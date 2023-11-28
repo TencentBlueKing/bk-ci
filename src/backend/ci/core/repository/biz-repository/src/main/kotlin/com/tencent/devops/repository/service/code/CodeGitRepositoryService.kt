@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.constant.RepositoryConstants
@@ -57,6 +58,7 @@ import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -133,6 +135,16 @@ class CodeGitRepositoryService @Autowired constructor(
                 I18nUtil.getCodeLanMessage(
                     messageCode = GIT_INVALID,
                     language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )
+            )
+        }
+        // 不得切换代码库
+        if (GitUtils.diffRepoUrl(record.url, repository.url)) {
+            logger.warn("can not switch repo url|sourceUrl[${record.url}]|targetUrl[${repository.url}]")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    RepositoryMessageCode.CAN_NOT_SWITCH_REPO_URL,
+                    I18nUtil.getLanguage(userId)
                 )
             )
         }
@@ -224,6 +236,7 @@ class CodeGitRepositoryService @Autowired constructor(
                     userName = repository.userName
                 )
             }
+
             RepoAuthType.HTTP -> {
                 if (repoCredentialInfo.username.isEmpty()) {
                     throw OperationException(
@@ -246,6 +259,7 @@ class CodeGitRepositoryService @Autowired constructor(
                     repoUsername = repository.userName
                 )
             }
+
             else -> {
                 throw ErrorCodeException(
                     errorCode = REPO_TYPE_NO_NEED_CERTIFICATION,
@@ -350,6 +364,16 @@ class CodeGitRepositoryService @Autowired constructor(
         val repoCredentialInfo = getCredentialInfo(projectId = projectId, repository = repository)
         // 若授权类型不为OAUTH则需要检查Token
         if (repository.authType != RepoAuthType.OAUTH) {
+            // 授权凭证信息
+            if (repoCredentialInfo.credentialType == CredentialType.USERNAME_PASSWORD.name) {
+                logger.info("using credential of type [USERNAME_PASSWORD],loginUser[${repoCredentialInfo.username}]")
+                repoCredentialInfo.token = scmService.getGitSession(
+                    type = ScmType.CODE_GIT,
+                    username = repoCredentialInfo.username,
+                    password = repoCredentialInfo.password,
+                    url = repository.url
+                )?.privateToken ?: ""
+            }
             val checkResult = checkToken(
                 repoCredentialInfo = repoCredentialInfo,
                 repository = repository

@@ -73,6 +73,7 @@ object RepositoryMessageCode {
     const val REPOSITORY_ID_AND_NAME_ARE_EMPTY = "2115024" // 仓库ID和仓库名都为空
     const val USER_NEED_PROJECT_X_PERMISSION = "2115025" // 用户（{0}）无（{1}）项目权限
     const val NOT_AUTHORIZED_BY_OAUTH = "2115026" // 用户[{0}]尚未进行OAUTH授权，请先授权。
+    const val CAN_NOT_SWITCH_REPO_URL = "2115027" // 不可切换代码库地址
     const val ERROR_REPO_REPEATEDLY_ENABLED_PAC = "2115027" // 代码库已开启PAC。
     const val ERROR_REPO_ENABLE_PAC_FAIL = "2115028" // 代码库开启PAC失败。
     const val ERROR_REPO_CI_DIR_EXISTS = "2115029" // 代码库关闭PAC失败，CI文件夹仍存在。

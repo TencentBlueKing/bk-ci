@@ -24,8 +24,19 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.notify.service
 
-interface OrgService {
-    fun parseStaff(staffs: Set<String>): Set<String>
-}
+package com.tencent.devops.scm.pojo
+
+import com.tencent.devops.common.api.enums.ScmType
+import io.swagger.annotations.ApiParam
+
+data class RepoSessionRequest(
+    @ApiParam("仓库类型", required = true)
+    val type: ScmType,
+    @ApiParam("username", required = true)
+    val username: String,
+    @ApiParam("password", required = true)
+    val password: String,
+    @ApiParam("url", required = true)
+    val url: String
+)

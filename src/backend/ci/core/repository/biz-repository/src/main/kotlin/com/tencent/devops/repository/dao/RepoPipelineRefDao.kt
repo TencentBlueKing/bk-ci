@@ -64,6 +64,9 @@ class RepoPipelineRefDao {
                     ATOM_CODE,
                     ATOM_CATEGORY,
                     TASK_PARAMS,
+                    TASK_REPO_TYPE,
+                    TASK_REPO_HASH_ID,
+                    TASK_REPO_NAME,
                     TRIGGER_TYPE,
                     EVENT_TYPE,
                     TRIGGER_CONDITION,
@@ -80,6 +83,9 @@ class RepoPipelineRefDao {
                     it.atomCode,
                     it.atomCategory,
                     JsonUtil.toJson(it.taskParams),
+                    it.taskRepoType,
+                    it.taskRepoHashId,
+                    it.taskRepoRepoName,
                     it.triggerType,
                     it.eventType,
                     it.triggerCondition?.let { JsonUtil.toJson(it) },
@@ -94,6 +100,9 @@ class RepoPipelineRefDao {
                     .set(TRIGGER_TYPE, it.triggerType)
                     .set(EVENT_TYPE, it.eventType)
                     .set(TASK_PARAMS, JsonUtil.toJson(it.taskParams))
+                    .set(TASK_REPO_TYPE, it.taskRepoType)
+                    .set(TASK_REPO_HASH_ID, it.taskRepoHashId)
+                    .set(TASK_REPO_NAME, it.taskRepoRepoName)
                     .set(TRIGGER_CONDITION, it.triggerCondition?.let { JsonUtil.toJson(it) })
                     .set(TRIGGER_CONDITION_MD5, it.triggerConditionMd5)
                     .set(UPDATE_TIME, now)

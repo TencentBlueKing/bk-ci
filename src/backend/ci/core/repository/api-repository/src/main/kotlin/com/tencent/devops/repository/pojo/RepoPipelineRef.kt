@@ -51,6 +51,12 @@ data class RepoPipelineRef(
     val atomCategory: String,
     @ApiModelProperty("插件参数")
     val taskParams: Map<String, Any>,
+    @ApiModelProperty("插件配置的代码库类型")
+    val taskRepoType: String,
+    @ApiModelProperty("插件配置的代码库hashId")
+    val taskRepoHashId: String?,
+    @ApiModelProperty("插件配置的代码库别名")
+    val taskRepoRepoName: String?,
     @ApiModelProperty("触发类型")
     val triggerType: String?,
     @ApiModelProperty("事件类型")

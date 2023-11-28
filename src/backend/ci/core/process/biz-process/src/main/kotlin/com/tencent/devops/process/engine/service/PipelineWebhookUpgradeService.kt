@@ -150,7 +150,7 @@ class PipelineWebhookUpgradeService(
         }
     }
 
-    @Suppress("LoopWithTooManyJumpStatements")
+    @Suppress("LoopWithTooManyJumpStatements", "ComplexMethod")
     private fun PipelineWebhook.matchElement(
         elements: List<Element>,
         params: Map<String, String>,
@@ -197,7 +197,10 @@ class PipelineWebhookUpgradeService(
                     pipelineWebhookDao.updateProjectNameAndTaskId(
                         dslContext = dslContext,
                         projectId = projectId,
-                        projectName = pipelineWebhookService.getProjectName(repo.projectName),
+                        projectName = pipelineWebhookService.getProjectName(
+                            repositoryType = repo.getScmType().name,
+                            projectName = repo.projectName
+                        ),
                         taskId = element.id!!,
                         id = id!!
                     )
@@ -282,13 +285,16 @@ class PipelineWebhookUpgradeService(
         }
     }
 
-    fun updateWebhookEventInfo() {
+    fun updateWebhookEventInfo(
+        projectId: String?,
+        projectNames: List<String>?
+    ) {
         val startTime = System.currentTimeMillis()
         val threadPoolExecutor = Executors.newSingleThreadExecutor()
         threadPoolExecutor.submit {
             logger.info("PipelineWebhookService:begin updateWebhookEventInfo threadPoolExecutor")
             try {
-                updateWebhookEventInfoTask()
+                updateWebhookEventInfoTask(projectId = projectId, projectNames = projectNames)
             } catch (ignored: Exception) {
                 logger.warn("PipelineWebhookService：updateWebhookEventInfo failed", ignored)
             } finally {
@@ -298,15 +304,20 @@ class PipelineWebhookUpgradeService(
         }
     }
 
-    private fun updateWebhookEventInfoTask() {
+    private fun updateWebhookEventInfoTask(
+        projectId: String?,
+        projectNames: List<String>?
+    ) {
         var offset = 0
         val limit = 1000
         val repoCache = mutableMapOf<String, Optional<Repository>>()
         // 上一个更新的项目ID
         var preProjectId: String? = null
         do {
-            val pipelines = pipelineWebhookDao.listPipelines(
+            val pipelines = pipelineWebhookDao.groupPipelineList(
                 dslContext = dslContext,
+                projectId = projectId,
+                projectNames = projectNames,
                 limit = limit,
                 offset = offset
             )
@@ -366,11 +377,16 @@ class PipelineWebhookUpgradeService(
                 }
                 val repository = getAndCacheRepo(projectId, webhookRepositoryConfig, repoCache)
 
-                // 历史原因,git的projectName有三个，如aaa/bbb/ccc,只读取了bbb,统计数据量
+                // 历史原因,假如git的projectName有三个，如aaa/bbb/ccc,只读取了bbb,导致触发时获取的流水线数量很多,修复数据
                 if (repository != null && webhook.projectName != repository.projectName) {
                     logger.info(
-                        "webhook projectName different from repo projectName|" +
-                                "webhook:${webhook.projectName}|repo:${repository.projectName}"
+                        "webhook projectName different from repo projectName|webhook:$webhook|repo:$repository"
+                    )
+                    pipelineWebhookDao.updateProjectName(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        projectName = repository.projectName,
+                        id = webhook.id!!
                     )
                 }
                 val repositoryHashId = when {

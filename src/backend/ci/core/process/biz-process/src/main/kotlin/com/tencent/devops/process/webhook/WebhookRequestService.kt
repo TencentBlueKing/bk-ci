@@ -86,9 +86,14 @@ class WebhookRequestService(
             requestBody = request.body,
             createTime = eventTime
         )
-        client.get(ServiceRepositoryWebhookResource::class).saveWebhookRequest(
-            repositoryWebhookRequest = repositoryWebhookRequest
-        ).data!!
+        try {
+            client.get(ServiceRepositoryWebhookResource::class).saveWebhookRequest(
+                repositoryWebhookRequest = repositoryWebhookRequest
+            ).data!!
+        } catch (ignored: Throwable) {
+            // 日志保存异常,不影响正常触发
+            logger.warn("Failed to save webhook request", ignored)
+        }
         webhookTriggerService.trigger(
             scmType = scmType,
             matcher = matcher,

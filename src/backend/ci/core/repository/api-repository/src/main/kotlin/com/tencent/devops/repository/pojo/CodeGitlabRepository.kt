@@ -53,8 +53,6 @@ data class CodeGitlabRepository(
     val authType: RepoAuthType? = RepoAuthType.HTTP,
     @ApiModelProperty("Gitlab仓库ID", required = false)
     val gitProjectId: Long?,
-    @ApiModelProperty("代码库类型", required = false)
-    override val scmType: ScmType = ScmType.CODE_GITLAB,
     @ApiModelProperty("仓库是否开启pac", required = false)
     override val enablePac: Boolean? = false,
     @ApiModelProperty("yaml同步状态", required = false)
@@ -81,6 +79,8 @@ data class CodeGitlabRepository(
                 GitUtils.isLegalSshUrl(url)
         }
     }
+
+    override fun getScmType() = ScmType.CODE_GITLAB
 
     override fun getExternalId(): String = gitProjectId?.toString() ?: ""
 }

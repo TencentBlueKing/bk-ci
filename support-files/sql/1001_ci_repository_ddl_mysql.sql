@@ -207,6 +207,9 @@ CREATE TABLE IF NOT EXISTS `T_REPOSITORY_PIPELINE_REF`
     `ATOM_CODE`       varchar(32)  NOT NULL DEFAULT '' COMMENT '插件的唯一标识',
     `ATOM_CATEGORY`   varchar(10)  NOT NULL DEFAULT '' COMMENT '插件类别',
     `TASK_PARAMS`     text         NOT NULL COMMENT '插件参数',
+    `TASK_REPO_TYPE`     varchar(10)         NOT NULL COMMENT '插件代码库类型配置',
+    `TASK_REPO_HASH_ID`     varchar(64)      NULL COMMENT '插件代码库hashId配置',
+    `TASK_REPO_NAME`     varchar(255)      NULL COMMENT '插件代码库别名配置',
     `TRIGGER_TYPE`    varchar(64)  NULL COMMENT '触发类型',
     `EVENT_TYPE`      varchar(64)  NULL COMMENT '事件类型',
     `TRIGGER_CONDITION` text       NULL COMMENT '触发条件',
@@ -217,6 +220,11 @@ CREATE TABLE IF NOT EXISTS `T_REPOSITORY_PIPELINE_REF`
     UNIQUE KEY `UQE_PROJECT_PIPELINE_TASK` (`PROJECT_ID`, `PIPELINE_ID`, `TASK_ID`),
     INDEX `IDX_PROJECT_REPOSITORY` (`PROJECT_ID`, `REPOSITORY_ID`)
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COMMENT = '流水线引用代码库表';
+
+
+-- ----------------------------
+-- Table structure for T_REPOSITORY_WEBHOOK_REQUEST
+-- ----------------------------
 
 CREATE TABLE IF NOT EXISTS `T_REPOSITORY_WEBHOOK_REQUEST`
 (

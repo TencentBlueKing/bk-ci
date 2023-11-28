@@ -295,10 +295,11 @@ class RepositoryDao {
         }
     }
 
-    fun delete(dslContext: DSLContext, repositoryId: Long, updateUser: String) {
+    fun delete(dslContext: DSLContext, repositoryId: Long, deleteAliasName: String, updateUser: String) {
         with(TRepository.T_REPOSITORY) {
             dslContext.update(this)
                 .set(IS_DELETED, true)
+                .set(ALIAS_NAME, deleteAliasName)
                 .set(UPDATED_USER, updateUser)
                 .where(REPOSITORY_ID.eq(repositoryId))
                 .execute()

@@ -50,8 +50,6 @@ data class GithubRepository(
     val gitProjectId: Long? = null,
     @ApiModelProperty("仓库凭证ID", required = false, hidden = true, allowEmptyValue = true)
     override val credentialId: String = "",
-    @ApiModelProperty("代码库类型", required = false)
-    override val scmType: ScmType = ScmType.GITHUB,
     @ApiModelProperty("仓库是否开启pac", required = false)
     override val enablePac: Boolean? = false,
     @ApiModelProperty("yaml同步状态", required = false)
@@ -62,6 +60,8 @@ data class GithubRepository(
     }
 
     override fun getStartPrefix() = "https://github.com/"
+
+    override fun getScmType() = ScmType.GITHUB
 
     override fun getExternalId(): String = gitProjectId?.toString() ?: ""
 }

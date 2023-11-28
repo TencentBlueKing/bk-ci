@@ -102,7 +102,11 @@ class PipelineTriggerDetailBuilder {
             buildId = buildId,
             buildNum = buildNum,
             reason = reason,
-            reasonDetailList = reasonDetailList
+            reasonDetailList = if (status == PipelineTriggerStatus.SUCCEED.name) {
+                null
+            } else {
+                reasonDetailList
+            }
         )
     }
 }

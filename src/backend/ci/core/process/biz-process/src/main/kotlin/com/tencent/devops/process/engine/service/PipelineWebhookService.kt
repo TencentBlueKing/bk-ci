@@ -128,12 +128,12 @@ class PipelineWebhookService @Autowired constructor(
         element: Element,
         variables: Map<String, String>
     ) {
-        val (repositoryType, eventType, repositoryConfig) =
+        val (scmType, eventType, repositoryConfig) =
             RepositoryConfigUtils.buildWebhookConfig(element, variables)
-        logger.info("$pipelineId| Trying to add the $repositoryType web hook for repo($repositoryConfig)")
+        logger.info("$pipelineId| Trying to add the $scmType web hook for repo($repositoryConfig)")
         val repository = registerWebhook(
             projectId = projectId,
-            repositoryType = repositoryType,
+            scmType = scmType,
             repositoryConfig = repositoryConfig,
             codeEventType = eventType,
             elementVersion = element.version
@@ -141,12 +141,12 @@ class PipelineWebhookService @Autowired constructor(
         val pipelineWebhook = PipelineWebhook(
             projectId = projectId,
             pipelineId = pipelineId,
-            repositoryType = repositoryType,
+            repositoryType = scmType,
             repoType = repositoryConfig.repositoryType,
             repoHashId = repositoryConfig.repositoryHashId,
             repoName = repositoryConfig.repositoryName,
             taskId = element.id,
-            projectName = getProjectName(repository.projectName),
+            projectName = getProjectName(repositoryType = scmType.name, projectName = repository.projectName),
             repositoryHashId = repository.repoHashId,
             eventType = eventType?.name ?: "",
             externalId = repository.getExternalId()
@@ -159,7 +159,7 @@ class PipelineWebhookService @Autowired constructor(
 
     private fun registerWebhook(
         projectId: String,
-        repositoryType: ScmType,
+        scmType: ScmType,
         repositoryConfig: RepositoryConfig,
         codeEventType: CodeEventType?,
         elementVersion: String
@@ -172,7 +172,7 @@ class PipelineWebhookService @Autowired constructor(
         )
         try {
             redisLock.lock()
-            return when (repositoryType) {
+            return when (scmType) {
                 ScmType.CODE_GIT ->
                     scmProxyService.addGitWebhook(
                         projectId = projectId,
@@ -292,7 +292,7 @@ class PipelineWebhookService @Autowired constructor(
     fun getTriggerPipelines(name: String, repositoryType: String): List<WebhookTriggerPipeline> {
         return pipelineWebhookDao.getByProjectNameAndType(
             dslContext = dslContext,
-            projectName = getProjectName(name),
+            projectNames = getTriggerProjectName(repositoryType = repositoryType, projectName = name),
             repositoryType = repositoryType
         ) ?: emptyList()
     }
@@ -310,13 +310,26 @@ class PipelineWebhookService @Autowired constructor(
         ) ?: emptyList()
     }
 
-    fun getProjectName(projectName: String): String {
-        // 如果项目名是三层的，比如a/b/c，那对应的rep_name是b
+    fun getProjectName(repositoryType: String, projectName: String): String {
+        val repoSplit = projectName.split("/")
+        // 如果代码库是svn类型，并且项目名是三层的，比如a/b/c，那对应的rep_name是b,工蜂svn webhook返回的rep_name结构
+        if (repositoryType == ScmType.CODE_SVN.name && repoSplit.size == 3) {
+            return repoSplit[1].trim()
+        }
+        return projectName
+    }
+
+    fun getTriggerProjectName(repositoryType: String, projectName: String): List<String> {
         val repoSplit = projectName.split("/")
         if (repoSplit.size != 3) {
-            return projectName
+            return listOf(projectName)
         }
-        return repoSplit[1].trim()
+        // 兼容历史数据，如果代码库类型是git，并且路径是三层,数据库只保留了第二层,导致查询的webhook数据量很大
+        return if (repositoryType == ScmType.CODE_SVN.name) {
+            listOf(repoSplit[1].trim())
+        } else {
+            listOf(repoSplit[1].trim(), projectName)
+        }
     }
 
     fun listWebhook(
@@ -348,5 +361,20 @@ class PipelineWebhookService @Autowired constructor(
             offset = limit.offset,
             limit = limit.limit
         ) ?: emptyList()
+    }
+
+    fun get(
+        projectId: String,
+        pipelineId: String,
+        repositoryHashId: String,
+        eventType: String
+    ): PipelineWebhook? {
+        return pipelineWebhookDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            repositoryHashId = repositoryHashId,
+            eventType = eventType
+        )
     }
 }

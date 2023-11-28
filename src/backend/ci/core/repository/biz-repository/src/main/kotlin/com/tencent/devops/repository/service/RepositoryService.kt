@@ -28,6 +28,7 @@
 package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
@@ -39,6 +40,7 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHUtil
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestamp
@@ -594,7 +596,6 @@ class RepositoryService @Autowired constructor(
                 )
             )
         }
-
         if (hasAliasName(projectId, repositoryHashId, repository.aliasName)) {
             throw OperationException(
                 MessageUtil.getMessageByLocale(
@@ -866,7 +867,14 @@ class RepositoryService @Autowired constructor(
         }
 
         deleteResource(projectId, repositoryId)
-        repositoryDao.delete(dslContext, repositoryId, userId)
+        val deleteTime = DateTimeUtil.toDateTime(LocalDateTime.now(), "yyMMddHHmmSS")
+        val deleteAliasName = "${record.aliasName}[$deleteTime]"
+        repositoryDao.delete(
+            dslContext = dslContext,
+            repositoryId = repositoryId,
+            deleteAliasName = deleteAliasName.coerceAtMaxLength(MAX_ALIAS_LENGTH),
+            updateUser = userId
+        )
     }
 
     fun validatePermission(user: String, projectId: String, authPermission: AuthPermission, message: String) {
@@ -1160,5 +1168,6 @@ class RepositoryService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(RepositoryService::class.java)
+        const val MAX_ALIAS_LENGTH = 255
     }
 }

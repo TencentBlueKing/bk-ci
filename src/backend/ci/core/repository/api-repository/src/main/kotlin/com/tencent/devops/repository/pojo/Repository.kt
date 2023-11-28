@@ -50,7 +50,6 @@ interface Repository {
     var userName: String
     val projectId: String?
     val repoHashId: String?
-    val scmType: ScmType
     val enablePac: Boolean?
     val yamlSyncStatus: String?
 
@@ -59,6 +58,8 @@ interface Repository {
     fun getStartPrefix(): String
 
     fun getFormatURL() = url
+
+    fun getScmType(): ScmType
 
     fun getExternalId(): String = projectName
 }

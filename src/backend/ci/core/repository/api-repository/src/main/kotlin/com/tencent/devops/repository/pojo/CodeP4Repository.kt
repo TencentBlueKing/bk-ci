@@ -47,8 +47,6 @@ data class CodeP4Repository(
     override var projectId: String?,
     @ApiModelProperty("仓库hash id", required = false)
     override val repoHashId: String?,
-    @ApiModelProperty("代码库类型", required = false)
-    override val scmType: ScmType = ScmType.CODE_P4,
     @ApiModelProperty("仓库是否开启pac", required = false)
     override val enablePac: Boolean? = false,
     @ApiModelProperty("yaml同步状态", required = false)
@@ -66,6 +64,8 @@ data class CodeP4Repository(
     override fun isLegal(): Boolean {
         return true
     }
+
+    override fun getScmType() = ScmType.CODE_P4
 
     override fun getExternalId(): String = projectName
 }

@@ -33,7 +33,6 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@Suppress("IMPLICIT_CAST_TO_ANY")
 @ApiModel("流水线触发类型")
 enum class PipelineTriggerType {
     // WEB_HOOK 触发
@@ -108,6 +107,19 @@ enum class PipelineTriggerType {
             } else {
                 null
             }
+        }
+
+        fun webhookTrigger(triggerType: String): Boolean {
+            return listOf(
+                CODE_SVN.name,
+                CODE_GIT.name,
+                CODE_GITLAB.name,
+                GITHUB.name,
+                CODE_TGIT.name,
+                CODE_P4.name
+            ).contains(
+                triggerType
+            )
         }
     }
 }

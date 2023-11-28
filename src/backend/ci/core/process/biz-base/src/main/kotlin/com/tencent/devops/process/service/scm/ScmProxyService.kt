@@ -58,8 +58,10 @@ import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
+import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.ticket.api.ServiceCredentialResource
+import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -705,12 +707,31 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             )
         )
 
+        // username+password 关联的git代码库
+        if ((repository is CodeGitRepository || repository is CodeTGitRepository) &&
+            (credential.credentialType == CredentialType.USERNAME_PASSWORD)
+        ) {
+            // USERNAME_PASSWORD v1 = username, v2 = password
+            val session = client.get(ServiceScmResource::class).getSession(
+                RepoSessionRequest(
+                    type = repository.getScmType(),
+                    username = privateKey,
+                    password = passPhrase,
+                    url = repository.url
+                )
+            ).data
+            return Credential(
+                username = privateKey,
+                privateKey = session?.privateToken ?: "",
+                passPhrase = passPhrase
+            )
+        }
+
         val list = if (passPhrase.isBlank()) {
             listOf(privateKey)
         } else {
             listOf(privateKey, passPhrase)
         }
-
         return CredentialUtils.getCredential(repository, list, credentialResult.data!!.credentialType)
     }
 
