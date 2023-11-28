@@ -300,7 +300,6 @@ class PipelineTriggerEventAspect(
                     )
 
                     else -> exception.message ?: "unknown error"
-
                 }
                 triggerDetailBuilder.status(PipelineTriggerStatus.FAILED.name)
                 triggerDetailBuilder.reason(PipelineTriggerReason.TRIGGER_FAILED.name)
