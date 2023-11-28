@@ -341,12 +341,6 @@ class PipelineWebhookUpgradeService(
         val model = pipelineWebhookService.getModel(projectId, pipelineId)
         if (model == null) {
             logger.info("$projectId|$pipelineId|model is null")
-            // 流水线不存在,则直接删除
-            pipelineWebhookDao.deleteByPipelineId(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )
             return
         }
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
