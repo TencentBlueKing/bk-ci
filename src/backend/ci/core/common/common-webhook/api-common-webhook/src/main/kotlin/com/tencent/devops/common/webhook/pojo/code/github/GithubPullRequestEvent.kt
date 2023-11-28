@@ -49,6 +49,11 @@ data class GithubPullRequestEvent(
     companion object {
         const val classType = "pull_request"
     }
+
+    /**
+     * 是否合并
+     */
+    fun isMerged() = action == "closed" && pullRequest.merged
 }
 
 fun GithubPullRequestEvent.isPrForkNotMergeEvent() =

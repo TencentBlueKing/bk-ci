@@ -150,7 +150,7 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
                 event.pullRequest.htmlUrl,
                 event.pullRequest.number.toString(),
                 getUsername(event),
-                event.action
+                if(event.isMerged()) GithubPullRequestMergeState.MERGED.name.lowercase() else event.action
             )
         ).toJsonStr()
     }
@@ -176,7 +176,7 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
         if (!(event.action == "opened" ||
                     event.action == "reopened" ||
                     event.action == "synchronize" ||
-                    (event.pullRequest.merged && event.action == "closed"))
+                    event.isMerged())
         ) {
             logger.info("Github pull request no open or update")
             return WebhookMatchResult(false)
