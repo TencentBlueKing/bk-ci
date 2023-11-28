@@ -540,7 +540,7 @@
                         theme: 'success',
                         message: this.$t('codelib.重置成功')
                     })
-                    this.fetchRepoDetail(this.newRepoInfo.repositoryHashId)
+                    this.fetchRepoDetail(this.newRepoInfo.repositoryHashId, false)
                     this.$emit('updateList')
                     this.isShow = false
                 }).catch((e) => {

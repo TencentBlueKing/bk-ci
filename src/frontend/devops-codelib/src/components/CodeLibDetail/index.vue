@@ -110,12 +110,15 @@
                 v-bind="panel"
                 :key="index">
                 <component
+                    ref="tabCom"
                     v-if="panel.name === active"
                     :is="componentName"
                     :repo-info="repoInfo"
                     :cur-repo="curRepo"
                     :type="repoInfo['@type']"
                     :fetch-repo-detail="fetchRepoDetail"
+                    :event-type-list="eventTypeList"
+                    :trigger-type-list="triggerTypeList"
                     :refresh-codelib-list="refreshCodelibList"
                     @updateList="updateList"
                 >
@@ -202,7 +205,9 @@
                     GITHUB: 'code-Github',
                     CODE_TGIT: 'code-TGit',
                     CODE_P4: 'code-P4'
-                }
+                },
+                eventTypeList: [],
+                triggerTypeList: []
             }
         },
         computed: {
@@ -222,6 +227,9 @@
             },
             userId () {
                 return this.$route.query.userId || ''
+            },
+            scmType () {
+                return this.$route.query.scmType || ''
             }
         },
         watch: {
@@ -245,6 +253,13 @@
                 if (!val) {
                     this.pipelinesList = []
                 }
+            },
+            scmType: {
+                handler () {
+                    this.getEventTypeList()
+                    this.getTriggerTypeList()
+                },
+                immediate: true
             }
         },
         created () {
@@ -263,20 +278,51 @@
             ...mapActions('codelib', [
                 'deleteRepo',
                 'renameAliasName',
-                'fetchUsingPipelinesList'
+                'fetchUsingPipelinesList',
+                'fetchEventType',
+                'fetchTriggerType'
             ]),
+         
+            getEventTypeList () {
+                this.fetchEventType({
+                    scmType: this.scmType
+                }).then(res => {
+                    this.eventTypeList = res.map(i => {
+                        return {
+                            ...i,
+                            name: i.value
+                        }
+                    })
+                })
+            },
+            getTriggerTypeList () {
+                this.fetchTriggerType({
+                    scmType: this.scmType
+                }).then(res => {
+                    this.triggerTypeList = res.map(i => {
+                        return {
+                            ...i,
+                            name: i.value
+                        }
+                    })
+                })
+            },
 
             /**
              * 获取仓库详情
              * @params {String} id 仓库id
              */
-            async fetchRepoDetail (id) {
-                if (!this.userId) this.isLoading = true
+            async fetchRepoDetail (id, loading = true) {
+                this.isLoading = true
                 await this.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${this.projectId}/${id}?repositoryType=ID`)
                     .then((res) => {
                         this.repoInfo = res
                     }).finally(() => {
-                        this.isLoading = false
+                        if (this.userId) {
+                            this.isLoading = loading
+                        } else {
+                            this.isLoading = false
+                        }
                     })
             },
 
@@ -409,7 +455,7 @@
                     if (this.pipelinesDialogPayload.page === 1 && this.pipelinesList.length) {
                         this.pipelinesDialogPayload.isShow = true
                     }
-                    this.pipelinesDialogPayload.hasLoadEnd = res.totalPages === this.pipelinesDialogPayload.page
+                    this.pipelinesDialogPayload.hasLoadEnd = res.count === this.pipelinesList.length
                     this.pipelinesDialogPayload.page += 1
                 }).finally(() => {
                     this.pipelinesDialogPayload.isLoadingMore = false

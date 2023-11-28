@@ -338,6 +338,10 @@
                 overflow: hidden;
                 text-overflow: ellipsis;
             }
+            
+            .trigger-user {
+                color: #979BA5 !important;
+            }
         }
         .header-right {
             display: flex;
@@ -356,9 +360,6 @@
             &.right-down {
                 transform: rotate(90deg);
             }
-        }
-        .trigger-user {
-            color: #979BA5;
         }
         .trigger-time {
             padding-left: 8px;

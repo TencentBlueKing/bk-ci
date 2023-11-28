@@ -79,6 +79,14 @@
             curRepo: {
                 type: Object,
                 default: () => {}
+            },
+            triggerTypeList: {
+                type: Object,
+                default: () => {}
+            },
+            eventTypeList: {
+                type: Object,
+                default: () => {}
             }
         },
         data () {
@@ -94,8 +102,6 @@
                 timelineMap: {},
                 searchValue: [],
                 daterange: setDefaultDaterange(),
-                eventTypeList: [],
-                triggerTypeList: [],
                 page: 1,
                 pageSize: 20,
                 catchRepoId: '',
@@ -182,13 +188,6 @@
                 if (this.catchRepoId === this.repoId) {
                     this.getListData()
                 }
-            },
-            scmType: {
-                handler (val) {
-                    this.getEventTypeList()
-                    this.getTriggerTypeList()
-                },
-                immediate: true
             }
         },
         created () {
@@ -252,30 +251,6 @@
                 'fetchTriggerType'
             ]),
          
-            getEventTypeList () {
-                this.fetchEventType({
-                    scmType: this.scmType
-                }).then(res => {
-                    this.eventTypeList = res.map(i => {
-                        return {
-                            ...i,
-                            name: i.value
-                        }
-                    })
-                })
-            },
-            getTriggerTypeList () {
-                this.fetchTriggerType({
-                    scmType: this.scmType
-                }).then(res => {
-                    this.triggerTypeList = res.map(i => {
-                        return {
-                            ...i,
-                            name: i.value
-                        }
-                    })
-                })
-            },
             handleScroll (event) {
                 const target = event.target
                 const bottomDis = target.scrollHeight - target.clientHeight - target.scrollTop

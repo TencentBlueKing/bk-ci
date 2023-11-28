@@ -513,7 +513,7 @@
                     if (this.pipelinesDialogPayload.page === 1 && this.pipelinesList.length) {
                         this.pipelinesDialogPayload.isShow = true
                     }
-                    this.pipelinesDialogPayload.hasLoadEnd = res.totalPages === this.pipelinesDialogPayload.page
+                    this.pipelinesDialogPayload.hasLoadEnd = res.count === this.pipelinesList.length
                     this.pipelinesDialogPayload.page += 1
                 }).finally(() => {
                     this.pipelinesDialogPayload.isLoadingMore = false
