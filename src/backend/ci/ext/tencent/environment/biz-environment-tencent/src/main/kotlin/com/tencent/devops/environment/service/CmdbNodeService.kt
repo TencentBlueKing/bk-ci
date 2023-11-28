@@ -182,11 +182,12 @@ class CmdbNodeService @Autowired constructor(
             nodesAgentList = toAddNodeList.map {
                 NodeAgent(
                     nodeIp = it.nodeIp,
-                    nodesAgentStatus = it.agentStatus,
+                    nodesAgentStatus = if (it.agentStatus) 1 else 0,
                     nodesAgentVersion = "1.0.0"
                 )
             },
-            agentAbnormalNodesCount = toAddNodeList.filterNot { it.agentStatus }.size
+            agentAbnormalNodesCount = toAddNodeList.filterNot { it.agentStatus }.size,
+            agentNotInstallNodesCount = 0
         )
     }
 
