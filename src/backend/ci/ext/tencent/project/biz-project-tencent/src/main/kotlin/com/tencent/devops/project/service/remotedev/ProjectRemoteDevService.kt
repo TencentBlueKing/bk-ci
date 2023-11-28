@@ -41,6 +41,9 @@ class ProjectRemoteDevService @Autowired constructor(
     @Value("\${remoteDev.bkrepoDevxHeaderUserAuth:}")
     val bkrepoDevxHeaderUserAuth = ""
 
+    @Value("\${remoteDev.bkrepoLsyncProxyUrl:}")
+    val bkrepoLsyncProxyUrl = “”
+
     // 开启 remotedev 相关逻辑
     fun enableRemoteDev(
         userId: String,
@@ -128,10 +131,21 @@ class ProjectRemoteDevService @Autowired constructor(
             projectId = projectId,
             name = "lsync",
             type = "GENERIC",
-            category = "LOCAL",
+            category = "COMPOSITE",
             public = false,
             description = "repo",
-            configuration = null,
+            configuration = CreateRepoConfigData(
+                type = "composite",
+                proxy = CreateRepoConfigProxy(
+                    channelList = listOf(
+                        CreateRepoConfigProxyData(
+                            public = false,
+                            name = "lsync",
+                            url = "$bkrepoLsyncProxyUrl/$projectId/lsync"
+                        )
+                    )
+                )
+            ),
             storageCredentialsKey = null
         )
         val url = "$bkrepoDevxUrl/repository/api/repo/create"
@@ -240,8 +254,23 @@ data class CreateRepoData(
     val category: String,
     val public: Boolean,
     val description: String?,
-    val configuration: Any?,
+    val configuration: CreateRepoConfigData,
     val storageCredentialsKey: Any?
+)
+
+data class CreateRepoConfigData(
+    val type: String,
+    val proxy: CreateRepoConfigProxy
+)
+
+data class CreateRepoConfigProxy(
+    val channelList: List<CreateRepoConfigProxyData>
+)
+
+data class CreateRepoConfigProxyData(
+    val public: Boolean,
+    val name: String,
+    val url: String
 )
 
 data class CreateProjectData(
