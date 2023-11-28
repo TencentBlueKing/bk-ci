@@ -39,6 +39,7 @@ enum class NodeStatus(
 ) {
     NORMAL("normal"), // 正常
     ABNORMAL("abnormal"), // 异常
+    NOT_INSTALLED("notInstall"), // 未安装agent
     DELETED("deleted"), // 已删除
     LOST("lost"), // 失联
     CREATING("creating"), // 正在创建中
