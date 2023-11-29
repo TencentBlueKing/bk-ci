@@ -142,6 +142,7 @@ class WindowsGpuResourceDao {
     ): List<Record2<String, String>> {
         with(TWindowsGpuPool.T_WINDOWS_GPU_POOL) {
             return dslContext.selectDistinct(ZONE_ID, MACHINE_TYPE).from(this)
+                .orderBy(MACHINE_TYPE.asc())
                 .skipCheck()
                 .fetch()
         }
