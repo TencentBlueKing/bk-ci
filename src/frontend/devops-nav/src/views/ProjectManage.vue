@@ -57,7 +57,23 @@
                                     {{ row.projectName.substr(0, 1) }}
                                 </span>
                                 <div class="info">
-                                    <bk-button text @click="goToProjectManage(row)">{{ row.projectName }}</bk-button>
+                                    <bk-button
+                                        text
+                                        v-perm="{
+                                            hasPermission: row.canView,
+                                            disablePermissionApi: true,
+                                            permissionData: {
+                                                projectId: row.projectCode,
+                                                resourceType: 'project',
+                                                resourceCode: row.projectCode,
+                                                action: RESOURCE_ACTION.VIEW
+                                            }
+                                        }"
+                                        :key="row.projectCode"
+                                        @click="goToProjectManage(row)"
+                                    >
+                                        {{ row.projectName }}
+                                    </bk-button>
                                 </div>
                             </div>
                         </template>
@@ -130,6 +146,16 @@
                             <bk-button
                                 class="mr5"
                                 text
+                                v-perm="{
+                                    hasPermission: row.managePermission,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: row.projectCode,
+                                        resourceType: 'project',
+                                        resourceCode: row.projectCode,
+                                        action: RESOURCE_ACTION.ENABLE
+                                    }
+                                }"
                                 :disabled="row.approvalStatus === 1"
                                 @click="handleGoUserGroup(row)"
                             >
