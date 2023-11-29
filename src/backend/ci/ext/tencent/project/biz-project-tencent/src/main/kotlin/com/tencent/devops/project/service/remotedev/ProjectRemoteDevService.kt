@@ -7,7 +7,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.devops.auth.api.service.ServiceMonitorSpaceResource
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.client.Client
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -24,8 +23,7 @@ import org.springframework.stereotype.Service
 @Service
 class ProjectRemoteDevService @Autowired constructor(
     private val objectMapper: ObjectMapper,
-    private val client: Client,
-    private val bkRepoClient: BkRepoClient
+    private val client: Client
 ) {
 
     @Value("\${remoteDev.appCode:}")
