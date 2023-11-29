@@ -155,10 +155,12 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_SHARED` (
     `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
 	`ASSIGN_TYPE` varchar(32) NOT NULL DEFAULT 'VIEWER' COMMENT '分享人所属类型（OWNER、VIEWER）',
     `RESOURCE_ID` varchar(32) NOT NULL DEFAULT '' COMMENT '最长32位字符串， 用于后续调度时传给start sdk',
+    `EXPIRATION` TIMESTAMP NULL COMMENT '过期时间',
     PRIMARY KEY (`ID`),
     KEY `uni_1` (`WORKSPACE_NAME`),
     KEY `uni_2` (`SHARED_USER`),
-    KEY `uni_3` (`OPERATOR`)
+    KEY `uni_3` (`OPERATOR`),
+    KEY `EXPIRATION_IDX` (`EXPIRATION`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '工作空间共享记录表';
 
 -- ----------------------------
@@ -462,7 +464,7 @@ CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_EXPERT_SUPPORT` (
     `HOST_IP` varchar(64) NOT NULL COMMENT '云桌面IP',
     `WORKSPACE_NAME` varchar(128) NOT NULL COMMENT '工作空间名称，唯一性',
 	`CREATOR` varchar(32)  NOT NULL COMMENT '创建人',
-	`SUPPORTER` varchar(32)  NULL COMMENT '协助人',
+	`SUPPORTER` varchar(256)  NULL COMMENT '协助人',
 	`STATUS` varchar(16) NOT NULL COMMENT '单据状态',
 	`CONTENT` varchar(256)  NOT NULL COMMENT '单据内容',
     `CITY` varchar(32) NOT NULL COMMENT '城市',

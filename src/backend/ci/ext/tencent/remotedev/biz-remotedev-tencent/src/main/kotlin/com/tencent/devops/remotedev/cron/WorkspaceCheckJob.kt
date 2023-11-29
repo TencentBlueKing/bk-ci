@@ -126,10 +126,10 @@ class WorkspaceCheckJob @Autowired constructor(
                     MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
                     logger.info(
                         "workspace $workspaceName last active is ${
-                            DateTimeUtil.formatMilliTime(
-                                time.toLong(),
-                                DateTimeUtil.YYYY_MM_DD_HH_MM_SS
-                            )
+                        DateTimeUtil.formatMilliTime(
+                            time.toLong(),
+                            DateTimeUtil.YYYY_MM_DD_HH_MM_SS
+                        )
                         } ready to sleep"
                     )
                     kotlin.runCatching {
@@ -256,5 +256,13 @@ class WorkspaceCheckJob @Autowired constructor(
         } catch (e: Throwable) {
             logger.error("sync START resource list failed", e)
         }
+    }
+
+    /**
+     * 每 10 分钟检测一次过期的工作空间分享
+     */
+    @Scheduled(cron = "0 */10 * ? * *")
+    fun checkAndUnshared() {
+        workspaceService.checkAndUnshared()
     }
 }
