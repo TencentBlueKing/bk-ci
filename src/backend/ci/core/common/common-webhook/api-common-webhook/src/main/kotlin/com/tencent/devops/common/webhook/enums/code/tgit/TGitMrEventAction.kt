@@ -28,6 +28,7 @@
 package com.tencent.devops.common.webhook.enums.code.tgit
 
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 
 /*
  * Stream Mr 事件支持动作
@@ -55,6 +56,17 @@ enum class TGitMrEventAction(val value: String) {
                     }
                 }
                 TGitMergeActionKind.MERGE.value -> MERGE.value
+                else -> null
+            }
+        }
+
+        fun getActionValue(event: GithubPullRequestEvent): String? {
+            return when {
+                event.isMerged() -> MERGE.value
+                event.action == "opened" -> OPEN.value
+                event.action == "reopened" -> REOPEN.value
+                event.action == "synchronize" -> PUSH_UPDATE.value
+                event.action == "close" -> CLOSE.value
                 else -> null
             }
         }

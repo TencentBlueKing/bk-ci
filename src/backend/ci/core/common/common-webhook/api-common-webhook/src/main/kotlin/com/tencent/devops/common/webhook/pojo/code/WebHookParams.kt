@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMrEventAction
 
 data class WebHookParams(
     val repositoryConfig: RepositoryConfig,
@@ -74,4 +75,19 @@ data class WebHookParams(
     var thirdSecretToken: String? = null,
     // 插件版本
     var version: String? = null
-)
+) {
+    /**
+     * 根据监听的事件类型匹配对应的MR动作
+     */
+    fun getMergeTriggerAction() = when (eventType) {
+        CodeEventType.MERGE_REQUEST_ACCEPT, CodeEventType.PULL_REQUEST_ACCEPT -> {
+            listOf(TGitMrEventAction.MERGE)
+        }
+
+        CodeEventType.PULL_REQUEST, CodeEventType.MERGE_REQUEST -> {
+            listOf(TGitMrEventAction.OPEN, TGitMrEventAction.REOPEN, TGitMrEventAction.PUSH_UPDATE)
+        }
+
+        else -> listOf()
+    }.map { it.value }
+}

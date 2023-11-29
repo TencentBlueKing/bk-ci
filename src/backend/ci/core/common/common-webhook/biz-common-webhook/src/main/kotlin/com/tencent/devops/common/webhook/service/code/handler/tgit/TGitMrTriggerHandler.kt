@@ -195,6 +195,7 @@ class TGitMrTriggerHandler(
         return WebhookMatchResult(true)
     }
 
+    @SuppressWarnings("LongMethod")
     override fun getEventFilters(
         event: GitMergeRequestEvent,
         projectId: String,
@@ -204,6 +205,12 @@ class TGitMrTriggerHandler(
     ): List<WebhookFilter> {
         with(webHookParams) {
             val userId = getUsername(event)
+            val eventActionFilter = ContainsFilter(
+                pipelineId = pipelineId,
+                included = getMergeTriggerAction(),
+                triggerOn = TGitMrEventAction.getActionValue(event) ?: "",
+                filterName = "mrActionFilter"
+            )
             val userFilter = UserFilter(
                 pipelineId = pipelineId,
                 triggerOnUser = getUsername(event),
@@ -312,7 +319,7 @@ class TGitMrTriggerHandler(
                 callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry
             )
             return listOf(
-                userFilter, targetBranchFilter,
+                eventActionFilter, userFilter, targetBranchFilter,
                 sourceBranchFilter, skipCiFilter, pathFilter,
                 commitMessageFilter, actionFilter, thirdFilter
             )

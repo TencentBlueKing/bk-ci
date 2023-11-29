@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMrEventAction
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_AUTHOR
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME
@@ -80,8 +81,8 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_REPO_
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
-import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestMergeState
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
+import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
@@ -132,15 +133,7 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
     }
 
     override fun getAction(event: GithubPullRequestEvent): String? {
-        return event.action
-    }
-
-    override fun getState(event: GithubPullRequestEvent): String? {
-        return if (event.pullRequest.merged) {
-            GithubPullRequestMergeState.MERGED
-        } else {
-            GithubPullRequestMergeState.NOT_MERGED
-        }.name
+        return TGitMrEventAction.getActionValue(event) ?: ""
     }
 
     override fun getEventDesc(event: GithubPullRequestEvent): String {
@@ -150,7 +143,7 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
                 event.pullRequest.htmlUrl,
                 event.pullRequest.number.toString(),
                 getUsername(event),
-                if(event.isMerged()) GithubPullRequestMergeState.MERGED.name.lowercase() else event.action
+                if(event.isMerged()) "merge" else event.action
             )
         ).toJsonStr()
     }
@@ -193,6 +186,12 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
     ): List<WebhookFilter> {
         with(webHookParams) {
             val userId = getUsername(event)
+            val actionFilter = ContainsFilter(
+                pipelineId = pipelineId,
+                included = getMergeTriggerAction(),
+                triggerOn = getAction(event) ?: "",
+                filterName = "prActionFilter"
+            )
             val userFilter = UserFilter(
                 pipelineId = pipelineId,
                 triggerOnUser = userId,
@@ -222,7 +221,7 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
                     params = listOf(targetBranch)
                 ).toJsonStr()
             )
-            return listOf(userFilter, targetBranchFilter)
+            return listOf(actionFilter, userFilter, targetBranchFilter)
         }
     }
 
