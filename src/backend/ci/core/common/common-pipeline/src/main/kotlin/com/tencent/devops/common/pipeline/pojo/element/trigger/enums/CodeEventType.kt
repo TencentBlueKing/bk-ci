@@ -86,8 +86,7 @@ enum class CodeEventType {
          */
         val CODE_GITHUB_EVENTS = listOf(
             PUSH,
-            MERGE_REQUEST,
-            MERGE_REQUEST_ACCEPT,
+            PULL_REQUEST,
             CREATE,
             REVIEW,
             ISSUES,
