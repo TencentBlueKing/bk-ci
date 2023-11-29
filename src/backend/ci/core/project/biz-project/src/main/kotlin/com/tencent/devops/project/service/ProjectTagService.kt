@@ -344,7 +344,7 @@ class ProjectTagService @Autowired constructor(
         }
         // 容器化项目需要将本地tag中的kubernetes-去掉来比较
         val localTag = bkTag.getLocalTag()
-        val clusterTag = if (isContainerProject) localTag.replace("kubernetes-", "") else localTag
+        val clusterTag = localTag.replace("kubernetes-", "")
         // 默认集群是不会有routerTag的信息
         if (projectTag.isNullOrBlank()) {
             // 只有默认集群在routerTag为空的时候才返回true
@@ -372,6 +372,7 @@ class ProjectTagService @Autowired constructor(
         }
     }
 
+    @Suppress("LongParameterList")
     fun getProjectListByFlag(
         projectName: String?,
         englishName: String?,
@@ -385,7 +386,8 @@ class ProjectTagService @Autowired constructor(
         grayFlag: Boolean,
         codeCCGrayFlag: Boolean,
         repoGrayFlag: Boolean,
-        remoteDevFlag: Boolean
+        remoteDevFlag: Boolean,
+        productId: Int?
     ): com.tencent.devops.project.pojo.Result<Map<String, Any?>?> {
         val dataObj = mutableMapOf<String, Any?>()
 
@@ -412,7 +414,8 @@ class ProjectTagService @Autowired constructor(
             limit = limit,
             routerTag = routerTag,
             otherRouterTagMaps = otherRouterTagMaps,
-            remoteDevFlag = remoteDevFlag
+            remoteDevFlag = remoteDevFlag,
+            productId = productId
         )
         val totalCount = projectDao.getProjectCount(
             dslContext = dslContext,
@@ -425,7 +428,8 @@ class ProjectTagService @Autowired constructor(
             approvalStatus = approvalStatus,
             routerTag = routerTag,
             otherRouterTagMaps = otherRouterTagMaps,
-            remoteDevFlag = remoteDevFlag
+            remoteDevFlag = remoteDevFlag,
+            productId = productId
         )
         val dataList = mutableListOf<ProjectInfoResponse>()
 
@@ -479,7 +483,8 @@ class ProjectTagService @Autowired constructor(
             enableExternal = projectData.enableExternal,
             enableIdc = projectData.enableIdc,
             pipelineLimit = projectData.pipelineLimit,
-            properties = projectProperties
+            properties = projectProperties,
+            productId = projectData.productId
         )
     }
 
