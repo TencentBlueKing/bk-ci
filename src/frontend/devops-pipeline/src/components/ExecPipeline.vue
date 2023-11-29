@@ -830,7 +830,6 @@
                     } else {
                         this.$set(container, 'locateActive', isLocate)
                     }
-                    console.log(element, elementIndex, container)
                     if (this.isPropertyPanelVisible || (showLog && isLocate)) {
                         this.toggleAsidePropertyPanel({
                             isShow: true,

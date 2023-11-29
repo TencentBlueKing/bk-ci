@@ -107,6 +107,7 @@
                             'webhookCommitId'
                         ]
                     case 'MERGE_REQUEST':
+                    case 'PULL_REQUEST':
                         return [
                             'webhookAliasName',
                             'webhookSourceTarget',
@@ -182,7 +183,7 @@
                     'tagName',
                     'webhookCommitId',
                     'parentBuildNum'
-                ].includes(field) && !this.isSVN
+                ].includes(field) && !this.isSVN && this.getLink(field)
             },
             formatField (field) {
                 switch (field) {
