@@ -969,10 +969,11 @@ class TemplateFacadeService @Autowired constructor(
             } else {
                 record
             }
-
             if (templateRecord == null) {
+                logger.warn("src store template not exist:$templateId|$type|$record")
                 throw ErrorCodeException(
-                    errorCode = ERROR_TEMPLATE_NOT_EXISTS
+                    errorCode = ERROR_TEMPLATE_NOT_EXISTS,
+                    defaultMessage = "src store template not exist:${templateId}"
                 )
             } else {
                 val modelStr = templateRecord[tTemplate.TEMPLATE] as String
