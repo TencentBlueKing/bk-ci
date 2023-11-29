@@ -225,7 +225,7 @@ class PipelineBuildFacadeService(
         run lit@{
             triggerContainer.elements.forEach {
                 if (it is ManualTriggerElement && it.isElementEnable()) {
-                    canManualStartup = true
+                    if (!debug) canManualStartup = true
                     canElementSkip = it.canElementSkip ?: false
                     useLatestParameters = it.useLatestParameters ?: false
                     return@lit
