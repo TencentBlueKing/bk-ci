@@ -91,7 +91,7 @@ class NodeScheduledService @Autowired constructor(
      * 分组执行，每次遍历100条记录。
      * display_name为空的：拼接节点类型、node hash值、nodeId这三个字段，写入display_name。
      */
-    @Scheduled(cron = "0 40 12 * * 1-5")
+    @Scheduled(cron = "0 10 15 * * 1-5")
     fun writeDisplayName() {
         val countDisplayNameEmptyNodes = nodeDao.countDisplayNameEmptyNodes(dslContext)
         if (logger.isDebugEnabled)

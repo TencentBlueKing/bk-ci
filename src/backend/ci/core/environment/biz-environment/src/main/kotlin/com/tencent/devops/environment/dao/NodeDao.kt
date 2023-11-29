@@ -91,6 +91,7 @@ class NodeDao {
             return dslContext.selectCount()
                 .from(TNode.T_NODE)
                 .where(DISPLAY_NAME.isNull)
+                .or(DISPLAY_NAME.eq(""))
                 .fetchOne(0, Int::class.java)!!
         }
     }
