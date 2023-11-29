@@ -69,7 +69,7 @@ class NodeDao {
     fun getCmdbNodesLimit(dslContext: DSLContext, limit: Int, offset: Int): Result<Record3<Long, String, String>> {
         with(TNode.T_NODE) {
             return dslContext.select(NODE_ID, NODE_TYPE, NODE_IP).from(this)
-                .where(NODE_TYPE.eq(NodeType.CMDB.toString()))
+                .where(NODE_TYPE.eq(NodeType.CMDB.name))
                 .and(HOST_ID.isNull)
                 .orderBy(NODE_ID.desc())
                 .limit(limit).offset(offset)
@@ -81,7 +81,7 @@ class NodeDao {
         with(TNode.T_NODE) {
             return dslContext.selectCount()
                 .from(TNode.T_NODE)
-                .where(NODE_TYPE.eq(NodeType.CMDB.toString()))
+                .where(NODE_TYPE.eq(NodeType.CMDB.name))
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -171,7 +171,7 @@ class NodeDao {
     fun getCmdbNodes(dslContext: DSLContext): Result<Record1<String>> {
         with(TNode.T_NODE) {
             return dslContext.select(NODE_IP).from(this)
-                .where(NODE_TYPE.eq("CMDB"))
+                .where(NODE_TYPE.eq(NodeType.CMDB.name))
                 .fetch()
         }
     }
