@@ -2,7 +2,7 @@
     <div class="node-list-wrapper">
         <content-header class="env-header">
             <div slot="left">{{ $t('environment.node') }}</div>
-            <div slot="right" v-if="nodeList.length > 0">
+            <div slot="right">
                 <template v-if="isExtendTx">
                     <bk-button
                         v-perm="{
@@ -45,7 +45,7 @@
             isLoading: loading.isLoading,
             title: loading.title
         }">
-            <template v-if="showContent && nodeList.length">
+            <template>
                 <bk-search-select
                     class="search-input"
                     v-model="searchValue"
@@ -56,6 +56,7 @@
                 >
                 </bk-search-select>
                 <bk-table
+                    v-bkloading="{ isLoading: tableLoading }"
                     :size="tableSize"
                     class="node-table-wrapper"
                     row-class-name="node-item-row"
@@ -143,9 +144,25 @@
                                     <i class="bk-icon node-removed-icon icon-close error"></i>
                                     <span class="node-removed-message">
                                         {{ removedMessage[props.row.nodeStatus] }}
-                                        {{ $t('environment.节点已从CMDB移除，不可使用') }}
                                     </span>
                                 </template>
+                                <!-- 责任人已变更 -->
+                                <!-- <template v-else-if="(props.row.nodeType === 'CC' || props.row.nodeType === 'CMDB') && ((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && props.row.createdUser !== props.row.bakOperator)
+                                    || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator.split(';').indexOf(props.row.createdUser) === -1))">
+                                    <div class="edit-operator" v-if="userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator">
+                                        <i class="devops-icon icon-exclamation-circle"></i><span @click="changeCreatedUser(props.row.nodeHashId)">{{ $t('environment.nodeInfo.operatorModfied') }}</span>
+                                    </div>
+                                    <div class="prompt-operator" v-else>
+                                        <bk-popover placement="top">
+                                            <span><i class="devops-icon icon-exclamation-circle"></i>{{ $t('environment.nodeInfo.prohibited') }}</span>
+                                            <template slot="content">
+                                                <p>{{ $t('environment.nodeInfo.currentImporter') }}<span>{{ props.row.createdUser }}</span></p>
+                                                <p>{{ $t('environment.nodeInfo.currentOperator') }}<span>{{ props.row.operator }}</span><span v-if="props.row.nodeType === 'CC'">/{{ props.row.bakOperator }}</span></p>
+                                                <p>{{ $t('environment.nodeInfo.contactOperator') }}</p>
+                                            </template>
+                                        </bk-popover>
+                                    </div>
+                                </template> -->
                                 <template v-else>
                                     <!-- 状态icon -->
                                     <StatusIcon v-if="successStatus.includes(props.row.nodeStatus)" status="success" />
@@ -164,16 +181,7 @@
                                         <div class="rotate rotate8"></div>
                                     </div>
                                     <!-- 状态值 -->
-                                    <span class="install-agent"
-                                        v-if="props.row.nodeType === 'DEVCLOUD' && props.row.nodeStatus === 'RUNNING'"
-                                        @click="installAgent(props.row)">
-                                        {{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}
-                                    </span>
-                                    <span class="node-status" v-else>{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}</span>
-                                <!-- <div class="install-agent"
-                                    v-if="['CC','CMDB','THIRDPARTY'].includes(props.row.nodeType) && props.row.nodeStatus === 'ABNORMAL'"
-                                    @click="installAgent(props.row)"
-                                >{{ `（${$t('environment.install')}Agent）` }}</div> -->
+                                    <span class="node-status">{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}</span>
                                 </template>
                             </div>
                         </template>
@@ -184,30 +192,6 @@
                         </template>
                     </bk-table-column>
                     <bk-table-column v-if="allRenderColumnMap.createdUser" :label="$t('environment.nodeInfo.importer')" prop="createdUser" min-width="80" show-overflow-tooltip></bk-table-column>
-                    <!-- <bk-table-column :label="`${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}`" prop="createdUser" min-width="120">
-                        <template slot-scope="props">
-                            <div v-if="(props.row.nodeType === 'CC' || props.row.nodeType === 'CMDB') && ((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && props.row.createdUser !== props.row.bakOperator)
-                                || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator.split(';').indexOf(props.row.createdUser) === -1))">
-                                <div class="edit-operator" v-if="userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator">
-                                    <i class="devops-icon icon-exclamation-circle"></i><span @click="changeCreatedUser(props.row.nodeHashId)">{{ $t('environment.nodeInfo.operatorModfied') }}</span>
-                                </div>
-                                <div class="prompt-operator" v-else>
-                                    <bk-popover placement="top">
-                                        <span><i class="devops-icon icon-exclamation-circle"></i>{{ $t('environment.nodeInfo.prohibited') }}</span>
-                                        <template slot="content">
-                                            <p>{{ $t('environment.nodeInfo.currentImporter') }}<span>{{ props.row.createdUser }}</span></p>
-                                            <p>{{ $t('environment.nodeInfo.currentOperator') }}<span>{{ props.row.operator }}</span><span v-if="props.row.nodeType === 'CC'">/{{ props.row.bakOperator }}</span></p>
-                                            <p>{{ $t('environment.nodeInfo.contactOperator') }}</p>
-                                        </template>
-                                    </bk-popover>
-                                </div>
-                            </div>
-                            <div v-else>
-                                <span class="node-name">{{ $t('environment.nodeTypeMap')[props.row.nodeType] || '-' }}</span>
-                                <span>({{ props.row.createdUser }})</span>
-                            </div>
-                        </template>
-                    </bk-table-column> -->
                     <bk-table-column v-if="allRenderColumnMap.lastModifyBy" :label="$t('environment.nodeInfo.lastModifyBy')" prop="lastModifyUser" min-width="80" show-overflow-tooltip></bk-table-column>
                     <!-- <bk-table-column :label="`${$t('environment.create')}/${$t('environment.nodeInfo.importTime')}`" prop="createTime" min-width="80">
                         <template slot-scope="props">
@@ -219,7 +203,7 @@
                             {{ props.row.lastModifyTime || '-' }}
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t('environment.operation')" width="200">
+                    <bk-table-column :label="$t('environment.operation')" width="80">
                         <template slot-scope="props">
                             <template v-if="props.row.canUse">
                                 <div class="table-node-item">
@@ -233,15 +217,15 @@
                                         class="node-handle delete-node-text"
                                         @click="handleInstallAgent"
                                     >
-                                        {{ $t('environment.installAgent') }}
+                                        {{ $t('environment.reinstallAgent') }}
                                     </span> -->
-                                    <span
+                                    <!-- <span
                                         v-if="['CC','CMDB','THIRDPARTY'].includes(props.row.nodeType) && props.row.nodeStatus === 'ABNORMAL'"
                                         class="node-handle delete-node-text"
                                         @click="handleInstallAgent"
                                     >
-                                        {{ $t('environment.reinstallAgent') }}
-                                    </span>
+                                        {{ $t('environment.installAgent') }}
+                                    </span> -->
                                     <span
                                         v-if="!['TSTACK'].includes(props.row.nodeType)"
                                         v-perm="{
@@ -292,18 +276,20 @@
                             :size="tableSize"
                             @setting-change="handleSettingChange" />
                     </bk-table-column>
+                    <template #empty>
+                        <EmptyTableStatus :type="searchValue.length ? 'search-empty' : 'empty'" @clear="clearFilter" />
+                    </template>
                 </bk-table>
             </template>
 
-            <empty-node v-if="showContent && !nodeList.length"
+            <!-- <empty-node v-if="!nodeList.length && !searchValue.length"
                 :to-import-node="toImportNode"
                 :empty-info="emptyInfo"
-            ></empty-node>
+            ></empty-node> -->
         </section>
 
         <!-- 导入CMDB -->
         <config-manage-node :node-select-conf="cmdbNodeSelectConf"
-            :node-list="nodeList"
             @confirm-fn="confirmCmdbFn"
             @cancel-fn="cancelCmdbFn"
         ></config-manage-node>
@@ -335,6 +321,7 @@
             ref="importTipsDialog"
             :status="importStatus"
             :message="importMessage"
+            :agent-abnormal-nodes-count="agentAbnormalNodesCount"
         />
 
         <!-- 重装/安装Agent -->
@@ -351,24 +338,26 @@
     import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
     import importTipsDialog from '@/components/devops/environment/import-tips-dialog'
     import installAgent from '@/components/devops/environment/install-agent'
+    import EmptyTableStatus from '@/components/empty-table-status.vue'
     import StatusIcon from '@/components/status-icon.vue'
     import { getQueryString } from '@/utils/util'
     import webSocketMessage from '../utils/webSocketMessage.js'
     import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
-    import emptyNode from './empty_node'
+    // import emptyNode from './empty_node'
 
     const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
 
     export default {
         components: {
-            emptyNode,
+            // emptyNode,
             thirdConstruct,
             configManageNode,
             dropdownList,
             makeMirrorDialog,
             importTipsDialog,
             StatusIcon,
-            installAgent
+            installAgent,
+            EmptyTableStatus
         },
         data () {
             return {
@@ -381,12 +370,12 @@
                 isAgent: false,
                 isMultipleBtn: false,
                 isEditNodeStatus: false,
-                showContent: false, // 内容显示
                 hasPermission: true, // 构建机权限
                 showTooltip: false,
                 curNodeDialog: '', // 当前弹窗节点
                 lastCliCKNode: {},
                 nodeList: [], // 节点列表
+                allNodeList: [],
                 gatewayList: [], // 网关列表
                 runningStatus: ['CREATING', 'STARTING', 'STOPPING', 'RESTARTING', 'DELETING', 'BUILDING_IMAGE'],
                 successStatus: ['NORMAL', 'BUILD_IMAGE_SUCCESS'],
@@ -396,6 +385,7 @@
                     NOT_IN_CMDB: this.$t('environment.节点已从CMDB移除，不可使用'),
                     NOT_IN_CC: this.$t('environment.节点已从蓝鲸CC移除，不可使用')
                 },
+                tableLoading: false,
                 // 页面loading
                 loading: {
                     isLoading: false,
@@ -465,11 +455,13 @@
                 searchValue: [],
                 importStatus: 'success',
                 importMessage: '',
+                agentAbnormalNodesCount: 0,
                 pagination: {
                     current: 1,
                     count: 0,
                     limit: 15
-                }
+                },
+                requestParams: {}
             }
         },
         computed: {
@@ -489,37 +481,19 @@
                 const data = [
                     {
                         name: 'IP',
-                        id: 'ip'
+                        id: 'nodeIp'
                     },
                     {
                         name: this.$t('environment.alias'),
-                        id: 'alias'
-                    },
-                    {
-                        name: this.$t('environment.nodeInfo.os'),
-                        id: 'OS',
-                        children: [
-                            {
-                                id: 'windows',
-                                name: 'Windows'
-                            },
-                            {
-                                id: 'Linux',
-                                name: 'Linux'
-                            },
-                            {
-                                id: 'Mac',
-                                name: 'Mac'
-                            }
-                        ]
+                        id: 'displayName'
                     },
                     {
                         name: this.$t('environment.envInfo.creator'),
-                        id: 'creator'
+                        id: 'createdUser'
                     },
                     {
                         name: this.$t('environment.lastModifier'),
-                        id: 'lastModifier'
+                        id: 'lastModifiedUser'
                     }
                 ]
                 return data.filter(data => {
@@ -552,6 +526,21 @@
                 if (val && !this.isAgent) {
                     this.requestDevCommand()
                 }
+            },
+            searchValue (val) {
+                if (val.length) {
+                    val.forEach(i => {
+                        if (i.values) {
+                            this.requestParams[i.id] = i.values[0].name
+                        } else {
+                            this.requestParams[i.id] = i.name
+                        }
+                    })
+                    this.pagination.current = 1
+                } else {
+                    this.requestParams = {}
+                }
+                this.requestList(this.requestParams)
             }
         },
         created () {
@@ -645,18 +634,21 @@
             /**
              * 节点列表
              */
-            async requestList () {
+            async requestList (params = {}) {
                 try {
+                    this.tableLoading = true
                     const res = await this.$store.dispatch('environment/requestNodeList', {
                         projectId: this.projectId,
-                        page: this.pagination.current,
-                        pageSize: this.pagination.limit
+                        params: {
+                            ...params,
+                            page: this.pagination.current,
+                            pageSize: this.pagination.limit
+                        }
                     })
-
                     this.nodeList.splice(0, this.nodeList.length)
-                    this.pagination.count = 200
+                    this.pagination.count = res.count
 
-                    res.forEach(item => {
+                    res.records.forEach(item => {
                         item.isEnableEdit = item.nodeHashId === this.curEditNodeItem
                         this.nodeList.push(item)
                     })
@@ -669,7 +661,7 @@
                         theme
                     })
                 } finally {
-                    this.showContent = true
+                    this.tableLoading = false
                 }
             },
             changeProject () {
@@ -1143,9 +1135,10 @@
             canShowDetail (row) {
                 return row.nodeType === 'THIRDPARTY' || (row.nodeType === 'DEVCLOUD' && row.nodeStatus === 'NORMAL')
             },
-            confirmCmdbFn ({ theme, message }) {
+            confirmCmdbFn ({ theme, message, agentAbnormalNodesCount }) {
                 this.importStatus = theme
                 this.importMessage = message
+                this.agentAbnormalNodesCount = agentAbnormalNodesCount
                 this.$refs.importTipsDialog.isShow = true
                 this.cmdbNodeSelectConf.isShow = false
                 this.requestList()
@@ -1163,16 +1156,21 @@
             },
             handlePageChange (page) {
                 this.pagination.current = page
+                this.requestList(this.requestParams)
             },
             
             handlePageLimitChange (limit) {
                 this.pagination.limit = limit
+                this.requestList(this.requestParams)
             },
             handleInstallAgent () {
                 this.$refs.installAgent.isShow = true
             },
             handleReImport () {
                 this.toImportNode('cmdb')
+            },
+            clearFilter () {
+                this.searchValue = []
             }
         }
     }
@@ -1313,6 +1311,10 @@
 
         .node-table-wrapper {
             margin-top: 20px;
+            .bk-table-body-wrapper,
+            .bk-table-pagination-wrapper {
+                background-color: #fff !important;
+            }
             td:first-child {
                 position: relative;
                 color: $primaryColor;
@@ -1399,5 +1401,6 @@
     }
     .search-input {
         width: 500px;
+        background: #fff;
     }
 </style>

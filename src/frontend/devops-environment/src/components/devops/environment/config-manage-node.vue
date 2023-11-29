@@ -142,7 +142,6 @@
             curUserInfo: Object,
             changeCreatedUser: Function,
             query: Function,
-            nodeList: Array,
             searchInfo: {
                 type: Object,
                 default: {
@@ -181,7 +180,8 @@
                     selectedNodeCount: 0,
                     allNodeSelected: false,
                     searchEmpty: false
-                }
+                },
+                nodeList: []
             }
         },
         computed: {
@@ -207,7 +207,7 @@
             }
         },
         watch: {
-            'nodeSelectConf.isShow' (val) {
+            async 'nodeSelectConf.isShow' (val) {
                 if (!val) {
                     this.inputValue = ''
                     this.operator = 'operator'
@@ -215,7 +215,8 @@
                     this.searchKeyList.splice(0, this.searchKeyList.length)
                 } else {
                     this.pagingConfig.curPage = 1
-                    this.getDate(this.pagingConfig.curPage)
+                    await this.requestAllList()
+                    await this.getDate(this.pagingConfig.curPage)
                 }
             }
         },
@@ -371,16 +372,17 @@
             async confirmFn () {
                 const selectNodeId = []
                 this.rowList.map(node => node.isChecked && !node.isEixtEnvNode && selectNodeId.push(node.ip))
-                let theme, message
+                let theme, message, agentAbnormalNodesCount
 
                 this.loading.isLoading = true
                 this.importText = `${this.$t('environment.nodeInfo.importing')}...`
 
                 try {
-                    await this.$store.dispatch('environment/importCmdbNode', {
+                    const res = await this.$store.dispatch('environment/importCmdbNode', {
                         projectId: this.projectId,
                         params: selectNodeId
                     })
+                    agentAbnormalNodesCount = res.agentAbnormalNodesCount
                     theme = 'success'
                 } catch (e) {
                     theme = 'error'
@@ -389,13 +391,22 @@
                     this.loading.isLoading = false
                     this.$emit('confirm-fn', {
                         theme,
-                        message
+                        message,
+                        agentAbnormalNodesCount
                     })
                     this.importText = this.$t('environment.import')
                 }
             },
             cancelFn () {
                 this.$emit('cancel-fn')
+            },
+            async requestAllList () {
+                const res = await this.$store.dispatch('environment/requestNodeList', {
+                    projectId: this.projectId,
+                    page: 1,
+                    pageSize: -1
+                })
+                this.nodeList = res.records
             }
         }
     }

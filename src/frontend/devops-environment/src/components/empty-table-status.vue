@@ -4,9 +4,9 @@
         <template v-if="type === 'search-empty'">
             <i18n
                 tag="div"
-                path="turbo.可以尝试 调整关键词 或 清空筛选条件"
+                path="environment.可以尝试 调整关键词 或 清空筛选条件"
                 class="empty-tips">
-                <bk-button text @click="handleClear">{{$t('turbo.清空筛选条件')}}</bk-button>
+                <bk-button text @click="handleClear">{{$t('environment.清空筛选条件')}}</bk-button>
             </i18n>
         </template>
     </bk-exception>
@@ -24,8 +24,8 @@
         data () {
             return {
                 typeMap: {
-                    empty: this.$t('turbo.暂无数据'),
-                    'search-empty': this.$t('turbo.搜索结果为空')
+                    empty: this.$t('environment.暂无数据'),
+                    'search-empty': this.$t('environment.搜索结果为空')
                 }
             }
         },

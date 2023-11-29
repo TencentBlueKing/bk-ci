@@ -266,7 +266,7 @@
         "UNKNOWN": "未知"
     },
     "newPool": "创建",
-    "nodeSearchTips": "IP/别名/操作系统/创建人/最近修改人",
+    "nodeSearchTips": "IP/别名/创建人/最近修改人",
     "alias": "别名",
     "lastModifier": "最近修改人",
     "installAgent": "安装Agent",
@@ -279,7 +279,7 @@
     "jobPushFile": "作业平台-构建分发",
     "executionJobScript": "插件进行远程脚本执行",
     "executionJobPushFile": "插件进行构件分发",
-    "GSEAgentAbnormal1": "有 {0} 个节点未安装 GSE Agent ，或 GSE Agent 状态异常请先安装 GSE Agent ，再使用",
+    "GSEAgentAbnormal1": "有 {0} 个节点未安装 GSE Agent ，或 GSE Agent 状态异常,请先安装 GSE Agent ，再使用",
     "GSEAgentAbnormal2": "插件进行脚本执行和构件分发。",
     "and": "、",
     "installGseAgent": "安装 Gse Agent",
@@ -335,5 +335,9 @@
     "部署": "部署",
     "构建": "构建",
     "节点已从CMDB移除，不可使用": "节点已从CMDB移除，不可使用",
-    "节点已从蓝鲸CC移除，不可使用": "节点已从蓝鲸CC移除，不可使用"
+    "节点已从蓝鲸CC移除，不可使用": "节点已从蓝鲸CC移除，不可使用",
+    "可以尝试 调整关键词 或 清空筛选条件": "可以尝试 调整关键词 或 {0}",
+    "清空筛选条件": "清空筛选条件",
+    "暂无数据": "暂无数据",
+    "搜索结果为空": "搜索结果为空"
 }

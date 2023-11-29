@@ -2,6 +2,7 @@
     <bk-sideslider
         ext-cls="install-agent-side"
         :is-show.sync="isShow"
+        quick-close
         :width="600"
     >
         <div class="sideslider-title" slot="header">

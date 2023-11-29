@@ -271,7 +271,7 @@
         "UNKNOWN": "Unknown"
     },
     "newPool": "New Pool",
-    "nodeSearchTips": "IP / Alias / OS / Creator / Last Modifier",
+    "nodeSearchTips": "IP / Alias / Creator / Last Modifier",
     "alias": "Alias",
     "lastModifier": "Last Modifier",
     "installAgent": "Install Agent",
@@ -340,5 +340,9 @@
     "部署": "部署",
     "构建": "构建",
     "节点已从CMDB移除，不可使用": "节点已从CMDB移除，不可使用",
-    "节点已从蓝鲸CC移除，不可使用": "节点已从蓝鲸CC移除，不可使用"
+    "节点已从蓝鲸CC移除，不可使用": "节点已从蓝鲸CC移除，不可使用",
+    "可以尝试 调整关键词 或 清空筛选条件": "You can try adjusting keywords or {0}",
+    "清空筛选条件": "Clear Search Conditions",
+    "暂无数据": "No Data",
+    "搜索结果为空": "Search result is empty",
 }

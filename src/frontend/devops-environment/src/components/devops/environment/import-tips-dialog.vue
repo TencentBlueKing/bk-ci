@@ -15,7 +15,7 @@
         </div>
         <div class="tips-content">
             <template v-if="status === 'success'">
-                <template v-if="status">
+                <template v-if="!agentAbnormalNodesCount">
                     <div>{{ $t('environment.nextCan') }}</div>
                     <div>
                         1.{{ $t('environment.use') }}
@@ -29,7 +29,7 @@
                     </div>
                 </template>
                 <template v-else>
-                    <span>{{ $t('environment.GSEAgentAbnormal1', [12]) }}</span>
+                    <span>{{ $t('environment.GSEAgentAbnormal1', [agentAbnormalNodesCount]) }}</span>
                     <a class="handle-btn" :href="`${hostName}/console/store/atomStore/detail/atom/JobScriptExecutionA`" target="__blank">{{ $t('environment.jobScriptExecution') }}</a>
                     <span>{{ $t('environment.and') }}</span>
                     <a class="handle-btn" :href="`${hostName}/console/store/atomStore/detail/atom/JobPushFile`" target="__blank">{{ $t('environment.jobPushFile') }}</a>
@@ -46,7 +46,8 @@
     export default {
         props: {
             status: String,
-            message: String
+            message: String,
+            agentAbnormalNodesCount: Number
         },
         data () {
             return {

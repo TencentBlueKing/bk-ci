@@ -93,10 +93,9 @@ const actions = {
      */
     requestNodeList ({ commit }, {
         projectId,
-        page,
-        pageSize
+        params
     }) {
-        return vue.$ajax.get(`${prefix}/user/envnode/${projectId}?page=${page}&pageSize=${pageSize}`).then(response => {
+        return vue.$ajax.get(`${prefix}/user/envnode/${projectId}`, { params }).then(response => {
             return response
         })
     },
