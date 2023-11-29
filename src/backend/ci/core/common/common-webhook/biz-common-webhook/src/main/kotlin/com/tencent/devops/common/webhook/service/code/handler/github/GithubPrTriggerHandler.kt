@@ -143,7 +143,7 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
                 event.pullRequest.htmlUrl,
                 event.pullRequest.number.toString(),
                 getUsername(event),
-                if(event.isMerged()) "merge" else event.action
+                if (event.isMerged()) "merge" else event.action
             )
         ).toJsonStr()
     }
