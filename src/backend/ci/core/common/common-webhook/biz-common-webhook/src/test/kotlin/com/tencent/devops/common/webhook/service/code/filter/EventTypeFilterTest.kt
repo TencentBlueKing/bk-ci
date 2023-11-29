@@ -72,7 +72,7 @@ class EventTypeFilterTest {
             triggerOnEventType = CodeEventType.MERGE_REQUEST,
             eventType = CodeEventType.MERGE_REQUEST
         )
-        Assertions.assertFalse(eventTypeFilter.doFilter(response))
+        Assertions.assertTrue(eventTypeFilter.doFilter(response))
 
         eventTypeFilter = EventTypeFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -86,7 +86,7 @@ class EventTypeFilterTest {
             triggerOnEventType = CodeEventType.MERGE_REQUEST,
             eventType = CodeEventType.MERGE_REQUEST_ACCEPT
         )
-        Assertions.assertFalse(eventTypeFilter.doFilter(response))
+        Assertions.assertTrue(eventTypeFilter.doFilter(response))
 
         eventTypeFilter = EventTypeFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
