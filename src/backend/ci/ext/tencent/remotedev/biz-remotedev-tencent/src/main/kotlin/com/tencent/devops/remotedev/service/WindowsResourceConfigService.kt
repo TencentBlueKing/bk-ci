@@ -52,9 +52,9 @@ class WindowsResourceConfigService @Autowired constructor(
         return windowsResourceZoneDao.fetchAll(dslContext, true)
     }
 
-    fun getAllType(): List<WindowsResourceTypeConfig> {
+    fun getAllType(withUnavailable: Boolean?): List<WindowsResourceTypeConfig> {
         logger.info("get all windows resource type")
-        return windowsResourceTypeDao.fetchAll(dslContext, true)
+        return windowsResourceTypeDao.fetchAll(dslContext, withUnavailable ?: false)
     }
 
     fun getTypeConfig(
