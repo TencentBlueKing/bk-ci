@@ -152,5 +152,5 @@ data class ProjectVO(
     @ApiModelProperty("运营产品ID")
     val productId: Int? = null,
     @ApiModelProperty("是否可以查看")
-    val canView: Boolean? = null,
+    val canView: Boolean? = null
 )
