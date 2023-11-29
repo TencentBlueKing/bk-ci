@@ -193,7 +193,13 @@ class DeliverControl @Autowired constructor(
                     workspaceCommon.shareWorkspace(
                         workspaceName = workspaceName,
                         operator = userId,
-                        assigns = listOf(ProjectWorkspaceAssign(assign2Owner.userId, WorkspaceShared.AssignType.OWNER)),
+                        assigns = listOf(
+                            ProjectWorkspaceAssign(
+                                userId = assign2Owner.userId,
+                                type = WorkspaceShared.AssignType.OWNER,
+                                expiration = null
+                            )
+                        ),
                         mountType = WorkspaceMountType.START
                     )
                 }
@@ -259,7 +265,8 @@ class DeliverControl @Autowired constructor(
                                 assigns = listOf(
                                     ProjectWorkspaceAssign(
                                         userId = userId,
-                                        type = WorkspaceShared.AssignType.OWNER
+                                        type = WorkspaceShared.AssignType.OWNER,
+                                        expiration = null
                                     )
                                 )
                             )

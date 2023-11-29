@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.dao
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.remotedev.tables.TRemotedevExpertSupport
 import com.tencent.devops.model.remotedev.tables.TRemotedevExpertSupportConfig
 import com.tencent.devops.model.remotedev.tables.records.TRemotedevExpertSupportConfigRecord
@@ -58,13 +59,13 @@ class ExpertSupportDao {
         dslContext: DSLContext,
         id: Long,
         status: ExpertSupportStatus,
-        supporter: String?
+        supporter: List<String>?
     ) {
         with(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT) {
             val sql = dslContext.update(this)
                 .set(STATUS, status.name)
             if (supporter != null) {
-                sql.set(SUPPORTER, supporter)
+                sql.set(SUPPORTER, JsonUtil.toJson(supporter, formatted = false))
             }
             sql.set(UPDATE_TIME, LocalDateTime.now())
             sql.where(ID.eq(id))
