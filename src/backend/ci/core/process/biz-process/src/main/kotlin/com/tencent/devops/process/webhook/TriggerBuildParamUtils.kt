@@ -213,7 +213,7 @@ object TriggerBuildParamUtils {
             mapOf(CodeEventType.MERGE_REQUEST.name to params)
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeGithubWebHookTriggerElement.classType]?.putAll(
-            mapOf(CodeEventType.MERGE_REQUEST.name to params)
+            mapOf(CodeEventType.PULL_REQUEST.name to params)
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeTGitWebHookTriggerElement.classType]?.putAll(
             mapOf(CodeEventType.MERGE_REQUEST.name to params)
