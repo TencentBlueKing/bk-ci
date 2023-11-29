@@ -62,6 +62,7 @@
             isMR () {
                 return [
                     'MERGE_REQUEST',
+                    'PULL_REQUEST',
                     'MERGE_REQUEST_ACCEPT'
                 ].includes(this.material?.webhookEventType)
             },
