@@ -31,17 +31,17 @@ import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 
 enum class QueryType {
-    WEB { // 0
+    WEB {
         override fun ownerType(): WorkspaceOwnerType = WorkspaceOwnerType.PROJECT
 
         override fun clearSearch(search: WorkspaceSearch) {}
-    },
+    }, // 0
     OP {
         override fun ownerType(): WorkspaceOwnerType? = null
         override fun clearSearch(search: WorkspaceSearch) {}
     }, // 1
     CLIENT {
-        override fun ownerType(): WorkspaceOwnerType = WorkspaceOwnerType.PERSONAL
+        override fun ownerType(): WorkspaceOwnerType? = null
         override fun clearSearch(search: WorkspaceSearch) {
             search.expertSupId = null
         }
