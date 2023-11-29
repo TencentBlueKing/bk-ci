@@ -27,6 +27,10 @@
 
 package com.tencent.devops.environment.service.thirdPartyAgent
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -36,7 +40,10 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.SecurityUtil
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -139,6 +146,15 @@ class ImportService @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.ENV_NODE_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.ENV_NODE
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.ENV_NODE_CREATE_CONTENT
+    )
     private fun import(id: Long, projectId: String, agentId: String, userId: String) {
         val agentRecord = thirdPartyAgentDao.getAgent(dslContext, id)
             ?: throw NotFoundException("The agent($agentId) is not exist")
@@ -185,7 +201,9 @@ class ImportService @Autowired constructor(
                 displayName = nodeStringId,
                 userId = userId
             )
-
+            ActionAuditContext.current()
+                .setInstanceName(nodeStringId)
+                .setInstanceId(nodeStringId)
             val count = thirdPartyAgentDao.updateStatus(context, id, nodeId, projectId, AgentStatus.IMPORT_OK)
             if (count != 1) {
                 LOG.warn("Fail to update the agent($id) to OK status")
