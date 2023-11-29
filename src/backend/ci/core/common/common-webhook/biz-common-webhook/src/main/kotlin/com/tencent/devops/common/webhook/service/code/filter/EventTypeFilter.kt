@@ -46,6 +46,14 @@ class EventTypeFilter(
         )
         return when (eventType) {
             null -> true
+            CodeEventType.MERGE_REQUEST, CodeEventType.MERGE_REQUEST_ACCEPT -> {
+                triggerOnEventType == CodeEventType.MERGE_REQUEST
+            }
+
+            CodeEventType.PULL_REQUEST, CodeEventType.PULL_REQUEST_ACCEPT -> {
+                triggerOnEventType == CodeEventType.PULL_REQUEST
+            }
+
             else -> eventType == triggerOnEventType
         }
     }
