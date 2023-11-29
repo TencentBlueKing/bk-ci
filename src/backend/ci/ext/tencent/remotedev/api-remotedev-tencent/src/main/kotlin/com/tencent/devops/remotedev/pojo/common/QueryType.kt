@@ -27,7 +27,27 @@
 
 package com.tencent.devops.remotedev.pojo.common
 
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.WorkspaceSearch
+
 enum class QueryType {
-    WEB, // 0
-    OP // 1
+    WEB { // 0
+        override fun ownerType(): WorkspaceOwnerType = WorkspaceOwnerType.PROJECT
+
+        override fun clearSearch(search: WorkspaceSearch) {}
+    },
+    OP {
+        override fun ownerType(): WorkspaceOwnerType? = null
+        override fun clearSearch(search: WorkspaceSearch) {}
+    }, // 1
+    CLIENT {
+        override fun ownerType(): WorkspaceOwnerType = WorkspaceOwnerType.PERSONAL
+        override fun clearSearch(search: WorkspaceSearch) {
+            search.expertSupId = null
+        }
+    }; // 2
+
+    abstract fun ownerType(): WorkspaceOwnerType?
+
+    abstract fun clearSearch(search: WorkspaceSearch)
 }

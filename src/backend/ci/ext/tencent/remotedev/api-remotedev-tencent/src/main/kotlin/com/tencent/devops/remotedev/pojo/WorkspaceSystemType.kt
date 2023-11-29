@@ -52,4 +52,9 @@ enum class WorkspaceSystemType {
         this == WINDOWS_GPU && ownerType == WorkspaceOwnerType.PROJECT -> true
         else -> true
     }
+
+    fun display() = when(this) {
+        LINUX -> "Linux动态容器"
+        WINDOWS_GPU -> "Windows GPU 云桌面"
+    }
 }

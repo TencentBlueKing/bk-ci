@@ -36,6 +36,7 @@ import com.tencent.devops.remotedev.api.user.UserProjectWorkspaceResource
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.windows.ComputerStatusResp
 import com.tencent.devops.remotedev.pojo.windows.TimeScope
@@ -44,6 +45,7 @@ import com.tencent.devops.remotedev.service.BKBaseService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.StartWorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceService
+import com.tencent.devops.remotedev.service.WorkspaceXlsxExportService
 import com.tencent.devops.remotedev.service.projectworkspace.MakeWorkspaceImageHandler
 import com.tencent.devops.remotedev.service.projectworkspace.RestartWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.StartWorkspaceHandler
@@ -67,7 +69,8 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     private val restartWorkspaceHandler: RestartWorkspaceHandler,
     private val makeWorkspaceImageHandler: MakeWorkspaceImageHandler,
     private val startWorkspaceService: StartWorkspaceService,
-    private val bkBaseService: BKBaseService
+    private val bkBaseService: BKBaseService,
+    private val xlsxExportService: WorkspaceXlsxExportService
 ) : UserProjectWorkspaceResource {
     @AuditEntry(actionId = ActionId.CGS_CREATE)
     override fun createWorkspace(
@@ -106,7 +109,18 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<Page<ProjectWorkspace>> {
         permissionService.checkUserManager(userId, projectId)
-        return Result(workspaceService.getProjectWorkspaceList(userId, projectId, page, pageSize))
+        return Result(workspaceService.getProjectWorkspaceList(userId, projectId, page, pageSize, null))
+    }
+
+    override fun getWorkspaceListNew(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: WorkspaceSearch
+    ): Result<Page<ProjectWorkspace>> {
+        permissionService.checkUserManager(userId, projectId)
+        return Result(workspaceService.getProjectWorkspaceList(userId, projectId, page, pageSize, search))
     }
 
     @AuditEntry(actionId = ActionId.CGS_ASSIGN)
@@ -165,6 +179,6 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun exportWorkspaceList(userId: String, projectId: String, page: Int?, pageSize: Int?): Response {
-        return workspaceService.exportProjectWorkspaceListUser(userId, projectId, page, pageSize)
+        return xlsxExportService.exportProjectWorkspaceListWeb(userId, projectId, page, pageSize)
     }
 }
