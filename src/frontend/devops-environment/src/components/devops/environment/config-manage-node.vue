@@ -372,7 +372,7 @@
             async confirmFn () {
                 const selectNodeId = []
                 this.rowList.map(node => node.isChecked && !node.isEixtEnvNode && selectNodeId.push(node.ip))
-                let theme, message, agentAbnormalNodesCount
+                let theme, message, agentAbnormalNodesCount, agentNotInstallNodesCount
 
                 this.loading.isLoading = true
                 this.importText = `${this.$t('environment.nodeInfo.importing')}...`
@@ -383,6 +383,7 @@
                         params: selectNodeId
                     })
                     agentAbnormalNodesCount = res.agentAbnormalNodesCount
+                    agentNotInstallNodesCount = res.agentNotInstallNodesCount
                     theme = 'success'
                 } catch (e) {
                     theme = 'error'
@@ -392,7 +393,8 @@
                     this.$emit('confirm-fn', {
                         theme,
                         message,
-                        agentAbnormalNodesCount
+                        agentAbnormalNodesCount,
+                        agentNotInstallNodesCount
                     })
                     this.importText = this.$t('environment.import')
                 }

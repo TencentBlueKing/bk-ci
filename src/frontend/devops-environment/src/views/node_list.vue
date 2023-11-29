@@ -203,7 +203,7 @@
                             {{ props.row.lastModifyTime || '-' }}
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t('environment.operation')" width="80">
+                    <bk-table-column :label="$t('environment.operation')" width="180">
                         <template slot-scope="props">
                             <template v-if="props.row.canUse">
                                 <div class="table-node-item">
@@ -219,13 +219,13 @@
                                     >
                                         {{ $t('environment.reinstallAgent') }}
                                     </span> -->
-                                    <!-- <span
+                                    <span
                                         v-if="['CC','CMDB','THIRDPARTY'].includes(props.row.nodeType) && props.row.nodeStatus === 'ABNORMAL'"
                                         class="node-handle delete-node-text"
-                                        @click="handleInstallAgent"
+                                        @click="installAgent(props.row)"
                                     >
                                         {{ $t('environment.installAgent') }}
-                                    </span> -->
+                                    </span>
                                     <span
                                         v-if="!['TSTACK'].includes(props.row.nodeType)"
                                         v-perm="{
@@ -322,6 +322,7 @@
             :status="importStatus"
             :message="importMessage"
             :agent-abnormal-nodes-count="agentAbnormalNodesCount"
+            :agent-not-install-nodes-count="agentNotInstallNodesCount"
         />
 
         <!-- 重装/安装Agent -->
@@ -456,6 +457,7 @@
                 importStatus: 'success',
                 importMessage: '',
                 agentAbnormalNodesCount: 0,
+                agentNotInstallNodesCount: 0,
                 pagination: {
                     current: 1,
                     count: 0,
@@ -1135,10 +1137,11 @@
             canShowDetail (row) {
                 return row.nodeType === 'THIRDPARTY' || (row.nodeType === 'DEVCLOUD' && row.nodeStatus === 'NORMAL')
             },
-            confirmCmdbFn ({ theme, message, agentAbnormalNodesCount }) {
+            confirmCmdbFn ({ theme, message, agentAbnormalNodesCount, agentNotInstallNodesCount }) {
                 this.importStatus = theme
                 this.importMessage = message
                 this.agentAbnormalNodesCount = agentAbnormalNodesCount
+                this.agentNotInstallNodesCount = agentNotInstallNodesCount
                 this.$refs.importTipsDialog.isShow = true
                 this.cmdbNodeSelectConf.isShow = false
                 this.requestList()

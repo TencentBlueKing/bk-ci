@@ -29,11 +29,14 @@
                     </div>
                 </template>
                 <template v-else>
-                    <span>{{ $t('environment.GSEAgentAbnormal1', [agentAbnormalNodesCount]) }}</span>
+                    <span>{{ $t('environment.有') }}</span>
+                    <span v-if="agentNotInstallNodesCount">{{ $t('environment.GSEAgentNotInstall', [agentNotInstallNodesCount]) }}</span>
+                    <span v-if="agentAbnormalNodesCount">{{ $t('environment.GSEAgentAbnormal', [agentAbnormalNodesCount]) }}</span>
+                    <span>{{ $t('environment.importSuccessTips1') }}</span>
                     <a class="handle-btn" :href="`${hostName}/console/store/atomStore/detail/atom/JobScriptExecutionA`" target="__blank">{{ $t('environment.jobScriptExecution') }}</a>
                     <span>{{ $t('environment.and') }}</span>
                     <a class="handle-btn" :href="`${hostName}/console/store/atomStore/detail/atom/JobPushFile`" target="__blank">{{ $t('environment.jobPushFile') }}</a>
-                    <span>{{ $t('environment.GSEAgentAbnormal2') }}</span>
+                    <span>{{ $t('environment.importSuccessTips2') }}</span>
                 </template>
             </template>
             <template v-else>
@@ -47,7 +50,8 @@
         props: {
             status: String,
             message: String,
-            agentAbnormalNodesCount: Number
+            agentAbnormalNodesCount: Number,
+            agentNotInstallNodesCount: Number
         },
         data () {
             return {
