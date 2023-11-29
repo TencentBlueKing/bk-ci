@@ -41,6 +41,7 @@ import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import javax.ws.rs.NotFoundException
 
 @Suppress("LongParameterList")
 class RbacPipelineTemplatePermissionService constructor(
@@ -193,7 +194,8 @@ class RbacPipelineTemplatePermissionService constructor(
 
     override fun enableTemplatePermissionManage(projectId: String): Boolean {
         val projectInfo = client.get(ServiceProjectResource::class).get(englishName = projectId).data
-        return projectInfo != null && projectInfo.properties?.enableTemplatePermissionManage == true
+            ?: throw NotFoundException("Fail to find the project info of project($projectId)")
+        return projectInfo.properties?.enableTemplatePermissionManage == true
     }
 
     companion object {
