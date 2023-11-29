@@ -100,6 +100,7 @@ class NodeDao {
         with(TNode.T_NODE) {
             return dslContext.select(NODE_ID, NODE_TYPE, NODE_HASH_ID).from(this)
                 .where(DISPLAY_NAME.isNull)
+                .or(DISPLAY_NAME.eq(""))
                 .orderBy(NODE_ID.desc())
                 .limit(limit).offset(offset)
                 .fetch()
