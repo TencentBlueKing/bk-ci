@@ -172,7 +172,7 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
             TGitMrEventAction.PUSH_UPDATE.value,
             TGitMrEventAction.MERGE.value
         )
-        if (targetAction.contains(TGitMrEventAction.getActionValue(event))) {
+        if (!targetAction.contains(TGitMrEventAction.getActionValue(event))) {
             logger.info("Github pull request no open or update")
             return WebhookMatchResult(false)
         }
