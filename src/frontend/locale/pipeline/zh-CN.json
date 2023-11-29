@@ -487,6 +487,7 @@
     "freedomMode": "自由模式",
     "freedomModeTips": "可以自由调整流水线编排，不受模版管控",
     "constraintMode": "约束模式",
+    "constraintModeDesc": "约束模式，编排受模版控制",
     "constraintModeTips": "不能自由调整流水线编排，可通过模版更新实例",
     "noTemplateTips": "请先选择模板",
     "noSearchResult": "未搜索到任何的结果",
@@ -557,7 +558,7 @@
       "totalTime": "耗时{0}",
       "appVersions": "APP版本",
       "recommendVersion": "推荐版本号",
-      "pipelineVersion": "编排版本号",
+      "pipelineVersion": "流水线版本",
       "entry": "快捷入口"
     },
     "filterNullTips": "搜索结果为空",
@@ -1225,5 +1226,7 @@
   "apkSignDurationTips": "仅首次下载需等待，准备时长和包大小有关，500MB的包大概需要1分钟",
   "apkSignSuccess": "{0} 已经准备完成，开始下载",
   "downloadLater": "稍后再下载",
-  "downloadDisabledTips": "目录下的文件大小超过 10 G，请到制品库分批下载"
+  "downloadDisabledTips": "目录下的文件大小超过 10 G，请到制品库分批下载",
+  "templateName": "模板",
+  "templateVersion": "模版版本"
 }
