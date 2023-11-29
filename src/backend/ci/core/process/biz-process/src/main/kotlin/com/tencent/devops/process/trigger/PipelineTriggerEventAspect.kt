@@ -28,11 +28,13 @@
 
 package com.tencent.devops.process.trigger
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.MANUAL_START_EVENT_DESC
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.OPENAPI_START_EVENT_DESC
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.PIPELINE_START_EVENT_DESC
@@ -89,6 +91,10 @@ class PipelineTriggerEventAspect(
 
     private fun saveTriggerEvent(pjp: ProceedingJoinPoint, result: Any?, exception: Throwable?) {
         try {
+            // openapi/远程触发/定时触发/子流水线触发 如果执行成功,则不记录事件，减少数据量
+            if (result != null && exception == null) {
+                return
+            }
             // 参数value
             val parameterValue = pjp.args
             // 参数key
@@ -118,9 +124,7 @@ class PipelineTriggerEventAspect(
                 userId = userId,
                 channelCode = channelCode,
                 startType = startType,
-                pipelineParamMap = pipelineParamMap,
-                result = result,
-                exception = exception
+                pipelineParamMap = pipelineParamMap
             )
             if (isSkip) {
                 return
@@ -156,13 +160,8 @@ class PipelineTriggerEventAspect(
         userId: String?,
         channelCode: ChannelCode?,
         startType: StartType?,
-        pipelineParamMap: MutableMap<String, BuildParameters>?,
-        result: Any?,
-        exception: Throwable?
+        pipelineParamMap: MutableMap<String, BuildParameters>?
     ): Boolean {
-        if (result == null && exception == null) {
-            return true
-        }
         if (pipeline == null || userId == null || channelCode == null || startType == null) {
             return true
         }
@@ -293,9 +292,18 @@ class PipelineTriggerEventAspect(
             }
 
             exception != null -> {
+                val reasonDetail = when (exception) {
+                    is ErrorCodeException -> I18nUtil.getCodeLanMessage(
+                        messageCode = exception.errorCode,
+                        params = exception.params,
+                        defaultMessage = exception.defaultMessage
+                    )
+
+                    else -> exception.message ?: "unknown error"
+                }
                 triggerDetailBuilder.status(PipelineTriggerStatus.FAILED.name)
                 triggerDetailBuilder.reason(PipelineTriggerReason.TRIGGER_FAILED.name)
-                triggerDetailBuilder.reasonDetail(exception.message ?: "unknown error")
+                triggerDetailBuilder.reasonDetail(reasonDetail)
             }
         }
         return triggerDetailBuilder.build()
