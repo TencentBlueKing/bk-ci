@@ -121,7 +121,7 @@ class NodeScheduledService @Autowired constructor(
      * 分组执行，每次遍历100条记录。
      * 对于 nodeType 为 CMDB 的机器，写入host_id(CC中查到的)，并将云区域ID设为0。
      */
-    @Scheduled(cron = "0 41 12 * * 1-5")
+    @Scheduled(cron = "0 16 15 * * 1-5")
     fun writeHostIdAndCloudAreaId() {
         val countCmdbNodes = nodeDao.countCmdbNodes(dslContext)
         if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId]countCmdbNodes:$countCmdbNodes.")
@@ -134,6 +134,7 @@ class NodeScheduledService @Autowired constructor(
                 val inCCInfoList = queryFromCCService.queryCCListHostWithoutBizByInRules(
                     listOf(FIELD_BK_HOST_ID, FIELD_BK_HOST_INNERIP), cmdbNodesIp, FIELD_BK_HOST_INNERIP
                 ).data?.info
+                if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId]inCCInfoList:$inCCInfoList.")
                 if (!inCCInfoList.isNullOrEmpty()) { // 有就写入
                     val ipToCCInfoMap = inCCInfoList.associateBy { it.bkHostInnerip }
                     val nodeHostIdAndCloudAreaIdInfoList = cmdbNodesRecords
