@@ -95,7 +95,7 @@ class NodeScheduledService @Autowired constructor(
     fun writeDisplayName() {
         val countDisplayNameEmptyNodes = nodeDao.countDisplayNameEmptyNodes(dslContext)
         if (logger.isDebugEnabled)
-            logger.debug("[writeDisplayName]countDisplayNameEmptyNodes:${countDisplayNameEmptyNodes}.")
+            logger.debug("[writeDisplayName]countDisplayNameEmptyNodes:$countDisplayNameEmptyNodes.")
         if (0 < countDisplayNameEmptyNodes) {
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countDisplayNameEmptyNodes.toLong())
             for (page in 1..totalPages) {
@@ -124,7 +124,7 @@ class NodeScheduledService @Autowired constructor(
     @Scheduled(cron = "0 41 12 * * 1-5")
     fun writeHostIdAndCloudAreaId() {
         val countCmdbNodes = nodeDao.countCmdbNodes(dslContext)
-        if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId]countCmdbNodes:${countCmdbNodes}.")
+        if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId]countCmdbNodes:$countCmdbNodes.")
         if (0 < countCmdbNodes) {
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countCmdbNodes.toLong())
             for (page in 1..totalPages) {
