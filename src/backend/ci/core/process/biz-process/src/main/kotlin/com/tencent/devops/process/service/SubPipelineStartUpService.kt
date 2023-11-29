@@ -224,7 +224,7 @@ class SubPipelineStartUpService @Autowired constructor(
         )
 
         val parentBuildInfo = pipelineRuntimeService.getBuildInfo(
-            projectId = projectId,
+            projectId = parentProjectId,
             buildId = parentBuildId
         ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
