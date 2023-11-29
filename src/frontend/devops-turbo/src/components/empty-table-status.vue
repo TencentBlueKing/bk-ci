@@ -6,7 +6,7 @@
                 tag="div"
                 path="turbo.可以尝试 调整关键词 或 清空筛选条件"
                 class="empty-tips">
-                <bk-button text @click="handleClear">{{$t('turbo.清空筛选条件')}}</bk-button>
+                <button class="bk-text-button" @click="handleClear">{{$t('turbo.清空筛选条件')}}</button>
             </i18n>
         </template>
     </bk-exception>
