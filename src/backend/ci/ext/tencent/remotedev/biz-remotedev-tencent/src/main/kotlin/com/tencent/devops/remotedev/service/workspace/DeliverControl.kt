@@ -57,11 +57,11 @@ import com.tencent.devops.remotedev.pojo.software.TaskStatusEnum
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.software.SoftwareManageService
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("LongMethod")
@@ -211,7 +211,7 @@ class DeliverControl @Autowired constructor(
             )
         }
 
-        val am = assigns.map { m -> m.userId }
+        val am = assigns.filter { it.type == WorkspaceShared.AssignType.VIEWER }.map { m -> m.userId }
         val reduce = alreadyExist.filter { it.type == WorkspaceShared.AssignType.VIEWER && it.sharedUser !in am }
         if (reduce.isNotEmpty()) {
             workspaceCommon.unShareWorkspace(
@@ -233,7 +233,7 @@ class DeliverControl @Autowired constructor(
     ) {
         logger.info(
             "softwareInstallationCompleteCallback|type|$type|workspaceName|$workspaceName" +
-                "|projectId|$projectId|userId|$userId|softwareList|$softwareList"
+                    "|projectId|$projectId|userId|$userId|softwareList|$softwareList"
         )
         // 添加软件安装历史
         softwareManageService.updateSoftwareInstalledRecords(
