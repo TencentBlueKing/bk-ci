@@ -714,6 +714,7 @@ abstract class ImageReleaseService {
             imageSourceType?.let { startParams["imageType"] = it }
             userName?.let { startParams["registryUser"] = it }
             password?.let { startParams["registryPwd"] = it }
+            imageRecord.imageRepoUrl?.let { startParams["registryHost"] = it }
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
                 userId = userId,
                 projectId = projectCode!!,
