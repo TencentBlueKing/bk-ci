@@ -398,6 +398,12 @@ class WorkspaceJoinDao {
             conditions.add(offset, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
             offset++
         }
+
+        if (!search.viewers.isNullOrEmpty()) {
+            result.add(TWorkspaceShared.T_WORKSPACE_SHARED)
+            conditions.add(offset, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
+            offset++
+        }
 //        if (machineType != null) {
 //            result.add(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
 //            result.add(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE)
