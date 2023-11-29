@@ -139,6 +139,7 @@ class RepoPipelineRefDao {
         dslContext: DSLContext,
         projectId: String,
         repositoryId: Long,
+        triggerConditionMd5: String?,
         limit: Int,
         offset: Int
     ): List<RepoPipelineRefVo> {
@@ -147,6 +148,13 @@ class RepoPipelineRefDao {
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPOSITORY_ID.eq(repositoryId))
+                .let {
+                    if (triggerConditionMd5.isNullOrBlank()) {
+                        it
+                    } else {
+                        it.and(TRIGGER_CONDITION_MD5.eq(triggerConditionMd5))
+                    }
+                }
                 .groupBy(PROJECT_ID, PIPELINE_ID, PIPELINE_NAME)
                 .orderBy(PIPELINE_NAME.desc())
                 .limit(limit).offset(offset)
@@ -163,13 +171,21 @@ class RepoPipelineRefDao {
     fun countByRepo(
         dslContext: DSLContext,
         projectId: String,
-        repositoryId: Long
+        repositoryId: Long,
+        triggerConditionMd5: String?
     ): Long {
         return with(TRepositoryPipelineRef.T_REPOSITORY_PIPELINE_REF) {
             dslContext.select()
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPOSITORY_ID.eq(repositoryId))
+                .let {
+                    if (triggerConditionMd5.isNullOrBlank()) {
+                        it
+                    } else {
+                        it.and(TRIGGER_CONDITION_MD5.eq(triggerConditionMd5))
+                    }
+                }
                 .groupBy(PROJECT_ID, PIPELINE_ID, PIPELINE_NAME)
                 .fetchGroups(PIPELINE_ID).size.toLong()
         }

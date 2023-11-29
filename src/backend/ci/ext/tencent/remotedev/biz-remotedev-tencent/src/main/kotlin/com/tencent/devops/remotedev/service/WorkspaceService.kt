@@ -105,6 +105,12 @@ import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
+import org.apache.poi.xssf.streaming.SXSSFWorkbook
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -112,12 +118,6 @@ import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
-import org.apache.poi.xssf.streaming.SXSSFWorkbook
-import org.jooq.DSLContext
-import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
 @Service
 @Suppress("ALL")
@@ -267,7 +267,7 @@ class WorkspaceService @Autowired constructor(
             workspaceCommon.shareWorkspace(
                 workspaceName = workspaceName,
                 operator = userId,
-                assigns = listOf(ProjectWorkspaceAssign(sharedUser, WorkspaceShared.AssignType.VIEWER)),
+                assigns = listOf(ProjectWorkspaceAssign(sharedUser, WorkspaceShared.AssignType.VIEWER, null)),
                 mountType = workspace.workspaceMountType
             )
             workspaceOpHistoryDao.createWorkspaceHistory(
@@ -417,7 +417,7 @@ class WorkspaceService @Autowired constructor(
             }
         }
 
-        val allConfig = windowsResourceConfigService.getAllType().associateBy { it.id!! }
+        val allConfig = windowsResourceConfigService.getAllType(true).associateBy { it.id!! }
         val zoneConfig = windowsResourceConfigService.getAllZone().associateBy { it.zoneShortName }
         val taiUserCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = taiUsers)
             .mapValues { "${it.value.first}@${it.value.second}" }
@@ -683,7 +683,7 @@ class WorkspaceService @Autowired constructor(
             dslContext,
             userIds = taiUsers.filter { UserUtil.isTaiUser(it) }.toSet()
         ).mapValues { "${it.value.first}@${it.value.second}" }
-        val allConfig = windowsResourceConfigService.getAllType().associateBy { it.id!! }
+        val allConfig = windowsResourceConfigService.getAllType(true).associateBy { it.id!! }
 
         val allWindows = workspaceWindowsDao.batchFetchWorkspaceWindowsInfo(
             dslContext,
@@ -1343,6 +1343,18 @@ class WorkspaceService @Autowired constructor(
             projects = projects.joinToString(","),
             ip = ip
         ) ?: emptyMap()
+    }
+
+    // 检测过期的工作空间分享并且取消
+    fun checkAndUnshared() {
+        workspaceSharedDao.fetchExpireShare(dslContext).forEach { record ->
+            workspaceCommon.unShareWorkspace(
+                workspaceName = record.workspaceName,
+                operator = record.operator,
+                sharedUsers = listOf(record.sharedUser),
+                mountType = WorkspaceMountType.START
+            )
+        }
     }
 
     companion object {

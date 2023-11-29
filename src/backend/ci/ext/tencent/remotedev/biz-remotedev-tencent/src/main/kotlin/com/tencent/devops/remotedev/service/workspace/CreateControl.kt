@@ -31,7 +31,9 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.common.api.constant.HTTP_400
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.audit.ActionAuditContent
@@ -47,7 +49,6 @@ import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
-import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.RemoteDevCommonConfig
@@ -166,8 +167,8 @@ class CreateControl @Autowired constructor(
         val projectInfo = kotlin.runCatching {
             client.get(ServiceProjectResource::class).get(projectId)
         }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
-            .getOrElse { null }?.data ?: throw ErrorCodeException(
-            errorCode = PROJECT_NOT_EXIST
+            .getOrElse { null }?.data ?: throw RemoteServiceException(
+            "not find project $projectId", HTTP_400
         )
 
         // 检查项目配额
@@ -665,7 +666,7 @@ class CreateControl @Autowired constructor(
         if (yaml.isBlank()) {
             logger.warn(
                 "create workspace get devfile blank,return." +
-                    "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
+                        "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
             )
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
@@ -869,9 +870,9 @@ class CreateControl @Autowired constructor(
     private fun startCloudResourceCountCheck(type: String, zone: String) =
         workspaceCommon.syncStartCloudResourceList().count {
             it.status == 11 &&
-                it.machineType == type &&
-                it.zoneId.replace(Regex("\\d+"), "") == zone &&
-                it.locked != true
+                    it.machineType == type &&
+                    it.zoneId.replace(Regex("\\d+"), "") == zone &&
+                    it.locked != true
         }
 
     private fun doPreparing(workspace: Workspace) {
@@ -899,7 +900,7 @@ class CreateControl @Autowired constructor(
             userId
         }
         return subUserId.replace(Regex("[@_]"), "-") +
-            "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
+                "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
     }
 
     // 判断用户定义的镜像是否在默认镜像白名单列表中
