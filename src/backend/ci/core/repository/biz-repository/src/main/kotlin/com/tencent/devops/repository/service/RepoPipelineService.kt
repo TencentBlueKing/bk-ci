@@ -176,6 +176,7 @@ class RepoPipelineService @Autowired constructor(
     fun listPipelineRef(
         projectId: String,
         repositoryHashId: String,
+        triggerConditionMd5: String?,
         limit: Int,
         offset: Int
     ): SQLPage<RepoPipelineRefVo> {
@@ -183,12 +184,14 @@ class RepoPipelineService @Autowired constructor(
         val count = repoPipelineRefDao.countByRepo(
             dslContext = dslContext,
             projectId = projectId,
-            repositoryId = repositoryId
+            repositoryId = repositoryId,
+            triggerConditionMd5 = triggerConditionMd5
         )
         val records = repoPipelineRefDao.listByRepo(
             dslContext = dslContext,
             projectId = projectId,
             repositoryId = repositoryId,
+            triggerConditionMd5 = triggerConditionMd5,
             limit = limit,
             offset = offset
         )
