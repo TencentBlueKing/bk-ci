@@ -166,11 +166,13 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
 
     @SuppressWarnings("ComplexCondition")
     override fun preMatch(event: GithubPullRequestEvent): WebhookMatchResult {
-        if (!(event.action == "opened" ||
-                    event.action == "reopened" ||
-                    event.action == "synchronize" ||
-                    event.isMerged())
-        ) {
+        val targetAction = setOf(
+            TGitMrEventAction.REOPEN.value,
+            TGitMrEventAction.OPEN.value,
+            TGitMrEventAction.PUSH_UPDATE.value,
+            TGitMrEventAction.MERGE.value
+        )
+        if (targetAction.contains(TGitMrEventAction.getActionValue(event))) {
             logger.info("Github pull request no open or update")
             return WebhookMatchResult(false)
         }
