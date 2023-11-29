@@ -1434,7 +1434,7 @@ class PipelineListFacadeService @Autowired constructor(
                     startType = StartType.toStartType(lastBuild.trigger),
                     channelCode = ChannelCode.getChannel(lastBuild.channel)
                 )
-                it.latestBuildUserId = lastBuild.triggerUser
+                it.latestBuildUserId = lastBuild.triggerUser ?: lastBuild.startUser
                 it.trigger = lastBuild.trigger
                 val webhookInfo = lastBuild.webhookInfo?.let { self ->
                     JsonUtil.to(self, object : TypeReference<WebhookInfo?>() {})
