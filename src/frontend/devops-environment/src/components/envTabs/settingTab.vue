@@ -47,10 +47,10 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
-    import { convertTime } from '@/utils/util'
-    import selectEnvShareDialog from './select-env-share-dialog'
     import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '@/utils/permission'
+    import { convertTime } from '@/utils/util'
+    import { mapActions } from 'vuex'
+    import selectEnvShareDialog from './select-env-share-dialog'
     export default {
         name: 'setting-tab',
         components: {
@@ -143,10 +143,13 @@
             },
             actionWrapper (action, message) {
                 return async (...args) => {
-                    const theme = 'success'
                     try {
                         await action(...args)
                         this.fetchEnvProjects()
+                        this.$bkMessage({
+                            message: message,
+                            theme: 'success'
+                        })
                     } catch (e) {
                         this.handleError(
                             e,
@@ -157,11 +160,6 @@
                                 action: ENV_RESOURCE_ACTION.EDIT
                             }
                         )
-                    } finally {
-                        this.$bkMessage({
-                            message: message,
-                            theme
-                        })
                     }
                 }
             },

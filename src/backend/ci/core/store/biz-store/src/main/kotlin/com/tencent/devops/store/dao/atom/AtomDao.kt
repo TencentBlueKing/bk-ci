@@ -29,6 +29,7 @@ package com.tencent.devops.store.dao.atom
 
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.KEY_ALL
+import com.tencent.devops.common.api.constant.KEY_BRANCH_TEST_FLAG
 import com.tencent.devops.common.api.constant.KEY_DESCRIPTION
 import com.tencent.devops.common.api.constant.KEY_DOCSLINK
 import com.tencent.devops.common.api.constant.KEY_OS
@@ -260,6 +261,16 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
+    fun getAtomByVersionPrefix(dslContext: DSLContext, atomCode: String, versionPrefix: String): TAtomRecord? {
+        return with(TAtom.T_ATOM) {
+            dslContext.selectFrom(this)
+                .where(ATOM_CODE.eq(atomCode).and(VERSION.startsWith(versionPrefix)))
+                .orderBy(UPDATE_TIME.desc())
+                .limit(1)
+                .fetchOne()
+        }
+    }
+
     fun getPipelineAtom(
         dslContext: DSLContext,
         atomCode: String,
@@ -331,6 +342,7 @@ class AtomDao : AtomBaseDao() {
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(tAtom.ATOM_CODE.eq(atomCode))
+        conditions.add(tAtom.ATOM_STATUS.notEqual(AtomStatusEnum.TESTED.status.toByte()))
         if (version != null) {
             conditions.add(tAtom.VERSION.like(VersionUtils.generateQueryVersion(version)))
         }
@@ -470,7 +482,8 @@ class AtomDao : AtomBaseDao() {
         val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
         val baseStep = dslContext.select(
             tAtom.VERSION.`as`(KEY_VERSION),
-            tAtom.ATOM_STATUS.`as`(KEY_ATOM_STATUS)
+            tAtom.ATOM_STATUS.`as`(KEY_ATOM_STATUS),
+            tAtom.BRANCH_TEST_FLAG.`as`(KEY_BRANCH_TEST_FLAG)
         ).from(tAtom)
         val t = if (defaultFlag) {
             val conditions = generateGetPipelineAtomCondition(
@@ -512,14 +525,21 @@ class AtomDao : AtomBaseDao() {
             delim = ".",
             count = -1
         )
+        val branchTestFlagField = t.field(KEY_BRANCH_TEST_FLAG) as Field<Boolean>
         val queryStep = dslContext.select(
             t.field(KEY_VERSION),
             t.field(KEY_ATOM_STATUS),
             firstVersion,
             secondVersion,
-            thirdVersion
+            thirdVersion,
+            branchTestFlagField
         ).from(t)
-            .orderBy(firstVersion.plus(0).desc(), secondVersion.plus(0).desc(), thirdVersion.plus(0).desc())
+            .orderBy(
+                branchTestFlagField.desc(),
+                firstVersion.plus(0).desc(),
+                secondVersion.plus(0).desc(),
+                thirdVersion.plus(0).desc()
+            )
         limitNum?.let { queryStep.limit(it) }
         return queryStep.skipCheck().fetch()
     }
@@ -624,6 +644,7 @@ class AtomDao : AtomBaseDao() {
                 getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst).where(defaultAtomCondition)
             )
         if (queryInitTestAtomStep != null && initTestAtomCondition != null) {
+            initTestAtomCondition.add(ta.LATEST_TEST_FLAG.eq(true))
             queryAtomStep.union(
                 getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst)
                     .join(tspr)
@@ -676,6 +697,7 @@ class AtomDao : AtomBaseDao() {
             ta.BUILD_LESS_RUN_FLAG.`as`(KEY_BUILD_LESS_RUN_FLAG),
             ta.WEIGHT.`as`(KEY_WEIGHT),
             ta.HTML_TEMPLATE_VERSION.`as`(KEY_HTML_TEMPLATE_VERSION),
+            ta.BRANCH_TEST_FLAG.`as`(KEY_BRANCH_TEST_FLAG),
             taf.RECOMMEND_FLAG.`as`(KEY_RECOMMEND_FLAG),
             tsst.SCORE_AVERAGE.`as`(KEY_AVG_SCORE),
             tsst.RECENT_EXECUTE_NUM.`as`(KEY_RECENT_EXECUTE_NUM),
@@ -785,6 +807,7 @@ class AtomDao : AtomBaseDao() {
             .where(defaultAtomCondition).fetchOne(0, Long::class.java)!!
         val normalAtomCount = queryNormalAtomStep.where(normalAtomConditions).fetchOne(0, Long::class.java)!!
         val initTestAtomCount = if (initTestAtomCondition != null && queryInitTestAtomStep != null) {
+            initTestAtomCondition.add(ta.LATEST_TEST_FLAG.eq(true))
             queryInitTestAtomStep.where(initTestAtomCondition).fetchOne(0, Long::class.java)!!
         } else {
             0
