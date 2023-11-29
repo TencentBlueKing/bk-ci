@@ -65,7 +65,7 @@ class MarketCheckImageTask : ITask() {
         val userId = buildVariableMap[PIPELINE_START_USER_ID]!!
         val checkImageResult = dockerApi.checkDockerImage(
             userId = userId,
-            checkDockerImageRequestList = listOf(
+            checkDockerImageRequestList = arrayOf(
                 CheckDockerImageRequest(
                     imageName = imageName!!,
                     registryHost = registryHost!!,
