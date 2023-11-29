@@ -411,8 +411,8 @@
                         endTime: item.endTime ? convertMiniTime(item.endTime) : '--',
                         queueTime: item.queueTime ? convertMiniTime(item.queueTime) : '--',
                         executeTime: item.executeTime
-                            ? `${convertMStoString(item.executeTime)} (${item.executeCount}/${
-                                item.executeCount
+                            ? `${convertMStoString(item.executeTime)} (${item.executeCount ?? 1}/${
+                                item.executeCount ?? 1
                             })`
                             : '--',
                         material:
