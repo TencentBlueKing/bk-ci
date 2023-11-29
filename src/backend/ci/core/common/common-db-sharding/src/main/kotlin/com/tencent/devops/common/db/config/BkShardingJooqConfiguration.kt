@@ -53,6 +53,7 @@ class BkShardingJooqConfiguration {
 
     @Bean
     @Primary
+    @ConditionalOnProperty(prefix = "sharding", name = ["defaultFlag"], havingValue = "Y", matchIfMissing = true)
     fun shardingDslContext(
         @Qualifier("shardingDataSource")
         shardingDataSource: DataSource,
