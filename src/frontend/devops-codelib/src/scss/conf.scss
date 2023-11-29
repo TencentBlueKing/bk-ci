@@ -1,4 +1,4 @@
-/*
+/*!
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
@@ -17,35 +17,65 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import actions from './actions'
-import mutations from './mutations'
-const store = {
-    namespaced: true,
-    actions,
-    mutations,
-    state: {
-        codelibs: null,
-        tickets: null,
-        showCodelibDialog: false,
-        fetchingCodelibDetail: true,
-        codelib: {
-            aliasName: '',
-            credentialId: '',
-            projectName: '',
-            url: ''
-        },
-        gitOAuth: {
-            project: []
-        },
-        githubOAuth: {
-            project: []
-        },
-        tgitOAuth: {
-            project: []
-        },
-        templateCodeLib: null
-    },
-    getters: {}
-}
+// 存放常用变量
 
-export default store
+// 边框色
+$borderColor: #ebf0f5; // 相对较浅，常用于容器边框色
+$borderWeightColor: #dde4eb; // 相对较深，常用于输入框边框色
+$borderLightColor: #c3cdd7;
+
+// 字体色
+$fontColor: #7b7d8a;
+$fontWeightColor: #63656E;
+$fontBoldColor: #333948;
+$fontLighterColor: #c3cdd7;
+
+// 主体 icon 颜色
+$iconPrimaryColor: #3c96ff;
+$primaryColor: #3c96ff;
+
+// 成功 icon 颜色
+$iconSuccessColor: #34d97b;
+$successColor: #34d97b;
+
+// 暂停颜色
+$iconPauseColor: #ff9801;
+$pauseColor: #ff9801;
+
+// 失败 icon 颜色
+$iconFailColor: #ff5656;
+$failColor: #ff5656;
+$dangerColor: #ff5656;
+
+// warning icon 颜色
+$iconWarningColor: #ffb400;
+$warningColor: #ffb400;
+
+// 淡色
+$primaryLightColor: #ebf4ff;
+
+// 适配宽度
+$mediaWidth: 1500px;
+
+// 背景hover
+$bgHoverColor: #fafbfd;
+
+// pipline_detail
+$loadingColor: #459fff;
+$cancelColor: #f6b026;
+$lineColor: #c3cdd7;
+
+$StagepaddingTop: 20px;
+
+
+.spin-icon {
+    animation: loading .8s linear infinite;
+}
+@keyframes loading {
+    from {
+        transform: rotate(0);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
