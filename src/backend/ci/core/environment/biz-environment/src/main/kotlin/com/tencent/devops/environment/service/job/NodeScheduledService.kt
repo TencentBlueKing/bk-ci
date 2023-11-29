@@ -121,16 +121,18 @@ class NodeScheduledService @Autowired constructor(
      * 分组执行，每次遍历100条记录。
      * 对于 nodeType 为 CMDB 的机器，写入host_id(CC中查到的)，并将云区域ID设为0。
      */
-    @Scheduled(cron = "0 16 15 * * 1-5")
+    @Scheduled(cron = "0 29 15 * * 1-5")
     fun writeHostIdAndCloudAreaId() {
         val countCmdbNodes = nodeDao.countCmdbNodes(dslContext)
-        if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId]countCmdbNodes:$countCmdbNodes.")
+        if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId]countCmdbNodes:$countCmdbNodes")
         if (0 < countCmdbNodes) {
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countCmdbNodes.toLong())
             for (page in 1..totalPages) {
                 val cmdbNodesRecords =
                     nodeDao.getCmdbNodesLimit(dslContext, page, DEFAULT_PAGE_SIZE)
+                if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId]cmdbNodesRecords:$cmdbNodesRecords")
                 val cmdbNodesIp = cmdbNodesRecords.map { it.value3() }.toSet()
+                if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId]cmdbNodesIp:$cmdbNodesIp.")
                 val inCCInfoList = queryFromCCService.queryCCListHostWithoutBizByInRules(
                     listOf(FIELD_BK_HOST_ID, FIELD_BK_HOST_INNERIP), cmdbNodesIp, FIELD_BK_HOST_INNERIP
                 ).data?.info
