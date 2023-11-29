@@ -81,7 +81,7 @@ interface UserBuildParametersResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "需要请求的触发器插件标识", required = true)
-        atomCodeList: List<String>
+        atomCodeList: List<String?>
     ): Result<List<BuildParameterGroup>>
 
     @ApiOperation("构建表单查询代码库别名列表")

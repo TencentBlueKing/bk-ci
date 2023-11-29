@@ -116,10 +116,10 @@ class UserBuildParametersResourceImpl @Autowired constructor(
 
     override fun getTriggerParams(
         userId: String,
-        atomCodeList: List<String>
+        atomCodeList: List<String?>
     ): Result<List<BuildParameterGroup>> {
         val buildParameterGroups = mutableListOf<BuildParameterGroup>()
-        atomCodeList.forEach { atomCode ->
+        atomCodeList.filterNotNull().distinct().forEach { atomCode ->
             buildParameterGroups.addAll(
                 TriggerBuildParamUtils.getTriggerParamNameMap(
                     atomCode = atomCode
