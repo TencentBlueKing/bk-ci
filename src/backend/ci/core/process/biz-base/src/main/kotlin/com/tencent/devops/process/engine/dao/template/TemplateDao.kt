@@ -295,7 +295,7 @@ class TemplateDao {
         dslContext: DSLContext,
         projectId: String? = null,
         version: Long
-    ): TTemplateRecord {
+    ): TTemplateRecord? {
         with(TTemplate.T_TEMPLATE) {
             val conditions = mutableListOf<Condition>()
             conditions.add(VERSION.eq(version))
@@ -305,9 +305,7 @@ class TemplateDao {
             return dslContext.selectFrom(this)
                 .where(conditions)
                 .limit(1)
-                .fetchOne() ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
-            )
+                .fetchOne()
         }
     }
 
