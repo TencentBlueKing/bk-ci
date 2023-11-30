@@ -107,7 +107,7 @@ class NodeScheduledService @Autowired constructor(
      * 分组执行，每次遍历100条记录。
      * display_name为空的：拼接节点类型、node hash值、nodeId这三个字段，写入display_name。
      */
-    @Scheduled(cron = "0 0 16 * * 1-5")
+    @Scheduled(cron = "0 7 16 * * 1-5")
     fun writeDisplayName() {
         val countDisplayNameEmptyNodes = nodeDao.countDisplayNameEmptyNodes(dslContext)
         if (logger.isDebugEnabled)
@@ -137,7 +137,7 @@ class NodeScheduledService @Autowired constructor(
      * 分组执行，每次遍历100条记录。
      * 对于 nodeType 为 CMDB 的机器，写入host_id(CC中查到的)，并将云区域ID设为0。
      */
-    @Scheduled(cron = "0 58 15 * * 1-5")
+    @Scheduled(cron = "0 5 16 * * 1-5")
     fun writeHostIdAndCloudAreaId() {
         val countCmdbNodes = nodeDao.countCmdbNodes(dslContext)
         if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId]countCmdbNodes:$countCmdbNodes")
