@@ -6,5 +6,7 @@ data class JobCloudAccount(
     @ApiModelProperty(value = "账号ID")
     val id: Long,
     @ApiModelProperty(value = "账号名称")
-    val name: String?
+    val name: String?,
+    @ApiModelProperty(value = "账号别名")
+    val alias: String?
 )

@@ -13,5 +13,5 @@ class JobCloudFileSource(
     val server: JobCloudExecuteTarget,
     @ApiModelProperty(value = "文件源账号", required = true)
     @JsonProperty("account")
-    val account: JobCloudAccount
+    val account: JobCloudAccountAlias
 )

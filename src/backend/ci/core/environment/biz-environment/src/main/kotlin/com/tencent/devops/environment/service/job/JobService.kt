@@ -16,7 +16,7 @@ import com.tencent.devops.environment.pojo.job.req.ScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudScriptExecuteResult
 import com.tencent.devops.environment.pojo.job.req.TaskTerminateReq
 import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudTaskTerminateResult
-import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudAccount
+import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudAccountAlias
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudCreateAccountReq
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudDeleteAccountReq
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudExecuteTarget
@@ -140,7 +140,7 @@ class JobService @Autowired constructor(
                         },
                         hostIdList = allFileSourceHostList.filter { it.bkHostId != null }.map { it.bkHostId ?: 0L }
                     ),
-                    account = JobCloudAccount(
+                    account = JobCloudAccountAlias(
                         id = fileSource.account.id,
                         alias = fileSource.account.alias
                     )
