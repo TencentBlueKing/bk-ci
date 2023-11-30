@@ -135,7 +135,7 @@
             />
         </section>
         <empty-tips
-            v-if="errorCode === 404"
+            v-if="errorCode === 403"
             :title="$t('codelib.无该代码库权限')"
             :desc="$t('codelib.你没有该代码库的查看权限，请申请权限')"
         >
@@ -147,7 +147,7 @@
             </bk-button>
         </empty-tips>
         <empty-tips
-            v-else-if="errorCode === 403"
+            v-else-if="errorCode === 404"
             :title="$t('codelib.代码库不存在')"
             :desc="$t('codelib.该代码库不存在，请切换代码库')"
         >
