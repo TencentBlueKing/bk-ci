@@ -130,10 +130,8 @@ class QueryFromCCService : QueryOperatorService {
         if (logger.isDebugEnabled) logger.debug(
             "[queryCCListHostWithoutBizByInRules] url: ${bkccQueryBaseUrl + bkccListHostWithoutBizPath}"
         )
-        val ccListHostWitBizReqContent = jacksonObjectMapper().writeValueAsString(ccListHostWithoutBizReq)
-        if (logger.isDebugEnabled) logger.debug("[queryCCListHostWithoutBizByInRules] req: $ccListHostWitBizReqContent")
         val resBody = executePostRequest(
-            getcommonHeaders(), bkccQueryBaseUrl + bkccListHostWithoutBizPath, ccListHostWitBizReqContent
+            getcommonHeaders(), bkccQueryBaseUrl + bkccListHostWithoutBizPath, ccListHostWithoutBizReq
         )
         if (logger.isDebugEnabled) logger.debug("[queryCCListHostWithoutBizByInRules] resBody:$resBody")
         return jacksonObjectMapper().readValue(resBody!!)
