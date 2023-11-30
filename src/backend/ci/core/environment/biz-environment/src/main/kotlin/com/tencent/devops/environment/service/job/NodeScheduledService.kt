@@ -3,7 +3,6 @@ package com.tencent.devops.environment.service.job
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.pojo.job.DisplayNameInfo
 import com.tencent.devops.environment.pojo.job.HostIdAndCloudAreaIdInfo
@@ -19,7 +18,8 @@ import org.springframework.stereotype.Service
 class NodeScheduledService @Autowired constructor(
     private val dslContext: DSLContext,
     private val nodeDao: NodeDao,
-    private val queryFromCCService: QueryFromCCService
+    private val queryFromCCService: QueryFromCCService,
+    private val redisOperation: RedisOperation
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(NodeScheduledService::class.java)
@@ -161,13 +161,11 @@ class NodeScheduledService @Autowired constructor(
                 }
             }
         }
-        if (logger.isDebugEnabled) logger.debug("---[checkNodeInCC]End Check whether the node is in the cc.---")
+        if (logger.isDebugEnabled) logger.debug("[checkNodeInCC]End Check whether the node is in the cc.")
     }
 
     private fun taskWithRedisLock(lockKey: String, operation: () -> Unit) {
-        val redisLock = RedisLock(
-            getRedisStringSerializerOperation(), lockKey, EXPTIRATION_TIME_OF_THE_LOCK
-        )
+        val redisLock = RedisLock(redisOperation, lockKey, EXPTIRATION_TIME_OF_THE_LOCK)
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
@@ -181,9 +179,5 @@ class NodeScheduledService @Autowired constructor(
         } finally {
             redisLock.unlock()
         }
-    }
-
-    private fun getRedisStringSerializerOperation(): RedisOperation {
-        return SpringContextUtil.getBean(RedisOperation::class.java, "redisStringHashOperation")
     }
 }
