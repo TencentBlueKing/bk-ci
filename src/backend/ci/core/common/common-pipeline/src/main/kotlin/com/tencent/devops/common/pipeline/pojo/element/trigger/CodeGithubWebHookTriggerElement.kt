@@ -93,7 +93,7 @@ data class CodeGithubWebHookTriggerElement(
 
             CodeEventType.REVIEW -> {
                 listOf(
-                    TriggerElementPropUtils.selector(name = "includeCrState", value = includeCrState),
+                    TriggerElementPropUtils.selector(name = "includeCrState", value = includeCrState)
                 )
             }
 
