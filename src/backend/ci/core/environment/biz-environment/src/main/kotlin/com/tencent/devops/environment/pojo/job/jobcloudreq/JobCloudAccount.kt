@@ -30,8 +30,8 @@ package com.tencent.devops.environment.pojo.job.jobcloudreq
 import io.swagger.annotations.ApiModelProperty
 
 data class JobCloudAccount(
-    @ApiModelProperty(value = "账号ID")
-    val id: Long,
-    @ApiModelProperty(value = "账号别名")
+    @ApiModelProperty(value = "执行帐号ID")
+    val id: Long?,
+    @ApiModelProperty(value = "执行帐号别名")
     val alias: String?
 )
