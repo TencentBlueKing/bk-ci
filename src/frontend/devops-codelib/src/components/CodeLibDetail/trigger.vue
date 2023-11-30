@@ -177,6 +177,7 @@
                 curAtom: {},
                 catchRepoId: '',
                 triggerConditionMd5: '',
+                triggerEventType: '',
                 showPipelineSideslider: false,
                 pipelineListPagination: {
                     current: 1,
@@ -239,6 +240,7 @@
                         projectId: this.projectId,
                         repositoryHashId: this.repoId,
                         triggerConditionMd5: this.triggerConditionMd5,
+                        eventType: this.triggerEventType,
                         page: this.pipelineListPagination.current,
                         pageSize: this.pipelineListPagination.limit
                     }).then(res => {
@@ -328,6 +330,7 @@
             },
             handleShowPipelineList (row) {
                 this.triggerConditionMd5 = row.triggerConditionMd5
+                this.triggerEventType = row.eventTypeKey
                 this.showPipelineSideslider = true
             },
             handelShowDetail (row) {
