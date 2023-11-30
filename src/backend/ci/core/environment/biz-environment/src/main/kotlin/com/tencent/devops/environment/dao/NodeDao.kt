@@ -180,9 +180,11 @@ class NodeDao {
 
     fun updateNodeNotInCC(dslContext: DSLContext, hostList: List<Long>) {
         val hostIdDefault: Long? = null
+        val cloudAreaIdDefault: Long? = null
         with(TNode.T_NODE) {
             dslContext.update(this)
                 .set(HOST_ID, hostIdDefault)
+                .set(CLOUD_AREA_ID, cloudAreaIdDefault)
                 .set(NODE_STATUS, NodeStatus.NOT_IN_CC.toString())
                 .set(LAST_MODIFY_TIME, LocalDateTime.now())
                 .where(HOST_ID.`in`(hostList))

@@ -37,7 +37,7 @@ class NodeScheduledService @Autowired constructor(
      * 分组执行，每次遍历100条记录。
      * display_name为空的：拼接节点类型、node hash值、nodeId这三个字段，写入display_name。
      */
-    @Scheduled(cron = "0 45 17 * * 1-5")
+    @Scheduled(cron = "0 16 18 * * 1-5")
     fun scheduledWriteDisplayName() {
         taskWithRedisLock(SCHEDULED_WRITE_DISPLAY_NAME_TIMEOUT_LOCK_KEY, ::writeDisplayName)
     }
@@ -70,7 +70,7 @@ class NodeScheduledService @Autowired constructor(
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countDisplayNameEmptyNodes.toLong())
             for (page in 1..totalPages) {
                 val displayNameNullNodeRecords =
-                    nodeDao.getNodesWhoseDisplayNameIsEmpty(dslContext, page, DEFAULT_PAGE_SIZE)
+                    nodeDao.getNodesWhoseDisplayNameIsEmpty(dslContext, page - 1, DEFAULT_PAGE_SIZE)
                 val nodeDisplayNameInfoList = displayNameNullNodeRecords.map {
                     DisplayNameInfo(
                         nodeId = it.value1(),
@@ -93,7 +93,7 @@ class NodeScheduledService @Autowired constructor(
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countCmdbNodes.toLong())
             for (page in 1..totalPages) {
                 val cmdbNodesRecords =
-                    nodeDao.getCmdbNodesLimit(dslContext, page, DEFAULT_PAGE_SIZE)
+                    nodeDao.getCmdbNodesLimit(dslContext, page - 1, DEFAULT_PAGE_SIZE)
                 if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId]cmdbNodesRecords:$cmdbNodesRecords")
                 val cmdbNodesIp = cmdbNodesRecords.map { it.value3() }.toSet()
                 if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId]cmdbNodesIp:$cmdbNodesIp.")
@@ -129,14 +129,14 @@ class NodeScheduledService @Autowired constructor(
             val totalPagesHostIdNotNull = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countHostIdNotNullRecord.toLong())
             for (pageHostIdNotNull in 1..totalPagesHostIdNotNull) {
                 val nodeRecords = nodeDao.getNodesWhoseHostIdNotNullLimit(
-                    dslContext, pageHostIdNotNull, DEFAULT_PAGE_SIZE
+                    dslContext, pageHostIdNotNull - 1, DEFAULT_PAGE_SIZE
                 ) // T_NODE表中host_id不为空的记录
                 val hostIdList = nodeRecords.map { it.value1() } // 要判断在不在cc中的 所有host_id
                 val nodeCCList =
                     if (hostIdList.isNotEmpty()) queryFromCCService.queryCCFindHostBizRelations(hostIdList).data
                     else emptyList() // 在cc中的 host_id对应cc记录
                 val hostIdToNodeCCMap = nodeCCList?.associateBy { it.bkHostId.toLong() } // 在cc中的 host_id-cc记录 映射
-                // 不在cc中了，要置空的hostid，且 NODE_STATUS字段 要改成 NOT_IN_CC
+                // 不在cc中了，置空 hostid 和 云区域id，且 NODE_STATUS字段 要改成 NOT_IN_CC
                 val invalidHostIdList = hostIdList.filterNot { hostIdToNodeCCMap?.containsKey(it) ?: false }
                 nodeDao.updateNodeNotInCC(dslContext, invalidHostIdList)
             }
@@ -148,7 +148,7 @@ class NodeScheduledService @Autowired constructor(
             val totalPagesNodesNotInCC = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countNodesNotInCC.toLong())
             for (pageNodesNotInCC in 1..totalPagesNodesNotInCC) {
                 val nodeRecordsNotInCC = nodeDao.getNodesNotInCC(
-                    dslContext, pageNodesNotInCC, DEFAULT_PAGE_SIZE
+                    dslContext, pageNodesNotInCC - 1, DEFAULT_PAGE_SIZE
                 )
                 val notInCCIpList = nodeRecordsNotInCC.map { it.value1() }
                 val inCCInfoList = queryFromCCService.queryCCListHostWithoutBizByInRules(
