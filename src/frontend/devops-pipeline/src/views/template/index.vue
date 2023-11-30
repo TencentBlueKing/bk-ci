@@ -7,25 +7,33 @@
                 :sub-system-name="'pipelines'">
             </side-bar>
         </div>
-        <router-view
-            v-if="hasViewPermission"
-            class="biz-content"
-            :is-enabled-permission="isEnabledPermission"
+        <div
+            :class="{
+                'content-wrapper': true,
+                'permission': isTemplatePermission
+            }"
+            v-bkloading="{ isLoading }"
         >
-        </router-view>
-        <empty-tips
-            v-else
-            :title="$t('template.accessDeny.title')"
-            :desc="$t('template.accessDeny.desc')"
-            show-lock
-        >
-            <bk-button
-                theme="primary"
-                @click="handleApply"
+            <router-view
+                v-if="hasViewPermission"
+                class="biz-content"
+                :is-enabled-permission="isEnabledPermission"
             >
-                {{ $t('template.accessDeny.apply') }}
-            </bk-button>
-        </empty-tips>
+            </router-view>
+            <empty-tips
+                v-else
+                :title="$t('template.accessDeny.title')"
+                :desc="$t('template.accessDeny.desc')"
+                show-lock
+            >
+                <bk-button
+                    theme="primary"
+                    @click="handleApply"
+                >
+                    {{ $t('template.accessDeny.apply') }}
+                </bk-button>
+            </empty-tips>
+        </div>
     </div>
 </template>
 
@@ -42,8 +50,9 @@
 
         data () {
             return {
+                isLoading: true,
                 isEnabledPermission: false,
-                hasViewPermission: false,
+                hasViewPermission: true,
                 sideMenuList: [
                     {
                         list: [
@@ -81,6 +90,12 @@
                 }
             }
         },
+
+        computed: {
+            isTemplatePermission () {
+                return this.$route.name === 'templatePermission'
+            }
+        },
         created () {
             const { projectId, templateId } = this.$route.params
             this.$store.dispatch('requestProjectDetail', { projectId })
@@ -90,7 +105,7 @@
                     this.sideMenuList[0].list.push({
                         id: 'templatePermission',
                         name: this.$t('template.permissionSetting'),
-                        icon: 'icon-cog'
+                        icon: 'permission'
                     })
                 }
             })
@@ -100,6 +115,8 @@
             }).then(async res => {
                 this.hasViewPermission = res.data
                 if (!this.hasViewPermission) await this.handleApply()
+            }).finally(() => {
+                this.isLoading = false
             })
         },
         methods: {
@@ -120,6 +137,13 @@
         min-height: 100%;
         .bk-exception {
             position: absolute;
+        }
+    }
+    .content-wrapper {
+        width: 100%;
+        height: 100%;
+        &.permission {
+            padding: 20px;
         }
     }
 </style>

@@ -105,7 +105,7 @@
                                         projectId: projectId,
                                         resourceType: 'pipeline_template',
                                         resourceCode: templateId,
-                                        action: TEMPLATE_RESOURCE_ACTION.EDIT
+                                        action: RESOURCE_ACTION.EDIT
                                     }
                                 }"
                             >
@@ -569,8 +569,8 @@
             }
             .disabled-checkbox {
                 position: absolute;
-                left: -38px;
-                top:  12px;
+                left: -60px;
+                top:  0;
             }
             .status-card {
                 max-width: 120px;
@@ -592,6 +592,11 @@
                 cursor: pointer;
             }
             .is-disabled {
+                display: flex;
+                width: 60px;
+                height: 42px;
+                align-items: center;
+                justify-content: space-around;
                 color: #ccc;
                 cursor: not-allowed;
             }

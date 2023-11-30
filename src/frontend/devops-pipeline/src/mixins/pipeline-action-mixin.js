@@ -31,6 +31,7 @@ import {
     UNCLASSIFIED_PIPELINE_VIEW_ID
 } from '@/store/constants'
 import {
+    TEMPLATE_RESOURCE_ACTION,
     PROJECT_RESOURCE_ACTION,
     RESOURCE_ACTION,
     handleProjectNoPermission
@@ -213,7 +214,7 @@ export default {
                             projectId: pipeline.projectId,
                             resourceType: 'project',
                             resourceCode: pipeline.projectId,
-                            action: PROJECT_RESOURCE_ACTION.MANAGE
+                            action: RESOURCE_ACTION.CREATE
                         }
                     }]
                     : []),
@@ -238,7 +239,7 @@ export default {
                         projectId: pipeline.projectId,
                         resourceType: 'project',
                         resourceCode: pipeline.projectId,
-                        action: PROJECT_RESOURCE_ACTION.MANAGE
+                        action: TEMPLATE_RESOURCE_ACTION.CREATE
                     }
                 },
                 ...(pipeline.isInstanceTemplate

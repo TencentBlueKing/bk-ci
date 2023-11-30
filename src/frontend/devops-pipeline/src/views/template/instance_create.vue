@@ -576,6 +576,7 @@
                                     })
                                     this.toInstanceManage()
                                 } else if (failCount) {
+                                    console.log(res, '11111111')
                                     this.successList = res.successPipelines || []
                                     this.failList = res.failurePipelines || []
                                     this.failMessage = res.failureMessages || []

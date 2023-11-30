@@ -26,13 +26,13 @@
                                         v-if="isEnabledPermission"
                                         @click="editTemplate(row)"
                                         v-perm="{
-                                            hasPermission: row.canEdit,
+                                            hasPermission: row.canView,
                                             disablePermissionApi: true,
                                             permissionData: {
                                                 projectId: projectId,
                                                 resourceType: 'pipeline_template',
                                                 resourceCode: row.templateId,
-                                                action: TEMPLATE_RESOURCE_ACTION.EDIT
+                                                action: TEMPLATE_RESOURCE_ACTION.VIEW
                                             }
                                         }"
                                     >
@@ -122,16 +122,7 @@
                                                     <li
                                                         v-if="['customize','CUSTOMIZE'].includes(row.templateType) && row.storeFlag"
                                                         data-name="stored"
-                                                        v-perm="{
-                                                            hasPermission: row.canEdit,
-                                                            disablePermissionApi: true,
-                                                            permissionData: {
-                                                                projectId: projectId,
-                                                                resourceType: 'pipeline_template',
-                                                                resourceCode: row.templateId,
-                                                                action: TEMPLATE_RESOURCE_ACTION.EDIT
-                                                            }
-                                                        }"
+                                                        class="is-disabled bk-permission-disable"
                                                         key="alreadyToStoreBtn"
                                                     >
                                                         {{ $t('template.alreadyToStore') }}
@@ -183,8 +174,7 @@
                                                 </template>
                                                 <li @click="deleteTemplate(row)" data-name="delete">{{['constraint','CONSTRAINT'].includes(row.templateType) ? $t('uninstall') : $t('delete')}}</li>
                                             </ul>
-                                        </template>
-                                    </span>
+                                        </template></span>
                                 </td>
                             </tr>
                         </table>
@@ -327,7 +317,7 @@
             },
             showTools (row) {
                 this.listData.forEach((data) => {
-                    if (data.templateId === row.templateId) row.showMore = !row.showMore
+                    if (data.templateId === row.templateId) row.showMore = true
                     else data.showMore = false
                 })
             },
@@ -587,6 +577,9 @@
                     }
                 }
             }
+        }
+        .is-disabled {
+            cursor: not-allowed !important;
         }
         .icon-item {
             text-align: center;

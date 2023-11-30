@@ -89,7 +89,7 @@
           </p>
         </div>
       </template>
-      <template>
+      <template v-else>
         <div class="close-tips">
           <p>{{ t('关闭流水线权限管理，将执行如下操作：', [resourceType === 'pipeline' ? t('流水线') : t('流水线组')]) }}</p>
           <p>

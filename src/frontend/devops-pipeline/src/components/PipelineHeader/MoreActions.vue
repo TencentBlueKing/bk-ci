@@ -61,7 +61,7 @@
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
     import {
-        PROJECT_RESOURCE_ACTION,
+        TEMPLATE_RESOURCE_ACTION,
         RESOURCE_ACTION
     } from '@/utils/permission'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
@@ -152,7 +152,7 @@
                                         projectId,
                                         resourceType: 'project',
                                         resourceCode: projectId,
-                                        action: PROJECT_RESOURCE_ACTION.MANAGE
+                                        action: RESOURCE_ACTION.CREATE
                                     }
                                 }
                                 : {
@@ -177,7 +177,7 @@
                                 projectId,
                                 resourceType: 'project',
                                 resourceCode: projectId,
-                                action: PROJECT_RESOURCE_ACTION.MANAGE
+                                action: TEMPLATE_RESOURCE_ACTION.CREATE
                             }
                         },
                         {
