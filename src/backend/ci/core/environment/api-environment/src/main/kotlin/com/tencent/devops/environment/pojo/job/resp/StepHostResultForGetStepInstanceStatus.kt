@@ -20,7 +20,7 @@ data class StepHostResultForGetStepInstanceStatus(
     )
     val status: Int,
     @ApiModelProperty(value = "任务状态描述", required = true)
-    val statusDesc: Int,
+    val statusDesc: String,
     @ApiModelProperty(
         value = "用户通过job_success/job_fail函数模板自定义输出的结果。仅脚本任务存在该参数", allowEmptyValue = true
     )
