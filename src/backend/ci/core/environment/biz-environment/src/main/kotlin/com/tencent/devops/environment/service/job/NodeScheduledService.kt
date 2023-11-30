@@ -37,7 +37,7 @@ class NodeScheduledService @Autowired constructor(
      * 分组执行，每次遍历100条记录。
      * display_name为空的：拼接节点类型、node hash值、nodeId这三个字段，写入display_name。
      */
-    @Scheduled(cron = "0 10 17 * * 1-5")
+    @Scheduled(cron = "0 45 17 * * 1-5")
     fun scheduledWriteDisplayName() {
         taskWithRedisLock(SCHEDULED_WRITE_DISPLAY_NAME_TIMEOUT_LOCK_KEY, ::writeDisplayName)
     }
@@ -47,7 +47,7 @@ class NodeScheduledService @Autowired constructor(
      * 分组执行，每次遍历100条记录。
      * 对于 nodeType 为 CMDB 的机器，写入host_id(CC中查到的)，并将云区域ID设为0。
      */
-    @Scheduled(cron = "0 13 17 * * 1-5")
+    @Scheduled(cron = "0 43 17 * * 1-5")
     fun scheduledWriteHostIdAndCloudAreaId() {
         taskWithRedisLock(SCHEDULED_WRITE_HOST_ID_AND_CLOUD_AREA_ID_TIMEOUT_LOCK_KEY, ::writeHostIdAndCloudAreaId)
     }
