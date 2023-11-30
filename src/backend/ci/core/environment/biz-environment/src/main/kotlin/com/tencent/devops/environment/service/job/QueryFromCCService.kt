@@ -125,7 +125,8 @@ class QueryFromCCService : QueryOperatorService {
                 )
             )
         )
-        if (logger.isDebugEnabled) logger.debug("[queryCCListHostWithoutBizByInRules] req ori: $ccListHostWithoutBizReq")
+        if (logger.isDebugEnabled)
+            logger.debug("[queryCCListHostWithoutBizByInRules] req ori: $ccListHostWithoutBizReq")
         if (logger.isDebugEnabled) logger.debug(
             "[queryCCListHostWithoutBizByInRules] url: ${bkccQueryBaseUrl + bkccListHostWithoutBizPath}"
         )

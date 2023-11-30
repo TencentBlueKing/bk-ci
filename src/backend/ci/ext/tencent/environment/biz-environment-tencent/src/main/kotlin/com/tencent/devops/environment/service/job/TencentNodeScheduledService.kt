@@ -42,37 +42,41 @@ class TencentNodeScheduledService @Autowired constructor(
         if (0 < countNodeInCmdb) {
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countNodeInCmdb.toLong())
             for (page in 1..totalPages) {
-                val nodeRecords = nodeDao.getCmdbNodesLimit(
-                    dslContext, page, DEFAULT_PAGE_SIZE
-                ) // T_NODE表中 所有NODE_TYPE=="CMDB"的记录
-                val nodeIpList = nodeRecords.map { it.value3() }.toSet() // 要判断在不在cmdb中的 所有ip
-                val ipToCmdbInfoMap =
-                    tencentQueryFromCmdbService.queryCmdbInfoFromIp(nodeIpList) // 从cmdb中查到的 所有ip - 记录 映射
-
-                // 不在cmdb中，对应节点的 NODE_STATUS字段 要改成 NOT_IN_CMDB
-                val invalidIpList = nodeIpList.filterNot { ipToCmdbInfoMap?.containsKey(it) ?: false }
-                nodeDao.updateNodeNotInCmdb(dslContext, invalidIpList)
-
-                // 在cmdb中，但对应节点的 NODE_STATUS字段==NOT_IN_CMDB，再查询一次CC: 在CC-改为NORMAL，不在CC-改为NOT_IN_CC
-                val inCmdbIpList = nodeIpList.filter { ipToCmdbInfoMap?.containsKey(it) ?: false }
-                val inCmdbIpRecords = nodeDao.getNotInCmdbNodes(dslContext, inCmdbIpList)
-                if (inCmdbIpRecords.isNotEmpty) {
-                    val inCmdbSvrIdList = inCmdbIpRecords.map { it.value1() } // 需要再查询一次CC的ip
-                        .mapNotNull { ipToCmdbInfoMap?.get(it)?.serverId?.toLong() } // 需要再查询一次CC的svrId
-
-                    val (svrIdQueryCCRes, _, _) =
-                        cmdbNodeService.checkNodeInCCBySvrId(inCmdbSvrIdList) // 用svrId，得到：其中所有在CC中的节点记录，在/不在CC中的svrId列表
-                    val ccData = svrIdQueryCCRes.data?.info
-                    val inCCIpList = ccData?.mapNotNull { it.bkHostInnerip }
-                    val notInCCIpList = inCmdbIpList.filterNot { inCCIpList?.contains(it) ?: false }
-                    if (!inCCIpList.isNullOrEmpty())
-                        nodeDao.updateNodeInCCByIp(dslContext, inCCIpList) // 在CC-改为NORMAL
-                    if (notInCCIpList.isNotEmpty())
-                        nodeDao.updateNodeNotInCCByIp(dslContext, notInCCIpList) // 不在CC-改为NOT_IN_CC
-                }
+                checkNodeInCmdb(page)
             }
         }
         if (logger.isDebugEnabled) logger.debug("[checkNodeInCmdb]End Check whether the node is in the cmdb.")
+    }
+
+    private fun checkNodeInCmdb(page: Int) {
+        val nodeRecords = nodeDao.getCmdbNodesLimit(
+            dslContext, page, DEFAULT_PAGE_SIZE
+        ) // T_NODE表中 所有NODE_TYPE=="CMDB"的记录
+        val nodeIpList = nodeRecords.map { it.value3() }.toSet() // 要判断在不在cmdb中的 所有ip
+        val ipToCmdbInfoMap =
+            tencentQueryFromCmdbService.queryCmdbInfoFromIp(nodeIpList) // 从cmdb中查到的 所有ip - 记录 映射
+
+        // 不在cmdb中，对应节点的 NODE_STATUS字段 要改成 NOT_IN_CMDB
+        val invalidIpList = nodeIpList.filterNot { ipToCmdbInfoMap?.containsKey(it) ?: false }
+        nodeDao.updateNodeNotInCmdb(dslContext, invalidIpList)
+
+        // 在cmdb中，但对应节点的 NODE_STATUS字段==NOT_IN_CMDB，再查询一次CC: 在CC-改为NORMAL，不在CC-改为NOT_IN_CC
+        val inCmdbIpList = nodeIpList.filter { ipToCmdbInfoMap?.containsKey(it) ?: false }
+        val inCmdbIpRecords = nodeDao.getNotInCmdbNodes(dslContext, inCmdbIpList)
+        if (inCmdbIpRecords.isNotEmpty) {
+            val inCmdbSvrIdList = inCmdbIpRecords.map { it.value1() } // 需要再查询一次CC的ip
+                .mapNotNull { ipToCmdbInfoMap?.get(it)?.serverId?.toLong() } // 需要再查询一次CC的svrId
+
+            val (svrIdQueryCCRes, _, _) =
+                cmdbNodeService.checkNodeInCCBySvrId(inCmdbSvrIdList) // 用svrId，得到：其中所有在CC中的节点记录，在/不在CC中的svrId列表
+            val ccData = svrIdQueryCCRes.data?.info
+            val inCCIpList = ccData?.mapNotNull { it.bkHostInnerip }
+            val notInCCIpList = inCmdbIpList.filterNot { inCCIpList?.contains(it) ?: false }
+            if (!inCCIpList.isNullOrEmpty())
+                nodeDao.updateNodeInCCByIp(dslContext, inCCIpList) // 在CC-改为NORMAL
+            if (notInCCIpList.isNotEmpty())
+                nodeDao.updateNodeNotInCCByIp(dslContext, notInCCIpList) // 不在CC-改为NOT_IN_CC
+        }
     }
 
     private fun taskWithRedisLockTencent(lockKey: String, operation: () -> Unit) {
