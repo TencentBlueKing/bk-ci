@@ -35,7 +35,6 @@
                 :width="tableWidthMap.aliasName"
                 sortable
                 prop="aliasName"
-                show-overflow-tooltip
             >
                 <template slot-scope="props">
                     <div
@@ -55,10 +54,11 @@
                     >
                         <div v-if="isListFlod" class="mask"></div>
                         <Icon
+                            class="codelib-logo"
                             :name="codelibIconMap[props.row.type]"
                             size="16"
                         />
-                        <a
+                        <div
                             :class="{
                                 'codelib-name': true,
                                 'name-flod': isListFlod,
@@ -68,7 +68,7 @@
                             @click="handleShowDetail(props.row)"
                         >
                             {{ props.row.aliasName }}
-                        </a>
+                        </div>
                         <!-- <span
                             v-if="props.row.enablePac"
                             class="pac-icon"
@@ -659,6 +659,7 @@
         display: inline-flex;
         align-items: center;
         position: initial;
+        width: 100%;
         .mask {
             position: absolute;
             top: 0;
@@ -666,8 +667,16 @@
             left: 0;
             right: 0;
         }
+        .codelib-logo {
+            flex-shrink: 0;
+        }
         .codelib-name {
+            color: #3c96ff;
+            cursor: pointer;
             margin-left: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
     }
     .is-flod-warpper {
