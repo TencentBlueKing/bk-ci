@@ -763,7 +763,7 @@ class PipelineRepositoryService constructor(
         val template = templatePipelineDao.get(dslContext, projectId, pipelineId)
         val srcTemplate = template?.let { t ->
             templateDao.getTemplate(
-                dslContext = dslContext, version = t.version)
+                dslContext = dslContext, templateId = t.templateId)
         }
         val templateId = template?.templateId
         val info = pipelineInfoDao.convert(
