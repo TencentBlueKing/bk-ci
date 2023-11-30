@@ -66,7 +66,7 @@ class NodeDao {
         }
     }
 
-    fun getCmdbNodesLimit(dslContext: DSLContext, limit: Int, offset: Int): Result<Record3<Long, String, String>> {
+    fun getCmdbNodesLimit(dslContext: DSLContext, offset: Int, limit: Int): Result<Record3<Long, String, String>> {
         with(TNode.T_NODE) {
             return dslContext.select(NODE_ID, NODE_TYPE, NODE_IP).from(this)
                 .where(NODE_TYPE.eq(NodeType.CMDB.name))
@@ -96,7 +96,7 @@ class NodeDao {
         }
     }
 
-    fun getNodesWhoseDisplayNameIsEmpty(dslContext: DSLContext, limit: Int, offset: Int): Result<Record3<Long, String, String>> {
+    fun getNodesWhoseDisplayNameIsEmpty(dslContext: DSLContext, offset: Int, limit: Int): Result<Record3<Long, String, String>> {
         with(TNode.T_NODE) {
             return dslContext.select(NODE_ID, NODE_TYPE, NODE_HASH_ID).from(this)
                 .where(DISPLAY_NAME.isNull)
@@ -190,18 +190,38 @@ class NodeDao {
         }
     }
 
-    fun getNodesNotInCC(dslContext: DSLContext): Result<Record1<String>> {
+    fun countNodesNotInCC(dslContext: DSLContext): Int {
+        with(TNode.T_NODE) {
+            return dslContext.selectCount()
+                .from(TNode.T_NODE)
+                .where(NODE_STATUS.eq(NodeStatus.NOT_IN_CC.toString()))
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun getNodesNotInCC(dslContext: DSLContext, offset: Int, limit: Int): Result<Record1<String>> {
         with(TNode.T_NODE) {
             return dslContext.select(NODE_IP).from(this)
                 .where(NODE_STATUS.eq(NodeStatus.NOT_IN_CC.toString()))
+                .limit(limit).offset(offset)
                 .fetch()
         }
     }
 
-    fun getNodesWhoseHostIdNotNull(dslContext: DSLContext): Result<Record1<Long>> {
+    fun countNodesWhoseHostIdNotNull(dslContext: DSLContext): Int {
+        with(TNode.T_NODE) {
+            return dslContext.selectCount()
+                .from(TNode.T_NODE)
+                .where(HOST_ID.isNotNull)
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun getNodesWhoseHostIdNotNullLimit(dslContext: DSLContext, offset: Int, limit: Int): Result<Record1<Long>> {
         with(TNode.T_NODE) {
             return dslContext.select(HOST_ID).from(this)
                 .where(HOST_ID.isNotNull)
+                .limit(limit).offset(offset)
                 .fetch()
         }
     }

@@ -61,27 +61,43 @@ class NodeScheduledService @Autowired constructor(
     }
 
     private fun checkNodeInCC() {
-        val nodeRecords = nodeDao.getNodesWhoseHostIdNotNull(dslContext) // T_NODE表中host_id不为空的记录
-        val hostIdList = nodeRecords.map { it.value1() } // 要判断在不在cc中的 所有host_id
-
-        val nodeCCList =
-            if (hostIdList.isNotEmpty()) queryFromCCService.queryCCFindHostBizRelations(hostIdList).data
-            else emptyList() // 在cc中的 host_id对应cc记录
-        val hostIdToNodeCCMap = nodeCCList?.associateBy { it.bkHostId.toLong() } // 在cc中的 host_id-cc记录 映射
-        // 不在cc中了，要置空的hostid，且 NODE_STATUS字段 要改成 NOT_IN_CC
-        val invalidHostIdList = hostIdList.filterNot { hostIdToNodeCCMap?.containsKey(it) ?: false }
-        nodeDao.updateNodeNotInCC(dslContext, invalidHostIdList)
-
+        val countHostIdNotNullRecord = nodeDao.countNodesWhoseHostIdNotNull(dslContext)
+        if (logger.isDebugEnabled) logger.debug("[checkNodeInCC]countHostIdNotNullRecord:$countHostIdNotNullRecord.")
+        if (0 < countHostIdNotNullRecord) {
+            val totalPagesHostIdNotNull = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countHostIdNotNullRecord.toLong())
+            for (pageHostIdNotNull in 1..totalPagesHostIdNotNull) {
+                val nodeRecords = nodeDao.getNodesWhoseHostIdNotNullLimit(
+                    dslContext, pageHostIdNotNull, DEFAULT_PAGE_SIZE
+                ) // T_NODE表中host_id不为空的记录
+                val hostIdList = nodeRecords.map { it.value1() } // 要判断在不在cc中的 所有host_id
+                val nodeCCList =
+                    if (hostIdList.isNotEmpty()) queryFromCCService.queryCCFindHostBizRelations(hostIdList).data
+                    else emptyList() // 在cc中的 host_id对应cc记录
+                val hostIdToNodeCCMap = nodeCCList?.associateBy { it.bkHostId.toLong() } // 在cc中的 host_id-cc记录 映射
+                // 不在cc中了，要置空的hostid，且 NODE_STATUS字段 要改成 NOT_IN_CC
+                val invalidHostIdList = hostIdList.filterNot { hostIdToNodeCCMap?.containsKey(it) ?: false }
+                nodeDao.updateNodeNotInCC(dslContext, invalidHostIdList)
+            }
+        }
         // T_NODE表中 NODE_STATUS字段 为NOT_IN_CC的记录，再去查在不在cc中：不在CC中 - 不处理；在CC中 - 将host_id写回T_NODE表中，NODE_STATUS字段 改成 NORMAL
-        val nodeRecordsNotInCC = nodeDao.getNodesNotInCC(dslContext)
-        val notInCCIpList = nodeRecordsNotInCC.map { it.value1() }
-        val inCCInfoList = queryFromCCService.queryCCListHostWithoutBizByInRules(
-            listOf(FIELD_BK_HOST_ID, FIELD_BK_HOST_INNERIP), notInCCIpList, FIELD_BK_HOST_INNERIP
-        ).data?.info
-        if (!inCCInfoList.isNullOrEmpty()) {
-            nodeDao.updateNodeHostIdByIp(dslContext, inCCInfoList) // 在CC中 - 将host_id写回T_NODE表中
-            val inCCIpList = inCCInfoList.mapNotNull { it.bkHostInnerip }
-            nodeDao.updateNodeInCCByIp(dslContext, inCCIpList) // 在CC中 - NODE_STATUS字段 改成 NORMAL
+        val countNodesNotInCC = nodeDao.countNodesNotInCC(dslContext)
+        if (logger.isDebugEnabled) logger.debug("[checkNodeInCC]countNodesNotInCC:$countNodesNotInCC.")
+        if (0 < countNodesNotInCC) {
+            val totalPagesNodesNotInCC = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countNodesNotInCC.toLong())
+            for (pageNodesNotInCC in 1..totalPagesNodesNotInCC) {
+                val nodeRecordsNotInCC = nodeDao.getNodesNotInCC(
+                    dslContext, pageNodesNotInCC, DEFAULT_PAGE_SIZE
+                )
+                val notInCCIpList = nodeRecordsNotInCC.map { it.value1() }
+                val inCCInfoList = queryFromCCService.queryCCListHostWithoutBizByInRules(
+                    listOf(FIELD_BK_HOST_ID, FIELD_BK_HOST_INNERIP), notInCCIpList, FIELD_BK_HOST_INNERIP
+                ).data?.info
+                if (!inCCInfoList.isNullOrEmpty()) {
+                    nodeDao.updateNodeHostIdByIp(dslContext, inCCInfoList) // 在CC中 - 将host_id写回T_NODE表中
+                    val inCCIpList = inCCInfoList.mapNotNull { it.bkHostInnerip }
+                    nodeDao.updateNodeInCCByIp(dslContext, inCCIpList) // 在CC中 - NODE_STATUS字段 改成 NORMAL
+                }
+            }
         }
         if (logger.isDebugEnabled) logger.debug("---[checkNodeInCC]End Check whether the node is in the cc.---")
     }
@@ -91,7 +107,7 @@ class NodeScheduledService @Autowired constructor(
      * 分组执行，每次遍历100条记录。
      * display_name为空的：拼接节点类型、node hash值、nodeId这三个字段，写入display_name。
      */
-    @Scheduled(cron = "0 25 15 * * 1-5")
+    @Scheduled(cron = "0 0 16 * * 1-5")
     fun writeDisplayName() {
         val countDisplayNameEmptyNodes = nodeDao.countDisplayNameEmptyNodes(dslContext)
         if (logger.isDebugEnabled)
@@ -121,7 +137,7 @@ class NodeScheduledService @Autowired constructor(
      * 分组执行，每次遍历100条记录。
      * 对于 nodeType 为 CMDB 的机器，写入host_id(CC中查到的)，并将云区域ID设为0。
      */
-    @Scheduled(cron = "0 10 16 * * 1-5")
+    @Scheduled(cron = "0 58 15 * * 1-5")
     fun writeHostIdAndCloudAreaId() {
         val countCmdbNodes = nodeDao.countCmdbNodes(dslContext)
         if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId]countCmdbNodes:$countCmdbNodes")
