@@ -45,7 +45,19 @@ interface ApigwAuthProjectResourceV4 {
     @GET
     @Path("/getResourceGroupUsers")
     @ApiOperation(
-        "获取项目权限分组成员",
+        """获取项目权限分组成员
+           该接口是一个可以查多种权限名单的接口，这取决于resourceType。
+           示例①：查询A项目下p-B流水线拥有者有哪些，如果group为null，则会取有p-B流水线相关权限的所有人。
+               - projectId: A
+               - resourceType: PIPELINE_DEFAULT
+               - resourceCode: p-B
+               - group: RESOURCE_MANAGER
+           示例②：查询A项目管理员有哪些,如果group为null，则A项目下所有人。
+               - projectId: A
+               - resourceType: PROJECT
+               - resourceCode: A
+               - group: MANAGER
+        """,
         tags = ["v4_app_get_project_permission_members"]
     )
     fun getResourceGroupUsers(
