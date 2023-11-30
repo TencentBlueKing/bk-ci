@@ -492,6 +492,7 @@
     "freedomMode": "Free Mode",
     "freedomModeTips": " You can arrange the pipeline freely without being constrained by the template.",
     "constraintMode": "Constraint Mode",
+    "constraintModeDesc": "Constraint Mode the arrangement is controlled by the template",
     "constraintModeTips": "You can't arrange the pipeline freely and should update the instance through template",
     "noTemplateTips": " Please select a template first",
     "noSearchResult": " No results found",
@@ -1229,5 +1230,7 @@
   "copyAsTemplateInstance": "Copy As Instance",
   "downloadDisabledTips": "Exceeds 10 GB. Please download in batches from the artifact repository.",
   "pipelineConstraintModeTips": "In constraint mode, You can't arrange the pipeline freely and should update the instance through template",
-  "copy": "Copy"
+  "copy": "Copy",
+  "templateName": "Template",
+  "templateVersion": "Template Version"
 }

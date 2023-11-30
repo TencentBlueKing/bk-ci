@@ -157,7 +157,7 @@ class GithubIssueTriggerHandler : CodeWebhookTriggerHandler<GithubIssuesEvent> {
             startParams[BK_REPO_GIT_WEBHOOK_ISSUE_URL] = htmlUrl ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_ISSUE_MILESTONE_ID] = milestone?.id ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_ISSUE_ACTION] = event.action
-            startParams[PIPELINE_GIT_EVENT_URL] = htmlUrl ?: ""
+            startParams[PIPELINE_GIT_EVENT_URL] = buildIssuesUrl(event)
         }
         return startParams
     }

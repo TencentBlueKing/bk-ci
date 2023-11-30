@@ -17,7 +17,6 @@ bkCiIamCallbackUser: bk_iam
 bkCiAppCode: bk_ci
 bkCiNotifyWeworkSendChannel: weworkAgent
 bkCiInfluxdbDb: agentMetrix
-bkCiEnvironmentAgentCollectorOn: true
 bkCiDocsUrl: https://bk.tencent.com
 bkCiArtifactoryRealm: local
 bkRepoHost: repo.demo.com
@@ -49,3 +48,4 @@ bkCiFrontendIndex: "rewrite .* /$subsystem/index.html break"
 bkCiDefaultLocale: zh_CN
 bkCiSupportLanguages: zh_CN,en_US
 bkEsbEnabled: false
+bkCiMonitorRegister: false

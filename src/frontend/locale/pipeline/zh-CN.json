@@ -493,6 +493,7 @@
     "freedomMode": "自由模式",
     "freedomModeTips": "可以自由调整流水线编排，不受模版管控",
     "constraintMode": "约束模式",
+    "constraintModeDesc": "约束模式，编排受模版控制",
     "constraintModeTips": "不能自由调整流水线编排，可通过模版更新实例",
     "noTemplateTips": "请先选择模板",
     "noSearchResult": "未搜索到任何的结果",
@@ -563,7 +564,7 @@
       "totalTime": "耗时{0}",
       "appVersions": "APP版本",
       "recommendVersion": "推荐版本号",
-      "pipelineVersion": "编排版本号",
+      "pipelineVersion": "流水线版本",
       "entry": "快捷入口"
     },
     "filterNullTips": "搜索结果为空",
@@ -1234,5 +1235,7 @@
   "copyAsTemplateInstance": "复制为模板实例",
   "downloadDisabledTips": "目录下的文件大小超过 10 G，请到制品库分批下载",
   "pipelineConstraintModeTips": "约束模式下，流水线编排随模板更新，不能自由调整",
-  "copy": "复制"
+  "copy": "复制",
+  "templateName": "模板",
+  "templateVersion": "模版版本"
 }

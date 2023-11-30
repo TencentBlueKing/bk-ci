@@ -30,6 +30,8 @@
         flex: 1;
         display: flex;
         flex-direction: column;
+        min-width: 1380px;
+        color: #63656E;
         &-header {
             display: flex;
             width: 100%;
