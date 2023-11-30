@@ -325,6 +325,7 @@ class PipelineWebhookUpgradeService(
         } while (pipelines.size == 1000)
     }
 
+    @Suppress("CyclomaticComplexMethod")
     private fun updatePipelineEventInfo(
         projectId: String,
         pipelineId: String,
