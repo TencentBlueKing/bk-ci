@@ -150,7 +150,7 @@ class PipelineWebhookService @Autowired constructor(
             repositoryHashId = repository.repoHashId,
             eventType = eventType?.name ?: "",
             externalId = repository.getExternalId(),
-            externalName = repository.projectName
+            externalName = getExternalName(scmType = scmType, repository.projectName)
         )
         pipelineWebhookDao.save(
             dslContext = dslContext,
@@ -318,6 +318,18 @@ class PipelineWebhookService @Autowired constructor(
             return projectName
         }
         return repoSplit[1].trim()
+    }
+
+    /**
+     * 获取代码库平台仓库名
+     */
+    fun getExternalName(scmType: ScmType, projectName: String): String {
+        val repoSplit = projectName.split("/")
+        // 如果代码库是svn类型，并且项目名是三层的，比如a/b/c，那对应的rep_name是b,工蜂svn webhook返回的rep_name结构
+        if (scmType == ScmType.CODE_SVN && repoSplit.size == 3) {
+            return repoSplit[1].trim()
+        }
+        return projectName
     }
 
     fun listWebhook(

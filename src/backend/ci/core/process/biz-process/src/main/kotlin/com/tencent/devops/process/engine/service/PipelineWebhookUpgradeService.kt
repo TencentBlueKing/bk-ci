@@ -383,11 +383,19 @@ class PipelineWebhookUpgradeService(
 
                     else -> null
                 }
+                val externalName = when {
+                    repository != null -> pipelineWebhookService.getExternalName(
+                        scmType = repository.getScmType(),
+                        projectName = repository.projectName
+                    )
+
+                    else -> webhook.projectName
+                }
                 pipelineWebhookDao.updateWebhookEventInfo(
                     dslContext = dslContext,
                     eventType = elementEventType?.name ?: "",
                     externalId = repository?.getExternalId(),
-                    externalName = repository?.projectName ?: webhook.projectName,
+                    externalName = externalName,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     taskId = webhook.taskId!!,
