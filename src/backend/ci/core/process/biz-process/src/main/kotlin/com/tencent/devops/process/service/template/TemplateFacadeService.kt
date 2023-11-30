@@ -1047,7 +1047,9 @@ class TemplateFacadeService @Autowired constructor(
                 )
             } else {
                 templateDao.getTemplate(dslContext = dslContext, version = version)
-            }
+            } ?: throw ErrorCodeException(
+                errorCode = ERROR_TEMPLATE_NOT_EXISTS
+            )
         }
         val currentVersion = TemplateVersion(
             template.version,
@@ -1149,8 +1151,12 @@ class TemplateFacadeService @Autowired constructor(
                     language = I18nUtil.getLanguage(userId)
                 )
             )
+        val templateRecord = templateDao.getTemplate(dslContext = dslContext, version = templatePipelineRecord.version)
+            ?: throw ErrorCodeException(
+                errorCode = ERROR_TEMPLATE_NOT_EXISTS
+            )
         val template: Model = objectMapper.readValue(
-            templateDao.getTemplate(dslContext = dslContext, version = templatePipelineRecord.version).template
+            templateRecord.template
         )
         val v1Model: Model = instanceCompareModel(
             objectMapper.readValue(
@@ -1164,6 +1170,9 @@ class TemplateFacadeService @Autowired constructor(
         )
 
         val srcTemplate = templateDao.getTemplate(dslContext = dslContext, version = version)
+            ?: throw ErrorCodeException(
+                errorCode = ERROR_TEMPLATE_NOT_EXISTS
+            )
         val v2Model = getTemplateModel(srcTemplate.template)
         val v1Containers = getContainers(v1Model)
         val v2Containers = getContainers(v2Model)
@@ -1284,6 +1293,9 @@ class TemplateFacadeService @Autowired constructor(
     ): Map<String, TemplateInstanceParams> {
         try {
             val template = templateDao.getTemplate(dslContext = dslContext, version = version)
+                ?: throw ErrorCodeException(
+                    errorCode = ERROR_TEMPLATE_NOT_EXISTS
+                )
             val templateModel: Model = objectMapper.readValue(template.template)
             val templateTriggerContainer = templateModel.stages[0].containers[0] as TriggerContainer
             val latestInstances = listLatestModel(projectId, pipelineIds)
@@ -1340,6 +1352,9 @@ class TemplateFacadeService @Autowired constructor(
     ): TemplateOperationRet {
         logger.info("Create the new template instance [$projectId|$userId|$templateId|$version|$useTemplateSettings]")
         val template = templateDao.getTemplate(dslContext = dslContext, version = version)
+            ?: throw ErrorCodeException(
+                errorCode = ERROR_TEMPLATE_NOT_EXISTS
+            )
         val successPipelines = ArrayList<String>()
         val failurePipelines = ArrayList<String>()
         val successPipelinesId = ArrayList<String>()
@@ -1473,6 +1488,8 @@ class TemplateFacadeService @Autowired constructor(
             templateId = srcTemplateId ?: templateId,
             versionName = versionName,
             version = version
+        ) ?: throw ErrorCodeException(
+            errorCode = ERROR_TEMPLATE_NOT_EXISTS
         )
         instances.forEach {
             try {
@@ -1621,6 +1638,10 @@ class TemplateFacadeService @Autowired constructor(
         // 当更新的实例数量较小则走同步更新逻辑，较大走异步更新逻辑
         if (instances.size <= maxSyncInstanceNum) {
             val template = templateDao.getTemplate(dslContext = dslContext, version = version)
+                ?: throw ErrorCodeException(
+                    errorCode = ERROR_TEMPLATE_NOT_EXISTS
+                )
+
             val successPipelines = ArrayList<String>()
             val failurePipelines = ArrayList<String>()
             instances.forEach { templateInstanceUpdate ->
