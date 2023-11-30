@@ -125,8 +125,7 @@ class QueryFromCCService : QueryOperatorService {
                 )
             )
         )
-        if (logger.isDebugEnabled)
-            logger.debug("[queryCCListHostWithoutBizByInRules] req ori: $ccListHostWithoutBizReq")
+        if (logger.isDebugEnabled) logger.debug("[queryCCListHostWithoutBizByInRules] req: $ccListHostWithoutBizReq")
         if (logger.isDebugEnabled) logger.debug(
             "[queryCCListHostWithoutBizByInRules] url: ${bkccQueryBaseUrl + bkccListHostWithoutBizPath}"
         )
@@ -190,6 +189,7 @@ class QueryFromCCService : QueryOperatorService {
         if (logger.isDebugEnabled) logger.debug("[executePostRequest] requestContent: $requestContent")
         val ccPostRes = OkhttpUtils.doPost(url, requestContent, headers)
         if (logger.isDebugEnabled) logger.debug("[executePostRequest] ccPostRes: $ccPostRes")
+        if (logger.isDebugEnabled) logger.debug("[executePostRequest] ccPostRes.body: ${ccPostRes.body?.string()}")
         return ccPostRes.body?.string()
     }
 
