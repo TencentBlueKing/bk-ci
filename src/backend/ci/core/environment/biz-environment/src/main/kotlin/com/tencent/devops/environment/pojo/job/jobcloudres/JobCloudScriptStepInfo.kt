@@ -26,7 +26,7 @@ data class JobCloudScriptStepInfo(
     @JsonProperty("script_timeout")
     val scriptTimeout: Int,
     @ApiModelProperty(value = "执行账号")
-    val account: JobCloudAccount,
+    val account: JobCloudAccountAlias,
     @ApiModelProperty(value = "执行目标机器")
     @JsonProperty("execute_target")
     val server: JobCloudVariableServer,

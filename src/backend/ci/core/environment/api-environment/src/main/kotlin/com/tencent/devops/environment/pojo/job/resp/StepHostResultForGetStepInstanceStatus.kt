@@ -7,7 +7,7 @@ data class StepHostResultForGetStepInstanceStatus(
     val bkHostId: Long?,
     @ApiModelProperty(value = "IP地址", required = true)
     val ip: String?,
-    @ApiModelProperty(value = "IPV6地址", required = true)
+    @ApiModelProperty(value = "IPV6地址")
     val ipv6: String?,
     @ApiModelProperty(value = "云区域ID")
     val bkCloudId: Long?,
