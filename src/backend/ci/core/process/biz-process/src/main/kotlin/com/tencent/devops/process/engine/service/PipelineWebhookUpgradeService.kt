@@ -283,15 +283,14 @@ class PipelineWebhookUpgradeService(
     }
 
     fun updateWebhookEventInfo(
-        projectId: String?,
-        projectNames: List<String>?
+        projectId: String?
     ) {
         val startTime = System.currentTimeMillis()
         val threadPoolExecutor = Executors.newSingleThreadExecutor()
         threadPoolExecutor.submit {
             logger.info("PipelineWebhookService:begin updateWebhookEventInfo threadPoolExecutor")
             try {
-                updateWebhookEventInfoTask(projectId = projectId, projectNames = projectNames)
+                updateWebhookEventInfoTask(projectId = projectId)
             } catch (ignored: Exception) {
                 logger.warn("PipelineWebhookService：updateWebhookEventInfo failed", ignored)
             } finally {
@@ -301,10 +300,7 @@ class PipelineWebhookUpgradeService(
         }
     }
 
-    private fun updateWebhookEventInfoTask(
-        projectId: String?,
-        projectNames: List<String>?
-    ) {
+    private fun updateWebhookEventInfoTask(projectId: String?) {
         var offset = 0
         val limit = 1000
         val repoCache = mutableMapOf<String, Optional<Repository>>()
@@ -314,7 +310,6 @@ class PipelineWebhookUpgradeService(
             val pipelines = pipelineWebhookDao.groupPipelineList(
                 dslContext = dslContext,
                 projectId = projectId,
-                projectNames = projectNames,
                 limit = limit,
                 offset = offset
             )

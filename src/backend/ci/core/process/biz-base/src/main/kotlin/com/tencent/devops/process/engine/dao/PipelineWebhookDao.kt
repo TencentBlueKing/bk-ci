@@ -280,7 +280,6 @@ class PipelineWebhookDao {
     fun groupPipelineList(
         dslContext: DSLContext,
         projectId: String?,
-        projectNames: List<String>?,
         offset: Int,
         limit: Int
     ): List<WebhookTriggerPipeline> {
@@ -292,13 +291,6 @@ class PipelineWebhookDao {
                         it
                     } else {
                         it.and(PROJECT_ID.eq(projectId))
-                    }
-                }
-                .let {
-                    if (projectNames.isNullOrEmpty()) {
-                        it
-                    } else {
-                        it.and(PROJECT_NAME.`in`(projectNames))
                     }
                 }
                 .groupBy(PROJECT_ID, PIPELINE_ID)
