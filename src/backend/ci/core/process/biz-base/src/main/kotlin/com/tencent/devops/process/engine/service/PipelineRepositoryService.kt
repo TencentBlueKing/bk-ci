@@ -888,7 +888,7 @@ class PipelineRepositoryService constructor(
                         pipelineVersion, originModel, model
                     )
                     triggerVersion = PipelineVersionUtils.getTriggerVersion(
-                        pipelineVersion, originModel, model
+                        triggerVersion, originModel, model
                     )
                 }
                 versionName = PipelineVersionUtils.getVersionName(
