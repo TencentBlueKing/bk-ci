@@ -56,7 +56,15 @@ data class CodeGithubWebHookTriggerElement(
     @ApiModelProperty("新版的github原子的类型")
     val repositoryType: RepositoryType? = null,
     @ApiModelProperty("新版的github代码库名")
-    val repositoryName: String? = null
+    val repositoryName: String? = null,
+    @ApiModelProperty("code review 状态", required = false)
+    val includeCrState: List<String>? = null,
+    @ApiModelProperty("code note comment", required = false)
+    val includeNoteComment: String? = null,
+    @ApiModelProperty("code note 类型", required = false)
+    val includeNoteTypes: List<String>? = null,
+    @ApiModelProperty("issue事件action")
+    val includeIssueAction: List<String>? = null
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeGithubWebHookTrigger"

@@ -30,6 +30,7 @@ package com.tencent.devops.common.webhook.service.code.matcher
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.service.code.loader.CodeWebhookHandlerRegistrar
+import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.repository.pojo.Repository
 
 @Suppress("TooManyFunctions")
@@ -38,7 +39,7 @@ abstract class AbstractScmWebhookMatcher<T : CodeWebhookEvent>(
 ) : ScmWebhookMatcher {
     protected val eventHandler by lazy { CodeWebhookHandlerRegistrar.getHandler(webhookEvent = event) }
 
-    override fun preMatch(): ScmWebhookMatcher.MatchResult {
+    override fun preMatch(): WebhookMatchResult {
         return eventHandler.preMatch(event)
     }
 
@@ -80,6 +81,14 @@ abstract class AbstractScmWebhookMatcher<T : CodeWebhookEvent>(
 
     override fun getMessage(): String? {
         return eventHandler.getMessage(event)
+    }
+
+    override fun getEventDesc(): String {
+        return eventHandler.getEventDesc(event)
+    }
+
+    override fun getExternalId(): String {
+        return eventHandler.getExternalId(event)
     }
 
     override fun retrieveParams(projectId: String?, repository: Repository?): Map<String, Any> {

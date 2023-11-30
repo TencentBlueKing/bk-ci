@@ -40,6 +40,7 @@ import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.ResourcesPools
 import com.tencent.devops.process.yaml.v2.models.format
+import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
 import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplateConf
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
@@ -116,7 +117,7 @@ class StreamYamlTrigger @Autowired constructor(
         if (!buildPipeline.enabled) {
             logger.warn(
                 "Pipeline $filePath is not enabled, gitProjectId: ${action.data.eventCommon.gitProjectId}, " +
-                    "eventId: ${action.data.context.requestEventId}"
+                        "eventId: ${action.data.context.requestEventId}"
             )
             throw StreamTriggerException(action, TriggerReason.PIPELINE_DISABLE)
         }
@@ -128,7 +129,7 @@ class StreamYamlTrigger @Autowired constructor(
             val e = triggerMatcher.isMatch(action, trigger)
             logger.info(
                 "${action.data.eventCommon.gitProjectId}|${action.data.context.pipeline?.pipelineId} " +
-                    "use trigger cache result $trigger"
+                        "use trigger cache result $trigger"
             )
             e
         }
@@ -137,8 +138,8 @@ class StreamYamlTrigger @Autowired constructor(
         if (triggerEvent != null && !triggerEvent.second.trigger.trigger) {
             logger.info(
                 "${buildPipeline.pipelineId}| use trigger cache" +
-                    "Matcher is false, return, gitProjectId: ${action.data.getGitProjectId()}, " +
-                    "eventId: ${action.data.context.requestEventId}"
+                        "Matcher is false, return, gitProjectId: ${action.data.getGitProjectId()}, " +
+                        "eventId: ${action.data.context.requestEventId}"
             )
             throw StreamTriggerException(
                 action, TriggerReason.TRIGGER_NOT_MATCH,
@@ -192,7 +193,7 @@ class StreamYamlTrigger @Autowired constructor(
     ): Boolean {
         logger.info(
             "StreamYamlTrigger|triggerBuild|requestEventId" +
-                "|${action.data.context.requestEventId}|action|${action.format()}"
+                    "|${action.data.context.requestEventId}|action|${action.format()}"
         )
         var pipeline = action.data.context.pipeline!!
 
@@ -261,19 +262,19 @@ class StreamYamlTrigger @Autowired constructor(
         } else {
             triggerMatcher.isMatch(action)
         }
-        val (isTriggerBody, _, isTiming, isDelete, repoHookName) = tr
+        val (isTriggerBody, triggerOn, isTiming, isDelete, repoHookName) = tr
         val (isTrigger, notTriggerReason) = isTriggerBody
         logger.info(
             "StreamYamlTrigger|triggerBuild|pipelineId|" +
-                "${pipeline.pipelineId}|Match return|isTrigger=$isTrigger|" +
-                "isTiming=$isTiming|isDelete=$isDelete|repoHookName=$repoHookName"
+                    "${pipeline.pipelineId}|Match return|isTrigger=$isTrigger|" +
+                    "isTiming=$isTiming|isDelete=$isDelete|repoHookName=$repoHookName"
         )
         if (tr.noNeedTrigger()) {
             logger.warn(
                 "StreamYamlTrigger|triggerBuild|pipelineId|" +
-                    "${pipeline.pipelineId}|" +
-                    "Matcher is false|gitProjectId|${action.data.getGitProjectId()}|" +
-                    "eventId|${action.data.context.requestEventId}"
+                        "${pipeline.pipelineId}|" +
+                        "Matcher is false|gitProjectId|${action.data.getGitProjectId()}|" +
+                        "eventId|${action.data.context.requestEventId}"
             )
             throw StreamTriggerException(
                 action = action,
@@ -281,8 +282,9 @@ class StreamYamlTrigger @Autowired constructor(
                 reasonParams = listOf(notTriggerReason ?: "")
             )
         }
+        fixTriggerSetting(action, triggerOn)
 
-        val startParams = GitActionCommon.getStartParams(action, tr.triggerOn)
+        val startParams = GitActionCommon.getStartParams(action, triggerOn)
 
         // 替换yaml模板
         val yamlReplaceResult = prepareCIBuildYaml(action) ?: return false
@@ -293,7 +295,7 @@ class StreamYamlTrigger @Autowired constructor(
         action.data.context.normalizedYaml = normalizedYaml
         logger.info(
             "StreamYamlTrigger|triggerBuild|pipelineId|${pipeline.pipelineId}" +
-                "|parsedYaml|$parsedYaml|normalize yaml|$normalizedYaml"
+                    "|parsedYaml|$parsedYaml|normalize yaml|$normalizedYaml"
         )
 
         if (action is TGitNoteActionGit || action is TGitReviewActionGit) {
@@ -315,7 +317,7 @@ class StreamYamlTrigger @Autowired constructor(
             // 定时注册事件
             logger.warn(
                 "StreamYamlTrigger|triggerBuild|special job register|timer|$isTiming" +
-                    "|gitProjectId|${action.data.getGitProjectId()}|eventId|${action.data.context.requestEventId!!}"
+                        "|gitProjectId|${action.data.getGitProjectId()}|eventId|${action.data.context.requestEventId!!}"
             )
             yamlBuild.gitStartBuild(
                 action = action,
@@ -334,8 +336,8 @@ class StreamYamlTrigger @Autowired constructor(
             // 有特殊任务的注册事件
             logger.warn(
                 "StreamYamlTrigger|triggerBuild|special job register|delete|$isDelete|repoHookName|$repoHookName" +
-                    "|gitProjectId|${action.data.getGitProjectId()}" +
-                    "|eventId|${action.data.context.requestEventId!!}"
+                        "|gitProjectId|${action.data.getGitProjectId()}" +
+                        "|eventId|${action.data.context.requestEventId!!}"
             )
             yamlBuild.gitStartBuild(
                 action = action,
@@ -354,7 +356,7 @@ class StreamYamlTrigger @Autowired constructor(
             // 正常匹配仓库操作触发
             logger.info(
                 "StreamYamlTrigger|triggerBuild|Matcher|gitProjectId|${action.data.getGitProjectId()}|" +
-                    "eventId|${action.data.context.requestEventId!!}|pipeline|$pipeline"
+                        "eventId|${action.data.context.requestEventId!!}|pipeline|$pipeline"
             )
 
             val gitBuildId = gitRequestEventBuildDao.save(
@@ -386,6 +388,16 @@ class StreamYamlTrigger @Autowired constructor(
         return true
     }
 
+    private fun fixTriggerSetting(action: BaseAction, triggerOn: TriggerOn?) {
+        if (triggerOn?.mr?.reportCommitCheck != null) {
+            action.data.setting.enableCommitCheck = triggerOn.mr?.reportCommitCheck!!
+        }
+
+        if (triggerOn?.mr?.blockMr != null) {
+            action.data.setting.enableMrBlock = triggerOn.mr?.blockMr!!
+        }
+    }
+
     private fun getDisplayName(action: BaseAction): String {
         val originYaml = action.data.context.originYaml!!
         val ymlName = ScriptYmlUtils.parseName(originYaml)?.name
@@ -399,12 +411,12 @@ class StreamYamlTrigger @Autowired constructor(
 
     private fun needUpdateLastBuildBranch(action: BaseAction): Boolean {
         return action.data.context.pipeline!!.pipelineId.isBlank() ||
-            (
-                action is GitBaseAction &&
-                    !action.getChangeSet().isNullOrEmpty() &&
-                    action.getChangeSet()!!.toSet()
-                        .contains(action.data.context.pipeline!!.filePath)
-                )
+                (
+                        action is GitBaseAction &&
+                                !action.getChangeSet().isNullOrEmpty() &&
+                                action.getChangeSet()!!.toSet()
+                                    .contains(action.data.context.pipeline!!.filePath)
+                        )
     }
 
     @Throws(StreamTriggerBaseException::class, ErrorCodeException::class)
@@ -413,7 +425,7 @@ class StreamYamlTrigger @Autowired constructor(
     ): YamlReplaceResult? {
         logger.info(
             "StreamYamlTrigger|prepareCIBuildYaml" +
-                "|requestEventId|${action.data.context.requestEventId}|action|${action.format()}"
+                    "|requestEventId|${action.data.context.requestEventId}|action|${action.format()}"
         )
 
         if (action.data.context.originYaml.isNullOrBlank()) {
@@ -464,7 +476,7 @@ class StreamYamlTrigger @Autowired constructor(
         } catch (e: Throwable) {
             logger.info(
                 "StreamYamlTrigger|prepareCIBuildYaml" +
-                    "|event|${action.data.context.requestEventId}|error",
+                        "|event|${action.data.context.requestEventId}|error",
                 e
             )
             val isMr = action.metaData.isStreamMr()
@@ -472,12 +484,15 @@ class StreamYamlTrigger @Autowired constructor(
                 is YamlBlankException -> {
                     Triple(isMr, "${e.repo} ${e.filePath} is null", TriggerReason.CI_YAML_CONTENT_NULL)
                 }
+
                 is YamlBehindException -> {
                     Triple(isMr, e.filePath, TriggerReason.CI_YAML_NEED_MERGE_OR_REBASE)
                 }
+
                 is YamlFormatException, is JsonProcessingException, is CustomException, is TypeCastException -> {
                     Triple(isMr, e.message, TriggerReason.CI_YAML_TEMPLATE_ERROR)
                 }
+
                 is StackOverflowError -> {
                     Triple(isMr, "Yaml file has circular dependency", TriggerReason.CI_YAML_TEMPLATE_ERROR)
                 }
@@ -485,6 +500,7 @@ class StreamYamlTrigger @Autowired constructor(
                 is StreamTriggerBaseException, is ErrorCodeException -> {
                     throw e
                 }
+
                 else -> {
                     logger.warn("StreamYamlTrigger|prepareCIBuildYaml|${action.data.context.requestEventId}|error", e)
                     Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)

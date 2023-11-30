@@ -48,6 +48,7 @@ import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
+import org.springframework.beans.factory.annotation.Value
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 
@@ -70,6 +71,9 @@ class MigrateResultService constructor(
         private val logger = LoggerFactory.getLogger(MigrateResultService::class.java)
         private val executorService = Executors.newFixedThreadPool(50)
     }
+
+    @Value("\${tag.prod:#{null}}")
+    private val prodTag: String? = null
 
     fun compare(projectCode: String): Boolean {
         logger.info("start to compare policy|$projectCode")
@@ -206,7 +210,7 @@ class MigrateResultService constructor(
         ) ?: throw ErrorCodeException(
             errorCode = AuthMessageCode.ERROR_MIGRATE_AUTH_COMPARE_FAIL,
             params = arrayOf(projectCode),
-            defaultMessage = "Failed to compare policy:resource not migrate" +
+            defaultMessage = "Failed to compare policy:resource not migrate|" +
                     "$userId|$projectCode|$resourceType|$resourceCode"
         )
 
@@ -219,24 +223,38 @@ class MigrateResultService constructor(
             return
         }
         // 用户存在,校验用户是否有资源权限
-        val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, projectCode)
+        val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, projectCode) ?: prodTag
+        logger.info("check user permission from $projectConsulTag|$projectCode|$resourceCode|$userId")
         val hasPermission = bkTag.invokeByTag(projectConsulTag) {
+            // create类的action,resourceType的值是project,调用v0权限接口应转换成原来的值
+            val createPermission = actions.filter { it.contains("create") }.all {
+                client.getGateway(ServicePermissionAuthResource::class).validateUserResourcePermission(
+                    userId = userId,
+                    token = tokenService.getSystemToken()!!,
+                    action = it.substringAfterLast("_"),
+                    projectCode = projectCode,
+                    resourceCode = it.substringBeforeLast("_")
+                ).data!!
+            }
             // 此处需要注意,必须使用getGateway,不能使用get方法,因为ServicePermissionAuthResource的bean类是存在的,不会跨集群调用
-            client.getGateway(ServicePermissionAuthResource::class).batchValidateUserResourcePermissionByRelation(
-                userId = userId,
-                token = tokenService.getSystemToken(null)!!,
-                action = actions.map { it.substringAfterLast("_") },
-                projectCode = projectCode,
-                resourceCode = resourceCode,
-                resourceType = resourceType
-            )
-        }.data!!
-        logger.info("check user permission from $projectConsulTag|$projectCode|$resourceCode|$userId|$hasPermission")
+            val notCreatePermission =
+                client.getGateway(ServicePermissionAuthResource::class).batchValidateUserResourcePermissionByRelation(
+                    userId = userId,
+                    token = tokenService.getSystemToken()!!,
+                    action = actions.filterNot {
+                        it.contains("create")
+                    }.map { it.substringAfterLast("_") },
+                    projectCode = projectCode,
+                    resourceCode = resourceCode,
+                    resourceType = resourceType
+                ).data!!
+            createPermission && notCreatePermission
+        }
         if (hasPermission) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.ERROR_MIGRATE_AUTH_COMPARE_FAIL,
                 params = arrayOf(projectCode),
-                defaultMessage = "Failed to compare policy:permission not migrate" +
+                defaultMessage = "Failed to compare policy:permission not migrate|" +
                         "$userId|$projectCode|$resourceType|$resourceCode|$actions"
             )
         }

@@ -49,7 +49,7 @@ import com.tencent.devops.dispatch.pojo.thirdPartyAgent.BuildJobType
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildDockerInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
-import com.tencent.devops.dispatch.service.dispatcher.agent.DispatchService
+import com.tencent.devops.dispatch.service.dispatcher.agent.DispatchAgentService
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentUtils
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyAgentBuildRedisUtils
@@ -75,7 +75,7 @@ class ThirdPartyAgentService @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
     private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao,
-    private val dispatchService: DispatchService
+    private val dispatchAgentService: DispatchAgentService
 ) {
 
     fun queueBuild(
@@ -297,7 +297,6 @@ class ThirdPartyAgentService @Autowired constructor(
         secretKey: String,
         info: ThirdPartyAgentUpgradeByVersionInfo
     ): AgentResult<UpgradeItem> {
-        // logger.info("Start to check if the agent($agentId) of version $version of project($projectId) can upgrade")
         return try {
             val agentUpgradeResult = client.get(ServiceThirdPartyAgentResource::class)
                 .upgradeByVersionNew(projectId, agentId, secretKey, info)
@@ -367,7 +366,7 @@ class ThirdPartyAgentService @Autowired constructor(
                 finishBuild(it, success)
                 if (it.dockerInfo != null) {
                     // 第三方构建机可能是docker构建机时需要在这里删除docker类型的redisKey
-                    dispatchService.shutdown(event)
+                    dispatchAgentService.shutdown(event)
                 }
             }
         } else {
@@ -375,7 +374,7 @@ class ThirdPartyAgentService @Autowired constructor(
             finishBuild(record, success)
             if (record.dockerInfo != null) {
                 // 第三方构建机可能是docker构建机时需要在这里删除docker类型的redisKey
-                dispatchService.shutdown(event)
+                dispatchAgentService.shutdown(event)
             }
         }
     }
@@ -413,7 +412,7 @@ class ThirdPartyAgentService @Autowired constructor(
                 "of seq(${record.vmSeqId}) and status(${record.status})"
         )
         val agentResult = client.get(ServiceThirdPartyAgentResource::class)
-            .getAgentById(record.projectId, record.agentId)
+            .getAgentByIdGlobal(record.projectId, record.agentId)
         if (agentResult.isNotOk()) {
             logger.warn("Fail to get the third party agent(${record.agentId}) because of ${agentResult.message}")
             throw RemoteServiceException("Fail to get the third party agent")

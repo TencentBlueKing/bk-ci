@@ -115,4 +115,20 @@ interface OpAuthMigrateResource {
         @ApiParam("权限交接请求体", required = true)
         permissionHandoverDTO: PermissionHandoverDTO
     ): Result<Boolean>
+
+    @POST
+    @Path("/migrateMonitorResource")
+    @ApiOperation("迁移监控空间权限资源")
+    fun migrateMonitorResource(
+        @ApiParam("迁移项目", required = true)
+        projectCodes: List<String>
+    ): Result<Boolean>
+
+    @POST
+    @Path("/fitSecToRbacAuth/")
+    @ApiOperation("fitSec升级到rbac权限")
+    fun fitSecToRbacAuth(
+        @ApiParam("按条件迁移项目实体", required = true)
+        migrateProjectConditionDTO: MigrateProjectConditionDTO
+    ): Result<Boolean>
 }
