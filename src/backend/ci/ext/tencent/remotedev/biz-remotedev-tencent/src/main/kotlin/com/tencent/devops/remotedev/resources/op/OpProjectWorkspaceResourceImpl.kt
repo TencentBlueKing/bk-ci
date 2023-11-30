@@ -6,11 +6,17 @@ import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.remotedev.api.op.OpProjectWorkspaceResource
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
@@ -24,7 +30,9 @@ import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.Executors
 import javax.ws.rs.core.Response
 
 @RestResource
@@ -34,8 +42,12 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     private val workspaceService: WorkspaceService,
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val desktopWorkspaceService: DesktopWorkspaceService,
-    private val gitProxyService: GitProxyService
+    private val gitProxyService: GitProxyService,
+    private val client: Client,
+    private val redisOperation: RedisOperation
 ) : OpProjectWorkspaceResource {
+    private val executor = Executors.newCachedThreadPool()
+
     @AuditEntry(
         actionId = ActionId.CGS_ASSIGN,
         subActionIds = [ActionId.CGS_CREATE]
@@ -84,6 +96,35 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
             )
             Thread.sleep(1000)
         }
+
+        // 启动流水线完成剩下的分配工作
+        executor.execute {
+            try {
+                val infoS = redisOperation.get(PIPELINE_CONFIG_INFO) ?: return@execute
+                val info = JsonUtil.to<AssignWorkspacePipelineInfo>(infoS)
+                val newParam = mutableMapOf<String, String>()
+                info.buildParam.forEach { (k, v) ->
+                    when (v) {
+                        "job_ip_list" -> newParam[k] = data.ips?.joinToString { " " } ?: ""
+                        "repoId" -> newParam[k] = data.repoId ?: ""
+                        "localDriver" -> newParam[k] = data.localDriver ?: ""
+                        else -> newParam[k] = v
+                    }
+                }
+                client.get(ServiceBuildResource::class).manualStartupNew(
+                    userId = userId,
+                    projectId = info.projectId,
+                    pipelineId = info.pipelineId,
+                    values = newParam,
+                    channelCode = ChannelCode.BS,
+                    buildNo = null,
+                    startType = StartType.SERVICE
+                )
+            } catch (e: Exception) {
+                logger.warn("execute assignWorkspace pipeline error", e)
+            }
+        }
+
         return Result(true)
     }
 
@@ -112,4 +153,15 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     override fun exportProjectWorkspaceList(userId: String, data: ProjectWorkspaceFetchData): Response {
         return workspaceService.exportProjectWorkspaceList(data)
     }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
+        private const val PIPELINE_CONFIG_INFO = "remotedev:assignWorkspace.pipelineinfo"
+    }
 }
+
+data class AssignWorkspacePipelineInfo(
+    val projectId: String,
+    val pipelineId: String,
+    val buildParam: Map<String, String>
+)
