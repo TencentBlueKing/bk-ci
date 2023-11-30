@@ -225,13 +225,14 @@ class PipelineBuildFacadeService(
         run lit@{
             triggerContainer.elements.forEach {
                 if (it is ManualTriggerElement && it.isElementEnable()) {
-                    if (!debug) canManualStartup = true
+                    canManualStartup = true
                     canElementSkip = it.canElementSkip ?: false
                     useLatestParameters = it.useLatestParameters ?: false
                     return@lit
                 }
             }
         }
+        if (debug) canManualStartup = true
 
         // 获取最后一次的构建id
         val lastTimeInfo = pipelineRuntimeService.getLastTimeBuild(projectId, pipelineId, debug)
