@@ -758,9 +758,10 @@ class PipelineRepositoryService constructor(
         projectId: String,
         pipelineId: String,
         channelCode: ChannelCode? = null,
-        delete: Boolean? = false
+        delete: Boolean? = false,
+        queryDslContext: DSLContext? = null
     ): PipelineInfo? {
-        val template = templatePipelineDao.get(dslContext, projectId, pipelineId)
+        val template = templatePipelineDao.get(queryDslContext ?: dslContext, projectId, pipelineId)
         val srcTemplate = template?.let { t ->
             templateDao.getTemplate(
                 dslContext = dslContext, templateId = t.templateId)
@@ -768,7 +769,7 @@ class PipelineRepositoryService constructor(
         val templateId = template?.templateId
         val info = pipelineInfoDao.convert(
             t = pipelineInfoDao.getPipelineInfo(
-                dslContext = dslContext,
+                dslContext = queryDslContext ?: dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 channelCode = channelCode,
@@ -778,10 +779,10 @@ class PipelineRepositoryService constructor(
         )
         if (info != null && srcTemplate != null) {
             info.templateInfo = TemplateInfo(
-                templateId = srcTemplate.id,
+                templateId = template.templateId,
                 templateName = srcTemplate.templateName,
-                version = srcTemplate.version,
-                versionName = srcTemplate.versionName,
+                version = template.version,
+                versionName = template.versionName,
                 instanceType = PipelineInstanceTypeEnum.valueOf(template.instanceType)
             )
         }
