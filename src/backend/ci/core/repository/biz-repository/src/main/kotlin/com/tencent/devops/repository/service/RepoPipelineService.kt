@@ -249,7 +249,8 @@ class RepoPipelineService @Autowired constructor(
                 pipelineRefCount = pipelineRefCountMap[it.id] ?: 0,
                 atomLogo = atomProps?.run {
                     this[it.atomCode]?.logoUrl ?: ""
-                }
+                },
+                eventTypeKey = it.eventType
             )
         }
         return SQLPage(count = count, records = triggerRecords)
