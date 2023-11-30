@@ -189,6 +189,7 @@ class QueryFromCCService : QueryOperatorService {
         val requestContent = jacksonObjectMapper().writeValueAsString(req)
         if (logger.isDebugEnabled) logger.debug("[executePostRequest] requestContent: $requestContent")
         val ccPostRes = OkhttpUtils.doPost(url, requestContent, headers)
+        if (logger.isDebugEnabled) logger.debug("[executePostRequest] ccPostRes: $ccPostRes")
         return ccPostRes.body?.string()
     }
 
