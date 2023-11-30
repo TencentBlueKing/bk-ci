@@ -13,6 +13,5 @@ data class JobCloudHostIpv6(
     @ApiModelProperty(value = "IP")
     val ip: String?,
     @ApiModelProperty(value = "Ipv6地址")
-    @JsonProperty("host_list")
     val ipv6: String?
 )
