@@ -197,10 +197,7 @@ class PipelineWebhookUpgradeService(
                     pipelineWebhookDao.updateProjectNameAndTaskId(
                         dslContext = dslContext,
                         projectId = projectId,
-                        projectName = pipelineWebhookService.getProjectName(
-                            repositoryType = repo.getScmType().name,
-                            projectName = repo.projectName
-                        ),
+                        projectName = pipelineWebhookService.getProjectName(repo.projectName),
                         taskId = element.id!!,
                         id = id!!
                     )
@@ -377,16 +374,11 @@ class PipelineWebhookUpgradeService(
                 }
                 val repository = getAndCacheRepo(projectId, webhookRepositoryConfig, repoCache)
 
-                // 历史原因,假如git的projectName有三个，如aaa/bbb/ccc,只读取了bbb,导致触发时获取的流水线数量很多,修复数据
+                // 历史原因,假如git的projectName有三个，如aaa/bbb/ccc,只读取了bbb,导致触发时获取的流水线数量很多,记录日志
                 if (repository != null && webhook.projectName != repository.projectName) {
                     logger.info(
-                        "webhook projectName different from repo projectName|webhook:$webhook|repo:$repository"
-                    )
-                    pipelineWebhookDao.updateProjectName(
-                        dslContext = dslContext,
-                        projectId = projectId,
-                        projectName = repository.projectName,
-                        id = webhook.id!!
+                        "webhook projectName different from repo projectName|$projectId|$pipelineId|" +
+                                "webhook:${webhook.projectName}|repo:${repository.projectName}"
                     )
                 }
                 val repositoryHashId = when {
@@ -400,6 +392,7 @@ class PipelineWebhookUpgradeService(
                     dslContext = dslContext,
                     eventType = elementEventType?.name ?: "",
                     externalId = repository?.getExternalId(),
+                    externalName = repository?.projectName ?: webhook.projectName,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     taskId = webhook.taskId!!,

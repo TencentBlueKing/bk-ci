@@ -112,6 +112,14 @@ BEGIN
         ADD COLUMN `REPOSITORY_HASH_ID` varchar(64) null comment '代码库hashId';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_WEBHOOK'
+                    AND COLUMN_NAME = 'EXTERNAL_NAME') THEN
+    ALTER TABLE `T_PIPELINE_WEBHOOK`
+        ADD COLUMN `EXTERNAL_NAME` varchar(255) DEFAULT null COMMENT '代码库平台仓库名';
+    END IF;
 
     COMMIT;
 END <CI_UBF>
