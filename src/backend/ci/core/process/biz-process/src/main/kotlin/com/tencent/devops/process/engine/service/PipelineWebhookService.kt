@@ -149,7 +149,8 @@ class PipelineWebhookService @Autowired constructor(
             projectName = getProjectName(repository.projectName),
             repositoryHashId = repository.repoHashId,
             eventType = eventType?.name ?: "",
-            externalId = repository.getExternalId()
+            externalId = repository.getExternalId(),
+            externalName = repository.projectName
         )
         pipelineWebhookDao.save(
             dslContext = dslContext,
