@@ -1047,10 +1047,9 @@ class TemplateFacadeService @Autowired constructor(
                 )
             } else {
                 templateDao.getTemplate(dslContext = dslContext, version = version)
-                    ?: throw ErrorCodeException(
-                        errorCode = ERROR_TEMPLATE_NOT_EXISTS
-                    )
-            }
+            } ?: throw ErrorCodeException(
+                errorCode = ERROR_TEMPLATE_NOT_EXISTS
+            )
         }
         val currentVersion = TemplateVersion(
             template.version,
@@ -1489,6 +1488,8 @@ class TemplateFacadeService @Autowired constructor(
             templateId = srcTemplateId ?: templateId,
             versionName = versionName,
             version = version
+        ) ?: throw ErrorCodeException(
+            errorCode = ERROR_TEMPLATE_NOT_EXISTS
         )
         instances.forEach {
             try {

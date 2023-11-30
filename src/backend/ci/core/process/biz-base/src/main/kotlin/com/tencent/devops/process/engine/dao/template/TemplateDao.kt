@@ -314,7 +314,7 @@ class TemplateDao {
         templateId: String,
         versionName: String? = null,
         version: Long? = null
-    ): TTemplateRecord {
+    ): TTemplateRecord? {
         with(TTemplate.T_TEMPLATE) {
             val conditions = mutableListOf<Condition>()
             conditions.add(ID.eq(templateId))
@@ -328,9 +328,7 @@ class TemplateDao {
                 .where(conditions)
                 .orderBy(CREATED_TIME.desc(), VERSION.desc())
                 .limit(1)
-                .fetchOne() ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
-            )
+                .fetchOne()
         }
     }
 
