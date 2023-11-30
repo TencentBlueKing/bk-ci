@@ -259,6 +259,7 @@
         watch: {
             curRepoId: {
                 handler (val) {
+                    this.errorCode = 0
                     this.fetchRepoDetail(val)
                 },
                 immediate: true
