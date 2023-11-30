@@ -237,7 +237,7 @@ class RepoPipelineService @Autowired constructor(
                 repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
                 atomCode = it.atomCode,
                 triggerType = it.triggerType,
-                eventType = I18nUtil.getCodeLanMessage(
+                eventTypeDesc = I18nUtil.getCodeLanMessage(
                     messageCode = "${CodeEventType.MESSAGE_CODE_PREFIX}_${it.eventType}",
                     defaultMessage = it.eventType
                 ),
@@ -250,7 +250,7 @@ class RepoPipelineService @Autowired constructor(
                 atomLogo = atomProps?.run {
                     this[it.atomCode]?.logoUrl ?: ""
                 },
-                eventTypeKey = it.eventType
+                eventType = it.eventType
             )
         }
         return SQLPage(count = count, records = triggerRecords)
