@@ -28,7 +28,6 @@ data class JobCloudScriptStepInfo(
     @ApiModelProperty(value = "执行账号")
     val account: JobCloudAccount,
     @ApiModelProperty(value = "执行目标机器")
-    @JsonProperty("execute_target")
     val server: JobCloudVariableServer,
     @ApiModelProperty(value = "参数是否为敏感参数：0-不敏感，1-敏感")
     @JsonProperty("is_param_sensitive")
