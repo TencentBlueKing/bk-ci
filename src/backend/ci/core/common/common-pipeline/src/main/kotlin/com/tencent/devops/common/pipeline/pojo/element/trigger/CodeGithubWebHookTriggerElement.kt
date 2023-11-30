@@ -91,6 +91,25 @@ data class CodeGithubWebHookTriggerElement(
                 )
             }
 
+            CodeEventType.REVIEW -> {
+                listOf(
+                    TriggerElementPropUtils.selector(name = "includeCrState", value = includeCrState),
+                )
+            }
+
+            CodeEventType.ISSUES -> {
+                listOf(
+                    TriggerElementPropUtils.selector(name = "includeIssueAction", value = includeIssueAction)
+                )
+            }
+
+            CodeEventType.NOTE -> {
+                listOf(
+                    TriggerElementPropUtils.selector(name = "includeNoteTypes", value = includeNoteTypes),
+                    TriggerElementPropUtils.vuexInput(name = "includeNoteComment", value = includeNoteComment)
+                )
+            }
+
             else -> emptyList()
         }
         return props.filterNotNull()
