@@ -23,10 +23,33 @@ class NodeScheduledService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(NodeScheduledService::class.java)
-        private const val SCHEDULED_CLEAN_HOST_ID_TIMEROUT_LOCK_KEY = "scheduled_clean_invalid_host_id_timeout_lock"
+        private const val SCHEDULED_CHECK_NODE_IN_CC_TIMEOUT_LOCK_KEY = "scheduled_check_node_in_cc_timeout_lock"
+        private const val SCHEDULED_WRITE_DISPLAY_NAME_TIMEOUT_LOCK_KEY = "scheduled_write_display_name_timeout_lock"
+        private const val SCHEDULED_WRITE_HOST_ID_AND_CLOUD_AREA_ID_TIMEOUT_LOCK_KEY =
+            "scheduled_write_host_id_and_cloud_area_id_timeout_lock"
         private const val EXPTIRATION_TIME_OF_THE_LOCK = 60L
         private const val DEFAULT_PAGE_SIZE = 100
         private const val DEFAULT_CLOUD_AREA_ID = 0L
+    }
+
+    /**
+     * 定时任务：执行一次就行。
+     * 分组执行，每次遍历100条记录。
+     * display_name为空的：拼接节点类型、node hash值、nodeId这三个字段，写入display_name。
+     */
+    @Scheduled(cron = "0 10 17 * * 1-5")
+    fun scheduledWriteDisplayName() {
+        taskWithRedisLock(SCHEDULED_WRITE_DISPLAY_NAME_TIMEOUT_LOCK_KEY, ::writeDisplayName)
+    }
+
+    /**
+     * 定时任务：执行一次就行。
+     * 分组执行，每次遍历100条记录。
+     * 对于 nodeType 为 CMDB 的机器，写入host_id(CC中查到的)，并将云区域ID设为0。
+     */
+    @Scheduled(cron = "0 13 17 * * 1-5")
+    fun scheduledWriteHostIdAndCloudAreaId() {
+        taskWithRedisLock(SCHEDULED_WRITE_HOST_ID_AND_CLOUD_AREA_ID_TIMEOUT_LOCK_KEY, ::writeHostIdAndCloudAreaId)
     }
 
     /**
@@ -35,29 +58,68 @@ class NodeScheduledService @Autowired constructor(
      * cron：每天上午10点执行。
      */
     @Scheduled(cron = "0 0 10 * * 1-5")
-    fun scheduledCleanInvalidHostId() {
-        val redisLock = RedisLock(
-            getRedisStringSerializerOperation(), SCHEDULED_CLEAN_HOST_ID_TIMEROUT_LOCK_KEY, EXPTIRATION_TIME_OF_THE_LOCK
-        )
-        try {
-            val lockSuccess = redisLock.tryLock()
-            if (lockSuccess) {
-                if (logger.isDebugEnabled)
-                    logger.debug("---[scheduledCleanInvalidHostId]Check whether the node is in cc.---")
-                checkNodeInCC()
-            } else {
-                if (logger.isDebugEnabled)
-                    logger.debug("---[scheduledCleanInvalidHostId]Task is running and doesn't need to be started.---")
+    fun scheduledCheckNodeInCC() {
+        taskWithRedisLock(SCHEDULED_CHECK_NODE_IN_CC_TIMEOUT_LOCK_KEY, ::checkNodeInCC)
+    }
+
+    private fun writeDisplayName() {
+        val countDisplayNameEmptyNodes = nodeDao.countDisplayNameEmptyNodes(dslContext)
+        if (logger.isDebugEnabled)
+            logger.debug("[writeDisplayName]countDisplayNameEmptyNodes:$countDisplayNameEmptyNodes.")
+        if (0 < countDisplayNameEmptyNodes) {
+            val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countDisplayNameEmptyNodes.toLong())
+            for (page in 1..totalPages) {
+                val displayNameNullNodeRecords =
+                    nodeDao.getNodesWhoseDisplayNameIsEmpty(dslContext, page, DEFAULT_PAGE_SIZE)
+                val nodeDisplayNameInfoList = displayNameNullNodeRecords.map {
+                    DisplayNameInfo(
+                        nodeId = it.value1(),
+                        nodeType = it.value2(),
+                        nodeHashId = it.value3(),
+                        displayName = it.value2() + "-" + it.value3() + "-" + it.value1().toString()
+                    )
+                }
+                nodeDao.updateDisplayNameByNodeId(dslContext, nodeDisplayNameInfoList)
             }
-        } catch (e: Throwable) {
-            logger.error("[scheduledCleanInvalidHostId]exception: ", e)
-        } finally {
-            redisLock.unlock()
+        } else {
+            if (logger.isDebugEnabled) logger.debug("[writeDisplayName] There is no node with empty DisplayName.")
         }
     }
 
-    private fun getRedisStringSerializerOperation(): RedisOperation {
-        return SpringContextUtil.getBean(RedisOperation::class.java, "redisStringHashOperation")
+    private fun writeHostIdAndCloudAreaId() {
+        val countCmdbNodes = nodeDao.countCmdbNodes(dslContext)
+        if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId]countCmdbNodes:$countCmdbNodes")
+        if (0 < countCmdbNodes) {
+            val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countCmdbNodes.toLong())
+            for (page in 1..totalPages) {
+                val cmdbNodesRecords =
+                    nodeDao.getCmdbNodesLimit(dslContext, page, DEFAULT_PAGE_SIZE)
+                if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId]cmdbNodesRecords:$cmdbNodesRecords")
+                val cmdbNodesIp = cmdbNodesRecords.map { it.value3() }.toSet()
+                if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId]cmdbNodesIp:$cmdbNodesIp.")
+                val inCCInfoList = queryFromCCService.queryCCListHostWithoutBizByInRules(
+                    listOf(FIELD_BK_HOST_ID, FIELD_BK_HOST_INNERIP), cmdbNodesIp, FIELD_BK_HOST_INNERIP
+                ).data?.info
+                if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId]inCCInfoList:$inCCInfoList.")
+                if (!inCCInfoList.isNullOrEmpty()) { // 有就写入
+                    val ipToCCInfoMap = inCCInfoList.associateBy { it.bkHostInnerip }
+                    val nodeHostIdAndCloudAreaIdInfoList = cmdbNodesRecords
+                        .filter {
+                            ipToCCInfoMap.containsKey(it.value3())
+                        }
+                        .map {
+                            HostIdAndCloudAreaIdInfo(
+                                nodeId = it.value1(),
+                                bkCloudId = DEFAULT_CLOUD_AREA_ID,
+                                bkHostId = ipToCCInfoMap[it.value3()]?.bkHostId
+                            )
+                        }
+                    nodeDao.updateHostIdAndCloudAreaIdByNodeId(dslContext, nodeHostIdAndCloudAreaIdInfoList)
+                }
+            }
+        } else {
+            if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId] There is no cmdb node.")
+        }
     }
 
     private fun checkNodeInCC() {
@@ -102,75 +164,26 @@ class NodeScheduledService @Autowired constructor(
         if (logger.isDebugEnabled) logger.debug("---[checkNodeInCC]End Check whether the node is in the cc.---")
     }
 
-    /**
-     * 定时任务：执行一次就行。
-     * 分组执行，每次遍历100条记录。
-     * display_name为空的：拼接节点类型、node hash值、nodeId这三个字段，写入display_name。
-     */
-    @Scheduled(cron = "0 7 16 * * 1-5")
-    fun writeDisplayName() {
-        val countDisplayNameEmptyNodes = nodeDao.countDisplayNameEmptyNodes(dslContext)
-        if (logger.isDebugEnabled)
-            logger.debug("[writeDisplayName]countDisplayNameEmptyNodes:$countDisplayNameEmptyNodes.")
-        if (0 < countDisplayNameEmptyNodes) {
-            val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countDisplayNameEmptyNodes.toLong())
-            for (page in 1..totalPages) {
-                val displayNameNullNodeRecords =
-                    nodeDao.getNodesWhoseDisplayNameIsEmpty(dslContext, page, DEFAULT_PAGE_SIZE)
-                val nodeDisplayNameInfoList = displayNameNullNodeRecords.map {
-                    DisplayNameInfo(
-                        nodeId = it.value1(),
-                        nodeType = it.value2(),
-                        nodeHashId = it.value3(),
-                        displayName = it.value2() + "-" + it.value3() + "-" + it.value1().toString()
-                    )
-                }
-                nodeDao.updateDisplayNameByNodeId(dslContext, nodeDisplayNameInfoList)
+    private fun taskWithRedisLock(lockKey: String, operation: () -> Unit) {
+        val redisLock = RedisLock(
+            getRedisStringSerializerOperation(), lockKey, EXPTIRATION_TIME_OF_THE_LOCK
+        )
+        try {
+            val lockSuccess = redisLock.tryLock()
+            if (lockSuccess) {
+                if (logger.isDebugEnabled) logger.debug("[taskWithRedisLock]Locked.")
+                operation()
+            } else {
+                if (logger.isDebugEnabled) logger.debug("[taskWithRedisLock]Lock failed.")
             }
-        } else {
-            if (logger.isDebugEnabled) logger.debug("[writeDisplayName] There is no node with empty DisplayName.")
+        } catch (e: Throwable) {
+            logger.error("[taskWithRedisLock]exception: ", e)
+        } finally {
+            redisLock.unlock()
         }
     }
 
-    /**
-     * 定时任务：执行一次就行。
-     * 分组执行，每次遍历100条记录。
-     * 对于 nodeType 为 CMDB 的机器，写入host_id(CC中查到的)，并将云区域ID设为0。
-     */
-    @Scheduled(cron = "0 5 16 * * 1-5")
-    fun writeHostIdAndCloudAreaId() {
-        val countCmdbNodes = nodeDao.countCmdbNodes(dslContext)
-        if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId]countCmdbNodes:$countCmdbNodes")
-        if (0 < countCmdbNodes) {
-            val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countCmdbNodes.toLong())
-            for (page in 1..totalPages) {
-                val cmdbNodesRecords =
-                    nodeDao.getCmdbNodesLimit(dslContext, page, DEFAULT_PAGE_SIZE)
-                if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId]cmdbNodesRecords:$cmdbNodesRecords")
-                val cmdbNodesIp = cmdbNodesRecords.map { it.value3() }.toSet()
-                if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId]cmdbNodesIp:$cmdbNodesIp.")
-                val inCCInfoList = queryFromCCService.queryCCListHostWithoutBizByInRules(
-                    listOf(FIELD_BK_HOST_ID, FIELD_BK_HOST_INNERIP), cmdbNodesIp, FIELD_BK_HOST_INNERIP
-                ).data?.info
-                if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId]inCCInfoList:$inCCInfoList.")
-                if (!inCCInfoList.isNullOrEmpty()) { // 有就写入
-                    val ipToCCInfoMap = inCCInfoList.associateBy { it.bkHostInnerip }
-                    val nodeHostIdAndCloudAreaIdInfoList = cmdbNodesRecords
-                        .filter {
-                            ipToCCInfoMap.containsKey(it.value3())
-                        }
-                        .map {
-                            HostIdAndCloudAreaIdInfo(
-                                nodeId = it.value1(),
-                                bkCloudId = DEFAULT_CLOUD_AREA_ID,
-                                bkHostId = ipToCCInfoMap[it.value3()]?.bkHostId
-                            )
-                        }
-                    nodeDao.updateHostIdAndCloudAreaIdByNodeId(dslContext, nodeHostIdAndCloudAreaIdInfoList)
-                }
-            }
-        } else {
-            if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId] There is no cmdb node.")
-        }
+    private fun getRedisStringSerializerOperation(): RedisOperation {
+        return SpringContextUtil.getBean(RedisOperation::class.java, "redisStringHashOperation")
     }
 }
