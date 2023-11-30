@@ -58,7 +58,7 @@ class TencentNodeScheduledService @Autowired constructor(
                 val inCmdbIpRecords = nodeDao.getNotInCmdbNodes(dslContext, inCmdbIpList)
                 if (inCmdbIpRecords.isNotEmpty) {
                     val inCmdbSvrIdList = inCmdbIpRecords.map { it.value1() } // 需要再查询一次CC的ip
-                        .mapNotNull { ipToCmdbInfoMap?.get(it)?.serverId?.toLong() }// 需要再查询一次CC的svrId
+                        .mapNotNull { ipToCmdbInfoMap?.get(it)?.serverId?.toLong() } // 需要再查询一次CC的svrId
 
                     val (svrIdQueryCCRes, _, _) =
                         cmdbNodeService.checkNodeInCCBySvrId(inCmdbSvrIdList) // 用svrId，得到：其中所有在CC中的节点记录，在/不在CC中的svrId列表
