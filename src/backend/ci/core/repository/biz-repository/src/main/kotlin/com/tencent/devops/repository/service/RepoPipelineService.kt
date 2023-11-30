@@ -176,6 +176,7 @@ class RepoPipelineService @Autowired constructor(
     fun listPipelineRef(
         projectId: String,
         repositoryHashId: String,
+        eventType: String?,
         triggerConditionMd5: String?,
         limit: Int,
         offset: Int
@@ -185,12 +186,14 @@ class RepoPipelineService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             repositoryId = repositoryId,
+            eventType = eventType,
             triggerConditionMd5 = triggerConditionMd5
         )
         val records = repoPipelineRefDao.listByRepo(
             dslContext = dslContext,
             projectId = projectId,
             repositoryId = repositoryId,
+            eventType = eventType,
             triggerConditionMd5 = triggerConditionMd5,
             limit = limit,
             offset = offset
