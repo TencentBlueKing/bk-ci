@@ -38,35 +38,45 @@
                 show-overflow-tooltip
             >
                 <template slot-scope="props">
-                    <Icon
-                        class="codelib-type-icon"
-                        :name="codelibIconMap[props.row.type]"
-                        size="16"
-                    />
-                    <a
-                        :class="{ 'name-flod': isListFlod }"
-                        v-bk-overflow-tips
+                    <div
+                        :class="{
+                            'codelib-name-warpper': true
+                        }"
                         v-perm="{
-                            hasPermission: props.row.canEdit,
+                            hasPermission: props.row.canView,
                             disablePermissionApi: true,
                             permissionData: {
                                 projectId: projectId,
                                 resourceType: RESOURCE_TYPE,
                                 resourceCode: props.row.repositoryHashId,
-                                action: RESOURCE_ACTION.EDIT
+                                action: RESOURCE_ACTION.VIEW
                             }
                         }"
-                        @click="handleShowDetail(props.row)"
                     >
-                        {{ props.row.aliasName }}
-                    </a>
-                    <!-- <span
-                        v-if="props.row.enablePac"
-                        class="pac-icon"
-                    >
-                        <Icon name="PACcode" size="22" class="pac-code-icon" />
-                        PAC
-                    </span> -->
+                        <div v-if="isListFlod" class="mask"></div>
+                        <Icon
+                            :name="codelibIconMap[props.row.type]"
+                            size="16"
+                        />
+                        <a
+                            :class="{
+                                'codelib-name': true,
+                                'name-flod': isListFlod,
+                                'name-disabled': !props.row.canView
+                            }"
+                            v-bk-overflow-tips
+                            @click="handleShowDetail(props.row)"
+                        >
+                            {{ props.row.aliasName }}
+                        </a>
+                        <!-- <span
+                            v-if="props.row.enablePac"
+                            class="pac-icon"
+                        >
+                            <Icon name="PACcode" size="22" class="pac-code-icon" />
+                            PAC
+                        </span> -->
+                    </div>
                 </template>
             </bk-table-column>
             <bk-table-column
@@ -645,9 +655,23 @@
             margin-left: auto;
         }
     }
-    .codelib-type-icon {
-        position: relative;
-        top: 3px;
+    .codelib-name-warpper {
+        display: inline-flex;
+        align-items: center;
+        position: initial;
+        .mask {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+        .codelib-name {
+            margin-left: 3px;
+        }
+    }
+    .is-flod-warpper {
+        display: initial;
     }
     .pac-icon {
         position: relative;
@@ -670,19 +694,14 @@
     }
     .name-flod {
         position: relative;
-        top: 3px;
         display: inline-block;
-        max-width: 250px;
+        max-width: 300px;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
     }
-    // .codelib-aliasName {
-    //     position: relative;
-    //     span {
-    //         position: absolute;
-    //         left: 90%;
-    //     }
-    // }
+    .name-disabled {
+        color: #dcdee5 !important;
+    }
 }
 </style>
