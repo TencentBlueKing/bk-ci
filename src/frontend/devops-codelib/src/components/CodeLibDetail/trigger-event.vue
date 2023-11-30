@@ -356,7 +356,6 @@
             },
 
             async handleRefresh () {
-                console.log(this.setDefaultDaterange())
                 this.pageLoading = true
                 this.hasLoadEnd = false
                 this.daterange = this.setDefaultDaterange()

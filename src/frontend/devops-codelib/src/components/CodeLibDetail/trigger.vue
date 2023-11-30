@@ -23,7 +23,7 @@
                 <template slot-scope="{ row }">
                     <div class="event-name">
                         <img class="logo" :src="`https:${row.atomLogo}`" alt="">
-                        {{ row.eventType }}
+                        {{ row.eventTypeDesc }}
                     </div>
                 </template>
             </bk-table-column>
@@ -330,7 +330,7 @@
             },
             handleShowPipelineList (row) {
                 this.triggerConditionMd5 = row.triggerConditionMd5
-                this.triggerEventType = row.eventTypeKey
+                this.triggerEventType = row.eventType
                 this.showPipelineSideslider = true
             },
             handelShowDetail (row) {
