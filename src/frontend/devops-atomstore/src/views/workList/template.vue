@@ -524,7 +524,7 @@
                     const res = await this.$store.dispatch('store/requestPipelineTemplate', {
                         projectCode: this.relateTemplateForm.projectCode
                     })
-                    this.templateList = res.filter(i => i.canEdit) || []
+                    this.templateList = res.models.filter(i => i.canView)
                 } catch (err) {
                     this.$bkMessage({
                         message: err.message ? err.message : err,

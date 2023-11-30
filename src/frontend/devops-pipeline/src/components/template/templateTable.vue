@@ -23,7 +23,7 @@
                                 </td>
                                 <td width="20%" :class="{
                                     'template-name': true,
-                                    'manager-user': isEnabledPermission ? row.canEdit : row.canView
+                                    'manager-user': isEnabledPermission ? row.canView : row.canEdit
                                 }"
                                     :title="row.name"
                                 >

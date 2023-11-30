@@ -104,7 +104,7 @@
                                     permissionData: {
                                         projectId: projectId,
                                         resourceType: 'pipeline',
-                                        resourceCode: templateId,
+                                        resourceCode: props.row.pipelineId,
                                         action: RESOURCE_ACTION.EDIT
                                     }
                                 }"
