@@ -130,7 +130,10 @@ class ParamFacadeService @Autowired constructor(
             codeService.getGitRefs(projectId, formProperty.repoHashId, search)
         } catch (e: Exception) {
             logger.warn("projectId:$projectId,repoHashId:${formProperty.repoHashId} add git refs error", e)
-            listOf<String>()
+            listOf()
+        }.toMutableList()
+        if (search.isNullOrBlank() && !refs.contains(formProperty.defaultValue.toString())){
+            refs.plus(formProperty.defaultValue.toString())
         }
         val options = refs.map {
             BuildFormValue(it, it)
