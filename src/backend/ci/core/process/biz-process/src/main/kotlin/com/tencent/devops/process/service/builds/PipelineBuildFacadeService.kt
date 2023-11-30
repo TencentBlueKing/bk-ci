@@ -248,6 +248,11 @@ class PipelineBuildFacadeService(
                     realValue
                 } ?: param.defaultValue
             }
+        } else {
+            triggerContainer.params.forEach { param ->
+                // 如果没有上次构建的记录则直接使用默认值
+                param.value = param.defaultValue
+            }
         }
 
         // #2902 默认增加构建信息
