@@ -11,11 +11,12 @@ data class JobCloudGetStepInstanceDetailResult(
     @ApiModelProperty(value = "name")
     val name: String,
     @ApiModelProperty(value = "脚本步骤信息")
+    @JsonProperty("script_info")
     val jobCloudScriptStepInfo: JobCloudScriptStepInfo?,
     @ApiModelProperty(value = "文件步骤信息")
-    @JsonProperty("file_step_info")
+    @JsonProperty("file_info")
     val jobCloudFileStepInfo: JobCloudFileStepInfo?,
     @ApiModelProperty(value = "审批步骤信息")
-    @JsonProperty("approval_step_info")
+    @JsonProperty("approval_info")
     val jobCloudApprovalStepInfo: JobCloudApprovalStepInfo?
 )
