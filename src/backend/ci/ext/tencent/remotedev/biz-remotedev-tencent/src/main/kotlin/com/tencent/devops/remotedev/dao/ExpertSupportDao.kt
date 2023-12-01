@@ -59,7 +59,7 @@ class ExpertSupportDao {
         dslContext: DSLContext,
         id: Long,
         status: ExpertSupportStatus,
-        supporter: List<String>?
+        supporter: Set<String>?
     ) {
         with(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT) {
             val sql = dslContext.update(this)
