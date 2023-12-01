@@ -65,7 +65,10 @@ class WindowsGpuResourceDao {
                     LOCKED,
                     PROJECT_ID,
                     DISK,
-                    HDISK
+                    HDISK,
+                    IMAGESTANDARD,
+                    NODE,
+                    IMAGE
                 ).values(
                     it.cgsId,
                     it.zoneId,
@@ -76,7 +79,10 @@ class WindowsGpuResourceDao {
                     ByteUtils.bool2Byte(it.locked ?: false),
                     it.projectId ?: "",
                     it.disk,
-                    it.hDisk
+                    it.hDisk,
+                    ByteUtils.bool2Byte(it.imageStandard ?: false),
+                    it.node,
+                    it.image
                 ).onDuplicateKeyUpdate()
                     .set(STATUS, it.status)
             }
