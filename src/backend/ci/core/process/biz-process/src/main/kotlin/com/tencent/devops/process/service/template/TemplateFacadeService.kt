@@ -2460,6 +2460,12 @@ class TemplateFacadeService @Autowired constructor(
                 weight = 0,
                 version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data
             )
+            pipelineTemplatePermissionService.createResource(
+                userId = userId,
+                projectId = projectId,
+                templateId = templateId,
+                templateName = templateName
+            )
             insertTemplateSetting(
                 context = context,
                 projectId = projectId,
