@@ -44,6 +44,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceType
+1import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.api.BSAuthTokenApi
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
@@ -120,7 +121,8 @@ class TxProjectServiceImpl @Autowired constructor(
     projectDao: ProjectDao,
     projectJmxApi: ProjectJmxApi,
     redisOperation: RedisOperation,
-    client: Client
+    client: Client,
+    authTokenApi: AuthTokenApi
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -134,7 +136,8 @@ class TxProjectServiceImpl @Autowired constructor(
     shardingRoutingRuleAssignService = shardingRoutingRuleAssignService,
     objectMapper = objectMapper,
     projectExtService = projectExtService,
-    projectApprovalService = projectApprovalService
+    projectApprovalService = projectApprovalService,
+    authTokenApi = authTokenApi
 ) {
 
     @Value("\${iam.v0.url:#{null}}")
