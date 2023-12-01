@@ -56,6 +56,8 @@ data class PipelineWebhook(
     var eventType: String? = null,
     @ApiModelProperty("代码库hashId,插件配置解析后的代码库ID", required = false)
     var repositoryHashId: String? = null,
-    @ApiModelProperty("事件源外联Id", required = false)
-    var externalId: String? = null
+    @ApiModelProperty("代码库平台ID", required = false)
+    var externalId: String? = null,
+    @ApiModelProperty("代码库平台仓库名", required = false)
+    var externalName: String? = null
 )
