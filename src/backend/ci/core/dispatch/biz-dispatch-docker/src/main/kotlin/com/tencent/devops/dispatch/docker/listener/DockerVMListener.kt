@@ -203,22 +203,18 @@ class DockerVMListener @Autowired constructor(
                     taskName = "",
                     os = "",
                     vmNames = vmNames,
-                    startTime = System.currentTimeMillis(),
                     channelCode = channelCode,
                     dispatchType = KubernetesDispatchType(
                         kubernetesBuildVersion = JsonUtil.toJson(containerPool),
                         imageType = ImageType.THIRD,
                         performanceConfigId = 0
                     ),
-                    zone = zone,
                     atoms = atoms,
                     executeCount = executeCount,
                     routeKeySuffix = if (!demoteFlag) DispatchRouteKeySuffix.KUBERNETES.routeKeySuffix
                     else DispatchRouteKeySuffix.KUBERNETES_DEMOTE.routeKeySuffix,
-                    stageId = stageId,
                     containerId = containerId,
                     containerHashId = containerHashId,
-                    containerType = containerType,
                     customBuildEnv = customBuildEnv,
                     dockerRoutingType = dockerRoutingType.name
                 )

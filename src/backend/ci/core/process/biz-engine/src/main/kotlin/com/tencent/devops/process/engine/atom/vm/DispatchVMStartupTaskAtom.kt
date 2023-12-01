@@ -256,18 +256,14 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 taskName = param.name,
                 os = param.baseOS.name,
                 vmNames = vmNames,
-                startTime = System.currentTimeMillis(),
                 channelCode = pipelineInfo.channelCode.name,
                 dispatchType = dispatchType,
-                zone = getBuildZone(container),
                 atoms = atoms,
                 executeCount = task.executeCount,
                 routeKeySuffix = dispatchType.routeKeySuffix?.routeKeySuffix,
-                stageId = task.stageId,
                 containerId = task.containerId,
                 containerHashId = task.containerHashId,
                 queueTimeoutMinutes = param.jobControlOption?.prepareTimeout,
-                containerType = task.containerType,
                 customBuildEnv = param.customBuildEnv
             )
         )

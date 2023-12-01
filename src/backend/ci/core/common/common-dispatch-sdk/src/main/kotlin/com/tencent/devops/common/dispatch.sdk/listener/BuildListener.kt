@@ -77,154 +77,6 @@ interface BuildListener {
 
     fun onShutdown(event: PipelineAgentShutdownEvent)
 
-    fun handleShutdownMessage(event: PipelineAgentShutdownEvent) {
-        try {
-            logger.info("Start to handle the shutdown message ($event)")
-            try {
-                onShutdown(event)
-                val dispatchService = getDispatchService()
-                // 上报monitoring
-                dispatchService.sendDispatchMonitoring(
-                    projectId = event.projectId,
-                    pipelineId = event.pipelineId,
-                    buildId = event.buildId,
-                    vmSeqId = event.vmSeqId ?: "",
-                    actionType = "stop",
-                    retryTime = event.retryTime,
-                    routeKeySuffix = event.routeKeySuffix!!,
-                    startTime = 0L,
-                    stopTime = System.currentTimeMillis(),
-                    errorCode = 0,
-                    errorMessage = "",
-                    errorType = null
-                )
-
-                dispatchService.shutdown(event)
-            } catch (t: Throwable) {
-                logger.warn("Fail to handle the shutdown message - ($event)", t)
-            }
-        } catch (t: Throwable) {
-            logger.warn("Fail to handle the shutdown message - ($event)", t)
-        } finally {
-            val jobQuotaService = getJobQuotaService()
-            jobQuotaService.removeRunningJob(
-                projectId = event.projectId,
-                pipelineId = event.pipelineId,
-                buildId = event.buildId,
-                vmSeqId = event.vmSeqId,
-                executeCount = event.executeCount
-            )
-            DispatchLogRedisUtils.removeRedisExecuteCount(event.buildId)
-        }
-    }
-
-    fun getVmType(): JobQuotaVmType?
-
-    fun log(
-        buildLogPrinter: BuildLogPrinter,
-        buildId: String,
-        containerHashId: String?,
-        vmSeqId: String,
-        message: String,
-        executeCount: Int?
-    ) {
-        buildLogPrinter.addLine(
-            buildId = buildId,
-            message = message,
-            tag = VMUtils.genStartVMTaskId(vmSeqId),
-            jobId = containerHashId,
-            executeCount = executeCount ?: 1
-        )
-    }
-
-    fun logRed(
-        buildLogPrinter: BuildLogPrinter,
-        buildId: String,
-        containerHashId: String?,
-        vmSeqId: String,
-        message: String,
-        executeCount: Int?
-    ) {
-        buildLogPrinter.addRedLine(
-            buildId = buildId,
-            message = message,
-            tag = VMUtils.genStartVMTaskId(vmSeqId),
-            jobId = containerHashId,
-            executeCount = executeCount ?: 1
-        )
-    }
-
-    fun retry(
-        sleepTimeInMS: Int = 30000,
-        retryTimes: Int = 3,
-        pipelineEvent: IPipelineEvent? = null
-    ): Boolean {
-        val event = pipelineEvent ?: DispatcherContext.getEvent()
-        if (event == null) {
-            logger.warn("The event is empty")
-            return false
-        }
-        logger.info("Retry the event($event) in $sleepTimeInMS ms")
-        if (event.retryTime > retryTimes) {
-            logger.warn("Fail to dispatch the agent start event with $retryTimes times - ($event)")
-            onFailure(errorType = ErrorType.SYSTEM,
-                errorCode = DispatchSdkErrorCode.RETRY_STARTUP_FAIL,
-                formatErrorMessage = "Fail to start up the job after $retryTimes times",
-                message = "Fail to start up the job after $retryTimes times")
-        }
-        val sleepTime = if (sleepTimeInMS <= 5000) {
-            // 重试不能低于5秒
-            logger.warn("The retry time is less than 5 seconds, use 5 as default")
-            5000
-        } else {
-            sleepTimeInMS
-        }
-        event.retryTime += 1
-        event.delayMills = sleepTime
-        getDispatchService().redispatch(event)
-        return true
-    }
-
-    fun onFailure(errorType: ErrorType, errorCode: Int, formatErrorMessage: String, message: String) {
-        throw BuildFailureException(errorType, errorCode, formatErrorMessage, message)
-    }
-
-    fun onAlert(users: Set<String>, alertTitle: String, message: String) {
-        try {
-            if (users.isEmpty()) {
-                return
-            }
-            val emailMessage = EmailNotifyMessage().apply {
-                addAllReceivers(users)
-                format = EnumEmailFormat.HTML
-                body = message
-                title = alertTitle
-                sender = "DevOps"
-            }
-            logger.info("Start to send the email message($message) with title($alertTitle) to users($users)")
-            val result = getClient().get(ServiceNotifyResource::class).sendEmailNotify(emailMessage)
-            logger.info("Get the notify result - ($result)")
-        } catch (t: Throwable) {
-            logger.warn("Fail to send the alert email - ($users|$alertTitle|$message)", t)
-        }
-    }
-
-    fun parseMessageTemplate(content: String, data: Map<String, String>): String {
-        if (content.isBlank()) {
-            return content
-        }
-        val pattern = Pattern.compile("#\\{([^}]+)}")
-        val newValue = StringBuffer(content.length)
-        val matcher = pattern.matcher(content)
-        while (matcher.find()) {
-            val key = matcher.group(1)
-            val variable = data[key] ?: ""
-            matcher.appendReplacement(newValue, variable)
-        }
-        matcher.appendTail(newValue)
-        return newValue.toString()
-    }
-
     @BkTimed
     fun handleStartup(event: PipelineAgentStartupEvent) {
         DispatcherContext.setEvent(event)
@@ -307,6 +159,155 @@ interface BuildListener {
                 errorType = errorType
             )
         }
+    }
+
+    fun handleShutdownMessage(event: PipelineAgentShutdownEvent) {
+        try {
+            logger.info("Start to handle the shutdown message ($event)")
+            try {
+                onShutdown(event)
+                val dispatchService = getDispatchService()
+                // 上报monitoring
+                dispatchService.sendDispatchMonitoring(
+                    projectId = event.projectId,
+                    pipelineId = event.pipelineId,
+                    buildId = event.buildId,
+                    vmSeqId = event.vmSeqId ?: "",
+                    actionType = "stop",
+                    retryTime = event.retryTime,
+                    routeKeySuffix = event.routeKeySuffix!!,
+                    startTime = 0L,
+                    stopTime = System.currentTimeMillis(),
+                    errorCode = 0,
+                    errorMessage = "",
+                    errorType = null
+                )
+
+                dispatchService.shutdown(event)
+            } catch (t: Throwable) {
+                logger.warn("Fail to handle the shutdown message - ($event)", t)
+            }
+        } catch (t: Throwable) {
+            logger.warn("Fail to handle the shutdown message - ($event)", t)
+        } finally {
+            val jobQuotaService = getJobQuotaService()
+            jobQuotaService.removeRunningJob(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId,
+                executeCount = event.executeCount
+            )
+            DispatchLogRedisUtils.removeRedisExecuteCount(event.buildId)
+        }
+    }
+
+    fun getVmType(): JobQuotaVmType?
+
+    fun log(
+        buildLogPrinter: BuildLogPrinter,
+        buildId: String,
+        containerHashId: String?,
+        vmSeqId: String,
+        message: String,
+        executeCount: Int?
+    ) {
+        buildLogPrinter.addLine(
+            buildId = buildId,
+            message = message,
+            tag = VMUtils.genStartVMTaskId(vmSeqId),
+            jobId = containerHashId,
+            executeCount = executeCount ?: 1
+        )
+    }
+
+    fun logRed(
+        buildLogPrinter: BuildLogPrinter,
+        buildId: String,
+        containerHashId: String?,
+        vmSeqId: String,
+        message: String,
+        executeCount: Int?
+    ) {
+        buildLogPrinter.addRedLine(
+            buildId = buildId,
+            message = message,
+            tag = VMUtils.genStartVMTaskId(vmSeqId),
+            jobId = containerHashId,
+            executeCount = executeCount ?: 1
+        )
+    }
+
+    fun retry(
+        sleepTimeInMS: Int = 30000,
+        retryTimes: Int = 3,
+        pipelineEvent: IPipelineEvent? = null,
+        errorMessage: String? = ""
+    ): Boolean {
+        val event = pipelineEvent ?: DispatcherContext.getEvent()
+        if (event == null) {
+            logger.warn("The event is empty")
+            return false
+        }
+        logger.info("Retry the event($event) in $sleepTimeInMS ms")
+        if (event.retryTime > retryTimes) {
+            logger.warn("Fail to dispatch the agent start event with $retryTimes times - ($event)")
+            onFailure(errorType = ErrorType.SYSTEM,
+                errorCode = DispatchSdkErrorCode.RETRY_STARTUP_FAIL,
+                formatErrorMessage = errorMessage ?: "Fail to start up the job after $retryTimes times",
+                message = errorMessage ?: "Fail to start up the job after $retryTimes times")
+        }
+        val sleepTime = if (sleepTimeInMS <= 5000) {
+            // 重试不能低于5秒
+            logger.warn("The retry time is less than 5 seconds, use 5 as default")
+            5000
+        } else {
+            sleepTimeInMS
+        }
+        event.retryTime += 1
+        event.delayMills = sleepTime
+        getDispatchService().redispatch(event)
+        return true
+    }
+
+    fun onFailure(errorType: ErrorType, errorCode: Int, formatErrorMessage: String, message: String) {
+        throw BuildFailureException(errorType, errorCode, formatErrorMessage, message)
+    }
+
+    fun onAlert(users: Set<String>, alertTitle: String, message: String) {
+        try {
+            if (users.isEmpty()) {
+                return
+            }
+            val emailMessage = EmailNotifyMessage().apply {
+                addAllReceivers(users)
+                format = EnumEmailFormat.HTML
+                body = message
+                title = alertTitle
+                sender = "DevOps"
+            }
+            logger.info("Start to send the email message($message) with title($alertTitle) to users($users)")
+            val result = getClient().get(ServiceNotifyResource::class).sendEmailNotify(emailMessage)
+            logger.info("Get the notify result - ($result)")
+        } catch (t: Throwable) {
+            logger.warn("Fail to send the alert email - ($users|$alertTitle|$message)", t)
+        }
+    }
+
+    fun parseMessageTemplate(content: String, data: Map<String, String>): String {
+        if (content.isBlank()) {
+            return content
+        }
+        val pattern = Pattern.compile("#\\{([^}]+)}")
+        val newValue = StringBuffer(content.length)
+        val matcher = pattern.matcher(content)
+        while (matcher.find()) {
+            val key = matcher.group(1)
+            val variable = data[key] ?: ""
+            matcher.appendReplacement(newValue, variable)
+        }
+        matcher.appendTail(newValue)
+        return newValue.toString()
     }
 
     private fun getDispatchService(): DispatchService {

@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.JOB_BUILD_STOPS
 import com.tencent.devops.common.api.constant.CommonMessageCode.UNABLE_GET_PIPELINE_JOB_STATUS
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
@@ -126,15 +127,18 @@ class DispatchService constructor(
             channelCode = event.channelCode,
             vmNames = event.vmNames,
             atoms = event.atoms,
-            zone = event.zone,
             containerHashId = event.containerHashId,
             executeCount = event.executeCount,
             containerId = event.containerId,
-            containerType = event.containerType,
-            stageId = event.stageId,
             dispatchType = event.dispatchType,
             customBuildEnv = customBuildEnv,
-            dockerRoutingType = event.dockerRoutingType
+            dockerRoutingType = event.dockerRoutingType,
+            pipelineName = event.pipelineName,
+            buildNo = event.buildNo,
+            taskName = event.taskName,
+            os = event.os,
+            retryTime = event.retryTime,
+            queueTimeoutMinutes = event.queueTimeoutMinutes
         )
     }
 
@@ -290,7 +294,8 @@ class DispatchService constructor(
                     buildId = event.buildId,
                     vmSeqId = event.vmSeqId,
                     channelCode = event.channelCode,
-                    zone = event.zone,
+                    // 待废弃属性
+                    zone = Zone.SHENZHEN,
                     atoms = event.atoms,
                     executeCount = event.executeCount ?: 1
                 )
