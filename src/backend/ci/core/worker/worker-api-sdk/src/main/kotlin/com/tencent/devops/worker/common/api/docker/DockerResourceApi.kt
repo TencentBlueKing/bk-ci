@@ -71,7 +71,7 @@ class DockerResourceApi : AbstractBuildResourceApi(), DockerSDKApi {
         userId: String,
         vararg checkDockerImageRequestList: CheckDockerImageRequest
     ): Result<List<CheckDockerImageResponse>> {
-        val path = "/ms/image/api/service/docker-image/checkDockerImage"
+        val path = "/ms/image/api/build/docker-image/checkDockerImage"
         val body = RequestBody.create(
             "application/json; charset=utf-8".toMediaTypeOrNull(),
             objectMapper.writeValueAsString(checkDockerImageRequestList.toList())
