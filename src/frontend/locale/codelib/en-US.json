@@ -181,5 +181,10 @@
     "收起": "Collapse",
     "重置授权会使正在运行的流水线中已获取到的授权信息失效，从而导致执行失败，请谨慎操作。": "Caution: Resetting authorization may cause running pipelines to fail.",
     "事件ID": "Event ID",
-    "关联的流水线": "Associated Pipeline"
+    "关联的流水线": "Associated Pipeline",
+    "无该代码库权限": "No permission for this code repository",
+    "你没有该代码库的查看权限，请申请权限": "You do not have permission to view this code repository, please apply for permission",
+    "代码库不存在": "Code repository does not exist”",
+    "该代码库不存在，请切换代码库": "This code repository does not exist, please switch to another code repository",
+    "申请权限": "Apply permission"
 }
