@@ -38,7 +38,6 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.pojo.agent.AgentErrorExitErrorEnum
 import com.tencent.devops.common.api.pojo.agent.NewHeartbeatInfo
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -236,8 +235,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         return tpad
     }
 
-    private fun trans(enum: AgentErrorExitErrorEnum, userId: String): String {
-        return MessageUtil.getMessageByLocale(enum.name, I18nUtil.getLanguage(userId))
+    private fun trans(enum: String, userId: String): String {
+        return MessageUtil.getMessageByLocale(enum, I18nUtil.getLanguage(userId))
     }
 
     private fun getAgentProperties(agentRecord: TEnvironmentThirdpartyAgentRecord): AgentProps? {
