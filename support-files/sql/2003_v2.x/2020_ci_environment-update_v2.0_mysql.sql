@@ -80,6 +80,24 @@ BEGIN
                   FROM information_schema.statistics
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_NODE'
+                    AND INDEX_NAME = 'HOST_ID') THEN
+        ALTER TABLE `T_NODE`
+            ADD INDEX `HOST_ID` (`HOST_ID`);
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_NODE'
+                    AND INDEX_NAME = 'NODE_TYPE') THEN
+        ALTER TABLE `T_NODE`
+            ADD INDEX `NODE_TYPE` (`NODE_TYPE`);
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_NODE'
                     AND INDEX_NAME = 'IDX_HOST') THEN
         ALTER TABLE `T_NODE`
             ADD INDEX `IDX_HOST` (`HOST_ID`, `PROJECT_ID`);
