@@ -35,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.Executors
 import javax.ws.rs.core.Response
 
+@Suppress("ALL")
 @RestResource
 class OpProjectWorkspaceResourceImpl @Autowired constructor(
     private val workspaceCommon: WorkspaceCommon,
