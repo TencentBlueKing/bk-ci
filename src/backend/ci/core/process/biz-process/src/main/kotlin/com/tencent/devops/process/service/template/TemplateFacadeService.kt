@@ -920,7 +920,7 @@ class TemplateFacadeService @Autowired constructor(
             templatesWithViewPermIds = templatesWithViewPermIds,
             templatesWithEditPermIds = templatesWithEditPermIds,
             templatesWithDeletePermIds = templatesWithDeletePermIds,
-            count = templatesWithListPermRecords?.size ?: 0
+            count = templatesWithListPermIds.size
         )
     }
 
