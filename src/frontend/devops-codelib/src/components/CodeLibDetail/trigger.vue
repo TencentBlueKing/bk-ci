@@ -23,7 +23,7 @@
                 <template slot-scope="{ row }">
                     <div class="event-name">
                         <img class="logo" :src="`https:${row.atomLogo}`" alt="">
-                        {{ row.eventType }}
+                        {{ row.eventTypeDesc }}
                     </div>
                 </template>
             </bk-table-column>
@@ -177,6 +177,7 @@
                 curAtom: {},
                 catchRepoId: '',
                 triggerConditionMd5: '',
+                triggerEventType: '',
                 showPipelineSideslider: false,
                 pipelineListPagination: {
                     current: 1,
@@ -239,6 +240,7 @@
                         projectId: this.projectId,
                         repositoryHashId: this.repoId,
                         triggerConditionMd5: this.triggerConditionMd5,
+                        eventType: this.triggerEventType,
                         page: this.pipelineListPagination.current,
                         pageSize: this.pipelineListPagination.limit
                     }).then(res => {
@@ -328,6 +330,7 @@
             },
             handleShowPipelineList (row) {
                 this.triggerConditionMd5 = row.triggerConditionMd5
+                this.triggerEventType = row.eventType
                 this.showPipelineSideslider = true
             },
             handelShowDetail (row) {

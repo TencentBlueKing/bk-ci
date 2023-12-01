@@ -1,138 +1,158 @@
 <template>
-    <section
-        v-if="curRepo"
-        class="codelib-detail"
-        v-bkloading="{ isLoading }">
-        <div class="detail-header">
-            <div
-                v-if="!isEditing"
-                class="codelib-name"
-            >
-                <span v-bk-overflow-tips class="name mr5">{{ repoInfo.aliasName }}</span>
-                <span
-                    v-perm="{
-                        hasPermission: curRepo.canEdit,
-                        disablePermissionApi: true,
-                        permissionData: {
-                            projectId: projectId,
-                            resourceType: RESOURCE_TYPE,
-                            resourceCode: curRepo.repositoryHashId,
-                            action: RESOURCE_ACTION.EDIT
-                        }
-                    }"
-                    @click="handleEditName"
+    <div class="codelib-detail">
+        <section
+            v-if="curRepo && !errorCode"
+            class="content-wrapper"
+            v-bkloading="{ isLoading }">
+            <div class="detail-header">
+                <div
+                    v-if="!isEditing"
+                    class="codelib-name"
                 >
+                    <span v-bk-overflow-tips class="name mr5">{{ repoInfo.aliasName }}</span>
+                    <span
+                        v-perm="{
+                            hasPermission: curRepo.canEdit,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: RESOURCE_TYPE,
+                                resourceCode: curRepo.repositoryHashId,
+                                action: RESOURCE_ACTION.EDIT
+                            }
+                        }"
+                        @click="handleEditName"
+                    >
+                        <Icon
+                            name="edit-line"
+                            size="16"
+                            class="edit-icon"
+                        />
+                    </span>
+                    <span
+                        v-perm="{
+                            hasPermission: curRepo.canDelete,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: RESOURCE_TYPE,
+                                resourceCode: curRepo.repositoryHashId,
+                                action: RESOURCE_ACTION.DELETE
+                            }
+                        }"
+                        @click="handleDeleteCodeLib"
+                    >
+                        <Icon
+                        
+                            name="delete"
+                            size="14"
+                            class="delete-icon"
+                        />
+                    </span>
+                </div>
+                <div
+                    v-else
+                    v-bk-clickoutside="handleSave"
+                    class="edit-input"
+                >
+                    <bk-input
+                        class="aliasName-input"
+                        ref="aliasNameInput"
+                        :maxlength="60"
+                        v-model="repoInfo.aliasName"
+                        @enter="handleSave"
+                    >
+                    </bk-input>
+                    <bk-button
+                        class="ml5 mr5"
+                        text
+                        @click="handleSave"
+                    >
+                        {{ $t('codelib.save') }}
+                    </bk-button>
+                    <bk-button
+                        text
+                        @click="handleCancelEdit"
+                    >
+                        {{ $t('codelib.cancel') }}
+                    </bk-button>
+                </div>
+                <div class="address-content">
                     <Icon
-                        name="edit-line"
+                        class="codelib-type-icon"
+                        :name="codelibIconMap[curRepo.type]"
                         size="16"
-                        class="edit-icon"
                     />
-                </span>
-                <span
-                    v-perm="{
-                        hasPermission: curRepo.canDelete,
-                        disablePermissionApi: true,
-                        permissionData: {
-                            projectId: projectId,
-                            resourceType: RESOURCE_TYPE,
-                            resourceCode: curRepo.repositoryHashId,
-                            action: RESOURCE_ACTION.DELETE
-                        }
-                    }"
-                    @click="handleDeleteCodeLib"
-                >
-                    <Icon
-                    
-                        name="delete"
-                        size="14"
-                        class="delete-icon"
-                    />
-                </span>
+                    <!-- <a
+                        v-if="repoInfo.url && repoInfo.url.startsWith('http')"
+                        class="codelib-address"
+                        v-bk-overflow-tips
+                        @click="handleToRepo(repoInfo.url)"
+                    >
+                        {{ repoInfo.url }}
+                    </a> -->
+                    <p
+                        class="codelib-address"
+                    >
+                        {{ repoInfo.url }}
+                    </p>
+                    <span @click="handleCopy">
+                        <Icon
+                            name="copy2"
+                            size="16"
+                            class="copy-icon"
+                        />
+                    </span>
+                </div>
             </div>
-            <div
-                v-else
-                v-bk-clickoutside="handleSave"
-                class="edit-input"
+            <bk-tab :active.sync="active" type="unborder-card">
+                <bk-tab-panel
+                    v-for="(panel, index) in panels"
+                    v-bind="panel"
+                    :key="index">
+                    <component
+                        ref="tabCom"
+                        v-if="panel.name === active"
+                        :is="componentName"
+                        :repo-info="repoInfo"
+                        :cur-repo="curRepo"
+                        :type="repoInfo['@type']"
+                        :fetch-repo-detail="fetchRepoDetail"
+                        :event-type-list="eventTypeList"
+                        :trigger-type-list="triggerTypeList"
+                        :refresh-codelib-list="refreshCodelibList"
+                        @updateList="updateList"
+                    >
+                    </component>
+                </bk-tab-panel>
+            </bk-tab>
+            <UsingPipelinesDialog
+                :is-show.sync="pipelinesDialogPayload.isShow"
+                :pipelines-list="pipelinesList"
+                :fetch-pipelines-list="fetchPipelinesList"
+                :is-loadig-more="pipelinesDialogPayload.isLoadingMore"
+                :has-load-end="pipelinesDialogPayload.hasLoadEnd"
+            />
+        </section>
+        <empty-tips
+            v-if="errorCode === 403"
+            :title="$t('codelib.无该代码库权限')"
+            :desc="$t('codelib.你没有该代码库的查看权限，请申请权限')"
+        >
+            <bk-button
+                theme="primary"
+                @click="handleApply"
             >
-                <bk-input
-                    class="aliasName-input"
-                    ref="aliasNameInput"
-                    :maxlength="60"
-                    v-model="repoInfo.aliasName"
-                    @enter="handleSave"
-                >
-                </bk-input>
-                <bk-button
-                    class="ml5 mr5"
-                    text
-                    @click="handleSave"
-                >
-                    {{ $t('codelib.save') }}
-                </bk-button>
-                <bk-button
-                    text
-                    @click="handleCancelEdit"
-                >
-                    {{ $t('codelib.cancel') }}
-                </bk-button>
-            </div>
-            <div class="address-content">
-                <Icon
-                    class="codelib-type-icon"
-                    :name="codelibIconMap[curRepo.type]"
-                    size="16"
-                />
-                <!-- <a
-                    v-if="repoInfo.url && repoInfo.url.startsWith('http')"
-                    class="codelib-address"
-                    v-bk-overflow-tips
-                    @click="handleToRepo(repoInfo.url)"
-                >
-                    {{ repoInfo.url }}
-                </a> -->
-                <p
-                    class="codelib-address"
-                >
-                    {{ repoInfo.url }}
-                </p>
-                <span @click="handleCopy">
-                    <Icon
-                        name="copy2"
-                        size="16"
-                        class="copy-icon"
-                    />
-                </span>
-            </div>
-        </div>
-        <bk-tab :active.sync="active" type="unborder-card">
-            <bk-tab-panel
-                v-for="(panel, index) in panels"
-                v-bind="panel"
-                :key="index">
-                <component
-                    ref="tabCom"
-                    v-if="panel.name === active"
-                    :is="componentName"
-                    :repo-info="repoInfo"
-                    :cur-repo="curRepo"
-                    :type="repoInfo['@type']"
-                    :fetch-repo-detail="fetchRepoDetail"
-                    :event-type-list="eventTypeList"
-                    :trigger-type-list="triggerTypeList"
-                    :refresh-codelib-list="refreshCodelibList"
-                    @updateList="updateList"
-                >
-                </component>
-            </bk-tab-panel>
-        </bk-tab>
-        <UsingPipelinesDialog
-            :is-show.sync="pipelinesDialogPayload.isShow"
-            :pipelines-list="pipelinesList"
-            :fetch-pipelines-list="fetchPipelinesList"
-            :is-loadig-more="pipelinesDialogPayload.isLoadingMore"
-            :has-load-end="pipelinesDialogPayload.hasLoadEnd"
-        />
-    </section>
+                {{ $t('codelib.申请权限') }}
+            </bk-button>
+        </empty-tips>
+        <empty-tips
+            v-else-if="errorCode === 404"
+            :title="$t('codelib.代码库不存在')"
+            :desc="$t('codelib.该代码库不存在，请切换代码库')"
+        >
+        </empty-tips>
+    </div>
 </template>
 <script>
     import {
@@ -141,7 +161,7 @@
     import {
         REPOSITORY_API_URL_PREFIX
     } from '../../store/constants'
-    import { RESOURCE_ACTION, RESOURCE_TYPE } from '@/utils/permission'
+    import { RESOURCE_ACTION, RESOURCE_TYPE, handleCodelibNoPermission } from '@/utils/permission'
     import Trigger from './trigger.vue'
     import BasicSetting from './basic-setting.vue'
     import TriggerEvent from './trigger-event.vue'
@@ -207,7 +227,8 @@
                     CODE_P4: 'code-P4'
                 },
                 eventTypeList: [],
-                triggerTypeList: []
+                triggerTypeList: [],
+                errorCode: 0
             }
         },
         computed: {
@@ -230,11 +251,15 @@
             },
             scmType () {
                 return this.$route.query.scmType || ''
+            },
+            urlRepoId () {
+                return this.$route.query.id
             }
         },
         watch: {
             curRepoId: {
                 handler (val) {
+                    this.errorCode = 0
                     this.fetchRepoDetail(val)
                 },
                 immediate: true
@@ -324,6 +349,8 @@
                                 scmType: this.repoInfo.scmType
                             }
                         })
+                    }).catch(e => {
+                        this.errorCode = e.httpStatus || 404
                     }).finally(() => {
                         if (this.userId) {
                             this.isLoading = loading
@@ -473,6 +500,13 @@
                 }).finally(() => {
                     this.pipelinesDialogPayload.isLoadingMore = false
                 })
+            },
+            handleApply () {
+                handleCodelibNoPermission({
+                    projectId: this.projectId,
+                    resourceCode: this.urlRepoId,
+                    action: RESOURCE_ACTION.VIEW
+                })
             }
         }
     }
@@ -491,7 +525,8 @@
         }
     }
 
-    .codelib-detail {
+    .codelib-detail,
+    .content-wrapper {
         height: 100%;
         .detail-header {
             display: flex;
