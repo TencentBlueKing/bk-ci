@@ -54,7 +54,7 @@ class MarketCheckImageTask : ITask() {
 
     @Suppress("ALL")
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
-        logger.info("MarketCheckImageTask buildTask: $buildTask,buildVariables: $buildVariables")
+        LoggerService.addNormalLine("MarketCheckImageTask buildTask: $buildTask,buildVariables: $buildVariables")
         LoggerService.addNormalLine("begin check image")
         val buildVariableMap = buildTask.buildVariable!!
         val imageCode = buildVariableMap["imageCode"]
