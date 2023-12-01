@@ -262,7 +262,7 @@ class WorkspaceService @Autowired constructor(
             workspaceCommon.shareWorkspace(
                 workspaceName = workspaceName,
                 operator = userId,
-                assigns = listOf(ProjectWorkspaceAssign(sharedUser, WorkspaceShared.AssignType.VIEWER)),
+                assigns = listOf(ProjectWorkspaceAssign(sharedUser, WorkspaceShared.AssignType.VIEWER, null)),
                 mountType = workspace.workspaceMountType
             )
             workspaceOpHistoryDao.createWorkspaceHistory(
@@ -384,7 +384,7 @@ class WorkspaceService @Autowired constructor(
             }
         }
 
-        val allConfig = windowsResourceConfigService.getAllType().associateBy { it.id!! }
+        val allConfig = windowsResourceConfigService.getAllType(true).associateBy { it.id!! }
         val zoneConfig = windowsResourceConfigService.getAllZone().associateBy { it.zoneShortName }
         val taiUserCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = taiUsers)
             .mapValues { "${it.value.first}@${it.value.second}" }
@@ -622,7 +622,7 @@ class WorkspaceService @Autowired constructor(
             dslContext,
             userIds = taiUsers.filter { UserUtil.isTaiUser(it) }.toSet()
         ).mapValues { "${it.value.first}@${it.value.second}" }
-        val allConfig = windowsResourceConfigService.getAllType().associateBy { it.id!! }
+        val allConfig = windowsResourceConfigService.getAllType(true).associateBy { it.id!! }
         val zoneConfig = windowsResourceConfigService.getAllZone().associateBy { it.zoneShortName }
 
         val allWindows = workspaceWindowsDao.batchFetchWorkspaceWindowsInfo(
@@ -1192,6 +1192,18 @@ class WorkspaceService @Autowired constructor(
             projects = projects.joinToString(","),
             ip = ip
         ) ?: emptyMap()
+    }
+
+    // 检测过期的工作空间分享并且取消
+    fun checkAndUnshared() {
+        workspaceSharedDao.fetchExpireShare(dslContext).forEach { record ->
+            workspaceCommon.unShareWorkspace(
+                workspaceName = record.workspaceName,
+                operator = record.operator,
+                sharedUsers = listOf(record.sharedUser),
+                mountType = WorkspaceMountType.START
+            )
+        }
     }
 
     companion object {

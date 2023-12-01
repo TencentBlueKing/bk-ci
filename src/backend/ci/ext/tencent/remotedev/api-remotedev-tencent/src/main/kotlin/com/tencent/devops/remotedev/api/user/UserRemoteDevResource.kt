@@ -49,6 +49,7 @@ import javax.ws.rs.core.Context
 import javax.ws.rs.core.HttpHeaders
 import javax.ws.rs.core.MediaType
 import org.glassfish.jersey.server.ChunkedOutput
+import javax.ws.rs.DefaultValue
 
 @Api(tags = ["USER_WORKSPACE"], description = "用户-工作空间,apiType:内网传user，离岸传desktop")
 @Path("/{apiType:user|desktop}/remotedev")
@@ -129,7 +130,11 @@ interface UserRemoteDevResource {
     @Path("/get_all_windows_resource_config")
     fun getAllWindowsResourceConfig(
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
+        userId: String,
+        @ApiParam(value = "是否包含不可用机型", required = false)
+        @QueryParam("withUnavailable")
+        @DefaultValue("false")
+        withUnavailable: Boolean? = false
     ): Result<List<WindowsResourceTypeConfig>>
 
     @ApiOperation("获取所有的WINDOWS GPU资源地域信息")
@@ -158,4 +163,18 @@ interface UserRemoteDevResource {
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<String>
+
+    @ApiOperation("申请专家协助")
+    @GET
+    @Path("/addExpSup")
+    fun addExpSup(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "工单id", required = true)
+        @QueryParam("id")
+        id: Long,
+        @ApiParam(value = "工作空间ID", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
 }

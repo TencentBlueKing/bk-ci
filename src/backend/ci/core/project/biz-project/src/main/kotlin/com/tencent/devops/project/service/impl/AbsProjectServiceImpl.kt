@@ -594,6 +594,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     accessToken = accessToken,
                     permission = AuthPermission.MANAGE
                 )
+                val projectsWithViewPermission = getProjectFromAuth(
+                    userId = userId,
+                    accessToken = accessToken,
+                    permission = AuthPermission.VIEW
+                )
                 projectDao.listByEnglishName(
                     dslContext = dslContext,
                     englishNameList = projectsWithVisitPermission.toList(),
@@ -603,7 +608,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         ProjectUtils.packagingBean(
                             tProjectRecord = it,
                             managePermission = projectsWithManagePermission?.contains(it.englishName),
-                            showUserManageIcon = isShowUserManageIcon(it.routerTag)
+                            showUserManageIcon = isShowUserManageIcon(it.routerTag),
+                            viewPermission = projectsWithViewPermission?.contains(it.englishName)
                         )
                     )
                 }
