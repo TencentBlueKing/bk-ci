@@ -197,10 +197,7 @@ class PipelineWebhookUpgradeService(
                     pipelineWebhookDao.updateProjectNameAndTaskId(
                         dslContext = dslContext,
                         projectId = projectId,
-                        projectName = pipelineWebhookService.getProjectName(
-                            repositoryType = repo.getScmType().name,
-                            projectName = repo.projectName
-                        ),
+                        projectName = pipelineWebhookService.getProjectName(repo.projectName),
                         taskId = element.id!!,
                         id = id!!
                     )
@@ -286,15 +283,14 @@ class PipelineWebhookUpgradeService(
     }
 
     fun updateWebhookEventInfo(
-        projectId: String?,
-        projectNames: List<String>?
+        projectId: String?
     ) {
         val startTime = System.currentTimeMillis()
         val threadPoolExecutor = Executors.newSingleThreadExecutor()
         threadPoolExecutor.submit {
             logger.info("PipelineWebhookService:begin updateWebhookEventInfo threadPoolExecutor")
             try {
-                updateWebhookEventInfoTask(projectId = projectId, projectNames = projectNames)
+                updateWebhookEventInfoTask(projectId = projectId)
             } catch (ignored: Exception) {
                 logger.warn("PipelineWebhookService：updateWebhookEventInfo failed", ignored)
             } finally {
@@ -304,10 +300,7 @@ class PipelineWebhookUpgradeService(
         }
     }
 
-    private fun updateWebhookEventInfoTask(
-        projectId: String?,
-        projectNames: List<String>?
-    ) {
+    private fun updateWebhookEventInfoTask(projectId: String?) {
         var offset = 0
         val limit = 1000
         val repoCache = mutableMapOf<String, Optional<Repository>>()
@@ -317,7 +310,6 @@ class PipelineWebhookUpgradeService(
             val pipelines = pipelineWebhookDao.groupPipelineList(
                 dslContext = dslContext,
                 projectId = projectId,
-                projectNames = projectNames,
                 limit = limit,
                 offset = offset
             )
@@ -333,6 +325,7 @@ class PipelineWebhookUpgradeService(
         } while (pipelines.size == 1000)
     }
 
+    @Suppress("CyclomaticComplexMethod", "ComplexMethod")
     private fun updatePipelineEventInfo(
         projectId: String,
         pipelineId: String,
@@ -377,16 +370,11 @@ class PipelineWebhookUpgradeService(
                 }
                 val repository = getAndCacheRepo(projectId, webhookRepositoryConfig, repoCache)
 
-                // 历史原因,假如git的projectName有三个，如aaa/bbb/ccc,只读取了bbb,导致触发时获取的流水线数量很多,修复数据
+                // 历史原因,假如git的projectName有三个，如aaa/bbb/ccc,只读取了bbb,导致触发时获取的流水线数量很多,记录日志
                 if (repository != null && webhook.projectName != repository.projectName) {
                     logger.info(
-                        "webhook projectName different from repo projectName|webhook:$webhook|repo:$repository"
-                    )
-                    pipelineWebhookDao.updateProjectName(
-                        dslContext = dslContext,
-                        projectId = projectId,
-                        projectName = repository.projectName,
-                        id = webhook.id!!
+                        "webhook projectName different from repo projectName|$projectId|$pipelineId|" +
+                                "webhook:${webhook.projectName}|repo:${repository.projectName}"
                     )
                 }
                 val repositoryHashId = when {
@@ -396,10 +384,19 @@ class PipelineWebhookUpgradeService(
 
                     else -> null
                 }
+                val externalName = when {
+                    repository != null -> pipelineWebhookService.getExternalName(
+                        scmType = repository.getScmType(),
+                        projectName = repository.projectName
+                    )
+
+                    else -> webhook.projectName
+                }
                 pipelineWebhookDao.updateWebhookEventInfo(
                     dslContext = dslContext,
                     eventType = elementEventType?.name ?: "",
                     externalId = repository?.getExternalId(),
+                    externalName = externalName,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     taskId = webhook.taskId!!,
