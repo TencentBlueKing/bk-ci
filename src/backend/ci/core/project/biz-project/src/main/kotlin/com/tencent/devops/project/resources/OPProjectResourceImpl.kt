@@ -138,4 +138,28 @@ class OPProjectResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         return Result(opProjectService.updateProjectProperties(userId, projectCode, properties))
     }
+
+    override fun enable(
+        enabled: Boolean,
+        englishNames: List<String>
+    ): Result<Boolean> {
+        englishNames.forEach {
+            projectService.updateUsableStatus(
+                englishName = it,
+                enabled = enabled
+            )
+        }
+        return Result(true)
+    }
+
+    override fun updateProjectProductId(
+        projectCode: String,
+        productName: String
+    ): Result<Boolean> {
+        projectService.updateProjectProductId(
+            englishName = projectCode,
+            productName = productName
+        )
+        return Result(true)
+    }
 }
