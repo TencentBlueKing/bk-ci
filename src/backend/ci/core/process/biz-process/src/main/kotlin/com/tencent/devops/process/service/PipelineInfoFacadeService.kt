@@ -1249,6 +1249,10 @@ class PipelineInfoFacadeService @Autowired constructor(
             if (model.instanceFromTemplate == true) {
                 model.templateId = templateService.getTemplateIdByPipeline(projectId, pipelineId)
             }
+            // TODO #8161 静态组
+            model.staticViews = pipelineViewGroupService.listViewByPipelineId(userId, projectId, pipelineId).map {
+                it.id
+            }
             return model
         } catch (e: Exception) {
             logger.warn("Fail to get the pipeline($pipelineId) definition of project($projectId)", e)
