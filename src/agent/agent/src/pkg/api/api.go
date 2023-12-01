@@ -33,6 +33,7 @@ import (
 	"strconv"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/httputil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
@@ -74,9 +75,17 @@ func Heartbeat(
 		},
 		DockerParallelTaskCount: config.GAgentConfig.DockerParallelTaskCount,
 		DockerTaskList:          dockerTaskList,
+		ErrorExitData:           exitcode.GetExitError(),
 	}
 
-	return httputil.NewHttpClient().Post(url).Body(agentHeartbeatInfo).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
+	res := httputil.NewHttpClient().Post(url).Body(agentHeartbeatInfo).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute()
+
+	// 可能是发送请求报错了，所以重新再取一遍
+	if exitcode.GetExitError() != nil {
+		exitcode.Exit()
+	}
+
+	return res.IntoDevopsResult()
 }
 
 func CheckUpgrade(jdkVersion []string, dockerInitFileMd5 DockerInitFileInfo) (*httputil.AgentResult, error) {
