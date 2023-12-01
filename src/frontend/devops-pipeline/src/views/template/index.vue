@@ -1,5 +1,5 @@
 <template>
-    <div class="biz-container pipeline-subpages">
+    <div class="biz-container pipeline-subpages" v-bkloading="{ isLoading }">
         <div class="biz-side-bar">
             <side-bar
                 :nav="nav"
@@ -7,13 +7,7 @@
                 :sub-system-name="'pipelines'">
             </side-bar>
         </div>
-        <div
-            :class="{
-                'content-wrapper': true,
-                'permission': isTemplatePermission
-            }"
-            v-bkloading="{ isLoading }"
-        >
+        <template v-if="!isLoading">
             <router-view
                 v-if="hasViewPermission"
                 class="biz-content"
@@ -33,7 +27,7 @@
                     {{ $t('template.accessDeny.apply') }}
                 </bk-button>
             </empty-tips>
-        </div>
+        </template>
     </div>
 </template>
 
@@ -91,11 +85,6 @@
             }
         },
 
-        computed: {
-            isTemplatePermission () {
-                return this.$route.name === 'templatePermission'
-            }
-        },
         created () {
             const { projectId, templateId } = this.$route.params
             this.$store.dispatch('requestProjectDetail', { projectId })
@@ -105,7 +94,7 @@
                     this.sideMenuList[0].list.push({
                         id: 'templatePermission',
                         name: this.$t('template.permissionSetting'),
-                        icon: 'permission'
+                        icon: 'icon-permission'
                     })
                 }
             })
@@ -139,10 +128,10 @@
             position: absolute;
         }
     }
-    .content-wrapper {
+    .biz-content {
         width: 100%;
         height: 100%;
-        &.permission {
+        .group-table {
             padding: 20px;
         }
     }
