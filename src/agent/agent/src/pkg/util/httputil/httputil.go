@@ -28,157 +28,156 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
- package httputil
+package httputil
 
- import (
-	 "bytes"
-	 "context"
-	 "encoding/json"
-	 "errors"
-	 "fmt"
-	 "io"
-	 "net/http"
-	 "net/url"
-	 "reflect"
-	 "time"
- 
-	 "github.com/TencentBlueKing/bk-ci/agentcommon/logs"
- 
-	 "github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
- )
- 
- type HttpClient struct {
-	 client    *http.Client
-	 method    string
-	 url       string
-	 body      io.Reader
-	 header    map[string]string
-	 formValue map[string]string
-	 err       error
- }
- 
- type HttpResult struct {
-	 Body   []byte
-	 Status int
-	 Error  error
- }
- 
- func IsSuccess(status int) bool {
-	 return status >= 200 && status < 400
- }
- 
- func NewHttpClient() *HttpClient {
-	 return &HttpClient{
-		 client:    http.DefaultClient,
-		 header:    make(map[string]string),
-		 formValue: make(map[string]string),
-	 }
- }
- 
- func (r *HttpClient) Post(url string) *HttpClient {
-	 r.method = "POST"
-	 r.url = url
-	 r.header["Content-Type"] = "application/json; charset=utf-8"
-	 return r
- }
- 
- func (r *HttpClient) Put(url string) *HttpClient {
-	 r.method = "PUT"
-	 r.url = url
-	 r.header["Content-Type"] = "application/json; charset=utf-8"
-	 return r
- }
- 
- func (r *HttpClient) Get(url string) *HttpClient {
-	 r.method = "GET"
-	 r.url = url
-	 return r
- }
- 
- func (r *HttpClient) Delete(url string) *HttpClient {
-	 r.method = "DELETE"
-	 r.url = url
-	 return r
- }
- 
- func (r *HttpClient) SetHeader(key, value string) *HttpClient {
-	 r.header[key] = value
-	 return r
- }
- 
- func (r *HttpClient) SetHeaders(header map[string]string) *HttpClient {
-	 for k, v := range header {
-		 r.header[k] = v
-	 }
-	 return r
- }
- 
- func (r *HttpClient) SetForm(key, value string) *HttpClient {
-	 r.formValue[key] = value
-	 return r
- }
- 
- func (r *HttpClient) Body(body interface{}) *HttpClient {
-	 if nil == body {
-		 r.body = bytes.NewReader([]byte(""))
-		 return r
-	 }
-	 if reflect.ValueOf(body).IsNil() {
-		 r.body = bytes.NewReader([]byte(""))
-		 return r
-	 }
-	 data, err := json.Marshal(body)
-	 if nil != err {
-		 r.err = err
-	 }
-	 r.body = bytes.NewReader(data)
- 
-	 logs.Info(fmt.Sprintf("url:[%s]|request body: %s", r.url, string(data)))
-	 return r
- }
- 
- func (r *HttpClient) Execute() *HttpResult {
-	 result := new(HttpResult)
-	 defer func() {
-		 if err := recover(); err != nil {
-			 logs.Error(fmt.Sprintf("url:[%s]|http request err: ", r.url), err)
-			 result.Error = errors.New("http request err")
-		 }
-	 }()
-	 withTimeout, cancel := context.WithTimeout(context.TODO(), time.Duration(config.GAgentConfig.TimeoutSec)*time.Second)
-	 defer cancel()
-	 req, err := http.NewRequestWithContext(withTimeout, r.method, r.url, r.body)
-	 if err != nil {
-		 result.Error = err
-		 return result
-	 }
- 
-	 //header
-	 for k, v := range r.header {
-		 req.Header.Set(k, v)
-	 }
- 
-	 //queryParams
-	 value := url.Values{}
-	 for k, v := range r.formValue {
-		 value.Add(k, v)
-	 }
-	 req.Form = value
-	 resp, err := r.client.Do(req)
-	 if err != nil {
-		 result.Error = err
-		 return result
-	 }
-	 defer resp.Body.Close()
-	 body, err := io.ReadAll(resp.Body)
-	 if err != nil {
-		 result.Error = err
-		 return result
-	 }
- 
-	 result.Body = body
-	 result.Status = resp.StatusCode
-	 logs.Info(fmt.Sprintf("url:[%s]|http status: %s, http respBody: %s", r.url, resp.Status, string(body)))
-	 return result
- }
- 
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+	"reflect"
+	"time"
+
+	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+)
+
+type HttpClient struct {
+	client    *http.Client
+	method    string
+	url       string
+	body      io.Reader
+	header    map[string]string
+	formValue map[string]string
+	err       error
+}
+
+type HttpResult struct {
+	Body   []byte
+	Status int
+	Error  error
+}
+
+func IsSuccess(status int) bool {
+	return status >= 200 && status < 400
+}
+
+func NewHttpClient() *HttpClient {
+	return &HttpClient{
+		client:    http.DefaultClient,
+		header:    make(map[string]string),
+		formValue: make(map[string]string),
+	}
+}
+
+func (r *HttpClient) Post(url string) *HttpClient {
+	r.method = "POST"
+	r.url = url
+	r.header["Content-Type"] = "application/json; charset=utf-8"
+	return r
+}
+
+func (r *HttpClient) Put(url string) *HttpClient {
+	r.method = "PUT"
+	r.url = url
+	r.header["Content-Type"] = "application/json; charset=utf-8"
+	return r
+}
+
+func (r *HttpClient) Get(url string) *HttpClient {
+	r.method = "GET"
+	r.url = url
+	return r
+}
+
+func (r *HttpClient) Delete(url string) *HttpClient {
+	r.method = "DELETE"
+	r.url = url
+	return r
+}
+
+func (r *HttpClient) SetHeader(key, value string) *HttpClient {
+	r.header[key] = value
+	return r
+}
+
+func (r *HttpClient) SetHeaders(header map[string]string) *HttpClient {
+	for k, v := range header {
+		r.header[k] = v
+	}
+	return r
+}
+
+func (r *HttpClient) SetForm(key, value string) *HttpClient {
+	r.formValue[key] = value
+	return r
+}
+
+func (r *HttpClient) Body(body interface{}) *HttpClient {
+	if nil == body {
+		r.body = bytes.NewReader([]byte(""))
+		return r
+	}
+	if reflect.ValueOf(body).IsNil() {
+		r.body = bytes.NewReader([]byte(""))
+		return r
+	}
+	data, err := json.Marshal(body)
+	if nil != err {
+		r.err = err
+	}
+	r.body = bytes.NewReader(data)
+
+	logs.Info(fmt.Sprintf("url:[%s]|request body: %s", r.url, string(data)))
+	return r
+}
+
+func (r *HttpClient) Execute() *HttpResult {
+	result := new(HttpResult)
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Error(fmt.Sprintf("url:[%s]|http request err: ", r.url), err)
+			result.Error = errors.New("http request err")
+		}
+	}()
+	withTimeout, cancel := context.WithTimeout(context.TODO(), time.Duration(config.GAgentConfig.TimeoutSec)*time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(withTimeout, r.method, r.url, r.body)
+	if err != nil {
+		result.Error = err
+		return result
+	}
+
+	//header
+	for k, v := range r.header {
+		req.Header.Set(k, v)
+	}
+
+	//queryParams
+	value := url.Values{}
+	for k, v := range r.formValue {
+		value.Add(k, v)
+	}
+	req.Form = value
+	resp, err := r.client.Do(req)
+	if err != nil {
+		result.Error = err
+		return result
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		result.Error = err
+		return result
+	}
+
+	result.Body = body
+	result.Status = resp.StatusCode
+	logs.Info(fmt.Sprintf("url:[%s]|http status: %s, http respBody: %s", r.url, resp.Status, string(body)))
+	return result
+}
