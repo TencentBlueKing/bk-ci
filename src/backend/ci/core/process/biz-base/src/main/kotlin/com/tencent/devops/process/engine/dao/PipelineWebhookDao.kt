@@ -58,7 +58,8 @@ class PipelineWebhookDao {
                     TASK_ID,
                     EVENT_TYPE,
                     REPOSITORY_HASH_ID,
-                    EXTERNAL_ID
+                    EXTERNAL_ID,
+                    EXTERNAL_NAME
                 )
                     .values(
                         projectId,
@@ -71,7 +72,8 @@ class PipelineWebhookDao {
                         taskId,
                         eventType,
                         repositoryHashId,
-                        externalId
+                        externalId,
+                        externalName
                     )
                     .onDuplicateKeyUpdate()
                     .set(REPO_TYPE, repoType?.name)
@@ -81,6 +83,7 @@ class PipelineWebhookDao {
                     .set(EVENT_TYPE, eventType)
                     .set(REPOSITORY_HASH_ID, repositoryHashId)
                     .set(EXTERNAL_ID, externalId)
+                    .set(EXTERNAL_NAME, externalName)
                     .execute()
             }
         }
@@ -176,6 +179,24 @@ class PipelineWebhookDao {
         }
     }
 
+    fun get(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        repositoryHashId: String,
+        eventType: String
+    ): PipelineWebhook? {
+        with(T_PIPELINE_WEBHOOK) {
+            val record = dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(REPOSITORY_HASH_ID.eq(repositoryHashId))
+                .and(EVENT_TYPE.eq(eventType))
+                .fetchAny()
+            return record?.map { convert(record) }
+        }
+    }
+
     fun listTriggerPipeline(
         dslContext: DSLContext,
         projectId: String,
@@ -195,22 +216,6 @@ class PipelineWebhookDao {
                         pipelineId = it.value2()
                     )
                 }
-        }
-    }
-
-    fun listWebhookPipeline(
-        dslContext: DSLContext,
-        projectName: String,
-        repositoryType: String,
-        eventType: String
-    ): List<PipelineWebhook>? {
-        with(T_PIPELINE_WEBHOOK) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_NAME.eq(projectName))
-                .and(REPOSITORY_TYPE.eq(repositoryType))
-                .and(EVENT_TYPE.eq(eventType))
-                .and(DELETE.eq(false))
-                .fetch().map { convert(it) }
         }
     }
 
@@ -272,14 +277,23 @@ class PipelineWebhookDao {
         }?.map { convert(it) }
     }
 
-    fun listPipelines(
+    fun groupPipelineList(
         dslContext: DSLContext,
+        projectId: String?,
         offset: Int,
         limit: Int
     ): List<WebhookTriggerPipeline> {
         return with(T_PIPELINE_WEBHOOK) {
             dslContext.select(PROJECT_ID, PIPELINE_ID).from(this)
                 .where(DELETE.eq(false))
+                .let {
+                    if (projectId.isNullOrBlank()) {
+                        it
+                    } else {
+                        it.and(PROJECT_ID.eq(projectId))
+                    }
+                }
+                .groupBy(PROJECT_ID, PIPELINE_ID)
                 .limit(offset, limit)
                 .fetch().map {
                     WebhookTriggerPipeline(
@@ -295,6 +309,7 @@ class PipelineWebhookDao {
         repositoryHashId: String?,
         eventType: String,
         externalId: String?,
+        externalName: String?,
         pipelineId: String,
         projectId: String,
         taskId: String
@@ -304,6 +319,7 @@ class PipelineWebhookDao {
                 .set(REPOSITORY_HASH_ID, repositoryHashId)
                 .set(EVENT_TYPE, eventType)
                 .set(EXTERNAL_ID, externalId)
+                .set(EXTERNAL_NAME, externalName)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(TASK_ID.eq(taskId))
