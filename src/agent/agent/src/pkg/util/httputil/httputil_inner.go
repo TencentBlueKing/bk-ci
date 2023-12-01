@@ -207,7 +207,6 @@ func checkHttpStatusErr(status int, body []byte) {
 			(data.Code >= 180001 && data.Code <= 180006) {
 			exitcode.AddExitError(IOA_ERROR, data.Desc+"|"+strings.Join(data.Contents, ","))
 		} else {
-			// TODO: 需要确认下这里要不要断掉
 			logs.Errorf("checkHttpStatusErr %d|%s|unknow", status, body)
 		}
 	default:
