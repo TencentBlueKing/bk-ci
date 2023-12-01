@@ -132,6 +132,9 @@ interface OPProjectResource {
         @ApiParam(value = "是否是云研发项目 true：是 false：否", required = true)
         @QueryParam(value = "is_remotedev")
         remoteDevFlag: Boolean = false,
+        @ApiParam(value = "运营产品ID", required = true)
+        @QueryParam(value = "product_id")
+        productId: Int?,
         @Context request: HttpServletRequest
     ): Result<Map<String, Any?>?>
 

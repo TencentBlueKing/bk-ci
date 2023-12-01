@@ -48,6 +48,7 @@ class WorkspaceCheckJob @Autowired constructor(
         private const val syncJobLockKey = "remotedev_cron_sync_start_resource_job"
         private const val computeAllUserWinUsageTime = "dispatch_devcloud_cron_workspace_computeAllUserWinUsageTime"
         private const val notifyWinBeforeSleep = "dispatch_devcloud_cron_notify_win_before_sleep"
+        private const val backupCgsDataLockKey = "remotedev_cron_backup_csg_data_job"
     }
 
     /**
@@ -125,10 +126,10 @@ class WorkspaceCheckJob @Autowired constructor(
                     MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
                     logger.info(
                         "workspace $workspaceName last active is ${
-                            DateTimeUtil.formatMilliTime(
-                                time.toLong(),
-                                DateTimeUtil.YYYY_MM_DD_HH_MM_SS
-                            )
+                        DateTimeUtil.formatMilliTime(
+                            time.toLong(),
+                            DateTimeUtil.YYYY_MM_DD_HH_MM_SS
+                        )
                         } ready to sleep"
                     )
                     kotlin.runCatching {
@@ -234,5 +235,34 @@ class WorkspaceCheckJob @Autowired constructor(
         } catch (e: Throwable) {
             logger.error("sync START resource list failed", e)
         }
+    }
+
+    /**
+     * 23:50 定时统计云桌面数据快照
+     */
+    @Scheduled(cron = "0 50 23 * * ?")
+    fun backupDailyCgsData() {
+        logger.info("=========>> start to back up cgs data <<=========")
+        if (!SpringContextUtil.getBean(Profile::class.java).isProd()) {
+            return
+        }
+        val redisLock = RedisLock(redisOperation, backupCgsDataLockKey, 60L)
+        try {
+            val lockSuccess = redisLock.tryLock()
+            if (lockSuccess) {
+                logger.info("sync backup cgs data get lock.")
+                workspaceCommon.backupDailyCsgData()
+            }
+        } catch (e: Throwable) {
+            logger.error("sync START resource list failed", e)
+        }
+    }
+
+    /**
+     * 每 10 分钟检测一次过期的工作空间分享
+     */
+    @Scheduled(cron = "0 */10 * ? * *")
+    fun checkAndUnshared() {
+        workspaceService.checkAndUnshared()
     }
 }

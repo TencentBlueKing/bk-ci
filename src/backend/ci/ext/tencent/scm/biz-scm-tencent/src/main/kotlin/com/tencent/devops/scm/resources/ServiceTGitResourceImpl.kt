@@ -42,6 +42,7 @@ import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.services.TGitService
+import javax.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -130,6 +131,24 @@ class ServiceTGitResourceImpl @Autowired constructor(
                 token = token,
                 ref = ref
             )
+        )
+    }
+
+    override fun downloadGitFile(
+        repoName: String,
+        filePath: String,
+        authType: RepoAuthType?,
+        token: String,
+        ref: String,
+        response: HttpServletResponse
+    ) {
+        gitService.downloadGitFile(
+            repoName = repoName,
+            filePath = filePath,
+            authType = authType,
+            token = token,
+            ref = ref,
+            response = response
         )
     }
 

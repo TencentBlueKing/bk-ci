@@ -27,11 +27,14 @@
 
 package com.tencent.devops.remotedev.resources.user
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserWorkspaceResource
 import com.tencent.devops.remotedev.pojo.BkTicketInfo
+import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
@@ -70,6 +73,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     private val deleteControl: DeleteControl
 ) : UserWorkspaceResource {
 
+    @AuditEntry(actionId = ActionId.CGS_CREATE)
     override fun createWorkspace(
         userId: String,
         bkTicket: String,
@@ -79,6 +83,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(createControl.createWorkspace(userId, bkTicket, projectId, workspace))
     }
 
+    @AuditEntry(actionId = ActionId.CGS_START)
     override fun startWorkspace(
         userId: String,
         bkTicket: String,
@@ -87,18 +92,22 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(startControl.startWorkspace(userId, bkTicket, workspaceName))
     }
 
+    @AuditEntry(actionId = ActionId.CGS_STOP)
     override fun stopWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         return Result(sleepControl.stopWorkspace(userId, workspaceName))
     }
 
+    @AuditEntry(actionId = ActionId.CGS_SHARE)
     override fun shareWorkspace(userId: String, workspaceName: String, sharedUser: String): Result<Boolean> {
         return Result(workspaceService.shareWorkspace(userId, workspaceName, sharedUser))
     }
 
+    @AuditEntry(actionId = ActionId.CGS_EDIT)
     override fun editWorkspace(userId: String, workspaceName: String, displayName: String): Result<Boolean> {
         return Result(workspaceService.editWorkspace(userId, workspaceName, displayName))
     }
 
+    @AuditEntry(actionId = ActionId.CGS_DELETE)
     override fun deleteWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         return Result(deleteControl.deleteWorkspace(userId, workspaceName))
     }
@@ -107,6 +116,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(workspaceService.getWorkspaceList(userId, page, pageSize))
     }
 
+    @AuditEntry(actionId = ActionId.CGS_VIEW)
     override fun getWorkspaceDetail(userId: String, workspaceName: String): Result<WorkspaceDetail?> {
         return Result(workspaceService.getWorkspaceDetail(userId, workspaceName))
     }
@@ -212,12 +222,21 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         bkTicketService.updateBkTicket(userId, bkTicketInfo.bkTicket, bkTicketInfo.hostName, bkTicketInfo.mountType)
         return Result(true)
     }
+
     override fun updateAllBkTicket(userId: String, bkTicket: String): Result<Boolean> {
         bkTicketService.updateAllBkTicket(userId, bkTicket)
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.CGS_VIEW)
     override fun startCloudWorkspaceDetail(userId: String, workspaceName: String): Result<WorkspaceStartCloudDetail?> {
         return Result(workspaceService.startCloudWorkspaceDetail(userId, workspaceName))
+    }
+
+    override fun projectAccessDevicePermissions(
+        userId: String,
+        macAddress: String
+    ): Result<Map<String, ProjectAccessDevicePermissionsResp>> {
+        return Result(workspaceService.projectAccessDevicePermissions(userId, macAddress))
     }
 }

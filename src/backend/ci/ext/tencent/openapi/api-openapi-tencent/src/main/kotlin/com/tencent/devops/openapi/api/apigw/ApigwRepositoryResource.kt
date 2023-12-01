@@ -55,7 +55,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwRepositoryResource {
 
-    @ApiOperation("代码库列表")
+    @ApiOperation("代码库列表", tags = ["v1_app_repositories_list"])
     @GET
     @Path("/{projectId}/hasPermissionList")
     fun hasPermissionList(
@@ -76,7 +76,7 @@ interface ApigwRepositoryResource {
         repositoryType: ScmType?
     ): Result<Page<RepositoryInfo>>
 
-    @ApiOperation("关联代码库")
+    @ApiOperation("关联代码库", tags = ["v1_app_repositories_create"])
     @POST
     @Path("/{projectId}/")
     fun create(

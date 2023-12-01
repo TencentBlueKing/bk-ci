@@ -9,6 +9,7 @@ import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceService
+import com.tencent.devops.remotedev.service.workspace.CreateControl
 import java.net.URLDecoder
 
 @RestResource
@@ -16,7 +17,8 @@ import java.net.URLDecoder
 class ServiceRemoteDevResourceImpl(
     private val permissionService: PermissionService,
     private val workspaceService: WorkspaceService,
-    private val desktopWorkspaceService: DesktopWorkspaceService
+    private val desktopWorkspaceService: DesktopWorkspaceService,
+    private val createControl: CreateControl
 ) : ServiceRemoteDevResource {
     override fun validateUserTicket(userId: String, isOffshore: Boolean, ticket: String): Result<Boolean> {
         return Result(
@@ -28,8 +30,8 @@ class ServiceRemoteDevResourceImpl(
         return Result(workspaceService.getProjectWorkspaceList4WeSec(projectId, ip))
     }
 
-    override fun getRemotedevProjects(): Result<List<RemotedevProject>> {
-        return Result(workspaceService.getWorkspaceProject())
+    override fun getRemotedevProjects(projectId: String?): Result<List<RemotedevProject>> {
+        return Result(workspaceService.getWorkspaceProject(projectId))
     }
 
     override fun queryProjectRemoteDevCvm(projectId: String?): Result<List<RemotedevCvmData>> {
@@ -38,5 +40,19 @@ class ServiceRemoteDevResourceImpl(
 
     override fun checkWorkspaceProject(projectId: String, ip: String): Result<Boolean> {
         return Result(desktopWorkspaceService.checkWorkspaceProject(projectId, ip))
+    }
+
+    override fun checkUserIpPermission(user: String, ip: String): Result<Boolean> {
+        return Result(desktopWorkspaceService.checkUserIpPermission(user, ip))
+    }
+
+    override fun createWinWorkspaceByVm(
+        userId: String,
+        oldWorkspaceName: String?,
+        projectId: String?,
+        uid: String
+    ): Result<Boolean> {
+        val res = createControl.createWinWorkspaceByVm(userId, oldWorkspaceName, projectId, uid)
+        return Result(res)
     }
 }

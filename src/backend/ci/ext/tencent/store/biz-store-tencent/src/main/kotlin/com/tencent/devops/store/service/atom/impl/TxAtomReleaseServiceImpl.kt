@@ -33,10 +33,12 @@ import com.tencent.devops.common.api.constant.BUILD
 import com.tencent.devops.common.api.constant.CODECC
 import com.tencent.devops.common.api.constant.COMMIT
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_IS_NULL
 import com.tencent.devops.common.api.constant.DOING
 import com.tencent.devops.common.api.constant.END
 import com.tencent.devops.common.api.constant.FAIL
 import com.tencent.devops.common.api.constant.HTTP_404
+import com.tencent.devops.common.api.constant.IN_READY_TEST
 import com.tencent.devops.common.api.constant.JS
 import com.tencent.devops.common.api.constant.KEY_BRANCH
 import com.tencent.devops.common.api.constant.KEY_COMMIT_ID
@@ -68,23 +70,28 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.AtomBaseInfo
 import com.tencent.devops.common.pipeline.pojo.AtomMarketInitPipelineReq
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.plugin.codecc.CodeccApi
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineInitResource
 import com.tencent.devops.process.utils.KEY_PIPELINE_NAME
+import com.tencent.devops.quality.api.v2.ServiceQualityControlPointMarketResource
+import com.tencent.devops.quality.api.v2.ServiceQualityIndicatorMarketResource
+import com.tencent.devops.quality.api.v2.ServiceQualityMetadataMarketResource
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.STORE_BRANCH_NO_NEW_COMMIT
+import com.tencent.devops.store.constant.StoreMessageCode.USER_NOT_IS_STORE_MEMBER
 import com.tencent.devops.store.dao.atom.MarketAtomBuildInfoDao
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.StoreBuildInfoDao
@@ -94,6 +101,7 @@ import com.tencent.devops.store.pojo.atom.AtomRebuildRequest
 import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
+import com.tencent.devops.store.pojo.atom.UpdateAtomPackageInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
 import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
@@ -103,17 +111,23 @@ import com.tencent.devops.store.pojo.common.KEY_INPUT
 import com.tencent.devops.store.pojo.common.KEY_INPUT_GROUPS
 import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
 import com.tencent.devops.store.pojo.common.KEY_OUTPUT
+import com.tencent.devops.store.pojo.common.KEY_PACKAGE_PATH
 import com.tencent.devops.store.pojo.common.KEY_RUNTIME_VERSION
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.STORE_REPO_CODECC_BUILD_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.STORE_REPO_COMMIT_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.StoreI18nConfig
+import com.tencent.devops.store.pojo.common.UN_RELEASE
 import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.TxAtomReleaseService
 import com.tencent.devops.store.service.common.TxStoreCodeccService
 import com.tencent.devops.store.utils.StoreUtils
+import java.time.LocalDateTime
+import java.util.Date
+import java.util.concurrent.Executors
 import org.apache.commons.text.StringEscapeUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -122,8 +136,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
-import java.util.Date
-import java.util.concurrent.Executors
 
 @Service
 @RefreshScope
@@ -203,7 +215,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                     dslContext,
                     marketAtomCreateRequest.language,
                     StoreTypeEnum.ATOM
-                ).sampleProjectPath,
+                )?.sampleProjectPath,
                 namespaceId = pluginNameSpaceId.toInt(),
                 visibilityLevel = marketAtomCreateRequest.visibilityLevel,
                 tokenType = TokenTypeEnum.PRIVATE_KEY,
@@ -300,18 +312,18 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     override fun validateUpdateMarketAtomReq(
         userId: String,
         marketAtomUpdateRequest: MarketAtomUpdateRequest,
-        atomRecord: TAtomRecord
+        repositoryHashId: String?
     ): Result<Boolean> {
         logger.info("validateUpdateMarketAtomReq userId is:$userId,marketAtomUpdateRequest is:$marketAtomUpdateRequest")
         val frontendType = marketAtomUpdateRequest.frontendType
-        val repositoryHashId = atomRecord.repositoryHashId
+        val branch = marketAtomUpdateRequest.branch
         if (frontendType != FrontendTypeEnum.SPECIAL || repositoryHashId.isNullOrBlank()) {
             return Result(true)
         }
         val repositoryTreeInfoResult = client.get(ServiceGitRepositoryResource::class).getGitRepositoryTreeInfo(
             userId = userId,
             repoId = repositoryHashId,
-            refName = null,
+            refName = branch,
             path = null,
             tokenType = TokenTypeEnum.PRIVATE_KEY
         )
@@ -485,6 +497,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val atomCode = atomRecord.atomCode
         val atomName = atomRecord.name
         val atomVersion = atomRecord.version
+        storeFileService.cleanStoreVersionReferenceFile(atomCode, atomVersion)
         val repoId = atomRecord.repositoryHashId
         val branch = if (atomRecord.branch.isNullOrBlank()) MASTER else atomRecord.branch
         val getAtomConfResult = getAtomConfig(
@@ -509,12 +522,17 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val i18nDir = StoreUtils.getStoreI18nDir(atomLanguage, getAtomPackageSourceType(repoId))
         val taskDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
             userId = userId,
-            projectCode = projectCode,
             jsonMap = taskJsonMap.toMutableMap(),
-            fileDir = "$atomCode/$atomVersion",
-            i18nDir = i18nDir,
-            dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, atomVersion),
-            repositoryHashId = repoId
+            storeI18nConfig = StoreI18nConfig(
+                projectCode = projectCode,
+                storeCode = atomCode,
+                fileDir = "$atomCode/$atomVersion",
+                i18nDir = i18nDir,
+                dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, atomVersion),
+                repositoryHashId = repoId,
+                branch = branch
+            ),
+            version = atomVersion
         )
         val atomVersionRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, atomId)
         val releaseType = ReleaseTypeEnum.getReleaseTypeObj(atomVersionRecord.releaseType.toInt())!!
@@ -974,5 +992,139 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
 
         return if (validateFlag) Triple(true, "", null)
         else Triple(false, StoreMessageCode.USER_ATOM_RELEASE_STEPS_ERROR, null)
+    }
+
+    @Suppress("ComplexMethod")
+    override fun creatAtomBranchTestVersion(
+        userId: String,
+        marketAtomUpdateRequest: MarketAtomUpdateRequest
+    ): Result<String> {
+        val atomCode = marketAtomUpdateRequest.atomCode
+        val branch = marketAtomUpdateRequest.branch ?: throw ErrorCodeException(
+            errorCode = PARAMETER_IS_NULL,
+            params = arrayOf("branch")
+        )
+        // 判断用户是否有权限(插件成员可以操作)
+        if (!(storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = atomCode,
+                storeType = StoreTypeEnum.ATOM.type.toByte()
+            ))
+        ) {
+            throw ErrorCodeException(
+                errorCode = USER_NOT_IS_STORE_MEMBER,
+                params = arrayOf(userId)
+            )
+        }
+        var version = marketAtomUpdateRequest.version
+        val projectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+            dslContext = dslContext,
+            storeCode = atomCode,
+            storeType = StoreTypeEnum.ATOM.type.toByte()
+        )!!
+        val versionRecord = atomDao.getAtomByVersionPrefix(dslContext, atomCode, "$TEST-$branch-")
+        var newVersionFlag = true
+        versionRecord?.let {
+            val recentCommitInfo = client.get(ServiceGitRepositoryResource::class).getRepoRecentCommitInfo(
+                userId = userId,
+                repoId = it.repositoryHashId,
+                sha = branch,
+                tokenType = TokenTypeEnum.OAUTH
+            ).data ?: throw ErrorCodeException(errorCode = StoreMessageCode.GET_BRANCH_COMMIT_INFO_ERROR)
+            val recentCommitDate = DateTimeUtil.zoneDateToTimestamp(recentCommitInfo.committed_date)
+            if (recentCommitDate <= it.updateTime.timestampmilli()) {
+                throw ErrorCodeException(errorCode = STORE_BRANCH_NO_NEW_COMMIT)
+            }
+            newVersionFlag = !(it.atomStatus == AtomStatusEnum.TESTING.status.toByte() ||
+                    it.atomStatus == AtomStatusEnum.BUILDING.status.toByte() ||
+                    it.atomStatus == AtomStatusEnum.BUILD_FAIL.status.toByte())
+        }
+        val atomId = if (newVersionFlag) {
+            version = "$version${LocalDateTime.now().hour}"
+            UUIDUtil.generate()
+        } else {
+            marketAtomUpdateRequest.version = versionRecord!!.version
+            versionRecord.id
+        }
+        val atomRecord = versionRecord ?: atomDao.getMaxVersionAtomByCode(dslContext, atomCode)!!
+
+        val atomPackageSourceType = getAtomPackageSourceType(atomRecord.repositoryHashId)
+
+        val getAtomConfResult = getAtomConfig(
+            projectCode = projectCode,
+            atomCode = atomCode,
+            atomVersion = version,
+            userId = userId,
+            repositoryHashId = atomRecord.repositoryHashId,
+            branch = branch
+        )
+        if (getAtomConfResult.errorCode != "0") {
+            return I18nUtil.generateResponseDataObject(
+                messageCode = getAtomConfResult.errorCode,
+                params = getAtomConfResult.errorParams,
+                language = I18nUtil.getLanguage(userId)
+            )
+        }
+        marketAtomUpdateRequest.isBranchTestVersion = true
+        val taskJsonMap = getAtomConfResult.taskDataMap
+        val executionInfoMap = taskJsonMap[KEY_EXECUTION] as Map<String, Any>
+        val atomLanguage = executionInfoMap[KEY_LANGUAGE].toString()
+        val i18nDir = StoreUtils.getStoreI18nDir(atomLanguage, atomPackageSourceType)
+
+        return updateAtomVersionInfo(
+            userId = userId,
+            projectCode = projectCode,
+            newVersionFlag = newVersionFlag,
+            updateAtomPackageInfo = UpdateAtomPackageInfo(
+                atomId = atomId,
+                i18nDir = i18nDir,
+                packagePath = executionInfoMap[KEY_PACKAGE_PATH] as? String,
+                atomPackageSourceType = atomPackageSourceType
+            ),
+            convertUpdateRequest = marketAtomUpdateRequest,
+            getAtomConfResult = getAtomConfResult
+        )
+    }
+
+    override fun endBranchVersionTest(userId: String, atomCode: String, branch: String): Result<Boolean> {
+        logger.info("endBranchVersionTest,userId:$userId | atomCode:$atomCode | branch=$branch")
+        // 判断用户是否有权限(插件成员可以操作)
+        if (!(storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = atomCode,
+                storeType = StoreTypeEnum.ATOM.type.toByte()
+            ))
+        ) {
+            throw ErrorCodeException(
+                errorCode = USER_NOT_IS_STORE_MEMBER,
+                params = arrayOf(userId)
+            )
+        }
+        val versionPrefix = "$TEST-$branch-"
+        val record = marketAtomDao.getAtomBranchTestVersion(dslContext, atomCode, versionPrefix)
+        record?.let {
+            checkUpdateAtomLatestTestFlag(userId, atomCode, record.id)
+            val atomId = record.id
+            val status = AtomStatusEnum.TESTED.status.toByte()
+            marketAtomDao.setAtomStatusById(
+                dslContext = dslContext,
+                atomId = atomId,
+                atomStatus = status,
+                userId = userId,
+                msg = I18nUtil.getCodeLanMessage(UN_RELEASE)
+            )
+            doCancelReleaseBus(userId, atomId)
+            // 删除质量红线相关数据
+            client.get(ServiceQualityIndicatorMarketResource::class)
+                .deleteTestIndicator(atomCode, "$IN_READY_TEST(${record.version})")
+            client.get(ServiceQualityMetadataMarketResource::class)
+                .deleteTestMetadata(atomCode, "$IN_READY_TEST(${record.version})")
+            client.get(ServiceQualityControlPointMarketResource::class)
+                .deleteTestControlPoint(atomCode, "$IN_READY_TEST(${record.version})")
+        }
+
+        return Result(true)
     }
 }

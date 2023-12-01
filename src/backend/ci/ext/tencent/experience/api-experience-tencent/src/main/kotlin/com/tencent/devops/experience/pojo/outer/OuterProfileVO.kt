@@ -10,5 +10,7 @@ data class OuterProfileVO(
     @ApiModelProperty("头像")
     val logo: String,
     @ApiModelProperty("邮箱")
-    val email: String
+    val email: String,
+    @ApiModelProperty("类型,1--蓝鲸外部用户,2--太湖账户")
+    val type: Int = 1
 )

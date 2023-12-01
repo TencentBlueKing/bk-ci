@@ -38,5 +38,8 @@ data class RemotedevProject(
     val projectId: String,
     @ApiModelProperty("项目名称")
     @JsonProperty("project_name")
-    val projectName: String
+    val projectName: String,
+    @ApiModelProperty("云研发管理员")
+    @JsonProperty("remotedev_manager")
+    val remotedevManager: String? = ""
 )

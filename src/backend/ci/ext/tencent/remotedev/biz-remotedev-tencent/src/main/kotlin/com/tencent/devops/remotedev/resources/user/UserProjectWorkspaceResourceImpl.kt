@@ -27,15 +27,17 @@
 
 package com.tencent.devops.remotedev.resources.user
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserProjectWorkspaceResource
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
-import com.tencent.devops.remotedev.pojo.windows.ComputerStatusResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
+import com.tencent.devops.remotedev.pojo.windows.ComputerStatusResp
 import com.tencent.devops.remotedev.pojo.windows.TimeScope
 import com.tencent.devops.remotedev.pojo.windows.UserLoginTimeResp
 import com.tencent.devops.remotedev.service.BKBaseService
@@ -49,6 +51,7 @@ import com.tencent.devops.remotedev.service.projectworkspace.StopWorkspaceHandle
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
+import javax.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -66,6 +69,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     private val startWorkspaceService: StartWorkspaceService,
     private val bkBaseService: BKBaseService
 ) : UserProjectWorkspaceResource {
+    @AuditEntry(actionId = ActionId.CGS_CREATE)
     override fun createWorkspace(
         userId: String,
         bkTicket: String,
@@ -83,6 +87,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.CGS_DELETE)
     override fun deleteWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
         permissionService.checkUserManager(userId, projectId)
         return Result(
@@ -104,6 +109,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         return Result(workspaceService.getProjectWorkspaceList(userId, projectId, page, pageSize))
     }
 
+    @AuditEntry(actionId = ActionId.CGS_ASSIGN)
     override fun assignUser(
         userId: String,
         projectId: String,
@@ -116,31 +122,28 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun checkManager(userId: String, projectId: String): Result<Boolean> {
-        kotlin.runCatching { permissionService.checkUserManager(userId, projectId) }.fold(
-            {
-                return Result(true)
-            },
-            {
-                return Result(false)
-            }
-        )
+        return Result(permissionService.hasUserManager(userId, projectId))
     }
 
+    @AuditEntry(actionId = ActionId.CGS_START)
     override fun startWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
         startWorkspaceHandler.startWorkspace(userId, projectId, workspaceName)
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.CGS_STOP)
     override fun stopWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
         stopWorkspaceHandler.stopWorkspace(userId, projectId, workspaceName)
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.CGS_RESTART)
     override fun restartWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
         restartWorkspaceHandler.restartWorkspace(userId, projectId, workspaceName)
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.CGS_MAKE_IMAGE)
     override fun makeImageByVm(
         userId: String,
         projectId: String,
@@ -159,5 +162,9 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
         return Result(
             bkBaseService.fetchOnlineUserMin(timeScope, projectId) ?: UserLoginTimeResp(0, emptyList())
         )
+    }
+
+    override fun exportWorkspaceList(userId: String, projectId: String, page: Int?, pageSize: Int?): Response {
+        return workspaceService.exportProjectWorkspaceListUser(userId, projectId, page, pageSize)
     }
 }

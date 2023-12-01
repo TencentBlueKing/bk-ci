@@ -70,8 +70,8 @@ import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.scm.services.GitService
-import org.springframework.beans.factory.annotation.Autowired
 import javax.servlet.http.HttpServletResponse
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceGitResourceImpl @Autowired constructor(
@@ -429,9 +429,21 @@ class ServiceGitResourceImpl @Autowired constructor(
         sha: String?,
         token: String,
         tokenType: TokenTypeEnum,
+        filePath: String?,
+        format: String?,
+        isProjectPathWrapped: Boolean?,
         response: HttpServletResponse
     ) {
-        return gitService.downloadGitRepoFile(repoName, sha, token, tokenType, response)
+        gitService.downloadGitRepoFile(
+            repoName = repoName,
+            sha = sha,
+            token = token,
+            tokenType = tokenType,
+            filePath = filePath,
+            format = format,
+            isProjectPathWrapped = isProjectPathWrapped ?: false,
+            response = response
+        )
     }
 
     override fun getMergeRequestReviewersInfo(

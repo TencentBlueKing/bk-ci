@@ -52,7 +52,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwMarketAtomResource {
-    @ApiOperation("根据插件代码获取插件详细信息")
+    @ApiOperation("根据插件代码获取插件详细信息", tags = ["v1_app_market_getAtomByCode"])
     @GET
     @Path("/{atomCode}")
     fun getAtomByCode(
@@ -70,7 +70,7 @@ interface ApigwMarketAtomResource {
         userId: String
     ): Result<AtomVersion?>
 
-    @ApiOperation("根据插件代码获取插件统计信息")
+    @ApiOperation("根据插件代码获取插件统计信息", tags = ["v1_app_market_statistic"])
     @GET
     @Path("/{atomCode}/statistic")
     fun getAtomStatisticByCode(
@@ -88,7 +88,7 @@ interface ApigwMarketAtomResource {
         userId: String
     ): Result<StoreStatistic>
 
-    @ApiOperation("根据插件代码获取使用的流水线详情")
+    @ApiOperation("根据插件代码获取使用的流水线详情", tags = ["v1_app_market_pipelines"])
     @GET
     @Path("/{atomCode}/pipelines")
     fun getAtomPipelinesByCode(

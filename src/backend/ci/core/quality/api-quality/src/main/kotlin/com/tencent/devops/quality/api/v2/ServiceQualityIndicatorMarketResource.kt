@@ -27,6 +27,7 @@
 
 package com.tencent.devops.quality.api.v2
 
+import com.tencent.devops.common.api.constant.IN_READY_TEST
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorUpdate
 import io.swagger.annotations.Api
@@ -54,6 +55,8 @@ interface ServiceQualityIndicatorMarketResource {
         userId: String,
         @QueryParam("atomCode")
         atomCode: String,
+        @QueryParam("tag")
+        tag: String = IN_READY_TEST,
         indicatorUpdateList: Collection<IndicatorUpdate>
     ): Result<Int>
 
@@ -71,6 +74,8 @@ interface ServiceQualityIndicatorMarketResource {
     @DELETE
     fun deleteTestIndicator(
         @QueryParam("elementType")
-        elementType: String
+        elementType: String,
+        @QueryParam("extra")
+        extra: String = IN_READY_TEST
     ): Result<Int>
 }

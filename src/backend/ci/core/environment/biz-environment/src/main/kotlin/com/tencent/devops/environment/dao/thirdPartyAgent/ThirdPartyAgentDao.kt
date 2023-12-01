@@ -154,6 +154,19 @@ class ThirdPartyAgentDao {
         }
     }
 
+    fun listByStatusAndProject(
+        dslContext: DSLContext,
+        status: Set<AgentStatus>,
+        projects: Set<String>
+    ): List<TEnvironmentThirdpartyAgentRecord> {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.`in`(projects))
+                .and(STATUS.`in`(status.map { it.status }))
+                .fetch()
+        }
+    }
+
     fun countAgentByStatusAndOS(
         dslContext: DSLContext,
         projectId: String,

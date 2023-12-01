@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
+import com.tencent.bkrepo.common.api.constant.StringPool
 import com.tencent.bkrepo.common.query.model.Sort
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.BUILD_NOT_EXIST
@@ -629,7 +630,7 @@ class BkRepoService @Autowired constructor(
 
     private fun buildFolderArtifactInfo(nodeInfo: QueryNodeInfo, properties: List<Property>): FileInfo {
         return FileInfo(
-            name = nodeInfo.path.split("/").last { it.isNotBlank() },
+            name = nodeInfo.path.split("/").lastOrNull { it.isNotBlank() } ?: StringPool.ROOT,
             fullName = nodeInfo.path,
             path = nodeInfo.path,
             fullPath = nodeInfo.path,

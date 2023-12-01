@@ -65,7 +65,7 @@ class TxV3AuthPermissionApi @Autowired constructor(
     ): Boolean {
         val action = TActionUtils.buildAction(permission, resourceType)
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             action = action,
             projectCode = projectCode,
@@ -91,7 +91,7 @@ class TxV3AuthPermissionApi @Autowired constructor(
         val resourceTypeStr = TActionUtils.extResourceType(resourceType)
         val action = TActionUtils.buildAction(permission, resourceType)
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             resourceType = resourceTypeStr,
             projectCode = projectCode,
@@ -135,7 +135,7 @@ class TxV3AuthPermissionApi @Autowired constructor(
         val resourceTypeStr = TActionUtils.extResourceType(resourceType)
         val action = TActionUtils.buildAction(permission, resourceType)
         return client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             action = action,
             resourceType = resourceTypeStr,
@@ -157,7 +157,7 @@ class TxV3AuthPermissionApi @Autowired constructor(
             actions.add(buildAction(resourceTypeStr, it))
         }
         return client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             resourceType = resourceType.value,
             projectCode = projectCode,
@@ -180,7 +180,7 @@ class TxV3AuthPermissionApi @Autowired constructor(
             actions.add(buildAction(resourceTypeStr, it))
         }
         return client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             resourceType = resourceType.value,
             projectCode = scopeId,
@@ -229,7 +229,7 @@ class TxV3AuthPermissionApi @Autowired constructor(
             client.get(ServicePermissionAuthResource::class).grantInstancePermission(
                 userId = userId,
                 projectCode = projectCode,
-                token = tokenService.getSystemToken(null)!!,
+                token = tokenService.getSystemToken()!!,
                 grantInstance = grantInstanceDTO
             ).data ?: false
         }
@@ -246,7 +246,7 @@ class TxV3AuthPermissionApi @Autowired constructor(
         }
         val action = "all_action"
         val hasAllAction = client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             resourceType = AuthResourceType.PROJECT.value,
             projectCode = projectCode,

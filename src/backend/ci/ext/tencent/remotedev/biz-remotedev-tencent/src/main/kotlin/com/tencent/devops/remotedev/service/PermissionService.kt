@@ -120,6 +120,12 @@ class PermissionService @Autowired constructor(
         }
     }
 
+    fun hasOwnerPermission(userId: String, workspaceName: String, projectId: String): Boolean {
+        return kotlin.runCatching { checkOwnerPermission(userId, workspaceName, projectId) }.fold(
+            { return true }, { return false }
+        )
+    }
+
     fun checkViewerPermission(userId: String, workspaceName: String, projectId: String) {
         if (!enablePermission) return
 
@@ -132,7 +138,7 @@ class PermissionService @Autowired constructor(
         }
     }
 
-    fun checkUserManager(userId: String, projectId: String): Boolean {
+    fun checkUserManager(userId: String, projectId: String) {
         val projectInfo = kotlin.runCatching {
             client.get(ServiceProjectResource::class).get(projectId)
         }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
@@ -140,7 +146,7 @@ class PermissionService @Autowired constructor(
             errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
         )
         val checkProjectManager = client.get(ServiceProjectAuthResource::class).checkProjectManager(
-            token = checkTokenService.getSystemToken(null)!!,
+            token = checkTokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId
         ).data ?: false
@@ -151,7 +157,12 @@ class PermissionService @Autowired constructor(
                 params = arrayOf("You need permission to access project $projectId")
             )
         }
-        return true
+    }
+
+    fun hasUserManager(userId: String, projectId: String): Boolean {
+        return kotlin.runCatching { checkUserManager(userId, projectId) }.fold(
+            { return true }, { return false }
+        )
     }
 
     // 判断用户是否项目成员

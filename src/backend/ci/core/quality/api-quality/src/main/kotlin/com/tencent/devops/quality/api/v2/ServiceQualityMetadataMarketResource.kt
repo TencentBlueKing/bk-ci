@@ -27,6 +27,7 @@
 
 package com.tencent.devops.quality.api.v2
 
+import com.tencent.devops.common.api.constant.IN_READY_TEST
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.quality.api.v2.pojo.op.QualityMetaData
 import io.swagger.annotations.Api
@@ -46,7 +47,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceQualityMetadataMarketResource {
 
-    @ApiOperation("注册插件指标的元数据")
+    @ApiOperation("注册插件指标的测试元数据")
     @Path("/setMetadata")
     @POST
     fun setTestMetadata(
@@ -54,6 +55,8 @@ interface ServiceQualityMetadataMarketResource {
         userId: String,
         @QueryParam("atomCode")
         atomCode: String,
+        @QueryParam("extra")
+        extra: String = IN_READY_TEST,
         metadataList: List<QualityMetaData>
     ): Result<Map<String/* dataId */, Long/* metadataId */>>
 
@@ -70,6 +73,8 @@ interface ServiceQualityMetadataMarketResource {
     @DELETE
     fun deleteTestMetadata(
         @QueryParam("elementType")
-        elementType: String
+        elementType: String,
+        @QueryParam("extra")
+        extra: String = IN_READY_TEST
     ): Result<Int>
 }

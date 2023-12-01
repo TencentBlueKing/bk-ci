@@ -51,14 +51,16 @@ import com.tencent.devops.scm.code.git.api.GitTagCommit
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitFileInfo
+import java.net.URLEncoder
+import javax.servlet.http.HttpServletResponse
+import javax.ws.rs.core.Response
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.net.URLEncoder
-import javax.ws.rs.core.Response
+import org.springframework.util.FileCopyUtils
 
 @Service
 @Suppress("ALL")
@@ -302,6 +304,38 @@ class TGitService @Autowired constructor(
             }
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file content")
+        }
+    }
+
+    override fun downloadGitFile(
+        repoName: String,
+        filePath: String,
+        authType: RepoAuthType?,
+        token: String,
+        ref: String,
+        response: HttpServletResponse
+    ) {
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val url = "${gitConfig.gitApiUrl}/projects/${URLEncoder.encode(repoName, "UTF-8")}/repository/" +
+                    "blobs/${URLEncoder.encode(ref, "UTF-8")}?" +
+                    "filepath=${URLEncoder.encode(filePath, "UTF-8")}&access_token=$token"
+
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use {
+                if (!it.isSuccessful) {
+                    throw CustomException(
+                        status = Response.Status.fromStatusCode(it.code) ?: Response.Status.BAD_REQUEST,
+                        message = "fail to get git file with: ${it.code}): ${it.message}"
+                    )
+                }
+                FileCopyUtils.copy(it.body!!.byteStream(), response.outputStream)
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file")
         }
     }
 

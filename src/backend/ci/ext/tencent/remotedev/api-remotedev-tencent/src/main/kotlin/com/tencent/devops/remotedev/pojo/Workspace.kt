@@ -60,6 +60,8 @@ data class Workspace(
     val createUserId: String,
     @ApiModelProperty("工作空间拥有人<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     val owner: String? = null,
+    @ApiModelProperty("工作空间拥有人CN<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    val ownerCN: String? = null,
     @ApiModelProperty("工作空间操作路径")
     val workPath: String? = null,
     @ApiModelProperty("工作空间默认打开工程相对路径，默认根目录")
@@ -78,6 +80,8 @@ data class Workspace(
     val winConfigId: Int? = null,
     @ApiModelProperty("windows 资源配置")
     val winConfig: WindowsResourceTypeConfig? = null,
+    @ApiModelProperty("镜像id")
+    val imageId: String = "",
     val gpu: Int = 0,
     val cpu: Int = 8,
     val memory: Int = 32,

@@ -28,6 +28,7 @@
 package com.tencent.devops.worker.common.logger
 
 import com.tencent.bkrepo.repository.pojo.token.TokenType
+import com.tencent.devops.common.log.constant.Constants.BULK_BUFFER_SIZE
 import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.log.pojo.enums.LogType
@@ -43,7 +44,6 @@ import com.tencent.devops.worker.common.LOG_MESSAGE_LENGTH_LIMIT
 import com.tencent.devops.worker.common.LOG_SUBTAG_FINISH_FLAG
 import com.tencent.devops.worker.common.LOG_SUBTAG_FLAG
 import com.tencent.devops.worker.common.LOG_TASK_LINE_LIMIT
-import com.tencent.devops.worker.common.LOG_UPLOAD_BUFFER_SIZE
 import com.tencent.devops.worker.common.LOG_WARN_FLAG
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.log.LogSDKApi
@@ -152,7 +152,7 @@ object LoggerService {
                 val size = logMessages.size
                 val now = System.currentTimeMillis()
                 // 缓冲大于200条或上次保存时间超过3秒
-                if (size >= LOG_UPLOAD_BUFFER_SIZE || (size > 0 && (now - lastSaveTime > 3 * 1000))) {
+                if (size >= BULK_BUFFER_SIZE || (size > 0 && (now - lastSaveTime > 3 * 1000))) {
                     flush()
                     lastSaveTime = now
                     currentTaskLineNo += size

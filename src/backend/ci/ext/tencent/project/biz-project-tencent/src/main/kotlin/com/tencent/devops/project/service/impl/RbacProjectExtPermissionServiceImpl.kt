@@ -99,7 +99,7 @@ class RbacProjectExtPermissionServiceImpl constructor(
             ?: roleName?.let { BkAuthGroup.get(it).value }
             ?: BkAuthGroup.DEVELOPER.value
         client.get(ServiceProjectAuthResource::class).batchCreateProjectUser(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = currencyCreateUser,
             projectCode = projectCode,
             roleCode = roleCode,

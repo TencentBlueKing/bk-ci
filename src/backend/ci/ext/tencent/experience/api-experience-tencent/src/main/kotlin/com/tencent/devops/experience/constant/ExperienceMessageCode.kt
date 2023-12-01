@@ -82,6 +82,8 @@ object ExperienceMessageCode {
     const val USER_NEED_VIEW_EXP_PERMISSION = "2106032" // 体验: 用户没有查看版本体验的权限
     const val USER_NEED_VIEW_EXP_GROUP_PERMISSION = "2106033" // 体验: 用户在项目({0})没有查看体验用户组{1}的权限
     const val USER_NEED_DELETE_EXP_GROUP_PERMISSION = "2106034" // 体验: 用户在项目({0})没有删除体验用户组{1}的权限
+    const val USER_NEED_TAI_ACCOUNT = "2106035" // 内部用户不能通过太湖账号登录
+    const val OUTER_LOGIN_WRONG_PASSWORD = "2106036" // 密码错误
 
     const val BK_UPDATED_SUCCESSFULLY_AND_SET = "bkUpdatedSuccessfullyAndSet" // 更新成功,已置为
     const val BK_UPDATED_SUCCESSFULLY = "bkUpdatedSuccessfully" // 更新成功
@@ -96,8 +98,10 @@ object ExperienceMessageCode {
     const val BK_INTERNAL_EXPERIENCE_SUBSCRIBED_DEFAULT = "bkInternalExperienceSubscribedDefault" // 内部体验默认已订阅
     const val BK_SUBSCRIPTION_EXPERIENCE_NOT_ALLOWED = "bkSubscriptionExperienceNotAllowed" // 不允许订阅内部体验
     const val BK_SUBSCRIPTION_EXPERIENCE_SUCCESSFUL = "bkSubscriptionExperienceSuccessful" // 订阅体验成功！
+
     // 既是公开体验又是内部体验的应用版本无法自行取消订阅,蓝盾App已不再支持同时选中两种体验范围，请尽快更改发布体验版本的配置。
     const val BK_PLEASE_CHANGE_CONFIGURATION = "bkPleaseChangeConfiguration"
+
     // 内部体验默认为已订阅状态，无法自行取消。如需取消订阅，请联系产品负责人退出内部体验，退出后将不接收订阅信息。
     const val BK_CANNOT_BE_CANCELLED_BY_ITSELF = "bkCannotBeCancelledByItself"
     const val BK_INTERNAL_EXPERIENCE_CANNOT_UNSUBSCRIBED = "bkInternalExperienceCannotUnsubscribed" // 内部体验不可取消订阅
@@ -109,18 +113,22 @@ object ExperienceMessageCode {
     const val BK_CONSTRUCTION_NUMBER = "bkConstructionNumber" // 构建号#{0}
     const val BK_USER_NOT_EDIT_PERMISSION_GROUP = "bkUserNotEditPermissionGroup" // 用户在项目({0})没有体验组({1})的编辑权限
     const val BK_HAS_BEEN_UPDATED = "bkHasBeenUpdated" // 【{0}】 {1} 更新啦
+
     // 【{0}】发布了最新体验版本，蓝盾App诚邀您参与体验。点击查看>>
     const val BK_LATEST_EXPERIENCE_VERSION_CLICK_VIEW = "bkLatestExperienceVersionClickView"
+
     // 【蓝盾版本体验通知】{0}邀您体验【{1}-{2}】
     const val BK_BLUE_SHIELD_VERSION_EXPERIENCE_NOTIFICATION = "bkBlueShieldVersionExperienceNotification"
     const val BK_INVITES_YOU_EXPERIENCE = "bkInvitesYouExperience" // {0}邀您体验【{1}-{2}】
     const val BK_NAME = "bkName" // 名称
     const val BK_VIEW = "bkView" // 查看
     const val BK_LATEST_EXPERIENCE_VERSION_SHARING = "bkLatestExperienceVersionSharing" // 【{0}】最新体验版本分享
+
     // 【{0}】发布了最新体验版本，【{1}-{2}】诚邀您参与体验。
     const val BK_LATEST_INVITES_YOU_EXPERIENCE = "bkLatestInvitesYouExperience"
     const val BK_PC_EXPERIENCE_ADDRESS = "bkPcExperienceAddress" // \nPC体验地址
     const val BK_MOBILE_EXPERIENCE_ADDRESS = "bkMobileExperienceAddress" // \n手机体验地址
+
     // 【{0}】发布了最新体验版本，【{1}-{2}】诚邀您参与体验。\nPC体验地址：{3}\n手机体验地址：{4}
     const val BK_LATEST_EXPERIENCE_VERSION_INFO = "bkLatestExperienceVersionInfo"
 }

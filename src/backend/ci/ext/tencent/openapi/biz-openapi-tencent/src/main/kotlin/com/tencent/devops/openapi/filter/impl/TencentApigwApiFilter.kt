@@ -26,11 +26,19 @@
  */
 package com.tencent.devops.openapi.filter.impl
 
+import com.tencent.devops.auth.api.oauth2.Oauth2ServiceEndpointResource
+import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_SECRET
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_OAUTH2_AUTHORIZATION
+import com.tencent.devops.common.api.auth.AUTH_HEADER_OAUTH2_CLIENT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_OAUTH2_CLIENT_SECRET
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.ERROR_OPENAPI_JWT_PARSE_FAIL
@@ -55,7 +63,8 @@ import javax.ws.rs.ext.Provider
 @RequestFilter
 @Suppress("UNUSED")
 class TencentApigwApiFilter(
-    private val apiGatewayUtil: ApiGatewayUtil
+    private val apiGatewayUtil: ApiGatewayUtil,
+    private val client: Client
 ) : ApiFilter {
 
     companion object {
@@ -64,6 +73,7 @@ class TencentApigwApiFilter(
         private const val appSecHeader = "app_secret"
         private const val jwtHeader = "X-Bkapi-JWT"
         private const val apigwSourceHeader = "X-DEVOPS-APIGW-TYPE"
+        private const val REMOTE_EXCEPTION_CODE = 500
     }
 
     enum class ApiType(val startContextPath: String, val verify: Boolean) {
@@ -98,9 +108,10 @@ class TencentApigwApiFilter(
         val bkApiJwt = requestContext.getHeaderString(jwtHeader)
         if (bkApiJwt.isNullOrBlank()) {
             logger.error("Request bk api jwt is empty for ${requestContext.request}")
-            requestContext.abortWith(Response.status(Response.Status.BAD_REQUEST)
-                .entity("Request bkapi jwt is empty.")
-                .build()
+            requestContext.abortWith(
+                Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Request bkapi jwt is empty.")
+                    .build()
             )
             return false
         }
@@ -149,13 +160,79 @@ class TencentApigwApiFilter(
                         requestContext.headers.add(AUTH_HEADER_DEVOPS_USER_ID, username)
                     }
                 } else if (apiType == ApiType.USER) {
-                    requestContext.abortWith(Response.status(Response.Status.BAD_REQUEST)
-                        .entity("Request don't has user's access_token.")
-                        .build()
+                    requestContext.abortWith(
+                        Response.status(Response.Status.BAD_REQUEST)
+                            .entity("Request don't has user's access_token.")
+                            .build()
                     )
                     return false
                 }
             }
+        }
+        return true
+    }
+
+    fun verifyOauth2Authorization(requestContext: ContainerRequestContext): Boolean {
+        val path = requestContext.uriInfo.requestUri.path
+        // 判断是否为合法的路径
+        val apiType = ApiType.parseType(path) ?: return false
+        // 如果是op的接口访问直接跳过jwt认证
+        if (!apiType.verify) return true
+
+        val bkApiJwt = requestContext.getHeaderString(jwtHeader)
+        val apigwSource = requestContext.getHeaderString(apigwSourceHeader)
+        val jwt = parseJwt(bkApiJwt, apigwSource)
+        // oauth2接口只提供给app调用方式
+        if (!jwt.contains("app")) return true
+        val oauth2AccessToken = requestContext.headers.getFirst(AUTH_HEADER_OAUTH2_AUTHORIZATION) ?: return true
+        val clientId = requestContext.headers.getFirst(AUTH_HEADER_OAUTH2_CLIENT_ID)
+        val clientSecret = requestContext.headers.getFirst(AUTH_HEADER_OAUTH2_CLIENT_SECRET)
+        if (clientId == null || clientSecret == null) {
+            requestContext.abortWith(
+                Response.status(Response.Status.OK)
+                    .entity(
+                        Result(
+                            status = AuthMessageCode.ERROR_CLIENT_NOT_EXIST.toInt(),
+                            message = "The client id or client secret cannot be empty!",
+                            data = null
+                        )
+                    ).build()
+            )
+            return false
+        }
+        try {
+            val username = client.get(Oauth2ServiceEndpointResource::class).verifyAccessToken(
+                clientId = clientId,
+                clientSecret = clientSecret,
+                accessToken = oauth2AccessToken
+            ).data
+            requestContext.headers.putSingle(AUTH_HEADER_DEVOPS_USER_ID, username)
+        } catch (ex: ErrorCodeException) {
+            requestContext.abortWith(
+                Response.status(Response.Status.OK)
+                    .entity(
+                        Result(
+                            status = ex.errorCode.toInt(),
+                            message = ex.defaultMessage,
+                            data = null
+                        )
+                    ).build()
+            )
+            return false
+        } catch (ignore: RemoteServiceException) {
+            requestContext.abortWith(
+                Response.status(Response.Status.OK)
+                    .entity(
+                        Result(
+                            status = ignore.errorCode ?: REMOTE_EXCEPTION_CODE,
+                            message = ignore.errorMessage,
+                            data = null
+                        )
+                    ).build()
+            )
+            return false
+        } catch (ignore: Exception) {
+            throw ignore
         }
         return true
     }
@@ -174,6 +251,8 @@ class TencentApigwApiFilter(
                 )
                 return
             }
+            // 校验oauth2授权方式
+            if (!verifyOauth2Authorization(requestContext)) return
         }
     }
 

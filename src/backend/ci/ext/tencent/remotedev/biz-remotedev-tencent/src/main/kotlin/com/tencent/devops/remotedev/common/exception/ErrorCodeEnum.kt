@@ -165,6 +165,16 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.USER,
         errorCode = "2132031",
         formatErrorMessage = "Please do not submit duplicate issue requests within 1 hour[{0}]."
+    ),
+    ZONE_VM_RESOURCE_NOT_ENOUGH(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = "2132032",
+        formatErrorMessage = "zone {0} machine {1} free {2} less than the {3} units that currently need to be produced."
+    ),
+    PROJECT_ACCESS_DEVICE_PERMISSION(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = "2132033",
+        formatErrorMessage = "req project_access_device_permissions error {0}"
     );
 
     fun getErrorMessage(): String {

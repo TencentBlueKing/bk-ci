@@ -48,7 +48,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwMarketTemplateResourceV2 {
 
-    @ApiOperation("安装研发商店模板到项目")
+    @ApiOperation("安装研发商店模板到项目", tags = ["v2_app_market_installFromStore"])
     @POST
     @Path("/template/installFromStore")
     fun installTemplateFromStore(

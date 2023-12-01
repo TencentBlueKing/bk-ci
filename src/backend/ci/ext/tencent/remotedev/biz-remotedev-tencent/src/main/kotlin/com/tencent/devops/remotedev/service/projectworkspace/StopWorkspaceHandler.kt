@@ -27,7 +27,13 @@
 
 package com.tencent.devops.remotedev.service.projectworkspace
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
@@ -52,13 +58,13 @@ import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 class StopWorkspaceHandler @Autowired constructor(
@@ -79,15 +85,40 @@ class StopWorkspaceHandler @Autowired constructor(
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CGS_STOP,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS,
+            instanceNames = "#workspaceName",
+            instanceIds = "#workspaceName"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CGS_STOP_CONTENT
+    )
     fun stopWorkspace(userId: String, projectId: String, workspaceName: String): WorkspaceResponse {
         logger.info("$userId stop project workspace $workspaceName")
         permissionService.checkUserManager(userId, projectId)
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
             expiredTimeInSeconds
         ).tryLock().use {
-
+            if (workspaceCommon.notOk2doNextAction(workspace)) {
+                logger.info("${workspace.workspaceName} is ${workspace.status}, return error.")
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
+                    params = arrayOf(
+                        workspace.workspaceName,
+                        "status is already ${workspace.status}, can't stop now"
+                    )
+                )
+            }
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
@@ -103,7 +134,7 @@ class StopWorkspaceHandler @Autowired constructor(
                 action = WorkspaceAction.STOP,
                 actionMessage = String.format(
                     workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                    WorkspaceStatus.RUNNING.name,
+                    workspace.status,
                     WorkspaceStatus.STOPPING.name
                 )
             )
@@ -127,7 +158,7 @@ class StopWorkspaceHandler @Autowired constructor(
                         ).toSet()
                     ),
                     workspaceName = workspaceName,
-                    settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable,
+                    settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
                     bkTicket = "",
                     mountType = WorkspaceMountType.START
                 )

@@ -83,7 +83,7 @@ class WorkspaceJoinDao {
     ): List<WorkspaceRecordInf>? {
         with(TWorkspace.T_WORKSPACE) {
             // 没有包含其他表的条件
-            if (ips.isNullOrEmpty() && owner == null && zoneId == null && machineType == null) {
+            if (ips.isNullOrEmpty() && owner == null && zoneId == null && machineType == null && expertSupId == null) {
                 return (
                         genFetchProjectWorkspaceCond(
                             dslContext = dslContext,
@@ -188,7 +188,7 @@ class WorkspaceJoinDao {
         }
 
         // 没有连表查询的条件
-        if (ips.isNullOrEmpty() && owner == null && zoneId == null && machineType == null) {
+        if (ips.isNullOrEmpty() && owner == null && zoneId == null && machineType == null && expertSupId == null) {
             return dslContext.selectFrom(TWorkspace.T_WORKSPACE).where(conditions)
         }
 
@@ -334,6 +334,21 @@ class WorkspaceJoinDao {
         }
 
         return result
+    }
+
+    fun fetchProjectFromUser(
+        dslContext: DSLContext,
+        userId: String
+    ): Set<String> {
+        return dslContext.select(TWorkspace.T_WORKSPACE.PROJECT_ID)
+            .from(TWorkspace.T_WORKSPACE, TWorkspaceShared.T_WORKSPACE_SHARED)
+            .where(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
+            .and(TWorkspace.T_WORKSPACE.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+            .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.eq(userId))
+            .fetch().distinct()
+            .map { it[TWorkspace.T_WORKSPACE.PROJECT_ID.name] as String? ?: "" }
+            .filter { it.isNotBlank() }
+            .toSet()
     }
 
     class TWorkspaceFieldJooqMapper : RecordMapper<Record, WorkspaceRecord> {

@@ -49,7 +49,7 @@ class RbacResourceApi(
         resourceName: String
     ) {
         client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             resourceType = RbacAuthUtils.extResourceType(authResourceType = resourceType),
             resourceCode = resourceCode,
@@ -67,7 +67,7 @@ class RbacResourceApi(
     ) {
         resourceList.forEach { resourceRegisterInfo ->
             client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
-                token = tokenService.getSystemToken(null)!!,
+                token = tokenService.getSystemToken()!!,
                 userId = user,
                 resourceType = RbacAuthUtils.extResourceType(authResourceType = resourceType),
                 resourceCode = resourceRegisterInfo.resourceCode,
@@ -87,7 +87,7 @@ class RbacResourceApi(
         authGroupList: List<BkAuthGroup>?
     ) {
         client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             resourceType = RbacAuthUtils.extResourceType(authResourceType = resourceType),
             resourceCode = resourceCode,
@@ -104,7 +104,7 @@ class RbacResourceApi(
         resourceName: String
     ) {
         client.get(ServicePermissionAuthResource::class).resourceModifyRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             resourceType = RbacAuthUtils.extResourceType(authResourceType = resourceType),
             resourceCode = resourceCode,
             resourceName = resourceName,
@@ -119,7 +119,7 @@ class RbacResourceApi(
         resourceCode: String
     ) {
         client.get(ServicePermissionAuthResource::class).resourceDeleteRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             resourceType = RbacAuthUtils.extResourceType(authResourceType = resourceType),
             resourceCode = resourceCode,
             projectCode = projectCode
@@ -135,7 +135,7 @@ class RbacResourceApi(
     ) {
         client.get(ServicePermissionAuthResource::class).resourceCancelRelation(
             userId = userId,
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             resourceType = RbacAuthUtils.extResourceType(authResourceType = resourceType),
             resourceCode = resourceCode,
             projectCode = projectCode
@@ -151,7 +151,7 @@ class RbacResourceApi(
     ) {
         client.get(ServicePermissionAuthResource::class).resourceCancelRelation(
             userId = userId,
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             resourceType = RbacAuthUtils.extResourceType(authResourceType = resourceType),
             resourceCode = resourceCode,
             projectCode = projectCode

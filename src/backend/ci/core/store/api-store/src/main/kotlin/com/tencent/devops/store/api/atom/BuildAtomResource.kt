@@ -27,16 +27,22 @@
 
 package com.tencent.devops.store.api.atom
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
+import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.VersionInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["BUILD_PIPELINE_ATOM"], description = "流水线-插件")
@@ -56,4 +62,42 @@ interface BuildAtomResource {
         @PathParam("atomCode")
         atomCode: String
     ): Result<VersionInfo?>
+
+    @ApiOperation("使用分支创建插件测试版本")
+    @POST
+    @Path("/test/version/create")
+    fun createAtomBranchTestVersion(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("新增插件请求报文体", required = true)
+        marketAtomUpdateRequest: MarketAtomUpdateRequest
+    ): Result<String>
+
+    @ApiOperation("结束插件分支测试版本测试")
+    @GET
+    @Path("/atoms/{atomCode}/test/version/end")
+    fun endBranchVersionTest(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("插件分支", required = true)
+        @PathParam("atomCode")
+        atomCode: String,
+        @ApiParam("插件分支", required = true)
+        @QueryParam("branch")
+        branch: String
+    ): Result<Boolean>
+
+    @ApiOperation("根据插件版本ID获取插件版本进度")
+    @GET
+    @Path("/desk/atom/release/ids/{atomId}")
+    fun getProcessInfo(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("atomId", required = true)
+        @PathParam("atomId")
+        atomId: String
+    ): Result<StoreProcessInfo>
 }
