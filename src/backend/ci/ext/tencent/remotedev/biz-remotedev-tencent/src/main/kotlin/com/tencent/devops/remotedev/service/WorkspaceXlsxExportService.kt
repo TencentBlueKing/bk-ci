@@ -32,7 +32,6 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.common.QueryType
 import com.tencent.devops.remotedev.pojo.display
-import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
@@ -114,7 +113,6 @@ class WorkspaceXlsxExportService @Autowired constructor(
             .build()
     }
 
-
     fun exportProjectWorkspaceListWeb(
         userId: String,
         projectId: String,
@@ -171,7 +169,6 @@ class WorkspaceXlsxExportService @Autowired constructor(
             .build()
     }
 
-
     fun exportProjectWorkspaceListUser(
         userId: String,
         page: Int?,
@@ -217,13 +214,8 @@ class WorkspaceXlsxExportService @Autowired constructor(
             .build()
     }
 
-
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceXlsxExportService::class.java)
-        private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
-        private const val defaultPageSize = 20
-        private const val DEFAULT_WAIT_TIME = 60
-        private const val DISCOUNT_TIME = 10000
         private val titleList =
             listOf("项目ID", "实例名称", "状态", "云桌面ID", "系统类型", "机型", "创建人", "拥有者", "共享人")
         private val webTitleList =

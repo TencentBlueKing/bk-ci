@@ -53,7 +53,7 @@ enum class WorkspaceSystemType {
         else -> true
     }
 
-    fun display() = when(this) {
+    fun display() = when (this) {
         LINUX -> "Linux动态容器"
         WINDOWS_GPU -> "Windows GPU 云桌面"
     }

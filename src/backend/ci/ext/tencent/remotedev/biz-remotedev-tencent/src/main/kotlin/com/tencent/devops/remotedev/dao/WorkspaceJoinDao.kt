@@ -176,7 +176,6 @@ class WorkspaceJoinDao {
 //            }
         }
 
-
         // 没有连表查询的条件
         if (search.onlyNeedCheckWorkspace()) {
             return dslContext.selectFrom(TWorkspace.T_WORKSPACE).where(conditions)
@@ -328,7 +327,6 @@ class WorkspaceJoinDao {
             }
             conditions.add(sql)
         }
-
 
         // machineType 条件查询
 //        if (machineType != null) {
