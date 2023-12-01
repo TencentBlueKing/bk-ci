@@ -438,7 +438,8 @@ class ProjectDao {
     fun updateUsableStatus(
         dslContext: DSLContext,
         userId: String?,
-        projectId: String, enabled: Boolean
+        projectId: String,
+        enabled: Boolean
     ): Int {
         with(TProject.T_PROJECT) {
             return dslContext.update(this)
