@@ -24,7 +24,7 @@
             </bk-button>
             <template v-if="executeStep === 2">
                 <bk-button
-                    theme="primary"
+                    :theme="isDebugPipeline ? '' : 'primary'"
                     @click="switchExecStep(executeSteps[0])"
                 >
                     {{ $t("prev") }}
@@ -106,7 +106,7 @@
             },
             goEdit () {
                 this.$router.push({
-                    name: 'pipelinesHistory'
+                    name: 'pipelinesEdit'
                 })
             },
             beforeSwitchStep () {

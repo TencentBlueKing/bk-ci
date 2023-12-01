@@ -781,3 +781,45 @@ export const prettyDateTimeFormat = (target) => {
     const seconds = formatStr(d.getSeconds())
     return `${year}-${month}-${date} ${hours}:${minutes}:${seconds}`
 }
+
+export function areDeeplyEqual (obj1, obj2) {
+    const stack = [[obj1, obj2]]
+    let current, left, right
+
+    while (stack.length > 0) {
+        current = stack.pop()
+        left = current[0]
+        right = current[1]
+
+        if (left === right) {
+            continue
+        }
+
+        if (typeof left !== 'object' || left === null
+            || typeof right !== 'object' || right === null) {
+            return false
+        }
+
+        const leftKeys = Object.keys(left)
+        const rightKeys = Object.keys(right)
+        if (leftKeys.length !== rightKeys.length) {
+            return false
+        }
+
+        for (const key in leftKeys) {
+            if (!Object.hasOwnProperty.call(right, key)) {
+                return false
+            }
+            if (left[key] === right[key]) {
+                continue
+            }
+            if (typeof left[key] === 'object' && typeof right[key] === 'object') {
+                stack.push([left[key], right[key]])
+            } else {
+                return false
+            }
+        }
+    }
+
+    return true
+}

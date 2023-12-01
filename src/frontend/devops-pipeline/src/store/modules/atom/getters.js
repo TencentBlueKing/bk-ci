@@ -36,6 +36,9 @@ export default {
     isBranchVersion: state => {
         return state.pipelineInfo?.baseVersionStatus === 'BRANCH'
     },
+    isReleasePipeline: state => {
+        return state.pipelineInfo?.baseVersionStatus === 'RELEASED'
+    },
     pacEnabled: state => {
         return state.pipelineInfo?.pipelineAsCodeSettings?.enable ?? false
     },
@@ -145,7 +148,7 @@ export default {
     },
     getEditingElementPos: state => state.editingElementPos,
     isEditing: state => {
-        return state.pipeline && state.pipeline.editing
+        return state.isPipelineEditing
     },
     checkPipelineInvalid: (state, getters) => (stages, pipelineSetting) => {
         try {

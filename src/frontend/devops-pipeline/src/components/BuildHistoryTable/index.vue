@@ -248,7 +248,7 @@
                         <span v-else>--</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('操作')" fixed="right" width="80">
+                <bk-table-column v-if="!isDebug" :label="$t('操作')" fixed="right" width="80">
                     <template v-slot="props">
                         <bk-button
                             v-if="retryable(props.row)"

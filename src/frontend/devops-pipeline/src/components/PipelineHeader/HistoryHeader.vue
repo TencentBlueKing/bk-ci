@@ -44,13 +44,14 @@
             ...mapState('atom', ['pipelineInfo']),
             ...mapGetters({
                 isCurPipelineLocked: 'atom/isCurPipelineLocked',
+                isReleasePipeline: 'atom/isReleasePipeline',
                 pacEnabled: 'atom/pacEnabled'
             }),
             yamlInfo () {
                 return this.pipelineInfo?.yamlInfo
             },
             executable () {
-                return !this.isCurPipelineLocked && this.canManualStartup
+                return !this.isCurPipelineLocked && this.canManualStartup && this.isReleasePipeline
             },
             canManualStartup () {
                 return this.pipelineInfo?.canManualStartup ?? true

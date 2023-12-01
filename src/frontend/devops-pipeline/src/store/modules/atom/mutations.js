@@ -48,13 +48,13 @@ import {
     SET_ATOM_VERSION_LIST,
     SET_COMMEND_ATOM_COUNT,
     SET_COMMEND_ATOM_PAGE_OVER,
+    SET_COMMON_PARAMS,
     SET_COMMON_SETTING,
     SET_CONTAINER_DETAIL,
     SET_CONTAINER_FETCHING,
     SET_DEFAULT_STAGE_TAG,
     SET_EDIT_FROM,
     SET_GLOBAL_ENVS,
-    SET_COMMON_PARAMS,
     SET_HIDE_SKIP_EXEC_TASK,
     SET_INSERT_STAGE_STATE,
     SET_PIPELINE,
@@ -66,11 +66,11 @@ import {
     SET_REMOTE_TRIGGER_TOKEN,
     SET_REQUEST_ATOM_DATA,
     SET_SAVE_STATUS,
+    SET_SHOW_VARIABLE,
     SET_STAGE_TAG_LIST,
     SET_STORE_LOADING,
     SET_STORE_SEARCH,
     SET_TEMPLATE,
-    SET_SHOW_VARIABLE,
     TOGGLE_ATOM_SELECTOR_POPUP,
     TOGGLE_STAGE_REVIEW_PANEL,
     UPDATE_ATOM,
@@ -178,8 +178,9 @@ export default {
         return state
     },
     [SET_PIPELINE_EDITING]: (state, editing) => {
-        if (state.pipeline && state.pipeline.editing !== editing) {
-            Vue.set(state.pipeline, 'editing', editing)
+        console.trace('SET_PIPELINE_EDITING', editing)
+        if (state.isPipelineEditing !== editing) {
+            Vue.set(state, 'isPipelineEditing', editing)
         }
         return state
     },

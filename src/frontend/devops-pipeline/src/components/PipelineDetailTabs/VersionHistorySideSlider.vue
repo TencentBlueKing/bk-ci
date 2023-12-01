@@ -66,7 +66,7 @@
 
 <script>
     import SearchSelect from '@blueking/search-select'
-    import { mapActions, mapState, mapMutations } from 'vuex'
+    import { mapActions, mapState } from 'vuex'
     import { convertTime, navConfirm } from '@/utils/util'
     import VersionDiffEntry from './VersionDiffEntry'
     import RollbackEntry from './RollbackEntry'
@@ -143,9 +143,6 @@
             }
         },
         methods: {
-            ...mapMutations('atom', ['SET_PIPELINE_EDITING']),
-            ...mapMutations('pipelines', ['PIPELINE_SETTING_MUTATION']),
-
             ...mapActions('pipelines', [
                 'requestPipelineVersionList',
                 'deletePipelineVersion'

@@ -125,7 +125,7 @@
                             bindData: {
                                 isEditing: this.isEditing,
                                 pipeline: this.pipelineWithoutTrigger,
-                                isLoading: !this.pipeline
+                                isLoading: !this.pipelineWithoutTrigger
                             }
                         },
                         {

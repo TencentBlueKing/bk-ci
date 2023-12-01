@@ -33,22 +33,28 @@
             <bk-collapse-item name="3" custom-trigger-area>
                 <header class="params-collapse-trigger">
                     {{ $t('template.pipelineVar') }}
-                    <span class="collapse-trigger-divider">|</span>
-                    <span v-if="useLastParams" class="text-link" @click.stop="updateParams()">
-                        {{ $t('resetDefault') }}
-                        <i class="devops-icon icon-question-circle" v-bk-tooltips="$t('debugParamsTips')" />
-                    </span>
-                    <span v-else class="text-link" @click.stop="updateParams('value')">
-                        {{ $t('useLastParams') }}
-                    </span>
+                    <template v-if="paramList.length > 0">
+                        <span class="collapse-trigger-divider">|</span>
+                        <span v-if="useLastParams" class="text-link" @click.stop="updateParams()">
+                            {{ $t('resetDefault') }}
+                            <i class="devops-icon icon-question-circle" v-bk-tooltips="$t('debugParamsTips')" />
+                        </span>
+                        <span v-else class="text-link" @click.stop="updateParams('value')">
+                            {{ $t('useLastParams') }}
+                        </span>
+                    </template>
                 </header>
                 <div slot="content" class="params-collapse-content">
                     <pipeline-params-form
+                        v-if="paramList.length > 0"
                         ref="paramsForm"
                         :param-values="paramsValues"
                         :handle-param-change="handleParamChange"
                         :params="paramList"
                     />
+                    <bk-exception v-else type="empty" scene="part">
+                        {{$t('暂无入参')}}
+                    </bk-exception>
                 </div>
             </bk-collapse-item>
             <bk-collapse-item name="4" custom-trigger-area v-if="constantParams.length > 0">
@@ -65,9 +71,11 @@
                 </div>
             </bk-collapse-item>
         </template>
-        <bk-exception v-else type="empty">
-            {{$t('暂无入参')}}
-        </bk-exception>
+        <div v-else class="empty-execute-params-exception">
+            <bk-exception type="empty" scene="part">
+                {{$t('暂无入参，无需填写')}}
+            </bk-exception>
+        </div>
     </bk-collapse>
 </template>
 
@@ -268,6 +276,12 @@
         .params-collapse-content {
             padding-top: 16px;
             border-top: 1px solid #DCDEE5;
+        }
+        .empty-execute-params-exception {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
         }
     }
 </style>

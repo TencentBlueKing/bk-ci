@@ -24,6 +24,7 @@
                         theme="primary"
                         name="enablePac"
                         v-model="releaseParams.enablePac"
+                        @change="handlePacEnableChange"
                     />
                 </aside>
                 <aside v-if="releaseParams.enablePac" class="release-pipeline-pac-conf-rightside">
@@ -149,8 +150,8 @@
                         {{ $t('pipelineSetting') }}
                     </header>
                     <PipelineGroupSelector
-                        :value="groupValue"
-                        :editable="false"
+                        v-model="groupValue"
+                        :dynamic-group-editable="false"
                         :pipeline-name="pipelineName"
                         ref="pipelineGroupSelector"
                         :has-manage-permission="isManage"
@@ -243,8 +244,11 @@
                     description: '',
                     repoHashId: '',
                     filePath: '',
-                    staticViews: [],
-                    targetAction: 'COMMIT_TO_MASTER'
+                    targetAction: 'CHECKOUT_BRANCH_AND_REQUEST_MERGE'
+                },
+                groupValue: {
+                    labels: this.pipelineSetting?.labels || [],
+                    staticViews: []
                 }
             }
         },
@@ -261,12 +265,7 @@
             baseVersionBranch () {
                 return this.pipelineInfo?.baseVersionBranch
             },
-            groupValue () {
-                return {
-                    labels: this.pipelineSetting?.labels || [],
-                    staticViews: []
-                }
-            },
+
             rules () {
                 return {
                     repoHashId: [{
@@ -338,6 +337,12 @@
                     }
                 },
                 immediate: true
+            },
+            'pipelineSetting.labels': {
+                handler: function (val) {
+                    this.groupValue.labels = val
+                },
+                immediate: true
             }
         },
         beforeDestroy () {
@@ -392,6 +397,9 @@
                     this.scrollLoadmoreConf.isLoading = false
                 }
             },
+            handlePacEnableChange (val) {
+                this.showPacCodelibSetting = val
+            },
             async releasePipeline () {
                 const { pipelineId, projectId } = this.$route.params
                 try {
@@ -404,6 +412,7 @@
                         version: this.version,
                         params: {
                             ...rest,
+                            staticViews: this.groupValue.staticViews,
                             yamlInfo: rest.enablePac
                                 ? {
                                     scmType,
@@ -507,7 +516,7 @@
                     scmType: '',
                     description: '',
                     filePath: '',
-                    targetAction: 'COMMIT_TO_MASTER'
+                    targetAction: 'CHECKOUT_BRANCH_AND_REQUEST_MERGE'
                 }
             },
             togglePacCodelibSettingForm () {

@@ -71,7 +71,7 @@
     </div>
 </template>
 <script>
-    import { mapState, mapMutations, mapActions } from 'vuex'
+    import { mapState, mapActions } from 'vuex'
     import { convertTime } from '@/utils/util'
     import VersionHistorySideSlider from './VersionHistorySideSlider'
     export default {
@@ -136,8 +136,6 @@
         },
         methods: {
             convertTime,
-            ...mapMutations('atom', ['SET_PIPELINE_EDITING']),
-            ...mapMutations('pipelines', ['PIPELINE_SETTING_MUTATION']),
             ...mapActions('pipelines', [
                 'requestPipelineVersionList'
             ]),

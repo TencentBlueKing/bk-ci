@@ -96,7 +96,7 @@
                 </ul>
             </div>
             <aside class="pipeline-template-box-right-side">
-                <bk-form form-type="vertical" v-if="!isActiveTempEmpty">
+                <bk-form form-type="vertical">
                     <bk-form-item :label="$t('pipelineName')">
                         <div class="pipeline-input">
                             <bk-input
@@ -111,57 +111,59 @@
                             <span v-show="errors.has('newPipelineName')" class="validate-fail-border-effect"></span>
                         </div>
                     </bk-form-item>
-                    <bk-form-item :label="$t('type')">
-                        <bk-radio-group class="pipelinte-template-type-group" v-model="templateType">
-                            <bk-popover placement="bottom" v-for="(entry, key) in tplTypes" :key="key">
-                                <bk-radio
-                                    :value="entry.value"
+                    <template v-if="!isActiveTempEmpty">
+                        <bk-form-item :label="$t('type')">
+                            <bk-radio-group class="pipelinte-template-type-group" v-model="templateType">
+                                <bk-popover placement="bottom" v-for="(entry, key) in tplTypes" :key="key">
+                                    <bk-radio
+                                        :value="entry.value"
+                                    >
+                                        <span class="radio-lable">{{ entry.label }}</span>
+                                    </bk-radio>
+                                    <div slot="content" style="white-space: normal;">{{entry.tip}}</div>
+                                </bk-popover>
+                            </bk-radio-group>
+                        </bk-form-item>
+                        <bk-form-item v-if="isPublicTemplate">
+                            <PipelineGroupSelector
+                                v-model="groupValue"
+                                :pipeline-name="newPipelineName"
+                                ref="pipelineGroupSelector"
+                                :has-manage-permission="isManage"
+                            />
+                        </bk-form-item>
+                        <bk-form-item :label="$t('克隆模板配置')" v-else>
+                            <bk-checkbox-group v-model="applySettings">
+                                <div v-for="item in settingItems"
+                                    :key="item.label"
+                                    :class="['template-setting-apply-checkbox', {
+                                        'disabled-setting': item.disabled
+                                    }]"
                                 >
-                                    <span class="radio-lable">{{ entry.label }}</span>
-                                </bk-radio>
-                                <div slot="content" style="white-space: normal;">{{entry.tip}}</div>
-                            </bk-popover>
-                        </bk-radio-group>
-                    </bk-form-item>
-                    <bk-form-item v-if="isPublicTemplate">
-                        <PipelineGroupSelector
-                            v-model="groupValue"
-                            :pipeline-name="newPipelineName"
-                            ref="pipelineGroupSelector"
-                            :has-manage-permission="isManage"
-                        />
-                    </bk-form-item>
-                    <bk-form-item :label="$t('克隆模板配置')" v-else>
-                        <bk-checkbox-group v-model="applySettings">
-                            <div v-for="item in settingItems"
-                                :key="item.label"
-                                :class="['template-setting-apply-checkbox', {
-                                    'disabled-setting': item.disabled
-                                }]"
-                            >
-                                <bk-checkbox
-                                    :value="item.value"
-                                    :disabled="item.disabled"
-                                >
-                                    <p class="template-apply-setting-checkbox-txt">
-                                        <span class="template-apply-setting-checkbox-txt-label">{{ item.label }}</span>
-                                        <e v-if="item.disabled">
-                                            {{$t('模板未包含此设置')}}
-                                        </e>
-                                        <bk-button
-                                            text
-                                            theme="primary"
-                                            size="small"
-                                            @click.stop="previewSetting(item.value)"
-                                            v-else
-                                        >
-                                            {{$t('pipelinesPreview')}}
-                                        </bk-button>
-                                    </p>
-                                </bk-checkbox>
-                            </div>
-                        </bk-checkbox-group>
-                    </bk-form-item>
+                                    <bk-checkbox
+                                        :value="item.value"
+                                        :disabled="item.disabled"
+                                    >
+                                        <p class="template-apply-setting-checkbox-txt">
+                                            <span class="template-apply-setting-checkbox-txt-label">{{ item.label }}</span>
+                                            <e v-if="item.disabled">
+                                                {{$t('模板未包含此设置')}}
+                                            </e>
+                                            <bk-button
+                                                text
+                                                theme="primary"
+                                                size="small"
+                                                @click.stop="previewSetting(item.value)"
+                                                v-else
+                                            >
+                                                {{$t('pipelinesPreview')}}
+                                            </bk-button>
+                                        </p>
+                                    </bk-checkbox>
+                                </div>
+                            </bk-checkbox-group>
+                        </bk-form-item>
+                    </template>
                 </bk-form>
             </aside>
         </div>
@@ -324,6 +326,12 @@
         created () {
             this.requestPipelineTemplate({
                 projectId: this.$route.params.projectId
+            })
+        },
+        mounted () {
+            console.log(this.$refs.pipelineName)
+            this.$nextTick(() => {
+                this.$refs.pipelineName.focus()
             })
         },
         methods: {

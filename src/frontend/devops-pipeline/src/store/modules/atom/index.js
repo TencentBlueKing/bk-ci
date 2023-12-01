@@ -81,7 +81,8 @@ export default {
             atomLimit: 50
         },
         pipelineCommonSetting: {},
-        editfromImport: false
+        editfromImport: false,
+        isPipelineEditing: false
     },
     mutations,
     actions,

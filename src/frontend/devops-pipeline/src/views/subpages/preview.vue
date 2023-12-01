@@ -85,7 +85,8 @@
                 'requestStartupInfo',
                 'requestExecPipeline',
                 'setExecuteStatus',
-                'resetExecuteConfig'
+                'resetExecuteConfig',
+                'setExecuteStep'
             ]),
             async init () {
                 try {
@@ -100,6 +101,9 @@
                     ])
                     this.pipelineModel = pipelineRes?.modelAndSetting?.model
                     this.startupInfo = res
+                    if (res.properties.length === 0) {
+                        this.setExecuteStep(2)
+                    }
                 } catch (err) {
                     this.handleError(err, [{
                         actionId: this.$permissionActionMap.execute,

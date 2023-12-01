@@ -6,7 +6,7 @@
         <mode-switch />
         <aside class="pipeline-edit-right-aside">
             <bk-button
-                :disabled="saveStatus"
+                :disabled="saveStatus || !isEditing"
                 :loading="saveStatus"
                 outline
                 theme="primary"
@@ -32,7 +32,7 @@
             </bk-button>
             <!-- <more-actions /> -->
             <span :class="['publish-pipeline-btn', {
-                'publish-diabled': !canRelease
+                'publish-diabled': !canRelease || isEditing
             }]" @click="showReleaseSlider">
                 <i class="devops-icon icon-check-small" />
                 {{ $t('release') }}
@@ -91,7 +91,6 @@
             canRelease () {
                 return (this.pipelineInfo?.canRelease ?? false) && !this.saveStatus
             },
-
             isTemplatePipeline () {
                 return this.pipelineInfo?.instanceFromTemplate ?? false
             },
