@@ -349,7 +349,13 @@ class PipelineVersionFacadeService @Autowired constructor(
         )
         val modelAndSetting = PipelineModelAndSetting(
             setting = setting,
-            model = resource.model
+            model = pipelineInfoFacadeService.getFixedModel(
+                model = resource.model,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                pipelineInfo = null
+            )
         )
         val baseResource = resource.baseVersion?.let {
             repositoryVersionService.getPipelineVersionSimple(
