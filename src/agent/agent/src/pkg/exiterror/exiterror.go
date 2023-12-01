@@ -37,7 +37,9 @@ func AddExitError(enum ExitErrorEnum, msg string) {
 }
 
 func GetExitError() *ExitErrorType {
-	return exitError
+	exit := exitError
+	exitError = nil
+	return exit
 }
 
 func Exit() {
