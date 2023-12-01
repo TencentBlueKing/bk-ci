@@ -489,8 +489,11 @@ class LogServiceESImpl(
             if (exString.contains("index_closed_exception")) {
                 logger.warn("[$buildId] Can't search because of index_closed_exception", e)
                 queryLogs.status = LogStatus.CLOSED.status
+            } else if (exString.contains("Too Many Requests")) {
+                logger.warn("[$buildId] Too many query requests", e)
+                queryLogs.status = LogStatus.FAIL.status
             }
-        } catch (ignore: Exception) {
+        } catch (ignore: Throwable) {
             logger.warn("Query init logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
         }
@@ -640,8 +643,11 @@ class LogServiceESImpl(
             if (exString.contains("index_closed_exception")) {
                 logger.warn("[$buildId] Can't search because of index_closed_exception", e)
                 queryLogs.status = LogStatus.CLOSED.status
+            } else if (exString.contains("Too Many Requests")) {
+                logger.warn("[$buildId] Too many query requests", e)
+                queryLogs.status = LogStatus.FAIL.status
             }
-        } catch (ignore: Exception) {
+        } catch (ignore: Throwable) {
             logger.warn("Query end logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
         }
@@ -707,8 +713,11 @@ class LogServiceESImpl(
             if (exString.contains("index_closed_exception")) {
                 logger.warn("[$buildId] Can't search because of index_closed_exception", e)
                 queryLogs.status = LogStatus.CLOSED.status
+            } else if (exString.contains("Too Many Requests")) {
+                logger.warn("[$buildId] Too many query requests", e)
+                queryLogs.status = LogStatus.FAIL.status
             }
-        } catch (ignore: Exception) {
+        } catch (ignore: Throwable) {
             logger.warn("Query init logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
         }
@@ -799,8 +808,11 @@ class LogServiceESImpl(
             if (exString.contains("index_closed_exception")) {
                 logger.warn("[$buildId] Can't search because of index_closed_exception", e)
                 queryLogs.status = LogStatus.CLOSED.status
+            } else if (exString.contains("Too Many Requests")) {
+                logger.warn("[$buildId] Too many query requests", e)
+                queryLogs.status = LogStatus.FAIL.status
             }
-        } catch (ignore: Exception) {
+        } catch (ignore: Throwable) {
             logger.warn("Query after logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
             queryLogs.finished = true
@@ -883,8 +895,11 @@ class LogServiceESImpl(
             if (exString.contains("index_closed_exception")) {
                 logger.warn("[$buildId] Can't search because of index_closed_exception", e)
                 queryLogs.status = LogStatus.CLOSED.status
+            } else if (exString.contains("Too Many Requests")) {
+                logger.warn("[$buildId] Too many query requests", e)
+                queryLogs.status = LogStatus.FAIL.status
             }
-        } catch (ignore: Exception) {
+        } catch (ignore: Throwable) {
             logger.warn("Query before logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
             queryLogs.finished = true
