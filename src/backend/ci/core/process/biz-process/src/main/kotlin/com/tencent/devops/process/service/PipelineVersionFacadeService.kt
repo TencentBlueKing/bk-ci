@@ -312,7 +312,9 @@ class PipelineVersionFacadeService @Autowired constructor(
             model = templateModel.copy(
                 name = request.pipelineName,
                 templateId = request.templateId,
-                instanceFromTemplate = instanceFromTemplate
+                instanceFromTemplate = instanceFromTemplate,
+                labels = request.labels,
+                staticViews = request.staticViews
             ),
             channelCode = ChannelCode.BS,
             checkPermission = true,
