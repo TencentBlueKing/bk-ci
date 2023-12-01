@@ -49,6 +49,7 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
 import com.tencent.devops.common.pipeline.pojo.BuildParameterGroup
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.webhook.TriggerBuildParamUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -61,6 +62,9 @@ class UserBuildParametersResourceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(UserBuildParametersResourceImpl::class.java)
+        private val paramToContext = PipelineVarUtil.contextVarMap().map {
+            it.value to it.key
+        }.toMap()
     }
 
     override fun getCommonBuildParams(userId: String): Result<List<BuildEnvParameters>> {
@@ -111,7 +115,58 @@ class UserBuildParametersResourceImpl @Autowired constructor(
     }
 
     override fun getCommonParams(userId: String): Result<List<BuildParameterGroup>> {
-        TODO("Not yet implemented")
+        return Result(
+            listOf(
+                BuildParameterGroup(
+                    name = "Basic parameters",
+                    params = listOf(
+                        BuildEnvParameters(
+                            name = paramToContext[PIPELINE_START_USER_NAME] ?: PIPELINE_START_USER_NAME,
+                            desc = MessageUtil.getMessageByLocale(
+                                PIPELINE_START_USER_NAME,
+                                I18nUtil.getLanguage(userId)
+                            )
+                        ),
+                        BuildEnvParameters(
+                            name = paramToContext[PIPELINE_START_TYPE] ?: PIPELINE_START_TYPE,
+                            desc = MessageUtil.getMessageByLocale(
+                                PIPELINE_START_TYPE,
+                                I18nUtil.getLanguage(userId),
+                                arrayOf(StartType.values().joinToString("/") { it.name })
+                            )
+                        ),
+                        BuildEnvParameters(
+                            name = paramToContext[PIPELINE_BUILD_NUM] ?: PIPELINE_BUILD_NUM,
+                            desc = MessageUtil.getMessageByLocale(PIPELINE_BUILD_NUM, I18nUtil.getLanguage(userId))
+                        ),
+                        BuildEnvParameters(
+                            name = paramToContext[PROJECT_NAME] ?: PROJECT_NAME,
+                            desc = MessageUtil.getMessageByLocale(PROJECT_NAME, I18nUtil.getLanguage(userId))
+                        ),
+                        BuildEnvParameters(
+                            name = paramToContext[PIPELINE_ID] ?: PIPELINE_ID,
+                            desc = MessageUtil.getMessageByLocale(PIPELINE_ID, I18nUtil.getLanguage(userId))
+                        ),
+                        BuildEnvParameters(
+                            name = paramToContext[PIPELINE_NAME] ?: PIPELINE_NAME,
+                            desc = MessageUtil.getMessageByLocale(PIPELINE_NAME, I18nUtil.getLanguage(userId))
+                        ),
+                        BuildEnvParameters(
+                            name = paramToContext[PIPELINE_BUILD_ID] ?: PIPELINE_BUILD_ID,
+                            desc = MessageUtil.getMessageByLocale(PIPELINE_BUILD_ID, I18nUtil.getLanguage(userId))
+                        ),
+                        BuildEnvParameters(
+                            name = paramToContext[PIPELINE_VMSEQ_ID] ?: PIPELINE_VMSEQ_ID,
+                            desc = MessageUtil.getMessageByLocale(PIPELINE_VMSEQ_ID, I18nUtil.getLanguage(userId))
+                        ),
+                        BuildEnvParameters(
+                            name = paramToContext[PIPELINE_ELEMENT_ID] ?: PIPELINE_ELEMENT_ID,
+                            desc = MessageUtil.getMessageByLocale(PIPELINE_ELEMENT_ID, I18nUtil.getLanguage(userId))
+                        )
+                    )
+                )
+            )
+        )
     }
 
     override fun getTriggerParams(

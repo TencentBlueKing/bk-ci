@@ -311,7 +311,6 @@ object TriggerBuildParamUtils {
         )
     }
 
-
     /**
      * github事件触发create事件变量名列表
      */

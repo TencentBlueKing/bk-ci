@@ -445,6 +445,8 @@ object PipelineVarUtil {
 
     fun newVarToOldVar(newVarName: String): String? = newVarMappingOldVar[newVarName]
 
+    fun contextVarMap() = contextVarMappingBuildVar
+
     const val MAX_VERSION_LEN = 64
 
     /**
