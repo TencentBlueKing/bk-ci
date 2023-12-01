@@ -5,6 +5,8 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.UserJobResource
 import com.tencent.devops.environment.pojo.job.req.QueryJobInstanceLogsReq
+import com.tencent.devops.environment.pojo.job.resp.GetStepInstanceDetailResult
+import com.tencent.devops.environment.pojo.job.resp.GetStepInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.resp.JobResult
 import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceStatusResult
@@ -36,6 +38,38 @@ class UserJobResourceImpl @Autowired constructor(
         checkParamBlank(userId, projectId)
         checkJobInsBelongToProj(projectId, queryJobInstanceLogsReq.jobInstanceId)
         return jobService.queryJobInstanceLogs(queryJobInstanceLogsReq)
+    }
+
+    override fun getStepInstanceDetail(
+        userId: String,
+        projectId: String,
+        jobInstanceId: Long,
+        stepInstanceId: Long
+    ): JobResult<GetStepInstanceDetailResult> {
+        checkParamBlank(userId, projectId)
+        checkJobInsBelongToProj(projectId, jobInstanceId)
+        return jobService.getStepInstanceDetail(projectId, jobInstanceId, stepInstanceId)
+    }
+
+    override fun getStepInstanceStatus(
+        userId: String,
+        projectId: String,
+        jobInstanceId: Long,
+        stepInstanceId: Long,
+        executeCount: Int?,
+        batch: Int?,
+        maxHostNumPerGroup: Int?,
+        keyword: String?,
+        searchIp: String?,
+        status: Int?,
+        tag: String?
+    ): JobResult<GetStepInstanceStatusResult> {
+        checkParamBlank(userId, projectId)
+        checkJobInsBelongToProj(projectId, jobInstanceId)
+        return jobService.getStepInstanceStatus(
+            projectId, jobInstanceId, stepInstanceId, executeCount,
+            batch, maxHostNumPerGroup, keyword, searchIp, status, tag
+        )
     }
 
     private fun checkParamBlank(userId: String, projectId: String) {
