@@ -42,7 +42,6 @@ import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_AND_CREATETOR_PERMISSION
 import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
@@ -95,7 +94,7 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
     override fun validateUpdateMarketAtomReq(
         userId: String,
         marketAtomUpdateRequest: MarketAtomUpdateRequest,
-        atomRecord: TAtomRecord
+        repositoryHashId: String?
     ): Result<Boolean> {
         // 开源版升级插件暂无特殊参数需要校验
         return Result(true)
@@ -219,4 +218,15 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         return if (validateFlag) Triple(true, "", null)
         else Triple(false, StoreMessageCode.USER_ATOM_RELEASE_STEPS_ERROR, null)
     }
+
+    override fun creatAtomBranchTestVersion(
+        userId: String,
+        marketAtomUpdateRequest: MarketAtomUpdateRequest
+    ): Result<String> = Result("")
+
+    override fun endBranchVersionTest(
+        userId: String,
+        atomCode: String,
+        branch: String
+    ): Result<Boolean> = Result(true)
 }

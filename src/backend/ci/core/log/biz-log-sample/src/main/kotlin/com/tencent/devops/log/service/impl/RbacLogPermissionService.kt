@@ -21,7 +21,7 @@ class RbacLogPermissionService @Autowired constructor(
     ): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             userId = userId,
-            token = tokenCheckService.getSystemToken(null) ?: "",
+            token = tokenCheckService.getSystemToken() ?: "",
             action = RbacAuthUtils.buildAction(
                 permission ?: AuthPermission.VIEW, AuthResourceType.PIPELINE_DEFAULT
             ),

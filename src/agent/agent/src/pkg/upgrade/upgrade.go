@@ -34,6 +34,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade/download"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
@@ -114,6 +115,11 @@ func DoPollAndUpgradeAgent() {
 			logs.Debug("debug no upgrade")
 			continue
 		}
+		// 有任务就放弃升级
+		if job.CheckRunningJob() {
+			logs.Info("has job running skip upgrade")
+			continue
+		}
 		agentUpgrade()
 		logs.Info("upgrade done")
 	}
@@ -180,10 +186,13 @@ func agentUpgrade() {
 	defer func() {
 		job.BuildTotalManager.Lock.Unlock()
 	}()
-	if job.GBuildManager.GetPreInstancesCount() > 0 || job.GBuildManager.GetInstanceCount() > 0 ||
-		job.GBuildDockerManager.GetInstanceCount() > 0 {
-		logs.Infof("agent has upgrade item, but has job running prejob: %d, job: %d, dockerJob: %d. so skip.",
-			job.GBuildManager.GetPreInstancesCount(), job.GBuildManager.GetInstanceCount(), job.GBuildDockerManager.GetInstanceCount())
+	if job.CheckRunningJob() {
+		logs.Infof(
+			"agent has upgrade item, but has job running prejob: %d, job: %d, dockerJob: %d. so skip.",
+			job.GBuildManager.GetPreInstancesCount(),
+			job.GBuildManager.GetInstanceCount(),
+			job.GBuildDockerManager.GetInstanceCount(),
+		)
 		return
 	}
 
@@ -298,6 +307,7 @@ func getJdkVersion() ([]string, error) {
 	jdkVersion, err := command.RunCommand(config.GetJava(), []string{"-version"}, "", nil)
 	if err != nil {
 		logs.Error("agent get jdk version failed: ", err.Error())
+		exitcode.CheckSignError(err, exitcode.ExitSignJdk)
 		return nil, errors.Wrap(err, "agent get jdk version failed")
 	}
 	var jdkV []string

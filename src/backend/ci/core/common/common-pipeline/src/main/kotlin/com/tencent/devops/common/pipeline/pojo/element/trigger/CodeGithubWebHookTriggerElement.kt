@@ -29,7 +29,9 @@ package com.tencent.devops.common.pipeline.pojo.element.trigger
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.element.ElementProp
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -54,7 +56,15 @@ data class CodeGithubWebHookTriggerElement(
     @ApiModelProperty("新版的github原子的类型")
     val repositoryType: RepositoryType? = null,
     @ApiModelProperty("新版的github代码库名")
-    val repositoryName: String? = null
+    val repositoryName: String? = null,
+    @ApiModelProperty("code review 状态", required = false)
+    val includeCrState: List<String>? = null,
+    @ApiModelProperty("code note comment", required = false)
+    val includeNoteComment: String? = null,
+    @ApiModelProperty("code note 类型", required = false)
+    val includeNoteTypes: List<String>? = null,
+    @ApiModelProperty("issue事件action")
+    val includeIssueAction: List<String>? = null
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeGithubWebHookTrigger"
@@ -68,5 +78,21 @@ data class CodeGithubWebHookTriggerElement(
         } else {
             super.findFirstTaskIdByStartType(startType)
         }
+    }
+
+    // 增加条件这里也要补充上,不然代码库触发器列表展示会不对
+    override fun triggerCondition(): List<ElementProp> {
+        val props = when (eventType) {
+            CodeEventType.PUSH, CodeEventType.CREATE, CodeEventType.PULL_REQUEST -> {
+                listOf(
+                    TriggerElementPropUtils.vuexInput(name = "branchName", value = branchName),
+                    TriggerElementPropUtils.vuexInput(name = "excludeBranchName", value = excludeBranchName),
+                    TriggerElementPropUtils.vuexInput(name = "excludeUsers", value = excludeUsers)
+                )
+            }
+
+            else -> emptyList()
+        }
+        return props.filterNotNull()
     }
 }

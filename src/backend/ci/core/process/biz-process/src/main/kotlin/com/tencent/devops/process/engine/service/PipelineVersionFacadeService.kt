@@ -27,11 +27,17 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -46,6 +52,17 @@ class PipelineVersionFacadeService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService
 ) {
 
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_DELETE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE,
+            instanceNames = "#$",
+            instanceIds = "#pipelineId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.PIPELINE_DELETE_VERSION_CONTENT
+    )
     fun deletePipelineVersion(
         userId: String,
         projectId: String,
@@ -73,7 +90,6 @@ class PipelineVersionFacadeService @Autowired constructor(
                 )
             )
         }
-
         pipelineRepositoryVersionService.deletePipelineVer(
             projectId = projectId,
             pipelineId = pipelineId,

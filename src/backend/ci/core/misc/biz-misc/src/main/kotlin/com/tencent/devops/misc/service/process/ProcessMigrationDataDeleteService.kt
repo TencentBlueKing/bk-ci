@@ -177,7 +177,6 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                 processDataDeleteDao.deletePipelineBuildContainer(dslContext, projectId, pipelineId)
                 processDataDeleteDao.deletePipelineBuildStage(dslContext, projectId, pipelineId)
                 processDataDeleteDao.deletePipelineFavor(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineWebhookBuildLogDetail(dslContext, projectId, pipelineId)
                 offset += DEFAULT_PAGE_SIZE
             } while (historyInfoRecords?.size == DEFAULT_PAGE_SIZE)
         }

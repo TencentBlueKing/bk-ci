@@ -29,15 +29,26 @@ package com.tencent.devops.auth.resources
 
 import com.tencent.devops.auth.api.service.ServiceMonitorSpaceResource
 import com.tencent.devops.auth.service.AuthMonitorSpaceService
+import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceMonitorSpaceResourceImpl @Autowired constructor(
-    val monitorSpaceService: AuthMonitorSpaceService
+    val monitorSpaceService: AuthMonitorSpaceService,
+    val permissionMigrateService: PermissionMigrateService
 ) : ServiceMonitorSpaceResource {
     override fun getMonitorSpaceBizId(userId: String, projectCode: String): Result<String> {
         return Result(monitorSpaceService.getMonitorSpaceBizId(projectCode))
+    }
+
+    override fun migrateMonitorResource(projectCodes: List<String>): Result<Boolean> {
+        return Result(
+            permissionMigrateService.migrateMonitorResource(
+                projectCodes = projectCodes,
+                async = false
+            )
+        )
     }
 }
