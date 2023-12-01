@@ -107,11 +107,13 @@
             <pipeline-table-view
                 v-if="isTableLayout"
                 :filter-params="filters"
+                :has-create-permission="hasCreatePermission"
                 ref="pipelineBox"
             />
             <pipelines-card-view
                 v-else-if="isCardLayout"
                 :filter-params="filters"
+                :has-create-permission="hasCreatePermission"
                 ref="pipelineBox"
             />
 

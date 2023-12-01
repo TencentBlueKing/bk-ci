@@ -103,7 +103,7 @@
                                     disablePermissionApi: true,
                                     permissionData: {
                                         projectId: projectId,
-                                        resourceType: 'pipeline_template',
+                                        resourceType: 'pipeline',
                                         resourceCode: templateId,
                                         action: RESOURCE_ACTION.EDIT
                                     }

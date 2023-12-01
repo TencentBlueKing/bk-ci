@@ -21,7 +21,12 @@
                                     <img :src="row.logoUrl" class="pipeline-icon" v-if="row.logoUrl">
                                     <logo size="40" name="pipeline" v-else></logo>
                                 </td>
-                                <td width="20%" :class="[{ 'manager-user': row.canEdit }, 'template-name']" :title="row.name">
+                                <td width="20%" :class="{
+                                    'template-name': true,
+                                    'manager-user': isEnabledPermission ? row.canEdit : row.canView
+                                }"
+                                    :title="row.name"
+                                >
                                     <span
                                         v-if="isEnabledPermission"
                                         @click="editTemplate(row)"
@@ -375,7 +380,7 @@
             },
 
             editTemplate (row) {
-                if (!row.canEdit) return
+                if (!this.isEnabledPermission && !row.canEdit) return
 
                 this.$router.push({
                     name: 'templateEdit',

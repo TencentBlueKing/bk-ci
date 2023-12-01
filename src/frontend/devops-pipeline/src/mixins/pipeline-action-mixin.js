@@ -46,6 +46,9 @@ export default {
             hasTemplatePermission: false
         }
     },
+    props: {
+        hasCreatePermission: Boolean
+    },
     computed: {
         ...mapGetters('pipelines', [
             'groupMap'
@@ -208,7 +211,7 @@ export default {
                     ? [{
                         text: this.$t('copyAsTemplateInstance'),
                         handler: () => this.copyAsTemplateInstance(pipeline),
-                        hasPermission: this.hasTemplatePermission,
+                        hasPermission: this.hasCreatePermission,
                         disablePermissionApi: true,
                         permissionData: {
                             projectId: pipeline.projectId,
