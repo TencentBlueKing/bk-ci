@@ -127,13 +127,13 @@
                                 text
                                 @click="copyAsTemplateInstance(props.row)"
                                 v-perm="{
-                                    hasPermission: hasCreatePermission,
+                                    hasPermission: props.row.hasPermission,
                                     disablePermissionApi: true,
                                     permissionData: {
                                         projectId: projectId,
                                         resourceType: 'pipeline',
-                                        resourceCode: projectId,
-                                        action: RESOURCE_ACTION.CREATE
+                                        resourceCode: props.row.pipelineId,
+                                        action: RESOURCE_ACTION.EDIT
                                     }
                                 }"
                             >
@@ -145,7 +145,7 @@
                                 theme="primary"
                                 text
                                 @click="copyAsTemplateInstance(props.row)"
-                                :disabled="!hasCreatePermission"
+                                :disabled="!props.row.hasPermission"
                             >
                                 {{ $t('copy') }}
                             </bk-button>

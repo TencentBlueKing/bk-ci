@@ -87,9 +87,9 @@
                                         v-perm="{
                                             permissionData: {
                                                 projectId: projectId,
-                                                resourceType: 'pipeline',
-                                                resourceCode: projectId,
-                                                action: RESOURCE_ACTION.CREATE
+                                                resourceType: row.canView ? 'pipeline' : 'pipeline_template',
+                                                resourceCode: row.canView ? projectId : row.templateId,
+                                                action: row.canView ? RESOURCE_ACTION.CREATE : TEMPLATE_RESOURCE_ACTION.VIEW
                                             }
                                         }"
                                     >
@@ -372,7 +372,7 @@
             },
 
             toInstanceList (row) {
-                if (!row.canView) return
+                if (!this.isEnabledPermission && !row.canView) return
                 this.$router.push({
                     name: 'templateInstance',
                     params: { templateId: row.templateId }
@@ -389,14 +389,14 @@
             },
 
             toRelativeStore (row) {
-                if (!row.canEdit) return
+                if (!this.isEnabledPermission && !row.canEdit) return
 
                 const href = `${WEB_URL_PREFIX}/store/workList/template?projectCode=${this.projectId}&templateId=${row.templateId}`
                 window.open(href, '_blank')
             },
 
             deleteTemplate (row) {
-                if (!row.canEdit) return
+                if (!this.isEnabledPermission && !row.canEdit) return
                 const content = `${this.$t('template.deleteTemplateTips', [row.name])}`
 
                 navConfirm({ type: 'warning', content })
