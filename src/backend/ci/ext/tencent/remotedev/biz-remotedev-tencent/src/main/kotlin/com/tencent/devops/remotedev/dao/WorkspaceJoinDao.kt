@@ -2,6 +2,7 @@ package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.db.utils.JooqUtils
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TRemotedevExpertSupport
 import com.tencent.devops.model.remotedev.tables.TWindowsResourceType
 import com.tencent.devops.model.remotedev.tables.TWorkspace
@@ -45,7 +46,7 @@ class WorkspaceJoinDao {
                 dslContext = dslContext,
                 queryType = queryType,
                 search = search
-            )
+            ).skipCheck()
         ).toLong()
     }
 
@@ -69,6 +70,7 @@ class WorkspaceJoinDao {
                         ) as SelectConditionStep<TWorkspaceRecord>
                         ).orderBy(CREATE_TIME.desc(), ID.desc())
                     .limit(limit.limit).offset(limit.offset)
+                    .skipCheck()
                     .fetch(WorkspaceDao.workspaceMapper)
             }
 
@@ -80,6 +82,7 @@ class WorkspaceJoinDao {
                     search = search
                 ).orderBy(CREATE_TIME.desc(), ID.desc())
                     .limit(limit.limit).offset(limit.offset)
+                    .skipCheck()
                     .fetch(workspaceWithDetailMapper)
             }
 
@@ -90,6 +93,7 @@ class WorkspaceJoinDao {
                 search = search
             ).orderBy(CREATE_TIME.desc(), ID.desc())
                 .limit(limit.limit).offset(limit.offset)
+                .skipCheck()
                 .fetch(workspaceFieldMapper)
         }
     }
