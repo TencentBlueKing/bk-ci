@@ -176,6 +176,7 @@ class RepoPipelineService @Autowired constructor(
     fun listPipelineRef(
         projectId: String,
         repositoryHashId: String,
+        eventType: String?,
         triggerConditionMd5: String?,
         limit: Int,
         offset: Int
@@ -185,12 +186,14 @@ class RepoPipelineService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             repositoryId = repositoryId,
+            eventType = eventType,
             triggerConditionMd5 = triggerConditionMd5
         )
         val records = repoPipelineRefDao.listByRepo(
             dslContext = dslContext,
             projectId = projectId,
             repositoryId = repositoryId,
+            eventType = eventType,
             triggerConditionMd5 = triggerConditionMd5,
             limit = limit,
             offset = offset
@@ -234,7 +237,7 @@ class RepoPipelineService @Autowired constructor(
                 repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
                 atomCode = it.atomCode,
                 triggerType = it.triggerType,
-                eventType = I18nUtil.getCodeLanMessage(
+                eventTypeDesc = I18nUtil.getCodeLanMessage(
                     messageCode = "${CodeEventType.MESSAGE_CODE_PREFIX}_${it.eventType}",
                     defaultMessage = it.eventType
                 ),
@@ -246,7 +249,8 @@ class RepoPipelineService @Autowired constructor(
                 pipelineRefCount = pipelineRefCountMap[it.id] ?: 0,
                 atomLogo = atomProps?.run {
                     this[it.atomCode]?.logoUrl ?: ""
-                }
+                },
+                eventType = it.eventType
             )
         }
         return SQLPage(count = count, records = triggerRecords)
