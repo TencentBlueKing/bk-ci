@@ -44,7 +44,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceType
-1import com.tencent.devops.common.auth.api.AuthTokenApi
+import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.api.BSAuthTokenApi
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
