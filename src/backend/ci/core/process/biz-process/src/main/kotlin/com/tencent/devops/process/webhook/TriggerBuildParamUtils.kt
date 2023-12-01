@@ -28,6 +28,8 @@
 
 package com.tencent.devops.process.webhook
 
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
 import com.tencent.devops.common.pipeline.pojo.BuildParameterGroup
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
@@ -92,6 +94,15 @@ import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_REVIEW_TYPE
 import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_SHA
 import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_SHA_SHORT
 import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_TAG_FROM
+import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
+import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
+import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
+import com.tencent.devops.process.utils.PIPELINE_ID
+import com.tencent.devops.process.utils.PIPELINE_NAME
+import com.tencent.devops.process.utils.PIPELINE_START_TYPE
+import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
+import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
+import com.tencent.devops.process.utils.PROJECT_NAME
 
 object TriggerBuildParamUtils {
     // map<atomCode, map<event_type, params>>
@@ -114,6 +125,51 @@ object TriggerBuildParamUtils {
         svnWebhookTrigger()
         // p4事件触发参数
         p4WebhookTrigger()
+    }
+
+    fun getBasicBuildParams(userId: String): List<BuildEnvParameters> {
+        return listOf(
+            BuildEnvParameters(
+                name = PIPELINE_START_USER_NAME,
+                desc = MessageUtil.getMessageByLocale(PIPELINE_START_USER_NAME, I18nUtil.getLanguage(userId))
+            ),
+            BuildEnvParameters(
+                name = PIPELINE_START_TYPE,
+                desc = MessageUtil.getMessageByLocale(
+                    PIPELINE_START_TYPE,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(StartType.values().joinToString("/") { it.name })
+                )
+            ),
+            BuildEnvParameters(
+                name = PIPELINE_BUILD_NUM,
+                desc = MessageUtil.getMessageByLocale(PIPELINE_BUILD_NUM, I18nUtil.getLanguage(userId))
+            ),
+            BuildEnvParameters(
+                name = PROJECT_NAME,
+                desc = MessageUtil.getMessageByLocale(PROJECT_NAME, I18nUtil.getLanguage(userId))
+            ),
+            BuildEnvParameters(
+                name = PIPELINE_ID,
+                desc = MessageUtil.getMessageByLocale(PIPELINE_ID, I18nUtil.getLanguage(userId))
+            ),
+            BuildEnvParameters(
+                name = PIPELINE_NAME,
+                desc = MessageUtil.getMessageByLocale(PIPELINE_NAME, I18nUtil.getLanguage(userId))
+            ),
+            BuildEnvParameters(
+                name = PIPELINE_BUILD_ID,
+                desc = MessageUtil.getMessageByLocale(PIPELINE_BUILD_ID, I18nUtil.getLanguage(userId))
+            ),
+            BuildEnvParameters(
+                name = PIPELINE_VMSEQ_ID,
+                desc = MessageUtil.getMessageByLocale(PIPELINE_VMSEQ_ID, I18nUtil.getLanguage(userId))
+            ),
+            BuildEnvParameters(
+                name = PIPELINE_ELEMENT_ID,
+                desc = MessageUtil.getMessageByLocale(PIPELINE_ELEMENT_ID, I18nUtil.getLanguage(userId))
+            )
+        )
     }
 
     fun getTriggerParamNameMap(atomCode: String): List<BuildParameterGroup> {

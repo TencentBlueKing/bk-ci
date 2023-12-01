@@ -30,21 +30,12 @@ package com.tencent.devops.process.api
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserBuildParametersResource
 import com.tencent.devops.process.pojo.BuildFormRepositoryValue
-import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
-import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
-import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
-import com.tencent.devops.process.utils.PIPELINE_ID
-import com.tencent.devops.process.utils.PIPELINE_NAME
-import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
-import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
-import com.tencent.devops.process.utils.PROJECT_NAME
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
@@ -68,102 +59,17 @@ class UserBuildParametersResourceImpl @Autowired constructor(
     }
 
     override fun getCommonBuildParams(userId: String): Result<List<BuildEnvParameters>> {
-        return Result(
-            data = listOf(
-                BuildEnvParameters(
-                    name = PIPELINE_START_USER_NAME,
-                    desc = MessageUtil.getMessageByLocale(PIPELINE_START_USER_NAME, I18nUtil.getLanguage(userId))
-                ),
-                BuildEnvParameters(
-                    name = PIPELINE_START_TYPE,
-                    desc = MessageUtil.getMessageByLocale(
-                        PIPELINE_START_TYPE,
-                        I18nUtil.getLanguage(userId),
-                        arrayOf(StartType.values().joinToString("/") { it.name })
-                    )
-                ),
-                BuildEnvParameters(
-                    name = PIPELINE_BUILD_NUM,
-                    desc = MessageUtil.getMessageByLocale(PIPELINE_BUILD_NUM, I18nUtil.getLanguage(userId))
-                ),
-                BuildEnvParameters(
-                    name = PROJECT_NAME,
-                    desc = MessageUtil.getMessageByLocale(PROJECT_NAME, I18nUtil.getLanguage(userId))
-                ),
-                BuildEnvParameters(
-                    name = PIPELINE_ID,
-                    desc = MessageUtil.getMessageByLocale(PIPELINE_ID, I18nUtil.getLanguage(userId))
-                ),
-                BuildEnvParameters(
-                    name = PIPELINE_NAME,
-                    desc = MessageUtil.getMessageByLocale(PIPELINE_NAME, I18nUtil.getLanguage(userId))
-                ),
-                BuildEnvParameters(
-                    name = PIPELINE_BUILD_ID,
-                    desc = MessageUtil.getMessageByLocale(PIPELINE_BUILD_ID, I18nUtil.getLanguage(userId))
-                ),
-                BuildEnvParameters(
-                    name = PIPELINE_VMSEQ_ID,
-                    desc = MessageUtil.getMessageByLocale(PIPELINE_VMSEQ_ID, I18nUtil.getLanguage(userId))
-                ),
-                BuildEnvParameters(
-                    name = PIPELINE_ELEMENT_ID,
-                    desc = MessageUtil.getMessageByLocale(PIPELINE_ELEMENT_ID, I18nUtil.getLanguage(userId))
-                )
-            )
-        )
+        return Result(TriggerBuildParamUtils.getBasicBuildParams(userId))
     }
 
     override fun getCommonParams(userId: String): Result<List<BuildParameterGroup>> {
         return Result(
             listOf(
                 BuildParameterGroup(
-                    name = "Basic parameters",
-                    params = listOf(
-                        BuildEnvParameters(
-                            name = paramToContext[PIPELINE_START_USER_NAME] ?: PIPELINE_START_USER_NAME,
-                            desc = MessageUtil.getMessageByLocale(
-                                PIPELINE_START_USER_NAME,
-                                I18nUtil.getLanguage(userId)
-                            )
-                        ),
-                        BuildEnvParameters(
-                            name = paramToContext[PIPELINE_START_TYPE] ?: PIPELINE_START_TYPE,
-                            desc = MessageUtil.getMessageByLocale(
-                                PIPELINE_START_TYPE,
-                                I18nUtil.getLanguage(userId),
-                                arrayOf(StartType.values().joinToString("/") { it.name })
-                            )
-                        ),
-                        BuildEnvParameters(
-                            name = paramToContext[PIPELINE_BUILD_NUM] ?: PIPELINE_BUILD_NUM,
-                            desc = MessageUtil.getMessageByLocale(PIPELINE_BUILD_NUM, I18nUtil.getLanguage(userId))
-                        ),
-                        BuildEnvParameters(
-                            name = paramToContext[PROJECT_NAME] ?: PROJECT_NAME,
-                            desc = MessageUtil.getMessageByLocale(PROJECT_NAME, I18nUtil.getLanguage(userId))
-                        ),
-                        BuildEnvParameters(
-                            name = paramToContext[PIPELINE_ID] ?: PIPELINE_ID,
-                            desc = MessageUtil.getMessageByLocale(PIPELINE_ID, I18nUtil.getLanguage(userId))
-                        ),
-                        BuildEnvParameters(
-                            name = paramToContext[PIPELINE_NAME] ?: PIPELINE_NAME,
-                            desc = MessageUtil.getMessageByLocale(PIPELINE_NAME, I18nUtil.getLanguage(userId))
-                        ),
-                        BuildEnvParameters(
-                            name = paramToContext[PIPELINE_BUILD_ID] ?: PIPELINE_BUILD_ID,
-                            desc = MessageUtil.getMessageByLocale(PIPELINE_BUILD_ID, I18nUtil.getLanguage(userId))
-                        ),
-                        BuildEnvParameters(
-                            name = paramToContext[PIPELINE_VMSEQ_ID] ?: PIPELINE_VMSEQ_ID,
-                            desc = MessageUtil.getMessageByLocale(PIPELINE_VMSEQ_ID, I18nUtil.getLanguage(userId))
-                        ),
-                        BuildEnvParameters(
-                            name = paramToContext[PIPELINE_ELEMENT_ID] ?: PIPELINE_ELEMENT_ID,
-                            desc = MessageUtil.getMessageByLocale(PIPELINE_ELEMENT_ID, I18nUtil.getLanguage(userId))
-                        )
-                    )
+                    name = MessageUtil.getMessageByLocale(PIPELINE_START_USER_NAME, I18nUtil.getLanguage(userId)),
+                    params = TriggerBuildParamUtils.getBasicBuildParams(userId).map {
+                        it.copy(name = paramToContext[it.name] ?: it.name)
+                    }
                 )
             )
         )
