@@ -937,21 +937,30 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return projectDao.updateProjectName(dslContext, projectId, projectName) > 0
     }
 
-    override fun updateUsableStatus(userId: String, englishName: String, enabled: Boolean) {
+    override fun updateUsableStatus(
+        userId: String?,
+        englishName: String,
+        enabled: Boolean,
+        checkPermission: Boolean
+    ) {
         logger.info("updateUsableStatus userId[$userId], englishName[$englishName] , enabled[$enabled]")
-
         val projectInfo = projectDao.getByEnglishName(dslContext, englishName)
-            ?: throw ErrorCodeException(errorCode = PROJECT_NOT_EXIST)
-        val verify = validatePermission(
-            userId = userId,
-            projectCode = englishName,
-            permission = AuthPermission.ENABLE
-        )
-        if (!verify) {
-            logger.info("$englishName| $userId| ${AuthPermission.DELETE} validatePermission fail")
-            throw PermissionForbiddenException(
-                I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL)
+            ?: throw ErrorCodeException(
+                errorCode = PROJECT_NOT_EXIST,
+                defaultMessage = "project($englishName) not exist!"
             )
+        if (checkPermission) {
+            val verify = validatePermission(
+                userId = userId!!,
+                projectCode = englishName,
+                permission = AuthPermission.ENABLE
+            )
+            if (!verify) {
+                logger.info("$englishName| $userId| ${AuthPermission.DELETE} validatePermission fail")
+                throw PermissionForbiddenException(
+                    I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL)
+                )
+            }
         }
         projectDao.updateUsableStatus(
             dslContext = dslContext,
@@ -1169,6 +1178,25 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             )
         }
         return true
+    }
+
+    override fun updateProjectProductId(
+        englishName: String,
+        productName: String
+    ) {
+        logger.info("update project productId|$englishName|$productName")
+        projectDao.getByEnglishName(
+            dslContext = dslContext,
+            englishName = englishName
+        ) ?: throw NotFoundException("project - $englishName is not exist!")
+        val product = getOperationalProducts().firstOrNull {
+            it.productName == productName
+        } ?: throw NotFoundException("product - $productName is not exist!")
+        projectDao.updateProductId(
+            dslContext = dslContext,
+            englishName = englishName,
+            productId = product.productId
+        )
     }
 
     abstract fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean

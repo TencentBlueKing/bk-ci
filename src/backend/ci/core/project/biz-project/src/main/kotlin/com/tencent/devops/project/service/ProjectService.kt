@@ -196,7 +196,12 @@ interface ProjectService {
 
     fun getNameByCode(projectCodes: String): HashMap<String, String>
 
-    fun updateUsableStatus(userId: String, englishName: String /* englishName is projectId */, enabled: Boolean)
+    fun updateUsableStatus(
+        userId: String? = null,
+        englishName: String /* englishName is projectId */,
+        enabled: Boolean,
+        checkPermission: Boolean = true
+    )
 
     fun searchProjectByProjectName(projectName: String, limit: Int, offset: Int): Page<ProjectVO>
 
@@ -239,4 +244,9 @@ interface ProjectService {
     fun updateProjectCreator(projectUpdateCreatorDtoList: List<ProjectUpdateCreatorDTO>): Boolean
 
     fun getOperationalProducts(): List<OperationalProductVO>
+
+    fun updateProjectProductId(
+        englishName: String,
+        productName: String
+    )
 }
