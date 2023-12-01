@@ -99,6 +99,9 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         }
 
         // 启动流水线完成剩下的分配工作
+        if (data.repoId == null || data.localDriver == null) {
+            return Result(true)
+        }
         executor.execute {
             try {
                 val infoS = redisOperation.get(PIPELINE_CONFIG_INFO) ?: return@execute
