@@ -56,11 +56,14 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRepositoryVersionService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.PipelineDetail
+import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
+import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.service.transfer.PipelineTransferYamlService
+import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.yaml.modelTransfer.PipelineTransferException
 import org.jooq.DSLContext
@@ -81,6 +84,8 @@ class PipelineVersionFacadeService @Autowired constructor(
     private val repositoryVersionService: PipelineRepositoryVersionService,
     private val pipelineRecentUseService: PipelineRecentUseService,
     private val templateFacadeService: TemplateFacadeService,
+    private val pipelineGroupService: PipelineGroupService,
+    private val pipelineViewGroupService: PipelineViewGroupService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao
 ) {
@@ -218,8 +223,9 @@ class PipelineVersionFacadeService @Autowired constructor(
 //        if (!latestDebugPassed) throw ErrorCodeException(
 //            errorCode = ProcessMessageCode.ERROR_RELEASE_VERSION_HAS_NOT_PASSED_DEBUGGING
 //        )
+        val model = draftVersion.model.copy(staticViews = request.staticViews)
         val result = pipelineRepositoryService.deployPipeline(
-            model = draftVersion.model.copy(staticViews = request.staticViews),
+            model = model,
             projectId = projectId,
             signPipelineId = pipelineId,
             userId = draftVersion.creator,
@@ -232,6 +238,25 @@ class PipelineVersionFacadeService @Autowired constructor(
             yamlStr = draftVersion.yaml,
             baseVersion = draftVersion.baseVersion,
             pipelineAsCodeSettings = savedSetting.pipelineAsCodeSettings
+        )
+        // 添加标签
+        pipelineGroupService.addPipelineLabel(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            labelIds = model.labels
+        )
+
+        // 添加到静态分组
+        val bulkAdd = PipelineViewBulkAdd(pipelineIds = listOf(pipelineId), viewIds = model.staticViews)
+        pipelineViewGroupService.bulkAdd(userId, projectId, bulkAdd)
+        // 添加到动态分组
+        pipelineViewGroupService.updateGroupAfterPipelineUpdate(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            creator = userId,
+            pipelineName = savedSetting.pipelineName
         )
         // #8164 发布后的流水将调试信息清空为0，重新计数
         pipelineBuildSummaryDao.resetDebugInfo(dslContext, projectId, pipelineId)
