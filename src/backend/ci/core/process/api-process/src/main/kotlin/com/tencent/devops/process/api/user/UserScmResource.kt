@@ -117,6 +117,9 @@ interface UserScmResource {
         repositoryType: RepositoryType?,
         @ApiParam("搜索条件", required = false)
         @QueryParam("search")
-        search: String?
+        search: String?,
+        @ApiParam("默认值", required = false)
+        @QueryParam("default")
+        default: String?
     ): Result<List<BuildFormValue>>
 }

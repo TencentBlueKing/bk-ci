@@ -76,7 +76,8 @@ class UserScmResourceImpl @Autowired constructor(
         projectId: String,
         repositoryId: String,
         repositoryType: RepositoryType?,
-        search: String?
+        search: String?,
+        default: String?
     ): Result<List<BuildFormValue>> {
         val result = mutableListOf<String>()
         val repositoryConfig = getRepositoryConfig(repositoryId, repositoryType)
@@ -92,6 +93,9 @@ class UserScmResourceImpl @Autowired constructor(
         ).data ?: listOf()
         result.addAll(branches)
         result.addAll(tags)
+        if (!default.isNullOrBlank() && !result.contains(default)) {
+            result.add(0, default)
+        }
         return Result(
             result.map { BuildFormValue(it, it) }
         )

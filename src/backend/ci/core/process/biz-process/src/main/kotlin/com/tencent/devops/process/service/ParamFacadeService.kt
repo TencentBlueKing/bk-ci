@@ -132,13 +132,14 @@ class ParamFacadeService @Autowired constructor(
             logger.warn("projectId:$projectId,repoHashId:${formProperty.repoHashId} add git refs error", e)
             listOf()
         }.toMutableList()
-        if (search.isNullOrBlank() && !refs.contains(formProperty.defaultValue.toString())){
-            refs.plus(formProperty.defaultValue.toString())
+        val default = formProperty.defaultValue.toString()
+        if (!refs.contains(default)) {
+            refs.add(0, default)
         }
         val options = refs.map {
             BuildFormValue(it, it)
         }
-        val searchUrl = "/process/api/user/scm/$projectId/${formProperty.repoHashId}/refs?search={words}"
+        val searchUrl = "/process/api/user/scm/$projectId/${formProperty.repoHashId}/refs?search={words}&default=$default"
         val replaceKey = "{words}"
         return copyFormProperty(
             property = formProperty,
