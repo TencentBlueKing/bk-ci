@@ -42,6 +42,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
@@ -114,7 +115,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private val shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
     private val objectMapper: ObjectMapper,
     private val projectExtService: ProjectExtService,
-    private val projectApprovalService: ProjectApprovalService
+    private val projectApprovalService: ProjectApprovalService,
+    private val authTokenApi: AuthTokenApi
 ) : ProjectService {
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
@@ -322,6 +324,18 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             return null
         }
         return projectVO
+    }
+
+    override fun getByEnglishNameByOpen(
+        englishName: String,
+        token: String
+    ): ProjectVO? {
+        authTokenApi.checkToken(token)
+        val record = projectDao.getByEnglishName(
+            dslContext = dslContext,
+            englishName = englishName
+        ) ?: return null
+        return ProjectUtils.packagingBean(record)
     }
 
     override fun show(userId: String, englishName: String, accessToken: String?): ProjectVO? {
