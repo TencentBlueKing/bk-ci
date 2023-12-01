@@ -6,9 +6,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.devops.auth.api.service.ServiceMonitorSpaceResource
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.security.util.EnvironmentUtil
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -184,13 +186,14 @@ class ProjectRemoteDevService @Autowired constructor(
         ).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
         val request2 = Request.Builder()
             .url(url2)
+            .headers(getBkrepoIdcCommonHeaders(BKREPO_ROOT_USERID, projectId).toHeaders())
             .post(requestBody2)
             .build()
         try {
             OkhttpUtils.doHttp(request2).use {
                 val responseStr = it.body!!.string()
                 if (!it.isSuccessful) {
-                    logger.warn("createLsyncGeneric idc request failed, uri:($url)|response: ($responseStr)")
+                    logger.warn("createLsyncGeneric idc request failed, uri:($url2)|response: ($responseStr)")
                     return
                 }
             }
@@ -254,6 +257,16 @@ class ProjectRemoteDevService @Autowired constructor(
         val headers = mutableMapOf<String, String>()
         headers["Authorization"] = bkrepoDevxHeaderUserAuth
         headers["X-BKREPO-UID"] = BKREPO_ROOT_USERID
+        return headers
+    }
+
+    private fun getBkrepoIdcCommonHeaders(userId: String, projectId: String): MutableMap<String, String> {
+        val headers = mutableMapOf<String, String>()
+        headers["X-BKREPO-UID"] = userId
+        headers["X-BKREPO-PROJECT-ID"] = projectId
+        headers[AUTH_HEADER_DEVOPS_PROJECT_ID] = projectId
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
+        devopsToken?.let { headers["X-DEVOPS-TOKEN"] = it }
         return headers
     }
 
