@@ -23,7 +23,7 @@ data class EnvironmentResourceData(
     val hdisk: String?,
     var imageStandard: Boolean? = true,
     val node: String?,
-    val image: String?,
+    val image: String?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
