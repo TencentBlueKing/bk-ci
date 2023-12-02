@@ -52,7 +52,8 @@ class WindowsGpuResourceDao {
         if (resourceList.isEmpty()) {
             return
         }
-        dslContext.batch(resourceList.map {
+        dslContext.batch(
+            resourceList.map {
             with(TWindowsGpuPool.T_WINDOWS_GPU_POOL) {
                 dslContext.insertInto(
                     this,
@@ -79,14 +80,15 @@ class WindowsGpuResourceDao {
                     ByteUtils.bool2Byte(it.locked ?: false),
                     it.projectId ?: "",
                     it.disk,
-                    it.hDisk,
+                    it.hdisk,
                     ByteUtils.bool2Byte(it.imageStandard ?: false),
                     it.node,
                     it.image
                 ).onDuplicateKeyUpdate()
                     .set(STATUS, it.status)
             }
-        }).execute()
+        }
+        ).execute()
     }
 
     // 删除已有数据
