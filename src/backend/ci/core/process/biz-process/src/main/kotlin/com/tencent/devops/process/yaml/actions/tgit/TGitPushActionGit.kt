@@ -48,7 +48,7 @@ class TGitPushActionGit(
 ) : TGitActionGit(apiService), GitBaseAction {
 
     companion object {
-        val logger = LoggerFactory.getLogger(TGitPushActionGit::class.java)
+        private val logger = LoggerFactory.getLogger(TGitPushActionGit::class.java)
     }
 
     override val metaData: ActionMetaData = ActionMetaData(StreamObjectKind.PUSH)
@@ -100,9 +100,21 @@ class TGitPushActionGit(
                 ref = this.data.eventCommon.branch, blobId = blobId
             )
         }.toMutableList()
-        // 补充删除的ci文件
-        if (data.eventCommon.branch == data.context.defaultBranch) {
-            val deleteYamlPathList = data.context.deleteCiSet?.map {
+        if (!data.context.deleteCiSet.isNullOrEmpty()) {
+            // 获取默认文件文件列表
+            val defaultBranchYamlList = if (data.eventCommon.branch != data.context.defaultBranch) {
+                GitActionCommon.getYamlPathList(
+                    action = this,
+                    gitProjectId = this.getGitProjectIdOrName(),
+                    ref = data.context.defaultBranch
+                ).map { it.first }
+            } else {
+                emptyList()
+            }
+            // yaml在默认分支不存在，文件删除直接删除流水线
+            val deleteYamlPathList = data.context.deleteCiSet?.filter {
+                !defaultBranchYamlList.contains(it)
+            }?.map {
                 YamlPathListEntry(
                     yamlPath = it,
                     checkType = CheckType.NEED_DELETE,

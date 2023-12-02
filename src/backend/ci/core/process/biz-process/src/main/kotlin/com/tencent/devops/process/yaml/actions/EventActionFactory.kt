@@ -30,6 +30,7 @@ package com.tencent.devops.process.yaml.actions
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
@@ -60,7 +61,8 @@ import org.springframework.stereotype.Service
 @Service
 class EventActionFactory @Autowired constructor(
     private val tGitApiService: TGitApiService,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val client: Client
 ) {
 
     companion object {
@@ -115,19 +117,22 @@ class EventActionFactory @Autowired constructor(
             }
             is GitIssueEvent -> {
                 val tGitIssueAction = TGitIssueActionGit(
-                    apiService = tGitApiService
+                    apiService = tGitApiService,
+                    client = client
                 )
                 tGitIssueAction
             }
             is GitReviewEvent -> {
                 val tGitReviewAction = TGitReviewActionGit(
-                    apiService = tGitApiService
+                    apiService = tGitApiService,
+                    client = client
                 )
                 tGitReviewAction
             }
             is GitNoteEvent -> {
                 val tGitNoteAction = TGitNoteActionGit(
-                    apiService = tGitApiService
+                    apiService = tGitApiService,
+                    client = client
                 )
                 tGitNoteAction
             }

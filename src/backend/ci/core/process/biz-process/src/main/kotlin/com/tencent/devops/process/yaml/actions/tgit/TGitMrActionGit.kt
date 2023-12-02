@@ -56,7 +56,7 @@ import org.slf4j.LoggerFactory
 import java.util.Base64
 
 class TGitMrActionGit(
-    private val apiService: TGitApiService,
+    private val apiService: TGitApiService
 ) : TGitActionGit(apiService), GitBaseAction {
 
     companion object {

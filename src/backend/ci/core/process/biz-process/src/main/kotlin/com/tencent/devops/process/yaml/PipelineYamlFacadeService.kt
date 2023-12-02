@@ -145,79 +145,87 @@ class PipelineYamlFacadeService @Autowired constructor(
         requestId: String,
         eventTime: LocalDateTime
     ) {
-        logger.info("pipeline yaml trigger|$requestId|$scmType")
-        val action = eventActionFactory.load(eventObject)
-        if (action == null) {
-            logger.warn("pipeline yaml trigger|request event not support|$eventObject")
-            return
-        }
-        val externalId = action.data.eventCommon.gitProjectId
-        val repository = client.get(ServiceRepositoryPacResource::class).getPacRepository(
-            externalId = externalId, scmType = scmType
-        ).data ?: run {
-            logger.info("pipeline yaml trigger|repository not enable pac|$externalId|$scmType")
-            return
-        }
-        val setting = PacRepoSetting(repository = repository)
-        action.data.setting = setting
-        action.initCacheData()
+        try {
+            logger.info("pipeline yaml trigger|$requestId|$scmType")
+            val action = eventActionFactory.load(eventObject)
+            if (action == null) {
+                logger.warn("pipeline yaml trigger|request event not support|$eventObject")
+                return
+            }
+            // 初始化setting
+            if (!action.data.isSettingInitialized) {
+                val externalId = action.data.eventCommon.gitProjectId
+                val repository = client.get(ServiceRepositoryPacResource::class).getPacRepository(
+                    externalId = externalId, scmType = scmType
+                ).data ?: run {
+                    logger.info("pipeline yaml trigger|repository not enable pac|$externalId|$scmType")
+                    return
+                }
+                val setting = PacRepoSetting(repository = repository)
+                action.data.setting = setting
+            }
 
-        val projectId = repository.projectId!!
-        val repoHashId = repository.repoHashId!!
-        val yamlPathList = action.getYamlPathList()
-        // 如果没有Yaml文件则不初始化
-        if (yamlPathList.isEmpty()) {
-            logger.warn("pipeline yaml trigger not found ci yaml from git|$projectId|$repoHashId")
-            return
-        }
-        val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = action.data.event)
-        val eventId = pipelineTriggerEventService.getEventId(
-            projectId = projectId,
-            requestId = requestId,
-            eventSource = repoHashId
-        )
-        val triggerEvent = PipelineTriggerEvent(
-            projectId = projectId,
-            eventId = eventId,
-            triggerType = scmType.name,
-            eventSource = repoHashId,
-            eventType = matcher.getEventType().name,
-            triggerUser = matcher.getUsername(),
-            eventDesc = matcher.getEventDesc(),
-            requestId = requestId,
-            createTime = eventTime
-        )
-        pipelineTriggerEventService.saveTriggerEvent(triggerEvent)
-        action.data.context.eventId = eventId
-        val path2PipelineExists = pipelineYamlInfoDao.getAllByRepo(
-            dslContext = dslContext, projectId = projectId, repoHashId = repoHashId
-        ).associate {
-            it.filePath to PacTriggerPipeline(
-                projectId = it.projectId,
-                repoHashId = it.repoHashId,
-                filePath = it.filePath,
-                pipelineId = it.pipelineId,
-                userId = it.creator,
-                delete = it.delete
+            action.initCacheData()
+
+            val projectId = action.data.setting.projectId
+            val repoHashId = action.data.setting.repoHashId
+            val yamlPathList = action.getYamlPathList()
+            // 如果没有Yaml文件则不初始化
+            if (yamlPathList.isEmpty()) {
+                logger.warn("pipeline yaml trigger not found ci yaml from git|$projectId|$repoHashId")
+                return
+            }
+            val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = action.data.event)
+            val eventId = pipelineTriggerEventService.getEventId(
+                projectId = projectId,
+                requestId = requestId,
+                eventSource = repoHashId
             )
-        }
-        yamlPathList.forEach {
-            action.data.context.pipeline = path2PipelineExists[it.yamlPath]
-            action.data.context.yamlFile = it
+            val triggerEvent = PipelineTriggerEvent(
+                projectId = projectId,
+                eventId = eventId,
+                triggerType = scmType.name,
+                eventSource = repoHashId,
+                eventType = matcher.getEventType().name,
+                triggerUser = matcher.getUsername(),
+                eventDesc = matcher.getEventDesc(),
+                requestId = requestId,
+                createTime = eventTime
+            )
+            pipelineTriggerEventService.saveTriggerEvent(triggerEvent)
             action.data.context.eventId = eventId
-            pipelineEventDispatcher.dispatch(
-                PipelineYamlTriggerEvent(
-                    projectId = projectId,
-                    yamlPath = it.yamlPath,
-                    userId = action.data.getUserId(),
-                    eventStr = objectMapper.writeValueAsString(eventObject),
-                    metaData = action.metaData,
-                    actionCommonData = action.data.eventCommon,
-                    actionContext = action.data.context,
-                    actionSetting = action.data.setting,
-                    scmType = scmType
+            val path2PipelineExists = pipelineYamlInfoDao.getAllByRepo(
+                dslContext = dslContext, projectId = projectId, repoHashId = repoHashId
+            ).associate {
+                it.filePath to PacTriggerPipeline(
+                    projectId = it.projectId,
+                    repoHashId = it.repoHashId,
+                    filePath = it.filePath,
+                    pipelineId = it.pipelineId,
+                    userId = it.creator,
+                    delete = it.delete
                 )
-            )
+            }
+            yamlPathList.forEach {
+                action.data.context.pipeline = path2PipelineExists[it.yamlPath]
+                action.data.context.yamlFile = it
+                action.data.context.eventId = eventId
+                pipelineEventDispatcher.dispatch(
+                    PipelineYamlTriggerEvent(
+                        projectId = projectId,
+                        yamlPath = it.yamlPath,
+                        userId = action.data.getUserId(),
+                        eventStr = objectMapper.writeValueAsString(eventObject),
+                        metaData = action.metaData,
+                        actionCommonData = action.data.eventCommon,
+                        actionContext = action.data.context,
+                        actionSetting = action.data.setting,
+                        scmType = scmType
+                    )
+                )
+            }
+        } catch (ignored: Throwable) {
+            logger.warn("pipeline yaml trigger", ignored)
         }
     }
 

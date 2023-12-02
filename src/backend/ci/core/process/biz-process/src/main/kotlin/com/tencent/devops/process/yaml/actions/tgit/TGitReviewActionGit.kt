@@ -28,23 +28,27 @@
 package com.tencent.devops.process.yaml.actions.tgit
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.process.yaml.actions.BaseAction
 import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.actions.GitBaseAction
 import com.tencent.devops.process.yaml.actions.data.ActionMetaData
 import com.tencent.devops.process.yaml.actions.data.EventCommonData
+import com.tencent.devops.process.yaml.actions.data.PacRepoSetting
 import com.tencent.devops.process.yaml.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.yaml.git.service.TGitApiService
 import com.tencent.devops.process.yaml.pojo.CheckType
 import com.tencent.devops.process.yaml.pojo.YamlContent
 import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
+import com.tencent.devops.repository.api.ServiceRepositoryPacResource
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 
 class TGitReviewActionGit(
     private val apiService: TGitApiService,
+    private val client: Client
 ) : TGitActionGit(apiService), GitBaseAction {
 
     companion object {
@@ -59,6 +63,17 @@ class TGitReviewActionGit(
         get() = apiService
 
     override fun init(): BaseAction? {
+        if (data.isSettingInitialized) {
+            return initCommonData()
+        }
+        val externalId = event().projectId.toString()
+        val repository = client.get(ServiceRepositoryPacResource::class).getPacRepository(
+            externalId = externalId, scmType = ScmType.CODE_GIT
+        ).data ?: run {
+            logger.info("pipeline yaml tgit review action init|repository not enable pac|$externalId")
+            return null
+        }
+        data.setting = PacRepoSetting(repository = repository)
         return initCommonData()
     }
 
