@@ -259,7 +259,7 @@ open class GitApi {
         logger.info("Start to create branches of host $host by project $projectName")
         val body = JsonUtil.getObjectMapper().writeValueAsString(
             mapOf(
-                Pair("branch", branch),
+                Pair("branch_name", branch),
                 Pair("ref", ref)
             )
         )
