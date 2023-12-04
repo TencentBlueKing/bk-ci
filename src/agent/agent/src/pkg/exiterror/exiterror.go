@@ -37,6 +37,10 @@ func AddExitError(enum ExitErrorEnum, msg string) {
 }
 
 func GetExitError() *ExitErrorType {
+	return exitError
+}
+
+func GetAndResetExitError() *ExitErrorType {
 	exit := exitError
 	exitError = nil
 	return exit
@@ -85,44 +89,34 @@ const (
 )
 
 // 避免不必要的错杀，信号错误最少连续持续 10 次以上才能杀掉
-func CheckSignError(err error, typ ExitSignType) {
-	// 检查是不是 signkill
-	var res int32 = -1
-	if err.Error() == "signal: killed" {
-		res = 1
+func CheckSignalError(err error, typ ExitSignType) {
+	// 检查是不是需要杀掉的信号
+	if err.Error() != "signal: killed" {
+		return
 	}
+
+	var res int32 = 1
+	logs.Warn(fmt.Sprintf("%s %s add 1", typ, err.Error()))
 
 	switch typ {
 	case ExitSignJdk:
-		if jdkSignFlag.Load() == 0 && res == -1 {
-			return
-		}
-
 		jdkSignFlag.Add(res)
 
 		if jdkSignFlag.Load() == 10 {
-			msg := fmt.Sprintf("%s %s time 10, exit", typ, err.Error())
+			msg := fmt.Sprintf("%s %s time 10, will exit", typ, err.Error())
 			logs.Error(msg)
 			AddExitError(ExitJdkError, msg)
 			return
 		}
 
 	case ExitSignWorker:
-		if workerSignFlag.Load() == 0 && res == -1 {
-			return
-		}
-
 		workerSignFlag.Add(res)
 
 		if workerSignFlag.Load() == 10 {
-			msg := fmt.Sprintf("%s %s time 10, exit", typ, err.Error())
+			msg := fmt.Sprintf("%s %s time 10, will exit", typ, err.Error())
 			logs.Error(msg)
 			AddExitError(ExitWorkerError, msg)
 			return
 		}
-	}
-
-	if res == 1 {
-		logs.Warn(fmt.Sprintf("%s %s add 1", typ, err.Error()))
 	}
 }

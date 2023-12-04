@@ -75,7 +75,7 @@ func Heartbeat(
 		},
 		DockerParallelTaskCount: config.GAgentConfig.DockerParallelTaskCount,
 		DockerTaskList:          dockerTaskList,
-		ErrorExitData:           exitcode.GetExitError(),
+		ErrorExitData:           exitcode.GetAndResetExitError(),
 	}
 
 	res := httputil.NewHttpClient().Post(url).Body(agentHeartbeatInfo).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute()

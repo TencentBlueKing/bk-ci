@@ -307,7 +307,7 @@ func getJdkVersion() ([]string, error) {
 	jdkVersion, err := command.RunCommand(config.GetJava(), []string{"-version"}, "", nil)
 	if err != nil {
 		logs.Error("agent get jdk version failed: ", err.Error())
-		exitcode.CheckSignError(err, exitcode.ExitSignJdk)
+		exitcode.CheckSignalError(err, exitcode.ExitSignJdk)
 		return nil, errors.Wrap(err, "agent get jdk version failed")
 	}
 	var jdkV []string
