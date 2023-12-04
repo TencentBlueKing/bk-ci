@@ -119,7 +119,7 @@
         CODE_REPOSITORY_CACHE,
         isSvn
     } from '../config/'
-
+    
     export default {
         name: 'codelib-list',
 
@@ -130,7 +130,7 @@
             CodeLibDetail,
             layout
         },
-
+       
         data () {
             return {
                 RESOURCE_ACTION,
@@ -184,6 +184,9 @@
         },
 
         async mounted () {
+            const { sortType, sortBy } = this.$route.query
+            this.sortType = sortType ?? localStorage.getItem('codelibSortType') ?? ''
+            this.sortBy = sortBy ?? localStorage.getItem('codelibSortBy') ?? ''
             this.init()
             this.projectList = this.$store.state.projectList
 
@@ -222,7 +225,7 @@
                 const tableHeadHeight = 42
                 const paginationHeight = 63
                 const windownOffsetBottom = 20
-                const listTotalHeight = windowHeight - top - tableHeadHeight - paginationHeight - windownOffsetBottom - 52
+                const listTotalHeight = windowHeight - top - tableHeadHeight - paginationHeight - windownOffsetBottom - 74
                 const tableRowHeight = 42
 
                 this.aliasName = query.searchName || ''
@@ -266,6 +269,13 @@
                 sortType = this.sortType
             ) {
                 if (!this.userId) this.isLoading = true
+                this.$router.push({
+                    query: {
+                        ...this.$route.query,
+                        sortBy,
+                        sortType
+                    }
+                })
                 await this.requestList({
                     projectId,
                     aliasName,
@@ -329,6 +339,15 @@
                 this.sortBy = sortBy
                 this.sortType = sortType
                 this.refreshCodelibList()
+                localStorage.setItem('codelibSortType', sortType)
+                localStorage.setItem('codelibSortBy', sortBy)
+                this.$router.push({
+                    query: {
+                        ...this.$route.query,
+                        sortBy,
+                        sortType
+                    }
+                })
             },
 
             handleUpdateFlod (payload) {

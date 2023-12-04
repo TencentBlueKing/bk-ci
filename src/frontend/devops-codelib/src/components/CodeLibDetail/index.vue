@@ -512,6 +512,21 @@
     }
 </script>
 <style lang='scss' scoped>
+    @media (max-width: 1200px) {
+        .codelib-name {
+            span {
+                max-width: 300px;
+            }
+        }
+    }
+
+    @media (min-width: 1200px) {
+        .codelib-name {
+            span {
+                max-width: 350px;
+            }
+        }
+    }
     ::v-deep {
         .bk-tab {
             height: calc(100% - 48px);
@@ -551,7 +566,6 @@
             }
             span {
                 display: inline-block;
-                max-width: 350px;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
@@ -585,15 +599,21 @@
         }
         .address-content {
             white-space: nowrap;
+            &:hover {
+                .copy-icon {
+                    opacity: 1;
+                }
+            }
         }
         .codelib-address {
             display: inline-block;
-            max-width: 480px;
+            max-width: 400px;
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
         }
         .copy-icon {
+            opacity: 0;
             margin-left: 10px;
             cursor: pointer;
         }
