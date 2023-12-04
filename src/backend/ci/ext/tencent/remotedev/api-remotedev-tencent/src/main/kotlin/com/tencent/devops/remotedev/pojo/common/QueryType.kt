@@ -34,11 +34,11 @@ enum class QueryType {
     WEB {
         override fun ownerType(): WorkspaceOwnerType = WorkspaceOwnerType.PROJECT
 
-        override fun clearSearch(search: WorkspaceSearch) {}
+        override fun clearSearch(search: WorkspaceSearch) = Unit
     }, // 0
     OP {
         override fun ownerType(): WorkspaceOwnerType? = null
-        override fun clearSearch(search: WorkspaceSearch) {}
+        override fun clearSearch(search: WorkspaceSearch) = Unit
     }, // 1
     CLIENT {
         override fun ownerType(): WorkspaceOwnerType? = null
