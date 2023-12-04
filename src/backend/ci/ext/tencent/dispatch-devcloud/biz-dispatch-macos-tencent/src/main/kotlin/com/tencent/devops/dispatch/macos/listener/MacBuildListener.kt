@@ -66,9 +66,11 @@ class MacBuildListener @Autowired constructor(
             }
         } catch (e: RejectedExecutionException) {
             // 构建任务被线程池拒绝，重新回队列
-            logger.info("${dispatchMessage.buildId}|${dispatchMessage.vmSeqId}|${dispatchMessage.executeCount} " +
-                            "build task rejected. Retry")
-            retry(sleepTimeInMS = 5000, retryTimes = 120, pipelineEvent = dispatchMessage.event)
+            with(dispatchMessage.event) {
+                logger.info("$buildId|$vmSeqId|$executeCount " +
+                        "build task rejected. Retry")
+                retry(sleepTimeInMS = 5000, retryTimes = 120, pipelineEvent = this)
+            }
         }
     }
 
@@ -78,10 +80,11 @@ class MacBuildListener @Autowired constructor(
                 doStartup(dispatchMessage)
             }
         } catch (e: RejectedExecutionException) {
-            // 构建任务被线程池拒绝，重新回队列
-            logger.info("${dispatchMessage.buildId}|${dispatchMessage.vmSeqId}|${dispatchMessage.executeCount} " +
-                            "build task rejected. Retry")
-            retry(sleepTimeInMS = 5000, retryTimes = 120, pipelineEvent = dispatchMessage.event)
+            with(dispatchMessage.event) {
+                logger.info("$buildId|$vmSeqId|$executeCount " +
+                        "build task rejected. Retry")
+                retry(sleepTimeInMS = 5000, retryTimes = 120, pipelineEvent = this)
+            }
         }
     }
 
@@ -125,6 +128,7 @@ class MacBuildListener @Autowired constructor(
     private fun doStartup(dispatchMessage: DispatchMessage) {
         logger.info("MacOS Dispatch on start up - ($dispatchMessage)")
         try {
+            val event = dispatchMessage.event
             val buildHistoryId = buildHistoryService.saveBuildHistory(dispatchMessage)
             // 保存构建任务失败，直接返回，对此次构建任务不做处理
             if (buildHistoryId < 0) {
@@ -137,26 +141,26 @@ class MacBuildListener @Autowired constructor(
                 buildHistoryService.saveBuildTask(it.ip, it.id, buildHistoryId, dispatchMessage)
                 macosVMRedisService.saveRedisBuild(dispatchMessage, it.ip)
 
-                logger.info("[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}] " +
+                logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] " +
                                 "Success to start vm(${it.ip}|${it.id})")
 
                 log(
                     buildLogPrinter = buildLogPrinter,
-                    buildId = dispatchMessage.buildId,
-                    containerHashId = dispatchMessage.containerHashId,
-                    vmSeqId = dispatchMessage.vmSeqId,
+                    buildId = event.buildId,
+                    containerHashId = event.containerHashId,
+                    vmSeqId = event.vmSeqId,
                     message = "DevCloud MacOS IP：${it.ip}",
-                    executeCount = dispatchMessage.executeCount
+                    executeCount = event.executeCount
                 )
             } ?: run {
                 // 如果没有找到合适的vm机器，则等待10秒后再执行, 总共执行60次（10min）
                 logRed(
                     buildLogPrinter,
-                    dispatchMessage.buildId,
-                    dispatchMessage.containerHashId,
-                    dispatchMessage.vmSeqId,
+                    event.buildId,
+                    event.containerHashId,
+                    event.vmSeqId,
                     "No idle macOS resources found, wait 10 seconds and try again",
-                    dispatchMessage.executeCount
+                    event.executeCount
                 )
 
                 logger.error("Can not found any idle vm for this build($dispatchMessage),wait for 10s")
@@ -190,25 +194,27 @@ class MacBuildListener @Autowired constructor(
     ) {
         logger.error("Fail to handle the start up message: $dispatchMessage)", t)
         val dispatchService = SpringContextUtil.getBean(DispatchService::class.java)
-        dispatchService.logRed(
-            buildId = dispatchMessage.buildId,
-            containerHashId = dispatchMessage.containerHashId,
-            vmSeqId = dispatchMessage.vmSeqId,
-            message = "${I18nUtil.getCodeLanMessage("${CommonMessageCode.BK_FAILED_START_BUILD_MACHINE}")} " +
-                "- ${t.message}",
-            executeCount = dispatchMessage.executeCount
-        )
+        with(dispatchMessage.event) {
+            dispatchService.logRed(
+                buildId = buildId,
+                containerHashId = containerHashId,
+                vmSeqId = vmSeqId,
+                message = "${I18nUtil.getCodeLanMessage("${CommonMessageCode.BK_FAILED_START_BUILD_MACHINE}")} " +
+                        "- ${t.message}",
+                executeCount = executeCount
+            )
 
-        client.get(ServiceBuildResource::class).setVMStatus(
-            projectId = dispatchMessage.projectId,
-            pipelineId = dispatchMessage.pipelineId,
-            buildId = dispatchMessage.buildId,
-            vmSeqId = dispatchMessage.vmSeqId,
-            status = BuildStatus.FAILED,
-            errorType = errorType,
-            errorCode = errorCode,
-            errorMsg = errorMessage
-        )
+            client.get(ServiceBuildResource::class).setVMStatus(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                status = BuildStatus.FAILED,
+                errorType = errorType,
+                errorCode = errorCode,
+                errorMsg = errorMessage
+            )
+        }
     }
 
     private fun doShutdown(
