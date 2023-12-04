@@ -156,3 +156,10 @@ export const PIPELINE_SORT_FILED = {
 
 export const UI_MODE = 'MODEL'
 export const CODE_MODE = 'YAML'
+
+export const templateTypeEnum = {
+    CONSTRAIN: 'CONSTRAIN',
+    FREEDOM: 'FREEDOM',
+    PUBLIC: 'PUBLIC',
+    CUSTOMIZE: 'CUSTOMIZE'
+}

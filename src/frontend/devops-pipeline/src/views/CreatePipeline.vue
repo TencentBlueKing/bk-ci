@@ -48,7 +48,7 @@
                         :placeholder="$t('searchPipelineTemplate')"
                     />
                 </div>
-                <ul class="pipeline-template-list" v-if="tempList.length" @scroll.passive="scrollLoadMore">
+                <ul class="create-pipeline-template-list" v-if="tempList.length" @scroll.passive="scrollLoadMore">
                     <li v-for="(temp, tIndex) in tempList"
                         :class="{
                             'active': activeTempIndex === tIndex,
@@ -183,13 +183,8 @@
     import PipelineGroupSelector from '@/components/PipelineActionDialog/PipelineGroupSelector'
     import PipelineTemplatePreview from '@/components/PipelineTemplatePreview'
     import { getCacheViewId } from '@/utils/util'
+    import { templateTypeEnum } from '@/utils/pipelineConst'
 
-    const templateTypeEnum = {
-        CONSTRAIN: 'CONSTRAIN',
-        FREEDOM: 'FREEDOM',
-        PUBLIC: 'PUBLIC',
-        CUSTOMIZE: 'CUSTOMIZE'
-    }
     export default {
         components: {
             pipelineHeader,
@@ -538,7 +533,7 @@
                 flex-shrink: 0;
                 margin: 16px 0;
             }
-            .pipeline-template-list {
+            .create-pipeline-template-list {
                 display: grid;
                 grid-gap: 16px;
                 grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));

@@ -191,6 +191,10 @@
             background: #FAFBFD;
             border-right: 1px solid #DCDEE5;
             padding: 4px 0;
+            height: 100%;
+            overflow: auto;
+            overflow: overlay;
+
             .nav-item-title {
                 padding: 0 16px 0 22px;
                 color: #C4C6CC;

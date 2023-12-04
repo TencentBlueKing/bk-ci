@@ -1,18 +1,22 @@
 <template>
     <div class="pipeline-template-list" v-bkloading="{ isLoading }">
-        <div class="template-list-content">
-            <div class="view-table-wrapper">
-                <bk-button theme="primary" icon="devops-icon icon-plus" class="add-template" @click="showSetting" :disabled="!isManagerUser" v-if="!showSelfEmpty">
-                    {{ $t('template.addTemplate') }}
-                </bk-button>
-                <template-table @getApiData="getTempFromSelf" ref="selfTemp"></template-table>
-                <empty-tips v-if="showSelfEmpty"
-                    :title="$t('template.noTemplate')"
-                    :desc="emptyTipsConfig.desc"
-                    :btn-disabled="emptyTipsConfig.btnDisabled"
-                    :btns="emptyTipsConfig.btns">
-                </empty-tips>
-            </div>
+        <header v-if="!showSelfEmpty">
+            <bk-button theme="primary" icon="devops-icon icon-plus" class="add-template" @click="showSetting" :disabled="!isManagerUser">
+                {{ $t('template.addTemplate') }}
+            </bk-button>
+        </header>
+        <template-table
+            class="template-table"
+            @getApiData="getTempFromSelf"
+            ref="selfTemp"
+        />
+        <div v-if="showSelfEmpty" class="template-empty-placeholder">
+            <empty-tips
+                :title="$t('template.noTemplate')"
+                :desc="emptyTipsConfig.desc"
+                :btn-disabled="emptyTipsConfig.btnDisabled"
+                :btns="emptyTipsConfig.btns">
+            </empty-tips>
         </div>
 
         <bk-dialog
@@ -171,31 +175,31 @@
 </script>
 
 <style lang='scss'>
-    @import './../../scss/conf';
 
     .pipeline-template-list {
-        padding-bottom: 20px;
-        .template-list-content {
-            margin: 0 auto;
-            padding-top: 16px;
-            width: 1200px;
-            h3 {
-                font-weight: normal;
-                font-size: 16px;
-                .small-title {
-                    font-size: 14px;
-                    vertical-align: middle;
-                    border-bottom: 1px dotted #63656E;
-                    margin-left: 4px;
-                    cursor: pointer;
-                }
-            }
+        padding: 20px 100px;
+        height: 100%;
+
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        overflow: auto;
+
+        .template-empty-placeholder {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        > header {
+            width: 100%;
+            text-align: right;
             .add-template {
-                height: 33px;
-                line-height: 31px;
-                padding: 0 13px;
+                flex-shrink: 0;
             }
         }
+
         #templateName {
             margin-top: 3px;
         }
