@@ -365,13 +365,8 @@
                 this.sortBy = sortBy
                 this.sortType = sortType
                 this.refreshCodelibList()
-                if (sortBy && sortType) {
-                    localStorage.setItem('codelibSortType', sortType)
-                    localStorage.setItem('codelibSortBy', sortBy)
-                } else {
-                    localStorage.removeItem('codelibSortType')
-                    localStorage.removeItem('codelibSortBy')
-                }
+                localStorage.setItem('codelibSortType', sortType)
+                localStorage.setItem('codelibSortBy', sortBy)
                 this.$router.push({
                     query: {
                         ...this.$route.query,

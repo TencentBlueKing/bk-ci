@@ -533,24 +533,19 @@
     }
 </script>
 <style lang='scss' scoped>
-    @media (max-width: 1400px) {
+    @media (max-width: 1200px) {
         .codelib-name {
             span {
                 max-width: 300px;
             }
         }
-        .codelib-address {
-            max-width: 300px;
-        }
     }
-    @media (min-width: 1400px) {
+
+    @media (min-width: 1200px) {
         .codelib-name {
             span {
-                max-width: 320px;
+                max-width: 350px;
             }
-        }
-        .codelib-address {
-            max-width: 380px;
         }
     }
     ::v-deep {
@@ -633,6 +628,7 @@
         }
         .codelib-address {
             display: inline-block;
+            max-width: 400px;
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
