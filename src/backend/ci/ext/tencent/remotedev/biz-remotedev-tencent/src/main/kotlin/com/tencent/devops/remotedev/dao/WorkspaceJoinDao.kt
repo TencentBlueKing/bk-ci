@@ -305,24 +305,27 @@ class WorkspaceJoinDao {
         }
 
         // viewers 条件查询
-        search.viewers?.ifEmpty { null }?.let { owners ->
+        search.viewers?.ifEmpty { null }?.let { viewers ->
             val sql = if (search.onFuzzyMatch) {
                 (
                         TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-                            .and(TWorkspace.T_WORKSPACE.CREATOR.likeRegex(owners.joinToString("|")))
+                            .and(TWorkspace.T_WORKSPACE.CREATOR.likeRegex(viewers.joinToString("|")))
                         )
                     .or(
-                        TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.VIEWER.name)
-                            .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.likeRegex(owners.joinToString("|")))
+                        TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.likeRegex("VIEWER|OWNER")
+                            .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.likeRegex(viewers.joinToString("|")))
                     )
             } else {
                 (
                         TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-                            .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(owners))
+                            .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(viewers))
                         )
                     .or(
                         TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.VIEWER.name)
-                            .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(owners))
+                            .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(viewers))
+                    ).or(
+                        TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
+                            .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(viewers))
                     )
             }
             conditions.add(sql)
@@ -395,17 +398,12 @@ class WorkspaceJoinDao {
 //            conditions.add(offset, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
 //            offset++
 //        }
-        if (!search.owner.isNullOrEmpty()) {
+        if (!search.owner.isNullOrEmpty() || !search.viewers.isNullOrEmpty()) {
             result.add(TWorkspaceShared.T_WORKSPACE_SHARED)
             conditions.add(offset, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
             offset++
         }
 
-        if (!search.viewers.isNullOrEmpty()) {
-            result.add(TWorkspaceShared.T_WORKSPACE_SHARED)
-            conditions.add(offset, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
-            offset++
-        }
 //        if (machineType != null) {
 //            result.add(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
 //            result.add(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE)
