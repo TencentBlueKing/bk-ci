@@ -597,6 +597,7 @@ class WorkspaceService @Autowired constructor(
             }
         } ?: WorkspaceSearch(
             viewers = listOf(userId),
+            owner = listOf(userId),
             onFuzzyMatch = false
         )
         val result = limitFetchProjectWorkspace(
