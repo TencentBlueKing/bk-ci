@@ -58,7 +58,7 @@ class MarketCheckImageTask : ITask() {
         LoggerService.addNormalLine("begin check image")
         val buildVariableMap = buildTask.buildVariable!!
         val imageCode = buildVariableMap["imageCode"]
-        val imageName = buildVariableMap["imageName"]
+        val imageName = buildVariableMap["imageName"]!!
         val registryHost = buildVariableMap["registryHost"]
         val registryUser = buildVariableMap["registryUser"]
         val registryPwd = buildVariableMap["registryPwd"]
@@ -67,7 +67,7 @@ class MarketCheckImageTask : ITask() {
             userId = userId,
             checkDockerImageRequestList = arrayOf(
                 CheckDockerImageRequest(
-                    imageName = imageName!!,
+                    imageName = imageName.replace("${registryHost}/", ""),
                     registryHost = registryHost!!,
                     registryUser = registryUser,
                     registryPwd = registryPwd
