@@ -477,6 +477,7 @@ class WorkspaceService @Autowired constructor(
                             workspaceMountType = it.workspaceMountType,
                             workspaceSystemType = it.workspaceSystemType,
                             winConfig = allWindows[it.workspaceName]?.let { i -> allConfig[i.winConfigId.toLong()] },
+                            zoneConfig = detail.hostIP.let { ip -> zoneConfig[ip.replace(Regex("[\\d\\.]+"), "")] },
                             owner = owners[it.workspaceName],
                             viewers = viewers[it.workspaceName],
                             ownerCN = taiUserCN[owners[it.workspaceName]] ?: owners[it.workspaceName],
