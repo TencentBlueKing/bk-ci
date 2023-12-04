@@ -87,7 +87,7 @@ class DispatchMQConfiguration @Autowired constructor() {
     ): SimpleMessageListenerContainer {
         val adapter = MessageListenerAdapter(
             thirdPartyBuildListener,
-            thirdPartyBuildListener::onStartup.name
+            thirdPartyBuildListener::handleStartup.name
         )
         adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
@@ -125,7 +125,7 @@ class DispatchMQConfiguration @Autowired constructor() {
     ): SimpleMessageListenerContainer {
         val adapter = MessageListenerAdapter(
             thirdPartyBuildListener,
-            thirdPartyBuildListener::onShutdown.name)
+            thirdPartyBuildListener::handleShutdownMessage.name)
         adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
             connectionFactory = connectionFactory,
