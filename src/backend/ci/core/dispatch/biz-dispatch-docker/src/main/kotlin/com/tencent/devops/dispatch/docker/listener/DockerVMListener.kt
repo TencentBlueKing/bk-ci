@@ -127,7 +127,8 @@ class DockerVMListener @Autowired constructor(
     }
 
     private fun parseRoutingStartup(dispatchMessage: DispatchMessage, demoteFlag: Boolean = false) {
-        val dispatchType = dispatchMessage.dispatchType as DockerDispatchType
+        val event = dispatchMessage.event
+        val dispatchType = event.dispatchType as DockerDispatchType
         val dockerImage = if (dispatchType.imageType == ImageType.THIRD) {
             dispatchType.dockerBuildVersion
         } else {
@@ -144,7 +145,7 @@ class DockerVMListener @Autowired constructor(
             }
         }
         logger.info(
-            "${dispatchMessage.buildId}|startBuild|${dispatchMessage.id}|$dockerImage" +
+            "${event.buildId}|startBuild|${dispatchMessage.id}|$dockerImage" +
                 "|${dispatchType.imageCode}|${dispatchType.imageVersion}|${dispatchType.credentialId}" +
                 "|${dispatchType.credentialProject}"
         )
@@ -153,7 +154,7 @@ class DockerVMListener @Autowired constructor(
         if (dispatchType.imageType == ImageType.THIRD) {
             if (!dispatchType.credentialId.isNullOrBlank()) {
                 val projectId = if (dispatchType.credentialProject.isNullOrBlank()) {
-                    dispatchMessage.projectId
+                    event.projectId
                 } else {
                     dispatchType.credentialProject!!
                 }
@@ -175,7 +176,7 @@ class DockerVMListener @Autowired constructor(
             imageType = dispatchType.imageType?.type
         )
 
-        val dockerRoutingType = dockerRoutingSdkService.getDockerRoutingType(dispatchMessage.projectId)
+        val dockerRoutingType = dockerRoutingSdkService.getDockerRoutingType(event.projectId)
         if (dockerRoutingType == DockerRoutingType.VM) {
             startup(dispatchMessage, containerPool)
         } else {
@@ -189,7 +190,7 @@ class DockerVMListener @Autowired constructor(
         dockerRoutingType: DockerRoutingType = DockerRoutingType.VM,
         demoteFlag: Boolean = false
     ) {
-        with(dispatchMessage) {
+        with(dispatchMessage.event) {
             pipelineEventDispatcher.dispatch(
                 PipelineAgentStartupEvent(
                     source = "vmStartupTaskAtom",
@@ -203,22 +204,18 @@ class DockerVMListener @Autowired constructor(
                     taskName = "",
                     os = "",
                     vmNames = vmNames,
-                    startTime = System.currentTimeMillis(),
                     channelCode = channelCode,
                     dispatchType = KubernetesDispatchType(
                         kubernetesBuildVersion = JsonUtil.toJson(containerPool),
                         imageType = ImageType.THIRD,
                         performanceConfigId = 0
                     ),
-                    zone = zone,
                     atoms = atoms,
                     executeCount = executeCount,
                     routeKeySuffix = if (!demoteFlag) DispatchRouteKeySuffix.KUBERNETES.routeKeySuffix
                     else DispatchRouteKeySuffix.KUBERNETES_DEMOTE.routeKeySuffix,
-                    stageId = stageId,
                     containerId = containerId,
                     containerHashId = containerHashId,
-                    containerType = containerType,
                     customBuildEnv = customBuildEnv,
                     dockerRoutingType = dockerRoutingType.name
                 )
@@ -230,52 +227,53 @@ class DockerVMListener @Autowired constructor(
         dispatchMessage: DispatchMessage,
         containerPool: Pool
     ) {
-        val dockerDispatch = dispatchMessage.dispatchType as DockerDispatchType
+        val event = dispatchMessage.event
+        val dockerDispatch = event.dispatchType as DockerDispatchType
         buildLogPrinter.addLine(
-            buildId = dispatchMessage.buildId,
+            buildId = event.buildId,
             message = "Start docker ${dockerDispatch.dockerBuildVersion} for the build",
-            tag = VMUtils.genStartVMTaskId(dispatchMessage.vmSeqId),
-            jobId = dispatchMessage.containerHashId,
-            executeCount = dispatchMessage.executeCount ?: 1
+            tag = VMUtils.genStartVMTaskId(event.vmSeqId),
+            jobId = event.containerHashId,
+            executeCount = event.executeCount ?: 1
         )
 
         var poolNo = 0
         try {
             // 先判断是否OP已配置专机，若配置了专机，看当前ip是否在专机列表中，若在 选择当前IP并检查负载，若不在从专机列表中选择一个容量最小的
-            val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, dispatchMessage.projectId)
-            logger.info("${dispatchMessage.projectId}| specialIpSet: $specialIpSet -- ${specialIpSet.size}")
+            val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, event.projectId)
+            logger.info("${event.projectId}| specialIpSet: $specialIpSet -- ${specialIpSet.size}")
 
             val taskHistory = pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(
                 dslContext = dslContext,
-                pipelineId = dispatchMessage.pipelineId,
-                vmSeq = dispatchMessage.vmSeqId
+                pipelineId = event.pipelineId,
+                vmSeq = event.vmSeqId
             )
 
             var driftIpInfo = ""
             val dockerPair: Pair<String, Int>
-            poolNo = dockerHostUtils.getIdlePoolNo(dispatchMessage.pipelineId, dispatchMessage.vmSeqId)
+            poolNo = dockerHostUtils.getIdlePoolNo(event.pipelineId, event.vmSeqId)
             if (taskHistory != null) {
                 val dockerIpInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, taskHistory.dockerIp)
                 if (dockerIpInfo == null) {
                     // 此前IP下架，重新选择，根据负载条件选择可用IP
                     dockerPair = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
-                        projectId = dispatchMessage.projectId,
-                        pipelineId = dispatchMessage.pipelineId,
-                        vmSeqId = dispatchMessage.vmSeqId,
+                        projectId = event.projectId,
+                        pipelineId = event.pipelineId,
+                        vmSeqId = event.vmSeqId,
                         specialIpSet = specialIpSet
                     )
                 } else {
                     driftIpInfo = JsonUtil.toJson(dockerIpInfo.intoMap())
                     // 根据当前IP负载选择IP
-                    val pair = dockerHostUtils.checkAndSetIP(dispatchMessage, specialIpSet, dockerIpInfo, poolNo)
+                    val pair = dockerHostUtils.checkAndSetIP(event, specialIpSet, dockerIpInfo, poolNo)
                     dockerPair = Pair(pair.first, pair.second)
                 }
             } else {
                 // 第一次构建，根据负载条件选择可用IP
                 dockerPair = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
-                    projectId = dispatchMessage.projectId,
-                    pipelineId = dispatchMessage.pipelineId,
-                    vmSeqId = dispatchMessage.vmSeqId,
+                    projectId = event.projectId,
+                    pipelineId = event.pipelineId,
+                    vmSeqId = event.vmSeqId,
                     specialIpSet = specialIpSet
                 )
             }
@@ -290,10 +288,10 @@ class DockerVMListener @Autowired constructor(
             )
         } catch (e: Exception) {
             val errMsgTriple = if (e is DockerServiceException) {
-                logger.warn("${dispatchMessage.buildId}| Start build Docker VM failed. ${e.message}")
+                logger.warn("${event.buildId}| Start build Docker VM failed. ${e.message}")
                 Triple(e.errorType, e.errorCode, e.message!!)
             } else {
-                logger.error("${dispatchMessage.buildId}| Start build Docker VM failed.", e)
+                logger.error("${event.buildId}| Start build Docker VM failed.", e)
                 Triple(first = ErrorCodeEnum.SYSTEM_ERROR.errorType,
                     second = ErrorCodeEnum.SYSTEM_ERROR.errorCode,
                     third = "Start build Docker VM failed.")
@@ -302,18 +300,18 @@ class DockerVMListener @Autowired constructor(
             // 更新构建记录状态
             val result = pipelineDockerBuildDao.updateStatus(
                 dslContext,
-                dispatchMessage.buildId,
-                dispatchMessage.vmSeqId.toInt(),
+                event.buildId,
+                event.vmSeqId.toInt(),
                 PipelineTaskStatus.FAILURE
             )
 
             if (!result) {
                 pipelineDockerBuildDao.saveBuildHistory(
                     dslContext = dslContext,
-                    projectId = dispatchMessage.projectId,
-                    pipelineId = dispatchMessage.pipelineId,
-                    buildId = dispatchMessage.buildId,
-                    vmSeqId = dispatchMessage.vmSeqId.toInt(),
+                    projectId = event.projectId,
+                    pipelineId = event.pipelineId,
+                    buildId = event.buildId,
+                    vmSeqId = event.vmSeqId.toInt(),
                     secretKey = "",
                     status = PipelineTaskStatus.FAILURE,
                     zone = Zone.SHENZHEN.name,

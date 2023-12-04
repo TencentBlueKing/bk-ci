@@ -49,6 +49,7 @@ import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.dispatch.docker.service.DockerHostQpcService
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
+import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import java.util.Random
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -241,7 +242,7 @@ class DockerHostUtils @Autowired constructor(
     }
 
     fun checkAndSetIP(
-        dispatchMessage: DispatchMessage,
+        event: PipelineAgentStartupEvent,
         specialIpSet: Set<String>,
         dockerIpInfo: TDispatchPipelineDockerIpInfoRecord,
         poolNo: Int
@@ -251,9 +252,9 @@ class DockerHostUtils @Autowired constructor(
             dockerIpInfo.grayEnv != (bkTag.getFinalTag().contains("gray")) ||
             overload(dockerIpInfo)) {
             return getAvailableDockerIpWithSpecialIps(
-                dispatchMessage.projectId,
-                dispatchMessage.pipelineId,
-                dispatchMessage.vmSeqId,
+                event.projectId,
+                event.pipelineId,
+                event.vmSeqId,
                 specialIpSet
             )
         }
@@ -261,19 +262,19 @@ class DockerHostUtils @Autowired constructor(
         // 校验专机
         if (specialIpCheck(dockerIpInfo, specialIpSet)) {
             return getAvailableDockerIpWithSpecialIps(
-                dispatchMessage.projectId,
-                dispatchMessage.pipelineId,
-                dispatchMessage.vmSeqId,
+                event.projectId,
+                event.pipelineId,
+                event.vmSeqId,
                 specialIpSet
             )
         }
 
         // 配置代码缓存集群，不用关注漂移
-        if (dockerHostQpcService.getQpcUniquePath(dispatchMessage) != null) {
+        if (dockerHostQpcService.getQpcUniquePath(event.projectId) != null) {
             return getAvailableDockerIpWithSpecialIps(
-                dispatchMessage.projectId,
-                dispatchMessage.pipelineId,
-                dispatchMessage.vmSeqId,
+                event.projectId,
+                event.pipelineId,
+                event.vmSeqId,
                 specialIpSet
             )
         }

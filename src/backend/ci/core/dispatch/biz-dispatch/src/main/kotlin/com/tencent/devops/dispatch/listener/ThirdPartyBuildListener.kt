@@ -25,61 +25,58 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.service
+package com.tencent.devops.dispatch.listener
 
+import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.docker.common.Constants
-import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
-import org.slf4j.LoggerFactory
+import com.tencent.devops.dispatch.exception.DispatchRetryMQException
+import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
+import com.tencent.devops.dispatch.service.ThirdPartyAgentService
+import com.tencent.devops.dispatch.service.ThirdPartyDispatchService
+import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class DockerHostQpcService @Autowired constructor(
-    private val redisOperation: RedisOperation
-) {
+class ThirdPartyBuildListener @Autowired constructor(
+    private val thirdPartyAgentService: ThirdPartyAgentService,
+    private val thirdPartyDispatchService: ThirdPartyDispatchService
+): BuildListener {
 
-    fun getQpcWhitelist(userId: String): List<String> {
-        val whiteList = mutableListOf<String>()
+    override fun getStartupQueue(): String {
+        return ""
+    }
 
-        val whiteSet = redisOperation.getSetMembers(Constants.QPC_WHITE_LIST_KEY_PREFIX)
-        return if (whiteSet != null) {
-            whiteSet.parallelStream().forEach {
-                whiteList.add(it)
-            }
+    override fun getStartupDemoteQueue(): String {
+        return ""
+    }
 
-            whiteList
-        } else {
-            emptyList()
+    override fun getShutdownQueue(): String {
+        return ""
+    }
+
+    override fun onStartup(dispatchMessage: DispatchMessage) {
+        try {
+            thirdPartyDispatchService.startUp(dispatchMessage)
+        } catch (e: DispatchRetryMQException) {
+            // 重试构建消息
+            retry(
+                sleepTimeInMS = 5000,
+                retryTimes = (6 * (dispatchMessage.event.queueTimeoutMinutes ?: 10)),
+                errorMessage = e.message
+            )
         }
     }
 
-    fun addQpcWhitelist(userId: String, gitProjectId: String): Boolean {
-        redisOperation.addSetValue(Constants.QPC_WHITE_LIST_KEY_PREFIX, gitProjectId)
-        return true
+    override fun onStartupDemote(dispatchMessage: DispatchMessage) {
+        thirdPartyDispatchService.startUp(dispatchMessage)
     }
 
-    fun deleteQpcWhitelist(userId: String, gitProjectId: String): Boolean {
-        redisOperation.removeSetMember(Constants.QPC_WHITE_LIST_KEY_PREFIX, gitProjectId)
-        return true
+    override fun onShutdown(event: PipelineAgentShutdownEvent) {
+        thirdPartyAgentService.finishBuild(event)
     }
 
-    fun checkQpcWhitelist(gitProjectId: String): Boolean {
-        return redisOperation.isMember(Constants.QPC_WHITE_LIST_KEY_PREFIX, gitProjectId)
-    }
-
-    fun getQpcUniquePath(projectId: String): String? {
-        return if (projectId.startsWith("git_") &&
-            checkQpcWhitelist(projectId.removePrefix("git_"))
-        ) {
-            return projectId.removePrefix("git_")
-        } else {
-            null
-        }
-    }
-
-    companion object {
-        private val LOG = LoggerFactory.getLogger(DockerHostQpcService::class.java)
+    override fun getVmType(): JobQuotaVmType? {
+        return JobQuotaVmType.OTHER
     }
 }
