@@ -344,11 +344,7 @@ class WorkspaceJoinDao {
 
         // machineType 条件查询
         search.size?.ifEmpty { null }?.let { type ->
-            if (search.onFuzzyMatch) {
-                conditions.add(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE.likeRegex(type.joinToString("|")))
-            } else {
-                conditions.add(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE.`in`(type))
-            }
+            conditions.add(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE.`in`(type))
         }
 
         // mac地址 条件查询
