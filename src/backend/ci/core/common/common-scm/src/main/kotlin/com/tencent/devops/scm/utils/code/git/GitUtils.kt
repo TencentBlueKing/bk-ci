@@ -46,9 +46,8 @@ object GitUtils {
 
     fun getDomainAndRepoName(gitUrl: String): Pair<String/*domain*/, String/*repoName*/> {
         // 兼容http存在端口的情況 http://gitlab.xx:8888/xx.git
-        // [.git] 后缀小数点需转义, 否则会匹配失败
-        val groups = Regex("git@([-.a-z0-9A-Z]+):([0-9]+/)?(.*)\\.git").find(gitUrl)?.groups
-            ?: Regex("http[s]?://([-.a-z0-9A-Z]+)(:[0-9]+)?/(.*)\\.git").find(gitUrl)?.groups
+        val groups = Regex("git@([-.a-z0-9A-Z]+):([0-9]+/)?(.*).git").find(gitUrl)?.groups
+            ?: Regex("http[s]?://([-.a-z0-9A-Z]+)(:[0-9]+)?/(.*).git").find(gitUrl)?.groups
             ?: Regex("http[s]?://([-.a-z0-9A-Z]+)(:[0-9]+)?/(.*)").find(gitUrl)?.groups
             ?: throw ScmException("Git error, invalid field [http_url]:$gitUrl", ScmType.CODE_GIT.name)
 
