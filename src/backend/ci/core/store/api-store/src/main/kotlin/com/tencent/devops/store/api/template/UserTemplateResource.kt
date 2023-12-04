@@ -30,9 +30,9 @@ package com.tencent.devops.store.api.template
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
 import com.tencent.devops.store.pojo.template.InstallTemplateReq
+import com.tencent.devops.store.pojo.template.InstallTemplateResp
 import com.tencent.devops.store.pojo.template.MarketTemplateMain
 import com.tencent.devops.store.pojo.template.MarketTemplateResp
 import com.tencent.devops.store.pojo.template.MyTemplateItem
@@ -102,7 +102,7 @@ interface UserTemplateResource {
         rdType: TemplateRdTypeEnum?,
         @ApiParam("排序", required = false)
         @QueryParam("sortType")
-        sortType: MarketTemplateSortTypeEnum ? = MarketTemplateSortTypeEnum.CREATE_TIME,
+        sortType: MarketTemplateSortTypeEnum? = MarketTemplateSortTypeEnum.CREATE_TIME,
         @ApiParam("项目ID", required = false)
         @QueryParam("projectCode")
         projectCode: String?,
@@ -161,7 +161,7 @@ interface UserTemplateResource {
         installTemplateReq: InstallTemplateReq
     ): Result<Boolean>
 
-    @ApiOperation("安装模板到项目--返回流水线模板Id")
+    @ApiOperation("安装模板到项目--返回流水线模板信息")
     @POST
     @Path("/template/install/new")
     fun installTemplateNew(
@@ -170,7 +170,7 @@ interface UserTemplateResource {
         userId: String,
         @ApiParam("安装模板到项目请求报文体", required = true)
         installTemplateReq: InstallTemplateReq
-    ): Result<List<PipelineTemplateInfo>>
+    ): Result<InstallTemplateResp>
 
     @ApiOperation("根据模板标识获取已安装的项目列表")
     @GET

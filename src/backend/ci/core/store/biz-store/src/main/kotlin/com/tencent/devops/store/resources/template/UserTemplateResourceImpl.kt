@@ -32,13 +32,11 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.template.ServicePTemplateResource
-import com.tencent.devops.process.pojo.PipelineTemplateInfo
-import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.api.template.UserTemplateResource
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.template.InstallTemplateReq
+import com.tencent.devops.store.pojo.template.InstallTemplateResp
 import com.tencent.devops.store.pojo.template.MarketTemplateMain
 import com.tencent.devops.store.pojo.template.MarketTemplateResp
 import com.tencent.devops.store.pojo.template.MyTemplateItem
@@ -76,25 +74,27 @@ class UserTemplateResourceImpl @Autowired constructor(
         userId: String,
         installTemplateReq: InstallTemplateReq
     ): Result<Boolean> {
-        return marketTemplateService.installTemplate(userId, ChannelCode.BS, installTemplateReq)
+        val installResult = marketTemplateService.installTemplate(
+            userId = userId,
+            channelCode = ChannelCode.BS,
+            installTemplateReq = installTemplateReq
+        )
+        return Result(
+            status = installResult.status,
+            message = installResult.message,
+            data = installResult.data?.result ?: false
+        )
     }
 
     override fun installTemplateNew(
         userId: String,
         installTemplateReq: InstallTemplateReq
-    ): Result<List<PipelineTemplateInfo>> {
-        val install = client.get(ServiceTemplateResource::class)
-            .installTemplate(userId, installTemplateReq).data ?: false
-        return if (install) {
-            val templateProjectInfos = client.get(ServicePTemplateResource::class)
-                .getTemplateIdBySrcCode(installTemplateReq.templateCode, installTemplateReq.projectCodeList).data
-            if (templateProjectInfos.isNullOrEmpty()) {
-                return Result(emptyList())
-            }
-            Result(templateProjectInfos)
-        } else {
-            Result(emptyList())
-        }
+    ): Result<InstallTemplateResp> {
+        return marketTemplateService.installTemplate(
+            userId = userId,
+            channelCode = ChannelCode.BS,
+            installTemplateReq = installTemplateReq
+        )
     }
 
     override fun mainPageList(userId: String, page: Int?, pageSize: Int?): Result<List<MarketTemplateMain>> {
