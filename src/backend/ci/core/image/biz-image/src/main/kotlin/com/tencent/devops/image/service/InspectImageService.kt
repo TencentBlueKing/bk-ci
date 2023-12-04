@@ -82,7 +82,7 @@ class InspectImageService @Autowired constructor(
         val imageInspectList = mutableListOf<CheckDockerImageResponse>()
         checkDockerImageRequestList.parallelStream().forEach {
             // 判断用户录入的镜像信息是否能正常拉取到镜像
-            val imageName = it.imageName.replace("${it.registryHost}/", "")
+            val imageName = it.imageName
             logger.info("checkDockerImage imageName:$imageName")
             try {
                 val authConfig = CommonUtils.getAuthConfig(
