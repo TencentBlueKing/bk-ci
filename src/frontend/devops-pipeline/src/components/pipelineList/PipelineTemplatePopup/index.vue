@@ -189,7 +189,8 @@
                 groupValue: {
                     labels: [],
                     staticViews: []
-                }
+                },
+                currentTemplate: {}
             }
         },
 
@@ -336,11 +337,14 @@
                 }
                 this.isLoading = true
                 this.requestInstallTemplate(postData).then((res) => {
+                    const curTemp = res.installProjectTemplateDTO.find(i => temp => temp.projectId === this.projectId)
                     return this.requestPipelineTemplate({
                         projectId: this.projectId
                     }).then(() => {
-                        const currentStoreItem = this.storeTemplate.find(x => x.code === temp.code)
-                        currentStoreItem.installed = true
+                        this.currentTemplate = this.storeTemplate.find(x => x.code === temp.code)
+                        this.currentTemplate.installed = true
+                        this.currentTemplate.templateId = curTemp.templateId
+                        this.currentTemplate.version = curTemp.version
                         this.selectTemp(index)
                     })
                 }).catch((err) => {
@@ -436,14 +440,11 @@
                 }
 
                 if (this.templateType === 'CONSTRAINT') {
-                    const code = this.activeTemp.code || ''
-                    const currentTemplate = this.pipelineTemplate[code] || this.activeTemp
-
                     this.$router.push({
                         name: 'createInstance',
                         params: {
-                            templateId: currentTemplate.templateId,
-                            curVersionId: currentTemplate.version,
+                            templateId: this.currentTemplate.templateId,
+                            curVersionId: this.currentTemplate.version,
                             pipelineName: pipeline.name
                         },
                         query: {

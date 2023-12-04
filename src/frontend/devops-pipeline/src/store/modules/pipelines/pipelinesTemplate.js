@@ -39,7 +39,7 @@ const mutations = {
 
 const actions = {
     requestInstallTemplate (_, params) {
-        return ajax.post(`${STORE_API_URL_PREFIX}/user/market/template/install`, params).then(response => {
+        return ajax.post(`${STORE_API_URL_PREFIX}/user/market/template/install/new`, params).then(response => {
             return response.data
         })
     },
