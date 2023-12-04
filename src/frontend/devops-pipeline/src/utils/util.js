@@ -806,7 +806,8 @@ export function areDeeplyEqual (obj1, obj2) {
             return false
         }
 
-        for (const key in leftKeys) {
+        for (let i = 0; i < leftKeys.length; i++) {
+            const key = leftKeys[i]
             if (!Object.hasOwnProperty.call(right, key)) {
                 return false
             }

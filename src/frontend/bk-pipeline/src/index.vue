@@ -32,7 +32,7 @@
 <script>
     import draggable from 'vuedraggable'
     import Stage from './Stage'
-    import { eventBus, hashID, isTriggerContainer } from './util'
+    import { eventBus, hashID, isTriggerContainer, areDeeplyEqual } from './util'
 
     import {
         CLICK_EVENT_NAME,
@@ -143,9 +143,7 @@
         computed: {
             computedStages: {
                 get () {
-                    return this.pipeline?.stages?.map((stage) => Object.assign(stage, {
-                        isTrigger: this.checkIsTriggerStage(stage)
-                    })) ?? []
+                    return this.pipeline?.stages ?? []
                 },
                 set (stages) {
                     const data = stages.map((stage, index) => {
@@ -186,11 +184,12 @@
             }
         },
         watch: {
-            'pipeline.stages': {
-                deep: true,
-                handler: function () {
-                    this.$emit('input', this.pipeline)
-                    this.$emit('change', this.pipeline)
+            pipeline: {
+                handler: function (newVal, oldVal) {
+                    if (this.editable && !areDeeplyEqual(newVal, oldVal)) {
+                        this.$emit('input', newVal)
+                        this.$emit('change', newVal)
+                    }
                 }
             },
             'pipeline.name': {

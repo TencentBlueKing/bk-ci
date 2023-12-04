@@ -21,7 +21,7 @@
 </template>
 
 <script>
-    import { mapActions, mapState } from 'vuex'
+    import { mapActions, mapState, mapGetters } from 'vuex'
     import Vue from 'vue'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import FormField from '@/components/AtomPropertyPanel/FormField'
@@ -42,6 +42,9 @@
             ...mapState('atom', [
                 'stageTagList'
             ]),
+            ...mapGetters('atom', [
+                'isTriggerContainer'
+            ]),
             stageTag: {
                 get () {
                     return this.stage.tag
@@ -54,7 +57,7 @@
                 return typeof this.stage !== 'undefined' ? this.stage.name : 'stage'
             },
             isTriggerStage () {
-                return this.stage?.isTrigger ?? false
+                return this.isTriggerContainer(this.stage?.containers?.[0]) ?? false
             },
             stageControl () {
                 if (this.stage && this.stage.stageControlOption) {

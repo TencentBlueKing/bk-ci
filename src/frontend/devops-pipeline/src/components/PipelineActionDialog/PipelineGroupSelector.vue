@@ -16,7 +16,7 @@
             </label>
             <PipelineLabelSelector
                 ref="labelSelector"
-                v-model="initTags"
+                v-model="labels"
                 :editable="dynamicGroupEditable"
                 @change="updateDynamicGroup"
             />
@@ -151,7 +151,7 @@
             },
             pipelineName () {
                 this.$nextTick(() => {
-                    this.updateDynamicGroup(this.initTags)
+                    this.updateDynamicGroup(this.labels, this.initTags)
                 })
             }
         },
@@ -168,19 +168,19 @@
             refreshLabel () {
                 this.$refs?.labelSelector.init?.()
             },
-            async updateDynamicGroup (tags) {
+            async updateDynamicGroup (labels, tags) {
                 if (this.isMatching || !this.pipelineName) return
                 this.isMatching = true
-                this.labels = Object.values(tags).flat()
+                this.labels = labels
+                this.initTags = tags
                 try {
-                    const labels = Object.keys(tags).map(key => ({
-                        groupId: key,
-                        labelIds: tags[key]
-                    }))
                     const { data } = await this.matchDynamicView({
                         projectId: this.$route.params.projectId,
                         pipelineName: this.pipelineName,
-                        labels
+                        labels: Object.keys(tags).map(key => ({
+                            groupId: key,
+                            labelIds: tags[key]
+                        }))
                     })
                     this.dynamicGroup = data
                 } catch (e) {

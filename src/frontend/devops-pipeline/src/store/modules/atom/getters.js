@@ -364,7 +364,7 @@ export default {
         }
     }),
     isVmContainer: state => container => isVmContainer(container['@type']),
-    isTriggerContainer: state => container => isTriggerContainer(container['@type']),
+    isTriggerContainer: state => container => isTriggerContainer(container?.['@type']),
     isCodePullAtom: state => atom => isCodePullAtom(atom['@type']),
     isNormalContainer: state => container => isNormalContainer(container['@type']),
     defaultBuildNo: state => defaultBuildNo,

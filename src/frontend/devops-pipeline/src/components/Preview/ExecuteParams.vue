@@ -162,7 +162,8 @@
                     this.buildList = startupInfo.properties.filter(p => p.propertyType === 'BUILD')
                     this.constantParams = startupInfo.properties.filter(p => p.constant)
                     this.initParams(values)
-                    this.updateParams({
+                    this.setExecuteParams({
+                        pipelineId: this.pipelineId,
                         ...this.paramsValues,
                         ...this.versionParamValues,
                         ...this.buildValues,
@@ -181,6 +182,7 @@
                 this.versionParamValues = getParamsValuesMap(this.versionParamList, key, values)
                 this.buildValues = getParamsValuesMap(this.buildList, key, values)
                 this.constantValues = getParamsValuesMap(this.constantParams, key, values)
+                console.log(this.paramsValues, 'sssss', this.paramList)
             },
             updateParams (valueKey = 'defaultValue') {
                 this.paramsValues = getParamsValuesMap(this.paramList, valueKey)

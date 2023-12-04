@@ -95,7 +95,7 @@
     import StagePropertyPanel from './StagePropertyPanel'
     import StageReviewPanel from './StageReviewPanel'
     import AtomSelector from './AtomSelector'
-    import { isObject } from '../utils/util'
+    import { isObject, areDeeplyEqual } from '../utils/util'
 
     export default {
         components: {
@@ -229,6 +229,16 @@
                     : [...this.ruleList]
             }
         },
+        watch: {
+            pipeline: {
+                handler (val, old) {
+                    if (this.pipelineEditable && !areDeeplyEqual(val, old)) {
+                        this.setPipelineEditing(true)
+                    }
+                },
+                deep: true
+            }
+        },
         beforeDestroy () {
             this.toggleAtomSelectorPopup(false)
             this.togglePropertyPanel({
@@ -279,6 +289,7 @@
             },
             handlePipelineChange (pipeline) {
                 if (!this.editable) return
+                console.log('11111, handlePipelineChange')
                 Object.assign(this.pipeline, pipeline)
                 this.setPipelineEditing(true)
             },

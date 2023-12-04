@@ -9,7 +9,7 @@
                 <bk-select
                     :disabled="!editable"
                     class="sub-label-select"
-                    :value="labelIdMap[item.id]"
+                    :value="labelMap[item.id]"
                     @change="item.handleChange"
                     multiple
                 >
@@ -35,8 +35,8 @@
         emits: ['input', 'change'],
         props: {
             value: {
-                type: Object,
-                default: () => ({})
+                type: Array,
+                default: () => []
             },
             editable: {
                 type: Boolean,
@@ -46,7 +46,9 @@
         data () {
             return {
                 isLoading: false,
-                labelIdMap: this.value
+                labelIdMap: {},
+                labelMap: {},
+                labelSet: new Set(this.value)
             }
         },
         computed: {
@@ -63,6 +65,7 @@
         watch: {
             value (newVal) {
                 this.updateValue(newVal)
+                this.labelSet = new Set(newVal)
             }
         },
         created () {
@@ -75,22 +78,38 @@
             async init () {
                 this.isLoading = true
                 await this.requestTagList(this.$route.params)
-                this.updateValue()
+                this.updateValue(this.value)
+                this.emitChange(Array.from(this.labelSet), this.labelMap)
                 this.isLoading = false
             },
-            updateValue (val = {}) {
-                this.labelIdMap = this.tagGroupList.reduce((acc, tag) => {
-                    acc[tag.id] = val[tag.id] ?? []
+            updateValue (val = []) {
+                this.labelIdMap = this.tagGroupList.map(tag => tag.labels).flat().reduce((acc, label) => {
+                    acc[label.id] = label
+                    return acc
+                }, {})
+                this.labelMap = val.reduce((acc, labelId) => {
+                    const label = this.labelIdMap[labelId]
+                    if (label?.groupId) {
+                        if (!Array.isArray(acc[label.groupId])) {
+                            acc[label.groupId] = []
+                        }
+                        acc[label.groupId].push(labelId)
+                    }
                     return acc
                 }, {})
             },
             handleChange (groupId, labelIds) {
-                this.labelIdMap[groupId] = labelIds
-                this.emitChange(this.labelIdMap)
+                this.labelMap[groupId] = labelIds
+                this.labelSet = new Set([
+                    ...this.labelSet,
+                    ...labelIds
+                ])
+
+                this.emitChange(Array.from(this.labelSet), this.labelMap)
             },
-            emitChange (labelIdMap) {
-                this.$emit('change', labelIdMap)
-                this.$emit('input', labelIdMap)
+            emitChange (value, labelMap) {
+                this.$emit('change', value, labelMap)
+                this.$emit('input', value, labelMap)
             }
         }
     }

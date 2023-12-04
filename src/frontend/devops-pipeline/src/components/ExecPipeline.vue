@@ -649,10 +649,8 @@
             },
             async reviewAtom (atom) {
                 // 人工审核
-                if (atom?.computedReviewers?.includes?.(this.userName)) {
-                    this.currentAtom = atom
-                    this.toggleCheckDialog(true)
-                }
+                this.currentAtom = atom
+                this.toggleCheckDialog(true)
             },
             toggleCheckDialog (isShow = false) {
                 this.isShowCheckDialog = isShow

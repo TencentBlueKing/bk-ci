@@ -154,7 +154,7 @@
     import StageCheckIcon from './StageCheckIcon'
     import { localeMixins } from './locale'
 
-    import { getOuterHeight, hashID, randomString, eventBus } from './util'
+    import { getOuterHeight, isTriggerContainer, hashID, randomString, eventBus } from './util'
     import {
         CLICK_EVENT_NAME,
         ADD_STAGE,
@@ -212,14 +212,22 @@
                     return false
                 }
             },
+            isTriggerStage () {
+                try {
+                    return isTriggerContainer(this.stage?.containers?.[0])
+                } catch (e) {
+                    console.warn(e)
+                    return false
+                }
+            },
             canStageRetry () {
                 return this.stage.canRetry === true
             },
             showCopyStage () {
-                return this.isMiddleStage && this.reactiveData.editable && !this.stage.isTrigger
+                return this.isMiddleStage && this.reactiveData.editable && !this.isTriggerStage
             },
             showDeleteStage () {
-                return this.reactiveData.editable && !this.stage.isTrigger
+                return this.reactiveData.editable && !this.isTriggerStage
             },
             isFirstStage () {
                 return this.stageIndex === 0
@@ -231,7 +239,7 @@
                 return this.stage.finally === true
             },
             isMiddleStage () {
-                return !(this.stage.isTrigger || this.isFinallyStage)
+                return !(this.isTriggerStage || this.isFinallyStage)
             },
             stageTitle () {
                 return this.stage ? this.stage.name : 'stage'
@@ -255,7 +263,7 @@
                     'pipeline-stage',
                     {
                         'is-final-stage': this.isFinallyStage,
-                        'pipeline-drag': this.reactiveData.editable && !this.stage.isTrigger,
+                        'pipeline-drag': this.reactiveData.editable && !this.isTriggerStage,
                         readonly: !this.reactiveData.editable || this.stageDisabled,
                         editable: this.reactiveData.editable,
                         'un-exec-this-time': this.reactiveData.isExecDetail && this.isUnExecThisTime
@@ -391,7 +399,7 @@
                 const relatedContext = event.relatedContext || {}
                 const relatedelement = relatedContext.element || {}
                 const isRelatedTrigger = relatedelement['@type'] === 'trigger'
-                const isTriggerStage = relatedelement.isTrigger
+                const isTriggerStage = isTriggerContainer(relatedelement?.containers?.[0])
                 const isFinallyStage = relatedelement.finally === true
 
                 return !isTrigger && !isRelatedTrigger && !isTriggerStage && !isFinallyStage

@@ -265,6 +265,9 @@
             baseVersionBranch () {
                 return this.pipelineInfo?.baseVersionBranch
             },
+            pipelineName () {
+                return this.pipelineInfo?.pipelineName
+            },
 
             rules () {
                 return {
@@ -491,7 +494,7 @@
                             instanceId: [
                                 {
                                     id: pipelineId,
-                                    name: this.pipelineInfo?.pipelineName
+                                    name: this.pipelineName
                                 }
                             ],
                             projectId

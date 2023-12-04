@@ -149,11 +149,6 @@
                     return this.container.elements
                         .filter((atom) => !this.isHookAtom(atom) || this.showPostAction)
                         .map((atom) => {
-                            atom.isReviewing = atom.status === STATUS_MAP.REVIEWING
-                            if (atom.isReviewing) {
-                                const atomReviewer = this.getReviewUser(atom)
-                                atom.computedReviewers = atomReviewer
-                            }
                             if (!atom.atomCode) {
                                 atom.atomCode = atom['@type']
                             }
@@ -237,22 +232,6 @@
                             && os.length <= 0
                             && element.buildLessRunFlag))
                 )
-            },
-
-            getReviewUser (atom) {
-                try {
-                    const list
-                        = atom.reviewUsers || (atom.data && atom.data.input && atom.data.input.reviewers)
-                    const reviewUsers = list
-                        .map((user) => user.split(';').map((val) => val.trim()))
-                        .reduce((prev, curr) => {
-                            return prev.concat(curr)
-                        }, [])
-                    return reviewUsers
-                } catch (error) {
-                    console.error(error)
-                    return []
-                }
             },
             editAtom (atomIndex, isAdd) {
                 const { stageIndex, containerIndex, container } = this
