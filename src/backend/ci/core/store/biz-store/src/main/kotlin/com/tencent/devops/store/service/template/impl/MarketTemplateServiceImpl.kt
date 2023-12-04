@@ -770,9 +770,9 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             )
         }
         val installProjectTemplateDTO = mutableListOf<InstallProjectTemplateDTO>()
-        projectTemplateMap.forEach { (projectId, templateCode) ->
+        projectTemplateMap.forEach { (projectId, projectTemplateCode) ->
             val templateDetailInfo = client.get(ServicePTemplateResource::class).getTemplateDetailInfo(
-                templateCode = templateCode
+                templateCode = projectTemplateCode
             ).data ?: return@forEach
             installProjectTemplateDTO.add(
                 InstallProjectTemplateDTO(
