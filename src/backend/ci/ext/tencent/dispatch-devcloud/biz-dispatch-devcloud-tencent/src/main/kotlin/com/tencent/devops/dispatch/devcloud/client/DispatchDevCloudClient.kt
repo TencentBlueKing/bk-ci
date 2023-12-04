@@ -49,11 +49,11 @@ class DispatchDevCloudClient {
 
     fun createContainer(dispatchMessage: DispatchMessage, devCloudContainer: DevCloudContainer): Pair<String, String> {
         return createContainer(
-            projectId = dispatchMessage.projectId,
-            pipelineId = dispatchMessage.pipelineId,
-            buildId = dispatchMessage.buildId,
-            vmSeqId = dispatchMessage.vmSeqId,
-            userId = dispatchMessage.userId,
+            projectId = dispatchMessage.event.projectId,
+            pipelineId = dispatchMessage.event.pipelineId,
+            buildId = dispatchMessage.event.buildId,
+            vmSeqId = dispatchMessage.event.vmSeqId,
+            userId = dispatchMessage.event.userId,
             devCloudContainer = devCloudContainer
         )
     }

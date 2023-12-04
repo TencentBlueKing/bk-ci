@@ -129,7 +129,7 @@ class MacBuildListener @Autowired constructor(
         logger.info("MacOS Dispatch on start up - ($dispatchMessage)")
         try {
             val event = dispatchMessage.event
-            val buildHistoryId = buildHistoryService.saveBuildHistory(dispatchMessage)
+            val buildHistoryId = buildHistoryService.saveBuildHistory(dispatchMessage.event)
             // 保存构建任务失败，直接返回，对此次构建任务不做处理
             if (buildHistoryId < 0) {
                 return
@@ -138,7 +138,7 @@ class MacBuildListener @Autowired constructor(
             val devCloudMacosVmInfo = devCloudMacosService.creatVM(dispatchMessage)
             devCloudMacosVmInfo?.let {
                 devCloudMacosService.saveVM(it)
-                buildHistoryService.saveBuildTask(it.ip, it.id, buildHistoryId, dispatchMessage)
+                buildHistoryService.saveBuildTask(it.ip, it.id, buildHistoryId, dispatchMessage.event)
                 macosVMRedisService.saveRedisBuild(dispatchMessage, it.ip)
 
                 logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] " +
