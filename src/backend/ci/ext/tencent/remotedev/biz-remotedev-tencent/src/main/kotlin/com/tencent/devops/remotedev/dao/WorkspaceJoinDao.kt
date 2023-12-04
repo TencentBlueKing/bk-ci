@@ -26,7 +26,6 @@ import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.RecordMapper
 import org.jooq.SelectConditionStep
-import org.jooq.impl.DSL
 import org.jooq.impl.TableImpl
 import org.springframework.stereotype.Repository
 
@@ -289,33 +288,21 @@ class WorkspaceJoinDao {
                             .and(TWorkspace.T_WORKSPACE.CREATOR.likeRegex(owners.joinToString("|")))
                         )
                     .or(
-                        TWorkspace.T_WORKSPACE.NAME.`in`(
-                            DSL.select(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME)
-                                .from(TWorkspaceShared.T_WORKSPACE_SHARED)
-                                .where(
-                                    TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(
-                                        WorkspaceShared.AssignType.OWNER.name
-                                    )
-                                        .and(
-                                            TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
-                                                .likeRegex(owners.joinToString("|"))
-                                        )
-                                )
+                        TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(
+                            WorkspaceShared.AssignType.OWNER.name
                         )
+                            .and(
+                                TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
+                                    .likeRegex(owners.joinToString("|"))
+                            )
                     )
             } else {
                 (
                         TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
                             .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(owners))
                         ).or(
-                        TWorkspace.T_WORKSPACE.NAME.`in`(
-                            DSL.select(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME)
-                                .from(TWorkspaceShared.T_WORKSPACE_SHARED)
-                                .where(
-                                    TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
-                                        .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(owners))
-                                )
-                        )
+                        TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
+                            .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(owners))
                     )
             }
             conditions.add(sql)
@@ -328,34 +315,22 @@ class WorkspaceJoinDao {
                         TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
                             .and(TWorkspace.T_WORKSPACE.CREATOR.likeRegex(viewers.joinToString("|")))
                         ).or(
-                        TWorkspace.T_WORKSPACE.NAME.`in`(
-                            DSL.select(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME)
-                                .from(TWorkspaceShared.T_WORKSPACE_SHARED)
-                                .where(
-                                    TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.likeRegex("VIEWER|OWNER")
-                                        .and(
-                                            TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
-                                                .likeRegex(viewers.joinToString("|"))
-                                        )
-                                )
-                        )
+                        TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.likeRegex("VIEWER|OWNER")
+                            .and(
+                                TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
+                                    .likeRegex(viewers.joinToString("|"))
+                            )
                     )
             } else {
                 (
                         TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
                             .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(viewers))
                         ).or(
-                        TWorkspace.T_WORKSPACE.NAME.`in`(
-                            DSL.select(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME)
-                                .from(TWorkspaceShared.T_WORKSPACE_SHARED)
-                                .where(
-                                    TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.VIEWER.name)
-                                        .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(viewers))
-                                ).or(
-                                    TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
-                                        .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(viewers))
-                                )
-                        )
+                        TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.VIEWER.name)
+                            .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(viewers))
+                    ).or(
+                        TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
+                            .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(viewers))
                     )
             }
             conditions.add(sql)
@@ -403,6 +378,8 @@ class WorkspaceJoinDao {
 
         return dslContext.select(fields)
             .from(tables)
+            .leftJoin(TWorkspaceShared.T_WORKSPACE_SHARED)
+            .on(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME.eq(TWorkspace.T_WORKSPACE.name))
             .where(conditions)
     }
 
