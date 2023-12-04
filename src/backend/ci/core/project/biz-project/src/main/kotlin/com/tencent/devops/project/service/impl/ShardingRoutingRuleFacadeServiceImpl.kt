@@ -78,9 +78,14 @@ class ShardingRoutingRuleFacadeServiceImpl @Autowired constructor(
             )
             tableShardingConfig?.let {
                 // 查找该分片规则对应的数据源
+                val dbRuleType = if (ruleType == ShardingRuleTypeEnum.ARCHIVE_TABLE) {
+                    ShardingRuleTypeEnum.ARCHIVE_DB
+                } else {
+                    ShardingRuleTypeEnum.DB
+                }
                 val dbShardingRoutingRule = shardingRoutingRuleService.getShardingRoutingRuleByName(
                     moduleCode = moduleCode,
-                    ruleType = ruleType,
+                    ruleType = dbRuleType,
                     routingName = routingName
                 )
                 if (dbShardingRoutingRule != null) {

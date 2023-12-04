@@ -30,6 +30,7 @@ package com.tencent.devops.process.strategy.bus.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -63,7 +64,8 @@ class UserArchivedPipelinePermissionCheckStrategy : IUserPipelinePermissionCheck
             if (!pipelinePermissionService.checkPipelinePermission(
                     userId = userId,
                     projectId = projectId,
-                    permission = archivedPipelinePermission
+                    permission = archivedPipelinePermission,
+                    authResourceType = AuthResourceType.PROJECT
                 )
             ) {
                 throw PermissionForbiddenException(

@@ -43,7 +43,8 @@ class StreamLogPermissionService(
     override fun verifyUserLogPermission(
         projectCode: String,
         userId: String,
-        permission: AuthPermission?
+        permission: AuthPermission?,
+        authResourceType: AuthResourceType?
     ): Boolean {
         logger.info("StreamLogPermissionService user:$userId projectId: $projectCode ")
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
@@ -51,7 +52,7 @@ class StreamLogPermissionService(
             token = tokenCheckService.getSystemToken(),
             action = permission?.value ?: AuthPermission.VIEW.value,
             projectCode = projectCode,
-            resourceCode = AuthResourceType.PIPELINE_DEFAULT.value
+            resourceCode = authResourceType?.value ?: AuthResourceType.PIPELINE_DEFAULT.value
         ).data ?: false
     }
 
@@ -59,7 +60,8 @@ class StreamLogPermissionService(
         projectCode: String,
         pipelineId: String,
         userId: String,
-        permission: AuthPermission?
+        permission: AuthPermission?,
+        authResourceType: AuthResourceType?
     ): Boolean {
         val action = permission?.value ?: AuthPermission.VIEW.value
         logger.info("StreamLogPermissionService user:$userId projectId: $projectCode ")
@@ -68,7 +70,7 @@ class StreamLogPermissionService(
             token = tokenCheckService.getSystemToken(),
             action = action,
             projectCode = projectCode,
-            resourceCode = AuthResourceType.PIPELINE_DEFAULT.value
+            resourceCode = authResourceType?.value ?: AuthResourceType.PIPELINE_DEFAULT.value
         ).data ?: false
     }
 

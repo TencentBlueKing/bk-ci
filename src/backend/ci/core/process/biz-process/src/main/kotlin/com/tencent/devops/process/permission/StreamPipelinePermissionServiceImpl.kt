@@ -143,7 +143,7 @@ class StreamPipelinePermissionServiceImpl @Autowired constructor(
         group: BkAuthGroup?
     ): Boolean {
         return client.get(ServiceProjectAuthResource::class).isProjectUser(
-            token = checkTokenService.getSystemToken()!!,
+            token = checkTokenService.getSystemToken(),
             userId = userId,
             projectCode = projectId
         ).data ?: false
@@ -151,7 +151,7 @@ class StreamPipelinePermissionServiceImpl @Autowired constructor(
 
     override fun checkProjectManager(userId: String, projectId: String): Boolean {
         return client.get(ServiceProjectAuthResource::class).checkProjectManager(
-            token = checkTokenService.getSystemToken()!!,
+            token = checkTokenService.getSystemToken(),
             userId = userId,
             projectCode = projectId
         ).data ?: false
