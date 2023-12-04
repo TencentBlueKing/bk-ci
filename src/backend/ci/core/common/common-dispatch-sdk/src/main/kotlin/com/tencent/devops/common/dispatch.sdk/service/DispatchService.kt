@@ -118,27 +118,8 @@ class DispatchService constructor(
             id = secretInfo.hashId,
             secretKey = secretInfo.secretKey,
             gateway = gateway!!,
-            projectId = event.projectId,
-            pipelineId = event.pipelineId,
-            buildId = event.buildId,
-            dispatchMessage = event.dispatchType.value,
-            userId = event.userId,
-            vmSeqId = event.vmSeqId,
-            channelCode = event.channelCode,
-            vmNames = event.vmNames,
-            atoms = event.atoms,
-            containerHashId = event.containerHashId,
-            executeCount = event.executeCount,
-            containerId = event.containerId,
-            dispatchType = event.dispatchType,
             customBuildEnv = customBuildEnv,
-            dockerRoutingType = event.dockerRoutingType,
-            pipelineName = event.pipelineName,
-            buildNo = event.buildNo,
-            taskName = event.taskName,
-            os = event.os,
-            retryTime = event.retryTime,
-            queueTimeoutMinutes = event.queueTimeoutMinutes
+            event = event
         )
     }
 

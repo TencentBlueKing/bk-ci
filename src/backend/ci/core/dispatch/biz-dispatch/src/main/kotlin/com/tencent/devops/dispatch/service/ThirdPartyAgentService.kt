@@ -79,7 +79,7 @@ class ThirdPartyAgentService @Autowired constructor(
         retryCount: Int = 0,
         dockerInfo: ThirdPartyAgentDockerInfoDispatch?
     ) {
-        with(dispatchMessage) {
+        with(dispatchMessage.event) {
             try {
                 thirdPartyAgentBuildDao.add(
                     dslContext = dslContext,
