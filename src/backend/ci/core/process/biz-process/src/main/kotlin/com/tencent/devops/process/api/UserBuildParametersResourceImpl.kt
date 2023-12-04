@@ -28,14 +28,11 @@
 package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserBuildParametersResource
 import com.tencent.devops.process.pojo.BuildFormRepositoryValue
-import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
@@ -66,7 +63,7 @@ class UserBuildParametersResourceImpl @Autowired constructor(
         return Result(
             listOf(
                 BuildParameterGroup(
-                    name = MessageUtil.getMessageByLocale(PIPELINE_START_USER_NAME, I18nUtil.getLanguage(userId)),
+                    name = TriggerBuildParamUtils.getBasicParamName(userId),
                     params = TriggerBuildParamUtils.getBasicBuildParams(userId).map {
                         it.copy(name = paramToContext[it.name] ?: it.name)
                     }

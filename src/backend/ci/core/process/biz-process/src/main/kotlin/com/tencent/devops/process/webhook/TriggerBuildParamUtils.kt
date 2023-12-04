@@ -94,15 +94,22 @@ import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_REVIEW_TYPE
 import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_SHA
 import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_SHA_SHORT
 import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_TAG_FROM
+import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
+import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
-import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
+import com.tencent.devops.process.utils.PIPELINE_CREATE_USER
 import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
+import com.tencent.devops.process.utils.PIPELINE_START_MOBILE
+import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
-import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
-import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
+import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.process.utils.PIPELINE_UPDATE_USER
+import com.tencent.devops.process.utils.PIPELINE_VERSION
 import com.tencent.devops.process.utils.PROJECT_NAME
+import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 
 object TriggerBuildParamUtils {
     // map<atomCode, map<event_type, params>>
@@ -127,27 +134,27 @@ object TriggerBuildParamUtils {
         p4WebhookTrigger()
     }
 
+    fun getBasicParamName(userId: String) =
+        MessageUtil.getMessageByLocale("$TRIGGER_BUILD_PARAM_PREFIX.basic", I18nUtil.getLanguage(userId))
+
     fun getBasicBuildParams(userId: String): List<BuildEnvParameters> {
         return listOf(
             BuildEnvParameters(
-                name = PIPELINE_START_USER_NAME,
-                desc = MessageUtil.getMessageByLocale(PIPELINE_START_USER_NAME, I18nUtil.getLanguage(userId))
+                name = PIPELINE_BUILD_MSG,
+                desc = MessageUtil.getMessageByLocale(PIPELINE_BUILD_MSG, I18nUtil.getLanguage(userId))
             ),
+
             BuildEnvParameters(
-                name = PIPELINE_START_TYPE,
-                desc = MessageUtil.getMessageByLocale(
-                    PIPELINE_START_TYPE,
-                    I18nUtil.getLanguage(userId),
-                    arrayOf(StartType.values().joinToString("/") { it.name })
-                )
+                name = BUILD_NO,
+                desc = MessageUtil.getMessageByLocale(BUILD_NO, I18nUtil.getLanguage(userId))
             ),
             BuildEnvParameters(
                 name = PIPELINE_BUILD_NUM,
                 desc = MessageUtil.getMessageByLocale(PIPELINE_BUILD_NUM, I18nUtil.getLanguage(userId))
             ),
             BuildEnvParameters(
-                name = PROJECT_NAME,
-                desc = MessageUtil.getMessageByLocale(PROJECT_NAME, I18nUtil.getLanguage(userId))
+                name = PIPELINE_BUILD_ID,
+                desc = MessageUtil.getMessageByLocale(PIPELINE_BUILD_ID, I18nUtil.getLanguage(userId))
             ),
             BuildEnvParameters(
                 name = PIPELINE_ID,
@@ -158,16 +165,48 @@ object TriggerBuildParamUtils {
                 desc = MessageUtil.getMessageByLocale(PIPELINE_NAME, I18nUtil.getLanguage(userId))
             ),
             BuildEnvParameters(
-                name = PIPELINE_BUILD_ID,
-                desc = MessageUtil.getMessageByLocale(PIPELINE_BUILD_ID, I18nUtil.getLanguage(userId))
+                name = PIPELINE_CREATE_USER,
+                desc = MessageUtil.getMessageByLocale(PIPELINE_CREATE_USER, I18nUtil.getLanguage(userId))
             ),
             BuildEnvParameters(
-                name = PIPELINE_VMSEQ_ID,
-                desc = MessageUtil.getMessageByLocale(PIPELINE_VMSEQ_ID, I18nUtil.getLanguage(userId))
+                name = PIPELINE_UPDATE_USER,
+                desc = MessageUtil.getMessageByLocale(PIPELINE_UPDATE_USER, I18nUtil.getLanguage(userId))
             ),
             BuildEnvParameters(
-                name = PIPELINE_ELEMENT_ID,
-                desc = MessageUtil.getMessageByLocale(PIPELINE_ELEMENT_ID, I18nUtil.getLanguage(userId))
+                name = PIPELINE_VERSION,
+                desc = MessageUtil.getMessageByLocale(PIPELINE_VERSION, I18nUtil.getLanguage(userId))
+            ),
+            BuildEnvParameters(
+                name = PROJECT_NAME,
+                desc = MessageUtil.getMessageByLocale(PROJECT_NAME, I18nUtil.getLanguage(userId))
+            ),
+            BuildEnvParameters(
+                name = PROJECT_NAME_CHINESE,
+                desc = MessageUtil.getMessageByLocale(PROJECT_NAME_CHINESE, I18nUtil.getLanguage(userId))
+            ),
+            BuildEnvParameters(
+                name = PIPELINE_START_TYPE,
+                desc = MessageUtil.getMessageByLocale(
+                    PIPELINE_START_TYPE,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(StartType.values().joinToString("/") { it.name })
+                )
+            ),
+            BuildEnvParameters(
+                name = PIPELINE_START_CHANNEL,
+                desc = MessageUtil.getMessageByLocale(PIPELINE_START_CHANNEL, I18nUtil.getLanguage(userId))
+            ),
+            BuildEnvParameters(
+                name = PIPELINE_START_USER_ID,
+                desc = MessageUtil.getMessageByLocale(PIPELINE_START_USER_ID, I18nUtil.getLanguage(userId))
+            ),
+            BuildEnvParameters(
+                name = PIPELINE_START_TASK_ID,
+                desc = MessageUtil.getMessageByLocale(PIPELINE_START_TASK_ID, I18nUtil.getLanguage(userId))
+            ),
+            BuildEnvParameters(
+                name = PIPELINE_START_MOBILE,
+                desc = MessageUtil.getMessageByLocale(PIPELINE_START_MOBILE, I18nUtil.getLanguage(userId))
             )
         )
     }

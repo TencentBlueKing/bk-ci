@@ -192,6 +192,7 @@ object PipelineVarUtil {
      * CI预置上下文转换映射关系
      */
     private val contextVarMappingBuildVar = mapOf(
+        "ci.build_msg" to PIPELINE_BUILD_MSG,
         "ci.workspace" to WORKSPACE,
         "ci.pipeline_id" to PIPELINE_ID,
         "ci.pipeline_name" to PIPELINE_NAME,
