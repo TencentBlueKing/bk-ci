@@ -103,7 +103,10 @@ config = {
         useForceHeader = false,
         tags = {},
         codeccTags = {},
-        api_url = "https://127.0.0.1/api/v1/nodes",
+        api = {
+            url = "https://127.0.0.1/api/v1/nodes",
+            token = ""
+        },
         special_domain = {}
     }
 }

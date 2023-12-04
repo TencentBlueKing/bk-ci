@@ -130,7 +130,7 @@ function _M:getAllWhitelistIp()
                 httpc:set_timeout(3000)
                 local headers = { ["Authorization"] = "Bearer " .. kubernetes_api_token }
                 --- 发送请求
-                local res, err = httpc:request_uri(config.kubernetes.api_url,
+                local res, err = httpc:request_uri(config.kubernetes.api.url,
                     { method = "GET", headers = headers, ssl_verify = false })
                 local useHttp = true
                 if not res then --- 判断是否出错了
