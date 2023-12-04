@@ -62,6 +62,10 @@ func WriteFileWithCheck(name string, data []byte, perm os.FileMode) error {
 }
 
 func CheckOsIoError(path string, err error) {
+	if err == nil {
+		return
+	}
+
 	// 检查写入磁盘空间不足
 	if errors.Is(err, syscall.ENOSPC) {
 		AddExitError(ExitLeftDevice, fmt.Sprintf("WriteFile %s|%s", path, err.Error()))
@@ -90,6 +94,10 @@ const (
 
 // 避免不必要的错杀，信号错误最少连续持续 10 次以上才能杀掉
 func CheckSignalError(err error, typ ExitSignType) {
+	if err == nil {
+		return
+	}
+
 	// 检查是不是需要杀掉的信号
 	if err.Error() != "signal: killed" {
 		return
