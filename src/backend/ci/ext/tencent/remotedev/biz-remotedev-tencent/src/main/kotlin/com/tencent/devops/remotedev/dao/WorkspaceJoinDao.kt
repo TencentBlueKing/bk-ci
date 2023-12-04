@@ -283,83 +283,82 @@ class WorkspaceJoinDao {
 
         // owner 条件查询
         search.owner?.ifEmpty { null }?.let { owners ->
-            if (search.onFuzzyMatch) {
-                conditions.add(
-                    TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-                        .and(TWorkspace.T_WORKSPACE.CREATOR.likeRegex(owners.joinToString("|")))
-                )
-                conditions.add(
-                    TWorkspace.T_WORKSPACE.NAME.`in`(
-                        DSL.select(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME)
-                            .from(TWorkspaceShared.T_WORKSPACE_SHARED)
-                            .where(
-                                TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(
-                                    WorkspaceShared.AssignType.OWNER.name
-                                )
-                                    .and(
-                                        TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
-                                            .likeRegex(owners.joinToString("|"))
+            val sql = if (search.onFuzzyMatch) {
+                (
+                        TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
+                            .and(TWorkspace.T_WORKSPACE.CREATOR.likeRegex(owners.joinToString("|")))
+                        )
+                    .or(
+                        TWorkspace.T_WORKSPACE.NAME.`in`(
+                            DSL.select(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME)
+                                .from(TWorkspaceShared.T_WORKSPACE_SHARED)
+                                .where(
+                                    TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(
+                                        WorkspaceShared.AssignType.OWNER.name
                                     )
-                            )
+                                        .and(
+                                            TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
+                                                .likeRegex(owners.joinToString("|"))
+                                        )
+                                )
+                        )
                     )
-                )
             } else {
-                conditions.add(
-                    TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-                        .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(owners))
-                )
-                conditions.add(
-                    TWorkspace.T_WORKSPACE.NAME.`in`(
-                        DSL.select(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME)
-                            .from(TWorkspaceShared.T_WORKSPACE_SHARED)
-                            .where(
-                                TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
-                                    .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(owners))
-                            )
+                (
+                        TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
+                            .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(owners))
+                        ).or(
+                        TWorkspace.T_WORKSPACE.NAME.`in`(
+                            DSL.select(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME)
+                                .from(TWorkspaceShared.T_WORKSPACE_SHARED)
+                                .where(
+                                    TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
+                                        .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(owners))
+                                )
+                        )
                     )
-                )
             }
+            conditions.add(sql)
         }
 
         // viewers 条件查询
         search.viewers?.ifEmpty { null }?.let { viewers ->
-            if (search.onFuzzyMatch) {
-                conditions.add(
-                    TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-                        .and(TWorkspace.T_WORKSPACE.CREATOR.likeRegex(viewers.joinToString("|")))
-                )
-                conditions.add(
-                    TWorkspace.T_WORKSPACE.NAME.`in`(
-                        DSL.select(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME)
-                            .from(TWorkspaceShared.T_WORKSPACE_SHARED)
-                            .where(
-                                TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.likeRegex("VIEWER|OWNER")
-                                    .and(
-                                        TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
-                                            .likeRegex(viewers.joinToString("|"))
-                                    )
-                            )
+            val sql = if (search.onFuzzyMatch) {
+                (
+                        TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
+                            .and(TWorkspace.T_WORKSPACE.CREATOR.likeRegex(viewers.joinToString("|")))
+                        ).or(
+                        TWorkspace.T_WORKSPACE.NAME.`in`(
+                            DSL.select(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME)
+                                .from(TWorkspaceShared.T_WORKSPACE_SHARED)
+                                .where(
+                                    TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.likeRegex("VIEWER|OWNER")
+                                        .and(
+                                            TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
+                                                .likeRegex(viewers.joinToString("|"))
+                                        )
+                                )
+                        )
                     )
-                )
             } else {
-                conditions.add(
-                    TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-                        .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(viewers))
-                )
-                conditions.add(
-                    TWorkspace.T_WORKSPACE.NAME.`in`(
-                        DSL.select(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME)
-                            .from(TWorkspaceShared.T_WORKSPACE_SHARED)
-                            .where(
-                                TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.VIEWER.name)
-                                    .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(viewers))
-                            ).or(
-                                TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
-                                    .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(viewers))
-                            )
+                (
+                        TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
+                            .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(viewers))
+                        ).or(
+                        TWorkspace.T_WORKSPACE.NAME.`in`(
+                            DSL.select(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME)
+                                .from(TWorkspaceShared.T_WORKSPACE_SHARED)
+                                .where(
+                                    TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.VIEWER.name)
+                                        .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(viewers))
+                                ).or(
+                                    TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
+                                        .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(viewers))
+                                )
+                        )
                     )
-                )
             }
+            conditions.add(sql)
         }
 
         // machineType 条件查询
