@@ -21,6 +21,7 @@ import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminData
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
+import com.tencent.devops.remotedev.service.WorkspaceXlsxExportService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
@@ -34,7 +35,8 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     private val workspaceService: WorkspaceService,
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val desktopWorkspaceService: DesktopWorkspaceService,
-    private val gitProxyService: GitProxyService
+    private val gitProxyService: GitProxyService,
+    private val xlsxExportService: WorkspaceXlsxExportService
 ) : OpProjectWorkspaceResource {
     @AuditEntry(
         actionId = ActionId.CGS_ASSIGN,
@@ -110,6 +112,6 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun exportProjectWorkspaceList(userId: String, data: ProjectWorkspaceFetchData): Response {
-        return workspaceService.exportProjectWorkspaceList(data)
+        return xlsxExportService.exportProjectWorkspaceListOp(data)
     }
 }

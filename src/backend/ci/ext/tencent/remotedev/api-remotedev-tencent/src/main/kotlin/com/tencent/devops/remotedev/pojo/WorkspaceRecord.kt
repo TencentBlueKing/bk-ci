@@ -32,75 +32,105 @@ import io.swagger.annotations.ApiModelProperty
 import java.time.LocalDateTime
 
 interface WorkspaceRecordInf {
+    val workspaceId: Long
+    val projectId: String
     val workspaceName: String
     val workspaceSystemType: WorkspaceSystemType
     val createUserId: String
+    val displayName: String
+    val templateId: Int?
+    val repositoryUrl: String?
+    val branch: String?
+    val yaml: String?
+    val devFilePath: String?
+    val dockerFile: String
+    val imagePath: String
+    val workPath: String?
+    val workspaceFolder: String?
+    val hostName: String?
+    val gpu: Int
+    val cpu: Int
+    val memory: Int
+    val usageTime: Int
+    val sleepingTime: Int
+    val disk: Int
+    val creatorBgName: String
+    val creatorDeptName: String
+    val creatorCenterName: String
+    val creatorGroupName: String
+    val status: WorkspaceStatus
+    val createTime: LocalDateTime
+    val updateTime: LocalDateTime
+    val lastStatusUpdateTime: LocalDateTime?
+    val preciAgentId: String?
+    val workspaceMountType: WorkspaceMountType
+    val ownerType: WorkspaceOwnerType
 }
 
 @ApiModel("工作空间信息")
 data class WorkspaceRecord(
     @ApiModelProperty("工作空间ID<只读>")
-    val workspaceId: Long,
+    override val workspaceId: Long,
     @ApiModelProperty("项目ID")
-    val projectId: String,
+    override val projectId: String,
     @ApiModelProperty("工作空间名称")
     override val workspaceName: String,
     @ApiModelProperty("工作空间备注名称")
-    val displayName: String,
+    override val displayName: String,
     @ApiModelProperty("工作空间模板ID")
-    val templateId: Int?,
+    override val templateId: Int?,
     @ApiModelProperty("远程开发仓库地址")
-    val repositoryUrl: String?,
+    override val repositoryUrl: String?,
     @ApiModelProperty("仓库分支")
-    val branch: String?,
+    override val branch: String?,
     @ApiModelProperty("devfile 内容")
-    val yaml: String?,
+    override val yaml: String?,
     @ApiModelProperty("devfile配置路径")
-    val devFilePath: String?,
+    override val devFilePath: String?,
     @ApiModelProperty("依赖镜像的DockerFile内容")
-    val dockerFile: String,
+    override val dockerFile: String,
     @ApiModelProperty("镜像地址")
-    val imagePath: String,
+    override val imagePath: String,
     @ApiModelProperty("工作空间操作路径")
-    val workPath: String?,
+    override val workPath: String?,
     @ApiModelProperty("工作空间默认打开工程相对路径，默认根目录")
-    val workspaceFolder: String?,
+    override val workspaceFolder: String?,
     @ApiModelProperty("工作空间对应的IP")
-    val hostName: String?,
-    val gpu: Int,
-    val cpu: Int,
-    val memory: Int,
+    override val hostName: String?,
+    override val gpu: Int,
+    override val cpu: Int,
+    override val memory: Int,
     @ApiModelProperty("已使用时间,单位:s（容器结束时更新）")
-    val usageTime: Int,
+    override val usageTime: Int,
     @ApiModelProperty("休眠时间<只读>")
-    val sleepingTime: Int,
-    val disk: Int,
+    override val sleepingTime: Int,
+    override val disk: Int,
     @ApiModelProperty("工作空间创建人")
     override val createUserId: String,
     @ApiModelProperty("所在事业群，用作度量统计")
-    val creatorBgName: String,
+    override val creatorBgName: String,
     @ApiModelProperty("所在部门，用作度量统计")
-    val creatorDeptName: String,
+    override val creatorDeptName: String,
     @ApiModelProperty("所在中心，用作度量统计")
-    val creatorCenterName: String,
+    override val creatorCenterName: String,
     @ApiModelProperty("所在组，用作度量统计")
-    val creatorGroupName: String,
+    override val creatorGroupName: String,
     @ApiModelProperty("工作空间状态<只读>")
-    val status: WorkspaceStatus,
+    override val status: WorkspaceStatus,
     @ApiModelProperty("工作空间状态<只读>")
-    val createTime: LocalDateTime,
+    override val createTime: LocalDateTime,
     @ApiModelProperty("工作空间状态<只读>")
-    val updateTime: LocalDateTime,
+    override val updateTime: LocalDateTime,
     @ApiModelProperty("工作空间状态<只读>")
-    val lastStatusUpdateTime: LocalDateTime?,
+    override val lastStatusUpdateTime: LocalDateTime?,
     @ApiModelProperty("preci go-agent id")
-    val preciAgentId: String?,
+    override val preciAgentId: String?,
     @ApiModelProperty("挂载平台类型")
-    val workspaceMountType: WorkspaceMountType,
+    override val workspaceMountType: WorkspaceMountType,
     @ApiModelProperty("操作系统类型")
     override val workspaceSystemType: WorkspaceSystemType,
     @ApiModelProperty("工作空间归属")
-    val ownerType: WorkspaceOwnerType
+    override val ownerType: WorkspaceOwnerType
 ) : WorkspaceRecordInf
 
 /**
@@ -108,67 +138,67 @@ data class WorkspaceRecord(
  */
 data class WorkspaceRecordWithDetail(
     @ApiModelProperty("工作空间ID<只读>")
-    val workspaceId: Long,
+    override val workspaceId: Long,
     @ApiModelProperty("项目ID")
-    val projectId: String,
+    override val projectId: String,
     @ApiModelProperty("工作空间名称")
     override val workspaceName: String,
     @ApiModelProperty("工作空间备注名称")
-    val displayName: String,
+    override val displayName: String,
     @ApiModelProperty("工作空间模板ID")
-    val templateId: Int?,
+    override val templateId: Int?,
     @ApiModelProperty("远程开发仓库地址")
-    val repositoryUrl: String?,
+    override val repositoryUrl: String?,
     @ApiModelProperty("仓库分支")
-    val branch: String?,
+    override val branch: String?,
     @ApiModelProperty("devfile 内容")
-    val yaml: String?,
+    override val yaml: String?,
     @ApiModelProperty("devfile配置路径")
-    val devFilePath: String?,
+    override val devFilePath: String?,
     @ApiModelProperty("依赖镜像的DockerFile内容")
-    val dockerFile: String,
+    override val dockerFile: String,
     @ApiModelProperty("镜像地址")
-    val imagePath: String,
+    override val imagePath: String,
     @ApiModelProperty("工作空间操作路径")
-    val workPath: String?,
+    override val workPath: String?,
     @ApiModelProperty("工作空间默认打开工程相对路径，默认根目录")
-    val workspaceFolder: String?,
+    override val workspaceFolder: String?,
     @ApiModelProperty("工作空间对应的IP")
-    val hostName: String?,
-    val gpu: Int,
-    val cpu: Int,
-    val memory: Int,
+    override val hostName: String?,
+    override val gpu: Int,
+    override val cpu: Int,
+    override val memory: Int,
     @ApiModelProperty("已使用时间,单位:s（容器结束时更新）")
-    val usageTime: Int,
+    override val usageTime: Int,
     @ApiModelProperty("休眠时间<只读>")
-    val sleepingTime: Int,
-    val disk: Int,
+    override val sleepingTime: Int,
+    override val disk: Int,
     @ApiModelProperty("工作空间创建人")
     override val createUserId: String,
     @ApiModelProperty("所在事业群，用作度量统计")
-    val creatorBgName: String,
+    override val creatorBgName: String,
     @ApiModelProperty("所在部门，用作度量统计")
-    val creatorDeptName: String,
+    override val creatorDeptName: String,
     @ApiModelProperty("所在中心，用作度量统计")
-    val creatorCenterName: String,
+    override val creatorCenterName: String,
     @ApiModelProperty("所在组，用作度量统计")
-    val creatorGroupName: String,
+    override val creatorGroupName: String,
     @ApiModelProperty("工作空间状态<只读>")
-    val status: WorkspaceStatus,
+    override val status: WorkspaceStatus,
     @ApiModelProperty("工作空间状态<只读>")
-    val createTime: LocalDateTime,
+    override val createTime: LocalDateTime,
     @ApiModelProperty("工作空间状态<只读>")
-    val updateTime: LocalDateTime,
+    override val updateTime: LocalDateTime,
     @ApiModelProperty("工作空间状态<只读>")
-    val lastStatusUpdateTime: LocalDateTime?,
+    override val lastStatusUpdateTime: LocalDateTime?,
     @ApiModelProperty("preci go-agent id")
-    val preciAgentId: String?,
+    override val preciAgentId: String?,
     @ApiModelProperty("挂载平台类型")
-    val workspaceMountType: WorkspaceMountType,
+    override val workspaceMountType: WorkspaceMountType,
     @ApiModelProperty("操作系统类型")
     override val workspaceSystemType: WorkspaceSystemType,
     @ApiModelProperty("工作空间归属")
-    val ownerType: WorkspaceOwnerType,
+    override val ownerType: WorkspaceOwnerType,
     @ApiModelProperty(" 工作空间详情")
     val workSpaceDetail: String
 ) : WorkspaceRecordInf
