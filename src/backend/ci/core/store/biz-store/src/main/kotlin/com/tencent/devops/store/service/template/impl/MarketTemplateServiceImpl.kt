@@ -738,7 +738,18 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 projectTemplateMap.putAll(it)
             }
         }
-
+        val templateProjectInfos = client.get(ServicePTemplateResource::class)
+            .getTemplateIdBySrcCode(
+                srcTemplateId = installTemplateReq.templateCode,
+                projectIds = installTemplateReq.projectCodeList
+            ).data ?: emptyList()
+        val installProjectTemplateDTO = templateProjectInfos.map {
+            InstallProjectTemplateDTO(
+                projectId = it.projectId,
+                templateId = it.templateId,
+                version = it.version
+            )
+        }
         projectCodeList.removeAll(addMarketTemplateResultKeys)
         // 更新生成的模板的红线规则
         copyQualityRule(
@@ -767,18 +778,6 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 ),
                 data = false,
                 language = I18nUtil.getLanguage(userId)
-            )
-        }
-        val templateProjectInfos = client.get(ServicePTemplateResource::class)
-            .getTemplateIdBySrcCode(
-                srcTemplateId = installTemplateReq.templateCode,
-                projectIds = installTemplateReq.projectCodeList
-            ).data ?: emptyList()
-        val installProjectTemplateDTO = templateProjectInfos.map {
-            InstallProjectTemplateDTO(
-                projectId = it.projectId,
-                templateId = it.templateId,
-                version = it.version
             )
         }
         return Result(
