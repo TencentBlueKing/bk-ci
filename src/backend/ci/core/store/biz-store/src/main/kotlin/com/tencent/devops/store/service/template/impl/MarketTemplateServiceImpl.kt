@@ -769,17 +769,16 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        val installProjectTemplateDTO = mutableListOf<InstallProjectTemplateDTO>()
-        projectTemplateMap.forEach { (projectId, projectTemplateCode) ->
-            val templateDetailInfo = client.get(ServicePTemplateResource::class).getTemplateDetailInfo(
-                templateCode = projectTemplateCode
-            ).data ?: return@forEach
-            installProjectTemplateDTO.add(
-                InstallProjectTemplateDTO(
-                    projectId = projectId,
-                    templateId = templateDetailInfo.templateCode,
-                    version = templateDetailInfo.templateVersion
-                )
+        val templateProjectInfos = client.get(ServicePTemplateResource::class)
+            .getTemplateIdBySrcCode(
+                srcTemplateId = installTemplateReq.templateCode,
+                projectIds = installTemplateReq.projectCodeList
+            ).data ?: emptyList()
+        val installProjectTemplateDTO = templateProjectInfos.map {
+            InstallProjectTemplateDTO(
+                projectId = it.projectId,
+                templateId = it.templateId,
+                version = it.version
             )
         }
         return Result(
