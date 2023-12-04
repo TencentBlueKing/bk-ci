@@ -30,6 +30,7 @@ package com.tencent.devops.store.api.template
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
 import com.tencent.devops.store.pojo.template.InstallTemplateReq
 import com.tencent.devops.store.pojo.template.MarketTemplateMain
@@ -159,6 +160,17 @@ interface UserTemplateResource {
         @ApiParam("安装模板到项目请求报文体", required = true)
         installTemplateReq: InstallTemplateReq
     ): Result<Boolean>
+
+    @ApiOperation("安装模板到项目--返回流水线模板Id")
+    @POST
+    @Path("/template/install/new")
+    fun installTemplateNew(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("安装模板到项目请求报文体", required = true)
+        installTemplateReq: InstallTemplateReq
+    ): Result<List<PipelineTemplateInfo>>
 
     @ApiOperation("根据模板标识获取已安装的项目列表")
     @GET

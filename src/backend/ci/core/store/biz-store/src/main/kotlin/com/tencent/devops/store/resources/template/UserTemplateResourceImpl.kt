@@ -29,8 +29,12 @@ package com.tencent.devops.store.resources.template
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.api.template.ServicePTemplateResource
+import com.tencent.devops.process.pojo.PipelineTemplateInfo
+import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.api.template.UserTemplateResource
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -48,7 +52,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserTemplateResourceImpl @Autowired constructor(
     private val marketTemplateService: MarketTemplateService,
-    private val storeProjectService: StoreProjectService
+    private val storeProjectService: StoreProjectService,
+    private val client: Client
 ) : UserTemplateResource {
 
     override fun getInstalledProjects(
@@ -72,6 +77,24 @@ class UserTemplateResourceImpl @Autowired constructor(
         installTemplateReq: InstallTemplateReq
     ): Result<Boolean> {
         return marketTemplateService.installTemplate(userId, ChannelCode.BS, installTemplateReq)
+    }
+
+    override fun installTemplateNew(
+        userId: String,
+        installTemplateReq: InstallTemplateReq
+    ): Result<List<PipelineTemplateInfo>> {
+        val install = client.get(ServiceTemplateResource::class)
+            .installTemplate(userId, installTemplateReq).data ?: false
+        return if (install) {
+            val templateProjectInfos = client.get(ServicePTemplateResource::class)
+                .getTemplateIdBySrcCode(installTemplateReq.templateCode, installTemplateReq.projectCodeList).data
+            if (templateProjectInfos.isNullOrEmpty()) {
+                return Result(emptyList())
+            }
+            Result(templateProjectInfos)
+        } else {
+            Result(emptyList())
+        }
     }
 
     override fun mainPageList(userId: String, page: Int?, pageSize: Int?): Result<List<MarketTemplateMain>> {

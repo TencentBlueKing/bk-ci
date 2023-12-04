@@ -32,5 +32,6 @@ data class PipelineTemplateInfo(
     val templateId: String,
     val templateName: String,
     val versionName: String,
+    val version: Long,
     val srcTemplateId: String
 )

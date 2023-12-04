@@ -2540,6 +2540,7 @@ class TemplateFacadeService @Autowired constructor(
                     templateId = it.id,
                     templateName = it.templateName,
                     versionName = it.versionName,
+                    version = it.version,
                     srcTemplateId = it.srcTemplateId
                 )
             )

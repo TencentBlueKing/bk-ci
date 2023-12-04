@@ -32,6 +32,7 @@ dependencies {
     api(project(":core:common:common-pipeline"))
     api(project(":core:environment:api-environment"))
     api(project(":core:repository:api-repository"))
+    api(project(":core:process:api-process"))
     api(project(":core:log:api-log"))
 }
 
