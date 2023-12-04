@@ -224,9 +224,9 @@ class RbacPermissionMigrateService constructor(
                         projectCode = it.englishName,
                         projectName = it.projectName,
                         gradeManagerId = gradeManagerId,
-                        async = true,
                         registerMonitorPermission = isRegisterMonitorPermission,
-                        migrateProjectDefaultGroup = migrateResourceDTO.migrateProjectDefaultGroup!!
+                        migrateManagerGroup = true,
+                        migrateOtherGroup = migrateResourceDTO.migrateProjectDefaultGroup!!
                     )
                 }
                 if (isMigrateOtherResource) {
@@ -277,7 +277,8 @@ class RbacPermissionMigrateService constructor(
 
     override fun migrateMonitorResource(
         projectCodes: List<String>,
-        async: Boolean
+        asyncMigrateManagerGroup: Boolean,
+        asyncMigrateOtherGroup: Boolean
     ): Boolean {
         val traceId = MDC.get(TraceTag.BIZID)
         client.get(ServiceProjectResource::class).listByProjectCode(
@@ -294,10 +295,17 @@ class RbacPermissionMigrateService constructor(
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = it.englishName
             )
-            if (!async) {
+            if (!asyncMigrateManagerGroup) {
                 permissionGradeManagerService.modifyGradeManager(
                     gradeManagerId = projectInfo.relationId,
                     projectCode = it.englishName,
+                    projectName = projectInfo.resourceName,
+                    registerMonitorPermission = true
+                )
+            }
+            if (!asyncMigrateOtherGroup) {
+                migrateResourceService.migrateProjectOtherGroup(
+                    projectCode = projectInfo.projectCode,
                     projectName = projectInfo.resourceName,
                     registerMonitorPermission = true
                 )
@@ -308,8 +316,9 @@ class RbacPermissionMigrateService constructor(
                     projectCode = it.englishName,
                     projectName = projectInfo.resourceName,
                     gradeManagerId = projectInfo.relationId,
-                    async = async,
-                    registerMonitorPermission = true
+                    registerMonitorPermission = true,
+                    migrateManagerGroup = asyncMigrateManagerGroup,
+                    migrateOtherGroup = asyncMigrateOtherGroup
                 )
             }
         }

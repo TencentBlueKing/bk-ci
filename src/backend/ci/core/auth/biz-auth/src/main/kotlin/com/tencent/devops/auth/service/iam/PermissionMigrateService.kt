@@ -87,6 +87,7 @@ interface PermissionMigrateService {
      */
     fun migrateMonitorResource(
         projectCodes: List<String>,
-        async: Boolean = true
+        asyncMigrateManagerGroup: Boolean = true,
+        asyncMigrateOtherGroup: Boolean = true
     ): Boolean
 }

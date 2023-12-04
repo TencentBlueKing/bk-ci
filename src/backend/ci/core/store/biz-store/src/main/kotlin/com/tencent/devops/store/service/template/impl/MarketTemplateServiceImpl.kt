@@ -741,7 +741,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         val templateProjectInfos = client.get(ServicePTemplateResource::class)
             .getTemplateIdBySrcCode(
                 srcTemplateId = installTemplateReq.templateCode,
-                projectIds = installTemplateReq.projectCodeList
+                projectIds = projectCodeList
             ).data ?: emptyList()
         val installProjectTemplateDTO = templateProjectInfos.map {
             InstallProjectTemplateDTO(

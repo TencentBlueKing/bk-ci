@@ -287,12 +287,12 @@ class MigrateResourceService @Autowired constructor(
         projectCode: String,
         projectName: String,
         gradeManagerId: String,
-        async: Boolean,
         registerMonitorPermission: Boolean,
-        migrateProjectDefaultGroup: Boolean = true
+        migrateManagerGroup: Boolean,
+        migrateOtherGroup: Boolean = true
     ) {
         logger.info("migrate project resources:$projectCode|$projectName|$gradeManagerId")
-        if (async) {
+        if (migrateManagerGroup) {
             permissionGradeManagerService.modifyGradeManager(
                 gradeManagerId = gradeManagerId,
                 projectCode = projectCode,
@@ -300,33 +300,45 @@ class MigrateResourceService @Autowired constructor(
                 registerMonitorPermission = registerMonitorPermission
             )
         }
-        if (migrateProjectDefaultGroup) {
-            val defaultGroupConfigs = authResourceGroupConfigDao.get(
-                dslContext = dslContext,
-                resourceType = AuthResourceType.PROJECT.value,
-                createMode = false
+        if (migrateOtherGroup) {
+            migrateProjectOtherGroup(
+                projectCode = projectCode,
+                projectName = projectName,
+                registerMonitorPermission = registerMonitorPermission
             )
-            defaultGroupConfigs.forEach { groupConfig ->
-                val resourceGroupInfo = authResourceGroupDao.get(
-                    dslContext = dslContext,
-                    projectCode = projectCode,
-                    resourceType = AuthResourceType.PROJECT.value,
-                    resourceCode = projectCode,
-                    groupCode = groupConfig.groupCode
-                ) ?: return@forEach
-                // 项目下用户组注册监控权限资源
-                permissionGroupPoliciesService.grantGroupPermission(
-                    authorizationScopesStr = groupConfig.authorizationScopes,
-                    projectCode = projectCode,
-                    projectName = projectName,
-                    resourceType = groupConfig.resourceType,
-                    groupCode = groupConfig.groupCode,
-                    iamResourceCode = projectCode,
-                    resourceName = projectName,
-                    iamGroupId = resourceGroupInfo.relationId.toInt(),
-                    registerMonitorPermission = registerMonitorPermission
-                )
-            }
+        }
+    }
+
+    fun migrateProjectOtherGroup(
+        projectCode: String,
+        projectName: String,
+        registerMonitorPermission: Boolean
+    ) {
+        val defaultGroupConfigs = authResourceGroupConfigDao.get(
+            dslContext = dslContext,
+            resourceType = AuthResourceType.PROJECT.value,
+            createMode = false
+        )
+        defaultGroupConfigs.forEach { groupConfig ->
+            val resourceGroupInfo = authResourceGroupDao.get(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
+                groupCode = groupConfig.groupCode
+            ) ?: return@forEach
+            // 项目下用户组注册监控权限资源
+            permissionGroupPoliciesService.grantGroupPermission(
+                authorizationScopesStr = groupConfig.authorizationScopes,
+                projectCode = projectCode,
+                projectName = projectName,
+                resourceType = groupConfig.resourceType,
+                groupCode = groupConfig.groupCode,
+                iamResourceCode = projectCode,
+                resourceName = projectName,
+                iamGroupId = resourceGroupInfo.relationId.toInt(),
+                registerMonitorPermission = registerMonitorPermission
+            )
         }
     }
 

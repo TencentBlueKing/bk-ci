@@ -70,7 +70,11 @@ class SamplePermissionMigrateService : PermissionMigrateService {
         return true
     }
 
-    override fun migrateMonitorResource(projectCodes: List<String>, async: Boolean): Boolean {
+    override fun migrateMonitorResource(
+        projectCodes: List<String>,
+        asyncMigrateManagerGroup: Boolean,
+        asyncMigrateOtherGroup: Boolean
+    ): Boolean {
         return true
     }
 }
