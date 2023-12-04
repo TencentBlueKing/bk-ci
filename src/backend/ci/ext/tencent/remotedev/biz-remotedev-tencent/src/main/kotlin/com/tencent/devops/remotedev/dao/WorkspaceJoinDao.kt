@@ -379,7 +379,7 @@ class WorkspaceJoinDao {
         return dslContext.select(fields)
             .from(tables)
             .leftJoin(TWorkspaceShared.T_WORKSPACE_SHARED)
-            .on(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME.eq(TWorkspace.T_WORKSPACE.name))
+            .on(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME.eq(TWorkspace.T_WORKSPACE.NAME))
             .where(conditions)
     }
 
