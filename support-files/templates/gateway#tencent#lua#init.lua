@@ -107,7 +107,10 @@ config = {
         tags = { "rbac", "gray", "prod-v3", "stream-gray", "stream", "rbac-gray", "prod", "devx", "auto" },
         codeccTags = { "gray" },
         codecc = { domain = "__CODECC_KUBERNETES_DOMAIN__" },
-        api_url = "__BK_CI_KUBERNETES_API_URL__",
+        api = {
+            url = "__BK_CI_KUBERNETES_API_URL__",
+            token = "__BK_CI_KUBERNETES_API_TOKEN__"
+        },
         special_domain = {}
     },
     openHttps = "__BKCI_OPEN_HTTPS__",
