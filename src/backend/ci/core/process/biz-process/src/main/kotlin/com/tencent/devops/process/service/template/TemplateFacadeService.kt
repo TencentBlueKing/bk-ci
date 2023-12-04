@@ -515,10 +515,6 @@ class TemplateFacadeService @Autowired constructor(
                 templateId = templateId,
                 version = version
             )
-            pipelineTemplatePermissionService.deleteResource(
-                projectId = projectId,
-                templateId = templateId
-            )
             templateDao.delete(dslContext, projectId, templateId, setOf(version)) == 1
         }
     }
@@ -568,10 +564,6 @@ class TemplateFacadeService @Autowired constructor(
                 projectId = projectId,
                 templateId = templateId,
                 versionName = versionName
-            )
-            pipelineTemplatePermissionService.deleteResource(
-                projectId = projectId,
-                templateId = templateId
             )
         }
         return true
@@ -778,9 +770,7 @@ class TemplateFacadeService @Autowired constructor(
             projectId = projectId,
             permission = AuthPermission.CREATE
         )
-        val enableTemplatePermissionManage = pipelineTemplatePermissionService.enableTemplatePermissionManage(
-            projectId = projectId
-        )
+        val enableTemplatePermissionManage = enableTemplatePermissionManage(projectId = projectId)
         return TemplateListModel(
             projectId = projectId,
             hasPermission = hasManagerPermission,
@@ -804,7 +794,7 @@ class TemplateFacadeService @Autowired constructor(
     ): TemplateWithPermission {
         val offset = if (null != page && null != pageSize) (page - 1) * pageSize else null
         // 若不开启模板权限或者不检查列表权限的，直接返回列表数据。
-        return if (!checkPermission || !pipelineTemplatePermissionService.enableTemplatePermissionManage(projectId!!)) {
+        return if (!checkPermission || !enableTemplatePermissionManage(projectId!!)) {
             logger.info("get templates without permission :$projectId|$userId|$checkPermission")
             getTemplateListAndCountWithoutPermission(
                 projectId = projectId,
@@ -2062,7 +2052,7 @@ class TemplateFacadeService @Autowired constructor(
         templateId: String
     ): Boolean {
         // 用户界面，对于未开启模板权限的项目，不校验查看权限。
-        if (!pipelineTemplatePermissionService.enableTemplatePermissionManage(projectId)) {
+        if (!enableTemplatePermissionManage(projectId)) {
             return true
         }
         return pipelineTemplatePermissionService.checkPipelineTemplatePermission(
