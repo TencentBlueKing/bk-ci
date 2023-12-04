@@ -262,19 +262,6 @@ class PipelineRepositoryService constructor(
                 description = description,
                 baseVersion = baseVersion
             )
-            operationLogService.addOperationLog(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                version = result.version,
-                operationLogType = if (versionStatus != VersionStatus.RELEASED) {
-                    OperationLogType.UPDATE_DRAFT_VERSION
-                } else {
-                    OperationLogType.NORMAL_SAVE_OPERATION
-                },
-                params = result.versionName ?: "init",
-                description = null
-            )
             result
         } else {
             val result = create(
@@ -1028,7 +1015,7 @@ class PipelineRepositoryService constructor(
             pipelineId = pipelineId,
             version = version,
             operationLogType = operationLogType,
-            params = versionName ?: "init",
+            params = operationLogParams,
             description = null
         )
         return DeployPipelineResult(

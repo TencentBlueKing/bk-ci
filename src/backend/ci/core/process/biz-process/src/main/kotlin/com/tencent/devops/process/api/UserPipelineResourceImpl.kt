@@ -341,6 +341,10 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun lockPipeline(userId: String, projectId: String, pipelineId: String, enable: Boolean): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
     @AuditEntry(actionId = ActionId.PIPELINE_EDIT)
     override fun rename(userId: String, projectId: String, pipelineId: String, name: PipelineName): Result<Boolean> {
         checkParam(userId, projectId)
