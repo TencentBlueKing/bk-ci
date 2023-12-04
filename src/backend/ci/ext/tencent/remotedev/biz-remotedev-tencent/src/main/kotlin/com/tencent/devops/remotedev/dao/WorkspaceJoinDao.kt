@@ -344,7 +344,20 @@ class WorkspaceJoinDao {
 
         // machineType 条件查询
         search.size?.ifEmpty { null }?.let { type ->
-            conditions.add(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE.`in`(type))
+            if (search.onFuzzyMatch) {
+                conditions.add(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE.likeRegex(type.joinToString("|")))
+            } else {
+                conditions.add(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE.`in`(type))
+            }
+        }
+
+        // mac地址 条件查询
+        search.macAddress?.ifEmpty { null }?.let { mac ->
+            if (search.onFuzzyMatch) {
+                conditions.add(TWorkspaceWindows.T_WORKSPACE_WINDOWS.MAC_ADDRESS.likeRegex(mac.joinToString("|")))
+            } else {
+                conditions.add(TWorkspaceWindows.T_WORKSPACE_WINDOWS.MAC_ADDRESS.`in`(mac))
+            }
         }
 
         // expertSup
@@ -392,10 +405,13 @@ class WorkspaceJoinDao {
             this.leftJoin(TWorkspaceDetail.T_WORKSPACE_DETAIL)
                 .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceDetail.T_WORKSPACE_DETAIL.WORKSPACE_NAME))
         }
-        if (!search.size.isNullOrEmpty()) {
+        if (!search.macAddress.isNullOrEmpty() || !search.size.isNullOrEmpty()) {
             this.leftJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS).on(
                 TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME)
             )
+        }
+
+        if (!search.size.isNullOrEmpty()) {
             this.leftJoin(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE).on(
                 TWorkspaceWindows.T_WORKSPACE_WINDOWS.WIN_CONFIG_ID.eq(
                     TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.ID.cast(Int::class.java)
