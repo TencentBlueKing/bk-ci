@@ -47,6 +47,20 @@ class GitUtilsTest {
     }
 
     @Test
+    fun getSpecialDomainAndRepoName(){
+        val baseRepoName = "fabio-he/test_github"
+        var domainAndRepoName = GitUtils.getDomainAndRepoName("https://github.com/fabio-he/test_github.git")
+        assertEquals(domain, domainAndRepoName.first)
+        assertEquals(baseRepoName, domainAndRepoName.second)
+        domainAndRepoName = GitUtils.getDomainAndRepoName("https://github.com/fabio-he/test_github")
+        assertEquals(domain, domainAndRepoName.first)
+        assertEquals(baseRepoName, domainAndRepoName.second)
+        domainAndRepoName = GitUtils.getDomainAndRepoName("git@github.com:fabio-he/test_github.git")
+        assertEquals(domain, domainAndRepoName.first)
+        assertEquals(baseRepoName, domainAndRepoName.second)
+    }
+
+    @Test
     fun getGitApiUrl() {
         var apiUrl = "http://aaa.com/api/v3"
         var repoApiUrl = "http://github.com/api/v3"
