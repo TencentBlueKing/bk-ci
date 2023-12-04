@@ -26,6 +26,7 @@ import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.RecordMapper
 import org.jooq.SelectConditionStep
+import org.jooq.SelectJoinStep
 import org.jooq.impl.TableImpl
 import org.springframework.stereotype.Repository
 
@@ -362,10 +363,10 @@ class WorkspaceJoinDao {
         }
 
         // 添加连表查询条件以及获得连表
-        val tables = joinTablesAndItems(
-            conditions = conditions,
-            search = search
-        )
+//        val tables = joinTablesAndItems(
+//            conditions = conditions,
+//            search = search
+//        )
 
         val fields = TWorkspace.T_WORKSPACE.fields().toMutableList()
 //        if (!ips.isNullOrEmpty() || zoneId != null) {
@@ -377,10 +378,36 @@ class WorkspaceJoinDao {
         }
 
         return dslContext.select(fields)
-            .from(tables)
-            .leftJoin(TWorkspaceShared.T_WORKSPACE_SHARED)
-            .on(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME.eq(TWorkspace.T_WORKSPACE.NAME))
+            .from(TWorkspace.T_WORKSPACE)
+            .joinTable(search)
             .where(conditions)
+    }
+
+    private fun SelectJoinStep<*>.joinTable(search: WorkspaceSearch): SelectJoinStep<*> {
+        if (!search.owner.isNullOrEmpty() || !search.viewers.isNullOrEmpty()) {
+            this.leftJoin(TWorkspaceShared.T_WORKSPACE_SHARED)
+                .on(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME.eq(TWorkspace.T_WORKSPACE.NAME))
+        }
+        if (!search.ips.isNullOrEmpty() || !search.zoneShortName.isNullOrEmpty()) {
+            this.leftJoin(TWorkspaceDetail.T_WORKSPACE_DETAIL)
+                .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceDetail.T_WORKSPACE_DETAIL.WORKSPACE_NAME))
+        }
+        if (!search.size.isNullOrEmpty()) {
+            this.leftJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS).on(
+                TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME)
+            )
+            this.leftJoin(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE).on(
+                TWorkspaceWindows.T_WORKSPACE_WINDOWS.WIN_CONFIG_ID.eq(
+                    TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.ID.cast(Int::class.java)
+                )
+            )
+        }
+        if (!search.expertSupId.isNullOrEmpty()) {
+            this.leftJoin(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT).on(
+                TWorkspace.T_WORKSPACE.NAME.eq(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT.WORKSPACE_NAME)
+            )
+        }
+        return this
     }
 
     private fun joinTablesAndItems(
