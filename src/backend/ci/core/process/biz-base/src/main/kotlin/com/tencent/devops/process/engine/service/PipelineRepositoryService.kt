@@ -792,83 +792,13 @@ class PipelineRepositoryService constructor(
         val watcher = Watcher(id = "updatePipeline#$pipelineId#$versionStatus")
         var versionName: String? = null
         var realBaseVersion = baseVersion
+        var operationLogType = OperationLogType.NORMAL_SAVE_OPERATION
+        var operationLogParams = versionName ?: "init"
+
         try {
             lock.lock()
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
-                watcher.start("updatePipelineInfo")
-                // 旧逻辑 bak —— 写入INFO表后进行了version的自动+1
-                // 新逻辑 #8161
-                when (versionStatus) {
-                    // 1 草稿版本保存 —— 寻找当前草稿，存在则同版本更新，不存在则新建
-                    VersionStatus.COMMITTING -> {
-                        val draftVersion = pipelineResourceVersionDao.getDraftVersionResource(
-                            dslContext = transactionContext,
-                            projectId = projectId,
-                            pipelineId = pipelineId
-                        )
-                        version = if (draftVersion == null) {
-                            val latestVersion = pipelineResourceVersionDao.getVersionResource(
-                                dslContext = transactionContext,
-                                projectId = projectId,
-                                pipelineId = pipelineId,
-                                version = null
-                            )
-                            (latestVersion?.version ?: 0) + 1
-                        } else {
-                            draftVersion.version
-                        }
-                    }
-                    // 2 分支版本保存 —— 取当前流水线的最新VERSION+1，不关心其他草稿和正式版本
-                    VersionStatus.BRANCH -> {
-                        val latestVersion = pipelineResourceVersionDao.getVersionResource(
-                            dslContext = transactionContext,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            version = null
-                        )
-                        version = (latestVersion?.version ?: 0) + 1
-                    }
-                    // 3 正式版本保存 —— 寻找当前草稿，存在草稿版本则报错，不存在则直接去最新VERSION+1，同时更新INFO、RESOURCE表
-                    else -> {
-                        val draftVersion = pipelineResourceVersionDao.getDraftVersionResource(
-                            dslContext = transactionContext,
-                            projectId = projectId,
-                            pipelineId = pipelineId
-                        )
-                        version = if (draftVersion == null || baseVersion == null) {
-                            // 没有已有草稿或者旧接口保存时，直接增加正式版本，基准为上一个发布版本
-                            val latestVersion = pipelineResourceVersionDao.getVersionResource(
-                                dslContext = transactionContext,
-                                projectId = projectId,
-                                pipelineId = pipelineId,
-                                version = null
-                            )
-                            realBaseVersion = realBaseVersion ?: latestVersion?.version ?: 0
-                            (latestVersion?.version ?: 0) + 1
-                        } else {
-                            if (draftVersion.baseVersion != baseVersion) throw ErrorCodeException(
-                                errorCode = ProcessMessageCode.ERROR_PIPELINE_IS_NOT_THE_LATEST
-                            )
-                            draftVersion.version
-                        }
-                        pipelineInfoDao.update(
-                            dslContext = transactionContext,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            userId = if (updateLastModifyUser == false) null else userId,
-                            version = version,
-                            pipelineName = null,
-                            pipelineDesc = null,
-                            manualStartup = canManualStartup,
-                            canElementSkip = canElementSkip,
-                            taskCount = taskCount,
-                            latestVersion = model.latestVersion
-                        )
-                        model.latestVersion = version
-                    }
-                }
-
                 // 如果不是草稿保存，最新版本永远是新增逻辑
                 watcher.start("getOriginModel")
                 val latestResRecord = pipelineResourceDao.getLatestVersionRecord(
@@ -894,6 +824,89 @@ class PipelineRepositoryService constructor(
                 versionName = PipelineVersionUtils.getVersionName(
                     pipelineVersion, triggerVersion, settingVersion
                 )
+                watcher.start("updatePipelineInfo")
+                // 旧逻辑 bak —— 写入INFO表后进行了version的自动+1
+                // 新逻辑 #8161
+                when (versionStatus) {
+                    // 1 草稿版本保存 —— 寻找当前草稿，存在则同版本更新，不存在则新建
+                    VersionStatus.COMMITTING -> {
+                        val draftVersion = pipelineResourceVersionDao.getDraftVersionResource(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId
+                        )
+                        version = if (draftVersion == null) {
+                            val latestVersion = pipelineResourceVersionDao.getVersionResource(
+                                dslContext = transactionContext,
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                version = null
+                            )
+                            operationLogType = OperationLogType.CREATE_DRAFT_VERSION
+                            operationLogParams = latestVersion?.versionName ?: latestVersion?.version.toString()
+                            (latestVersion?.version ?: 0) + 1
+                        } else {
+                            operationLogType = OperationLogType.UPDATE_DRAFT_VERSION
+                            draftVersion.version
+                        }
+                    }
+                    // 2 分支版本保存 —— 取当前流水线的最新VERSION+1，不关心其他草稿和正式版本
+                    VersionStatus.BRANCH -> {
+                        val latestVersion = pipelineResourceVersionDao.getVersionResource(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            version = null
+                        )
+                        // TODO 增加维护分支版本历史版本状态（判断是否为更新）
+                        operationLogType = OperationLogType.CREATE_BRANCH_VERSION
+                        operationLogParams = latestVersion?.versionName ?: latestVersion?.version.toString()
+                        version = (latestVersion?.version ?: 0) + 1
+                    }
+                    // 3 正式版本保存 —— 寻找当前草稿，存在草稿版本则报错，不存在则直接取最新VERSION+1，同时更新INFO、RESOURCE表
+                    else -> {
+                        val draftVersion = pipelineResourceVersionDao.getDraftVersionResource(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId
+                        )
+                        operationLogType = OperationLogType.RELEASE_MASTER_VERSION
+                        version = if (draftVersion == null || baseVersion == null) {
+                            // 没有已有草稿或者旧接口保存时，直接增加正式版本，基准为上一个发布版本
+                            val latestVersion = pipelineResourceVersionDao.getVersionResource(
+                                dslContext = transactionContext,
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                version = null
+                            )
+                            versionName?.let { operationLogParams = it }
+                            realBaseVersion = realBaseVersion ?: latestVersion?.version ?: 0
+                            (latestVersion?.version ?: 0) + 1
+                        } else {
+                            if (draftVersion.baseVersion != baseVersion) throw ErrorCodeException(
+                                errorCode = ProcessMessageCode.ERROR_PIPELINE_IS_NOT_THE_LATEST
+                            )
+                            operationLogParams = draftVersion.versionName ?: draftVersion.version.toString()
+                            draftVersion.version
+                        }
+
+                        pipelineInfoDao.update(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            userId = if (updateLastModifyUser == false) null else userId,
+                            version = version,
+                            pipelineName = null,
+                            pipelineDesc = null,
+                            manualStartup = canManualStartup,
+                            canElementSkip = canElementSkip,
+                            taskCount = taskCount,
+                            latestVersion = model.latestVersion
+                        )
+                        model.latestVersion = version
+                    }
+                }
+
                 watcher.start("updatePipelineResource")
                 if (versionStatus == VersionStatus.RELEASED) {
                     pipelineResourceDao.deleteEarlyVersion(
@@ -1008,6 +1021,15 @@ class PipelineRepositoryService constructor(
                 model = JsonUtil.toJson(model, formatted = false),
                 channelCode = channelCode.name
             )
+        )
+        operationLogService.addOperationLog(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            operationLogType = operationLogType,
+            params = versionName ?: "init",
+            description = null
         )
         return DeployPipelineResult(
             pipelineId,
