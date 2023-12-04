@@ -51,10 +51,6 @@
                 type: Boolean,
                 default: true
             },
-            isSaving: {
-                type: Boolean,
-                default: false
-            },
             pipeline: {
                 type: Object,
                 required: true

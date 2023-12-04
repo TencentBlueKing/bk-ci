@@ -26,7 +26,9 @@
                 </bk-pipeline>
             </div>
         </div>
-        <div v-else class="empty-pipeline-stage" @click="handleAddStage({ stageIndex: 0, isParallel: false, isFinally: false })">
+        <div v-else :class="['empty-pipeline-stage', {
+            'empty-pipeline-stage-disabled': !pipelineEditable
+        }]" @click="handleAddStage({ stageIndex: 0, isParallel: false, isFinally: false })">
             <i class="bk-icon left-icon icon-devops-icon icon-plus"></i>
             <span>{{$t('点击添加第一个流水线Stage')}}</span>
         </div>
@@ -258,12 +260,14 @@
                 'toggleStageReviewPanel'
             ]),
             handleAddStage ({ stageIndex, isParallel, isFinally }) {
-                this.setInsertStageState({
-                    isStagePopupShow: true,
-                    isAddParallelStage: isParallel,
-                    insertStageIsFinally: isFinally,
-                    insertStageIndex: stageIndex
-                })
+                if (this.pipelineEditable) {
+                    this.setInsertStageState({
+                        isStagePopupShow: true,
+                        isAddParallelStage: isParallel,
+                        insertStageIsFinally: isFinally,
+                        insertStageIndex: stageIndex
+                    })
+                }
             },
             handleStageCheck ({ type, stageIndex }) {
                 this.toggleStageReviewPanel({
@@ -410,6 +414,12 @@
         i {
             font-size: 14px;
             margin-right: 8px;
+        }
+        &.empty-pipeline-stage-disabled {
+            cursor: not-allowed;
+            background: #F7F7F7;
+            border: 1px solid #E6E6E6;
+            color: #C3CDD7;
         }
     }
 

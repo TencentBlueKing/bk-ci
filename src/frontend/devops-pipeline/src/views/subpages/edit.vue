@@ -123,7 +123,6 @@
                             label: this.$t('pipeline'),
                             component: 'PipelineEditTab',
                             bindData: {
-                                isEditing: this.isEditing,
                                 pipeline: this.pipelineWithoutTrigger,
                                 isLoading: !this.pipelineWithoutTrigger
                             }
@@ -131,11 +130,12 @@
                         {
                             name: 'trigger',
                             label: this.$t('settings.trigger'),
-                            component: 'triggerTab',
+                            component: 'TriggerTab',
                             bindData: {
-                                isEditing: this.isEditing,
-                                pipeline: this.pipeline,
-                                isLoading: !this.pipeline
+                                editable:
+                                    !(this.pipeline?.instanceFromTemplate
+                                    && this.templateType !== 'CONSTRAINT'),
+                                pipeline: this.pipeline
                             }
                         },
                         {

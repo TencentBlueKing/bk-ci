@@ -1,5 +1,5 @@
 <template>
-    <pipeline v-if="!isLoading" :pipeline="pipeline" :is-editing="isEditing" :show-header="false"></pipeline>
+    <pipeline v-if="!isLoading" :pipeline="pipeline" :show-header="false"></pipeline>
 </template>
 
 <script>
@@ -12,7 +12,6 @@
             Pipeline
         },
         props: {
-            isEditing: Boolean,
             isLoading: Boolean,
             pipeline: Object
         },
@@ -57,6 +56,7 @@
             ...mapActions('common', [
                 'requestInterceptAtom'
             ]),
+
             getAtomIndex (stages, hash) { // 新增
                 let pos
                 const keyword = hash.substr(1)
