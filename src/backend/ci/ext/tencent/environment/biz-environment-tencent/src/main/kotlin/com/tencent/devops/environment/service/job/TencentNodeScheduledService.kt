@@ -40,7 +40,7 @@ class TencentNodeScheduledService @Autowired constructor(
      * 分组执行，每次遍历100条记录。
      * 将不在CC中的节点，添加到CC中，并返回host_id，将host_id写入表中，并将 云区域id 设为0
      */
-    @Scheduled(cron = "0 25 21 * * 1-5")
+    @Scheduled(cron = "0 43 21 * * 1-5")
     fun scheduledAddNodeToCC() {
         taskWithRedisLockTencent(SCHEDULED_ADD_NODE_TO_CC_TIMEOUT_LOCK_KEY, ::addNodeToCC)
     }
