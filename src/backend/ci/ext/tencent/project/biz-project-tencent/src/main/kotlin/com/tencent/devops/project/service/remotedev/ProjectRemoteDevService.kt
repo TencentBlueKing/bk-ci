@@ -221,7 +221,10 @@ class ProjectRemoteDevService @Autowired constructor(
 
     fun updateRemoteDevInfo(projectCode: String, addcloudDesktopNum: Int): Boolean {
         val record = projectDao.getByEnglishName(dslContext, projectCode) ?: return false
-        val prop = JsonUtil.to<ProjectProperties>(record.properties)
+        if (record.properties == null) {
+            return false
+        }
+        val prop = JsonUtil.to(record.properties, ProjectProperties::class.java)
         val newProp = prop.copy(cloudDesktopNum = prop.cloudDesktopNum + addcloudDesktopNum)
         return projectDao.updatePropertiesByCode(dslContext, projectCode, newProp) > 0
     }

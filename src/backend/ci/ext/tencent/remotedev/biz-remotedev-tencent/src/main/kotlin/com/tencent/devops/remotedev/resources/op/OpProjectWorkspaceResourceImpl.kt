@@ -58,11 +58,11 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         val cgsData = workspaceCommon.getCgsData(data.cgsIds, data.ips) ?: return Result(false)
         // 增加可以分配的配额
-        if (!data.ips.isNullOrEmpty()) {
+        if (!data.ips.isNullOrEmpty() || !data.cgsIds.isNullOrEmpty()) {
             client.get(ServiceTxProjectResource::class).updateRemotedev(
                 userId = userId,
                 projectCode = data.projectId,
-                addcloudDesktopNum = data.ips!!.size
+                addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0)
             )
         }
         cgsData.forEach { cgs ->
