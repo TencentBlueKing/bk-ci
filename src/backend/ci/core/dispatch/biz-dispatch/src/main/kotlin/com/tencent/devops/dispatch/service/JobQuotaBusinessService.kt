@@ -328,11 +328,11 @@ class JobQuotaBusinessService @Autowired constructor(
             projectDayJobConcurrencyKey
         )?.toLongOrNull()
 
-        if (maxConcurrency == null || maxConcurrency < runningJobCount) {
+        if (maxConcurrency == null || maxConcurrency < (runningJobCount + 1)) {
             getRedisStringSerializerOperation().hset(
                 dayJobConcurrencyKey,
                 projectDayJobConcurrencyKey,
-                runningJobCount.toString()
+                (runningJobCount + 1).toString()
             )
         }
 
