@@ -156,7 +156,8 @@ class GitOauthService @Autowired constructor(
         redirectUrlType: RedirectUrlTypeEnum?,
         redirectUrl: String?,
         gitProjectId: Long?,
-        refreshToken: Boolean?
+        refreshToken: Boolean?,
+        resetType: String?
     ): AuthorizeResult {
         logger.info("isOAuth userId is: $userId,redirectUrlType is: $redirectUrlType")
         if (redirectUrlType == RedirectUrlTypeEnum.SPEC) {
@@ -172,7 +173,8 @@ class GitOauthService @Autowired constructor(
             "userId" to userId,
             "redirectUrlType" to redirectUrlType?.type,
             "redirectUrl" to redirectUrl,
-            "randomStr" to "BK_DEVOPS__${RandomStringUtils.randomAlphanumeric(8)}"
+            "randomStr" to "BK_DEVOPS__${RandomStringUtils.randomAlphanumeric(8)}",
+            "resetType" to resetType
         )
         val accessToken = if (refreshToken == true) {
             null
@@ -180,6 +182,13 @@ class GitOauthService @Autowired constructor(
             getAccessToken(userId)
         } ?: return AuthorizeResult(403, getAuthUrl(authParams))
         logger.info("isOAuth accessToken is: $accessToken")
+        // 检查accessToken 是否可用
+        try {
+            gitService.getUserInfoByToken(accessToken.accessToken)
+        } catch (e: Exception) {
+            logger.info("get oauth project fail: ${e.message}")
+            return AuthorizeResult(403, getAuthUrl(authParams))
+        }
         return AuthorizeResult(200, "")
     }
 

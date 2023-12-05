@@ -17,7 +17,6 @@ bkCiIamCallbackUser: bk_iam
 bkCiAppCode: bk_ci
 bkCiNotifyWeworkSendChannel: weworkAgent
 bkCiInfluxdbDb: agentMetrix
-bkCiEnvironmentAgentCollectorOn: true
 bkCiDocsUrl: https://bk.tencent.com
 bkCiArtifactoryRealm: local
 bkRepoHost: repo.demo.com
@@ -50,3 +49,4 @@ bkCiSupportLanguages: zh_CN,en_US
 bkEsbEnabled: false
 bkCiSm4Key: s31^dDjd!3k
 bkCiSm4Enabled: false
+bkCiMonitorRegister: false

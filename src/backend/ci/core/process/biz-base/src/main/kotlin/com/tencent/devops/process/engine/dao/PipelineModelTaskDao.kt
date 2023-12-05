@@ -136,6 +136,32 @@ class PipelineModelTaskDao {
         }
     }
 
+    fun batchGetPipelineIdByAtomCode(
+        dslContext: DSLContext,
+        projectId: String?,
+        atomCodeList: List<String>,
+        limit: Int,
+        offset: Int
+    ): Result<Record2<String, String>>? {
+        with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
+            return dslContext.select(PROJECT_ID, PIPELINE_ID)
+                .from(this)
+                .where(ATOM_CODE.`in`(atomCodeList))
+                .let {
+                    if (projectId.isNullOrEmpty()) {
+                        it
+                    } else {
+                        it.and(PROJECT_ID.eq(projectId))
+                    }
+                }
+                .groupBy(PROJECT_ID, PIPELINE_ID)
+                .orderBy(PROJECT_ID, PIPELINE_ID)
+                .offset(offset)
+                .limit(limit)
+                .fetch()
+        }
+    }
+
     fun getModelTasks(
         dslContext: DSLContext,
         projectId: String,

@@ -60,7 +60,7 @@ class OpenStoreResourceImpl @Autowired constructor(
             return Result(true)
         }
         // 校验token是否合法
-        val validateTokenFlag = clientTokenService.checkToken(null, token)
+        val validateTokenFlag = clientTokenService.checkToken(token)
         if (!validateTokenFlag) {
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_INVALID,

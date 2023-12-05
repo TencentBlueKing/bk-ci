@@ -8,12 +8,11 @@ apply(plugin = "org.owasp.dependencycheck")
 
 allprojects {
     apply(plugin = "com.tencent.devops.boot")
-
     // 包路径
     group = "com.tencent.bk.devops.ci"
     // 版本
     version = (System.getProperty("ci_version") ?: "1.9.0") +
-            if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else ""
+        if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else ""
 
     // 加载boot的插件
     if (name.startsWith("boot-")) {
@@ -127,6 +126,7 @@ allprojects {
                 entry("org.eclipse.jgit.ssh.jsch")
             }
             dependency("com.tencent.bk.sdk:iam-java-sdk:${Versions.iam}")
+            dependency("com.tencent.bk.sdk:spring-boot-bk-audit-starter:${Versions.audit}")
             dependency("com.jakewharton:disklrucache:${Versions.disklrucache}")
         }
     }
