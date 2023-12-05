@@ -108,8 +108,7 @@ config = {
         codeccTags = { "gray" },
         codecc = { domain = "__CODECC_KUBERNETES_DOMAIN__" },
         api = {
-            host = "__BK_CI_KUBERNETES_API_HOST__",
-            port = __BK_CI_KUBERNETES_API_PORT__,
+            url = "__BK_CI_KUBERNETES_API_URL__",
             token = "__BK_CI_KUBERNETES_API_TOKEN__"
         },
         special_domain = {}

@@ -35,7 +35,9 @@ data class ListCgsRespDataBasic(
     val orderId: String?,
     val needLock: Boolean,
     val isCopying: Boolean?,
-    val imageStandard: Boolean?
+    val imageStandard: Boolean?,
+    val node: String?,
+    val image: String?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

@@ -27,6 +27,7 @@ import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminData
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
+import com.tencent.devops.remotedev.service.WorkspaceXlsxExportService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
@@ -44,6 +45,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val desktopWorkspaceService: DesktopWorkspaceService,
     private val gitProxyService: GitProxyService,
+    private val xlsxExportService: WorkspaceXlsxExportService,
     private val client: Client,
     private val redisOperation: RedisOperation
 ) : OpProjectWorkspaceResource {
@@ -95,7 +97,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                     count = 1
                 )
             )
-            Thread.sleep(1000)
+            Thread.sleep(500)
         }
 
         // 启动流水线完成剩下的分配工作
@@ -155,7 +157,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun exportProjectWorkspaceList(userId: String, data: ProjectWorkspaceFetchData): Response {
-        return workspaceService.exportProjectWorkspaceList(data)
+        return xlsxExportService.exportProjectWorkspaceListOp(data)
     }
 
     companion object {
