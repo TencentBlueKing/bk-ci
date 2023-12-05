@@ -69,7 +69,8 @@ data class WorkspaceSearch(
             viewers.isNullOrEmpty() &&
             viewersCN.isNullOrEmpty() &&
             size.isNullOrEmpty() &&
-            expertSupId.isNullOrEmpty()
+            expertSupId.isNullOrEmpty() &&
+            macAddress.isNullOrEmpty()
 
     fun needCheckDetail() = !ips.isNullOrEmpty() || !zoneShortName.isNullOrEmpty()
 }

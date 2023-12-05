@@ -26,6 +26,7 @@ import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.RecordMapper
 import org.jooq.SelectConditionStep
+import org.jooq.SelectJoinStep
 import org.jooq.impl.TableImpl
 import org.springframework.stereotype.Repository
 
@@ -288,15 +289,19 @@ class WorkspaceJoinDao {
                             .and(TWorkspace.T_WORKSPACE.CREATOR.likeRegex(owners.joinToString("|")))
                         )
                     .or(
-                        TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
-                            .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.likeRegex(owners.joinToString("|")))
+                        TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(
+                            WorkspaceShared.AssignType.OWNER.name
+                        )
+                            .and(
+                                TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
+                                    .likeRegex(owners.joinToString("|"))
+                            )
                     )
             } else {
                 (
                         TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
                             .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(owners))
-                        )
-                    .or(
+                        ).or(
                         TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
                             .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(owners))
                     )
@@ -305,24 +310,28 @@ class WorkspaceJoinDao {
         }
 
         // viewers 条件查询
-        search.viewers?.ifEmpty { null }?.let { owners ->
+        search.viewers?.ifEmpty { null }?.let { viewers ->
             val sql = if (search.onFuzzyMatch) {
                 (
                         TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-                            .and(TWorkspace.T_WORKSPACE.CREATOR.likeRegex(owners.joinToString("|")))
-                        )
-                    .or(
-                        TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.VIEWER.name)
-                            .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.likeRegex(owners.joinToString("|")))
+                            .and(TWorkspace.T_WORKSPACE.CREATOR.likeRegex(viewers.joinToString("|")))
+                        ).or(
+                        TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.likeRegex("VIEWER|OWNER")
+                            .and(
+                                TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
+                                    .likeRegex(viewers.joinToString("|"))
+                            )
                     )
             } else {
                 (
                         TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-                            .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(owners))
-                        )
-                    .or(
+                            .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(viewers))
+                        ).or(
                         TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.VIEWER.name)
-                            .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(owners))
+                            .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(viewers))
+                    ).or(
+                        TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
+                            .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(viewers))
                     )
             }
             conditions.add(sql)
@@ -336,6 +345,15 @@ class WorkspaceJoinDao {
         // machineType 条件查询
         search.size?.ifEmpty { null }?.let { type ->
             conditions.add(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE.`in`(type))
+        }
+
+        // mac地址 条件查询
+        search.macAddress?.ifEmpty { null }?.let { mac ->
+            if (search.onFuzzyMatch) {
+                conditions.add(TWorkspaceWindows.T_WORKSPACE_WINDOWS.MAC_ADDRESS.likeRegex(mac.joinToString("|")))
+            } else {
+                conditions.add(TWorkspaceWindows.T_WORKSPACE_WINDOWS.MAC_ADDRESS.`in`(mac))
+            }
         }
 
         // expertSup
@@ -354,10 +372,10 @@ class WorkspaceJoinDao {
         }
 
         // 添加连表查询条件以及获得连表
-        val tables = joinTablesAndItems(
-            conditions = conditions,
-            search = search
-        )
+//        val tables = joinTablesAndItems(
+//            conditions = conditions,
+//            search = search
+//        )
 
         val fields = TWorkspace.T_WORKSPACE.fields().toMutableList()
 //        if (!ips.isNullOrEmpty() || zoneId != null) {
@@ -369,8 +387,39 @@ class WorkspaceJoinDao {
         }
 
         return dslContext.select(fields)
-            .from(tables)
+            .from(TWorkspace.T_WORKSPACE)
+            .joinTable(search)
             .where(conditions)
+    }
+
+    private fun SelectJoinStep<*>.joinTable(search: WorkspaceSearch): SelectJoinStep<*> {
+        if (!search.owner.isNullOrEmpty() || !search.viewers.isNullOrEmpty()) {
+            this.leftJoin(TWorkspaceShared.T_WORKSPACE_SHARED)
+                .on(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME.eq(TWorkspace.T_WORKSPACE.NAME))
+        }
+        if (!search.ips.isNullOrEmpty() || !search.zoneShortName.isNullOrEmpty()) {
+            this.leftJoin(TWorkspaceDetail.T_WORKSPACE_DETAIL)
+                .on(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceDetail.T_WORKSPACE_DETAIL.WORKSPACE_NAME))
+        }
+        if (!search.macAddress.isNullOrEmpty() || !search.size.isNullOrEmpty()) {
+            this.leftJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS).on(
+                TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME)
+            )
+        }
+
+        if (!search.size.isNullOrEmpty()) {
+            this.leftJoin(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE).on(
+                TWorkspaceWindows.T_WORKSPACE_WINDOWS.WIN_CONFIG_ID.eq(
+                    TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.ID.cast(Int::class.java)
+                )
+            )
+        }
+        if (!search.expertSupId.isNullOrEmpty()) {
+            this.leftJoin(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT).on(
+                TWorkspace.T_WORKSPACE.NAME.eq(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT.WORKSPACE_NAME)
+            )
+        }
+        return this
     }
 
     private fun joinTablesAndItems(
@@ -395,17 +444,12 @@ class WorkspaceJoinDao {
 //            conditions.add(offset, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
 //            offset++
 //        }
-        if (!search.owner.isNullOrEmpty()) {
-            result.add(TWorkspaceShared.T_WORKSPACE_SHARED)
-            conditions.add(offset, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
-            offset++
-        }
+//        if (!search.owner.isNullOrEmpty() || !search.viewers.isNullOrEmpty()) {
+//            result.add(TWorkspaceShared.T_WORKSPACE_SHARED)
+//            conditions.add(offset, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
+//            offset++
+//        }
 
-        if (!search.viewers.isNullOrEmpty()) {
-            result.add(TWorkspaceShared.T_WORKSPACE_SHARED)
-            conditions.add(offset, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
-            offset++
-        }
 //        if (machineType != null) {
 //            result.add(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
 //            result.add(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE)
