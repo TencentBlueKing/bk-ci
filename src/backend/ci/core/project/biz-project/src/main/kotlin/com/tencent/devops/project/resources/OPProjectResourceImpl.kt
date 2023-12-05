@@ -146,7 +146,8 @@ class OPProjectResourceImpl @Autowired constructor(
         englishNames.forEach {
             projectService.updateUsableStatus(
                 englishName = it,
-                enabled = enabled
+                enabled = enabled,
+                checkPermission = false
             )
         }
         return Result(true)
