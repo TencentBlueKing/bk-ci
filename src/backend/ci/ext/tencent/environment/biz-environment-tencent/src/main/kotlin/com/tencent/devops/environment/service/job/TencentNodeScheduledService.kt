@@ -4,7 +4,11 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.pojo.job.HostIdAndCloudAreaIdInfo
 import com.tencent.devops.environment.service.CmdbNodeService
+import com.tencent.devops.environment.service.CmdbNodeService.Companion.FIELD_BK_SVR_ID
+import com.tencent.devops.environment.service.job.QueryFromCCService.Companion.FIELD_BK_HOST_ID
+import com.tencent.devops.environment.service.job.QueryFromCCService.Companion.FIELD_BK_HOST_INNERIP
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,14 +20,28 @@ class TencentNodeScheduledService @Autowired constructor(
     private val dslContext: DSLContext,
     private val nodeDao: NodeDao,
     private val tencentQueryFromCmdbService: TencentQueryFromCmdbService,
+    private val queryFromCCService: QueryFromCCService,
     private val cmdbNodeService: CmdbNodeService,
     private val redisOperation: RedisOperation
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(TencentNodeScheduledService::class.java)
         private const val CHECK_NODE_IN_CMDB_TIMEROUT_LOCK_KEY = "check_node_in_cmdb_timeout_lock"
+        private const val SCHEDULED_WRITE_HOST_ID_CLOUD_AREA_ID_TIMEOUT_LOCK_KEY =
+            "scheduled_write_host_id_and_cloud_area_id_timeout_lock"
         private const val EXPTIRATION_TIME_OF_THE_LOCK = 60L
         private const val DEFAULT_PAGE_SIZE = 100
+        private const val DEFAULT_CLOUD_AREA_ID = 0L
+    }
+
+    /**
+     * 定时任务：执行一次就行。
+     * 分组执行，每次遍历100条记录。
+     * 对于 nodeType 为 CMDB 的机器，写入host_id(CC中查到的)，并将云区域ID设为0。
+     */
+    @Scheduled(cron = "0 50 16 * * 1-5")
+    fun scheduledWriteHostIdAndCloudAreaId() {
+        taskWithRedisLockTencent(SCHEDULED_WRITE_HOST_ID_CLOUD_AREA_ID_TIMEOUT_LOCK_KEY, ::writeHostIdAndCloudAreaId)
     }
 
     /**
@@ -34,6 +52,45 @@ class TencentNodeScheduledService @Autowired constructor(
     @Scheduled(cron = "0 0 9 * * ?")
     fun scheduledCheckNodeInCmdb() {
         taskWithRedisLockTencent(CHECK_NODE_IN_CMDB_TIMEROUT_LOCK_KEY, ::checkNodeInCmdb)
+    }
+
+    private fun writeHostIdAndCloudAreaId() {
+        val countCmdbNodes = nodeDao.countCmdbNodes(dslContext)
+        if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId]countCmdbNodes:$countCmdbNodes")
+        if (0 < countCmdbNodes) {
+            val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countCmdbNodes.toLong())
+            for (page in 1..totalPages) {
+                val cmdbNodesRecords =
+                    nodeDao.getCmdbNodesLimit(dslContext, page - 1, DEFAULT_PAGE_SIZE)
+                if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId]cmdbNodesRecords:$cmdbNodesRecords")
+                val cmdbNodesIp = cmdbNodesRecords.map { it.value3() }.toSet()
+                if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId]cmdbNodesIp:$cmdbNodesIp.")
+                val serverIdList = tencentQueryFromCmdbService.queryCmdbInfoFromIp(cmdbNodesIp)
+                    ?.values
+                    ?.map { it.serverId } // 从cmdb中查到的 所有ip - 记录 映射
+                val inCCInfoList = queryFromCCService.queryCCListHostWithoutBizByInRules(
+                    listOf(FIELD_BK_HOST_ID, FIELD_BK_HOST_INNERIP), serverIdList, FIELD_BK_SVR_ID
+                ).data?.info
+                if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId]inCCInfoList:$inCCInfoList.")
+                if (!inCCInfoList.isNullOrEmpty()) { // 有就写入
+                    val ipToCCInfoMap = inCCInfoList.associateBy { it.bkHostInnerip }
+                    val nodeHostIdAndCloudAreaIdInfoList = cmdbNodesRecords
+                        .filter {
+                            ipToCCInfoMap.containsKey(it.value3())
+                        }
+                        .map {
+                            HostIdAndCloudAreaIdInfo(
+                                nodeId = it.value1(),
+                                bkCloudId = DEFAULT_CLOUD_AREA_ID,
+                                bkHostId = ipToCCInfoMap[it.value3()]?.bkHostId
+                            )
+                        }
+                    nodeDao.updateHostIdAndCloudAreaIdByNodeId(dslContext, nodeHostIdAndCloudAreaIdInfoList)
+                }
+            }
+        } else {
+            if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId] There is no cmdb node.")
+        }
     }
 
     private fun checkNodeInCmdb() {
