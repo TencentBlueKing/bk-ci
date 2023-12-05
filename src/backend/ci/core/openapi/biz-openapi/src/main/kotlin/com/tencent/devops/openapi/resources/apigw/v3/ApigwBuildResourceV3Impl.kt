@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwBuildResourceV3
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
+import com.tencent.devops.openapi.utils.ApigwParamUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
@@ -94,6 +95,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         updateTimeDesc: Boolean?
     ): Result<BuildHistoryPage<BuildHistory>> {
         logger.info("OPENAPI_BUILD_V3|$userId|get history build|$projectId|$pipelineId|$page|$pageSize|$updateTimeDesc")
+        ApigwParamUtil.checkPageSize(pageSize)
         return client.get(ServiceBuildResource::class).getHistoryBuild(
             userId = userId,
             projectId = projectId,
@@ -177,7 +179,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
     ): Result<BuildId> {
         logger.info(
             "OPENAPI_BUILD_V3|$userId|retry|$projectId|$pipelineId|$buildId|$taskId|$failedContainer" +
-                "|$skipFailedTask"
+                    "|$skipFailedTask"
         )
         return client.get(ServiceBuildResource::class).retry(
             userId = userId,
@@ -223,7 +225,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
     ): Result<Boolean> {
         logger.info(
             "OPENAPI_BUILD_V3|$userId|manual start stage|$projectId|$pipelineId|$buildId|$stageId|$cancel" +
-                "|$reviewRequest"
+                    "|$reviewRequest"
         )
         return client.get(ServiceBuildResource::class).manualStartStage(
             userId = userId,

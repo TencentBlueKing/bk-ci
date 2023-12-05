@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwPipelineResourceV3
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
+import com.tencent.devops.openapi.utils.ApigwParamUtil
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCopy
@@ -206,6 +207,7 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(
         pageSize: Int?
     ): Result<Page<Pipeline>> {
         logger.info("OPENAPI_PIPELINE_V3|$userId|get list by user|$projectId|$page|$pageSize")
+        ApigwParamUtil.checkPageSize(pageSize)
         return client.get(ServicePipelineResource::class).list(
             userId = userId,
             projectId = projectId,
