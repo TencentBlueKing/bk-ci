@@ -132,13 +132,12 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
                     "|$startTimeStartTime|startTimeEndTime=$startTimeEndTime|$endTimeStartTime|$endTimeEndTime" +
                     "|$totalTimeMin|$totalTimeMax|remark=$remark|$buildNoStart|$buildNoEnd|$buildMsg|$startUser"
         )
-        ApigwParamUtil.checkPageSize(pageSize)
         return client.get(ServiceBuildResource::class).getHistoryBuild(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             page = page ?: 1,
-            pageSize = pageSize ?: 20,
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
             channelCode = apiGatewayUtil.getChannelCode(),
             updateTimeDesc = updateTimeDesc,
             materialAlias = materialAlias,

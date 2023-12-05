@@ -95,13 +95,12 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         updateTimeDesc: Boolean?
     ): Result<BuildHistoryPage<BuildHistory>> {
         logger.info("OPENAPI_BUILD_V3|$userId|get history build|$projectId|$pipelineId|$page|$pageSize|$updateTimeDesc")
-        ApigwParamUtil.checkPageSize(pageSize)
         return client.get(ServiceBuildResource::class).getHistoryBuild(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             page = page ?: 1,
-            pageSize = pageSize ?: 20,
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
             channelCode = apiGatewayUtil.getChannelCode(),
             updateTimeDesc = updateTimeDesc,
             materialAlias = null,

@@ -228,12 +228,11 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         pageSize: Int?
     ): Result<Page<Pipeline>> {
         logger.info("OPENAPI_PIPELINE_V4|$userId|get list by user|$projectId|$page|$pageSize")
-        ApigwParamUtil.checkPageSize(pageSize)
         return client.get(ServicePipelineResource::class).list(
             userId = userId,
             projectId = projectId,
             page = page ?: 1,
-            pageSize = pageSize ?: 20,
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
             channelCode = apiGatewayUtil.getChannelCode(),
             checkPermission = true
         )
