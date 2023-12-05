@@ -41,6 +41,7 @@ import com.tencent.devops.model.environment.tables.TEnvNode
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.jooq.Record1
+import org.jooq.Record2
 import org.jooq.Record3
 import org.jooq.Result
 import org.jooq.impl.DSL
@@ -170,10 +171,12 @@ class NodeDao {
         }
     }
 
-    fun getCmdbNodes(dslContext: DSLContext): Result<Record1<String>> {
+    fun getCmdbNodesIpHostIdNullLimit(dslContext: DSLContext, offset: Int, limit: Int): Result<Record2<String, Long>> {
         with(TNode.T_NODE) {
-            return dslContext.select(NODE_IP).from(this)
+            return dslContext.select(NODE_IP, NODE_ID).from(this)
                 .where(NODE_TYPE.eq(NodeType.CMDB.name))
+                .and(HOST_ID.isNull)
+                .limit(limit).offset(offset)
                 .fetch()
         }
     }
