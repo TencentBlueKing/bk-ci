@@ -39,7 +39,7 @@ class TencentNodeScheduledService @Autowired constructor(
      * 分组执行，每次遍历100条记录。
      * 对于 nodeType 为 CMDB 的机器，写入host_id(CC中查到的)，并将云区域ID设为0。
      */
-    @Scheduled(cron = "0 35 11 * * 1-5")
+    @Scheduled(cron = "0 48 11 * * 1-5")
     fun scheduledWriteHostIdAndCloudAreaId() {
         taskWithRedisLockTencent(SCHEDULED_WRITE_HOST_ID_CLOUD_AREA_ID_TIMEOUT_LOCK_KEY, ::writeHostIdAndCloudAreaId)
     }

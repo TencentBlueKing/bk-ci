@@ -29,7 +29,7 @@ class TencentQueryFromCmdbService : QueryOperatorService {
     @Value("\${job.cmdbGetQueryInfoBaseUrl:}")
     private val cmdbGetQueryInfoBaseUrl = ""
 
-    @Value("\${job.cmdbGetQueryInfoPath:#{\"/get_query_info\"}")
+    @Value("\${job.cmdbGetQueryInfoPath:#{\"/get_query_info\"}}")
     private val cmdbGetQueryInfoPath = ""
 
     companion object {
