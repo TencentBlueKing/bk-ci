@@ -72,7 +72,7 @@ class BkProcessArchiveTableShardingAlgorithm : StandardShardingAlgorithm<String>
             val ruleObj = client.get(ServiceShardingRoutingRuleResource::class)
                 .getShardingRoutingRuleByName(
                     routingName = routingName,
-                    moduleCode = SystemModuleEnum.METRICS,
+                    moduleCode = SystemModuleEnum.PROCESS,
                     ruleType = ShardingRuleTypeEnum.ARCHIVE_TABLE,
                     tableName = logicTableName
                 ).data

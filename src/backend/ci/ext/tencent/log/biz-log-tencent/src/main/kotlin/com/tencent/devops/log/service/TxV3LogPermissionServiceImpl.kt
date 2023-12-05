@@ -18,15 +18,17 @@ class TxV3LogPermissionServiceImpl @Autowired constructor(
     override fun verifyUserLogPermission(
         projectCode: String,
         userId: String,
-        permission: AuthPermission?
+        permission: AuthPermission?,
+        authResourceType: AuthResourceType?
     ): Boolean {
-        val action = TActionUtils.buildAction(permission ?: AuthPermission.VIEW, AuthResourceType.PIPELINE_DEFAULT)
+        val finalAuthResourceType = authResourceType ?: AuthResourceType.PIPELINE_DEFAULT
+        val action = TActionUtils.buildAction(permission ?: AuthPermission.VIEW, finalAuthResourceType)
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
             token = tokenCheckService.getSystemToken(),
             action = action,
             projectCode = projectCode,
-            resourceCode = AuthResourceType.PIPELINE_DEFAULT.value
+            resourceCode = finalAuthResourceType.value
         ).data ?: false
     }
 
@@ -34,15 +36,17 @@ class TxV3LogPermissionServiceImpl @Autowired constructor(
         projectCode: String,
         pipelineId: String,
         userId: String,
-        permission: AuthPermission?
+        permission: AuthPermission?,
+        authResourceType: AuthResourceType?
     ): Boolean {
-        val action = TActionUtils.buildAction(permission ?: AuthPermission.VIEW, AuthResourceType.PIPELINE_DEFAULT)
+        val finalAuthResourceType = authResourceType ?: AuthResourceType.PIPELINE_DEFAULT
+        val action = TActionUtils.buildAction(permission ?: AuthPermission.VIEW, finalAuthResourceType)
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             userId = userId,
             token = tokenCheckService.getSystemToken(),
             action = action,
             projectCode = projectCode,
-            resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+            resourceType = finalAuthResourceType.value,
             resourceCode = getPipelineId(pipelineId, projectCode),
             relationResourceType = null
         ).data ?: false

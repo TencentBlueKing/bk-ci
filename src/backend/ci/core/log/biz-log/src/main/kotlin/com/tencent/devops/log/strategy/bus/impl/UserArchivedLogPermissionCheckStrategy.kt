@@ -30,6 +30,7 @@ package com.tencent.devops.log.strategy.bus.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.log.service.LogPermissionService
@@ -64,7 +65,8 @@ class UserArchivedLogPermissionCheckStrategy : IUserLogPermissionCheckStrategy {
             if (!logPermissionService.verifyUserLogPermission(
                     projectCode = projectId,
                     userId = userId,
-                    permission = permission
+                    permission = permission,
+                    authResourceType = AuthResourceType.PROJECT
                 )
             ) {
                 throw ErrorCodeException(

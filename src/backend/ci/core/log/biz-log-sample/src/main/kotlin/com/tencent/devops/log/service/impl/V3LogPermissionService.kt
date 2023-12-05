@@ -53,7 +53,8 @@ class V3LogPermissionService @Autowired constructor(
     override fun verifyUserLogPermission(
         projectCode: String,
         userId: String,
-        permission: AuthPermission?
+        permission: AuthPermission?,
+        authResourceType: AuthResourceType?
     ): Boolean {
         logger.info("checkPipelinePermission only check action project[$projectCode]")
         if (isProjectOwner(projectCode, userId)) {
@@ -63,7 +64,7 @@ class V3LogPermissionService @Autowired constructor(
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = pipelineAuthServiceCode,
-            resourceType = AuthResourceType.PIPELINE_DEFAULT,
+            resourceType = authResourceType ?: AuthResourceType.PIPELINE_DEFAULT,
             projectCode = projectCode,
             permission = permission ?: AuthPermission.VIEW
         )
@@ -73,7 +74,8 @@ class V3LogPermissionService @Autowired constructor(
         projectCode: String,
         pipelineId: String,
         userId: String,
-        permission: AuthPermission?
+        permission: AuthPermission?,
+        authResourceType: AuthResourceType?
     ): Boolean {
         logger.info("checkPipelinePermission only check action project[$projectCode]")
         if (isProjectOwner(projectCode, userId)) {
@@ -83,7 +85,7 @@ class V3LogPermissionService @Autowired constructor(
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = pipelineAuthServiceCode,
-            resourceType = AuthResourceType.PIPELINE_DEFAULT,
+            resourceType = authResourceType ?: AuthResourceType.PIPELINE_DEFAULT,
             projectCode = projectCode,
             resourceCode = pipelineId,
             permission = permission ?: AuthPermission.VIEW,

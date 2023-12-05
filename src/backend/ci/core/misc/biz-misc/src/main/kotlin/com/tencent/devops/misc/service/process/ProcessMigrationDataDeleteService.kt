@@ -84,6 +84,7 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                 deleteProcessRelData(
                     dslContext = dslContext,
                     projectId = projectId,
+                    pipelineId = pipelineId,
                     targetClusterName = targetClusterName,
                     targetDataSourceName = targetDataSourceName
                 )

@@ -47,12 +47,14 @@ class LogPermissionServiceImpl @Autowired constructor(
     override fun verifyUserLogPermission(
         projectCode: String,
         userId: String,
-        permission: AuthPermission?
+        permission: AuthPermission?,
+        authResourceType: AuthResourceType?
     ): Boolean {
+        val finalAuthResourceType = authResourceType ?: AuthResourceType.PIPELINE_DEFAULT
         if (authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = pipelineAuthServiceCode,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT,
+                resourceType = finalAuthResourceType,
                 projectCode = projectCode,
                 permission = AuthPermission.VIEW
             )
@@ -63,7 +65,7 @@ class LogPermissionServiceImpl @Autowired constructor(
         if (managerService.isManagerPermission(
                 userId = userId,
                 projectId = projectCode,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT,
+                resourceType = finalAuthResourceType,
                 authPermission = AuthPermission.VIEW
             )) {
             return true
@@ -81,12 +83,14 @@ class LogPermissionServiceImpl @Autowired constructor(
         projectCode: String,
         pipelineId: String,
         userId: String,
-        permission: AuthPermission?
+        permission: AuthPermission?,
+        authResourceType: AuthResourceType?
     ): Boolean {
+        val finalAuthResourceType = authResourceType ?: AuthResourceType.PIPELINE_DEFAULT
         if (authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = pipelineAuthServiceCode,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT,
+                resourceType = finalAuthResourceType,
                 projectCode = projectCode,
                 resourceCode = pipelineId,
                 permission = AuthPermission.VIEW
@@ -98,7 +102,7 @@ class LogPermissionServiceImpl @Autowired constructor(
         if (managerService.isManagerPermission(
                 userId = userId,
                 projectId = projectCode,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT,
+                resourceType = finalAuthResourceType,
                 authPermission = AuthPermission.VIEW
             )) {
             return true

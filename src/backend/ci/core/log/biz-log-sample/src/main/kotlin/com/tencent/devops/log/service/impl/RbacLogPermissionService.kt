@@ -17,16 +17,18 @@ class RbacLogPermissionService @Autowired constructor(
     override fun verifyUserLogPermission(
         projectCode: String,
         userId: String,
-        permission: AuthPermission?
+        permission: AuthPermission?,
+        authResourceType: AuthResourceType?
     ): Boolean {
+        val finalAuthResourceType = authResourceType ?: AuthResourceType.PIPELINE_DEFAULT
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
             token = tokenCheckService.getSystemToken(),
             action = RbacAuthUtils.buildAction(
-                permission ?: AuthPermission.VIEW, AuthResourceType.PIPELINE_DEFAULT
+                permission ?: AuthPermission.VIEW, finalAuthResourceType
             ),
             projectCode = projectCode,
-            resourceCode = AuthResourceType.PIPELINE_DEFAULT.value
+            resourceCode = finalAuthResourceType.value
         ).data ?: false
     }
 
@@ -34,16 +36,18 @@ class RbacLogPermissionService @Autowired constructor(
         projectCode: String,
         pipelineId: String,
         userId: String,
-        permission: AuthPermission?
+        permission: AuthPermission?,
+        authResourceType: AuthResourceType?
     ): Boolean {
+        val finalAuthResourceType = authResourceType ?: AuthResourceType.PIPELINE_DEFAULT
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             userId = userId,
             token = tokenCheckService.getSystemToken(),
             action = RbacAuthUtils.buildAction(
-                permission ?: AuthPermission.VIEW, AuthResourceType.PIPELINE_DEFAULT
+                permission ?: AuthPermission.VIEW, finalAuthResourceType
             ),
             projectCode = projectCode,
-            resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+            resourceType = finalAuthResourceType.value,
             resourceCode = pipelineId,
             relationResourceType = null
         ).data ?: false
