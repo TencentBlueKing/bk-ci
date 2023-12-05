@@ -179,7 +179,7 @@ class JobQuotaBusinessService @Autowired constructor(
             }
 
             // 所有已经结束的耗时
-            val finishRunJobTime = getRedisStringSerializerOperation().hget(getProjectWeekRunningTimeKey(),
+            val finishRunJobTime = getRedisStringSerializerOperation().hget(getDayRunningTimeKey(),
                 getProjectRunningTimeKey(projectId))
             runningTotalTime += (finishRunJobTime ?: "0").toLong()
 
@@ -195,7 +195,7 @@ class JobQuotaBusinessService @Autowired constructor(
 
             // 所有已经结束的耗时
             val finishRunJobTime = getRedisStringSerializerOperation().hget(
-                getProjectWeekRunningTimeKey(),
+                getDayRunningTimeKey(),
                 getProjectVmTypeRunningTimeKey(projectId, vmType)
             )
             runningTotalTime += (finishRunJobTime ?: "0").toLong()
@@ -216,14 +216,7 @@ class JobQuotaBusinessService @Autowired constructor(
 
         with(jobStatus) {
             // 记录一次job并发数据
-            jobQuotaInterface.saveJobConcurrency(
-                JobConcurrencyHistory(
-                    projectId = projectId,
-                    jobConcurrency = jobStatus.runningJobCount,
-                    jobQuotaVmType = vmType,
-                    createTime = LocalDateTime.now().format(dateTimeFormatter)
-                )
-            )
+            saveJobConcurrency(projectId, jobStatus.runningJobCount, vmType)
 
             if (runningJobCount >= jobQuota) {
                 buildLogPrinter.addYellowLine(
@@ -321,6 +314,38 @@ class JobQuotaBusinessService @Autowired constructor(
         }
     }
 
+    private fun saveJobConcurrency(
+        projectId: String,
+        runningJobCount: Long,
+        jobQuotaVmType: JobQuotaVmType
+    ) {
+        // 刷新redis缓存数据
+        val dayJobConcurrencyKey = getDayJobConcurrencyKey()
+        val projectDayJobConcurrencyKey = getProjectDayJobConcurrencyKey(projectId, jobQuotaVmType)
+
+        val maxConcurrency = getRedisStringSerializerOperation().hget(
+            dayJobConcurrencyKey,
+            projectDayJobConcurrencyKey
+        )?.toLongOrNull()
+
+        if (maxConcurrency == null || maxConcurrency < runningJobCount) {
+            getRedisStringSerializerOperation().hset(
+                dayJobConcurrencyKey,
+                projectDayJobConcurrencyKey,
+                runningJobCount.toString()
+            )
+        }
+
+        jobQuotaInterface.saveJobConcurrency(
+            JobConcurrencyHistory(
+                projectId = projectId,
+                jobConcurrency = runningJobCount,
+                jobQuotaVmType = jobQuotaVmType,
+                createTime = LocalDateTime.now().format(dateTimeFormatter)
+            )
+        )
+    }
+
     private fun checkSystemWarn(vmType: JobQuotaVmType) {
         try {
             val jobQuota = jobQuotaManagerService.getSystemQuota(vmType)
@@ -409,7 +434,7 @@ class JobQuotaBusinessService @Autowired constructor(
     fun restoreProjectJobTime(projectId: String?, vmType: JobQuotaVmType) {
         if (projectId == null && vmType != JobQuotaVmType.ALL) {
             // 直接删除当月的hash主key
-            getRedisStringSerializerOperation().delete(getProjectWeekRunningTimeKey())
+            getRedisStringSerializerOperation().delete(getDayRunningTimeKey())
             return
         }
         if (projectId != null && vmType != JobQuotaVmType.ALL) { // restore project with vmType
@@ -420,14 +445,14 @@ class JobQuotaBusinessService @Autowired constructor(
 
     private fun restoreWithVmType(project: String, vmType: JobQuotaVmType) {
         val time = getRedisStringSerializerOperation().hget(
-            getProjectWeekRunningTimeKey(),
+            getDayRunningTimeKey(),
             getProjectVmTypeRunningTimeKey(project, vmType)) ?: "0"
         val totalTime = getRedisStringSerializerOperation().hget(
-            getProjectWeekRunningTimeKey(),
+            getDayRunningTimeKey(),
             getProjectRunningTimeKey(project)) ?: "0"
         val reduiceTime = (totalTime.toLong() - time.toLong())
         getRedisStringSerializerOperation().hset(
-            key = getProjectWeekRunningTimeKey(),
+            key = getDayRunningTimeKey(),
             hashKey = getProjectRunningTimeKey(project),
             values = if (reduiceTime < 0) {
                 "0"
@@ -436,7 +461,7 @@ class JobQuotaBusinessService @Autowired constructor(
             }
         )
         getRedisStringSerializerOperation().hset(
-            key = getProjectWeekRunningTimeKey(),
+            key = getDayRunningTimeKey(),
             hashKey = getProjectVmTypeRunningTimeKey(project, vmType),
             values = "0"
         )
@@ -454,7 +479,7 @@ class JobQuotaBusinessService @Autowired constructor(
             if (lockSuccess) {
                 LOG.info("<<< Restore time monthly Start >>>")
                 val lastMonth = LocalDateTime.now().minusMonths(1).month.name
-                getRedisStringSerializerOperation().delete(getProjectWeekRunningTimeKey(lastMonth))
+                getRedisStringSerializerOperation().delete(getDayRunningTimeKey(lastMonth))
             } else {
                 LOG.info("<<< Restore time monthly Has Running, Do Not Start>>>")
             }
@@ -509,7 +534,7 @@ class JobQuotaBusinessService @Autowired constructor(
         }
 
         getRedisStringSerializerOperation().hIncrBy(
-            key = getProjectWeekRunningTimeKey(),
+            key = getDayRunningTimeKey(),
             hashKey = getProjectVmTypeRunningTimeKey(projectId, vmType),
             delta = time
         )
@@ -522,9 +547,9 @@ class JobQuotaBusinessService @Autowired constructor(
         )*/
     }
 
-    private fun getProjectWeekRunningTimeKey(month: String? = null): String {
-        val currentMonth = month ?: LocalDateTime.now().dayOfWeek.name
-        return "$PROJECT_RUNNING_TIME_KEY_PREFIX$currentMonth"
+    private fun getDayRunningTimeKey(day: String? = null): String {
+        val currentDay = day ?: LocalDateTime.now().dayOfWeek.name
+        return "$PROJECT_RUNNING_TIME_KEY_PREFIX$currentDay"
     }
 
     private fun getProjectVmTypeRunningTimeKey(projectId: String, vmType: JobQuotaVmType): String {
@@ -533,6 +558,15 @@ class JobQuotaBusinessService @Autowired constructor(
 
     private fun getProjectRunningTimeKey(projectId: String): String {
         return "$PROJECT_RUNNING_TIME_KEY_PREFIX$projectId"
+    }
+
+    private fun getDayJobConcurrencyKey(day: String? = null): String {
+        val currentDay = day ?: LocalDateTime.now().dayOfWeek.name
+        return "$PROJECT_JOB_CONCURRENCY_KEY_PREFIX$currentDay"
+    }
+
+    private fun getProjectDayJobConcurrencyKey(projectId: String, vmType: JobQuotaVmType): String {
+        return "$PROJECT_JOB_CONCURRENCY_KEY_PREFIX${projectId}_${vmType.name}"
     }
 
     fun statistics(limit: Int?, offset: Int?): Map<String, Any> {
@@ -554,7 +588,9 @@ class JobQuotaBusinessService @Autowired constructor(
         private const val TIMER_RESTORE_LOCK_KEY = "job_quota_business_time_restore_lock"
         private const val TIMER_COUNT_TIME_LOCK_KEY = "job_quota_project_run_time_count_lock"
         private const val JOB_END_LOCK_KEY = "job_quota_business_redis_job_end_lock_"
-        private const val PROJECT_RUNNING_TIME_KEY_PREFIX = "project_running_time_key_" // 项目当月已运行时间前缀
+        private const val PROJECT_RUNNING_TIME_KEY_PREFIX = "project_running_time_key_" // 项目当天已运行时间前缀
+        private const val PROJECT_JOB_CONCURRENCY_KEY_PREFIX = "project_job_concurrency_key_" // 项目当天最大并发job前缀
+
         // 系统当月已运行JOB数量KEY, 告警使用
         private const val WARN_TIME_SYSTEM_JOB_MAX_LOCK_KEY = "job_quota_warning_system_max_lock_key"
         // 项目当月已运行JOB数量告警前缀
