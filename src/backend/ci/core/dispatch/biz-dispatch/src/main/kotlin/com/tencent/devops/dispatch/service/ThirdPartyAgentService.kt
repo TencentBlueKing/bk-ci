@@ -134,7 +134,6 @@ class ThirdPartyAgentService @Autowired constructor(
         buildType: BuildJobType
     ): AgentResult<ThirdPartyBuildInfo?> {
         // Get the queue status build by buildId and agentId
-        logger.debug("Start the third party agent($agentId) of project($projectId)")
         try {
             val agentResult = try {
                 client.get(ServiceThirdPartyAgentResource::class).getAgentById(projectId, agentId)
@@ -170,8 +169,6 @@ class ThirdPartyAgentService @Autowired constructor(
                 throw NotFoundException("Fail to get the agent")
             }
 
-            logger.debug("Third party agent($agentId) start up")
-
             val redisLock = ThirdPartyAgentLock(redisOperation, projectId, agentId)
             try {
                 redisLock.lock()
@@ -179,10 +176,6 @@ class ThirdPartyAgentService @Autowired constructor(
                     logger.debug("There is not build by agent($agentId) in queue")
                     return AgentResult(AgentStatus.IMPORT_OK, null)
                 }
-
-                logger.debug(
-                    "Third party agent($agentId) start up agent project($projectId) build project(${build.projectId})"
-                )
 
                 logger.info("Start the build(${build.buildId}) of agent($agentId) and seq(${build.vmSeqId})")
                 thirdPartyAgentBuildDao.updateStatus(dslContext, build.id, PipelineTaskStatus.RUNNING)

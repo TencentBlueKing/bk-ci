@@ -156,8 +156,8 @@ class JobQuotaManagerService @Autowired constructor(
         val record = jobQuotaSystemDao.get(dslContext, jobQuotaVmType)
             ?: return JobQuotaSystem(
                 vmType = jobQuotaVmType,
-                runningJobMaxSystem = 500, // default value
-                runningJobMaxProject = 50, // default value
+                runningJobMaxSystem = 5000, // default value
+                runningJobMaxProject = 1000, // default value
                 runningTimeJobMax = 8,
                 runningTimeJobMaxProject = 40,
                 runningJobMaxGitCiSystem = when (jobQuotaVmType) {

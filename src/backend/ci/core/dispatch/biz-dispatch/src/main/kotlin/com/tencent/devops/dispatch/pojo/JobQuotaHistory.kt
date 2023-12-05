@@ -36,5 +36,6 @@ data class JobQuotaHistory(
     val vmType: String,
     val createTime: String,
     val agentStartTime: String,
-    val agentFinishTime: String
+    val agentFinishTime: String,
+    val costTime: Long
 )

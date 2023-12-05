@@ -25,20 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.service
+package com.tencent.devops.dispatch.pojo
 
-import com.tencent.devops.dispatch.pojo.JobConcurrencyHistory
-import com.tencent.devops.dispatch.pojo.JobQuotaHistory
+import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 
-class JobQuotaInterfaceImpl : JobQuotaInterface {
-    /**
-     * 保存Job配额相关构建记录
-     */
-    override fun saveJobQuotaHistory(jobQuotaHistory: JobQuotaHistory) {
-        // save job quota history
-    }
-
-    override fun saveJobConcurrency(jobConcurrencyHistory: JobConcurrencyHistory) {
-        // save job concurrency history
-    }
-}
+data class JobConcurrencyHistory(
+    val projectId: String,
+    val jobConcurrency: Long,
+    val jobQuotaVmType: JobQuotaVmType,
+    val createTime: String
+)
