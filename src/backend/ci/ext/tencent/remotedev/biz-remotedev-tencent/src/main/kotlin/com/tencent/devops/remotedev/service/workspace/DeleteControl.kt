@@ -27,7 +27,13 @@
 
 package com.tencent.devops.remotedev.service.workspace
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
@@ -94,6 +100,15 @@ class DeleteControl @Autowired constructor(
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CGS_DELETE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS,
+            instanceNames = "#workspaceName",
+            instanceIds = "#workspaceName"
+        ),
+        content = ActionAuditContent.CGS_DELETE_CONTENT
+    )
     fun deleteWorkspace(
         userId: String,
         workspaceName: String,
@@ -106,6 +121,10 @@ class DeleteControl @Autowired constructor(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
+        // 审计
+        ActionAuditContext.current()
+            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .scopeId = workspace.projectId
         if (needPermission) {
             permissionService.checkOwnerPermission(userId, workspaceName, workspace.projectId)
         }
@@ -157,6 +176,15 @@ class DeleteControl @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CGS_DELETE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS,
+            instanceNames = "#workspaceName",
+            instanceIds = "#workspaceName"
+        ),
+        content = ActionAuditContent.CGS_DELETE_CONTENT
+    )
     fun deleteWorkspace4OP(
         userId: String,
         workspaceName: String
@@ -173,6 +201,11 @@ class DeleteControl @Autowired constructor(
                     errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                     params = arrayOf(workspaceName)
                 )
+            // 审计
+            ActionAuditContext.current()
+                .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+                .scopeId = workspace.projectId
+
             // 创建操作历史记录
             createDeleteOperationHistoryRecord(workspace, userId)
 
@@ -184,7 +217,7 @@ class DeleteControl @Autowired constructor(
             // 发送处理事件
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
-                    userId = userId,
+                    userId = workspace.createUserId,
                     traceId = bizId,
                     type = UpdateEventType.DELETE,
                     workspaceName = workspace.workspaceName,
@@ -214,7 +247,7 @@ class DeleteControl @Autowired constructor(
             }
         }
         val now = LocalDateTime.now()
-        workspaceDao.fetchNotUsageTimeWinWorkspace(dslContext, status = WorkspaceStatus.SLEEP)
+        workspaceDao.fetchNotUsageTimeWinWorkspace(dslContext, status = WorkspaceStatus.STOPPED)
             ?.parallelStream()?.forEach {
                 MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
                 val retentionTime = redisCache.get(RedisKeys.REDIS_DESTRUCTION_RETENTION_TIME)?.toInt() ?: 3
@@ -267,7 +300,7 @@ class DeleteControl @Autowired constructor(
             )
 
             workspaceCommon.dispatchWebsocketPushEvent(
-                userId = ADMIN_NAME,
+                userId = workspace.createUserId,
                 workspaceName = workspace.workspaceName,
                 workspaceHost = null,
                 errorMsg = null,
@@ -293,7 +326,7 @@ class DeleteControl @Autowired constructor(
                 EnvStatusEnum.deleted -> event.status = true
                 else -> logger.warn(
                     "delete workspace callback with error|" +
-                        "${event.workspaceName}|${workspaceInfo.status}"
+                            "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }
@@ -315,7 +348,7 @@ class DeleteControl @Autowired constructor(
 
         val detail = workspaceCommon.getWorkspaceDetail(workspaceName)
 
-        val projectId = remoteDevSettingDao.fetchAnySetting(dslContext, workspace.createUserId).projectId
+        val projectId = remoteDevSettingDao.fetchOneSetting(dslContext, workspace.createUserId).projectId
         if (status) {
             // 删除环境管理第三方构建机记录
             if (!workspace.preciAgentId.isNullOrBlank() && client.get(ServiceNodeResource::class)
@@ -323,7 +356,7 @@ class DeleteControl @Autowired constructor(
             ) {
                 logger.warn(
                     "delete workspace $workspaceName, but third party agent delete failed." +
-                        "|${workspace.createUserId}|$projectId|${detail?.environmentIP}|${workspace.preciAgentId}"
+                            "|${workspace.createUserId}|$projectId|${detail?.environmentIP}|${workspace.preciAgentId}"
                 )
             }
             // 清心跳

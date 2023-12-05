@@ -121,6 +121,7 @@ class RemoteDevCvmDao {
         return dslContext.selectFrom(TRemotedevCvm.T_REMOTEDEV_CVM)
             .where(conditions)
             .limit(limit.limit).offset(limit.offset)
+            .skipCheck()
             .fetch()
     }
 

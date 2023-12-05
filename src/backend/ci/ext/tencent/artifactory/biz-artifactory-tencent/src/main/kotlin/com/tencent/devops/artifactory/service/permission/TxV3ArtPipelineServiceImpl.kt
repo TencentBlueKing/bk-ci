@@ -39,13 +39,13 @@ class TxV3ArtPipelineServiceImpl @Autowired constructor(
         return if (pipelineId.isNullOrEmpty()) {
             client.get(ServiceProjectAuthResource::class).isProjectUser(
                 userId = userId,
-                token = tokenCheckService.getSystemToken(null) ?: "",
+                token = tokenCheckService.getSystemToken() ?: "",
                 projectCode = projectId
             ).data ?: false
         } else {
             client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
                 userId = userId,
-                token = tokenCheckService.getSystemToken(null) ?: "",
+                token = tokenCheckService.getSystemToken() ?: "",
                 action = TActionUtils.buildAction(
                     authPermission = permission ?: AuthPermission.VIEW,
                     authResourceType = AuthResourceType.PIPELINE_DEFAULT),

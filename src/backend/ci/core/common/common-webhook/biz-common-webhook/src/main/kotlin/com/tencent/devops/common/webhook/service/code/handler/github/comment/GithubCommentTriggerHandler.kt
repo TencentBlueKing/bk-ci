@@ -29,6 +29,7 @@ package com.tencent.devops.common.webhook.service.code.handler.github.comment
 
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_NOTE_AUTHOR_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_NOTE_COMMENT
@@ -168,6 +169,7 @@ interface GithubCommentTriggerHandler<T : GithubCommentEvent> : CodeWebhookTrigg
             startParams[BK_REPO_GIT_WEBHOOK_NOTE_UPDATED_AT] = updatedAt ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_NOTE_URL] = url ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_NOTE_NOTEABLE_TYPE] = event.getCommentType()
+            startParams[PIPELINE_GIT_EVENT_URL] = buildCommentUrl(event)
         }
         // 填充其他参数
         startParams.putAll(getCommentParam(event))

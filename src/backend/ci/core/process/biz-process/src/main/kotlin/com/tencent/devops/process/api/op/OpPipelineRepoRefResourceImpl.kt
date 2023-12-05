@@ -43,8 +43,8 @@ class OpPipelineRepoRefResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun updateAllRepoPipelineRef(): Result<Boolean> {
-        repoPipelineRefService.updateAllPipelineRef()
+    override fun updateAllRepoPipelineRef(projectId: String?): Result<Boolean> {
+        repoPipelineRefService.updateAllPipelineRef(projectId)
         return Result(true)
     }
 }

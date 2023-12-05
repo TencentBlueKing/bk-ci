@@ -44,6 +44,7 @@ import org.springframework.stereotype.Component
 import java.net.SocketTimeoutException
 import java.util.UUID
 
+@Suppress("ALL")
 @Component
 class WorkspaceStartCloudClient @Autowired constructor(
     private val dslContext: DSLContext,
@@ -382,6 +383,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         workspaceName = workspaceName,
                         environmentUid = "",
                         operator = userId,
+                        uid = "",
                         action = EnvironmentAction.DELETE
                     )
                 } else {
@@ -439,7 +441,8 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         workspaceName = workspaceName,
                         environmentUid = environmentOperate.uid,
                         operator = userId,
-                        action = EnvironmentAction.START
+                        uid = environmentOpRsp.data!!.taskUid,
+                        action = action
                     )
 
                     return environmentOpRsp.data!!
@@ -657,7 +660,17 @@ class WorkspaceStartCloudClient @Autowired constructor(
 
                 val resp: ListCgsResp = jacksonObjectMapper().readValue(responseContent)
                 when (resp.code) {
-                    OK -> return resp.data
+                    OK -> {
+                        if (resp.data == null) {
+                            throw BuildFailureException(
+                                ErrorCodeEnum.LIST_CGS_ERROR.errorType,
+                                ErrorCodeEnum.LIST_CGS_ERROR.errorCode,
+                                ErrorCodeEnum.LIST_CGS_ERROR.formatErrorMessage,
+                                " 获取listcgs接口异常: data is null"
+                            )
+                        }
+                        return resp.data
+                    }
                     else -> throw BuildFailureException(
                         ErrorCodeEnum.LIST_CGS_ERROR.errorType,
                         ErrorCodeEnum.LIST_CGS_ERROR.errorCode,

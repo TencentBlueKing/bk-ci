@@ -344,7 +344,7 @@ class WorkspaceCommon @Autowired constructor(
      */
     fun notOk2doNextAction(workspace: WorkspaceRecord): Boolean {
         return (
-                workspace.status.notOk2doNextAction(workspace) && Duration.between(
+                workspace.status.notOk2doNextAction(workspace.workspaceSystemType) && Duration.between(
                     workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
                     LocalDateTime.now()
                 ).seconds < DEFAULT_WAIT_TIME
@@ -426,7 +426,7 @@ class WorkspaceCommon @Autowired constructor(
         if (profile.isDebug()) return true
 
         val projectId = when (workspaceOwnerType) {
-            WorkspaceOwnerType.PERSONAL -> remoteDevSettingDao.fetchAnySetting(
+            WorkspaceOwnerType.PERSONAL -> remoteDevSettingDao.fetchOneSetting(
                 dslContext = dslContext,
                 userId = creator
             ).projectId.ifBlank { null }
@@ -494,7 +494,6 @@ class WorkspaceCommon @Autowired constructor(
     fun getWorkspaceDetail(workspaceName: String): WorkSpaceCacheInfo? {
         return try {
             val result = workspaceDao.getWorkspaceDetail(dslContext, workspaceName)?.detail
-            logger.warn("$workspaceName get workspaceDetail $result")
             if (result != null) {
                 objectMapper.readValue<WorkSpaceCacheInfo>(result)
             } else {
@@ -571,6 +570,8 @@ class WorkspaceCommon @Autowired constructor(
         }
         sharedDao.batchCreate(dslContext, workspaceName, operator, assigns, resourceId)
         assigns.forEach {
+            // 没有注册setting就注册
+            remoteDevSettingDao.fetchOneSetting(dslContext, it.userId)
             whiteListService.shareWorkspace(operator, it.userId)
         }
     }

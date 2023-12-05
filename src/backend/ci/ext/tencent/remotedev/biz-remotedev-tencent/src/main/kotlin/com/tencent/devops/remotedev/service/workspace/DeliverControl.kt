@@ -27,7 +27,16 @@
 
 package com.tencent.devops.remotedev.service.workspace
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.audit.ActionAuditContent.ASSIGNS_TEMPLATE
+import com.tencent.devops.common.audit.ActionAuditContent.CGS_ASSIGN_USER_CONTENT
+import com.tencent.devops.common.audit.ActionAuditContent.PROJECT_CODE_TEMPLATE
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -124,6 +133,17 @@ class DeliverControl @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CGS_ASSIGN,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS,
+            instanceNames = "#workspaceName",
+            instanceIds = "#workspaceName"
+        ),
+        attributes = [AuditAttribute(name = PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = CGS_ASSIGN_USER_CONTENT
+    )
     fun assignUser2Workspace(
         userId: String,
         projectId: String,
@@ -136,6 +156,8 @@ class DeliverControl @Autowired constructor(
         val existOwner = alreadyExist.firstOrNull { it.type == WorkspaceShared.AssignType.OWNER }
         logger.info("assignUser2Workspace|assign2Owner|$assign2Owner|alreadyExist|$alreadyExist")
 
+        ActionAuditContext.current()
+            .addAttribute(ASSIGNS_TEMPLATE, assigns.joinToString(",") { it.userId })
         when {
             existOwner == null && assign2Owner != null -> {
                 val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
@@ -171,7 +193,13 @@ class DeliverControl @Autowired constructor(
                     workspaceCommon.shareWorkspace(
                         workspaceName = workspaceName,
                         operator = userId,
-                        assigns = listOf(ProjectWorkspaceAssign(assign2Owner.userId, WorkspaceShared.AssignType.OWNER)),
+                        assigns = listOf(
+                            ProjectWorkspaceAssign(
+                                userId = assign2Owner.userId,
+                                type = WorkspaceShared.AssignType.OWNER,
+                                expiration = null
+                            )
+                        ),
                         mountType = WorkspaceMountType.START
                     )
                 }
@@ -189,7 +217,7 @@ class DeliverControl @Autowired constructor(
             )
         }
 
-        val am = assigns.map { m -> m.userId }
+        val am = assigns.filter { it.type == WorkspaceShared.AssignType.VIEWER }.map { m -> m.userId }
         val reduce = alreadyExist.filter { it.type == WorkspaceShared.AssignType.VIEWER && it.sharedUser !in am }
         if (reduce.isNotEmpty()) {
             workspaceCommon.unShareWorkspace(
@@ -211,7 +239,7 @@ class DeliverControl @Autowired constructor(
     ) {
         logger.info(
             "softwareInstallationCompleteCallback|type|$type|workspaceName|$workspaceName" +
-                "|projectId|$projectId|userId|$userId|softwareList|$softwareList"
+                    "|projectId|$projectId|userId|$userId|softwareList|$softwareList"
         )
         // 添加软件安装历史
         softwareManageService.updateSoftwareInstalledRecords(
@@ -237,7 +265,8 @@ class DeliverControl @Autowired constructor(
                                 assigns = listOf(
                                     ProjectWorkspaceAssign(
                                         userId = userId,
-                                        type = WorkspaceShared.AssignType.OWNER
+                                        type = WorkspaceShared.AssignType.OWNER,
+                                        expiration = null
                                     )
                                 )
                             )

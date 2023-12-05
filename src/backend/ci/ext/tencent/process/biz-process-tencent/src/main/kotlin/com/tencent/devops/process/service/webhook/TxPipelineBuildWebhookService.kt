@@ -29,6 +29,7 @@ package com.tencent.devops.process.service.webhook
 
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailBuilder
 import com.tencent.devops.process.service.perm.PermFixService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
@@ -49,9 +50,14 @@ class TxPipelineBuildWebhookService : PipelineBuildWebhookService() {
     override fun webhookTriggerPipelineBuild(
         projectId: String,
         pipelineId: String,
-        codeRepositoryType: String,
-        matcher: ScmWebhookMatcher
+        matcher: ScmWebhookMatcher,
+        builder: PipelineTriggerDetailBuilder
     ): Boolean {
-        return super.webhookTriggerPipelineBuild(projectId, pipelineId, codeRepositoryType, matcher)
+        return super.webhookTriggerPipelineBuild(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            matcher = matcher,
+            builder = builder
+        )
     }
 }

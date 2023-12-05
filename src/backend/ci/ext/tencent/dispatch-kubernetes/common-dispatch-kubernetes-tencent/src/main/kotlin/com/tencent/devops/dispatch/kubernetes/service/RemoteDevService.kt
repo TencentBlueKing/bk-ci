@@ -44,6 +44,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceResponse
 import com.tencent.devops.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.pojo.image.WorkspaceImageInfo
 import org.jooq.DSLContext
@@ -179,6 +180,88 @@ class RemoteDevService @Autowired constructor(
         }
     }
 
+    fun makeWorkspaceImageWithBackEvent(event: WorkspaceOperateEvent, backEvent: RemoteDevUpdateEvent) {
+        // 先检测工作空间状态
+        val environmentInfoRspData = remoteDevServiceFactory.loadRemoteDevService(event.mountType).getWorkspaceInfo(
+            userId = event.userId,
+            workspaceName = event.workspaceName
+        )
+
+        var workspaceRunning = false
+        if (environmentInfoRspData.status == EnvStatusEnum.running ||
+            environmentInfoRspData.status == EnvStatusEnum.startFailed ||
+            environmentInfoRspData.status == EnvStatusEnum.stopFailed ||
+            environmentInfoRspData.status == EnvStatusEnum.abnormalAfterRunning
+        ) {
+            // 制作镜像前先关机
+            stopWorkspace(event)
+
+            // 标识这是一次开机制作镜像
+            workspaceRunning = true
+        }
+
+        val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
+            .makeWorkspaceImage(event.userId, event.workspaceName, event.cgsId)
+        val (taskStatus, taskMessage) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
+            .waitTaskFinish(event.userId, taskId, event.type)
+
+        if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
+            logger.info("${event.userId} make workspaceImage success. ${event.workspaceName}")
+            val image = JsonUtil.to(taskMessage ?: "", TaskStatus::class.java).image
+            // 更新db状态
+            dispatchWorkspaceDao.updateWorkspaceStatus(
+                workspaceName = event.workspaceName,
+                status = EnvStatusEnum.stopped,
+                dslContext = dslContext
+            )
+
+            // 如果是开机制作镜像，镜像制作完成后要开机
+            if (workspaceRunning) {
+                startWorkspace(event)
+            }
+
+            backEvent.status = true
+            backEvent.workspaceImageInfo = WorkspaceImageInfo(
+                imageId = event.imageId ?: "",
+                imageCosFile = image?.cosFile ?: "",
+                size = image?.size ?: "",
+                sourceCgsId = image?.sourceCgsId ?: "",
+                sourceCgsType = image?.sourceType ?: "",
+                sourceCgsZone = image?.zoneId ?: ""
+            )
+        } else {
+            throw BuildFailureException(
+                ErrorCodeEnum.BASE_DELETE_VM_ERROR.errorType,
+                ErrorCodeEnum.BASE_DELETE_VM_ERROR.errorCode,
+                ErrorCodeEnum.BASE_DELETE_VM_ERROR.getErrorMessage(),
+                "errorMessage:$taskMessage"
+            )
+        }
+    }
+
+    fun getWorkspaceUrl(
+        userId: String,
+        workspaceName: String,
+        mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD
+    ): String? {
+        return remoteDevServiceFactory.loadRemoteDevService(mountType).getWorkspaceUrl(userId, workspaceName)
+    }
+
+    fun getWorkspaceInfo(
+        userId: String,
+        workspaceName: String,
+        mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD
+    ): WorkspaceInfo {
+        return remoteDevServiceFactory.loadRemoteDevService(mountType).getWorkspaceInfo(userId, workspaceName)
+    }
+
+    fun workspaceTaskCallback(
+        taskStatus: TaskStatus,
+        mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD
+    ): Boolean {
+        return remoteDevServiceFactory.loadRemoteDevService(mountType).workspaceTaskCallback(taskStatus)
+    }
+
     fun startWorkspace(event: WorkspaceOperateEvent): WorkspaceResponse {
         val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .startWorkspace(event.userId, event.workspaceName)
@@ -293,85 +376,5 @@ class RemoteDevService @Autowired constructor(
                 "errorMessage:$failedMsg"
             )
         }
-    }
-
-    fun makeWorkspaceImage(event: WorkspaceOperateEvent): WorkspaceImageInfo {
-        // 先检测工作空间状态
-        val environmentInfoRspData = remoteDevServiceFactory.loadRemoteDevService(event.mountType).getWorkspaceInfo(
-            userId = event.userId,
-            workspaceName = event.workspaceName
-        )
-
-        var workspaceRunning = false
-        if (environmentInfoRspData.status == EnvStatusEnum.running ||
-            environmentInfoRspData.status == EnvStatusEnum.startFailed ||
-            environmentInfoRspData.status == EnvStatusEnum.stopFailed ||
-            environmentInfoRspData.status == EnvStatusEnum.abnormalAfterRunning) {
-            // 制作镜像前先关机
-            stopWorkspace(event)
-
-            // 标识这是一次开机制作镜像
-            workspaceRunning = true
-        }
-
-        val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
-            .makeWorkspaceImage(event.userId, event.workspaceName, event.cgsId)
-        val (taskStatus, taskMessage) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
-            .waitTaskFinish(event.userId, taskId, event.type)
-
-        if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
-            logger.info("${event.userId} make workspaceImage success. ${event.workspaceName}")
-            val image = JsonUtil.to(taskMessage ?: "", TaskStatus::class.java).image
-            // 更新db状态
-            dispatchWorkspaceDao.updateWorkspaceStatus(
-                workspaceName = event.workspaceName,
-                status = EnvStatusEnum.stopped,
-                dslContext = dslContext
-            )
-
-            // 如果是开机制作镜像，镜像制作完成后要开机
-            if (workspaceRunning) {
-                startWorkspace(event)
-            }
-
-            return WorkspaceImageInfo(
-                imageId = event.imageId ?: "",
-                imageCosFile = image?.cosFile ?: "",
-                size = image?.size ?: "",
-                sourceCgsId = image?.sourceCgsId ?: "",
-                sourceCgsType = image?.sourceType ?: "",
-                sourceCgsZone = image?.zoneId ?: ""
-            )
-        } else {
-            throw BuildFailureException(
-                ErrorCodeEnum.BASE_DELETE_VM_ERROR.errorType,
-                ErrorCodeEnum.BASE_DELETE_VM_ERROR.errorCode,
-                ErrorCodeEnum.BASE_DELETE_VM_ERROR.getErrorMessage(),
-                "errorMessage:$taskMessage"
-            )
-        }
-    }
-
-    fun getWorkspaceUrl(
-        userId: String,
-        workspaceName: String,
-        mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD
-    ): String? {
-        return remoteDevServiceFactory.loadRemoteDevService(mountType).getWorkspaceUrl(userId, workspaceName)
-    }
-
-    fun getWorkspaceInfo(
-        userId: String,
-        workspaceName: String,
-        mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD
-    ): WorkspaceInfo {
-        return remoteDevServiceFactory.loadRemoteDevService(mountType).getWorkspaceInfo(userId, workspaceName)
-    }
-
-    fun workspaceTaskCallback(
-        taskStatus: TaskStatus,
-        mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD
-    ): Boolean {
-        return remoteDevServiceFactory.loadRemoteDevService(mountType).workspaceTaskCallback(taskStatus)
     }
 }

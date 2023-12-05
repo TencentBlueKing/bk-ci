@@ -251,7 +251,11 @@ class TxProjectServiceImpl @Autowired constructor(
         userId: String?,
         accessToken: String?
     ): List<String> {
-        val iamV0List = getV0UserProject(userId, accessToken)
+        val iamV0List = projectDao.list(
+            dslContext = dslContext,
+            englishNameList = getV0UserProject(userId, accessToken).toSet(),
+            routerTag = AuthSystemType.RBAC_AUTH_TYPE.value
+        ).map { it.englishName }
         logger.info("$userId V0 project: $iamV0List")
         val projectList = mutableSetOf<String>()
         projectList.addAll(iamV0List)
@@ -276,7 +280,7 @@ class TxProjectServiceImpl @Autowired constructor(
         return bkTag.invokeByTag(rbacTag) {
             client.getGateway(ServiceProjectAuthResource::class).getUserProjectsByPermission(
                 userId = userId,
-                token = tokenService.getSystemToken(null)!!,
+                token = tokenService.getSystemToken()!!,
                 action = permission.value
             ).data
         }
@@ -476,7 +480,7 @@ class TxProjectServiceImpl @Autowired constructor(
             val iamProjectList = bkTag.invokeByTag(tag) {
                 client.getGateway(ServiceProjectAuthResource::class).getUserProjects(
                     userId = userId,
-                    token = tokenService.getSystemToken(null)!!
+                    token = tokenService.getSystemToken()!!
                 ).data
             }
             if (iamProjectList != null) {

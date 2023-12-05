@@ -23,7 +23,7 @@ class TxV3LogPermissionServiceImpl @Autowired constructor(
         val action = TActionUtils.buildAction(permission ?: AuthPermission.VIEW, AuthResourceType.PIPELINE_DEFAULT)
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             userId = userId,
-            token = tokenCheckService.getSystemToken(null) ?: "",
+            token = tokenCheckService.getSystemToken() ?: "",
             action = action,
             projectCode = projectCode,
             resourceType = AuthResourceType.PIPELINE_DEFAULT.value,

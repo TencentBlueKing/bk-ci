@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 
-class GitCIBkRepoDownloadService @Autowired constructor(
+open class GitCIBkRepoDownloadService @Autowired constructor(
     private val pipelineService: PipelineService,
     bkRepoService: BkRepoService,
     client: Client,
@@ -68,8 +68,10 @@ class GitCIBkRepoDownloadService @Autowired constructor(
         channelCode: ChannelCode?,
         fullUrl: Boolean
     ): Url {
-        logger.info("getDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
-            "argPath: $argPath")
+        logger.info(
+            "getDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
+                    "argPath: $argPath"
+        )
         pipelineService.validatePermission(userId, projectId)
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val repo = RepoUtils.getRepoByType(artifactoryType)
