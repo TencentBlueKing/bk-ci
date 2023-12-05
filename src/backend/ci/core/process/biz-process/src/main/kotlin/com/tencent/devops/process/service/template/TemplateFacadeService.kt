@@ -2565,7 +2565,7 @@ class TemplateFacadeService @Autowired constructor(
             ) ?: return@forEach
             templateList.add(
                 PipelineTemplateInfo(
-                    name =  it.templateName,
+                    name = it.templateName,
                     templateId = it.id,
                     projectId = it.projectId,
                     version = it.version,
@@ -2575,7 +2575,7 @@ class TemplateFacadeService @Autowired constructor(
                     category = optionalTemplateInfo.category,
                     logoUrl = optionalTemplateInfo.logoUrl,
                     stages = optionalTemplateInfo.stages,
-                    templateName =  it.templateName,
+                    templateName = it.templateName,
                     srcTemplateId = it.srcTemplateId
                 )
             )
