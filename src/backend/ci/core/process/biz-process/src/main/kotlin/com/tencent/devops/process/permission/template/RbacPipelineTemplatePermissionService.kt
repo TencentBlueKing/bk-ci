@@ -37,9 +37,11 @@ import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import javax.ws.rs.NotFoundException
 
 @Suppress("LongParameterList")
 class RbacPipelineTemplatePermissionService constructor(
@@ -48,6 +50,7 @@ class RbacPipelineTemplatePermissionService constructor(
     val pipelineInfoDao: PipelineInfoDao,
     val client: Client,
     val authResourceApi: AuthResourceApi,
+    private val pipelinePermissionService: PipelinePermissionService,
     authProjectApi: AuthProjectApi,
     pipelineAuthServiceCode: PipelineAuthServiceCode
 ) : AbstractPipelineTemplatePermissionService(
@@ -112,6 +115,18 @@ class RbacPipelineTemplatePermissionService constructor(
             )
         }
         return true
+    }
+
+    override fun hasCreateTemplateInstancePermission(userId: String, projectId: String): Boolean {
+        return if (enableTemplatePermissionManage(projectId)) {
+            pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                permission = AuthPermission.CREATE
+            )
+        } else {
+            true
+        }
     }
 
     override fun getResourcesByPermission(
@@ -179,7 +194,8 @@ class RbacPipelineTemplatePermissionService constructor(
 
     override fun enableTemplatePermissionManage(projectId: String): Boolean {
         val projectInfo = client.get(ServiceProjectResource::class).get(englishName = projectId).data
-        return projectInfo != null && projectInfo.properties?.enableTemplatePermissionManage == true
+            ?: throw NotFoundException("Fail to find the project info of project($projectId)")
+        return projectInfo.properties?.enableTemplatePermissionManage == true
     }
 
     companion object {

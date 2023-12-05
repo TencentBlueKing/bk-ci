@@ -27,9 +27,11 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.p4
 
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_P4_WEBHOOK_CHANGE
 import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
@@ -79,6 +81,21 @@ class P4ChangeTriggerHandler(
     }
 
     override fun getMessage(event: P4ChangeEvent) = event.description
+
+    override fun getEventDesc(event: P4ChangeEvent): String {
+        return I18Variable(
+            code = WebhookI18nConstants.P4_EVENT_DESC,
+            params = listOf(
+                getRevision(event),
+                getUsername(event),
+                getFormatEventType(event)
+            )
+        ).toJsonStr()
+    }
+
+    override fun getExternalId(event: P4ChangeEvent): String {
+        return event.p4Port
+    }
 
     override fun getWebhookFilters(
         event: P4ChangeEvent,
@@ -144,7 +161,15 @@ class P4ChangeTriggerHandler(
                             triggerOnPath = changeFiles,
                             includedPaths = WebhookUtils.convert(includePaths),
                             excludedPaths = WebhookUtils.convert(excludePaths),
-                            caseSensitive = caseSensitive
+                            caseSensitive = caseSensitive,
+                            includedFailedReason = I18Variable(
+                                code = WebhookI18nConstants.PATH_NOT_MATCH,
+                                params = listOf()
+                            ).toJsonStr(),
+                            excludedFailedReason = I18Variable(
+                                code = WebhookI18nConstants.PATH_IGNORED,
+                                params = listOf()
+                            ).toJsonStr()
                         )
                     ).doFilter(response)
                 }
@@ -162,5 +187,12 @@ class P4ChangeTriggerHandler(
         startParams[BK_REPO_P4_WEBHOOK_CHANGE] = event.change
         startParams[PIPELINE_BUILD_MSG] = event.description ?: P4ChangeEvent.DEFAULT_CHANGE_DESCRIPTION
         return startParams
+    }
+
+    private fun getFormatEventType(event: P4ChangeEvent) = when (event.eventType) {
+        CodeEventType.CHANGE_COMMIT.name -> P4ChangeEvent.CHANGE_COMMIT
+        CodeEventType.CHANGE_SUBMIT.name -> P4ChangeEvent.CHANGE_SUBMIT
+        CodeEventType.CHANGE_CONTENT.name -> P4ChangeEvent.CHANGE_CONTENT
+        else -> event.eventType
     }
 }

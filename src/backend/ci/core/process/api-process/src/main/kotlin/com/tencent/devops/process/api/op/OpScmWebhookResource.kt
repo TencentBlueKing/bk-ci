@@ -17,6 +17,11 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpScmWebhookResource {
 
+    @ApiOperation("更新所有的webhook项目名")
+    @PUT
+    @Path("/updateProjectNameAndTaskId")
+    fun updateProjectNameAndTaskId(): Result<Boolean>
+
     @ApiOperation("更新webhook secret")
     @PUT
     @Path("/updateWebhookSecret")
@@ -25,4 +30,9 @@ interface OpScmWebhookResource {
         @QueryParam("scmType")
         scmType: String
     ): Result<Boolean>
+
+    @ApiOperation("更新webhook 事件信息")
+    @PUT
+    @Path("/updateWebhookEventInfo")
+    fun updateWebhookEventInfo(): Result<Boolean>
 }

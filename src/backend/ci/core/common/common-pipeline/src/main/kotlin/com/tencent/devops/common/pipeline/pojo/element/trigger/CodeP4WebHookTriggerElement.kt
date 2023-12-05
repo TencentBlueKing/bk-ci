@@ -29,7 +29,9 @@ package com.tencent.devops.common.pipeline.pojo.element.trigger
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.element.ElementProp
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.vuexInput
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -55,6 +57,31 @@ data class CodeP4WebHookTriggerElement(
             this.id!!
         } else {
             super.findFirstTaskIdByStartType(startType)
+        }
+    }
+
+    // 增加条件这里也要补充上,不然代码库触发器列表展示会不对
+    override fun triggerCondition(): List<ElementProp> {
+        with(data.input) {
+            val props = when (eventType) {
+                CodeEventType.CHANGE_COMMIT, CodeEventType.CHANGE_SUBMIT, CodeEventType.CHANGE_CONTENT -> {
+                    listOf(
+                        vuexInput(name = "includePaths", value = includePaths),
+                        vuexInput(name = "excludePaths", value = excludePaths)
+                    )
+                }
+
+                CodeEventType.SHELVE_COMMIT, CodeEventType.SHELVE_SUBMIT, CodeEventType.SHELVE_DELETE -> {
+                    listOf(
+                        vuexInput(name = "includePaths", value = includePaths),
+                        vuexInput(name = "excludePaths", value = excludePaths)
+                    )
+                }
+
+                else ->
+                    emptyList()
+            }
+            return props.filterNotNull()
         }
     }
 }

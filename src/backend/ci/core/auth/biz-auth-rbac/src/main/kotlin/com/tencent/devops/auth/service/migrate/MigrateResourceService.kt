@@ -287,11 +287,12 @@ class MigrateResourceService @Autowired constructor(
         projectCode: String,
         projectName: String,
         gradeManagerId: String,
-        async: Boolean,
-        registerMonitorPermission: Boolean
+        registerMonitorPermission: Boolean,
+        migrateManagerGroup: Boolean,
+        migrateOtherGroup: Boolean = true
     ) {
         logger.info("migrate project resources:$projectCode|$projectName|$gradeManagerId")
-        if (async) {
+        if (migrateManagerGroup) {
             permissionGradeManagerService.modifyGradeManager(
                 gradeManagerId = gradeManagerId,
                 projectCode = projectCode,
@@ -299,6 +300,20 @@ class MigrateResourceService @Autowired constructor(
                 registerMonitorPermission = registerMonitorPermission
             )
         }
+        if (migrateOtherGroup) {
+            migrateProjectOtherGroup(
+                projectCode = projectCode,
+                projectName = projectName,
+                registerMonitorPermission = registerMonitorPermission
+            )
+        }
+    }
+
+    fun migrateProjectOtherGroup(
+        projectCode: String,
+        projectName: String,
+        registerMonitorPermission: Boolean
+    ) {
         val defaultGroupConfigs = authResourceGroupConfigDao.get(
             dslContext = dslContext,
             resourceType = AuthResourceType.PROJECT.value,
