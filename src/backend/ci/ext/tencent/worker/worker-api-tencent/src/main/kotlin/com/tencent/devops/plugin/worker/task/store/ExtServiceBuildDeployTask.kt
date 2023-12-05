@@ -62,7 +62,7 @@ class ExtServiceBuildDeployTask : ITask() {
     private val logger = LoggerFactory.getLogger(ExtServiceBuildDeployTask::class.java)
 
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
-        LoggerService.addNormalLine("ExtServiceBuildDeployTask buildTask: $buildTask,buildVariables: $buildVariables")
+        logger.info("ExtServiceBuildDeployTask buildTask: $buildTask,buildVariables: $buildVariables")
         val buildId = buildTask.buildId
         LoggerService.addNormalLine("buildId:$buildId begin archive extService package")
         val buildVariableMap = buildTask.buildVariable!!
@@ -76,8 +76,14 @@ class ExtServiceBuildDeployTask : ITask() {
             errorType = ErrorType.USER,
             errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
-        val extServiceImageInfo = buildVariableMap["extServiceImageInfo"] ?: throw TaskExecuteException(
-            errorMsg = "param [extServiceImageInfo] is empty",
+        val bkDockerTargetImageName = buildVariableMap["BK_DOCKER_TARGET_IMAGE_NAME"] ?: throw TaskExecuteException(
+            errorMsg = "param [BK_DOCKER_TARGET_IMAGE_NAME] is empty",
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
+        )
+
+        val imageTag = buildVariableMap["BK_DOCKER_TARGET_IMAGE_TAG"] ?: throw TaskExecuteException(
+            errorMsg = "param [BK_DOCKER_TARGET_IMAGE_TAG] is empty",
             errorType = ErrorType.USER,
             errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
@@ -138,12 +144,13 @@ class ExtServiceBuildDeployTask : ITask() {
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )
         }
+        LoggerService.addNormalLine("ExtServiceBuildDeployTask imagePath:$bkDockerTargetImageName:$imageTag")
         val updateExtServiceEnvInfo = UpdateExtServiceEnvInfoDTO(
             userId = userId,
             pkgPath = destPath,
             pkgShaContent = ShaUtils.sha1(file.readBytes()),
             dockerFileContent = dockerfile.readText(),
-            imagePath = ""
+            imagePath = "$bkDockerTargetImageName:$imageTag",
         )
         val updateExtServiceEnvInfoResult = ExtServiceResourceApi().updateExtServiceEnv(
             buildVariables.projectId,
