@@ -6,12 +6,16 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.devops.auth.api.service.ServiceMonitorSpaceResource
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.pojo.ProjectProperties
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -23,7 +27,9 @@ import org.springframework.stereotype.Service
 @Service
 class ProjectRemoteDevService @Autowired constructor(
     private val objectMapper: ObjectMapper,
-    private val client: Client
+    private val client: Client,
+    private val dslContext: DSLContext,
+    private val projectDao: ProjectDao
 ) {
 
     @Value("\${remoteDev.appCode:}")
@@ -211,6 +217,13 @@ class ProjectRemoteDevService @Autowired constructor(
         headers["Authorization"] = bkrepoDevxHeaderUserAuth
         headers["X-BKREPO-UID"] = BKREPO_ROOT_USERID
         return headers
+    }
+
+    fun updateRemoteDevInfo(projectCode: String, addcloudDesktopNum: Int): Boolean {
+        val record = projectDao.getByEnglishName(dslContext, projectCode) ?: return false
+        val prop = JsonUtil.to<ProjectProperties>(record.properties)
+        val newProp = prop.copy(cloudDesktopNum = prop.cloudDesktopNum + addcloudDesktopNum)
+        return projectDao.updatePropertiesByCode(dslContext, projectCode, newProp) > 0
     }
 
     companion object {

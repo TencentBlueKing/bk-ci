@@ -400,4 +400,19 @@ interface ServiceTxProjectResource {
         @ApiParam("项目组织信息", required = true)
         projectDeptInfo: ProjectDeptInfo
     ): Result<Boolean>
+
+    @PUT
+    @Path("/updateRemotedev")
+    @ApiOperation("修改项目云桌面信息")
+    fun updateRemotedev(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目名称", required = true)
+        @QueryParam("projectCode")
+        projectCode: String,
+        @ApiParam("云桌面配额", required = true)
+        @QueryParam("desktopNum")
+        addcloudDesktopNum: Int,
+    ): Result<Boolean>
 }

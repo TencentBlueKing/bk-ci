@@ -9,8 +9,10 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
+import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.api.op.OpProjectWorkspaceResource
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
@@ -36,7 +38,8 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val desktopWorkspaceService: DesktopWorkspaceService,
     private val gitProxyService: GitProxyService,
-    private val xlsxExportService: WorkspaceXlsxExportService
+    private val xlsxExportService: WorkspaceXlsxExportService,
+    private val client: Client
 ) : OpProjectWorkspaceResource {
     @AuditEntry(
         actionId = ActionId.CGS_ASSIGN,
@@ -54,6 +57,14 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean> {
         val cgsData = workspaceCommon.getCgsData(data.cgsIds, data.ips) ?: return Result(false)
+        // 增加可以分配的配额
+        if (!data.ips.isNullOrEmpty()) {
+            client.get(ServiceTxProjectResource::class).updateRemotedev(
+                userId = userId,
+                projectCode = data.projectId,
+                addcloudDesktopNum = data.ips!!.size
+            )
+        }
         cgsData.forEach { cgs ->
             // 先校验该cgsId是否已被申领分配并运行中
             if (!workspaceCommon.checkCgsRunning(cgs.cgsId, EnvStatusEnum.running)) return Result(false)
@@ -87,6 +98,12 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
             Thread.sleep(500)
         }
         return Result(true)
+    }
+
+    private fun addProjectDesktopNum(
+        userId: String,
+        projectId: String
+    ) {
     }
 
     override fun getProjectWorkspaceList(
