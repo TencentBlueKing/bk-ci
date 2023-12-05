@@ -150,7 +150,7 @@ class ExtServiceBuildDeployTask : ITask() {
             pkgPath = destPath,
             pkgShaContent = ShaUtils.sha1(file.readBytes()),
             dockerFileContent = dockerfile.readText(),
-            imagePath = "$bkDockerTargetImageName:$imageTag",
+            imagePath = "$bkDockerTargetImageName:$imageTag"
         )
         val updateExtServiceEnvInfoResult = ExtServiceResourceApi().updateExtServiceEnv(
             buildVariables.projectId,
