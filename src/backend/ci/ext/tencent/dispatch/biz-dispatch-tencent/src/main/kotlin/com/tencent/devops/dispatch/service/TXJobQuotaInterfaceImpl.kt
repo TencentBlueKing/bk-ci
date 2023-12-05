@@ -30,6 +30,7 @@ package com.tencent.devops.dispatch.service
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.kafka.KafkaTopic
+import com.tencent.devops.dispatch.pojo.JobConcurrencyHistory
 import com.tencent.devops.dispatch.pojo.JobQuotaHistory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
@@ -44,6 +45,10 @@ class TXJobQuotaInterfaceImpl @Autowired constructor(
      * 保存Job配额相关构建记录
      */
     override fun saveJobQuotaHistory(jobQuotaHistory: JobQuotaHistory) {
-        kafkaClient.send(KafkaTopic.JOB_QUOTA_HISYORY_TOPIC, JsonUtil.toJson(jobQuotaHistory))
+        kafkaClient.send(KafkaTopic.JOB_QUOTA_HISTORY_TOPIC, JsonUtil.toJson(jobQuotaHistory))
+    }
+
+    override fun saveJobConcurrency(jobConcurrencyHistory: JobConcurrencyHistory) {
+        kafkaClient.send(KafkaTopic.JOB_CONCURRENCY_HISTORY_TOPIC, JsonUtil.toJson(jobConcurrencyHistory))
     }
 }
