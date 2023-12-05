@@ -743,11 +743,19 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 srcTemplateId = installTemplateReq.templateCode,
                 projectIds = projectCodeList
             ).data ?: emptyList()
-        val installProjectTemplateDTO = templateProjectInfos.map {
+        val installProjectTemplateDTO = templateProjectInfos.map { optionalTemplateInfo ->
             InstallProjectTemplateDTO(
-                projectId = it.projectId,
-                templateId = it.templateId,
-                version = it.version
+                name = optionalTemplateInfo.name,
+                templateId = optionalTemplateInfo.templateId,
+                projectId = optionalTemplateInfo.projectId,
+                version = optionalTemplateInfo.version,
+                versionName = optionalTemplateInfo.versionName,
+                templateType = optionalTemplateInfo.templateType,
+                templateTypeDesc = optionalTemplateInfo.templateTypeDesc,
+                category = optionalTemplateInfo.category,
+                logoUrl = optionalTemplateInfo.logoUrl,
+                stages = optionalTemplateInfo.stages,
+                srcTemplateId = optionalTemplateInfo.srcTemplateId
             )
         }
         projectCodeList.removeAll(addMarketTemplateResultKeys)

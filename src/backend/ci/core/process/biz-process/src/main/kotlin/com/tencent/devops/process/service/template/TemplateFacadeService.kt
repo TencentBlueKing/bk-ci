@@ -1041,6 +1041,7 @@ class TemplateFacadeService @Autowired constructor(
             if (template[tTemplate.TYPE] == TemplateType.CONSTRAINT.name) {
                 constrainedTemplateList.add(template[tTemplate.SRC_TEMPLATE_ID])
             }
+            // 非研发商店流水线模板ID集合
             templateIdList.add(template[tTemplate.ID])
         }
         val srcTemplateRecords = if (constrainedTemplateList.isNotEmpty()) templateDao.listTemplate(
@@ -1183,46 +1184,62 @@ class TemplateFacadeService @Autowired constructor(
         ).map { it.pipelineId to it }.toMap()
         val tTemplate = TTemplate.T_TEMPLATE
         templates.forEach { record ->
-            val templateId = record[tTemplate.ID]
             val type = record[tTemplate.TYPE]
             val srcTemplateId = record[tTemplate.SRC_TEMPLATE_ID]
-            val templateRecord = if (type == TemplateType.CONSTRAINT.name) {
-                srcTemplates?.get(srcTemplateId)
-            } else {
-                record
-            }
-
-            if (templateRecord != null) {
-                val modelStr = templateRecord[tTemplate.TEMPLATE]
-                val version = templateRecord[tTemplate.VERSION] as Long
-
-                val model: Model = objectMapper.readValue(modelStr)
-                val setting = settings[templateId]
-                val logoUrl = record[tTemplate.LOGO_URL]
-                val categoryStr = record[tTemplate.CATEGORY]
-                val key = if (type == TemplateType.CONSTRAINT.name) srcTemplateId else templateId
-                result[key] = OptionalTemplate(
-                    name = setting?.name ?: model.name,
-                    templateId = templateId,
-                    projectId = templateRecord[tTemplate.PROJECT_ID],
-                    version = version,
-                    versionName = templateRecord[tTemplate.VERSION_NAME],
-                    templateType = type,
-                    templateTypeDesc = TemplateType.getTemplateTypeDesc(type),
-                    logoUrl = logoUrl ?: "",
-                    category = if (!categoryStr.isNullOrBlank()) JsonUtil.getObjectMapper()
-                        .readValue(categoryStr, List::class.java) as List<String> else listOf(),
-                    stages = model.stages
-                )
-            }
+            val templateId = record[tTemplate.ID]
+            val key = if (type == TemplateType.CONSTRAINT.name) srcTemplateId else templateId
+            val optionalTemplateInfo = generateOptionalTemplate(
+                settings = settings,
+                record = record,
+                srcTemplates = srcTemplates
+            ) ?: return@forEach
+            result[key] = optionalTemplateInfo
         }
-
         return OptionalTemplateList(
             count = templateCount,
             page = page,
             pageSize = pageSize,
             templates = result
         )
+    }
+
+    private fun generateOptionalTemplate(
+        settings: Map<String, TPipelineSettingRecord>,
+        record: Record,
+        srcTemplates: Map<String, Record>?
+    ): OptionalTemplate? {
+        val tTemplate = TTemplate.T_TEMPLATE
+        val templateId = record[tTemplate.ID]
+        val type = record[tTemplate.TYPE]
+        val srcTemplateId = record[tTemplate.SRC_TEMPLATE_ID]
+        val templateRecord = if (type == TemplateType.CONSTRAINT.name) {
+            srcTemplates?.get(srcTemplateId)
+        } else {
+            record
+        }
+        return if (templateRecord != null) {
+            val modelStr = templateRecord[tTemplate.TEMPLATE]
+            val version = templateRecord[tTemplate.VERSION] as Long
+            val model: Model = objectMapper.readValue(modelStr)
+            val setting = settings[templateId]
+            val logoUrl = record[tTemplate.LOGO_URL]
+            val categoryStr = record[tTemplate.CATEGORY]
+            OptionalTemplate(
+                name = setting?.name ?: model.name,
+                templateId = templateId,
+                projectId = templateRecord[tTemplate.PROJECT_ID],
+                version = version,
+                versionName = templateRecord[tTemplate.VERSION_NAME],
+                templateType = type,
+                templateTypeDesc = TemplateType.getTemplateTypeDesc(type),
+                logoUrl = logoUrl ?: "",
+                category = if (!categoryStr.isNullOrBlank()) JsonUtil.getObjectMapper()
+                    .readValue(categoryStr, List::class.java) as List<String> else listOf(),
+                stages = model.stages
+            )
+        } else {
+            null
+        }
     }
 
     fun getTemplate(
@@ -2520,17 +2537,45 @@ class TemplateFacadeService @Autowired constructor(
         }
     }
 
-    fun getTemplateIdByTemplateCode(templateCode: String, projectIds: List<String>): List<PipelineTemplateInfo> {
-        val templateInfos = templateDao.listTemplateReferenceByProjects(dslContext, templateCode, projectIds)
+    fun getTemplateIdByTemplateCode(
+        templateCode: String,
+        projectIds: List<String>
+    ): List<PipelineTemplateInfo> {
         val templateList = mutableListOf<PipelineTemplateInfo>()
+        val templateIdList = mutableSetOf<String>()
+        val templateInfos = templateDao.listTemplateReferenceByProjects(
+            dslContext = dslContext,
+            templateId = templateCode,
+            projectIds = projectIds
+        )
+        val srcTemplates = getConstrainedSrcTemplates(
+            context = dslContext,
+            templates = templateInfos,
+            templateIdList = templateIdList,
+            queryModelFlag = true
+        )
+
         templateInfos.forEach {
+            val tTemplate = TTemplate.T_TEMPLATE
+            val type = it[tTemplate.TYPE]
+            val optionalTemplateInfo = generateOptionalTemplate(
+                settings = emptyMap(),
+                record = it,
+                srcTemplates = srcTemplates
+            ) ?: return@forEach
             templateList.add(
                 PipelineTemplateInfo(
-                    projectId = it.projectId,
+                    name =  it.templateName,
                     templateId = it.id,
-                    templateName = it.templateName,
-                    versionName = it.versionName,
+                    projectId = it.projectId,
                     version = it.version,
+                    versionName = it.versionName,
+                    templateType = type,
+                    templateTypeDesc = optionalTemplateInfo.templateTypeDesc,
+                    category = optionalTemplateInfo.category,
+                    logoUrl = optionalTemplateInfo.logoUrl,
+                    stages = optionalTemplateInfo.stages,
+                    templateName =  it.templateName,
                     srcTemplateId = it.srcTemplateId
                 )
             )
