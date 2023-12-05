@@ -101,6 +101,8 @@ class TencentQueryFromCmdbService : QueryOperatorService {
             pagingInfo = CmdbPagingInfo(DEFAULT_START_INDEX, PAGE_SIZE, DEFAULT_RETURN_TOTAL_ROWS)
         )
         val headers = mutableMapOf("accept" to "*/*", "Content-Type" to "application/json")
+        if (logger.isDebugEnabled) logger.debug("[queryCmdb]req:$cmdbGetQueryInfoReq")
+        if (logger.isDebugEnabled) logger.debug("[queryCmdb]url:${cmdbGetQueryInfoBaseUrl + cmdbGetQueryInfoPath}")
         val responseBody = executePostRequest(
             headers, cmdbGetQueryInfoBaseUrl + cmdbGetQueryInfoPath, cmdbGetQueryInfoReq
         )
