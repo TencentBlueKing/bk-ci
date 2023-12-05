@@ -79,8 +79,10 @@ class TencentNodeScheduledService @Autowired constructor(
                 if (logger.isDebugEnabled) logger.debug("[addNodeToCC]cmdbNodesIp:$cmdbNodesIp.")
                 val nodeIpToNodesRecords = cmdbNodesRecords.associateBy { it.value1() }
                 val ipToCmdbInfoMap = tencentQueryFromCmdbService.queryCmdbInfoFromIp(cmdbNodesIp)
+                if (logger.isDebugEnabled) logger.debug("[addNodeToCC]ipToCmdbInfoMap:$ipToCmdbInfoMap.")
                 val svrIdToCmdbInfoMap = ipToCmdbInfoMap?.values
                     ?.associateBy { it.serverId?.toLong() }
+                if (logger.isDebugEnabled) logger.debug("[addNodeToCC]svrIdToCmdbInfoMap:$svrIdToCmdbInfoMap.")
                 if (!ipToCmdbInfoMap.isNullOrEmpty()) {
                     val svrIdList = ipToCmdbInfoMap.values.mapNotNull { it.serverId?.toLong() } // 从cmdb中查到的 所有svrId
                     val (_, inCCSvrIdList, notInCCSvrIdList) = cmdbNodeService.checkNodeInCCBySvrId(svrIdList)
