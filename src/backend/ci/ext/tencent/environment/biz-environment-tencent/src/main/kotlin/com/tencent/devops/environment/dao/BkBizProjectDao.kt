@@ -92,4 +92,17 @@ class BkBizProjectDao {
             return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).fetchAny()
         }
     }
+
+    fun updateDashboard(
+        dslContext: DSLContext,
+        projectId: String,
+        update: Boolean
+    ): Boolean {
+        with(TBkbizProject.T_BKBIZ_PROJECT) {
+            return dslContext.update(this)
+                .set(ENABLE_MONITOR_DASHBOARD, update)
+                .where(PROJECT_ID.eq(projectId))
+                .execute() > 0
+        }
+    }
 }

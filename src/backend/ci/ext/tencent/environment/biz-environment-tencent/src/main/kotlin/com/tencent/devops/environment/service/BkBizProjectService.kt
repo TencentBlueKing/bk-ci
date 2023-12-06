@@ -80,4 +80,15 @@ class BkBizProjectService @Autowired constructor(
         }
         return EnableDashboardResp(false, null)
     }
+
+    fun updateDashboard(
+        projectId: String,
+        updateDashboard: Boolean
+    ): Boolean {
+        return bizProjectDao.updateDashboard(
+            dslContext = dslContext,
+            projectId = projectId,
+            update = updateDashboard
+        )
+    }
 }
