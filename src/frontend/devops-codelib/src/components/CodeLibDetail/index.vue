@@ -539,6 +539,9 @@
                 max-width: 300px;
             }
         }
+        .codelib-address {
+            max-width: 300px;
+        }
     }
 
     @media (min-width: 1200px) {
@@ -546,6 +549,9 @@
             span {
                 max-width: 350px;
             }
+        }
+        .codelib-address {
+            max-width: 400px;
         }
     }
     ::v-deep {
@@ -628,7 +634,6 @@
         }
         .codelib-address {
             display: inline-block;
-            max-width: 400px;
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
