@@ -2569,6 +2569,7 @@ class TemplateFacadeService @Autowired constructor(
                     templateId = it.id,
                     projectId = it.projectId,
                     version = it.version,
+                    srcTemplateVersion = optionalTemplateInfo.version,
                     versionName = it.versionName,
                     templateType = type,
                     templateTypeDesc = optionalTemplateInfo.templateTypeDesc,

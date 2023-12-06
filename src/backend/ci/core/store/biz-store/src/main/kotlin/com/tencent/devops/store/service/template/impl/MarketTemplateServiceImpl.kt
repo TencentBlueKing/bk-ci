@@ -749,6 +749,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 templateId = optionalTemplateInfo.templateId,
                 projectId = optionalTemplateInfo.projectId,
                 version = optionalTemplateInfo.version,
+                srcTemplateVersion = optionalTemplateInfo.srcTemplateVersion,
                 versionName = optionalTemplateInfo.versionName,
                 templateType = optionalTemplateInfo.templateType,
                 templateTypeDesc = optionalTemplateInfo.templateTypeDesc,
