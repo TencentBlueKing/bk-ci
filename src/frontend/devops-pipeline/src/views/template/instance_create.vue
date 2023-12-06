@@ -272,6 +272,7 @@
             }
         },
         async mounted () {
+            console.log(this.$route.params)
             this.requestTemplateDatail(this.curVersionId)
             this.handlePipeLineName()
             if (this.hashVal) {
@@ -280,7 +281,7 @@
             if (this.$route.query.useTemplateSettings === 'true') {
                 this.isTemplateSetting = true
             }
-            if (this.curVersionId && this.type === 'copy_instance') {
+            if (this.curVersionId) {
                 this.instanceVersion = this.curVersionId
             }
         },

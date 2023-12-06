@@ -507,8 +507,7 @@
                         projectId: this.projectId,
                         pipelineId: this.pipelineId,
                         curVersionId: this.currentVersionId,
-                        pipelineName: (row.pipelineName + '_copy').substring(0, 128),
-                        type: 'copy_instance'
+                        pipelineName: (row.pipelineName + '_copy').substring(0, 128)
                     }
                 }
                 this.$router.push(route)
