@@ -178,7 +178,6 @@ export default {
         return state
     },
     [SET_PIPELINE_EDITING]: (state, editing) => {
-        console.trace('SET_PIPELINE_EDITING', editing)
         if (state.isPipelineEditing !== editing) {
             Vue.set(state, 'isPipelineEditing', editing)
         }

@@ -124,7 +124,7 @@
                     [
                         {
                             label: 'disable',
-                            handler: () => this.disablePipeline(pipeline)
+                            handler: () => this.disablePipeline(this.pipelineInfo?.pipelineAsCodeSettings?.enable ?? false, pipeline)
                         },
                         {
                             label: 'delete',
@@ -135,12 +135,12 @@
             }
         },
         methods: {
-            ...mapActions('atom', ['setPipelineEditing', 'setPipeline', 'setEditFrom']),
-            ...mapActions('pipelines', ['requestToggleCollect']),
+            ...mapActions('atom', ['setPipelineEditing', 'setEditFrom']),
+            ...mapActions('pipelines', ['requestToggleCollect', 'lockPipeline']),
             exportPipeline () {
                 this.showExportDialog = true
             },
-            disablePipeline (pipeline) {
+            disablePipeline (enablePac, pipeline) {
                 this.$bkInfo({
                     type: 'warning',
                     title: this.$t('disablePipelineConfirmTips'),
@@ -149,31 +149,42 @@
                         this.$createElement(
                             'p',
                             {},
-                            this.$t(pipeline.enablePac ? 'disablePacPipelineConfirmDesc' : 'disablePipelineConfirmDesc')
+                            this.$t(enablePac ? 'disablePacPipelineConfirmDesc' : 'disablePipelineConfirmDesc')
                         ),
-                        this.$createElement(
-                            'pre',
-                            {
-                                class: 'disable-pac-code'
-                            },
-                            [
-                                this.$t('codeConfig'),
-                                this.$createElement(CopyIcon, {
-                                    props: {
-                                        value: 'abc'
-                                    }
-                                })
-                            ]
-                        )
+                        enablePac
+                            ? this.$createElement(
+                                'pre',
+                                {
+                                    class: 'disable-pac-code'
+                                },
+                                [
+                                    this.$t('codeConfig'),
+                                    this.$createElement(CopyIcon, {
+                                        props: {
+                                            value: 'abc'
+                                        }
+                                    })
+                                ]
+                            )
+                            : null
                     ]),
-                    confirmFn (vm) {
-                        console.warn(vm)
-                    },
-                    cancelFn (vm) {
-                        console.warn(vm)
-                    },
-                    afterLeaveFn (vm) {
-                        console.log(vm)
+                    confirmFn: async (vm) => {
+                        try {
+                            await this.lockPipeline({
+                                projectId: this.$route.params.projectId,
+                                pipelineId: pipeline.pipelineId,
+                                isLock: true
+                            })
+                            this.$bkMessage({
+                                theme: 'success',
+                                message: this.$t('disableSuc', [pipeline.pipelineName])
+                            })
+                        } catch (error) {
+                            this.$bkMessage({
+                                theme: 'error',
+                                message: error.message || error
+                            })
+                        }
                     }
                 })
             },

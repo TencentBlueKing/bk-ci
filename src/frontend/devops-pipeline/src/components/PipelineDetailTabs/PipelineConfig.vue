@@ -173,9 +173,20 @@
                 })
             }
         },
+        beforeDestroy () {
+            this.$refs.editor?.destroy()
+            this.setPipelineYaml('')
+            this.setPipeline(null)
+            this.setPipelineWithoutTrigger(null)
+            this.setPipelineSetting(null)
+        },
         methods: {
             ...mapActions('atom', [
-                'requestPipeline'
+                'requestPipeline',
+                'setPipeline',
+                'setPipelineYaml',
+                'setPipelineSetting',
+                'setPipelineWithoutTrigger'
             ]),
             ...mapActions('pipelines', [
                 'rollbackPipelineVersion'

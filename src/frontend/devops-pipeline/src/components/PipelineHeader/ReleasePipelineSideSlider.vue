@@ -301,6 +301,11 @@
             }
         },
         watch: {
+            value (val) {
+                if (val) {
+                    this.init()
+                }
+            },
             yamlInfo: {
                 handler: function (val) {
                     if (val) {
@@ -308,14 +313,6 @@
                     }
                 },
                 immediate: true
-            },
-            pacSupportScmTypeList (val) {
-                if (val.length && !this.releaseParams.scmType) {
-                    this.releaseParams.scmType = val[0].id
-                    this.$nextTick(() => {
-                        this.fetchPacEnableCodelibList()
-                    })
-                }
             },
             pacEnabled: {
                 handler: function (val) {
@@ -365,8 +362,11 @@
                 if (this.releaseParams.enablePac) {
                     this.isLoading = true
                     await this.getSupportPacScmTypeList()
-
+                    this.releaseParams.scmType = this.pacSupportScmTypeList[0]?.id
                     this.isLoading = false
+                    this.$nextTick(() => {
+                        this.fetchPacEnableCodelibList()
+                    })
                 }
             },
             async fetchPacEnableCodelibList () {
@@ -514,11 +514,10 @@
             hideReleaseSlider () {
                 this.$emit('input', false)
                 this.releaseParams = {
-                    enablePac: false,
-                    repoHashId: '',
-                    scmType: '',
+                    enablePac: this.pacEnabled,
                     description: '',
-                    filePath: '',
+                    scmType: '',
+                    ...this.yamlInfo,
                     targetAction: 'CHECKOUT_BRANCH_AND_REQUEST_MERGE'
                 }
             },

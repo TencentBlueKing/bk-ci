@@ -97,7 +97,7 @@
     import StagePropertyPanel from './StagePropertyPanel'
     import StageReviewPanel from './StageReviewPanel'
     import AtomSelector from './AtomSelector'
-    import { isObject, areDeeplyEqual } from '../utils/util'
+    import { isObject } from '../utils/util'
 
     export default {
         components: {
@@ -234,7 +234,7 @@
         watch: {
             pipeline: {
                 handler (val, old) {
-                    if (this.pipelineEditable && !areDeeplyEqual(val, old)) {
+                    if (this.pipelineEditable) {
                         this.setPipelineEditing(true)
                     }
                 },
@@ -255,7 +255,6 @@
                 'addAtom',
                 'addContainer',
                 'addStage',
-                'setPipeline',
                 'setPipelineEditing',
                 'toggleStageReviewPanel'
             ]),

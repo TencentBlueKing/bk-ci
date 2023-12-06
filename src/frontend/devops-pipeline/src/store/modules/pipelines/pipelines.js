@@ -246,6 +246,12 @@ const actions = {
             return response.data
         })
     },
+
+    lockPipeline ({ commit, state, dispatch }, { projectId, pipelineId, isLock }) {
+        return ajax.post(`${prefix}/projects/${projectId}/pipelines/${pipelineId}/lock?enable=${isLock}`).then(response => {
+            return response.data
+        })
+    },
     /**
      * 获取流水线下拉列表信息
      *
