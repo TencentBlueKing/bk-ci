@@ -80,14 +80,12 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         apigwType: String?,
         operator: String,
         owner: String?,
-        projectId: String,
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean> {
-        logger.info("assign workspace|operator|$operator|owner|$owner|projectId|$projectId|data|$data")
+        logger.info("assign workspace|operator|$operator|owner|$owner|data|$data")
         return client.get(ServiceRemoteDevResource::class).assignWorkspace(
             operator = operator,
             owner = owner,
-            projectId = projectId,
             data = data
         )
     }

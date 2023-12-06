@@ -68,7 +68,6 @@ class ServiceRemoteDevResourceImpl(
     override fun assignWorkspace(
         operator: String,
         owner: String?,
-        projectId: String,
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean> {
         val cgsData = workspaceCommon.getCgsData(data.cgsIds, data.ips) ?: return Result(false)

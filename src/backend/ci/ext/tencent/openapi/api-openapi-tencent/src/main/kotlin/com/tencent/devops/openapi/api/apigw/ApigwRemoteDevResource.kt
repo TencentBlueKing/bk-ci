@@ -130,9 +130,6 @@ interface ApigwRemoteDevResource {
         @ApiParam(value = "拥有者，为空则表示不分配，只交付项目", required = false)
         @QueryParam("owner")
         owner: String?,
-        @ApiParam(value = "项目ID", required = true)
-        @QueryParam("projectId")
-        projectId: String,
         @ApiParam(value = "分配数据，必填", required = true)
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean>
