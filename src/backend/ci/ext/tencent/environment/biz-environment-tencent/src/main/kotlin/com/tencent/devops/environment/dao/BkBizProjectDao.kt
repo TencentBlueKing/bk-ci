@@ -29,6 +29,7 @@ package com.tencent.devops.environment.dao
 
 import com.tencent.devops.environment.pojo.BizProjectItem
 import com.tencent.devops.model.environment.tables.TBkbizProject
+import com.tencent.devops.model.environment.tables.records.TBkbizProjectRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -80,6 +81,15 @@ class BkBizProjectDao {
     ): Boolean {
         with(TBkbizProject.T_BKBIZ_PROJECT) {
             return dslContext.deleteFrom(this).where(ID.eq(id)).execute() > 0
+        }
+    }
+
+    fun fetchRecord(
+        dslContext: DSLContext,
+        projectId: String
+    ): TBkbizProjectRecord? {
+        with(TBkbizProject.T_BKBIZ_PROJECT) {
+            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).fetchAny()
         }
     }
 }

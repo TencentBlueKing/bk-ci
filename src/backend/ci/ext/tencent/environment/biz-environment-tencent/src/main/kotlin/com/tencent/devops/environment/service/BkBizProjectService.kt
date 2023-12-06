@@ -29,10 +29,12 @@ package com.tencent.devops.environment.service
 
 import com.tencent.devops.environment.dao.BkBizProjectDao
 import com.tencent.devops.environment.pojo.BizProjectItem
+import com.tencent.devops.environment.pojo.EnableDashboardResp
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
+@Suppress("ALL")
 @Service
 class BkBizProjectService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -61,5 +63,21 @@ class BkBizProjectService @Autowired constructor(
         id: Long
     ): Boolean {
         return bizProjectDao.delete(dslContext, id)
+    }
+
+    fun checkEnableDashboard(
+        projectId: String
+    ): EnableDashboardResp {
+        val record = bizProjectDao.fetchRecord(dslContext, projectId)
+            ?: return EnableDashboardResp(false, null)
+        if (record.enableMonitorDashboard == true) {
+            return if (record.bizId <= 0) {
+                EnableDashboardResp(true, record.bizId)
+            } else {
+                // 兼容最早的一批旧数据
+                EnableDashboardResp(true, -record.bizId)
+            }
+        }
+        return EnableDashboardResp(false, null)
     }
 }
