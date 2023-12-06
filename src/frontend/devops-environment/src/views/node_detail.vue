@@ -34,10 +34,11 @@
                     <div class="info-value" :title="entry.value">{{ entry.value }}</div>
                 </li>
             </ul>
-            <div class="metric-monitor">
+            <div class="metric-monitor" v-if="isEnableDashboard">
                 <i class="devops-icon icon-tiaozhuan jump-icon"></i>
                 <a :href="jumpDashboardUrl">{{ $t('environment.查看更多指标监控') }}</a>
             </div>
+            <node-overview-chart></node-overview-chart>
             <node-detail-tab></node-detail-tab>
         </div>
     </div>
@@ -71,7 +72,7 @@
                     isLoading: false,
                     title: this.$t('environment.loadingTitle')
                 },
-                isEnableDashboard: true,
+                isEnableDashboard: false,
                 bizId: 0
             }
         },
