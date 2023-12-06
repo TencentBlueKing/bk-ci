@@ -391,7 +391,7 @@
                 return window.userInfo
             },
             jumpDashboardUrl () {
-                return `https://bkm.woa.com/?bizId=-4220877#/grafana/d/${this.bizId}`
+                return `https://bkm.woa.com/?bizId=${this.bizId}#/grafana/d/bT8qy3NVa`
             }
         },
         watch: {
