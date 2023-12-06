@@ -42,6 +42,8 @@ data class CheckImageInitPipelineReq(
     val version: String,
     @ApiModelProperty("镜像类型", required = false)
     val imageType: String? = null,
+    @ApiModelProperty("镜像仓库", required = true)
+    val registryHost: String,
     @ApiModelProperty("仓库用户名", required = false)
     val registryUser: String? = null,
     @ApiModelProperty("仓库密码", required = false)
