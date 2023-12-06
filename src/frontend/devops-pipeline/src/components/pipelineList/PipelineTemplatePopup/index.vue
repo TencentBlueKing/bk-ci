@@ -337,11 +337,13 @@
                 }
                 this.isLoading = true
                 this.requestInstallTemplate(postData).then((res) => {
+                    const curTempData = res.installProjectTemplateDTO.find(i => i.projectId === this.projectId)
                     return this.requestPipelineTemplate({
                         projectId: this.projectId
                     }).then(() => {
                         const currentStoreItem = this.storeTemplate.find(x => x.code === temp.code)
                         currentStoreItem.installed = true
+                        this.pipelineTemplate[curTempData.srcTemplateId] = curTempData
                         this.selectTemp(index)
                     })
                 }).catch((err) => {
