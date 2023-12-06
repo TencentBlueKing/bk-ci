@@ -1,6 +1,6 @@
 <template>
     <div class="variable-container">
-        <bk-alert type="info" :title="$t('可在插件中通过表达式 ${{ xxx }} 引用变量')" closable></bk-alert>
+        <bk-alert type="info" :title="$t('可通过表达式 ${{ variable.<var_name> }} 引用变量')" closable></bk-alert>
         <div class="operate-row">
             <bk-button class="var-btn" @click="handleAdd">{{$t('添加变量')}}</bk-button>
             <bk-button class="var-btn" @click="handleAdd('constant')">{{$t('添加常量')}}</bk-button>

@@ -1,8 +1,8 @@
 <template>
     <div class="selector-type-param">
         <div class="option-type">
-            <div class="type-select" :class="{ 'is-active': payloadValue.type === 'options' }" @click="handleParamTypeChange('type', 'options')">预定义选项</div>
-            <div class="type-select" :class="{ 'is-active': payloadValue.type === 'remote' }" @click="handleParamTypeChange('type', 'remote')">从接口获取选项</div>
+            <div class="type-select" :class="{ 'is-active': payloadValue.type === 'options' }" @click="handleParamTypeChange('type', 'options')">{{$t('预定义选项')}}</div>
+            <div class="type-select" :class="{ 'is-active': payloadValue.type === 'remote' }" @click="handleParamTypeChange('type', 'remote')">{{$t('从接口获取选项')}}</div>
         </div>
         <div class="option-items">
             <section v-if="payloadValue.type !== 'remote'">

@@ -22,6 +22,7 @@ const dictionary = {
         messages: {
             alpha: field => '字段只能包含字母',
             unique: field => `${field}字段不能重复`,
+            notInList: field => `${field}字段不能重复`,
             required: field => '字段不能为空',
             excludeComma: field => '字段不能包含英文逗号',
             string: field => '字段只能包含数字，字母和下划线',
@@ -55,6 +56,7 @@ const dictionary = {
     'en-US': {
         messages: {
             unique: field => `${field} field cannot be repeated`,
+            notInList: field => `${field} field cannot be repeated`,
             excludeComma: field => 'Field cannot contain English commas',
             string: field => 'Fields can only contain numbers, letters, and underscores',
             numeric: field => 'Fields can only contain numbers',

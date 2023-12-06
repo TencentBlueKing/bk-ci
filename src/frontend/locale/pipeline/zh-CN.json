@@ -931,6 +931,9 @@
       "abnormalParams": "参数异常",
       "consoleEnterTips": "Linux登录调试入口由此进入"
     },
+    "newui": {
+      "variable": "变量"
+    },
     "atomForm": {
       "hasExisted": "已存在",
       "notFound": "未找到相关人员",

@@ -7,7 +7,7 @@
         </div>
         <a class="key-add" v-if="!disabled" @click.stop="handleAdd">
             <i class="devops-icon icon-plus-circle" />
-            <span>添加选项</span>
+            <span>{{$t('添加选项')}}</span>
         </a>
     </section>
 </template>

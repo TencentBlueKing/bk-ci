@@ -5,8 +5,8 @@
                 <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value)" :data-vv-scope="'pipelineParam'" v-validate.initial="`required|unique:${globalParams.map(p => p.id).join(',')}`" name="id" :placeholder="$t('nameInputTips')" :value="param.id" />
             </form-field>
 
-            <form-field :required="true" :label="nameLabel" :is-error="errors.has('pipelineParam.name')" :error-msg="errors.first('pipelineParam.name')">
-                <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value)" :data-vv-scope="'pipelineParam'" v-validate.initial="`required|unique:${globalParams.map(p => p.name).join(',')}`" name="name" :placeholder="$t('请输入别名')" :value="param.name" />
+            <form-field :label="nameLabel" :is-error="errors.has('pipelineParam.name')" :error-msg="errors.first('pipelineParam.name')">
+                <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value)" :data-vv-scope="'pipelineParam'" v-validate.initial="`unique:${globalParams.map(p => p.name).join(',')}`" name="name" :placeholder="$t('请输入别名')" :value="param.name" />
             </form-field>
 
             <form-field :required="true" :label="typeLabel">

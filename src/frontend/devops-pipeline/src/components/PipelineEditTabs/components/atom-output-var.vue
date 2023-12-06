@@ -1,6 +1,6 @@
 <template>
     <div class="variable-container">
-        <bk-alert type="info" :title="$t('可在插件中通过表达式 ${{ jobs.<JobID>.steps.<StepID>.outputs.xxx }} 引用变量')" closable></bk-alert>
+        <bk-alert type="info" :title="$t('可通过表达式 ${{ steps.<StepID>.outputs.<var_name> }} 引用变量')" closable></bk-alert>
         <div class="operate-row">
             <bk-input
                 v-model="searchStr"
@@ -31,7 +31,7 @@
                 </div>
                 <div v-if="!group.stepId" @click.stop class="flex-item step-tips">
                     <bk-icon type="exclamation-circle-shape" />
-                    <span>{{$t('插件未设置StepID,如需使用变量,请')}}
+                    <span>{{$t('步骤未设置 StepID,')}}
                         <bk-popconfirm
                             trigger="click"
                             ext-cls="step-pop-confirm"
@@ -55,12 +55,12 @@
                                         :value.sync="editStepId"
                                         :handle-change="(name, value) => editStepId = value"
                                         data-vv-scope="step"
-                                        v-validate="`required|varRule`"
+                                        v-validate="`required|varRule|notInList:${allStepId}`"
                                     >
                                     </vuex-input>
                                 </form-field>
                             </div>
-                            <a class="edit-step-span" @click="location = group.location">输入StepID</a>
+                            <a class="edit-step-span" @click="location = group.location">{{$t('立即设置')}}</a>
                         </bk-popconfirm>
                     </span>
                 </div>
@@ -129,16 +129,16 @@
             currentElement () {
                 return this.getElement(this.currentContainer, this.location.elementIndex) || {}
             },
-            // allStepId () {
-            //     const stepIdList = []
-            //     const elements = this.currentContainer?.elements || []
-            //     elements.forEach(ele => {
-            //         if (ele.stepId) {
-            //             stepIdList.push(ele.stepId)
-            //         }
-            //     })
-            //     return stepIdList
-            // },
+            allStepId () {
+                const stepIdList = []
+                const elements = this.currentContainer?.elements || []
+                elements.forEach(ele => {
+                    if (ele.stepId) {
+                        stepIdList.push(ele.stepId)
+                    }
+                })
+                return stepIdList
+            },
             outputAtomList () {
                 const list = []
                 this.stages.forEach((stage, stageIndex) => {
@@ -193,7 +193,6 @@
             ]),
             async handleUpdateStepId () {
                 const valid = await this.$validator.validate('step.*')
-                alert(valid)
                 if (valid) {
                     this.updateAtom({
                         element: this.currentElement,
@@ -237,6 +236,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
+        width: 100%;
         .flex-item {
             display: flex;
             align-items: center;
@@ -250,7 +250,7 @@
                 max-width: 460px;
             }
             .group-title.title-overflow {
-                max-width: 110px;
+                max-width: 210px;
             }
         }
         .step-tips {
