@@ -27,7 +27,7 @@
 
 package com.tencent.devops.project.api.open
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_IAM_TOKEN
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import io.swagger.annotations.Api
@@ -50,7 +50,7 @@ interface OpenProjectResource {
     @Path("/{projectId}")
     @ApiOperation("获取项目信息")
     fun get(
-        @HeaderParam(AUTH_HEADER_IAM_TOKEN)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @ApiParam("token")
         token: String,
         @ApiParam(value = "项目ID")
