@@ -4,8 +4,8 @@ import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
+import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
@@ -70,10 +70,12 @@ class ServiceRemoteDevResourceImpl(
         owner: String?,
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean> {
+        workspaceCommon.syncStartCloudResourceList()
         val cgsData = workspaceCommon.getCgsData(data.cgsIds, data.ips) ?: return Result(false)
         cgsData.forEach { cgs ->
+            if (cgs.status != Constansts.CGS_AVAIABLE_STATUS) return@forEach
             // 先校验该cgsId是否已被申领分配并运行中
-            if (!workspaceCommon.checkCgsRunning(cgs.cgsId, EnvStatusEnum.running)) return Result(false)
+            if (workspaceCommon.checkCgsRunning(cgs.cgsId)) return@forEach
             // 审计
             ActionAuditContext.current()
                 .addInstanceInfo(
