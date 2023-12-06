@@ -14,6 +14,8 @@
                     <bk-dropdown-menu trigger="click">
                         <bk-button
                             v-perm="{
+                                hasPermission: hasCreatePermission,
+                                disablePermissionApi: true,
                                 permissionData: {
                                     projectId: projectId,
                                     resourceType: 'pipeline',
@@ -21,7 +23,6 @@
                                     action: RESOURCE_ACTION.CREATE
                                 }
                             }"
-                            key="addPipeline"
                             theme="primary"
                             icon="plus"
                             slot="dropdown-trigger"
@@ -106,13 +107,11 @@
             <pipeline-table-view
                 v-if="isTableLayout"
                 :filter-params="filters"
-                :has-create-permission="hasCreatePermission"
                 ref="pipelineBox"
             />
             <pipelines-card-view
                 v-else-if="isCardLayout"
                 :filter-params="filters"
-                :has-create-permission="hasCreatePermission"
                 ref="pipelineBox"
             />
 
@@ -410,7 +409,6 @@
 
             async checkHasCreatePermission () {
                 const res = await this.requestHasCreatePermission(this.$route.params)
-                console.log('xxxx')
                 this.hasCreatePermission = res
             },
 

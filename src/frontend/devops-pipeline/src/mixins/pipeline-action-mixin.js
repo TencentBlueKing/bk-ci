@@ -43,11 +43,9 @@ export default {
     data () {
         return {
             pipelineMap: {},
-            hasTemplatePermission: false
+            hasTemplatePermission: false,
+            hasCreatePermission: false
         }
-    },
-    props: {
-        hasCreatePermission: Boolean
     },
     computed: {
         ...mapGetters('pipelines', [
@@ -62,6 +60,7 @@ export default {
     },
     created () {
         this.checkHasTemplatePermission()
+        this.checkHasCreatePermission()
     },
     methods: {
         ...mapMutations('pipelines', [
@@ -76,7 +75,8 @@ export default {
             'requestToggleCollect',
             'deletePipeline',
             'copyPipeline',
-            'restorePipeline'
+            'restorePipeline',
+            'requestHasCreatePermission'
         ]),
         async checkHasTemplatePermission () {
             this.hasTemplatePermission = await this.requestTemplatePermission(this.$route.params.projectId)
@@ -180,6 +180,10 @@ export default {
                 return `${this.$t('execedTimes')}${convertMStoStringByRule(currentTimestamp - latestBuildStartTime)}(${Math.floor((lastBuildFinishCount / lastBuildTotalCount) * 100)}%)`
             }
             return ''
+        },
+        async checkHasCreatePermission () {
+            const res = await this.requestHasCreatePermission(this.$route.params)
+            this.hasCreatePermission = res
         },
         getPipelineActions (pipeline) {
             const isShowRemovedAction = ![
