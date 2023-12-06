@@ -44,7 +44,6 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.api.BSAuthTokenApi
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
@@ -122,7 +121,7 @@ class TxProjectServiceImpl @Autowired constructor(
     projectJmxApi: ProjectJmxApi,
     redisOperation: RedisOperation,
     client: Client,
-    authTokenApi: AuthTokenApi
+    clientTokenService: ClientTokenService
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -137,7 +136,7 @@ class TxProjectServiceImpl @Autowired constructor(
     objectMapper = objectMapper,
     projectExtService = projectExtService,
     projectApprovalService = projectApprovalService,
-    authTokenApi = authTokenApi
+    clientTokenService = clientTokenService
 ) {
 
     @Value("\${iam.v0.url:#{null}}")
