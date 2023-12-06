@@ -5,6 +5,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.ApigwRemoteDevResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
+import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
@@ -72,5 +73,22 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Boolean> {
         logger.info("check user cgs permission")
         return client.get(ServiceRemoteDevResource::class).checkUserIpPermission(userId, ip)
+    }
+
+    override fun assignWorkspace(
+        appCode: String?,
+        apigwType: String?,
+        operator: String,
+        owner: String?,
+        projectId: String,
+        data: OpProjectWorkspaceAssignData
+    ): Result<Boolean> {
+        logger.info("assign workspace|operator|$operator|owner|$owner|projectId|$projectId|data|$data")
+        return client.get(ServiceRemoteDevResource::class).assignWorkspace(
+            operator = operator,
+            owner = owner,
+            projectId = projectId,
+            data = data
+        )
     }
 }
