@@ -78,13 +78,13 @@ class ExtServiceBuildDeployTask : ITask() {
         )
         val bkDockerTargetImageName =
             buildVariables.variables["BK_DOCKER_TARGE_IMAGE_NAME"] ?: throw TaskExecuteException(
-            errorMsg = "param [BK_DOCKER_TARGET_IMAGE_NAME] is empty",
+            errorMsg = "param [BK_DOCKER_TARGE_IMAGE_NAME] is empty",
             errorType = ErrorType.USER,
             errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
 
         val imageTag = buildVariables.variables["BK_DOCKER_TARGE_IMAGE_TAG"] ?: throw TaskExecuteException(
-            errorMsg = "param [BK_DOCKER_TARGET_IMAGE_TAG] is empty",
+            errorMsg = "param [BK_DOCKER_TARGE_IMAGE_TAG] is empty",
             errorType = ErrorType.USER,
             errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
