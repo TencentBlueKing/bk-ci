@@ -49,7 +49,7 @@ class CodeCCDispatchListener @Autowired constructor(
     }
 
     override fun getVmType(): JobQuotaVmType? {
-        return JobQuotaVmType.OTHER
+        return JobQuotaVmType.DOCKER_DEVCLOUD
     }
 
     override fun onShutdown(event: PipelineAgentShutdownEvent) {
