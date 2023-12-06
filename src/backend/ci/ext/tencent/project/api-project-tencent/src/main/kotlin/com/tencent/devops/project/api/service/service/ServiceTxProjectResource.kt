@@ -413,6 +413,6 @@ interface ServiceTxProjectResource {
         projectCode: String,
         @ApiParam("云桌面配额", required = true)
         @QueryParam("desktopNum")
-        addcloudDesktopNum: Int,
+        addcloudDesktopNum: Int
     ): Result<Boolean>
 }
