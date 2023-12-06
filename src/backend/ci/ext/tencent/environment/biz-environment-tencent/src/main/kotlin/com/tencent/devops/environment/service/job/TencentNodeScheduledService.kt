@@ -40,7 +40,7 @@ class TencentNodeScheduledService @Autowired constructor(
      * 分组执行，每次遍历100条记录。
      * 将不在CC中的节点，添加到CC中，并返回host_id，将host_id写入表中，并将 云区域id 设为0
      */
-    @Scheduled(cron = "0 25 10 * * 1-5")
+    @Scheduled(cron = "0 37 10 * * 1-5")
     fun scheduledAddNodeToCC() {
         taskWithRedisLockTencent(SCHEDULED_ADD_NODE_TO_CC_TIMEOUT_LOCK_KEY, ::addNodeToCC)
     }
@@ -71,12 +71,12 @@ class TencentNodeScheduledService @Autowired constructor(
         if (0 < countCmdbNodes) {
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countCmdbNodes.toLong())
             for (page in 1..totalPages) {
-                addNodeToCC(page)
+                addNodeToCCByPage(page)
             }
         }
     }
 
-    private fun addNodeToCC(page: Int) {
+    private fun addNodeToCCByPage(page: Int) {
         val cmdbNodesRecords =
             nodeDao.getCmdbNodesHostIdNullLimit(dslContext, page - 1, DEFAULT_PAGE_SIZE) // ip, nodeId
         if (logger.isDebugEnabled) logger.debug("[addNodeToCC]cmdbNodesRecords:$cmdbNodesRecords")
