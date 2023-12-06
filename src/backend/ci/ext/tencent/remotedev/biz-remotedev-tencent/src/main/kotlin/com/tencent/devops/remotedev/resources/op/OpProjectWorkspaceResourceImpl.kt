@@ -56,7 +56,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         val cgsData = workspaceCommon.getCgsData(data.cgsIds, data.ips) ?: return Result(false)
         cgsData.forEach { cgs ->
-            if (cgs.status != Constansts.cgsAvaiableStatus) return@forEach
+            if (cgs.status != Constansts.CGS_AVAIABLE_STATUS) return@forEach
             // 先校验该cgsId是否已被申领分配并运行中
             if (!workspaceCommon.checkCgsRunning(cgs.cgsId, EnvStatusEnum.running)) return Result(false)
             // 审计
