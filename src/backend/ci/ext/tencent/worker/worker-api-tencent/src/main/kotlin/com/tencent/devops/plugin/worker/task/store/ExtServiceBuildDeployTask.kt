@@ -39,6 +39,8 @@ import com.tencent.devops.common.pipeline.utils.ParameterUtils
 import com.tencent.devops.dispatch.pojo.DeployApp
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.utils.BK_DOCKER_TARGE_IMAGE_NAME
+import com.tencent.devops.process.utils.BK_DOCKER_TARGE_IMAGE_TAG
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.dto.UpdateExtServiceEnvInfoDTO
@@ -77,13 +79,13 @@ class ExtServiceBuildDeployTask : ITask() {
             errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
         val bkDockerTargetImageName =
-            buildVariables.variables["BK_DOCKER_TARGE_IMAGE_NAME"] ?: throw TaskExecuteException(
+            buildVariables.variables[BK_DOCKER_TARGE_IMAGE_NAME] ?: throw TaskExecuteException(
             errorMsg = "param [BK_DOCKER_TARGE_IMAGE_NAME] is empty",
             errorType = ErrorType.USER,
             errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
 
-        val imageTag = buildVariables.variables["BK_DOCKER_TARGE_IMAGE_TAG"] ?: throw TaskExecuteException(
+        val imageTag = buildVariables.variables[BK_DOCKER_TARGE_IMAGE_TAG] ?: throw TaskExecuteException(
             errorMsg = "param [BK_DOCKER_TARGE_IMAGE_TAG] is empty",
             errorType = ErrorType.USER,
             errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
