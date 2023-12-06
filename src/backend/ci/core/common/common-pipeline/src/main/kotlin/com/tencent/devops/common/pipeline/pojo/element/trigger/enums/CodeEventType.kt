@@ -125,7 +125,7 @@ enum class CodeEventType {
 
         fun getEventsByScmType(scmType: ScmType?): List<CodeEventType> = when (scmType) {
             ScmType.CODE_GIT -> CODE_GIT_EVENTS
-            ScmType.CODE_TGIT -> CODE_TGIT_EVENTS
+            ScmType.CODE_TGIT, ScmType.CODE_TGIT_CE -> CODE_TGIT_EVENTS
             ScmType.GITHUB -> CODE_GITHUB_EVENTS
             ScmType.CODE_GITLAB -> CODE_GITLAB_EVENTS
             ScmType.CODE_SVN -> CODE_SVN_EVENTS

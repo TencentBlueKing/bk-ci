@@ -51,6 +51,7 @@ import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.CodeP4Repository
 import com.tencent.devops.repository.pojo.CodeSvnRepository
+import com.tencent.devops.repository.pojo.CodeTGitCeRepository
 import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
@@ -400,6 +401,17 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                     )
                 }
             }
+            is CodeTGitCeRepository -> {
+                val credInfo = getCredential(projectId, repo)
+                return client.get(ServiceScmResource::class).listTags(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = ScmType.CODE_TGIT_CE,
+                    token = credInfo.privateKey,
+                    userName = credInfo.username,
+                    search = search
+                )
+            }
             else -> {
                 throw IllegalArgumentException("Unknown repo($repo)")
             }
@@ -529,6 +541,29 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                 event = convertEvent(codeEventType)
             )
         }
+        return repo
+    }
+
+    fun addTGitCeWebhook(
+        projectId: String,
+        repositoryConfig: RepositoryConfig,
+        codeEventType: CodeEventType?
+    ): Repository {
+        checkRepoID(repositoryConfig)
+        val repo = getRepo(projectId, repositoryConfig) as? CodeTGitCeRepository
+            ?: throw ErrorCodeException(defaultMessage = "TGitCe", errorCode = ProcessMessageCode.TGIT_INVALID)
+        val credInfo = getCredential(projectId, repo)
+        client.get(ServiceScmResource::class).addWebHook(
+            projectName = repo.projectName,
+            url = repo.url,
+            type = ScmType.CODE_TGIT_CE,
+            privateKey = null,
+            passPhrase = null,
+            token = credInfo.privateKey,
+            region = null,
+            userName = credInfo.username,
+            event = convertEvent(codeEventType)
+        )
         return repo
     }
 
@@ -708,9 +743,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         )
 
         // username+password 关联的git代码库
-        if ((repository is CodeGitRepository || repository is CodeTGitRepository) &&
-            (credential.credentialType == CredentialType.USERNAME_PASSWORD)
-        ) {
+        if (needGetSession(repository, credential.credentialType)) {
             // USERNAME_PASSWORD v1 = username, v2 = password
             val session = client.get(ServiceScmResource::class).getSession(
                 RepoSessionRequest(
@@ -752,4 +785,8 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             ?: throw NotFoundException("cannot find github oauth accessToekn for user($userName)")
         return accessToken.accessToken
     }
+
+    private fun needGetSession(repository: Repository, credentialType: CredentialType) =
+        (repository is CodeGitRepository || repository is CodeTGitRepository || repository is CodeTGitCeRepository) &&
+                (credentialType == CredentialType.USERNAME_PASSWORD)
 }

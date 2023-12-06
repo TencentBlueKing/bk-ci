@@ -33,6 +33,7 @@ import com.tencent.devops.model.process.Tables.T_PIPELINE_WEBHOOK
 import com.tencent.devops.model.process.tables.records.TPipelineWebhookRecord
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.pojo.webhook.WebhookTriggerPipeline
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
@@ -112,11 +113,19 @@ class PipelineWebhookDao {
     fun getPipelineWebHooksByRepositoryType(
         dslContext: DSLContext,
         repositoryType: String,
+        projectId: String? = null,
         offset: Int,
         limit: Int
     ): Result<TPipelineWebhookRecord> {
         return with(T_PIPELINE_WEBHOOK) {
-            dslContext.selectFrom(this).where(REPOSITORY_TYPE.eq(repositoryType)).limit(offset, limit).fetch()
+            dslContext.selectFrom(this)
+                .where(REPOSITORY_TYPE.eq(repositoryType)).let {
+                    if (!projectId.isNullOrBlank()) {
+                        it.and(PROJECT_ID.eq(projectId))
+                    }
+                    it
+                }
+                .limit(offset, limit).fetch()
         }
     }
 
@@ -323,6 +332,19 @@ class PipelineWebhookDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(TASK_ID.eq(taskId))
+                .execute()
+        }
+    }
+
+    fun updateWebhookRepositoryType(
+        dslContext: DSLContext,
+        scmType: ScmType,
+        id: Long
+    ) {
+        return with(T_PIPELINE_WEBHOOK) {
+            dslContext.update(this)
+                .set(REPOSITORY_TYPE, scmType.name)
+                .where(ID.eq(id))
                 .execute()
         }
     }

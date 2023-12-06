@@ -32,6 +32,7 @@ import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.CodeTGitCeRepository
 import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.WebhookCommit
@@ -51,8 +52,10 @@ open class GitWebHookMatcher(
         repository: Repository,
         webHookParams: WebHookParams
     ): WebhookMatchResult {
-        if (repository !is CodeGitRepository &&
-            repository !is CodeTGitRepository
+        if (
+            repository !is CodeGitRepository &&
+            repository !is CodeTGitRepository &&
+            repository !is CodeTGitCeRepository
         ) {
             logger.warn("$pipelineId|Is not code repo for git web hook for repo and pipeline: $repository")
             return WebhookMatchResult(isMatch = false)

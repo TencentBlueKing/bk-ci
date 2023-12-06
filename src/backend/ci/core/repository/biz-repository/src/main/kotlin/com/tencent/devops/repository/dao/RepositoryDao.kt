@@ -362,6 +362,42 @@ class RepositoryDao {
         }
     }
 
+    fun listByProject(
+        dslContext: DSLContext,
+        scmType: ScmType? = null,
+        projectId: String? = null,
+        limit: Int,
+        offset: Int
+    ): Result<TRepositoryRecord> {
+        with(TRepository.T_REPOSITORY) {
+            val conditions = mutableListOf<Condition>()
+            if (!projectId.isNullOrBlank()) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            if (scmType != null) {
+                conditions.add(TYPE.eq(scmType.name))
+            }
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .orderBy(CREATED_TIME.desc())
+                .limit(limit).offset(offset)
+                .fetch()
+        }
+    }
+
+    fun updateScmTypes(
+        dslContext: DSLContext,
+        repositoryId: Long,
+        scmType: ScmType
+    ) {
+        with(TRepository.T_REPOSITORY) {
+            dslContext.update(this)
+                .set(TYPE, scmType.name)
+                .where(REPOSITORY_ID.eq(repositoryId))
+                .execute()
+        }
+    }
+
     fun updateHashId(
         dslContext: DSLContext,
         id: Long,

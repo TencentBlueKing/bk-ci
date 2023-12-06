@@ -95,4 +95,9 @@ class OPRepositoryResourceImpl @Autowired constructor(
         )
         return Result(true)
     }
+
+    override fun splitTgit(projectId: String?): Result<Boolean> {
+        opRepositoryService.splitTgit(projectId = projectId)
+        return Result(true)
+    }
 }

@@ -43,7 +43,9 @@ import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.IScmOauthService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
+import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.slf4j.LoggerFactory
@@ -68,7 +70,8 @@ class OPRepositoryService @Autowired constructor(
     private val githubTokenService: GithubTokenService,
     private val githubRepositoryService: GithubRepositoryService,
     private val credentialService: CredentialService,
-    private val repositoryService: RepositoryService
+    private val repositoryService: RepositoryService,
+    private val gitConfig: GitConfig
 ) {
     fun addHashId() {
         val startTime = System.currentTimeMillis()
@@ -548,6 +551,38 @@ class OPRepositoryService @Autowired constructor(
             logger.warn("get codeGit project info failed,projectName=[$projectName] | $e ")
             null
         }
+    }
+
+    fun splitTgit(projectId: String?) {
+        var offset = 0
+        val limit = 100
+        logger.info("OPRepositoryService:begin splitTgit|projectId[$projectId]")
+        do {
+            val repoRecords = repositoryDao.listByProject(
+                dslContext = dslContext,
+                scmType = ScmType.CODE_TGIT,
+                projectId = projectId,
+                limit = limit,
+                offset = offset
+            )
+            val repoSize = repoRecords.size
+            logger.info("repoSize:$repoSize")
+            repoRecords.forEach {
+                val (domain, repoName) = GitUtils.getDomainAndRepoName(it.url)
+                if (gitConfig.tGitCeHostName == domain) {
+                    // 根据ID更新仓库类型
+                    repositoryDao.updateScmTypes(
+                        dslContext = dslContext,
+                        repositoryId = it.repositoryId,
+                        scmType = ScmType.CODE_TGIT_CE
+                    )
+                }
+            }
+            offset += limit
+            // 避免限流，增加一秒休眠时间
+            Thread.sleep(1 * 1000)
+        } while (repoSize == 100)
+        logger.info("OPRepositoryService:end splitTgit|projectId[$projectId]")
     }
 
     companion object {

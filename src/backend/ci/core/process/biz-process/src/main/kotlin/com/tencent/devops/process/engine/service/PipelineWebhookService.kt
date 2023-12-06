@@ -207,6 +207,14 @@ class PipelineWebhookService @Autowired constructor(
                     )
                 }
 
+                ScmType.CODE_TGIT_CE -> {
+                    scmProxyService.addTGitCeWebhook(
+                        projectId = projectId,
+                        repositoryConfig = repositoryConfig,
+                        codeEventType = codeEventType
+                    )
+                }
+
                 ScmType.CODE_P4 ->
                     if (WebhookUtils.isCustomP4TriggerVersion(elementVersion)) {
                         val repo = client.get(ServiceRepositoryResource::class).get(

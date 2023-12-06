@@ -32,6 +32,7 @@ import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.CodeP4Repository
 import com.tencent.devops.repository.pojo.CodeSvnRepository
+import com.tencent.devops.repository.pojo.CodeTGitCeRepository
 import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
@@ -99,6 +100,9 @@ object CodeRepositoryServiceRegistrar {
             }
             ScmType.CODE_P4 -> {
                 getService(CodeP4Repository::class.java)
+            }
+            ScmType.CODE_TGIT_CE -> {
+                getService(CodeTGitCeRepository::class.java)
             }
             else -> throw IllegalArgumentException("Unknown repository type")
         }
