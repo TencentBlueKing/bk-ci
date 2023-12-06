@@ -100,12 +100,6 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    private fun addProjectDesktopNum(
-        userId: String,
-        projectId: String
-    ) {
-    }
-
     override fun getProjectWorkspaceList(
         userId: String,
         data: ProjectWorkspaceFetchData
