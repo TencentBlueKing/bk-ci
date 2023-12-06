@@ -189,8 +189,9 @@ class QueryFromCCService : QueryOperatorService {
         if (logger.isDebugEnabled) logger.debug("[executePostRequest] requestContent: $requestContent")
         val ccPostRes = OkhttpUtils.doPost(url, requestContent, headers)
         if (logger.isDebugEnabled) logger.debug("[executePostRequest] ccPostRes: $ccPostRes")
-        if (logger.isDebugEnabled) logger.debug("[executePostRequest] ccPostRes.body: ${ccPostRes.body?.string()}")
-        return ccPostRes.body?.string()
+        val ccPostResBody = ccPostRes.body?.string()
+        if (logger.isDebugEnabled) logger.debug("[executePostRequest] ccPostRes.body.string(): $ccPostResBody")
+        return ccPostResBody
     }
 
     private fun <T> executeDeleteRequest(headers: Map<String, String>, url: String, req: T): String? {
