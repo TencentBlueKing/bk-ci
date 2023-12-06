@@ -5,7 +5,6 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.pojo.job.HostIdAndCloudAreaIdInfo
-import com.tencent.devops.environment.pojo.job.cmdbres.CmdbDataIns
 import com.tencent.devops.environment.service.CmdbNodeService
 import com.tencent.devops.environment.service.CmdbNodeService.Companion.FIELD_BK_SVR_ID
 import com.tencent.devops.environment.service.job.QueryFromCCService.Companion.FIELD_BK_HOST_ID
