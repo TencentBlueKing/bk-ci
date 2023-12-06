@@ -62,9 +62,9 @@ type JdkVersionType struct {
 func (j *JdkVersionType) GetVersion() []string {
 	data := j.version.Load()
 	if data == nil {
-		return []string{}
+		return make([]string, 0)
 	} else {
-		return j.version.Load().([]string)
+		return data.([]string)
 	}
 }
 

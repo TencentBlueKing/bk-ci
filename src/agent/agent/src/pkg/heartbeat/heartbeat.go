@@ -29,7 +29,6 @@ package heartbeat
 
 import (
 	"errors"
-	"sync"
 	"time"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
@@ -50,43 +49,23 @@ func DoAgentHeartbeat() {
 	}()
 
 	// 部分逻辑只在启动时运行一次
-	var jdkOnce = &sync.Once{}
-	var dockerfileSyncOnce = &sync.Once{}
+	if _, err := upgrade.SyncJdkVersion(); err != nil {
+		logs.Error("agent heart sync jdkVersion error", err)
+	}
+	if err := upgrade.SyncDockerInitFileMd5(); err != nil {
+		logs.Error("agent heart sync docker file md5 error", err)
+	}
 
 	for {
-		_ = agentHeartbeat(jdkOnce, dockerfileSyncOnce)
+		_ = agentHeartbeat()
 		time.Sleep(10 * time.Second)
 	}
 }
 
-func agentHeartbeat(jdkSyncOnce, dockerfileSyncOnce *sync.Once) error {
-	// 在第一次启动时同步一次jdk version，防止重启时因为upgrade的执行慢导致了升级jdk
-	var jdkVersion []string
-	jdkSyncOnce.Do(func() {
-		version, err := upgrade.SyncJdkVersion()
-		if err != nil {
-			logs.Error("agent heart sync jdkVersion error", err)
-			return
-		}
-		jdkVersion = version
-	})
-	if jdkVersion == nil {
-		version := upgrade.JdkVersion.GetVersion()
-		if version != nil {
-			jdkVersion = version
-		}
-	}
-
-	// 获取docker的filemd5前也同步一次
-	dockerfileSyncOnce.Do(func() {
-		if err := upgrade.SyncDockerInitFileMd5(); err != nil {
-			logs.Error("agent heart sync docker file md5 error", err)
-		}
-	})
-
+func agentHeartbeat() error {
 	result, err := api.Heartbeat(
 		job.GBuildManager.GetInstances(),
-		jdkVersion,
+		upgrade.JdkVersion.GetVersion(),
 		job.GBuildDockerManager.GetInstances(),
 		api.DockerInitFileInfo{
 			FileMd5:     upgrade.DockerFileMd5.Md5,
