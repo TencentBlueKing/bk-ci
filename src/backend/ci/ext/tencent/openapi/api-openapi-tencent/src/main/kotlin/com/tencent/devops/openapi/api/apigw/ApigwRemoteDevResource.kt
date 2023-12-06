@@ -114,7 +114,7 @@ interface ApigwRemoteDevResource {
         ip: String
     ): Result<Boolean>
 
-    @ApiOperation("提供给BCS做分配云桌面给指定用户限", tags = ["v4_app_assign_workspace"])
+    @ApiOperation("提供给BCS做分配云桌面给指定项目或用户", tags = ["v4_app_assign_workspace"])
     @POST
     @Path("/assign/workspace")
     fun assignWorkspace(
