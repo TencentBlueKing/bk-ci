@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.exception.TokenForbiddenException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
@@ -42,12 +43,12 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -116,7 +117,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val projectExtService: ProjectExtService,
     private val projectApprovalService: ProjectApprovalService,
-    private val authTokenApi: AuthTokenApi
+    private val clientTokenService: ClientTokenService
 ) : ProjectService {
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
@@ -330,7 +331,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         englishName: String,
         token: String
     ): ProjectVO? {
-        authTokenApi.checkToken(token)
+        if (token != clientTokenService.getSystemToken()) {
+            logger.warn("auth token fail: $token")
+            throw TokenForbiddenException("token check fail")
+        }
         val record = projectDao.getByEnglishName(
             dslContext = dslContext,
             englishName = englishName
