@@ -267,5 +267,7 @@
         "OTHER": "Other",
         "UNKNOWN": "Unknown"
     },
-    "newPool": "New Pool"
+    "newPool": "New Pool",
+    "查看构建机监控": "查看构建机监控",
+    "查看更多指标监控": "查看更多指标监控"
 }
