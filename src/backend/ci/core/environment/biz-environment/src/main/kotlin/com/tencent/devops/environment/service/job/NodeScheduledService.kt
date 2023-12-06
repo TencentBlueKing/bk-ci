@@ -24,7 +24,7 @@ class NodeScheduledService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(NodeScheduledService::class.java)
         private const val SCHEDULED_CHECK_NODE_IN_CC_TIMEOUT_LOCK_KEY = "scheduled_check_node_in_cc_timeout_lock"
         private const val SCHEDULED_WRITE_DISPLAY_NAME_TIMEOUT_LOCK_KEY = "scheduled_write_display_name_timeout_lock"
-        private const val EXPTIRATION_TIME_OF_THE_LOCK = 60L
+        private const val EXPIRATION_TIME_OF_THE_LOCK = 200L
         private const val DEFAULT_PAGE_SIZE = 100
     }
 
@@ -115,7 +115,7 @@ class NodeScheduledService @Autowired constructor(
     }
 
     private fun taskWithRedisLock(lockKey: String, operation: () -> Unit) {
-        val redisLock = RedisLock(redisOperation, lockKey, EXPTIRATION_TIME_OF_THE_LOCK)
+        val redisLock = RedisLock(redisOperation, lockKey, EXPIRATION_TIME_OF_THE_LOCK)
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {

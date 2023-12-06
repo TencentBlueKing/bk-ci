@@ -5,6 +5,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.pojo.job.HostIdAndCloudAreaIdInfo
+import com.tencent.devops.environment.pojo.job.cmdbres.CmdbDataIns
 import com.tencent.devops.environment.service.CmdbNodeService
 import com.tencent.devops.environment.service.CmdbNodeService.Companion.FIELD_BK_SVR_ID
 import com.tencent.devops.environment.service.job.QueryFromCCService.Companion.FIELD_BK_HOST_ID
@@ -30,7 +31,7 @@ class TencentNodeScheduledService @Autowired constructor(
         private const val SCHEDULED_WRITE_HOST_ID_CLOUD_AREA_ID_TIMEOUT_LOCK_KEY =
             "scheduled_write_host_id_and_cloud_area_id_timeout_lock"
         private const val SCHEDULED_ADD_NODE_TO_CC_TIMEOUT_LOCK_KEY = "scheduled_add_node_to_cc_timeout_lock"
-        private const val EXPTIRATION_TIME_OF_THE_LOCK = 60L
+        private const val EXPIRATION_TIME_OF_THE_LOCK = 200L
         private const val DEFAULT_PAGE_SIZE = 100
         private const val DEFAULT_CLOUD_AREA_ID = 0L
     }
@@ -40,7 +41,7 @@ class TencentNodeScheduledService @Autowired constructor(
      * 分组执行，每次遍历100条记录。
      * 将不在CC中的节点，添加到CC中，并返回host_id，将host_id写入表中，并将 云区域id 设为0
      */
-    @Scheduled(cron = "0 43 21 * * 1-5")
+    @Scheduled(cron = "0 25 10 * * 1-5")
     fun scheduledAddNodeToCC() {
         taskWithRedisLockTencent(SCHEDULED_ADD_NODE_TO_CC_TIMEOUT_LOCK_KEY, ::addNodeToCC)
     }
@@ -66,45 +67,47 @@ class TencentNodeScheduledService @Autowired constructor(
     }
 
     private fun addNodeToCC() {
-        // 通过节点ip，到cmdb中 查到svrId
         val countCmdbNodes = nodeDao.countCmdbNodes(dslContext)
         if (logger.isDebugEnabled) logger.debug("[addNodeToCC]countCmdbNodes:$countCmdbNodes")
         if (0 < countCmdbNodes) {
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countCmdbNodes.toLong())
             for (page in 1..totalPages) {
-                val cmdbNodesRecords =
-                    nodeDao.getCmdbNodesIpHostIdNullLimit(dslContext, page - 1, DEFAULT_PAGE_SIZE)
-                if (logger.isDebugEnabled) logger.debug("[addNodeToCC]cmdbNodesRecords:$cmdbNodesRecords")
-                val cmdbNodesIp = cmdbNodesRecords.map { it.value1() }.toSet()
-                if (logger.isDebugEnabled) logger.debug("[addNodeToCC]cmdbNodesIp:$cmdbNodesIp.")
-                val nodeIpToNodesRecords = cmdbNodesRecords.associateBy { it.value1() }
-                val ipToCmdbInfoMap = tencentQueryFromCmdbService.queryCmdbInfoFromIp(cmdbNodesIp)
-                if (logger.isDebugEnabled) logger.debug("[addNodeToCC]ipToCmdbInfoMap:$ipToCmdbInfoMap.")
-                val svrIdToCmdbInfoMap = ipToCmdbInfoMap?.values
-                    ?.associateBy { it.serverId?.toLong() }
-                if (logger.isDebugEnabled) logger.debug("[addNodeToCC]svrIdToCmdbInfoMap:$svrIdToCmdbInfoMap.")
-                if (!ipToCmdbInfoMap.isNullOrEmpty()) {
-                    val svrIdList = ipToCmdbInfoMap.values.mapNotNull { it.serverId?.toLong() } // 从cmdb中查到的 所有svrId
-                    val (_, inCCSvrIdList, notInCCSvrIdList) = cmdbNodeService.checkNodeInCCBySvrId(svrIdList)
-                    if (logger.isDebugEnabled) logger.debug("[addNodeToCC]inCCSvrIdList:$inCCSvrIdList.")
-                    if (logger.isDebugEnabled) logger.debug("[addNodeToCC]notInCCSvrIdList:$notInCCSvrIdList.")
-                    // 将不在CC中的svrId，添加到CC中，查出host_id和云区域id，写入db对应记录
-                    val addToCCResp = queryFromCCService.addHostToCiBiz(notInCCSvrIdList)
-                    if (logger.isDebugEnabled) logger.debug("[addNodeToCC]addToCCResp:$addToCCResp")
-                    val ccHostIdList = addToCCResp.data?.bkHostIds
-                    val addToCCInfoList = ccHostIdList?.mapIndexed { index, value ->
-                        HostIdAndCloudAreaIdInfo(
-                            nodeId = nodeIpToNodesRecords[svrIdToCmdbInfoMap
-                                ?.get(notInCCSvrIdList[index])?.SvrIp]
-                                ?.value2(),
-                            bkCloudId = DEFAULT_CLOUD_AREA_ID,
-                            bkHostId = value
-                        )
-                    }
-                    if (!addToCCInfoList.isNullOrEmpty()) {
-                        nodeDao.updateHostIdAndCloudAreaIdByNodeId(dslContext, addToCCInfoList)
-                    }
-                }
+                addNodeToCC(page)
+            }
+        }
+    }
+
+    private fun addNodeToCC(page: Int) {
+        val cmdbNodesRecords =
+            nodeDao.getCmdbNodesHostIdNullLimit(dslContext, page - 1, DEFAULT_PAGE_SIZE) // ip, nodeId
+        if (logger.isDebugEnabled) logger.debug("[addNodeToCC]cmdbNodesRecords:$cmdbNodesRecords")
+        val cmdbNodesIp = cmdbNodesRecords.map { it.value1() }.toSet()
+        if (logger.isDebugEnabled) logger.debug("[addNodeToCC]cmdbNodesIp:$cmdbNodesIp.")
+        val nodeIpToNodesRecords = cmdbNodesRecords.associateBy { it.value1() }
+        val ipToCmdbInfoMap = tencentQueryFromCmdbService.queryCmdbInfoFromIp(cmdbNodesIp)
+        if (logger.isDebugEnabled) logger.debug("[addNodeToCC]ipToCmdbInfoMap:$ipToCmdbInfoMap.")
+        if (!ipToCmdbInfoMap.isNullOrEmpty()) {
+            val svrIdToCmdbInfoMap = ipToCmdbInfoMap.values
+                .associateBy { it.serverId?.toLong() }
+            if (logger.isDebugEnabled) logger.debug("[addNodeToCC]svrIdToCmdbInfoMap:$svrIdToCmdbInfoMap.")
+            val svrIdList = ipToCmdbInfoMap.values.mapNotNull { it.serverId?.toLong() } // 从cmdb中查到的 所有svrId
+            val (_, inCCSvrIdList, notInCCSvrIdList) = cmdbNodeService.checkNodeInCCBySvrId(svrIdList)
+            if (logger.isDebugEnabled) logger.debug("[addNodeToCC]inCCSvrIdList:$inCCSvrIdList.")
+            if (logger.isDebugEnabled) logger.debug("[addNodeToCC]notInCCSvrIdList:$notInCCSvrIdList.")
+            // 将不在CC中的svrId，添加到CC中，查出host_id和云区域id，写入db对应记录
+            val addToCCResp = queryFromCCService.addHostToCiBiz(notInCCSvrIdList)
+            if (logger.isDebugEnabled) logger.debug("[addNodeToCC]addToCCResp:$addToCCResp")
+            val ccHostIdList = addToCCResp.data?.bkHostIds
+            val addToCCInfoList = ccHostIdList?.mapIndexed { index, value ->
+                HostIdAndCloudAreaIdInfo(
+                    nodeId = nodeIpToNodesRecords[svrIdToCmdbInfoMap[notInCCSvrIdList[index]]?.SvrIp]
+                        ?.value2(),
+                    bkCloudId = DEFAULT_CLOUD_AREA_ID,
+                    bkHostId = value
+                )
+            }
+            if (!addToCCInfoList.isNullOrEmpty()) {
+                nodeDao.updateHostIdAndCloudAreaIdByNodeId(dslContext, addToCCInfoList)
             }
         }
     }
@@ -192,7 +195,7 @@ class TencentNodeScheduledService @Autowired constructor(
     }
 
     private fun taskWithRedisLockTencent(lockKey: String, operation: () -> Unit) {
-        val redisLock = RedisLock(redisOperation, lockKey, EXPTIRATION_TIME_OF_THE_LOCK)
+        val redisLock = RedisLock(redisOperation, lockKey, EXPIRATION_TIME_OF_THE_LOCK)
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {

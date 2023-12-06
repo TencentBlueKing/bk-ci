@@ -171,7 +171,7 @@ class NodeDao {
         }
     }
 
-    fun getCmdbNodesIpHostIdNullLimit(dslContext: DSLContext, offset: Int, limit: Int): Result<Record2<String, Long>> {
+    fun getCmdbNodesHostIdNullLimit(dslContext: DSLContext, offset: Int, limit: Int): Result<Record2<String, Long>> {
         with(TNode.T_NODE) {
             return dslContext.select(NODE_IP, NODE_ID).from(this)
                 .where(NODE_TYPE.eq(NodeType.CMDB.name))
