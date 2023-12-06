@@ -10,4 +10,5 @@ object Constansts {
     const val subUserIdLimitLen = 14
     const val workspaceNameSuffixLimitLen = 16
     const val ADMIN_NAME = "system"
+    const val cgsAvaiableStatus = 11
 }

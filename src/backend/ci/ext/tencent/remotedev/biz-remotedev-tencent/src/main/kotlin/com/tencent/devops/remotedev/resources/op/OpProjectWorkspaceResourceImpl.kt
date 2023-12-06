@@ -12,6 +12,7 @@ import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.api.op.OpProjectWorkspaceResource
+import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
@@ -55,6 +56,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         val cgsData = workspaceCommon.getCgsData(data.cgsIds, data.ips) ?: return Result(false)
         cgsData.forEach { cgs ->
+            if (cgs.status != Constansts.cgsAvaiableStatus) return@forEach
             // 先校验该cgsId是否已被申领分配并运行中
             if (!workspaceCommon.checkCgsRunning(cgs.cgsId, EnvStatusEnum.running)) return Result(false)
             // 审计
