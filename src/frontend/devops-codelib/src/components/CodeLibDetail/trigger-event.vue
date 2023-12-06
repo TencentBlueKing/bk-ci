@@ -3,7 +3,7 @@
         <header class="header-warpper">
             <bk-date-picker
                 class="date-picker mr15"
-                v-model="daterange"
+                :value="daterange"
                 type="daterange"
                 :placeholder="$t('codelib.选择日期范围')"
                 :options="{
@@ -11,6 +11,7 @@
                 }"
                 :shortcuts="shortcuts"
                 :key="repoId"
+                @change="handleChangeDaterange"
             >
             </bk-date-picker>
             <bk-search-select
@@ -43,6 +44,7 @@
                         <TimelineCollapse
                             :search-value="searchValue"
                             :data="data"
+                            :cur-repo="curRepo"
                             :time="key"
                             @replay="replayEvent"
                         />
@@ -78,6 +80,18 @@
             curRepo: {
                 type: Object,
                 default: () => {}
+            },
+            repoInfo: {
+                type: Object,
+                default: () => {}
+            },
+            triggerTypeList: {
+                type: Object,
+                default: () => {}
+            },
+            eventTypeList: {
+                type: Object,
+                default: () => {}
             }
         },
         data () {
@@ -93,8 +107,6 @@
                 timelineMap: {},
                 searchValue: [],
                 daterange: setDefaultDaterange(),
-                eventTypeList: [],
-                triggerTypeList: [],
                 page: 1,
                 pageSize: 20,
                 catchRepoId: '',
@@ -163,12 +175,13 @@
                 this.isInitTime = true
             },
             daterange (newVal, oldVal) {
+                console.log(newVal, 1111111)
                 if (oldVal[0]) this.isInitTime = false
                 this.page = 1
                 this.hasLoadEnd = false
                 this.eventList = []
                 this.timelineMap = {}
-                if (this.catchRepoId === this.repoId) {
+                if ((this.catchRepoId === this.repoId) && !this.eventId) {
                     this.getListData()
                 }
             },
@@ -181,13 +194,6 @@
                 if (this.catchRepoId === this.repoId) {
                     this.getListData()
                 }
-            },
-            scmType: {
-                handler (val) {
-                    this.getEventTypeList()
-                    this.getTriggerTypeList()
-                },
-                immediate: true
             }
         },
         created () {
@@ -251,30 +257,6 @@
                 'fetchTriggerType'
             ]),
          
-            getEventTypeList () {
-                this.fetchEventType({
-                    scmType: this.scmType
-                }).then(res => {
-                    this.eventTypeList = res.map(i => {
-                        return {
-                            ...i,
-                            name: i.value
-                        }
-                    })
-                })
-            },
-            getTriggerTypeList () {
-                this.fetchTriggerType({
-                    scmType: this.scmType
-                }).then(res => {
-                    this.triggerTypeList = res.map(i => {
-                        return {
-                            ...i,
-                            name: i.value
-                        }
-                    })
-                })
-            },
             handleScroll (event) {
                 const target = event.target
                 const bottomDis = target.scrollHeight - target.clientHeight - target.scrollTop
@@ -367,11 +349,17 @@
                 })
             },
 
+            handleChangeDaterange (date, type) {
+                const startTime = new Date(`${date[0]} 00:00:00`).getTime() || ''
+                const endTime = new Date(`${date[1]} 23:59:59`).getTime() || ''
+                this.daterange = [startTime, endTime]
+            },
+
             async handleRefresh () {
                 this.pageLoading = true
                 this.hasLoadEnd = false
-                this.page = 1
-                await this.getListData()
+                this.daterange = this.setDefaultDaterange()
+                // await this.getListData()
             },
 
             replayEvent () {

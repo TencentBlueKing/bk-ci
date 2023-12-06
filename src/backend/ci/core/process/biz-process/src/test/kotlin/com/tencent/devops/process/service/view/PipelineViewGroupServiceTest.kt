@@ -836,7 +836,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
     inner class HasPermission {
         @BeforeEach
         fun beforeEach() {
-            every { clientTokenService.getSystemToken(any()) } returns ""
+            every { clientTokenService.getSystemToken() } returns ""
         }
 
         @Test

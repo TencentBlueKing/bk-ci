@@ -30,11 +30,13 @@ package com.tencent.devops.store.service.atom.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.STORE_LATEST_TEST_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
 import com.tencent.devops.store.service.atom.AtomReleaseService
 import com.tencent.devops.store.service.atom.MarketAtomService
@@ -84,6 +86,19 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
             msg = null
         )
         if (atomStatus == AtomStatusEnum.TESTING) {
+            RedisLock(
+                redisOperation,
+                "$STORE_LATEST_TEST_FLAG_KEY_PREFIX:$atomCode",
+                60L
+            ).use { redisLock ->
+                redisLock.lock()
+                marketAtomDao.setupAtomLatestTestFlag(
+                    dslContext = dslContext,
+                    userId = storeBuildResultRequest.userId,
+                    atomCode = atomCode,
+                    atomId = atomId
+                )
+            }
             // 插件errorCodes.json文件数据入库
             atomReleaseService.syncAtomErrorCodeConfig(
                 atomCode = atomCode,

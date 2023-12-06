@@ -33,12 +33,14 @@ import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
 import com.tencent.devops.common.api.enums.RequestChannelTypeEnum
 import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.LocaleUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.CookieUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.service.ServiceLocaleResource
@@ -95,7 +97,7 @@ object I18nUtil {
      * 获取接口请求渠道信息
      * @return 渠道信息
      */
-    private fun getRequestChannel(): String? {
+    fun getRequestChannel(): String? {
         val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
         return if (null != attributes) {
             val request = attributes.request
@@ -219,6 +221,14 @@ object I18nUtil {
         } else {
             i18nMessage
         }
+    }
+
+    fun I18Variable.getCodeLanMessage(language: String? = CommonUtils.ZH_CN): String {
+        return getCodeLanMessage(
+            language = language,
+            messageCode = code,
+            params = params.toTypedArray()
+        )
     }
 
     /**

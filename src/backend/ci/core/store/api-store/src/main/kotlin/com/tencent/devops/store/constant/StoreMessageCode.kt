@@ -36,7 +36,8 @@ package com.tencent.devops.store.constant
  *    05:environment-环境 06：experience-版本体验 07：image-镜像 08：log-日志 09：measure-度量 10：monitoring-监控 11：notify-通知
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
  *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
- *    25：prebuild-预建 26: dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker）
+ *    25：prebuild-预建 26: dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker
+ *    32: remotedev 35：misc-杂项）
  * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
@@ -149,6 +150,9 @@ object StoreMessageCode {
     const val BUILD_VISIT_NO_PERMISSION = "2120923" // 接口请求中的插件【{0}】不是当前当前构建运行的插件
     const val VERSION_PUBLISHED = "2120924" // 组件{0}版本({1})已发布
     const val NO_COMPONENT_ADMIN_AND_CREATETOR_PERMISSION = "2120925" // 无组件{0}管理员或当前版本创建者权限，请联系组件管理员。
+    const val USER_NOT_IS_STORE_MEMBER = "2120926" // 研发商店：用户{0}不是组件成员
+    const val GET_BRANCH_COMMIT_INFO_ERROR = "2120927" // 获取分支提交信息异常
+    const val STORE_BRANCH_NO_NEW_COMMIT = "2120928" // 代码未变更，分支测试版本生成失败
 
     const val BK_OTHER = "bkOther" // 其他
     const val BK_PIPELINED_JOB = "bkPipelinedJob" // 流水线Job

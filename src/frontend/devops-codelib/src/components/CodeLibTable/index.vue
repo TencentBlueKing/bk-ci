@@ -13,13 +13,17 @@
             ref="list"
             v-if="tableHeight"
             v-bkloading="{ isLoading }"
-            class="devops-codelib-table"
+            :class="{
+                'devops-codelib-table': true,
+                'flod-table': isListFlod
+            }"
             :data="records"
             :size="tableSize"
             :height="tableHeight"
             :outer-border="false"
             :row-class-name="rowClassName"
             :pagination="pagination"
+            :default-sort="sortField"
             @header-dragend="handelHeaderDragend"
             @row-click="handleRowSelect"
             @sort-change="handleSortChange"
@@ -32,26 +36,48 @@
                 :width="tableWidthMap.aliasName"
                 sortable
                 prop="aliasName"
-                show-overflow-tooltip
             >
                 <template slot-scope="props">
-                    <Icon
-                        class="codelib-type-icon"
-                        :name="codelibIconMap[props.row.type]"
-                        size="16"
-                    />
-                    <a
-                        @click="handleShowDetail(props.row)"
+                    <div
+                        :class="{
+                            'codelib-name-warpper': true
+                        }"
+                        v-perm="{
+                            hasPermission: props.row.canView,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: RESOURCE_TYPE,
+                                resourceCode: props.row.repositoryHashId,
+                                action: RESOURCE_ACTION.VIEW
+                            }
+                        }"
                     >
-                        {{ props.row.aliasName }}
-                    </a>
-                    <!-- <span
-                        v-if="props.row.enablePac"
-                        class="pac-icon"
-                    >
-                        <Icon name="PACcode" size="22" class="pac-code-icon" />
-                        PAC
-                    </span> -->
+                        <div v-if="isListFlod" class="mask"></div>
+                        <Icon
+                            class="codelib-logo"
+                            :name="codelibIconMap[props.row.type]"
+                            size="16"
+                        />
+                        <div
+                            :class="{
+                                'codelib-name': true,
+                                'name-flod': isListFlod,
+                                'name-disabled': !props.row.canView
+                            }"
+                            v-bk-overflow-tips
+                            @click="handleShowDetail(props.row)"
+                        >
+                            {{ props.row.aliasName }}
+                        </div>
+                        <!-- <span
+                            v-if="props.row.enablePac"
+                            class="pac-icon"
+                        >
+                            <Icon name="PACcode" size="22" class="pac-code-icon" />
+                            PAC
+                        </span> -->
+                    </div>
                 </template>
             </bk-table-column>
             <bk-table-column
@@ -124,6 +150,16 @@
                     <bk-button
                         theme="primary"
                         text
+                        v-perm="{
+                            hasPermission: props.row.canDelete,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: RESOURCE_TYPE,
+                                resourceCode: props.row.repositoryHashId,
+                                action: RESOURCE_ACTION.DELETE
+                            }
+                        }"
                         @click.stop="deleteCodeLib(props.row)"
                     >
                         {{ $t('codelib.delete') }}
@@ -156,6 +192,7 @@
 
 <script>
     import { mapActions, mapState } from 'vuex'
+    import { RESOURCE_ACTION, RESOURCE_TYPE } from '@/utils/permission'
     import {
         TABLE_COLUMN_CACHE,
         CODE_REPOSITORY_CACHE,
@@ -179,6 +216,7 @@
                 type: Function,
                 required: true
             },
+            isSearch: Boolean,
             count: Number,
             totalPages: Number,
             page: Number,
@@ -215,6 +253,8 @@
 
         data () {
             return {
+                RESOURCE_ACTION,
+                RESOURCE_TYPE,
                 scmType: '',
                 selectId: '',
                 tableHeight: '',
@@ -282,6 +322,15 @@
                     result[item.id] = true
                     return result
                 }, {})
+            },
+            sortField () {
+                const { sortType, sortBy } = this.$route.query
+                const prop = sortBy ?? localStorage.getItem('codelibSortBy')
+                const order = sortType ?? localStorage.getItem('codelibSortType')
+                return {
+                    prop: this.getkeyByValue(this.sortByMap, prop),
+                    order: this.getkeyByValue(this.sortTypeMap, order)
+                }
             }
         },
 
@@ -384,6 +433,9 @@
                 'deleteRepo',
                 'fetchUsingPipelinesList'
             ]),
+            getkeyByValue (obj, value) {
+                return Object.keys(obj).find(key => obj[key] === value)
+            },
             prettyDateTimeFormat,
 
             /**
@@ -487,7 +539,7 @@
                     if (this.pipelinesDialogPayload.page === 1 && this.pipelinesList.length) {
                         this.pipelinesDialogPayload.isShow = true
                     }
-                    this.pipelinesDialogPayload.hasLoadEnd = res.totalPages === this.pipelinesDialogPayload.page
+                    this.pipelinesDialogPayload.hasLoadEnd = res.count === this.pipelinesList.length
                     this.pipelinesDialogPayload.page += 1
                 }).finally(() => {
                     this.pipelinesDialogPayload.isLoadingMore = false
@@ -546,7 +598,8 @@
             handleSortChange ({ prop, order }) {
                 const sortBy = this.sortByMap[prop]
                 const sortType = this.sortTypeMap[order]
-                this.$emit('handleSortChange', { sortBy, sortType })
+                console.log('pros', prop, 'order', order, 111)
+                this.$emit('handleSortChange', { sortBy, sortType, prop, order })
             },
 
             resetFilter () {
@@ -557,7 +610,6 @@
 
             handelHeaderDragend (newWidth, oldWidth, column) {
                 this.tableWidthMap[column.property] = newWidth
-                console.log(column.property)
                 localStorage.setItem(CACHE_CODELIB_TABLE_WIDTH_MAP, JSON.stringify(this.tableWidthMap))
             }
         }
@@ -579,6 +631,12 @@
         position: relative;
         top: 3px;
         font-size: 24px !important;
+    }
+}
+.flod-table {
+    td,
+    th {
+        width: 400px !important;
     }
 }
 .devops-codelib-table {
@@ -610,9 +668,32 @@
             margin-left: auto;
         }
     }
-    .codelib-type-icon {
-        position: relative;
-        top: 3px;
+    .codelib-name-warpper {
+        display: inline-flex;
+        align-items: center;
+        position: initial;
+        width: 100%;
+        .mask {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+        .codelib-logo {
+            flex-shrink: 0;
+        }
+        .codelib-name {
+            color: #3c96ff;
+            cursor: pointer;
+            margin-left: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    }
+    .is-flod-warpper {
+        display: initial;
     }
     .pac-icon {
         position: relative;
@@ -622,7 +703,7 @@
         background-color: #E1ECFF;
         width: 60px;
         height: 24px;
-        display: inline-table;
+        display: inline-grid;
         line-height: 24px;
         border-radius: 12px;
         text-align: right;
@@ -633,12 +714,16 @@
         left: 1px;
         top: 1px;
     }
-    // .codelib-aliasName {
-    //     position: relative;
-    //     span {
-    //         position: absolute;
-    //         left: 90%;
-    //     }
-    // }
+    .name-flod {
+        position: relative;
+        display: inline-block;
+        max-width: 300px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+    .name-disabled {
+        color: #dcdee5 !important;
+    }
 }
 </style>

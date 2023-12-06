@@ -31,7 +31,7 @@
                             },
                             {
                                 id: 'templateSetting',
-                                name: this.$t('setting'),
+                                name: this.$t('template.settings'),
                                 icon: 'icon-cog'
                             },
                             {

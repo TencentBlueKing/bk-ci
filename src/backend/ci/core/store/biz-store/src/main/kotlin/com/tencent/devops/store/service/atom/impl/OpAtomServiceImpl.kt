@@ -29,7 +29,7 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.tencent.bkrepo.common.api.util.toJsonString
-import com.tencent.devops.artifactory.api.ServiceArchiveAtomFileResource
+import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -77,12 +77,13 @@ import com.tencent.devops.store.service.atom.AtomNotifyService
 import com.tencent.devops.store.service.atom.AtomQualityService
 import com.tencent.devops.store.service.atom.AtomReleaseService
 import com.tencent.devops.store.service.atom.OpAtomService
-import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
 import com.tencent.devops.store.service.common.ClassifyService
+import com.tencent.devops.store.service.common.StoreFileService
 import com.tencent.devops.store.service.common.StoreI18nMessageService
 import com.tencent.devops.store.service.common.StoreLogoService
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
-import com.tencent.devops.store.utils.AtomReleaseTxtAnalysisUtil
+import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil
 import com.tencent.devops.store.utils.StoreUtils
 import java.io.File
 import java.io.InputStream
@@ -113,6 +114,7 @@ class OpAtomServiceImpl @Autowired constructor(
     private val storeWebsocketService: StoreWebsocketService,
     private val classifyService: ClassifyService,
     private val storeI18nMessageService: StoreI18nMessageService,
+    private val storeFileService: StoreFileService,
     private val redisOperation: RedisOperation,
     private val client: Client
 ) : OpAtomService {
@@ -225,7 +227,9 @@ class OpAtomServiceImpl @Autowired constructor(
             name = atomRecord.name,
             atomCode = atomRecord.atomCode,
             classType = atomRecord.classType,
-            logoUrl = atomRecord.logoUrl,
+            logoUrl = atomRecord.logoUrl?.let {
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+            },
             icon = atomRecord.icon,
             summary = atomRecord.summary,
             serviceScope = JsonUtil.toOrNull(atomRecord.serviceScope, List::class.java) as List<String>?,
@@ -238,7 +242,9 @@ class OpAtomServiceImpl @Autowired constructor(
             category = AtomCategoryEnum.getAtomCategory(atomRecord.categroy.toInt()),
             atomType = AtomTypeEnum.getAtomType(atomRecord.atomType.toInt()),
             atomStatus = AtomStatusEnum.getAtomStatus(atomRecord.atomStatus.toInt()),
-            description = atomRecord.description,
+            description = atomRecord.description?.let {
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+            },
             version = atomRecord.version,
             creator = atomRecord.creator,
             createTime = DateTimeUtil.toDateTime(atomRecord.createTime),
@@ -258,11 +264,11 @@ class OpAtomServiceImpl @Autowired constructor(
                         version = atomRecord.version
                     )
                 )
-                AtomDecorateFactory.get(AtomDecorateFactory.Kind.PROPS)
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.PROPS)
                     ?.decorate(propJsonStr) as Map<String, Any>?
             },
             data = atomRecord.data?.let {
-                AtomDecorateFactory.get(AtomDecorateFactory.Kind.DATA)
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.DATA)
                     ?.decorate(atomRecord.data) as Map<String, Any>?
             },
             recommendFlag = atomFeature?.recommendFlag,
@@ -373,11 +379,12 @@ class OpAtomServiceImpl @Autowired constructor(
         val fileName = disposition.fileName
         val index = fileName.lastIndexOf(".")
         val fileType = fileName.substring(index + 1)
-        val file = Files.createTempFile(UUIDUtil.generate(), ".$fileType").toFile()
+        val uuid = UUIDUtil.generate()
+        val file = Files.createTempFile(uuid, ".$fileType").toFile()
         file.outputStream().use {
             inputStream.copyTo(it)
         }
-        val atomPath = AtomReleaseTxtAnalysisUtil.buildAtomArchivePath(userId, atomCode)
+        val atomPath = TextReferenceFileAnalysisUtil.buildStoreArchivePath(atomCode) + "$fileSeparator$uuid"
         if (!File(atomPath).exists()) {
             ZipUtil.unZipFile(file, atomPath, false)
         }
@@ -442,7 +449,7 @@ class OpAtomServiceImpl @Autowired constructor(
         // 远程logo资源不做处理
         if (!releaseInfo.logoUrl.startsWith("http")) {
             // 解析logoUrl
-            val logoUrlAnalysisResult = AtomReleaseTxtAnalysisUtil.logoUrlAnalysis(releaseInfo.logoUrl)
+            val logoUrlAnalysisResult = TextReferenceFileAnalysisUtil.logoUrlAnalysis(releaseInfo.logoUrl)
             if (logoUrlAnalysisResult.isNotOk()) {
                 return Result(
                     data = false,
@@ -481,10 +488,9 @@ class OpAtomServiceImpl @Autowired constructor(
             }
         }
         // 解析description
-        releaseInfo.description = AtomReleaseTxtAnalysisUtil.descriptionAnalysis(
-            description = releaseInfo.description,
-            atomPath = atomPath,
-            client = client,
+        releaseInfo.description = storeFileService.textReferenceFileAnalysis(
+            content = releaseInfo.description,
+            fileDirPath = "$atomPath${fileSeparator}file",
             userId = userId
         )
         taskJsonMap[KEY_RELEASE_INFO] = releaseInfo
@@ -496,15 +502,17 @@ class OpAtomServiceImpl @Autowired constructor(
         }
         try {
             if (file.exists()) {
-                val archiveAtomResult = AtomReleaseTxtAnalysisUtil.serviceArchiveAtomFile(
+                val archiveAtomResult = TextReferenceFileAnalysisUtil.serviceArchiveAtomFile(
                     userId = userId,
-                    projectCode = releaseInfo.projectId,
-                    atomCode = atomCode,
-                    version = versionInfo.version,
-                    serviceUrlPrefix = client.getServiceUrl(ServiceArchiveAtomFileResource::class),
-                    releaseType = versionInfo.releaseType.name,
+                    client = client,
                     file = file,
-                    os = JsonUtil.toJson(releaseInfo.os)
+                    archiveAtomRequest = ArchiveAtomRequest(
+                        projectCode = releaseInfo.projectId,
+                        atomCode = atomCode,
+                        version = versionInfo.version,
+                        releaseType = versionInfo.releaseType,
+                        os = JsonUtil.toJson(releaseInfo.os)
+                    )
                 )
                 if (archiveAtomResult.isNotOk()) {
                     return Result(

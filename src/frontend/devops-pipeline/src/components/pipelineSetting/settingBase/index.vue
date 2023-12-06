@@ -44,7 +44,7 @@
                             <div class="bk-form-item item-notice">
                                 <label class="bk-label">{{ $t('settings.noticeType') }}：</label>
                                 <div class="bk-form-content">
-                                    <bk-checkbox-group :value="pipelineSubscription.types" @change="handleCheckNoticeType">
+                                    <bk-checkbox-group class="checkbox-group" :value="pipelineSubscription.types" @change="handleCheckNoticeType">
                                         <bk-checkbox v-for="item in noticeList" :key="item.value" :value="item.value">
                                             {{ item.name }}
                                         </bk-checkbox>
@@ -138,8 +138,9 @@
                 ],
                 curNavTab: { label: this.$t('settings.buildFail'), name: 'fail' },
                 noticeList: [
-                    { id: 1, name: this.$t('settings.rtxNotice'), value: 'WEWORK' }
-                    // { id: 4, name: this.$t('settings.emailNotice'), value: 'EMAIL' },
+                    { id: 4, name: this.$t('settings.emailNotice'), value: 'EMAIL' },
+                    { id: 1, name: this.$t('settings.rtxNotice'), value: 'WEWORK' },
+                    { id: 5, name: this.$t('settings.voice'), value: 'VOICE' }
                     // { id: 2, name: this.$t('settings.wechatNotice'), value: 'WECHAT' },
                     // { id: 3, name: this.$t('settings.smsNotice'), value: 'SMS' }
                 ],
@@ -370,7 +371,7 @@
 
                     if (resData && resData.data) {
                         this.$showTips({
-                            message: `${pipelineSetting.pipelineName}${this.$t('updateSuc')}`,
+                            message: `${pipelineSetting.pipelineName}${' '}${this.$t('updateSuc')}`,
                             theme: 'success'
                         })
                         this.isEditing = false
@@ -421,6 +422,9 @@
              & .bk-form-content .bk-form-radio{
                 display: block;
              }
+             .bk-form-control {
+                line-height: inherit;
+             }
         }
         .notice-tab {
             padding: 10px 0px 0px;
@@ -435,7 +439,6 @@
             }
             .bk-form-item label{
                 display: inline-block;
-                width: 145px;
                 white-space: nowrap;
                 text-overflow: ellipsis;
                 overflow: hidden;
@@ -559,5 +562,10 @@
         white-space: normal;
         word-wrap: break-word;
         font-weight: 400;
+    }
+    .checkbox-group {
+        .bk-form-checkbox {
+            width: 250px !important;
+        }
     }
 </style>

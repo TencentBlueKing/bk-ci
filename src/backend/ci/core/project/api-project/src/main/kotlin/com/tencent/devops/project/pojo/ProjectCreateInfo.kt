@@ -35,36 +35,26 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("项目-新增模型")
 data class ProjectCreateInfo(
     @ApiModelProperty("项目名称")
-    // @JsonProperty("project_name")
     val projectName: String,
     @ApiModelProperty("英文缩写")
-    // @JsonProperty("english_name")
     val englishName: String,
     @ApiModelProperty("项目类型")
-    // @JsonProperty("project_type")
     val projectType: Int = 0,
     @ApiModelProperty("描述")
     val description: String,
     @ApiModelProperty("一级部门ID")
-    // @JsonProperty("bg_id")
     val bgId: Long = 0,
     @ApiModelProperty("一级部门名字")
-    // @JsonProperty("bg_name")
     val bgName: String = "",
     @ApiModelProperty("二级部门ID")
-    // @JsonProperty("dept_id")
     val deptId: Long = 0,
     @ApiModelProperty("二级部门名称")
-    // @JsonProperty("dept_name")
     val deptName: String = "",
     @ApiModelProperty("三级部门ID")
-    // @JsonProperty("center_id")
     val centerId: Long = 0,
     @ApiModelProperty("三级部门名称")
-    // @JsonProperty("center_name")
     val centerName: String = "",
     @ApiModelProperty("是否保密")
-    // @get:JsonProperty("is_secrecy")
     var secrecy: Boolean = false,
     @ApiModelProperty("kind")
     val kind: Int = 0,
@@ -75,5 +65,11 @@ data class ProjectCreateInfo(
     @ApiModelProperty("logo地址")
     val logoAddress: String? = null,
     @ApiModelProperty("项目性质")
-    val authSecrecy: Int? = ProjectAuthSecrecyStatus.PUBLIC.value
+    val authSecrecy: Int? = ProjectAuthSecrecyStatus.PUBLIC.value,
+    @ApiModelProperty("是否可用")
+    val enabled: Boolean = true,
+    @ApiModelProperty("运营产品ID")
+    val productId: Int? = null,
+    @ApiModelProperty("运营产品名称")
+    val productName: String? = null
 )

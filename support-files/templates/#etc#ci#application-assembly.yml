@@ -317,6 +317,7 @@ store:
   imageExecuteNullNotifyTplCode: IMAGE_EXECUTE_NULL_NOTIFY_TPL
   templateApproveSwitch: close
   imageApproveSwitch: close
+  defaultStaticFileFormat: jpg,png,svg,gif,jpeg
 
 logo:
   allowUploadLogoTypes: jpg,png,svg

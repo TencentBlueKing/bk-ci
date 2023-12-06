@@ -76,6 +76,7 @@
                                 </li>
                             </ul>
                         </template>
+                        <div v-else class="no-data">{{ $t('noData') }}</div>
                         <bk-pipeline v-if="showPreview && tempPipeline" class="pipeline-preview" :pipeline="tempPipeline"></bk-pipeline>
                     </div>
                     <div class="right-temp-info">
@@ -83,7 +84,7 @@
                             <template v-show="!isActiveTempEmpty">
                                 <label class="info-label">{{ $t('pipelineName') }}：</label>
                                 <div class="pipeline-input">
-                                    <input type="text" ref="pipelineName" class="bk-form-input" :placeholder="$t('pipelineNameInputTips')" maxlength="40" name="newPipelineName" v-model.trim="newPipelineName" v-validate.initial="&quot;required&quot;" />
+                                    <input type="text" ref="pipelineName" class="bk-form-input" :placeholder="$t('pipelineNameInputTips')" maxlength="128" name="newPipelineName" v-model.trim="newPipelineName" v-validate.initial="&quot;required&quot;" />
                                     <span class="border-effect" v-show="!errors.has(&quot;newPipelineName&quot;)"></span>
                                     <span v-show="errors.has(&quot;newPipelineName&quot;)" class="validate-fail-border-effect"></span>
                                 </div>
@@ -130,7 +131,7 @@
                             </section>
                         </div>
                         <div class="temp-operation-bar">
-                            <bk-button theme="primary" size="small" :disabled="isConfirmDisable" @click="createNewPipeline">{{ $t('add') }}</bk-button>
+                            <bk-button theme="primary" size="small" :disabled="isConfirmDisable" @click="createNewPipeline">{{ $t('new') }}</bk-button>
                             <bk-button size="small" @click="toggleTemplatePopup(false)">{{ $t('cancel') }}</bk-button>
                         </div>
                     </div>
@@ -472,12 +473,14 @@
                         })
                     }
                 } catch (e) {
-                    this.handleError(e, [{
-                        actionId: this.$permissionActionMap.create,
-                        resourceId: this.$permissionResourceMap.pipeline,
-                        instanceId: [],
-                        projectId: this.$route.params.projectId
-                    }])
+                    this.handleError(
+                        e,
+                        {
+                            projectId: this.$route.params.projectId,
+                            resourceCode: this.$route.params.projectId,
+                            action: this.$permissionResourceAction.CREATE
+                        }
+                    )
                 } finally {
                     this.isDisabled = false
                 }
@@ -743,6 +746,12 @@
                             }
                         }
                     }
+                }
+                .no-data {
+                    display: flex;
+                    height: 100%;
+                    align-items: center;
+                    justify-content: space-around;
                 }
             }
             .right-temp-info {

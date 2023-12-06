@@ -23,7 +23,7 @@
                 <template slot-scope="{ row }">
                     <div class="event-name">
                         <img class="logo" :src="`https:${row.atomLogo}`" alt="">
-                        {{ row.eventType }}
+                        {{ row.eventTypeDesc }}
                     </div>
                 </template>
             </bk-table-column>
@@ -87,8 +87,7 @@
             </bk-table-column>
             <bk-table-column :label="$t('codelib.流水线数量')" prop="pipelineCount">
                 <template slot-scope="{ row }">
-                    <!-- <a :href="`/console/pipeline/${projectId}/list`" target="_blank">{{ row.pipelineRefCount }}</a> -->
-                    {{ row.pipelineRefCount }}
+                    <bk-button text @click="handleShowPipelineList(row)">{{ row.pipelineRefCount }}</bk-button>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t('codelib.操作')" width="150">
@@ -114,6 +113,27 @@
             ref="atomDetailRef"
             :atom="curAtom">
         </atom-detail>
+
+        <bk-sideslider
+            :is-show.sync="showPipelineSideslider"
+            :width="600"
+            quick-close
+            :title="$t('codelib.关联的流水线')"
+            ext-cls="pipeline-list-sideslider"
+        >
+            <template slot="content">
+                <bk-table
+                    :data="pipelineList"
+                    :pagination="pipelineListPagination"
+                    @page-change="handlePipelinePageChange">
+                    <bk-table-column :label="$t('codelib.流水线名称')" prop="pipelineName">
+                        <template slot-scope="{ row }">
+                            <a @click="handleToPipeline(row)">{{ row.pipelineName }}</a>
+                        </template>
+                    </bk-table-column>
+                </bk-table>
+            </template>
+        </bk-sideslider>
     </div>
 </template>
 
@@ -132,6 +152,14 @@
             curRepo: {
                 type: Object,
                 default: () => {}
+            },
+            triggerTypeList: {
+                type: Object,
+                default: () => {}
+            },
+            eventTypeList: {
+                type: Object,
+                default: () => {}
             }
         },
         data () {
@@ -139,8 +167,6 @@
                 isLoading: false,
                 triggerData: [],
                 searchValue: [],
-                triggerTypeList: [],
-                eventTypeList: [],
                 pagination: {
                     current: 1,
                     count: 0,
@@ -149,7 +175,16 @@
                 eventType: '',
                 triggerType: '',
                 curAtom: {},
-                catchRepoId: ''
+                catchRepoId: '',
+                triggerConditionMd5: '',
+                triggerEventType: '',
+                showPipelineSideslider: false,
+                pipelineListPagination: {
+                    current: 1,
+                    count: 0,
+                    limit: 20
+                },
+                pipelineList: []
             }
         },
         computed: {
@@ -199,12 +234,20 @@
                     this.getTriggerData()
                 }
             },
-            scmType: {
-                handler (val) {
-                    this.getEventTypeList()
-                    this.getTriggerTypeList()
-                },
-                immediate: true
+            showPipelineSideslider (val) {
+                if (val) {
+                    this.fetchUsingPipelinesList({
+                        projectId: this.projectId,
+                        repositoryHashId: this.repoId,
+                        triggerConditionMd5: this.triggerConditionMd5,
+                        eventType: this.triggerEventType,
+                        page: this.pipelineListPagination.current,
+                        pageSize: this.pipelineListPagination.limit
+                    }).then(res => {
+                        this.pipelineList = res.records
+                        this.pipelineListPagination.count = res.count
+                    })
+                }
             }
         },
         created () {
@@ -213,8 +256,7 @@
         },
         methods: {
             ...mapActions('codelib', [
-                'fetchEventType',
-                'fetchTriggerType',
+                'fetchUsingPipelinesList',
                 'fetchTriggerData'
             ]),
             triggerRepo () {
@@ -286,13 +328,20 @@
                 this.pagination.limit = limit
                 this.getTriggerData()
             },
+            handleShowPipelineList (row) {
+                this.triggerConditionMd5 = row.triggerConditionMd5
+                this.triggerEventType = row.eventType
+                this.showPipelineSideslider = true
+            },
             handelShowDetail (row) {
                 this.curAtom = row
                 this.$refs.atomDetailRef.isShow = true
             },
-
             clearFilter () {
                 this.searchValue = []
+            },
+            handleToPipeline (row) {
+                window.open(`/console/pipeline/${row.projectId}/${row.pipelineId}`, '__blank')
             }
         }
     }
@@ -354,5 +403,11 @@
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
+    }
+    .pipeline-list-sideslider {
+        .bk-sideslider-content {
+            padding: 20px;
+            height: calc(100vh - 60px) !important;
+        }
     }
 </style>

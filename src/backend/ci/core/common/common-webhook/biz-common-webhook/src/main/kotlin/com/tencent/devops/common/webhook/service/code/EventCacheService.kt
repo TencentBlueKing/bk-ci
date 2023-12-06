@@ -2,9 +2,11 @@ package com.tencent.devops.common.webhook.service.code
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.sdk.github.response.PullRequestResponse
 import com.tencent.devops.common.webhook.util.EventCacheUtil
 import com.tencent.devops.repository.api.ServiceP4Resource
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.code.p4.api.P4ChangeList
 import com.tencent.devops.scm.code.p4.api.P4ServerInfo
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitCommitReviewInfo
@@ -112,16 +114,36 @@ class EventCacheService @Autowired constructor(
         repositoryId: String,
         repositoryType: RepositoryType?,
         change: Int
-    ): List<String> {
+    ): P4ChangeList? {
         val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
         return eventCache?.p4ChangeFiles ?: run {
-            val changeFiles = client.get(ServiceP4Resource::class).getChangelistFiles(
+            val changeFiles = client.get(ServiceP4Resource::class).getChangelist(
                 projectId = projectId,
                 repositoryId = repositoryId,
                 repositoryType = repositoryType,
                 change = change
-            ).data?.map { it.depotPathString } ?: emptyList()
+            ).data
             eventCache?.p4ChangeFiles = changeFiles
+            changeFiles
+        }
+    }
+
+    fun getP4ShelvedChangelistFiles(
+        repo: Repository,
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?,
+        change: Int
+    ): P4ChangeList? {
+        val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
+        return eventCache?.p4ShelveChangeFiles ?: run {
+            val changeFiles = client.get(ServiceP4Resource::class).getShelvedChangeList(
+                projectId = projectId,
+                repositoryId = repositoryId,
+                repositoryType = repositoryType,
+                change = change
+            ).data
+            eventCache?.p4ShelveChangeFiles = changeFiles
             changeFiles
         }
     }
@@ -134,11 +156,13 @@ class EventCacheService @Autowired constructor(
     ): P4ServerInfo? {
         val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
         return eventCache?.serverInfo ?: run {
-            client.get(ServiceP4Resource::class).getServerInfo(
+            val p4ServerInfo = client.get(ServiceP4Resource::class).getServerInfo(
                 projectId = projectId,
                 repositoryId = repositoryId,
                 repositoryType = repositoryType
             ).data
+            eventCache?.serverInfo = p4ServerInfo
+            p4ServerInfo
         }
     }
 
@@ -153,11 +177,31 @@ class EventCacheService @Autowired constructor(
     ): GitCommitReviewInfo? {
         val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
         return eventCache?.gitCommitReviewInfo ?: run {
-            gitScmService.getCommitReviewInfo(
+            val commitReviewInfo = gitScmService.getCommitReviewInfo(
                 projectId = projectId,
                 commitReviewId = commitReviewId,
                 repo = repo
             )
+            eventCache?.gitCommitReviewInfo = commitReviewInfo
+            commitReviewInfo
+        }
+    }
+
+    fun getPrInfo(
+        githubRepoName: String,
+        pullNumber: String,
+        repo: Repository,
+        projectId: String
+    ): PullRequestResponse? {
+        val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
+        return eventCache?.githubPrInfo ?: run {
+            val prInfo = gitScmService.getPrInfo(
+                repo = repo,
+                githubRepoName = githubRepoName,
+                pullNumber = pullNumber
+            )
+            eventCache?.githubPrInfo = prInfo
+            prInfo
         }
     }
 }

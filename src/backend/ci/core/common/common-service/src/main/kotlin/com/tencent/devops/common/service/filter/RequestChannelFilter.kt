@@ -29,6 +29,9 @@ package com.tencent.devops.common.service.filter
 
 import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
 import com.tencent.devops.common.api.enums.RequestChannelTypeEnum
+import org.slf4j.LoggerFactory
+import org.springframework.core.Ordered
+import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import javax.servlet.Filter
 import javax.servlet.FilterChain
@@ -38,8 +41,13 @@ import javax.servlet.ServletResponse
 import javax.servlet.http.HttpServletRequest
 
 @Component
+@Order(Ordered.HIGHEST_PRECEDENCE)
 class RequestChannelFilter : Filter {
     override fun destroy() = Unit
+
+    companion object {
+        val logger = LoggerFactory.getLogger(RequestChannelFilter::class.java)
+    }
 
     override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain?) {
         if (request == null || chain == null) {
@@ -48,16 +56,13 @@ class RequestChannelFilter : Filter {
         val httpServletRequest = request as HttpServletRequest
         val requestUrl = httpServletRequest.requestURI
         // 根据接口路径设置请求渠道信息
-        val channel = if (requestUrl.contains("/api/build/")) {
-            RequestChannelTypeEnum.BUILD.name
-        } else if (requestUrl.contains("/api/user/")) {
-            RequestChannelTypeEnum.USER.name
-        } else if (requestUrl.contains("/api/op/")) {
-            RequestChannelTypeEnum.OP.name
-        } else if (requestUrl.contains("/api/open/")) {
-            RequestChannelTypeEnum.OPEN.name
-        } else {
-            null
+        val channel = when {
+            requestUrl.contains("/api/build/") -> RequestChannelTypeEnum.BUILD.name
+            requestUrl.contains("/api/user/") -> RequestChannelTypeEnum.USER.name
+            requestUrl.contains("/api/op/") -> RequestChannelTypeEnum.OP.name
+            requestUrl.contains("/api/open/") -> RequestChannelTypeEnum.OPEN.name
+            requestUrl.contains("/api/apigw") -> RequestChannelTypeEnum.API.name
+            else -> null
         }
         channel?.let { request.setAttribute(REQUEST_CHANNEL, channel) }
         chain.doFilter(request, response)

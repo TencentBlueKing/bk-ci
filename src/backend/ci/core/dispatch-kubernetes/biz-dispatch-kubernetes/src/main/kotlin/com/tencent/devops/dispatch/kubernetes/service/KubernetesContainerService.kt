@@ -45,7 +45,6 @@ import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_GATEWAY
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_PROJECT_ID
 import com.tencent.devops.dispatch.kubernetes.common.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter
-import com.tencent.devops.dispatch.kubernetes.dao.DispatchKubernetesBuildDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_CONTAINER_BUILD_ERROR
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_READY_CREATE_KUBERNETES_BUILD_MACHINE
@@ -61,6 +60,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesDockerRegistry
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResource
 import com.tencent.devops.dispatch.kubernetes.pojo.PodNameSelector
 import com.tencent.devops.dispatch.kubernetes.pojo.Pool
+import com.tencent.devops.dispatch.kubernetes.pojo.SpecialBuilderConfig
 import com.tencent.devops.dispatch.kubernetes.pojo.StartBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.StopBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.TaskStatusEnum
@@ -85,7 +85,6 @@ import com.tencent.devops.dispatch.kubernetes.pojo.isSuccess
 import com.tencent.devops.dispatch.kubernetes.pojo.readyToStart
 import com.tencent.devops.dispatch.kubernetes.utils.CommonUtils
 import org.apache.commons.lang3.RandomStringUtils
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -96,12 +95,10 @@ import java.util.stream.Collectors
 @Service("kubernetesContainerService")
 class KubernetesContainerService @Autowired constructor(
     private val logsPrinter: LogsPrinter,
-    private val dslContext: DSLContext,
     private val commonConfig: CommonConfig,
     private val kubernetesTaskClient: KubernetesTaskClient,
     private val kubernetesBuilderClient: KubernetesBuilderClient,
-    private val kubernetesJobClient: KubernetesJobClient,
-    private val dispatchKubernetesBuildDao: DispatchKubernetesBuildDao
+    private val kubernetesJobClient: KubernetesJobClient
 ) : ContainerService {
 
     companion object {
@@ -142,6 +139,9 @@ class KubernetesContainerService @Autowired constructor(
 
     @Value("\${kubernetes.gateway.webConsoleProxy}")
     val webConsoleProxy: String = ""
+
+    @Value("\${kubernetes.privateBuilderTaint:}")
+    val privateBuilderTaint: String = ""
 
     override fun getBuilderStatus(
         buildId: String,
@@ -245,7 +245,8 @@ class KubernetesContainerService @Autowired constructor(
                     ),
                     command = listOf("/bin/sh", entrypoint),
                     nfs = null,
-                    privateBuilder = null,
+                    privateBuilder = if (privateBuilderTaint.isBlank()) null
+                    else SpecialBuilderConfig(privateBuilderTaint),
                     specialBuilder = null
                 )
             )

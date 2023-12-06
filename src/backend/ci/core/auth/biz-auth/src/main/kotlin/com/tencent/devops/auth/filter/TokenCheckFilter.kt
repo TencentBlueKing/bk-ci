@@ -65,7 +65,7 @@ class TokenCheckFilter @Autowired constructor(
             return chain.doFilter(request, response)
         }
 
-        if (token != clientTokenService.getSystemToken(null)) {
+        if (token != clientTokenService.getSystemToken()) {
             logger.warn("auth token fail: $token")
             throw TokenForbiddenException("token check fail")
         }

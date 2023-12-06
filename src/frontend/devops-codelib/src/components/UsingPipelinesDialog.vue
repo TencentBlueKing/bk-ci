@@ -29,7 +29,7 @@
                 :key="pipeline.pipelineId"
                
             >
-                <a @click="handleToPipelne(pipeline)">{{ pipeline.pipelineName }}</a>
+                <a @click="handleToPipeline(pipeline)">{{ pipeline.pipelineName }}</a>
             </li>
         </ul>
         <footer>
@@ -73,7 +73,7 @@
                 }
             },
 
-            handleToPipelne (pipeline) {
+            handleToPipeline (pipeline) {
                 window.open(`/console/pipeline/${this.projectId}/${pipeline.pipelineId}`, '__blank')
             }
         }

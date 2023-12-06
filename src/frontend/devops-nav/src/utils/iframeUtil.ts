@@ -35,10 +35,6 @@ function iframeUtil (router: any) {
         }
     }
 
-    utilMap.showAskPermissionDialog = function (params) {
-        eventBus.$showAskPermissionDialog(params)
-    }
-
     utilMap.toggleLoginDialog = function () {
         location.href = window.getLoginUrl()
     }
@@ -95,13 +91,14 @@ function iframeUtil (router: any) {
         send(target, 'leaveCancelOrder', '')
     }
 
-    utilMap.leaveConfirm = function ({ title, content = '离开后，新编辑的数据将丢失', type, subHeader, theme }):void {
+    utilMap.leaveConfirm = function ({ title, content = '离开后，新编辑的数据将丢失', type, subHeader, theme, cancelText }):void {
         const iframeBox: any = document.getElementById('iframe-box')
         eventBus.$bkInfo({
             type: type || theme,
             theme: theme || type,
             title,
             subTitle: content,
+            cancelText,
             subHeader: subHeader ? eventBus.$createElement('p', {}, subHeader) : null,
             confirmFn: () => {
                 utilMap.leaveConfirmOrder(iframeBox.contentWindow)

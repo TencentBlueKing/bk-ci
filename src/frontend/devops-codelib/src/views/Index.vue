@@ -6,18 +6,19 @@
                     <template>
                         <section class="header-content">
                             <link-code-lib
-                                v-if="codelibs && codelibs.hasCreatePermission"
+                                v-perm="{
+                                    hasPermission: codelibs && codelibs.hasCreatePermission,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: RESOURCE_TYPE,
+                                        resourceCode: projectId,
+                                        action: RESOURCE_ACTION.CREATE
+                                    }
+                                }"
                                 :create-codelib="createCodelib"
                             >
                             </link-code-lib>
-                            <bk-button
-                                v-else
-                                theme="primary"
-                                @click.stop="goCreatePermission"
-                            >
-                                <i class="devops-icon icon-plus"></i>
-                                <span>{{ $t('codelib.linkCodelib') }}</span>
-                            </bk-button>
                             <bk-input :placeholder="$t('codelib.aliasNamePlaceholder')"
                                 :class="{
                                     'codelib-search': true,
@@ -106,17 +107,19 @@
     import CodeLibDialog from '../components/CodeLibDialog'
     import { mapState, mapActions } from 'vuex'
     import { getOffset } from '../utils/'
+    import { RESOURCE_ACTION, RESOURCE_TYPE } from '../utils/permission'
     import {
         codelibTypes,
         getCodelibConfig,
         isGit,
-        isGithub,
         isGitLab,
+        isGithub,
         isTGit,
         isP4,
         CODE_REPOSITORY_CACHE,
         isSvn
     } from '../config/'
+    
     export default {
         name: 'codelib-list',
 
@@ -127,9 +130,11 @@
             CodeLibDetail,
             layout
         },
-
+       
         data () {
             return {
+                RESOURCE_ACTION,
+                RESOURCE_TYPE,
                 isLoading: !this.codelibs,
                 defaultPagesize: 10,
                 startPage: 1,
@@ -179,6 +184,9 @@
         },
 
         async mounted () {
+            const { sortType, sortBy } = this.$route.query
+            this.sortType = sortType ?? localStorage.getItem('codelibSortType') ?? ''
+            this.sortBy = sortBy ?? localStorage.getItem('codelibSortBy') ?? ''
             this.init()
             this.projectList = this.$store.state.projectList
 
@@ -217,7 +225,7 @@
                 const tableHeadHeight = 42
                 const paginationHeight = 63
                 const windownOffsetBottom = 20
-                const listTotalHeight = windowHeight - top - tableHeadHeight - paginationHeight - windownOffsetBottom - 52
+                const listTotalHeight = windowHeight - top - tableHeadHeight - paginationHeight - windownOffsetBottom - 74
                 const tableRowHeight = 42
 
                 this.aliasName = query.searchName || ''
@@ -261,6 +269,13 @@
                 sortType = this.sortType
             ) {
                 if (!this.userId) this.isLoading = true
+                this.$router.push({
+                    query: {
+                        ...this.$route.query,
+                        sortBy,
+                        sortType
+                    }
+                })
                 await this.requestList({
                     projectId,
                     aliasName,
@@ -311,29 +326,28 @@
                 this.iframeUtil.toggleProjectMenu(true)
             },
 
-            async toApplyPermission () {
-                this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.code, [{
-                    id: this.projectId,
-                    type: this.$permissionResourceTypeMap.PROJECT
-                }])
-            },
-
-            goCreatePermission () {
-                this.$showAskPermissionDialog({
-                    noPermissionList: [{
-                        actionId: this.$permissionActionMap.create,
-                        resourceId: this.$permissionResourceMap.code,
-                        instanceId: [],
-                        projectId: this.projectId
-                    }]
+            applyPermission () {
+                this.handleNoPermission({
+                    projectId: this.projectId,
+                    resourceType: RESOURCE_TYPE,
+                    resourceCode: this.projectId,
+                    action: RESOURCE_ACTION.CREATE
                 })
             },
-
             handleSortChange (payload) {
                 const { sortBy, sortType } = payload
                 this.sortBy = sortBy
                 this.sortType = sortType
                 this.refreshCodelibList()
+                localStorage.setItem('codelibSortType', sortType)
+                localStorage.setItem('codelibSortBy', sortBy)
+                this.$router.push({
+                    query: {
+                        ...this.$route.query,
+                        sortBy,
+                        sortType
+                    }
+                })
             },
 
             handleUpdateFlod (payload) {

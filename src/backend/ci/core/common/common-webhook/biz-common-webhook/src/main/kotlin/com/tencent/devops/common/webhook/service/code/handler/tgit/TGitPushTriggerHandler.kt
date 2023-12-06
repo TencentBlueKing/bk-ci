@@ -28,6 +28,7 @@
 package com.tencent.devops.common.webhook.service.code.handler.tgit
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
@@ -39,6 +40,8 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TGIT_PUSH_EVENT_DESC
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionType
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
@@ -56,14 +59,16 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
 import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.GitScmService
+import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
 import com.tencent.devops.common.webhook.service.code.filter.PushKindFilter
 import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
 import com.tencent.devops.common.webhook.service.code.filter.ThirdFilter
+import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
-import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.common.webhook.util.WebhookUtils.convert
 import com.tencent.devops.process.engine.service.code.filter.CommitMessageFilter
@@ -125,7 +130,23 @@ class TGitPushTriggerHandler(
         }
     }
 
-    override fun preMatch(event: GitPushEvent): ScmWebhookMatcher.MatchResult {
+    override fun getEventDesc(event: GitPushEvent): String {
+        return I18Variable(
+            code = TGIT_PUSH_EVENT_DESC,
+            params = listOf(
+                getBranchName(event),
+                "${event.repository.homepage}/commit/${event.checkout_sha}",
+                "${event.checkout_sha}".substring(0, GitPushEvent.SHORT_COMMIT_ID_LENGTH),
+                getUsername(event)
+            )
+        ).toJsonStr()
+    }
+
+    override fun getExternalId(event: GitPushEvent): String {
+        return event.project_id.toString()
+    }
+
+    override fun preMatch(event: GitPushEvent): WebhookMatchResult {
         val isMatch = when {
             event.total_commits_count <= 0 -> {
                 logger.info("Git web hook no commit(${event.total_commits_count})")
@@ -138,7 +159,7 @@ class TGitPushTriggerHandler(
             else ->
                 true
         }
-        return ScmWebhookMatcher.MatchResult(isMatch)
+        return WebhookMatchResult(isMatch)
     }
 
     override fun getEventFilters(
@@ -149,6 +170,36 @@ class TGitPushTriggerHandler(
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
         with(webHookParams) {
+            val userId = getUsername(event)
+            val userFilter = UserFilter(
+                pipelineId = pipelineId,
+                triggerOnUser = userId,
+                includedUsers = convert(includeUsers),
+                excludedUsers = convert(excludeUsers),
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_NOT_MATCH,
+                    params = listOf(userId)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_IGNORED,
+                    params = listOf(userId)
+                ).toJsonStr()
+            )
+            val triggerOnBranchName = getBranchName(event)
+            val branchFilter = BranchFilter(
+                pipelineId = pipelineId,
+                triggerOnBranchName = triggerOnBranchName,
+                includedBranches = convert(branchName),
+                excludedBranches = convert(excludeBranchName),
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.SOURCE_BRANCH_NOT_MATCH,
+                    params = listOf(triggerOnBranchName)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.SOURCE_BRANCH_IGNORED,
+                    params = listOf(triggerOnBranchName)
+                ).toJsonStr()
+            )
             val skipCiFilter = SkipCiFilter(
                 pipelineId = pipelineId,
                 triggerOnMessage = event.commits?.get(0)?.message ?: ""
@@ -183,7 +234,15 @@ class TGitPushTriggerHandler(
                             pipelineId = pipelineId,
                             triggerOnPath = eventPaths.toList(),
                             includedPaths = convert(includePaths),
-                            excludedPaths = convert(excludePaths)
+                            excludedPaths = convert(excludePaths),
+                            includedFailedReason = I18Variable(
+                                code = WebhookI18nConstants.PATH_NOT_MATCH,
+                                params = listOf()
+                            ).toJsonStr(),
+                            excludedFailedReason = I18Variable(
+                                code = WebhookI18nConstants.PATH_IGNORED,
+                                params = listOf()
+                            ).toJsonStr()
                         )
                     ).doFilter(response)
                 }
@@ -204,7 +263,10 @@ class TGitPushTriggerHandler(
                 gitScmService = gitScmService,
                 callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry
             )
-            return listOf(skipCiFilter, pathFilter, commitMessageFilter, pushKindFilter, thirdFilter)
+            return listOf(
+                userFilter, branchFilter, skipCiFilter,
+                pathFilter, commitMessageFilter, pushKindFilter, thirdFilter
+            )
         }
     }
 

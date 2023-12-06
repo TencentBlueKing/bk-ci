@@ -41,10 +41,13 @@
                     v-for="step in timeSteps"
                     :key="step.title"
                 >
-                    <span>
-                        {{ step.title }}
+                    <span class="title-item">
+                        <p>{{ step.title }}</p>
+                        <span v-bk-tooltips="step.popup" class="time-step-divider">
+                            <p></p>
+                        </span>
                     </span>
-                    <p v-bk-tooltips="step.popup" class="time-step-divider"></p>
+                    <!-- <p v-bk-tooltips="step.popup" class="time-step-divider"></p> -->
                     <p class="constant-width-num">
                         {{ step.description }}
                     </p>
@@ -446,6 +449,12 @@
                 return this.$route.params
             },
             errorPopupHeight () {
+                if (!this.showErrorPopup) {
+                    return '0px'
+                }
+                if (!this.showErrors) {
+                    return '42px'
+                }
                 return getComputedStyle(this.$refs.errorPopup)?.height ?? '42px'
             }
         },
@@ -476,9 +485,7 @@
 
         },
         updated () {
-            if (this.showErrorPopup) {
-                this.setScrollBarPostion()
-            }
+            this.setScrollBarPostion()
         },
         mounted () {
             this.requestInterceptAtom(this.routerParams)
@@ -586,7 +593,7 @@
             },
             setScrollBarPostion () {
                 const rootCssVar = document.querySelector(':root')
-                rootCssVar.style.setProperty('--track-bottom', this.showErrors ? this.errorPopupHeight : '42px')
+                rootCssVar.style.setProperty('--track-bottom', this.errorPopupHeight)
             },
             isActiveErrorAtom (atom) {
                 return this.activeErrorAtom?.taskId === atom.taskId && this.activeErrorAtom?.containerId === atom.containerId
@@ -754,19 +761,11 @@
                         theme = 'error'
                     }
                 } catch (err) {
-                    this.handleError(err, [
-                        {
-                            actionId: this.$permissionActionMap.execute,
-                            resourceId: this.$permissionResourceMap.pipeline,
-                            instanceId: [
-                                {
-                                    id: this.routerParams.pipelineId,
-                                    name: this.routerParams.pipelineId
-                                }
-                            ],
-                            projectId: this.routerParams.projectId
-                        }
-                    ])
+                    this.handleError(err, {
+                        projectId: this.routerParams.projectId,
+                        resourceCode: this.routerParams.pipelineId,
+                        action: this.$permissionResourceAction.EXECUTE
+                    })
                 } finally {
                     message
                         && this.$showTips({
@@ -962,26 +961,29 @@
         background: white;
         border: 2px solid #d8d8d8;
       }
-
-      &:not(:last-child) .time-step-divider {
-        display: block;
-        position: absolute;
-        width: calc(100% - 24px);
-        height: 24px;
-        top: 0;
-        &:hover {
-          &:before {
-            background: $primaryColor;
+      &:not(:last-child) {
+          .title-item {
+            display: flex;
+            .time-step-divider {
+                flex: 1;
+                height: 16px;
+                cursor: pointer;
+                &:hover {
+                    p {
+    
+                        background: $primaryColor;
+                    }
+                }
+                p {
+                    position: relative;
+                    top: 8px;
+                    left: 4px;
+                    width: 96%;
+                    height: 1px;
+                    background: #d8d8d8;
+                }
+            }
           }
-        }
-        &:before {
-          content: "";
-          position: absolute;
-          height: 1px;
-          width: 100%;
-          top: 8px;
-          background: #d8d8d8;
-        }
       }
     }
   }

@@ -60,7 +60,7 @@
                 <span> {{ $t('store.版本：') }} </span><span>{{detail.version || '-'}}</span>
             </h5>
             <h5 class="detail-info">
-                <span> {{ $t('store.Job类型：') }} </span>
+                <span> {{ $t('store.适用Job类型：') }} </span>
                 <span>
                     {{detail.jobType|atomJobType}}
                     <template v-if="detail.os && detail.os.length">
@@ -338,6 +338,7 @@
         .detail-pic {
             width: 130px;
             height: 130px;
+            flex-shrink: 0;
         }
         .atom-icon {
             height: 160px;
@@ -426,7 +427,7 @@
             float: left;
             display: flex;
             padding-top: 7px;
-            width: 25%;
+            width: 30%;
             font-size: 14px;
             font-weight: normal;
             line-height: 20px;
@@ -434,9 +435,9 @@
             span:nth-child(1) {
                 color: $fontWeightColor;
                 display: inline-block;
-                width: 90px;
                 padding-right: 10px;
                 text-align: right;
+                white-space: nowrap;
             }
             span:nth-child(2) {
                 overflow: hidden;
@@ -503,8 +504,8 @@
             }
         }
         .detail-info.detail-label {
-            width: 994px;
-            padding-left: 90px;
+            width: 800px;
+            padding-left: 70px;
             display: inline-block;
             position: relative;
             span {
@@ -514,6 +515,7 @@
             span:first-child {
                 position: absolute;
                 left: 0;
+                width: 70px;
             }
             span.info-label {
                 display: inline-block;
@@ -538,9 +540,12 @@
     }
     .click-area {
         display: flex;
+        justify-content: center;
         align-items: center;
+        flex-direction: column;
+        line-height: 30px;
         color: #63656E;
-        margin-top: 16px;
+        margin-top: 10px;
         .click-button {
             display: flex;
             align-items: center;
@@ -550,6 +555,9 @@
                 cursor: auto;
                 background: none;
                 color: #9e9e9e;
+            }
+            &:hover {
+                color: #3c96ff;
             }
         }
         .mr4 {

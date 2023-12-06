@@ -32,5 +32,6 @@ enum class RequestChannelTypeEnum {
     SERVICE,
     BUILD,
     OP,
-    OPEN
+    OPEN,
+    API
 }
