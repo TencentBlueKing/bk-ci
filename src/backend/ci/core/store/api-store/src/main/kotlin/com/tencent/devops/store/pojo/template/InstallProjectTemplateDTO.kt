@@ -12,10 +12,8 @@ data class InstallProjectTemplateDTO(
     val templateId: String,
     @ApiModelProperty("项目ID", required = true)
     val projectId: String,
-    @ApiModelProperty("当前模板版本ID", required = true)
+    @ApiModelProperty("模板ID", required = true)
     val version: Long,
-    @ApiModelProperty("父模板版本ID", required = true)
-    val srcTemplateVersion: Long,
     @ApiModelProperty("最新版本号", required = true)
     val versionName: String,
     @ApiModelProperty("模板类型", required = true)
