@@ -155,7 +155,7 @@ class JobQuotaRedisUtils @Autowired constructor(
         }
 
         // 检查是否有jobConcurrency记录，没有则插入一条
-        saveJobConcurrency(projectId, 1, jobType)
+        saveJobConcurrency(projectId, 0, jobType)
 
         getRedisStringSerializerOperation().hIncrBy(
             key = getDayRunningTimeKey(),
