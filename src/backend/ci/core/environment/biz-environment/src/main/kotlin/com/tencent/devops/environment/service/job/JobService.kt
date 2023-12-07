@@ -710,7 +710,7 @@ class JobService @Autowired constructor(
                 )
             },
             replaceHostId = installAgentReq.replaceHostId,
-            isInstallLatestPlugins = installAgentReq.isInstallLatestPlugins,
+            isInstallLatestPlugins = installAgentReq.isInstallLatestPlugins
         )
         val agentInstallAgentRes: AgentResult<AgentInstallAgentResult> = agentApi.executePostRequest(
             installAgentRequest, AgentInstallAgentResult::class.java

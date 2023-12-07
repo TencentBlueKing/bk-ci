@@ -29,7 +29,7 @@ package com.tencent.devops.environment.pojo.job.agentres
 
 import io.swagger.annotations.ApiModelProperty
 
-data class AgentRetryAgentInstallTaskResult (
+data class AgentRetryAgentInstallTaskResult(
     @ApiModelProperty(value = "任务ID列表。task_id是更具体的任务队列，一个job_id对应多个task。")
     val taskIdList: List<Int>
 )

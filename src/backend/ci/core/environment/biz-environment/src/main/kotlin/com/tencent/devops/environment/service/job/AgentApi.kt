@@ -100,7 +100,7 @@ class AgentApi {
         val headers = getAuthHeaderMap(bkAuthorization)
         val requestContent = jacksonObjectMapper().writeValueAsString(req)
         if (logger.isDebugEnabled)
-            logger.debug("[${getThreadLocal()}] headers: $headers, url: ${url}, body: $requestContent")
+            logger.debug("[${getThreadLocal()}] headers: $headers, url: $url, body: $requestContent")
         return getResultFromRes(OkhttpUtils.doPost(url, requestContent, headers), classOfU)
     }
 

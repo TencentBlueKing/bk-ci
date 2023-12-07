@@ -31,5 +31,5 @@ import io.swagger.annotations.ApiModelProperty
 
 data class QueryAgentStatusResult(
     @ApiModelProperty(value = "Agent信息列表。若传入的host_id在返回结果的列表中不存在，则表示未查询到该主机的agent信息")
-    val agentInfoList: List<AgentInfo>,
+    val agentInfoList: List<AgentInfo>
 )
