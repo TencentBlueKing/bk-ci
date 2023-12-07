@@ -72,6 +72,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.WhiteListService
@@ -103,6 +104,7 @@ class WorkspaceCommon @Autowired constructor(
     private val remoteDevBillingDao: RemoteDevBillingDao,
     private val remoteDevSettingService: RemoteDevSettingService,
     private val webSocketDispatcher: WebSocketDispatcher,
+    private val permissionService: PermissionService,
     private val redisCache: RedisCacheService,
     private val profile: Profile,
     @org.springframework.context.annotation.Lazy
@@ -576,6 +578,7 @@ class WorkspaceCommon @Autowired constructor(
             // 没有注册setting就注册
             remoteDevSettingDao.fetchOneSetting(dslContext, it.userId)
             whiteListService.shareWorkspace(operator, it.userId)
+            permissionService.refreshUserPermissionCache(it.userId)
         }
     }
 
