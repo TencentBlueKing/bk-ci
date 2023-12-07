@@ -37,8 +37,6 @@ interface OpScmWebhookResource {
     fun updateWebhookEventInfo(
         @ApiParam("待更新的项目ID", required = false)
         @QueryParam("projectId")
-        projectId: String?,
-        @ApiParam("待更新代码库平台项目名", required = false)
-        projectNames: List<String>?
+        projectId: String?
     ): Result<Boolean>
 }

@@ -11,6 +11,7 @@
         :tag-tpl="renderMemberTag"
         :tpl="renderMerberList"
         :create-tag-validator="detect"
+        :paste-fn="paste"
         @change="handleSelect"
     >
     </bk-tag-input>
@@ -136,6 +137,12 @@
                 } catch (error) {
                     return false
                 }
+            },
+            paste (val) {
+                this.handleSelect([
+                    ...this.value,
+                    ...val.split(',').filter(v => !this.value.includes(v))
+                ])
             }
         }
     }
