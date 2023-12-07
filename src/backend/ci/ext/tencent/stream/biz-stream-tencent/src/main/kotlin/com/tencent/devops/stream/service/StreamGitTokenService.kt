@@ -29,11 +29,11 @@ package com.tencent.devops.stream.service
 
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.scm.constant.SteamGitTokenConstant
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
-import java.util.concurrent.TimeUnit
 
 @Service
 class StreamGitTokenService @Autowired constructor(
@@ -43,57 +43,101 @@ class StreamGitTokenService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(StreamGitTokenService::class.java)
-        private const val STREAM_GIT_TOKEN_UPDATE_LOCK_PREFIX = "stream:git:token:lock:key:"
-        private const val STREAM_GIT_TOKEN_PROJECT_PREFIX = "stream:git:project:token:"
-        fun getGitTokenKey(gitProjectId: Long) = STREAM_GIT_TOKEN_PROJECT_PREFIX + gitProjectId
-        fun getGitTokenProjectKey(gitProjectId: String) = STREAM_GIT_TOKEN_PROJECT_PREFIX + gitProjectId
-        fun getGitTokenLockKey(gitProjectId: Long) = STREAM_GIT_TOKEN_UPDATE_LOCK_PREFIX + gitProjectId
-
-        // 工蜂超级token有效时间为8个小时，我们redis存7.5个小时，提前半个小时，这里token的使用都在初始化时间完成，不会超过30分钟
-        private val validTime = TimeUnit.MINUTES.toSeconds(30) + TimeUnit.HOURS.toSeconds(7)
     }
 
     fun getToken(gitProjectId: Long, notGetFromCache: Boolean = false): String {
-        val token = redisOperation.get(getGitTokenKey(gitProjectId))
-        return if (token.isNullOrBlank() || notGetFromCache) {
-            val updateLock = RedisLock(redisOperation, getGitTokenLockKey(gitProjectId), 10)
+        if (notGetFromCache) {
+            val updateLock = RedisLock(redisOperation, SteamGitTokenConstant.getGitTokenLockKey(gitProjectId), 10)
             updateLock.use {
                 updateLock.lock()
                 val newToken = streamScmService.getToken(gitProjectId.toString()).accessToken
                 logger.info("STREAM|getToken|gitProjectId=$gitProjectId|newToken=$newToken")
-                redisOperation.set(getGitTokenKey(gitProjectId), newToken, validTime)
-                newToken
+                redisOperation.set(
+                    SteamGitTokenConstant.getGitTokenKey(gitProjectId),
+                    newToken,
+                    SteamGitTokenConstant.validTime
+                )
+                return newToken
             }
-        } else token
+        }
+
+        val token = redisOperation.get(SteamGitTokenConstant.getGitTokenKey(gitProjectId))
+        if (!token.isNullOrBlank()) {
+            return token
+        }
+
+        val updateLock = RedisLock(redisOperation, SteamGitTokenConstant.getGitTokenLockKey(gitProjectId), 10)
+        updateLock.use {
+            updateLock.lock()
+            // 锁住后再拿一次看看可能存在并发锁场景
+            val token2 = redisOperation.get(SteamGitTokenConstant.getGitTokenKey(gitProjectId))
+            if (!token2.isNullOrBlank()) {
+                return token2
+            }
+            val newToken = streamScmService.getToken(gitProjectId.toString()).accessToken
+            logger.info("STREAM|getToken|gitProjectId=$gitProjectId|newToken=$newToken")
+            redisOperation.set(
+                SteamGitTokenConstant.getGitTokenKey(gitProjectId),
+                newToken,
+                SteamGitTokenConstant.validTime
+            )
+            return newToken
+        }
     }
 
     fun getTokenByNameWithNameSpace(gitProjectId: String, notGetFromCache: Boolean = false): String {
         val id = URLEncoder.encode(gitProjectId, "UTF8")
-        val token = redisOperation.get(getGitTokenProjectKey(id))
-        return if (token.isNullOrBlank() || notGetFromCache) {
-            val updateLock = RedisLock(redisOperation, getGitTokenProjectKey(id), 10)
+        if (notGetFromCache) {
+            val updateLock = RedisLock(redisOperation, SteamGitTokenConstant.getGitTokenProjectKey(id), 10)
             updateLock.use {
                 updateLock.lock()
                 val newToken = streamScmService.getTokenForProject(id)!!.accessToken
                 logger.info("STREAM|getToken|gitProjectId=$id|newToken=$newToken")
-                redisOperation.set(getGitTokenProjectKey(id), newToken, validTime)
+                redisOperation.set(
+                    SteamGitTokenConstant.getGitTokenProjectKey(id),
+                    newToken,
+                    SteamGitTokenConstant.validTime
+                )
                 newToken
             }
-        } else token
+        }
+
+        val token = redisOperation.get(SteamGitTokenConstant.getGitTokenProjectKey(id))
+        if (!token.isNullOrBlank()) {
+            return token
+        }
+
+        val updateLock = RedisLock(redisOperation, SteamGitTokenConstant.getGitTokenProjectKey(id), 10)
+        updateLock.use {
+            updateLock.lock()
+            // 锁住后再拿一次看看可能存在并发锁场景
+            val token2 = redisOperation.get(SteamGitTokenConstant.getGitTokenProjectKey(id))
+            if (!token2.isNullOrBlank()) {
+                return token2
+            }
+            val newToken = streamScmService.getTokenForProject(id)!!.accessToken
+            logger.info("STREAM|getToken|gitProjectId=$id|newToken=$newToken")
+            redisOperation.set(
+                SteamGitTokenConstant.getGitTokenProjectKey(id),
+                newToken,
+                SteamGitTokenConstant.validTime
+            )
+            return newToken
+        }
     }
 
     // TODO 暂时不加入销毁逻辑
     fun clearToken(gitProjectId: Long): Boolean {
-        val token = redisOperation.get(getGitTokenKey(gitProjectId))
+        val token = redisOperation.get(SteamGitTokenConstant.getGitTokenKey(gitProjectId))
         if (token.isNullOrBlank()) return true
         val cleared = streamScmService.clearToken(gitProjectId, token)
         logger.info("STREAM|clearToken|gitProjectId=$gitProjectId|token=$token cleared=$cleared")
         if (cleared) {
-            val updateLock = RedisLock(redisOperation, getGitTokenLockKey(gitProjectId), 10)
+            val updateLock = RedisLock(redisOperation, SteamGitTokenConstant.getGitTokenLockKey(gitProjectId), 10)
             updateLock.use {
                 updateLock.lock()
                 logger.info("STREAM|deleteTokenInRedis|gitProjectId=$gitProjectId|token=$token")
-                redisOperation.delete(getGitTokenKey(gitProjectId))
+                redisOperation.delete(SteamGitTokenConstant.getGitTokenKey(gitProjectId))
             }
         }
         return cleared
