@@ -56,17 +56,17 @@ class UserBuildParametersResourceImpl @Autowired constructor(
     }
 
     override fun getCommonBuildParams(userId: String): Result<List<BuildEnvParameters>> {
-        return Result(TriggerBuildParamUtils.getBasicBuildParams(userId))
+        return Result(TriggerBuildParamUtils.getBasicBuildParams())
     }
 
     override fun getCommonParams(userId: String): Result<List<BuildParameterGroup>> {
         return Result(
             listOf(
                 BuildParameterGroup(
-                    name = TriggerBuildParamUtils.getBasicParamName(userId),
-                    params = TriggerBuildParamUtils.getBasicBuildParams(userId).map {
+                    name = TriggerBuildParamUtils.getBasicParamName(),
+                    params = TriggerBuildParamUtils.getBasicBuildParams().map {
                         it.copy(name = paramToContext[it.name] ?: it.name)
-                    }
+                    }.sortedBy { it.name }
                 )
             )
         )
