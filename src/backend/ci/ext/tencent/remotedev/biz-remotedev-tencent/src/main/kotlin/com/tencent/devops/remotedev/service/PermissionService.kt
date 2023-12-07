@@ -109,11 +109,6 @@ class PermissionService @Autowired constructor(
             }
         )
 
-    fun refreshUserPermissionCache(userId: String) {
-        workspaceOwnerCache.refresh(userId)
-        workspaceViewerCache.refresh(userId)
-    }
-
     fun checkOwnerPermission(userId: String, workspaceName: String, projectId: String) {
         if (!enablePermission) return
 
