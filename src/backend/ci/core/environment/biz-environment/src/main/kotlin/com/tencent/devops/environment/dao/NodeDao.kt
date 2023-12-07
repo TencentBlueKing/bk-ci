@@ -262,7 +262,11 @@ class NodeDao {
         return nodeRecords
     }
 
-    fun getNodesFromNodeHashList(dslContext: DSLContext, projectId: String, nodeHashIdList: List<String>): Result<Record3<String, Long, Long>> {
+    fun getNodesByNodeHashIdList(
+        dslContext: DSLContext,
+        projectId: String,
+        nodeHashIdList: List<String>
+    ): Result<Record3<String, Long, Long>> {
         with(TNode.T_NODE) {
             return dslContext.select(NODE_IP, HOST_ID, CLOUD_AREA_ID).from(this)
                 .where(NODE_HASH_ID.`in`(nodeHashIdList))
@@ -332,7 +336,7 @@ class NodeDao {
             if (!lastModifiedUser.isNullOrEmpty()) {
                 query.and(LAST_MODIFY_USER.like("%$lastModifiedUser%"))
             }
-            query.orderBy(NODE_ID.desc())
+            query.orderBy(LAST_MODIFY_TIME.desc())
                 .limit(limit).offset(offset)
                 .fetch()
         }

@@ -107,6 +107,15 @@ BEGIN
                   FROM information_schema.statistics
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_NODE'
+                    AND INDEX_NAME = 'LAST_MODIFY_TIME') THEN
+        ALTER TABLE `T_NODE`
+            ADD INDEX `LAST_MODIFY_TIME` (`LAST_MODIFY_TIME`);
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_NODE'
                     AND INDEX_NAME = 'IDX_HOST') THEN
         ALTER TABLE `T_NODE`
             ADD INDEX `IDX_HOST` (`HOST_ID`, `PROJECT_ID`);
