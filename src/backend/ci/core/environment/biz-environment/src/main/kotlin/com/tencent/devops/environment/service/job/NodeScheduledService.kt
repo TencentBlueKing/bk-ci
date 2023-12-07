@@ -97,10 +97,10 @@ class NodeScheduledService @Autowired constructor(
         if (0 < countNodesNotInCC) {
             val totalPagesNodesNotInCC = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countNodesNotInCC.toLong())
             for (pageNodesNotInCC in 1..totalPagesNodesNotInCC) {
-                val nodeRecordsNotInCC = nodeDao.getNodesNotInCC(
+                val nodeIpsNotInCC = nodeDao.getNodeIpsNotInCC(
                     dslContext, pageNodesNotInCC - 1, DEFAULT_PAGE_SIZE
                 )
-                val notInCCIpList = nodeRecordsNotInCC.map { it.value1() }
+                val notInCCIpList = nodeIpsNotInCC.map { it.value1() }
                 val inCCInfoList = queryFromCCService.queryCCListHostWithoutBizByInRules(
                     listOf(FIELD_BK_HOST_ID, FIELD_BK_HOST_INNERIP), notInCCIpList, FIELD_BK_HOST_INNERIP
                 ).data?.info

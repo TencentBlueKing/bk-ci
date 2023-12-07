@@ -67,7 +67,7 @@ class NodeDao {
         }
     }
 
-    fun getCmdbNodesLimit(dslContext: DSLContext, offset: Int, limit: Int): Result<Record3<Long, String, String>> {
+    fun getCmdbNodesWhoseHostIdNullLimit(dslContext: DSLContext, offset: Int, limit: Int): Result<Record3<Long, String, String>> {
         with(TNode.T_NODE) {
             return dslContext.select(NODE_ID, NODE_TYPE, NODE_IP).from(this)
                 .where(NODE_TYPE.eq(NodeType.CMDB.name))
@@ -181,7 +181,7 @@ class NodeDao {
         }
     }
 
-    fun updateNodeNotInCC(dslContext: DSLContext, hostList: List<Long>) {
+    fun updateNodeNotInCC(dslContext: DSLContext, hostIdList: List<Long>) {
         val hostIdDefault: Long? = null
         val cloudAreaIdDefault: Long? = null
         with(TNode.T_NODE) {
@@ -190,7 +190,7 @@ class NodeDao {
                 .set(CLOUD_AREA_ID, cloudAreaIdDefault)
                 .set(NODE_STATUS, NodeStatus.NOT_IN_CC.toString())
                 .set(LAST_MODIFY_TIME, LocalDateTime.now())
-                .where(HOST_ID.`in`(hostList))
+                .where(HOST_ID.`in`(hostIdList))
                 .execute()
         }
     }
@@ -204,7 +204,7 @@ class NodeDao {
         }
     }
 
-    fun getNodesNotInCC(dslContext: DSLContext, offset: Int, limit: Int): Result<Record1<String>> {
+    fun getNodeIpsNotInCC(dslContext: DSLContext, offset: Int, limit: Int): Result<Record1<String>> {
         with(TNode.T_NODE) {
             return dslContext.select(NODE_IP).from(this)
                 .where(NODE_STATUS.eq(NodeStatus.NOT_IN_CC.toString()))
@@ -275,7 +275,7 @@ class NodeDao {
         }
     }
 
-    fun getEnvsFromEnvHashList(dslContext: DSLContext, projectId: String, envHashIdList: List<String>): Result<Record1<Long>> {
+    fun getEnvsByEnvHashIdList(dslContext: DSLContext, projectId: String, envHashIdList: List<String>): Result<Record1<Long>> {
         with(TEnv.T_ENV) {
             return dslContext.select(ENV_ID).from(this)
                 .where(ENV_HASH_ID.`in`(envHashIdList))
@@ -284,7 +284,7 @@ class NodeDao {
         }
     }
 
-    fun getNodeIdsFromEnvIdList(dslContext: DSLContext, projectId: String, envIdList: List<Long>): Result<Record1<Long>> {
+    fun getNodeIdsByEnvIdList(dslContext: DSLContext, projectId: String, envIdList: List<Long>): Result<Record1<Long>> {
         with(TEnvNode.T_ENV_NODE) {
             return dslContext.select(NODE_ID).from(this)
                 .where(ENV_ID.`in`(envIdList))
@@ -293,7 +293,7 @@ class NodeDao {
         }
     }
 
-    fun getNodesFromNodeIdList(dslContext: DSLContext, projectId: String, nodeIdList: List<Long>): Result<Record3<String, Long, Long>> {
+    fun getNodesByNodeIdList(dslContext: DSLContext, projectId: String, nodeIdList: List<Long>): Result<Record3<String, Long, Long>> {
         with(TNode.T_NODE) {
             return dslContext.select(NODE_IP, HOST_ID, CLOUD_AREA_ID).from(this)
                 .where(NODE_ID.`in`(nodeIdList))

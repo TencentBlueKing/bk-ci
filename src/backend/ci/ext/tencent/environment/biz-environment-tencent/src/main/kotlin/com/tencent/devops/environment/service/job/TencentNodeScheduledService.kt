@@ -118,7 +118,7 @@ class TencentNodeScheduledService @Autowired constructor(
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countCmdbNodes.toLong())
             for (page in 1..totalPages) {
                 val cmdbNodesRecords =
-                    nodeDao.getCmdbNodesLimit(dslContext, page - 1, DEFAULT_PAGE_SIZE)
+                    nodeDao.getCmdbNodesWhoseHostIdNullLimit(dslContext, page - 1, DEFAULT_PAGE_SIZE)
                 if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId]cmdbNodesRecords:$cmdbNodesRecords")
                 val cmdbNodesIp = cmdbNodesRecords.map { it.value3() }.toSet()
                 if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId]cmdbNodesIp:$cmdbNodesIp.")
@@ -163,7 +163,7 @@ class TencentNodeScheduledService @Autowired constructor(
     }
 
     private fun checkNodeInCmdb(page: Int) {
-        val nodeRecords = nodeDao.getCmdbNodesLimit(
+        val nodeRecords = nodeDao.getCmdbNodesWhoseHostIdNullLimit(
             dslContext, page, DEFAULT_PAGE_SIZE
         ) // T_NODE表中 所有NODE_TYPE=="CMDB"的记录
         val nodeIpList = nodeRecords.map { it.value3() }.toSet() // 要判断在不在cmdb中的 所有ip

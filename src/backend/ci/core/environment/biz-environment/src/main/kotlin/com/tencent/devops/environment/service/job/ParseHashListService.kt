@@ -31,17 +31,17 @@ class ParseHashListService @Autowired constructor(
 
     fun getHostFromEnvList(projectId: String, envHashIdList: List<String>?/*环境hashId列表*/): List<Host> {
         if (!envHashIdList.isNullOrEmpty()) {
-            val envRecord = nodeDao.getEnvsFromEnvHashList(
+            val envRecord = nodeDao.getEnvsByEnvHashIdList(
                 dslContext, projectId, envHashIdList
             )
             val envIdList = envRecord.map { it.value1() }
 
-            val envNodeRecord = nodeDao.getNodeIdsFromEnvIdList(
+            val envNodeRecord = nodeDao.getNodeIdsByEnvIdList(
                 dslContext, projectId, envIdList
             )
             val nodeIdList = envNodeRecord.map { it.value1() }
 
-            val nodeRecord = nodeDao.getNodesFromNodeIdList(
+            val nodeRecord = nodeDao.getNodesByNodeIdList(
                 dslContext, projectId, nodeIdList
             )
             val nodeHostList = nodeRecord.map {
