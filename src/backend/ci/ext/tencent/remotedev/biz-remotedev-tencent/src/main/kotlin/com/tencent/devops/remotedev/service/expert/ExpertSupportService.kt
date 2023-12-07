@@ -111,7 +111,7 @@ class ExpertSupportService @Autowired constructor(
             supporter = if (data.supporter == null) {
                 null
             } else {
-                listOf(data.supporter!!)
+                setOf(data.supporter!!)
             }
         )
     }
@@ -175,7 +175,7 @@ class ExpertSupportService @Autowired constructor(
 
         // 添加认领人信息
         expertSupportDao.getSup(dslContext, id)?.let {
-            val sups = mutableListOf(userId)
+            val sups = mutableSetOf(userId)
             if (it.supporter != null) {
                 sups.addAll(JsonUtil.to<List<String>>(it.supporter))
             }
