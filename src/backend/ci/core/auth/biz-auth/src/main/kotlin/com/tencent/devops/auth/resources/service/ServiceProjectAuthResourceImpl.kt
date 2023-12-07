@@ -77,7 +77,8 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
         return Result(
             permissionProjectService.getUserProjectsByPermission(
                 userId = userId,
-                action = action
+                action = action,
+                resourceType = resourceType
             )
         )
     }
