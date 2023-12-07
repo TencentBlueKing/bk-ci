@@ -28,7 +28,6 @@
 
 package com.tencent.devops.process.webhook
 
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
 import com.tencent.devops.common.pipeline.pojo.BuildParameterGroup
@@ -159,12 +158,12 @@ object TriggerBuildParamUtils {
                 name = it,
                 desc = I18nUtil.getCodeLanMessage(it)
             )
-        }.toMutableList().let {list ->
+        }.toMutableList().let { list ->
             list.add(
                 BuildEnvParameters(
                     name = PIPELINE_START_TYPE,
                     desc = I18nUtil.getCodeLanMessage(
-                        messageCode =PIPELINE_START_TYPE,
+                        messageCode = PIPELINE_START_TYPE,
                         params = arrayOf(StartType.values().joinToString("/") { it.name })
                     )
                 )
