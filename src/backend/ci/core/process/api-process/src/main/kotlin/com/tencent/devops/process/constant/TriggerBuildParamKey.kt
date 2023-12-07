@@ -72,10 +72,3 @@ object TriggerBuildParamKey {
     const val CI_CREATE_REF = "ci.create_ref"
     const val CI_CREATE_REF_TYPE = "ci.create_type"
 }
-
-fun main() {
-    val declaredFields = TriggerBuildParamKey::class.java.declaredFields
-    declaredFields.forEach {
-        println(it.get(null))
-    }
-}
