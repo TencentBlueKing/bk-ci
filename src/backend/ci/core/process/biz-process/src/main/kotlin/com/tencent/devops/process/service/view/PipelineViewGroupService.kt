@@ -642,7 +642,7 @@ class PipelineViewGroupService @Autowired constructor(
 
     fun hasPermission(userId: String, projectId: String) =
         client.get(ServiceProjectAuthResource::class)
-            .checkManager(clientTokenService.getSystemToken(null)!!, userId, projectId).data ?: false
+            .checkManager(clientTokenService.getSystemToken()!!, userId, projectId).data ?: false
 
     fun listView(userId: String, projectId: String, projected: Boolean?, viewType: Int?): List<PipelineNewViewSummary> {
         val views = pipelineViewDao.list(dslContext, userId, projectId, projected, viewType)

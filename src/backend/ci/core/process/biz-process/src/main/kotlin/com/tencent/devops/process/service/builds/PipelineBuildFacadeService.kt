@@ -110,6 +110,7 @@ import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
+import com.tencent.devops.process.pojo.pipeline.BuildRecordInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
@@ -593,10 +594,8 @@ class PipelineBuildFacadeService(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                 params = arrayOf(pipelineId)
             )
-
         val startEpoch = System.currentTimeMillis()
         try {
-
             val model = getModel(projectId, pipelineId)
 
             /**
@@ -695,7 +694,6 @@ class PipelineBuildFacadeService(
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
 
             val paramPamp = buildParamCompatibilityTransformer.parseTriggerParam(triggerContainer.params, parameters)
-
             return pipelineBuildService.startPipeline(
                 userId = userId,
                 pipeline = pipeline,
@@ -1462,6 +1460,32 @@ class PipelineBuildFacadeService(
             buildId = buildId,
             executeCount = executeCount,
             channelCode = channelCode
+        )
+    }
+
+    fun getBuildRecordInfo(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        channelCode: ChannelCode,
+        checkPermission: Boolean = true
+    ): List<BuildRecordInfo> {
+
+        if (checkPermission) {
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW,
+                message = null
+            )
+        }
+
+        return buildRecordService.getRecordInfo(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId
         )
     }
 
