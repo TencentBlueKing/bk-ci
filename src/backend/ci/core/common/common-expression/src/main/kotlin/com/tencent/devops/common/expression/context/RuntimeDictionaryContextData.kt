@@ -46,9 +46,7 @@ interface RuntimeNamedValue {
  */
 @Suppress("TooManyFunctions", "ReturnCount")
 class RuntimeDictionaryContextData(private val runtimeNamedValue: RuntimeNamedValue) :
-    PipelineContextData(PipelineContextDataType.DICTIONARY),
-    Iterable<Pair<String, PipelineContextData?>>,
-    IReadOnlyObject {
+    DictionaryContextData() {
 
     private var mIndexLookup: TreeMap<String, Int>? = null
     private var mList: MutableList<DictionaryContextDataPair> = mutableListOf()
@@ -102,44 +100,12 @@ class RuntimeDictionaryContextData(private val runtimeNamedValue: RuntimeNamedVa
             return mList
         }
 
-    operator fun set(k: String, value: PipelineContextData?) {
-        // Existing
-        val index = indexLookup[k]
-        if (index != null) {
-            val key = mList[index].key // preserve casing
-            mList[index] = DictionaryContextDataPair(key, value)
-        }
-        // New
-        else {
-            add(k, value)
-        }
-    }
-
-    operator fun get(k: String): PipelineContextData? {
+    override operator fun get(k: String): PipelineContextData? {
         return tryGetValue(k).first
     }
 
-    operator fun IReadOnlyObject.get(key: String): Any? {
+    override operator fun IReadOnlyObject.get(key: String): Any? {
         return tryGetValue(key).first
-    }
-
-    operator fun Pair<String, PipelineContextData>.get(key: Int): Pair<String, PipelineContextData?> {
-        val pair = mList[key]
-        return Pair(pair.key, pair.value)
-    }
-
-    fun add(pairs: Iterable<Pair<String, PipelineContextData>>) {
-        pairs.forEach { pair ->
-            add(pair.first, pair.second)
-        }
-    }
-
-    fun add(
-        key: String,
-        value: PipelineContextData?
-    ) {
-        indexLookup[key] = mList.count()
-        list.add(DictionaryContextDataPair(key, value))
     }
 
     override fun clone(): PipelineContextData {
