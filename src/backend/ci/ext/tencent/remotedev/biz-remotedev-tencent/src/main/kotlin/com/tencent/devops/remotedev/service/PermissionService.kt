@@ -112,10 +112,17 @@ class PermissionService @Autowired constructor(
     fun checkOwnerPermission(userId: String, workspaceName: String, projectId: String) {
         if (!enablePermission) return
 
-        if (!workspaceOwnerCache.get(workspaceName).contains(userId) && !checkUserVisitPermission(userId, projectId)) {
+        if (!workspaceOwnerCache.get(workspaceName).contains(userId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need permission to access workspace $workspaceName")
+                params = arrayOf("You need owner permission to access workspace $workspaceName")
+            )
+        }
+
+        if (!checkUserVisitPermission(userId, projectId)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You need permission to access project $projectId")
             )
         }
     }
@@ -132,7 +139,7 @@ class PermissionService @Autowired constructor(
         if (!workspaceViewerCache.get(workspaceName).contains(userId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need permission to access workspace $workspaceName")
+                params = arrayOf("You need viewer permission to access workspace $workspaceName")
             )
         }
 
@@ -181,10 +188,7 @@ class PermissionService @Autowired constructor(
                 projectCode = projectCode,
                 userId = userId
             ).data
-        }.getOrNull() ?: throw ErrorCodeException(
-            errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-            params = arrayOf("You need permission to access project $projectCode")
-        )
+        }.getOrNull() ?: false
     }
 
     private fun initRedisUser(params: UserOnePassword): String {
