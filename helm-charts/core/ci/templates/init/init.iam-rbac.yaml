@@ -59,7 +59,7 @@ spec:
               {{- end }}
 
               {{- if eq .Values.config.bkCodeccPrivateUrl "" }}
-              DELETE T_AUTH_IAM_CALLBACK where `SYSTEM`="codecc"
+              DELETE FROM T_AUTH_IAM_CALLBACK where `SYSTEM`="codecc"
               {{- end }}
               EOF
               mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }} devops_ci_auth < iam.sql;

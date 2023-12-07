@@ -106,8 +106,6 @@ set_env03_en BK_CI_AUTH_PROVIDER=rbac \
   BK_CI_IAM_URL_PREFIX=$BK_PAAS_PUBLIC_URL/o/bk_iam \
   BK_CI_ITSM_URL_PREFIX=$BK_PAAS_PUBLIC_URL/o/bk_itsm/#/ \
   BK_CI_IAM_WEB_URL=$BK_PAAS_PUBLIC_URL/o/bk_iam/ \
-  BK_CI_PUBLIC_PATH="" \
-  BK_CI_FRONTEND_INDEX="rewrite .* /\$subsystem/index.html break" \
 
 if grep -w repo $CTRL_DIR/install.config|grep -v ^\# ; then
   set_env03_en BK_REPO_GATEWAY_IP=$BK_REPO_GATEWAY_IP \
