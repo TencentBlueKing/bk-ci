@@ -143,7 +143,7 @@ class JobQuotaBusinessService @Autowired constructor(
 
     private fun getProjectRunningJobStatus(projectId: String, vmType: JobQuotaVmType): JobQuotaStatus {
         val jobQuota = jobQuotaManagerService.getProjectQuota(projectId, vmType)
-        val runningJobCount = runningJobsDao.getProjectRunningJobCount(dslContext, projectId, vmType).toLong()
+        val runningJobCount = runningJobsDao.getProjectRunningJobCount(dslContext, projectId, vmType)
         val threshold = jobQuotaManagerService.getSystemQuota(vmType)
         val runningJobTime = getProjectRunningJobTime(projectId, vmType)
 
@@ -263,7 +263,7 @@ class JobQuotaBusinessService @Autowired constructor(
                     // 保存构建时间，单位秒
                     jobQuotaRedisUtils.incProjectJobRunningTime(
                         projectId = projectId,
-                        vmType = JobQuotaVmType.parse(runningJobsRecord.vmType),
+                        jobType = JobQuotaVmType.parse(runningJobsRecord.vmType),
                         time = duration.toMillis() / 1000
                     )
                     LOG.info("$projectId|$buildId|$vmSeqId|${JobQuotaVmType.parse(runningJobsRecord.vmType)} >> " +
@@ -302,7 +302,7 @@ class JobQuotaBusinessService @Autowired constructor(
 
     private fun saveJobConcurrency(
         projectId: String,
-        runningJobCount: Long,
+        runningJobCount: Int,
         jobQuotaVmType: JobQuotaVmType
     ) {
         // 刷新redis缓存数据

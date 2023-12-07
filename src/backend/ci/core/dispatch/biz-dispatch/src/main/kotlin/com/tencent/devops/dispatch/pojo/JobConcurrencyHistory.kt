@@ -31,7 +31,7 @@ import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 
 data class JobConcurrencyHistory(
     val projectId: String,
-    val jobConcurrency: Long,
+    val jobConcurrency: Int,
     val jobQuotaVmType: JobQuotaVmType,
     val createTime: String
 )

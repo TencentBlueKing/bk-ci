@@ -91,7 +91,7 @@ class JobQuotaRedisUtils @Autowired constructor(
 
     fun saveJobConcurrency(
         projectId: String,
-        runningJobCount: Long,
+        runningJobCount: Int,
         jobQuotaVmType: JobQuotaVmType
     ) {
         // 刷新redis缓存数据
@@ -148,15 +148,18 @@ class JobQuotaRedisUtils @Autowired constructor(
         )
     }
 
-    fun incProjectJobRunningTime(projectId: String, vmType: JobQuotaVmType?, time: Long) {
-        if (vmType == null) {
+    fun incProjectJobRunningTime(projectId: String, jobType: JobQuotaVmType?, time: Long) {
+        if (jobType == null) {
             LOG.warn("incProjectJobRunningTime, vmType is null. projectId: $projectId")
             return
         }
 
+        // 检查是否有jobConcurrency记录，没有则插入一条
+        saveJobConcurrency(projectId, 1, jobType)
+
         getRedisStringSerializerOperation().hIncrBy(
             key = getDayRunningTimeKey(),
-            hashKey = getProjectJobTypeRunningTimeKey(projectId, vmType),
+            hashKey = getProjectJobTypeRunningTimeKey(projectId, jobType),
             delta = time
         )
 
