@@ -25,13 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.pojo
+package com.tencent.devops.metrics.listener
 
-import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsEvent
+import com.tencent.devops.metrics.service.MetricsDataReportService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-data class JobConcurrencyHistory(
-    val projectId: String,
-    val jobConcurrency: Int,
-    val jobQuotaVmType: JobQuotaVmType,
-    val createTime: String
-)
+@Component
+class DispatchJobMetricsListener @Autowired constructor(
+    private val metricsDataReportService: MetricsDataReportService
+) : Listener<DispatchJobMetricsEvent> {
+
+    override fun execute(event: DispatchJobMetricsEvent) {
+        try {
+            val dispatchJobMetricsDataList = event.jobMetricsList
+            metricsDataReportService.saveDispatchJobMetrics(dispatchJobMetricsDataList)
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to insert the metrics data", ignored)
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.SYSTEM_ERROR,
+                defaultMessage = "Fail to insert the metrics data"
+            )
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(DispatchJobMetricsListener::class.java)
+    }
+}

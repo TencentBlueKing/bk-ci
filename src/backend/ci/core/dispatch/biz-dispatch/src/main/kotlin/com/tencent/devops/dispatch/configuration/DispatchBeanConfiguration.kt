@@ -27,8 +27,8 @@
 
 package com.tencent.devops.dispatch.configuration
 
-import com.tencent.devops.dispatch.service.JobQuotaInterface
-import com.tencent.devops.dispatch.service.JobQuotaInterfaceImpl
+import com.tencent.devops.dispatch.service.jobquota.JobQuotaInterface
+import com.tencent.devops.dispatch.service.jobquota.JobQuotaInterfaceImpl
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication

@@ -25,13 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.pojo
+package com.tencent.devops.metrics.dao
 
-import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
+import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
+import com.tencent.devops.model.metrics.tables.TDispatchJobDailyMetrics
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
 
-data class JobConcurrencyHistory(
-    val projectId: String,
-    val jobConcurrency: Int,
-    val jobQuotaVmType: JobQuotaVmType,
-    val createTime: String
-)
+@Repository
+class DispatchJobMetricsDao {
+
+    fun batchSaveDispatchJobMetrics(
+        dslContext: DSLContext,
+        dispatchJobMetricsData: List<DispatchJobMetricsData>
+    ) {
+        with(TDispatchJobDailyMetrics.T_DISPATCH_JOB_DAILY_METRICS) {
+            dispatchJobMetricsData.forEach { jobMetricsData ->
+                dslContext.insertInto(this)
+                    .set(PROJECT_ID, jobMetricsData.projectId)
+                    .set(PRODUCT_ID, jobMetricsData.productId)
+                    .set(THE_DATE, jobMetricsData.theDate)
+                    .set(JOB_TYPE, jobMetricsData.jobType)
+                    .set(MAX_JOB_CONCURRENCY, jobMetricsData.maxJobConcurrency)
+                    .set(SUM_JOB_COST, jobMetricsData.sumJobCost)
+                    .execute()
+            }
+        }
+    }
+}

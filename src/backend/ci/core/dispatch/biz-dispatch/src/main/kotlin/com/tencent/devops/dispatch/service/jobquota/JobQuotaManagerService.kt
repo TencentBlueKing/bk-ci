@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.service
+package com.tencent.devops.dispatch.service.jobquota
 
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.dispatch.dao.JobQuotaProjectDao

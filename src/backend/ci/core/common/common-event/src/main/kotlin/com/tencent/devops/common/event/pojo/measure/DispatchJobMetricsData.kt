@@ -25,19 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.service
+package com.tencent.devops.common.event.pojo.measure
 
-import com.tencent.devops.dispatch.pojo.JobConcurrencyHistory
-import com.tencent.devops.dispatch.pojo.JobQuotaHistory
-
-interface JobQuotaInterface {
-    /**
-     * 保存Job配额相关构建记录
-     */
-    fun saveJobQuotaHistory(jobQuotaHistory: JobQuotaHistory)
-
-    /**
-     * 包含Job的并发数据
-     */
-    fun saveJobConcurrency(jobConcurrencyHistory: JobConcurrencyHistory)
-}
+data class DispatchJobMetricsData(
+    val theDate: String,
+    val projectId: String,
+    val productId: String,
+    val jobType: String,
+    val maxJobConcurrency: Int,
+    val sumJobCost: Int
+)

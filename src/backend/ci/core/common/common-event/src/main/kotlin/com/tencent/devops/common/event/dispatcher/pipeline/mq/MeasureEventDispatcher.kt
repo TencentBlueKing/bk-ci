@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.service.measure
+package com.tencent.devops.common.event.dispatcher.pipeline.mq
 
 import com.rabbitmq.client.ChannelContinuationTimeoutException
 import com.rabbitmq.client.impl.AMQImpl

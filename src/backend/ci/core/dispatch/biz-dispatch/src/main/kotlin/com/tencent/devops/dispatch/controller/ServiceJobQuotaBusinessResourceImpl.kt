@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
-import com.tencent.devops.dispatch.service.JobQuotaBusinessService
+import com.tencent.devops.dispatch.service.jobquota.JobQuotaBusinessService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
