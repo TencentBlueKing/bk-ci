@@ -140,36 +140,34 @@ class WorkspaceCommon @Autowired constructor(
         ownerType: WorkspaceOwnerType? = null,
         projectId: String = ""
     ) {
-        val websocketPush = WorkspaceWebsocketPush(
-            type = type,
-            status = status ?: true,
-            anyMessage = WorkspaceResponse(
-                workspaceHost = workspaceHost ?: "",
-                workspaceName = workspaceName,
-                status = action,
-                errorMsg = errorMsg,
-                systemType = systemType,
-                workspaceMountType = workspaceMountType,
-                ownerType = ownerType
-            ),
-            projectId = projectId,
-            userIds = getWebSocketUsers(userId, workspaceName),
-            redisOperation = redisOperation,
-            page = WorkspacePageBuild.buildPage(workspaceName),
-            notifyPost = NotifyPost(
-                module = "remotedev",
-                level = NotityLevel.LOW_LEVEL.getLevel(),
-                message = "",
-                dealUrl = null,
-                code = 200,
-                webSocketType = "IFRAME",
-                page = WorkspacePageBuild.buildPage(workspaceName)
+        webSocketDispatcher.dispatch(
+            WorkspaceWebsocketPush(
+                type = type,
+                status = status ?: true,
+                anyMessage = WorkspaceResponse(
+                    workspaceHost = workspaceHost ?: "",
+                    workspaceName = workspaceName,
+                    status = action,
+                    errorMsg = errorMsg,
+                    systemType = systemType,
+                    workspaceMountType = workspaceMountType,
+                    ownerType = ownerType
+                ),
+                projectId = projectId,
+                userIds = getWebSocketUsers(userId, workspaceName),
+                redisOperation = redisOperation,
+                page = WorkspacePageBuild.buildPage(workspaceName),
+                notifyPost = NotifyPost(
+                    module = "remotedev",
+                    level = NotityLevel.LOW_LEVEL.getLevel(),
+                    message = "",
+                    dealUrl = null,
+                    code = 200,
+                    webSocketType = "IFRAME",
+                    page = WorkspacePageBuild.buildPage(workspaceName)
+                )
             )
         )
-
-        logger.warn("$workspaceName websocketPushEvent $websocketPush")
-
-        webSocketDispatcher.dispatch(websocketPush)
     }
 
     fun getOpHistory(key: OpHistoryCopyWriting) =
@@ -617,10 +615,6 @@ class WorkspaceCommon @Autowired constructor(
             sharedUsers = sharedUsers,
             assignType = assignType
         )
-
-        sharedUsers.forEach { user ->
-            permissionService.refreshUserPermissionCache(user)
-        }
     }
 
     private fun checkUserNeedUnShare(ws: List<WorkspaceShared>, assignType: WorkspaceShared.AssignType): Boolean {
