@@ -7,14 +7,18 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.devops.auth.api.service.ServiceMonitorSpaceResource
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.security.util.EnvironmentUtil
+import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.pojo.ProjectProperties
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -27,7 +31,9 @@ import org.springframework.stereotype.Service
 class ProjectRemoteDevService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val client: Client,
-    private val bkRepoClient: BkRepoClient
+    private val bkRepoClient: BkRepoClient,
+    private val dslContext: DSLContext,
+    private val projectDao: ProjectDao
 ) {
 
     @Value("\${remoteDev.appCode:}")
@@ -268,6 +274,16 @@ class ProjectRemoteDevService @Autowired constructor(
         val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         devopsToken?.let { headers["X-DEVOPS-TOKEN"] = it }
         return headers
+    }
+
+    fun updateRemoteDevInfo(projectCode: String, addcloudDesktopNum: Int): Boolean {
+        val record = projectDao.getByEnglishName(dslContext, projectCode) ?: return false
+        if (record.properties == null) {
+            return false
+        }
+        val prop = JsonUtil.to(record.properties, ProjectProperties::class.java)
+        val newProp = prop.copy(cloudDesktopNum = prop.cloudDesktopNum + addcloudDesktopNum)
+        return projectDao.updatePropertiesByCode(dslContext, projectCode, newProp) > 0
     }
 
     companion object {
