@@ -73,7 +73,8 @@ function setLsLocale (locale) {
         subDomains.forEach(domain => {
             cookies.remove(LS_KEY, { domain, path: '/' })
         })
-        cookies.set(LS_KEY, formateLocale, { domain: subDomains[0] ?? location.hostname, path: '/' })
+        const domain = window.LOCALE_DOMAIN || (subDomains[0] ?? location.hostname)
+        cookies.set(LS_KEY, formateLocale, { domain, path: '/' })
     }
 }
 
@@ -113,7 +114,7 @@ export default (r, initSetLocale = false) => {
     }
 
     async function setLocale (localeLang) {
-        Object.keys(loadedModule).map(mod => {
+        Object.keys(loadedModule).forEach(mod => {
             const [, module] = mod.split('_')
             if (!loadedModule[getLocalModuleId(module, localeLang)]) {
                 dynamicLoadModule(module, localeLang)
