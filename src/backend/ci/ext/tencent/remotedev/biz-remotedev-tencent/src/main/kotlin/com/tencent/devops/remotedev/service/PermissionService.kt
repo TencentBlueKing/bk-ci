@@ -112,10 +112,17 @@ class PermissionService @Autowired constructor(
     fun checkOwnerPermission(userId: String, workspaceName: String, projectId: String) {
         if (!enablePermission) return
 
-        if (!workspaceOwnerCache.get(workspaceName).contains(userId) && !checkUserVisitPermission(userId, projectId)) {
+        if (!workspaceOwnerCache.get(workspaceName).contains(userId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need permission to access workspace $workspaceName")
+                params = arrayOf("You need owner permission to access workspace $workspaceName")
+            )
+        }
+
+        if (!checkUserVisitPermission(userId, projectId)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You need permission to access project $projectId")
             )
         }
     }
@@ -132,7 +139,7 @@ class PermissionService @Autowired constructor(
         if (!workspaceViewerCache.get(workspaceName).contains(userId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need permission to access workspace $workspaceName")
+                params = arrayOf("You need viewer permission to access workspace $workspaceName")
             )
         }
 
@@ -176,15 +183,14 @@ class PermissionService @Autowired constructor(
         userId: String,
         projectCode: String
     ): Boolean {
-        return kotlin.runCatching {
-            client.get(ServiceProjectResource::class).verifyUserProjectPermission(
-                projectCode = projectCode,
-                userId = userId
-            ).data
-        }.getOrNull() ?: throw ErrorCodeException(
-            errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-            params = arrayOf("You need permission to access project $projectCode")
-        )
+//        return kotlin.runCatching {
+//            client.get(ServiceProjectResource::class).verifyUserProjectPermission(
+//                projectCode = projectCode,
+//                userId = userId
+//            ).data
+//        }.getOrNull() ?: false
+        // todo 待所有项目迁移到rbac。再做权限判断。
+        return true
     }
 
     private fun initRedisUser(params: UserOnePassword): String {
