@@ -37,6 +37,7 @@ import okhttp3.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 
+@Component("AgentApi")
 class AgentApi {
     @Value("\${job.bkDevBkAppCode:}")
     private val bkAppCode = ""
