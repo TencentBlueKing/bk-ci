@@ -194,7 +194,7 @@ class RbacPermissionProjectService(
             pageInfoDTO
         ).results.filter {
             it.type == type
-        }.associateBy { it.name }
+        }.associateBy { it.id }
         val addMembers = mutableListOf<String>()
         // 预期的过期天数
         val expectExpiredAt = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(VALID_EXPIRED_AT)
