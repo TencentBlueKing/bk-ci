@@ -4,10 +4,22 @@ import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.UserJobResource
+import com.tencent.devops.environment.pojo.job.agentreq.InstallAgentReq
+import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentStatusReq
+import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLogResult
+import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.req.QueryJobInstanceLogsReq
+import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
+import com.tencent.devops.environment.pojo.job.agentreq.TerminalAgentInstallTaskReq
+import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.resp.GetStepInstanceDetailResult
 import com.tencent.devops.environment.pojo.job.resp.GetStepInstanceStatusResult
+import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
 import com.tencent.devops.environment.pojo.job.resp.JobResult
+import com.tencent.devops.environment.pojo.job.agentres.QueryAgentStatusResult
+import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskStatusResult
+import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskResult
+import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.service.job.JobService
@@ -72,6 +84,64 @@ class UserJobResourceImpl @Autowired constructor(
         )
     }
 
+    override fun installAgent(
+        userId: String,
+        projectId: String,
+        installAgentReq: InstallAgentReq
+    ): AgentResult<InstallAgentResult> {
+        checkParamBlank(userId, projectId)
+        return jobService.installAgent(userId, projectId, installAgentReq)
+    }
+
+    override fun queryAgentTaskStatus(
+        userId: String,
+        projectId: String,
+        jobId: Int,
+        queryAgentTaskStatusReq: QueryAgentTaskStatusReq
+    ): AgentResult<QueryAgentTaskStatusResult> {
+        checkParamBlank(userId, projectId)
+        return jobService.queryAgentTaskStatus(userId, projectId, jobId, queryAgentTaskStatusReq)
+    }
+
+    override fun queryAgentStatus(
+        userId: String,
+        projectId: String,
+        queryAgentStatusReq: QueryAgentStatusReq
+    ): AgentResult<QueryAgentStatusResult> {
+        checkParamBlank(userId, projectId)
+        return jobService.queryAgentStatus(userId, projectId, queryAgentStatusReq)
+    }
+
+    override fun queryAgentTaskLog(
+        userId: String,
+        projectId: String,
+        jobId: Int,
+        instanceId: Long
+    ): AgentResult<QueryAgentTaskLogResult> {
+        checkParamBlank(userId, projectId)
+        return jobService.queryAgentTaskLog(userId, projectId, jobId, instanceId)
+    }
+
+    override fun terminalAgentInstallTask(
+        userId: String,
+        projectId: String,
+        jobId: Int,
+        terminalAgentInstallTaskReq: TerminalAgentInstallTaskReq
+    ): AgentResult<TerminalAgentInstallTaskResult> {
+        checkParamBlank(userId, projectId)
+        return jobService.terminalAgentInstallTask(userId, projectId, jobId, terminalAgentInstallTaskReq)
+    }
+
+    override fun retryAgentInstallTask(
+        userId: String,
+        projectId: String,
+        jobId: Int,
+        retryAgentInstallTaskReq: RetryAgentInstallTaskReq
+    ): AgentResult<RetryAgentInstallTaskResult> {
+        checkParamBlank(userId, projectId)
+        return jobService.retryAgentInstallTask(userId, projectId, jobId, retryAgentInstallTaskReq)
+    }
+
     private fun checkParamBlank(userId: String, projectId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("userId is blank.")
@@ -88,9 +158,5 @@ class UserJobResourceImpl @Autowired constructor(
                     "or more than three months."
             )
         }
-    }
-
-    private fun recordJobInsToProj(projectId: String, jobInstanceId: Long, createUser: String) {
-        permissionManageService.recordJobInsToProj(projectId, jobInstanceId, createUser)
     }
 }

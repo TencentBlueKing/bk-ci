@@ -98,11 +98,11 @@ class ApigwJobCloudApi {
         )
     }
 
-    fun getJobCloudAuthReq(): JobCloudAuthenticationReq {
+    private fun getJobCloudAuthReq(): JobCloudAuthenticationReq {
         val bkAuthorization = "{\"bk_app_code\": \"${bkAppCode}\", " +
             "\"bk_app_secret\": \"${bkAppSecret}\", \"bk_username\": \"$AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE\"}"
         val operationName = getThreadLocal()
-        if (logger.isDebugEnabled) logger.debug("[appAuthentication] operationName: $operationName")
+        if (logger.isDebugEnabled) logger.debug("[getJobCloudAuthReq] operationName: $operationName")
         val url = jobCloudApiBaseUrl + when (operationName) {
             "executeScript" -> executeScriptPath
             "distributeFile" -> distributeFilePath
@@ -116,7 +116,7 @@ class ApigwJobCloudApi {
             "getStepInstanceStatus" -> getStepInstanceStatusPath
             else -> ""
         }
-        if (logger.isDebugEnabled) logger.debug("[appAuthentication] url: $url")
+        if (logger.isDebugEnabled) logger.debug("[getJobCloudAuthReq] url: $url")
         val bkScopeId = bkScopeId
         return JobCloudAuthenticationReq(
             url = url,
@@ -126,7 +126,7 @@ class ApigwJobCloudApi {
         )
     }
 
-    fun logWithLengthLimit(logOrigin: String): String {
+    private fun logWithLengthLimit(logOrigin: String): String {
         return if (logOrigin.length > LOG_OUTPUT_MAX_LENGTH)
             logOrigin.substring(0, LOG_OUTPUT_MAX_LENGTH)
         else
