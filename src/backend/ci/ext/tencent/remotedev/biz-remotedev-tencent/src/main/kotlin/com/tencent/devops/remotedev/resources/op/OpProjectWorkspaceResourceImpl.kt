@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.resources.op
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
@@ -119,7 +120,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         executor.execute {
             try {
                 val infoS = redisOperation.get(PIPELINE_CONFIG_INFO) ?: return@execute
-                val info = JsonUtil.to<AssignWorkspacePipelineInfo>(infoS)
+                val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
                 val newParam = mutableMapOf<String, String>()
                 info.buildParam.forEach { (k, v) ->
                     when (v) {
@@ -130,7 +131,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                     }
                 }
                 client.get(ServiceBuildResource::class).manualStartupNew(
-                    userId = userId,
+                    userId = info.userId ?: userId,
                     projectId = info.projectId,
                     pipelineId = info.pipelineId,
                     values = newParam,
@@ -178,7 +179,9 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     }
 }
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class AssignWorkspacePipelineInfo(
+    val userId: String?,
     val projectId: String,
     val pipelineId: String,
     val buildParam: Map<String, String>
