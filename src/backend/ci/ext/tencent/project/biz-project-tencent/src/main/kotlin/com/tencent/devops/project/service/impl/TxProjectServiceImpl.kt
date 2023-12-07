@@ -272,7 +272,8 @@ class TxProjectServiceImpl @Autowired constructor(
     override fun getProjectFromAuth(
         userId: String,
         accessToken: String?,
-        permission: AuthPermission
+        permission: AuthPermission,
+        resourceType: String?
     ): List<String>? {
         if (rbacTag.isBlank()) {
             return emptyList()
@@ -281,7 +282,8 @@ class TxProjectServiceImpl @Autowired constructor(
             client.getGateway(ServiceProjectAuthResource::class).getUserProjectsByPermission(
                 userId = userId,
                 token = tokenService.getSystemToken()!!,
-                action = permission.value
+                action = permission.value,
+                resourceType = resourceType
             ).data
         }
     }
