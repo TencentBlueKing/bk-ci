@@ -69,8 +69,8 @@ enum class WorkspaceStatus {
     /**
      * 当正在做某事时，不能新建任务去执行
      */
-    fun notOk2doNextAction(ws: WorkspaceRecord) =
-        (this == PREPARING && ws.workspaceSystemType != WorkspaceSystemType.WINDOWS_GPU) ||
+    fun notOk2doNextAction(workspaceSystemType: WorkspaceSystemType) =
+        (this == PREPARING && workspaceSystemType != WorkspaceSystemType.WINDOWS_GPU) ||
             this == STARTING || this == SLEEPING || this == DELETING || this == STOPPING ||
             this == RESTARTING || this == MAKING_IMAGE
 }

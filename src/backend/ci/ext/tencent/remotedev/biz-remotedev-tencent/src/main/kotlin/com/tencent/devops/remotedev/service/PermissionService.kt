@@ -129,11 +129,17 @@ class PermissionService @Autowired constructor(
     fun checkViewerPermission(userId: String, workspaceName: String, projectId: String) {
         if (!enablePermission) return
 
-        if (!workspaceViewerCache.get(workspaceName).contains(userId) && !checkUserVisitPermission(userId, projectId)
-        ) {
+        if (!workspaceViewerCache.get(workspaceName).contains(userId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access workspace $workspaceName")
+            )
+        }
+
+        if (!checkUserVisitPermission(userId, projectId) && !redisCache.checkExpertSupportUser(userId)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You need permission to access project $projectId")
             )
         }
     }
@@ -170,18 +176,15 @@ class PermissionService @Autowired constructor(
         userId: String,
         projectCode: String
     ): Boolean {
-        val result =
+        return kotlin.runCatching {
             client.get(ServiceProjectResource::class).verifyUserProjectPermission(
                 projectCode = projectCode,
                 userId = userId
-            )
-        if (result.isNotOk()) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need permission to access project $projectCode")
-            )
-        }
-        return true
+            ).data
+        }.getOrNull() ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+            params = arrayOf("You need permission to access project $projectCode")
+        )
     }
 
     private fun initRedisUser(params: UserOnePassword): String {

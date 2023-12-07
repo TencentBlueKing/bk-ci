@@ -9,6 +9,8 @@ data class InstallSoftwareRes(
     val message: String,
     val data: DataRes
 )
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class DataRes(
     @JsonProperty("task_id")
     val taskId: Long
