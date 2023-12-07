@@ -262,6 +262,7 @@
             curRepoId: {
                 handler (val) {
                     this.errorCode = 0
+                    this.pacProjectName = ''
                     this.fetchRepoDetail(val)
                 },
                 immediate: true
@@ -518,14 +519,11 @@
              */
             handleCheckPacProject () {
                 if (this.repoInfo.scmType === 'CODE_GIT') {
-                    this.isLoading = true
                     this.checkPacProject({
                         repoUrl: this.repoInfo.url,
                         repositoryType: this.repoInfo.scmType
                     }).then((res) => {
                         this.pacProjectName = res
-                    }).finally(() => {
-                        this.isLoading = false
                     })
                 }
             }
