@@ -121,10 +121,19 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
             try {
                 val infoS = redisOperation.get(PIPELINE_CONFIG_INFO) ?: return@execute
                 val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
+
+                val cgsIps = data.cgsIds?.map {
+                    val hostIdSub = it.split(".")
+                    hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+                }?.toSet()
+                val resIps = mutableSetOf<String>()
+                resIps.addAll(cgsIps ?: emptySet())
+                resIps.addAll(data.ips ?: emptySet())
+
                 val newParam = mutableMapOf<String, String>()
                 info.buildParam.forEach { (k, v) ->
                     when (v) {
-                        "job_ip_list" -> newParam[k] = data.ips?.joinToString { " " } ?: ""
+                        "job_ip_list" -> newParam[k] = resIps.joinToString(separator = " ")
                         "repoId" -> newParam[k] = data.repoId ?: ""
                         "localDriver" -> newParam[k] = data.localDriver ?: ""
                         else -> newParam[k] = v
