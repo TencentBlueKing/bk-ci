@@ -136,7 +136,7 @@
                             <div class="rotate rotate7"></div>
                             <div class="rotate rotate8"></div>
                         </div>
-                        <span class="ml5">{{ $t('codelib.正在同步代码库流水线任务') }}</span>
+                        <span class="ml5">{{ $t('codelib.正在同步代码库流水线') }}</span>
                     </span>
 
                     <!-- 同步失败 -->
@@ -485,7 +485,6 @@
             repoId () {
                 this.time = 1000
                 this.syncStatus = ''
-                this.$emit('update:pacProjectName', '')
             },
             codelibTypeConstants (val) {
                 // 校验是否已经授权了OAUTh
@@ -532,7 +531,8 @@
                 handler (val) {
                     this.syncStatus = val
                 },
-                deep: true
+                deep: true,
+                immediate: true
             },
             syncStatus (val) {
                 if (val === 'SUCCEED') {
@@ -552,7 +552,6 @@
                 'enablePac',
                 'changeMrBlock',
                 'checkHasCiFolder',
-                'checkPacProject',
                 'retrySyncRepository',
                 'getListYamlSync',
                 'getYamlSyncStatus',

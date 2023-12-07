@@ -84,11 +84,13 @@
                         <bk-radio
                             class="mr20"
                             value="SSH"
+                            :disabled="repoInfo.enablePac"
                         >
                             SSH
                         </bk-radio>
                         <bk-radio
                             value="HTTP"
+                            :disabled="repoInfo.enablePac"
                         >
                             {{ $t('codelib.用户名+密码') }}
                         </bk-radio>
@@ -389,7 +391,6 @@
                     }
 
                     if (this.isGit) {
-                        console.log(val, 11)
                         if (['OAUTH', 'HTTP'].includes(val) && this.cacheRepoInfo.authType === 'SSH') {
                             const { url } = this.newRepoInfo
                             this.newRepoInfo.url = url.replace('com:', 'com/').replace('git@', 'https://')
