@@ -36,6 +36,7 @@ import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import okhttp3.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
 @Component("AgentApi")
 class AgentApi {
