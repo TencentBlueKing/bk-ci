@@ -32,7 +32,7 @@ import com.tencent.devops.common.expression.expression.sdk.IReadOnlyObject
 import com.tencent.devops.common.expression.utils.ExpressionJsonUtil
 import java.util.TreeMap
 
-class DictionaryContextData :
+open class DictionaryContextData :
     PipelineContextData(PipelineContextDataType.DICTIONARY),
     Iterable<Pair<String, PipelineContextData?>>,
     IReadOnlyObject {
@@ -88,13 +88,13 @@ class DictionaryContextData :
         }
     }
 
-    operator fun get(k: String): PipelineContextData? {
+    open operator fun get(k: String): PipelineContextData? {
         // Existing
         val index = indexLookup[k] ?: return null
         return list[index].value
     }
 
-    operator fun IReadOnlyObject.get(key: String): Any? {
+    open operator fun IReadOnlyObject.get(key: String): Any? {
         val index = indexLookup[key] ?: return null
         return list[index].value
     }
