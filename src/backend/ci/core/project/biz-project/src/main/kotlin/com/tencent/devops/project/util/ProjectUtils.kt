@@ -44,6 +44,7 @@ object ProjectUtils {
         tProjectRecord: TProjectRecord,
         managePermission: Boolean? = null,
         showUserManageIcon: Boolean? = null,
+        viewPermission: Boolean? = null,
         pipelineTemplateInstallPerm: Boolean? = null
     ): ProjectVO {
         return ProjectVO(
@@ -112,6 +113,7 @@ object ProjectUtils {
             showUserManageIcon = showUserManageIcon,
             channelCode = tProjectRecord.channel,
             productId = tProjectRecord.productId,
+            canView = viewPermission,
             pipelineTemplateInstallPerm = pipelineTemplateInstallPerm
         )
     }

@@ -613,6 +613,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     permission = AuthPermission.CREATE,
                     resourceType = AuthResourceType.PIPELINE_TEMPLATE.value
                 )
+                val projectsWithViewPermission = getProjectFromAuth(
+                    userId = userId,
+                    accessToken = accessToken,
+                    permission = AuthPermission.VIEW
+                )
                 projectDao.listByEnglishName(
                     dslContext = dslContext,
                     englishNameList = projectsWithVisitPermission.toList(),
@@ -627,6 +632,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                             tProjectRecord = it,
                             managePermission = projectsWithManagePermission?.contains(it.englishName),
                             showUserManageIcon = isShowUserManageIcon(it.routerTag),
+                            viewPermission = projectsWithViewPermission?.contains(it.englishName),
                             pipelineTemplateInstallPerm = pipelineTemplateInstallPerm
                         )
                     )
@@ -844,7 +850,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
     }
 
-    override fun listByChannel(limit: Int, offset: Int, projectChannelCode: ProjectChannelCode): Page<ProjectVO> {
+    override fun listByChannel(limit: Int, offset: Int, projectChannelCode: List<String>): Page<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         try {
             val list = ArrayList<ProjectVO>()
@@ -997,22 +1003,26 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun searchProjectByProjectName(projectName: String, limit: Int, offset: Int): Page<ProjectVO> {
         val startTime = System.currentTimeMillis()
-        val list = mutableListOf<ProjectVO>()
-        projectDao.searchByProjectName(
+        val projectList = projectDao.searchByProjectName(
             dslContext = dslContext,
             projectName = projectName,
+            channelCodes = listOf(ProjectChannelCode.BS.name, ProjectChannelCode.PREBUILD.name),
             limit = limit,
             offset = offset
         ).map {
-            list.add(ProjectUtils.packagingBean(it))
+            ProjectUtils.packagingBean(it)
         }
-        val count = projectDao.countByProjectName(dslContext, projectName).toLong()
+        val count = projectDao.countByProjectName(
+            dslContext = dslContext,
+            projectName = projectName,
+            channelCodes = listOf(ProjectChannelCode.BS.name, ProjectChannelCode.PREBUILD.name)
+        ).toLong()
         LogUtils.costTime("search project by projectName", startTime)
         return Page(
             count = count,
             page = offset,
             pageSize = limit,
-            records = list
+            records = projectList
         )
     }
 

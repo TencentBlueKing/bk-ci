@@ -151,6 +151,8 @@ data class ProjectVO(
     val channelCode: String? = null,
     @ApiModelProperty("运营产品ID")
     val productId: Int? = null,
+    @ApiModelProperty("是否可以查看")
+    val canView: Boolean? = null,
     @ApiModelProperty("安装模板权限")
-    val pipelineTemplateInstallPerm: Boolean? = null,
+    val pipelineTemplateInstallPerm: Boolean? = null
 )

@@ -295,7 +295,7 @@ class TemplateDao {
         dslContext: DSLContext,
         projectId: String? = null,
         version: Long
-    ): TTemplateRecord {
+    ): TTemplateRecord? {
         with(TTemplate.T_TEMPLATE) {
             val conditions = mutableListOf<Condition>()
             conditions.add(VERSION.eq(version))
@@ -305,9 +305,7 @@ class TemplateDao {
             return dslContext.selectFrom(this)
                 .where(conditions)
                 .limit(1)
-                .fetchOne() ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
-            )
+                .fetchOne()
         }
     }
 
@@ -316,7 +314,7 @@ class TemplateDao {
         templateId: String,
         versionName: String? = null,
         version: Long? = null
-    ): TTemplateRecord {
+    ): TTemplateRecord? {
         with(TTemplate.T_TEMPLATE) {
             val conditions = mutableListOf<Condition>()
             conditions.add(ID.eq(templateId))
@@ -330,9 +328,7 @@ class TemplateDao {
                 .where(conditions)
                 .orderBy(CREATED_TIME.desc(), VERSION.desc())
                 .limit(1)
-                .fetchOne() ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
-            )
+                .fetchOne()
         }
     }
 
