@@ -66,7 +66,8 @@ class BuildRecordContainerDao {
                 MATRIX_GROUP_FLAG,
                 MATRIX_GROUP_ID,
                 STATUS,
-                TIMESTAMPS
+                TIMESTAMPS,
+                END_TIME
             ).also { insert ->
                 records.forEach { record ->
                     insert.values(
@@ -82,12 +83,12 @@ class BuildRecordContainerDao {
                         record.matrixGroupFlag,
                         record.matrixGroupId,
                         record.status,
-                        JsonUtil.toJson(record.timestamps, false)
+                        JsonUtil.toJson(record.timestamps, false),
+                        record.endTime
                     )
                 }
             }.onDuplicateKeyUpdate()
                 .set(STATUS, MySQLDSL.values(STATUS))
-                .set(START_TIME, MySQLDSL.values(START_TIME))
                 .set(END_TIME, MySQLDSL.values(END_TIME))
                 .set(TIMESTAMPS, MySQLDSL.values(TIMESTAMPS))
                 .set(CONTAINER_VAR, MySQLDSL.values(CONTAINER_VAR))
