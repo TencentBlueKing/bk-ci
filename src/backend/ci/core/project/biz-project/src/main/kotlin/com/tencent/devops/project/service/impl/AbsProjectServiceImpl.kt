@@ -607,12 +607,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     accessToken = accessToken,
                     permission = AuthPermission.MANAGE
                 )
-                val projectsWithPipelineTemplateCreatePerm = getProjectFromAuth(
-                    userId = userId,
-                    accessToken = accessToken,
-                    permission = AuthPermission.CREATE,
-                    resourceType = AuthResourceType.PIPELINE_TEMPLATE.value
-                )
+                val projectsWithPipelineTemplateCreatePerm = try {
+                    getProjectFromAuth(
+                        userId = userId,
+                        accessToken = accessToken,
+                        permission = AuthPermission.CREATE,
+                        resourceType = AuthResourceType.PIPELINE_TEMPLATE.value
+                    )
+                } catch (ex: Exception) {
+                    emptyList()
+                }
                 val projectsWithViewPermission = getProjectFromAuth(
                     userId = userId,
                     accessToken = accessToken,
