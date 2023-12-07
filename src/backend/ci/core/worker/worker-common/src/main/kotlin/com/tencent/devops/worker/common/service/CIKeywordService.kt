@@ -23,7 +23,7 @@ object CIKeywordsService {
     }
 
     class CIKeywordsRuntimeNamedValue(
-        override val key: String = "ci",
+        override val key: String = "ci"
     ) : RuntimeNamedValue {
         override fun getValue(key: String): PipelineContextData? {
             // 不是需要的关键字直接返回空

@@ -37,8 +37,8 @@ open class DictionaryContextData :
     Iterable<Pair<String, PipelineContextData?>>,
     IReadOnlyObject {
 
-    private var mIndexLookup: TreeMap<String, Int>? = null
-    private var mList: MutableList<DictionaryContextDataPair> = mutableListOf()
+    protected open var mIndexLookup: TreeMap<String, Int>? = null
+    protected open var mList: MutableList<DictionaryContextDataPair> = mutableListOf()
 
     override val values: Iterable<Any?>
         get() {
@@ -56,7 +56,7 @@ open class DictionaryContextData :
         return Pair(null, false)
     }
 
-    private val indexLookup: MutableMap<String, Int>
+    protected val indexLookup: MutableMap<String, Int>
         get() {
             if (mIndexLookup == null) {
                 mIndexLookup = TreeMap<String, Int>()
@@ -155,7 +155,7 @@ open class DictionaryContextData :
         return mList.map { pair -> Pair(pair.key, pair.value); }.iterator()
     }
 
-    private data class DictionaryContextDataPair(
+    protected data class DictionaryContextDataPair(
         val key: String,
         val value: PipelineContextData?
     )
