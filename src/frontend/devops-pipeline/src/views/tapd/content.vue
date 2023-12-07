@@ -1,7 +1,6 @@
 <template>
     <section
         class="pipeline-detail-wrapper tapd-content"
-        @scroll="handlerScroll"
         v-bkloading="{ isLoading: isLoading || fetchingAtomList }"
     >
         
@@ -15,9 +14,7 @@
         </empty-tips>
 
         <template v-else-if="execDetail">
-            <div :class="['exec-detail-main', {
-                'is-outputs-panel': curItemTab === 'outputs'
-            }]">
+            <div class="exec-detail-main">
                 <component
                     :is="curPanel.component"
                     v-bind="curPanel.bindData"
@@ -116,8 +113,6 @@
                 isLoading: true,
                 hasNoPermission: false,
                 linkUrl: WEB_URL_PREFIX + location.pathname,
-                show: false,
-                summaryVisible: true,
                 noPermissionTipsConfig: {
                     title: this.$t('noPermission'),
                     desc: this.$t('history.noPermissionTips'),
@@ -162,52 +157,18 @@
             execFormatStartTime () {
                 return convertTime(this.execDetail?.queueTime)
             },
-            panels () {
-                return [
-                    {
-                        name: 'executeDetail',
-                        label: this.$t('details.executeDetail'),
-                        component: 'exec-pipeline',
-                        className: 'exec-pipeline',
-                        bindData: {
-                            execDetail: this.execDetail,
-                            isLatestBuild: this.isLatestBuild,
-                            matchRules: this.curMatchRules
-                        }
-                    },
-                    {
-                        name: 'outputs',
-                        label: this.$t('details.artifact'),
-                        className: '',
-                        component: 'outputs',
-                        bindData: {
-                            currentTab: 'artifacts'
-                        }
-                    },
-                    {
-                        name: 'reports',
-                        label: this.$t('details.report'),
-                        className: '',
-                        component: 'outputs',
-                        bindData: {
-                            currentTab: 'reports'
-                        }
-                    },
-                    {
-                        name: 'codeRecords',
-                        label: this.$t('details.codeRecords'),
-                        className: '',
-                        component: 'code-record',
-                        bindData: {}
-                    },
-                    {
-                        name: 'startupParams',
-                        label: this.$t('details.startupParams'),
-                        className: '',
-                        component: 'start-params',
-                        bindData: {}
+            curPanel () {
+                return {
+                    name: 'executeDetail',
+                    label: this.$t('details.executeDetail'),
+                    component: 'exec-pipeline',
+                    className: 'exec-pipeline',
+                    bindData: {
+                        execDetail: this.execDetail,
+                        isLatestBuild: this.isLatestBuild,
+                        matchRules: this.curMatchRules
                     }
-                ]
+                }
             },
             showLog: {
                 get () {
@@ -281,12 +242,6 @@
             },
             routerParams () {
                 return this.$route.params
-            },
-            curItemTab () {
-                return this.routerParams.type || 'executeDetail'
-            },
-            curPanel () {
-                return this.panels.find(panel => panel.name === this.curItemTab)
             },
             statusTagTheme () {
                 return mapThemeOfStatus(this.execDetail?.status)
@@ -371,9 +326,6 @@
                 'getAfterLog',
                 'pausePlugin'
             ]),
-            handlerScroll (e) {
-                this.show = e.target.scrollTop > 88
-            },
             ...mapActions('common', ['requestInterceptAtom']),
 
             hideSidePanel () {
@@ -400,9 +352,6 @@
     background: white;
     flex: 1;
     box-shadow: 0 2px 2px 0 #00000026;
-    &.is-outputs-panel {
-        overflow: hidden;
-    }
   }
   .exec-pipeline {
     position: relative;
