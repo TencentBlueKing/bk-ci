@@ -30,6 +30,7 @@ package com.tencent.devops.process.api.template
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
@@ -296,10 +297,10 @@ interface UserPTemplateResource {
         projectId: String
     ): Result<Boolean>
 
-    @ApiOperation("是否有查看权限")
+    @ApiOperation("是否有特定模板权限")
     @GET
-    @Path("/projects/{projectId}/templates/{templateId}/hasViewPermission")
-    fun hasViewPermission(
+    @Path("/projects/{projectId}/templates/{templateId}/hasPipelineTemplatePermission")
+    fun hasPipelineTemplatePermission(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -308,7 +309,10 @@ interface UserPTemplateResource {
         projectId: String,
         @ApiParam("模板ID", required = true)
         @PathParam("templateId")
-        templateId: String
+        templateId: String?,
+        @ApiParam("操作", required = true)
+        @QueryParam("permission")
+        permission: AuthPermission
     ): Result<Boolean>
 
     @ApiOperation("是否开启模板管理权限")

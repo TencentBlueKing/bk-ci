@@ -31,6 +31,7 @@ import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -56,7 +57,9 @@ import org.springframework.beans.factory.annotation.Autowired
  * 2019-01-08
  */
 @RestResource
-class UserPTemplateResourceImpl @Autowired constructor(private val templateFacadeService: TemplateFacadeService) :
+class UserPTemplateResourceImpl @Autowired constructor(
+    private val templateFacadeService: TemplateFacadeService
+) :
     UserPTemplateResource {
 
     @AuditEntry(actionId = ActionId.PIPELINE_TEMPLATE_CREATE)
@@ -196,16 +199,18 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateFacad
         return Result(templateFacadeService.hasManagerPermission(projectId, userId))
     }
 
-    override fun hasViewPermission(
+    override fun hasPipelineTemplatePermission(
         userId: String,
         projectId: String,
-        templateId: String
+        templateId: String?,
+        permission: AuthPermission
     ): Result<Boolean> {
         return Result(
-            templateFacadeService.hasViewPermission(
+            templateFacadeService.hasPipelineTemplatePermission(
                 userId = userId,
                 projectId = projectId,
-                templateId = templateId
+                templateId = templateId,
+                permission = permission
             )
         )
     }
