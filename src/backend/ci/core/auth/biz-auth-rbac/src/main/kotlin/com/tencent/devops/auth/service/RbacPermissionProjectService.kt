@@ -213,6 +213,7 @@ class RbacPermissionProjectService(
             )
             addMembers.add(it)
         }
+        logger.info("batch add project user:$userId|$projectCode|$roleCode|$addMembers")
         if (addMembers.isNotEmpty()) {
             val iamMemberInfos = addMembers.map { ManagerMember(type, it) }
             val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(expiredAt)
