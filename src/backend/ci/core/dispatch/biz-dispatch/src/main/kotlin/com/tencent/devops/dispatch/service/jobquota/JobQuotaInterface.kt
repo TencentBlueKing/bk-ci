@@ -25,18 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.configuration
+package com.tencent.devops.dispatch.service.jobquota
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.boot.context.properties.EnableConfigurationProperties
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+import com.tencent.devops.dispatch.pojo.JobConcurrencyHistory
+import com.tencent.devops.dispatch.pojo.JobQuotaHistory
 
-@Configuration
-@EnableConfigurationProperties(DispatchProperties::class)
-class DispatchConfiguration {
+interface JobQuotaInterface {
+    /**
+     * 保存Job配额相关构建记录
+     */
+    fun saveJobQuotaHistory(jobQuotaHistory: JobQuotaHistory)
 
-    @Bean
-    fun pipelineEventDispatcher(rabbitTemplate: RabbitTemplate) = MQEventDispatcher(rabbitTemplate)
+    /**
+     * 包含Job的并发数据
+     */
+    fun saveJobConcurrency(jobConcurrencyHistory: JobConcurrencyHistory)
 }

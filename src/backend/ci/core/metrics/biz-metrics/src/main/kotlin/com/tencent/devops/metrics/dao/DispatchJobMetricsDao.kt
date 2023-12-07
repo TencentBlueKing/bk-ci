@@ -25,24 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.configuration
+package com.tencent.devops.metrics.dao
 
-import com.tencent.devops.dispatch.service.jobquota.JobQuotaInterface
-import com.tencent.devops.dispatch.service.jobquota.JobQuotaInterfaceImpl
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
+import com.tencent.devops.model.metrics.tables.TDispatchJobDailyMetrics
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
 
-@Suppress("ALL")
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class DispatchBeanConfiguration {
+@Repository
+class DispatchJobMetricsDao {
 
-    @Bean
-    @ConditionalOnMissingBean(JobQuotaInterface::class)
-    fun jobQuotaInterface() = JobQuotaInterfaceImpl()
+    fun batchSaveDispatchJobMetrics(
+        dslContext: DSLContext,
+        dispatchJobMetricsData: List<DispatchJobMetricsData>
+    ) {
+        with(TDispatchJobDailyMetrics.T_DISPATCH_JOB_DAILY_METRICS) {
+            dispatchJobMetricsData.forEach { jobMetricsData ->
+                dslContext.insertInto(this)
+                    .set(PROJECT_ID, jobMetricsData.projectId)
+                    .set(PRODUCT_ID, jobMetricsData.productId)
+                    .set(THE_DATE, jobMetricsData.theDate)
+                    .set(JOB_TYPE, jobMetricsData.jobType)
+                    .set(MAX_JOB_CONCURRENCY, jobMetricsData.maxJobConcurrency)
+                    .set(SUM_JOB_COST, jobMetricsData.sumJobCost)
+                    .execute()
+            }
+        }
+    }
 }

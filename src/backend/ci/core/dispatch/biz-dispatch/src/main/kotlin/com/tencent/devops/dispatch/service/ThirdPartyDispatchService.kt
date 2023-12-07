@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.type.agent.AgentType
@@ -77,7 +76,6 @@ class ThirdPartyDispatchService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val buildLogPrinter: BuildLogPrinter,
     private val thirdPartyAgentBuildRedisUtils: ThirdPartyAgentBuildRedisUtils,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val thirdPartyAgentBuildService: ThirdPartyAgentService
 ) {
     fun canDispatch(event: PipelineAgentStartupEvent) =

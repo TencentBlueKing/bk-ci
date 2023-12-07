@@ -25,16 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.service
+package com.tencent.devops.dispatch.service.jobquota
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.dao.JobQuotaProjectRunTimeDao
 import com.tencent.devops.dispatch.dao.RunningJobsDao
@@ -43,17 +40,15 @@ import com.tencent.devops.dispatch.pojo.JobConcurrencyHistory
 import com.tencent.devops.dispatch.pojo.JobQuotaHistory
 import com.tencent.devops.dispatch.pojo.JobQuotaStatus
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
-import com.tencent.devops.dispatch.utils.JobQuotaProjectLock
-import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.dispatch.utils.redis.JobQuotaRedisUtils
 import com.tencent.devops.process.engine.common.VMUtils
-import java.time.Duration
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.time.Duration
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Service
 class JobQuotaBusinessService @Autowired constructor(
@@ -64,7 +59,8 @@ class JobQuotaBusinessService @Autowired constructor(
     private val client: Client,
     private val jobQuotaInterface: JobQuotaInterface,
     private val buildLogPrinter: BuildLogPrinter,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val jobQuotaRedisUtils: JobQuotaRedisUtils
 ) {
 
     /**
@@ -80,7 +76,7 @@ class JobQuotaBusinessService @Autowired constructor(
         containerHashId: String?
     ): Boolean {
         val result: Boolean
-        val jobQuotaProjectLock = JobQuotaProjectLock(redisOperation, projectId)
+        val jobQuotaProjectLock = jobQuotaRedisUtils.getJobQuotaProjectLock(projectId)
         try {
             jobQuotaProjectLock.lock()
             result = checkJobQuotaBase(
@@ -99,8 +95,6 @@ class JobQuotaBusinessService @Autowired constructor(
         } finally {
             jobQuotaProjectLock.unlock()
         }
-
-        // checkSystemWarn(vmType)
 
         return result
     }
@@ -179,8 +173,7 @@ class JobQuotaBusinessService @Autowired constructor(
             }
 
             // 所有已经结束的耗时
-            val finishRunJobTime = getRedisStringSerializerOperation().hget(getDayRunningTimeKey(),
-                getProjectRunningTimeKey(projectId))
+            val finishRunJobTime = jobQuotaRedisUtils.getProjectRunJobTime(projectId)
             runningTotalTime += (finishRunJobTime ?: "0").toLong()
 
             return runningTotalTime
@@ -194,10 +187,7 @@ class JobQuotaBusinessService @Autowired constructor(
             }
 
             // 所有已经结束的耗时
-            val finishRunJobTime = getRedisStringSerializerOperation().hget(
-                getDayRunningTimeKey(),
-                getProjectVmTypeRunningTimeKey(projectId, vmType)
-            )
+            val finishRunJobTime = jobQuotaRedisUtils.getProjectRunJobTypeTime(projectId, vmType)
             runningTotalTime += (finishRunJobTime ?: "0").toLong()
 
             return runningTotalTime
@@ -262,11 +252,7 @@ class JobQuotaBusinessService @Autowired constructor(
         vmSeqId: String,
         executeCount: Int
     ) {
-        val redisLock = RedisLock(
-            redisOperation = getRedisStringSerializerOperation(),
-            lockKey = "$JOB_END_LOCK_KEY$buildId-$vmSeqId-$executeCount",
-            expiredTimeInSeconds = 60L
-        )
+        val redisLock = jobQuotaRedisUtils.getJobAgentFinishLock(buildId, vmSeqId, executeCount)
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
@@ -275,7 +261,7 @@ class JobQuotaBusinessService @Autowired constructor(
                     val duration: Duration = Duration.between(runningJobsRecord.agentStartTime, LocalDateTime.now())
 
                     // 保存构建时间，单位秒
-                    incProjectJobRunningTime(
+                    jobQuotaRedisUtils.incProjectJobRunningTime(
                         projectId = projectId,
                         vmType = JobQuotaVmType.parse(runningJobsRecord.vmType),
                         time = duration.toMillis() / 1000
@@ -320,79 +306,16 @@ class JobQuotaBusinessService @Autowired constructor(
         jobQuotaVmType: JobQuotaVmType
     ) {
         // 刷新redis缓存数据
-        val dayJobConcurrencyKey = getDayJobConcurrencyKey()
-        val projectDayJobConcurrencyKey = getProjectDayJobConcurrencyKey(projectId, jobQuotaVmType)
-
-        val maxConcurrency = getRedisStringSerializerOperation().hget(
-            dayJobConcurrencyKey,
-            projectDayJobConcurrencyKey
-        )?.toLongOrNull()
-
-        if (maxConcurrency == null || maxConcurrency < (runningJobCount + 1)) {
-            getRedisStringSerializerOperation().hset(
-                dayJobConcurrencyKey,
-                projectDayJobConcurrencyKey,
-                (runningJobCount + 1).toString()
-            )
-        }
+        jobQuotaRedisUtils.saveJobConcurrency(projectId, runningJobCount, jobQuotaVmType)
 
         jobQuotaInterface.saveJobConcurrency(
             JobConcurrencyHistory(
                 projectId = projectId,
-                jobConcurrency = runningJobCount,
+                jobConcurrency = runningJobCount + 1,
                 jobQuotaVmType = jobQuotaVmType,
                 createTime = LocalDateTime.now().format(dateTimeFormatter)
             )
         )
-    }
-
-    private fun checkSystemWarn(vmType: JobQuotaVmType) {
-        try {
-            val jobQuota = jobQuotaManagerService.getSystemQuota(vmType)
-            val runningJobCount = runningJobsDao.getSystemRunningJobCount(dslContext, vmType).toLong()
-
-            val runningJobMaxSystem = jobQuota.runningJobMaxSystem
-            val systemRunningJobThreshold = jobQuota.systemRunningJobThreshold
-            val jobMaxLock = getRedisStringSerializerOperation().get(WARN_TIME_SYSTEM_JOB_MAX_LOCK_KEY)
-            if (jobMaxLock != null) {
-                if (runningJobCount < runningJobMaxSystem) {
-                    getRedisStringSerializerOperation().delete(WARN_TIME_SYSTEM_JOB_MAX_LOCK_KEY)
-                }
-                return
-            } else {
-                if (runningJobCount >= runningJobMaxSystem) {
-                    getRedisStringSerializerOperation().set(
-                        key = WARN_TIME_SYSTEM_JOB_MAX_LOCK_KEY,
-                        value = WARN_TIME_LOCK_VALUE,
-                        expiredInSecond = 86400
-                    )
-                    LOG.info("System running job count reach max, running jobs: $runningJobCount, " +
-                            "quota: $runningJobMaxSystem")
-                    return
-                }
-            }
-
-            val thresholdLock = getRedisStringSerializerOperation().get(WARN_TIME_SYSTEM_THRESHOLD_LOCK_KEY)
-            if (thresholdLock != null) {
-                if (runningJobCount * 100 / runningJobMaxSystem < systemRunningJobThreshold) {
-                    getRedisStringSerializerOperation().delete(WARN_TIME_SYSTEM_THRESHOLD_LOCK_KEY)
-                }
-                return
-            } else {
-                if (runningJobCount * 100 / runningJobMaxSystem >= systemRunningJobThreshold) {
-                    getRedisStringSerializerOperation().set(
-                        key = WARN_TIME_SYSTEM_THRESHOLD_LOCK_KEY,
-                        value = WARN_TIME_LOCK_VALUE,
-                        expiredInSecond = 86400
-                    )
-                    LOG.info("System running job count reach threshold: $runningJobCount, " +
-                            "quota: $runningJobMaxSystem, threshold: $systemRunningJobThreshold send alert.")
-                    return
-                }
-            }
-        } catch (e: Exception) {
-            LOG.error("Check System warning error.", e)
-        }
     }
 
     private fun normalizePercentage(value: Double): String {
@@ -409,166 +332,6 @@ class JobQuotaBusinessService @Autowired constructor(
         }
     }
 
-    /**
-     * 清理超过7天的job记录，防止一直占用
-     */
-    @Scheduled(cron = "0 0 1 * * ?")
-    fun clearTimeOutJobRecord() {
-        LOG.info("start to clear timeout job record")
-        val redisLock = RedisLock(getRedisStringSerializerOperation(), TIMER_OUT_LOCK_KEY, 60L)
-        try {
-            val lockSuccess = redisLock.tryLock()
-            if (lockSuccess) {
-                LOG.info("<<< Clear Pipeline Quota Start >>>")
-                doClear()
-            } else {
-                LOG.info("<<< Clear Pipeline Quota Job Has Running, Do Not Start>>>")
-            }
-        } catch (e: Throwable) {
-            LOG.error("Clear pipeline quota exception:", e)
-        } finally {
-            redisLock.unlock()
-        }
-    }
-
-    fun restoreProjectJobTime(projectId: String?, vmType: JobQuotaVmType) {
-        if (projectId == null && vmType != JobQuotaVmType.ALL) {
-            // 直接删除当月的hash主key
-            getRedisStringSerializerOperation().delete(getDayRunningTimeKey())
-            return
-        }
-        if (projectId != null && vmType != JobQuotaVmType.ALL) { // restore project with vmType
-            restoreWithVmType(projectId, vmType)
-            return
-        }
-    }
-
-    private fun restoreWithVmType(project: String, vmType: JobQuotaVmType) {
-        val time = getRedisStringSerializerOperation().hget(
-            getDayRunningTimeKey(),
-            getProjectVmTypeRunningTimeKey(project, vmType)) ?: "0"
-        val totalTime = getRedisStringSerializerOperation().hget(
-            getDayRunningTimeKey(),
-            getProjectRunningTimeKey(project)) ?: "0"
-        val reduiceTime = (totalTime.toLong() - time.toLong())
-        getRedisStringSerializerOperation().hset(
-            key = getDayRunningTimeKey(),
-            hashKey = getProjectRunningTimeKey(project),
-            values = if (reduiceTime < 0) {
-                "0"
-            } else {
-                reduiceTime.toString()
-            }
-        )
-        getRedisStringSerializerOperation().hset(
-            key = getDayRunningTimeKey(),
-            hashKey = getProjectVmTypeRunningTimeKey(project, vmType),
-            values = "0"
-        )
-    }
-
-    /**
-     * 每月1号凌晨0点删除上个月的redis key
-     */
-    @Scheduled(cron = "0 0 0 1 * ?")
-    fun restoreTimeMonthly() {
-        LOG.info("start to clear time monthly")
-        val redisLock = RedisLock(getRedisStringSerializerOperation(), TIMER_RESTORE_LOCK_KEY, 60L)
-        try {
-            val lockSuccess = redisLock.tryLock()
-            if (lockSuccess) {
-                LOG.info("<<< Restore time monthly Start >>>")
-                val lastMonth = LocalDateTime.now().minusMonths(1).month.name
-                getRedisStringSerializerOperation().delete(getDayRunningTimeKey(lastMonth))
-            } else {
-                LOG.info("<<< Restore time monthly Has Running, Do Not Start>>>")
-            }
-        } catch (e: Throwable) {
-            LOG.error("Restore time monthly exception:", e)
-        } finally {
-            redisLock.unlock()
-        }
-    }
-
-    private fun doClear() {
-        val timeoutJobs = runningJobsDao.getTimeoutRunningJobs(dslContext, TIMEOUT_DAYS)
-        if (timeoutJobs.isNotEmpty) {
-            timeoutJobs.filterNotNull().forEach {
-                LOG.info("delete timeout running job: ${it.projectId}|${it.buildId}|${it.vmSeqId}")
-            }
-        }
-        runningJobsDao.clearTimeoutRunningJobs(dslContext, TIMEOUT_DAYS)
-        LOG.info("finish to clear timeout jobs, total:${timeoutJobs.size}")
-
-        LOG.info("Check pipeline running.")
-        val runningJobs = runningJobsDao.getTimeoutRunningJobs(dslContext, CHECK_RUNNING_DAYS)
-        if (runningJobs.isEmpty()) {
-            return
-        }
-
-        try {
-            runningJobs.filterNotNull().forEach {
-                val isRunning = client.get(ServicePipelineResource::class).isRunning(projectId = it.projectId,
-                    buildId = it.buildId,
-                    channelCode = ChannelCode.BS).data
-                    ?: false
-                if (!isRunning) {
-                    runningJobsDao.delete(
-                        dslContext = dslContext,
-                        buildId = it.buildId,
-                        vmSeqId = it.vmSeqId,
-                        executeCount = it.executeCount
-                    )
-                    LOG.info("${it.buildId}|${it.vmSeqId} Pipeline not running, but runningJob history not deleted.")
-                }
-            }
-        } catch (e: Throwable) {
-            LOG.error("Check pipeline running failed, msg: ${e.message}")
-        }
-    }
-
-    private fun incProjectJobRunningTime(projectId: String, vmType: JobQuotaVmType?, time: Long) {
-        if (vmType == null) {
-            LOG.warn("incProjectJobRunningTime, vmType is null. projectId: $projectId")
-            return
-        }
-
-        getRedisStringSerializerOperation().hIncrBy(
-            key = getDayRunningTimeKey(),
-            hashKey = getProjectVmTypeRunningTimeKey(projectId, vmType),
-            delta = time
-        )
-
-        // 注释按月统计时间
-        /*getRedisStringSerializerOperation().hIncrBy(
-            key = getProjectMonthRunningTimeKey(),
-            hashKey = getProjectRunningTimeKey(projectId),
-            delta = time
-        )*/
-    }
-
-    private fun getDayRunningTimeKey(day: String? = null): String {
-        val currentDay = day ?: LocalDateTime.now().dayOfWeek.name
-        return "$PROJECT_RUNNING_TIME_KEY_PREFIX$currentDay"
-    }
-
-    private fun getProjectVmTypeRunningTimeKey(projectId: String, vmType: JobQuotaVmType): String {
-        return "$PROJECT_RUNNING_TIME_KEY_PREFIX${projectId}_${vmType.name}"
-    }
-
-    private fun getProjectRunningTimeKey(projectId: String): String {
-        return "$PROJECT_RUNNING_TIME_KEY_PREFIX$projectId"
-    }
-
-    private fun getDayJobConcurrencyKey(day: String? = null): String {
-        val currentDay = day ?: LocalDateTime.now().dayOfWeek.name
-        return "$PROJECT_JOB_CONCURRENCY_KEY_PREFIX$currentDay"
-    }
-
-    private fun getProjectDayJobConcurrencyKey(projectId: String, vmType: JobQuotaVmType): String {
-        return "$PROJECT_JOB_CONCURRENCY_KEY_PREFIX${projectId}_${vmType.name}"
-    }
-
     fun statistics(limit: Int?, offset: Int?): Map<String, Any> {
         val result = mutableMapOf<String, List<ProjectVmTypeTime>>()
         JobQuotaVmType.values().filter { it != JobQuotaVmType.ALL }.forEach { type ->
@@ -579,34 +342,7 @@ class JobQuotaBusinessService @Autowired constructor(
         return result
     }
 
-    private fun getRedisStringSerializerOperation(): RedisOperation {
-        return SpringContextUtil.getBean(RedisOperation::class.java, "redisStringHashOperation")
-    }
-
     companion object {
-        private const val TIMER_OUT_LOCK_KEY = "job_quota_business_time_out_lock"
-        private const val TIMER_RESTORE_LOCK_KEY = "job_quota_business_time_restore_lock"
-        private const val TIMER_COUNT_TIME_LOCK_KEY = "job_quota_project_run_time_count_lock"
-        private const val JOB_END_LOCK_KEY = "job_quota_business_redis_job_end_lock_"
-        private const val PROJECT_RUNNING_TIME_KEY_PREFIX = "project_running_time_key_" // 项目当天已运行时间前缀
-        private const val PROJECT_JOB_CONCURRENCY_KEY_PREFIX = "project_job_concurrency_key_" // 项目当天最大并发job前缀
-
-        // 系统当月已运行JOB数量KEY, 告警使用
-        private const val WARN_TIME_SYSTEM_JOB_MAX_LOCK_KEY = "job_quota_warning_system_max_lock_key"
-        // 项目当月已运行JOB数量告警前缀
-        private const val WARN_TIME_SYSTEM_THRESHOLD_LOCK_KEY = "job_quota_warning_system_threshold_lock_key"
-        // 系统当月已运行JOB数量阈值KEY，告警使用
-        private const val WARN_TIME_PROJECT_JOB_MAX_LOCK_KEY_PREFIX = "job_quota_warning_project_max_lock_key_"
-        private const val WARN_TIME_PROJECT_JOB_THRESHOLD_LOCK_KEY_PREFIX =
-            "job_quota_warning_project_threshold_lock_key_" // 项目当月已运行JOB数量阈值告警前缀
-        private const val WARN_TIME_PROJECT_TIME_MAX_LOCK_KEY_PREFIX =
-            "time_quota_warning_project_max_lock_key_" // 项目当月已运行时间告警前缀
-        private const val WARN_TIME_PROJECT_TIME_THRESHOLD_LOCK_KEY_PREFIX =
-            "time_quota_warning_project_threshold_lock_key_" // 项目当月已运行时间阈值告警前缀
-        private const val WARN_TIME_LOCK_VALUE = "job_quota_warning_lock_value" // VALUE值，标志位
-        private const val TIMEOUT_DAYS = 7L
-        private const val CHECK_RUNNING_DAYS = 1L
-
         private val LOG = LoggerFactory.getLogger(JobQuotaBusinessService::class.java)
         private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
     }

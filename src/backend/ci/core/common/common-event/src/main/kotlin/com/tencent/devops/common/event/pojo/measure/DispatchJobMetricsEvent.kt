@@ -25,20 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.service
+package com.tencent.devops.common.event.pojo.measure
 
-import com.tencent.devops.dispatch.pojo.JobConcurrencyHistory
-import com.tencent.devops.dispatch.pojo.JobQuotaHistory
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 
-class JobQuotaInterfaceImpl : JobQuotaInterface {
-    /**
-     * 保存Job配额相关构建记录
-     */
-    override fun saveJobQuotaHistory(jobQuotaHistory: JobQuotaHistory) {
-        // save job quota history
-    }
-
-    override fun saveJobConcurrency(jobConcurrencyHistory: JobConcurrencyHistory) {
-        // save job concurrency history
-    }
-}
+@Event(exchange = MQ.EXCHANGE_DISPATCH_JOB_METRICS_FANOUT)
+data class DispatchJobMetricsEvent(
+    override val projectId: String,
+    override val pipelineId: String,
+    override val buildId: String,
+    val jobMetricsList: List<DispatchJobMetricsData>
+) : IMeasureEvent(projectId, pipelineId, buildId)

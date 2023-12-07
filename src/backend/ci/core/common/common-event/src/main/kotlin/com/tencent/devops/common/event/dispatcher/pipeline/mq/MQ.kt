@@ -152,6 +152,10 @@ object MQ {
     const val QUEUE_BUILD_LESS_AGENT_STARTUP_PREFFIX = "q.engine.pipeline.bl.agent.startup."
     const val QUEUE_BUILD_LESS_AGENT_SHUTDOWN_PREFFIX = "q.engine.pipeline.bl.agent.shutdown."
 
+    // 构建job统计数据上报事件广播
+    const val EXCHANGE_DISPATCH_JOB_METRICS_FANOUT = "e.metrics.dispatch.job.daily.exchange.fanout"
+    const val QUEUE_DISPATCH_JOB_METRICS = "q.metrics.dispatch.job.daily.queue"
+
     const val DEFAULT_BUILD_LESS_DOCKET_HOST_ROUTE_SUFFIX = "sys_default"
     // ================================================================================================
 

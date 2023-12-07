@@ -32,14 +32,16 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.api.OpJobQuotaSystemResource
 import com.tencent.devops.dispatch.pojo.JobQuotaSystem
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
-import com.tencent.devops.dispatch.service.JobQuotaBusinessService
-import com.tencent.devops.dispatch.service.JobQuotaManagerService
+import com.tencent.devops.dispatch.service.jobquota.JobQuotaBusinessService
+import com.tencent.devops.dispatch.service.jobquota.JobQuotaManagerService
+import com.tencent.devops.dispatch.utils.redis.JobQuotaRedisUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpJobQuotaSystemResourceImpl @Autowired constructor(
     private val jobQuotaManagerService: JobQuotaManagerService,
-    private val jobQuotaBusinessService: JobQuotaBusinessService
+    private val jobQuotaBusinessService: JobQuotaBusinessService,
+    private val jobQuotaRedisUtils: JobQuotaRedisUtils
 ) : OpJobQuotaSystemResource {
     override fun statistics(limit: Int?, offset: Int?): Result<Map<String, Any>> {
         return Result(jobQuotaBusinessService.statistics(limit, offset))
@@ -70,7 +72,7 @@ class OpJobQuotaSystemResourceImpl @Autowired constructor(
     }
 
     override fun restore(vmType: JobQuotaVmType): Result<Boolean> {
-        jobQuotaBusinessService.restoreProjectJobTime(null, vmType)
+        jobQuotaRedisUtils.restoreProjectJobTime(null, vmType)
         return Result(true)
     }
 }
