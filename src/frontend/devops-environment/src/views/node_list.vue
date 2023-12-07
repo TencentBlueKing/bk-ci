@@ -1,7 +1,13 @@
 <template>
     <div class="node-list-wrapper">
         <content-header class="env-header">
-            <div slot="left">{{ $t('environment.node') }}</div>
+            <div slot="left">
+                <span>{{ $t('environment.node') }}</span>
+                <span v-if="isEnableDashboard" class="dashboard-entry ml5">
+                    <i class="devops-icon icon-tiaozhuan jump-icon"></i>
+                    <a :href="jumpDashboardUrl">{{ $t('environment.查看构建机监控') }}</a>
+                </span>
+            </div>
             <div slot="right" v-if="nodeList.length > 0">
                 <template v-if="isExtendTx">
                     <bk-button
@@ -372,7 +378,9 @@
                             text: this.$t('environment.applyPermission')
                         }
                     ]
-                }
+                },
+                isEnableDashboard: false,
+                bizId: 0
             }
         },
         computed: {
@@ -381,6 +389,9 @@
             },
             userInfo () {
                 return window.userInfo
+            },
+            jumpDashboardUrl () {
+                return `https://bkm.woa.com/?bizId=${this.bizId}#/grafana/d/bT8qy3NVa`
             }
         },
         watch: {
@@ -412,6 +423,7 @@
         },
         async mounted () {
             await this.init()
+            await this.getEnableDashboard()
         },
         methods: {
             async init () {
@@ -462,6 +474,19 @@
                     this.showContent = true
                 }
             },
+            async getEnableDashboard () {
+                try {
+                    const res = await this.$store.dispatch('environment/checkEnableDashboard', {
+                        projectId: this.projectId
+                    })
+                    if (res) {
+                        this.isEnableDashboard = res.result
+                        this.bizId = res.bizId
+                    }
+                } catch (e) {
+                    console.err(e)
+                }
+            },
             changeProject () {
                 this.$toggleProjectMenu(true)
             },
@@ -478,7 +503,8 @@
                     this.$router.push({
                         name: 'nodeDetail',
                         params: {
-                            nodeHashId: node.nodeHashId
+                            nodeHashId: node.nodeHashId,
+                            enableDashboard: this.enableDashboard
                         }
                     })
                 }
@@ -965,6 +991,19 @@
             .devops-icon {
                 margin-right: 6px;
             }
+        }
+        .dashboard-entry {
+            color: #3c96ff;
+            cursor: pointer;
+            a {
+                font-size: 14px;
+                color: #3c96ff;
+            }
+        }
+        .jump-icon {
+            font-size: 18px;
+            position: relative;
+            top: 2px;
         }
 
         .edit-operator {
