@@ -29,7 +29,7 @@ package com.tencent.devops.environment.pojo.job.agentreq
 
 import io.swagger.annotations.ApiModelProperty
 
-data class RetryAgentInstallTaskReq (
+data class RetryAgentInstallTaskReq(
     @ApiModelProperty(value = "")
     val instanceIdList: List<String>
 )

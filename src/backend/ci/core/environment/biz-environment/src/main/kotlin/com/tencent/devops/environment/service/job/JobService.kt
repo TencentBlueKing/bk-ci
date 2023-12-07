@@ -737,7 +737,7 @@ class JobService @Autowired constructor(
                         exception = it.exception,
                         msg = it.msg
                     )
-                },
+                }
             )
         )
         return installAgentRes
