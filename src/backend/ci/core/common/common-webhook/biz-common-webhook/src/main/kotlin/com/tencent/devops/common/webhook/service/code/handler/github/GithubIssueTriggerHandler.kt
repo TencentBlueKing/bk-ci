@@ -35,6 +35,7 @@ import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ACTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_DESCRIPTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_IID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_MILESTONE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_OWNER
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_STATE
@@ -151,6 +152,7 @@ class GithubIssueTriggerHandler : CodeWebhookTriggerHandler<GithubIssuesEvent> {
         with(event.issue) {
             startParams[BK_REPO_GIT_WEBHOOK_ISSUE_TITLE] = title
             startParams[BK_REPO_GIT_WEBHOOK_ISSUE_ID] = id
+            startParams[BK_REPO_GIT_WEBHOOK_ISSUE_IID] = number
             startParams[BK_REPO_GIT_WEBHOOK_ISSUE_DESCRIPTION] = body ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_ISSUE_STATE] = state
             startParams[BK_REPO_GIT_WEBHOOK_ISSUE_OWNER] = user.login
