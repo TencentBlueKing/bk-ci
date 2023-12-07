@@ -14,6 +14,10 @@ spec:
           containers:
           - name: auto-restart-gateway
             image: bitnami/kubectl
+            resources:
+              limits:
+                cpu: 100m
+                memory: 100Mi
             command:
               - /bin/sh
               - -c

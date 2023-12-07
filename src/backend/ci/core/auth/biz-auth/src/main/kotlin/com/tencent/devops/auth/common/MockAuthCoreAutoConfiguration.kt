@@ -44,6 +44,8 @@ import com.tencent.devops.auth.service.sample.SamplePermissionRoleMemberService
 import com.tencent.devops.auth.service.sample.SamplePermissionRoleService
 import com.tencent.devops.auth.service.sample.SamplePermissionSuperManagerService
 import com.tencent.devops.auth.service.sample.SamplePermissionUrlServiceImpl
+import com.tencent.devops.auth.service.security.DefaultSecurityServiceImpl
+import com.tencent.devops.auth.service.security.SecurityService
 import com.tencent.devops.common.client.Client
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
@@ -141,4 +143,14 @@ class MockAuthCoreAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(AuthMonitorSpaceService::class)
     fun sampleAuthMonitorSpaceService() = SampleAuthMonitorSpaceService()
+
+    @Bean
+    @ConditionalOnMissingBean(SecurityService::class)
+    fun defaultSecurityServiceImpl(
+        deptService: DeptService,
+        permissionProjectService: PermissionProjectService
+    ) = DefaultSecurityServiceImpl(
+        deptService = deptService,
+        permissionProjectService = permissionProjectService
+    )
 }

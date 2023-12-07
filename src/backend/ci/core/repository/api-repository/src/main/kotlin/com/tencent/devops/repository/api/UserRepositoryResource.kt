@@ -290,6 +290,12 @@ interface UserRepositoryResource {
         @ApiParam("代码库哈希ID", required = true)
         @PathParam("repositoryHashId")
         repositoryHashId: String,
+        @ApiParam("事件类型", required = false)
+        @QueryParam("eventType")
+        eventType: String?,
+        @ApiParam("触发条件MD5", required = false)
+        @QueryParam("triggerConditionMd5")
+        triggerConditionMd5: String?,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
