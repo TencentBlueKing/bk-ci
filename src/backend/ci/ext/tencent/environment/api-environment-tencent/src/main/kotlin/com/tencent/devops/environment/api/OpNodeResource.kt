@@ -78,4 +78,16 @@ interface OpNodeResource {
         @PathParam("nodeHashId")
         nodeHashId: String
     ): Result<Boolean>
+
+    @ApiOperation("开启或关闭监控仪表盘")
+    @PUT
+    @Path("/updateMonitorDashboard")
+    fun updateMonitorDashboard(
+        @ApiParam("项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("updateDashboard", required = true)
+        @QueryParam("updateDashboard")
+        updateDashboard: Boolean
+    ): Result<Boolean>
 }

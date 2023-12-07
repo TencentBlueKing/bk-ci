@@ -11,9 +11,9 @@ import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.api.op.OpProjectWorkspaceResource
+import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
@@ -56,6 +56,8 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         userId: String,
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean> {
+        // 分配之前先同步下最新的数据
+        workspaceCommon.syncStartCloudResourceList()
         val cgsData = workspaceCommon.getCgsData(data.cgsIds, data.ips) ?: return Result(false)
         // 增加可以分配的配额
         if (!data.ips.isNullOrEmpty() || !data.cgsIds.isNullOrEmpty()) {
@@ -66,8 +68,9 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
             )
         }
         cgsData.forEach { cgs ->
+            if (cgs.status != Constansts.CGS_AVAIABLE_STATUS) return@forEach
             // 先校验该cgsId是否已被申领分配并运行中
-            if (!workspaceCommon.checkCgsRunning(cgs.cgsId, EnvStatusEnum.running)) return Result(false)
+            if (workspaceCommon.checkCgsRunning(cgs.cgsId)) return@forEach
             // 审计
             ActionAuditContext.current()
                 .addInstanceInfo(

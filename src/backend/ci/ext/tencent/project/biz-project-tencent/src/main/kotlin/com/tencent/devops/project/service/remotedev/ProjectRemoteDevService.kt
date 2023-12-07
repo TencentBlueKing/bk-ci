@@ -6,9 +6,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.devops.auth.api.service.ServiceMonitorSpaceResource
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.ProjectProperties
 import okhttp3.Headers.Companion.toHeaders
@@ -28,6 +31,7 @@ import org.springframework.stereotype.Service
 class ProjectRemoteDevService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val client: Client,
+    private val bkRepoClient: BkRepoClient,
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao
 ) {
@@ -46,6 +50,9 @@ class ProjectRemoteDevService @Autowired constructor(
 
     @Value("\${remoteDev.bkrepoDevxHeaderUserAuth:}")
     val bkrepoDevxHeaderUserAuth = ""
+
+    @Value("\${remoteDev.bkrepoLsyncProxyUrl:}")
+    val bkrepoLsyncProxyUrl = ""
 
     // 开启 remotedev 相关逻辑
     fun enableRemoteDev(
@@ -130,14 +137,26 @@ class ProjectRemoteDevService @Autowired constructor(
     private fun createLsyncGeneric(
         projectId: String
     ) {
+        // 创建 devx 的 lsync
         val requestData = CreateRepoData(
             projectId = projectId,
             name = "lsync",
             type = "GENERIC",
-            category = "LOCAL",
+            category = "COMPOSITE",
             public = false,
             description = "repo",
-            configuration = null,
+            configuration = CreateRepoConfigData(
+                type = "composite",
+                proxy = CreateRepoConfigProxy(
+                    channelList = listOf(
+                        CreateRepoConfigProxyData(
+                            public = false,
+                            name = "lsync",
+                            url = "$bkrepoLsyncProxyUrl/$projectId/lsync"
+                        )
+                    )
+                )
+            ),
             storageCredentialsKey = null
         )
         val url = "$bkrepoDevxUrl/repository/api/repo/create"
@@ -158,6 +177,34 @@ class ProjectRemoteDevService @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.error("createLsyncGeneric request api[${request.url.toUrl()}] error: ${e.localizedMessage}")
+        }
+
+        // 创建 idc 的 lsync
+        val url2 = "${bkRepoClient.getRkRepoIdcHost()}/api/repository/api/repo/create"
+        val requestBody2 = objectMapper.writeValueAsString(
+            mapOf(
+                "projectId" to projectId,
+                "name" to "lsync",
+                "type" to "GENERIC",
+                "category" to "COMPOSITE",
+                "display" to false
+            )
+        ).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+        val request2 = Request.Builder()
+            .url(url2)
+            .headers(getBkrepoIdcCommonHeaders(BKREPO_ROOT_USERID, projectId).toHeaders())
+            .post(requestBody2)
+            .build()
+        try {
+            OkhttpUtils.doHttp(request2).use {
+                val responseStr = it.body!!.string()
+                if (!it.isSuccessful) {
+                    logger.warn("createLsyncGeneric idc request failed, uri:($url2)|response: ($responseStr)")
+                    return
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("createLsyncGeneric idc request api[${request.url.toUrl()}] error: ${e.localizedMessage}")
         }
     }
 
@@ -219,6 +266,16 @@ class ProjectRemoteDevService @Autowired constructor(
         return headers
     }
 
+    private fun getBkrepoIdcCommonHeaders(userId: String, projectId: String): MutableMap<String, String> {
+        val headers = mutableMapOf<String, String>()
+        headers["X-BKREPO-UID"] = userId
+        headers["X-BKREPO-PROJECT-ID"] = projectId
+        headers[AUTH_HEADER_DEVOPS_PROJECT_ID] = projectId
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
+        devopsToken?.let { headers["X-DEVOPS-TOKEN"] = it }
+        return headers
+    }
+
     fun updateRemoteDevInfo(projectCode: String, addcloudDesktopNum: Int): Boolean {
         val record = projectDao.getByEnglishName(dslContext, projectCode) ?: return false
         if (record.properties == null) {
@@ -256,8 +313,23 @@ data class CreateRepoData(
     val category: String,
     val public: Boolean,
     val description: String?,
-    val configuration: Any?,
+    val configuration: CreateRepoConfigData,
     val storageCredentialsKey: Any?
+)
+
+data class CreateRepoConfigData(
+    val type: String,
+    val proxy: CreateRepoConfigProxy
+)
+
+data class CreateRepoConfigProxy(
+    val channelList: List<CreateRepoConfigProxyData>
+)
+
+data class CreateRepoConfigProxyData(
+    val public: Boolean,
+    val name: String,
+    val url: String
 )
 
 data class CreateProjectData(
