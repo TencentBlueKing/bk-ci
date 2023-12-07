@@ -133,11 +133,13 @@ class SimpleProjectServiceImpl @Autowired constructor(
     override fun getProjectFromAuth(
         userId: String,
         accessToken: String?,
-        permission: AuthPermission
+        permission: AuthPermission,
+        resourceType: String?
     ): List<String>? {
         return projectPermissionService.filterProjects(
             userId = userId,
-            permission = permission
+            permission = permission,
+            resourceType = resourceType
         )
     }
 

@@ -2063,20 +2063,20 @@ class TemplateFacadeService @Autowired constructor(
     fun hasManagerPermission(projectId: String, userId: String): Boolean =
         pipelinePermissionService.checkProjectManager(userId = userId, projectId = projectId)
 
-    fun hasViewPermission(
+    fun hasPipelineTemplatePermission(
         userId: String,
         projectId: String,
-        templateId: String
+        templateId: String?,
+        permission: AuthPermission
     ): Boolean {
-        // 用户界面，对于未开启模板权限的项目，不校验查看权限。
         if (!enableTemplatePermissionManage(projectId)) {
             return true
         }
         return pipelineTemplatePermissionService.checkPipelineTemplatePermission(
             userId = userId,
             projectId = projectId,
-            permission = AuthPermission.VIEW,
-            templateId = templateId
+            templateId = templateId,
+            permission = permission
         )
     }
 

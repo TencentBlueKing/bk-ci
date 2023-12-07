@@ -68,7 +68,12 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
         return Result(permissionProjectService.getUserProjects(userId))
     }
 
-    override fun getUserProjectsByPermission(token: String, userId: String, action: String): Result<List<String>> {
+    override fun getUserProjectsByPermission(
+        token: String,
+        userId: String,
+        action: String,
+        resourceType: String?
+    ): Result<List<String>> {
         return Result(
             permissionProjectService.getUserProjectsByPermission(
                 userId = userId,

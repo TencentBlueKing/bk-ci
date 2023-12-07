@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.FileUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -606,16 +607,27 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     accessToken = accessToken,
                     permission = AuthPermission.MANAGE
                 )
+                val projectsWithPipelineTemplateCreatePerm = getProjectFromAuth(
+                    userId = userId,
+                    accessToken = accessToken,
+                    permission = AuthPermission.CREATE,
+                    resourceType = AuthResourceType.PIPELINE_TEMPLATE.value
+                )
                 projectDao.listByEnglishName(
                     dslContext = dslContext,
                     englishNameList = projectsWithVisitPermission.toList(),
                     enabled = enabled
                 ).forEach {
+                    val pipelineTemplateInstallPerm = pipelineTemplateInstallPerm(
+                        projectsWithPipelineTemplateCreatePerm = projectsWithPipelineTemplateCreatePerm,
+                        tProjectRecord = it
+                    )
                     projectsResp.add(
                         ProjectUtils.packagingBean(
                             tProjectRecord = it,
                             managePermission = projectsWithManagePermission?.contains(it.englishName),
-                            showUserManageIcon = isShowUserManageIcon(it.routerTag)
+                            showUserManageIcon = isShowUserManageIcon(it.routerTag),
+                            pipelineTemplateInstallPerm = pipelineTemplateInstallPerm
                         )
                     )
                 }
@@ -640,6 +652,22 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         } finally {
             projectJmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
+        }
+    }
+
+    private fun pipelineTemplateInstallPerm(
+        projectsWithPipelineTemplateCreatePerm: List<String>?,
+        tProjectRecord: TProjectRecord
+    ): Boolean {
+        val properties = tProjectRecord.properties?.let { self ->
+            JsonUtil.to(self, ProjectProperties::class.java)
+        }
+        return if (properties != null && properties.enableTemplatePermissionManage == true) {
+            // 开启了模板权限，在给项目安装研发商店模板时，需要校验是否有当前项目的模板创建权限。
+            projectsWithPipelineTemplateCreatePerm?.contains(tProjectRecord.englishName) ?: false
+        } else {
+            // 未开启模板权限的默认有安装模板权限
+            true
         }
     }
 
@@ -1183,7 +1211,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     abstract fun getProjectFromAuth(userId: String?, accessToken: String?): List<String>
 
-    abstract fun getProjectFromAuth(userId: String, accessToken: String?, permission: AuthPermission): List<String>?
+    abstract fun getProjectFromAuth(
+        userId: String,
+        accessToken: String?,
+        permission: AuthPermission,
+        resourceType: String? = null
+    ): List<String>?
 
     abstract fun isShowUserManageIcon(routerTag: String?): Boolean
 
