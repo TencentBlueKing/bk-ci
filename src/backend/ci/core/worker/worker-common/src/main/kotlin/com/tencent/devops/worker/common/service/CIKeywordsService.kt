@@ -10,7 +10,7 @@ import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
 object CIKeywordsService {
     private val buildApi = ApiFactory.create(EngineBuildSDKApi::class)
 
-    private var ciToken: String? = null
+    var ciToken: String? = null
 
     fun getCiToken(): String? {
         if (!ciToken.isNullOrBlank()) {
