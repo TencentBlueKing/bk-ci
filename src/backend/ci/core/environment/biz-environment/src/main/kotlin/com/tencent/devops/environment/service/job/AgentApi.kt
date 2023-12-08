@@ -129,6 +129,8 @@ class AgentApi {
             val responseBody = response.body?.string()
             if (logger.isDebugEnabled) {
                 val responseLog = logWithLengthLimit(responseBody.toString())
+                logger.debug("[$operationName] response: $response")
+                logger.debug("[$operationName] responseBody: $responseBody")
                 logger.debug("[$operationName] response body(origin): $responseLog")
             }
 
