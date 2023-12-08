@@ -732,7 +732,7 @@ class PipelineRuntimeService @Autowired constructor(
                         stageId = stage.id!!,
                         container = container,
                         context = context,
-                        buildStatus = BuildStatus.RUNNING,
+                        buildStatus = null,
                         taskBuildRecords = taskBuildRecords
                     )
                     return@nextContainer
@@ -1149,7 +1149,7 @@ class PipelineRuntimeService @Autowired constructor(
                     stageId = build.stageId, containerId = build.containerId,
                     containerType = build.containerType, executeCount = build.executeCount,
                     matrixGroupFlag = build.matrixGroupFlag, matrixGroupId = build.matrixGroupId,
-                    status = build.status.name, startTime = build.startTime,
+                    status = null, startTime = build.startTime,
                     endTime = build.endTime, timestamps = mapOf(), containerVar = containerVar
                 )
             )
