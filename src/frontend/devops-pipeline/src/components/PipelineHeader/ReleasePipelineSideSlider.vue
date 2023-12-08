@@ -131,7 +131,7 @@
                             {{ $t('commitMsgDesc') }}
                         </span>
                     </bk-form-item>
-                    <bk-form-item required :label="$t('targetBranch')" property="targetAction">
+                    <bk-form-item v-if="releaseParams.enablePac" required :label="$t('targetBranch')" property="targetAction">
                         <bk-radio-group v-model="releaseParams.targetAction">
                             <bk-radio
                                 v-for="option in targetActionOptions"
