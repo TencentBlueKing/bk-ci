@@ -719,7 +719,7 @@ class PipelineRuntimeService @Autowired constructor(
                         stageEnableFlag = stage.isStageEnable(),
                         container = container,
                         context = context,
-                        buildStatus = BuildStatus.RUNNING,
+                        buildStatus = null,
                         taskBuildRecords = taskBuildRecords
                     )
                     // 清理options变量
