@@ -138,6 +138,8 @@ object ActionAuditContent {
     const val REPERTORY_CREATE_CONTENT = "create repertory $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val REPERTORY_VIEW_CONTENT = "get repertory info $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val REPERTORY_EDIT_CONTENT = "modify repertory $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val REPERTORY_EDIT_RENAME_CONTENT = "rename repertory $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val REPERTORY_EDIT_LOCK_CONTENT = "lock/unlock repertory $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val REPERTORY_DELETE_CONTENT = "delete repertory $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val REPERTORY_USE_CONTENT = "use repertory $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
 
