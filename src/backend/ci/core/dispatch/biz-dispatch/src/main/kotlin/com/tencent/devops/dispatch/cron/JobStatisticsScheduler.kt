@@ -36,6 +36,7 @@ import com.tencent.devops.dispatch.dao.RunningJobsDao
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.dispatch.utils.redis.JobQuotaRedisUtils
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -73,7 +74,7 @@ class JobStatisticsScheduler @Autowired constructor(
                     jobMetricsDataList.add(DispatchJobMetricsData(
                         theDate = theDate,
                         projectId = projectId,
-                        productId = "",
+                        productId = client.get(ServiceProjectResource::class).get(projectId).data?.productId.toString(),
                         jobType = jobType,
                         maxJobConcurrency = keyValue.value.toInt(),
                         sumJobCost = jobQuotaRedisUtils.getLastDayProjectRunJobTypeTime(
@@ -89,13 +90,15 @@ class JobStatisticsScheduler @Autowired constructor(
                     }
                 }
 
-                // 最后再把剩余数据push
+                // 最后再把100余数的剩余数据push
                 pushJobStatistics(jobMetricsDataList)
             }
         } catch (e: Throwable) {
             logger.error("Save jobStatistics failed.", e)
         } finally {
             redisLock.unlock()
+            jobQuotaRedisUtils.deleteLastDayJobKey()
+            jobQuotaRedisUtils.setDayJobKeyExpire()
         }
     }
 
@@ -174,6 +177,7 @@ class JobStatisticsScheduler @Autowired constructor(
 
         private const val TIMEOUT_DAYS = 7L
         private const val CHECK_RUNNING_DAYS = 1L
+        private const val CURSOR = 1L
         private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     }
 }
