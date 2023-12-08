@@ -322,7 +322,7 @@
                 return this.stage && this.stage.status ? this.stage.status : ''
             },
             disableFinally () {
-                return this.hasFinallyStage || this.stageLength === 1
+                return this.hasFinallyStage
             },
             isStageSkip () {
                 return this.stage.status === STATUS_MAP.SKIP

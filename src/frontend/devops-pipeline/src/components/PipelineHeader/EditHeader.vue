@@ -48,13 +48,13 @@
 </template>
 
 <script>
-    import { mapState, mapGetters, mapActions } from 'vuex'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
     // import MoreActions from './MoreActions.vue'
-    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
-    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
-    import ReleasePipelineSideSlider from './ReleasePipelineSideSlider'
     import ModeSwitch from '@/components/ModeSwitch'
+    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
+    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
+    import ReleasePipelineSideSlider from './ReleasePipelineSideSlider'
     export default {
         components: {
             PipelineBreadCrumb,
@@ -228,7 +228,7 @@
                 )
             },
             showReleaseSlider () {
-                if (this.canRelease) {
+                if (this.canRelease && !this.isEditing) {
                     this.isReleaseSliderShow = true
                 }
             },
