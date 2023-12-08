@@ -74,6 +74,7 @@ import com.tencent.devops.process.pojo.pipeline.BatchDeletePipeline
 import com.tencent.devops.process.pojo.pipeline.PipelineCount
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.engine.service.PipelineRepositoryService.Companion.checkParam
 import com.tencent.devops.process.service.PipelineInfoFacadeService
@@ -341,8 +342,26 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun lockPipeline(userId: String, projectId: String, pipelineId: String, enable: Boolean): Result<Boolean> {
-        TODO("Not yet implemented")
+    override fun lockPipeline(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        enable: Boolean
+    ): Result<Boolean> {
+        checkParam(userId, projectId)
+        val origin = pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId)
+        // 暂时无法回溯关闭前的配置，先采用支持并发的配置
+        val setting = if (enable) {
+            origin.copy(runLockType = PipelineRunLockType.MULTIPLE)
+        } else {
+            origin.copy(runLockType = PipelineRunLockType.LOCK)
+        }
+        return saveSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            setting = setting
+        )
     }
 
     @AuditEntry(actionId = ActionId.PIPELINE_EDIT)
