@@ -29,7 +29,6 @@ package com.tencent.devops.environment.pojo.job.agentreq
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
-import org.jvnet.hk2.annotations.Optional
 
 @ApiModel("安装agent的请求信息中的 host信息")
 data class HostForInstallAgent(
