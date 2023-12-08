@@ -63,6 +63,7 @@ class BuildRecordStageDao {
                 STAGE_VAR,
                 STATUS,
                 TIMESTAMPS,
+                START_TIME,
                 END_TIME
             ).also { insertSetStep ->
                 records.forEach { record ->
@@ -77,11 +78,13 @@ class BuildRecordStageDao {
                         JsonUtil.toJson(record.stageVar, false),
                         record.status,
                         JsonUtil.toJson(record.timestamps, false),
+                        record.startTime,
                         record.endTime
                     )
                 }
             }.onDuplicateKeyUpdate()
                 .set(STATUS, MySQLDSL.values(STATUS))
+                .set(START_TIME, MySQLDSL.values(START_TIME))
                 .set(END_TIME, MySQLDSL.values(END_TIME))
                 .set(TIMESTAMPS, MySQLDSL.values(TIMESTAMPS))
                 .set(STAGE_VAR, MySQLDSL.values(STAGE_VAR))
