@@ -195,7 +195,7 @@ function jsonpLocale (language) {
             }
 
             const script = document.createElement('script')
-            script.src = `${window.BK_PAAS_PRIVATE_URL}/?language=${language}&callback=${callbackName}`
+            script.src = `${window.BK_PAAS_PRIVATE_URL}/api/c/compapi/v2/usermanage/fe_update_user_language?language=${language}&callback=${callbackName}`
             document.body.appendChild(script)
         } catch (e) {
             console.error('jsonp locale error', e)
