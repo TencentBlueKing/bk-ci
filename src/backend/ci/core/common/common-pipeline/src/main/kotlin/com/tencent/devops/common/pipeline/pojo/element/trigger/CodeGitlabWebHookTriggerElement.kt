@@ -144,7 +144,8 @@ data class CodeGitlabWebHookTriggerElement(
                     vuexInput(name = "includePaths", value = includePaths),
                     vuexInput(name = "excludePaths", value = excludePaths),
                     staffInput(name = "includeUsers", value = includeUsers),
-                    staffInput(name = "excludeUsers", value = excludeUsers)
+                    staffInput(name = "excludeUsers", value = excludeUsers),
+                    vuexInput(name = "action", value = "merge")
                 )
             }
 
