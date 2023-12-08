@@ -29,13 +29,16 @@ package com.tencent.devops.environment.pojo.job.agentreq
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import org.jvnet.hk2.annotations.Optional
 
 @ApiModel("安装agent的请求信息")
 data class InstallAgentReq(
     @ApiModelProperty(value = "主机列表", required = true)
     val hosts: List<HostForInstallAgent>,
     @ApiModelProperty(value = "被替换的Proxy主机ID")
+    @Optional
     val replaceHostId: Int?,
     @ApiModelProperty(value = "是否安装最新版本插件，默认安装最新插件")
+    @Optional
     val isInstallLatestPlugins: Boolean?
 )
