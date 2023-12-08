@@ -27,6 +27,10 @@
 
 package com.tencent.devops.repository.service
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
@@ -45,7 +49,10 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.constant.RepositoryMessageCode
@@ -455,7 +462,7 @@ class RepositoryService @Autowired constructor(
         // 兼容历史插件的代码库不在公共group下的情况，历史插件的代码库信息更新要用用户的token更新
         var finalTokenType = tokenType
         if (!repoProjectName.startsWith(devopsGroupName) && !repoProjectName
-                        .contains("bkdevops-extension-service", true)
+                .contains("bkdevops-extension-service", true)
         ) {
             finalTokenType = TokenTypeEnum.OAUTH
         }
@@ -544,11 +551,32 @@ class RepositoryService @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.REPERTORY_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.REPERTORY
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.REPERTORY_VIEW_CONTENT
+    )
     private fun compose(repository: TRepositoryRecord): Repository {
+        ActionAuditContext.current()
+            .setInstanceId(repository.repositoryId.toString())
+            .setInstanceName(repository.aliasName)
         val codeRepositoryService = CodeRepositoryServiceRegistrar.getServiceByScmType(repository.type)
         return codeRepositoryService.compose(repository = repository)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.REPERTORY_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.REPERTORY
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.REPERTORY_EDIT_CONTENT
+    )
     fun userEdit(userId: String, projectId: String, repositoryHashId: String, repository: Repository) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -601,6 +629,11 @@ class RepositoryService @Autowired constructor(
                 )
             )
         }
+        ActionAuditContext.current()
+            .setInstanceId(repositoryId.toString())
+            .setInstanceName(repository.aliasName)
+            .setOriginInstance(record)
+            .setInstance(repository)
         val codeRepositoryService = CodeRepositoryServiceRegistrar.getService(repository)
         codeRepositoryService.edit(
             userId = userId,
@@ -839,6 +872,15 @@ class RepositoryService @Autowired constructor(
         return SQLPage(count, repositoryList)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.REPERTORY_DELETE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.REPERTORY
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.REPERTORY_DELETE_CONTENT
+    )
     fun userDelete(userId: String, projectId: String, repositoryHashId: String) {
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         validatePermission(
@@ -857,7 +899,9 @@ class RepositoryService @Autowired constructor(
         if (record.projectId != projectId) {
             throw NotFoundException("Repository is not part of the project")
         }
-
+        ActionAuditContext.current()
+            .setInstanceId(repositoryId.toString())
+            .setInstanceName(record.aliasName)
         deleteResource(projectId, repositoryId)
         val deleteTime = DateTimeUtil.toDateTime(LocalDateTime.now(), "yyMMddHHmmSS")
         val deleteAliasName = "${record.aliasName}[$deleteTime]"
@@ -891,6 +935,15 @@ class RepositoryService @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.REPERTORY_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.REPERTORY
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.REPERTORY_EDIT_LOCK_CONTENT
+    )
     fun userLock(userId: String, projectId: String, repositoryHashId: String) {
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         validatePermission(
@@ -917,7 +970,9 @@ class RepositoryService @Autowired constructor(
                 )
             )
         }
-
+        ActionAuditContext.current()
+            .setInstanceId(record.repositoryId.toString())
+            .setInstanceName(record.aliasName)
         scmService.lock(
             projectName = record.projectId,
             url = record.url,
@@ -927,6 +982,15 @@ class RepositoryService @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.REPERTORY_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.REPERTORY
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.REPERTORY_EDIT_LOCK_CONTENT
+    )
     fun userUnLock(userId: String, projectId: String, repositoryHashId: String) {
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         validatePermission(
@@ -953,6 +1017,9 @@ class RepositoryService @Autowired constructor(
                 )
             )
         }
+        ActionAuditContext.current()
+            .setInstanceId(record.repositoryId.toString())
+            .setInstanceName(record.aliasName)
         scmService.unlock(
             projectName = record.projectId,
             url = record.url,
@@ -1104,6 +1171,15 @@ class RepositoryService @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.REPERTORY_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.REPERTORY
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.REPERTORY_EDIT_RENAME_CONTENT
+    )
     fun rename(userId: String, projectId: String, repositoryHashId: String, repoRename: RepoRename) {
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         // 权限校验
@@ -1124,6 +1200,15 @@ class RepositoryService @Autowired constructor(
                 params = arrayOf(repoRename.name)
             )
         }
+        val record = repositoryDao.get(dslContext, repositoryId, projectId)
+        if (record.projectId != projectId) {
+            throw NotFoundException("Repository is not part of the project")
+        }
+        ActionAuditContext.current()
+            .setInstanceId(repositoryId.toString())
+            .setInstanceName(repoRename.name)
+            .setOriginInstance(record.aliasName)
+            .setInstance(repoRename.name)
         repositoryDao.rename(
             dslContext = dslContext,
             projectId = projectId,

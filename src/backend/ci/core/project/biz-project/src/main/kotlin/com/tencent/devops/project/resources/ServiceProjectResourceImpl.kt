@@ -27,6 +27,9 @@
 
 package com.tencent.devops.project.resources
 
+import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ActionId.PROJECT_CREATE
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
@@ -115,6 +118,7 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.getByEnglishName(englishName))
     }
 
+    @AuditEntry(actionId = PROJECT_CREATE)
     override fun create(
         userId: String,
         projectCreateInfo: ProjectCreateInfo,
@@ -132,6 +136,7 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = PROJECT_CREATE)
     override fun createExtSystem(
         userId: String,
         projectInfo: ProjectCreateInfo,
@@ -151,6 +156,7 @@ class ServiceProjectResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PROJECT_EDIT)
     override fun update(
         userId: String,
         projectId: String,
