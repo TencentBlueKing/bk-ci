@@ -148,6 +148,7 @@ data class CodeGitWebHookTriggerElement(
 
             CodeEventType.MERGE_REQUEST_ACCEPT -> {
                 listOf(
+                    vuexInput(name = "action", value = "merge"),
                     vuexInput(name = "branchName", value = branchName),
                     vuexInput(name = "excludeBranchName", value = excludeBranchName),
                     vuexInput(name = "includeSourceBranchName", value = includeSourceBranchName),
@@ -155,8 +156,7 @@ data class CodeGitWebHookTriggerElement(
                     vuexInput(name = "includePaths", value = includePaths),
                     vuexInput(name = "excludePaths", value = excludePaths),
                     staffInput(name = "includeUsers", value = includeUsers),
-                    staffInput(name = "excludeUsers", value = excludeUsers),
-                    vuexInput(name = "action", value = "merge")
+                    staffInput(name = "excludeUsers", value = excludeUsers)
                 )
             }
 
