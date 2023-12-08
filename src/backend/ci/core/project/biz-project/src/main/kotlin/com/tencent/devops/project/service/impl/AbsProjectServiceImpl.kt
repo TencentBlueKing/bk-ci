@@ -452,11 +452,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     subjectScopes = subjectScopes,
                     approvalStatus = newApprovalStatus
                 )
-                // 修改到项目可授权范围，项目名称，项目性质需要同步修改权限中心资源
                 if (needModifyAuthResource(
                         originalProjectName = projectInfo.projectName,
                         modifiedProjectName = projectUpdateInfo.projectName,
-                        finalNeedApproval = finalNeedApproval
+                        finalNeedApproval = finalNeedApproval,
+                        beforeSubjectScopesStr = projectInfo.subjectScopes,
+                        afterSubjectScopesStr = subjectScopesStr
                     )) {
                     modifyProjectAuthResource(resourceUpdateInfo)
                 }
@@ -522,12 +523,21 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return success
     }
 
+    /**
+     * 修改蓝盾项目需要修改权限中心的场景。
+     * 1.若需要审批则必然需要修改到权限中心资源
+     * 2.修改到名称需要同步修改权限中心资源
+     * 3.通过service接口时，不需要审批，但是修改到可授权范围也需要修改权限中心资源
+     * */
     private fun needModifyAuthResource(
         originalProjectName: String,
         modifiedProjectName: String,
-        finalNeedApproval: Boolean
+        finalNeedApproval: Boolean,
+        beforeSubjectScopesStr: String,
+        afterSubjectScopesStr: String
     ): Boolean {
-        return originalProjectName != modifiedProjectName || finalNeedApproval
+        return originalProjectName != modifiedProjectName || finalNeedApproval ||
+            beforeSubjectScopesStr != afterSubjectScopesStr
     }
 
     private fun getUpdateApprovalStatus(
