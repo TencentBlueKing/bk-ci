@@ -78,6 +78,7 @@ data class AgentHostForInstallAgent(
     val innerIpv6: String?,
     @ApiModelProperty(value = "外网IPv6")
     @JsonProperty("outer_ipv6")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     val outerIpv6: String?,
     @ApiModelProperty(value = "操作系统，1：LINUX 2：WINDOWS 3：AIX 4：SOLARIS")
     @JsonProperty("os_type")
