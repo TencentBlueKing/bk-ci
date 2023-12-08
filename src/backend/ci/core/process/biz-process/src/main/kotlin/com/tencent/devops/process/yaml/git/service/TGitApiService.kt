@@ -337,7 +337,9 @@ class TGitApiService @Autowired constructor(
                 blobId = it.blobId
             )
         }
-        if (targetAction == CodeTargetAction.PUSH_BRANCH_AND_REQUEST_MERGE) {
+        if (targetAction == CodeTargetAction.PUSH_BRANCH_AND_REQUEST_MERGE ||
+            targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE
+        ) {
             client.get(ServiceGitResource::class).createMergeRequest(
                 token = token,
                 tokenType = cred.toTokenType(),

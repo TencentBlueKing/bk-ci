@@ -37,7 +37,7 @@ import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.actions.data.ActionData
 import com.tencent.devops.process.yaml.actions.data.ActionMetaData
 import com.tencent.devops.process.yaml.actions.data.EventCommonData
-import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlEnableActionEvent
+import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlPushActionEvent
 import com.tencent.devops.process.yaml.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.yaml.git.pojo.PacGitCred
 import com.tencent.devops.process.yaml.git.pojo.tgit.TGitCred
@@ -57,7 +57,7 @@ class PipelineYamlPushAction : BaseAction {
     override val metaData: ActionMetaData = ActionMetaData(StreamObjectKind.UPLOAD)
 
     override lateinit var data: ActionData
-    fun event() = data.event as PipelineYamlEnableActionEvent
+    fun event() = data.event as PipelineYamlPushActionEvent
 
     override lateinit var api: PacGitApiService
 

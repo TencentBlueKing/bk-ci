@@ -35,6 +35,8 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
@@ -48,6 +50,7 @@ import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlEnabl
 import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlPushActionEvent
 import com.tencent.devops.process.yaml.mq.PipelineYamlEnableEvent
 import com.tencent.devops.process.yaml.mq.PipelineYamlTriggerEvent
+import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.repository.api.ServiceRepositoryPacResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.jooq.DSLContext
@@ -206,6 +209,15 @@ class PipelineYamlFacadeService @Autowired constructor(
                     delete = it.delete
                 )
             }
+            val eventStr = if (action.metaData.streamObjectKind == StreamObjectKind.REVIEW) {
+                objectMapper.writeValueAsString(
+                    (action.data.event as GitReviewEvent).copy(
+                        objectKind = GitReviewEvent.classType
+                    )
+                )
+            } else {
+                objectMapper.writeValueAsString(action.data.event as GitEvent)
+            }
             yamlPathList.forEach {
                 action.data.context.pipeline = path2PipelineExists[it.yamlPath]
                 action.data.context.yamlFile = it
@@ -215,7 +227,7 @@ class PipelineYamlFacadeService @Autowired constructor(
                         projectId = projectId,
                         yamlPath = it.yamlPath,
                         userId = action.data.getUserId(),
-                        eventStr = objectMapper.writeValueAsString(eventObject),
+                        eventStr = eventStr,
                         metaData = action.metaData,
                         actionCommonData = action.data.eventCommon,
                         actionContext = action.data.context,

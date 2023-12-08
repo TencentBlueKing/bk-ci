@@ -28,6 +28,7 @@
 
 package com.tencent.devops.process.yaml.exception.hanlder
 
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailBuilder
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
@@ -40,7 +41,8 @@ import org.springframework.stereotype.Service
  */
 @Service
 class YamlTriggerExceptionHandler(
-    private val pipelineTriggerEventService: PipelineTriggerEventService
+    private val pipelineTriggerEventService: PipelineTriggerEventService,
+    private val pipelineRepositoryService: PipelineRepositoryService
 ) {
 
     companion object {
@@ -73,13 +75,23 @@ class YamlTriggerExceptionHandler(
         val pipeline = action.data.context.pipeline
         val eventId = action.data.context.eventId
         val (reason, reasonDetail) = YamlTriggerExceptionUtil.getReason(exception = exception)
+        val (pipelineId, pipelineName) = if (pipeline != null && pipeline.pipelineId.isNotBlank()) {
+            val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
+                projectId = pipeline.projectId,
+                pipelineId = pipeline.pipelineId
+            )
+            Pair(pipeline.pipelineId, pipelineInfo?.pipelineName ?: yamlFile.yamlPath)
+        } else {
+            Pair(yamlFile.yamlPath, yamlFile.yamlPath)
+        }
         if (eventId != null) {
             val pipelineTriggerDetail = PipelineTriggerDetailBuilder()
                 .projectId(action.data.setting.projectId)
                 .detailId(pipelineTriggerEventService.getDetailId())
                 .eventId(action.data.context.eventId!!)
                 .status(PipelineTriggerStatus.FAILED.name)
-                .pipelineId(pipeline?.pipelineId ?: yamlFile.yamlPath)
+                .pipelineId(pipelineId)
+                .pipelineName(pipelineName)
                 .reason(reason)
                 .reasonDetail(reasonDetail)
                 .build()

@@ -79,9 +79,9 @@ class PipelineYamlRepositoryService @Autowired constructor(
                     )
                 }
             }
-        } catch (e: Exception) {
-            logger.error("Failed to deploy pipeline yaml|$projectId|${action.format()}", e)
-            throw e
+        } catch (ignored: Exception) {
+            logger.error("Failed to deploy pipeline yaml|$projectId|${action.format()}", ignored)
+            throw ignored
         }
     }
 
@@ -203,22 +203,27 @@ class PipelineYamlRepositoryService @Autowired constructor(
         val triggerPipeline = action.data.context.pipeline
         val userId = action.data.getUserId()
         logger.info("deleteYamlPipeline|$userId|$projectId|pipeline:$triggerPipeline|yamlFile:$yamlFile")
-        val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
-            projectId = projectId,
-            repoHashId = repoHashId,
-            filePath = filePath
-        )
-        if (pipelineYamlInfo != null) {
-            pipelineInfoFacadeService.deletePipeline(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineYamlInfo.pipelineId
-            )
-            pipelineYamlService.delete(
+        try {
+            val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath
             )
+            if (pipelineYamlInfo != null) {
+                pipelineInfoFacadeService.deletePipeline(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineYamlInfo.pipelineId
+                )
+                pipelineYamlService.delete(
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    filePath = filePath
+                )
+            }
+        } catch (ignored: Exception) {
+            logger.error("Failed to delete pipeline yaml|$projectId|${action.format()}", ignored)
+            throw ignored
         }
     }
 }
