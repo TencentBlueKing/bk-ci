@@ -198,8 +198,8 @@
 
 <script>
     import PipelineGroupSelector from '@/components/PipelineActionDialog/PipelineGroupSelector'
-    import { mapActions, mapState, mapGetters } from 'vuex'
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
+    import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
         components: {
@@ -365,11 +365,11 @@
                     this.releaseParams.scmType = this.pacSupportScmTypeList[0]?.id
                     this.isLoading = false
                     this.$nextTick(() => {
-                        this.fetchPacEnableCodelibList()
+                        this.fetchPacEnableCodelibList(true)
                     })
                 }
             },
-            async fetchPacEnableCodelibList () {
+            async fetchPacEnableCodelibList (init = false) {
                 try {
                     if (this.scrollLoadmoreConf.isLoading || (this.scrollLoadmoreConf.total && this.scrollLoadmoreConf.total <= this.pacEnableCodelibList.length)) {
                         return
@@ -390,10 +390,12 @@
                         page: response.page,
                         pageSize: response.pageSize
                     })
-                    this.pacEnableCodelibList = [
-                        ...this.pacEnableCodelibList,
-                        ...response.records
-                    ]
+                    this.pacEnableCodelibList = init
+                        ? response.records
+                        : [
+                            ...this.pacEnableCodelibList,
+                            ...response.records
+                        ]
                 } catch (error) {
 
                 } finally {
