@@ -27,10 +27,10 @@
 
 package com.tencent.devops.environment.pojo.job.agentreq
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
-import org.jvnet.hk2.annotations.Optional
 
 @ApiModel("安装agent的请求信息中的 host信息")
 data class AgentHostForInstallAgent(
@@ -42,84 +42,84 @@ data class AgentHostForInstallAgent(
     val bkCloudId: Int,
     @ApiModelProperty(value = "主机ID")
     @JsonProperty("bk_host_id")
-    @Optional
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     val bkHostId: Int?,
     @ApiModelProperty(value = "寻址方式，1: 0，静态 2: 1，动态")
     @JsonProperty("bk_addressing")
-    @Optional
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     val bkAddressing: Int?,
     @ApiModelProperty(value = "接入点ID")
     @JsonProperty("ap_id")
-    @Optional
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     val apId: Int?,
     @ApiModelProperty(value = "安装通道ID")
     @JsonProperty("install_channel_id")
-    @Optional
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     val installChannelId: Int?,
     @ApiModelProperty(value = "内网IPV4地址，inner_ip和inner_ipv6必选其一")
     @JsonProperty("inner_ip")
-    @Optional
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     val innerIp: String?,
     @ApiModelProperty(value = "外网IP")
     @JsonProperty("outer_ip")
-    @Optional
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     val outerIp: String?,
     @ApiModelProperty(value = "登录IP")
     @JsonProperty("login_ip")
-    @Optional
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     val loginIp: String?,
     @ApiModelProperty(value = "数据IP")
     @JsonProperty("data_ip")
-    @Optional
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     val dataIp: String?,
     @ApiModelProperty(value = "内网IPv6")
     @JsonProperty("inner_ipv6")
-    @Optional
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     val innerIpv6: String?,
     @ApiModelProperty(value = "外网IPv6")
     @JsonProperty("outer_ipv6")
     val outerIpv6: String?,
     @ApiModelProperty(value = "操作系统，1：LINUX 2：WINDOWS 3：AIX 4：SOLARIS")
     @JsonProperty("os_type")
-    @Optional
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     val osType: String?,
     @ApiModelProperty(value = "认证类型，1：PASSWORD，密码认证 2: KEY，秘钥认证 3：TJJ_PASSWORD，默认为密码认证")
     @JsonProperty("auth_type")
-    @Optional
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     val authType: String?,
     @ApiModelProperty(value = "账户")
-    @Optional
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     val account: String?,
     @ApiModelProperty(value = "密码")
-    @Optional
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     val password: String?,
     @ApiModelProperty(value = "端口")
-    @Optional
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     val port: String?,
     @ApiModelProperty(value = "密钥")
-    @Optional
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     val key: String?,
     @ApiModelProperty(value = "是否手动模式")
     @JsonProperty("is_manual")
-    @Optional
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     val isManual: Boolean?,
     @ApiModelProperty(value = "密码保留天数，默认保留一天")
-    @Optional
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     val retention: Int?,
     @ApiModelProperty(value = "加速设置，默认为0")
     @JsonProperty("peer_exchange_switch_for_agent")
-    @Optional
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     val peerExchangeSwitchForAgent: Int?,
     @ApiModelProperty(value = "传输限速")
     @JsonProperty("bt_speed_limit")
-    @Optional
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     val btSpeedLimit: String?,
     @ApiModelProperty(value = "数据压缩开关，默认是关闭")
     @JsonProperty("enable_compression")
-    @Optional
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     val enableCompression: Boolean?,
     @ApiModelProperty(value = "数据文件路径")
     @JsonProperty("data_path")
-    @Optional
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     val dataPath: String?
 )
