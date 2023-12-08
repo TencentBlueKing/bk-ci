@@ -732,7 +732,7 @@ class PipelineRuntimeService @Autowired constructor(
                         stageId = stage.id!!,
                         container = container,
                         context = context,
-                        buildStatus = BuildStatus.RUNNING,
+                        buildStatus = null,
                         taskBuildRecords = taskBuildRecords
                     )
                     return@nextContainer
