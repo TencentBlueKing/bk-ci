@@ -247,8 +247,8 @@ const actions = {
         })
     },
 
-    lockPipeline ({ commit, state, dispatch }, { projectId, pipelineId, isLock }) {
-        return ajax.post(`${prefix}/projects/${projectId}/pipelines/${pipelineId}/lock?enable=${isLock}`).then(response => {
+    lockPipeline ({ commit, state, dispatch }, { projectId, pipelineId, enable }) {
+        return ajax.post(`${prefix}/projects/${projectId}/pipelines/${pipelineId}/lock?enable=${enable}`).then(response => {
             return response.data
         })
     },

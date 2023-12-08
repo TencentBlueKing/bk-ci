@@ -40,6 +40,12 @@
             @done="goHome"
         />
         <export-dialog :is-show.sync="showExportDialog"></export-dialog>
+        <DisableDialog
+            v-model="showDisableDialog"
+            :pipeline-id="$route.params.pipelineId"
+            :pipeline-name="pipelineName"
+            :pac-enabled="pacEnabled"
+        />
     </div>
 </template>
 
@@ -47,12 +53,12 @@
     import exportDialog from '@/components/ExportDialog'
     import CopyPipelineDialog from '@/components/PipelineActionDialog/CopyPipelineDialog'
     import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
-    import CopyIcon from '@/components/copyIcon'
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
-    import { mapActions, mapState } from 'vuex'
+    import { mapActions, mapState, mapGetters } from 'vuex'
+    import DisableDialog from '@/components/PipelineActionDialog/DisableDialog'
 
     export default {
         components: {
@@ -61,15 +67,15 @@
             CopyPipelineDialog,
             SaveAsTemplateDialog,
             RemoveConfirmDialog,
-            // eslint-disable-next-line vue/no-unused-components
-            CopyIcon
+            DisableDialog
         },
         mixins: [pipelineActionMixin],
         data () {
             return {
                 hasNoPermission: false,
                 showExportDialog: false,
-                showImportDialog: false
+                showImportDialog: false,
+                showDisableDialog: false
             }
         },
         computed: {
@@ -78,6 +84,9 @@
             ]),
             ...mapState('pipelines', [
                 'pipelineActionState'
+            ]),
+            ...mapGetters('atom', [
+                'pacEnabled'
             ]),
             isTemplatePipeline () {
                 return this.pipelineInfo?.instanceFromTemplate ?? false
@@ -124,7 +133,7 @@
                     [
                         {
                             label: 'disable',
-                            handler: () => this.disablePipeline(this.pipelineInfo?.pipelineAsCodeSettings?.enable ?? false, pipeline)
+                            handler: () => this.disablePipeline()
                         },
                         {
                             label: 'delete',
@@ -136,57 +145,12 @@
         },
         methods: {
             ...mapActions('atom', ['setPipelineEditing', 'setEditFrom']),
-            ...mapActions('pipelines', ['requestToggleCollect', 'lockPipeline']),
+            ...mapActions('pipelines', ['requestToggleCollect']),
             exportPipeline () {
                 this.showExportDialog = true
             },
-            disablePipeline (enablePac, pipeline) {
-                this.$bkInfo({
-                    type: 'warning',
-                    title: this.$t('disablePipelineConfirmTips'),
-                    subHeader: this.$createElement('div', {
-                    }, [
-                        this.$createElement(
-                            'p',
-                            {},
-                            this.$t(enablePac ? 'disablePacPipelineConfirmDesc' : 'disablePipelineConfirmDesc')
-                        ),
-                        enablePac
-                            ? this.$createElement(
-                                'pre',
-                                {
-                                    class: 'disable-pac-code'
-                                },
-                                [
-                                    this.$t('codeConfig'),
-                                    this.$createElement(CopyIcon, {
-                                        props: {
-                                            value: 'abc'
-                                        }
-                                    })
-                                ]
-                            )
-                            : null
-                    ]),
-                    confirmFn: async (vm) => {
-                        try {
-                            await this.lockPipeline({
-                                projectId: this.$route.params.projectId,
-                                pipelineId: pipeline.pipelineId,
-                                isLock: true
-                            })
-                            this.$bkMessage({
-                                theme: 'success',
-                                message: this.$t('disableSuc', [pipeline.pipelineName])
-                            })
-                        } catch (error) {
-                            this.$bkMessage({
-                                theme: 'error',
-                                message: error.message || error
-                            })
-                        }
-                    }
-                })
+            disablePipeline () {
+                this.showDisableDialog = true
             },
             importModifyPipeline () {
                 this.showImportDialog = true
@@ -283,17 +247,5 @@
       }
     }
   }
-}
-.disable-pac-code {
-    position: relative;
-    background: #F0F1F5;
-    width: 100%;
-    margin: 10px 0;
-    padding: 8px 0;
-    .icon-clipboard {
-        position: absolute;
-        right: 10px;
-        top: 10px;
-    }
 }
 </style>
