@@ -30,6 +30,7 @@ package com.tencent.devops.environment.pojo.job.agentreq
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import org.jvnet.hk2.annotations.Optional
 
 @ApiModel("安装agent的请求信息")
 data class AgentInstallAgentReq(
@@ -40,8 +41,10 @@ data class AgentInstallAgentReq(
     val hosts: List<AgentHostForInstallAgent>,
     @ApiModelProperty(value = "被替换的Proxy主机ID")
     @JsonProperty("replace_host_id")
+    @Optional
     val replaceHostId: Int?,
     @ApiModelProperty(value = "是否安装最新版本插件，默认安装最新插件")
     @JsonProperty("is_install_latest_plugins")
+    @Optional
     val isInstallLatestPlugins: Boolean?
 )

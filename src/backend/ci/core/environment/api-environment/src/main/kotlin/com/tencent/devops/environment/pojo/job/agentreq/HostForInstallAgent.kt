@@ -38,69 +38,47 @@ data class HostForInstallAgent(
     @ApiModelProperty(value = "管控区域ID", required = true)
     val bkCloudId: Int,
     @ApiModelProperty(value = "主机ID")
-    @Optional
     val bkHostId: Int?,
     @ApiModelProperty(value = "寻址方式，1: 0，静态 2: 1，动态")
-    @Optional
     val bkAddressing: Int?,
     @ApiModelProperty(value = "接入点ID")
-    @Optional
     val apId: Int?,
     @ApiModelProperty(value = "安装通道ID")
-    @Optional
     val installChannelId: Int?,
     @ApiModelProperty(value = "内网IPV4地址，inner_ip和inner_ipv6必选其一")
-    @Optional
     val innerIp: String?,
     @ApiModelProperty(value = "外网IP")
-    @Optional
     val outerIp: String?,
     @ApiModelProperty(value = "登录IP")
-    @Optional
     val loginIp: String?,
     @ApiModelProperty(value = "数据IP")
-    @Optional
     val dataIp: String?,
     @ApiModelProperty(value = "内网IPv6")
-    @Optional
     val innerIpv6: String?,
     @ApiModelProperty(value = "外网IPv6")
-    @Optional
     val outerIpv6: String?,
     @ApiModelProperty(value = "操作系统，1：LINUX 2：WINDOWS 3：AIX 4：SOLARIS")
-    @Optional
     val osType: String?,
     @ApiModelProperty(value = "认证类型，1：PASSWORD，密码认证 2: KEY，秘钥认证 3：TJJ_PASSWORD，默认为密码认证")
-    @Optional
     val authType: String?,
     @ApiModelProperty(value = "账户")
-    @Optional
     val account: String?,
     @ApiModelProperty(value = "密码")
-    @Optional
     val password: String?,
     @ApiModelProperty(value = "端口")
-    @Optional
     val port: String?,
     @ApiModelProperty(value = "密钥")
-    @Optional
     val key: String?,
     @ApiModelProperty(value = "是否手动模式")
-    @Optional
     val isManual: Boolean?,
     @ApiModelProperty(value = "密码保留天数，默认保留一天")
-    @Optional
     val retention: Int?,
     @ApiModelProperty(value = "加速设置，默认为0")
-    @Optional
     val peerExchangeSwitchForAgent: Int?,
     @ApiModelProperty(value = "传输限速")
-    @Optional
     val btSpeedLimit: String?,
     @ApiModelProperty(value = "数据压缩开关，默认是关闭")
-    @Optional
     val enableCompression: Boolean?,
     @ApiModelProperty(value = "数据文件路径")
-    @Optional
     val dataPath: String?
 )
