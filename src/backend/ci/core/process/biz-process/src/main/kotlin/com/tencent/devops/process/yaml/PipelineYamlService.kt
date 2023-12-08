@@ -91,23 +91,6 @@ class PipelineYamlService(
         }
     }
 
-    fun saveYamlPipeline(
-        projectId: String,
-        repoHashId: String,
-        filePath: String,
-        pipelineId: String,
-        userId: String
-    ) {
-        pipelineYamlInfoDao.save(
-            dslContext = dslContext,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            filePath = filePath,
-            pipelineId = pipelineId,
-            userId = userId
-        )
-    }
-
     fun update(
         projectId: String,
         repoHashId: String,

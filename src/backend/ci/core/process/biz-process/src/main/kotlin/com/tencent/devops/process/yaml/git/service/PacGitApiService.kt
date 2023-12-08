@@ -35,6 +35,7 @@ import com.tencent.devops.process.yaml.git.pojo.PacGitMrChangeInfo
 import com.tencent.devops.process.yaml.git.pojo.PacGitMrInfo
 import com.tencent.devops.process.yaml.git.pojo.PacGitProjectInfo
 import com.tencent.devops.process.yaml.git.pojo.PacGitTreeFileInfo
+import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
 
 /**
  * PAC 需要用到的各平台的标准接口
@@ -140,5 +141,5 @@ interface PacGitApiService {
         commitMessage: String,
         title: String,
         targetAction: CodeTargetAction
-    )
+    ): YamlPathListEntry
 }

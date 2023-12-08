@@ -131,13 +131,13 @@ class PipelineYamlPushAction : BaseAction {
         content: String,
         commitMessage: String,
         targetAction: CodeTargetAction
-    ) {
+    ): YamlPathListEntry {
         val branchName = if (targetAction == CodeTargetAction.COMMIT_TO_MASTER) {
             data.eventCommon.branch
         } else {
             "$PAC_BRANCH_PREFIX${pipelineId}"
         }
-        api.pushYamlFile(
+        return api.pushYamlFile(
             cred = this.getGitCred(),
             gitProjectId = getGitProjectIdOrName(),
             branchName = branchName,
