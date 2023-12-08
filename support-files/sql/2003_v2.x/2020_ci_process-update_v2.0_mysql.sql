@@ -85,6 +85,50 @@ BEGIN
         ADD INDEX `IDX_TPVUS_PROJECT_ID`(`PROJECT_ID`);
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_WEBHOOK'
+                    AND COLUMN_NAME = 'EVENT_TYPE') THEN
+    ALTER TABLE `T_PIPELINE_WEBHOOK`
+        ADD COLUMN `EVENT_TYPE` varchar(64) DEFAULT null COMMENT '事件类型';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_WEBHOOK'
+                    AND COLUMN_NAME = 'EXTERNAL_ID') THEN
+    ALTER TABLE `T_PIPELINE_WEBHOOK`
+        ADD COLUMN `EXTERNAL_ID` varchar(255) DEFAULT null COMMENT '代码库平台ID';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_WEBHOOK'
+                    AND COLUMN_NAME = 'REPOSITORY_HASH_ID') THEN
+    ALTER TABLE `T_PIPELINE_WEBHOOK`
+        ADD COLUMN `REPOSITORY_HASH_ID` varchar(64) null comment '代码库hashId';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_WEBHOOK'
+                    AND COLUMN_NAME = 'EXTERNAL_NAME') THEN
+    ALTER TABLE `T_PIPELINE_WEBHOOK`
+        ADD COLUMN `EXTERNAL_NAME` varchar(255) DEFAULT null COMMENT '代码库平台仓库名';
+    END IF;
+
+    IF EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_MODEL_TASK'
+                    AND COLUMN_NAME = 'ATOM_VERSION') THEN
+        ALTER TABLE T_PIPELINE_MODEL_TASK MODIFY COLUMN ATOM_VERSION varchar(30)  NULL COMMENT '插件版本号';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

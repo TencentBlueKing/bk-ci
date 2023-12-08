@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.pojo
 
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -66,5 +67,7 @@ data class PipelineInfo(
     @ApiModelProperty("ID")
     val id: Long?,
     @ApiModelProperty("流水线组名称列表", required = false)
-    var viewNames: List<String>? = null
+    var viewNames: List<String>? = null,
+    @ApiModelProperty("约束模式下的模板信息", required = false)
+    var templateInfo: TemplateInfo? = null
 )

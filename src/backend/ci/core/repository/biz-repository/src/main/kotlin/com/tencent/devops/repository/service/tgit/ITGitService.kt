@@ -38,6 +38,7 @@ import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitFileInfo
+import javax.servlet.http.HttpServletResponse
 
 interface ITGitService {
 
@@ -65,6 +66,15 @@ interface ITGitService {
         token: String,
         ref: String
     ): String
+
+    fun downloadGitFile(
+        repoName: String,
+        filePath: String,
+        authType: RepoAuthType?,
+        token: String,
+        ref: String,
+        response: HttpServletResponse
+    )
 
     fun getFileTree(
         gitProjectId: String,

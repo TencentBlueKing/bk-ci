@@ -35,7 +35,7 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.log.service.LogPermissionService
 import org.slf4j.LoggerFactory
 
-class StreamLogPermissionService constructor(
+class StreamLogPermissionService(
     val client: Client,
     private val tokenCheckService: ClientTokenService
 ) : LogPermissionService {
@@ -49,7 +49,7 @@ class StreamLogPermissionService constructor(
         logger.info("StreamLogPermissionService user:$userId projectId: $projectCode ")
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
-            token = tokenCheckService.getSystemToken(null) ?: "",
+            token = tokenCheckService.getSystemToken() ?: "",
             action = action,
             projectCode = projectCode,
             resourceCode = AuthResourceType.PIPELINE_DEFAULT.value
