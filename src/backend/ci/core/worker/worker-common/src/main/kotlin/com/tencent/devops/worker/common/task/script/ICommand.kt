@@ -101,7 +101,7 @@ interface ICommand {
                 object : KeyReplacement {
                     override fun getReplacement(key: String): String? = contextMap[key] ?: try {
                         if (key == CI_TOKEN_CONTEXT) {
-                            CIKeywordsService.getCiToken()
+                            CIKeywordsService.getOrRequestToken()
                         } else {
                             CredentialUtils.getCredential(
                                 credentialId = key,

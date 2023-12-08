@@ -108,7 +108,7 @@ object CredentialUtils {
                 context?.get(key)?.let { return it }
                 // 如果不是凭据上下文则直接返回原value值
                 return if (key == CI_TOKEN_CONTEXT) {
-                    CIKeywordsService.getCiToken()
+                    CIKeywordsService.getOrRequestToken()
                 } else {
                     getCredentialContextValue(key, acrossProjectId)
                 }

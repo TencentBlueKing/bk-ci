@@ -12,7 +12,7 @@ object CIKeywordsService {
 
     var ciToken: String? = null
 
-    fun getCiToken(): String? {
+    fun getOrRequestToken(): String? {
         if (!ciToken.isNullOrBlank()) {
             return ciToken
         }
@@ -30,7 +30,7 @@ object CIKeywordsService {
             if (key != CI_TOKEN_CONTEXT.removePrefix("$key.")) {
                 return null
             }
-            return StringContextData(getCiToken() ?: "")
+            return StringContextData(getOrRequestToken() ?: "")
         }
     }
 }
