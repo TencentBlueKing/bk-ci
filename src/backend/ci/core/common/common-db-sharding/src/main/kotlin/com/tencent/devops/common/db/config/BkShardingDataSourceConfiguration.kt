@@ -119,7 +119,7 @@ class BkShardingDataSourceConfiguration {
     @Value("\${spring.datasource.idleTimeout:#{60000}}")
     private val datasourceIdleTimeout: Long = 60000
 
-    @Value("\${sharding.table.defaultShardingNum:#{5}}")
+    @Value("\${sharding.tableShardingStrategy.defaultShardingNum:#{5}}")
     private val defaultTableShardingNum: Int = 5
 
     private fun dataSourceMap(
@@ -199,7 +199,7 @@ class BkShardingDataSourceConfiguration {
             databaseAlgorithmClassName = migratingDatabaseAlgorithmClassName,
             tableAlgorithmClassName = migratingTableAlgorithmClassName,
             dataSourceConfigs = migratingDataSourceConfigs,
-            tableRuleConfigs = generateTableRuleConfigs(migratingTableRuleConfigs, config),
+            tableRuleConfigs = migratingTableRuleConfigs ?: config.tableRuleConfigs,
             bindingTableGroupConfigs = config.migratingBindingTableGroupConfigs ?: config.bindingTableGroupConfigs,
             registry = registry
         )
@@ -231,19 +231,22 @@ class BkShardingDataSourceConfiguration {
     private fun generateTableRuleConfigs(
         tableRuleConfigs: List<TableRuleConfig>?,
         config: DataSourceProperties
-    ): List<TableRuleConfig>? {
-        var finalTableRuleConfigs = tableRuleConfigs
-        if (finalTableRuleConfigs.isNullOrEmpty()) {
+    ): List<TableRuleConfig> {
+        return if (tableRuleConfigs.isNullOrEmpty()) {
             // 如果分表规则为空，则复用默认的分表规则
-            finalTableRuleConfigs = config.tableRuleConfigs.deepCopy()
-            finalTableRuleConfigs?.forEach { tableRuleConfig ->
-                if (tableRuleConfig.broadcastFlag != true) {
-                    tableRuleConfig.tableShardingStrategy = TableShardingStrategyEnum.SHARDING
-                    tableRuleConfig.shardingNum = defaultTableShardingNum
+            val finalTableRuleConfigs = mutableListOf<TableRuleConfig>()
+            config.tableRuleConfigs.forEach { tableRuleConfig ->
+                val finalTableRuleConfig = tableRuleConfig.deepCopy<TableRuleConfig>()
+                if (finalTableRuleConfig.broadcastFlag != true) {
+                    finalTableRuleConfig.tableShardingStrategy = TableShardingStrategyEnum.SHARDING
+                    finalTableRuleConfig.shardingNum = defaultTableShardingNum
                 }
+                finalTableRuleConfigs.add(finalTableRuleConfig)
             }
+            finalTableRuleConfigs
+        } else {
+            tableRuleConfigs
         }
-        return finalTableRuleConfigs
     }
 
     fun createShardingDataSource(
@@ -362,7 +365,7 @@ class BkShardingDataSourceConfiguration {
         val shardingTableRuleConfig = ShardingTableRuleConfiguration(tableName, actualDataNodes)
         logger.info(
             "BkShardingDataSourceConfiguration table:$tableName|databaseShardingStrategy: $databaseShardingStrategy|" +
-                    "tableShardingStrategy:$tableShardingStrategy|actualDataNodes:$actualDataNodes "
+                "tableShardingStrategy:$tableShardingStrategy|actualDataNodes:$actualDataNodes "
         )
         // 设置表的分库策略
         shardingTableRuleConfig.databaseShardingStrategy = if (databaseShardingStrategy != null) {
