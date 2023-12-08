@@ -66,7 +66,7 @@ class DispatchWorkspaceOpHisDao {
                     environmentUid,
                     operator,
                     action.name,
-                    actionMsg,
+                    actionMsg.take(255),
                     LocalDateTime.now(),
                     EnvironmentActionStatus.PENDING.name,
                     uid
@@ -85,7 +85,7 @@ class DispatchWorkspaceOpHisDao {
         with(TDispatchWorkspaceOpHis.T_DISPATCH_WORKSPACE_OP_HIS) {
             return dslContext.update(this).set(STATUS, status.name)
                 .let {
-                    if (actionMsg != null) it.set(ACTION_MSG, actionMsg) else it
+                    if (actionMsg != null) it.set(ACTION_MSG, actionMsg.take(255)) else it
                 }
                 .let {
                     if (workspaceName != null) it.set(WORKSPACE_NAME, workspaceName) else it

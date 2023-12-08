@@ -175,6 +175,11 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.THIRD_PARTY,
         errorCode = "2132033",
         formatErrorMessage = "req project_access_device_permissions error {0}"
+    ),
+    CODEPROXY_EXIST_ERROR(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = "2132034",
+        formatErrorMessage = "project {0} code proxy {1} already exists"
     );
 
     fun getErrorMessage(): String {

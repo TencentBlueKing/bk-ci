@@ -5,8 +5,12 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
@@ -19,6 +23,7 @@ import com.tencent.devops.remotedev.pojo.expert.ExpertSupportConfigType
 import com.tencent.devops.remotedev.pojo.expert.ExpertSupportStatus
 import com.tencent.devops.remotedev.pojo.expert.FetchExpertSupResp
 import com.tencent.devops.remotedev.pojo.expert.UpdateSupportData
+import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -27,6 +32,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.Executors
 
 @Service
 class ExpertSupportService @Autowired constructor(
@@ -34,7 +40,8 @@ class ExpertSupportService @Autowired constructor(
     private val client: Client,
     private val expertSupportDao: ExpertSupportDao,
     private val workspaceCommon: WorkspaceCommon,
-    private val workspaceSharedDao: WorkspaceSharedDao
+    private val workspaceSharedDao: WorkspaceSharedDao,
+    private val redisOperation: RedisOperation
 ) {
     @Value("\${expertsupport.rtxtemplate:#{null}}")
     val rtxTemplate: String? = null
@@ -47,6 +54,8 @@ class ExpertSupportService @Autowired constructor(
 
     @Value("\${expertsupport.weworkGroupId:#{null}}")
     val weworkGroupId: String? = null
+
+    private val executor = Executors.newCachedThreadPool()
 
     fun createSupport(
         data: CreateSupportData
@@ -99,6 +108,35 @@ class ExpertSupportService @Autowired constructor(
                 markdownContent = true
             )
         )
+        // 异步执行流水线完成其他动作
+        executor.execute {
+            try {
+                val infoS = redisOperation.get(PIPELINE_EXPORT_CONFIG_INFO) ?: return@execute
+                val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
+
+                val newParam = mutableMapOf<String, String>()
+                val hostIdSub = data.hostIp.split(".")
+                val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+                info.buildParam.forEach { (k, v) ->
+                    when (v) {
+                        "ip" -> newParam[k] = ip
+                        else -> newParam[k] = v
+                    }
+                }
+
+                client.get(ServiceBuildResource::class).manualStartupNew(
+                    userId = info.userId ?: "",
+                    projectId = info.projectId,
+                    pipelineId = info.pipelineId,
+                    values = newParam,
+                    channelCode = ChannelCode.BS,
+                    buildNo = null,
+                    startType = StartType.SERVICE
+                )
+            } catch (e: Exception) {
+                logger.warn("execute createSupport pipeline error", e)
+            }
+        }
     }
 
     fun updateSupportStatus(
@@ -111,7 +149,7 @@ class ExpertSupportService @Autowired constructor(
             supporter = if (data.supporter == null) {
                 null
             } else {
-                listOf(data.supporter!!)
+                setOf(data.supporter!!)
             }
         )
     }
@@ -175,7 +213,7 @@ class ExpertSupportService @Autowired constructor(
 
         // 添加认领人信息
         expertSupportDao.getSup(dslContext, id)?.let {
-            val sups = mutableListOf(userId)
+            val sups = mutableSetOf(userId)
             if (it.supporter != null) {
                 sups.addAll(JsonUtil.to<List<String>>(it.supporter))
             }
@@ -213,5 +251,6 @@ class ExpertSupportService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ExpertSupportService::class.java)
         private const val DEFAULT_WAIT_TIME = 3600
         private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy年MM月dd日HH:mm:ss")
+        private const val PIPELINE_EXPORT_CONFIG_INFO = "remotedev:createExpSupport.pipelineinfo"
     }
 }

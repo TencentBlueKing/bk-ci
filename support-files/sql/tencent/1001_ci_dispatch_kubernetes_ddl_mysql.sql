@@ -61,6 +61,9 @@ CREATE TABLE IF NOT EXISTS T_WINDOWS_GPU_POOL
     PROJECT_ID varchar(64)  DEFAULT '' NOT NULL COMMENT '项目ID',
     DISK varchar(64)  NULL COMMENT '磁盘',
     HDISK varchar(64)  NULL COMMENT '云磁盘',
+    IMAGESTANDARD  boolean      default true             not null comment '是否基础镜像',
+    NODE varchar(64)  DEFAULT '' NOT NULL COMMENT '母机IP',
+    IMAGE varchar(256)  DEFAULT '' NOT NULL COMMENT '镜像地址',
     UNIQUE KEY `uni_1` (`ZONE_ID`,`CGS_IP`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='START云桌面的资源列表';
 
