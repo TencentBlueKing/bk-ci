@@ -85,6 +85,7 @@ class ModelTransfer @Autowired constructor(
             // Cancel-In-Progress 配置group后默认为true
             concurrencyCancelInProgress = yaml.concurrency?.cancelInProgress ?: false,
             runLockType = when {
+                yaml.disablePipeline == true -> PipelineRunLockType.LOCK
                 yaml.concurrency?.group != null -> PipelineRunLockType.GROUP_LOCK
                 else -> PipelineRunLockType.MULTIPLE
             },
@@ -247,6 +248,7 @@ class ModelTransfer @Autowired constructor(
         } else null
         yaml.finally = finally as LinkedHashMap<String, Any>?
         yaml.concurrency = makeConcurrency(modelInput.setting)
+        yaml.disablePipeline = (modelInput.setting.runLockType == PipelineRunLockType.LOCK).nullIfDefault(false)
         return yaml
     }
 
@@ -283,7 +285,9 @@ class ModelTransfer @Autowired constructor(
     }
 
     private fun makeConcurrency(setting: PipelineSetting): Concurrency? {
-        if (setting.runLockType == PipelineRunLockType.GROUP_LOCK) {
+        if (setting.runLockType == PipelineRunLockType.GROUP_LOCK ||
+            setting.runLockType == PipelineRunLockType.LOCK
+        ) {
             return Concurrency(
                 group = setting.concurrencyGroup,
                 cancelInProgress = setting.concurrencyCancelInProgress.nullIfDefault(false),
