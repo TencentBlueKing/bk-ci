@@ -195,7 +195,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                 eventType = eventType
             ) ?: run {
                 logger.warn(
-                    "Failed to match pipeline webhook|projectId|${triggerDetail.pipelineId}|$eventSource|$eventType"
+                    "Failed to match pipeline webhook|$projectId|${triggerDetail.pipelineId}|$eventSource|$eventType"
                 )
             }
         }
