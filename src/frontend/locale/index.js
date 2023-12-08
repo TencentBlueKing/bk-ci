@@ -185,6 +185,7 @@ function importAll (r) {
 }
 
 function jsonpLocale (language) {
+    if (!window.BK_PAAS_PRIVATE_URL) return
     return new Promise((resolve) => {
         try {
             const callbackName = `jsonp_callback_${Math.round(100000 * Math.random())}`
