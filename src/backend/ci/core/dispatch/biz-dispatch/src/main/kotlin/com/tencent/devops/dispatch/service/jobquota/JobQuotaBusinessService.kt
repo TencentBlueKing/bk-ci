@@ -29,9 +29,7 @@ package com.tencent.devops.dispatch.service.jobquota
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.dao.JobQuotaProjectRunTimeDao
 import com.tencent.devops.dispatch.dao.RunningJobsDao
@@ -56,10 +54,8 @@ class JobQuotaBusinessService @Autowired constructor(
     private val runningJobsDao: RunningJobsDao,
     private val jobQuotaProjectRunTimeDao: JobQuotaProjectRunTimeDao,
     private val dslContext: DSLContext,
-    private val client: Client,
     private val jobQuotaInterface: JobQuotaInterface,
     private val buildLogPrinter: BuildLogPrinter,
-    private val redisOperation: RedisOperation,
     private val jobQuotaRedisUtils: JobQuotaRedisUtils
 ) {
 
