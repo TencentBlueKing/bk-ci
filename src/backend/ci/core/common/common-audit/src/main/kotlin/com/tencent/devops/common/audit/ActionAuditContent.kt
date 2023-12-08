@@ -147,7 +147,7 @@ object ActionAuditContent {
     const val EXPERIENCE_TASK_CREATE_CONTENT = "create experience task $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val EXPERIENCE_TASK_VIEW_CONTENT = "get experience task info $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val EXPERIENCE_TASK_EDIT_CONTENT = "modify experience task $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val EXPERIENCE_TASK_DELETE_CONTENT = "delete experience task $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val EXPERIENCE_TASK_DELETE_CONTENT = "online/offline experience task $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val EXPERIENCE_GROUP_CREATE_CONTENT = "create experience group $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val EXPERIENCE_GROUP_VIEW_CONTENT = "get experience group info $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val EXPERIENCE_GROUP_EDIT_CONTENT = "modify experience group $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"

@@ -27,9 +27,11 @@
 
 package com.tencent.devops.experience.resources.app
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.app.AppExperienceResource
 import com.tencent.devops.experience.filter.annotions.AllowOuter
@@ -91,7 +93,7 @@ class AppExperienceResourceImpl @Autowired constructor(
             emptyList()
         }
         val redPointCount = privateExperiences.count { it.redPointEnabled } +
-                publicExperiences.count { it.redPointEnabled }
+            publicExperiences.count { it.redPointEnabled }
         return Result(ExperienceList(privateExperiences, publicExperiences, redPointCount))
     }
 
@@ -148,6 +150,7 @@ class AppExperienceResourceImpl @Autowired constructor(
         return Result(result)
     }
 
+    @AuditEntry(actionId = ActionId.EXPERIENCE_TASK_CREATE)
     override fun create(userId: String, projectId: String, experience: ExperienceCreate): Result<Boolean> {
         checkParam(userId, projectId)
         experienceService.create(userId, projectId, experience)
