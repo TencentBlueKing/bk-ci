@@ -103,7 +103,9 @@ class AgentApi {
         val requestContent = jacksonObjectMapper().writeValueAsString(req)
         if (logger.isDebugEnabled)
             logger.debug("[${getThreadLocal()}] headers: $headers, url: $url, body: $requestContent")
-        return getResultFromRes(OkhttpUtils.doPost(url, requestContent, headers), classOfU)
+        val resultFromRes = getResultFromRes(OkhttpUtils.doPost(url, requestContent, headers), classOfU)
+        if (logger.isDebugEnabled) logger.debug("[${getThreadLocal()}] resultFromRes: $resultFromRes")
+        return resultFromRes
     }
 
     fun <T, U> executeGetRequest(classOfT: Class<T>, jobId: Int? = null, vararg args: U): AgentResult<T> {
@@ -121,7 +123,7 @@ class AgentApi {
     }
 
     private fun <T> getResultFromRes(response: Response, classOfT: Class<T>): AgentResult<T> {
-        val operationName = AgentApi.getThreadLocal()
+        val operationName = getThreadLocal()
         removeThreadLocal()
         try {
             val responseBody = response.body?.string()
