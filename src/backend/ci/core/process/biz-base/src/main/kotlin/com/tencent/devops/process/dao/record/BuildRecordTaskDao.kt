@@ -72,6 +72,7 @@ class BuildRecordTaskDao {
                 ATOM_CODE,
                 TIMESTAMPS,
                 POST_INFO,
+                START_TIME,
                 END_TIME
             ).also { insert ->
                 records.forEach { record ->
@@ -92,11 +93,13 @@ class BuildRecordTaskDao {
                         record.atomCode,
                         JsonUtil.toJson(record.timestamps, false),
                         record.elementPostInfo?.let { JsonUtil.toJson(it, false) },
+                        record.startTime,
                         record.endTime
                     )
                 }
             }.onDuplicateKeyUpdate()
                 .set(STATUS, MySQLDSL.values(STATUS))
+                .set(START_TIME, MySQLDSL.values(START_TIME))
                 .set(END_TIME, MySQLDSL.values(END_TIME))
                 .set(TIMESTAMPS, MySQLDSL.values(TIMESTAMPS))
                 .set(TASK_VAR, MySQLDSL.values(TASK_VAR))
