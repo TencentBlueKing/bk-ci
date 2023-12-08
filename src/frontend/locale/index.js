@@ -135,9 +135,12 @@ export default (r, initSetLocale = false) => {
     async function syncLocaleBackend (localeLang) {
         try {
             console.log('sync backendLocalEnum', backendLocalEnum[localeLang], localeLang)
-            await axios.put('/ms/project/api/user/locales/update', {
-                language: backendLocalEnum[localeLang]
-            })
+            await Promise.all([
+                axios.put('/ms/project/api/user/locales/update', {
+                    language: backendLocalEnum[localeLang]
+                }),
+                jsonpLocale(backendLocalEnum[localeLang])
+            ])
         } catch (error) {
             console.error('sync locale to backend error', error)
         }
@@ -179,4 +182,25 @@ function importAll (r) {
         localeList,
         messages
     }
+}
+
+function jsonpLocale (language) {
+    if (!window.BK_PAAS_PRIVATE_URL) return
+    return new Promise((resolve) => {
+        try {
+            const callbackName = `jsonp_callback_${Math.round(100000 * Math.random())}`
+            window[callbackName] = function (data) {
+                delete window[callbackName]
+                document.body.removeChild(script)
+                resolve(data)
+            }
+
+            const script = document.createElement('script')
+            script.src = `${window.BK_PAAS_PRIVATE_URL}/api/c/compapi/v2/usermanage/fe_update_user_language?language=${language}&callback=${callbackName}`
+            document.body.appendChild(script)
+        } catch (e) {
+            console.error('jsonp locale error', e)
+            resolve(false)
+        }
+    })
 }
