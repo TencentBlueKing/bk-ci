@@ -27,10 +27,8 @@
 
 package com.tencent.devops.common.expression.context
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.tencent.devops.common.expression.ContextDataRuntimeException
 import com.tencent.devops.common.expression.expression.sdk.IReadOnlyObject
-import com.tencent.devops.common.expression.utils.ExpressionJsonUtil
 import java.lang.Exception
 import java.util.TreeMap
 
@@ -48,8 +46,8 @@ interface RuntimeNamedValue {
 class RuntimeDictionaryContextData(private val runtimeNamedValue: RuntimeNamedValue) :
     DictionaryContextData() {
 
-    private var mIndexLookup: TreeMap<String, Int>? = null
-    private var mList: MutableList<DictionaryContextDataPair> = mutableListOf()
+    override var mIndexLookup: TreeMap<String, Int>? = null
+    override var mList: MutableList<DictionaryContextDataPair> = mutableListOf()
 
     private fun requestAndSaveValue(key: String): PipelineContextData? {
         return try {
@@ -63,14 +61,6 @@ class RuntimeDictionaryContextData(private val runtimeNamedValue: RuntimeNamedVa
         }
     }
 
-    override val values: Iterable<Any?>
-        get() {
-            if (mList.isNotEmpty()) {
-                return mList.map { it.value }
-            }
-            return emptyList()
-        }
-
     override fun tryGetValue(key: String): Pair<PipelineContextData?, Boolean> {
         if (mList.isNotEmpty() && indexLookup.containsKey(key)) {
             return Pair(mList[indexLookup[key]!!].value, true)
@@ -80,25 +70,6 @@ class RuntimeDictionaryContextData(private val runtimeNamedValue: RuntimeNamedVa
 
         return Pair(value, true)
     }
-
-    private val indexLookup: MutableMap<String, Int>
-        get() {
-            if (mIndexLookup == null) {
-                mIndexLookup = TreeMap<String, Int>()
-                if (mList.isNotEmpty()) {
-                    mList.forEachIndexed { index, pair ->
-                        mIndexLookup!![pair.key] = index
-                    }
-                }
-            }
-
-            return mIndexLookup!!
-        }
-
-    private val list: MutableList<DictionaryContextDataPair>
-        get() {
-            return mList
-        }
 
     override operator fun get(k: String): PipelineContextData? {
         return tryGetValue(k).first
@@ -120,33 +91,4 @@ class RuntimeDictionaryContextData(private val runtimeNamedValue: RuntimeNamedVa
 
         return result
     }
-
-    override fun toJson(): JsonNode {
-        val json = ExpressionJsonUtil.createObjectNode()
-        if (mList.isNotEmpty()) {
-            mList.forEach {
-                json.set<JsonNode>(it.key, it.value?.toJson())
-            }
-        }
-        return json
-    }
-
-    override fun fetchValue(): Map<String, Any> {
-        val map = mutableMapOf<String, Any>()
-        if (mList.isNotEmpty()) {
-            mList.forEach {
-                map[it.key] = it.value?.fetchValue() ?: ""
-            }
-        }
-        return map
-    }
-
-    override fun iterator(): Iterator<Pair<String, PipelineContextData?>> {
-        return mList.map { pair -> Pair(pair.key, pair.value); }.iterator()
-    }
-
-    private data class DictionaryContextDataPair(
-        val key: String,
-        val value: PipelineContextData?
-    )
 }
