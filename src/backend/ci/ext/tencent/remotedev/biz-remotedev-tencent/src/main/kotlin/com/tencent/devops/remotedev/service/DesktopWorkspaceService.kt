@@ -118,6 +118,10 @@ class DesktopWorkspaceService @Autowired constructor(
         return workspaceWindowsDao.countProjectIp(dslContext, projectId, ip) > 0
     }
 
+    fun checkUserIpPermission(user: String, ip: String): Boolean {
+        return workspaceWindowsDao.countUserIp(dslContext, user, ip) > 0
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(DesktopWorkspaceService::class.java)
     }

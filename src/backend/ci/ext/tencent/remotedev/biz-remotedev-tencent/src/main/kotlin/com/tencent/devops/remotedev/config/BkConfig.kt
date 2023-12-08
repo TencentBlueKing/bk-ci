@@ -31,4 +31,8 @@ class BkConfig {
 
     @Value("\${bkbase.token:}")
     val baseToken: String = ""
+
+    // apigwRemotedev 配置
+    @Value("\${apigw.remoteDevUrl:}")
+    val remoteDevUrl: String = ""
 }

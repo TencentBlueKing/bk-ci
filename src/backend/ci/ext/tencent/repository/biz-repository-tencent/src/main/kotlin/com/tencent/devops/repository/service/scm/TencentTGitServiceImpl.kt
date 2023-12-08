@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.service.scm
 
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
 import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
@@ -41,6 +42,7 @@ import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitFileInfo
+import javax.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
@@ -108,6 +110,20 @@ class TencentTGitServiceImpl @Autowired constructor(val client: Client) : ITGitS
             token = token,
             ref = ref
         ).data!!
+    }
+
+    override fun downloadGitFile(
+        repoName: String,
+        filePath: String,
+        authType: RepoAuthType?,
+        token: String,
+        ref: String,
+        response: HttpServletResponse
+    ) {
+        val serviceUrlPrefix = client.getScmUrl(ServiceTGitResource::class)
+        val serviceUrl = "$serviceUrlPrefix/service/tgit/downloadGitFile?repoName=$repoName" +
+                "&filePath=$filePath&authType=$authType&token=$token&ref=$ref"
+        OkhttpUtils.downloadFile(serviceUrl, response)
     }
 
     override fun getFileTree(

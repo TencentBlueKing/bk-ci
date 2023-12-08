@@ -61,4 +61,11 @@ interface IGithubService {
     fun listBranches(token: String, projectName: String): List<String>
 
     fun listTags(token: String, projectName: String): List<String>
+
+    fun isOAuth(
+        userId: String,
+        projectId: String,
+        refreshToken: Boolean?,
+        resetType: String?
+    ): AuthorizeResult
 }

@@ -51,7 +51,7 @@ class RbacEnvironmentPermissionService(
         permission: AuthPermission
     ): Set<Long> {
         return client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
-            token = tokenCheckService.getSystemToken(null)!!,
+            token = tokenCheckService.getSystemToken()!!,
             userId = userId,
             action = buildEnvAction(permission),
             projectCode = projectId,
@@ -72,7 +72,7 @@ class RbacEnvironmentPermissionService(
         permissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
         return client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
-            token = tokenCheckService.getSystemToken(null)!!,
+            token = tokenCheckService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             resourceType = envResourceType,
@@ -91,7 +91,7 @@ class RbacEnvironmentPermissionService(
         permission: AuthPermission
     ): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenCheckService.getSystemToken(null)!!,
+            token = tokenCheckService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             resourceCode = HashUtil.encodeLongId(envId), // 此处之所以要加密,为兼容企业版。已发布的企业版记录的为hashId
@@ -107,7 +107,7 @@ class RbacEnvironmentPermissionService(
         permission: AuthPermission
     ): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenCheckService.getSystemToken(null)!!,
+            token = tokenCheckService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             resourceCode = projectId,
@@ -120,7 +120,7 @@ class RbacEnvironmentPermissionService(
     override fun createEnv(userId: String, projectId: String, envId: Long, envName: String) {
         client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
             userId = userId,
-            token = tokenCheckService.getSystemToken(null)!!,
+            token = tokenCheckService.getSystemToken()!!,
             projectCode = projectId,
             resourceType = envResourceType,
             resourceCode = HashUtil.encodeLongId(envId),
@@ -130,7 +130,7 @@ class RbacEnvironmentPermissionService(
 
     override fun updateEnv(userId: String, projectId: String, envId: Long, envName: String) {
         client.get(ServicePermissionAuthResource::class).resourceModifyRelation(
-            token = tokenCheckService.getSystemToken(null)!!,
+            token = tokenCheckService.getSystemToken()!!,
             projectCode = projectId,
             resourceType = envResourceType,
             resourceCode = HashUtil.encodeLongId(envId),
@@ -140,7 +140,7 @@ class RbacEnvironmentPermissionService(
 
     override fun deleteEnv(projectId: String, envId: Long) {
         client.get(ServicePermissionAuthResource::class).resourceDeleteRelation(
-            token = tokenCheckService.getSystemToken(null)!!,
+            token = tokenCheckService.getSystemToken()!!,
             projectCode = projectId,
             resourceType = envResourceType,
             resourceCode = HashUtil.encodeLongId(envId)
@@ -149,7 +149,7 @@ class RbacEnvironmentPermissionService(
 
     override fun listNodeByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long> {
         return client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
-            token = tokenCheckService.getSystemToken(null)!!,
+            token = tokenCheckService.getSystemToken()!!,
             userId = userId,
             action = buildNodeAction(permission),
             projectCode = projectId,
@@ -163,7 +163,7 @@ class RbacEnvironmentPermissionService(
         permissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
         return client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
-            token = tokenCheckService.getSystemToken(null)!!,
+            token = tokenCheckService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             resourceType = nodeResourceType,
@@ -189,7 +189,7 @@ class RbacEnvironmentPermissionService(
         permission: AuthPermission
     ): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenCheckService.getSystemToken(null)!!,
+            token = tokenCheckService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             resourceCode = HashUtil.encodeLongId(nodeId), // 此处之所以要加密,为兼容企业版。已发布的企业版记录的为hashId
@@ -201,7 +201,7 @@ class RbacEnvironmentPermissionService(
 
     override fun checkNodePermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenCheckService.getSystemToken(null)!!,
+            token = tokenCheckService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             resourceCode = projectId,
@@ -214,7 +214,7 @@ class RbacEnvironmentPermissionService(
     override fun createNode(userId: String, projectId: String, nodeId: Long, nodeName: String) {
         client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
             userId = userId,
-            token = tokenCheckService.getSystemToken(null)!!,
+            token = tokenCheckService.getSystemToken()!!,
             projectCode = projectId,
             resourceType = nodeResourceType,
             resourceCode = HashUtil.encodeLongId(nodeId),
@@ -224,7 +224,7 @@ class RbacEnvironmentPermissionService(
 
     override fun updateNode(userId: String, projectId: String, nodeId: Long, nodeName: String) {
         client.get(ServicePermissionAuthResource::class).resourceModifyRelation(
-            token = tokenCheckService.getSystemToken(null)!!,
+            token = tokenCheckService.getSystemToken()!!,
             projectCode = projectId,
             resourceType = nodeResourceType,
             resourceCode = HashUtil.encodeLongId(nodeId),
@@ -234,7 +234,7 @@ class RbacEnvironmentPermissionService(
 
     override fun deleteNode(projectId: String, nodeId: Long) {
         client.get(ServicePermissionAuthResource::class).resourceDeleteRelation(
-            token = tokenCheckService.getSystemToken(null)!!,
+            token = tokenCheckService.getSystemToken()!!,
             projectCode = projectId,
             resourceType = nodeResourceType,
             resourceCode = HashUtil.encodeLongId(nodeId)

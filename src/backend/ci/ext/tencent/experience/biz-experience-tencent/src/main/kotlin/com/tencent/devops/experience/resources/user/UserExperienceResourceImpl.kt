@@ -45,6 +45,8 @@ import com.tencent.devops.experience.pojo.ExperienceUpdate
 import com.tencent.devops.experience.pojo.ExperienceUserCount
 import com.tencent.devops.experience.pojo.Url
 import com.tencent.devops.experience.pojo.enums.ArtifactoryType
+import com.tencent.devops.experience.pojo.outer.OuterCanAddParam
+import com.tencent.devops.experience.pojo.outer.OuterCanAddVO
 import com.tencent.devops.experience.pojo.outer.OuterSelectorVO
 import com.tencent.devops.experience.service.ExperienceDownloadService
 import com.tencent.devops.experience.service.ExperienceOuterService
@@ -156,6 +158,10 @@ class UserExperienceResourceImpl @Autowired constructor(
 
     override fun outerList(userId: String, projectId: String): Result<List<OuterSelectorVO>> {
         return Result(experienceOuterService.outerList(projectId).map { OuterSelectorVO(it) })
+    }
+
+    override fun outerCanAdd(userId: String, projectId: String, param: OuterCanAddParam): Result<OuterCanAddVO> {
+        return Result(experienceOuterService.outerCanAdd(projectId, param))
     }
 
     fun checkParam(userId: String, projectId: String) {

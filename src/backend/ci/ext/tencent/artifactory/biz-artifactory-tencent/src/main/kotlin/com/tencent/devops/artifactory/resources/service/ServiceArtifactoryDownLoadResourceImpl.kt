@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.resources.service
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
 import com.tencent.devops.artifactory.pojo.ApkDefenderRequest
 import com.tencent.devops.artifactory.pojo.Url
@@ -37,6 +38,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.pojo.defender.ApkDefenderTasks
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
@@ -79,6 +81,7 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_DOWNLOAD)
     override fun downloadUrl(
         projectId: String,
         artifactoryType: ArtifactoryType,

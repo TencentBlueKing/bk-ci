@@ -27,8 +27,11 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.github
 
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_APPROVING_REVIEWERS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_IID
@@ -48,7 +51,7 @@ import com.tencent.devops.common.webhook.service.code.filter.EventTypeFilter
 import com.tencent.devops.common.webhook.service.code.filter.GitUrlFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
-import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
 import org.slf4j.LoggerFactory
@@ -93,11 +96,26 @@ class GithubReviewTriggerHandler @Autowired constructor(
         return event.pullRequest.title
     }
 
-    override fun preMatch(event: GithubReviewEvent): ScmWebhookMatcher.MatchResult {
+    override fun getExternalId(event: GithubReviewEvent): String {
+        return event.repository.id.toString()
+    }
+
+    override fun getEventDesc(event: GithubReviewEvent): String {
+        return I18Variable(
+            code = getI18Code(event),
+            params = listOf(
+                buildReviewUrl(event),
+                event.pullRequest.number.toString(),
+                getUsername(event)
+            )
+        ).toJsonStr()
+    }
+
+    override fun preMatch(event: GithubReviewEvent): WebhookMatchResult {
         // Review事件仅提交操作才触发，评审通过、拒绝、要求修改
         val result = (event.action == "submitted" || event.action == "dismissed") &&
             event.review.state != GithubReviewState.COMMENTED.value
-        return ScmWebhookMatcher.MatchResult(result)
+        return WebhookMatchResult(result)
     }
 
     override fun getWebhookFilters(
@@ -133,7 +151,11 @@ class GithubReviewTriggerHandler @Autowired constructor(
                 pipelineId = pipelineId,
                 filterName = "crState",
                 triggerOn = event.convertState(),
-                included = WebhookUtils.convert(includeCrState)
+                included = WebhookUtils.convert(includeCrState),
+                failedReason = I18Variable(
+                    code = WebhookI18nConstants.REVIEW_ACTION_NOT_MATCH,
+                    params = listOf()
+                ).toJsonStr()
             )
             return listOf(urlFilter, eventTypeFilter, crStateFilter)
         }
@@ -160,6 +182,7 @@ class GithubReviewTriggerHandler @Autowired constructor(
             startParams[BK_REPO_GIT_WEBHOOK_REVIEW_TARGET_BRANCH] = event.pullRequest.base.ref
             startParams[BK_REPO_GIT_WEBHOOK_REVIEW_SOURCE_PROJECT_ID] = event.pullRequest.head.repo.id
             startParams[BK_REPO_GIT_WEBHOOK_REVIEW_TARGET_PROJECT_ID] = event.pullRequest.base.repo.id
+            startParams[PIPELINE_GIT_EVENT_URL] = buildReviewUrl(event)
             event.pullRequest.requestedReviewers.run {
                 startParams[BK_REPO_GIT_WEBHOOK_REVIEW_APPROVING_REVIEWERS] = this.joinToString(",") {
                     it.login
@@ -167,6 +190,17 @@ class GithubReviewTriggerHandler @Autowired constructor(
             }
         }
         return startParams
+    }
+
+    private fun getI18Code(event: GithubReviewEvent) = when (event.review.state) {
+        GithubReviewState.APPROVED.value -> WebhookI18nConstants.TGIT_REVIEW_APPROVED_EVENT_DESC
+        GithubReviewState.CHANGES_REQUESTED.value -> WebhookI18nConstants.TGIT_REVIEW_CHANGE_REQUIRED_EVENT_DESC
+        GithubReviewState.DISMISSED.value -> WebhookI18nConstants.TGIT_REVIEW_CHANGE_DENIED_EVENT_DESC
+        else -> ""
+    }
+
+    private fun buildReviewUrl(event: GithubReviewEvent) = with(event) {
+        review.htmlUrl ?: "${GithubBaseInfo.GITHUB_HOME_PAGE_URL}/${repository.fullName}/pull/${pullRequest.number}"
     }
 
     companion object {

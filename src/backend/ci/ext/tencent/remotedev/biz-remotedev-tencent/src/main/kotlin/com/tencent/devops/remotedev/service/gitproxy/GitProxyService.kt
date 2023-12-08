@@ -1,11 +1,20 @@
 package com.tencent.devops.remotedev.service.gitproxy
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.RemoteDevCodeProxyDao
 import com.tencent.devops.remotedev.pojo.gitproxy.CodeProxyConf
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateGitProxyData
@@ -13,6 +22,7 @@ import com.tencent.devops.remotedev.pojo.gitproxy.CreateRepoRespData
 import com.tencent.devops.remotedev.pojo.gitproxy.FetchRepoResp
 import com.tencent.devops.remotedev.pojo.gitproxy.RefreshCodeProxyData
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.format.DateTimeFormatter
@@ -24,10 +34,26 @@ class GitProxyService @Autowired constructor(
     private val dslContext: DSLContext,
     private val codeProxyDao: RemoteDevCodeProxyDao
 ) {
+    @ActionAuditRecord(
+        actionId = ActionId.CODE_PROXY_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CODE_PROXY,
+            instanceNames = "#data?.repoName",
+            instanceIds = "#data?.repoName"
+        ),
+        content = ActionAuditContent.CODE_PROXY_CREATE_CONTENT
+    )
     fun createRepo(
         userId: String,
         data: CreateGitProxyData
     ): Boolean {
+        // 判断是否有重复数据
+        if (codeProxyDao.checkExistRepo(dslContext, data.projectId, data.repoName)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.CODEPROXY_EXIST_ERROR.errorCode,
+                params = arrayOf(data.projectId, data.repoName)
+            )
+        }
         // 判断项目是否存在，不存在创建
         if (!ifExistBkRepoProject(userId, data.projectId)) {
             gitproxyBkRepoClient.createProject(userId, data.projectId)
@@ -43,6 +69,11 @@ class GitProxyService @Autowired constructor(
             category = BkRepoCategory.PROXY,
             enableLfs = false
         )
+        // 审计
+        ActionAuditContext.current()
+            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
+            .scopeId = data.projectId
+
         var lfsRespData: CreateRepoRespData? = null
         val enableLfs = data.enableLfsCache == true && data.gitType == ScmType.CODE_TGIT
         if (enableLfs) {
@@ -130,6 +161,17 @@ class GitProxyService @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CODE_PROXY_DELETE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CODE_PROXY,
+            instanceNames = "#repoName",
+            instanceIds = "#repoName"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CODE_PROXY_DELETE_CONTENT
+    )
     fun deleteRepo(
         userId: String,
         projectId: String,
@@ -145,9 +187,13 @@ class GitProxyService @Autowired constructor(
         }
         gitproxyBkRepoClient.deleteRepo(userId, projectId, repoName)
         if (record.enableLfs == true) {
-            gitproxyBkRepoClient.deleteRepo(userId, projectId, "$LFS_REPONAME_PREFIX$repoName")
+            try {
+                gitproxyBkRepoClient.deleteRepo(userId, projectId, "$LFS_REPONAME_PREFIX$repoName")
+            } catch (e: Exception) {
+                logger.warn("deleteRepo delete lfs repo error", e)
+            }
         }
-        codeProxyDao.deleteCodeProxy(dslContext, record.id)
+        codeProxyDao.deleteCodeProxy(dslContext, record.projectId, record.name)
         return true
     }
 
@@ -201,5 +247,6 @@ class GitProxyService @Autowired constructor(
 
     companion object {
         private const val LFS_REPONAME_PREFIX = "Lfs_"
+        private val logger = LoggerFactory.getLogger(GitProxyService::class.java)
     }
 }

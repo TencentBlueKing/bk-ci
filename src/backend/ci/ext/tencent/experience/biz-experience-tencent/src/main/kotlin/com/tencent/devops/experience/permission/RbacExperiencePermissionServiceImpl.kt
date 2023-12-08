@@ -28,7 +28,7 @@ class RbacExperiencePermissionServiceImpl @Autowired constructor(
         message: String
     ) {
         val checkPermission = client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             projectCode = projectId,
             resourceCode = HashUtil.encodeLongId(experienceId),
@@ -43,7 +43,7 @@ class RbacExperiencePermissionServiceImpl @Autowired constructor(
 
     override fun validateCreateTaskPermission(user: String, projectId: String): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             projectCode = projectId,
             action = RbacAuthUtils.buildAction(AuthPermission.CREATE, AuthResourceType.EXPERIENCE_TASK),
@@ -74,7 +74,7 @@ class RbacExperiencePermissionServiceImpl @Autowired constructor(
     ) {
         client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
             userId = user,
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             projectCode = projectId,
             resourceType = RbacAuthUtils.extResourceType(AuthResourceType.EXPERIENCE_TASK),
             resourceCode = HashUtil.encodeLongId(experienceId),
@@ -89,7 +89,7 @@ class RbacExperiencePermissionServiceImpl @Autowired constructor(
     ): Map<AuthPermission, List<Long>> {
         val actions = RbacAuthUtils.buildActionList(authPermissions, AuthResourceType.EXPERIENCE_TASK)
         val instanceMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             projectCode = projectId,
             action = actions,
@@ -117,7 +117,7 @@ class RbacExperiencePermissionServiceImpl @Autowired constructor(
         projectId: String
     ): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             projectCode = projectId,
             action = RbacAuthUtils.buildAction(AuthPermission.CREATE, AuthResourceType.EXPERIENCE_GROUP),
@@ -133,7 +133,7 @@ class RbacExperiencePermissionServiceImpl @Autowired constructor(
         message: String
     ) {
         val checkPermission = client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             resourceCode = HashUtil.encodeLongId(groupId),
@@ -154,7 +154,7 @@ class RbacExperiencePermissionServiceImpl @Autowired constructor(
     ) {
         client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
             userId = userId,
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             projectCode = projectId,
             resourceType = RbacAuthUtils.extResourceType(AuthResourceType.EXPERIENCE_GROUP),
             resourceCode = HashUtil.encodeLongId(groupId),
@@ -168,7 +168,7 @@ class RbacExperiencePermissionServiceImpl @Autowired constructor(
         groupName: String
     ) {
         client.get(ServicePermissionAuthResource::class).resourceModifyRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             projectCode = projectId,
             resourceType = RbacAuthUtils.extResourceType(AuthResourceType.EXPERIENCE_GROUP),
             resourceCode = HashUtil.encodeLongId(groupId),
@@ -181,7 +181,7 @@ class RbacExperiencePermissionServiceImpl @Autowired constructor(
         groupId: Long
     ) {
         client.get(ServicePermissionAuthResource::class).resourceDeleteRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             projectCode = projectId,
             resourceType = RbacAuthUtils.extResourceType(AuthResourceType.EXPERIENCE_GROUP),
             resourceCode = HashUtil.encodeLongId(groupId)
@@ -195,7 +195,7 @@ class RbacExperiencePermissionServiceImpl @Autowired constructor(
     ): Map<AuthPermission, List<Long>> {
         val actions = RbacAuthUtils.buildActionList(authPermissions, AuthResourceType.EXPERIENCE_GROUP)
         val instanceMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             projectCode = projectId,
             action = actions,

@@ -642,7 +642,7 @@ interface ServiceGitResource {
         repoUrl: String? = null
     ): Result<GitMrInfo>
 
-    @ApiOperation("下载git仓库")
+    @ApiOperation("下载git仓库文件")
     @GET
     @Path("/downloadGitRepoFile")
     fun downloadGitRepoFile(
@@ -658,6 +658,15 @@ interface ServiceGitResource {
         @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum,
+        @ApiParam("限定为下载指定路径的文件", required = false)
+        @QueryParam("filePath")
+        filePath: String?,
+        @ApiParam("支持的 format 格式有:zip、tar、tar.gz、tar.xz、tar.bz2(默认为.zip 格式)", required = false)
+        @QueryParam("format")
+        format: String?,
+        @ApiParam("将项目名作为目录打包进去 (默认：false)", required = false)
+        @QueryParam("isProjectPathWrapped")
+        isProjectPathWrapped: Boolean?,
         @Context
         response: HttpServletResponse
     )

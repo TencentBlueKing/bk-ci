@@ -33,14 +33,10 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("扩展服务构建初始化流水线请求报文体")
 data class ExtServiceBuildInitPipelineReq(
-    @ApiModelProperty("代码仓库hashId", required = true)
-    val repositoryHashId: String,
-    @ApiModelProperty("代码仓库路径", required = true)
-    val repositoryPath: String?,
+    @ApiModelProperty("流水线模型", required = true)
+    val pipelineModel: String,
     @ApiModelProperty("脚本任务插件Shell执行脚本", required = true)
     val script: String,
     @ApiModelProperty("扩展服务基本信息", required = true)
-    val extServiceBaseInfo: ExtServiceBaseInfoDTO,
-    @ApiModelProperty("构建环境依赖环境变量", required = false)
-    val buildEnv: Map<String, String>?
+    val extServiceBaseInfo: ExtServiceBaseInfoDTO
 )

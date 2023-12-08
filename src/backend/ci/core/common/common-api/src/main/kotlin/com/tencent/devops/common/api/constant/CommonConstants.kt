@@ -104,6 +104,7 @@ const val OR = "or" // 或
 const val TIMETOSELECT = "timetoSelect" // 时必选
 const val MASTER = "master" // 主干
 const val SYSTEM = "system" // 系统
+const val IN_READY_TEST = "IN_READY_TEST" // 正在测试中
 const val BUILD_RUNNING = "buildRunning" // 运行中
 const val BUILD_QUEUE = "buildQueue" // 构建排队中
 const val BUILD_REVIEWING = "buildReviewing" // 构建待审核
@@ -118,6 +119,7 @@ const val LOCALE_LANGUAGE = "BK_CI_LOCALE_LANGUAGE" // locale国际化语言信�
 const val DEFAULT_LOCALE_LANGUAGE = "zh_CN" // 默认语言信息
 const val REQUEST_CHANNEL = "BK_CI_REQUEST_CHANNEL" // 请求渠道
 const val API_PERMISSION = "BK_CI_API_PERMISSION" // 请求API权限
+const val REQUEST_IP = "X-Forwarded-For" // 请求IP
 const val BK_CREATE = "bkCreate" // 创建
 const val BK_REVISE = "bkRevise" // 修改
 
@@ -153,6 +155,7 @@ const val KEY_UPDATED_TIME = "updatedTime"
 const val KEY_DEFAULT_LOCALE_LANGUAGE = "defaultLocaleLanguage"
 const val KEY_PROJECT_ID = "projectId"
 const val KEY_PIPELINE_NUM = "pipelineNum"
+const val KEY_BRANCH_TEST_FLAG = "branchTestFlag"
 
 const val BK_BUILD_ENV_START_FAILED = "bkBuildEnvStartFailed" // 构建环境启动失败
 const val BK_START_PULL_IMAGE = "bkStartPullImage" // 开始拉取镜像，镜像名称：

@@ -30,6 +30,7 @@ package com.tencent.devops.repository.service.scm
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.scm.api.ServiceScmResource
+import com.tencent.devops.scm.code.git.api.GitHook
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
@@ -39,6 +40,8 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.GitSession
+import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import org.springframework.beans.factory.annotation.Autowired
@@ -221,6 +224,43 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
         )
     }
 
+    override fun getWebHooks(projectName: String, url: String, type: ScmType, token: String?): List<GitHook> {
+        return client.getScm(ServiceScmResource::class).getWebHooks(
+            projectName = projectName,
+            url = url,
+            type = type,
+            token = token
+        ).data ?: emptyList()
+    }
+
+    override fun updateWebHook(
+        hookId: Long,
+        projectName: String,
+        url: String,
+        type: ScmType,
+        privateKey: String?,
+        passPhrase: String?,
+        token: String?,
+        region: CodeSvnRegion?,
+        userName: String,
+        event: String?,
+        hookUrl: String?
+    ) {
+        client.getScm(ServiceScmResource::class).updateWebHook(
+            hookId = hookId,
+            projectName = projectName,
+            url = url,
+            type = type,
+            privateKey = privateKey,
+            passPhrase = passPhrase,
+            token = token,
+            region = region,
+            userName = userName,
+            event = event,
+            hookUrl = hookUrl
+        )
+    }
+
     override fun addCommitCheck(request: CommitCheckRequest) {
         client.getScm(ServiceScmResource::class).addCommitCheck(request)
     }
@@ -365,6 +405,22 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
             type = type,
             token = token,
             crId = crId
+        ).data
+    }
+
+    override fun getGitSession(
+        type: ScmType,
+        username: String,
+        password: String,
+        url: String
+    ): GitSession? {
+        return client.getScm(ServiceScmResource::class).getSession(
+            RepoSessionRequest(
+                type = type,
+                username = username,
+                password = password,
+                url = url
+            )
         ).data
     }
 }

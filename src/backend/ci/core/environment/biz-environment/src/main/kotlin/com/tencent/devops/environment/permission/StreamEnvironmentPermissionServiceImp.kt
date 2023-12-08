@@ -172,7 +172,7 @@ class StreamEnvironmentPermissionServiceImp @Autowired constructor(
         logger.info("StreamEnvironmentPermissionServiceImp user:$userId projectId: $projectId ")
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
-            token = tokenCheckService.getSystemToken(null) ?: "",
+            token = tokenCheckService.getSystemToken() ?: "",
             action = AuthPermission.ENABLE.value, // 环境,节点类的校验都需要按操作类的校验方式校验。即便是view类型也按操作类
             projectCode = projectId,
             resourceCode = ""

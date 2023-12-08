@@ -14,7 +14,7 @@ class OpWindowsConfigResourceImpl @Autowired constructor(
 ) : OpWindowsConfigResource {
 
     override fun getWindowsResourceList(userId: String): Result<List<WindowsResourceTypeConfig>> {
-        return Result(windowsResourceConfigService.getAllType())
+        return Result(windowsResourceConfigService.getAllType(false))
     }
 
     override fun addWindowsResource(userId: String, windowsResourceConfig: WindowsResourceTypeConfig): Result<Boolean> {

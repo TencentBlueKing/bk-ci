@@ -96,7 +96,7 @@ class TxV3AuthResourceApiStr @Autowired constructor(
             resourceCode = resourceType,
             projectCode = projectCode,
             action = "all_action",
-            token = tokenService.getSystemToken(null)!!
+            token = tokenService.getSystemToken()!!
         ).data
         if (hasAllAction != null && hasAllAction) {
             return
@@ -124,7 +124,7 @@ class TxV3AuthResourceApiStr @Autowired constructor(
 //        )
 //        iamEsbService.createRelationResource(iamApiReq)
         client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             resourceType = resourceType,
             resourceCode = resourceCode,

@@ -28,7 +28,9 @@
 package com.tencent.devops.repository.resources.scm
 
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
@@ -43,6 +45,8 @@ import com.tencent.devops.repository.pojo.git.GitOperationFile
 import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.repository.service.RepoFileService
+import com.tencent.devops.repository.service.RepositoryService
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
@@ -63,13 +67,15 @@ import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.scm.pojo.TapdWorkItem
-import org.springframework.beans.factory.annotation.Autowired
 import javax.servlet.http.HttpServletResponse
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 @Suppress("ALL")
 class ServiceGitResourceImpl @Autowired constructor(
-    private val gitService: IGitService
+    private val gitService: IGitService,
+    private val repositoryService: RepositoryService,
+    private val repoFileService: RepoFileService
 ) : ServiceGitResource {
 
     override fun moveProjectToGroup(
@@ -263,13 +269,28 @@ class ServiceGitResourceImpl @Autowired constructor(
     }
 
     override fun downloadGitRepoFile(
-        repoName: String,
+        repoId: String,
+        repositoryType: RepositoryType?,
         sha: String?,
-        token: String,
         tokenType: TokenTypeEnum,
+        filePath: String?,
+        format: String?,
+        isProjectPathWrapped: Boolean?,
         response: HttpServletResponse
     ) {
-        return gitService.downloadGitRepoFile(repoName, sha, token, tokenType, response)
+        val repo = repositoryService.serviceGet(
+                "",
+            RepositoryConfigUtils.buildConfig(repoId, repositoryType)
+        )
+        repoFileService.downloadTGitRepoFile(
+            repo = repo,
+            sha = sha,
+            tokenType = tokenType,
+            filePath = filePath,
+            format = format,
+            isProjectPathWrapped = isProjectPathWrapped ?: false,
+            response = response
+        )
     }
 
     override fun getMergeRequestReviewersInfo(

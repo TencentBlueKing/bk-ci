@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.resources.user
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.artifactory.api.user.TencentUserArtifactoryResource
 import com.tencent.devops.artifactory.api.user.UserArtifactoryResource
 import com.tencent.devops.artifactory.pojo.CopyToCustomReq
@@ -47,6 +48,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
@@ -141,6 +143,7 @@ class TencentUserArtifactoryResourceImpl @Autowired constructor(
         return Result(bkRepoService.folderSize(userId, projectId, artifactoryType, path))
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_DOWNLOAD)
     override fun downloadUrl(
         userId: String,
         projectId: String,
@@ -159,6 +162,7 @@ class TencentUserArtifactoryResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_DOWNLOAD)
     override fun ioaUrl(
         userId: String,
         projectId: String,
@@ -177,6 +181,7 @@ class TencentUserArtifactoryResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_DOWNLOAD)
     override fun shareUrl(
         userId: String,
         projectId: String,
@@ -196,6 +201,7 @@ class TencentUserArtifactoryResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_DOWNLOAD)
     override fun externalUrl(
         userId: String,
         projectId: String,
