@@ -40,11 +40,11 @@ import com.tencent.devops.statistics.constant.StatisticsMessageCode.ORG_NOT_PROJ
 import com.tencent.devops.statistics.constant.StatisticsMessageCode.ORG_TYPE_ERROR
 import com.tencent.devops.statistics.dao.project.ProjectDao
 import com.tencent.devops.statistics.jmx.api.project.ProjectJmxApi
-import com.tencent.devops.statistics.util.project.ProjectUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import com.tencent.devops.statistics.util.project.ProjectUtils
 
 @Service
 class ProjectLocalService @Autowired constructor(
