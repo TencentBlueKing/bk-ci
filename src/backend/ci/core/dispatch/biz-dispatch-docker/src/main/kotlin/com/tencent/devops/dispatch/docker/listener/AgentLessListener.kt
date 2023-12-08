@@ -62,7 +62,7 @@ class AgentLessListener @Autowired constructor(
             logger.info("start build less($event)")
 
             // 开始启动无编译构建，增加构建次数
-            if (!jobQuotaService.checkAndAddRunningJob(event, JobQuotaVmType.AGENTLESS)) {
+            if (!jobQuotaService.checkAndAddRunningJob(event, JobQuotaVmType.BUILD_LESS)) {
                 logger.error("[${event.buildId}]|BUILD_LESS| AgentLess Job quota exceed quota.")
                 return
             }

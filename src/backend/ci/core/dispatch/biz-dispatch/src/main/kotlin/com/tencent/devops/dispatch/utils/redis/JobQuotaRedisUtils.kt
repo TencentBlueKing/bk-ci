@@ -26,22 +26,18 @@
  */
 package com.tencent.devops.dispatch.utils.redis
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.dispatch.service.jobquota.JobQuotaBusinessService
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.redis.core.Cursor
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 
 @Component
-class JobQuotaRedisUtils @Autowired constructor(
-    private val objectMapper: ObjectMapper
-) {
+class JobQuotaRedisUtils {
     fun getJobQuotaProjectLock(projectId: String): RedisLock {
         return RedisLock(getRedisStringSerializerOperation(), "$JOB_PROJECT_LOCK_KEY$projectId", 60L)
     }
@@ -67,20 +63,20 @@ class JobQuotaRedisUtils @Autowired constructor(
     }
 
     fun getProjectRunJobTime(projectId: String): String? {
-        return getRedisStringSerializerOperation().hget(getDayRunningTimeKey(),
+        return getRedisStringSerializerOperation().hget(getDayJobRunningTimeKey(),
             getProjectRunningTimeKey(projectId))
     }
 
     fun getProjectRunJobTypeTime(projectId: String, vmType: JobQuotaVmType): String? {
         return getRedisStringSerializerOperation().hget(
-            getDayRunningTimeKey(),
+            getDayJobRunningTimeKey(),
             getProjectJobTypeRunningTimeKey(projectId, vmType))
     }
 
     fun getLastDayProjectRunJobTypeTime(projectId: String, jobType: JobQuotaVmType): String? {
         val lastWeekDay = LocalDateTime.now().minusDays(1).dayOfWeek
         return getRedisStringSerializerOperation().hget(
-            getDayRunningTimeKey(lastWeekDay.name),
+            getDayJobRunningTimeKey(lastWeekDay.name),
             getProjectJobTypeRunningTimeKey(projectId, jobType))
     }
 
@@ -115,7 +111,7 @@ class JobQuotaRedisUtils @Autowired constructor(
     fun restoreProjectJobTime(projectId: String?, vmType: JobQuotaVmType) {
         if (projectId == null && vmType != JobQuotaVmType.ALL) {
             // 直接删除当月的hash主key
-            getRedisStringSerializerOperation().delete(getDayRunningTimeKey())
+            getRedisStringSerializerOperation().delete(getDayJobRunningTimeKey())
             return
         }
         if (projectId != null && vmType != JobQuotaVmType.ALL) { // restore project with vmType
@@ -126,14 +122,14 @@ class JobQuotaRedisUtils @Autowired constructor(
 
     private fun restoreWithVmType(project: String, vmType: JobQuotaVmType) {
         val time = getRedisStringSerializerOperation().hget(
-            getDayRunningTimeKey(),
+            getDayJobRunningTimeKey(),
             getProjectJobTypeRunningTimeKey(project, vmType)) ?: "0"
         val totalTime = getRedisStringSerializerOperation().hget(
-            getDayRunningTimeKey(),
+            getDayJobRunningTimeKey(),
             getProjectRunningTimeKey(project)) ?: "0"
         val reduiceTime = (totalTime.toLong() - time.toLong())
         getRedisStringSerializerOperation().hset(
-            key = getDayRunningTimeKey(),
+            key = getDayJobRunningTimeKey(),
             hashKey = getProjectRunningTimeKey(project),
             values = if (reduiceTime < 0) {
                 "0"
@@ -142,7 +138,7 @@ class JobQuotaRedisUtils @Autowired constructor(
             }
         )
         getRedisStringSerializerOperation().hset(
-            key = getDayRunningTimeKey(),
+            key = getDayJobRunningTimeKey(),
             hashKey = getProjectJobTypeRunningTimeKey(project, vmType),
             values = "0"
         )
@@ -158,7 +154,7 @@ class JobQuotaRedisUtils @Autowired constructor(
         saveJobConcurrency(projectId, 0, jobType)
 
         getRedisStringSerializerOperation().hIncrBy(
-            key = getDayRunningTimeKey(),
+            key = getDayJobRunningTimeKey(),
             hashKey = getProjectJobTypeRunningTimeKey(projectId, jobType),
             delta = time
         )
@@ -181,7 +177,26 @@ class JobQuotaRedisUtils @Autowired constructor(
         return Pair(array[0], array[1])
     }
 
-    private fun getDayRunningTimeKey(day: String? = null): String {
+    /**
+     * 删除前一天的hashKey
+     */
+    fun deleteLastDayJobKey() {
+        val lastWeekDay = LocalDateTime.now().minusDays(1).dayOfWeek
+        getRedisStringSerializerOperation().delete(getDayJobRunningTimeKey(lastWeekDay.name))
+        getRedisStringSerializerOperation().delete(getDayJobConcurrencyKey(lastWeekDay.name))
+    }
+
+    /**
+     * 给hashKey设置过期时间
+     */
+    fun setDayJobKeyExpire() {
+        getRedisStringSerializerOperation().expire(getDayJobRunningTimeKey(), DAY_HASH_KEY_EXPIRE_TIME)
+        getRedisStringSerializerOperation().expire(getDayJobConcurrencyKey(), DAY_HASH_KEY_EXPIRE_TIME)
+    }
+
+    /************************** KEY ***************************/
+
+    private fun getDayJobRunningTimeKey(day: String? = null): String {
         val currentDay = day ?: LocalDateTime.now().dayOfWeek.name
         return "$PROJECT_RUNNING_TIME_KEY_PREFIX$currentDay"
     }
@@ -230,6 +245,8 @@ class JobQuotaRedisUtils @Autowired constructor(
         private const val WARN_TIME_PROJECT_TIME_THRESHOLD_LOCK_KEY_PREFIX =
             "time_quota_warning_project_threshold_lock_key_" // 项目当月已运行时间阈值告警前缀
         private const val WARN_TIME_LOCK_VALUE = "job_quota_warning_lock_value" // VALUE值，标志位
+
+        private const val DAY_HASH_KEY_EXPIRE_TIME = 3600 * 25L
 
         private val LOG = LoggerFactory.getLogger(JobQuotaBusinessService::class.java)
     }

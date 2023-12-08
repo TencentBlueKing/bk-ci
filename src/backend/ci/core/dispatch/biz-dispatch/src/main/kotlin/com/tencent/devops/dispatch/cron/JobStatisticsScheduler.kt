@@ -90,13 +90,15 @@ class JobStatisticsScheduler @Autowired constructor(
                     }
                 }
 
-                // 最后再把剩余数据push
+                // 最后再把100余数的剩余数据push
                 pushJobStatistics(jobMetricsDataList)
             }
         } catch (e: Throwable) {
             logger.error("Save jobStatistics failed.", e)
         } finally {
             redisLock.unlock()
+            jobQuotaRedisUtils.deleteLastDayJobKey()
+            jobQuotaRedisUtils.setDayJobKeyExpire()
         }
     }
 
@@ -175,6 +177,7 @@ class JobStatisticsScheduler @Autowired constructor(
 
         private const val TIMEOUT_DAYS = 7L
         private const val CHECK_RUNNING_DAYS = 1L
+        private const val CURSOR = 1L
         private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     }
 }

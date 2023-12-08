@@ -37,7 +37,7 @@ enum class JobQuotaVmType(val displayName: String) {
     MACOS_DEVCLOUD("MacOS on DevCloud"),
     WINDOWS_DEVCLOUD("Windows on DevCloud"),
     OTHER("私有构建机或集群"),
-    AGENTLESS("无编译环境"),
+    BUILD_LESS("无编译环境"),
     DOCKER_GITCI("工蜂CI构建机"),
     DOCKER_STREAM("STREAM构建机"),
     DOCKER_BCS("Docker on Bcs"),
