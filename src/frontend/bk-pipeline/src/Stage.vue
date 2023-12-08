@@ -100,7 +100,6 @@
 
         <template v-if="reactiveData.editable">
             <span
-                v-if="!isFirstStage"
                 class="add-menu"
                 @click.stop="toggleAddMenu(!isAddMenuShow)"
             >
@@ -147,22 +146,22 @@
 
 <script>
     import draggable from 'vuedraggable'
-    import StageContainer from './StageContainer'
-    import Logo from './Logo'
     import CruveLine from './CruveLine'
     import InsertStageMenu from './InsertStageMenu'
+    import Logo from './Logo'
     import StageCheckIcon from './StageCheckIcon'
+    import StageContainer from './StageContainer'
     import { localeMixins } from './locale'
 
-    import { getOuterHeight, isTriggerContainer, hashID, randomString, eventBus } from './util'
     import {
-        CLICK_EVENT_NAME,
         ADD_STAGE,
-        DELETE_EVENT_NAME,
+        CLICK_EVENT_NAME,
         COPY_EVENT_NAME,
+        DELETE_EVENT_NAME,
         STAGE_RETRY,
         STATUS_MAP
     } from './constants'
+    import { eventBus, getOuterHeight, hashID, isTriggerContainer, randomString } from './util'
 
     export default {
         components: {

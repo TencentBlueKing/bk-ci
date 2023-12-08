@@ -3,7 +3,9 @@
         v-model="computedStages"
         v-bind="dragOptions"
         :move="checkMove"
-        class="bk-pipeline"
+        :class="['bk-pipeline', {
+            'editable-bk-pipeline': editable
+        }]"
     >
         <Stage
             class="list-item"
@@ -32,21 +34,21 @@
 <script>
     import draggable from 'vuedraggable'
     import Stage from './Stage'
-    import { eventBus, hashID, isTriggerContainer, areDeeplyEqual } from './util'
+    import { areDeeplyEqual, eventBus, hashID, isTriggerContainer } from './util'
 
     import {
-        CLICK_EVENT_NAME,
-        DELETE_EVENT_NAME,
-        COPY_EVENT_NAME,
-        ATOM_REVIEW_EVENT_NAME,
-        ATOM_QUALITY_CHECK_EVENT_NAME,
+        ADD_STAGE,
+        ATOM_ADD_EVENT_NAME,
         ATOM_CONTINUE_EVENT_NAME,
         ATOM_EXEC_EVENT_NAME,
-        ATOM_ADD_EVENT_NAME,
-        ADD_STAGE,
+        ATOM_QUALITY_CHECK_EVENT_NAME,
+        ATOM_REVIEW_EVENT_NAME,
+        CLICK_EVENT_NAME,
+        COPY_EVENT_NAME,
+        DEBUG_CONTAINER,
+        DELETE_EVENT_NAME,
         STAGE_CHECK,
-        STAGE_RETRY,
-        DEBUG_CONTAINER
+        STAGE_RETRY
     } from './constants'
 
     const customEvents = [
@@ -301,6 +303,9 @@
   li {
     margin: 0;
     padding: 0;
+  }
+  &.editable-bk-pipeline {
+    padding-left: 80px;
   }
 }
 
