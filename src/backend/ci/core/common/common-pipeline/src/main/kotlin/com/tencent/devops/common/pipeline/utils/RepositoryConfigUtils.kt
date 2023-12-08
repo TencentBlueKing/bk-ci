@@ -135,7 +135,7 @@ object RepositoryConfigUtils {
             )
         }
 
-    @Suppress("CyclomaticComplexMethod")
+    @Suppress("CyclomaticComplexMethod", "ComplexMethod")
     fun buildWebhookConfig(
         element: Element,
         variables: Map<String, String>
