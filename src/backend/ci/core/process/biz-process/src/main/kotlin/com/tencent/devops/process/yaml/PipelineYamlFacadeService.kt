@@ -71,7 +71,7 @@ class PipelineYamlFacadeService @Autowired constructor(
     private val webhookEventFactory: WebhookEventFactory,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
     private val pipelineYamlService: PipelineYamlService,
-    private val pipelineYamlRepositoryService: PipelineYamlRepositoryService
+    // private val pipelineYamlRepositoryService: PipelineYamlRepositoryService
 ) {
 
     companion object {
@@ -296,7 +296,7 @@ class PipelineYamlFacadeService @Autowired constructor(
             commitMessage = commitMessage,
             targetAction = targetAction
         )
-        pipelineYamlRepositoryService.releaseYamlPipeline(
+        /*pipelineYamlRepositoryService.releaseYamlPipeline(
             projectId = projectId,
             repoHashId = repoHashId,
             filePath = filePath,
@@ -305,6 +305,6 @@ class PipelineYamlFacadeService @Autowired constructor(
             version = version,
             versionName = versionName,
             yamlFile = yamlFile
-        )
+        )*/
     }
 }
