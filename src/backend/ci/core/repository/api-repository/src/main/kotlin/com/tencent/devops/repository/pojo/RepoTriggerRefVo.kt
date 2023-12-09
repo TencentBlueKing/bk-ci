@@ -38,8 +38,8 @@ data class RepoTriggerRefVo(
     val atomCode: String,
     @ApiModelProperty("触发类型")
     val triggerType: String,
-    @ApiModelProperty("事件类型")
-    val eventType: String,
+    @ApiModelProperty("事件类型描述，根据[eventType]进行国际化")
+    val eventTypeDesc: String,
     @ApiModelProperty("插件参数")
     val taskParams: Map<String, Any>,
     @ApiModelProperty("触发条件")
@@ -48,5 +48,7 @@ data class RepoTriggerRefVo(
     val triggerConditionMd5: String?,
     @ApiModelProperty("流水线引用数量")
     val pipelineRefCount: Int,
-    val atomLogo: String? = null
+    val atomLogo: String? = null,
+    @ApiModelProperty("事件类型key")
+    val eventType: String
 )

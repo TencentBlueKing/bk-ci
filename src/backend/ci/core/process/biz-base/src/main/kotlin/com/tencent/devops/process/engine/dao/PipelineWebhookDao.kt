@@ -58,7 +58,8 @@ class PipelineWebhookDao {
                     TASK_ID,
                     EVENT_TYPE,
                     REPOSITORY_HASH_ID,
-                    EXTERNAL_ID
+                    EXTERNAL_ID,
+                    EXTERNAL_NAME
                 )
                     .values(
                         projectId,
@@ -71,7 +72,8 @@ class PipelineWebhookDao {
                         taskId,
                         eventType,
                         repositoryHashId,
-                        externalId
+                        externalId,
+                        externalName
                     )
                     .onDuplicateKeyUpdate()
                     .set(REPO_TYPE, repoType?.name)
@@ -81,6 +83,7 @@ class PipelineWebhookDao {
                     .set(EVENT_TYPE, eventType)
                     .set(REPOSITORY_HASH_ID, repositoryHashId)
                     .set(EXTERNAL_ID, externalId)
+                    .set(EXTERNAL_NAME, externalName)
                     .execute()
             }
         }
@@ -158,13 +161,13 @@ class PipelineWebhookDao {
 
     fun getByProjectNameAndType(
         dslContext: DSLContext,
-        projectNames: List<String>,
+        projectName: String,
         repositoryType: String,
         yamlPipelineIds: List<String>?
     ): List<WebhookTriggerPipeline>? {
         with(T_PIPELINE_WEBHOOK) {
             return dslContext.select(PROJECT_ID, PIPELINE_ID).from(this)
-                .where(PROJECT_NAME.`in`(projectNames))
+                .where(PROJECT_NAME.eq(projectName))
                 .and(REPOSITORY_TYPE.eq(repositoryType))
                 .and(DELETE.eq(false))
                 .let {
@@ -221,22 +224,6 @@ class PipelineWebhookDao {
                         pipelineId = it.value2()
                     )
                 }
-        }
-    }
-
-    fun listWebhookPipeline(
-        dslContext: DSLContext,
-        projectName: String,
-        repositoryType: String,
-        eventType: String
-    ): List<PipelineWebhook>? {
-        with(T_PIPELINE_WEBHOOK) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_NAME.eq(projectName))
-                .and(REPOSITORY_TYPE.eq(repositoryType))
-                .and(EVENT_TYPE.eq(eventType))
-                .and(DELETE.eq(false))
-                .fetch().map { convert(it) }
         }
     }
 
@@ -301,7 +288,6 @@ class PipelineWebhookDao {
     fun groupPipelineList(
         dslContext: DSLContext,
         projectId: String?,
-        projectNames: List<String>?,
         offset: Int,
         limit: Int
     ): List<WebhookTriggerPipeline> {
@@ -313,13 +299,6 @@ class PipelineWebhookDao {
                         it
                     } else {
                         it.and(PROJECT_ID.eq(projectId))
-                    }
-                }
-                .let {
-                    if (projectNames.isNullOrEmpty()) {
-                        it
-                    } else {
-                        it.and(PROJECT_NAME.`in`(projectNames))
                     }
                 }
                 .groupBy(PROJECT_ID, PIPELINE_ID)
@@ -338,6 +317,7 @@ class PipelineWebhookDao {
         repositoryHashId: String?,
         eventType: String,
         externalId: String?,
+        externalName: String?,
         pipelineId: String,
         projectId: String,
         taskId: String
@@ -347,24 +327,10 @@ class PipelineWebhookDao {
                 .set(REPOSITORY_HASH_ID, repositoryHashId)
                 .set(EVENT_TYPE, eventType)
                 .set(EXTERNAL_ID, externalId)
+                .set(EXTERNAL_NAME, externalName)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(TASK_ID.eq(taskId))
-                .execute()
-        }
-    }
-
-    fun updateProjectName(
-        dslContext: DSLContext,
-        projectId: String,
-        projectName: String,
-        id: Long
-    ) {
-        with(T_PIPELINE_WEBHOOK) {
-            dslContext.update(this)
-                .set(PROJECT_NAME, projectName)
-                .where(PROJECT_ID.eq(projectId))
-                .and(ID.eq(id))
                 .execute()
         }
     }

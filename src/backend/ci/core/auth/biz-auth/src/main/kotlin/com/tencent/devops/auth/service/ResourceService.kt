@@ -122,14 +122,7 @@ class ResourceService @Autowired constructor(
 
     private fun buildResult(method: CallbackMethodEnum, response: String): CallbackBaseResponseDTO1 {
         return when (method) {
-            CallbackMethodEnum.SEARCH_INSTANCE -> {
-                val searchResult = objectMapper.readValue<SearchInstanceInfo>(response)
-                if (searchResult.data?.count!! > 100L) {
-                    searchResult.buildSearchInstanceResultFailResult()
-                } else {
-                    searchResult
-                }
-            }
+            CallbackMethodEnum.SEARCH_INSTANCE -> objectMapper.readValue<SearchInstanceInfo>(response)
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> objectMapper.readValue<FetchInstanceInfoResponseDTO>(response)
             CallbackMethodEnum.LIST_INSTANCE -> objectMapper.readValue<ListInstanceResponseDTO>(response)
             else -> objectMapper.readValue(response)

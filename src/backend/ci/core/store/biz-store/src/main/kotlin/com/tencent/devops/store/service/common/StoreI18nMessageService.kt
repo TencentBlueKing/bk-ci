@@ -27,7 +27,7 @@
 
 package com.tencent.devops.store.service.common
 
-import com.tencent.devops.store.pojo.atom.StoreI18nConfig
+import com.tencent.devops.store.pojo.common.StoreI18nConfig
 
 @Suppress("LongParameterList")
 interface StoreI18nMessageService {
