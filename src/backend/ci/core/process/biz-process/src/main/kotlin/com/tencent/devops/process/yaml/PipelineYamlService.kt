@@ -32,10 +32,12 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
+import com.tencent.devops.process.engine.dao.PipelineYamlTriggerDao
 import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
+import com.tencent.devops.process.pojo.trigger.PipelineYamlTrigger
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import org.jooq.DSLContext
@@ -48,6 +50,7 @@ class PipelineYamlService(
     private val dslContext: DSLContext,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
     private val pipelineYamlVersionDao: PipelineYamlVersionDao,
+    private val pipelineYamlTriggerDao: PipelineYamlTriggerDao,
     private val client: Client
 ) {
 
@@ -64,7 +67,8 @@ class PipelineYamlService(
         blobId: String,
         ref: String?,
         version: Int,
-        versionName: String
+        versionName: String,
+        yamlTriggers: List<PipelineYamlTrigger>
     ) {
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -88,6 +92,10 @@ class PipelineYamlService(
                 versionName = versionName,
                 userId = userId
             )
+            pipelineYamlTriggerDao.batchSave(
+                dslContext = transactionContext,
+                yamlTriggers = yamlTriggers
+            )
         }
     }
 
@@ -100,7 +108,8 @@ class PipelineYamlService(
         blobId: String,
         ref: String?,
         version: Int,
-        versionName: String
+        versionName: String,
+        yamlTriggers: List<PipelineYamlTrigger>
     ) {
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -122,6 +131,10 @@ class PipelineYamlService(
                 version = version,
                 versionName = versionName,
                 userId = userId
+            )
+            pipelineYamlTriggerDao.batchSave(
+                dslContext = transactionContext,
+                yamlTriggers = yamlTriggers
             )
         }
     }
@@ -238,6 +251,17 @@ class PipelineYamlService(
         repoHashId: String
     ): Long {
         return pipelineYamlInfoDao.countYamlPipeline(
+            dslContext = dslContext,
+            projectId = projectId,
+            repoHashId = repoHashId
+        )
+    }
+
+    fun getAllByRepo(
+        projectId: String,
+        repoHashId: String
+    ): List<PipelineYamlInfo> {
+        return pipelineYamlInfoDao.getAllByRepo(
             dslContext = dslContext,
             projectId = projectId,
             repoHashId = repoHashId

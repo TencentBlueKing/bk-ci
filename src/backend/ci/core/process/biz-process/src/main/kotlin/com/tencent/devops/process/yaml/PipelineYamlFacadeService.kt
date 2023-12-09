@@ -70,7 +70,8 @@ class PipelineYamlFacadeService @Autowired constructor(
     private val pipelineYamlSyncService: PipelineYamlSyncService,
     private val webhookEventFactory: WebhookEventFactory,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
-    private val pipelineYamlService: PipelineYamlService
+    private val pipelineYamlService: PipelineYamlService,
+    private val pipelineYamlRepositoryService: PipelineYamlRepositoryService
 ) {
 
     companion object {
@@ -117,15 +118,7 @@ class PipelineYamlFacadeService @Autowired constructor(
             )
         }
         yamlPathList.forEach {
-            val triggerPipeline = path2PipelineExists[it.yamlPath] ?: PacTriggerPipeline(
-                projectId = projectId,
-                repoHashId = repoHashId,
-                filePath = it.yamlPath,
-                pipelineId = "",
-                userId = userId,
-                delete = false
-            )
-            action.data.context.pipeline = triggerPipeline
+            action.data.context.pipeline = path2PipelineExists[it.yamlPath]
             action.data.context.yamlFile = it
             pipelineEventDispatcher.dispatch(
                 PipelineYamlEnableEvent(
@@ -303,17 +296,15 @@ class PipelineYamlFacadeService @Autowired constructor(
             commitMessage = commitMessage,
             targetAction = targetAction
         )
-        // 发布只记录yaml流水线信息，不记录yaml版本信息，因为此时还不能确定yaml文件的blob_id,等yaml文件提交后,产生webhook事件事再创建
-        pipelineYamlService.save(
+        pipelineYamlRepositoryService.releaseYamlPipeline(
             projectId = projectId,
             repoHashId = repoHashId,
             filePath = filePath,
             pipelineId = pipelineId,
             userId = userId,
-            blobId = yamlFile.blobId!!,
-            ref = yamlFile.ref,
             version = version,
-            versionName = versionName
+            versionName = versionName,
+            yamlFile = yamlFile
         )
     }
 }

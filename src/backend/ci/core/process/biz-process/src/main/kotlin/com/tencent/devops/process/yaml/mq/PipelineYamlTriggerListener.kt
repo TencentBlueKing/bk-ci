@@ -92,7 +92,7 @@ class PipelineYamlTriggerListener @Autowired constructor(
             pipelineYamlSyncService.syncSuccess(projectId = projectId, repoHashId = repoHashId, filePath = filePath)
         } catch (ignored: Exception) {
             logger.warn("enable pipeline yaml error", ignored)
-            val (reason, reasonDetail) = YamlTriggerExceptionUtil.getReason(exception = ignored)
+            val (reason, reasonDetail) = YamlTriggerExceptionUtil.getI18Reason(exception = ignored)
             pipelineYamlSyncService.syncFailed(
                 projectId = projectId,
                 repoHashId = repoHashId,

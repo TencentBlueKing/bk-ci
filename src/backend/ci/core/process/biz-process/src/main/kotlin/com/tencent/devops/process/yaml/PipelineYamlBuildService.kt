@@ -29,12 +29,11 @@
 package com.tencent.devops.process.yaml
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.process.engine.dao.PipelineYamlTriggerDao
 import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailBuilder
 import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
-import com.tencent.devops.process.trigger.PipelineTriggerEventService
-import com.tencent.devops.process.yaml.actions.BaseAction
 import com.tencent.devops.process.webhook.WebhookEventFactory
+import com.tencent.devops.process.yaml.actions.BaseAction
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,9 +43,9 @@ import org.springframework.stereotype.Service
 class PipelineYamlBuildService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineYamlVersionDao: PipelineYamlVersionDao,
+    private val pipelineYamlTriggerDao: PipelineYamlTriggerDao,
     private val webhookEventFactory: WebhookEventFactory,
-    private val pipelineBuildWebhookService: PipelineBuildWebhookService,
-    private val pipelineTriggerEventService: PipelineTriggerEventService
+    private val pipelineBuildWebhookService: PipelineBuildWebhookService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineYamlBuildService::class.java)
@@ -70,18 +69,22 @@ class PipelineYamlBuildService @Autowired constructor(
             return
         }
         val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = action.data.event)
-        val builder = PipelineTriggerDetailBuilder()
-            .detailId(pipelineTriggerEventService.getDetailId())
-            .projectId(projectId)
-            .pipelineId(pipelineYamlVersion.pipelineId)
-            .eventId(action.data.context.eventId!!)
-            .eventSource(repoHashId)
+        val taskIds = pipelineYamlTriggerDao.getTaskIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineYamlVersion.pipelineId,
+            version = pipelineYamlVersion.version,
+            repoHashId = repoHashId,
+            eventType = matcher.getEventType().name
+        ) ?: return
         pipelineBuildWebhookService.webhookTriggerPipelineBuild(
             projectId = projectId,
             pipelineId = pipelineYamlVersion.pipelineId,
+            version = pipelineYamlVersion.version,
+            taskIds = taskIds,
+            repoHashId = repoHashId,
             matcher = matcher,
-            builder = builder
+            eventId = action.data.context.eventId!!
         )
-        pipelineTriggerEventService.saveTriggerDetail(triggerDetail = builder.build())
     }
 }

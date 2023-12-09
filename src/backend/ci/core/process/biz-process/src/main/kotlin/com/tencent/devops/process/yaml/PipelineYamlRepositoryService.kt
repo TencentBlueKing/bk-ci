@@ -28,7 +28,13 @@
 
 package com.tencent.devops.process.yaml
 
+import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
+import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.service.PipelineWebhookService
+import com.tencent.devops.process.pojo.trigger.PipelineYamlTrigger
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.yaml.actions.BaseAction
 import com.tencent.devops.process.yaml.pojo.PipelineYamlTriggerLock
@@ -41,7 +47,9 @@ import org.springframework.stereotype.Service
 class PipelineYamlRepositoryService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineYamlService: PipelineYamlService,
-    private val pipelineInfoFacadeService: PipelineInfoFacadeService
+    private val pipelineInfoFacadeService: PipelineInfoFacadeService,
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineWebhookService: PipelineWebhookService
 ) {
 
     companion object {
@@ -88,7 +96,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
     /**
      * 创建yaml流水线,如果流水线不存在则创建，创建则更新版本
      */
-    fun createPipelineIfAbsent(
+    private fun createPipelineIfAbsent(
         projectId: String,
         action: BaseAction,
         yamlFile: YamlPathListEntry
@@ -114,7 +122,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
         }
     }
 
-    fun updatePipelineIfAbsent(
+    private fun updatePipelineIfAbsent(
         projectId: String,
         pipelineId: String,
         action: BaseAction,
@@ -135,7 +143,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
         }
     }
 
-    fun createYamlPipeline(
+    private fun createYamlPipeline(
         projectId: String,
         action: BaseAction,
         yamlFile: YamlPathListEntry
@@ -150,20 +158,26 @@ class PipelineYamlRepositoryService @Autowired constructor(
             branchName = branch,
             isDefaultBranch = branch == action.data.context.defaultBranch
         )
+        val pipelineId = deployPipelineResult.pipelineId
+        val version = deployPipelineResult.version
+        val repoHashId = action.data.setting.repoHashId
+        val yamlTriggers =
+            getYamlTriggers(projectId = projectId, pipelineId = pipelineId, version = version, repoHashId = repoHashId)
         pipelineYamlService.save(
             projectId = projectId,
-            repoHashId = action.data.setting.repoHashId,
+            repoHashId = repoHashId,
             filePath = yamlFile.yamlPath,
             blobId = yamlFile.blobId!!,
             ref = branch,
-            pipelineId = deployPipelineResult.pipelineId,
-            version = deployPipelineResult.version,
+            pipelineId = pipelineId,
+            version = version,
             versionName = deployPipelineResult.versionName!!,
-            userId = action.data.getUserId()
+            userId = action.data.getUserId(),
+            yamlTriggers = yamlTriggers
         )
     }
 
-    fun updateYamlPipeline(
+    private fun updateYamlPipeline(
         projectId: String,
         pipelineId: String,
         action: BaseAction,
@@ -180,16 +194,21 @@ class PipelineYamlRepositoryService @Autowired constructor(
             branchName = branch,
             isDefaultBranch = branch == action.data.context.defaultBranch
         )
+        val version = deployPipelineResult.version
+        val repoHashId = action.data.setting.repoHashId
+        val yamlTriggers =
+            getYamlTriggers(projectId = projectId, pipelineId = pipelineId, version = version, repoHashId = repoHashId)
         pipelineYamlService.update(
             projectId = projectId,
-            repoHashId = action.data.setting.repoHashId,
+            repoHashId = repoHashId,
             filePath = yamlFile.yamlPath,
             blobId = yamlFile.blobId!!,
             ref = branch,
             pipelineId = deployPipelineResult.pipelineId,
             version = deployPipelineResult.version,
             versionName = deployPipelineResult.versionName!!,
-            userId = action.data.getUserId()
+            userId = action.data.getUserId(),
+            yamlTriggers = yamlTriggers
         )
     }
 
@@ -225,5 +244,99 @@ class PipelineYamlRepositoryService @Autowired constructor(
             logger.error("Failed to delete pipeline yaml|$projectId|${action.format()}", ignored)
             throw ignored
         }
+    }
+
+    /**
+     * 发布yaml流水线
+     */
+    fun releaseYamlPipeline(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        versionName: String,
+        repoHashId: String,
+        filePath: String,
+        yamlFile: YamlPathListEntry
+    ) {
+        PipelineYamlTriggerLock(
+            redisOperation = redisOperation,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = filePath
+        ).use {
+            it.lock()
+            val yamlTriggers =
+                getYamlTriggers(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    version = version,
+                    repoHashId = repoHashId
+                )
+            pipelineYamlService.save(
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = filePath,
+                pipelineId = pipelineId,
+                userId = userId,
+                blobId = yamlFile.blobId!!,
+                ref = yamlFile.ref,
+                version = version,
+                versionName = versionName,
+                yamlTriggers = yamlTriggers
+            )
+        }
+    }
+
+    fun getYamlTriggers(
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        repoHashId: String
+    ): List<PipelineYamlTrigger> {
+        val model =
+            pipelineRepositoryService.getModel(projectId = projectId, pipelineId = pipelineId, version = version)
+        if (model == null) {
+            logger.info("$pipelineId|$version|model is null")
+            return emptyList()
+        }
+        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val variables = triggerContainer.params.associate { param ->
+            param.id to param.defaultValue.toString()
+        }
+        val elements = triggerContainer.elements.filterIsInstance<WebHookTriggerElement>()
+        val yamlTriggers = mutableListOf<PipelineYamlTrigger>()
+        elements.forEach { element ->
+            try {
+                val (scmType, eventType, repositoryConfig) =
+                    RepositoryConfigUtils.buildWebhookConfig(element, variables)
+                val repository = pipelineWebhookService.registerWebhook(
+                    projectId = projectId,
+                    scmType = scmType,
+                    repositoryConfig = repositoryConfig,
+                    codeEventType = eventType,
+                    elementVersion = element.version
+                ) ?: return@forEach
+                if (repository.repoHashId == repoHashId) {
+                    yamlTriggers.add(
+                        PipelineYamlTrigger(
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            version = version,
+                            taskId = element.id!!,
+                            taskRepoType = repositoryConfig.repositoryType,
+                            taskRepoHashId = repositoryConfig.repositoryHashId,
+                            taskRepoName = repositoryConfig.repositoryName,
+                            repositoryType = scmType,
+                            repositoryHashId = repoHashId,
+                            eventType = eventType!!.name
+                        )
+                    )
+                }
+            } catch (ignore: Exception) {
+                logger.warn("$projectId|$pipelineId|add webhook failed", ignore)
+            }
+        }
+        return yamlTriggers
     }
 }
