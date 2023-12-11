@@ -48,7 +48,8 @@ data class PacRepoSetting(
     val enableUser: String,
     val gitProjectId: Long?,
     val projectName: String,
-    val credentialId: String?
+    val credentialId: String?,
+    val aliasName: String
 ) {
     constructor(repository: Repository): this(
         projectId = repository.projectId!!,
@@ -62,6 +63,7 @@ data class PacRepoSetting(
             else -> null
         },
         projectName = repository.projectName,
-        credentialId = repository.credentialId
+        credentialId = repository.credentialId,
+        aliasName = repository.aliasName
     )
 }

@@ -92,6 +92,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
+import java.util.LinkedList
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
@@ -507,7 +508,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         projectId: String,
         yml: String,
         branchName: String,
-        isDefaultBranch: Boolean
+        isDefaultBranch: Boolean,
+        aspects: LinkedList<IPipelineTransferAspect>? = null
     ): DeployPipelineResult {
         // TODO 待补充
         return DeployPipelineResult(pipelineId = "p-001", pipelineName = "yml-001-pipeline", version = 1)
@@ -519,7 +521,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         pipelineId: String,
         yml: String,
         branchName: String,
-        isDefaultBranch: Boolean
+        isDefaultBranch: Boolean,
+        aspects: LinkedList<IPipelineTransferAspect>? = null
     ): DeployPipelineResult {
         // TODO 待补充
         return DeployPipelineResult(pipelineId = "p-001", pipelineName = "yml-001-pipeline", version = 1)

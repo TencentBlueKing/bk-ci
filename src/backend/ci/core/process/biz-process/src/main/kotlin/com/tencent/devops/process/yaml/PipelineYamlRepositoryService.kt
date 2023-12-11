@@ -28,15 +28,17 @@
 
 package com.tencent.devops.process.yaml
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
-import com.tencent.devops.process.pojo.trigger.PipelineYamlTrigger
+import com.tencent.devops.process.pojo.webhook.PipelineWebhookVersion
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.yaml.actions.BaseAction
+import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferAspectLoader
 import com.tencent.devops.process.yaml.pojo.PipelineYamlTriggerLock
 import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
 import org.slf4j.LoggerFactory
@@ -156,13 +158,16 @@ class PipelineYamlRepositoryService @Autowired constructor(
             projectId = projectId,
             yml = yamlContent.content,
             branchName = branch,
-            isDefaultBranch = branch == action.data.context.defaultBranch
+            isDefaultBranch = branch == action.data.context.defaultBranch,
+            aspects = PipelineTransferAspectLoader.initByDefaultTriggerOn(defaultRepo = {
+                action.data.setting.aliasName
+            })
         )
         val pipelineId = deployPipelineResult.pipelineId
         val version = deployPipelineResult.version
         val repoHashId = action.data.setting.repoHashId
-        val yamlTriggers =
-            getYamlTriggers(projectId = projectId, pipelineId = pipelineId, version = version, repoHashId = repoHashId)
+        val webhooks =
+            getWebhooks(projectId = projectId, pipelineId = pipelineId, version = version, repoHashId = repoHashId)
         pipelineYamlService.save(
             projectId = projectId,
             repoHashId = repoHashId,
@@ -173,7 +178,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             version = version,
             versionName = deployPipelineResult.versionName!!,
             userId = action.data.getUserId(),
-            yamlTriggers = yamlTriggers
+            webhooks = webhooks
         )
     }
 
@@ -192,12 +197,15 @@ class PipelineYamlRepositoryService @Autowired constructor(
             pipelineId = pipelineId,
             yml = yamlContent.content,
             branchName = branch,
-            isDefaultBranch = branch == action.data.context.defaultBranch
+            isDefaultBranch = branch == action.data.context.defaultBranch,
+            aspects = PipelineTransferAspectLoader.initByDefaultTriggerOn(defaultRepo = {
+                action.data.setting.aliasName
+            })
         )
         val version = deployPipelineResult.version
         val repoHashId = action.data.setting.repoHashId
-        val yamlTriggers =
-            getYamlTriggers(projectId = projectId, pipelineId = pipelineId, version = version, repoHashId = repoHashId)
+        val webhooks =
+            getWebhooks(projectId = projectId, pipelineId = pipelineId, version = version, repoHashId = repoHashId)
         pipelineYamlService.update(
             projectId = projectId,
             repoHashId = repoHashId,
@@ -208,7 +216,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             version = deployPipelineResult.version,
             versionName = deployPipelineResult.versionName!!,
             userId = action.data.getUserId(),
-            yamlTriggers = yamlTriggers
+            webhooks = webhooks
         )
     }
 
@@ -259,6 +267,13 @@ class PipelineYamlRepositoryService @Autowired constructor(
         filePath: String,
         yamlFile: YamlPathListEntry
     ) {
+        val webhooks =
+            getWebhooks(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            repoHashId = repoHashId
+        )
         PipelineYamlTriggerLock(
             redisOperation = redisOperation,
             projectId = projectId,
@@ -266,13 +281,6 @@ class PipelineYamlRepositoryService @Autowired constructor(
             filePath = filePath
         ).use {
             it.lock()
-            val yamlTriggers =
-                getYamlTriggers(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    version = version,
-                    repoHashId = repoHashId
-                )
             pipelineYamlService.save(
                 projectId = projectId,
                 repoHashId = repoHashId,
@@ -283,17 +291,22 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 ref = yamlFile.ref,
                 version = version,
                 versionName = versionName,
-                yamlTriggers = yamlTriggers
+                webhooks = webhooks
             )
         }
     }
 
-    fun getYamlTriggers(
+    /**
+     * TODO 需优化
+     * 本来应该在com.tencent.devops.process.engine.service.PipelineWebhookService.addWebhook处理,
+     * 但是这个方法是异步的,可能有延迟，所以再保存一次,后续需要优化
+     */
+    fun getWebhooks(
         projectId: String,
         pipelineId: String,
         version: Int,
         repoHashId: String
-    ): List<PipelineYamlTrigger> {
+    ): List<PipelineWebhookVersion> {
         val model =
             pipelineRepositoryService.getModel(projectId = projectId, pipelineId = pipelineId, version = version)
         if (model == null) {
@@ -305,7 +318,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             param.id to param.defaultValue.toString()
         }
         val elements = triggerContainer.elements.filterIsInstance<WebHookTriggerElement>()
-        val yamlTriggers = mutableListOf<PipelineYamlTrigger>()
+        val webhooks = mutableListOf<PipelineWebhookVersion>()
         elements.forEach { element ->
             try {
                 val (scmType, eventType, repositoryConfig) =
@@ -317,26 +330,25 @@ class PipelineYamlRepositoryService @Autowired constructor(
                     codeEventType = eventType,
                     elementVersion = element.version
                 ) ?: return@forEach
-                if (repository.repoHashId == repoHashId) {
-                    yamlTriggers.add(
-                        PipelineYamlTrigger(
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            version = version,
-                            taskId = element.id!!,
-                            taskRepoType = repositoryConfig.repositoryType,
-                            taskRepoHashId = repositoryConfig.repositoryHashId,
-                            taskRepoName = repositoryConfig.repositoryName,
-                            repositoryType = scmType,
-                            repositoryHashId = repoHashId,
-                            eventType = eventType!!.name
-                        )
+                webhooks.add(
+                    PipelineWebhookVersion(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        version = version,
+                        taskId = element.id!!,
+                        taskParams = JsonUtil.toJson(element.genTaskParams()),
+                        taskRepoType = repositoryConfig.repositoryType,
+                        taskRepoHashId = repositoryConfig.repositoryHashId,
+                        taskRepoName = repositoryConfig.repositoryName,
+                        repositoryType = scmType,
+                        repositoryHashId = repository.repoHashId!!,
+                        eventType = eventType!!.name
                     )
-                }
+                )
             } catch (ignore: Exception) {
                 logger.warn("$projectId|$pipelineId|add webhook failed", ignore)
             }
         }
-        return yamlTriggers
+        return webhooks
     }
 }

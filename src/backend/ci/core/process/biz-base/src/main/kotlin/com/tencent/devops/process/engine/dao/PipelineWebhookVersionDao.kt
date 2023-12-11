@@ -28,23 +28,27 @@
 
 package com.tencent.devops.process.engine.dao
 
-import com.tencent.devops.model.process.tables.TPipelineYamlTrigger
-import com.tencent.devops.process.pojo.trigger.PipelineYamlTrigger
+import com.tencent.devops.model.process.tables.TPipelineWebhookVersion
+import com.tencent.devops.process.pojo.webhook.PipelineWebhookVersion
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
 @Repository
-class PipelineYamlTriggerDao {
+class PipelineWebhookVersionDao {
 
-    fun batchSave(dslContext: DSLContext, yamlTriggers: List<PipelineYamlTrigger>) {
-        val addStep = yamlTriggers.map {
-            with(TPipelineYamlTrigger.T_PIPELINE_YAML_TRIGGER) {
+    fun batchSave(dslContext: DSLContext, webhooks: List<PipelineWebhookVersion>) {
+        if (webhooks.isEmpty()) {
+            return
+        }
+        val addStep = webhooks.map {
+            with(TPipelineWebhookVersion.T_PIPELINE_WEBHOOK_VERSION) {
                 dslContext.insertInto(
                     this,
                     PROJECT_ID,
                     PIPELINE_ID,
                     VERSION,
                     TASK_ID,
+                    TASK_PARAMS,
                     TASK_REPO_TYPE,
                     TASK_REPO_HASH_ID,
                     TASK_REPO_NAME,
@@ -56,6 +60,7 @@ class PipelineYamlTriggerDao {
                     it.pipelineId,
                     it.version,
                     it.taskId,
+                    it.taskParams,
                     it.taskRepoType?.name,
                     it.taskRepoHashId,
                     it.taskRepoName,
@@ -76,7 +81,7 @@ class PipelineYamlTriggerDao {
         repoHashId: String,
         eventType: String
     ): List<String>? {
-        return with(TPipelineYamlTrigger.T_PIPELINE_YAML_TRIGGER) {
+        return with(TPipelineWebhookVersion.T_PIPELINE_WEBHOOK_VERSION) {
             dslContext.select(TASK_ID).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))

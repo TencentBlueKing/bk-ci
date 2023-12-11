@@ -32,12 +32,12 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
-import com.tencent.devops.process.engine.dao.PipelineYamlTriggerDao
+import com.tencent.devops.process.engine.dao.PipelineWebhookVersionDao
 import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
-import com.tencent.devops.process.pojo.trigger.PipelineYamlTrigger
+import com.tencent.devops.process.pojo.webhook.PipelineWebhookVersion
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import org.jooq.DSLContext
@@ -50,7 +50,7 @@ class PipelineYamlService(
     private val dslContext: DSLContext,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
     private val pipelineYamlVersionDao: PipelineYamlVersionDao,
-    private val pipelineYamlTriggerDao: PipelineYamlTriggerDao,
+    private val pipelineWebhookVersionDao: PipelineWebhookVersionDao,
     private val client: Client
 ) {
 
@@ -68,7 +68,7 @@ class PipelineYamlService(
         ref: String?,
         version: Int,
         versionName: String,
-        yamlTriggers: List<PipelineYamlTrigger>
+        webhooks: List<PipelineWebhookVersion>
     ) {
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -92,9 +92,9 @@ class PipelineYamlService(
                 versionName = versionName,
                 userId = userId
             )
-            pipelineYamlTriggerDao.batchSave(
+            pipelineWebhookVersionDao.batchSave(
                 dslContext = transactionContext,
-                yamlTriggers = yamlTriggers
+                webhooks = webhooks
             )
         }
     }
@@ -109,7 +109,7 @@ class PipelineYamlService(
         ref: String?,
         version: Int,
         versionName: String,
-        yamlTriggers: List<PipelineYamlTrigger>
+        webhooks: List<PipelineWebhookVersion>
     ) {
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -121,7 +121,7 @@ class PipelineYamlService(
                 userId = userId
             )
             pipelineYamlVersionDao.save(
-                dslContext = dslContext,
+                dslContext = transactionContext,
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath,
@@ -132,9 +132,9 @@ class PipelineYamlService(
                 versionName = versionName,
                 userId = userId
             )
-            pipelineYamlTriggerDao.batchSave(
+            pipelineWebhookVersionDao.batchSave(
                 dslContext = transactionContext,
-                yamlTriggers = yamlTriggers
+                webhooks = webhooks
             )
         }
     }

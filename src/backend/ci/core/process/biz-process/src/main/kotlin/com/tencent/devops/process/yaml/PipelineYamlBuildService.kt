@@ -29,7 +29,7 @@
 package com.tencent.devops.process.yaml
 
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.process.engine.dao.PipelineYamlTriggerDao
+import com.tencent.devops.process.engine.dao.PipelineWebhookVersionDao
 import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
 import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
 import com.tencent.devops.process.webhook.WebhookEventFactory
@@ -43,7 +43,7 @@ import org.springframework.stereotype.Service
 class PipelineYamlBuildService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineYamlVersionDao: PipelineYamlVersionDao,
-    private val pipelineYamlTriggerDao: PipelineYamlTriggerDao,
+    private val pipelineWebhookVersionDao: PipelineWebhookVersionDao,
     private val webhookEventFactory: WebhookEventFactory,
     private val pipelineBuildWebhookService: PipelineBuildWebhookService
 ) {
@@ -69,7 +69,7 @@ class PipelineYamlBuildService @Autowired constructor(
             return
         }
         val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = action.data.event)
-        val taskIds = pipelineYamlTriggerDao.getTaskIds(
+        val taskIds = pipelineWebhookVersionDao.getTaskIds(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineYamlVersion.pipelineId,
