@@ -79,6 +79,7 @@ import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskStatusResu
 import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.agentres.Statistics
 import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
+import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudIpInfo
 import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.resp.ScriptExcuteLog
@@ -247,9 +248,10 @@ class JobService @Autowired constructor(
         val jobCloudQueryJobInstanceLogsReq = JobCloudQueryJobInstanceLogsReq(
             jobInstanceId = queryJobInstanceLogsReq.jobInstanceId,
             stepInstanceId = queryJobInstanceLogsReq.stepInstanceId,
-            hostList = queryJobInstanceLogsReq.hostList?.map {
-                JobCloudHost(bkHostId = it.bkHostId, bkCloudId = it.bkCloudId ?: 0, ip = it.ip)
+            ipList = queryJobInstanceLogsReq.ipList?.map {
+                JobCloudIpInfo(bkCloudId = it.bkCloudId ?: 0, ip = it.ip)
             },
+            hostIdList = queryJobInstanceLogsReq.hostIdList,
             bkUsername = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
         )
         ApigwJobCloudApi.setThreadLocal(::queryJobInstanceLogs.name)

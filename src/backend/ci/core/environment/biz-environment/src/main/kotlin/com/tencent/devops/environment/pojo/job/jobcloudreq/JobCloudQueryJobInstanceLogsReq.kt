@@ -17,9 +17,12 @@ class JobCloudQueryJobInstanceLogsReq(
     @ApiModelProperty(value = "步骤实例ID", required = true)
     @JsonProperty("step_instance_id")
     val stepInstanceId: Long,
-    @ApiModelProperty(value = "主机/主机列表", required = true)
+    @ApiModelProperty(value = "主机IP信息列表", required = true)
     @JsonProperty("ip_list")
-    val hostList: List<JobCloudHost>?,
+    val ipList: List<JobCloudIpInfo>?,
+    @ApiModelProperty(value = "主机ID列表", required = true)
+    @JsonProperty("host_id_list")
+    val hostIdList: List<Long>?,
     @ApiModelProperty(value = "当前用户用户名", required = true)
     @JsonProperty("bk_username")
     override var bkUsername: String
