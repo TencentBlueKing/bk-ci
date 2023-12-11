@@ -20,7 +20,7 @@
             </div>
             <div class="content-wrapper">
                 <pipeline-param v-if="active === 'pipeline'" :editable="editable" :params="params" :update-container-params="handleContainerChange" />
-                <atom-output-var :stages="stages" v-else-if="active === 'atomOutput'" />
+                <atom-output-var :stages="stages" :editable="editable" v-else-if="active === 'atomOutput'" />
                 <system-var :container="container" v-else-if="active === 'system'" />
                 <pipeline-version v-else :params="params" :disabled="!editable" :build-no="buildNo" :update-container-params="handleContainerChange" />
             </div>
@@ -81,8 +81,10 @@
             }
         },
         created () {
-            this.setShowVariable(true)
             this.requestCommonParams()
+        },
+        mounted () {
+            this.setShowVariable(true)
         },
         beforeDestroy () {
             this.setShowVariable(false)

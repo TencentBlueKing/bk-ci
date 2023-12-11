@@ -33,7 +33,9 @@
             <span>{{$t('点击添加第一个流水线Stage')}}</span>
         </div>
 
-        <bk-dialog v-model="isStageShow"
+        <bk-dialog
+            v-if="pipelineEditable"
+            v-model="isStageShow"
             :width="stageTypeDialogWidth"
             :title="$t('editPage.selectJob')"
             :show-footer="false"
@@ -49,7 +51,7 @@
                 </ul>
             </section>
         </bk-dialog>
-        <template v-if="container">
+        <template v-if="container && pipelineEditable">
             <atom-selector :container="container" :element="element" v-bind="editingElementPos" />
         </template>
         <template v-if="editingElementPos">

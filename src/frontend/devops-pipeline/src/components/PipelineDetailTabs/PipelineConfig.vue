@@ -227,6 +227,7 @@
         height: 100%;
         flex-direction: column;
         overflow: hidden;
+        position: static !important;
         .pipeline-config-header {
             display: flex;
             align-items: center;

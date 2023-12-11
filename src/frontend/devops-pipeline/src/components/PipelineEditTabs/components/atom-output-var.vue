@@ -17,19 +17,23 @@
             <div
                 class="atom-group-header"
                 slot="header"
-                :class="{ 'disabled-header': (editingEleIndex && group.totalIndex > editingEleIndex) }"
-                v-bk-tooltips="{ content: '当前插件无法使用下游步骤输出的变量', placement: 'top-start', disabld: (editingEleIndex && group.totalIndex > editingEleIndex) }"
+                :class="{ 'disabled-header': group.disableHeader }"
+                v-bk-tooltips="{
+                    content: '当前插件无法使用下游步骤输出的变量',
+                    placement: 'top-start',
+                    disabled: group.disableHeader
+                }"
             >
                 <div class="env-name flex-item">
                     <bk-icon class="toggle-icon" type="right-shape" />
                     <span class="group-title"
                         :class="{ 'title-overflow': !group.stepId }"
-                        v-bk-tooltips="{ content: group.title, maxWidth: 300, disabled: group.stepId }"
+                        v-bk-tooltips="{ content: group.title, maxWidth: 300, disabled: group.stepId, allowHTML: false }"
                     >
                         {{group.title}}
                     </span>
                 </div>
-                <div v-if="!group.stepId" @click.stop class="flex-item step-tips">
+                <div v-if="!group.stepId && editable" @click.stop class="flex-item step-tips">
                     <bk-icon type="exclamation-circle-shape" />
                     <span>{{$t('步骤未设置 StepID,')}}
                         <bk-popconfirm
@@ -69,7 +73,7 @@
                 <template v-for="env in group.params">
                     <env-item :key="env.name" :name="env.name" :desc="env.desc"
                         :copy-prefix="group.envPrefix"
-                        :disabled-copy="!group.stepId || (editingEleIndex && group.totalIndex > editingEleIndex)"
+                        :disabled-copy="!group.stepId || group.disableHeader"
                     />
                 </template>
             </section>
@@ -94,6 +98,10 @@
             stages: {
                 type: Array,
                 default: () => ([])
+            },
+            editable: {
+                type: Boolean,
+                default: true
             }
         },
         data () {
@@ -172,19 +180,18 @@
                 return list
             },
             renderOutputList () {
-                if (!this.searchStr) {
-                    return this.outputAtomList
-                } else {
-                    const renderList = []
-                    this.outputAtomList.forEach((group, index) => {
-                        renderList.push({
-                            ...group,
-                            params: group.stepName?.includes(this.searchStr) ? group.params : group.params?.filter(item => item.name.includes(this.searchStr) || item.desc.includes(this.searchStr)),
-                            isOpen: group.stepName?.includes(this.searchStr) || group.params?.filter(item => item.name.includes(this.searchStr) || item.desc.includes(this.searchStr)).length > 0
-                        })
-                    })
-                    return renderList
-                }
+                return this.outputAtomList.map((group, index) => ({
+                    ...group,
+                    disableHeader: this.editingEleIndex && group.totalIndex > this.editingEleIndex,
+                    ...(
+                        this.searchStr
+                            ? {
+                                params: group.stepName?.includes(this.searchStr) ? group.params : group.params?.filter(item => item.name.includes(this.searchStr) || item.desc.includes(this.searchStr)),
+                                isOpen: group.stepName?.includes(this.searchStr) || group.params?.filter(item => item.name.includes(this.searchStr) || item.desc.includes(this.searchStr)).length > 0
+                            }
+                            : {}
+                    )
+                }))
             }
         },
         methods: {

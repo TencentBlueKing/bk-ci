@@ -31,6 +31,24 @@
         right: 480px;
         height: calc(100vh - 50px);
     }
+
+}
+
+.pipeline-config-wrapper {
+    .bkci-property-panel {
+
+        .bk-sideslider-wrapper {
+            right: 24px;
+        }
+        &.with-variable-open {
+            z-index: 2005 !important;
+            .bk-sideslider-wrapper {
+                right: 504px;
+                top: 72px;
+                height: calc(100vh - 96px);
+            }
+        }
+    }
 }
 .bkci-property-panel {
     background-color: rgba(0, 0, 0, .6);

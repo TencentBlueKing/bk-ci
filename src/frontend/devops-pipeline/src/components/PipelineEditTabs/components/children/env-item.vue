@@ -3,7 +3,7 @@
         <div class="var-con">
             <div class="var-names"
                 :class="{ 'desc-param': desc }"
-                v-bk-tooltips="{ content: desc, disabled: !desc }">
+                v-bk-tooltips="{ content: desc, disabled: !desc, allowHTML: false }">
                 <span>{{ name }}</span>
             </div>
             <div class="var-operate">
