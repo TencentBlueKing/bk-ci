@@ -2,8 +2,8 @@
     <div class="variable-container">
         <bk-alert type="info" :title="$t('可通过表达式 ${{ variables.<var_name> }} 引用变量')" closable></bk-alert>
         <div class="operate-row">
-            <bk-button class="var-btn" @click="handleAdd">{{$t('添加变量')}}</bk-button>
-            <bk-button class="var-btn" @click="handleAdd('constant')">{{$t('添加常量')}}</bk-button>
+            <bk-button class="var-btn" :disabled="!editable" @click="handleAdd">{{$t('添加变量')}}</bk-button>
+            <bk-button class="var-btn" :disabled="!editable" @click="handleAdd('constant')">{{$t('添加常量')}}</bk-button>
             <bk-input
                 v-model="searchStr"
                 :clearable="true"
@@ -14,6 +14,7 @@
         <template v-if="!showSlider">
             <param-group
                 v-for="group in pipelineParamGroups"
+                :editable="editable"
                 :key="group.key"
                 :title="group.title"
                 :list="group.list"
@@ -22,7 +23,7 @@
             />
         </template>
 
-        <div v-else class="current-edit-param-item">
+        <div v-else-if="editable" class="current-edit-param-item">
             <div class="edit-var-header">
                 <bk-icon style="font-size: 28px;" type="arrows-left" class="back-icon" @click="showSlider = false" />
                 {{sliderTitle}}
@@ -66,6 +67,10 @@
             updateContainerParams: {
                 type: Function,
                 required: true
+            },
+            editable: {
+                type: Boolean,
+                default: true
             }
         },
         data () {
@@ -117,6 +122,7 @@
         },
         methods: {
             handleDelete (paramId) {
+                if (!this.editable) return
                 const index = this.globalParams.findIndex(item => item.id === paramId)
                 this.globalParams.splice(index, 1)
                 this.updateContainerParams('params', [...this.globalParams, ...this.versions])
@@ -128,6 +134,7 @@
                 this.paramType = type
             },
             handleEdit (paramId) {
+                if (!this.editable) return
                 this.showSlider = true
                 this.editIndex = this.globalParams.findIndex(item => item.id === paramId)
                 this.sliderEditItem = this.globalParams.find(item => item.id === paramId) || {}

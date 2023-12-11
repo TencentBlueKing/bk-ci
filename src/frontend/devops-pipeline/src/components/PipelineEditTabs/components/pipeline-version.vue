@@ -76,7 +76,7 @@
                             </form-field>
                         </div>
                     </bk-form-item>
-        
+
                     <form-field class="buildno-form-field" :required="true" :label="$t('buildNum')" :is-error="errors.has('pipelineVersion.buildNo')" :error-msg="errors.first('pipelineVersion.buildNo')">
                         <vuex-input
                             input-type="number"
@@ -90,7 +90,7 @@
                             :handle-change="handleEditBuildNoChange"
                         />
                     </form-field>
-        
+
                     <form-field class="buildno-form-field" :required="true" :is-error="errors.has('pipelineVersion.buildNoType')" :error-msg="errors.first('pipelineVersion.buildNoType')">
                         <enum-input :list="buildNoRules" :disabled="disabled" name="buildNoType" v-validate.initial="'required|string'" :data-vv-scope="'pipelineVersion'" :value="editBuildNo.buildNoType" :handle-change="handleEditBuildNoChange" />
                     </form-field>
@@ -125,6 +125,10 @@
             AtomCheckbox
         },
         props: {
+            disabled: {
+                type: Boolean,
+                default: false
+            },
             params: {
                 type: Array,
                 default: () => ([])
@@ -363,5 +367,5 @@
             display: inline-block;
         }
     }
-    
+
 </style>

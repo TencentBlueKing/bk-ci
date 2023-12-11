@@ -113,10 +113,7 @@
                 switch (this.pipelineType) {
                     case 'pipeline':
                         return {
-                            is: PipelineModel,
-                            props: {
-                                pipeline: this.pipelineWithoutTrigger
-                            }
+                            is: PipelineModel
                         }
                     case 'trigger':
                         return {

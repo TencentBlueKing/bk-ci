@@ -3,7 +3,7 @@
         <pipeline
             :editable="false"
             :show-header="false"
-            v-bind="$props"
+            :pipeline="pipelineWithoutTrigger"
             v-on="$listeners"
         >
         </pipeline>
@@ -12,6 +12,7 @@
 </template>
 
 <script>
+    import { mapState } from 'vuex'
     import Pipeline from '@/components/Pipeline'
     import { ShowVariable } from '@/components/PipelineEditTabs/'
     export default {
@@ -19,11 +20,11 @@
             Pipeline,
             ShowVariable
         },
-        props: {
-            pipeline: {
-                type: Object,
-                required: true
-            }
+        computed: {
+            ...mapState('atom', [
+                'pipelineWithoutTrigger',
+                'pipeline'
+            ])
         }
     }
 </script>

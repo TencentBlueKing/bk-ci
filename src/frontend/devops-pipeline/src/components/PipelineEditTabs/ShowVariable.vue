@@ -19,10 +19,10 @@
                 </div>
             </div>
             <div class="content-wrapper">
-                <pipeline-param v-if="active === 'pipeline'" :params="params" :update-container-params="handleContainerChange" />
+                <pipeline-param v-if="active === 'pipeline'" :editable="editable" :params="params" :update-container-params="handleContainerChange" />
                 <atom-output-var :stages="stages" v-else-if="active === 'atomOutput'" />
                 <system-var :container="container" v-else-if="active === 'system'" />
-                <pipeline-version v-else :params="params" :build-no="buildNo" :update-container-params="handleContainerChange" />
+                <pipeline-version v-else :params="params" :disabled="!editable" :build-no="buildNo" :update-container-params="handleContainerChange" />
             </div>
         </div>
     </section>
@@ -46,6 +46,10 @@
             pipeline: {
                 type: Object,
                 required: true
+            },
+            editable: {
+                type: Boolean,
+                default: true
             }
         },
         data () {

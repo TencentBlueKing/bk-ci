@@ -9,9 +9,16 @@
         <transition name="slideLeft">
             <section v-show="isShow" class="var-content">
                 <slot name="content">
-                    <div v-for="(param) in list" :key="param.id" class="variable-item" @click="handleEdit(param.id)">
+                    <div
+                        v-for="(param) in list"
+                        :key="param.id"
+                        :class="['variable-item', {
+                            'variable-item-editable': editable
+                        }]"
+                        @click="handleEdit(param.id)"
+                    >
                         <div class="var-con">
-                            <div class="var-names" :class="{ 'required-param': param.valueNotEmpty, 'desc-param': param.desc }" v-bk-tooltips="{ content: param.desc, disabled: !param.desc }">
+                            <div class="var-names" :class="{ 'required-param': param.valueNotEmpty, 'desc-param': param.desc }" v-bk-tooltips="{ content: param.desc, disabled: !param.desc, allowHTML: false }">
                                 <span>{{ param.id }}</span>
                                 <span>({{ param.name || param.id }})</span>
                             </div>
@@ -20,7 +27,7 @@
                                     <span v-if="param.readOnly" class="read-only">{{$t('只读')}}</span>
                                     <span class="default-value">{{ param.defaultValue || '--' }}</span>
                                 </div>
-                                <div class="var-operate">
+                                <div v-if="editable" class="var-operate">
                                     <div class="operate-btns">
                                         <i @click.stop="handleCopy(bkVarWrapper(param.id))" class="bk-icon icon-copy" style="margin-right: 12px;"></i>
                                         <i @click.stop="handleDelete(param.id)" class="bk-icon icon-minus-circle"></i>
@@ -58,6 +65,10 @@
             handleDelete: {
                 type: Function,
                 default: () => {}
+            },
+            editable: {
+                type: Boolean,
+                default: true
             }
         },
         data () {
@@ -136,11 +147,13 @@
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                cursor: pointer;
-                &:hover {
-                    border-color: #C4C6CC;
-                    .var-operate {
-                        display: block;
+                &.variable-item-editable {
+                    cursor: pointer;
+                    &:hover {
+                        border-color: #C4C6CC;
+                        .var-operate {
+                            display: block;
+                        }
                     }
                 }
                 .var-con {
@@ -179,7 +192,7 @@
                                 transform: scale(0.83);
                             }
                         }
-                        
+
                     }
                     .required-param:before {
                         content: '* ';
