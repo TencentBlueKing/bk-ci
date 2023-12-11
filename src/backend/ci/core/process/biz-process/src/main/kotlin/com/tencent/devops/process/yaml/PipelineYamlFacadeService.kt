@@ -56,6 +56,7 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
@@ -71,7 +72,8 @@ class PipelineYamlFacadeService @Autowired constructor(
     private val webhookEventFactory: WebhookEventFactory,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
     private val pipelineYamlService: PipelineYamlService,
-    // private val pipelineYamlRepositoryService: PipelineYamlRepositoryService
+    @Lazy
+    private val pipelineYamlRepositoryService: PipelineYamlRepositoryService
 ) {
 
     companion object {
@@ -296,7 +298,7 @@ class PipelineYamlFacadeService @Autowired constructor(
             commitMessage = commitMessage,
             targetAction = targetAction
         )
-        /*pipelineYamlRepositoryService.releaseYamlPipeline(
+        pipelineYamlRepositoryService.releaseYamlPipeline(
             projectId = projectId,
             repoHashId = repoHashId,
             filePath = filePath,
@@ -305,6 +307,6 @@ class PipelineYamlFacadeService @Autowired constructor(
             version = version,
             versionName = versionName,
             yamlFile = yamlFile
-        )*/
+        )
     }
 }
