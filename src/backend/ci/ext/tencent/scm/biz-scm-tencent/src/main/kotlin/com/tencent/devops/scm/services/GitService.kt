@@ -2523,7 +2523,7 @@ class GitService @Autowired constructor(
     ): Result<Boolean> {
         if (tokenType == TokenTypeEnum.OAUTH) {
             GitOauthApi().createBranch(
-                host = gitConfig.gitUrl,
+                host = gitConfig.gitApiUrl,
                 token = token,
                 projectName = gitProjectId,
                 branch = gitCreateBranch.branchName,
@@ -2531,7 +2531,7 @@ class GitService @Autowired constructor(
             )
         } else {
             GitApi().createBranch(
-                host = gitConfig.gitUrl,
+                host = gitConfig.gitApiUrl,
                 token = token,
                 projectName = gitProjectId,
                 branch = gitCreateBranch.branchName,
@@ -2549,14 +2549,14 @@ class GitService @Autowired constructor(
     ): Result<GitMrInfo> {
         val mrInfo = if (tokenType == TokenTypeEnum.OAUTH) {
             GitOauthApi().createMergeRequest(
-                host = gitConfig.gitUrl,
+                host = gitConfig.gitApiUrl,
                 token = token,
                 projectName = gitProjectId,
                 gitCreateMergeRequest = gitCreateMergeRequest
             )
         } else {
             GitApi().createMergeRequest(
-                host = gitConfig.gitUrl,
+                host = gitConfig.gitApiUrl,
                 token = token,
                 projectName = gitProjectId,
                 gitCreateMergeRequest = gitCreateMergeRequest
