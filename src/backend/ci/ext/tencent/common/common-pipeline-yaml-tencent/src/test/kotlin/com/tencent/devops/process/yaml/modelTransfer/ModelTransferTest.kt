@@ -235,7 +235,7 @@ internal class ModelTransferTest : BkCiAbstractTest() {
   }""".let { JsonUtil.to(it, object : TypeReference<Map<String, String>>() {}) })
 
         every {
-            transferCache.getStoreImageInfo(any(), any())
+            transferCache.getStoreImageDetail(any(), any(), any())
         }.returns(null)
 
         every {
