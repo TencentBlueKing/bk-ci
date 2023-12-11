@@ -38,7 +38,7 @@ class TransferCacheService @Autowired constructor(
 
     private val atomDefaultValueCache = Caffeine.newBuilder()
         .maximumSize(1000)
-        .expireAfterWrite(1, TimeUnit.DAYS)
+        .expireAfterWrite(10, TimeUnit.MINUTES)
         .build<String, Map<String, String>> { key ->
             kotlin.runCatching {
                 val (atomCode, version) = key.split("@")
@@ -48,7 +48,7 @@ class TransferCacheService @Autowired constructor(
         }
     private val storeImageInfoCache = Caffeine.newBuilder()
         .maximumSize(1000)
-        .expireAfterWrite(1, TimeUnit.DAYS)
+        .expireAfterWrite(10, TimeUnit.MINUTES)
         .build<String, ImageDetail?> { key ->
             kotlin.runCatching {
                 val (userId, imageCode, imageVersion) = key.split("@@")
