@@ -469,6 +469,15 @@ class RepositoryService @Autowired constructor(
         return finalTokenType
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.REPERTORY_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.REPERTORY
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.REPERTORY_CREATE_CONTENT
+    )
     fun userCreate(userId: String, projectId: String, repository: Repository): String {
         // 指定oauth的用户名字只能是登录用户。
         repository.userName = userId
@@ -491,15 +500,6 @@ class RepositoryService @Autowired constructor(
         return HashUtil.encodeOtherLongId(repositoryId)
     }
 
-    @ActionAuditRecord(
-        actionId = ActionId.REPERTORY_CREATE,
-        instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.REPERTORY
-        ),
-        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
-        scopeId = "#projectId",
-        content = ActionAuditContent.REPERTORY_CREATE_CONTENT
-    )
     private fun createRepository(
         repository: Repository,
         projectId: String,
@@ -530,6 +530,15 @@ class RepositoryService @Autowired constructor(
         return repositoryId
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.REPERTORY_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.REPERTORY
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.REPERTORY_VIEW_CONTENT
+    )
     fun userGet(userId: String, projectId: String, repositoryConfig: RepositoryConfig): Repository {
         val repository = getRepository(projectId, repositoryConfig)
         val repositoryId = repository.repositoryId
@@ -544,11 +553,27 @@ class RepositoryService @Autowired constructor(
                 language = I18nUtil.getLanguage(userId)
             )
         )
+        ActionAuditContext.current()
+            .setInstanceId(repository.repositoryId.toString())
+            .setInstanceName(repository.aliasName)
         return compose(repository)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.REPERTORY_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.REPERTORY
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.REPERTORY_VIEW_CONTENT
+    )
     fun serviceGet(projectId: String, repositoryConfig: RepositoryConfig): Repository {
-        return compose(getRepository(projectId, repositoryConfig))
+        val repository = getRepository(projectId, repositoryConfig)
+        ActionAuditContext.current()
+            .setInstanceId(repository.repositoryId.toString())
+            .setInstanceName(repository.aliasName)
+        return compose(repository)
     }
 
     private fun getRepository(projectId: String, repositoryConfig: RepositoryConfig): TRepositoryRecord {
@@ -564,19 +589,7 @@ class RepositoryService @Autowired constructor(
         }
     }
 
-    @ActionAuditRecord(
-        actionId = ActionId.REPERTORY_VIEW,
-        instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.REPERTORY
-        ),
-        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
-        scopeId = "#projectId",
-        content = ActionAuditContent.REPERTORY_VIEW_CONTENT
-    )
     private fun compose(repository: TRepositoryRecord): Repository {
-        ActionAuditContext.current()
-            .setInstanceId(repository.repositoryId.toString())
-            .setInstanceName(repository.aliasName)
         val codeRepositoryService = CodeRepositoryServiceRegistrar.getServiceByScmType(repository.type)
         return codeRepositoryService.compose(repository = repository)
     }
