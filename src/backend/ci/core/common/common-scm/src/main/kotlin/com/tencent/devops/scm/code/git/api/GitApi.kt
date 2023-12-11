@@ -60,13 +60,13 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import io.micrometer.core.instrument.Tags
 import io.micrometer.core.instrument.Timer
-import java.net.URLEncoder
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
+import java.net.URLEncoder
 
 @Suppress("ALL")
 open class GitApi {
@@ -698,13 +698,13 @@ open class GitApi {
         val request = post(host, token, url, body)
         try {
             return callMethod(
-                operation = getMessageByLocale(CommonMessageCode.OPERATION_ADD_MR_COMMENT),
+                operation = getMessageByLocale(CommonMessageCode.OPERATION_ADD_MR),
                 request = request,
                 classOfT = GitMrInfo::class.java
             )
         } catch (t: GitApiException) {
             if (t.code == 403) {
-                throw GitApiException(t.code, getMessageByLocale(CommonMessageCode.ADD_MR_COMMENTS_FAIL))
+                throw GitApiException(t.code, getMessageByLocale(CommonMessageCode.ADD_MR_FAIL))
             }
             throw t
         }
