@@ -59,7 +59,9 @@ data class PreTemplateScriptBuildYamlV3(
     override var resources: Resources? = null,
     override var finally: LinkedHashMap<String, Any>? = null,
     override val notices: List<PacNotices>?,
-    override var concurrency: Concurrency? = null
+    override var concurrency: Concurrency? = null,
+    @JsonProperty("disable-pipeline")
+    override var disablePipeline: Boolean? = null
 ) : IPreTemplateScriptBuildYaml, ITemplateFilter {
 
     init {
@@ -76,7 +78,8 @@ data class PreTemplateScriptBuildYamlV3(
             triggerOn = makeRunsOn(),
             resources = resources,
             notices = notices,
-            concurrency = concurrency
+            concurrency = concurrency,
+            disablePipeline = disablePipeline
         )
     }
 

@@ -307,7 +307,7 @@ object ScriptYmlUtils {
                             Job(
                                 id = jobId,
                                 name = "job1",
-                                runsOn = RunsOn(),
+                                runsOn = RunsOn(poolName = JobRunsOnType.DOCKER.type),
                                 steps = preStepsToSteps(jobId, preScriptBuildYaml.steps, transferData)
                             )
                         ),

@@ -274,16 +274,18 @@ data class StartBuildContext(
                 webhookInfo = getWebhookInfo(params),
                 buildMsg = params[PIPELINE_BUILD_MSG]?.coerceAtMaxLength(MAX_LENGTH),
                 buildParameters = genOriginStartParamsList(realStartParamKeys, pipelineParamMap),
-                // 优化并发组逻辑，只在GROUP_LOCK时才保存进history表
-                concurrencyGroup = pipelineSetting?.takeIf { it.runLockType == PipelineRunLockType.GROUP_LOCK }
-                    ?.concurrencyGroup?.let {
-                        val webhookParam = webHookStartParam.values.associate { p -> p.key to p.value.toString() }
-                        val tConcurrencyGroup = EnvUtils.parseEnv(
-                            it, PipelineVarUtil.fillContextVarMap(webhookParam.plus(params))
-                        )
-                        logger.info("[$pipelineId]|[$buildId]|ConcurrencyGroup=$tConcurrencyGroup")
-                        tConcurrencyGroup
-                    },
+                // 优化并发组逻辑，只在正式执行且GROUP_LOCK时才保存进history表
+                concurrencyGroup = if (!debug) {
+                    pipelineSetting?.takeIf { it.runLockType == PipelineRunLockType.GROUP_LOCK }
+                        ?.concurrencyGroup?.let {
+                            val webhookParam = webHookStartParam.values.associate { p -> p.key to p.value.toString() }
+                            val tConcurrencyGroup = EnvUtils.parseEnv(
+                                it, PipelineVarUtil.fillContextVarMap(webhookParam.plus(params))
+                            )
+                            logger.info("[$pipelineId]|[$buildId]|ConcurrencyGroup=$tConcurrencyGroup")
+                            tConcurrencyGroup
+                        }
+                } else null,
                 triggerReviewers = triggerReviewers,
                 startBuildStatus =
                 if (triggerReviewers.isNullOrEmpty()) BuildStatus.QUEUE else BuildStatus.TRIGGER_REVIEWING,

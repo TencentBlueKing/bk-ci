@@ -232,6 +232,7 @@ class PipelineBuildFacadeService(
                 }
             }
         }
+        if (debug) canManualStartup = true
 
         // 获取最后一次的构建id
         val lastTimeInfo = pipelineRuntimeService.getLastTimeBuild(projectId, pipelineId, debug)
@@ -246,6 +247,11 @@ class PipelineBuildFacadeService(
                 } else {
                     realValue
                 } ?: param.defaultValue
+            }
+        } else {
+            triggerContainer.params.forEach { param ->
+                // 如果没有上次构建的记录则直接使用默认值
+                param.value = param.defaultValue
             }
         }
 
@@ -1121,13 +1127,15 @@ class PipelineBuildFacadeService(
                     pipelineName = pipelineInfo.pipelineName,
                     buildNum = buildInfo.buildNum,
                     buildStage = buildStage,
-                    reviewRequest = reviewRequest
+                    reviewRequest = reviewRequest,
+                    debug = buildInfo.debug
                 )
             } else {
                 pipelineStageService.stageManualStart(
                     userId = userId,
                     buildStage = buildStage,
-                    reviewRequest = reviewRequest
+                    reviewRequest = reviewRequest,
+                    debug = buildInfo.debug
                 )
             }
             if (!success) throw ErrorCodeException(

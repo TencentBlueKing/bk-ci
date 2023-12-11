@@ -67,6 +67,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.PipelineViewType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_MAX_PIPELINE_COUNT_PER_PROJECT
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_PERMISSION_PLUGIN_IN_TEMPLATE
@@ -95,18 +96,18 @@ import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.yaml.modelTransfer.aspect.IPipelineTransferAspect
 import com.tencent.devops.store.api.template.ServiceTemplateResource
-import java.net.URLEncoder
-import java.util.LinkedList
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.StreamingOutput
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
+import java.net.URLEncoder
+import java.util.LinkedList
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.core.StreamingOutput
 
 @Suppress("ALL")
 @Service
@@ -1206,12 +1207,12 @@ class PipelineInfoFacadeService @Autowired constructor(
         return getFixedModel(model, projectId, pipelineId, userId, pipelineInfo)
     }
 
-    private fun getFixedModel(
+    fun getFixedModel(
         model: Model,
         projectId: String,
         pipelineId: String,
         userId: String,
-        pipelineInfo: PipelineInfo
+        pipelineInfo: PipelineInfo?
     ): Model {
         try {
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
@@ -1230,10 +1231,13 @@ class PipelineInfoFacadeService @Autowired constructor(
                 labels.addAll(it.labels)
             }
             model.labels = labels
-            model.name = pipelineInfo.pipelineName
-            model.desc = pipelineInfo.pipelineDesc
-            model.pipelineCreator = pipelineInfo.creator
-
+            // 如果传空则表示只拿当前版本的配置
+            pipelineInfo?.let {
+                model.name = pipelineInfo.pipelineName
+                model.desc = pipelineInfo.pipelineDesc
+                model.pipelineCreator = pipelineInfo.creator
+                model.latestVersion = pipelineInfo.version
+            }
             val defaultTagId by lazy { stageTagService.getDefaultStageTag().data?.id } // 优化
             model.stages.forEach {
                 if (it.name.isNullOrBlank()) it.name = it.id
@@ -1246,8 +1250,13 @@ class PipelineInfoFacadeService @Autowired constructor(
             if (model.instanceFromTemplate == true) {
                 model.templateId = templateService.getTemplateIdByPipeline(projectId, pipelineId)
             }
-            // 将当前最新版本号传给前端
-            model.latestVersion = pipelineInfo.version
+            // 静态组
+            model.staticViews = pipelineViewGroupService.listViewByPipelineId(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                viewType = PipelineViewType.STATIC
+            ).map { it.id }
             return model
         } catch (e: Exception) {
             logger.warn("Fail to get the pipeline($pipelineId) definition of project($projectId)", e)

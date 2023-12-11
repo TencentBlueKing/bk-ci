@@ -66,7 +66,7 @@ class TransferCacheService @Autowired constructor(
             kotlin.runCatching {
                 client.get(ServiceProjectAuthResource::class)
                     .getProjectGroupAndUserList(
-                        token = tokenService.getSystemToken(null)!!,
+                        token = tokenService.getSystemToken(),
                         projectCode = key
                     ).data
             }.onFailure { logger.warn("get $key ProjectGroupAndUserList error.", it) }.getOrNull()

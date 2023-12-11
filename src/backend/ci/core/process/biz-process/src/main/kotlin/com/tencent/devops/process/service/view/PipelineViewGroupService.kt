@@ -61,15 +61,15 @@ import com.tencent.devops.process.pojo.classify.PipelineViewPreview
 import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.service.view.lock.PipelineViewGroupLock
 import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
-import java.text.Collator
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.text.Collator
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @Service
 @SuppressWarnings("LoopWithTooManyJumpStatements", "LongParameterList", "TooManyFunctions", "ReturnCount")
@@ -668,7 +668,7 @@ class PipelineViewGroupService @Autowired constructor(
 
     fun hasPermission(userId: String, projectId: String) =
         client.get(ServiceProjectAuthResource::class)
-            .checkManager(clientTokenService.getSystemToken(null)!!, userId, projectId).data ?: false
+            .checkManager(clientTokenService.getSystemToken()!!, userId, projectId).data ?: false
 
     fun listView(userId: String, projectId: String, projected: Boolean?, viewType: Int?): List<PipelineNewViewSummary> {
         val views = pipelineViewDao.list(dslContext, userId, projectId, projected, viewType)
@@ -699,9 +699,19 @@ class PipelineViewGroupService @Autowired constructor(
         return summaries
     }
 
-    fun listViewByPipelineId(userId: String, projectId: String, pipelineId: String): List<PipelineNewViewSummary> {
+    fun listViewByPipelineId(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        viewType: Int? = null
+    ): List<PipelineNewViewSummary> {
         val viewGroupRecords = pipelineViewGroupDao.listByPipelineId(dslContext, projectId, pipelineId)
-        val viewRecords = pipelineViewDao.list(dslContext, projectId, viewGroupRecords.map { it.viewId }.toSet())
+        val viewRecords = pipelineViewDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            viewIds = viewGroupRecords.map { it.viewId }.toSet(),
+            viewType = viewType
+        )
         return viewRecords.filter { it.isProject || it.createUser == userId }.map {
             PipelineNewViewSummary(
                 id = HashUtil.encodeLongId(it.id),

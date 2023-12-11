@@ -185,10 +185,10 @@ class ContainerTransfer @Autowired(required = false) constructor(
             } else null,
             // 蓝盾这边是自定义Job ID
             dependOn = when (job.jobControlOption?.dependOnType) {
-                DependOnType.ID -> job.jobControlOption?.dependOnId
-                DependOnType.NAME -> job.jobControlOption?.dependOnName?.split(",")
+                DependOnType.ID -> job.jobControlOption?.dependOnId?.ifEmpty { null }
+                DependOnType.NAME -> job.jobControlOption?.dependOnName?.ifBlank { null }?.split(",")
                 else -> null
-            }?.ifEmpty { null }
+            }
         )
     }
 
@@ -224,10 +224,10 @@ class ContainerTransfer @Autowired(required = false) constructor(
                 getMatrixFromJob(job.matrixControlOption)
             } else null,
             dependOn = when (job.jobControlOption?.dependOnType) {
-                DependOnType.ID -> job.jobControlOption?.dependOnId
-                DependOnType.NAME -> job.jobControlOption?.dependOnName?.split(",")
+                DependOnType.ID -> job.jobControlOption?.dependOnId?.ifEmpty { null }
+                DependOnType.NAME -> job.jobControlOption?.dependOnName?.ifBlank { null }?.split(",")
                 else -> null
-            }?.ifEmpty { null }
+            }
         )
     }
 

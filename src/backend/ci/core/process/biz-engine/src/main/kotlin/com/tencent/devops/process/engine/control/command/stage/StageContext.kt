@@ -53,6 +53,7 @@ data class StageContext(
     var concurrency: Int = 0,
     val maxConcurrency: Int = 20, // #5109 并发控制埋点准备
     val pipelineAsCodeEnabled: Boolean? = null, // YAML流水线功能开关
+    val debug: Boolean, // 是否为调试构建
     override var cmdFlowSeq: Int = 0, // 命令序号
     override val variables: Map<String, String>, // 变量
     override val watcher: Watcher, // 监控对象

@@ -59,6 +59,7 @@ interface IPreTemplateScriptBuildYaml : YamlVersion {
     val label: List<String>?
     val notices: List<Notices>?
     var concurrency: Concurrency?
+    var disablePipeline: Boolean?
 
     fun replaceTemplate(f: (param: ITemplateFilter) -> PreScriptBuildYamlI)
 
@@ -122,7 +123,9 @@ data class PreTemplateScriptBuildYaml(
     override var resources: Resources? = null,
     override var finally: LinkedHashMap<String, Any>? = null,
     override val notices: List<GitNotices>?,
-    override var concurrency: Concurrency? = null
+    override var concurrency: Concurrency? = null,
+    @JsonProperty("disable-pipeline")
+    override var disablePipeline: Boolean? = null
 ) : IPreTemplateScriptBuildYaml, ITemplateFilter {
 
     init {
