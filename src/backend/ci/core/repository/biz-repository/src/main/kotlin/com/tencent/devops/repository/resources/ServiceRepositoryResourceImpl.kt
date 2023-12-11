@@ -59,6 +59,7 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
 ) : ServiceRepositoryResource {
 
     @BkTimed(extraTags = ["operate", "create"])
+    @AuditEntry(actionId = ActionId.REPERTORY_CREATE)
     override fun create(userId: String, projectId: String, repository: Repository): Result<RepositoryId> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")

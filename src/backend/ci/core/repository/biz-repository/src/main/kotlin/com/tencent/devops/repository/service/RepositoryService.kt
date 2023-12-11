@@ -491,6 +491,15 @@ class RepositoryService @Autowired constructor(
         return HashUtil.encodeOtherLongId(repositoryId)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.REPERTORY_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.REPERTORY
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.REPERTORY_CREATE_CONTENT
+    )
     private fun createRepository(
         repository: Repository,
         projectId: String,
@@ -513,6 +522,10 @@ class RepositoryService @Autowired constructor(
         val repositoryService = CodeRepositoryServiceRegistrar.getService(repository = repository)
         val repositoryId =
             repositoryService.create(projectId = projectId, userId = userId, repository = repository)
+        ActionAuditContext.current()
+            .setInstanceId(repositoryId.toString())
+            .setInstanceName(repository.aliasName)
+            .setInstance(repository)
         createResource(userId, projectId, repositoryId, repository.aliasName)
         return repositoryId
     }
@@ -629,10 +642,18 @@ class RepositoryService @Autowired constructor(
                 )
             )
         }
+        val repositoryInfo = serviceGet(
+            projectId = projectId,
+            RepositoryConfig(
+                repositoryHashId = repositoryHashId,
+                repositoryName = null,
+                repositoryType = RepositoryType.ID
+            )
+        )
         ActionAuditContext.current()
             .setInstanceId(repositoryId.toString())
             .setInstanceName(repository.aliasName)
-            .setOriginInstance(record)
+            .setOriginInstance(repositoryInfo)
             .setInstance(repository)
         val codeRepositoryService = CodeRepositoryServiceRegistrar.getService(repository)
         codeRepositoryService.edit(
