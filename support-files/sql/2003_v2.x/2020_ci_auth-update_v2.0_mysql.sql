@@ -38,6 +38,14 @@ BEGIN
         ADD COLUMN `ERROR_MESSAGE` text DEFAULT NULL COMMENT '错误信息';
     END IF;
 
+     IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_AUTH_IAM_CALLBACK'
+                    AND INDEX_NAME = 'UNIQ_RESOURCE') THEN
+    ALTER TABLE T_AUTH_IAM_CALLBACK ADD UNIQUE INDEX `UNIQ_RESOURCE` (`RESOURCE`);
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;
