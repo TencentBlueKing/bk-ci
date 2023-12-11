@@ -211,7 +211,7 @@ class ImageDao {
             val query = dslContext.selectFrom(this)
                 .where(IMAGE_CODE.eq(imageCode))
                 .and(VERSION.like(VersionUtils.generateQueryVersion(imageVersion)))
-            query.fetchOne()
+            query.orderBy(VERSION.desc()).fetchAny()
         }
     }
 
