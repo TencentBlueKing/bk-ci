@@ -49,7 +49,7 @@ class ServiceJobQuotaBusinessResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         val result = jobQuotaBusinessService.checkAndAddRunningJob(
             projectId = projectId,
-            vmType = vmType,
+            jobType = vmType,
             buildId = buildId,
             vmSeqId = vmSeqId,
             executeCount = executeCount,

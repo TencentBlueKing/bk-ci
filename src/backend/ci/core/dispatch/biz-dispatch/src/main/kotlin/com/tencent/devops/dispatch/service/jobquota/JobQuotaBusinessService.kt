@@ -64,7 +64,7 @@ class JobQuotaBusinessService @Autowired constructor(
      */
     fun checkAndAddRunningJob(
         projectId: String,
-        vmType: JobQuotaVmType,
+        jobType: JobQuotaVmType,
         buildId: String,
         vmSeqId: String,
         executeCount: Int,
@@ -72,7 +72,7 @@ class JobQuotaBusinessService @Autowired constructor(
         containerHashId: String?
     ): Boolean {
         val result: Boolean
-        val jobQuotaProjectLock = jobQuotaRedisUtils.getJobQuotaProjectLock(projectId)
+        val jobQuotaProjectLock = jobQuotaRedisUtils.getJobQuotaProjectLock(projectId, jobType)
         try {
             jobQuotaProjectLock.lock()
             result = checkJobQuotaBase(
@@ -81,12 +81,12 @@ class JobQuotaBusinessService @Autowired constructor(
                 containerId = containerId,
                 containerHashId = containerHashId,
                 executeCount = executeCount,
-                vmType = vmType
+                vmType = jobType
             )
 
             // 如果配额没有超限，则记录一条running job
             if (result) {
-                runningJobsDao.insert(dslContext, projectId, vmType, buildId, vmSeqId, executeCount)
+                runningJobsDao.insert(dslContext, projectId, jobType, buildId, vmSeqId, executeCount)
             }
         } finally {
             jobQuotaProjectLock.unlock()
@@ -260,7 +260,8 @@ class JobQuotaBusinessService @Autowired constructor(
                     jobQuotaRedisUtils.incProjectJobRunningTime(
                         projectId = projectId,
                         jobType = JobQuotaVmType.parse(runningJobsRecord.vmType),
-                        time = duration.toMillis() / 1000
+                        costTime = duration.toMillis() / 1000,
+                        agentStartTime = runningJobsRecord.agentStartTime
                     )
                     LOG.info("$projectId|$buildId|$vmSeqId|${JobQuotaVmType.parse(runningJobsRecord.vmType)} >> " +
                             "Finish time: increase ${duration.toMillis() / 1000} seconds. >>>")
