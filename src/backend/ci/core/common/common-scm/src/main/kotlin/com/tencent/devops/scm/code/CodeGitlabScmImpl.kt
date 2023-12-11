@@ -99,7 +99,7 @@ class CodeGitlabScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the gitlab token", ignored)
             throw ScmException(
-                ignored.message ?: I18nUtil.getCodeLanMessage(
+                I18nUtil.getCodeLanMessage(
                     messageCode = USER_ACCESS_CHECK_FAIL
                 ),
                 ScmType.CODE_GITLAB.name
@@ -130,7 +130,7 @@ class CodeGitlabScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the gitlab token", ignored)
             throw ScmException(
-                ignored.message ?: I18nUtil.getCodeLanMessage(
+                I18nUtil.getCodeLanMessage(
                     USER_ACCESS_CHECK_FAIL
                 ),
                 ScmType.CODE_GITLAB.name

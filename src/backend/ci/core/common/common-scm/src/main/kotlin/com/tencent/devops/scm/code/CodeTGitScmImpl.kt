@@ -111,8 +111,8 @@ class CodeTGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to list all branches", ignored)
             throw ScmException(
-                ignored.message ?: I18nUtil.getCodeLanMessage(
-                    CommonMessageCode.TGIT_TOKEN_EMPTY
+                I18nUtil.getCodeLanMessage(
+                    CommonMessageCode.TGIT_TOKEN_FAIL
                 ),
                 ScmType.CODE_TGIT.name
             )
@@ -127,7 +127,7 @@ class CodeTGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the private key of git", ignored)
             throw ScmException(
-                ignored.message ?: I18nUtil.getCodeLanMessage(
+                I18nUtil.getCodeLanMessage(
                     CommonMessageCode.TGIT_SECRET_WRONG
                 ),
                 ScmType.CODE_TGIT.name
@@ -152,7 +152,7 @@ class CodeTGitScmImpl constructor(
             logger.warn("Fail to list all branches", ignored)
             throw ScmException(
                 I18nUtil.getCodeLanMessage(
-                    CommonMessageCode.TGIT_TOKEN_EMPTY
+                    CommonMessageCode.TGIT_TOKEN_FAIL
                 ),
                 ScmType.CODE_TGIT.name
             )
@@ -166,7 +166,7 @@ class CodeTGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the username and password of git", ignored)
             throw ScmException(
-                ignored.message ?: I18nUtil.getCodeLanMessage(
+                I18nUtil.getCodeLanMessage(
                     CommonMessageCode.TGIT_LOGIN_FAIL
                 ),
                 ScmType.CODE_TGIT.name
