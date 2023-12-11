@@ -261,7 +261,7 @@ class CodeTGitRepositoryService @Autowired constructor(
                     url = repository.url
                 )?.privateToken ?: ""
             }
-            if (repoCredentialInfo.token.isBlank()){
+            if (repoCredentialInfo.token.isBlank()) {
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(
                         messageCode = CommonMessageCode.TGIT_LOGIN_FAIL

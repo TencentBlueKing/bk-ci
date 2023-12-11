@@ -308,7 +308,7 @@ class CodeGitRepositoryService @Autowired constructor(
                     url = repository.url
                 )?.privateToken ?: ""
             }
-            if (repoCredentialInfo.token.isBlank()){
+            if (repoCredentialInfo.token.isBlank()) {
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(
                         messageCode = CommonMessageCode.GIT_LOGIN_FAIL
