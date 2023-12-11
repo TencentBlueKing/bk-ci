@@ -40,7 +40,12 @@ enum class StreamObjectKind(val value: String) {
     OPENAPI("openApi"),
     ISSUE("issue"),
     REVIEW("review"),
-    NOTE("note");
+    NOTE("note"),
+
+    // pac特有操作
+    ENABLE("enable"),
+    DISABLE("disable"),
+    UPLOAD("upload");
 }
 
 fun StreamObjectKind.needInput() = this == StreamObjectKind.MANUAL || this == StreamObjectKind.OPENAPI

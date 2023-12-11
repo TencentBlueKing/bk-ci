@@ -53,6 +53,8 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
 import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
+import com.tencent.devops.scm.pojo.GitCreateBranch
+import com.tencent.devops.scm.pojo.GitCreateMergeRequest
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitOperationFile
 import com.tencent.devops.repository.pojo.git.GitUserInfo
@@ -1844,11 +1846,40 @@ class GitService @Autowired constructor(
         gitOperationFile: GitOperationFile,
         tokenType: TokenTypeEnum
     ): Result<Boolean> {
-        val url = StringBuilder("$gitCIUrl/api/v3/projects/$gitProjectId/repository/files")
+        val encodeGitProjectId = URLEncoder.encode(gitProjectId, "utf-8")
+        val url = StringBuilder("$gitCIUrl/api/v3/projects/$encodeGitProjectId/repository/files")
         setToken(tokenType, url, token)
         val request = Request.Builder()
             .url(url.toString())
             .post(
+                RequestBody.create(
+                    "application/json;charset=utf-8".toMediaTypeOrNull(),
+                    JsonUtil.toJson(gitOperationFile)
+                )
+            )
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            logger.info("request: $request Start to create file resp: $it")
+            if (!it.isSuccessful) {
+                throw GitCodeUtils.handleErrorMessage(it)
+            }
+            return Result(true)
+        }
+    }
+
+    @BkTimed(extraTags = ["operation", "gitUpdateFile"], value = "bk_tgit_api_time")
+    override fun gitUpdateFile(
+        gitProjectId: String,
+        token: String,
+        gitOperationFile: GitOperationFile,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        val encodeGitProjectId = URLEncoder.encode(gitProjectId, "utf-8")
+        val url = StringBuilder("$gitCIUrl/api/v3/projects/$encodeGitProjectId/repository/files")
+        setToken(tokenType, url, token)
+        val request = Request.Builder()
+            .url(url.toString())
+            .put(
                 RequestBody.create(
                     "application/json;charset=utf-8".toMediaTypeOrNull(),
                     JsonUtil.toJson(gitOperationFile)
@@ -1964,5 +1995,55 @@ class GitService @Autowired constructor(
                 projectName = gitProjectId
             )
         )
+    }
+
+    override fun createBranch(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        gitCreateBranch: GitCreateBranch
+    ): Result<Boolean> {
+        if (tokenType == TokenTypeEnum.OAUTH) {
+            GitOauthApi().createBranch(
+                host = gitConfig.gitApiUrl,
+                token = token,
+                projectName = gitProjectId,
+                branch = gitCreateBranch.branchName,
+                ref = gitCreateBranch.ref
+            )
+        } else {
+            GitApi().createBranch(
+                host = gitConfig.gitApiUrl,
+                token = token,
+                projectName = gitProjectId,
+                branch = gitCreateBranch.branchName,
+                ref = gitCreateBranch.ref
+            )
+        }
+        return Result(true)
+    }
+
+    override fun createMergeRequest(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        gitCreateMergeRequest: GitCreateMergeRequest
+    ): Result<GitMrInfo> {
+        val mrInfo = if (tokenType == TokenTypeEnum.OAUTH) {
+            GitOauthApi().createMergeRequest(
+                host = gitConfig.gitApiUrl,
+                token = token,
+                projectName = gitProjectId,
+                gitCreateMergeRequest = gitCreateMergeRequest
+            )
+        } else {
+            GitApi().createMergeRequest(
+                host = gitConfig.gitApiUrl,
+                token = token,
+                projectName = gitProjectId,
+                gitCreateMergeRequest = gitCreateMergeRequest
+            )
+        }
+        return Result(mrInfo)
     }
 }

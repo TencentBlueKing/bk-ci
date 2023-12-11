@@ -119,7 +119,8 @@ class RepositoryDao {
         projectIds: Collection<String>,
         repositoryTypes: List<ScmType>?,
         aliasName: String?,
-        repositoryIds: Set<Long>?
+        repositoryIds: Set<Long>?,
+        enablePac: Boolean? = null
     ): Long {
         with(TRepository.T_REPOSITORY) {
             val step = dslContext.selectCount()
@@ -132,6 +133,9 @@ class RepositoryDao {
 
             if (!aliasName.isNullOrBlank()) {
                 step.and(ALIAS_NAME.like("%$aliasName%"))
+            }
+            if (enablePac != null) {
+                step.and(ENABLE_PAC.eq(enablePac))
             }
             return when (repositoryTypes) {
                 null -> {
@@ -246,7 +250,8 @@ class RepositoryDao {
         offset: Int,
         limit: Int,
         sortBy: String? = null,
-        sortType: String? = null
+        sortType: String? = null,
+        enablePac: Boolean? = null
     ): Result<TRepositoryRecord> {
         with(TRepository.T_REPOSITORY) {
             val step = dslContext.selectFrom(this)
@@ -258,6 +263,10 @@ class RepositoryDao {
             if (!aliasName.isNullOrBlank()) {
                 step.and(ALIAS_NAME.like("%$aliasName%"))
             }
+            if (enablePac != null) {
+                step.and(ENABLE_PAC.eq(enablePac))
+            }
+
             when (repositoryTypes) {
                 null -> {
                 }
@@ -306,6 +315,16 @@ class RepositoryDao {
             return query.and(IS_DELETED.eq(false)).fetchOne() ?: throw NotFoundException(
                 I18nUtil.getCodeLanMessage(messageCode = GIT_NOT_FOUND, params = arrayOf(repositoryId.toString()))
             )
+        }
+    }
+
+    fun getOrNull(dslContext: DSLContext, repositoryId: Long, projectId: String? = null): TRepositoryRecord? {
+        with(TRepository.T_REPOSITORY) {
+            val query = dslContext.selectFrom(this).where(REPOSITORY_ID.eq(repositoryId))
+            if (!projectId.isNullOrBlank()) {
+                query.and(PROJECT_ID.eq(projectId))
+            }
+            return query.and(IS_DELETED.eq(false)).fetchOne()
         }
     }
 
@@ -417,6 +436,64 @@ class RepositoryDao {
                 .set(UPDATED_USER, updateUser)
                 .set(UPDATED_TIME, LocalDateTime.now())
                 .where(REPOSITORY_HASH_ID.eq(hashId).and(PROJECT_ID.eq(projectId)))
+                .execute()
+        }
+    }
+
+    fun getPacRepositoryByIds(dslContext: DSLContext, repositoryIds: List<Long>): TRepositoryRecord? {
+        with(TRepository.T_REPOSITORY) {
+            return dslContext.selectFrom(this)
+                .where(REPOSITORY_ID.`in`(repositoryIds))
+                .and(ENABLE_PAC.eq(true))
+                .and(IS_DELETED.eq(false))
+                .fetchOne()
+        }
+    }
+
+    fun enablePac(
+        dslContext: DSLContext,
+        userId: String,
+        projectId: String,
+        repositoryId: Long
+    ) {
+        return with(TRepository.T_REPOSITORY) {
+            dslContext.update(this)
+                .set(UPDATED_TIME, LocalDateTime.now())
+                .set(UPDATED_USER, userId)
+                .set(ENABLE_PAC, true)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPOSITORY_ID.eq(repositoryId))
+                .execute()
+        }
+    }
+
+    fun disablePac(
+        dslContext: DSLContext,
+        userId: String,
+        projectId: String,
+        repositoryId: Long
+    ) {
+        return with(TRepository.T_REPOSITORY) {
+            dslContext.update(this)
+                .set(ENABLE_PAC, false)
+                .setNull(YAML_SYNC_STATUS)
+                .set(UPDATED_TIME, LocalDateTime.now())
+                .set(UPDATED_USER, userId)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPOSITORY_ID.eq(repositoryId))
+                .execute()
+        }
+    }
+
+    fun updatePacSyncStatus(
+        dslContext: DSLContext,
+        repositoryId: Long,
+        syncStatus: String
+    ) {
+        with(TRepository.T_REPOSITORY) {
+            dslContext.update(this)
+                .set(YAML_SYNC_STATUS, syncStatus)
+                .where(REPOSITORY_ID.eq(repositoryId))
                 .execute()
         }
     }

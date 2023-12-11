@@ -34,20 +34,28 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.repository.constant.RepositoryConstants
 import com.tencent.devops.repository.constant.RepositoryMessageCode
+import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_GET_GIT_PROJECT_ID
 import com.tencent.devops.repository.constant.RepositoryMessageCode.GIT_INVALID
+import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
+import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_AUTH_TYPE_ENABLED_PAC
 import com.tencent.devops.repository.constant.RepositoryMessageCode.REPO_TYPE_NO_NEED_CERTIFICATION
 import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_SECRET_EMPTY
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
-import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
+import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
+import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.scm.IGitOauthService
+import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.repository.service.scm.IScmOauthService
 import com.tencent.devops.repository.service.scm.IScmService
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -66,7 +74,8 @@ class CodeGitRepositoryService @Autowired constructor(
     private val credentialService: CredentialService,
     private val scmService: IScmService,
     private val gitOauthService: IGitOauthService,
-    private val scmOauthService: IScmOauthService
+    private val scmOauthService: IScmOauthService,
+    private val gitService: IGitService
 ) : CodeRepositoryService<CodeGitRepository> {
     override fun repositoryType(): String {
         return CodeGitRepository::class.java.name
@@ -75,6 +84,21 @@ class CodeGitRepositoryService @Autowired constructor(
     override fun create(projectId: String, userId: String, repository: CodeGitRepository): Long {
         val credentialInfo = checkCredentialInfo(projectId = projectId, repository = repository)
         var repositoryId = 0L
+        // Git项目ID
+        val gitProjectId = getGitProjectInfo(
+            repo = repository,
+            token = credentialInfo.token
+        )?.id ?: throw ErrorCodeException(
+            errorCode = ERROR_GET_GIT_PROJECT_ID, params = arrayOf(repository.url)
+        )
+        if (repository.enablePac == true) {
+            getPacRepository(externalId = gitProjectId.toString())?.let {
+                throw ErrorCodeException(
+                    errorCode = RepositoryMessageCode.ERROR_REPO_URL_HAS_ENABLED_PAC,
+                    params = arrayOf(it.projectId, it.aliasName)
+                )
+            }
+        }
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             repositoryId = repositoryDao.create(
@@ -85,12 +109,6 @@ class CodeGitRepositoryService @Autowired constructor(
                 url = repository.getFormatURL(),
                 type = ScmType.CODE_GIT
             )
-            // Git项目ID
-            val gitProjectId =
-                getGitProjectId(
-                    repo = repository,
-                    token = credentialInfo.token
-                )
             repositoryCodeGitDao.create(
                 dslContext = transactionContext,
                 repositoryId = repositoryId,
@@ -143,13 +161,14 @@ class CodeGitRepositoryService @Autowired constructor(
         // 需要更新gitProjectId
         if (sourceUrl != repository.url) {
             logger.info(
-                "repository url unMatch,need change gitProjectId,sourceUrl=[$sourceUrl] " +
-                        "targetUrl=[${repository.url}]"
+                "repository url unMatch,need change gitProjectId,sourceUrl=[$sourceUrl] targetUrl=[${repository.url}]"
             )
             // Git项目ID
-            gitProjectId = getGitProjectId(
+            gitProjectId = getGitProjectInfo(
                 repo = repository,
                 token = credentialInfo.token
+            )?.id ?: throw ErrorCodeException(
+                errorCode = ERROR_GET_GIT_PROJECT_ID, params = arrayOf(repository.url)
             )
         }
         dslContext.transaction { configuration ->
@@ -184,7 +203,9 @@ class CodeGitRepositoryService @Autowired constructor(
             authType = RepoAuthType.parse(record.authType),
             projectId = repository.projectId,
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
-            gitProjectId = record.gitProjectId
+            gitProjectId = record.gitProjectId,
+            enablePac = repository.enablePac,
+            yamlSyncStatus = repository.yamlSyncStatus
         )
     }
 
@@ -249,32 +270,7 @@ class CodeGitRepositoryService @Autowired constructor(
         return checkResult
     }
 
-    /**
-     * 获取Git项目ID
-     */
-    fun getGitProjectId(repo: CodeGitRepository, token: String): Long {
-        val isOauth = repo.authType == RepoAuthType.OAUTH
-        logger.info("the repo is:$repo,token length:${StringUtils.length(token)},isOauth:$isOauth")
-        val repositoryProjectInfo = if (isOauth) {
-            scmOauthService.getProjectInfo(
-                projectName = repo.projectName,
-                url = repo.getFormatURL(),
-                type = ScmType.CODE_GIT,
-                token = token
-            )
-        } else {
-            scmService.getProjectInfo(
-                projectName = repo.projectName,
-                url = repo.getFormatURL(),
-                type = ScmType.CODE_GIT,
-                token = token
-            )
-        }
-        logger.info("the gitProjectInfo is:$repositoryProjectInfo")
-        return repositoryProjectInfo?.id ?: 0L
-    }
-
-    override fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo> {
+    override fun getRepoDetailMap(repositoryIds: List<Long>): Map<Long, RepositoryDetailInfo> {
         return repositoryCodeGitDao.list(
             dslContext = dslContext,
             repositoryIds = repositoryIds.toSet()
@@ -286,8 +282,78 @@ class CodeGitRepositoryService @Autowired constructor(
             } else {
                 it.credentialId
             }
-            RepoAuthInfo(gitAuthType, gitAuthIdentity)
+            RepositoryDetailInfo(
+                authType = gitAuthType,
+                credentialId = gitAuthIdentity
+            )
         }) ?: mapOf()
+    }
+
+    override fun getPacProjectId(userId: String, repoUrl: String): String? {
+        val token = gitOauthService.getAccessToken(userId = userId)?.accessToken ?: throw ErrorCodeException(
+            errorCode = NOT_AUTHORIZED_BY_OAUTH,
+            params = arrayOf(userId)
+        )
+        val gitProjectId = getGitProjectInfo(repoUrl, token).id
+        return getPacRepository(externalId = gitProjectId.toString())?.projectId
+    }
+
+    override fun pacCheckEnabled(
+        projectId: String,
+        userId: String,
+        repository: TRepositoryRecord,
+        retry: Boolean
+    ) {
+        val codeGitRepository = compose(repository)
+        if (codeGitRepository.authType != RepoAuthType.OAUTH) {
+            throw ErrorCodeException(errorCode = ERROR_AUTH_TYPE_ENABLED_PAC)
+        }
+        val credentialInfo = getCredentialInfo(projectId = projectId, repository = codeGitRepository)
+        // 获取工蜂ID
+        val gitProjectInfo = getGitProjectInfo(
+            repo = codeGitRepository, token = credentialInfo.token
+        ) ?: throw ErrorCodeException(
+            errorCode = ERROR_GET_GIT_PROJECT_ID, params = arrayOf(repository.url)
+        )
+        val member = gitService.getProjectMembersAll(
+            gitProjectId = gitProjectInfo.id.toString(),
+            page = 1,
+            pageSize = 1,
+            search = userId,
+            tokenType = TokenTypeEnum.OAUTH,
+            token = credentialInfo.token
+        ).data?.firstOrNull() ?: throw ErrorCodeException(
+            errorCode = RepositoryMessageCode.ERROR_MEMBER_NOT_FOUND,
+            params = arrayOf(userId)
+        )
+        if (member.accessLevel < GitAccessLevelEnum.MASTER.level) {
+            throw ErrorCodeException(
+                errorCode = RepositoryMessageCode.ERROR_MEMBER_LEVEL_LOWER_MASTER
+            )
+        }
+        // 重试不需要校验开启的pac仓库
+        if (!retry) {
+            getPacRepository(externalId = gitProjectInfo.id.toString())?.let {
+                throw ErrorCodeException(
+                    errorCode = RepositoryMessageCode.ERROR_REPO_URL_HAS_ENABLED_PAC,
+                    params = arrayOf(it.projectId, it.aliasName)
+                )
+            }
+        }
+    }
+
+    override fun checkCiDirExists(projectId: String, userId: String, repository: TRepositoryRecord): Boolean {
+        val codeGitRepository = compose(repository)
+        val credentialInfo = getCredentialInfo(projectId = projectId, repository = codeGitRepository)
+        val gitProjectInfo = getGitProjectInfo(repoUrl = repository.url, token = credentialInfo.token)
+        return gitService.getGitRepositoryTreeInfo(
+            userId = userId,
+            repoName = gitProjectInfo.id.toString(),
+            refName = gitProjectInfo.defaultBranch,
+            path = RepositoryConstants.CI_DIR_PATH,
+            token = credentialInfo.token,
+            tokenType = TokenTypeEnum.OAUTH
+        ).data?.isNotEmpty() ?: false
     }
 
     /**
@@ -335,6 +401,53 @@ class CodeGitRepositoryService @Autowired constructor(
                 repository = repository
             )
         }
+    }
+
+    override fun getPacRepository(externalId: String): TRepositoryRecord? {
+        // 判断是否已有仓库开启pac
+        val repositoryIds = repositoryCodeGitDao.listByGitProjectId(
+            dslContext = dslContext,
+            gitProjectId = externalId.toLong()
+        ).map { it.repositoryId }
+        return repositoryDao.getPacRepositoryByIds(dslContext = dslContext, repositoryIds = repositoryIds)
+    }
+
+    /**
+     * 获取Git项目ID
+     */
+    fun getGitProjectInfo(repo: CodeGitRepository, token: String): GitProjectInfo? {
+        val isOauth = repo.authType == RepoAuthType.OAUTH
+        logger.info("the repo is:$repo,token length:${StringUtils.length(token)},isOauth:$isOauth")
+        val repositoryProjectInfo = if (isOauth) {
+            scmOauthService.getProjectInfo(
+                projectName = repo.projectName,
+                url = repo.getFormatURL(),
+                type = ScmType.CODE_GIT,
+                token = token
+            )
+        } else {
+            scmService.getProjectInfo(
+                projectName = repo.projectName,
+                url = repo.getFormatURL(),
+                type = ScmType.CODE_GIT,
+                token = token
+            )
+        }
+        logger.info("the gitProjectInfo is:$repositoryProjectInfo")
+        return repositoryProjectInfo
+    }
+
+    private fun getGitProjectInfo(repoUrl: String, token: String): GitProjectInfo {
+        val gitProjectName = GitUtils.getProjectName(repoUrl)
+        return scmOauthService.getProjectInfo(
+            projectName = gitProjectName,
+            url = repoUrl,
+            type = ScmType.CODE_GIT,
+            token = token
+        ) ?: throw ErrorCodeException(
+            errorCode = ERROR_GET_GIT_PROJECT_ID,
+            params = arrayOf(repoUrl)
+        )
     }
 
     companion object {

@@ -158,7 +158,7 @@ class PipelineWebhookService @Autowired constructor(
         )
     }
 
-    private fun registerWebhook(
+    fun registerWebhook(
         projectId: String,
         scmType: ScmType,
         repositoryConfig: RepositoryConfig,
@@ -290,11 +290,16 @@ class PipelineWebhookService @Autowired constructor(
         }
     }
 
-    fun getTriggerPipelines(name: String, repositoryType: String): List<WebhookTriggerPipeline> {
+    fun getTriggerPipelines(
+        name: String,
+        repositoryType: String,
+        yamlPipelineIds: List<String>?
+    ): List<WebhookTriggerPipeline> {
         return pipelineWebhookDao.getByProjectNameAndType(
             dslContext = dslContext,
             projectName = getProjectName(name),
-            repositoryType = repositoryType
+            repositoryType = repositoryType,
+            yamlPipelineIds = yamlPipelineIds
         ) ?: emptyList()
     }
 
