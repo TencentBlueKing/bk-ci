@@ -37,8 +37,8 @@ import org.springframework.stereotype.Repository
 class PipelineYamlTriggerDao {
 
     fun batchSave(dslContext: DSLContext, yamlTriggers: List<PipelineYamlTrigger>) {
-        with(TPipelineYamlTrigger.T_PIPELINE_YAML_TRIGGER) {
-            val addStep = yamlTriggers.map {
+        val addStep = yamlTriggers.map {
+            with(TPipelineYamlTrigger.T_PIPELINE_YAML_TRIGGER) {
                 dslContext.insertInto(
                     this,
                     PROJECT_ID,
@@ -64,8 +64,8 @@ class PipelineYamlTriggerDao {
                     it.eventType
                 )
             }
-            dslContext.batch(addStep).execute()
         }
+        dslContext.batch(addStep).execute()
     }
 
     fun getTaskIds(
