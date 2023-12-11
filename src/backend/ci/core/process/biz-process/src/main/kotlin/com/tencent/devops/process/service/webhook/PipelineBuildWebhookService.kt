@@ -266,6 +266,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                     val webhookCommit = WebhookCommit(
                         userId = userId,
                         pipelineId = pipelineId,
+                        version = null,
                         params = WebhookStartParamsRegistrar.getService(element).getStartParams(
                             projectId = projectId,
                             element = element,
