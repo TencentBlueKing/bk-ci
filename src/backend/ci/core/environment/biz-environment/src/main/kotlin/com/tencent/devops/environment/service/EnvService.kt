@@ -159,7 +159,7 @@ class EnvService @Autowired constructor(
         ),
         attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
         scopeId = "#projectId",
-        content = ActionAuditContent.ENVIRONMENT_EDIT_SET_SHARE_ENV_CONTENT
+        content = ActionAuditContent.ENVIRONMENT_EDIT_CONTENT
     )
     override fun updateEnvironment(
         userId: String,
@@ -184,7 +184,12 @@ class EnvService @Autowired constructor(
         }
 
         ActionAuditContext.current()
-            .addInstanceInfo(envId.toString(), envUpdateInfo.name, existEnv, envUpdateInfo)
+            .addInstanceInfo(
+                envId.toString(),
+                envUpdateInfo.name,
+                getEnvironment(userId, projectId, envHashId),
+                envUpdateInfo
+            )
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
 

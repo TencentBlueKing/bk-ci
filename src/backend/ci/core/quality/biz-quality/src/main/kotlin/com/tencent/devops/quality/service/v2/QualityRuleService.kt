@@ -109,6 +109,15 @@ class QualityRuleService @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.RULE_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.RULE
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.RULE_CREATE_CONTENT
+    )
     fun userCreate(userId: String, projectId: String, ruleRequest: RuleCreateRequest): String {
         val permission = AuthPermission.CREATE
         qualityPermissionService.validateRulePermission(
@@ -121,22 +130,20 @@ class QualityRuleService @Autowired constructor(
                 arrayOf(permission.getI18n(I18nUtil.getLanguage(userId)))
             )
         )
-        return serviceCreate(
+
+        val ruleHashId = serviceCreate(
             userId = userId,
             projectId = projectId,
             ruleRequest = ruleRequest
         )
+        // audit
+        ActionAuditContext.current()
+            .setInstanceId(HashUtil.decodeIdToLong(ruleHashId).toString())
+            .setInstanceName(ruleRequest.name)
+            .setInstance(ruleRequest)
+        return ruleHashId
     }
 
-    @ActionAuditRecord(
-        actionId = ActionId.RULE_CREATE,
-        instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.RULE
-        ),
-        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
-        scopeId = "#projectId",
-        content = ActionAuditContent.RULE_CREATE_CONTENT
-    )
     fun serviceCreate(userId: String, projectId: String, ruleRequest: RuleCreateRequest): String {
         return dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
@@ -161,10 +168,6 @@ class QualityRuleService @Autowired constructor(
                     auditTimeoutMinutes = ruleRequest.auditTimeoutMinutes ?: 15
                 )
             }
-            ActionAuditContext.current()
-                .setInstanceId(ruleId.toString())
-                .setInstanceName(ruleRequest.name)
-                .setInstance(ruleRequest)
             qualityPermissionService.createRuleResource(
                 userId = userId,
                 projectId = projectId,

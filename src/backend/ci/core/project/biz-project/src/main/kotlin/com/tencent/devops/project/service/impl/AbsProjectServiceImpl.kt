@@ -473,7 +473,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 ) ?: throw NotFoundException("project - $englishName is not exist!")
                 // 审计
                 ActionAuditContext.current()
-                    .setOriginInstance(projectInfo)
+                    .setOriginInstance(ProjectUtils.packagingBean(projectInfo))
                     .setInstance(projectUpdateInfo)
 
                 val approvalStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
