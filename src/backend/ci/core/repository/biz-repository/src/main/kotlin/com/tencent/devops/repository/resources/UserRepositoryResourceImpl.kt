@@ -302,6 +302,8 @@ class UserRepositoryResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         repositoryHashId: String,
+        eventType: String?,
+        triggerConditionMd5: String?,
         page: Int?,
         pageSize: Int?
     ): Result<SQLPage<RepoPipelineRefVo>> {
@@ -312,6 +314,8 @@ class UserRepositoryResourceImpl @Autowired constructor(
             repoPipelineService.listPipelineRef(
                 projectId = projectId,
                 repositoryHashId = repositoryHashId,
+                eventType = eventType,
+                triggerConditionMd5 = triggerConditionMd5,
                 limit = limit.limit,
                 offset = limit.offset
             )

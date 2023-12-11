@@ -179,7 +179,7 @@ interface ProjectService {
 
     fun list(limit: Int, offset: Int): Page<ProjectVO>
 
-    fun listByChannel(limit: Int, offset: Int, projectChannelCode: ProjectChannelCode): Page<ProjectVO>
+    fun listByChannel(limit: Int, offset: Int, projectChannelCode: List<String>): Page<ProjectVO>
 
     fun getAllProject(): List<ProjectVO>
 

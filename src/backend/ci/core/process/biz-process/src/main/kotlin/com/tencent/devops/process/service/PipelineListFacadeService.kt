@@ -300,7 +300,8 @@ class PipelineListFacadeService @Autowired constructor(
         pageSize: Int?,
         sortType: PipelineSortType,
         channelCode: ChannelCode,
-        checkPermission: Boolean
+        checkPermission: Boolean,
+        filterByPipelineName: String? = null
     ): PipelinePage<Pipeline> {
 
         val watcher = Watcher(id = "listPermissionPipeline|$projectId|$userId")
@@ -343,20 +344,24 @@ class PipelineListFacadeService @Autowired constructor(
             }
 
             watcher.start("s_r_summary")
+            val pipelineFilterParamList =
+                pipelineFilterParams(projectId, filterByPipelineName, null, null)
             val buildPipelineRecords = pipelineRuntimeService.getBuildPipelineRecords(
                 projectId = projectId,
                 channelCode = channelCode,
                 pipelineIds = hasPermissionList,
                 page = pageNotNull,
                 pageSize = pageSizeNotNull,
-                sortType = sortType
+                sortType = sortType,
+                pipelineFilterParamList = pipelineFilterParamList
             )
             val buildPipelineCount = pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
                 dslContext = dslContext,
                 projectId = projectId,
                 channelCode = channelCode,
                 pipelineIds = hasPermissionList,
-                userId = userId
+                userId = userId,
+                pipelineFilterParamList = pipelineFilterParamList
             )
             watcher.stop()
 
@@ -714,6 +719,39 @@ class PipelineListFacadeService @Autowired constructor(
             LogUtils.printCostTimeWE(watcher = watcher)
             processJmxApi.execute(ProcessJmxApi.LIST_NEW_PIPELINES, watcher.totalTimeMillis)
         }
+    }
+
+    private fun pipelineFilterParams(
+        projectId: String,
+        filterByPipelineName: String?,
+        filterByCreator: String?,
+        filterByLabels: String?
+    ): MutableList<PipelineFilterParam> {
+        val (
+            filterByPipelineNames: List<PipelineViewFilterByName>,
+            filterByPipelineCreators: List<PipelineViewFilterByCreator>,
+            filterByPipelineLabels: List<PipelineViewFilterByLabel>
+        ) = pipelineListQueryParamService.generatePipelineFilterInfo(
+            projectId = projectId,
+            filterByName = filterByPipelineName,
+            filterByCreator = filterByCreator,
+            filterByLabels = filterByLabels
+        )
+        val pipelineFilterParamList = mutableListOf<PipelineFilterParam>()
+        val pipelineFilterParam = PipelineFilterParam(
+            logic = Logic.AND,
+            filterByPipelineNames = filterByPipelineNames,
+            filterByPipelineCreators = filterByPipelineCreators,
+            filterByLabelInfo = PipelineFilterByLabelInfo(
+                filterByLabels = filterByPipelineLabels,
+                labelToPipelineMap = pipelineListQueryParamService.generateLabelToPipelineMap(
+                    projectId = projectId,
+                    pipelineViewFilterByLabels = filterByPipelineLabels
+                )
+            )
+        )
+        pipelineFilterParamList.add(pipelineFilterParam)
+        return pipelineFilterParamList
     }
 
     private fun fillPipelinePermissions(
@@ -1355,7 +1393,6 @@ class PipelineListFacadeService @Autowired constructor(
                 it.latestBuildNum = pipelineBuildSummaryRecord.buildNum
 //                it.latestBuildTaskName = pipelineBuildSummaryRecord.latestTaskName // 卡片界面不再需要该信息
                 it.latestBuildId = pipelineBuildSummaryRecord.latestBuildId
-                it.latestBuildUserId = pipelineBuildSummaryRecord.latestStartUser ?: ""
                 it.latestBuildNumAlias = pipelineBuildSummaryRecord.buildNumAlias
                 it.viewNames = pipelineViewNameMap[it.pipelineId]
             }
@@ -1365,6 +1402,7 @@ class PipelineListFacadeService @Autowired constructor(
                     startType = StartType.toStartType(lastBuild.trigger),
                     channelCode = ChannelCode.getChannel(lastBuild.channel)
                 )
+                it.latestBuildUserId = lastBuild.triggerUser ?: lastBuild.startUser
                 it.trigger = lastBuild.trigger
                 val webhookInfo = lastBuild.webhookInfo?.let { self ->
                     JsonUtil.to(self, object : TypeReference<WebhookInfo?>() {})

@@ -114,6 +114,7 @@ import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
+import com.tencent.devops.process.pojo.pipeline.BuildRecordInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
@@ -1470,6 +1471,32 @@ class PipelineBuildFacadeService(
             executeCount = executeCount,
             channelCode = channelCode,
             archiveFlag = archiveFlag
+        )
+    }
+
+    fun getBuildRecordInfo(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        channelCode: ChannelCode,
+        checkPermission: Boolean = true
+    ): List<BuildRecordInfo> {
+
+        if (checkPermission) {
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW,
+                message = null
+            )
+        }
+
+        return buildRecordService.getRecordInfo(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId
         )
     }
 

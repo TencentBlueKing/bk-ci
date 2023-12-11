@@ -111,10 +111,23 @@ class AgentUpgradeJob @Autowired constructor(
 
         val currentDockerInitFileMd5 = agentPropsScope.getDockerInitFileMd5()
 
-        val importOKAgents = thirdPartyAgentDao.listByStatus(
+        var importOKAgents = thirdPartyAgentDao.listByStatus(
             dslContext = dslContext,
             status = setOf(AgentStatus.IMPORT_OK)
-        ).toSet()
+        ).toMutableSet()
+
+        // 对于优先升级的项目的 agent 也一并计入并且放到前面
+        val upgrades = projectScope.fetchInPriorityUpgradeProject()
+        if (upgrades.isNotEmpty()) {
+            val upImportOKAgents = thirdPartyAgentDao.listByStatusAndProject(
+                dslContext = dslContext,
+                projects = upgrades,
+                status = setOf(AgentStatus.IMPORT_OK)
+            ).toMutableSet()
+            upImportOKAgents.addAll(importOKAgents)
+            importOKAgents = upImportOKAgents
+        }
+
         val needUpgradeAgents = importOKAgents.filter {
             // #5806 #5045 解决worker过老，或者异常，导致拿不到版本号，而无法自愈或升级的问题
             // it.version.isNullOrBlank() || it.masterVersion.isNullOrBlank() -> false

@@ -169,7 +169,9 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         repoEventIdMap: MutableMap<String, Long>
     ) {
         if (!builder.getEventSource().isNullOrBlank()) {
-            triggerEvent.eventSource = builder.getEventSource()
+            val eventSource = builder.getEventSource()!!
+            val eventType = triggerEvent.eventType
+            triggerEvent.eventSource = eventSource
             triggerEvent.projectId = projectId
             val eventId = repoEventIdMap[builder.getEventSource()] ?: run {
                 val eventId = pipelineTriggerEventService.getEventId(
@@ -180,10 +182,22 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
             }
             triggerEvent.eventId = eventId
             builder.eventId(eventId)
+            val triggerDetail = builder.build()
             pipelineTriggerEventService.saveEvent(
                 triggerEvent = triggerEvent,
-                triggerDetail = builder.build()
+                triggerDetail = triggerDetail
             )
+            // 判断刷新的eventType和repository_hash_id字段的准确性,为后期优化做准备
+            pipelineWebhookService.get(
+                projectId = projectId,
+                pipelineId = triggerDetail.pipelineId!!,
+                repositoryHashId = eventSource,
+                eventType = eventType
+            ) ?: run {
+                logger.warn(
+                    "Failed to match pipeline webhook|projectId|${triggerDetail.pipelineId}|$eventSource|$eventType"
+                )
+            }
         }
     }
 

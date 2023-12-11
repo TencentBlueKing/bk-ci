@@ -104,6 +104,7 @@ const val OR = "or" // 或
 const val TIMETOSELECT = "timetoSelect" // 时必选
 const val MASTER = "master" // 主干
 const val SYSTEM = "system" // 系统
+const val IN_READY_TEST = "IN_READY_TEST" // 正在测试中
 const val BUILD_RUNNING = "buildRunning" // 运行中
 const val BUILD_QUEUE = "buildQueue" // 构建排队中
 const val BUILD_REVIEWING = "buildReviewing" // 构建待审核
@@ -157,6 +158,7 @@ const val KEY_PROJECT_ID = "projectId"
 const val KEY_PIPELINE_ID = "pipelineId"
 const val KEY_PIPELINE_NUM = "pipelineNum"
 const val KEY_ARCHIVE = "archive"
+const val KEY_BRANCH_TEST_FLAG = "branchTestFlag"
 
 const val BK_BUILD_ENV_START_FAILED = "bkBuildEnvStartFailed" // 构建环境启动失败
 const val BK_START_PULL_IMAGE = "bkStartPullImage" // 开始拉取镜像，镜像名称：
