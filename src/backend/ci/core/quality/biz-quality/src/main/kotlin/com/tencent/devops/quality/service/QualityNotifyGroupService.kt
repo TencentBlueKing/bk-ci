@@ -253,7 +253,7 @@ class QualityNotifyGroupService @Autowired constructor(
                 arrayOf(authPermission.getI18n(I18nUtil.getLanguage(userId)))
             )
         )
-        val qualityGroupInfo = qualityNotifyGroupDao.getOrNull(dslContext, groupId)
+        qualityNotifyGroupDao.getOrNull(dslContext, groupId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = QualityMessageCode.USER_GROUP_NOT_EXISTS,
@@ -270,7 +270,7 @@ class QualityNotifyGroupService @Autowired constructor(
         ActionAuditContext.current()
             .setInstanceId(groupId.toString())
             .setInstanceName(group.name)
-            .setOriginInstance(qualityGroupInfo)
+            .setOriginInstance(serviceGet(groupHashId))
             .setInstance(group)
 
         val outerUsers = regex.split(group.outerUsers)
