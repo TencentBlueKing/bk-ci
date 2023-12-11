@@ -551,7 +551,6 @@ export default {
         commit(SET_PIPELINE_EDITING, true)
     },
     deleteAtom: ({ commit }, { container, atomIndex }) => {
-        debugger
         commit(DELETE_ATOM, { elements: container.elements, atomIndex })
         commit(SET_PIPELINE_EDITING, true)
     },

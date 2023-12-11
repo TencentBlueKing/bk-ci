@@ -63,17 +63,33 @@
         },
         computed: {
             ...mapState('atom', [
-                'editingElementPos'
+                'editingElementPos',
+                'showAtomSelectorPopup'
             ]),
             container () {
                 return this.pipeline?.stages[0]?.containers[0] || {}
             },
             triggerList () {
-                console.log(this.container?.elements)
                 try {
                     return this.container?.elements || []
                 } catch (err) {
                     return []
+                }
+            }
+        },
+        watch: {
+            showAtomSelectorPopup: {
+                handler (show) {
+                    if (!show && !this.editingElementPos) {
+                        this.triggerList.forEach((element, index) => {
+                            if (!element.atomCode) {
+                                this.deleteAtom({
+                                    container: this.container,
+                                    atomIndex: index
+                                })
+                            }
+                        })
+                    }
                 }
             }
         },

@@ -1,7 +1,7 @@
 <template>
     <section class="variable-version-wrapper">
         <div class="variable-entry" :class="{ 'is-close': !showVariable }" @click="toggleOpenVar">
-            <i class="bk-devops-icon bk-icon icon-expand-line"></i>
+            <i class="bk-icon icon-angle-double-right"></i>
             变量
         </div>
         <div v-if="showVariable" class="variable-version-container">
@@ -75,7 +75,6 @@
             buildNo () {
                 return this.container?.buildNo || {}
             }
-
         },
         created () {
             this.setShowVariable(true)
@@ -118,19 +117,6 @@
 <style lang="scss">
     @import "@/scss/mixins/ellipsis.scss";
     @import "@/scss/mixins/scroller.scss";
-    .edit-var-container {
-        .edit-var-content {
-            padding: 20px 24px;
-        }
-        .bk-sideslider-footer {
-            position: absolute;
-            bottom: 0;
-            .edit-var-footer {
-                margin-left: 24px;
-            }
-        }
-        /* .bk-s */
-    }
     .variable-entry {
         z-index: 2017;
         position: absolute;
@@ -144,11 +130,14 @@
         font-size: 12px;
         line-height: 16px;
         color: #FFF;
+        .bk-icon {
+            font-size: 14px;
+        }
         &.is-close {
             right: 0;
             border-radius: 4px 0 0 4px;
             background: #699DF4;
-            .icon-expand-line {
+            .bk-icon {
                 display: inline-block;
                 transform: rotate(180deg);
             }
@@ -201,7 +190,7 @@
         right: 0;
         height: 100%;
         background-color: #FFF;
-        border: 1px solid #DCDEE5;
+        border-left: 1px solid #DCDEE5;
         .edit-var-header {
             display: flex;
             align-items: center;
@@ -217,6 +206,8 @@
             }
         }
         .edit-var-content {
+            height: calc(100% - 90px);
+            overflow-y: auto;
             padding: 24px 40px;
         }
         .edit-var-footer {

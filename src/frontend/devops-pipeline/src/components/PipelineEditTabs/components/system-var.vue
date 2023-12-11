@@ -1,6 +1,6 @@
 <template>
     <div class="system-var-container">
-        <bk-alert type="info" :title="$t('可在插件中通过表达式 ${{ ci.xxx }} 引用变量')" closable></bk-alert>
+        <bk-alert type="info" :title="$t('可在插件中通过表达式 ${{ ci.<var_name> }} 引用变量')" closable></bk-alert>
         <div class="operate-row">
             <bk-input
                 v-model="searchStr"

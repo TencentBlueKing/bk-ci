@@ -15,14 +15,10 @@
                                 <span>{{ param.id }}</span>
                                 <span>({{ param.name || param.id }})</span>
                             </div>
-                            <!-- <div class="value-operate-row">
-                                <span v-if="param.readOnly" class="read-only">只读</span>
-                                <span class="default-value">{{ param.defaultValue }}</span>
-                            </div> -->
                             <div class="value-operate-row" style="justify-content: space-between;">
                                 <div class="param-value">
-                                    <span v-if="param.readOnly" class="read-only">只读</span>
-                                    <span class="default-value">{{ param.defaultValue }}</span>
+                                    <span v-if="param.readOnly" class="read-only">{{$t('只读')}}</span>
+                                    <span class="default-value">{{ param.defaultValue || '--' }}</span>
                                 </div>
                                 <div class="var-operate">
                                     <div class="operate-btns">
@@ -32,17 +28,8 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- <div class="var-operate">
-                            <div class="operate-btns">
-                                <i @click.stop="handleCopy(bkVarWrapper(param.id))" class="bk-icon icon-copy" style="margin-right: 12px;"></i>
-                                <i @click.stop="handleDelete(param.id)" class="bk-icon icon-minus-circle"></i>
-                            </div>
-                        </div> -->
                     </div>
                 </slot>
-                <!-- <div class="variable-empty" v-if="list.length === 0">
-                    {{$t('暂无变量')}}
-                </div> -->
             </section>
         </transition>
     </div>

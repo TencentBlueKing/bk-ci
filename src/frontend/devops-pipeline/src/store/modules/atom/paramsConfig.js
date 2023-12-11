@@ -35,9 +35,9 @@ function paramType (typeConst) {
 
 export const DEFAULT_PARAM = {
     [STRING]: {
-        id: 'string',
-        name: 'string',
-        defaultValue: 'value',
+        id: '',
+        name: '',
+        defaultValue: '',
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
         desc: '',

@@ -18,7 +18,6 @@
                     :handle-change="handleBuildNoChange"
                 />
             </section>
-            
             <bk-button v-if="showVersions" @click="editVersions">
                 {{$t('编辑版本号')}}
             </bk-button>
@@ -34,7 +33,7 @@
                     </div>
                     <div class="value-row">
                         <span class="default-value">
-                            {{ param.id === 'BK_CI_BUILD_NO' ? `${buildNo.buildNo}（${getLabelByBuildType(buildNo.buildNoType)}）` : versionValues[param.id] }}
+                            {{ param.id === 'BK_CI_BUILD_NO' ? `${renderBuildNo.buildNo}（${getLabelByBuildType(renderBuildNo.buildNoType)}）` : versionValues[param.id] }}
                         </span>
                         <div class="version-operate">
                             <div class="operate-btns">
@@ -43,11 +42,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- <div class="version-operate">
-                    <div class="operate-btns">
-                        <i @click.stop="handleCopy(bkVarWrapper(param.id))" class="bk-icon icon-copy"></i>
-                    </div>
-                </div> -->
             </div>
         </section>
 
@@ -149,6 +143,7 @@
                 showVersions: false,
                 isRequired: false,
                 showEditVersion: false,
+                renderBuildNo: {},
                 editBuildNo: {},
                 editVersionValues: {}
 
@@ -193,6 +188,7 @@
             }
         },
         created () {
+            this.renderBuildNo = this.buildNo
             this.showVersions = this.versions.length !== 0
         },
         methods: {
@@ -232,6 +228,7 @@
                         required: false,
                         type: versionConfig[v].type
                     }))
+                    this.renderBuildNo = Object.assign({}, this.defaultBuildNo)
 
                     this.updateContainerParams('params', [
                         ...this.globalParams,
@@ -247,7 +244,7 @@
             },
             editVersions () {
                 this.editVersionValues = Object.assign({}, this.versionValues)
-                this.editBuildNo = Object.assign({}, this.buildNo)
+                this.editBuildNo = Object.assign({}, this.renderBuildNo)
                 this.showEditVersion = true
             },
             handleSaveVersion () {
@@ -268,6 +265,7 @@
                         this.updateContainerParams('buildNo', {
                             ...this.editBuildNo
                         })
+                        this.renderBuildNo = Object.assign({}, this.editBuildNo)
                         this.showEditVersion = false
                     }
                 })
@@ -356,7 +354,6 @@
         }
         .version-input {
             width: 64px;
-            background: #FAFBFD;
             border: 1px solid #DCDEE5;
             border-radius: 2px;
         }
