@@ -60,8 +60,7 @@ class JobStatisticsScheduler @Autowired constructor(
     fun saveJobStatisticsHistory() {
         val redisLock = jobQuotaRedisUtils.getJobStatisticsLock()
         try {
-            val lockSuccess = redisLock.tryLock()
-            if (lockSuccess) {
+            if (redisLock.tryLock()) {
                 logger.info("Start save jobStatistics")
                 val theDate = LocalDateTime.now().format(dateTimeFormatter)
                 val cursor = jobQuotaRedisUtils.getLastDayAllProjectConcurrency()
@@ -71,17 +70,7 @@ class JobStatisticsScheduler @Autowired constructor(
                     counter++
                     val keyValue = cursor.next()
                     val (projectId, jobType) = jobQuotaRedisUtils.parseProjectJobTypeConcurrencyKey(keyValue.key)
-                    jobMetricsDataList.add(DispatchJobMetricsData(
-                        theDate = theDate,
-                        projectId = projectId,
-                        productId = client.get(ServiceProjectResource::class).get(projectId).data?.productId.toString(),
-                        jobType = jobType,
-                        maxJobConcurrency = keyValue.value.toInt(),
-                        sumJobCost = jobQuotaRedisUtils.getLastDayProjectRunJobTypeTime(
-                            projectId,
-                            JobQuotaVmType.valueOf(jobType)
-                        )?.toInt() ?: 0
-                    ))
+                    addJobMetricsData(theDate, projectId, jobType, keyValue, jobMetricsDataList)
 
                     if (counter % 100 == 0) {
                         println("Start save jobStatistics counter: $counter -> pushAndClear dataMap.")
@@ -99,6 +88,30 @@ class JobStatisticsScheduler @Autowired constructor(
             redisLock.unlock()
             jobQuotaRedisUtils.deleteLastDayJobKey()
             jobQuotaRedisUtils.setDayJobKeyExpire()
+        }
+    }
+
+    private fun addJobMetricsData(
+        theDate: String,
+        projectId: String,
+        jobType: String,
+        keyValue: MutableMap.MutableEntry<String, String>,
+        jobMetricsDataList: MutableList<DispatchJobMetricsData>
+    ) {
+        try {
+            jobMetricsDataList.add(DispatchJobMetricsData(
+                theDate = theDate,
+                projectId = projectId,
+                productId = client.get(ServiceProjectResource::class).get(projectId).data?.productId.toString(),
+                jobType = jobType,
+                maxJobConcurrency = keyValue.value.toInt(),
+                sumJobCost = jobQuotaRedisUtils.getLastDayProjectRunJobTypeTime(
+                    projectId,
+                    JobQuotaVmType.valueOf(jobType)
+                )?.toInt() ?: 0
+            ))
+        } catch (e: Exception) {
+            logger.error("Save jobStatistics failed.", e)
         }
     }
 
