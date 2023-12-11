@@ -51,7 +51,7 @@ spec:
                python3 do_migrate.py -t {{ .Values.config.bkCiIamApigwUrl }} -a "{{ .Values.config.bkCiAppCode }}" -s "{{ .Values.config.bkCiAppToken }}" -f  $i --apigateway
               done
               # 导入数据库
-              cat << EOF > iam.sql
+              cat << 'EOF' > iam.sql
               UPDATE T_AUTH_IAM_CALLBACK SET GATEWAY="http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}" where `SYSTEM`="ci"
               
               {{- if ne .Values.config.bkCodeccPrivateUrl "" }}

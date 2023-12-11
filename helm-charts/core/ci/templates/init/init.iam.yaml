@@ -51,7 +51,7 @@ spec:
                python3 bkiam_do_migrate.py -t {{ .Values.config.bkIamPrivateUrl }} -a "{{ .Values.config.bkCiAppCode }}" -s "{{ .Values.config.bkCiAppToken }}" -f  $i
               done
               # 导入数据库
-              cat << EOF > iam.sql
+              cat << 'EOF' > iam.sql
               UPDATE T_AUTH_IAM_CALLBACK SET GATEWAY="http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}" where `SYSTEM`="ci"
               EOF
               mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }} devops_ci_auth < iam.sql;
