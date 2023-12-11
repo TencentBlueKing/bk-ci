@@ -160,7 +160,6 @@ class JobQuotaRedisUtils {
             saveJobConcurrency(projectId, 0, jobType)
         }
 
-
         getRedisStringSerializerOperation().hIncrBy(
             key = getDayJobRunningTimeKey(),
             hashKey = getProjectJobTypeRunningTimeKey(projectId, jobType),
@@ -210,7 +209,7 @@ class JobQuotaRedisUtils {
     }
 
     private fun getProjectJobTypeRunningTimeKey(projectId: String, vmType: JobQuotaVmType): String {
-        return "$PROJECT_RUNNING_TIME_KEY_PREFIX${projectId}:${vmType.name}"
+        return "$PROJECT_RUNNING_TIME_KEY_PREFIX$projectId:${vmType.name}"
     }
 
     private fun getProjectRunningTimeKey(projectId: String): String {
@@ -223,7 +222,7 @@ class JobQuotaRedisUtils {
     }
 
     private fun getProjectJobTypeConcurrencyKey(projectId: String, vmType: JobQuotaVmType): String {
-        return "$PROJECT_JOB_CONCURRENCY_KEY_PREFIX${projectId}:${vmType.name}"
+        return "$PROJECT_JOB_CONCURRENCY_KEY_PREFIX$projectId:${vmType.name}"
     }
 
     private fun getRedisStringSerializerOperation(): RedisOperation {
