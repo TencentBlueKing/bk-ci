@@ -27,10 +27,8 @@
 
 package com.tencent.devops.dispatch.docker.service
 
-import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.docker.common.Constants
-import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

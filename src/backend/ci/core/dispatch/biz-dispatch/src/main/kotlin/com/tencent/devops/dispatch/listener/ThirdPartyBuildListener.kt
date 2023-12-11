@@ -41,7 +41,7 @@ import org.springframework.stereotype.Service
 class ThirdPartyBuildListener @Autowired constructor(
     private val thirdPartyAgentService: ThirdPartyAgentService,
     private val thirdPartyDispatchService: ThirdPartyDispatchService
-): BuildListener {
+) : BuildListener {
 
     override fun getStartupQueue(): String {
         return ""
