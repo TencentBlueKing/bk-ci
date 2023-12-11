@@ -27,7 +27,7 @@ object CIKeywordsService {
     ) : RuntimeNamedValue {
         override fun getValue(key: String): PipelineContextData? {
             // 不是需要的关键字直接返回空
-            if (key != CI_TOKEN_CONTEXT.removePrefix("$key.")) {
+            if (key != CI_TOKEN_CONTEXT.removePrefix("ci.")) {
                 return null
             }
             return StringContextData(getOrRequestToken() ?: "")
