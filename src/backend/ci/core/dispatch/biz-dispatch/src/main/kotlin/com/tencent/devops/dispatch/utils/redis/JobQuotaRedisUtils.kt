@@ -38,8 +38,8 @@ import java.time.LocalDateTime
 
 @Component
 class JobQuotaRedisUtils {
-    fun getJobQuotaProjectLock(projectId: String): RedisLock {
-        return RedisLock(getRedisStringSerializerOperation(), "$JOB_PROJECT_LOCK_KEY$projectId", 60L)
+    fun getJobQuotaProjectLock(projectId: String, jobType: JobQuotaVmType): RedisLock {
+        return RedisLock(getRedisStringSerializerOperation(), "$JOB_PROJECT_LOCK_KEY$projectId${jobType.name}", 60L)
     }
 
     fun getJobStatisticsLock(): RedisLock {
@@ -144,19 +144,27 @@ class JobQuotaRedisUtils {
         )
     }
 
-    fun incProjectJobRunningTime(projectId: String, jobType: JobQuotaVmType?, time: Long) {
+    fun incProjectJobRunningTime(
+        projectId: String,
+        jobType: JobQuotaVmType?,
+        costTime: Long,
+        agentStartTime: LocalDateTime
+    ) {
         if (jobType == null) {
             LOG.warn("incProjectJobRunningTime, vmType is null. projectId: $projectId")
             return
         }
 
-        // 检查是否有jobConcurrency记录，没有则插入一条
-        saveJobConcurrency(projectId, 0, jobType)
+        // 判断如果是跨天的构建任务，并发数加一
+        if (agentStartTime.dayOfYear != LocalDateTime.now().dayOfYear) {
+            saveJobConcurrency(projectId, 0, jobType)
+        }
+
 
         getRedisStringSerializerOperation().hIncrBy(
             key = getDayJobRunningTimeKey(),
             hashKey = getProjectJobTypeRunningTimeKey(projectId, jobType),
-            delta = time
+            delta = costTime
         )
 
         // 注释按月统计时间

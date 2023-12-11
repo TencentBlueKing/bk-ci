@@ -29,9 +29,7 @@ package com.tencent.devops.dispatch.service.jobquota
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.dao.JobQuotaProjectRunTimeDao
 import com.tencent.devops.dispatch.dao.RunningJobsDao
@@ -56,10 +54,8 @@ class JobQuotaBusinessService @Autowired constructor(
     private val runningJobsDao: RunningJobsDao,
     private val jobQuotaProjectRunTimeDao: JobQuotaProjectRunTimeDao,
     private val dslContext: DSLContext,
-    private val client: Client,
     private val jobQuotaInterface: JobQuotaInterface,
     private val buildLogPrinter: BuildLogPrinter,
-    private val redisOperation: RedisOperation,
     private val jobQuotaRedisUtils: JobQuotaRedisUtils
 ) {
 
@@ -68,7 +64,7 @@ class JobQuotaBusinessService @Autowired constructor(
      */
     fun checkAndAddRunningJob(
         projectId: String,
-        vmType: JobQuotaVmType,
+        jobType: JobQuotaVmType,
         buildId: String,
         vmSeqId: String,
         executeCount: Int,
@@ -76,7 +72,7 @@ class JobQuotaBusinessService @Autowired constructor(
         containerHashId: String?
     ): Boolean {
         val result: Boolean
-        val jobQuotaProjectLock = jobQuotaRedisUtils.getJobQuotaProjectLock(projectId)
+        val jobQuotaProjectLock = jobQuotaRedisUtils.getJobQuotaProjectLock(projectId, jobType)
         try {
             jobQuotaProjectLock.lock()
             result = checkJobQuotaBase(
@@ -85,12 +81,12 @@ class JobQuotaBusinessService @Autowired constructor(
                 containerId = containerId,
                 containerHashId = containerHashId,
                 executeCount = executeCount,
-                vmType = vmType
+                vmType = jobType
             )
 
             // 如果配额没有超限，则记录一条running job
             if (result) {
-                runningJobsDao.insert(dslContext, projectId, vmType, buildId, vmSeqId, executeCount)
+                runningJobsDao.insert(dslContext, projectId, jobType, buildId, vmSeqId, executeCount)
             }
         } finally {
             jobQuotaProjectLock.unlock()
@@ -264,7 +260,8 @@ class JobQuotaBusinessService @Autowired constructor(
                     jobQuotaRedisUtils.incProjectJobRunningTime(
                         projectId = projectId,
                         jobType = JobQuotaVmType.parse(runningJobsRecord.vmType),
-                        time = duration.toMillis() / 1000
+                        costTime = duration.toMillis() / 1000,
+                        agentStartTime = runningJobsRecord.agentStartTime
                     )
                     LOG.info("$projectId|$buildId|$vmSeqId|${JobQuotaVmType.parse(runningJobsRecord.vmType)} >> " +
                             "Finish time: increase ${duration.toMillis() / 1000} seconds. >>>")
