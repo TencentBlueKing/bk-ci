@@ -472,8 +472,8 @@ class NodeService @Autowired constructor(
         checkDisplayName(projectId, nodeId, displayName)
         ActionAuditContext.current()
             .setInstanceId(nodeInDb.nodeId.toString())
-            .setInstanceName(nodeInDb.nodeName)
             .setOriginInstance(nodeInDb.displayName)
+            .setInstanceName(displayName)
             .setInstance(displayName)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
