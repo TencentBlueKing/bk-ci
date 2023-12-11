@@ -55,11 +55,7 @@ spec:
               UPDATE T_AUTH_IAM_CALLBACK SET GATEWAY="http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}" where `SYSTEM`="ci"
               
               {{- if ne .Values.config.bkCodeccPrivateUrl "" }}
-              UPDATE T_AUTH_IAM_CALLBACK SET GATEWAY="{{ .Values.config.bkCodeccPrivateUrl }}" where `SYSTEM`="codecc"
-              {{- end }}
-
-              {{- if eq .Values.config.bkCodeccPrivateUrl "" }}
-              DELETE FROM T_AUTH_IAM_CALLBACK where `SYSTEM`="codecc"
+              REPLACE INTO T_AUTH_IAM_CALLBACK (GATEWAY,PATH, RESOURCE,`SYSTEM`) VALUES ("{{ .Values.config.bkCodeccPrivateUrl }}", "/ms/openapi/api/open/v2/callback/instances/list", "codecc_task", "codecc");
               {{- end }}
               EOF
               mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }} devops_ci_auth < iam.sql;
