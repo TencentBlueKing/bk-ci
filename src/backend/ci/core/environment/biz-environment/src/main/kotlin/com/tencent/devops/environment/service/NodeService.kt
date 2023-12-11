@@ -91,8 +91,6 @@ class NodeService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(NodeService::class.java)
     }
 
-    val threadPoolExecutor = ThreadPoolExecutor(8, 8, 60, TimeUnit.SECONDS, LinkedBlockingQueue(50))
-
     @ActionAuditRecord(
         actionId = ActionId.ENV_NODE_DELETE,
         instance = AuditInstanceRecord(
