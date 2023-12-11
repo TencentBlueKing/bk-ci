@@ -34,7 +34,6 @@
 
 <script>
     import { mapGetters, mapActions } from 'vuex'
-    import { deepClone } from '@/utils/util'
     import Pipeline from '@/components/Pipeline'
 
     export default {
@@ -71,7 +70,7 @@
                 immediate: true,
                 handler (newVal, oldVal) {
                     if (newVal) {
-                        const pipeline = deepClone(newVal)
+                        const pipeline = JSON.parse(JSON.stringify(newVal))
                         this.setPipelineSkipProp(pipeline.stages, this.checkTotal)
                         this.previewPipeline = Object.assign(pipeline, {
                             stages: newVal.stages.slice(1)

@@ -3,7 +3,6 @@
         ref="stageContainer"
         :class="{
             'devops-stage-container': true,
-            'first-stage-container': stageIndex === 0,
             'last-stage-container': stageIndex === stageLength - 1,
             'readonly': !reactiveData.editable || containerDisabled,
             'editing': reactiveData.editable

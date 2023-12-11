@@ -4,7 +4,7 @@
             :value="historyPageStatus.dateTimeRange"
             :placeholder="$t('startTimeRangePlaceholder')"
             type="datetimerange"
-            @change="(...args) => handleDateRangeChange('dateTimeRange', ...args)"
+            @change="handleDateRangeChange"
         />
         <search-select
             class="pipeline-history-search-select"
@@ -194,7 +194,8 @@
                     })
                 }
             },
-            handleDateRangeChange (name, value) {
+            handleDateRangeChange (value) {
+                const name = 'dateTimeRange'
                 const { startTimeStartTime, endTimeEndTime, ...newQuery } = this.historyPageStatus.query
                 if (!!value[0] && !!value[1]) {
                     const startTime = moment(value[0]).valueOf() || ''

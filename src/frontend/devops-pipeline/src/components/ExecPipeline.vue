@@ -53,7 +53,7 @@
         </div>
         <section class="pipeline-exec-content">
             <header class="pipeline-style-setting-header">
-                <mode-switch />
+                <!-- <mode-switch /> -->
                 <bk-checkbox
                     :true-value="true"
                     :false-value="false"
@@ -245,7 +245,6 @@
 
 <script>
     import CheckAtomDialog from '@/components/CheckAtomDialog'
-    import ModeSwitch from '@/components/ModeSwitch'
     import CompleteLog from '@/components/ExecDetail/completeLog'
     import Logo from '@/components/Logo'
     import MiniMap from '@/components/MiniMap'
@@ -260,7 +259,6 @@
             CheckAtomDialog,
             CompleteLog,
             Logo,
-            ModeSwitch,
             MiniMap
         },
         props: {
@@ -982,7 +980,7 @@
     padding: 16px 24px;
     flex-shrink: 0;
     .hide-skip-pipeline-task {
-      padding: 0 16px 0 24px;
+      padding: 0 16px 0 0;
       position: relative;
       &:after {
         content: "";

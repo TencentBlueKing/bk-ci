@@ -3,7 +3,6 @@
         <draggable
             :class="{
                 'container-atom-list': true,
-                'trigger-container': stageIndex === 0,
                 readonly: !reactiveData.editable
             }"
             :data-baseos="container.baseOS || container.classType"

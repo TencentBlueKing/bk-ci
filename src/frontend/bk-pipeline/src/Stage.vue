@@ -228,9 +228,6 @@
             showDeleteStage () {
                 return this.reactiveData.editable && !this.isTriggerStage
             },
-            isFirstStage () {
-                return this.stageIndex === 0
-            },
             isLastStage () {
                 return this.stageIndex === this.stageLength - 1
             },

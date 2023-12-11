@@ -191,20 +191,6 @@ export function findIndexByKeyValue (arr, oldKey, oldValue) {
     })
 }
 
-export function deepClone (obj) {
-    const _obj = {}
-
-    for (const key in obj) {
-        if (obj[key].toString().toLowerCase() === '[object object]') {
-            _obj[key] = deepClone(obj[key])
-        } else {
-            _obj[key] = key === 'text' ? '' : obj[key]
-        }
-    }
-
-    return _obj
-}
-
 /**
  *  将字符串去掉指定内容之后转成数字
  *  @param {String} str - 需要转换的字符串
