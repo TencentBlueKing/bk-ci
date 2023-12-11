@@ -40,37 +40,38 @@ class PipelineWebhookVersionDao {
         if (webhooks.isEmpty()) {
             return
         }
-        val addStep = webhooks.map {
-            with(TPipelineWebhookVersion.T_PIPELINE_WEBHOOK_VERSION) {
-                dslContext.insertInto(
-                    this,
-                    PROJECT_ID,
-                    PIPELINE_ID,
-                    VERSION,
-                    TASK_ID,
-                    TASK_PARAMS,
-                    TASK_REPO_TYPE,
-                    TASK_REPO_HASH_ID,
-                    TASK_REPO_NAME,
-                    REPOSITORY_TYPE,
-                    REPOSITORY_HASH_ID,
-                    EVENT_TYPE
-                ).values(
-                    it.projectId,
-                    it.pipelineId,
-                    it.version,
-                    it.taskId,
-                    it.taskParams,
-                    it.taskRepoType?.name,
-                    it.taskRepoHashId,
-                    it.taskRepoName,
-                    it.repositoryType.name,
-                    it.repositoryHashId,
-                    it.eventType
-                )
-            }
+        with(TPipelineWebhookVersion.T_PIPELINE_WEBHOOK_VERSION) {
+            dslContext.insertInto(
+                this,
+                PROJECT_ID,
+                PIPELINE_ID,
+                VERSION,
+                TASK_ID,
+                TASK_PARAMS,
+                TASK_REPO_TYPE,
+                TASK_REPO_HASH_ID,
+                TASK_REPO_NAME,
+                REPOSITORY_TYPE,
+                REPOSITORY_HASH_ID,
+                EVENT_TYPE
+            ).also { insert ->
+                webhooks.forEach { webhook ->
+                    insert.values(
+                        webhook.projectId,
+                        webhook.pipelineId,
+                        webhook.version,
+                        webhook.taskId,
+                        webhook.taskParams,
+                        webhook.taskRepoType?.name,
+                        webhook.taskRepoHashId,
+                        webhook.taskRepoName,
+                        webhook.repositoryType.name,
+                        webhook.repositoryHashId,
+                        webhook.eventType
+                    )
+                }
+            }.execute()
         }
-        dslContext.batch(addStep).execute()
     }
 
     fun getTaskIds(
