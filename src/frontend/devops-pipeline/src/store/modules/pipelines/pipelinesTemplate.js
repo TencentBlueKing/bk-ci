@@ -122,7 +122,10 @@ const actions = {
         return ajax.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/enableTemplatePermissionManage`)
     },
     getTemplateHasViewPermission (_, { projectId, templateId }) {
-        return ajax.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}/hasViewPermission`)
+        return ajax.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}/hasPipelineTemplatePermission?permission=VIEW`)
+    },
+    getTemplateHasCreatePermission (_, { projectId, templateId }) {
+        return ajax.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}/hasPipelineTemplatePermission?permission=CREATE`)
     }
 }
 

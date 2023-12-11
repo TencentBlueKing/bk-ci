@@ -70,7 +70,23 @@
                                     <p class="temp-title" :title="item.name">
                                         {{ item.name }}
                                     </p>
-                                    <p class="install-btn" v-if="item.isInstall && item.isFlag " @click="installTemplate(item, index)" :title="item.name">{{ $t('editPage.install') }}</p>
+                                    <p class="install-btn"
+                                        v-if="item.isInstall && item.isFlag "
+                                        @click="installTemplate(item, index)"
+                                        :title="item.name"
+                                        v-perm="{
+                                            hasPermission: hasCreatePermission,
+                                            disablePermissionApi: true,
+                                            permissionData: {
+                                                projectId: projectId,
+                                                resourceType: 'pipeline_template',
+                                                resourceCode: projectId,
+                                                action: TEMPLATE_RESOURCE_ACTION.CREATE
+                                            }
+                                        }"
+                                    >
+                                        {{ $t('editPage.install') }}
+                                    </p>
                                     <p class="permission-tips" v-if="item.isInstall && !item.isFlag" :title="item.name">{{ $t('newlist.noInstallPerm') }}</p>
                                     <p class="permission-tips" v-if="!item.isInstall" :title="item.name">{{ $t('newlist.installed') }}</p>
                                 </li>
@@ -144,6 +160,7 @@
 <script>
     import { mapActions, mapState, mapGetters } from 'vuex'
     import PipelineGroupSelector from '@/components/PipelineActionDialog/PipelineGroupSelector'
+    import { TEMPLATE_RESOURCE_ACTION } from '@/utils/permission'
     import Logo from '@/components/Logo'
 
     export default {
@@ -168,6 +185,7 @@
 
         data () {
             return {
+                TEMPLATE_RESOURCE_ACTION,
                 isDisabled: false,
                 activeTempIndex: -1,
                 tempTypeIndex: 0,
@@ -190,7 +208,8 @@
                     labels: [],
                     staticViews: []
                 },
-                currentTemplate: {}
+                currentTemplate: {},
+                hasCreatePermission: false
             }
         },
 
@@ -283,6 +302,7 @@
             isShow: function () {
                 if (this.isShow) {
                     this.isLoading = true
+                    this.fetchHasTemplateCreatePermission()
                     this.requestCategory()
                     this.requestPipelineTemplate({
                         projectId: this.projectId
@@ -489,6 +509,15 @@
             },
             computPopupHeight () {
                 this.viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0) - this.headerHeight - 120 + 'px'
+            },
+            fetchHasTemplateCreatePermission () {
+                this.$store.dispatch('pipelines/getTemplateHasCreatePermission', {
+                    projectId: this.projectId
+                }).then(async res => {
+                    this.hasCreatePermission = res.data
+                }).finally(() => {
+                    this.isLoading = false
+                })
             }
         }
     }
