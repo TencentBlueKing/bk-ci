@@ -335,24 +335,23 @@ class GroupService @Autowired constructor(
                 params = arrayOf(projectId, groupHashId)
             )
         )
-        val groupInfo = groupDao.getOrNull(dslContext, groupId)
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ExperienceMessageCode.EXP_GROUP_NOT_EXISTS,
-                params = arrayOf(groupHashId)
-            )
+        groupDao.getOrNull(dslContext, groupId) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ExperienceMessageCode.EXP_GROUP_NOT_EXISTS,
+            params = arrayOf(groupHashId)
+        )
         if (groupDao.has(dslContext, projectId, group.name, groupId)) {
             throw ErrorCodeException(
                 errorCode = ExperienceMessageCode.EXP_GROUP_IS_EXISTS,
                 params = arrayOf(group.name)
             )
         }
-
         val innerUsersCount = group.innerUsers.size
+        // audit
         ActionAuditContext.current()
             .setInstanceId(groupId.toString())
             .setInstanceName(group.name)
-            .setOriginInstance(groupInfo)
+            .setOriginInstance(get(userId, projectId, groupHashId))
             .setInstance(group)
         groupDao.update(
             dslContext = dslContext,

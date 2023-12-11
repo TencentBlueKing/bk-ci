@@ -623,7 +623,7 @@ class ExperienceService @Autowired constructor(
         ActionAuditContext.current()
             .setInstanceId(experienceRecord.id.toString())
             .setInstanceName(experienceRecord.experienceName)
-            .setOriginInstance(experienceRecord)
+            .setOriginInstance(get(userId, experienceHashId, false))
             .setInstance(experience)
         experienceDao.update(
             dslContext = dslContext,
