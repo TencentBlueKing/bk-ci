@@ -514,7 +514,6 @@ class ExperienceService @Autowired constructor(
             pipelineId = propertyMap[ARCHIVE_PROPS_PIPELINE_ID] ?: ""
         )
 
-
         ActionAuditContext.current()
             .setInstanceId(experienceId.toString())
             .setInstanceName(experienceName)
@@ -699,7 +698,6 @@ class ExperienceService @Autowired constructor(
     fun getCreatorById(experienceHashId: String): String {
         return experienceDao.get(dslContext, HashUtil.decodeIdToLong(experienceHashId)).creator
     }
-
 
     @ActionAuditRecord(
         actionId = ActionId.EXPERIENCE_TASK_DELETE,
