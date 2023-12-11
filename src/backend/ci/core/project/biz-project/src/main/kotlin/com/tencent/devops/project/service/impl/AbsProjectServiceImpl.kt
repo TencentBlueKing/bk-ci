@@ -203,6 +203,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             ProjectApproveStatus.APPROVED.status
         }
         val projectInfo = organizationMarkUp(projectCreateInfo, userDeptDetail)
+        ActionAuditContext.current().setInstance(projectCreateInfo)
         try {
             if (createExtInfo.needAuth!!) {
                 val authProjectCreateInfo = AuthProjectCreateInfo(
@@ -408,7 +409,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             instanceIds = "#englishName",
             instanceNames = "#projectUpdateInfo?.projectName"
         ),
-        scopeId = "#projectCreateInfo?.englishName",
+        scopeId = "#englishName",
         content = PROJECT_EDIT_CONTENT
     )
     override fun update(
@@ -971,9 +972,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         actionId = PROJECT_ENABLE,
         instance = AuditInstanceRecord(
             resourceType = PROJECT,
-            instanceIds = "#projectCreateInfo?.englishName"
+            instanceIds = "#englishName"
         ),
-        scopeId = "#projectCreateInfo?.englishName",
+        scopeId = "#englishName",
         content = PROJECT_ENABLE_CONTENT
     )
     override fun updateUsableStatus(userId: String, englishName: String, enabled: Boolean) {

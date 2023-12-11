@@ -200,14 +200,18 @@ class QualityRuleService @Autowired constructor(
                 arrayOf(permission.getI18n(I18nUtil.getLanguage(userId)))
             )
         )
+        val ruleInfo = userGetRule(
+            userId = userId,
+            projectId = projectId,
+            ruleHashId = ruleHashId
+        )
+        ActionAuditContext.current()
+            .setInstanceId(ruleId.toString())
+            .setInstanceName(ruleRequest.name)
+            .setOriginInstance(ruleInfo)
+            .setInstance(ruleRequest)
         dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
-            val qualityRuleInfo = qualityRuleDao.get(dslContext, ruleId)
-            ActionAuditContext.current()
-                .setInstanceId(ruleId.toString())
-                .setInstanceName(ruleRequest.name)
-                .setOriginInstance(qualityRuleInfo)
-                .setInstance(ruleRequest)
             qualityRuleDao.update(context, userId, projectId, ruleId, ruleRequest)
             if (ruleRequest.operation == RuleOperation.END) {
                 ruleOperationService.serviceUpdateEndOperation(
