@@ -26,7 +26,7 @@
                         :disabled="!item.pipelineTemplateInstallPerm"
                         v-bk-tooltips="{
                             content: $t('store.无该项目的模板安装权限'),
-                            disable: item.pipelineTemplateInstallPerm
+                            disabled: item.pipelineTemplateInstallPerm
                         }"
                     >
                     </bk-option>
