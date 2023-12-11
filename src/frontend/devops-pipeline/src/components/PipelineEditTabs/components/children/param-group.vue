@@ -18,7 +18,7 @@
                             <div class="value-operate-row" style="justify-content: space-between;">
                                 <div class="param-value">
                                     <span v-if="param.readOnly" class="read-only">{{$t('只读')}}</span>
-                                    <span class="default-value">{{ param.defaultValue }}</span>
+                                    <span class="default-value">{{ param.defaultValue || '--' }}</span>
                                 </div>
                                 <div class="var-operate">
                                     <div class="operate-btns">

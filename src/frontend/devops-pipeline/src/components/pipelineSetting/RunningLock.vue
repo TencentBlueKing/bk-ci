@@ -207,9 +207,9 @@
                     concurrencyCancelInProgress: val
                 })
             },
-            handleBaseInfoChange (val) {
+            handleBaseInfoChange (name, val) {
                 this.handleRunningLockChange({
-                    buildNumRule: val
+                    [name]: val
                 })
             },
             handleGoDocumentInfo () {

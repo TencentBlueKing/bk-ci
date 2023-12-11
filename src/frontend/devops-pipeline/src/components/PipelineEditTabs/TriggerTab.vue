@@ -84,7 +84,7 @@
         watch: {
             showAtomSelectorPopup: {
                 handler (show) {
-                    if (!show) {
+                    if (!show && !this.editingElementPos) {
                         this.triggerList.forEach((element, index) => {
                             if (!element.atomCode) {
                                 this.deleteAtom({
@@ -94,8 +94,7 @@
                             }
                         })
                     }
-                },
-                immediate: true
+                }
             }
         },
         methods: {

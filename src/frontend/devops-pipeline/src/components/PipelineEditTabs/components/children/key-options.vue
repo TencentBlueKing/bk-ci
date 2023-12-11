@@ -2,7 +2,8 @@
     <section class="key-options">
         <div class="key-item" v-for="(option, index) in options" :key="option.key">
             <span class="key-index">{{index + 1}}</span>
-            <vuex-input class="key-val" name="key" :value="option.key" :handle-change="(name, value) => handleEdit(value, index)"></vuex-input>
+            <!-- <vuex-input class="key-val" name="key" :value="option.key" :handle-change="(name, value) => handleEdit(value, index)"></vuex-input> -->
+            <bk-input class="key-val" :value="option.key" @blur="(val) => handleEdit(val, index)" />
             <span class="key-del"><i @click.stop="handleDelete(index)" class="bk-icon icon-minus-circle hover-click" v-if="!disabled" /></span>
         </div>
         <a class="key-add" v-if="!disabled" @click.stop="handleAdd">
@@ -13,10 +14,10 @@
 </template>
 
 <script>
-    import VuexInput from '@/components/atomFormField/VuexInput'
+    // import VuexInput from '@/components/atomFormField/VuexInput'
     export default {
         components: {
-            VuexInput
+            // VuexInput
         },
         props: {
             disabled: {
@@ -42,8 +43,10 @@
         },
         methods: {
             handleEdit (val, index) {
+                console.log(val, index, 633)
                 const item = { key: val, value: val }
                 this.list.splice(index, 1, item)
+                console.log(this.list, 5522)
                 this.handleChangeOptions('options', this.list)
             },
             handleAdd () {
@@ -71,8 +74,8 @@
         .key-val {
             flex: 1;
             background: #FFFFFF;
-            border: 1px solid #C4C6CC;
-            border-radius: 2px;
+            /* border: 1px solid #C4C6CC;
+            border-radius: 2px; */
         }
         .key-del {
             width: 32px;

@@ -190,7 +190,7 @@
         right: 0;
         height: 100%;
         background-color: #FFF;
-        border: 1px solid #DCDEE5;
+        border-left: 1px solid #DCDEE5;
         .edit-var-header {
             display: flex;
             align-items: center;

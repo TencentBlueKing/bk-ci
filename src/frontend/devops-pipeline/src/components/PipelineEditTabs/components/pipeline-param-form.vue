@@ -2,7 +2,7 @@
     <section>
         <bk-form form-type="vertical" class="new-ui-form" :key="param">
             <form-field :required="true" :label="idLabel" :is-error="errors.has(`pipelineParam.id`)" :error-msg="errors.first(`pipelineParam.id`)">
-                <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value)" :data-vv-scope="'pipelineParam'" v-validate.initial="`required|unique:${globalParams.map(p => p.id).join(',')}`" name="id" :placeholder="$t('nameInputTips')" :value="param.id" />
+                <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value)" :data-vv-scope="'pipelineParam'" v-validate="`required|unique:${globalParams.map(p => p.id).join(',')}`" name="id" :placeholder="$t('nameInputTips')" :value="param.id" />
             </form-field>
 
             <form-field :label="nameLabel" :is-error="errors.has('pipelineParam.name')" :error-msg="errors.first('pipelineParam.name')">
@@ -34,7 +34,7 @@
             </form-field>
 
             <template v-if="paramType !== 'constant'">
-                <form-field>
+                <div class="param-checkbox-row">
                     <atom-checkbox
                         name="required"
                         :text="$t('editPage.showOnExec')"
@@ -50,8 +50,8 @@
                         :text="$t('editPage.required')"
                         :value="param.valueNotEmpty"
                         :handle-change="(name, value) => handleUpdateParam(name, value)" />
-                </form-field>
-                <form-field>
+                </div>
+                <div class="param-checkbox-row">
                     <atom-checkbox
                         name="readOnly"
                         :disabled="disabled"
@@ -59,7 +59,7 @@
                         :value="param.readOnly"
                         :handle-change="(name, value) => handleUpdateParam(name, value)" />
                     <i class="bk-icon icon-question-circle-shape" v-bk-tooltips="$t('editPage.只读tips')" />
-                </form-field>
+                </div>
             </template>
         </bk-form>
     </section>
@@ -178,6 +178,10 @@
 <style lang="scss" scoped>
     .icon-question-circle-shape {
         margin-left: 16px;
+    }
+    .param-checkbox-row {
+        margin-top: 24px;
+        line-height: 20px;
     }
     .neccessary-checkbox {
         margin-left: 24px;

@@ -291,7 +291,7 @@
                 return ''
             },
             atomVersion () {
-                return this.element.version || this.getDefaultVersion(this.atomCode)
+                return this.element?.version || this.getDefaultVersion(this.atomCode)
             },
             atom () {
                 const { atomMap, atomCode, element, getDefaultVersion, getAtomModal } = this

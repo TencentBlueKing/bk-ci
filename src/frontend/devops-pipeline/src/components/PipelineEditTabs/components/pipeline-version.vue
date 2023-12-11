@@ -354,7 +354,6 @@
         }
         .version-input {
             width: 64px;
-            background: #FAFBFD;
             border: 1px solid #DCDEE5;
             border-radius: 2px;
         }
