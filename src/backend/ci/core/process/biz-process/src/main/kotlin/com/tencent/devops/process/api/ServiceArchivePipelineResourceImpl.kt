@@ -29,16 +29,11 @@ package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceArchivePipelineResource
-import com.tencent.devops.process.api.service.ServiceAuthPipelineResource
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineSortType
-import com.tencent.devops.process.service.PipelineListFacadeService
-import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
-import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.service.ArchivePipelineFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 

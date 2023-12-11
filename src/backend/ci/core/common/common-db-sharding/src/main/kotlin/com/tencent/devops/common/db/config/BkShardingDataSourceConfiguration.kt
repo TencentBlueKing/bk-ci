@@ -338,7 +338,7 @@ class BkShardingDataSourceConfiguration {
         val logicTableName = if (logicTableSuffixName.isNullOrBlank()) {
             tableName
         } else {
-            "${tableName}_${logicTableSuffixName}"
+            "${tableName}_$logicTableSuffixName"
         }
         val actualDataNodes = if (databaseShardingStrategy != null &&
             tableShardingStrategy == TableShardingStrategyEnum.SHARDING
