@@ -163,6 +163,7 @@ class StageTransfer @Autowired(required = false) constructor(
                     containerList = containerList,
                     jobIndex = jobIndex,
                     projectCode = yamlInput.projectCode,
+                    userId = yamlInput.userId,
                     finalStage = finalStage,
                     jobEnable = jobEnable,
                     resources = yamlInput.yaml.formatResources(),

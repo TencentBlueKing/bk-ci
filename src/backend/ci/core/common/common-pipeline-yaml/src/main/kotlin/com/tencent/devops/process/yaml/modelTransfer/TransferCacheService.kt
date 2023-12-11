@@ -21,7 +21,7 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.api.image.service.ServiceStoreImageResource
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
-import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
+import com.tencent.devops.store.pojo.image.response.ImageDetail
 import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,13 +49,14 @@ class TransferCacheService @Autowired constructor(
     private val storeImageInfoCache = Caffeine.newBuilder()
         .maximumSize(1000)
         .expireAfterWrite(1, TimeUnit.DAYS)
-        .build<String, ImageRepoInfo?> { key ->
+        .build<String, ImageDetail?> { key ->
             kotlin.runCatching {
-                val (imageCode, imageVersion) = key.split("@@")
+                val (userId, imageCode, imageVersion) = key.split("@@")
                 client.get(ServiceStoreImageResource::class)
-                    .getImageInfoByCodeAndVersion(
+                    .getImagesByCodeAndVersion(
+                        userId = userId,
                         imageCode = imageCode,
-                        imageVersion = imageVersion
+                        version = imageVersion
                     ).data
             }.onFailure { logger.warn("get $key ImageInfoByCodeAndVersion value error.", it) }.getOrNull()
         }
@@ -140,16 +141,16 @@ class TransferCacheService @Autowired constructor(
         .build<String, UserDockerResourceOptionsVO?> { key ->
             kotlin.runCatching {
                 val (userId, projectId, buildType) = key.split("@@")
-                        client.get(ServiceDockerResourceConfigResource::class)
-                            .getDockerResourceConfigList(userId, projectId, buildType)
-                            .data
+                client.get(ServiceDockerResourceConfigResource::class)
+                    .getDockerResourceConfigList(userId, projectId, buildType)
+                    .data
             }.onFailure { logger.warn("get $key dockerResource value error.", it) }.getOrNull()
         }
 
     fun getAtomDefaultValue(key: String) = atomDefaultValueCache.get(key) ?: emptyMap()
 
-    fun getStoreImageInfo(imageCode: String, imageVersion: String?) =
-        storeImageInfoCache.get("$imageCode@@${imageVersion ?: ""}")
+    fun getStoreImageDetail(userId: String, imageCode: String, imageVersion: String?) =
+        storeImageInfoCache.get("$userId@@$imageCode@@${imageVersion ?: ""}")
 
     fun getProjectGroupAndUsers(projectId: String) = projectGroupAndUsersCache.get(projectId)
 

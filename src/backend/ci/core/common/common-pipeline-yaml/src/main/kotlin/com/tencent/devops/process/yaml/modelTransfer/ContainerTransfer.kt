@@ -45,6 +45,8 @@ import com.tencent.devops.common.pipeline.pojo.transfer.IfType
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.common.pipeline.type.StoreDispatchType
+import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.utils.TransferUtil
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.modelCreate.ModelCommon
@@ -94,6 +96,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
         containerList: MutableList<Container>,
         jobIndex: Int,
         projectCode: String,
+        userId: String,
         finalStage: Boolean = false,
         jobEnable: Boolean = true,
         resources: Resources? = null,
@@ -104,6 +107,12 @@ class ContainerTransfer @Autowired(required = false) constructor(
             job = job,
             buildTemplateAcrossInfo = buildTemplateAcrossInfo
         )
+        if (dispatchType is StoreDispatchType && dispatchType.imageType == ImageType.BKSTORE) {
+            val imageName = transferCache.getStoreImageDetail(
+                userId, dispatchType.imageCode!!, dispatchType.imageVersion
+            )?.name
+            dispatchType.imageName = imageName
+        }
         val vmContainer = VMBuildContainer(
             jobId = job.id,
             name = job.name ?: "Job-${jobIndex + 1}",
