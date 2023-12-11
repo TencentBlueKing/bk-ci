@@ -210,7 +210,7 @@ class ImageDao {
         return with(TImage.T_IMAGE) {
             val query = dslContext.selectFrom(this)
                 .where(IMAGE_CODE.eq(imageCode))
-                .and(VERSION.eq(imageVersion))
+                .and(VERSION.like(VersionUtils.generateQueryVersion(imageVersion))))
             query.fetchOne()
         }
     }
