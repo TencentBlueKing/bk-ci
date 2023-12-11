@@ -132,25 +132,15 @@ class PipelineYamlPushAction : BaseAction {
         commitMessage: String,
         targetAction: CodeTargetAction
     ): YamlPathListEntry {
-        val branchName = if (targetAction == CodeTargetAction.COMMIT_TO_MASTER) {
-            data.eventCommon.branch
-        } else {
-            "$PAC_BRANCH_PREFIX${pipelineId}"
-        }
         return api.pushYamlFile(
             cred = this.getGitCred(),
             gitProjectId = getGitProjectIdOrName(),
-            branchName = branchName,
             defaultBranch = data.eventCommon.branch,
             filePath = filePath,
             content = content,
             commitMessage = commitMessage,
-            title = I18nUtil.getCodeLanMessage(
-                messageCode = ProcessMessageCode.BK_MERGE_YAML_FILE_TITLE,
-                params = arrayOf(pipelineId),
-                language = I18nUtil.getDefaultLocaleLanguage()
-            ),
-            targetAction = targetAction
+            targetAction = targetAction,
+            pipelineId = pipelineId
         )
     }
 }

@@ -127,19 +127,15 @@ interface PacGitApiService {
     /**
      * 提交yaml文件
      *
-     * @param branchName 提交的分支名,可能不存在,需要创建
-     * @param defaultBranch 默认分支
-     * @param title mr标题
      */
     fun pushYamlFile(
         cred: PacGitCred,
         gitProjectId: String,
-        branchName: String,
         defaultBranch: String,
         filePath: String,
         content: String,
         commitMessage: String,
-        title: String,
-        targetAction: CodeTargetAction
+        targetAction: CodeTargetAction,
+        pipelineId: String
     ): YamlPathListEntry
 }

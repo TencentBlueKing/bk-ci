@@ -31,7 +31,9 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.yaml.actions.pacActions.PipelineYamlPushAction
 import com.tencent.devops.process.yaml.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.yaml.git.pojo.PacGitCred
 import com.tencent.devops.process.yaml.git.pojo.tgit.TGitChangeFileInfo
@@ -64,6 +66,8 @@ class TGitApiService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TGitApiService::class.java)
+        // pac分支前缀
+        private const val PAC_BRANCH_PREFIX = "bk-ci-pipeline-"
     }
 
     /**
@@ -259,15 +263,19 @@ class TGitApiService @Autowired constructor(
     override fun pushYamlFile(
         cred: PacGitCred,
         gitProjectId: String,
-        branchName: String,
         defaultBranch: String,
         filePath: String,
         content: String,
         commitMessage: String,
-        title: String,
-        targetAction: CodeTargetAction
+        targetAction: CodeTargetAction,
+        pipelineId: String
     ): YamlPathListEntry {
         val token = cred.toToken()
+        val branchName = if (targetAction == CodeTargetAction.COMMIT_TO_MASTER) {
+            defaultBranch
+        } else {
+            "${PAC_BRANCH_PREFIX}${pipelineId}"
+        }
         // 1. 判断分支是否存在
         val branchExists = client.get(ServiceGitResource::class).getBranch(
             accessToken = token,
@@ -340,6 +348,19 @@ class TGitApiService @Autowired constructor(
         if (targetAction == CodeTargetAction.PUSH_BRANCH_AND_REQUEST_MERGE ||
             targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE
         ) {
+            val title = if (fileExists) {
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.BK_MERGE_YAML_CREATE_FILE_TITLE,
+                    params = arrayOf(pipelineId),
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                )
+            } else {
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.BK_MERGE_YAML_UPDATE_FILE_TITLE,
+                    params = arrayOf(pipelineId),
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                )
+            }
             client.get(ServiceGitResource::class).createMergeRequest(
                 token = token,
                 tokenType = cred.toTokenType(),

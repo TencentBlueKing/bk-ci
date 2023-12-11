@@ -402,6 +402,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                     userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineId,
+                    version = version,
                     variables = variables,
                     element = triggerElement,
                     repository = repository,
@@ -430,6 +431,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         userId: String,
         projectId: String,
         pipelineId: String,
+        version: Int?,
         variables: MutableMap<String, String>,
         element: WebHookTriggerElement,
         repository: Repository,
@@ -442,6 +444,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
             val webhookCommit = WebhookCommit(
                 userId = userId,
                 pipelineId = pipelineId,
+                version = version,
                 params = WebhookStartParamsRegistrar.getService(element).getStartParams(
                     projectId = projectId,
                     element = element,
@@ -476,6 +479,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
     fun webhookCommitTriggerPipelineBuild(projectId: String, webhookCommit: WebhookCommit): String {
         val userId = webhookCommit.userId
         val pipelineId = webhookCommit.pipelineId
+        val version = webhookCommit.version
         val startParams = webhookCommit.params
 
         val repoName = webhookCommit.repoName
@@ -484,7 +488,8 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
             ?: throw IllegalArgumentException("Pipeline($pipelineId) not found")
         checkPermission(pipelineInfo.lastModifyUser, projectId = projectId, pipelineId = pipelineId)
 
-        val model = pipelineRepositoryService.getModel(projectId, pipelineId)
+        val model =
+            pipelineRepositoryService.getModel(projectId = projectId, pipelineId = pipelineId, version = version)
         if (model == null) {
             logger.warn("[$pipelineId]| Fail to get the model")
             return ""
@@ -515,7 +520,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                 channelCode = pipelineInfo.channelCode,
                 isMobile = false,
                 model = model,
-                signPipelineVersion = pipelineInfo.version,
+                signPipelineVersion = version ?: pipelineInfo.version,
                 frequencyLimit = false
             ).id
             pipelineWebHookQueueService.onWebHookTrigger(
