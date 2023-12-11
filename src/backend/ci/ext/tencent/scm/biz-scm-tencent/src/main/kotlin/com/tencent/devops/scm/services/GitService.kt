@@ -2438,7 +2438,8 @@ class GitService @Autowired constructor(
         gitOperationFile: GitOperationFile,
         tokenType: TokenTypeEnum
     ): Boolean {
-        val url = StringBuilder("$gitCIUrl/api/v3/projects/$gitProjectId/repository/files")
+        val encodeGitProjectId = URLEncoder.encode(gitProjectId, "utf-8")
+        val url = StringBuilder("$gitCIUrl/api/v3/projects/$encodeGitProjectId/repository/files")
         setToken(tokenType, url, token)
         val request = Request.Builder()
             .url(url.toString())
