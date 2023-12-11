@@ -251,14 +251,6 @@ class CodeTGitRepositoryService @Autowired constructor(
             repository = repository
         )
         if (repository.authType != RepoAuthType.OAUTH) {
-            val checkResult = checkToken(
-                repoCredentialInfo = repoCredentialInfo,
-                repository = repository
-            )
-            if (!checkResult.result) {
-                logger.warn("Fail to check the repo token & private key because of ${checkResult.message}")
-                throw OperationException(checkResult.message)
-            }
             // 授权凭证信息
             if (repoCredentialInfo.credentialType == CredentialType.USERNAME_PASSWORD.name) {
                 logger.info("using credential of type [USERNAME_PASSWORD],loginUser[${repoCredentialInfo.username}]")
@@ -268,6 +260,21 @@ class CodeTGitRepositoryService @Autowired constructor(
                     password = repoCredentialInfo.password,
                     url = repository.url
                 )?.privateToken ?: ""
+            }
+            if (repoCredentialInfo.token.isBlank()){
+                throw OperationException(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = CommonMessageCode.TGIT_LOGIN_FAIL
+                    )
+                )
+            }
+            val checkResult = checkToken(
+                repoCredentialInfo = repoCredentialInfo,
+                repository = repository
+            )
+            if (!checkResult.result) {
+                logger.warn("Fail to check the repo token & private key because of ${checkResult.message}")
+                throw OperationException(checkResult.message)
             }
         }
         return repoCredentialInfo
