@@ -45,22 +45,22 @@ object NotifyTemplateUtils {
     fun getCommonShutdownSuccessContent(): String {
         return String.format(
             I18nUtil.getCodeLanMessage(COMMON_SHUTDOWN_SUCCESS_CONTENT),
-            PROJECT_NAME_CHINESE,
-            PIPELINE_NAME,
-            PIPELINE_BUILD_NUM,
-            PIPELINE_TIME_DURATION,
-            PIPELINE_START_USER_NAME
+            "ci.project_name",
+            "ci.pipeline_name",
+            "ci.build_num",
+            "ci.pipeline_execute_time",
+            "ci.actor"
         )
     }
 
     fun getCommonShutdownFailureContent(): String {
         return String.format(
             I18nUtil.getCodeLanMessage(COMMON_SHUTDOWN_FAILURE_CONTENT),
-            PROJECT_NAME_CHINESE,
-            PIPELINE_NAME,
-            PIPELINE_BUILD_NUM,
-            PIPELINE_TIME_DURATION,
-            PIPELINE_START_USER_NAME
+            "ci.project_name",
+            "ci.pipeline_name",
+            "ci.build_num",
+            "ci.pipeline_execute_time",
+            "ci.actor"
         )
     }
 }
