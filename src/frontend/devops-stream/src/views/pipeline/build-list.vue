@@ -621,7 +621,7 @@
             },
 
             loopGetList () {
-                register.installWsMessage(throttle(this.getBuildData, 1000), 'IFRAMEprocess', 'history')
+                register.installWsMessage(throttle(this.getBuildData, 2000), 'IFRAMEprocess', 'history')
             },
 
             getBuildData () {
