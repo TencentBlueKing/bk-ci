@@ -13,10 +13,12 @@ import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
+import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.expert.CreateExpertSupportConfigData
 import com.tencent.devops.remotedev.pojo.expert.CreateSupportData
 import com.tencent.devops.remotedev.pojo.expert.ExpertSupportConfigType
@@ -41,7 +43,8 @@ class ExpertSupportService @Autowired constructor(
     private val expertSupportDao: ExpertSupportDao,
     private val workspaceCommon: WorkspaceCommon,
     private val workspaceSharedDao: WorkspaceSharedDao,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val workspaceDao: WorkspaceDao
 ) {
     @Value("\${expertsupport.rtxtemplate:#{null}}")
     val rtxTemplate: String? = null
@@ -60,6 +63,19 @@ class ExpertSupportService @Autowired constructor(
     fun createSupport(
         data: CreateSupportData
     ) {
+        // 校验机器在不在
+        val record = workspaceDao.fetchAnyWorkspace(
+            dslContext = dslContext,
+            workspaceName = data.workspaceName,
+            mountType = WorkspaceMountType.START
+        )
+        if (record == null || record.status == WorkspaceStatus.DELETED) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
+                params = arrayOf(data.workspaceName)
+            )
+        }
+
         val fetchExpertSupportData = expertSupportDao.fetchSupports(
             dslContext = dslContext,
             projectId = data.projectId,
@@ -195,6 +211,16 @@ class ExpertSupportService @Autowired constructor(
             )
         ) {
             return Pair(false, "${userId}已认领该工单")
+        }
+
+        // 校验机器在不在
+        val record = workspaceDao.fetchAnyWorkspace(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            mountType = WorkspaceMountType.START
+        )
+        if (record == null || record.status == WorkspaceStatus.DELETED) {
+            return Pair(false, "云桌面${workspaceName}不存在或者已销毁")
         }
 
         // 分配
