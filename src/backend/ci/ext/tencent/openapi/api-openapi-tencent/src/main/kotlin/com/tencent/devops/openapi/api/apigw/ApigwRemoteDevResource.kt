@@ -136,7 +136,7 @@ interface ApigwRemoteDevResource {
 
     @ApiOperation("指定项目获取云桌面信息", tags = ["v4_app_list_workspaces_with_projectId"])
     @GET
-    @Path("/{projectId}/workspace")
+    @Path("/{projectId}/workspaces")
     fun listWorkspacesWithProjectId(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
