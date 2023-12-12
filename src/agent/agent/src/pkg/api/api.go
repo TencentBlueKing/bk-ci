@@ -42,6 +42,7 @@ func buildUrl(url string) string {
 	return config.GetGateWay() + url
 }
 
+// TODO
 func Heartbeat(
 	buildInfos []ThirdPartyBuildInfo,
 	jdkVersion []string,
@@ -88,6 +89,7 @@ func Heartbeat(
 	return res.IntoDevopsResult()
 }
 
+// TODO
 func CheckUpgrade(jdkVersion []string, dockerInitFileMd5 DockerInitFileInfo) (*httputil.AgentResult, error) {
 	url := buildUrl("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/upgradeNew")
 
@@ -130,11 +132,13 @@ func AgentStartup() (*httputil.DevopsResult, error) {
 	return httputil.NewHttpClient().Post(url).Body(startInfo).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
 }
 
+// TODO
 func GetAgentStatus() (*httputil.DevopsResult, error) {
 	url := buildUrl("/ms/environment/api/buildAgent/agent/thirdPartyAgent/status")
 	return httputil.NewHttpClient().Get(url).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
 }
 
+// TODO
 func GetBuild(buildType BuildJobType) (*httputil.AgentResult, error) {
 	url := buildUrl(fmt.Sprintf("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/startup?buildType=%s", buildType))
 	return httputil.NewHttpClient().Get(url).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoAgentResult()
@@ -145,6 +149,7 @@ func WorkerBuildFinish(buildInfo *ThirdPartyBuildWithStatus) (*httputil.DevopsRe
 	return httputil.NewHttpClient().Post(url).Body(buildInfo).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
 }
 
+// TODO
 func GetAgentPipeline() (*httputil.DevopsResult, error) {
 	url := buildUrl("/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/pipelines")
 	return httputil.NewHttpClient().Get(url).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
@@ -161,6 +166,7 @@ func DownloadAgentInstallBatchZip(saveFile string) error {
 	return httputil.DownloadAgentInstallScript(url, config.GAgentConfig.GetAuthHeaderMap(), saveFile)
 }
 
+// TODO
 func PullDockerDebugTask() (*httputil.AgentResult, error) {
 	url := buildUrl("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/docker/startupDebug")
 	return httputil.NewHttpClient().Get(url).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoAgentResult()
