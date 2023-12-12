@@ -176,11 +176,6 @@ class PipelineViewGroupService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND,
             params = arrayOf(viewIdEncode)
         )
-        ActionAuditContext.current()
-            .setInstanceId(viewId.toString())
-            .setInstanceName(pipelineView.name)
-            .setOriginInstance(oldView)
-            .setInstance(pipelineView)
         // 校验
         checkPermission(userId, projectId, pipelineView.projected, oldView.createUser)
         if (pipelineView.projected != oldView.isProject) {
@@ -192,6 +187,11 @@ class PipelineViewGroupService @Autowired constructor(
         if (pipelineView.viewType == PipelineViewType.UNCLASSIFIED) {
             pipelineView.viewType = oldView.viewType
         }
+        ActionAuditContext.current()
+            .setInstanceId(viewId.toString())
+            .setInstanceName(pipelineView.name)
+            .setOriginInstance(getView(userId, projectId, viewIdEncode))
+            .setInstance(pipelineView)
         // 更新视图
         var result = false
         dslContext.transaction { t ->
