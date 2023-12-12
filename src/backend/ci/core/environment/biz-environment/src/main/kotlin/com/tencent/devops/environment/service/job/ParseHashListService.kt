@@ -20,10 +20,12 @@ class ParseHashListService @Autowired constructor(
     fun getAllHostList(projectId: String, executeTarget: ExecuteTarget): List<Host> {
         val hostListFromEnvHash: List<Host> = getHostFromEnvList(projectId, executeTarget.envHashIdList)
         val hostListFromNodeHash: List<Host> = getHostFromNodeList(projectId, executeTarget.nodeHashIdList)
-        return if (null != executeTarget.hostList) {
-            listOf(
-                executeTarget.hostList!!, hostListFromEnvHash, hostListFromNodeHash
-            ).flatten()
+        val hostListByHostId: List<Host>? = executeTarget.hostIdList?.map { Host(bkHostId = it) }
+        val hostListByIp: List<Host>? = executeTarget.ipList?.map { Host(bkCloudId = it.bkCloudId, ip = it.ip) }
+        return if (!hostListByHostId.isNullOrEmpty()) {
+            listOf(hostListByHostId, hostListFromEnvHash, hostListFromNodeHash).flatten()
+        } else if (!hostListByIp.isNullOrEmpty()) {
+            listOf(hostListByIp, hostListFromEnvHash, hostListFromNodeHash).flatten()
         } else {
             listOf(hostListFromEnvHash, hostListFromNodeHash).flatten()
         }

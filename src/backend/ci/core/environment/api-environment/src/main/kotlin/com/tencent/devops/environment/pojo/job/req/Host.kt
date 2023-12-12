@@ -13,4 +13,5 @@ data class Host(
     val ip: String?
 ) {
     constructor(bkHostId: Long?) : this(0, bkHostId, null)
+    constructor(bkCloudId: Long?, ip: String?) : this(bkCloudId, null, ip)
 }

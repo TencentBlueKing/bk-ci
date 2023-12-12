@@ -30,7 +30,6 @@ import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudDeleteAccount
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudExecuteTarget
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudFileDistributeReq
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudFileSource
-import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudHost
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudQueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudTaskTerminateReq
@@ -121,14 +120,14 @@ class JobService @Autowired constructor(
             isParamSensitive = scriptExecuteReq.isSensiveParam,
             scriptLanguage = scriptExecuteReq.scriptLanguage,
             targetServer = JobCloudExecuteTarget(
+                hostIdList = allHostList.filter { it.bkHostId != null }.map {
+                    it.bkHostId ?: 0L
+                },
                 ipList = allHostList.filter { it.bkHostId == null }.map {
                     JobCloudIpInfo(
                         bkCloudId = it.bkCloudId ?: 0,
                         ip = it.ip
                     )
-                },
-                hostIdList = allHostList.filter { it.bkHostId != null }.map {
-                    it.bkHostId ?: 0L
                 }
             ),
             bkUsername = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
