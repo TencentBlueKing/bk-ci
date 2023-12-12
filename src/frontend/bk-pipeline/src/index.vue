@@ -305,7 +305,7 @@
     padding: 0;
   }
   &.editable-bk-pipeline {
-    padding-left: 80px;
+    padding-left: 50px;
   }
 }
 

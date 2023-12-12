@@ -103,6 +103,7 @@
                 class="add-menu"
                 @click.stop="toggleAddMenu(!isAddMenuShow)"
             >
+                <span class="add-plus-connector"></span>
                 <i :class="{ [iconCls]: true, active: isAddMenuShow }" />
                 <template v-if="isAddMenuShow">
                     <cruve-line
@@ -694,6 +695,15 @@ $entryBtnWidth: 80px;
     }
     .parallel-add {
       left: 50px;
+    }
+
+    .add-plus-connector {
+        position: absolute;
+        width: 24px;
+        height: 2px;
+        left: 17px;
+        top: 8px;
+        background-color: $primaryColor;
     }
   }
 
