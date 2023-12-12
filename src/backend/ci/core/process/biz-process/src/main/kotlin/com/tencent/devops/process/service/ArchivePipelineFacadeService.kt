@@ -58,7 +58,12 @@ class ArchivePipelineFacadeService @Autowired constructor(
         return pipelineListFacadeService.getAllBuildNo(projectId, pipelineId)
     }
 
-    fun migrateArchivePipelineData(userId: String, projectId: String, pipelineId: String): Boolean {
+    fun migrateArchivePipelineData(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        cancelFlag: Boolean = false
+    ): Boolean {
         // 检查用户是否有迁移归档流水线数据的权限
         val permission = AuthPermission.ARCHIVE
         if (!pipelinePermissionService.checkPipelinePermission(
@@ -77,7 +82,12 @@ class ArchivePipelineFacadeService @Autowired constructor(
                 )
             )
         }
-        return archivePipelineManageService.migrateData(userId, projectId, pipelineId)
+        return archivePipelineManageService.migrateData(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            cancelFlag = cancelFlag
+        )
     }
 
     fun getArchivedPipelineList(

@@ -45,9 +45,17 @@ class ServiceArchivePipelineResourceImpl @Autowired constructor(
     override fun migrateArchivePipelineData(
         userId: String,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        cancelFlag: Boolean
     ): Result<Boolean> {
-        return Result(archivePipelineFacadeService.migrateArchivePipelineData(userId, projectId, pipelineId))
+        return Result(
+            archivePipelineFacadeService.migrateArchivePipelineData(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                cancelFlag = cancelFlag
+            )
+        )
     }
 
     override fun getArchivedPipelineList(

@@ -63,7 +63,8 @@ class ArchivePipelineManageService @Autowired constructor(
     fun migrateData(
         userId: String,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        cancelFlag: Boolean = false
     ): Boolean {
         // 发送迁移归档流水线数据消息
         pipelineEventDispatcher.dispatch(
@@ -71,7 +72,8 @@ class ArchivePipelineManageService @Autowired constructor(
                 source = "archive_pipeline",
                 projectId = projectId,
                 pipelineId = pipelineId,
-                userId = userId
+                userId = userId,
+                cancelFlag = cancelFlag
             )
         )
         return true
