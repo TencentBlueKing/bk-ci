@@ -30,6 +30,8 @@ package com.tencent.devops.dispatch.kubernetes.api.service
 import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.FetchWinPoolData
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
@@ -123,4 +125,22 @@ interface ServiceStartCloudResource {
     fun getResourceVm(
         data: ResourceVmReq
     ): Result<ResourceVmRespData>
+
+    @ApiOperation("根据eid拿到对应vm信息")
+    @GET
+    @Path("/workspace/eid")
+    fun getWorkspaceInfoByEid(
+        @ApiParam("uid", required = true)
+        @QueryParam("eid")
+        eid: String
+    ): Result<WorkspaceInfo>
+
+    @ApiOperation("根据uid拿到对应task回调信息")
+    @GET
+    @Path("/workspace/uid")
+    fun getTaskInfoByUid(
+        @ApiParam("uid", required = true)
+        @QueryParam("uid")
+        uid: String
+    ): Result<TaskStatus?>
 }

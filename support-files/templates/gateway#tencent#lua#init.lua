@@ -105,11 +105,10 @@ config = {
         switchAll = __BK_CI_KUBERNETES_SWITCH_ALL__,
         useForceHeader = __BK_CI_KUBERNETES_USE_FORCE_HEADER__,
         tags = { "rbac", "gray", "prod-v3", "stream-gray", "stream", "rbac-gray", "prod", "devx", "auto" },
-        codeccTags = {},
+        codeccTags = { "gray" },
         codecc = { domain = "__CODECC_KUBERNETES_DOMAIN__" },
         api = {
-            host = "__BK_CI_KUBERNETES_API_HOST__",
-            port = __BK_CI_KUBERNETES_API_PORT__,
+            url = "__BK_CI_KUBERNETES_API_URL__",
             token = "__BK_CI_KUBERNETES_API_TOKEN__"
         },
         special_domain = {}

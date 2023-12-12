@@ -65,6 +65,7 @@ data class GitReviewEvent(
         const val classType = "review"
         const val ACTION_APPROVED = "approved"
         const val ACTION_APPROVING = "approving"
+        const val ACTION_CLOSE = "closed"
         const val ACTION_CHANGE_DENIED = "change_denied"
         const val ACTION_CHANGE_REQUIRED = "change_required"
         const val ACTION_EMPTY = "empty"

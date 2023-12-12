@@ -193,6 +193,7 @@
   - "EMAIL"
   - "RTX"
   - "WEWORK_GROUP"
+  - "MOA"
   priority: 0
   source: 0
   emailTemplate:

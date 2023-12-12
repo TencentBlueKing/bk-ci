@@ -44,9 +44,9 @@ enum class WorkspaceStatus {
     DELIVERING, // 9 交付中
     DISTRIBUTING, // 10 待分配
     DELIVERING_FAILED, // 11 交付失败
-    STOPPING,
-    RESTARTING,
-    MAKING_IMAGE;
+    STOPPING, // 12 关机中
+    RESTARTING, // 13 重启中
+    MAKING_IMAGE; // 14 制作镜像中
 
     fun checkRunning() = this == RUNNING
 
@@ -69,8 +69,8 @@ enum class WorkspaceStatus {
     /**
      * 当正在做某事时，不能新建任务去执行
      */
-    fun notOk2doNextAction(ws: WorkspaceRecord) =
-        (this == PREPARING && ws.workspaceSystemType != WorkspaceSystemType.WINDOWS_GPU) ||
+    fun notOk2doNextAction(workspaceSystemType: WorkspaceSystemType) =
+        (this == PREPARING && workspaceSystemType != WorkspaceSystemType.WINDOWS_GPU) ||
             this == STARTING || this == SLEEPING || this == DELETING || this == STOPPING ||
             this == RESTARTING || this == MAKING_IMAGE
 }
