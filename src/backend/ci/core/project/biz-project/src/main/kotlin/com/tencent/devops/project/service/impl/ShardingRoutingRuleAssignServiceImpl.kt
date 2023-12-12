@@ -126,15 +126,12 @@ class ShardingRoutingRuleAssignServiceImpl @Autowired constructor(
         }
         // 根据模块查找还有空余容量的数据源
         val dataTagModules = dataTagModulesConfig.split(",")
-        val dbDataTag = if (dataTagModules.contains(moduleCode.name)) {
-            if (ruleType == ShardingRuleTypeEnum.ARCHIVE_DB && dataTag.isNullOrBlank()) {
-                KEY_ARCHIVE
-            } else {
-                dataTag
-            }
-        } else {
-            null
-        }
+        val dbDataTag = getDbDataTag(
+            dataTagModules = dataTagModules,
+            moduleCode = moduleCode,
+            ruleType = ruleType,
+            dataTag = dataTag
+        )
         val dataSourceNames = dataSourceDao.listByModule(
             dslContext = dslContext,
             clusterName = clusterName,
@@ -143,7 +140,6 @@ class ShardingRoutingRuleAssignServiceImpl @Autowired constructor(
             fullFlag = false,
             dataTag = dbDataTag
         )?.map { it.dataSourceName }
-
         if (dataSourceNames.isNullOrEmpty() && ruleType == ShardingRuleTypeEnum.ARCHIVE_DB) {
             // 如果归档数据库的配置不存在，则复用原数据库的配置
             val dbShardingRoutingRule = shardingRoutingRuleService.getShardingRoutingRuleByName(
@@ -178,6 +174,24 @@ class ShardingRoutingRuleAssignServiceImpl @Autowired constructor(
         // 保存db分片规则
         shardingRoutingRuleService.addShardingRoutingRule(SYSTEM, dbShardingRoutingRule)
         return dbShardingRoutingRule
+    }
+
+    private fun getDbDataTag(
+        dataTagModules: List<String>,
+        moduleCode: SystemModuleEnum,
+        ruleType: ShardingRuleTypeEnum,
+        dataTag: String?
+    ): String? {
+        val dbDataTag = if (dataTagModules.contains(moduleCode.name)) {
+            if (ruleType == ShardingRuleTypeEnum.ARCHIVE_DB && dataTag.isNullOrBlank()) {
+                KEY_ARCHIVE
+            } else {
+                dataTag
+            }
+        } else {
+            null
+        }
+        return dbDataTag
     }
 
     override fun assignTableShardingRoutingRule(
