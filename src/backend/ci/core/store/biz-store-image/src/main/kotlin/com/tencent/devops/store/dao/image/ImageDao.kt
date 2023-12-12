@@ -28,6 +28,7 @@
 package com.tencent.devops.store.dao.image
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TImage
@@ -407,9 +408,9 @@ class ImageDao {
             .asTable("t")
         val baseStep = dslContext.select().from(t).orderBy(t.field("weight")!!.desc(), t.field("imageName")!!.asc())
         return if (null != page && null != pageSize) {
-            baseStep.limit((page - 1) * pageSize + (offsetNum ?: 0), pageSize).fetch()
+            baseStep.limit((page - 1) * pageSize + (offsetNum ?: 0), pageSize).skipCheck().fetch()
         } else {
-            baseStep.fetch()
+            baseStep.skipCheck().fetch()
         }
     }
 
