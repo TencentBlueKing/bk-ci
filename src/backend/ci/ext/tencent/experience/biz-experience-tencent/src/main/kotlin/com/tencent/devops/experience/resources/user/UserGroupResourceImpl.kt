@@ -79,6 +79,9 @@ class UserGroupResourceImpl @Autowired constructor(private val groupService: Gro
         )
     }
 
+    @AuditEntry(
+        actionId = ActionId.EXPERIENCE_GROUP_CREATE
+    )
     override fun commit(userId: String, projectId: String, groupCommit: GroupCommit): Result<Boolean> {
         checkParam(userId, projectId)
         return Result(groupService.commit(userId, projectId, groupCommit))
