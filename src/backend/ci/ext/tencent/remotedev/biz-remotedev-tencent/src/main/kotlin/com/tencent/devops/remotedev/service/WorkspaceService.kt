@@ -163,7 +163,9 @@ class WorkspaceService @Autowired constructor(
             .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, ws.projectId)
             .scopeId = ws.projectId
 
-        permissionService.checkViewerPermission(userId, workspaceName, ws.projectId)
+        if (!permissionService.hasUserManager(userId, ws.projectId)) {
+            permissionService.checkViewerPermission(userId, workspaceName, ws.projectId)
+        }
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             workspaceDao.updateWorkspaceDisplayName(
