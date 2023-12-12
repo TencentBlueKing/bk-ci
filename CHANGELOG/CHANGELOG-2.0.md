@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v2.0.0-beta.39](#v200-beta39)
+   - [Changelog since v2.0.0-beta.38](#changelog-since-v200-beta38)
+
 - [v2.0.0-beta.28](#v200-beta28)
    - [Changelog since v2.0.0-beta.27](#changelog-since-v200-beta27)
 
@@ -7,6 +10,10 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v2.0.0-beta.39
+## Changelog since v2.0.0-beta.38
+#### 新增
+- [新增] doc: 文档链接优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9766)
 # v2.0.0-beta.28
 ## Changelog since v2.0.0-beta.27
 #### 新增
