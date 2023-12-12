@@ -133,4 +133,19 @@ interface ApigwRemoteDevResource {
         @ApiParam(value = "分配数据，必填", required = true)
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean>
+
+    @ApiOperation("指定项目获取云桌面信息", tags = ["v4_app_list_workspaces_with_projectId"])
+    @GET
+    @Path("/{projectId}/workspace")
+    fun listWorkspacesWithProjectId(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam("项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<List<WeSecProjectWorkspace>>
 }
