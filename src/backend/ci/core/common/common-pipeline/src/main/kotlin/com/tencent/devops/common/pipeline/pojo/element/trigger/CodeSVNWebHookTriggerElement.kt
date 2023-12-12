@@ -29,7 +29,10 @@ package com.tencent.devops.common.pipeline.pojo.element.trigger
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.element.ElementProp
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
+import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.staffInput
+import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.vuexInput
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -70,5 +73,15 @@ data class CodeSVNWebHookTriggerElement(
         } else {
             super.findFirstTaskIdByStartType(startType)
         }
+    }
+
+    // 增加条件这里也要补充上,不然代码库触发器列表展示会不对
+    override fun triggerCondition(): List<ElementProp> {
+        return listOfNotNull(
+            vuexInput(name = "relativePath", value = relativePath),
+            vuexInput(name = "excludePaths", value = excludePaths),
+            staffInput(name = "includeUsers", value = includeUsers),
+            staffInput(name = "excludeUsers", value = excludeUsers)
+        )
     }
 }

@@ -37,7 +37,8 @@ class ContainsFilter(
     // 过滤器名字
     private val filterName: String,
     private val triggerOn: String,
-    private val included: List<String>
+    private val included: List<String>,
+    private val failedReason: String = ""
 ) : WebhookFilter {
 
     companion object {
@@ -46,6 +47,10 @@ class ContainsFilter(
 
     override fun doFilter(response: WebhookFilterResponse): Boolean {
         logger.info("$pipelineId|triggerOn:$triggerOn|included:$included|$filterName filter")
-        return included.isEmpty() || included.contains(triggerOn)
+        val filterResult = included.isEmpty() || included.contains(triggerOn)
+        if (!filterResult && failedReason.isNotBlank()) {
+            response.failedReason = failedReason
+        }
+        return filterResult
     }
 }

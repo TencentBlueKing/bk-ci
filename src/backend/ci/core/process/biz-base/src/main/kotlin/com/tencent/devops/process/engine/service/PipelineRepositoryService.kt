@@ -46,6 +46,7 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
@@ -73,6 +74,7 @@ import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
+import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
@@ -88,6 +90,8 @@ import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
+import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
+import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -136,6 +140,7 @@ class PipelineRepositoryService constructor(
     private val pipelineJobMutexGroupService: PipelineJobMutexGroupService,
     private val modelCheckPlugin: ModelCheckPlugin,
     private val templatePipelineDao: TemplatePipelineDao,
+    private val templateDao: TemplateDao,
     private val pipelineResourceVersionDao: PipelineResourceVersionDao,
     private val pipelineSettingVersionDao: PipelineSettingVersionDao,
     private val pipelineViewGroupDao: PipelineViewGroupDao,
@@ -1033,8 +1038,12 @@ class PipelineRepositoryService constructor(
         delete: Boolean? = false
     ): PipelineInfo? {
         val template = templatePipelineDao.get(dslContext, projectId, pipelineId)
+        val srcTemplate = template?.let { t ->
+            templateDao.getTemplate(
+                dslContext = dslContext, templateId = t.templateId)
+        }
         val templateId = template?.templateId
-        return pipelineInfoDao.convert(
+        val info = pipelineInfoDao.convert(
             t = pipelineInfoDao.getPipelineInfo(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -1044,6 +1053,16 @@ class PipelineRepositoryService constructor(
             ),
             templateId = templateId
         )
+        if (info != null && srcTemplate != null) {
+            info.templateInfo = TemplateInfo(
+                templateId = template.templateId,
+                templateName = srcTemplate.templateName,
+                version = template.version,
+                versionName = template.versionName,
+                instanceType = PipelineInstanceTypeEnum.valueOf(template.instanceType)
+            )
+        }
+        return info
     }
 
     /**

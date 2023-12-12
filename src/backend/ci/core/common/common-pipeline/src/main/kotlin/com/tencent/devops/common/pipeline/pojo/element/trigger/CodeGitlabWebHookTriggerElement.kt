@@ -29,8 +29,11 @@ package com.tencent.devops.common.pipeline.pojo.element.trigger
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.element.ElementProp
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
+import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.staffInput
+import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.vuexInput
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -91,5 +94,70 @@ data class CodeGitlabWebHookTriggerElement(
         } else {
             super.findFirstTaskIdByStartType(startType)
         }
+    }
+
+    // 增加条件这里也要补充上,不然代码库触发器列表展示会不对
+    override fun triggerCondition(): List<ElementProp> {
+        val props = when (eventType) {
+            CodeEventType.PUSH -> {
+                listOf(
+                    vuexInput(name = "branchName", value = branchName),
+                    vuexInput(name = "excludeBranchName", value = excludeBranchName),
+                    vuexInput(name = "includePaths", value = includePaths),
+                    vuexInput(name = "excludePaths", value = excludePaths),
+                    staffInput(name = "includeUsers", value = includeUsers),
+                    staffInput(name = "excludeUsers", value = excludeUsers)
+                )
+            }
+
+            CodeEventType.MERGE_REQUEST -> {
+                listOf(
+                    vuexInput(name = "branchName", value = branchName),
+                    vuexInput(name = "excludeBranchName", value = excludeBranchName),
+                    vuexInput(
+                        name = "includeSourceBranchName",
+                        value = includeSourceBranchName
+                    ),
+                    vuexInput(
+                        name = "includeSourceBranchName",
+                        value = includeSourceBranchName
+                    ),
+                    vuexInput(name = "includePaths", value = includePaths),
+                    vuexInput(name = "excludePaths", value = excludePaths),
+                    staffInput(name = "includeUsers", value = includeUsers),
+                    staffInput(name = "excludeUsers", value = excludeUsers)
+                )
+            }
+
+            CodeEventType.MERGE_REQUEST_ACCEPT -> {
+                listOf(
+                    vuexInput(name = "branchName", value = branchName),
+                    vuexInput(name = "excludeBranchName", value = excludeBranchName),
+                    vuexInput(
+                        name = "includeSourceBranchName",
+                        value = includeSourceBranchName
+                    ),
+                    vuexInput(
+                        name = "includeSourceBranchName",
+                        value = includeSourceBranchName
+                    ),
+                    vuexInput(name = "includePaths", value = includePaths),
+                    vuexInput(name = "excludePaths", value = excludePaths),
+                    staffInput(name = "includeUsers", value = includeUsers),
+                    staffInput(name = "excludeUsers", value = excludeUsers)
+                )
+            }
+
+            CodeEventType.TAG_PUSH -> {
+                listOf(
+                    vuexInput(name = "tagName", value = tagName),
+                    vuexInput(name = "excludeTagName", value = excludeTagName)
+                )
+            }
+
+            else ->
+                emptyList()
+        }
+        return props.filterNotNull()
     }
 }

@@ -256,12 +256,7 @@ class PipelineBuildRecordService @Autowired constructor(
             buildId = buildId
         )
         watcher.start("startUserList")
-        val startUserList = recordModelDao.getRecordStartUserList(
-            dslContext = dslContext,
-            pipelineId = pipelineInfo.pipelineId,
-            projectId = projectId,
-            buildId = buildId
-        )
+        val recordList = getRecordInfo(pipelineInfo.pipelineId, projectId, buildId)
         watcher.start("parseTriggerInfo")
         // TODO 临时解析旧触发器获取实际触发信息，后续触发器完善需要改回
         val triggerInfo = if (buildInfo.trigger == StartType.WEB_HOOK.name) {
@@ -348,7 +343,7 @@ class PipelineBuildRecordService @Autowired constructor(
             stageStatus = buildInfo.stageStatus,
             triggerReviewers = triggerReviewers,
             executeCount = fixedExecuteCount,
-            startUserList = startUserList,
+            startUserList = recordList.map { it.startUser },
             buildMsg = BuildMsgUtils.getBuildMsg(
                 buildMsg = buildInfo.buildMsg,
                 startType = StartType.toStartType(buildInfo.trigger),
@@ -357,9 +352,19 @@ class PipelineBuildRecordService @Autowired constructor(
             material = buildInfo.material,
             remark = buildInfo.remark,
             debug = buildInfo.debug,
-            webhookInfo = buildInfo.webhookInfo
+            webhookInfo = buildInfo.webhookInfo,
+            templateInfo = pipelineInfo.templateInfo,
+            recordList = recordList
         )
     }
+
+    fun getRecordInfo(pipelineId: String, projectId: String, buildId: String) =
+        recordModelDao.getRecordInfoList(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            projectId = projectId,
+            buildId = buildId
+        )
 
     private fun fixContainerDetail(container: Container) {
         container.containerHashId = container.containerHashId ?: container.containerId

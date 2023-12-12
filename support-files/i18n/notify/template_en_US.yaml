@@ -783,11 +783,11 @@
     id: "aab3cc905f004b9392773d388d64daef"
     sender: "DevOps"
     title: "The pipeline under the project [${projectName}] [${pipelineName}] # ${buildNum} builds Stage audit"
-    body: "The build status is stage sucess, and your audit is required to implement the follow-up process.\nAudit description: ${reviewDesc}\nClick ${reviewUrl} on the computer side\nClick ${reviewAppUrl} on the mobile phone"
+    body: "The build status is stage success, and your audit is required to implement the follow-up process.\nAudit description: ${reviewDesc}\nClick ${reviewUrl} on the computer side\nClick ${reviewAppUrl} on the mobile phone"
   weworkGroupTemplate:
     id: "cead07553b364b5a9c3f0290e35c82da"
     title: "The pipeline under the project [${projectName}] [${pipelineName}] # ${buildNum} builds Stage audit"
-    body: "The build status is stage sucess, and an audit of \"${reviewers}\" is required to execute the subsequent process.\n\nAudit description:\n${reviewDesc}\n\n[click on the computer side] (${reviewUrl})\n[click on mobile] (${reviewAppUrl})"
+    body: "The build status is stage success, and an audit of \"${reviewers}\" is required to execute the subsequent process.\n\nAudit description:\n${reviewDesc}\n\n[click on the computer side] (${reviewUrl})\n[click on mobile] (${reviewAppUrl})"
   creator: "system"
   modifior: "system"
 - index: 37
