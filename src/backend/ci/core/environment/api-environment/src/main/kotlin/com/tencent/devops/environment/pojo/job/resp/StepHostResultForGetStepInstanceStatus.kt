@@ -1,5 +1,6 @@
 package com.tencent.devops.environment.pojo.job.resp
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
 data class StepHostResultForGetStepInstanceStatus(
@@ -11,6 +12,10 @@ data class StepHostResultForGetStepInstanceStatus(
     val ipv6: String?,
     @ApiModelProperty(value = "云区域ID")
     val bkCloudId: Long?,
+    @ApiModelProperty(value = "Agent ID")
+    val bkAgentId: Long?,
+    @ApiModelProperty(value = "管控区域名称")
+    val bkCloudName: Long?,
     @ApiModelProperty(
         value = "任务状态", notes = "0-未知错误，1-Agent异常，2-无效主机，3-上次已成功，5-等待执行，7-正在执行，9-执行成功，" +
         "11-执行失败，12-任务下发失败，13-任务超时，15-任务日志错误，16-GSE脚本日志超时，17-GSE文件日志超时，101-脚本执行失败，" +

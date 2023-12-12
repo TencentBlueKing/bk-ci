@@ -658,6 +658,8 @@ class JobService @Autowired constructor(
                             ip = stepHostResult.ip,
                             ipv6 = stepHostResult.ipv6,
                             bkCloudId = stepHostResult.bkCloudId,
+                            bkAgentId = stepHostResult.bkAgentId,
+                            bkCloudName = stepHostResult.bkCloudName,
                             status = stepHostResult.status,
                             statusDesc = stepHostResult.statusDesc,
                             tag = stepHostResult.tag,
