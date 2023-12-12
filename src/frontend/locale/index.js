@@ -134,12 +134,16 @@ export default (r, initSetLocale = false) => {
 
     async function syncLocaleBackend (localeLang) {
         try {
-            console.log('sync backendLocalEnum', backendLocalEnum[localeLang], localeLang)
+            const bkLocalEnum = {
+                'zh-CN': 'zh-cn', // 简体中文
+                'en-US': 'en' // 英文
+            }
+            console.log('sync backendLocalEnum', backendLocalEnum[localeLang], localeLang, bkLocalEnum[localeLang])
             await Promise.all([
                 axios.put('/ms/project/api/user/locales/update', {
                     language: backendLocalEnum[localeLang]
                 }),
-                jsonpLocale(backendLocalEnum[localeLang])
+                jsonpLocale(bkLocalEnum[localeLang])
             ])
         } catch (error) {
             console.error('sync locale to backend error', error)
