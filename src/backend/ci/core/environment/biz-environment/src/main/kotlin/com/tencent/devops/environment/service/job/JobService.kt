@@ -121,8 +121,8 @@ class JobService @Autowired constructor(
             isParamSensitive = scriptExecuteReq.isSensiveParam,
             scriptLanguage = scriptExecuteReq.scriptLanguage,
             targetServer = JobCloudExecuteTarget(
-                hostList = allHostList.filter { it.bkHostId == null }.map {
-                    JobCloudHost(
+                ipList = allHostList.filter { it.bkHostId == null }.map {
+                    JobCloudIpInfo(
                         bkCloudId = it.bkCloudId ?: 0,
                         ip = it.ip
                     )
@@ -171,8 +171,8 @@ class JobService @Autowired constructor(
                 JobCloudFileSource(
                     fileList = fileSource.fileList.toList(),
                     server = JobCloudExecuteTarget(
-                        hostList = allFileSourceHostList.filter { it.bkHostId == null }.map {
-                            JobCloudHost(bkCloudId = it.bkCloudId ?: 0, ip = it.ip)
+                        ipList = allFileSourceHostList.filter { it.bkHostId == null }.map {
+                            JobCloudIpInfo(bkCloudId = it.bkCloudId ?: 0, ip = it.ip)
                         },
                         hostIdList = allFileSourceHostList.filter { it.bkHostId != null }.map { it.bkHostId ?: 0L }
                     ),
@@ -185,8 +185,8 @@ class JobService @Autowired constructor(
             fileTargetPath = fileDistributeReq.fileTargetPath,
             transferMode = fileDistributeReq.transferMode,
             executeTarget = JobCloudExecuteTarget(
-                hostList = allExecuteTargetHostList.filter { it.bkHostId == null }.map {
-                    JobCloudHost(bkCloudId = it.bkCloudId ?: 0, ip = it.ip)
+                ipList = allExecuteTargetHostList.filter { it.bkHostId == null }.map {
+                    JobCloudIpInfo(bkCloudId = it.bkCloudId ?: 0, ip = it.ip)
                 },
                 hostIdList = allExecuteTargetHostList.filter { it.bkHostId != null }.map { it.bkHostId ?: 0L }
             ),
