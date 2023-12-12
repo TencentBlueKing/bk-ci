@@ -429,7 +429,7 @@ class DeleteControl @Autowired constructor(
         }
 
         workspaceCommon.dispatchWebsocketPushEvent(
-            userId = operator,
+            userId = ADMIN_NAME,
             workspaceName = workspaceName,
             workspaceHost = null,
             errorMsg = errorMsg,
