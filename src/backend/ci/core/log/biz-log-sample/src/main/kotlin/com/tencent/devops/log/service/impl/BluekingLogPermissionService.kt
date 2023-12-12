@@ -58,7 +58,6 @@ class BluekingLogPermissionService @Autowired constructor(
         return false
     }
 
-
     override fun verifyUserLogPermission(
         projectCode: String,
         pipelineId: String,

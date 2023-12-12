@@ -268,8 +268,8 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
         userId: String,
         errorMsg: String?
     ) {
-        val titleParams = mapOf(KEY_PROJECT_ID to projectId, KEY_PIPELINE_ID to projectId)
-        val bodyParams = mapOf(KEY_PROJECT_ID to projectId, KEY_PIPELINE_ID to projectId, FAIL_MSG to (errorMsg ?: ""))
+        val titleParams = mapOf(KEY_PROJECT_ID to projectId, KEY_PIPELINE_ID to pipelineId)
+        val bodyParams = mapOf(KEY_PROJECT_ID to projectId, KEY_PIPELINE_ID to pipelineId, FAIL_MSG to (errorMsg ?: ""))
         val request = SendNotifyMessageTemplateRequest(
             templateCode = MIGRATE_PROCESS_PIPELINE_DATA_FAIL_TEMPLATE,
             receivers = mutableSetOf(userId),

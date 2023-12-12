@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.pojo
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -79,5 +80,7 @@ data class PipelineInfo(
     @ApiModelProperty("最后构建ID", required = false)
     var latestBuildId: String? = null,
     @ApiModelProperty("触发方式", required = false)
-    var trigger: String? = null
+    var trigger: String? = null,
+    @ApiModelProperty("约束模式下的模板信息", required = false)
+    var templateInfo: TemplateInfo? = null
 )

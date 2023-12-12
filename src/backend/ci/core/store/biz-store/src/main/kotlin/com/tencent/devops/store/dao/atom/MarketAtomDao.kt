@@ -48,6 +48,8 @@ import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.utils.VersionUtils
+import java.math.BigDecimal
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -56,8 +58,6 @@ import org.jooq.SelectOnConditionStep
 import org.jooq.UpdateSetFirstStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.math.BigDecimal
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -509,7 +509,8 @@ class MarketAtomDao : AtomBaseDao() {
                 PUBLISHER,
                 WEIGHT,
                 CREATOR,
-                MODIFIER
+                MODIFIER,
+                BRANCH_TEST_FLAG
             )
                 .values(id,
                     atomRequest.name,
@@ -542,7 +543,8 @@ class MarketAtomDao : AtomBaseDao() {
                     atomRequest.publisher,
                     atomRecord.weight,
                     userId,
-                    userId
+                    userId,
+                    atomRequest.isBranchTestVersion
                 )
                 .execute()
         }
@@ -579,6 +581,7 @@ class MarketAtomDao : AtomBaseDao() {
         return with(TAtom.T_ATOM) {
             val baseStep = dslContext.selectFrom(this)
                 .where(ATOM_CODE.eq(atomCode))
+                .and(BRANCH_TEST_FLAG.eq(false))
                 .orderBy(CREATE_TIME.desc())
             if (null != page && null != pageSize) {
                 baseStep.limit((page - 1) * pageSize, pageSize).fetch()
@@ -607,6 +610,21 @@ class MarketAtomDao : AtomBaseDao() {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
                 .where(ID.eq(atomId))
+                .fetchOne()
+        }
+    }
+
+    fun getAtomBranchTestVersion(
+        dslContext: DSLContext,
+        atomCode: String,
+        versionPrefix: String
+    ): TAtomRecord? {
+        with(TAtom.T_ATOM) {
+            return dslContext.selectFrom(this)
+                .where(ATOM_CODE.eq(atomCode))
+                .and(VERSION.startsWith(versionPrefix))
+                .and(ATOM_STATUS.eq(AtomStatusEnum.TESTING.status.toByte()))
+                .orderBy(UPDATE_TIME.desc())
                 .fetchOne()
         }
     }
@@ -710,6 +728,39 @@ class MarketAtomDao : AtomBaseDao() {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(atomId))
                 .execute()
+        }
+    }
+
+    fun setupAtomLatestTestFlag(dslContext: DSLContext, userId: String, atomCode: String, atomId: String) {
+        with(TAtom.T_ATOM) {
+            dslContext.update(this)
+                .set(
+                    LATEST_TEST_FLAG,
+                    DSL.case_().`when`(ID.eq(atomId), true).otherwise(false)
+                )
+                .set(MODIFIER, userId)
+                .where(ATOM_CODE.eq(atomCode))
+                .execute()
+        }
+    }
+
+    fun queryAtomLatestTestVersionId(dslContext: DSLContext, atomCode: String): String? {
+        with(TAtom.T_ATOM) {
+            return dslContext.select(ID).from(this)
+                .where(ATOM_CODE.eq(atomCode))
+                .and(ATOM_STATUS.`in`(
+                    listOf(AtomStatusEnum.TESTING.status.toByte(), AtomStatusEnum.AUDITING.status.toByte())
+                ))
+                .orderBy(UPDATE_TIME.desc())
+                .limit(1)
+                .fetchOne(0, String::class.java)
+        }
+    }
+
+    fun isAtomLatestTestVersion(dslContext: DSLContext, atomId: String): Int {
+        with(TAtom.T_ATOM) {
+            return dslContext.select(ID).from(this)
+                .where(ID.eq(atomId).and(LATEST_TEST_FLAG.eq(true))).execute()
         }
     }
 

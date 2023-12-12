@@ -27,11 +27,8 @@
 
 package com.tencent.devops.log.service
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
 import com.tencent.devops.common.log.pojo.PageQueryLogs
@@ -40,13 +37,12 @@ import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.log.pojo.enums.LogStatus
 import com.tencent.devops.common.log.pojo.enums.LogType
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.log.jmx.LogStorageBean
 import com.tencent.devops.log.strategy.context.UserLogPermissionCheckContext
 import com.tencent.devops.log.strategy.factory.UserLogPermissionCheckStrategyFactory
-import javax.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Suppress("LongParameterList", "TooManyFunctions")
 @Service

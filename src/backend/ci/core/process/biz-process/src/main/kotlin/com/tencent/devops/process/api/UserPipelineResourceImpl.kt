@@ -562,13 +562,19 @@ class UserPipelineResourceImpl @Autowired constructor(
         projectId: String,
         page: Int?,
         pageSize: Int?,
-        sortType: PipelineSortType?
+        sortType: PipelineSortType?,
+        filterByPipelineName: String?
     ): Result<PipelinePage<Pipeline>> {
         checkParam(userId, projectId)
         return Result(
             pipelineListFacadeService.listPermissionPipeline(
-                userId, projectId, page,
-                pageSize, sortType ?: PipelineSortType.CREATE_TIME, ChannelCode.BS, true
+                userId = userId,
+                projectId = projectId,
+                page = page,
+                pageSize = pageSize,
+                sortType = sortType ?: PipelineSortType.CREATE_TIME, ChannelCode.BS,
+                checkPermission = true,
+                filterByPipelineName = filterByPipelineName
             )
         )
     }

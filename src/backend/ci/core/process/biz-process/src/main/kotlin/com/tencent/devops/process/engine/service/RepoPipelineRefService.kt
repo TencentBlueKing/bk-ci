@@ -130,7 +130,7 @@ class RepoPipelineRefService @Autowired constructor(
         updateRepoPipelineRef(userId, "op", projectId, pipelineId)
     }
 
-    fun updateAllPipelineRef() {
+    fun updateAllPipelineRef(projectId: String?) {
         val startTime = System.currentTimeMillis()
         logger.info("op update all pipeline repository ref")
         val threadPoolExecutor = ThreadPoolExecutor(
@@ -150,6 +150,7 @@ class RepoPipelineRefService @Autowired constructor(
                 do {
                     val records = modelTaskDao.batchGetPipelineIdByAtomCode(
                         dslContext = dslContext,
+                        projectId = projectId,
                         atomCodeList = repoAtomCodes,
                         limit = limit,
                         offset = offset

@@ -139,14 +139,25 @@ class RepoPipelineRefDao {
         dslContext: DSLContext,
         projectId: String,
         repositoryId: Long,
+        eventType: String?,
+        triggerConditionMd5: String?,
         limit: Int,
         offset: Int
     ): List<RepoPipelineRefVo> {
         return with(TRepositoryPipelineRef.T_REPOSITORY_PIPELINE_REF) {
+            val conditions = mutableListOf(
+                PROJECT_ID.eq(projectId),
+                REPOSITORY_ID.eq(repositoryId)
+            )
+            if (!triggerConditionMd5.isNullOrBlank()) {
+                conditions.add(TRIGGER_CONDITION_MD5.eq(triggerConditionMd5))
+            }
+            if (!eventType.isNullOrBlank()) {
+                conditions.add(EVENT_TYPE.eq(eventType))
+            }
             dslContext.select(PROJECT_ID, PIPELINE_ID, PIPELINE_NAME)
                 .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(REPOSITORY_ID.eq(repositoryId))
+                .where(conditions)
                 .groupBy(PROJECT_ID, PIPELINE_ID, PIPELINE_NAME)
                 .orderBy(PIPELINE_NAME.desc())
                 .limit(limit).offset(offset)
@@ -163,13 +174,24 @@ class RepoPipelineRefDao {
     fun countByRepo(
         dslContext: DSLContext,
         projectId: String,
-        repositoryId: Long
+        repositoryId: Long,
+        eventType: String?,
+        triggerConditionMd5: String?
     ): Long {
         return with(TRepositoryPipelineRef.T_REPOSITORY_PIPELINE_REF) {
+            val conditions = mutableListOf(
+                PROJECT_ID.eq(projectId),
+                REPOSITORY_ID.eq(repositoryId)
+            )
+            if (!triggerConditionMd5.isNullOrBlank()) {
+                conditions.add(TRIGGER_CONDITION_MD5.eq(triggerConditionMd5))
+            }
+            if (!eventType.isNullOrBlank()) {
+                conditions.add(EVENT_TYPE.eq(eventType))
+            }
             dslContext.select()
                 .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(REPOSITORY_ID.eq(repositoryId))
+                .where(conditions)
                 .groupBy(PROJECT_ID, PIPELINE_ID, PIPELINE_NAME)
                 .fetchGroups(PIPELINE_ID).size.toLong()
         }

@@ -68,7 +68,7 @@ class PipelineListQueryParamService @Autowired constructor(
             filterByPipelineCreators = filterByPipelineCreators,
             filterByLabelInfo = PipelineFilterByLabelInfo(
                 filterByLabels = filterByPipelineLabels,
-                labelToPipelineMap = filterByPipelineLabels.generateLabelToPipelineMap(projectId, queryDSLContext)
+                labelToPipelineMap = generateLabelToPipelineMap(projectId, filterByPipelineLabels, queryDSLContext)
             )
         )
         pipelineFilterParamList.add(pipelineFilterParam)
@@ -106,14 +106,15 @@ class PipelineListQueryParamService @Autowired constructor(
         return Triple(filterByPipelineNames, filterByPipelineCreators, filterByPipelineLabels)
     }
 
-    private fun List<PipelineViewFilterByLabel>.generateLabelToPipelineMap(
+    fun generateLabelToPipelineMap(
         projectId: String,
+        pipelineViewFilterByLabels: List<PipelineViewFilterByLabel>,
         queryDSLContext: DSLContext? = null
     ): Map<String, List<String>>? {
         var labelToPipelineMap: Map<String, List<String>>? = null
-        if (isNotEmpty()) {
+        if (pipelineViewFilterByLabels.isNotEmpty()) {
             val labelIds = mutableListOf<String>()
-            forEach {
+            pipelineViewFilterByLabels.forEach {
                 labelIds.addAll(it.labelIds)
             }
             labelToPipelineMap = pipelineGroupService.getViewLabelToPipelinesMap(

@@ -94,7 +94,8 @@ class ThirdPartyAgentBuildDao {
                     .set(AGENT_IP, agentIp)
                     .set(NODE_ID, nodeId)
                     .set(
-                        DOCKER_INFO, if (dockerInfo == null) {
+                        DOCKER_INFO,
+                        if (dockerInfo == null) {
                             null
                         } else {
                             JSON.json(JsonUtil.toJson(dockerInfo, formatted = false))
