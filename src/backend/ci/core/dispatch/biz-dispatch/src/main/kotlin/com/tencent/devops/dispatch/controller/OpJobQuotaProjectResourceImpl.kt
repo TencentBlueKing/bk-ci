@@ -45,24 +45,28 @@ class OpJobQuotaProjectResourceImpl @Autowired constructor(
         return Result(jobQuotaManagerService.listProjectQuota(projectId))
     }
 
-    override fun get(projectId: String, vmType: JobQuotaVmType): Result<JobQuotaProject> {
-        return Result(jobQuotaManagerService.getProjectQuota(projectId, vmType))
+    override fun get(
+        projectId: String,
+        vmType: JobQuotaVmType,
+        channelCode: String
+    ): Result<JobQuotaProject> {
+        return Result(jobQuotaManagerService.getProjectQuota(projectId, vmType, channelCode))
     }
 
     override fun add(projectId: String, jobQuota: JobQuotaProject): Result<Boolean> {
         return Result(jobQuotaManagerService.addProjectQuota(projectId, jobQuota))
     }
 
-    override fun delete(projectId: String, vmType: JobQuotaVmType): Result<Boolean> {
-        return Result(jobQuotaManagerService.deleteProjectQuota(projectId, vmType))
+    override fun delete(projectId: String, vmType: JobQuotaVmType, channelCode: String): Result<Boolean> {
+        return Result(jobQuotaManagerService.deleteProjectQuota(projectId, vmType, channelCode))
     }
 
     override fun update(projectId: String, vmType: JobQuotaVmType, jobQuota: JobQuotaProject): Result<Boolean> {
         return Result(jobQuotaManagerService.updateProjectQuota(projectId, vmType, jobQuota))
     }
 
-    override fun restore(projectId: String, vmType: JobQuotaVmType): Result<Boolean> {
-        jobQuotaRedisUtils.restoreProjectJobTime(projectId, vmType)
+    override fun restore(projectId: String, vmType: JobQuotaVmType, channelCode: String): Result<Boolean> {
+        jobQuotaRedisUtils.restoreProjectJobTime(projectId, vmType, channelCode)
         return Result(true)
     }
 }

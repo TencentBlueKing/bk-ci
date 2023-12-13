@@ -33,5 +33,6 @@ data class JobConcurrencyHistory(
     val projectId: String,
     val jobConcurrency: Int,
     val jobQuotaVmType: JobQuotaVmType,
+    val channelCode: String,
     val createTime: String
 )

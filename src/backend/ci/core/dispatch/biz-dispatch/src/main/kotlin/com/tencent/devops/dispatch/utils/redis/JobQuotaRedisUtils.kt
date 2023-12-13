@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.dispatch.utils.redis
 
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -67,17 +68,25 @@ class JobQuotaRedisUtils {
             getProjectRunningTimeKey(projectId))
     }
 
-    fun getProjectRunJobTypeTime(projectId: String, vmType: JobQuotaVmType): String? {
+    fun getProjectRunJobTypeTime(
+        projectId: String,
+        jobType: JobQuotaVmType,
+        channelCode: String
+    ): String? {
         return getRedisStringSerializerOperation().hget(
             getDayJobRunningTimeKey(),
-            getProjectJobTypeRunningTimeKey(projectId, vmType))
+            getProjectJobTypeRunningTimeKey(projectId, jobType, channelCode))
     }
 
-    fun getLastDayProjectRunJobTypeTime(projectId: String, jobType: JobQuotaVmType): String? {
+    fun getLastDayProjectRunJobTypeTime(
+        projectId: String,
+        jobType: JobQuotaVmType,
+        channelCode: String
+    ): String? {
         val lastWeekDay = LocalDateTime.now().minusDays(1).dayOfWeek
         return getRedisStringSerializerOperation().hget(
             getDayJobRunningTimeKey(lastWeekDay.name),
-            getProjectJobTypeRunningTimeKey(projectId, jobType))
+            getProjectJobTypeRunningTimeKey(projectId, jobType, channelCode))
     }
 
     fun getLastDayAllProjectConcurrency(): Cursor<MutableMap.MutableEntry<String, String>> {
@@ -88,11 +97,12 @@ class JobQuotaRedisUtils {
     fun saveJobConcurrency(
         projectId: String,
         runningJobCount: Int,
-        jobQuotaVmType: JobQuotaVmType
+        jobQuotaVmType: JobQuotaVmType,
+        channelCode: String
     ) {
         // 刷新redis缓存数据
         val dayJobConcurrencyKey = getDayJobConcurrencyKey()
-        val projectDayJobConcurrencyKey = getProjectJobTypeConcurrencyKey(projectId, jobQuotaVmType)
+        val projectDayJobConcurrencyKey = getProjectJobTypeConcurrencyKey(projectId, jobQuotaVmType, channelCode)
 
         val maxConcurrency = getRedisStringSerializerOperation().hget(
             dayJobConcurrencyKey,
@@ -108,22 +118,26 @@ class JobQuotaRedisUtils {
         }
     }
 
-    fun restoreProjectJobTime(projectId: String?, vmType: JobQuotaVmType) {
+    fun restoreProjectJobTime(
+        projectId: String?,
+        vmType: JobQuotaVmType,
+        channelCode: String = ChannelCode.BS.name
+    ) {
         if (projectId == null && vmType != JobQuotaVmType.ALL) {
             // 直接删除当月的hash主key
             getRedisStringSerializerOperation().delete(getDayJobRunningTimeKey())
             return
         }
         if (projectId != null && vmType != JobQuotaVmType.ALL) { // restore project with vmType
-            restoreWithVmType(projectId, vmType)
+            restoreWithVmType(projectId, vmType, channelCode)
             return
         }
     }
 
-    private fun restoreWithVmType(project: String, vmType: JobQuotaVmType) {
+    private fun restoreWithVmType(project: String, vmType: JobQuotaVmType, channelCode: String) {
         val time = getRedisStringSerializerOperation().hget(
             getDayJobRunningTimeKey(),
-            getProjectJobTypeRunningTimeKey(project, vmType)) ?: "0"
+            getProjectJobTypeRunningTimeKey(project, vmType, channelCode)) ?: "0"
         val totalTime = getRedisStringSerializerOperation().hget(
             getDayJobRunningTimeKey(),
             getProjectRunningTimeKey(project)) ?: "0"
@@ -139,7 +153,7 @@ class JobQuotaRedisUtils {
         )
         getRedisStringSerializerOperation().hset(
             key = getDayJobRunningTimeKey(),
-            hashKey = getProjectJobTypeRunningTimeKey(project, vmType),
+            hashKey = getProjectJobTypeRunningTimeKey(project, vmType, channelCode),
             values = "0"
         )
     }
@@ -148,7 +162,8 @@ class JobQuotaRedisUtils {
         projectId: String,
         jobType: JobQuotaVmType?,
         costTime: Long,
-        agentStartTime: LocalDateTime
+        agentStartTime: LocalDateTime,
+        channelCode: String
     ) {
         if (jobType == null) {
             LOG.warn("incProjectJobRunningTime, vmType is null. projectId: $projectId")
@@ -157,12 +172,12 @@ class JobQuotaRedisUtils {
 
         // 判断如果是跨天的构建任务，并发数加一
         if (agentStartTime.dayOfYear != LocalDateTime.now().dayOfYear) {
-            saveJobConcurrency(projectId, 0, jobType)
+            saveJobConcurrency(projectId, 0, jobType, channelCode)
         }
 
         getRedisStringSerializerOperation().hIncrBy(
             key = getDayJobRunningTimeKey(),
-            hashKey = getProjectJobTypeRunningTimeKey(projectId, jobType),
+            hashKey = getProjectJobTypeRunningTimeKey(projectId, jobType, channelCode),
             delta = costTime
         )
 
@@ -179,9 +194,9 @@ class JobQuotaRedisUtils {
         return Pair(array[0], array[1])
     }
 
-    fun parseProjectJobTypeConcurrencyKey(key: String): Pair<String, String> {
-        val array = key.removePrefix(PROJECT_JOB_CONCURRENCY_KEY_PREFIX).split(":", limit = 2)
-        return Pair(array[0], array[1])
+    fun parseProjectJobTypeConcurrencyKey(key: String): Triple<String, String, String> {
+        val array = key.removePrefix(PROJECT_JOB_CONCURRENCY_KEY_PREFIX).split(":", limit = 3)
+        return Triple(array[0], array[1], array[2])
     }
 
     /**
@@ -208,8 +223,12 @@ class JobQuotaRedisUtils {
         return "$PROJECT_RUNNING_TIME_KEY_PREFIX$currentDay"
     }
 
-    private fun getProjectJobTypeRunningTimeKey(projectId: String, vmType: JobQuotaVmType): String {
-        return "$PROJECT_RUNNING_TIME_KEY_PREFIX$projectId:${vmType.name}"
+    private fun getProjectJobTypeRunningTimeKey(
+        projectId: String,
+        vmType: JobQuotaVmType,
+        channelCode: String
+    ): String {
+        return "$PROJECT_RUNNING_TIME_KEY_PREFIX$projectId:${vmType.name}:$channelCode"
     }
 
     private fun getProjectRunningTimeKey(projectId: String): String {
@@ -221,8 +240,12 @@ class JobQuotaRedisUtils {
         return "$PROJECT_JOB_CONCURRENCY_KEY_PREFIX$currentDay"
     }
 
-    private fun getProjectJobTypeConcurrencyKey(projectId: String, vmType: JobQuotaVmType): String {
-        return "$PROJECT_JOB_CONCURRENCY_KEY_PREFIX$projectId:${vmType.name}"
+    private fun getProjectJobTypeConcurrencyKey(
+        projectId: String,
+        vmType: JobQuotaVmType,
+        channelCode: String
+    ): String {
+        return "$PROJECT_JOB_CONCURRENCY_KEY_PREFIX$projectId:${vmType.name}:$channelCode"
     }
 
     private fun getRedisStringSerializerOperation(): RedisOperation {

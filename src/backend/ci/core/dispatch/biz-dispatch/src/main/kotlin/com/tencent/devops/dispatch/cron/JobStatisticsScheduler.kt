@@ -69,8 +69,15 @@ class JobStatisticsScheduler @Autowired constructor(
                 while (cursor.hasNext()) {
                     counter++
                     val keyValue = cursor.next()
-                    val (projectId, jobType) = jobQuotaRedisUtils.parseProjectJobTypeConcurrencyKey(keyValue.key)
-                    addJobMetricsData(theDate, projectId, jobType, keyValue, jobMetricsDataList)
+                    val (projectId, jobType, channelCode) = jobQuotaRedisUtils.parseProjectJobTypeConcurrencyKey(keyValue.key)
+                    addJobMetricsData(
+                        theDate = theDate,
+                        projectId = projectId,
+                        jobType = jobType,
+                        channelCode = channelCode,
+                        keyValue = keyValue,
+                        jobMetricsDataList = jobMetricsDataList
+                    )
 
                     if (counter % 100 == 0) {
                         println("Start save jobStatistics counter: $counter -> pushAndClear dataMap.")
@@ -95,6 +102,7 @@ class JobStatisticsScheduler @Autowired constructor(
         theDate: String,
         projectId: String,
         jobType: String,
+        channelCode: String,
         keyValue: MutableMap.MutableEntry<String, String>,
         jobMetricsDataList: MutableList<DispatchJobMetricsData>
     ) {
@@ -104,10 +112,12 @@ class JobStatisticsScheduler @Autowired constructor(
                 projectId = projectId,
                 productId = client.get(ServiceProjectResource::class).get(projectId).data?.productId.toString(),
                 jobType = jobType,
+                channelCode = channelCode,
                 maxJobConcurrency = keyValue.value.toInt(),
                 sumJobCost = jobQuotaRedisUtils.getLastDayProjectRunJobTypeTime(
-                    projectId,
-                    JobQuotaVmType.valueOf(jobType)
+                    projectId = projectId,
+                    jobType = JobQuotaVmType.valueOf(jobType),
+                    channelCode = channelCode
                 )?.toInt() ?: 0
             ))
         } catch (e: Exception) {

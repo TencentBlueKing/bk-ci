@@ -45,7 +45,8 @@ class ServiceJobQuotaBusinessResourceImpl @Autowired constructor(
         vmSeqId: String,
         executeCount: Int,
         containerId: String,
-        containerHashId: String?
+        containerHashId: String?,
+        channelCode: String
     ): Result<Boolean> {
         val result = jobQuotaBusinessService.checkAndAddRunningJob(
             projectId = projectId,
@@ -54,7 +55,8 @@ class ServiceJobQuotaBusinessResourceImpl @Autowired constructor(
             vmSeqId = vmSeqId,
             executeCount = executeCount,
             containerId = containerId,
-            containerHashId = containerHashId
+            containerHashId = containerHashId,
+            channelCode = channelCode
         )
         return Result(result)
     }

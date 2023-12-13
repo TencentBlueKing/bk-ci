@@ -30,6 +30,7 @@ package com.tencent.devops.dispatch.service.jobquota
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.dao.JobQuotaProjectRunTimeDao
 import com.tencent.devops.dispatch.dao.RunningJobsDao
@@ -69,7 +70,8 @@ class JobQuotaBusinessService @Autowired constructor(
         vmSeqId: String,
         executeCount: Int,
         containerId: String,
-        containerHashId: String?
+        containerHashId: String?,
+        channelCode: String = ChannelCode.BS.name
     ): Boolean {
         val result: Boolean
         val jobQuotaProjectLock = jobQuotaRedisUtils.getJobQuotaProjectLock(projectId, jobType)
@@ -81,12 +83,13 @@ class JobQuotaBusinessService @Autowired constructor(
                 containerId = containerId,
                 containerHashId = containerHashId,
                 executeCount = executeCount,
-                vmType = jobType
+                vmType = jobType,
+                channelCode = channelCode
             )
 
             // 如果配额没有超限，则记录一条running job
             if (result) {
-                runningJobsDao.insert(dslContext, projectId, jobType, buildId, vmSeqId, executeCount)
+                runningJobsDao.insert(dslContext, projectId, jobType, buildId, vmSeqId, executeCount, channelCode)
             }
         } finally {
             jobQuotaProjectLock.unlock()
@@ -137,18 +140,23 @@ class JobQuotaBusinessService @Autowired constructor(
         jobAgentFinish(projectId, pipelineId, buildId, vmSeqId, executeCount)
     }
 
-    private fun getProjectRunningJobStatus(projectId: String, vmType: JobQuotaVmType): JobQuotaStatus {
-        val jobQuota = jobQuotaManagerService.getProjectQuota(projectId, vmType)
-        val runningJobCount = runningJobsDao.getProjectRunningJobCount(dslContext, projectId, vmType)
-        val threshold = jobQuotaManagerService.getSystemQuota(vmType)
-        val runningJobTime = getProjectRunningJobTime(projectId, vmType)
+    private fun getProjectRunningJobStatus(
+        projectId: String,
+        vmType: JobQuotaVmType,
+        channelCode: String
+    ): JobQuotaStatus {
+        val jobQuota = jobQuotaManagerService.getProjectQuota(projectId, vmType, channelCode)
+        val runningJobCount = runningJobsDao.getProjectRunningJobCount(dslContext, projectId, vmType, channelCode)
+        val threshold = jobQuotaManagerService.getSystemQuota(vmType, channelCode)
+        // 目前暂时不用关注构建总耗时，先注释
+        // val runningJobTime = getProjectRunningJobTime(projectId, vmType, channelCode)
 
         return JobQuotaStatus(
             jobQuota = jobQuota.runningJobMax,
             runningJobCount = runningJobCount,
             jobThreshold = threshold.projectRunningJobThreshold,
             timeQuota = jobQuota.runningTimeProjectMax.toLong(),
-            runningJobTime = runningJobTime,
+            runningJobTime = 0,
             timeThreshold = threshold.projectRunningTimeThreshold
         )
     }
@@ -156,12 +164,16 @@ class JobQuotaBusinessService @Autowired constructor(
     /**
      * 获取项目当月所有JOB已运行的时间，返回已运行的时间
      */
-    private fun getProjectRunningJobTime(projectId: String, vmType: JobQuotaVmType): Long {
+    private fun getProjectRunningJobTime(
+        projectId: String,
+        vmType: JobQuotaVmType,
+        channelCode: String
+    ): Long {
         if (vmType == JobQuotaVmType.ALL) {
             // 所有运行中的耗时
             var runningTotalTime = 0L
             JobQuotaVmType.values().filter { it != JobQuotaVmType.ALL }.forEach { type ->
-                val runningJobs = runningJobsDao.getProjectRunningJobs(dslContext, projectId, type)
+                val runningJobs = runningJobsDao.getProjectRunningJobs(dslContext, projectId, type, channelCode)
                 runningJobs.filter { it?.agentStartTime != null }.forEach {
                     val duration: Duration = Duration.between(it!!.agentStartTime, LocalDateTime.now())
                     runningTotalTime += duration.toMillis()
@@ -175,7 +187,7 @@ class JobQuotaBusinessService @Autowired constructor(
             return runningTotalTime
         } else {
             // 运行中的耗时
-            val runningJobs = runningJobsDao.getProjectRunningJobs(dslContext, projectId, vmType)
+            val runningJobs = runningJobsDao.getProjectRunningJobs(dslContext, projectId, vmType, channelCode)
             var runningTotalTime = 0L
             runningJobs.filter { it?.agentStartTime != null }.forEach {
                 val duration: Duration = Duration.between(it!!.agentStartTime, LocalDateTime.now())
@@ -183,7 +195,7 @@ class JobQuotaBusinessService @Autowired constructor(
             }
 
             // 所有已经结束的耗时
-            val finishRunJobTime = jobQuotaRedisUtils.getProjectRunJobTypeTime(projectId, vmType)
+            val finishRunJobTime = jobQuotaRedisUtils.getProjectRunJobTypeTime(projectId, vmType, channelCode)
             runningTotalTime += (finishRunJobTime ?: "0").toLong()
 
             return runningTotalTime
@@ -196,13 +208,19 @@ class JobQuotaBusinessService @Autowired constructor(
         containerId: String,
         containerHashId: String?,
         executeCount: Int?,
-        vmType: JobQuotaVmType
+        vmType: JobQuotaVmType,
+        channelCode: String
     ): Boolean {
-        val jobStatus = getProjectRunningJobStatus(projectId, vmType)
+        val jobStatus = getProjectRunningJobStatus(projectId, vmType, channelCode)
 
         with(jobStatus) {
             // 记录一次job并发数据
-            saveJobConcurrency(projectId, jobStatus.runningJobCount, vmType)
+            saveJobConcurrency(
+                projectId = projectId,
+                runningJobCount = jobStatus.runningJobCount,
+                jobQuotaVmType = vmType,
+                channelCode = channelCode
+            )
 
             if (runningJobCount >= jobQuota) {
                 buildLogPrinter.addYellowLine(
@@ -261,7 +279,8 @@ class JobQuotaBusinessService @Autowired constructor(
                         projectId = projectId,
                         jobType = JobQuotaVmType.parse(runningJobsRecord.vmType),
                         costTime = duration.toMillis() / 1000,
-                        agentStartTime = runningJobsRecord.agentStartTime
+                        agentStartTime = runningJobsRecord.agentStartTime,
+                        channelCode = runningJobsRecord.channelCode
                     )
                     LOG.info("$projectId|$buildId|$vmSeqId|${JobQuotaVmType.parse(runningJobsRecord.vmType)} >> " +
                             "Finish time: increase ${duration.toMillis() / 1000} seconds. >>>")
@@ -275,6 +294,7 @@ class JobQuotaBusinessService @Autowired constructor(
                             vmSeqId = vmSeqId,
                             executeCount = executeCount,
                             vmType = runningJobsRecord.vmType,
+                            channelCode = runningJobsRecord.channelCode,
                             createTime = runningJobsRecord.createdTime.format(dateTimeFormatter),
                             agentStartTime = runningJobsRecord.agentStartTime.format(dateTimeFormatter),
                             agentFinishTime = LocalDateTime.now().format(dateTimeFormatter),
@@ -300,16 +320,18 @@ class JobQuotaBusinessService @Autowired constructor(
     private fun saveJobConcurrency(
         projectId: String,
         runningJobCount: Int,
-        jobQuotaVmType: JobQuotaVmType
+        jobQuotaVmType: JobQuotaVmType,
+        channelCode: String
     ) {
         // 刷新redis缓存数据
-        jobQuotaRedisUtils.saveJobConcurrency(projectId, runningJobCount, jobQuotaVmType)
+        jobQuotaRedisUtils.saveJobConcurrency(projectId, runningJobCount, jobQuotaVmType, channelCode)
 
         jobQuotaInterface.saveJobConcurrency(
             JobConcurrencyHistory(
                 projectId = projectId,
                 jobConcurrency = runningJobCount + 1,
                 jobQuotaVmType = jobQuotaVmType,
+                channelCode = channelCode,
                 createTime = LocalDateTime.now().format(dateTimeFormatter)
             )
         )

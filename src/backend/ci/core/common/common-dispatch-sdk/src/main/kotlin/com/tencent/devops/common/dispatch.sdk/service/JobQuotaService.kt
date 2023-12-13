@@ -32,6 +32,7 @@ import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_AND_SOON_DELAYED
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_SOON_RETRY
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
@@ -75,6 +76,7 @@ class JobQuotaService constructor(
                 containerId = containerId,
                 containerHashId = containerHashId,
                 executeCount = executeCount,
+                channelCode = startupEvent.channelCode,
                 vmType = vmType
             )
 
@@ -169,6 +171,7 @@ class JobQuotaService constructor(
                 containerId = containerId,
                 containerHashId = containerHashId,
                 executeCount = executeCount,
+                channelCode = agentLessStartupEvent.channelCode,
                 vmType = vmType
             ) ?: true
         }
@@ -204,6 +207,7 @@ class JobQuotaService constructor(
         containerId: String,
         containerHashId: String?,
         executeCount: Int?,
+        channelCode: String,
         vmType: JobQuotaVmType?
     ): Boolean? {
         if (null == vmType || !jobQuotaEnable) {
@@ -220,7 +224,8 @@ class JobQuotaService constructor(
                 vmSeqId = vmSeqId,
                 executeCount = executeCount ?: 1,
                 containerId = containerId,
-                containerHashId = containerHashId
+                containerHashId = containerHashId,
+                channelCode = channelCode
             ).data
         } catch (e: Throwable) {
             logger.error("$projectId|$vmType|$buildId|$vmSeqId|$executeCount Check job quota failed.", e)
