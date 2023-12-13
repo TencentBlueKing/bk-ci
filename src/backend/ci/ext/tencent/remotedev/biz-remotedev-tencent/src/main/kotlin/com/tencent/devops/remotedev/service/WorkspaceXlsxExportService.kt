@@ -85,16 +85,20 @@ class WorkspaceXlsxExportService @Autowired constructor(
         // 创建内容
         var offset = 1
         records.forEach { record ->
+            val ip = record.hostName?.split(".")?.let {
+                it.subList(1, it.size).joinToString(separator = ".")
+            }
             val row = sheet.createRow(offset)
             row.createCell(0).setCellValue(record.projectId)
             row.createCell(1).setCellValue(record.workspaceName)
             row.createCell(2).setCellValue(record.status?.display())
-            row.createCell(3).setCellValue(record.hostName)
+            row.createCell(3).setCellValue(ip)
             row.createCell(4).setCellValue(record.workspaceSystemType.name)
             row.createCell(5).setCellValue(record.winConfig?.size)
-            row.createCell(6).setCellValue(record.createUserId)
-            row.createCell(7).setCellValue(record.owner)
-            row.createCell(8).setCellValue(record.viewers?.joinToString(","))
+            row.createCell(6).setCellValue(record.zoneConfig?.zone)
+            row.createCell(7).setCellValue(record.createUserId)
+            row.createCell(8).setCellValue(record.owner)
+            row.createCell(9).setCellValue(record.viewers?.joinToString(","))
             offset++
         }
         // 调整宽度
@@ -215,9 +219,8 @@ class WorkspaceXlsxExportService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(WorkspaceXlsxExportService::class.java)
         private val titleList =
-            listOf("项目ID", "实例名称", "状态", "云桌面ID", "系统类型", "机型", "创建人", "拥有者", "共享人")
+            listOf("项目ID", "实例名称", "状态", "云桌面ID", "系统类型", "机型", "城市", "创建人", "拥有者", "共享人")
         private val webTitleList =
             listOf("桌面 ID/别名", "内网 IP", "状态", "机型", "地域", "MAC地址", "拥有者", "共享人")
         private val userTitleList =
