@@ -57,9 +57,6 @@ class GithubTokenService @Autowired constructor(
     @Value("\${aes.github:#{null}}")
     private val aesKey = ""
 
-    @Value("\${sm4.github:}")
-    private val sm4Key: String = ""
-
     fun createAccessToken(
         userId: String,
         accessToken: String,
@@ -67,7 +64,7 @@ class GithubTokenService @Autowired constructor(
         scope: String,
         githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP
     ) {
-        val encryptedAccessToken = BkCryptoUtil.encryptSm4ButAes(sm4Key, aesKey, accessToken)
+        val encryptedAccessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, accessToken)
         if (githubTokenDao.getOrNull(dslContext, userId, githubTokenType) == null) {
             githubTokenDao.create(dslContext, userId, encryptedAccessToken, tokenType, scope, githubTokenType)
         } else {
@@ -85,7 +82,7 @@ class GithubTokenService @Autowired constructor(
     ): GithubToken? {
         val githubTokenRecord = githubTokenDao.getOrNull(dslContext, userId, tokenType) ?: return null
         return GithubToken(
-            BkCryptoUtil.decryptSm4OrAes(sm4Key, aesKey, githubTokenRecord.accessToken),
+            BkCryptoUtil.decryptSm4OrAes(aesKey, githubTokenRecord.accessToken),
             githubTokenRecord.tokenType,
             githubTokenRecord.scope
         )

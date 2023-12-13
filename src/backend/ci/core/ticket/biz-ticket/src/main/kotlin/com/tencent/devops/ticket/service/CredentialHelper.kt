@@ -52,9 +52,6 @@ class CredentialHelper {
     @Value("\${credential.aes-key}")
     private val aesKey = "C/R%3{?OS}IeGT21"
 
-    @Value("\${credential.sm4-key:}")
-    private val sm4Key: String = ""
-
     fun isValid(credentialCreate: CredentialCreate): Boolean {
         return isValid(
             credentialType = credentialCreate.credentialType,
@@ -140,7 +137,7 @@ class CredentialHelper {
             return null
         }
         try {
-            val credential = BkCryptoUtil.decryptSm4OrAes(sm4Key, aesKey, aesEncryptedCredential)
+            val credential = BkCryptoUtil.decryptSm4OrAes(aesKey, aesEncryptedCredential)
             val credentialEncryptedContent =
                 DHUtil.encrypt(credential.toByteArray(), publicKeyByteArray, serverPrivateKeyByteArray)
             return String(Base64.getEncoder().encode(credentialEncryptedContent))
@@ -153,13 +150,13 @@ class CredentialHelper {
         if (aesCredential.isNullOrBlank()) {
             return null
         }
-        return BkCryptoUtil.decryptSm4OrAes(sm4Key, aesKey, aesCredential)
+        return BkCryptoUtil.decryptSm4OrAes(aesKey, aesCredential)
     }
 
     fun encryptCredential(credential: String?): String? {
         if (credential.isNullOrBlank() || credential == credentialMixer) {
             return null
         }
-        return BkCryptoUtil.encryptSm4ButAes(sm4Key, aesKey, credential)
+        return BkCryptoUtil.encryptSm4ButAes(aesKey, credential)
     }
 }

@@ -74,9 +74,6 @@ class GitOauthService @Autowired constructor(
     @Value("\${aes.git:#{null}}")
     private val aesKey: String = ""
 
-    @Value("\${sm4.git:}")
-    private val sm4Key: String = ""
-
     companion object {
         private val logger = LoggerFactory.getLogger(GitOauthService::class.java)
     }
@@ -272,8 +269,8 @@ class GitOauthService @Autowired constructor(
     private fun doGetAccessToken(userId: String): GitToken? {
         return gitTokenDao.getAccessToken(dslContext, userId)?.let {
             GitToken(
-                accessToken = BkCryptoUtil.decryptSm4OrAes(sm4Key, aesKey, it.accessToken),
-                refreshToken = BkCryptoUtil.decryptSm4OrAes(sm4Key, aesKey, it.refreshToken),
+                accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.accessToken),
+                refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.refreshToken),
                 tokenType = it.tokenType,
                 expiresIn = it.expiresIn,
                 createTime = it.createTime.timestampmilli()
@@ -284,14 +281,14 @@ class GitOauthService @Autowired constructor(
     private fun refreshToken(userId: String, gitToken: GitToken): GitToken {
         val token = gitService.refreshToken(userId, gitToken)
         saveAccessToken(userId, token)
-        token.accessToken = BkCryptoUtil.decryptSm4OrAes(sm4Key, aesKey, token.accessToken)
-        token.refreshToken = BkCryptoUtil.decryptSm4OrAes(sm4Key, aesKey, token.refreshToken)
+        token.accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, token.accessToken)
+        token.refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, token.refreshToken)
         return token
     }
 
     override fun saveAccessToken(userId: String, tGitToken: GitToken): Int {
-        tGitToken.accessToken = BkCryptoUtil.encryptSm4ButAes(sm4Key, aesKey, tGitToken.accessToken)
-        tGitToken.refreshToken = BkCryptoUtil.encryptSm4ButAes(sm4Key, aesKey, tGitToken.refreshToken)
+        tGitToken.accessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, tGitToken.accessToken)
+        tGitToken.refreshToken = BkCryptoUtil.encryptSm4ButAes(aesKey, tGitToken.refreshToken)
         return gitTokenDao.saveAccessToken(dslContext, userId, tGitToken)
     }
 

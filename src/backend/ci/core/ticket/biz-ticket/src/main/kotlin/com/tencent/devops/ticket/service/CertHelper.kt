@@ -45,9 +45,6 @@ class CertHelper {
     @Value("\${cert.aes-key}")
     private val aesKey = "d/R%3{?OS}IeGT21"
 
-    @Value("\${cert.sm4-key:}")
-    private val sm4Key: String = "d/R%3{?OS}IeGT21"
-
     companion object {
         private const val JKS = "JKS"
     }
@@ -137,13 +134,13 @@ class CertHelper {
 
     fun encryptBytes(bytes: ByteArray?): ByteArray? {
         return if (bytes != null) {
-            BkCryptoUtil.encryptSm4ButAes(sm4Key, aesKey, bytes)
+            BkCryptoUtil.encryptSm4ButAes(aesKey, bytes)
         } else null
     }
 
     fun decryptBytes(bytes: ByteArray?): ByteArray? {
         return if (bytes != null) {
-            BkCryptoUtil.decryptSm4OrAes(sm4Key, aesKey, bytes)
+            BkCryptoUtil.decryptSm4OrAes(aesKey, bytes)
         } else null
     }
 

@@ -68,9 +68,6 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
     @Value("\${aes.aesKey}")
     private lateinit var aesKey: String
 
-    @Value("\${sm4.sm4Key:}")
-    private lateinit var sm4Key: String
-
     @Value("\${aes.aesMock}")
     private lateinit var aesMock: String
 
@@ -122,7 +119,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         val fieldType = sensitiveConfReq.fieldType
         val finalFieldValue = if (fieldType == FieldTypeEnum.BACKEND.name) {
             // 字段如果只是给后端使用需要对字段值进行加密
-            BkCryptoUtil.encryptSm4ButAes(sm4Key, aesKey, fieldValue)
+            BkCryptoUtil.encryptSm4ButAes(aesKey, fieldValue)
         } else {
             fieldValue
         }
@@ -182,13 +179,13 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
             val dbFieldType = sensitiveConfRecord.fieldType
             if (dbFieldType == FieldTypeEnum.BACKEND.name && dbFieldType != fieldType) {
                 // 如果字段类型由BACKEND改为其它，需把数据库里字段内容解密存储
-                BkCryptoUtil.decryptSm4OrAes(sm4Key, aesKey, sensitiveConfRecord.fieldValue)
+                BkCryptoUtil.decryptSm4OrAes(aesKey, sensitiveConfRecord.fieldValue)
             } else {
                 null
             }
         } else {
             if (fieldType == FieldTypeEnum.BACKEND.name) {
-                BkCryptoUtil.encryptSm4ButAes(sm4Key, aesKey, fieldValue)
+                BkCryptoUtil.encryptSm4ButAes(aesKey, fieldValue)
             } else {
                 fieldValue
             }
@@ -276,7 +273,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         records?.forEach {
             val fieldType = it.fieldType
             val fieldValue = if (fieldType == FieldTypeEnum.BACKEND.name) {
-                if (isDecrypt) BkCryptoUtil.decryptSm4OrAes(sm4Key, aesKey, it.fieldValue) else aesMock
+                if (isDecrypt) BkCryptoUtil.decryptSm4OrAes(aesKey, it.fieldValue) else aesMock
             } else {
                 it.fieldValue
             }

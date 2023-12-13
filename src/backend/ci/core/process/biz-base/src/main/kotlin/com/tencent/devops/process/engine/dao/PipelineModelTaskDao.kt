@@ -51,14 +51,11 @@ import java.time.LocalDateTime
 @Repository
 class PipelineModelTaskDao {
 
-    @Value("\${sm4.sm4Key:}")
-    private lateinit var sm4Key: String
-
     fun batchSave(dslContext: DSLContext, modelTasks: Collection<PipelineModelTask>) {
         with(T_PIPELINE_MODEL_TASK) {
             modelTasks.forEach { modelTask ->
                 val taskParamJson =
-                    BkCryptoUtil.encryptSm4ButNone(sm4Key, JsonUtil.toJson(modelTask.taskParams, formatted = false))
+                    BkCryptoUtil.encryptSm4ButNone(JsonUtil.toJson(modelTask.taskParams, formatted = false))
                 val additionalOptionsJson = JsonUtil.toJson(modelTask.additionalOptions ?: "", formatted = false)
                 val currentTime = LocalDateTime.now()
                 dslContext.insertInto(this)
@@ -182,7 +179,7 @@ class PipelineModelTaskDao {
                 .where(condition)
                 .fetch()
             for (r in records) {
-                r.set(TASK_PARAMS, BkCryptoUtil.decryptSm4orNone(sm4Key, r.taskParams))
+                r.set(TASK_PARAMS, BkCryptoUtil.decryptSm4orNone(r.taskParams))
             }
             return records
         }
@@ -198,7 +195,7 @@ class PipelineModelTaskDao {
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.`in`(pipelineIds)))
                 .fetch()
             for (r in records) {
-                r.set(TASK_PARAMS, BkCryptoUtil.decryptSm4orNone(sm4Key, r.taskParams))
+                r.set(TASK_PARAMS, BkCryptoUtil.decryptSm4orNone(r.taskParams))
             }
             return records
         }

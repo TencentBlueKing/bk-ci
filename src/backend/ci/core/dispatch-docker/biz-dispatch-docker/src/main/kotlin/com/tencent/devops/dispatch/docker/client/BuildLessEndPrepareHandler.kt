@@ -98,7 +98,7 @@ class BuildLessEndPrepareHandler @Autowired constructor(
             logger.warn("${record.buildId}|${record.vmSeqId} Finish buildless error.", e)
         } finally {
             // 无编译环境清除redisAuth
-            val decryptSecretKey = BkCryptoUtil.decryptSm4ButOther(record.secretKey) { SecurityUtil.decrypt(it) }
+            val decryptSecretKey = BkCryptoUtil.decryptSm4OrOther(record.secretKey) { SecurityUtil.decrypt(it) }
             logger.info("${record.buildId}|${record.vmSeqId} delete dockerBuildKey ${record.id}|$decryptSecretKey")
             redisUtils.deleteDockerBuild(record.id, decryptSecretKey)
         }
