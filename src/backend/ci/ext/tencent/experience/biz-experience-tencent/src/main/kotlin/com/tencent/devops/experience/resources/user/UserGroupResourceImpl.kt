@@ -28,9 +28,11 @@
 package com.tencent.devops.experience.resources.user
 
 import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.user.UserGroupResource
@@ -80,11 +82,17 @@ class UserGroupResourceImpl @Autowired constructor(private val groupService: Gro
     }
 
     @AuditEntry(
-        actionId = ActionId.EXPERIENCE_GROUP_CREATE
+        actionId = ActionId.EXPERIENCE_GROUP_CREATE,
+        subActionIds = [ActionId.EXPERIENCE_GROUP_EDIT]
     )
     override fun commit(userId: String, projectId: String, groupCommit: GroupCommit): Result<Boolean> {
         checkParam(userId, projectId)
-        return Result(groupService.commit(userId, projectId, groupCommit))
+        if (groupCommit.groupHashId == null) { // 新建用户组
+            groupService.createForCommit(groupCommit, userId, projectId)
+        } else { // 更新用户组
+            groupService.updateForCommit(groupCommit, userId, projectId)
+        }
+        return Result(true)
     }
 
     override fun getProjectUsers(userId: String, projectId: String, projectGroup: ProjectGroup?): Result<List<String>> {

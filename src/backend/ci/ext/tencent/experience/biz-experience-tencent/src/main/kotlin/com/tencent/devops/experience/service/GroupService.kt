@@ -575,7 +575,16 @@ class GroupService @Autowired constructor(
         return true
     }
 
-    private fun updateForCommit(
+    @ActionAuditRecord(
+        actionId = ActionId.EXPERIENCE_GROUP_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.EXPERIENCE_GROUP
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.EXPERIENCE_GROUP_EDIT_CONTENT
+    )
+    fun updateForCommit(
         groupCommit: GroupCommit,
         userId: String,
         projectId: String
@@ -601,6 +610,12 @@ class GroupService @Autowired constructor(
             remark = groupCommit.remark,
             updator = userId
         )
+        // audit
+        ActionAuditContext.current()
+            .setInstanceName(groupCommit.name)
+            .setInstanceId(groupId.toString())
+            .setOriginInstance(get(userId, projectId, groupCommit.groupHashId!!))
+            .setInstance(groupCommit)
         // 内部体验人员
         val originalInnerUsers = experienceGroupInnerDao
             .listByGroupIds(dslContext = dslContext, groupIds = setOf(groupId))
@@ -672,7 +687,16 @@ class GroupService @Autowired constructor(
         )
     }
 
-    private fun createForCommit(
+    @ActionAuditRecord(
+        actionId = ActionId.EXPERIENCE_GROUP_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.EXPERIENCE_GROUP
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.EXPERIENCE_GROUP_CREATE_CONTENT
+    )
+    fun createForCommit(
         groupCommit: GroupCommit,
         userId: String,
         projectId: String
@@ -705,6 +729,10 @@ class GroupService @Autowired constructor(
             creator = userId,
             updator = userId
         )
+        ActionAuditContext.current()
+            .setInstanceName(groupCommit.name)
+            .setInstanceId(groupId.toString())
+            .setInstance(groupCommit)
         // 内部体验人员
         groupCommit.members.filter { GroupMemberType.INNER.eq(it.type) }.forEach {
             val gdfn = getGDFNByUser(it.id)

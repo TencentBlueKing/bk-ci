@@ -234,8 +234,6 @@ class ExperienceService @Autowired constructor(
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.EXPERIENCE_TASK
         ),
-        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
-        scopeId = "#projectId",
         content = ActionAuditContent.EXPERIENCE_TASK_VIEW_CONTENT
     )
     fun get(userId: String, experienceHashId: String, checkPermission: Boolean = true): Experience {
