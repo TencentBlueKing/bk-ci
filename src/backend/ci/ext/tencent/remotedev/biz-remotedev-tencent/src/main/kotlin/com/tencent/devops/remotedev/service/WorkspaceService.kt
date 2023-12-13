@@ -1215,9 +1215,5 @@ class WorkspaceService @Autowired constructor(
         private const val defaultPageSize = 20
         private const val DEFAULT_WAIT_TIME = 60
         private const val DISCOUNT_TIME = 10000
-        private val titleList =
-            listOf("项目ID", "实例名称", "状态", "云桌面ID", "系统类型", "机型", "创建人", "拥有者", "共享人")
-        private val userTitleList =
-            listOf("桌面 ID/别名", "内网 IP", "状态", "机型", "地域", "MAC地址", "拥有者", "共享人")
     }
 }
