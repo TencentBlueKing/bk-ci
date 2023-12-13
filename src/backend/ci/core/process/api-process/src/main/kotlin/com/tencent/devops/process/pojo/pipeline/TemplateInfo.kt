@@ -25,42 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.pojo
+package com.tencent.devops.process.pojo.pipeline
 
-import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("代码库模型-基本信息")
-data class RepositoryInfoWithPermission(
-    @ApiModelProperty("仓库哈希ID", required = true)
-    val repositoryHashId: String,
-    @ApiModelProperty("仓库别名", required = true)
-    val aliasName: String,
-    @ApiModelProperty("URL", required = true)
-    val url: String,
-    @ApiModelProperty("类型", required = true)
-    val type: ScmType,
-    @ApiModelProperty("最后更新时间", required = true)
-    val updatedTime: Long,
-    @ApiModelProperty("最后更新用户", required = false)
-    val updatedUser: String?,
-    @ApiModelProperty("创建时间", required = true)
-    val createTime: Long,
-    @ApiModelProperty("创建人", required = true)
-    val createUser: String,
-    @ApiModelProperty("能否被编辑", required = true)
-    val canEdit: Boolean,
-    @ApiModelProperty("能否被删除", required = true)
-    val canDelete: Boolean,
-    @ApiModelProperty("能否被查看", required = true)
-    val canView: Boolean? = null,
-    @ApiModelProperty("能否被使用", required = true)
-    val canUse: Boolean? = null,
-    @ApiModelProperty("认证类型", required = false)
-    val authType: String = "",
-    @ApiModelProperty("svn的protocal类型（http|ssh）", required = false)
-    val svnType: String? = null,
-    @ApiModelProperty("授权身份", required = true)
-    val authIdentity: String? = null
+@ApiModel("子流水线参数键值对")
+data class TemplateInfo(
+    @ApiModelProperty("模板ID", required = true)
+    val templateId: String,
+    @ApiModelProperty("模板名称", required = true)
+    val templateName: String,
+    @ApiModelProperty("版本号", required = true)
+    val version: Long,
+    @ApiModelProperty("版本名称", required = true)
+    val versionName: String,
+    @ApiModelProperty("关联模式", required = true)
+    val instanceType: PipelineInstanceTypeEnum,
+    @ApiModelProperty("版本描述", required = true)
+    val desc: String? = null
 )
