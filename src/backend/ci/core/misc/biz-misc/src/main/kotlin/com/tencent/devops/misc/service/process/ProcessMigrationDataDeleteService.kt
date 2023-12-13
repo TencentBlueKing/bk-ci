@@ -107,7 +107,7 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
         targetDataSourceName: String
     ) {
         if (!pipelineId.isNullOrBlank()) {
-            // 如果流水线ID为空，只需清理与流水线直接相关的数据
+            // 如果流水线ID不为空，只需清理与流水线直接相关的数据
             deleteProjectPipelineRelData(dslContext, projectId, mutableListOf(pipelineId))
             return
         }
@@ -188,6 +188,9 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                 processDataDeleteDao.deletePipelineViewGroup(dslContext, projectId, pipelineId)
                 processDataDeleteDao.deletePipelineRecentUse(dslContext, projectId, pipelineId)
                 processDataDeleteDao.deletePipelineTriggerDetail(dslContext, projectId, pipelineId)
+                processDataDeleteDao.deletePipelineAuditResource(dslContext, projectId, pipelineId)
+                processDataDeleteDao.deletePipelineRemoteAuth(dslContext, projectId, pipelineId)
+                processDataDeleteDao.deletePipelineWebhook(dslContext, projectId, pipelineId)
                 offset += DEFAULT_PAGE_SIZE
             } while (historyInfoRecords?.size == DEFAULT_PAGE_SIZE)
         }

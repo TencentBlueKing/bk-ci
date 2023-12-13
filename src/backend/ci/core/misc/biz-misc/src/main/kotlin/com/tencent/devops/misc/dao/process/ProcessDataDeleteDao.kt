@@ -27,6 +27,7 @@
 
 package com.tencent.devops.misc.dao.process
 
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.model.process.tables.TAuditResource
 import com.tencent.devops.model.process.tables.TPipelineBuildContainer
 import com.tencent.devops.model.process.tables.TPipelineBuildDetail
@@ -49,6 +50,7 @@ import com.tencent.devops.model.process.tables.TPipelineLabelPipeline
 import com.tencent.devops.model.process.tables.TPipelineModelTask
 import com.tencent.devops.model.process.tables.TPipelinePauseValue
 import com.tencent.devops.model.process.tables.TPipelineRecentUse
+import com.tencent.devops.model.process.tables.TPipelineRemoteAuth
 import com.tencent.devops.model.process.tables.TPipelineResource
 import com.tencent.devops.model.process.tables.TPipelineResourceVersion
 import com.tencent.devops.model.process.tables.TPipelineSetting
@@ -61,6 +63,7 @@ import com.tencent.devops.model.process.tables.TPipelineViewGroup
 import com.tencent.devops.model.process.tables.TPipelineViewTop
 import com.tencent.devops.model.process.tables.TPipelineViewUserLastView
 import com.tencent.devops.model.process.tables.TPipelineViewUserSettings
+import com.tencent.devops.model.process.tables.TPipelineWebhook
 import com.tencent.devops.model.process.tables.TPipelineWebhookBuildParameter
 import com.tencent.devops.model.process.tables.TPipelineWebhookQueue
 import com.tencent.devops.model.process.tables.TProjectPipelineCallback
@@ -408,6 +411,33 @@ class ProcessDataDeleteDao {
 
     fun deletePipelineTriggerDetail(dslContext: DSLContext, projectId: String, pipelineId: String) {
         with(TPipelineTriggerDetail.T_PIPELINE_TRIGGER_DETAIL) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
+                .execute()
+        }
+    }
+
+    fun deletePipelineAuditResource(dslContext: DSLContext, projectId: String, pipelineId: String) {
+        with(TAuditResource.T_AUDIT_RESOURCE) {
+            dslContext.deleteFrom(this)
+                .where(
+                    PROJECT_ID.eq(projectId)
+                        .and(RESOURCE_TYPE.eq(AuthResourceType.PIPELINE_DEFAULT.value)).and(RESOURCE_ID.eq(pipelineId))
+                )
+                .execute()
+        }
+    }
+
+    fun deletePipelineRemoteAuth(dslContext: DSLContext, projectId: String, pipelineId: String) {
+        with(TPipelineRemoteAuth.T_PIPELINE_REMOTE_AUTH) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
+                .execute()
+        }
+    }
+
+    fun deletePipelineWebhook(dslContext: DSLContext, projectId: String, pipelineId: String) {
+        with(TPipelineWebhook.T_PIPELINE_WEBHOOK) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
                 .execute()
