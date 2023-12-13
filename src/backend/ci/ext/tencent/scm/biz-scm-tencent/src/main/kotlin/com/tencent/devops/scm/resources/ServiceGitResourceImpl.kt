@@ -62,6 +62,7 @@ import com.tencent.devops.scm.pojo.GitCreateBranch
 import com.tencent.devops.scm.pojo.GitCreateMergeRequest
 import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitFileInfo
+import com.tencent.devops.scm.pojo.GitListMergeRequest
 import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -808,6 +809,20 @@ class ServiceGitResourceImpl @Autowired constructor(
             tokenType = tokenType,
             gitProjectId = gitProjectId,
             gitCreateBranch = gitCreateBranch
+        )
+    }
+
+    override fun listMergeRequest(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        gitListMergeRequest: GitListMergeRequest
+    ): Result<List<GitMrInfo>> {
+        return gitService.listMergeRequest(
+            token = token,
+            tokenType = tokenType,
+            gitProjectId = gitProjectId,
+            gitListMergeRequest = gitListMergeRequest
         )
     }
 

@@ -61,6 +61,7 @@ import com.tencent.devops.scm.pojo.GitCreateBranch
 import com.tencent.devops.scm.pojo.GitCreateMergeRequest
 import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitFileInfo
+import com.tencent.devops.scm.pojo.GitListMergeRequest
 import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -1160,6 +1161,22 @@ interface ServiceGitResource {
         gitProjectId: String,
         gitCreateBranch: GitCreateBranch
     ): Result<Boolean>
+
+    @ApiOperation("获取合并请求列表")
+    @POST
+    @Path("/listMergeRequest")
+    fun listMergeRequest(
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH,
+        @ApiParam(value = "项目 ID 或 项目全路径 project_full_path")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        gitListMergeRequest: GitListMergeRequest
+    ): Result<List<GitMrInfo>>
 
     @ApiOperation("创建合并请求")
     @POST
