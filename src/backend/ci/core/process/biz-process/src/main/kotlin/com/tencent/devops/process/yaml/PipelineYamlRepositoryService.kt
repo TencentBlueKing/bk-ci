@@ -281,6 +281,37 @@ class PipelineYamlRepositoryService @Autowired constructor(
             filePath = filePath
         ).use {
             it.lock()
+            createOrUpdateYamlPipeline(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version,
+                versionName = versionName,
+                repoHashId = repoHashId,
+                filePath = filePath,
+                yamlFile = yamlFile,
+                webhooks = webhooks
+            )
+        }
+    }
+
+    private fun createOrUpdateYamlPipeline(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        versionName: String,
+        repoHashId: String,
+        filePath: String,
+        yamlFile: YamlPathListEntry,
+        webhooks: List<PipelineWebhookVersion>
+    ) {
+        val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = filePath
+        )
+        if (pipelineYamlInfo == null) {
             pipelineYamlService.save(
                 projectId = projectId,
                 repoHashId = repoHashId,
@@ -293,6 +324,27 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 versionName = versionName,
                 webhooks = webhooks
             )
+        } else {
+            val pipelineYamlVersion = pipelineYamlService.getPipelineYamlVersion(
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = yamlFile.yamlPath,
+                blobId = yamlFile.blobId!!
+            )
+            if (pipelineYamlVersion == null) {
+                pipelineYamlService.update(
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    filePath = yamlFile.yamlPath,
+                    blobId = yamlFile.blobId,
+                    ref = yamlFile.ref,
+                    pipelineId = pipelineId,
+                    version = version,
+                    versionName = versionName,
+                    userId = userId,
+                    webhooks = webhooks
+                )
+            }
         }
     }
 
