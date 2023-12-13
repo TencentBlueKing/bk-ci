@@ -169,7 +169,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId = nodeId, projectId = projectId)
             ?: return null
         ActionAuditContext.current()
-            .setInstanceName(agentRecord.hostname)
+            .setInstanceName(agentRecord.nodeId.toString())
             .setInstanceId(agentRecord.nodeId.toString())
         return getThirdPartyAgentDetail(agentRecord, userId)
     }
@@ -936,7 +936,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             }
             ActionAuditContext.current()
                 .setInstanceId(record.nodeId.toString())
-                .setInstanceName(record.hostname)
+                .setInstanceName(record.nodeId.toString())
             val count = thirdPartyAgentDao.updateStatus(
                 dslContext = context,
                 id = record.id,
