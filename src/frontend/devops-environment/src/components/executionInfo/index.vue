@@ -1,8 +1,8 @@
 <template>
     <div ref="infoBox" class="step-execution-info-box" :style="boxStyles">
         <div class="tab-container">
-            <div class="tab-title">
-                <span class="host-ip">{{ isFile }}</span>
+            <div :class="['tab-title', ipStatus]">
+                <span class="host-ip">{{ bkCloudId }}:{{ ip }}</span>
             </div>
             <div class="split-line" />
             <div
@@ -26,21 +26,14 @@
                     {{ $t('environment.上传源信息') }}
                 </div>
             </template>
-            <div
-                v-if="isTask && !isFile"
-                class="tab-item"
-                :class="{ active: activePanel === 'variable' }"
-                @click="handleTogglePanel('variable')">
-                {{ $t('environment.变量明细') }}
-            </div>
             <div class="extend-box">
-                <div
+                <!-- <div
                     v-if="activePanel === 'scriptLog'"
                     class="extend-item"
                     v-bk-tooltips="$t('environment.下载日志')"
                     @click="handleDownload">
                     <icon name="download" size="16" />
-                </div>
+                </div> -->
                 <div
                     v-if="activePanel === 'scriptLog'"
                     class="extend-item"
@@ -78,13 +71,10 @@
                 ref="view"
                 :key="activePanel"
                 :is="renderCom"
-                :name="`${stepInstanceId}_${'host.ip'}_${retryCount}`"
                 :step-instance-id="stepInstanceId"
-                :ip="123"
-                :batch="123"
-                :retry-count="retryCount"
                 :font-size="fontSize"
                 :mode="activePanel"
+                :host-id="hostId"
                 :line-feed="isScriptLogLineFeed"
                 v-bind="$attrs"
                 v-on="$listeners" />
@@ -127,25 +117,10 @@
         name: '',
         inheritAttrs: false,
         props: {
-            name: String,
-            host: {
-                type: Object,
-                required: true
-            },
-            stepInstanceId: {
-                type: Number
-            },
-            retryCount: {
-                type: Number,
-                required: true
-            },
-            isTask: {
-                type: Boolean,
-                default: false
-            },
-            jobInstanceType: {
-                type: String
-            }
+            ip: String,
+            bkCloudId: Number,
+            hostId: Number,
+            ipStatus: String
         },
         data () {
             let fontSize = parseInt(localStorage.getItem(STEP_FONT_SIZE_KEY), 10)
@@ -164,6 +139,11 @@
             }
         },
         computed: {
+            jobInstanceType () {
+                // 脚本执行 - SCRIPT
+                // 文件分发 - FILE
+                return this.$route.query.jobInstanceType
+            },
             isFile () {
                 return this.jobInstanceType === 'FILE'
             },

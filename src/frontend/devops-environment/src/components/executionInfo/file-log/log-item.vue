@@ -37,14 +37,25 @@
             const handleToggle = () => {
                 listeners['on-toggle'](data.taskId, !isContentOpen)
             }
+            const statusDescMap = (status) => {
+                console.log(status, 'status')
+                const descMap = {
+                    1: parent.$t('environment.等待开始'),
+                    2: parent.$t('environment.上传中'),
+                    3: parent.$t('environment.下载中'),
+                    4: parent.$t('environment.成功'),
+                    5: parent.$t('environment.失败')
+                }
+                return descMap[status]
+            }
             return (
             <div class={classes}>
                 <div class="log-header" onClick={handleToggle}>
                     <icon name="down-shape" size="14" class="log-toggle" />
-                    <span>{ parent.$t('environment.文件名') }：{ data.fileName }</span>
+                    <span>{ parent.$t('environment.文件名') }：{ data.srcPath }</span>
                     <span>{ parent.$t('environment.文件大小') }：{ data.fileSize }</span>
-                    <span>{ parent.$t('environment.状态') }：<span class="status">{ data.statusDesc }</span></span>
-                    <span>{ parent.$t('environment.源服务器 IP') }：{ data.srcIp }</span>
+                    <span>{ parent.$t('environment.状态') }：<span class="status">{ statusDescMap(data.status) }</span></span>
+                    <span>{ parent.$t('environment.源服务器 IP') }：{ data.srcHost.ip }</span>
                     <span>{ parent.$t('environment.速率') }：{ data.speed }</span>
                     <span>{ parent.$t('environment.进度') }：{ data.progress }</span>
                 </div>
@@ -89,7 +100,7 @@
             }
 
             .log-toggle {
-                transform: rotateZ(-90deg);
+                transform: rotateZ(0deg);
             }
         }
 
@@ -146,7 +157,7 @@
             top: 4px;
             left: -30px;
             font-size: 24px;
-            transform: rotateZ(0deg);
+            transform: rotateZ(-90deg);
             transition: transform 0.15s;
         }
 

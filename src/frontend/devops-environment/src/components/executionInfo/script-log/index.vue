@@ -7,15 +7,12 @@
         <div class="log-wraper">
             <div id="executeScriptLog" style="height: 100%;" />
         </div>
-        <div class="log-status" v-if="ip && isRunning">
-            <div class="log-loading">{{ $t('history.执行中') }}</div>
-        </div>
         <div class="log-action-box">
             <div class="action-item" v-bk-tooltips="backTopTips" @click="handleScrollTop">
-                <icon name="un-to-top" size="16" />
+                <icon name="up-to-top" size="20" />
             </div>
             <div class="action-item action-bottom" v-bk-tooltips="backBottomTips" @click="handleScrollBottom">
-                <icon name="un-to-top" size="16" />
+                <icon name="up-to-top" size="20" />
             </div>
         </div>
     </div>
@@ -25,7 +22,7 @@
     import 'ace-builds/src-noconflict/mode-text'
     import 'ace-builds/src-noconflict/theme-monokai'
     import 'ace-builds/src-noconflict/ext-searchbox'
-    // import mixins from '../../mixins'
+    import { mapActions } from 'vuex'
 
     export default {
         // mixins: [
@@ -33,19 +30,9 @@
         // ],
         props: {
             name: String,
-            stepInstanceId: {
-                type: Number,
-                required: true
-            },
+            hostId: Number,
             ip: {
                 type: String
-            },
-            batch: {
-                type: [Number, String]
-            },
-            retryCount: {
-                type: Number,
-                required: true
             },
             logFilter: {
                 type: String,
@@ -64,10 +51,19 @@
             return {
                 // 日志loading，切换主机的时候才显示
                 isLoading: true,
-                // 是否执行中
-                isRunning: false,
                 // 自动动滚动到底部
                 isWillAutoScroll: true
+            }
+        },
+        computed: {
+            jobInstanceId () {
+                return this.$route.query.jobInstanceId
+            },
+            stepInstanceId () {
+                return this.$route.query.stepInstanceId
+            },
+            projectId () {
+                return this.$route.params.projectId
             }
         },
         watch: {
@@ -81,7 +77,7 @@
                     // 日志自动滚动
                     this.isLoading = true
                     this.autoScrollTimeout()
-                    this.fetchLogContent()
+                    // this.fetchLogContent()
                 },
                 immediate: true
             },
@@ -102,6 +98,11 @@
                     })
                 },
                 immediate: true
+            },
+            hostId (val) {
+                if (val) {
+                    this.fetchLogContent()
+                }
             }
         },
         created () {
@@ -124,6 +125,9 @@
             this.initEditor()
         },
         methods: {
+            ...mapActions('environment', [
+                'getJobInstanceLogs'
+            ]),
             /**
              * @desc 获取脚本日志
              */
@@ -135,29 +139,22 @@
                         this.editor.clearSelection()
                     }
                 }
-                // TaskExecuteService.fetchLogContentOfIp({
-                //     stepInstanceId: this.stepInstanceId,
-                //     retryCount: this.retryCount,
-                //     ip: this.ip,
-                //     batch: this.batch
-                // })
-                //     .then(({
-                //         finished,
-                //         logContent
-                //     }) => {
-                //         this.isRunning = !finished
-                //         this.$nextTick(() => {
-                //             // this.editor.setValue(_.trim(logContent || '', '\n'))
-                //             this.editor.clearSelection()
-                //         })
-                //         // 当前主机执行结束
-                //         if (!finished) {
-                //             this.$pollingQueueRun(this.fetchLogContent)
-                //         }
-                //     })
-                //     .finally(() => {
-                //         this.isLoading = false
-                //     })
+                this.isLoading = true
+
+                this.getJobInstanceLogs({
+                    projectId: this.projectId,
+                    jobInstanceId: this.jobInstanceId,
+                    stepInstanceId: this.stepInstanceId,
+                    hostIdList: [this.hostId]
+                })
+                    .then(res => {
+                        const logContent = res.scriptTaskLogs[0].logContent || ''
+                        this.editor.setValue(logContent)
+                        this.editor.clearSelection()
+                    })
+                    .finally(() => {
+                        this.isLoading = false
+                    })
             },
             initEditor () {
                 const editor = ace.edit('executeScriptLog')
@@ -272,6 +269,7 @@
                 .ace_scroller {
                     padding-top: 4px;
                     margin-bottom: -4px;
+                    
                 }
 
                 .ace_hidden-cursors .ace_cursor {
@@ -284,6 +282,9 @@
 
                 .ace_scrollbar-v,
                 .ace_scrollbar-h {
+                    &::-webkit-scrollbar {
+                        background: #1d1d1d !important;
+                    }
                     &::-webkit-scrollbar-thumb {
                         background-color: #3b3c42;
                         border: 1px solid #63656e;

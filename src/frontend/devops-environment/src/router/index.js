@@ -118,7 +118,7 @@ const routes = [
         ]
     },
     {
-        path: 'environment/:projectId?/execute/detail/:jobInstanceId/:jobInstanceType',
+        path: 'environment/:projectId?/execute/step',
         name: 'executionDetail',
         component: executionDetail
     }

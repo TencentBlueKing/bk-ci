@@ -10,6 +10,31 @@ const STATUS_STATE_EXCEPTION = 9
 const STATUS_FORCEDING = 10
 const STATUS_FORCED_SUCCESS = 11
 
+const AGENT_STATUS_SUCCESS = 9
+const AGENT_STATUS_RUNNING = 7
+const AGENT_STATUS_WAITING = 5
+const AGENT_STATUS_LAST_SUCCESS = 3
+
+export const getAgentStatus = (status) => {
+    if ([
+        AGENT_STATUS_SUCCESS,
+        AGENT_STATUS_LAST_SUCCESS
+    ].includes(status)) {
+        return 'success'
+    }
+    if ([
+        AGENT_STATUS_RUNNING
+    ].includes(status)) {
+        return 'running'
+    }
+    if ([
+        AGENT_STATUS_WAITING
+    ].includes(status)) {
+        return 'waiting'
+    }
+    return 'fail'
+}
+
 export const checkStatus = (status) => {
     if ([
         STATUS_SUCCESS,

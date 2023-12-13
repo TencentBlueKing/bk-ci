@@ -1,15 +1,84 @@
 <template>
     <bk-table
-        :data="data"
+        :data="list"
         :size="size"
         height="100%"
-        :outer-border="false">
-        <bk-table-column type="index" label="序列" width="60"></bk-table-column>
-        <bk-table-column label="名称/内网IP" prop="ip"></bk-table-column>
-        <bk-table-column label="来源" prop="source"></bk-table-column>
-        <bk-table-column label="状态" prop="status"></bk-table-column>
-        <bk-table-column label="创建时间" prop="create_time"></bk-table-column>
-        <bk-table-column type="setting">
+        class="ip-table"
+        :row-class-name="rowClassName"
+        @row-click="handleRowClick"
+    >
+        <bk-table-column
+            label="IP"
+            prop="ip"
+            :min-width="150"
+        >
+            <template slot-scope="{ row }">
+                <div
+                    class="ip-box"
+                    :class="row.result">
+                    {{ row.ip }}
+                </div>
+            </template>
+        </bk-table-column>
+        <bk-table-column
+            v-if="allRenderColumnMap.ipv6"
+            label="IPv6"
+            prop="ipv6"
+            width="150"
+        >
+            <template slot-scope="{ row }">
+                {{ row.ipv6 || '--' }}
+            </template>
+        </bk-table-column>
+        <bk-table-column
+            v-if="allRenderColumnMap.totalTime"
+            :label="$t('environment.耗时(s)')"
+            prop="totalTime"
+            sortable
+            width="100"
+        >
+            <template slot-scope="{ row }">
+                {{ row.totalTime / 1000 }}
+            </template>
+        </bk-table-column>
+        <bk-table-column
+            v-if="allRenderColumnMap.bkCloudId"
+            :label="$t('environment.管控区域')"
+            prop="bkCloudId"
+            sortable
+            width="100"
+        >
+            <template slot-scope="{ row }">
+                {{ row.bkCloudAreaName || row.bkCloudId || '--' }}
+            </template>
+        </bk-table-column>
+        <bk-table-column
+            v-if="allRenderColumnMap.exitCode"
+            :label="$t('environment.返回码')"
+            prop="exitCode"
+            width="100"
+            sortable
+        >
+        </bk-table-column>
+        <bk-table-column
+            v-if="allRenderColumnMap.agentId"
+            label="Agent ID"
+            prop="agentId"
+            width="100"
+        >
+        </bk-table-column>
+        <bk-table-column
+            v-if="allRenderColumnMap.bkHostId"
+            label="Host ID"
+            prop="bkHostId"
+            sortable
+            width="100"
+        >
+        </bk-table-column>
+        <bk-table-column
+            type="setting"
+            width="40"
+        >
             <bk-table-setting-content
                 :fields="tableColumn"
                 :selected="selectedTableColumn"
@@ -21,6 +90,15 @@
 <script>
     const TABLE_COLUMN_CACHE = 'env_ip_list_columns'
     export default {
+        props: {
+            list: {
+                type: Array,
+                default: () => []
+            },
+            ip: String,
+            bkCloudId: Number,
+            hostId: Number
+        },
         data () {
             return {
                 tableColumn: [],
@@ -39,8 +117,33 @@
         created () {
             this.tableColumn = [
                 {
-                    id: 'id',
-                    label: 'ID'
+                    id: 'ip',
+                    label: 'IP',
+                    disabled: true
+                },
+                {
+                    id: 'ipv6',
+                    label: 'IPv6'
+                },
+                {
+                    id: 'totalTime',
+                    label: this.$t('environment.耗时(s)')
+                },
+                {
+                    id: 'bkCloudId',
+                    label: this.$t('environment.管控区域')
+                },
+                {
+                    id: 'exitCode',
+                    label: this.$t('environment.返回码')
+                },
+                {
+                    id: 'agentId',
+                    label: 'Agent ID'
+                },
+                {
+                    id: 'bkHostId',
+                    label: 'Host ID'
                 }
             ]
             const columnsCache = JSON.parse(localStorage.getItem(TABLE_COLUMN_CACHE))
@@ -49,7 +152,13 @@
                 this.tableSize = columnsCache.size
             } else {
                 this.selectedTableColumn = Object.freeze([
-                    { id: 'name' }
+                    { id: 'ip' },
+                    { id: 'ipv6' },
+                    { id: 'totalTime' },
+                    { id: 'bkCloudId' },
+                    { id: 'exitCode' },
+                    { id: 'agentId' },
+                    { id: 'bkHostId' }
                 ])
             }
         },
@@ -61,17 +170,30 @@
                     columns: fields,
                     size
                 }))
+            },
+
+            handleRowClick (row) {
+                this.$emit('update:hostId', row.bkHostId)
+                this.$emit('update:ip', row.ip)
+                this.$emit('update:bkCloudId', row.bkCloudId)
+                this.$emit('update:ipStatus', row.result)
+            },
+
+            rowClassName ({ row }) {
+                return row && row.bkHostId === this.hostId ? 'active' : ''
             }
         }
     }
 </script>
 
-<style>
-    .dot-menu {
-        display: inline-block;
-        vertical-align: middle;
+<style lang="scss">
+    .ip-table .bk-table-body tr {
+        cursor: pointer;
     }
-
+    .bk-table-row.active,
+    .bk-table-row.hover-row>td {
+       background-color: #f0f1f5 !important;
+    }
     .tippy-tooltip.dot-menu-theme {
         padding: 0;
     }
@@ -113,6 +235,43 @@
         &:hover {
             background-color: #eaf3ff;
             color: #3a84ff;
+        }
+    }
+
+    .ip-box{
+        position: relative;
+        left: 10px;
+        &.success,
+        &.fail,
+        &.running,
+        &.waiting {
+            &::before {
+                position: absolute;
+                width: 3px;
+                height: 12px;
+                margin-right: 1em;
+                margin-left: -13px;
+                background: #2dc89d;
+                content: "";
+            }
+        }
+
+        &.fail {
+            &::before {
+                background: #ea3636;
+            }
+        }
+
+        &.running {
+            &::before {
+                background: #699df4;
+            }
+        }
+
+        &.waiting {
+            &::before {
+                background: #dcdee5;
+            }
         }
     }
 </style>

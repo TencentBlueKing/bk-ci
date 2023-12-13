@@ -347,5 +347,14 @@
     "可以尝试 调整关键词 或 清空筛选条件": "You can try adjusting keywords or clearing the filter conditions",
     "清空筛选条件": "Clear Filter Conditions",
     "暂无数据": "No Data",
-    "搜索结果为空": "Search result is empty"
+    "搜索结果为空": "Search result is empty",
+    "管控区域": "BK-Net",
+    "返回码": "Retcode",
+    "耗时(s)": "Duration(s)",
+    "按 Esc 即可退出全屏模式": "Press esc to exit full screen mode",
+    "成功": "Success",
+    "等待开始": "Waiting to start",
+    "上传中": "Uploading",
+    "下载中": "Downloading",
+    "失败": "Fail"
 }

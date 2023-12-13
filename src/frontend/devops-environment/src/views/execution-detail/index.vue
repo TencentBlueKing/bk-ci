@@ -1,21 +1,21 @@
 <template>
-    <div class="execution-detail">
+    <div class="execution-detail" v-bkloading="{ isLoading }">
         <header class="header-wrapper">
             <bk-breadcrumb separator=">">
                 <bk-breadcrumb-item :to="{ path: '/console/environment' }">{{ $t('environment.environmentManage') }}</bk-breadcrumb-item>
-                <bk-breadcrumb-item>{{ jobInstanceData.jobInstance.name }}</bk-breadcrumb-item>
+                <bk-breadcrumb-item>{{ stepInstanceData.name }}</bk-breadcrumb-item>
             </bk-breadcrumb>
-            <div class="status-box" :class="statusStyleMap[checkStatus(jobInstanceData.jobInstance.status)]">
+            <div class="status-box" :class="statusStyleMap[checkStatus(stepInstanceData.status)]">
                 <div class="status">
                     <span>{{ $t('environment.状态') }}：</span>
-                    <span class="status-text">{{ stepStatusMap[jobInstanceData.jobInstance.status] }}</span>
+                    <span class="status-text">{{ stepStatusMap[stepInstanceData.status] }}</span>
                 </div>
                 <div class="time">
                     <span>{{ $t('environment.总耗时') }}：</span>
                     <span
                         class="value"
                     >
-                        {{ jobInstanceData.jobInstance.totalTime / 1000 }}s
+                        {{ stepInstanceData.totalTime / 1000 }}s
                     </span>
                 </div>
                 <div class="action">
@@ -28,8 +28,8 @@
                 <div class="step-info-wrapper">
                     <div class="step-type-text">{{ stepTypeText }}</div>
                     <div class="step-name-box">
-                        <div class="step-name-text">
-                            {{ jobInstanceData.jobInstance.name }}
+                        <div class="step-name-text" v-bk-overflow-tips>
+                            {{ stepInstanceData.name }}
                         </div>
                     </div>
                 </div>
@@ -37,26 +37,41 @@
             </div>
             <div class="step-execute-host-group">
                 <div class="group-tab">
-                    <div class="tab-item active">
-                        <div class="group-name" v-bk-overflow-tips>{{ stepStatusMap[jobInstanceData.jobInstance.status] }}</div>
-                        <div class="group-nums">{{ jobInstanceData.stepInstanceList.length }}</div>
+                    <div :class="{
+                             'tab-item': true,
+                             'active': activeGroupIndex === index
+                         }"
+                        v-for="(value, key, index) in groupListMap"
+                        :key="key"
+                        @click="activeGroupIndex = index"
+                    >
+                        <div class="group-name" v-bk-overflow-tips>{{ key }}</div>
+                        <div class="group-nums">{{ value.length }}</div>
                     </div>
                 </div>
             </div>
         </div>
-
         <div
             ref="detailContainer"
             class="detail-container"
             :style="defailContainerStyles">
             <div class="container-left" v-bkloading="{ isLoading: isHostLoading }">
                 <!-- 主机列表 -->
-                <ip-list />
+                <ip-list
+                    :list="ipList"
+                    :ip.sync="activeIp"
+                    :ip-status.sync="activeIpStatus"
+                    :host-id.sync="activeHostId"
+                    :bk-cloud-id.sync="activeBkCloudId"
+                />
             </div>
             <div class="container-right">
                 <!-- 执行日志 -->
                 <execution-info
-                    :job-instance-type="jobInstanceType"
+                    :ip="activeIp"
+                    :host-id="activeHostId"
+                    :bk-cloud-id="activeBkCloudId"
+                    :ip-status="activeIpStatus"
                 />
             </div>
         </div>
@@ -69,7 +84,8 @@
     import { mapActions } from 'vuex'
     import {
         statusStyleMap,
-        checkStatus
+        checkStatus,
+        getAgentStatus
     } from '@/utils/execution'
     export default {
         components: {
@@ -78,11 +94,17 @@
         },
         data () {
             return {
-                jobInstanceData: {},
+                stepInstanceData: {},
                 stepStatusMap: {},
                 statusStyleMap,
                 checkStatus,
-                stepInstanceId: ''
+                groupListMap: {},
+                activeGroupIndex: -1,
+                isLoading: false,
+                activeHostId: 0,
+                activeIp: '',
+                activeBkCloudId: 0,
+                activeIpStatus: ''
             }
         },
         computed: {
@@ -90,12 +112,15 @@
                 return this.$route.params.projectId
             },
             jobInstanceId () {
-                return this.$route.params.jobInstanceId
+                return this.$route.query.jobInstanceId
+            },
+            stepInstanceId () {
+                return this.$route.query.stepInstanceId
             },
             jobInstanceType () {
                 // 脚本执行 - SCRIPT
                 // 文件分发 - FILE
-                return this.$route.params.jobInstanceType
+                return this.$route.query.jobInstanceType
             },
             stepTypeText () {
                 const typeTextMap = {
@@ -103,6 +128,19 @@
                     FILE: this.$t('environment.fileTransfer')
                 }
                 return typeTextMap[this.jobInstanceType]
+            },
+            ipList () {
+                const key = Object.keys(this.groupListMap)[this.activeGroupIndex]
+                this.activeHostId = this.groupListMap[key] && this.groupListMap[key].length && this.groupListMap[key][0].bkHostId
+                this.activeIp = this.groupListMap[key] && this.groupListMap[key].length && this.groupListMap[key][0].ip
+                this.activeBkCloudId = this.groupListMap[key] && this.groupListMap[key].length && this.groupListMap[key][0].bkCloudId
+                this.activeIpStatus = this.groupListMap[key] && this.groupListMap[key].length && getAgentStatus(this.groupListMap[key][0].status)
+                return this.groupListMap[key] && this.groupListMap[key].map(i => {
+                    return {
+                        ...i,
+                        result: getAgentStatus(i.status)
+                    }
+                })
             }
         },
         created () {
@@ -119,67 +157,37 @@
                 10: this.$t('environment.步骤强制终止中'),
                 11: this.$t('environment.步骤强制终止成功')
             }
-            this.fetchJobInstanceStatus()
+            this.fetchStepInstanceStatus()
         },
         methods: {
             ...mapActions('environment', [
-                'getJobInstanceStatus'
+                'getStepInstanceStatus'
             ]),
-            fetchJobInstanceStatus () {
-                try {
-                    const { data } = this.getJobInstanceStatus({
-                        projectId: this.projectId,
-                        jobInstanceId: this.jobInstanceId
+            fetchStepInstanceStatus () {
+                this.isLoading = true
+                this.getStepInstanceStatus({
+                    projectId: this.projectId,
+                    jobInstanceId: this.jobInstanceId,
+                    stepInstanceId: this.stepInstanceId
+                }).then(res => {
+                    this.stepInstanceData = res
+
+                    this.stepInstanceData.stepHostResultList.forEach(item => {
+                        const key = item.statusDesc + item.tag
+                        if (!this.groupListMap[key]) {
+                            this.groupListMap[key] = []
+                        }
+                        this.groupListMap[key].push(item)
                     })
-                    this.jobInstanceData = {
-                        finished: true,
-                        jobInstance: {
-                            name: '快速执行脚本_20231110150105256',
-                            status: 3,
-                            createTime: 1699599665256,
-                            startTime: 1699599665448,
-                            endTime: 1699599666663,
-                            totalTime: 1215,
-                            jobInstanceId: 20003562849,
-                            bkBizId: 2005000002,
-                            bkScopeType: 'biz',
-                            bkScopeId: '2005000002'
-                        },
-                        stepInstanceList: [
-                            {
-                                stepInstanceId: 20004250944,
-                                type: 1,
-                                name: '快速执行脚本_20231110150105256',
-                                stepStatus: 3,
-                                createTime: 1699599665256,
-                                startTime: 1699599665482,
-                                endTime: 1699599666647,
-                                totalTime: 1165,
-                                stepRetries: 0,
-                                stepIpResultList: [
-                                    {
-                                        ip: '9.146.98.67',
-                                        bkHostId: 2000000008,
-                                        bkCloudId: 0,
-                                        status: 9,
-                                        tag: '',
-                                        exitCode: 0,
-                                        errorCode: 0,
-                                        startTime: 1699599665627,
-                                        endTime: 1699599665871,
-                                        totalTime: 244
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                    console.log(data, 1111111)
-                } catch (error) {
+                    this.activeGroupIndex = 0
+                }).catch(error => {
                     this.$bkMessage({
                         theme: 'error',
                         message: error.message || error
                     })
-                }
+                }).finally(() => {
+                    this.isLoading = false
+                })
             }
         }
     }
@@ -294,7 +302,7 @@
             }
             .step-name-text {
                 height: 24px;
-                max-width: calc(100% - 65px);
+                max-width: 600px;
                 overflow: hidden;
                 font-size: 18px;
                 line-height: 24px;
