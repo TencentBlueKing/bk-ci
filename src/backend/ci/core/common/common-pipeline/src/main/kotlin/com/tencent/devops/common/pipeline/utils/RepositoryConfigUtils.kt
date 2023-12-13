@@ -173,7 +173,12 @@ object RepositoryConfigUtils {
                     repositoryName = EnvUtils.parseEnv(element.repositoryName, variables),
                     repositoryType = element.repositoryType ?: RepositoryType.ID
                 )
-                Triple(ScmType.GITHUB, element.eventType, repositoryConfig)
+                val eventType = if (element.eventType == CodeEventType.PULL_REQUEST_ACCEPT) {
+                    CodeEventType.PULL_REQUEST
+                } else {
+                    element.eventType
+                }
+                Triple(ScmType.GITHUB, eventType, repositoryConfig)
             }
 
             is CodeTGitWebHookTriggerElement -> {
