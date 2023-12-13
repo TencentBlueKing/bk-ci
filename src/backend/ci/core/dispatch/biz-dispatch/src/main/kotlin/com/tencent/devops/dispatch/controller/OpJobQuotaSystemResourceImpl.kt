@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.controller
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.api.OpJobQuotaSystemResource
 import com.tencent.devops.dispatch.pojo.JobQuotaSystem
@@ -51,11 +52,14 @@ class OpJobQuotaSystemResourceImpl @Autowired constructor(
         return Result(jobQuotaManagerService.listSystemQuota())
     }
 
-    override fun get(jobQuotaVmType: JobQuotaVmType): Result<List<JobQuotaSystem>> {
+    override fun get(jobQuotaVmType: JobQuotaVmType, channelCode: String?): Result<List<JobQuotaSystem>> {
         return if (jobQuotaVmType == JobQuotaVmType.ALL) {
-            Result(jobQuotaManagerService.getSystemQuota())
+            Result(jobQuotaManagerService.listSystemQuota())
         } else {
-            Result(listOf(jobQuotaManagerService.getSystemQuota(jobQuotaVmType)))
+            Result(listOf(jobQuotaManagerService.getSystemQuota(
+                jobQuotaVmType,
+                channelCode ?: ChannelCode.BS.name
+            )))
         }
     }
 
@@ -63,8 +67,11 @@ class OpJobQuotaSystemResourceImpl @Autowired constructor(
         return Result(jobQuotaManagerService.addSystemQuota(jobQuota))
     }
 
-    override fun delete(jobQuotaVmType: JobQuotaVmType): Result<Boolean> {
-        return Result(jobQuotaManagerService.deleteSystemQuota(jobQuotaVmType))
+    override fun delete(jobQuotaVmType: JobQuotaVmType, channelCode: String?): Result<Boolean> {
+        return Result(jobQuotaManagerService.deleteSystemQuota(
+            jobQuotaVmType,
+            channelCode ?: ChannelCode.BS.name
+        ))
     }
 
     override fun update(jobQuotaVmType: JobQuotaVmType, jobQuota: JobQuotaSystem): Result<Boolean> {

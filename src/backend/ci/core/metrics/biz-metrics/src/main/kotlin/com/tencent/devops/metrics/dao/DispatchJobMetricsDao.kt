@@ -46,6 +46,7 @@ class DispatchJobMetricsDao {
                     .set(PRODUCT_ID, jobMetricsData.productId)
                     .set(THE_DATE, jobMetricsData.theDate)
                     .set(JOB_TYPE, jobMetricsData.jobType)
+                    .set(CHANNEL_CODE, jobMetricsData.channelCode)
                     .set(MAX_JOB_CONCURRENCY, jobMetricsData.maxJobConcurrency)
                     .set(SUM_JOB_COST, jobMetricsData.sumJobCost)
                     .execute()
