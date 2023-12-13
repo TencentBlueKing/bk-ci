@@ -30,7 +30,6 @@ package com.tencent.devops.experience.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bk.audit.annotations.ActionAuditRecord
-import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
@@ -73,7 +72,6 @@ import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
-import org.jooq.impl.DSL.timestamp
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.net.URI
