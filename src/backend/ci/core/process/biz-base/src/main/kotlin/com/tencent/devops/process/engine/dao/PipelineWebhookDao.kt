@@ -33,7 +33,6 @@ import com.tencent.devops.model.process.Tables.T_PIPELINE_WEBHOOK
 import com.tencent.devops.model.process.tables.records.TPipelineWebhookRecord
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.pojo.webhook.WebhookTriggerPipeline
-import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
