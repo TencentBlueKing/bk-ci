@@ -686,6 +686,25 @@ open class GitApi {
         return JsonUtil.getObjectMapper().readValue(responseBody)
     }
 
+    fun listMergeRequest(
+        host: String,
+        token: String,
+        projectName: String,
+        sourceBranch: String?,
+        targetBranch: String?,
+        state: String?,
+        page: Int,
+        perPage: Int
+    ): List<GitMrInfo> {
+        val queryParams =
+            "source_branch=$sourceBranch&target_branch=$targetBranch&state=$state&page=$page&per_page=$perPage"
+        val url = "projects/${urlEncode(projectName)}/merge_requests/?"
+        val request = get(host, token, url, queryParams)
+        return JsonUtil.getObjectMapper().readValue<List<GitMrInfo>>(
+            getBody(getMessageByLocale(CommonMessageCode.OPERATION_LIST_MR), request)
+        )
+    }
+
     fun createMergeRequest(
         host: String,
         token: String,

@@ -33,7 +33,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.yaml.actions.pacActions.PipelineYamlPushAction
 import com.tencent.devops.process.yaml.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.yaml.git.pojo.PacGitCred
 import com.tencent.devops.process.yaml.git.pojo.tgit.TGitChangeFileInfo
@@ -53,7 +52,9 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.git.GitOperationFile
 import com.tencent.devops.scm.pojo.GitCreateBranch
 import com.tencent.devops.scm.pojo.GitCreateMergeRequest
+import com.tencent.devops.scm.pojo.GitListMergeRequest
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.MergeRequestState
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -348,31 +349,57 @@ class TGitApiService @Autowired constructor(
         if (targetAction == CodeTargetAction.PUSH_BRANCH_AND_REQUEST_MERGE ||
             targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE
         ) {
-            val title = if (fileExists) {
-                I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BK_MERGE_YAML_CREATE_FILE_TITLE,
-                    params = arrayOf(pipelineId),
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                )
-            } else {
-                I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BK_MERGE_YAML_UPDATE_FILE_TITLE,
-                    params = arrayOf(pipelineId),
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                )
-            }
-            client.get(ServiceGitResource::class).createMergeRequest(
-                token = token,
-                tokenType = cred.toTokenType(),
-                gitProjectId = gitProjectId,
-                gitCreateMergeRequest = GitCreateMergeRequest(
-                    sourceBranch = branchName,
-                    targetBranch = defaultBranch,
-                    title = title
-                )
-            ).data
+            createYamlMergeRequest(fileExists, pipelineId, token, cred, gitProjectId, branchName, defaultBranch)
         }
         return yamlFile
+    }
+
+    private fun createYamlMergeRequest(
+        fileExists: Boolean,
+        pipelineId: String,
+        token: String,
+        cred: PacGitCred,
+        gitProjectId: String,
+        branchName: String,
+        defaultBranch: String
+    ) {
+        val title = if (fileExists) {
+            I18nUtil.getCodeLanMessage(
+                messageCode = ProcessMessageCode.BK_MERGE_YAML_UPDATE_FILE_TITLE,
+                params = arrayOf(pipelineId),
+                language = I18nUtil.getDefaultLocaleLanguage()
+            )
+        } else {
+            I18nUtil.getCodeLanMessage(
+                messageCode = ProcessMessageCode.BK_MERGE_YAML_CREATE_FILE_TITLE,
+                params = arrayOf(pipelineId),
+                language = I18nUtil.getDefaultLocaleLanguage()
+            )
+        }
+        val mrList = client.get(ServiceGitResource::class).listMergeRequest(
+            token = token,
+            tokenType = cred.toTokenType(),
+            gitProjectId = gitProjectId,
+            gitListMergeRequest = GitListMergeRequest(
+                sourceBranch = branchName,
+                targetBranch = defaultBranch,
+                state = MergeRequestState.OPENED.value
+            )
+        ).data ?: emptyList()
+        // 如果源分支->目标分支的mr已存在,则不需要再发起mr
+        if (mrList.isNotEmpty()) {
+            return
+        }
+        client.get(ServiceGitResource::class).createMergeRequest(
+            token = token,
+            tokenType = cred.toTokenType(),
+            gitProjectId = gitProjectId,
+            gitCreateMergeRequest = GitCreateMergeRequest(
+                sourceBranch = branchName,
+                targetBranch = defaultBranch,
+                title = title
+            )
+        ).data
     }
 
     private fun PacGitCred.toToken(): String {

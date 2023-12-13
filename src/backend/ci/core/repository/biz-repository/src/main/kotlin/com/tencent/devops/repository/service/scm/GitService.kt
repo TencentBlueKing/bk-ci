@@ -83,6 +83,7 @@ import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitFileInfo
+import com.tencent.devops.scm.pojo.GitListMergeRequest
 import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -1997,6 +1998,40 @@ class GitService @Autowired constructor(
                 projectName = gitProjectId
             )
         )
+    }
+
+    override fun listMergeRequest(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        gitListMergeRequest: GitListMergeRequest
+    ): Result<List<GitMrInfo>> {
+        val mrInfoList = with(gitListMergeRequest) {
+            if (tokenType == TokenTypeEnum.OAUTH) {
+                GitOauthApi().listMergeRequest(
+                    host = gitConfig.gitApiUrl,
+                    token = token,
+                    projectName = gitProjectId,
+                    sourceBranch = sourceBranch,
+                    targetBranch = targetBranch,
+                    state = state,
+                    page = page,
+                    perPage = perPage
+                )
+            } else {
+                GitApi().listMergeRequest(
+                    host = gitConfig.gitApiUrl,
+                    token = token,
+                    projectName = gitProjectId,
+                    sourceBranch = sourceBranch,
+                    targetBranch = targetBranch,
+                    state = state,
+                    page = page,
+                    perPage = perPage
+                )
+            }
+        }
+        return Result(mrInfoList)
     }
 
     override fun createBranch(

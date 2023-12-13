@@ -230,7 +230,8 @@ object CommonMessageCode {
     const val OPERATION_LIST_WEBHOOK = "bkOperationListWebhook" // 查询WEBHOOK
     const val OPERATION_ADD_COMMIT_CHECK = "bkOperationAddCommitCheck" // 添加COMMIT CHECK
     const val OPERATION_ADD_MR_COMMENT = "bkOperationAddMrComment" // 添加MR COMMENT
-    const val OPERATION_ADD_MR = "bkOperationAddMr" // 添加MR COMMENT
+    const val OPERATION_LIST_MR = "bkOperationListMr" // 添加MR
+    const val OPERATION_ADD_MR = "bkOperationAddMr" // 添加MR
     const val OPERATION_COMMIT = "bkOperationCommit" // 拉提交记录
     const val OPERATION_COMMIT_DIFF = "bkOperationCommitDiff" // 查询commit变化
     const val OPERATION_UNLOCK_HOOK_LOCK = "bkOperationUnlockHookLock" // 解锁hook锁
