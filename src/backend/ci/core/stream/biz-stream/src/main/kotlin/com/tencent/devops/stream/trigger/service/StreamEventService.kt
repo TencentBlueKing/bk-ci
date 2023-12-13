@@ -121,9 +121,10 @@ class StreamEventService @Autowired constructor(
                         gitProjectId = getGitProjectId(),
                         messageId = action.data.context.requestEventId.toString()
                     ),
-                    context = "${context.pipeline!!.filePath}@${action.metaData.streamObjectKind.name}",
+                    context = "${context.pipeline!!.displayName}@${action.metaData.streamObjectKind.name}",
                     description = TriggerReason.getTriggerReason(reason)?.summary ?: reason,
                     mrId = null,
+                    targetBranch = action.data.context.gitMrInfo?.targetBranch,
                     addCommitCheck = action.api::addCommitCheck
                 )
             }

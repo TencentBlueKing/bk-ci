@@ -84,6 +84,7 @@ class GitCheckService @Autowired constructor(
         mrId: Long?,
         manualUnlock: Boolean? = false,
         reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>,
+        targetBranch: String?,
         addCommitCheck: (
             request: CommitCheckRequest,
             retry: ApiRequestRetryInfo
@@ -141,6 +142,7 @@ class GitCheckService @Autowired constructor(
             manualUnlock = manualUnlock,
             buildNum = buildNum,
             reportData = reportData,
+            targetBranch = targetBranch,
             addCommitCheck = addCommitCheck
         )
     }
@@ -163,6 +165,7 @@ class GitCheckService @Autowired constructor(
         manualUnlock: Boolean?,
         buildNum: String,
         reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>,
+        targetBranch: String?,
         addCommitCheck: (
             request: CommitCheckRequest,
             retry: ApiRequestRetryInfo
@@ -206,6 +209,7 @@ class GitCheckService @Autowired constructor(
                         context = context,
                         description = description,
                         mrId = mrId,
+                        targetBranch = targetBranch,
                         addCommitCheck = addCommitCheck
                     )
                     gitCheckClient.createGitCheck(
@@ -235,6 +239,7 @@ class GitCheckService @Autowired constructor(
                             description = description,
                             mrId = mrId,
                             reportData = reportData,
+                            targetBranch = targetBranch,
                             addCommitCheck = addCommitCheck
                         )
                         gitCheckClient.updateGitCheck(
@@ -286,6 +291,7 @@ class GitCheckService @Autowired constructor(
         description: String,
         mrId: Long?,
         reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>> = Pair(listOf(), mutableMapOf()),
+        targetBranch: String?,
         addCommitCheck: (
             request: CommitCheckRequest,
             retry: ApiRequestRetryInfo
@@ -308,7 +314,8 @@ class GitCheckService @Autowired constructor(
             description = description,
             block = block,
             mrRequestId = mrId,
-            reportData = reportData
+            reportData = reportData,
+            targetBranch = targetBranch?.let { listOf(it) }
         )
         addCommitCheck(request, ApiRequestRetryInfo(true))
     }
