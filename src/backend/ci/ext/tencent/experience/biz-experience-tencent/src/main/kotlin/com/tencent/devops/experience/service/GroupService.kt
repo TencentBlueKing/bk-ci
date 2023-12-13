@@ -552,30 +552,6 @@ class GroupService @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.EXPERIENCE_GROUP_CREATE,
-        instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.EXPERIENCE_GROUP
-        ),
-        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
-        scopeId = "#projectId",
-        content = ActionAuditContent.EXPERIENCE_GROUP_CREATE_CONTENT
-    )
-    @SuppressWarnings("LongMethod")
-    fun commit(userId: String, projectId: String, groupCommit: GroupCommit): Boolean {
-        ActionAuditContext.current()
-            .setInstance(groupCommit)
-            .setInstanceName(groupCommit.name)
-        if (groupCommit.groupHashId == null) { // 新建用户组
-            val groupId = createForCommit(groupCommit, userId, projectId)
-            ActionAuditContext.current().setInstanceId(groupId)
-        } else { // 更新用户组
-            updateForCommit(groupCommit, userId, projectId)
-            ActionAuditContext.current().setInstanceId(HashUtil.decodeIdToLong(groupCommit.groupHashId!!).toString())
-        }
-        return true
-    }
-
-    @ActionAuditRecord(
         actionId = ActionId.EXPERIENCE_GROUP_EDIT,
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.EXPERIENCE_GROUP
