@@ -133,18 +133,6 @@ class ImportService @Autowired constructor(
         }
     }
 
-    fun importAgent(userId: String, projectId: String, agentId: String) {
-
-        val id = HashUtil.decodeIdToLong(agentId)
-
-        TpaLock(redisOperation = redisOperation, key = "ia:$id").use { lock ->
-            if (!lock.tryLock()) { // 并发场景，不向用户展示信息
-                LOG.info("$agentId duplicate import, skip")
-                return
-            }
-            import(id, projectId, agentId, userId)
-        }
-    }
 
     @ActionAuditRecord(
         actionId = ActionId.ENV_NODE_CREATE,
@@ -155,12 +143,31 @@ class ImportService @Autowired constructor(
         scopeId = "#projectId",
         content = ActionAuditContent.ENV_NODE_CREATE_CONTENT
     )
-    private fun import(id: Long, projectId: String, agentId: String, userId: String) {
+    fun importAgent(userId: String, projectId: String, agentId: String) {
+
+        val id = HashUtil.decodeIdToLong(agentId)
+
+        TpaLock(redisOperation = redisOperation, key = "ia:$id").use { lock ->
+            if (!lock.tryLock()) { // 并发场景，不向用户展示信息
+                LOG.info("$agentId duplicate import, skip")
+                return
+            }
+            val nodeId = import(id, projectId, agentId, userId)
+            if (nodeId != null) {
+                // audit
+                ActionAuditContext.current()
+                    .setInstanceName(nodeId.toString())
+                    .setInstanceId(nodeId.toString())
+            }
+        }
+    }
+
+    private fun import(id: Long, projectId: String, agentId: String, userId: String): Long? {
         val agentRecord = thirdPartyAgentDao.getAgent(dslContext, id)
             ?: throw NotFoundException("The agent($agentId) is not exist")
 
         if (agentRecord.status == AgentStatus.IMPORT_OK.status) { // 忽略重复导入
-            return
+            return null
         }
 
         Preconditions.checkTrue(
@@ -177,12 +184,12 @@ class ImportService @Autowired constructor(
                 )
             )
         )
-
+        var nodeId = 0L
         LOG.info("Trying to import the agent($agentId) of project($projectId) by user($userId)")
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
 
-            val nodeId = nodeDao.addNode(
+            nodeId = nodeDao.addNode(
                 dslContext = context,
                 projectId = projectId,
                 ip = agentRecord.ip,
@@ -201,9 +208,6 @@ class ImportService @Autowired constructor(
                 displayName = nodeStringId,
                 userId = userId
             )
-            ActionAuditContext.current()
-                .setInstanceName(nodeStringId)
-                .setInstanceId(nodeStringId)
             val count = thirdPartyAgentDao.updateStatus(context, id, nodeId, projectId, AgentStatus.IMPORT_OK)
             if (count != 1) {
                 LOG.warn("Fail to update the agent($id) to OK status")
@@ -220,5 +224,6 @@ class ImportService @Autowired constructor(
             )
         }
         webSocketDispatcher.dispatch(websocketService.buildDetailMessage(projectId = projectId, userId = userId))
+        return nodeId
     }
 }

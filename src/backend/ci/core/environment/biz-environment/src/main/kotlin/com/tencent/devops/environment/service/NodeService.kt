@@ -118,7 +118,12 @@ class NodeService @Autowired constructor(
         }
         existNodeList.forEach {
             ActionAuditContext.current()
-                .addInstanceInfo(it.nodeId.toString(), it.nodeName, null, null)
+                .addInstanceInfo(
+                    it.nodeId.toString(),
+                    it.nodeId.toString(),
+                    null,
+                    null
+                )
         }
         NodeActionFactory.load(NodeActionFactory.Action.DELETE)?.action(existNodeList)
 
@@ -135,6 +140,15 @@ class NodeService @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.ENV_NODE_DELETE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.ENV_NODE
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.ENV_NODE_DELETE_CONTENT
+    )
     fun deleteNodeByAgentId(userId: String, projectId: String, agentId: String) {
         val node = thirdPartyAgentDao.getAgent(dslContext, HashUtil.decodeIdToLong(agentId))?.nodeId ?: return
         deleteNodes(userId, projectId, listOf(node))

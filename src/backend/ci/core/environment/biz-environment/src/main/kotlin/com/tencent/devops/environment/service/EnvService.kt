@@ -148,7 +148,7 @@ class EnvService @Autowired constructor(
         ActionAuditContext.current()
             .setInstanceId(HashUtil.decodeIdToLong(environmentId.hashId).toString())
             .setInstanceName(envCreateInfo.name)
-            .addExtendData("envCreateInfo", envCreateInfo)
+            .setInstance(envCreateInfo)
         return environmentId
     }
 
