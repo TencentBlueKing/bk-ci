@@ -27,13 +27,16 @@
 
 package com.tencent.devops.environment.resources
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.UserCmdbNodeResource
 import com.tencent.devops.environment.pojo.CmdbNode
 import com.tencent.devops.environment.service.CmdbNodeService
 import org.springframework.beans.factory.annotation.Autowired
+import javax.swing.Action
 
 @RestResource
 class UserCmdbNodeResourceImpl @Autowired constructor(
@@ -56,6 +59,7 @@ class UserCmdbNodeResourceImpl @Autowired constructor(
         ))
     }
 
+    @AuditEntry(actionId = ActionId.ENV_NODE_CREATE)
     override fun addCmdbNodes(userId: String, projectId: String, nodeIps: List<String>): Result<Boolean> {
         cmdbNodeService.addCmdbNodes(userId = userId, projectId = projectId, nodeIps = nodeIps)
         return Result(true)
