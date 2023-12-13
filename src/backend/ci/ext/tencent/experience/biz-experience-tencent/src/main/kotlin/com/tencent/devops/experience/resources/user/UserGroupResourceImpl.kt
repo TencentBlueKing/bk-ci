@@ -28,11 +28,9 @@
 package com.tencent.devops.experience.resources.user
 
 import com.tencent.bk.audit.annotations.AuditEntry
-import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.user.UserGroupResource
