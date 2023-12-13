@@ -74,17 +74,21 @@
                                 enable-scroll-load
                                 v-model="releaseParams.repoHashId"
                                 :scroll-loading="scrollLoadmoreConf"
-                                @scroll-end="fetchPacEnableCodelibList"
+                                :loading="isInitPacRepo"
                                 :show-empty="false"
                                 :placeholder="$t('editPage.atomForm.selectTips')"
+                                @scroll-end="fetchPacEnableCodelibList(false)"
+                                @toggle="refreshPacEnableCodelibList"
                             >
-                                <template v-if="pacEnableCodelibList.length > 0">
+                                <template v-if="pacEnableCodelibList.length">
                                     <bk-option v-for="option in pacEnableCodelibList"
                                         :key="option.repositoryHashId"
                                         :id="option.repositoryHashId"
                                         :name="option.aliasName">
                                     </bk-option>
                                 </template>
+                                <bk-loading is-loading mode="spin" size="small" v-else-if="isInitPacRepo">
+                                </bk-loading>
                                 <bk-exception v-else scene="part" type="empty">
                                     <span class="no-pac-enable-codelib-yet">
                                         {{ $t('noPacEnableCodelibYet') }}
@@ -111,7 +115,7 @@
                                 v-model="releaseParams.filePath"
                                 id="yamlFilePath"
                             >
-                                <span class="group-text" slot="prepend">.ci/</span>
+                                <span class="group-text" slot="prepend">{{ filePathDir }}</span>
                             </bk-input>
                         </bk-form-item>
                     </section>
@@ -231,6 +235,7 @@
                 hasOauth: false,
                 oauthing: false,
                 refreshing: false,
+                filePathDir: '.ci/',
                 scrollLoadmoreConf: {
                     isLoading: false,
                     page: 1,
@@ -238,6 +243,7 @@
                     total: 0,
                     size: 'small'
                 },
+                isInitPacRepo: false,
                 releaseParams: {
                     enablePac: false,
                     scmType: '',
@@ -309,7 +315,10 @@
             yamlInfo: {
                 handler: function (val) {
                     if (val) {
-                        Object.assign(this.releaseParams, val)
+                        Object.assign(this.releaseParams, {
+                            ...val,
+                            filePath: this.trimCIPrefix(val.filePath)
+                        })
                     }
                 },
                 immediate: true
@@ -371,10 +380,16 @@
             },
             async fetchPacEnableCodelibList (init = false) {
                 try {
-                    if (this.scrollLoadmoreConf.isLoading || (this.scrollLoadmoreConf.total && this.scrollLoadmoreConf.total <= this.pacEnableCodelibList.length)) {
+                    if (this.isInitPacRepo || this.scrollLoadmoreConf.isLoading || (this.scrollLoadmoreConf.total && this.scrollLoadmoreConf.total <= this.pacEnableCodelibList.length)) {
                         return
                     }
-                    this.scrollLoadmoreConf.isLoading = true
+                    if (init) {
+                        this.scrollLoadmoreConf.page = 1
+                        this.pacEnableCodelibList = []
+                        this.isInitPacRepo = true
+                    } else {
+                        this.scrollLoadmoreConf.isLoading = true
+                    }
                     const { projectId } = this.$route.params
                     const { scmType } = this.releaseParams
                     const response = await this.getPACRepoList({
@@ -390,16 +405,23 @@
                         page: response.page,
                         pageSize: response.pageSize
                     })
-                    this.pacEnableCodelibList = init
-                        ? response.records
-                        : [
-                            ...this.pacEnableCodelibList,
-                            ...response.records
-                        ]
+                    this.pacEnableCodelibList = [
+                        ...this.pacEnableCodelibList,
+                        ...response.records
+                    ]
                 } catch (error) {
-
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
                 } finally {
                     this.scrollLoadmoreConf.isLoading = false
+                    this.isInitPacRepo = false
+                }
+            },
+            refreshPacEnableCodelibList (show) {
+                if (show) {
+                    this.fetchPacEnableCodelibList(true)
                 }
             },
             handlePacEnableChange (val) {
@@ -410,7 +432,7 @@
                 try {
                     this.setSaveStatus(true)
                     await this.$refs?.releaseForm?.validate?.()
-                    const { repoHashId, scmType, filePath, ...rest } = this.releaseParams
+                    const { fileUrl, webUrl, pathWithNamespace, repoHashId, scmType, filePath, ...rest } = this.releaseParams
                     const { data: { version, versionName } } = await this.releaseDraftPipeline({
                         projectId,
                         pipelineId,
@@ -422,7 +444,7 @@
                                 ? {
                                     scmType,
                                     repoHashId,
-                                    filePath
+                                    filePath: `${this.filePathDir}${filePath}`
                                 }
                                 : null
                         }
@@ -518,8 +540,12 @@
                 this.releaseParams = {
                     enablePac: this.pacEnabled,
                     description: '',
-                    scmType: '',
-                    ...this.yamlInfo,
+                    ...(this.yamlInfo
+                        ? {
+                            ...this.yamlInfo,
+                            filePath: this.trimCIPrefix(this.yamlInfo.filePath)
+                        }
+                        : {}),
                     targetAction: 'CHECKOUT_BRANCH_AND_REQUEST_MERGE'
                 }
             },
@@ -559,6 +585,11 @@
                 } finally {
                     this.refreshing = false
                 }
+            },
+            trimCIPrefix (filePath) {
+                return filePath.startsWith(this.filePathDir)
+                    ? filePath.replace(this.filePathDir, '')
+                    : filePath
             }
         }
     }

@@ -76,12 +76,12 @@
             executeSteps () {
                 return [
                     {
-                        title: this.$t('填写参数'),
+                        title: this.$t('paramFill'),
                         id: 'params',
                         icon: 1
                     },
                     {
-                        title: this.$t(this.isDebugPipeline ? '选择调试插件' : '选择执行插件'),
+                        title: this.$t('stepPreview'),
                         id: 'optional',
                         icon: 2
                     }

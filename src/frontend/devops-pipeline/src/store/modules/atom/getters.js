@@ -239,6 +239,7 @@ export default {
                 message: ''
             }
         } catch (e) {
+            console.trace(e)
             return {
                 message: e.message,
                 inValid: true

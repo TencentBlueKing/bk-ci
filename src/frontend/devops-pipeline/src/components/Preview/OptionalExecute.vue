@@ -71,10 +71,10 @@
                 handler (newVal, oldVal) {
                     if (newVal) {
                         const pipeline = JSON.parse(JSON.stringify(newVal))
-                        this.setPipelineSkipProp(pipeline.stages, this.checkTotal)
                         this.previewPipeline = Object.assign(pipeline, {
                             stages: newVal.stages.slice(1)
                         })
+                        this.setPipelineSkipProp(this.previewPipeline.stages, this.checkTotal)
                     }
                 }
             },

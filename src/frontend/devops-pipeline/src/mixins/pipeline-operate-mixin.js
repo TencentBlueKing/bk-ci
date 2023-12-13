@@ -26,8 +26,7 @@ export default {
             allPipelineList: 'pipelines/getAllPipelineList',
             pipelineList: 'pipelines/getPipelineList',
             tagGroupList: 'pipelines/getTagGroupList',
-            isEditing: 'atom/isEditing',
-            checkPipelineInvalid: 'atom/checkPipelineInvalid'
+            isEditing: 'atom/isEditing'
         }),
         ...mapState([
             'curProject'

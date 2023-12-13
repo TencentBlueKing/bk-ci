@@ -27,6 +27,7 @@ import {
 import { UI_MODE } from '@/utils/pipelineConst'
 import request from '@/utils/request'
 import { hashID, randomString } from '@/utils/util'
+import { areDeeplyEqual } from '../../../utils/util'
 import { PipelineEditActionCreator, actionCreator } from './atomUtil'
 import {
     ADD_CONTAINER,
@@ -169,7 +170,7 @@ export default {
             return response.data
         })
     },
-    requestPipeline: async ({ commit, dispatch, getters }, { projectId, pipelineId, version }) => {
+    requestPipeline: async ({ commit, dispatch, getters, state }, { projectId, pipelineId, version }) => {
         try {
             const [pipelineRes, atomPropRes] = await Promise.all([
                 request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version ?? ''}`),
@@ -189,10 +190,16 @@ export default {
                 baseVersion: pipelineRes.data.baseVersion,
                 baseVersionName: pipelineRes.data.baseVersionName
             })
-            commit(SET_PIPELINE_WITHOUT_TRIGGER, {
+            if (!areDeeplyEqual(state.pipelineWithoutTrigger, {
                 ...model,
                 stages: model.stages.slice(1)
-            })
+            })) {
+                commit(SET_PIPELINE_WITHOUT_TRIGGER, {
+                    ...model,
+                    stages: model.stages.slice(1)
+                })
+            }
+
             commit(PIPELINE_SETTING_MUTATION, setting)
             if (!pipelineRes.data.yamlSupported) {
                 rootCommit(commit, UPDATE_PIPELINE_MODE, UI_MODE)

@@ -99,7 +99,7 @@
     import StagePropertyPanel from './StagePropertyPanel'
     import StageReviewPanel from './StageReviewPanel'
     import AtomSelector from './AtomSelector'
-    import { isObject } from '../utils/util'
+    import { isObject, areDeeplyEqual } from '../utils/util'
 
     export default {
         components: {
@@ -295,8 +295,10 @@
             handlePipelineChange (pipeline) {
                 if (!this.editable) return
                 console.log('11111, handlePipelineChange')
-                Object.assign(this.pipeline, pipeline)
-                this.setPipelineEditing(true)
+                if (!areDeeplyEqual(this.pipeline, pipeline)) {
+                    Object.assign(this.pipeline, pipeline)
+                    this.setPipelineEditing(true)
+                }
             },
             resetInsertStageState () {
                 this.setInsertStageState({
