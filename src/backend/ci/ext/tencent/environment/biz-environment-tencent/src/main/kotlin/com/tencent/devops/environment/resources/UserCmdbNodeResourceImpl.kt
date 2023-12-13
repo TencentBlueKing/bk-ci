@@ -36,7 +36,6 @@ import com.tencent.devops.environment.api.UserCmdbNodeResource
 import com.tencent.devops.environment.pojo.CmdbNode
 import com.tencent.devops.environment.service.CmdbNodeService
 import org.springframework.beans.factory.annotation.Autowired
-import javax.swing.Action
 
 @RestResource
 class UserCmdbNodeResourceImpl @Autowired constructor(
@@ -50,13 +49,15 @@ class UserCmdbNodeResourceImpl @Autowired constructor(
         pageSize: Int,
         ips: List<String>?
     ): Result<Page<CmdbNode>> {
-        return Result(cmdbNodeService.getUserCmdbNodesNew(
-            userId = userId,
-            bakOperator = bakOperator,
-            page = page,
-            pageSize = pageSize,
-            ips = ips ?: listOf()
-        ))
+        return Result(
+            cmdbNodeService.getUserCmdbNodesNew(
+                userId = userId,
+                bakOperator = bakOperator,
+                page = page,
+                pageSize = pageSize,
+                ips = ips ?: listOf()
+            )
+        )
     }
 
     @AuditEntry(actionId = ActionId.ENV_NODE_CREATE)
