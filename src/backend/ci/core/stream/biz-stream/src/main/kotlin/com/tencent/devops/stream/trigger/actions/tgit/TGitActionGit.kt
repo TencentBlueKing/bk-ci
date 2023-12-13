@@ -98,6 +98,7 @@ abstract class TGitActionGit(
                 false
             },
             reportData = reportData,
+            targetBranch = data.context.gitMrInfo?.targetBranch,
             addCommitCheck = api::addCommitCheck
         )
     }
