@@ -63,7 +63,19 @@ class AgentLessListener @Autowired constructor(
 
             // 开始启动无编译构建，增加构建次数
             if (!jobQuotaService.checkAndAddRunningJob(event, JobQuotaVmType.BUILD_LESS)) {
-                logger.error("[${event.buildId}]|BUILD_LESS| AgentLess Job quota exceed quota.")
+                logger.warn("[${event.buildId}]|BUILD_LESS| AgentLess Job quota exceed quota.")
+                with(event) {
+                    jobQuotaService.jobQuoteOverrunHandler(
+                        logPrefix = "$projectId$pipelineId$buildId$vmSeqId$executeCount",
+                        buildId = buildId,
+                        containerId = containerId,
+                        containerHashId = containerHashId,
+                        executeCount = executeCount,
+                        jobType = JobQuotaVmType.BUILD_LESS,
+                        demoteQueueRouteKeySuffix = "",
+                        startupEvent = event
+                    )
+                }
                 return
             }
 

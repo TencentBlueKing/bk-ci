@@ -102,14 +102,13 @@ interface BuildListener {
             val jobQuotaService = getJobQuotaService()
             if (!jobQuotaService.checkAndAddRunningJob(
                     startupEvent = event,
-                    vmType = getVmType(),
+                    jobType = getVmType(),
                     demoteQueueRouteKeySuffix = getStartupDemoteQueue()
                 )) {
                 return
             }
 
-            val dispatchMessage = dispatchService.buildDispatchMessage(event)
-            onStartup(dispatchMessage)
+            onStartup(dispatchService.buildDispatchMessage(event))
         } catch (e: BuildFailureException) {
             dispatchService.logRed(buildId = event.buildId,
                 containerHashId = event.containerHashId,
