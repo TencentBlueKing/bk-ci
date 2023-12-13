@@ -242,9 +242,6 @@ class ExperienceService @Autowired constructor(
 
         val experienceRecord = experienceDao.get(dslContext, HashUtil.decodeIdToLong(experienceHashId))
         val experienceId = experienceRecord.id
-        ActionAuditContext.current()
-            .setInstanceId(experienceId.toString())
-            .setInstanceName(experienceRecord.experienceName)
         val online = experienceRecord.online
         val isExpired = DateUtil.isExpired(experienceRecord.endDate)
         val canExperience = if (checkPermission) experienceBaseService.userCanExperience(userId, experienceId) else true
@@ -282,7 +279,12 @@ class ExperienceService @Autowired constructor(
                 )
             )
         }
-
+        // audit
+        ActionAuditContext.current()
+            .setInstanceId(experienceId.toString())
+            .setInstanceName(experienceRecord.experienceName)
+            .setScopeId(experienceRecord.projectId)
+            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, experienceRecord.projectId)
         return Experience(
             name = experienceRecord.name,
             path = experienceRecord.artifactoryPath,
@@ -310,6 +312,15 @@ class ExperienceService @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.EXPERIENCE_TASK_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.EXPERIENCE_TASK
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.EXPERIENCE_TASK_CREATE_CONTENT
+    )
     fun create(userId: String, projectId: String, experience: ExperienceCreate) {
         val isPublic = isPublicGroupAndCheck(experience.experienceGroups) // 是否有公开体验组
 
@@ -320,7 +331,7 @@ class ExperienceService @Autowired constructor(
 
         val propertyMap = getArtifactoryPropertiesMap(userId, projectId, artifactoryType, experience.path)
 
-        createExperience(
+        val experienceId = createExperience(
             projectId,
             experience,
             propertyMap,
@@ -329,6 +340,10 @@ class ExperienceService @Autowired constructor(
             isPublic,
             artifactoryType
         )
+        ActionAuditContext.current()
+            .setInstanceId(experienceId.toString())
+            .setInstanceName(experience.experienceName)
+            .setInstance(experience)
     }
 
     private fun isPublicGroupAndCheck(experienceGroups: Set<String>): Boolean {
@@ -393,15 +408,6 @@ class ExperienceService @Autowired constructor(
         return propertyMap
     }
 
-    @ActionAuditRecord(
-        actionId = ActionId.EXPERIENCE_TASK_CREATE,
-        instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.EXPERIENCE_TASK
-        ),
-        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
-        scopeId = "#projectId",
-        content = ActionAuditContent.EXPERIENCE_TASK_CREATE_CONTENT
-    )
     @SuppressWarnings("ComplexMethod")
     private fun createExperience(
         projectId: String,
@@ -513,11 +519,6 @@ class ExperienceService @Autowired constructor(
             buildId = propertyMap[ARCHIVE_PROPS_BUILD_ID] ?: "",
             pipelineId = propertyMap[ARCHIVE_PROPS_PIPELINE_ID] ?: ""
         )
-
-        ActionAuditContext.current()
-            .setInstanceId(experienceId.toString())
-            .setInstanceName(experienceName)
-            .setInstance(experience)
         // IAM权限
         experiencePermissionService.createTaskResource(
             userId,
@@ -787,6 +788,15 @@ class ExperienceService @Autowired constructor(
         return experienceId
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.EXPERIENCE_TASK_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.EXPERIENCE_TASK
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.EXPERIENCE_TASK_CREATE_CONTENT
+    )
     fun serviceCreate(
         userId: String,
         projectId: String,
@@ -858,6 +868,11 @@ class ExperienceService @Autowired constructor(
             isPublic,
             artifactoryType
         )
+
+        ActionAuditContext.current()
+            .setInstanceId(experienceId.toString())
+            .setInstanceName(experience.experienceName)
+            .setInstance(experience)
 
         return ExperienceCreateResp(
             url = getShortExternalUrl(experienceId),

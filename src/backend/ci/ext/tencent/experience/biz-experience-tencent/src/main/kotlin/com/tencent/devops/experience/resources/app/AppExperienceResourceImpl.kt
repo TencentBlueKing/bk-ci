@@ -98,6 +98,7 @@ class AppExperienceResourceImpl @Autowired constructor(
     }
 
     @AllowOuter
+    @AuditEntry(actionId = ActionId.EXPERIENCE_TASK_VIEW)
     override fun detail(
         userId: String,
         platform: Int,
