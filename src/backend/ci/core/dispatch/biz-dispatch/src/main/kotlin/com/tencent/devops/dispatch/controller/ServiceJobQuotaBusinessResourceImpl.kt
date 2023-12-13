@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.controller
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
@@ -46,7 +47,7 @@ class ServiceJobQuotaBusinessResourceImpl @Autowired constructor(
         executeCount: Int,
         containerId: String,
         containerHashId: String?,
-        channelCode: String
+        channelCode: String?
     ): Result<Boolean> {
         val result = jobQuotaBusinessService.checkAndAddRunningJob(
             projectId = projectId,
@@ -56,7 +57,7 @@ class ServiceJobQuotaBusinessResourceImpl @Autowired constructor(
             executeCount = executeCount,
             containerId = containerId,
             containerHashId = containerHashId,
-            channelCode = channelCode
+            channelCode = channelCode ?: ChannelCode.BS.name
         )
         return Result(result)
     }
