@@ -43,7 +43,6 @@ import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.groupConcatDistinct
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
