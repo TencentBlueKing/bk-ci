@@ -125,7 +125,7 @@ class StreamEventService @Autowired constructor(
                     context = "${context.pipeline!!.displayName}@${action.metaData.streamObjectKind.name}",
                     description = TriggerReason.getTriggerReason(reason)?.summary ?: reason,
                     mrId = null,
-                    targetBranch = action.data.context.mrTargetBranch,
+                    targetBranch = action.data.context.mrTargetBranch ?: GIT_COMMIT_CHECK_NONE_TARGET_BRANCH,
                     addCommitCheck = action.api::addCommitCheck
                 )
             }
