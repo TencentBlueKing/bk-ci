@@ -75,7 +75,8 @@
             buildNumConf () {
                 return {
                     latestBuildNum: this.execDetail?.latestBuildNum ?? 1,
-                    currentBuildNum: this.execDetail?.buildNum ?? 1
+                    currentBuildNum: this.execDetail?.buildNum ?? 1,
+                    version: this.pipelineInfo?.version
                 }
             },
             isDebugExec () {

@@ -190,10 +190,7 @@ export default {
                 baseVersion: pipelineRes.data.baseVersion,
                 baseVersionName: pipelineRes.data.baseVersionName
             })
-            if (!areDeeplyEqual(state.pipelineWithoutTrigger, {
-                ...model,
-                stages: model.stages.slice(1)
-            })) {
+            if (!areDeeplyEqual(state.pipelineWithoutTrigger?.stages, model.stages.slice(1))) {
                 commit(SET_PIPELINE_WITHOUT_TRIGGER, {
                     ...model,
                     stages: model.stages.slice(1)
@@ -239,7 +236,7 @@ export default {
             }
         }
     },
-    async transferModelToYaml ({ commit }, { projectId, pipelineId, actionType, ...params }) {
+    async transferModelToYaml ({ commit, state }, { projectId, pipelineId, actionType, ...params }) {
         try {
             const { data } = await request.post(`${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}`, params, {
                 params: {
@@ -589,9 +586,13 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    requestPipelineExecDetailByBuildNum: async ({ commit, dispatch }, { projectId, buildNum, pipelineId }) => {
+    requestPipelineExecDetailByBuildNum: async ({ commit, dispatch }, { projectId, buildNum, pipelineId, version }) => {
         try {
-            return request.get(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/record/${buildNum}`)
+            return request.get(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/record/${buildNum}`, {
+                params: {
+                    version
+                }
+            })
         } catch (e) {
             if (e.code === 403) {
                 e.message = ''

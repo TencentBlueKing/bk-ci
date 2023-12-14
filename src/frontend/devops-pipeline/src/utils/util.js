@@ -785,9 +785,9 @@ export function areDeeplyEqual (obj1, obj2) {
             || typeof right !== 'object' || right === null) {
             return false
         }
-
-        const leftKeys = Object.keys(left)
-        const rightKeys = Object.keys(right)
+        // 排除 isError 字段
+        const leftKeys = Object.keys(left).filter(key => key !== 'isError')
+        const rightKeys = Object.keys(right).filter(key => key !== 'isError')
         if (leftKeys.length !== rightKeys.length) {
             return false
         }

@@ -13,7 +13,7 @@
                 {{ $t('releasePipelineBaseVersion', [baseVersionName]) }}
             </span>
         </header>
-        <section slot="content" v-bkloading="{ isLoading }" class="release-pipeline-pac-form">
+        <section slot="content" v-bkloading="{ isLoading: isLoading || releasing }" class="release-pipeline-pac-form">
             <div class="release-pipeline-pac-conf">
                 <aside class="release-pipeline-pac-conf-leftside">
                     <label for="enablePac">
@@ -187,11 +187,14 @@
         <footer v-if="!releaseParams.enablePac || hasOauth" slot="footer" class="release-pipeline-pac-footer">
             <bk-button
                 theme="primary"
+                :loading="releasing"
+                :disabled="releasing"
                 @click="releasePipeline"
             >
                 {{$t('release')}}
             </bk-button>
             <bk-button
+                :disabled="releasing"
                 @click="hideReleaseSlider"
             >
                 {{$t('cancel')}}
@@ -230,6 +233,7 @@
         data () {
             return {
                 isLoading: false,
+                releasing: false,
                 showPacCodelibSetting: false,
                 pacEnableCodelibList: [],
                 hasOauth: false,
@@ -430,6 +434,8 @@
             async releasePipeline () {
                 const { pipelineId, projectId } = this.$route.params
                 try {
+                    if (this.releasing) return
+                    this.releasing = true
                     this.setSaveStatus(true)
                     await this.$refs?.releaseForm?.validate?.()
                     const { fileUrl, webUrl, pathWithNamespace, repoHashId, scmType, filePath, ...rest } = this.releaseParams
@@ -530,6 +536,7 @@
                     }
                 } finally {
                     this.setSaveStatus(false)
+                    this.releasing = false
                 }
             },
             showReleaseSlider  () {
