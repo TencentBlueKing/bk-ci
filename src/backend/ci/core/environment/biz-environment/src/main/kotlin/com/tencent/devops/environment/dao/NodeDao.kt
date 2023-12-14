@@ -163,7 +163,7 @@ class NodeDao {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)
                 .where(NODE_IP.`in`(ipList))
-                .and(NODE_STATUS.eq(NodeType.CMDB.name))
+                .and(NODE_TYPE.eq(NodeType.CMDB.name))
                 .fetch()
         }
     }
