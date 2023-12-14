@@ -75,7 +75,10 @@ class MarketCheckImageTask : ITask() {
             )
         )
         LoggerService.addNormalLine("checkImageResult: $checkImageResult")
-        if (checkImageResult.isNotOk() || checkImageResult.data.isNullOrEmpty()) {
+        val checkImageResponse =
+        if (checkImageResult.isOk() && checkImageResult.data!!.isNotEmpty()) {
+            checkImageResult.data!![0]
+        } else {
             LoggerService.addErrorLine(JsonUtil.toJson(checkImageResult))
             throw TaskExecuteException(
                 errorMsg = "checkImage fail: ${checkImageResult.message}",
@@ -83,9 +86,16 @@ class MarketCheckImageTask : ITask() {
                 errorType = ErrorType.USER
             )
         }
+        if (checkImageResponse.errorCode == -1) {
+            LoggerService.addErrorLine(JsonUtil.toJson(checkImageResponse))
+            throw TaskExecuteException(
+                errorMsg = "checkImage fail: ${checkImageResponse.errorMessage}",
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorType = ErrorType.USER
+            )
+        }
         val imageVersion = buildVariableMap["version"]
         // 获取镜像大小上送至商店
-        val checkImageResponse = checkImageResult.data!![0]
         val updateImageResult = dockerApi.updateImageInfo(
             userId = userId,
             projectCode = buildVariables.projectId,
