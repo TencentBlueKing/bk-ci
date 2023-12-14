@@ -38,9 +38,9 @@ data class TemplateWithPermission(
     val templatesWithListPermRecords: Result<out Record>?,
     @ApiModelProperty("拥有查看权限的模板列表ID", required = true)
     val templatesWithViewPermIds: List<String>?,
-    @ApiModelProperty("拥有查看权限的模板列表ID", required = true)
+    @ApiModelProperty("拥有编辑权限的模板列表ID", required = true)
     val templatesWithEditPermIds: List<String>?,
-    @ApiModelProperty("拥有查看权限的模板列表ID", required = true)
+    @ApiModelProperty("拥有删除权限的模板列表ID", required = true)
     val templatesWithDeletePermIds: List<String>?,
     @ApiModelProperty("数量", required = true)
     val count: Int
