@@ -74,7 +74,6 @@ class MarketCheckImageTask : ITask() {
                 )
             )
         )
-        LoggerService.addNormalLine("checkImageResult: $checkImageResult")
         val checkImageResponse =
         if (checkImageResult.isOk() && checkImageResult.data!!.isNotEmpty()) {
             checkImageResult.data!![0]
