@@ -108,12 +108,15 @@ class StartCloudRemoteDevService @Autowired constructor(
         val resource = workspaceClient.getResourceList().filter {
             it.status == 11 && it.zoneId.replace(Regex("\\d+"), "") == event.devFile.zoneId &&
                 it.machineType == event.devFile.machineType
-        }.randomOrNull() ?: throw BuildFailureException(
-            ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
-            ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
-            ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-            " ${event.devFile.zoneId}地区${event.devFile.machineType}型云桌面资源不足"
-        )
+        }.randomOrNull()
+        if (resource == null && event.devFile.imageCosFile.isNullOrBlank()) {
+            throw BuildFailureException(
+                ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                " ${event.devFile.zoneId}地区${event.devFile.machineType}型云桌面资源不足"
+            )
+        }
 
         logger.info("get random resource to running|$resource")
 
@@ -124,8 +127,8 @@ class StartCloudRemoteDevService @Autowired constructor(
                     userId = userId,
                     appName = appName,
                     pipelineId = orderId,
-                    zoneId = resource.zoneId,
-                    machineType = resource.machineType,
+                    zoneId = resource?.zoneId,
+                    machineType = resource?.machineType,
                     cgsId = event.devFile.cgsId,
                     projectId = event.projectId,
                     image = event.devFile.imageCosFile

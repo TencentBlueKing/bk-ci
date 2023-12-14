@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
+import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -140,5 +141,30 @@ interface OpWindowsConfigResource {
         @ApiParam(value = "模板信息", required = true)
         @QueryParam("id")
         id: Long
+    ): Result<Boolean>
+
+    @ApiOperation("创建或者更新特殊机型配置")
+    @POST
+    @Path("/spec/createOrUpdate")
+    fun createOrUpdateSpec(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: WindowsSpecResInfo
+    ): Result<Boolean>
+
+    @ApiOperation("删除特殊机型配额")
+    @DELETE
+    @Path("/spec/delete")
+    fun deleteSpec(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam(value = "机型", required = true)
+        @QueryParam("size")
+        size: String,
     ): Result<Boolean>
 }

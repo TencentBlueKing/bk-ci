@@ -5,6 +5,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpWindowsConfigResource
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
+import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -51,5 +52,13 @@ class OpWindowsConfigResourceImpl @Autowired constructor(
 
     override fun deleteWindowsZone(userId: String, id: Long): Result<Boolean> {
         return Result(windowsResourceConfigService.deleteWindowsResourceZone(id))
+    }
+
+    override fun createOrUpdateSpec(userId: String, data: WindowsSpecResInfo): Result<Boolean> {
+        return Result(windowsResourceConfigService.createOrUpdateSpec(data))
+    }
+
+    override fun deleteSpec(userId: String, projectId: String, size: String): Result<Boolean> {
+        return Result(windowsResourceConfigService.deleteSpec(projectId, size))
     }
 }

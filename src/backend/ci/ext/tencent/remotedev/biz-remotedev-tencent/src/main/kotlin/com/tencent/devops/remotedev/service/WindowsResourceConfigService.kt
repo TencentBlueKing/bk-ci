@@ -29,8 +29,10 @@ package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.remotedev.dao.WindowsResourceTypeDao
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
+import com.tencent.devops.remotedev.dao.WindowsSpecResourceDao
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
+import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -40,7 +42,8 @@ import org.springframework.stereotype.Service
 class WindowsResourceConfigService @Autowired constructor(
     private val dslContext: DSLContext,
     private val windowsResourceTypeDao: WindowsResourceTypeDao,
-    private val windowsResourceZoneDao: WindowsResourceZoneDao
+    private val windowsResourceZoneDao: WindowsResourceZoneDao,
+    private val windowsSpecResourceDao: WindowsSpecResourceDao
 ) {
 
     companion object {
@@ -94,7 +97,7 @@ class WindowsResourceConfigService @Autowired constructor(
     ): Boolean {
         logger.info(
             "WorkspaceTemplateService|updateWorkspaceTemplate|" +
-                    "id|$id|windowsResourceConfig|$windowsResourceConfig"
+                "id|$id|windowsResourceConfig|$windowsResourceConfig"
         )
 
         // 更新模板信息
@@ -113,7 +116,7 @@ class WindowsResourceConfigService @Autowired constructor(
     ): Boolean {
         logger.info(
             "WorkspaceTemplateService|updateWindowsResourceZone|" +
-                    "id|$id|windowsResourceConfig|$windowsResourceConfig"
+                "id|$id|windowsResourceConfig|$windowsResourceConfig"
         )
 
         // 更新模板信息
@@ -149,5 +152,23 @@ class WindowsResourceConfigService @Autowired constructor(
         )
 
         return true
+    }
+
+    fun createOrUpdateSpec(
+        data: WindowsSpecResInfo
+    ): Boolean {
+        return windowsSpecResourceDao.createOrUpdateSpecRes(
+            dslContext = dslContext,
+            projectId = data.projectId,
+            size = data.size,
+            quota = data.quota
+        )
+    }
+
+    fun deleteSpec(
+        projectId: String,
+        size: String
+    ): Boolean {
+        return windowsSpecResourceDao.delete(dslContext = dslContext, projectId = projectId, size = size)
     }
 }

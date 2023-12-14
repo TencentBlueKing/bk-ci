@@ -180,6 +180,11 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.THIRD_PARTY,
         errorCode = "2132034",
         formatErrorMessage = "project {0} code proxy {1} already exists"
+    ),
+    PROJECT_DESKTOP_SPEC_RESOURCES_INSUFFICIENT(
+        errorType = ErrorType.USER,
+        errorCode = "2132035",
+        formatErrorMessage = "Insufficient quota for special model {0} in current project, currently {1}"
     );
 
     fun getErrorMessage(): String {
