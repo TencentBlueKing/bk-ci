@@ -37,7 +37,7 @@ interface MetricsDataReportService {
      * @param buildEndPipelineMetricsData 构建结束后流水线指标数据
      * @return 布尔值
      */
-    fun saveDispatchJobMetrics(
+    fun metricsDataReport(
         buildEndPipelineMetricsData: BuildEndPipelineMetricsData
     ): Boolean
 
@@ -46,7 +46,7 @@ interface MetricsDataReportService {
      * @param dispatchJobMetricsDataList job度量数据
      * @return 布尔值
      */
-    fun saveDispatchJobMetrics(
+    fun metricsDataReport(
         dispatchJobMetricsDataList: List<DispatchJobMetricsData>
     ): Boolean
 }

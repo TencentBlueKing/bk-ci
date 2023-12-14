@@ -97,7 +97,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         private fun metricsDataReportKey(key: String) = "metricsDataReport:$key"
     }
 
-    override fun saveDispatchJobMetrics(buildEndPipelineMetricsData: BuildEndPipelineMetricsData): Boolean {
+    override fun metricsDataReport(buildEndPipelineMetricsData: BuildEndPipelineMetricsData): Boolean {
         // 判断流水线是否在db中有记录
         val projectId = buildEndPipelineMetricsData.projectId
         val pipelineId = buildEndPipelineMetricsData.pipelineId
@@ -214,7 +214,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         return true
     }
 
-    override fun saveDispatchJobMetrics(dispatchJobMetricsDataList: List<DispatchJobMetricsData>): Boolean {
+    override fun metricsDataReport(dispatchJobMetricsDataList: List<DispatchJobMetricsData>): Boolean {
         dispatchJobMetricsDao.batchSaveDispatchJobMetrics(dslContext, dispatchJobMetricsDataList)
         return true
     }

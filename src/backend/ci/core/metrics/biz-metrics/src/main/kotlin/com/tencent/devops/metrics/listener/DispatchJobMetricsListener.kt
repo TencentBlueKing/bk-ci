@@ -44,7 +44,7 @@ class DispatchJobMetricsListener @Autowired constructor(
     override fun execute(event: DispatchJobMetricsEvent) {
         try {
             val dispatchJobMetricsDataList = event.jobMetricsList
-            metricsDataReportService.saveDispatchJobMetrics(dispatchJobMetricsDataList)
+            metricsDataReportService.metricsDataReport(dispatchJobMetricsDataList)
         } catch (ignored: Throwable) {
             logger.warn("Fail to insert the metrics data", ignored)
             throw ErrorCodeException(
