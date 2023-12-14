@@ -9,6 +9,7 @@ import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
+import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.service.PermissionService
@@ -106,5 +107,9 @@ class ServiceRemoteDevResourceImpl(
             Thread.sleep(500)
         }
         return Result(true)
+    }
+
+    override fun notifyWorkspaceInfo(notifyData: WorkspaceNotifyData): Result<Boolean> {
+        TODO("Not yet implemented")
     }
 }

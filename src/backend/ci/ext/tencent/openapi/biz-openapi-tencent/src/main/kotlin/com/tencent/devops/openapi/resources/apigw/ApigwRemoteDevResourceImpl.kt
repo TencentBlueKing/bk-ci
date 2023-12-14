@@ -7,6 +7,7 @@ import com.tencent.devops.openapi.api.apigw.ApigwRemoteDevResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
+import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import org.slf4j.LoggerFactory
@@ -88,5 +89,9 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             owner = owner,
             data = data
         )
+    }
+
+    override fun notifyWorkspaceInfo(appCode: String?, apigwType: String?, notifyData: WorkspaceNotifyData): Result<Boolean> {
+        TODO("Not yet implemented")
     }
 }
