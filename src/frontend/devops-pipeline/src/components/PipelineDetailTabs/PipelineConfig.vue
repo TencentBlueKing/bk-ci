@@ -169,6 +169,7 @@
                     this.init()
                 })
             }
+            window.__bk_zIndex_manager.zIndex = 2020
         },
         beforeDestroy () {
             this.$refs.editor?.destroy()
@@ -176,6 +177,7 @@
             this.setPipeline(null)
             this.setPipelineWithoutTrigger(null)
             this.setPipelineSetting(null)
+            window.__bk_zIndex_manager.zIndex = 2000
         },
         methods: {
             ...mapActions('atom', [
