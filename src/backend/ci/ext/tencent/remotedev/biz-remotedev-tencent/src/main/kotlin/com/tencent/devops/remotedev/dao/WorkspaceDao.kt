@@ -431,7 +431,7 @@ class WorkspaceDao {
         status: WorkspaceStatus? = null,
         mountType: WorkspaceMountType? = null,
         projectIds: Set<String>? = null,
-        ip: String? = null,
+        ips: Set<String>? = null,
         assignType: WorkspaceShared.AssignType? = null
     ): Result<out Record>? {
         val t1 = TWorkspace.T_WORKSPACE.`as`("t1")
@@ -456,7 +456,25 @@ class WorkspaceDao {
             }
         }
 
-        ip?.let {
+        if(!ips.isNullOrEmpty()) {
+
+                var ipsCond =t3.HOST_IP.endsWith(".$${ips.first()}")as Condition
+
+//                ips.drop(1).forEach { ip ->
+//                    ipsCond = ipsCond.or(
+//                        JooqUtils.jsonExtract(
+//                            t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
+//                            t2 = "\$.hostIP",
+//                            lower = false,
+//                            removeDoubleQuotes = true
+//                        ).like("%$ip")
+//                    )
+//                }
+//                conditions.add(ipsCond)
+        }
+
+
+        ips?.let {
             conditions.add(
                 t1.NAME.`in`(
                     DSL.selectDistinct(t3.WORKSPACE_NAME).from(t3).where(
