@@ -45,13 +45,9 @@ class ServiceExtServiceBuildPipelineInitResourceImpl @Autowired constructor(
         extServiceBuildInitPipelineReq: ExtServiceBuildInitPipelineReq
     ): Result<ExtServiceBuildInitPipelineResp> {
         return extServiceBuildInitPipelineService.initPipeline(
-            userId,
-            projectCode,
-            extServiceBuildInitPipelineReq.extServiceBaseInfo,
-            extServiceBuildInitPipelineReq.repositoryHashId,
-            extServiceBuildInitPipelineReq.repositoryPath,
-            extServiceBuildInitPipelineReq.script,
-            extServiceBuildInitPipelineReq.buildEnv
+            userId = userId,
+            projectCode = projectCode,
+            extServiceBuildInitPipelineReq = extServiceBuildInitPipelineReq
         )
     }
 }

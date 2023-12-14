@@ -99,6 +99,7 @@ data class CodeTGitWebHookTriggerElement(
 
                 CodeEventType.MERGE_REQUEST_ACCEPT -> {
                     listOf(
+                        vuexInput(name = "action", value = "merge"),
                         vuexInput(name = "branchName", value = branchName),
                         vuexInput(name = "excludeBranchName", value = excludeBranchName),
                         vuexInput(

@@ -35,6 +35,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.dispatch.kubernetes.service.RemoteDevService
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import com.tencent.devops.remotedev.pojo.image.WorkspaceImageInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -95,37 +96,42 @@ class WorkspaceListener @Autowired constructor(
             type = event.type,
             bkTicket = event.bkTicket,
             status = false,
-            environmentUid = ""
+            environmentUid = "",
+            workspaceImageInfo = WorkspaceImageInfo(imageId = event.imageId ?: "")
         )
+
         try {
             logger.info("Start to handle workspace operate ($event)")
             when (event.type) {
                 UpdateEventType.START -> {
                     val workspaceResponse = remoteDevService.startWorkspace(event)
+                    backEvent.status = true
                     backEvent.environmentHost = workspaceResponse.environmentHost
                 }
+
                 UpdateEventType.STOP -> {
-                    remoteDevService.stopWorkspace(event)
+                    backEvent.status = remoteDevService.stopWorkspace(event)
                 }
+
                 UpdateEventType.DELETE -> {
-                    remoteDevService.deleteWorkspace(event)
+                    backEvent.status = remoteDevService.deleteWorkspace(event)
                 }
+
                 UpdateEventType.RESTART -> {
-                    remoteDevService.restartWorkspace(event)
+                    backEvent.status = remoteDevService.restartWorkspace(event)
                 }
+
                 UpdateEventType.MAKE_IMAGE -> {
-                    backEvent.workspaceImageInfo = remoteDevService.makeWorkspaceImage(event)
+                    remoteDevService.makeWorkspaceImageWithBackEvent(event, backEvent)
                 }
+
                 else -> {
                 }
             }
-            backEvent.status = true
-        } catch (e: BuildFailureException) {
-            backEvent.errorMsg = e.formatErrorMessage + e.message
-            logger.error("Handle workspace update error.", e)
-        } catch (t: Throwable) {
-            backEvent.errorMsg = t.message
-            logger.warn("Fail to handle workspace operate ($event)", t)
+        } catch (e: Exception) {
+            backEvent.status = false
+            backEvent.errorMsg = e.message
+            logger.error("Fail to handle workspace operate ($event)", e)
         } finally {
             // 业务逻辑处理完成回调remotedev事件
             remoteDevDispatcher.dispatch(

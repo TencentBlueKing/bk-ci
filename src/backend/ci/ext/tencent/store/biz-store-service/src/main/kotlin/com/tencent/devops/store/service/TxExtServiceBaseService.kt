@@ -28,13 +28,21 @@
 package com.tencent.devops.store.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_BRANCH
+import com.tencent.devops.common.api.constant.KEY_REPOSITORY_HASH_ID
+import com.tencent.devops.common.api.constant.KEY_REPOSITORY_PATH
+import com.tencent.devops.common.api.constant.KEY_SCRIPT
+import com.tencent.devops.common.api.constant.KEY_VERSION
+import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceExtServiceBuildPipelineInitResource
 import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildInitPipelineReq
+import com.tencent.devops.process.utils.KEY_PIPELINE_NAME
 import com.tencent.devops.project.api.service.service.ServiceItemResource
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
@@ -43,10 +51,11 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.config.ExtServiceImageSecretConfig
 import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.dao.ExtServiceBuildAppRelDao
 import com.tencent.devops.store.dao.ExtServiceBuildInfoDao
+import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
+import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.constants.KEY_EXT_SERVICE_ITEMS_PREFIX
 import com.tencent.devops.store.pojo.dto.ExtServiceBaseInfoDTO
@@ -54,12 +63,13 @@ import com.tencent.devops.store.pojo.dto.ExtServiceImageInfoDTO
 import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
 import com.tencent.devops.store.pojo.enums.ExtServicePackageSourceTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
-import java.util.concurrent.TimeUnit
+import org.apache.commons.text.StringEscapeUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 class TxExtServiceBaseService : ExtServiceBaseService() {
@@ -76,7 +86,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
     private lateinit var extServiceBuildInfoDao: ExtServiceBuildInfoDao
 
     @Autowired
-    private lateinit var extServiceBuildAppRelDao: ExtServiceBuildAppRelDao
+    private lateinit var businessConfigDao: BusinessConfigDao
 
     @Autowired
     private lateinit var storePipelineBuildRelDao: StorePipelineBuildRelDao
@@ -134,7 +144,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
                     dslContext,
                     extensionInfo.language!!,
                     StoreTypeEnum.SERVICE
-                ).sampleProjectPath,
+                )?.sampleProjectPath,
                 namespaceId = serviceNameSpaceId.toInt(),
                 visibilityLevel = extensionInfo.visibilityLevel,
                 tokenType = TokenTypeEnum.PRIVATE_KEY
@@ -212,20 +222,35 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
                 serviceCode = serviceCode,
                 version = serviceRecord.version,
                 extServiceImageInfo = extServiceImageInfo,
-                extServiceDeployInfo = deployApp
+                extServiceDeployInfo = deployApp,
+                branch = MASTER
             )
-            val serviceBuildAppInfoRecords = extServiceBuildAppRelDao.getExtServiceBuildAppInfo(context, serviceId)
-            val buildEnv = mutableMapOf<String, String>()
-            serviceBuildAppInfoRecords?.forEach {
-                buildEnv[it["appName"] as String] = it["appVersion"] as String
-            }
+            val pipelineModelConfig = businessConfigDao.get(
+                dslContext = context,
+                business = StoreTypeEnum.SERVICE.name,
+                feature = "initBuildPipeline",
+                businessValue = "PIPELINE_MODEL"
+            )
             val extServiceFeature = extFeatureDao.getServiceByCode(context, serviceCode)!!
+            var pipelineModel = pipelineModelConfig!!.configValue
+            val pipelineName = "am-$serviceCode-${UUIDUtil.generate()}"
+            val paramMap = mapOf(
+                KEY_PIPELINE_NAME to pipelineName,
+                KEY_STORE_CODE to serviceCode,
+                KEY_VERSION to version,
+                KEY_SCRIPT to StringEscapeUtils.escapeJava(script),
+                KEY_REPOSITORY_HASH_ID to extServiceFeature.repositoryHashId,
+                KEY_REPOSITORY_PATH to (buildInfo.value2() ?: ""),
+                KEY_BRANCH to MASTER
+            )
+            // 将流水线模型中的变量替换成具体的值
+            paramMap.forEach { (key, value) ->
+                pipelineModel = pipelineModel.replace("#{$key}", value)
+            }
             val extServiceBuildInitPipelineReq = ExtServiceBuildInitPipelineReq(
-                repositoryHashId = extServiceFeature.repositoryHashId,
-                repositoryPath = buildInfo.value2(),
+                pipelineModel = pipelineModel,
                 script = script,
-                extServiceBaseInfo = serviceBaseInfo,
-                buildEnv = buildEnv
+                extServiceBaseInfo = serviceBaseInfo
             )
             val serviceMarketInitPipelineResp = client.get(ServiceExtServiceBuildPipelineInitResource::class)
                 .initExtServiceBuildPipeline(userId, projectCode!!, extServiceBuildInitPipelineReq).data

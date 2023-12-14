@@ -46,5 +46,8 @@ data class SoftwareInfo(
 
 data class CommonArgs(
     @ApiModelProperty("base64参数")
-    val base64: String
+    val base64: String,
+    @ApiModelProperty("云桌面ID")
+    @JsonProperty("cloud_desktop_id")
+    val cloudDesktopId: String? = ""
 )

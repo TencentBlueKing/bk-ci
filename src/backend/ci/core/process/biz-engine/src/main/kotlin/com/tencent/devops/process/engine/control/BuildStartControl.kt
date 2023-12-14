@@ -530,16 +530,17 @@ class BuildStartControl @Autowired constructor(
             ),
             startTime = LocalDateTime.now(), endTime = null
         )
+        val nowMills = now.timestampmilli()
+        val stageElapsed = max(0, nowMills - buildInfo.queueTime)
+        stage.elapsed = stageElapsed
+        stage.status = BuildStatus.SUCCEED.name
         stageRecordService.updateStageRecord(
             projectId = buildInfo.projectId, pipelineId = buildInfo.pipelineId, buildId = buildInfo.buildId,
             stageId = stage.id!!, executeCount = executeCount, buildStatus = BuildStatus.SUCCEED,
             stageVar = mutableMapOf(
-                Stage::elapsed.name to max(0, System.currentTimeMillis() - buildInfo.queueTime)
+                Stage::elapsed.name to stageElapsed
             )
         )
-        val nowMills = now.timestampmilli()
-        stage.status = BuildStatus.SUCCEED.name
-        stage.elapsed = max(0, nowMills - buildInfo.queueTime)
         container.status = BuildStatus.SUCCEED.name
         container.startEpoch = nowMills
         container.systemElapsed = stage.elapsed // 修复可能导致负数的情况

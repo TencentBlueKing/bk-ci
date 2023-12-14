@@ -8,14 +8,14 @@ data class ListCgsResp(
     val result: Boolean,
     val code: Int,
     val message: String,
-    val data: List<ListCgsRespData>
+    val data: List<ListCgsRespData>?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ListCgsRespData(
-    val basic: ListCgsRespDataBasic,
+    val basic: ListCgsRespDataBasic?,
     val pvcs: List<ListCgsRespDataPvcsData>?,
-    val image: String,
+    val image: String?,
     val cgsData: ListCgsRespDataCgsData
 )
 

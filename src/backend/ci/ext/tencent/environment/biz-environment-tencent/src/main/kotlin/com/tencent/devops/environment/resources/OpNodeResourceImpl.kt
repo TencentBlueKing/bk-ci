@@ -31,11 +31,15 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.OpNodeResource
 import com.tencent.devops.environment.pojo.NodePage
+import com.tencent.devops.environment.service.BkBizProjectService
 import com.tencent.devops.environment.service.OpNodeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpNodeResourceImpl @Autowired constructor(private val opNodeService: OpNodeService) : OpNodeResource {
+class OpNodeResourceImpl @Autowired constructor(
+    private val opNodeService: OpNodeService,
+    private val bizProjectService: BkBizProjectService
+) : OpNodeResource {
     override fun flushDisplayName(): Result<Int> {
         return Result(opNodeService.flushDisplayName())
     }
@@ -46,5 +50,9 @@ class OpNodeResourceImpl @Autowired constructor(private val opNodeService: OpNod
 
     override fun deleteNodes(projectId: String, nodeHashId: String): Result<Boolean> {
         return Result(opNodeService.deleteNode(projectId, nodeHashId))
+    }
+
+    override fun updateMonitorDashboard(projectId: String, updateDashboard: Boolean): Result<Boolean> {
+        return Result(bizProjectService.updateDashboard(projectId, updateDashboard))
     }
 }

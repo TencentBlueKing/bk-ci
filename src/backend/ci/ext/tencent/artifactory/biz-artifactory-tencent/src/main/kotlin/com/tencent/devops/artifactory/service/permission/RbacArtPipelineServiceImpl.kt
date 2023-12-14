@@ -35,7 +35,7 @@ class RbacArtPipelineServiceImpl(
         return if (pipelineId.isNullOrEmpty()) {
             client.get(ServiceProjectAuthResource::class).isProjectUser(
                 userId = userId,
-                token = tokenCheckService.getSystemToken(null) ?: "",
+                token = tokenCheckService.getSystemToken() ?: "",
                 projectCode = projectId
             ).data ?: false
         } else {

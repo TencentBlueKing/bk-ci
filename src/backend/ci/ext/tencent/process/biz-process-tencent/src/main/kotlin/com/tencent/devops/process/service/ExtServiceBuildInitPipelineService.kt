@@ -27,33 +27,14 @@
 
 package com.tencent.devops.process.service
 
-import com.tencent.devops.common.api.constant.CommonMessageCode.BK_BUILD_TRIGGER
+import com.tencent.devops.common.api.constant.KEY_BRANCH
+import com.tencent.devops.common.api.constant.KEY_SCRIPT
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.Stage
-import com.tencent.devops.common.pipeline.container.TriggerContainer
-import com.tencent.devops.common.pipeline.container.VMBuildContainer
-import com.tencent.devops.common.pipeline.element.store.ExtServiceBuildDeployElement
-import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
-import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.enums.CodePullStrategy
-import com.tencent.devops.common.pipeline.enums.DockerVersion
-import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.pipeline.enums.VMBaseOS
-import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
-import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
-import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
-import com.tencent.devops.common.pipeline.pojo.git.GitPullMode
-import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_PULL_GIT_WAREHOUSE_CODE
+import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildInitPipelineReq
 import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildInitPipelineResp
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.store.pojo.dto.ExtServiceBaseInfoDTO
@@ -79,180 +60,32 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
     fun initPipeline(
         userId: String,
         projectCode: String,
-        extServiceBaseInfo: ExtServiceBaseInfoDTO,
-        repositoryHashId: String,
-        repositoryPath: String?,
-        script: String,
-        buildEnv: Map<String, String>?
+        extServiceBuildInitPipelineReq: ExtServiceBuildInitPipelineReq
     ): Result<ExtServiceBuildInitPipelineResp> {
-        var containerSeqId = 0
-        // stage-1
-        val stageFirstElement = ManualTriggerElement(id = "T-1-1-1")
-        val stageFirstElements = listOf<Element>(stageFirstElement)
-        val params = mutableListOf<BuildFormProperty>()
-        params.add(
-            BuildFormProperty(
-                id = "serviceCode",
-                required = true,
-                type = BuildFormPropertyType.STRING,
-                defaultValue = extServiceBaseInfo.serviceCode,
-                value = null,
-                options = null,
-                desc = null,
-                repoHashId = null,
-                relativePath = null,
-                scmType = null,
-                containerType = null,
-                glob = null,
-                properties = null
-            )
-        )
-        params.add(
-            BuildFormProperty(
-                id = "version",
-                required = true,
-                type = BuildFormPropertyType.STRING,
-                defaultValue = extServiceBaseInfo.version,
-                value = null,
-                options = null,
-                desc = null,
-                repoHashId = null,
-                relativePath = null,
-                scmType = null,
-                containerType = null,
-                glob = null,
-                properties = null
-            )
-        )
-        params.add(
-            BuildFormProperty(
-                id = "extServiceImageInfo",
-                required = true,
-                type = BuildFormPropertyType.STRING,
-                defaultValue = JsonUtil.toJson(extServiceBaseInfo.extServiceImageInfo),
-                value = null,
-                options = null,
-                desc = null,
-                repoHashId = null,
-                relativePath = null,
-                scmType = null,
-                containerType = null,
-                glob = null,
-                properties = null
-            )
-        )
-        params.add(
-            BuildFormProperty(
-                id = "extServiceDeployInfo",
-                required = true,
-                type = BuildFormPropertyType.STRING,
-                defaultValue = JsonUtil.toJson(extServiceBaseInfo.extServiceDeployInfo),
-                value = null,
-                options = null,
-                desc = null,
-                repoHashId = null,
-                relativePath = null,
-                scmType = null,
-                containerType = null,
-                glob = null,
-                properties = null
-            )
-        )
-        params.add(
-            BuildFormProperty(
-                id = "script",
-                required = true,
-                type = BuildFormPropertyType.STRING,
-                defaultValue = script,
-                value = null,
-                options = null,
-                desc = null,
-                repoHashId = null,
-                relativePath = null,
-                scmType = null,
-                containerType = null,
-                glob = null,
-                properties = null
-            )
-        )
-        val stageFirstContainer = TriggerContainer(
-            id = containerSeqId.toString(),
-            name = MessageUtil.getMessageByLocale(
-                messageCode = BK_BUILD_TRIGGER,
-                language = I18nUtil.getLanguage(userId)
-            ),
-            elements = stageFirstElements,
-            status = null,
-            startEpoch = null,
-            systemElapsed = null,
-            elementElapsed = null,
-            params = params,
-            buildNo = null
-        )
-        containerSeqId++
-        val stageFirstContainers = listOf<Container>(stageFirstContainer)
-        val stageFirst = Stage(stageFirstContainers, "stage-1")
-        // stage-2
-        val stageSecondPullCodeElement = CodeGitElement(
-            name = MessageUtil.getMessageByLocale(
-                messageCode = BK_PULL_GIT_WAREHOUSE_CODE,
-                language = I18nUtil.getLanguage(userId)
-            ),
-            id = "T-2-1-1",
-            status = null,
-            repositoryHashId = repositoryHashId,
-            branchName = "",
-            revision = "",
-            strategy = CodePullStrategy.FRESH_CHECKOUT,
-            path = repositoryPath,
-            enableSubmodule = true,
-            gitPullMode = GitPullMode(GitPullModeType.BRANCH, "master")
-        )
-        val stageSecondLinuxScriptElement = LinuxScriptElement(
-            id = "T-2-1-2",
-            status = null,
-            scriptType = BuildScriptType.SHELL,
-            script = "\${script}",
-            continueNoneZero = false
-        )
-        val stageSecondExtServiceBuildDeployElement = ExtServiceBuildDeployElement(id = "T-2-1-3")
-        val stageSecondElements =
-            listOf<Element>(stageSecondPullCodeElement, stageSecondLinuxScriptElement, stageSecondExtServiceBuildDeployElement)
-        val stageSecondContainer = VMBuildContainer(
-            id = containerSeqId.toString(),
-            elements = stageSecondElements,
-            baseOS = VMBaseOS.LINUX,
-            vmNames = emptySet(),
-            maxQueueMinutes = 60,
-            maxRunningMinutes = 480,
-            buildEnv = buildEnv,
-            customBuildEnv = null,
-            thirdPartyAgentId = null,
-            thirdPartyAgentEnvId = null,
-            thirdPartyWorkspace = null,
-            dockerBuildVersion = null,
-            tstackAgentId = null,
-            dispatchType = DockerDispatchType(DockerVersion.TLINUX2_2.value)
-        )
-        val stageSecondContainers = listOf<Container>(stageSecondContainer)
-        val stageSecond = Stage(stageSecondContainers, "stage-2")
-        val stages = mutableListOf(stageFirst, stageSecond)
-        val serviceCode = extServiceBaseInfo.serviceCode
-        val pipelineName = "service-$projectCode-$serviceCode-${System.currentTimeMillis()}"
-        val model = Model(pipelineName, pipelineName, stages)
-        logger.info("model is:$model")
+        val model = JsonUtil.to(extServiceBuildInitPipelineReq.pipelineModel, Model::class.java)
         // 保存流水线信息
-        val pipelineId = pipelineInfoFacadeService.createPipeline(userId, projectCode, model, ChannelCode.AM)
-            .pipelineId
+        val pipelineId = pipelineInfoFacadeService.createPipeline(
+            userId = userId,
+            projectId = projectCode,
+            model = model,
+            channelCode = ChannelCode.AM
+        ).pipelineId
         logger.info("createPipeline result is:$pipelineId")
         // 异步启动流水线
         val startParams = mutableMapOf<String, String>() // 启动参数
-        startParams["serviceCode"] = serviceCode
-        startParams["version"] = extServiceBaseInfo.version
-        startParams["extServiceImageInfo"] = JsonUtil.toJson(extServiceBaseInfo.extServiceImageInfo)
-        startParams["extServiceDeployInfo"] = JsonUtil.toJson(extServiceBaseInfo.extServiceDeployInfo)
-        startParams["script"] = script
-        var extServiceStatus = ExtServiceStatusEnum.BUILDING
+        val extServiceBaseInfo = extServiceBuildInitPipelineReq.extServiceBaseInfo
+        startParams[ExtServiceBaseInfoDTO::serviceCode.name] = extServiceBaseInfo.serviceCode
+        startParams[ExtServiceBaseInfoDTO::version.name] = extServiceBaseInfo.version
+        startParams[ExtServiceBaseInfoDTO::extServiceImageInfo.name] =
+            JsonUtil.toJson(extServiceBaseInfo.extServiceImageInfo)
+        startParams[ExtServiceBaseInfoDTO::extServiceDeployInfo.name] =
+            JsonUtil.toJson(extServiceBaseInfo.extServiceDeployInfo)
+        startParams[KEY_SCRIPT] = extServiceBuildInitPipelineReq.script
+        val branch = extServiceBaseInfo.branch
+        if (!branch.isNullOrBlank()) {
+            startParams[KEY_BRANCH] = branch
+        }
+        var serviceBuildStatus = ExtServiceStatusEnum.BUILDING
         var buildId: String? = null
         try {
             buildId = pipelineBuildFacadeService.buildManualStartup(
@@ -266,11 +99,11 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
                 isMobile = false,
                 startByMessage = null
             ).id
-            logger.info("buildManualStartup result is:$buildId")
-        } catch (e: Exception) {
-            logger.info("buildManualStartup error is :$e", e)
-            extServiceStatus = ExtServiceStatusEnum.BUILD_FAIL
+            logger.info("serviceBuildManualStartup result is:$buildId")
+        } catch (ignored: Throwable) {
+            logger.error("$pipelineId buildManualStartup error:", ignored)
+            serviceBuildStatus = ExtServiceStatusEnum.BUILD_FAIL
         }
-        return Result(ExtServiceBuildInitPipelineResp(pipelineId, buildId, extServiceStatus))
+        return Result(ExtServiceBuildInitPipelineResp(pipelineId, buildId, serviceBuildStatus))
     }
 }

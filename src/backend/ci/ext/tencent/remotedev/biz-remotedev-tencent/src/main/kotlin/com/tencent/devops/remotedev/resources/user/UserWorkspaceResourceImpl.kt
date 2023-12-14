@@ -27,11 +27,14 @@
 
 package com.tencent.devops.remotedev.resources.user
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserWorkspaceResource
 import com.tencent.devops.remotedev.pojo.BkTicketInfo
+import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
@@ -39,12 +42,14 @@ import com.tencent.devops.remotedev.pojo.WorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
+import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.remotedev.service.BkTicketService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.RepositoryService
 import com.tencent.devops.remotedev.service.WorkspaceService
+import com.tencent.devops.remotedev.service.WorkspaceXlsxExportService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.CreateControl
@@ -53,6 +58,7 @@ import com.tencent.devops.remotedev.service.workspace.SleepControl
 import com.tencent.devops.remotedev.service.workspace.StartControl
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
+import javax.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -67,9 +73,11 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     private val createControl: CreateControl,
     private val startControl: StartControl,
     private val sleepControl: SleepControl,
-    private val deleteControl: DeleteControl
+    private val deleteControl: DeleteControl,
+    private val xlsxExportService: WorkspaceXlsxExportService
 ) : UserWorkspaceResource {
 
+    @AuditEntry(actionId = ActionId.CGS_CREATE)
     override fun createWorkspace(
         userId: String,
         bkTicket: String,
@@ -79,6 +87,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(createControl.createWorkspace(userId, bkTicket, projectId, workspace))
     }
 
+    @AuditEntry(actionId = ActionId.CGS_START)
     override fun startWorkspace(
         userId: String,
         bkTicket: String,
@@ -87,26 +96,44 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(startControl.startWorkspace(userId, bkTicket, workspaceName))
     }
 
+    @AuditEntry(actionId = ActionId.CGS_STOP)
     override fun stopWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         return Result(sleepControl.stopWorkspace(userId, workspaceName))
     }
 
+    @AuditEntry(actionId = ActionId.CGS_SHARE)
     override fun shareWorkspace(userId: String, workspaceName: String, sharedUser: String): Result<Boolean> {
         return Result(workspaceService.shareWorkspace(userId, workspaceName, sharedUser))
     }
 
+    @AuditEntry(actionId = ActionId.CGS_EDIT)
     override fun editWorkspace(userId: String, workspaceName: String, displayName: String): Result<Boolean> {
         return Result(workspaceService.editWorkspace(userId, workspaceName, displayName))
     }
 
+    @AuditEntry(actionId = ActionId.CGS_DELETE)
     override fun deleteWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         return Result(deleteControl.deleteWorkspace(userId, workspaceName))
     }
 
     override fun getWorkspaceList(userId: String, page: Int?, pageSize: Int?): Result<Page<Workspace>> {
-        return Result(workspaceService.getWorkspaceList(userId, page, pageSize))
+        return Result(workspaceService.getWorkspaceList(userId, page, pageSize, null))
     }
 
+    override fun getWorkspaceListNew(
+        userId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: WorkspaceSearch
+    ): Result<Page<Workspace>> {
+        return Result(workspaceService.getWorkspaceList(userId, page, pageSize, search))
+    }
+
+    override fun getWorkspaceListXlsx(userId: String, page: Int?, pageSize: Int?, search: WorkspaceSearch): Response {
+        return xlsxExportService.exportProjectWorkspaceListUser(userId, page, pageSize, search)
+    }
+
+    @AuditEntry(actionId = ActionId.CGS_VIEW)
     override fun getWorkspaceDetail(userId: String, workspaceName: String): Result<WorkspaceDetail?> {
         return Result(workspaceService.getWorkspaceDetail(userId, workspaceName))
     }
@@ -212,12 +239,21 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         bkTicketService.updateBkTicket(userId, bkTicketInfo.bkTicket, bkTicketInfo.hostName, bkTicketInfo.mountType)
         return Result(true)
     }
+
     override fun updateAllBkTicket(userId: String, bkTicket: String): Result<Boolean> {
         bkTicketService.updateAllBkTicket(userId, bkTicket)
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.CGS_VIEW)
     override fun startCloudWorkspaceDetail(userId: String, workspaceName: String): Result<WorkspaceStartCloudDetail?> {
         return Result(workspaceService.startCloudWorkspaceDetail(userId, workspaceName))
+    }
+
+    override fun projectAccessDevicePermissions(
+        userId: String,
+        macAddress: String
+    ): Result<Map<String, ProjectAccessDevicePermissionsResp>> {
+        return Result(workspaceService.projectAccessDevicePermissions(userId, macAddress))
     }
 }

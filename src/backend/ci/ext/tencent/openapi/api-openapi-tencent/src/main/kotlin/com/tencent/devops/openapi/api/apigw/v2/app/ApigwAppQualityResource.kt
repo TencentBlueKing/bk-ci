@@ -50,7 +50,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwAppQualityResource {
 
-    @ApiOperation("获取某次构建的质量红线数据")
+    @ApiOperation("获取某次构建的质量红线数据", tags = ["v2_app_quality"])
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}")
     @GET
     fun getBuildQuality(
