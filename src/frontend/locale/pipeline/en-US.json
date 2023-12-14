@@ -1235,5 +1235,6 @@
   "unAccessUser": "User {0} is not a member of the current project.",
   "downloadDisabledTips": "Exceeds 10 GB. Please download in batches from the artifact repository.",
   "templateName": "Template",
-  "templateVersion": "Template Version"
+  "templateVersion": "Template Version",
+  "documentTitlePipeline": "Pipeline | BK-CI | Tencent BlueKing"
 }

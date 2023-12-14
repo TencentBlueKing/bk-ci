@@ -63,6 +63,11 @@
                 }]
             }
         },
+        watch: {
+            'curPipeline.pipelineName' (val) {
+                window.top.document.title = `${val} | ${this.$t('pipeline')}`
+            }
+        },
         created () {
             this.fetchPipelineList()
         },

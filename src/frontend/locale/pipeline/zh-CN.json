@@ -1238,5 +1238,6 @@
   "unAccessUser": "用户{0}不是当前项目成员",
   "downloadDisabledTips": "目录下的文件大小超过 10 G，请到制品库分批下载",
   "templateName": "模板",
-  "templateVersion": "模版版本"
+  "templateVersion": "模版版本",
+  "documentTitlePipeline": "流水线 | 持续集成平台-蓝盾 | 腾讯蓝鲸智云"
 }
