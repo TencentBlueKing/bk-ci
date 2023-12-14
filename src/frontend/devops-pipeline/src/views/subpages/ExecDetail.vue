@@ -369,7 +369,7 @@
             execDetail (val) {
                 this.isLoading = val === null
                 if (val) {
-                    window.top.document.title = `${val.buildNum}  ${val.buildMsg} | ${val.pipelineName}`
+                    window.top.document.title = `#${val.buildNum}  ${val.buildMsg} | ${val.pipelineName}`
                 }
             },
             'routerParams.buildNo': {
