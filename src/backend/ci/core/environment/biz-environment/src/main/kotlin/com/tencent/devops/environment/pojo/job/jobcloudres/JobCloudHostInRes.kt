@@ -11,6 +11,8 @@ data class JobCloudHostInRes(
     val bkCloudId: Long?,
     @ApiModelProperty(value = "IP地址")
     val ip: String?,
+    @ApiModelProperty(value = "IPv6地址")
+    val ipv6: String?,
     @ApiModelProperty(value = "主机ID")
     @JsonProperty("bk_host_id")
     val bkHostId: Long?

@@ -35,7 +35,7 @@ class NodeScheduledService @Autowired constructor(
      * 分组执行，每次遍历100条记录。
      * display_name为空的：拼接节点类型、node hash值、nodeId这三个字段，写入display_name。
      */
-    @Scheduled(cron = "0 3 21 * * 1-5")
+    @Scheduled(cron = "0 10 10 * * 1-5")
     fun scheduledWriteDisplayName() {
         taskWithRedisLock(SCHEDULED_WRITE_DISPLAY_NAME_TIMEOUT_LOCK_KEY, ::writeDisplayName)
     }
@@ -45,7 +45,7 @@ class NodeScheduledService @Autowired constructor(
      * 遍历T_NODE表中host_id不为空的记录，用host_id 调用find_host_biz_relations接口，看能否得到对应记录：能-不操作，不能-对应记录host_id置为null
      * cron：每天上午10点执行。
      */
-    @Scheduled(cron = "0 22 20 * * 1-5")
+    @Scheduled(cron = "0 0 10 * * 1-5")
     fun scheduledCheckNodeInCC() {
         taskWithRedisLock(SCHEDULED_CHECK_NODE_IN_CC_TIMEOUT_LOCK_KEY, ::checkNodeInCC)
     }

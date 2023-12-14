@@ -281,14 +281,14 @@ class JobService @Autowired constructor(
                                     srcHost = jobCloudFileLog.srcHost.let { srcHost ->
                                         HostInRes(
                                             bkCloudId = srcHost.bkCloudId, ip = srcHost.ip,
-                                            bkHostId = srcHost.bkHostId
+                                            ipv6 = srcHost.ipv6, bkHostId = srcHost.bkHostId
                                         )
                                     },
                                     srcPath = jobCloudFileLog.srcPath,
-                                    destHost = jobCloudFileLog.destHost.let { destHost ->
+                                    destHost = jobCloudFileLog.destHost?.let { destHost ->
                                         HostInRes(
-                                            bkCloudId = destHost?.bkCloudId, ip = destHost?.ip,
-                                            bkHostId = destHost?.bkHostId
+                                            bkCloudId = destHost.bkCloudId, ip = destHost.ip,
+                                            ipv6 = destHost.ipv6, bkHostId = destHost.bkHostId
                                         )
                                     },
                                     destPath = jobCloudFileLog.destPath,
