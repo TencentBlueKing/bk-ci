@@ -17,6 +17,7 @@ import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
+import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import java.net.URLDecoder
 
@@ -28,7 +29,8 @@ class ServiceRemoteDevResourceImpl(
     private val desktopWorkspaceService: DesktopWorkspaceService,
     private val createControl: CreateControl,
     private val workspaceCommon: WorkspaceCommon,
-    private val windowsResourceConfigService: WindowsResourceConfigService
+    private val windowsResourceConfigService: WindowsResourceConfigService,
+    private val notifyControl: NotifyControl
 ) : ServiceRemoteDevResource {
     override fun validateUserTicket(userId: String, isOffshore: Boolean, ticket: String): Result<Boolean> {
         return Result(
@@ -110,6 +112,9 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun notifyWorkspaceInfo(notifyData: WorkspaceNotifyData): Result<Boolean> {
-        TODO("Not yet implemented")
+        notifyControl.notifyWorkspaceInfo(
+            notifyData = notifyData
+        )
+        return Result(true)
     }
 }
