@@ -55,10 +55,20 @@ data class GitReviewEvent(
     val commitId: String? = null,
     val state: String,
     @JsonProperty("restrict_type")
-    val restrictType: String? = null
+    val restrictType: String? = null,
+    @JsonProperty("created_at")
+    val createdAt: String,
+    @JsonProperty("updated_at")
+    val updatedAt: String
 ) : GitEvent() {
     companion object {
         const val classType = "review"
+        const val ACTION_APPROVED = "approved"
+        const val ACTION_APPROVING = "approving"
+        const val ACTION_CLOSE = "closed"
+        const val ACTION_CHANGE_DENIED = "change_denied"
+        const val ACTION_CHANGE_REQUIRED = "change_required"
+        const val ACTION_EMPTY = "empty"
     }
 }
 

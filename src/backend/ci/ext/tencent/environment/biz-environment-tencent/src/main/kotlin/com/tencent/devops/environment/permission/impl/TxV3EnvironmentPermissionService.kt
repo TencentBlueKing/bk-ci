@@ -59,7 +59,7 @@ class TxV3EnvironmentPermissionService constructor(
         permission: AuthPermission
     ): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenCheckService.getSystemToken(null)!!,
+            token = tokenCheckService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             resourceCode = HashUtil.encodeLongId(envId), // 此处之所以要加密,为兼容企业版。已发布的企业版记录的为hashId
@@ -71,7 +71,7 @@ class TxV3EnvironmentPermissionService constructor(
 
     override fun checkEnvPermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenCheckService.getSystemToken(null)!!,
+            token = tokenCheckService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             resourceCode = projectId,
@@ -90,7 +90,7 @@ class TxV3EnvironmentPermissionService constructor(
         if (permission == AuthPermission.VIEW)
             return true
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenCheckService.getSystemToken(null)!!,
+            token = tokenCheckService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             resourceCode = HashUtil.encodeLongId(nodeId), // 此处之所以要加密,为兼容企业版。已发布的企业版记录的为hashId
@@ -102,7 +102,7 @@ class TxV3EnvironmentPermissionService constructor(
 
     override fun checkNodePermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenCheckService.getSystemToken(null)!!,
+            token = tokenCheckService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             resourceCode = projectId,
@@ -115,7 +115,7 @@ class TxV3EnvironmentPermissionService constructor(
     // 解密后
     override fun listEnvByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long> {
         val resourceInstances = client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
-            token = tokenCheckService.getSystemToken(null)!!,
+            token = tokenCheckService.getSystemToken()!!,
             userId = userId,
             action = buildEnvAction(permission),
             projectCode = projectId,
@@ -136,7 +136,7 @@ class TxV3EnvironmentPermissionService constructor(
     ): Map<AuthPermission, List<String>> {
         val actions = TActionUtils.buildActionList(permissions, AuthResourceType.ENVIRONMENT_ENVIRONMENT)
         val instanceResourcesMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
-            token = tokenCheckService.getSystemToken(null)!!,
+            token = tokenCheckService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             resourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT.value,
@@ -172,7 +172,7 @@ class TxV3EnvironmentPermissionService constructor(
     // 解密后
     override fun listNodeByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long> {
         val resourceInstances = client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
-            token = tokenCheckService.getSystemToken(null)!!,
+            token = tokenCheckService.getSystemToken()!!,
             userId = userId,
             action = buildNodeAction(permission),
             projectCode = projectId,
@@ -196,7 +196,7 @@ class TxV3EnvironmentPermissionService constructor(
         val actions = TActionUtils.buildActionList(permissions, AuthResourceType.ENVIRONMENT_ENV_NODE)
 
         val instanceResourcesMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
-            token = tokenCheckService.getSystemToken(null)!!,
+            token = tokenCheckService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             resourceType = AuthResourceType.ENVIRONMENT_ENV_NODE.value,

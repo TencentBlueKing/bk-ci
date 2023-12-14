@@ -32,7 +32,9 @@ import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
@@ -76,4 +78,28 @@ interface OPRepositoryResource {
     @POST
     @Path("/updateGithubProjectId")
     fun updateGithubProjectId()
+
+    @ApiOperation("设置工蜂webhook路由到灰度")
+    @PUT
+    @Path("/{projectId}/{repositoryId}/setGrayGitHookUrl")
+    fun setGrayGitHookUrl(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("代码库ID", required = true)
+        @PathParam("repositoryId")
+        repositoryId: Long
+    ): Result<Boolean>
+
+    @ApiOperation("移除工蜂webhook路由到灰度")
+    @PUT
+    @Path("/{projectId}/{repositoryId}/removeGrayGitHookUrl")
+    fun removeGrayGitHookUrl(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("代码库ID", required = true)
+        @PathParam("repositoryId")
+        repositoryId: Long
+    ): Result<Boolean>
 }

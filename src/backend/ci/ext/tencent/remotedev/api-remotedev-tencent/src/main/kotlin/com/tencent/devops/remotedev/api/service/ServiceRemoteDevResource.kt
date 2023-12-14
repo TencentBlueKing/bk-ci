@@ -2,6 +2,7 @@ package com.tencent.devops.remotedev.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
@@ -11,6 +12,7 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
@@ -51,7 +53,11 @@ interface ServiceRemoteDevResource {
     @ApiOperation("提供给wesec获取创建云桌面的项目")
     @GET
     @Path("/project/list")
-    fun getRemotedevProjects(): Result<List<RemotedevProject>>
+    fun getRemotedevProjects(
+        @ApiParam("project_id", required = false)
+        @QueryParam("project_id")
+        projectId: String?
+    ): Result<List<RemotedevProject>>
 
     @ApiOperation("获取云研发项目的Devcloud CVM", tags = ["v4_app_remotedev_cvm", "v4_user_remotedev_cvm"])
     @GET
@@ -72,5 +78,49 @@ interface ServiceRemoteDevResource {
         @ApiParam("ip", required = true)
         @QueryParam("ip")
         ip: String
+    ): Result<Boolean>
+
+    @ApiOperation("校验当前用户是否有当前云桌面的权限")
+    @GET
+    @Path("/checkUserIpPermission")
+    fun checkUserIpPermission(
+        @ApiParam("user", required = true)
+        @QueryParam("user")
+        user: String,
+        @ApiParam("ip", required = true)
+        @QueryParam("ip")
+        ip: String
+    ): Result<Boolean>
+
+    @ApiOperation("通过已有cgsIp实例创建workspace记录")
+    @POST
+    @Path("/create_win_workspace_by_vm")
+    fun createWinWorkspaceByVm(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "老workspace记录，可以为空，如果填写将会做清理", required = true)
+        @QueryParam("oldWorkspaceName")
+        oldWorkspaceName: String?,
+        @ApiParam(value = "项目ID，可以为空，如果填写就是团队空间，否则个人空间", required = true)
+        @QueryParam("projectId")
+        projectId: String?,
+        @ApiParam(value = "机器uid", required = true)
+        @QueryParam("uid")
+        uid: String
+    ): Result<Boolean>
+
+    @ApiOperation("提供给BCS做分配云桌面给指定用户")
+    @POST
+    @Path("/assignWorkspace")
+    fun assignWorkspace(
+        @ApiParam(value = "操作人，必填", required = true)
+        @QueryParam("operator")
+        operator: String,
+        @ApiParam(value = "拥有者，为空则表示不分配，只交付项目", required = false)
+        @QueryParam("owner")
+        owner: String?,
+        @ApiParam(value = "分配数据，必填", required = true)
+        data: OpProjectWorkspaceAssignData
     ): Result<Boolean>
 }

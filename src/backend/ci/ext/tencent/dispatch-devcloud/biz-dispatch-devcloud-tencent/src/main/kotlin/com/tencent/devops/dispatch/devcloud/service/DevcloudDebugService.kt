@@ -71,7 +71,7 @@ class DevcloudDebugService @Autowired constructor(
             devCloudBuildHisDao.getLatestBuildHistory(dslContext, pipelineId, vmSeqId)
         } else {
             // 精确查找
-            devCloudBuildHisDao.get(dslContext, buildId, vmSeqId)[0]
+            devCloudBuildHisDao.get(dslContext, buildId, vmSeqId)
         }
 
         val containerName: String

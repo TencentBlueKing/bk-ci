@@ -52,7 +52,8 @@ class WindowsGpuResourceDao {
         if (resourceList.isEmpty()) {
             return
         }
-        dslContext.batch(resourceList.map {
+        dslContext.batch(
+            resourceList.map {
             with(TWindowsGpuPool.T_WINDOWS_GPU_POOL) {
                 dslContext.insertInto(
                     this,
@@ -65,7 +66,10 @@ class WindowsGpuResourceDao {
                     LOCKED,
                     PROJECT_ID,
                     DISK,
-                    HDISK
+                    HDISK,
+                    IMAGESTANDARD,
+                    NODE,
+                    IMAGE
                 ).values(
                     it.cgsId,
                     it.zoneId,
@@ -76,11 +80,15 @@ class WindowsGpuResourceDao {
                     ByteUtils.bool2Byte(it.locked ?: false),
                     it.projectId ?: "",
                     it.disk,
-                    it.hdisk
+                    it.hDisk,
+                    ByteUtils.bool2Byte(it.imageStandard ?: false),
+                    it.node ?: "",
+                    it.image ?: ""
                 ).onDuplicateKeyUpdate()
                     .set(STATUS, it.status)
             }
-        }).execute()
+        }
+        ).execute()
     }
 
     // 删除已有数据
@@ -142,6 +150,7 @@ class WindowsGpuResourceDao {
     ): List<Record2<String, String>> {
         with(TWindowsGpuPool.T_WINDOWS_GPU_POOL) {
             return dslContext.selectDistinct(ZONE_ID, MACHINE_TYPE).from(this)
+                .orderBy(MACHINE_TYPE.asc())
                 .skipCheck()
                 .fetch()
         }

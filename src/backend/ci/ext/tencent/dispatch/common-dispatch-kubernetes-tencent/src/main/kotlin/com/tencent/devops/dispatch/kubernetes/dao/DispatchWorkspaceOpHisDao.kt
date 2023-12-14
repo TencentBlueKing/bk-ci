@@ -27,11 +27,15 @@
 
 package com.tencent.devops.dispatch.kubernetes.dao
 
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchWorkspaceOpHisRecord
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentActionStatus
 import com.tencent.devops.model.dispatch.kubernetes.tables.TDispatchWorkspaceOpHis
-import org.jooq.DSLContext
-import org.springframework.stereotype.Repository
+import com.tencent.devops.model.dispatch.kubernetes.tables.records.TDispatchWorkspaceOpHisRecord
 import java.time.LocalDateTime
+import org.jooq.DSLContext
+import org.jooq.RecordMapper
+import org.springframework.stereotype.Repository
 
 @Repository
 class DispatchWorkspaceOpHisDao {
@@ -42,6 +46,7 @@ class DispatchWorkspaceOpHisDao {
         environmentUid: String,
         operator: String,
         action: EnvironmentAction,
+        uid: String,
         actionMsg: String = ""
     ) {
         with(TDispatchWorkspaceOpHis.T_DISPATCH_WORKSPACE_OP_HIS) {
@@ -52,16 +57,74 @@ class DispatchWorkspaceOpHisDao {
                 OPERATOR,
                 ACTION,
                 ACTION_MSG,
-                CREATED_TIME
+                CREATED_TIME,
+                STATUS,
+                UID
             )
                 .values(
                     workspaceName,
                     environmentUid,
                     operator,
                     action.name,
-                    actionMsg,
-                    LocalDateTime.now()
+                    actionMsg.take(255),
+                    LocalDateTime.now(),
+                    EnvironmentActionStatus.PENDING.name,
+                    uid
                 ).execute()
         }
+    }
+
+    fun update(
+        dslContext: DSLContext,
+        uid: String,
+        status: EnvironmentActionStatus,
+        fStatus: EnvironmentActionStatus? = null,
+        workspaceName: String? = null,
+        actionMsg: String? = null
+    ): Int {
+        with(TDispatchWorkspaceOpHis.T_DISPATCH_WORKSPACE_OP_HIS) {
+            return dslContext.update(this).set(STATUS, status.name)
+                .let {
+                    if (actionMsg != null) it.set(ACTION_MSG, actionMsg.take(255)) else it
+                }
+                .let {
+                    if (workspaceName != null) it.set(WORKSPACE_NAME, workspaceName) else it
+                }
+                .where(UID.eq(uid))
+                .let {
+                    if (fStatus != null) it.and(STATUS.eq(fStatus.name)) else it
+                }.execute()
+        }
+    }
+
+    fun getTask(
+        dslContext: DSLContext,
+        uid: String
+    ): DispatchWorkspaceOpHisRecord? {
+        with(TDispatchWorkspaceOpHis.T_DISPATCH_WORKSPACE_OP_HIS) {
+            return dslContext.selectFrom(this)
+                .where(UID.eq(uid)).orderBy(ID.desc()).fetchAny(mapper)
+        }
+    }
+
+    class RecordJooqMapper : RecordMapper<TDispatchWorkspaceOpHisRecord, DispatchWorkspaceOpHisRecord> {
+        override fun map(record: TDispatchWorkspaceOpHisRecord?): DispatchWorkspaceOpHisRecord? {
+            return record?.run {
+                DispatchWorkspaceOpHisRecord(
+                    workspaceName = workspaceName,
+                    envId = environmentUid,
+                    operator = operator,
+                    action = EnvironmentAction.valueOf(action),
+                    actionMsg = actionMsg,
+                    createTime = createdTime,
+                    uid = uid,
+                    status = EnvironmentActionStatus.parse(status)
+                )
+            }
+        }
+    }
+
+    companion object {
+        val mapper = RecordJooqMapper()
     }
 }

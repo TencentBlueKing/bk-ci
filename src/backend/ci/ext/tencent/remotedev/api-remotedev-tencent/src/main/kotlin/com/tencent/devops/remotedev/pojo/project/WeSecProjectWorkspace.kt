@@ -54,5 +54,11 @@ data class WeSecProjectWorkspace(
     @JsonProperty("inner_ip")
     val innerIp: String?,
     @ApiModelProperty("状态")
-    val status: WorkspaceStatus?
+    val status: WorkspaceStatus?,
+    @ApiModelProperty("工作空间实际拥有者，待分配时为空")
+    @JsonProperty("real_owner")
+    val realOwner: String? = null,
+    @ApiModelProperty("云桌面别名")
+    @JsonProperty("display_name")
+    val displayName: String? = null
 )

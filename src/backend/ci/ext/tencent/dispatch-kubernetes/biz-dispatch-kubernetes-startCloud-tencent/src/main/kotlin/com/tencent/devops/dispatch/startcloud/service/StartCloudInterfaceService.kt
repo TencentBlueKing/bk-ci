@@ -111,8 +111,8 @@ class StartCloudInterfaceService @Autowired constructor(
                     machineType = it.cgsData.machineType,
                     status = it.cgsData.status,
                     userInstanceList = it.cgsData.userInstanceList,
-                    locked = it.basic.needLock,
-                    projectId = it.basic.projectId ?: "",
+                    locked = it.basic?.needLock,
+                    projectId = it.basic?.projectId ?: "",
                     disk = it.pvcs?.firstOrNull { pvc -> pvc.pvcClass == "ssd" }?.pvcSize,
                     hDisk = it.pvcs?.firstOrNull { pvc -> pvc.pvcClass == "hdd" }?.pvcSize
                 )

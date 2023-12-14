@@ -27,7 +27,13 @@
 
 package com.tencent.devops.remotedev.service.projectworkspace
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
@@ -77,6 +83,17 @@ class RestartWorkspaceHandler @Autowired constructor(
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CGS_RESTART,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS,
+            instanceNames = "#workspaceName",
+            instanceIds = "#workspaceName"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CGS_RESTART_CONTENT
+    )
     fun restartWorkspace(userId: String, projectId: String, workspaceName: String): WorkspaceResponse {
         logger.info("$userId restart project workspace $workspaceName")
         if (!permissionService.hasOwnerPermission(
@@ -90,11 +107,27 @@ class RestartWorkspaceHandler @Autowired constructor(
                 params = arrayOf("You do not have permission to restart $workspaceName")
             )
         }
+
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
             expiredTimeInSeconds
         ).tryLock().use {
+            if (workspaceCommon.notOk2doNextAction(workspace)) {
+                logger.info("${workspace.workspaceName} is ${workspace.status}, return error.")
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
+                    params = arrayOf(
+                        workspace.workspaceName,
+                        "status is already ${workspace.status}, can't restart now"
+                    )
+                )
+            }
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
@@ -116,7 +149,7 @@ class RestartWorkspaceHandler @Autowired constructor(
                 action = WorkspaceAction.RESTART,
                 actionMessage = String.format(
                     workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                    WorkspaceStatus.RUNNING,
+                    workspace.status,
                     WorkspaceStatus.RESTARTING
                 )
             )
@@ -133,7 +166,7 @@ class RestartWorkspaceHandler @Autowired constructor(
                         ).toSet()
                     ),
                     workspaceName = workspaceName,
-                    settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable,
+                    settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
                     bkTicket = "",
                     mountType = WorkspaceMountType.START
                 )

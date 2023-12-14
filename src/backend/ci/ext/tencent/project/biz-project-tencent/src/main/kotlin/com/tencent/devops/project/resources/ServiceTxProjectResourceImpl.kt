@@ -53,6 +53,7 @@ import com.tencent.devops.project.service.ProjectMemberService
 import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ProjectTagService
 import com.tencent.devops.project.service.ProjectTxInfoService
+import com.tencent.devops.project.service.remotedev.ProjectRemoteDevService
 import com.tencent.devops.project.util.ProjectUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -67,7 +68,8 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     private val projectService: ProjectService,
     private val projectMemberService: ProjectMemberService,
     private val projectTagService: ProjectTagService,
-    private val projectTxService: ProjectTxInfoService
+    private val projectTxService: ProjectTxInfoService,
+    private val remoteDevService: ProjectRemoteDevService
 ) : ServiceTxProjectResource {
 
     @Value("\${tag.auto:#{null}}")
@@ -381,6 +383,10 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
                 projectDeptInfo = projectDeptInfo
             )
         )
+    }
+
+    override fun updateRemotedev(userId: String, projectCode: String, addcloudDesktopNum: Int): Result<Boolean> {
+        return Result(remoteDevService.updateRemoteDevInfo(projectCode, addcloudDesktopNum))
     }
 
     companion object {

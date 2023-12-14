@@ -20,7 +20,7 @@ config = {
     service_name = "",                -- 指定后台微服务名称，如果对接后端是boot-assembly的单体微服务，则该配置项为bk-ci, 否则请置空会自动路由相应微服务
     allow_hosts = { __BKCI_ALLOW_HOST__ },
     allow_headers =
-    "Authorization,Content-Type,withcredentials,credentials,Accept,Origin,User-Agent,Cache-Control,Keep-Alive,X-Requested-With,If-Modified-Since,X-CSRFToken,X-DEVOPS-PROJECT-ID,X-DEVOPS-TASK-ID,X-DEVOPS-TOKEN,X-DEVOPS-UID,BK-CI-CLIENT-VERSION",
+    "Authorization,Content-Type,withcredentials,credentials,Accept,Origin,User-Agent,Cache-Control,Keep-Alive,X-Requested-With,If-Modified-Since,X-CSRFToken,X-DEVOPS-PROJECT-ID,X-DEVOPS-TASK-ID,X-DEVOPS-TOKEN,X-DEVOPS-UID,BK-CI-CLIENT-VERSION,BK-CI-CLIENT-MAC",
     ns = {
         ip = { "127.0.0.1" },
         port = __BKCI_CONSUL_DNS_PORT__,
@@ -105,13 +105,13 @@ config = {
         switchAll = __BK_CI_KUBERNETES_SWITCH_ALL__,
         useForceHeader = __BK_CI_KUBERNETES_USE_FORCE_HEADER__,
         tags = { "rbac", "gray", "prod-v3", "stream-gray", "stream", "rbac-gray", "prod", "devx", "auto" },
-        codeccTags = {},
+        codeccTags = { "gray" },
         codecc = { domain = "__CODECC_KUBERNETES_DOMAIN__" },
         api = {
-            host = "__BK_CI_KUBERNETES_API_HOST__",
-            port = __BK_CI_KUBERNETES_API_PORT__,
+            url = "__BK_CI_KUBERNETES_API_URL__",
             token = "__BK_CI_KUBERNETES_API_TOKEN__"
-        }
+        },
+        special_domain = {}
     },
     openHttps = "__BKCI_OPEN_HTTPS__",
     mobileSiteToken = "__BK_CI_MOBILE_SITE_TOKEN__",
@@ -120,6 +120,9 @@ config = {
     },
     auth_token = "__BK_CI_AUTH_TOKEN__",
 }
+
+-- 特殊域名
+config.kubernetes.special_domain["codecc:kubernetes-clss"] = "clss.codecc.woa.com"
 
 require("init_common")
 require("ip_whitelist")

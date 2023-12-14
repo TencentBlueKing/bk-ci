@@ -904,9 +904,11 @@ class GitService @Autowired constructor(
         val authParams = JsonUtil.toMap(authParamDecodeJsonStr)
         val type = authParams["redirectUrlType"] as? String
         val specRedirectUrl = authParams["redirectUrl"] as? String
+        val resetType = authParams["resetType"] as? String
+        val userId = authParams["userId"] as? String
         return when (RedirectUrlTypeEnum.getRedirectUrlType(type ?: "")) {
             RedirectUrlTypeEnum.SPEC -> specRedirectUrl!!
-            RedirectUrlTypeEnum.DEFAULT -> redirectUrl
+            RedirectUrlTypeEnum.DEFAULT -> "$redirectUrl?resetType=$resetType&userId=$userId"
             else -> {
                 val projectId = authParams["projectId"] as String
                 val repoId = authParams["repoId"] as String

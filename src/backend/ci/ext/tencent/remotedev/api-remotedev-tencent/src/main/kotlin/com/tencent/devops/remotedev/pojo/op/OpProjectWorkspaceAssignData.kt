@@ -8,5 +8,9 @@ data class OpProjectWorkspaceAssignData(
     @ApiParam(value = "云桌面ID", required = true)
     val cgsIds: List<String>?,
     @ApiParam(value = "云桌面IP", required = true)
-    val ips: List<String>?
+    val ips: List<String>?,
+    @ApiParam("仓库ID")
+    val repoId: String?,
+    @ApiParam("云桌面盘符")
+    val localDriver: String?
 )

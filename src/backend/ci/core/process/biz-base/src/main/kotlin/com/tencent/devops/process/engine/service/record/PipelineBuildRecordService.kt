@@ -253,12 +253,7 @@ class PipelineBuildRecordService @Autowired constructor(
             buildId = buildId
         )
         watcher.start("startUserList")
-        val startUserList = recordModelDao.getRecordStartUserList(
-            dslContext = dslContext,
-            pipelineId = pipelineInfo.pipelineId,
-            projectId = projectId,
-            buildId = buildId
-        )
+        val recordList = getRecordInfo(pipelineInfo.pipelineId, projectId, buildId)
         watcher.start("parseTriggerInfo")
         // TODO 临时解析旧触发器获取实际触发信息，后续触发器完善需要改回
         val triggerInfo = if (buildInfo.trigger == StartType.WEB_HOOK.name) {
@@ -341,7 +336,7 @@ class PipelineBuildRecordService @Autowired constructor(
             stageStatus = buildInfo.stageStatus,
             triggerReviewers = triggerReviewers,
             executeCount = fixedExecuteCount,
-            startUserList = startUserList,
+            startUserList = recordList.map { it.startUser },
             buildMsg = BuildMsgUtils.getBuildMsg(
                 buildMsg = buildInfo.buildMsg,
                 startType = StartType.toStartType(buildInfo.trigger),
@@ -349,9 +344,19 @@ class PipelineBuildRecordService @Autowired constructor(
             ),
             material = buildInfo.material,
             remark = buildInfo.remark,
-            webhookInfo = buildInfo.webhookInfo
+            webhookInfo = buildInfo.webhookInfo,
+            templateInfo = pipelineInfo.templateInfo,
+            recordList = recordList
         )
     }
+
+    fun getRecordInfo(pipelineId: String, projectId: String, buildId: String) =
+        recordModelDao.getRecordInfoList(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            projectId = projectId,
+            buildId = buildId
+        )
 
     private fun fixContainerDetail(container: Container) {
         container.containerHashId = container.containerHashId ?: container.containerId
@@ -533,6 +538,7 @@ class PipelineBuildRecordService @Autowired constructor(
                 )
                 return@transaction
             }
+            val now = LocalDateTime.now()
             val runningStatusSet = enumValues<BuildStatus>().filter { it.isRunning() }.toSet()
             // 刷新运行中stage状态，取出所有stage记录还需用于耗时计算
             val recordStages = recordStageDao.getRecords(
@@ -541,6 +547,7 @@ class PipelineBuildRecordService @Autowired constructor(
             recordStages.forEach nextStage@{ stage ->
                 if (!BuildStatus.parse(stage.status).isRunning()) return@nextStage
                 stage.status = buildStatus.name
+                if (stage.endTime == null) { stage.endTime = now }
             }
             // 刷新运行中的container状态
             val recordContainers = recordContainerDao.getRecords(
@@ -551,6 +558,7 @@ class PipelineBuildRecordService @Autowired constructor(
             )
             recordContainers.forEach nextContainer@{ container ->
                 container.status = buildStatus.name
+                if (container.endTime == null) { container.endTime = now }
                 val containerName = container.containerVar[Container::name.name] as String?
                 if (!containerName.isNullOrBlank()) {
                     container.containerVar[Container::name.name] =
@@ -563,6 +571,7 @@ class PipelineBuildRecordService @Autowired constructor(
             )
             recordTasks.forEach nextTask@{ task ->
                 task.status = buildStatus.name
+                if (task.endTime == null) { task.endTime = now }
             }
             recordTaskDao.batchSave(context, recordTasks)
             recordContainerDao.batchSave(context, recordContainers)

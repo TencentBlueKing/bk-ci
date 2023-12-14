@@ -44,12 +44,13 @@ import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.WatermarkService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
+import com.tencent.devops.remotedev.service.expert.ExpertSupportService
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import java.util.concurrent.Executors
-import javax.ws.rs.core.HttpHeaders
 import org.glassfish.jersey.server.ChunkedOutput
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.Executors
+import javax.ws.rs.core.HttpHeaders
 
 @RestResource
 @Suppress("ALL")
@@ -61,6 +62,7 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val workspaceCommon: WorkspaceCommon,
     private val permissionService: PermissionService,
+    private val expertSupportService: ExpertSupportService,
     private val client: Client
 ) : UserRemoteDevResource {
 
@@ -118,9 +120,9 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         return Result(userId)
     }
 
-    override fun getAllWindowsResourceConfig(userId: String): Result<List<WindowsResourceTypeConfig>> {
-        logger.info("getAllWindowsResourceConfig|$userId")
-        return Result(windowsResourceConfigService.getAllType())
+    override fun getAllWindowsResourceConfig(userId: String, withUnavailable: Boolean?): Result<List<WindowsResourceTypeConfig>> {
+        logger.info("getAllWindowsResourceConfig|$userId|withUnavailable|$withUnavailable")
+        return Result(windowsResourceConfigService.getAllType(withUnavailable))
     }
 
     override fun getAllWindowsResourceZone(userId: String): Result<List<WindowsResourceZoneConfig>> {
@@ -155,5 +157,14 @@ class UserRemoteDevResourceImpl @Autowired constructor(
 
     override fun onePassword(userId: String, workspaceName: String): Result<String> {
         return Result(permissionService.init1Password(userId, workspaceName))
+    }
+
+    override fun addExpSup(userId: String, id: Long, workspaceName: String): Result<Boolean> {
+        val (res, message) = expertSupportService.assignExpSup(userId, id, workspaceName)
+        return if (message.isNullOrBlank()) {
+            Result(res)
+        } else {
+            Result(message, res)
+        }
     }
 }

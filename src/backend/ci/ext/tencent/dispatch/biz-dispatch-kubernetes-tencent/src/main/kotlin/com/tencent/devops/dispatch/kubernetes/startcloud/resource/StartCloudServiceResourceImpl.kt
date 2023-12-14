@@ -31,6 +31,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.FetchWinPoolData
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
@@ -83,5 +85,13 @@ class StartCloudServiceResourceImpl @Autowired constructor(
 
     override fun getResourceVm(data: ResourceVmReq): Result<List<ResourceVmRespData>?> {
         return Result(workspaceStartCloudClient.getResourceVm(data))
+    }
+
+    override fun getWorkspaceInfoByEid(eid: String): Result<WorkspaceInfo> {
+        return Result(startCloudInterfaceService.getWorkspaceInfoByEid(eid))
+    }
+
+    override fun getTaskInfoByUid(uid: String): Result<TaskStatus?> {
+        return Result(startCloudInterfaceService.getTaskInfoByUid(uid))
     }
 }
