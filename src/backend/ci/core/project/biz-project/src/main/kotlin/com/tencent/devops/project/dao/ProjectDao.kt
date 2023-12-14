@@ -135,7 +135,7 @@ class ProjectDao {
         return with(TProject.T_PROJECT) {
             dslContext.selectFrom(this)
                 .where(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
-                .and(CHANNEL.eq(ProjectChannelCode.BS.name))
+                .and(CHANNEL.eq(ProjectChannelCode.BS.name).or(CHANNEL.eq(ProjectChannelCode.PREBUILD.name)))
                 .let {
                     if (routerTag == null) {
                         it.and(
