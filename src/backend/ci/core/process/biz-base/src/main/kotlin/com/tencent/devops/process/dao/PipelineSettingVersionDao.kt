@@ -72,8 +72,8 @@ class PipelineSettingVersionDao {
                 .values(
                     projectId,
                     pipelineId,
-                    "\${$PIPELINE_START_USER_NAME}",
-                    "\${$PIPELINE_START_USER_NAME}",
+                    "\${{$PIPELINE_START_USER_NAME}}",
+                    "\${{$PIPELINE_START_USER_NAME}}",
                     "",
                     "",
                     successNotifyTypes,
