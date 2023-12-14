@@ -44,7 +44,7 @@ class NodeScheduledService @Autowired constructor(
      * 遍历T_NODE表中host_id不为空的记录，用host_id 调用find_host_biz_relations接口，看能否得到对应记录：能-不操作，不能-对应记录host_id置为null
      * cron：每天上午10点执行。
      */
-    @Scheduled(cron = "0 30 17 * * 1-5")
+    @Scheduled(cron = "0 55 17 * * 1-5")
     fun scheduledCheckNodeInCC() {
         taskWithRedisLock(SCHEDULED_CHECK_NODE_IN_CC_TIMEOUT_LOCK_KEY, ::checkNodeInCC)
     }
@@ -105,6 +105,7 @@ class NodeScheduledService @Autowired constructor(
                 val inCCInfoList = queryFromCCService.queryCCListHostWithoutBizByInRules(
                     listOf(FIELD_BK_HOST_ID, FIELD_BK_HOST_INNERIP), notInCCIpList, FIELD_BK_HOST_INNERIP
                 ).data?.info
+                if (logger.isDebugEnabled) logger.debug("[checkNodeInCC]inCCInfoList:$inCCInfoList.")
                 batchUpdateByCCInfo(inCCInfoList)
             }
         }
