@@ -165,6 +165,6 @@ interface OpWindowsConfigResource {
         projectId: String,
         @ApiParam(value = "机型", required = true)
         @QueryParam("size")
-        size: String,
+        size: String
     ): Result<Boolean>
 }
