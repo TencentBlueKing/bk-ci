@@ -319,6 +319,7 @@
             }
         },
         created () {
+            window.top.document.title = this.$t('documentTitlePipeline')
             this.goList()
             this.checkHasCreatePermission()
         },
