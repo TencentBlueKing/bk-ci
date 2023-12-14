@@ -31,9 +31,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.environment.model.CreateNodeModel
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
-import com.tencent.devops.environment.pojo.job.DisplayNameInfo
 import com.tencent.devops.environment.pojo.job.HostIdAndCloudAreaIdInfo
-import com.tencent.devops.environment.pojo.job.ccres.CCInfo
 import com.tencent.devops.environment.pojo.job.req.Host
 import com.tencent.devops.model.environment.tables.TNode
 import com.tencent.devops.model.environment.tables.TEnv
