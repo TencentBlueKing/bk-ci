@@ -233,23 +233,25 @@ class MigratePipelineDataTask constructor(
                     migratingShardingDslContext = migratingShardingDslContext,
                     processDataMigrateDao = processDbMigrateDao
                 )
+                // 3.23、迁移T_PIPELINE_REMOTE_AUTH表数据
+                migratePipelineRemoteAuthData(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    dslContext = dslContext,
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    processDataMigrateDao = processDbMigrateDao
+                )
+                // 3.24、迁移T_PIPELINE_WEBHOOK表数据
+                migratePipelineWebhookData(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    dslContext = dslContext,
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    processDataMigrateDao = processDbMigrateDao
+                )
                 if (doneSignal == null) {
                     // 单独迁移一条流水线的数据时需要执行以下数据迁移逻辑
                     migratePipelineAuditResourceData(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        dslContext = dslContext,
-                        migratingShardingDslContext = migratingShardingDslContext,
-                        processDataMigrateDao = processDbMigrateDao
-                    )
-                    migratePipelineRemoteAuthData(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        dslContext = dslContext,
-                        migratingShardingDslContext = migratingShardingDslContext,
-                        processDataMigrateDao = processDbMigrateDao
-                    )
-                    migratePipelineWebhookData(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         dslContext = dslContext,

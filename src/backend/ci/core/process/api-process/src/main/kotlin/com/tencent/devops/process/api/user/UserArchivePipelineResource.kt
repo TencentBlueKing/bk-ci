@@ -110,7 +110,10 @@ interface UserArchivePipelineResource {
         projectId: String,
         @ApiParam(value = "流水线id", required = true)
         @PathParam(value = "pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @ApiParam("取消正在运行构建标识", required = true)
+        @QueryParam("cancelFlag")
+        cancelFlag: Boolean = false
     ): Result<Boolean>
 
     @ApiOperation("获取已归档流水线列表")

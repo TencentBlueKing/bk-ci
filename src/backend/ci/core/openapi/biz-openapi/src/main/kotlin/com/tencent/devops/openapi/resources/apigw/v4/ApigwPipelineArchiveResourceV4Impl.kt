@@ -41,11 +41,17 @@ import org.springframework.beans.factory.annotation.Autowired
 class ApigwPipelineArchiveResourceV4Impl @Autowired constructor(private val client: Client) :
     ApigwPipelineArchiveResourceV4 {
 
-    override fun migrateArchivePipelineData(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
+    override fun migrateArchivePipelineData(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        cancelFlag: Boolean
+    ): Result<Boolean> {
         return client.get(ServiceArchivePipelineResource::class).migrateArchivePipelineData(
             userId = userId,
             projectId = projectId,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            cancelFlag = cancelFlag
         )
     }
 

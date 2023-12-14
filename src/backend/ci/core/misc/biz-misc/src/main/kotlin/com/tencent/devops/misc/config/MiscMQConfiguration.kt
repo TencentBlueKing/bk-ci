@@ -28,6 +28,7 @@
 package com.tencent.devops.misc.config
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.misc.listener.PipelineArchiveListener
 import org.springframework.amqp.core.Binding
@@ -36,6 +37,7 @@ import org.springframework.amqp.core.DirectExchange
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
@@ -70,8 +72,11 @@ class MiscMQConfiguration {
         @Autowired pipelineCoreExchange: DirectExchange
     ): Binding {
         return BindingBuilder.bind(pipelineArchiveQueue)
-            .to(pipelineCoreExchange).with(MQ.QUEUE_PIPELINE_ARCHIVE)
+            .to(pipelineCoreExchange).with(MQ.ROUTE_PIPELINE_ARCHIVE)
     }
+
+    @Bean
+    fun pipelineEventDispatcher(rabbitTemplate: RabbitTemplate) = MQEventDispatcher(rabbitTemplate)
 
     @Bean
     fun pipelineArchiveListenerContainer(

@@ -545,7 +545,7 @@ class ProcessDataMigrateDao {
         migratingShardingDslContext: DSLContext,
         pipelineRemoteAuthRecord: TPipelineRemoteAuthRecord
     ) {
-        with(TPipelineResource.T_PIPELINE_RESOURCE) {
+        with(TPipelineRemoteAuth.T_PIPELINE_REMOTE_AUTH) {
             val insertRecord = migratingShardingDslContext.newRecord(this, pipelineRemoteAuthRecord)
             migratingShardingDslContext.executeInsert(insertRecord)
         }
