@@ -241,6 +241,7 @@ class StreamUserMessageService @Autowired constructor(
         }
     }
 
+    @Suppress("ComplexMethod")
     private fun getRequestMap(
         userId: String,
         gitProjectId: Long?,
