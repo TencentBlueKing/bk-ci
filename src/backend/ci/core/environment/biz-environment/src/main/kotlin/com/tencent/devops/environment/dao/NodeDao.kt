@@ -106,18 +106,6 @@ class NodeDao {
         }
     }
 
-//    fun updateDisplayNameByNodeId(dslContext: DSLContext, nodeDisplayNameInfoList: List<DisplayNameInfo>) {
-//        with(TNode.T_NODE) {
-//            nodeDisplayNameInfoList.map {
-//                dslContext.update(this)
-//                    .set(DISPLAY_NAME, it.displayName)
-//                    .set(LAST_MODIFY_TIME, LocalDateTime.now())
-//                    .where(NODE_ID.eq(it.nodeId))
-//                    .execute()
-//            }
-//        }
-//    }
-
     fun getNodesByNodeId(dslContext: DSLContext, nodeIdList: List<Long>): MutableList<TNodeRecord> {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)

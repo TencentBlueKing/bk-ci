@@ -67,7 +67,6 @@ class NodeScheduledService @Autowired constructor(
                         displayName = it.value2() + "-" + it.value3() + "-" + it.value1().toString()
                     )
                 }
-//                nodeDao.updateDisplayNameByNodeId(dslContext, nodeDisplayNameInfoList)
                 val nodeIdList = nodeDisplayNameInfoList.mapNotNull { it.nodeId }
                 val nodeIdToRecordMap = nodeDisplayNameInfoList.associateBy { it.nodeId }
                 val nodeRecords = nodeDao.getNodesByNodeId(dslContext, nodeIdList)
