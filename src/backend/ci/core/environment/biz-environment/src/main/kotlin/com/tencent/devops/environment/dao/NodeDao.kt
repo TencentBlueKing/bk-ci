@@ -152,6 +152,22 @@ class NodeDao {
         }
     }
 
+    fun batchUpdateNodeHostIdByIp(dslContext: DSLContext, ccInfoRecord: List<TNodeRecord>) {
+        if (ccInfoRecord.isEmpty()) {
+            return
+        }
+        dslContext.batchUpdate(ccInfoRecord).execute()
+    }
+
+    fun getInCmdbNodesByIp(dslContext: DSLContext, ipList: List<String>): MutableList<TNodeRecord> {
+        with(TNode.T_NODE) {
+            return dslContext.selectFrom(this)
+                .where(NODE_IP.`in`(ipList))
+                .and(NODE_STATUS.eq(NodeType.CMDB.toString()))
+                .fetch()
+        }
+    }
+
     fun getNotInCmdbNodes(dslContext: DSLContext, ipList: List<String>): Result<Record1<String>> {
         with(TNode.T_NODE) {
             return dslContext.select(NODE_IP).from(this)
@@ -232,34 +248,26 @@ class NodeDao {
     }
 
     fun getNodesFromHostListByBkHostId(dslContext: DSLContext, projectId: String, hostList: List<Host>): MutableList<TNodeRecord> {
-        val nodeRecords: MutableList<TNodeRecord> = mutableListOf()
-        hostList.map {
-            with(TNode.T_NODE) {
-                dslContext.selectFrom(this)
-                    .where(HOST_ID.eq(it.bkHostId))
-                    .and(PROJECT_ID.eq(projectId))
-                    .fetch()
-            }.map {
-                if (it != null) nodeRecords.add(it)
-            }
+        val hostIdList = hostList.map { it.bkHostId }
+        return with(TNode.T_NODE) {
+            dslContext.selectFrom(this)
+                .where(HOST_ID.`in`(hostIdList))
+                .and(PROJECT_ID.eq(projectId))
+                .fetch()
         }
-        return nodeRecords
     }
 
-    fun getNodesFromHostListByIpAndBkCloudId(dslContext: DSLContext, projectId: String, hostList: List<Host>): MutableList<TNodeRecord> {
-        val nodeRecords: MutableList<TNodeRecord> = mutableListOf()
-        hostList.map {
-            with(TNode.T_NODE) {
-                dslContext.selectFrom(this)
-                    .where(NODE_IP.eq(it.ip))
-                    .and(CLOUD_AREA_ID.eq(it.bkCloudId))
-                    .and(PROJECT_ID.eq(projectId))
-                    .fetch()
-            }.map {
-                if (it != null) nodeRecords.add(it)
-            }
+    fun getNodesFromHostListByIpAndBkCloudId(dslContext: DSLContext, projectId: String, hostList: List<Host>): List<TNodeRecord> {
+        val ipList = hostList.map { it.ip }
+        val ipToRecordMap = hostList.associateBy { it.ip }
+        return with(TNode.T_NODE) {
+            dslContext.selectFrom(this)
+                .where(NODE_IP.`in`(ipList))
+                .and(PROJECT_ID.eq(projectId))
+                .fetch()
+        }.filter {
+            ipToRecordMap[it.nodeIp]?.bkCloudId == it.cloudAreaId
         }
-        return nodeRecords
     }
 
     fun getNodesByNodeHashIdList(
