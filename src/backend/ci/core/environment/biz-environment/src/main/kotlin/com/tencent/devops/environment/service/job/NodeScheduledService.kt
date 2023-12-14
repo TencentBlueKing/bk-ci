@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class NodeScheduledService @Autowired constructor(
@@ -34,7 +35,7 @@ class NodeScheduledService @Autowired constructor(
      * 分组执行，每次遍历100条记录。
      * display_name为空的：拼接节点类型、node hash值、nodeId这三个字段，写入display_name。
      */
-    @Scheduled(cron = "0 16 18 * * 1-5")
+    @Scheduled(cron = "0 3 21 * * 1-5")
     fun scheduledWriteDisplayName() {
         taskWithRedisLock(SCHEDULED_WRITE_DISPLAY_NAME_TIMEOUT_LOCK_KEY, ::writeDisplayName)
     }
@@ -66,7 +67,15 @@ class NodeScheduledService @Autowired constructor(
                         displayName = it.value2() + "-" + it.value3() + "-" + it.value1().toString()
                     )
                 }
-                nodeDao.updateDisplayNameByNodeId(dslContext, nodeDisplayNameInfoList)
+//                nodeDao.updateDisplayNameByNodeId(dslContext, nodeDisplayNameInfoList)
+                val nodeIdList = nodeDisplayNameInfoList.mapNotNull { it.nodeId }
+                val nodeIdToRecordMap = nodeDisplayNameInfoList.associateBy { it.nodeId }
+                val nodeRecords = nodeDao.getNodesByNodeId(dslContext, nodeIdList)
+                nodeRecords.forEach {
+                    it.displayName = nodeIdToRecordMap[it.nodeId]?.displayName
+                    it.lastModifyTime = LocalDateTime.now()
+                }
+                nodeDao.batchUpdateDisplayNameByNodeId(dslContext, nodeRecords)
             }
         } else {
             if (logger.isDebugEnabled) logger.debug("[writeDisplayName] There is no node with empty DisplayName.")
@@ -114,7 +123,6 @@ class NodeScheduledService @Autowired constructor(
 
     private fun batchUpdateByCCInfo(inCCInfoList: List<CCInfo>?) {
         if (!inCCInfoList.isNullOrEmpty()) {
-//                    nodeDao.updateNodeHostIdByIp(dslContext, inCCInfoList) // 在CC中 - 将host_id写回T_NODE表中
             val inCCIpToCCInfoMap = inCCInfoList.associateBy { it.bkHostInnerip }
             val inCCIpList = inCCInfoList.mapNotNull { it.bkHostInnerip }.distinct()
             val inCCRecord = nodeDao.getInCmdbNodesByIp(dslContext, inCCIpList)
@@ -122,6 +130,7 @@ class NodeScheduledService @Autowired constructor(
             inCCRecord.forEach {
                 it.hostId = inCCIpToCCInfoMap[it.nodeIp]?.bkHostId
                 it.cloudAreaId = inCCIpToCCInfoMap[it.nodeIp]?.bkCloudId?.toLong()
+                it.lastModifyTime = LocalDateTime.now()
             }
             if (logger.isDebugEnabled) logger.debug("[batchUpdateByCCInfo]inCCRecord2:$inCCRecord.")
             nodeDao.batchUpdateNodeHostIdByIp(dslContext, inCCRecord)

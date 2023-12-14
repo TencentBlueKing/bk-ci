@@ -108,16 +108,31 @@ class NodeDao {
         }
     }
 
-    fun updateDisplayNameByNodeId(dslContext: DSLContext, nodeDisplayNameInfoList: List<DisplayNameInfo>) {
+//    fun updateDisplayNameByNodeId(dslContext: DSLContext, nodeDisplayNameInfoList: List<DisplayNameInfo>) {
+//        with(TNode.T_NODE) {
+//            nodeDisplayNameInfoList.map {
+//                dslContext.update(this)
+//                    .set(DISPLAY_NAME, it.displayName)
+//                    .set(LAST_MODIFY_TIME, LocalDateTime.now())
+//                    .where(NODE_ID.eq(it.nodeId))
+//                    .execute()
+//            }
+//        }
+//    }
+
+    fun getNodesByNodeId(dslContext: DSLContext, nodeIdList: List<Long>): MutableList<TNodeRecord> {
         with(TNode.T_NODE) {
-            nodeDisplayNameInfoList.map {
-                dslContext.update(this)
-                    .set(DISPLAY_NAME, it.displayName)
-                    .set(LAST_MODIFY_TIME, LocalDateTime.now())
-                    .where(NODE_ID.eq(it.nodeId))
-                    .execute()
-            }
+            return dslContext.selectFrom(this)
+                .where(NODE_ID.`in`(nodeIdList))
+                .fetch()
         }
+    }
+
+    fun batchUpdateDisplayNameByNodeId(dslContext: DSLContext, nodeRecords: List<TNodeRecord>) {
+        if (nodeRecords.isEmpty()) {
+            return
+        }
+        dslContext.batchUpdate(nodeRecords).execute()
     }
 
     fun updateNodeNotInCCByIp(dslContext: DSLContext, notInCCIpList: List<String>) {
@@ -137,18 +152,6 @@ class NodeDao {
                 .set(LAST_MODIFY_TIME, LocalDateTime.now())
                 .where(NODE_IP.`in`(inCCIpList))
                 .execute()
-        }
-    }
-
-    fun updateNodeHostIdByIp(dslContext: DSLContext, ccInfoList: List<CCInfo>) {
-        with(TNode.T_NODE) {
-            ccInfoList.map {
-                dslContext.update(this)
-                    .set(HOST_ID, it.bkHostId)
-                    .set(LAST_MODIFY_TIME, LocalDateTime.now())
-                    .where(NODE_IP.eq(it.bkHostInnerip))
-                    .execute()
-            }
         }
     }
 
