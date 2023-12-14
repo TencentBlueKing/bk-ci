@@ -612,7 +612,7 @@ class DispatchDevCloudClient {
                 when (taskResponse.optJSONObject("data").optString("status")) {
                     "succeeded" -> {
                         val containerName = taskResponse.optJSONObject("data").optString("name")
-                        logger.info("Task: $taskId success, containerName: $containerName, taskResponse: $taskResponse")
+                        logger.info("Task: $taskId success, containerName: $containerName")
                         TaskResult(isFinish = true, success = true, msg = containerName)
                     }
                     "failed" -> {
