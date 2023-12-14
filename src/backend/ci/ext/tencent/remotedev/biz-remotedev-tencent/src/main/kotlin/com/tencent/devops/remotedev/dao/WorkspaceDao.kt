@@ -228,6 +228,7 @@ class WorkspaceDao {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(OWNER_TYPE.eq(ownerType.name))
+                .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
                 .fetch().map { it.name }.toSet()
         }
     }
