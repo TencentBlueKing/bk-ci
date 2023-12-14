@@ -884,6 +884,7 @@ class TemplateFacadeService @Autowired constructor(
         val templatesWithDeletePermIds = templatesByPermissionMap[AuthPermission.DELETE]
         val templatesWithEditPermIds = templatesByPermissionMap[AuthPermission.EDIT]
         val templatesWithViewPermIds = templatesByPermissionMap[AuthPermission.VIEW]
+        // 公共模板如 流水线空白模板，不需要权限校验，直接返回
         val templatesWithListPermIds = if (includePublicFlag == true) {
             templateDao.getTemplateByType(
                 dslContext = dslContext,
