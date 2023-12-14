@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.store.dao.image
 
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.model.store.tables.TImage
 import com.tencent.devops.model.store.tables.TImageFeature
 import com.tencent.devops.model.store.tables.TStorePipelineRel
@@ -67,7 +68,7 @@ class ImageCommonDao : AbstractStoreCommonDao() {
 
     override fun getStoreCodeListByName(dslContext: DSLContext, storeName: String): Result<out Record>? {
         return with(TImage.T_IMAGE) {
-            dslContext.select(IMAGE_CODE.`as`("storeCode")).from(this)
+            dslContext.select(IMAGE_CODE.`as`(KEY_STORE_CODE)).from(this)
                 .where(IMAGE_NAME.contains(storeName))
                 .groupBy(IMAGE_CODE)
                 .fetch()
@@ -105,7 +106,7 @@ class ImageCommonDao : AbstractStoreCommonDao() {
         ).from(ti)
             .join(tspr).on(ti.IMAGE_CODE.eq(tspr.STORE_CODE))
             .join(tspir).on(ti.IMAGE_CODE.eq(tspir.STORE_CODE).and(tspr.STORE_TYPE.eq(tspir.STORE_TYPE)))
-            .where(tspr.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
+            .where(tspr.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
             .and(ti.LATEST_FLAG.eq(true))
             .and(tspr.TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
             .and(ti.IMAGE_CODE.`in`(storeCodeList))
