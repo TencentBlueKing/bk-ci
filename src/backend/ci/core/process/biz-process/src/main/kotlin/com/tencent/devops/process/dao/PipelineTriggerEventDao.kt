@@ -415,7 +415,7 @@ class PipelineTriggerEventDao {
         return with(T_PIPELINE_TRIGGER_DETAIL) {
             val conditions = mutableListOf(
                 EVENT_ID.`in`(eventIds),
-                PROJECT_ID.eq(PROJECT_ID)
+                PROJECT_ID.eq(projectId)
             )
             if (!pipelineName.isNullOrBlank()) {
                 conditions.add(PIPELINE_NAME.like("%$pipelineName%"))
@@ -427,7 +427,7 @@ class PipelineTriggerEventDao {
                 PROJECT_ID,
                 EVENT_ID,
                 count().`as`("total"),
-                count(`when`(STATUS.eq(PipelineTriggerStatus.SUCCEED.name), 1))
+                count(`when`(STATUS.eq(PipelineTriggerStatus.SUCCEED.name), 1)).`as`("success")
             )
                 .from(this)
                 .where(conditions)
@@ -468,7 +468,7 @@ class PipelineTriggerEventDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(REQUEST_ID.eq(requestId))
                 .and(EVENT_SOURCE.eq(eventSource))
-                .fetchOne()
+                .fetchAny()
         }
         return record?.let { convertEvent(it) }
     }

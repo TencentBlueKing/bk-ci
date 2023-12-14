@@ -39,10 +39,10 @@ class BKBaseService @Autowired constructor(
         val sql = when (timeScope) {
             TimeScope.DAY -> {
                 gal.add(Calendar.DAY_OF_WEEK, -1)
-                "SELECT minute2, SUM(user_id_num) AS unum " +
-                        "FROM 100656_BKCI_online_user_min.hdfs " +
+                "SELECT minute2, COUNT(DISTINCT user_id) AS unum " +
+                        "FROM 100656_cgs_report_game_all " +
                         "WHERE dtEventTime >= '${dateFormat.format(gal.time)}' " +
-                        "AND game_id = '$projectId' " +
+                        "AND project_id = '$projectId' " +
                         "GROUP BY minute2 " +
                         "ORDER BY minute2 " +
                         "LIMIT 721"
@@ -50,10 +50,10 @@ class BKBaseService @Autowired constructor(
 
             TimeScope.WEEK -> {
                 gal.add(Calendar.WEEK_OF_MONTH, -1)
-                "SELECT minute10, SUM(user_id_num) AS unum " +
-                        "FROM 100656_BKCI_online_user_min.hdfs " +
+                "SELECT minute10, COUNT(DISTINCT user_id) AS unum " +
+                        "FROM 100656_cgs_report_game_all " +
                         "WHERE dtEventTime >= '${dateFormat.format(gal.time)}' " +
-                        "AND game_id = '$projectId' " +
+                        "AND project_id = '$projectId' " +
                         "GROUP BY minute10 " +
                         "ORDER BY minute10 " +
                         "LIMIT 1009"
@@ -61,11 +61,12 @@ class BKBaseService @Autowired constructor(
 
             else -> {
                 gal.add(Calendar.HOUR_OF_DAY, -1)
-                "SELECT user_id_num, dtEventTime " +
-                        "FROM 100656_BKCI_online_user_min.hdfs " +
+                "SELECT minute1, COUNT(DISTINCT user_id) AS unum " +
+                        "FROM 100656_cgs_report_game_all " +
                         "WHERE dtEventTime >= '${dateFormat.format(gal.time)}' " +
-                        "AND game_id = '$projectId' " +
-                        "ORDER BY dtEventTime " +
+                        "AND project_id = '$projectId' " +
+                        "GROUP BY minute1 " +
+                        "ORDER BY minute1 " +
                         "LIMIT 61"
             }
         }
@@ -131,8 +132,12 @@ class BKBaseService @Autowired constructor(
 
                     else -> {
                         UserLoginTimeRespData(
-                            num = l["user_id_num"] as Int? ?: 0,
-                            time = l["dtEventTime"] as String? ?: ""
+                            num = l["unum"] as Int? ?: 0,
+                            time = if (l["minute1"] == null) {
+                                ""
+                            } else {
+                                dateFormat.format(dataInputFormat.parse(l["minute1"] as String))
+                            }
                         )
                     }
                 }

@@ -62,7 +62,9 @@ class BuildRecordStageDao {
                 SEQ,
                 STAGE_VAR,
                 STATUS,
-                TIMESTAMPS
+                TIMESTAMPS,
+                START_TIME,
+                END_TIME
             ).also { insertSetStep ->
                 records.forEach { record ->
                     insertSetStep.values(
@@ -75,7 +77,9 @@ class BuildRecordStageDao {
                         record.stageSeq,
                         JsonUtil.toJson(record.stageVar, false),
                         record.status,
-                        JsonUtil.toJson(record.timestamps, false)
+                        JsonUtil.toJson(record.timestamps, false),
+                        record.startTime,
+                        record.endTime
                     )
                 }
             }.onDuplicateKeyUpdate()

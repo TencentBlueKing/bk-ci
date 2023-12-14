@@ -825,6 +825,18 @@ class WorkspaceDao {
         }
     }
 
+    fun getAvailableCgsWorkspace(
+        dslContext: DSLContext,
+        cgsId: String
+    ): Int {
+        return dslContext.fetchCount(
+            dslContext.select(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP)
+                .from(TWorkspace.T_WORKSPACE, TWorkspaceWindows.T_WORKSPACE_WINDOWS)
+                .where(TWorkspace.T_WORKSPACE.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                .and(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
+                .and(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP.eq(cgsId))
+        )
+    }
     companion object {
         val workspaceMapper = TWorkspaceRecordJooqMapper()
     }

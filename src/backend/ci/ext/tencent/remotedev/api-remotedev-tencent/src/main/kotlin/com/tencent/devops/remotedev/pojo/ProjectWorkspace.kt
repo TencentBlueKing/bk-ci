@@ -34,45 +34,45 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("工作空间信息")
 data class ProjectWorkspace(
     @ApiModelProperty("工作空间ID<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    val workspaceId: Long?,
+    override val workspaceId: Long?,
     @ApiModelProperty("工作空间名称")
-    val workspaceName: String,
+    override val workspaceName: String,
     @ApiModelProperty("项目ID")
-    val projectId: String?,
+    override val projectId: String?,
     @ApiModelProperty("工作空间备注名称")
-    val displayName: String? = null,
+    override val displayName: String? = null,
     @ApiModelProperty("工作空间状态<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    val status: WorkspaceStatus? = null,
+    override val status: WorkspaceStatus? = null,
     @ApiModelProperty("状态最近更新时间<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    val lastStatusUpdateTime: Long? = null,
+    override val lastStatusUpdateTime: Long? = null,
     @ApiModelProperty("休眠时间<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    val sleepingTime: Long? = null,
+    override val sleepingTime: Long? = null,
     @ApiModelProperty("工作空间创建人<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    val createUserId: String,
+    override val createUserId: String,
     @ApiModelProperty("工作空间对应的IP")
-    val hostName: String? = null,
+    override val hostName: String? = null,
     @ApiModelProperty("挂载平台类型")
-    val workspaceMountType: WorkspaceMountType,
+    override val workspaceMountType: WorkspaceMountType,
     @ApiModelProperty("操作系统类型")
-    val workspaceSystemType: WorkspaceSystemType,
+    override val workspaceSystemType: WorkspaceSystemType,
     @ApiModelProperty("windows 资源配置")
-    val winConfig: WindowsResourceTypeConfig? = null,
+    override val winConfig: WindowsResourceTypeConfig? = null,
+    @ApiModelProperty("拥有者")
+    override val owner: String? = null,
+    @ApiModelProperty("拥有者_CN")
+    override val ownerCN: String? = null,
+    @ApiModelProperty("查看者")
+    override val viewers: List<String>? = emptyList(),
+    @ApiModelProperty("查看者_CN")
+    override val viewersCN: List<String>? = emptyList(),
+    override val gpu: Int = 0,
+    override val cpu: Int = 8,
+    override val memory: Int = 32,
+    override val disk: Int = 100,
     @ApiModelProperty("windows 地域配置")
     val zoneConfig: WindowsResourceZoneConfig? = null,
-    @ApiModelProperty("拥有者")
-    val owner: String? = null,
-    @ApiModelProperty("查看者")
-    val viewers: List<String>? = emptyList(),
-    @ApiModelProperty("拥有者_CN")
-    val ownerCN: String? = null,
-    @ApiModelProperty("查看者_CN")
-    val viewersCN: List<String>? = emptyList(),
-    val gpu: Int = 0,
-    val cpu: Int = 8,
-    val memory: Int = 32,
-    val disk: Int = 100,
     @ApiModelProperty("专家协助")
     val expertSupportList: List<FetchSupportResp>?,
     @ApiModelProperty("云桌面对应的mac地址")
     val macAddress: String? = null
-)
+) : IWorkspace

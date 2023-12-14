@@ -8,32 +8,10 @@ import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class WorkspaceSharedDao {
-
-    // 新增工作空间共享记录
-    fun createWorkspaceSharedInfo(
-        userId: String,
-        workspaceShared: WorkspaceShared,
-        dslContext: DSLContext
-    ) {
-        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
-            dslContext.insertInto(
-                this,
-                WORKSPACE_NAME,
-                OPERATOR,
-                SHARED_USER,
-                ASSIGN_TYPE
-            )
-                .values(
-                    workspaceShared.workspaceName,
-                    userId,
-                    workspaceShared.sharedUser,
-                    workspaceShared.type.name
-                ).execute()
-        }
-    }
 
     fun batchCreate(
         dslContext: DSLContext,
@@ -51,29 +29,18 @@ class WorkspaceSharedDao {
                         OPERATOR,
                         SHARED_USER,
                         ASSIGN_TYPE,
-                        RESOURCE_ID
+                        RESOURCE_ID,
+                        EXPIRATION
                     ).values(
                         workspaceName,
                         operator,
                         it.userId,
                         it.type.name,
-                        resourceId
+                        resourceId,
+                        it.expiration
                     )
                 }
             ).execute()
-        }
-    }
-
-    fun updateResourceId(
-        dslContext: DSLContext,
-        workspaceName: String,
-        sharedUser: List<String>,
-        resourceId: String? = ""
-    ): Int {
-        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
-            return dslContext.update(this)
-                .set(RESOURCE_ID, resourceId ?: "")
-                .where(WORKSPACE_NAME.equal(workspaceName).and(SHARED_USER.`in`(sharedUser))).execute()
         }
     }
 
@@ -139,21 +106,6 @@ class WorkspaceSharedDao {
         }
     }
 
-    // 删除工作空间共享记录
-    fun deleteWorkspaceSharedInfo(
-        workspaceName: String,
-        sharedUser: String,
-        dslContext: DSLContext
-    ) {
-        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
-            dslContext.delete(this)
-                .where(WORKSPACE_NAME.eq(workspaceName))
-                .and(SHARED_USER.equals(sharedUser))
-                .limit(1)
-                .execute()
-        }
-    }
-
     fun batchDelete(
         dslContext: DSLContext,
         workspaceName: String,
@@ -166,6 +118,36 @@ class WorkspaceSharedDao {
                 .and(SHARED_USER.`in`(sharedUsers))
                 .and(ASSIGN_TYPE.eq(assignType.name))
                 .execute()
+        }
+    }
+
+    fun fetchExpireShare(
+        dslContext: DSLContext
+    ): List<TWorkspaceSharedRecord> {
+        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
+            return dslContext.selectFrom(this)
+                .where(EXPIRATION.isNotNull)
+                .and(EXPIRATION.lessThan(LocalDateTime.now()))
+                .fetch()
+        }
+    }
+
+    fun checkAlreadyExpireShare(
+        dslContext: DSLContext,
+        workspaceName: String,
+        operator: String,
+        sharedUser: String,
+        assignType: WorkspaceShared.AssignType
+    ): Boolean {
+        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
+            return dslContext.selectFrom(this)
+                .where(WORKSPACE_NAME.eq(workspaceName))
+                .and(OPERATOR.eq(operator))
+                .and(SHARED_USER.eq(sharedUser))
+                .and(ASSIGN_TYPE.eq(assignType.name))
+                .and(EXPIRATION.isNotNull)
+                .and(EXPIRATION.greaterThan(LocalDateTime.now()))
+                .fetchAny() != null
         }
     }
 

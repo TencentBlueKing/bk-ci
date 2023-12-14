@@ -85,16 +85,20 @@ class RemoteDevCodeProxyDao {
         repoName: String
     ): TRemoteCodeProxyRecord? {
         with(TRemoteCodeProxy.T_REMOTE_CODE_PROXY) {
-            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).and(NAME.eq(repoName)).fetchAny()
+            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).and(NAME.eq(repoName))
+                .orderBy(ID.desc())
+                .fetchAny()
         }
     }
 
     fun deleteCodeProxy(
         dslContext: DSLContext,
-        id: Long
+        projectId: String,
+        repoName: String
     ) {
         with(TRemoteCodeProxy.T_REMOTE_CODE_PROXY) {
-            dslContext.deleteFrom(this).where(ID.eq(id)).execute()
+            dslContext.deleteFrom(this).where(PROJECT_ID.eq(projectId)).and(NAME.eq(repoName))
+                .execute()
         }
     }
 
@@ -102,30 +106,43 @@ class RemoteDevCodeProxyDao {
         dslContext: DSLContext,
         data: List<RefreshCodeProxyData>
     ) {
-        dslContext.batch(data.map {
-            with(TRemoteCodeProxy.T_REMOTE_CODE_PROXY) {
-                dslContext.insertInto(
-                    this,
-                    PROJECT_ID,
-                    NAME,
-                    TYPE,
-                    URL,
-                    CONF,
-                    DESC,
-                    CREATOR,
-                    ENABLE_LFS
-                ).values(
-                    it.projectId,
-                    it.name,
-                    it.type,
-                    it.url,
-                    JSON.json(JsonUtil.toJson(it.conf, false)),
-                    it.desc,
-                    it.creator,
-                    it.enableLfs
-                )
+        dslContext.batch(
+            data.map {
+                with(TRemoteCodeProxy.T_REMOTE_CODE_PROXY) {
+                    dslContext.insertInto(
+                        this,
+                        PROJECT_ID,
+                        NAME,
+                        TYPE,
+                        URL,
+                        CONF,
+                        DESC,
+                        CREATOR,
+                        ENABLE_LFS
+                    ).values(
+                        it.projectId,
+                        it.name,
+                        it.type,
+                        it.url,
+                        JSON.json(JsonUtil.toJson(it.conf, false)),
+                        it.desc,
+                        it.creator,
+                        it.enableLfs
+                    )
+                }
             }
-        }
         ).execute()
+    }
+
+    fun checkExistRepo(
+        dslContext: DSLContext,
+        projectId: String,
+        repoName: String
+    ): Boolean {
+        with(TRemoteCodeProxy.T_REMOTE_CODE_PROXY) {
+            return dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId)).and(NAME.eq(name))
+                .fetchOne(0, Int::class.java)!! > 0
+        }
     }
 }
