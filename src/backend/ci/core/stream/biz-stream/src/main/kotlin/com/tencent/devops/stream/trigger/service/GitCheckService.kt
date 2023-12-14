@@ -58,6 +58,8 @@ class GitCheckService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(GitCheckService::class.java)
+        // GIT无目标分支，用于工蜂PUSH事件check回写
+        const val GIT_COMMIT_CHECK_NONE_TARGET_BRANCH = "~NONE"
     }
 
     // 针对不同部署环境的check token可以做不同的改动
@@ -142,7 +144,7 @@ class GitCheckService @Autowired constructor(
             manualUnlock = manualUnlock,
             buildNum = buildNum,
             reportData = reportData,
-            targetBranch = targetBranch,
+            targetBranch = targetBranch ?: GIT_COMMIT_CHECK_NONE_TARGET_BRANCH,
             addCommitCheck = addCommitCheck
         )
     }
@@ -165,7 +167,7 @@ class GitCheckService @Autowired constructor(
         manualUnlock: Boolean?,
         buildNum: String,
         reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>,
-        targetBranch: String?,
+        targetBranch: String,
         addCommitCheck: (
             request: CommitCheckRequest,
             retry: ApiRequestRetryInfo
@@ -178,6 +180,7 @@ class GitCheckService @Autowired constructor(
             repositoryName = null,
             repositoryType = RepositoryType.ID
         )
+        var tBranch: String? = targetBranch
 
         while (true) {
             val lockKey = "code_git_commit_check_lock_$pipelineId"
@@ -193,8 +196,19 @@ class GitCheckService @Autowired constructor(
                     pipelineId = pipelineId,
                     repositoryConfig = repositoryConfig,
                     commitId = commitId,
-                    context = context
-                ).data
+                    context = context,
+                    targetBranch = tBranch
+                ).data ?: kotlin.run {
+                    gitCheckClient.getGitCheck(
+                        pipelineId = pipelineId,
+                        repositoryConfig = repositoryConfig,
+                        commitId = commitId,
+                        context = context,
+                        targetBranch = null
+                    ).data?.also {
+                        tBranch = null
+                    }
+                }
 
                 if (record == null) {
                     addCommitCheck(
@@ -221,7 +235,8 @@ class GitCheckService @Autowired constructor(
                             repositoryName = getProjectName(gitProjectId, gitProjectName),
                             commitId = commitId,
                             context = context,
-                            source = ExecuteSource.STREAM
+                            source = ExecuteSource.STREAM,
+                            targetBranch = targetBranch
                         )
                     )
                 } else {
@@ -239,7 +254,7 @@ class GitCheckService @Autowired constructor(
                             description = description,
                             mrId = mrId,
                             reportData = reportData,
-                            targetBranch = targetBranch,
+                            targetBranch = tBranch,
                             addCommitCheck = addCommitCheck
                         )
                         gitCheckClient.updateGitCheck(
