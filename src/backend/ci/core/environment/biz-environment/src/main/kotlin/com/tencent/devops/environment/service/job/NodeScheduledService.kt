@@ -5,6 +5,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.pojo.job.DisplayNameInfo
+import com.tencent.devops.environment.pojo.job.ccres.CCInfo
 import com.tencent.devops.environment.service.job.QueryFromCCService.Companion.FIELD_BK_HOST_ID
 import com.tencent.devops.environment.service.job.QueryFromCCService.Companion.FIELD_BK_HOST_INNERIP
 import org.jooq.DSLContext
@@ -43,7 +44,7 @@ class NodeScheduledService @Autowired constructor(
      * 遍历T_NODE表中host_id不为空的记录，用host_id 调用find_host_biz_relations接口，看能否得到对应记录：能-不操作，不能-对应记录host_id置为null
      * cron：每天上午10点执行。
      */
-    @Scheduled(cron = "0 10 17 * * 1-5")
+    @Scheduled(cron = "0 30 17 * * 1-5")
     fun scheduledCheckNodeInCC() {
         taskWithRedisLock(SCHEDULED_CHECK_NODE_IN_CC_TIMEOUT_LOCK_KEY, ::checkNodeInCC)
     }
@@ -104,23 +105,27 @@ class NodeScheduledService @Autowired constructor(
                 val inCCInfoList = queryFromCCService.queryCCListHostWithoutBizByInRules(
                     listOf(FIELD_BK_HOST_ID, FIELD_BK_HOST_INNERIP), notInCCIpList, FIELD_BK_HOST_INNERIP
                 ).data?.info
-                if (!inCCInfoList.isNullOrEmpty()) {
-//                    nodeDao.updateNodeHostIdByIp(dslContext, inCCInfoList) // 在CC中 - 将host_id写回T_NODE表中
-                    val inCCIpToCCInfoMap = inCCInfoList.associateBy { it.bkHostInnerip }
-                    val inCCIpList = inCCInfoList.mapNotNull { it.bkHostInnerip }.distinct()
-                    val inCCRecord = nodeDao.getInCmdbNodesByIp(dslContext, inCCIpList)
-                    if (inCCRecord.isNotEmpty()) {
-                        inCCRecord.forEach {
-                            it.hostId = inCCIpToCCInfoMap[it.nodeIp]?.bkHostId
-                            it.cloudAreaId = inCCIpToCCInfoMap[it.nodeIp]?.bkCloudId?.toLong()
-                        }
-                        nodeDao.batchUpdateNodeHostIdByIp(dslContext, inCCRecord)
-                    }
-                    nodeDao.updateNodeInCCByIp(dslContext, inCCIpList) // 在CC中 - NODE_STATUS字段 改成 NORMAL
-                }
+                batchUpdateByCCInfo(inCCInfoList)
             }
         }
         if (logger.isDebugEnabled) logger.debug("[checkNodeInCC]End Check whether the node is in the cc.")
+    }
+
+    private fun batchUpdateByCCInfo(inCCInfoList: List<CCInfo>?) {
+        if (!inCCInfoList.isNullOrEmpty()) {
+//                    nodeDao.updateNodeHostIdByIp(dslContext, inCCInfoList) // 在CC中 - 将host_id写回T_NODE表中
+            val inCCIpToCCInfoMap = inCCInfoList.associateBy { it.bkHostInnerip }
+            val inCCIpList = inCCInfoList.mapNotNull { it.bkHostInnerip }.distinct()
+            val inCCRecord = nodeDao.getInCmdbNodesByIp(dslContext, inCCIpList)
+            if (logger.isDebugEnabled) logger.debug("[batchUpdateByCCInfo]inCCRecord:$inCCRecord.")
+            inCCRecord.forEach {
+                it.hostId = inCCIpToCCInfoMap[it.nodeIp]?.bkHostId
+                it.cloudAreaId = inCCIpToCCInfoMap[it.nodeIp]?.bkCloudId?.toLong()
+            }
+            if (logger.isDebugEnabled) logger.debug("[batchUpdateByCCInfo]inCCRecord2:$inCCRecord.")
+            nodeDao.batchUpdateNodeHostIdByIp(dslContext, inCCRecord)
+            nodeDao.updateNodeInCCByIp(dslContext, inCCIpList) // 在CC中 - NODE_STATUS字段 改成 NORMAL
+        }
     }
 
     private fun taskWithRedisLock(lockKey: String, operation: () -> Unit) {
