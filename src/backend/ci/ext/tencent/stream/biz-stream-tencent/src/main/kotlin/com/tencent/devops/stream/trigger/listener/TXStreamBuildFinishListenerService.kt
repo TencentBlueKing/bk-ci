@@ -180,6 +180,7 @@ class TXStreamBuildFinishListenerService @Autowired constructor(
         )
         action.data.context.requestEventId = requestEvent.id
         action.data.context.extensionAction = requestEvent.extensionAction
+        action.data.context.mrTargetBranch = requestEvent.targetBranch
 
         // 推送结束构建消息
         sendCommitCheck.sendCommitCheck(action)
