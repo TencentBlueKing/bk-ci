@@ -64,8 +64,11 @@
             }
         },
         watch: {
-            'curPipeline.pipelineName' (val) {
-                window.top.document.title = `${val} | ${this.$t('pipeline')}`
+            'curPipeline.pipelineName': {
+                handler (val) {
+                    window.top.document.title = `${val} | ${this.$t('pipeline')}`
+                },
+                immediate: true
             }
         },
         created () {
