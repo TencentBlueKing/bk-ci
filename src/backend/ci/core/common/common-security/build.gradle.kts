@@ -32,6 +32,7 @@ dependencies {
     api("org.springframework.boot:spring-boot-autoconfigure")
     api("org.springframework.boot:spring-boot-configuration-processor")
     api("io.jsonwebtoken:jjwt-api")
+    api("com.tencent.bk.sdk:crypto-java-sdk")
     implementation("org.springframework:spring-context")
     implementation("com.google.guava:guava")
     runtimeOnly("io.jsonwebtoken:jjwt-impl")

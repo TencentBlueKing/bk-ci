@@ -66,5 +66,9 @@ interface OpPipelineRepoRefResource {
     @ApiOperation("更新所有代码库流水线引用信息")
     @POST
     @Path("/updateAll")
-    fun updateAllRepoPipelineRef(): Result<Boolean>
+    fun updateAllRepoPipelineRef(
+        @ApiParam("项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String?
+    ): Result<Boolean>
 }
