@@ -214,7 +214,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         return true
     }
 
-    override fun metricsDataReport(dispatchJobMetricsDataList: List<DispatchJobMetricsData>): Boolean {
+    override fun saveDispatchJobMetrics(dispatchJobMetricsDataList: List<DispatchJobMetricsData>): Boolean {
         dispatchJobMetricsDao.batchSaveDispatchJobMetrics(dslContext, dispatchJobMetricsDataList)
         return true
     }

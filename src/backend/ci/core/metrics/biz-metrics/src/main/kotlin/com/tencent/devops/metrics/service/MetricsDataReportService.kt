@@ -46,7 +46,7 @@ interface MetricsDataReportService {
      * @param dispatchJobMetricsDataList job度量数据
      * @return 布尔值
      */
-    fun metricsDataReport(
+    fun saveDispatchJobMetrics(
         dispatchJobMetricsDataList: List<DispatchJobMetricsData>
     ): Boolean
 }
