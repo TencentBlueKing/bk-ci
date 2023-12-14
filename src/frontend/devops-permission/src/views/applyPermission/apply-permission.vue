@@ -224,7 +224,8 @@ onMounted(async () => {
   formData.value.projectCode = route?.query.project_code || tools.getCookie('X-DEVOPS-PROJECT-ID') || '';
   await getUserInfo();
   await getAllProjectList();
-  await getProjectByName();
+  // getProjectByName 会渲染重复的项目列表
+  //await getProjectByName();
 });
 
 </script>
