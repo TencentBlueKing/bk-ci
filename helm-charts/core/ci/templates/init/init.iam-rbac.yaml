@@ -17,48 +17,39 @@ spec:
       labels: {{- include "bkci.labels.standard" . | nindent 8 }}
         app.kubernetes.io/component: init-iam
     spec:
-      {{- if .Values.mysql.enabled }}
-      initContainers:
-        - name: wait-for-mysql
-          image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" .Values.global) }}
-          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
-          command:
-            - "/bin/sh"
-            - "-c"
-            - |
-              until getent hosts {{ include "bkci.mysql.fullname" . }}
-              do
-                echo waiting for {{ include "bkci.mysql.fullname" . }};
-                sleep 2;
-              done
-              echo "MySQL is available";
-      {{- end }}
       containers:
         - name: init-iam
           image: {{ include "bkci-backend.image" . }}
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
-          workingDir: /data/workspace/support-files/bkiam-rbac
-          {{ $mysqlData := split ":" (include "bkci.mysqlAddr" .) }}
+          workingDir: /data/workspace/support-files/
           command:
             - "/bin/bash"
             - "-c"
             - |
               # 修改auth链接
-              sed -i 's/ci-auth.service.consul:21936/{{- .Values.config.bkCiHost -}}\/auth/g' *.json
+              sed -i 's/ci-auth.service.consul:21936/{{- .Values.config.bkCiHost -}}\/auth/g' bkiam-rbac/*.json
               # 导入模型
               for i in $(find . -name '*.json'|sort)
               do
                python3 do_migrate.py -t {{ .Values.config.bkCiIamApigwUrl }} -a "{{ .Values.config.bkCiAppCode }}" -s "{{ .Values.config.bkCiAppToken }}" -f  $i --apigateway
               done
-              # 导入数据库
-              cat << 'EOF' > iam.sql
-              UPDATE T_AUTH_IAM_CALLBACK SET GATEWAY="http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}" where `SYSTEM`="ci"
               
-              {{- if ne .Values.config.bkCodeccPrivateUrl "" }}
-              REPLACE INTO T_AUTH_IAM_CALLBACK (GATEWAY,PATH, RESOURCE,`SYSTEM`) VALUES ("{{ .Values.config.bkCodeccPrivateUrl }}", "/ms/openapi/api/open/v2/callback/instances/list", "codecc_task", "codecc");
-              {{- end }}
-              EOF
-              mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }} devops_ci_auth < iam.sql;
+              services="auth"
+              for service in $services
+              do
+                until curl --connect-timeout 3 -m 1 -s "http://{{ include "bkci.names.fullname" . }}-$service.{{ .Release.Namespace }}.svc.cluster.local" > nohup
+                do 
+                  echo "waiting for {{ include "bkci.names.fullname" . }}-$service";
+                  sleep 2;
+                done
+                echo "{{ include "bkci.names.fullname" . }}-$service is available";
+              done
+              
+              # 注册auth回调
+              echo "{{ include "bkci.names.fullname" . }}-auth is available";
+              sed -i 's/bk-ci.service.consul/{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}/g' ms-init/auth/iam-callback-resource-registere.conf
+              iam_json_file="ms-init/auth/iam-callback-resource-registere.conf"
+              curl -X POST -H "Content-Type:application/json" -d "@$iam_json_file" "http://{{ include "bkci.names.fullname" . }}-auth.{{ .Release.Namespace }}.svc.cluster.local/api/op/auth/iam/callback/" 
       restartPolicy: OnFailure
 {{- end -}}
 {{- end -}}

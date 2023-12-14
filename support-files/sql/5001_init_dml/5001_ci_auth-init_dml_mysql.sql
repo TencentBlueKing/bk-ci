@@ -205,15 +205,5 @@ REPLACE INTO T_AUTH_RESOURCE_GROUP_CONFIG(`ID`,`RESOURCE_TYPE`, `GROUP_CODE`, `G
 REPLACE INTO T_AUTH_RESOURCE_GROUP_CONFIG(`ID`,`RESOURCE_TYPE`, `GROUP_CODE`, `GROUP_NAME`, `CREATE_MODE`, `DESCRIPTION`, `AUTHORIZATION_SCOPES`, `ACTIONS`) values(55, "project", "codecc_task_viewer", "Any-Codecc-Task-Viewer", 1, 'Migrated to user-defined permissions', '[{\"system\":\"#system#\",\"actions\":[{\"id\":\"project_visit\"}],\"resources\":[{\"system\":\"#system#\",\"type\":\"project\",\"paths\":[[{\"system\":\"#system#\",\"type\":\"project\",\"id\":\"#projectId#\",\"name\":\"#projectName#\"}]]}]},{\"system\":\"#system#\",\"actions\":[{\"id\":\"codecc_task_view-defect\"},{\"id\":\"codecc_task_view-report\"},{\"id\":\"codecc_task_list\"}],\"resources\":[{\"system\":\"#system#\",\"type\":\"codecc_task\",\"paths\":[[{\"system\":\"#system#\",\"type\":\"project\",\"id\":\"#projectId#\",\"name\":\"#projectName#\"}]]}]}]', '[\"codecc_task_view-defect\",\"codecc_task_view-report\", \"codecc_task_list\"]');
 
 
--- 删除版本体验回调接口
-DELETE FROM T_AUTH_IAM_CALLBACK WHERE RESOURCE IN ("experience_task", "experience_group");
-INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (GATEWAY,PATH, RESOURCE,`SYSTEM`) VALUES ("", "/ms/project/api/open/project/callback/", "project", "ci");
-INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (GATEWAY,PATH, RESOURCE,`SYSTEM`) VALUES ("", "/ms/process/api/open/pipeline/callback/", "pipeline", "ci");
-INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (GATEWAY,PATH, RESOURCE,`SYSTEM`) VALUES ("", "/ms/repository/api/open/repository/callback/", "repertory", "ci");
-INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (GATEWAY,PATH, RESOURCE,`SYSTEM`) VALUES ("", "/ms/ticket/api/open/ticket/callback/credential/", "credential", "ci");
-INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (GATEWAY,PATH, RESOURCE,`SYSTEM`) VALUES ("", "/ms/ticket/api/open/ticket/callback/cert/", "cert", "ci");
-INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (GATEWAY,PATH, RESOURCE,`SYSTEM`) VALUES ("", "/ms/environment/api/open/environment/callback/env/", "environment", "ci");
-INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (GATEWAY,PATH, RESOURCE,`SYSTEM`) VALUES ("", "/ms/environment/api/open/environment/callback/node/", "env_node", "ci");
-INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (GATEWAY,PATH, RESOURCE,`SYSTEM`) VALUES ("", "/ms/quality/api/open/quality/callback/rule", "rule", "ci");
-INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (GATEWAY,PATH, RESOURCE,`SYSTEM`) VALUES ("", "/ms/quality/api/open/quality/callback/group", "quality_group", "ci");
-INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (GATEWAY,PATH, RESOURCE,`SYSTEM`) VALUES ("", "/ms/process/api/open/pipeline/callback/pipelineGroupInfo", "pipeline_group", "ci");
+-- 删除版本体验、质量红线回调接口
+DELETE FROM T_AUTH_IAM_CALLBACK WHERE RESOURCE IN ("experience_task", "experience_group", "group");
