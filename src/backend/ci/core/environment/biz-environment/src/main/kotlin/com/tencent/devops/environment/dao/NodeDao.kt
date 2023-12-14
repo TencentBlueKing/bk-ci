@@ -123,7 +123,7 @@ class NodeDao {
     fun updateNodeNotInCCByIp(dslContext: DSLContext, notInCCIpList: List<String>) {
         with(TNode.T_NODE) {
             dslContext.update(this)
-                .set(NODE_STATUS, NodeStatus.NOT_IN_CC.toString())
+                .set(NODE_STATUS, NodeStatus.NOT_IN_CC.name)
                 .set(LAST_MODIFY_TIME, LocalDateTime.now())
                 .where(NODE_IP.`in`(notInCCIpList))
                 .execute()
@@ -133,7 +133,7 @@ class NodeDao {
     fun updateNodeInCCByIp(dslContext: DSLContext, inCCIpList: List<String>) {
         with(TNode.T_NODE) {
             dslContext.update(this)
-                .set(NODE_STATUS, NodeStatus.NORMAL.toString())
+                .set(NODE_STATUS, NodeStatus.NORMAL.name)
                 .set(LAST_MODIFY_TIME, LocalDateTime.now())
                 .where(NODE_IP.`in`(inCCIpList))
                 .execute()
@@ -163,7 +163,7 @@ class NodeDao {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)
                 .where(NODE_IP.`in`(ipList))
-                .and(NODE_STATUS.eq(NodeType.CMDB.toString()))
+                .and(NODE_STATUS.eq(NodeType.CMDB.name))
                 .fetch()
         }
     }
@@ -172,7 +172,7 @@ class NodeDao {
         with(TNode.T_NODE) {
             return dslContext.select(NODE_IP).from(this)
                 .where(NODE_IP.`in`(ipList))
-                .and(NODE_STATUS.eq(NodeStatus.NOT_IN_CMDB.toString()))
+                .and(NODE_STATUS.eq(NodeStatus.NOT_IN_CMDB.name))
                 .fetch()
         }
     }
@@ -180,7 +180,7 @@ class NodeDao {
     fun updateNodeNotInCmdb(dslContext: DSLContext, ipList: List<String>) {
         with(TNode.T_NODE) {
             dslContext.update(this)
-                .set(NODE_STATUS, NodeStatus.NOT_IN_CMDB.toString())
+                .set(NODE_STATUS, NodeStatus.NOT_IN_CMDB.name)
                 .set(LAST_MODIFY_TIME, LocalDateTime.now())
                 .where(NODE_IP.`in`(ipList))
                 .execute()
@@ -204,7 +204,7 @@ class NodeDao {
             dslContext.update(this)
                 .set(HOST_ID, hostIdDefault)
                 .set(CLOUD_AREA_ID, cloudAreaIdDefault)
-                .set(NODE_STATUS, NodeStatus.NOT_IN_CC.toString())
+                .set(NODE_STATUS, NodeStatus.NOT_IN_CC.name)
                 .set(LAST_MODIFY_TIME, LocalDateTime.now())
                 .where(HOST_ID.`in`(hostIdList))
                 .execute()
@@ -215,7 +215,7 @@ class NodeDao {
         with(TNode.T_NODE) {
             return dslContext.selectCount()
                 .from(TNode.T_NODE)
-                .where(NODE_STATUS.eq(NodeStatus.NOT_IN_CC.toString()))
+                .where(NODE_STATUS.eq(NodeStatus.NOT_IN_CC.name))
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -223,7 +223,7 @@ class NodeDao {
     fun getNodeIpsNotInCC(dslContext: DSLContext, offset: Int, limit: Int): Result<Record1<String>> {
         with(TNode.T_NODE) {
             return dslContext.select(NODE_IP).from(this)
-                .where(NODE_STATUS.eq(NodeStatus.NOT_IN_CC.toString()))
+                .where(NODE_STATUS.eq(NodeStatus.NOT_IN_CC.name))
                 .limit(limit).offset(offset)
                 .fetch()
         }
