@@ -68,7 +68,7 @@ class BkRepoReportService @Autowired constructor(
         val host = bkRepoClient.getRkRepoIdcHost()
         val redirectUrlBuilder = StringBuilder()
         redirectUrlBuilder.append(
-            "$host/generic/$projectId/${RepoUtils.REPORT_REPO}${
+            "$host/web/generic/$projectId/${RepoUtils.REPORT_REPO}${
                 urlEncode(realPath).replace("%2F", "/")
             }?preview=true"
         )
