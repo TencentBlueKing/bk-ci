@@ -149,7 +149,7 @@ class GitCheckService @Autowired constructor(
         )
     }
 
-    @Suppress("NestedBlockDepth")
+    @Suppress("NestedBlockDepth", "ComplexMethod")
     private fun tryAddCommitCheck(
         gitProjectId: String,
         gitProjectName: String,
