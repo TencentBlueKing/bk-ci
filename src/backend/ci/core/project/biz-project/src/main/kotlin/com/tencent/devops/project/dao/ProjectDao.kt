@@ -91,15 +91,19 @@ class ProjectDao {
         }
     }
 
-    fun list(dslContext: DSLContext, projectIdList: Set<String>, enabled: Boolean? = null): Result<TProjectRecord> {
+    fun list(
+        dslContext: DSLContext,
+        englishNameList: Set<String>,
+        enabled: Boolean? = null,
+        routerTag: String? = null
+    ): Result<TProjectRecord> {
         return with(TProject.T_PROJECT) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(PROJECT_ID.`in`(projectIdList))
-            conditions.add(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
-            if (enabled != null) {
-                conditions.add(ENABLED.eq(enabled))
-            }
-            dslContext.selectFrom(this).where(conditions).fetch()
+            dslContext.selectFrom(this)
+                .where(ENGLISH_NAME.`in`(englishNameList))
+                .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
+                .let { if (enabled != null) it.and(ENABLED.eq(enabled)) else it }
+                .let { if (routerTag != null) it.and(ROUTER_TAG.notLike("%$routerTag%").or(ROUTER_TAG.isNull)) else it }
+                .fetch()
         }
     }
 
