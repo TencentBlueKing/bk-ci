@@ -144,7 +144,7 @@ class ProjectDao {
                         )
                     } else {
                         it.and(
-                            ROUTER_TAG.contains(routerTag.value)
+                            ROUTER_TAG.contains(routerTag.value).or(ROUTER_TAG.contains("devx"))
                         )
                     }
                 }
