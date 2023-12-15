@@ -50,7 +50,7 @@ import javax.ws.rs.core.MediaType
 interface ServiceRepositoryPacResource {
     @ApiOperation("更新pac同步状态")
     @POST
-    @Path("/{projectId}/{repositoryHashId}/updatePacSyncStatus")
+    @Path("/{projectId}/{repoHashId}/updatePacSyncStatus")
     fun updateYamlSyncStatus(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
