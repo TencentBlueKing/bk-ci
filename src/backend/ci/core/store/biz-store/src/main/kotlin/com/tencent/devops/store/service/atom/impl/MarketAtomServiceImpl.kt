@@ -30,6 +30,8 @@ package com.tencent.devops.store.service.atom.impl
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.REFERER
 import com.tencent.devops.common.api.constant.AND
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DANG
@@ -50,12 +52,14 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.api.util.ThreadLocalUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.AtomBaseInfo
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.util.RegexUtils
+import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomEnvInfo
@@ -320,7 +324,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             classifyList?.forEach {
                 classifyMap[it.id] = it.classifyCode
             }
-
+            BkApiUtil.getHttpServletRequest()?.let {
+                ThreadLocalUtil.set(REFERER, it.getHeader(REFERER))
+                ThreadLocalUtil.set(AUTH_HEADER_USER_ID, it.getHeader(AUTH_HEADER_USER_ID))
+            }
             atoms.forEach {
                 val atomCode = it[tAtom.ATOM_CODE] as String
                 val visibleList = atomVisibleData?.get(atomCode)

@@ -28,6 +28,8 @@
 package com.tencent.devops.store.service.image
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.REFERER
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
@@ -36,9 +38,11 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.ThreadLocalUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TImageRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -326,7 +330,10 @@ abstract class ImageService @Autowired constructor() {
         classifyList?.forEach {
             classifyMap[it.id] = it.classifyCode
         }
-
+        BkApiUtil.getHttpServletRequest()?.let {
+            ThreadLocalUtil.set(REFERER, it.getHeader(REFERER))
+            ThreadLocalUtil.set(AUTH_HEADER_USER_ID, it.getHeader(AUTH_HEADER_USER_ID))
+        }
         images.forEach {
             val imageCode = it[KEY_IMAGE_CODE] as String
             val visibleList = imageVisibleData?.get(imageCode)
