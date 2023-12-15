@@ -201,7 +201,7 @@ object RepositoryConfigUtils {
                     repositoryName = EnvUtils.parseEnv(element.data.input.repositoryName, variables),
                     repositoryType = element.data.input.repositoryType ?: RepositoryType.ID
                 )
-                Triple(ScmType.CODE_TGIT_CE, element.data.input.eventType, repositoryConfig)
+                Triple(ScmType.CODE_TGIT, element.data.input.eventType, repositoryConfig)
             }
 
             else ->
