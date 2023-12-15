@@ -46,6 +46,8 @@ import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.AgentBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.BuildJobType
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyAskInfo
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyAskResp
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildDockerInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
@@ -65,6 +67,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DeadlockLoserDataAccessException
 import org.springframework.stereotype.Service
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import javax.ws.rs.NotFoundException
 
 @Service
@@ -481,6 +487,26 @@ class ThirdPartyAgentService @Autowired constructor(
                 error = buildInfo.error
             )
         )
+    }
+
+    private val askExecutor = ThreadPoolExecutor(
+        100,
+        100,
+        0L,
+        TimeUnit.MILLISECONDS,
+        LinkedBlockingQueue(3000)
+    )
+
+    fun ask(info: ThirdPartyAskInfo): AgentResult<ThirdPartyAskResp> {
+        val heartBeatF = CompletableFuture.supplyAsync({ Thread.sleep(30) }, askExecutor)
+        val buildF = CompletableFuture.supplyAsync({ Thread.sleep(10) }, askExecutor)
+        val dockerBuildF = CompletableFuture.supplyAsync({ Thread.sleep(10) }, askExecutor)
+        val pipelineF = CompletableFuture.supplyAsync({ Thread.sleep(20) }, askExecutor)
+        val upgradeF = CompletableFuture.supplyAsync({ Thread.sleep(10) }, askExecutor)
+        val dockerDebugF = CompletableFuture.supplyAsync({ Thread.sleep(20) }, askExecutor)
+
+        val dockerDebugR = dockerDebugF.get()
+        val dockerBuildR = dockerBuildF.get()
     }
 
     companion object {

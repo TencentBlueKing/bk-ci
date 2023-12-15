@@ -38,6 +38,8 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.api.BuildAgentBuildResource
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.BuildJobType
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyAskInfo
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyAskResp
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyDockerDebugDoneInfo
@@ -144,6 +146,16 @@ class BuildAgentBuildResourceImpl constructor(
     ): Result<String?> {
         checkParam(projectId, agentId, secretKey)
         return Result(thirdPartyAgentDockerService.fetchDebugStatus(debugId))
+    }
+
+    override fun thirdPartyAgentAsk(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        data: ThirdPartyAskInfo
+    ): AgentResult<ThirdPartyAskResp> {
+        checkParam(projectId, agentId, secretKey)
+        return thirdPartyAgentBuildService.ask(data)
     }
 
     private fun checkParam(projectId: String, agentId: String, secretKey: String) {
