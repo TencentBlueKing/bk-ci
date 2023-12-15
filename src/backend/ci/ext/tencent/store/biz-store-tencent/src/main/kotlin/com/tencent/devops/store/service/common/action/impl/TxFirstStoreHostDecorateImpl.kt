@@ -43,7 +43,7 @@ class TxFirstStoreHostDecorateImpl : AbstractStoreHostDecorateImpl() {
     @Value("\${bkrepo.staticRepoPrefixUrl:#{null}}")
     val staticRepoPrefixUrl: String? = null
 
-    @Value("\${bkrepo.dexStaticRepoPrefixUrl:#{null}}")
+    @Value("\${bkrepo.devxStaticRepoPrefixUrl:#{null}}")
     val devxStaticRepoPrefixUrl: String? = null
 
     override fun handleHostBus(str: String): String {
@@ -56,7 +56,7 @@ class TxFirstStoreHostDecorateImpl : AbstractStoreHostDecorateImpl() {
             ThreadLocalUtil.remove(REFERER)
         }
         val hostReplaceFlag = if (!referer.isNullOrBlank() && !devxStaticRepoPrefixUrl.isNullOrBlank()) {
-            // 判断请求的域名是否是devx环境的域名
+            // 判断请求来源的域名是否是devx环境的域名
             val host = RegexUtils.splitDomainContextPath(devxStaticRepoPrefixUrl!!)!!.first
             referer.contains(host)
         } else {
