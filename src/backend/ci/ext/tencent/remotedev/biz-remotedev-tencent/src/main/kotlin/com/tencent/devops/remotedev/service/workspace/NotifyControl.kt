@@ -95,7 +95,7 @@ class NotifyControl @Autowired constructor(
     fun notifyWorkspaceInfo(
         notifyData: WorkspaceNotifyData
     ) {
-        val workspace = workspaceDao.fetchWorkspaceWithOwner(
+        val workspace = workspaceDao.fetchNotifyWorkspaces(
             dslContext = dslContext,
             mountType = WorkspaceMountType.START,
             ips = notifyData.ip?.toSet(),

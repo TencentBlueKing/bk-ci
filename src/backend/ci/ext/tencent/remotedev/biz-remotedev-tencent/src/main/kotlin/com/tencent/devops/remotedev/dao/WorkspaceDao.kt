@@ -431,7 +431,7 @@ class WorkspaceDao {
         status: WorkspaceStatus? = null,
         mountType: WorkspaceMountType? = null,
         projectIds: Set<String>? = null,
-        ips: Set<String>? = null,
+        ip: String? = null,
         assignType: WorkspaceShared.AssignType? = null
     ): Result<out Record>? {
         val t1 = TWorkspace.T_WORKSPACE.`as`("t1")
@@ -456,12 +456,14 @@ class WorkspaceDao {
             }
         }
 
-        if (!ips.isNullOrEmpty()) {
-            val ipsCond = t3.HOST_IP.like("%${ips.first()}")
-            ips.drop(1).forEach { ip ->
-                ipsCond.or(t3.HOST_IP.like("%$ip"))
-            }
-            conditions.add(ipsCond)
+        ip?.let {
+            conditions.add(
+                t1.NAME.`in`(
+                    DSL.selectDistinct(t3.WORKSPACE_NAME).from(t3).where(
+                        t3.HOST_IP.endsWith(".$ip")
+                    )
+                )
+            )
         }
 
         return dslContext.selectDistinct(
@@ -485,6 +487,52 @@ class WorkspaceDao {
                     .where(conditions)
                     .and(t1.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name))
             )
+            .fetch()
+    }
+
+    /*
+     获取发送通知的云桌面
+     */
+    fun fetchNotifyWorkspaces(
+        dslContext: DSLContext,
+        status: WorkspaceStatus? = null,
+        mountType: WorkspaceMountType? = null,
+        projectIds: Set<String>? = null,
+        ips: Set<String>? = null
+    ): Result<out Record>? {
+        val t1 = TWorkspace.T_WORKSPACE.`as`("t1")
+        val t2 = TWorkspaceWindows.T_WORKSPACE_WINDOWS.`as`("t2")
+        val conditions = mutableListOf<Condition>()
+        conditions.add(t1.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal).and(t1.STATUS.notEqual(WorkspaceStatus.PREPARING.ordinal))
+        .and(t1.STATUS.notEqual(WorkspaceStatus.DELIVERING_FAILED.ordinal)))
+        status?.let {
+            conditions.add(t1.STATUS.eq(it.ordinal))
+        }
+        mountType?.let {
+            conditions.add(t1.WORKSPACE_MOUNT_TYPE.eq(mountType.name))
+        }
+
+        if (!projectIds.isNullOrEmpty()) {
+            if (projectIds.size == 1) {
+                conditions.add(t1.PROJECT_ID.eq(projectIds.first()))
+            } else {
+                conditions.add(t1.PROJECT_ID.`in`(projectIds))
+            }
+        }
+
+        if (!ips.isNullOrEmpty()) {
+            val ipsCond = t2.HOST_IP.like("%${ips.first()}")
+            ips.drop(1).forEach { ip ->
+                ipsCond.or(t2.HOST_IP.like("%$ip"))
+            }
+            conditions.add(ipsCond)
+        }
+
+        return dslContext.selectDistinct(
+            t1.NAME, t1.DISPLAY_NAME, t1.PROJECT_ID, t1.CREATOR, t1.STATUS, t1.CREATE_TIME
+        )
+            .from(t1).innerJoin(t2).on(t1.NAME.eq(t2.WORKSPACE_NAME))
+            .where(conditions)
             .fetch()
     }
 
