@@ -463,7 +463,6 @@ class WorkspaceDao {
                         t3.HOST_IP.like("%.$ip"))
                     )
                 )
-            )
         }
 
         return dslContext.selectDistinct(
