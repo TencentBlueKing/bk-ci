@@ -73,7 +73,7 @@ class PipelineYamlSyncService @Autowired constructor(
         val syncStatus = if (syncFileInfoList.isEmpty()) {
             RepoYamlSyncStatusEnum.SUCCEED.name
         } else {
-            RepoYamlSyncStatusEnum.FAILED.name
+            RepoYamlSyncStatusEnum.SYNC.name
         }
         client.get(ServiceRepositoryPacResource::class).updateYamlSyncStatus(
             projectId = projectId,

@@ -217,7 +217,7 @@ class RepositoryPacService @Autowired constructor(
         syncStatus: String
     ) {
         logger.info("update yaml sync status|$projectId|$repoHashId|$syncStatus")
-        val repositoryId = HashUtil.decodeOtherIdToLong(syncStatus)
+        val repositoryId = HashUtil.decodeOtherIdToLong(repoHashId)
         repositoryDao.updateYamlSyncStatus(
             dslContext = dslContext,
             repositoryId = repositoryId,
