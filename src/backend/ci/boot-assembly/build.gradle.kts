@@ -35,7 +35,7 @@ dependencies {
     implementation(project(":core:auth:biz-auth-blueking"))
     implementation(project(":core:dispatch:biz-dispatch"))
     implementation(project(":core:environment:biz-environment"))
-    implementation(project(":core:image:biz-image"))
+    implementation(project(":core:misc:biz-image"))
     implementation(project(":core:log:biz-log-sample"))
     implementation(project(":core:misc:biz-misc-sample"))
     implementation(project(":core:notify:biz-notify"))
