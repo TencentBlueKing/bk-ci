@@ -36,6 +36,7 @@ import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
+import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
@@ -45,6 +46,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.service.BkTicketService
 import com.tencent.devops.remotedev.service.PermissionService
@@ -55,8 +57,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
-import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
-import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 
 @Service
 @Suppress("LongMethod")
@@ -98,25 +98,28 @@ class NotifyControl @Autowired constructor(
         val workspace = workspaceDao.fetchWorkspaceWithOwner(
             dslContext = dslContext,
             mountType = WorkspaceMountType.START,
-            ip = notifyData.ip
+            ips = notifyData.ip?.toSet(),
+            projectIds = setOf(notifyData.projectId)
         ) ?: throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                params = arrayOf(notifyData.ip)
-            )
+            errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+            params = arrayOf(notifyData.ip?.joinToString(";") ?: "")
+        )
 
         // 分发到WS
-        workspaceCommon.dispatchWebsocketPushEvent(
-            userId = ADMIN_NAME,
-            workspaceName = workspace[0]["NAME"] as String,
-            workspaceHost = notifyData.ip,
-            errorMsg = notifyData.content,
-            type = WebSocketActionType.WORKSPACE_NOTIFY,
-            status = true,
-            action = WorkspaceAction.NOTIFY,
-            systemType = WorkspaceSystemType.WINDOWS_GPU,
-            workspaceMountType = null,
-            ownerType = null,
-            projectId = workspace[0]["PROJECT_ID"] as String
-        )
+        workspace.forEach { ws ->
+            workspaceCommon.dispatchWebsocketPushEvent(
+                userId = ADMIN_NAME,
+                workspaceName = ws["NAME"] as String,
+                workspaceHost = null,
+                errorMsg = "${notifyData.title}\n${notifyData.desc}",
+                type = WebSocketActionType.WORKSPACE_NOTIFY,
+                status = true,
+                action = WorkspaceAction.NOTIFY,
+                systemType = WorkspaceSystemType.WINDOWS_GPU,
+                workspaceMountType = null,
+                ownerType = null,
+                projectId = ws["PROJECT_ID"] as String
+            )
+        }
     }
 }
