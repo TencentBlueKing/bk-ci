@@ -30,14 +30,12 @@ package com.tencent.devops.common.webhook.service.code.filter
 /**
  * webhook过滤器返回结果
  */
-class WebhookFilterResponse {
-    private val params = mutableMapOf<String, String>()
-
+data class WebhookFilterResponse(
+    val params: MutableMap<String, String> = mutableMapOf(),
+    // 过滤失败原因
+    var failedReason: String? = null
+) {
     fun addParam(key: String, value: String) {
         params[key] = value
-    }
-
-    fun getParam(): Map<String, String> {
-        return params
     }
 }

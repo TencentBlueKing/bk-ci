@@ -110,4 +110,24 @@ object AuthMessageCode {
     const val ERROR_MIGRATE_AUTH_COMPARE_FAIL = "2121061" // 迁移项目{0}失败,权限策略对比失败
     const val ERROR_CREATOR_NOT_EXIST = "2121062" // 创建人离职
     const val ERROR_RESOURCE_CREATE_FAIL = "2121063" // 资源创建失败
+    const val ERROR_CLIENT_NOT_EXIST = "2121064" // 客户端{0}不存在
+    const val INVALID_AUTHORIZATION_TYPE = "2121065" // 授权类型{0}不合法
+    const val INVALID_REDIRECT_URI = "2121066" // 跳转链接{0}不合法
+    const val INVALID_CLIENT_SECRET = "2121067" // 客户端{0}密钥不合法
+    const val INVALID_AUTHORIZATION_CODE = "2121068" // 授权码不合法
+    const val INVALID_AUTHORIZATION_EXPIRED = "2121069" // 授权码已过期
+    const val ERROR_REFRESH_TOKEN_NOT_FOUND = "2121070" // refresh_token不能为空
+    const val INVALID_REFRESH_TOKEN = "2121071" // refresh_token不合法
+    const val ERROR_REFRESH_TOKEN_EXPIRED = "2121072" // refresh token已过期
+    const val ERROR_ACCESS_TOKEN_NOT_FOUND = "2121073" // access token不能为空
+    const val INVALID_ACCESS_TOKEN = "2121074" // access token不合法
+    const val ERROR_ACCESS_TOKEN_EXPIRED = "2121075" // access token已过期
+    const val INVALID_SCOPE = "2121076" // scope不合法
+
+    const val ERROR_MONITOR_SPACE_NOT_EXIST = "2121077" // 监控空间不存在
+    const val ERROR_MONITOR_READ_ONLY_ACTIONS_NOT_EXIST = "2121078" // 业务只读组不存在
+    const val ERROR_MONITOR_OPS_ACTIONS_NOT_EXIST = "2121079" // 业务运维组不存在
+
+    const val ERROR_WATER_MARK_NOT_EXIST = "2121080" // 水印信息不存在
+    const val ERROR_USER_NOT_EXIST = "2121081" // 用户不存在
 }

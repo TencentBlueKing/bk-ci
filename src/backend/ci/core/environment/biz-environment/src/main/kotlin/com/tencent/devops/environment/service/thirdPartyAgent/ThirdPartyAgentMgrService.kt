@@ -428,7 +428,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             thirdPartyAgentDao.getAgent(dslContext, id)!!
         } else {
             val agentRecord = unimportAgent[0]
-            logger.info("The agent(${agentRecord.id}) exist")
+            logger.debug("The agent(${agentRecord.id}) exist")
             if (!gateway.isNullOrBlank()) {
                 thirdPartyAgentDao.updateGateway(
                     dslContext = dslContext,
@@ -497,13 +497,13 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             return emptyList()
         }
 
-        logger.info("Get the user can use node ids $canUseNodeIds")
+        logger.debug("Get the user can use node ids $canUseNodeIds")
 
         val agentInfo = ArrayList<ThirdPartyAgentInfo>()
 
         agents.forEach { agent ->
             if (agent.nodeId == null) {
-                logger.warn("The agent(${agent.id}) node id is empty")
+                logger.debug("The agent(${agent.id}) node id is empty")
                 return@forEach
             }
 
@@ -532,7 +532,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     }
 
     fun getAgentByDisplayName(projectId: String, displayName: String): AgentResult<ThirdPartyAgent?> {
-        logger.info("[$projectId|$displayName] Get the agent")
         val nodes = nodeDao.getByDisplayName(
             dslContext = dslContext,
             projectId = projectId,
@@ -580,7 +579,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         projectId: String,
         agentId: String
     ): AgentResult<ThirdPartyAgent?> {
-        logger.info("Get the agent($agentId) of project($projectId)")
         val id = HashUtil.decodeIdToLong(agentId)
         // 先去寻找当前项目下是否存在这个 agent
         val agentRecord = thirdPartyAgentDao.getAgentByProject(dslContext, id, projectId)
@@ -614,7 +612,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         projectId: String,
         agentId: String
     ): AgentResult<ThirdPartyAgent?> {
-        logger.info("Get the agent($agentId) of project($projectId)")
         val id = HashUtil.decodeIdToLong(agentId)
         val agentRecord = thirdPartyAgentDao.getAgent(dslContext = dslContext, id = id)
             ?: return AgentResult(AgentStatus.DELETE, null)
@@ -652,7 +649,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     }
 
     fun getAgnetByEnvName(projectId: String, envName: String): List<ThirdPartyAgent> {
-        logger.info("[$projectId|$envName] Get the agents by env name")
         // 共享环境由 被共享的项目ID@环境名称 组成，这里通过@分隔出的数量来区分是否是共享环境
         val envNameItems = envName.split("@")
         val thirdPartyAgentList = mutableListOf<ThirdPartyAgent>()
@@ -1219,7 +1215,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             thirdPartyAgentHeartbeatUtils.heartbeat(projectId, agentHashId)
 
             HeartbeatResponse(
-                masterVersion = agentPropsScope.getAgentVersion(),
+                // 避免老的没有删除 master 校验的版本进程阻塞导致心跳异常
+                masterVersion = newHeartbeatInfo.masterVersion,
                 slaveVersion = agentPropsScope.getWorkerVersion(),
                 AgentStatus = agentStatus.name,
                 ParallelTaskCount = agentRecord.parallelTaskCount,

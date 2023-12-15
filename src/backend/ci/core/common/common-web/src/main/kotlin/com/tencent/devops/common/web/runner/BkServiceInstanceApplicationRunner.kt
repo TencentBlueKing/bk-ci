@@ -6,19 +6,15 @@ import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.BkServiceUtil
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.KubernetesUtils
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
-import org.springframework.core.env.Environment
 
 class BkServiceInstanceApplicationRunner constructor(
     private val compositeDiscoveryClient: CompositeDiscoveryClient,
     private val bkTag: BkTag,
-    private val redisOperation: RedisOperation,
-    private val rabbitAdmin: RabbitAdmin
+    private val redisOperation: RedisOperation
 ) : ApplicationRunner {
 
     companion object {
@@ -47,52 +43,10 @@ class BkServiceInstanceApplicationRunner constructor(
                         )
                     }"
                 )
-                val environment: Environment = SpringContextUtil.getBean(Environment::class.java)
-                val shardingDbFlag = environment.containsProperty("spring.datasource.dataSourceConfigs[0].url")
-                logger.info("initServiceHostInfo serviceName:$serviceName shardingDbFlag:$shardingDbFlag")
-                if (shardingDbFlag) {
-                    // 如果微服务的DB采用了分库分表方案，那么需要清理规则动态队列
-                    try {
-                        deleteDynamicMqQueue(cacheKey, serviceName, serviceHosts)
-                    } catch (ignored: Throwable) {
-                        logger.warn(
-                            "serviceName:$serviceName delete dynamicMqQueue fail!", ignored
-                        )
-                    }
-                }
                 // 清空redis中微服务的主机IP列表
                 redisOperation.delete(cacheKey)
                 // 把微服务的最新主机IP列表写入redis中
                 redisOperation.sadd(cacheKey, *serviceHosts)
-            }
-
-            private fun deleteDynamicMqQueue(cacheKey: String, serviceName: String, serviceHosts: Array<String>) {
-                // 将微服务在redis的主机IP列表取出
-                val historyServiceHosts = redisOperation.getSetMembers(cacheKey)?.toMutableSet()
-                logger.info("initServiceHostInfo serviceName:$serviceName historyServiceHosts:$historyServiceHosts")
-                if (historyServiceHosts.isNullOrEmpty()) {
-                    return
-                }
-                historyServiceHosts.removeAll(serviceHosts.toSet())
-                historyServiceHosts.forEach { historyServiceHost ->
-                    val queueName = BkServiceUtil.getDynamicMqQueue(serviceName, historyServiceHost)
-                    logger.info("serviceName:$serviceName delete dynamicMqQueue($queueName) start!")
-                    var queueProperties = rabbitAdmin.getQueueProperties(queueName)
-                    if (queueProperties == null) {
-                        // 队列属性为空说明删除成功
-                        logger.info("serviceName:$serviceName dynamicMqQueue($queueName) does not exist!")
-                        return
-                    }
-                    rabbitAdmin.purgeQueue(queueName)
-                    rabbitAdmin.deleteQueue(queueName)
-                    queueProperties = rabbitAdmin.getQueueProperties(queueName)
-                    if (queueProperties != null) {
-                        // 队列属性不为空说明删除未成功，把队列名称写入redis中
-                        logger.info("serviceName:$serviceName delete dynamicMqQueue($queueName) fail!")
-                    } else {
-                        logger.info("serviceName:$serviceName delete dynamicMqQueue($queueName) success!")
-                    }
-                }
             }
         }.start()
     }

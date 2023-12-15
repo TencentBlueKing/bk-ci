@@ -230,17 +230,17 @@ class MigrateResultService constructor(
             val createPermission = actions.filter { it.contains("create") }.all {
                 client.getGateway(ServicePermissionAuthResource::class).validateUserResourcePermission(
                     userId = userId,
-                    token = tokenService.getSystemToken(null)!!,
+                    token = tokenService.getSystemToken()!!,
                     action = it.substringAfterLast("_"),
                     projectCode = projectCode,
-                    resourceCode = it.substringBefore("_")
+                    resourceCode = it.substringBeforeLast("_")
                 ).data!!
             }
             // 此处需要注意,必须使用getGateway,不能使用get方法,因为ServicePermissionAuthResource的bean类是存在的,不会跨集群调用
             val notCreatePermission =
                 client.getGateway(ServicePermissionAuthResource::class).batchValidateUserResourcePermissionByRelation(
                     userId = userId,
-                    token = tokenService.getSystemToken(null)!!,
+                    token = tokenService.getSystemToken()!!,
                     action = actions.filterNot {
                         it.contains("create")
                     }.map { it.substringAfterLast("_") },

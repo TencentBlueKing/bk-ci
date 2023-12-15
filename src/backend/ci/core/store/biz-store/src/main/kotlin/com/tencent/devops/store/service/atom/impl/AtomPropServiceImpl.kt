@@ -35,6 +35,7 @@ import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.store.dao.atom.AtomPropDao
 import com.tencent.devops.store.pojo.atom.AtomProp
 import com.tencent.devops.store.service.atom.AtomPropService
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import org.apache.commons.collections4.ListUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -77,23 +78,29 @@ class AtomPropServiceImpl @Autowired constructor(
         }
         ListUtils.partition(queryDbAtomCodes!!, 100).forEach { rids ->
             val atomPropRecords = atomPropDao.getAtomProps(dslContext, rids)
-            if (!atomPropRecords.isNullOrEmpty()) {
-                if (atomPropMap == null) {
-                    atomPropMap = mutableMapOf()
+            if (atomPropRecords.isNullOrEmpty()) {
+                return@forEach
+            }
+            if (atomPropMap == null) {
+                atomPropMap = mutableMapOf()
+            }
+            val tAtom = TAtom.T_ATOM
+            atomPropRecords.forEach { atomPropRecord ->
+                val atomCode = atomPropRecord[tAtom.ATOM_CODE]
+                var logoUrl = atomPropRecord[tAtom.LOGO_URL]
+                logoUrl = logoUrl?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
                 }
-                val tAtom = TAtom.T_ATOM
-                atomPropRecords.forEach { atomPropRecord ->
-                    val atomCode = atomPropRecord[tAtom.ATOM_CODE]
-                    val atomProp = AtomProp(
-                        atomCode = atomCode,
-                        os = JsonUtil.to(atomPropRecord[tAtom.OS], object : TypeReference<List<String>>() {}),
-                        logoUrl = RegexUtils.trimProtocol(atomPropRecord[tAtom.LOGO_URL]),
-                        buildLessRunFlag = atomPropRecord[tAtom.BUILD_LESS_RUN_FLAG]
-                    )
-                    atomPropMap!![atomCode] = atomProp
-                    // 把数据放入缓存
-                    atomPropCache.put(atomCode, atomProp)
-                }
+                logoUrl = RegexUtils.trimProtocol(atomPropRecord[tAtom.LOGO_URL])
+                val atomProp = AtomProp(
+                    atomCode = atomCode,
+                    os = JsonUtil.to(atomPropRecord[tAtom.OS], object : TypeReference<List<String>>() {}),
+                    logoUrl = logoUrl,
+                    buildLessRunFlag = atomPropRecord[tAtom.BUILD_LESS_RUN_FLAG]
+                )
+                atomPropMap!![atomCode] = atomProp
+                // 把数据放入缓存
+                atomPropCache.put(atomCode, atomProp)
             }
         }
         return atomPropMap

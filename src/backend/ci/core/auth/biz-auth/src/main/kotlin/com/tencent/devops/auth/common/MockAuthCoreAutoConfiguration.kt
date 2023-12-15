@@ -2,6 +2,8 @@ package com.tencent.devops.auth.common
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.impl.GrantServiceImpl
+import com.tencent.devops.auth.service.AuthAuthorizationScopesService
+import com.tencent.devops.auth.service.AuthMonitorSpaceService
 import com.tencent.devops.auth.service.DefaultDeptServiceImpl
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.LocalManagerService
@@ -22,6 +24,8 @@ import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.auth.service.iam.PermissionUrlService
+import com.tencent.devops.auth.service.sample.SampleAuthAuthorizationScopesService
+import com.tencent.devops.auth.service.sample.SampleAuthMonitorSpaceService
 import com.tencent.devops.auth.service.sample.SampleAuthPermissionProjectService
 import com.tencent.devops.auth.service.sample.SampleAuthPermissionService
 import com.tencent.devops.auth.service.sample.SampleGrantPermissionServiceImpl
@@ -40,6 +44,8 @@ import com.tencent.devops.auth.service.sample.SamplePermissionRoleMemberService
 import com.tencent.devops.auth.service.sample.SamplePermissionRoleService
 import com.tencent.devops.auth.service.sample.SamplePermissionSuperManagerService
 import com.tencent.devops.auth.service.sample.SamplePermissionUrlServiceImpl
+import com.tencent.devops.auth.service.security.DefaultSecurityServiceImpl
+import com.tencent.devops.auth.service.security.SecurityService
 import com.tencent.devops.common.client.Client
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
@@ -129,4 +135,22 @@ class MockAuthCoreAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(PermissionMigrateService::class)
     fun samplePermissionMigrateService() = SamplePermissionMigrateService()
+
+    @Bean
+    @ConditionalOnMissingBean(AuthAuthorizationScopesService::class)
+    fun sampleAuthAuthorizationScopesService() = SampleAuthAuthorizationScopesService()
+
+    @Bean
+    @ConditionalOnMissingBean(AuthMonitorSpaceService::class)
+    fun sampleAuthMonitorSpaceService() = SampleAuthMonitorSpaceService()
+
+    @Bean
+    @ConditionalOnMissingBean(SecurityService::class)
+    fun defaultSecurityServiceImpl(
+        deptService: DeptService,
+        permissionProjectService: PermissionProjectService
+    ) = DefaultSecurityServiceImpl(
+        deptService = deptService,
+        permissionProjectService = permissionProjectService
+    )
 }

@@ -47,12 +47,15 @@ data class GitPushEvent(
     val operation_kind: String?,
     val action_kind: String?,
     val push_options: Map<String, String>?,
+    @JsonProperty("push_timestamp")
+    val pushTimestamp: String?,
     val create_and_update: Boolean?,
     @JsonProperty("diff_files")
     val diffFiles: List<GitDiffFile>?
 ) : GitEvent() {
     companion object {
         const val classType = "push"
+        const val SHORT_COMMIT_ID_LENGTH = 8
     }
 }
 
