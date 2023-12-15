@@ -295,7 +295,11 @@ class ScmService @Autowired constructor(
             ScmFactory.getScm(
                 projectName = projectName,
                 url = url,
-                type = type,
+                type = if (type == ScmType.CODE_TGIT_CE) {
+                    ScmType.CODE_TGIT
+                } else {
+                    type
+                },
                 branchName = null,
                 privateKey = privateKey,
                 passPhrase = passPhrase,
