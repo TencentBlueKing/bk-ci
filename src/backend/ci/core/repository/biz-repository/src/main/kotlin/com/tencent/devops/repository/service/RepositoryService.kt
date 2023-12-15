@@ -1150,7 +1150,7 @@ class RepositoryService @Autowired constructor(
 
     fun setProjectProtectionBranchDefaultRules(
         userId: String,
-        repositoryHashId:String,
+        repositoryHashId: String,
         ruleMap: Map<String, Any>
     ): Result<Boolean> {
         try {
