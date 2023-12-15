@@ -280,7 +280,8 @@ class ScmService @Autowired constructor(
                     ScmType.CODE_GITLAB -> {
                         gitConfig.gitlabHookUrl
                     }
-                    ScmType.CODE_TGIT -> {
+
+                    ScmType.CODE_TGIT, ScmType.CODE_TGIT_CE -> {
                         gitConfig.tGitHookUrl
                     }
                     ScmType.CODE_P4 -> {
