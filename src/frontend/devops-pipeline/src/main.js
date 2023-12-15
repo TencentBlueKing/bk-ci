@@ -24,6 +24,8 @@
 import Vue from 'vue'
 import App from './App'
 import focus from './directives/focus/index.js'
+import enClass from './directives/focus/en-class'
+import enStyle from './directives/focus/en-style'
 import createRouter from './router'
 import store from './store'
 
@@ -57,6 +59,8 @@ const { i18n, setLocale } = createLocale(
 const isInIframe = window.self !== window.parent
 
 Vue.use(focus)
+Vue.use(enClass)
+Vue.use(enStyle)
 Vue.use(bkMagic)
 Vue.use(PortalVue)
 Vue.use(mavonEditor)

@@ -1,11 +1,11 @@
 <template>
     <div class="variable-container">
-        <bk-alert type="info" :title="$t('可通过表达式 ${{ steps.<StepID>.outputs.<var_name> }} 引用变量')" closable></bk-alert>
+        <bk-alert type="info" :title="$t('newui.atomVarTips')" closable></bk-alert>
         <div class="operate-row">
             <bk-input
                 v-model="searchStr"
                 :clearable="true"
-                :placeholder="'变量名/变量描述/step名称'"
+                :placeholder="$t('newui.searchAtomVar')"
                 :right-icon="'bk-icon icon-search'"
             />
         </div>
@@ -19,7 +19,7 @@
                 slot="header"
                 :class="{ 'disabled-header': group.disableHeader }"
                 v-bk-tooltips="{
-                    content: '当前插件无法使用下游步骤输出的变量',
+                    content: $t('newui.stepUseWarn'),
                     placement: 'top-start',
                     disabled: group.disableHeader
                 }"
@@ -35,7 +35,7 @@
                 </div>
                 <div v-if="!group.stepId && editable" @click.stop class="flex-item step-tips">
                     <bk-icon type="exclamation-circle-shape" />
-                    <span>{{$t('步骤未设置 StepID,')}}
+                    <span>{{$t('newui.noStepidTips')}}
                         <bk-popconfirm
                             trigger="click"
                             ext-cls="step-pop-confirm"
@@ -64,7 +64,7 @@
                                     </vuex-input>
                                 </form-field>
                             </div>
-                            <a class="edit-step-span" @click="location = group.location">{{$t('立即设置')}}</a>
+                            <a class="edit-step-span" @click="location = group.location">{{$t('newui.setNow')}}</a>
                         </bk-popconfirm>
                     </span>
                 </div>

@@ -1,8 +1,8 @@
 <template>
     <div class="selector-type-param">
         <div class="option-type">
-            <div class="type-select" :class="{ 'is-active': payloadValue.type === 'options' }" @click="handleParamTypeChange('type', 'options')">{{$t('预定义选项')}}</div>
-            <div class="type-select" :class="{ 'is-active': payloadValue.type === 'remote' }" @click="handleParamTypeChange('type', 'remote')">{{$t('从接口获取选项')}}</div>
+            <div class="type-select" :class="{ 'is-active': payloadValue.type === 'options' }" @click="handleParamTypeChange('type', 'options')">{{$t('newui.pipelineParam.optionsList')}}</div>
+            <div class="type-select" :class="{ 'is-active': payloadValue.type === 'remote' }" @click="handleParamTypeChange('type', 'remote')">{{$t('newui.pipelineParam.optionsFromApi')}}</div>
         </div>
         <div class="option-items">
             <section v-if="payloadValue.type !== 'remote'">
@@ -59,27 +59,23 @@
                 remoteTypeOptions: [
                     {
                         key: 'url',
-                        label: '接口URL',
-                        placeholder: '请输入',
-                        tips: ''
+                        label: this.$t('newui.pipelineParam.apiUrl'),
+                        placeholder: this.$t('atomForm.inputTips')
                     },
                     {
                         key: 'dataPath',
-                        label: '数据对象名称',
-                        placeholder: '缺省时默认为data，示例：data.detail.list',
-                        tips: ''
+                        label: this.$t('newui.pipelineParam.dataPath'),
+                        placeholder: this.$t('newui.pipelineParam.dataPathTips')
                     },
                     {
                         key: 'paramId',
-                        label: '选项ID字段名',
-                        placeholder: '选中时将此ID值传递给插件',
-                        tips: ''
+                        label: this.$t('newui.pipelineParam.paramId'),
+                        placeholder: this.$t('newui.pipelineParam.paramIdTips')
                     },
                     {
                         key: 'paramName',
-                        label: '选项NAME字段名',
-                        placeholder: '用户在页面上看到的选项名称',
-                        tips: ''
+                        label: this.$t('newui.pipelineParam.paramName'),
+                        placeholder: this.$t('newui.pipelineParam.paramNameTips')
                     }
                 ]
             }
