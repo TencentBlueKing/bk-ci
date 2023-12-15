@@ -29,9 +29,10 @@
 package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.model.process.tables.TPipelineYamlSync
+import com.tencent.devops.model.process.tables.records.TPipelineYamlSyncRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlSyncInfo
-import com.tencent.devops.repository.pojo.enums.RepoYamlSyncStatusEnum
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -108,20 +109,13 @@ class PipelineYamlSyncDao {
         projectId: String,
         repoHashId: String,
         syncStatus: String? = null
-    ): List<PipelineYamlSyncInfo> {
+    ): Result<TPipelineYamlSyncRecord> {
         with(TPipelineYamlSync.T_PIPELINE_YAML_SYNC) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .let { if (syncStatus == null) it else it.and(SYNC_STATUS.eq(syncStatus)) }
-                .fetch().map {
-                    PipelineYamlSyncInfo(
-                        filePath = it.filePath,
-                        syncStatus = RepoYamlSyncStatusEnum.valueOf(it.syncStatus),
-                        reason = it.reason,
-                        reasonDetail = it.reasonDetail
-                    )
-                }
+                .fetch()
         }
     }
 

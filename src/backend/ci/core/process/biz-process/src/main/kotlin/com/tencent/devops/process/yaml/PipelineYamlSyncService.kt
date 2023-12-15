@@ -28,9 +28,12 @@
 
 package com.tencent.devops.process.yaml
 
+import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
 import com.tencent.devops.process.engine.dao.PipelineYamlSyncDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlSyncInfo
 import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
@@ -124,7 +127,20 @@ class PipelineYamlSyncService @Autowired constructor(
             projectId = projectId,
             repoHashId = repoHashId,
             syncStatus = RepoYamlSyncStatusEnum.FAILED.name
-        )
+        ).map {
+            PipelineYamlSyncInfo(
+                filePath = it.filePath,
+                syncStatus = RepoYamlSyncStatusEnum.valueOf(it.syncStatus),
+                reason = it.reason,
+                reasonDetail = it.reasonDetail?.let { detail ->
+                    try {
+                        JsonUtil.to(detail, I18Variable::class.java).getCodeLanMessage()
+                    } catch (ignored: Throwable) {
+                        detail
+                    }
+                }
+            )
+        }
     }
 
     private fun updateYamlSyncStatus(
@@ -151,10 +167,10 @@ class PipelineYamlSyncService @Autowired constructor(
                 repoHashId = repoHashId
             ).map { it.syncStatus }
             // 还有正在同步的文件,不修改状态
-            if (syncStatusList.contains(RepoYamlSyncStatusEnum.SYNC)) {
+            if (syncStatusList.contains(RepoYamlSyncStatusEnum.SYNC.name)) {
                 return
             }
-            val syncStatus = if (syncStatusList.contains(RepoYamlSyncStatusEnum.FAILED)) {
+            val syncStatus = if (syncStatusList.contains(RepoYamlSyncStatusEnum.FAILED.name)) {
                 RepoYamlSyncStatusEnum.FAILED.name
             } else {
                 RepoYamlSyncStatusEnum.SUCCEED.name
