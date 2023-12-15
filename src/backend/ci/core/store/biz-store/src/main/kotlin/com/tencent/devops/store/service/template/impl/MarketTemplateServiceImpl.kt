@@ -29,7 +29,6 @@ package com.tencent.devops.store.service.template.impl
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.REFERER
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -279,7 +278,6 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             }
             BkApiUtil.getHttpServletRequest()?.let {
                 ThreadLocalUtil.set(REFERER, it.getHeader(REFERER))
-                ThreadLocalUtil.set(AUTH_HEADER_USER_ID, it.getHeader(AUTH_HEADER_USER_ID))
             }
             templates.forEach {
                 val code = it[tTemplate.TEMPLATE_CODE] as String
@@ -355,7 +353,6 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         val result = mutableListOf<MarketTemplateMain>()
         // 获取用户组织架构
         val userDeptList = getUserDeptList(userId)
-        logger.info("mainPageList userDeptList is:$userDeptList")
         val futureList = mutableListOf<Future<MarketTemplateResp>>()
         val labelInfoList = mutableListOf<MarketMainItemLabel>()
         labelInfoList.add(
@@ -459,10 +456,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         page: Int?,
         pageSize: Int?
     ): MarketTemplateResp {
-        logger.info("[list]enter")
         // 获取用户组织架构
         val userDeptList = getUserDeptList(userId)
-        logger.info("list userDeptList is:$userDeptList")
         var installedTemplateCodes: List<String>? = null
         run check@{
             if (!projectCode.isNullOrBlank()) {

@@ -28,7 +28,6 @@
 package com.tencent.devops.store.service.image
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.REFERER
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -332,7 +331,6 @@ abstract class ImageService @Autowired constructor() {
         }
         BkApiUtil.getHttpServletRequest()?.let {
             ThreadLocalUtil.set(REFERER, it.getHeader(REFERER))
-            ThreadLocalUtil.set(AUTH_HEADER_USER_ID, it.getHeader(AUTH_HEADER_USER_ID))
         }
         images.forEach {
             val imageCode = it[KEY_IMAGE_CODE] as String

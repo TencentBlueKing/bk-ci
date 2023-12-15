@@ -30,7 +30,6 @@ package com.tencent.devops.store.service.atom.impl
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.REFERER
 import com.tencent.devops.common.api.constant.AND
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -326,7 +325,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             }
             BkApiUtil.getHttpServletRequest()?.let {
                 ThreadLocalUtil.set(REFERER, it.getHeader(REFERER))
-                ThreadLocalUtil.set(AUTH_HEADER_USER_ID, it.getHeader(AUTH_HEADER_USER_ID))
             }
             atoms.forEach {
                 val atomCode = it[tAtom.ATOM_CODE] as String
@@ -523,11 +521,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         pageSize: Int?,
         urlProtocolTrim: Boolean
     ): MarketAtomResp {
-        logger.info("[list]enter")
-
         // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)
-        logger.info("[list]get userDeptList:$userDeptList")
 
         return doList(
             userId = userId,
