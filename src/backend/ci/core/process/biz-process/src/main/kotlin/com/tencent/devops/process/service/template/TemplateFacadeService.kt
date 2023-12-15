@@ -1320,7 +1320,7 @@ class TemplateFacadeService @Autowired constructor(
             description = setting.desc ?: "",
             creator = if (isConstrainedFlag) latestTemplate.creator else template.creator,
             template = templateResult,
-            templateType = if (isConstrainedFlag) latestTemplate.type else template.type,
+            templateType = if (isConstrainedFlag) TemplateType.CONSTRAINT.name else template.type,
             logoUrl = if (isConstrainedFlag) latestTemplate.logoUrl ?: "" else {
                 if (template.logoUrl.isNullOrEmpty()) "" else template.logoUrl
             },
