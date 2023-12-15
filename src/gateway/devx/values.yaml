@@ -8,6 +8,9 @@ dashboard:
   config:
     authentication:
       users: [{"password":"Devops@2023","username":"bkci"}]
+    plugins:
+    - proxy-rewrite
+    - check-ip-project
 apisix:
   plugins:
     - proxy-rewrite
