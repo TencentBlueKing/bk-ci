@@ -129,4 +129,8 @@ object GitActionCommon {
         return name.startsWith(Constansts.ciFileDirectoryName) &&
                 (name.endsWith(Constansts.ciFileExtensionYml) || name.endsWith(Constansts.ciFileExtensionYaml))
     }
+
+    fun getCiDirectory(filePath: String): String {
+        return filePath.let { it.substring(0, it.indexOfLast { c -> c == '/' } + 1) }
+    }
 }

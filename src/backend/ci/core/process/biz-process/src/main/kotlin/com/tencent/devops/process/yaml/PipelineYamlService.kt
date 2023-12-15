@@ -34,8 +34,10 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.engine.dao.PipelineWebhookVersionDao
 import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
+import com.tencent.devops.process.engine.dao.PipelineYamlViewDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlView
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookVersion
 import com.tencent.devops.repository.api.ServiceRepositoryResource
@@ -51,6 +53,7 @@ class PipelineYamlService(
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
     private val pipelineYamlVersionDao: PipelineYamlVersionDao,
     private val pipelineWebhookVersionDao: PipelineWebhookVersionDao,
+    private val pipelineYamlViewDao: PipelineYamlViewDao,
     private val client: Client
 ) {
 
@@ -62,12 +65,14 @@ class PipelineYamlService(
         projectId: String,
         repoHashId: String,
         filePath: String,
+        directory: String,
         pipelineId: String,
         userId: String,
         blobId: String,
         ref: String?,
         version: Int,
         versionName: String,
+        viewId: Long?,
         webhooks: List<PipelineWebhookVersion>
     ) {
         dslContext.transaction { configuration ->
@@ -77,6 +82,7 @@ class PipelineYamlService(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath,
+                directory = directory,
                 pipelineId = pipelineId,
                 userId = userId
             )
@@ -92,6 +98,15 @@ class PipelineYamlService(
                 versionName = versionName,
                 userId = userId
             )
+            if (viewId != null) {
+                pipelineYamlViewDao.save(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    directory = directory,
+                    viewId = viewId
+                )
+            }
             pipelineWebhookVersionDao.batchSave(
                 dslContext = transactionContext,
                 webhooks = webhooks
@@ -288,5 +303,18 @@ class PipelineYamlService(
                 filePath = filePath
             )
         }
+    }
+
+    fun getPipelineYamlView(
+        projectId: String,
+        repoHashId: String,
+        directory: String
+    ): PipelineYamlView? {
+        return pipelineYamlViewDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            directory = directory
+        )
     }
 }

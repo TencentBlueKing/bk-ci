@@ -28,60 +28,34 @@
 
 package com.tencent.devops.process.engine.dao
 
-import com.tencent.devops.model.process.tables.TPipelineYamlVersion
-import com.tencent.devops.model.process.tables.records.TPipelineYamlVersionRecord
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
+import com.tencent.devops.model.process.tables.TPipelineYamlView
+import com.tencent.devops.model.process.tables.records.TPipelineYamlViewRecord
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlView
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
-/**
- * 流水线与代码库yml文件关联表
- */
 @Repository
-class PipelineYamlVersionDao {
+class PipelineYamlViewDao {
 
     fun save(
         dslContext: DSLContext,
         projectId: String,
         repoHashId: String,
-        filePath: String,
-        blobId: String,
-        ref: String?,
-        pipelineId: String,
-        version: Int,
-        versionName: String,
-        userId: String
+        directory: String,
+        viewId: Long
     ) {
-        val now = LocalDateTime.now()
-        with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
+        with(TPipelineYamlView.T_PIPELINE_YAML_VIEW) {
             dslContext.insertInto(
                 this,
                 PROJECT_ID,
                 REPO_HASH_ID,
-                FILE_PATH,
-                BLOB_ID,
-                REF,
-                PIPELINE_ID,
-                VERSION,
-                VERSION_NAME,
-                CREATOR,
-                MODIFIER,
-                CREATE_TIME,
-                UPDATE_TIME
+                DIRECTORY,
+                VIEW_ID
             ).values(
                 projectId,
                 repoHashId,
-                filePath,
-                blobId,
-                ref,
-                pipelineId,
-                version,
-                versionName,
-                userId,
-                userId,
-                now,
-                now
+                directory,
+                viewId
             ).execute()
         }
     }
@@ -90,62 +64,36 @@ class PipelineYamlVersionDao {
         dslContext: DSLContext,
         projectId: String,
         repoHashId: String,
-        filePath: String,
-        blobId: String
-    ): PipelineYamlVersion? {
-        with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
+        directory: String
+    ): PipelineYamlView? {
+        with(TPipelineYamlView.T_PIPELINE_YAML_VIEW) {
             val record = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
-                .and(FILE_PATH.eq(filePath))
-                .and(BLOB_ID.eq(blobId))
+                .and(DIRECTORY.eq(directory))
                 .fetchOne()
             return record?.let { convert(it) }
         }
     }
 
-    fun getByPipelineId(
+    fun listViewIds(
         dslContext: DSLContext,
         projectId: String,
-        pipelineId: String,
-        version: Int
-    ): PipelineYamlVersion? {
-        with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
-            val record = dslContext.selectFrom(this)
+    ): List<Long> {
+        with(TPipelineYamlView.T_PIPELINE_YAML_VIEW) {
+            return dslContext.select(VIEW_ID).from(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-                .and(VERSION.eq(version))
-                .fetchAny()
-            return record?.let { convert(it) }
+                .fetch(0, Long::class.java)
         }
     }
 
-    fun delete(
-        dslContext: DSLContext,
-        projectId: String,
-        repoHashId: String,
-        filePath: String
-    ) {
-        with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
-            dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(REPO_HASH_ID.eq(repoHashId))
-                .and(FILE_PATH.eq(filePath))
-                .execute()
-        }
-    }
-
-    fun convert(record: TPipelineYamlVersionRecord): PipelineYamlVersion {
+    fun convert(record: TPipelineYamlViewRecord): PipelineYamlView {
         return with(record) {
-            PipelineYamlVersion(
+            PipelineYamlView(
                 projectId = projectId,
                 repoHashId = repoHashId,
-                filePath = filePath,
-                blobId = blobId,
-                ref = ref,
-                pipelineId = pipelineId,
-                version = version,
-                versionName = versionName
+                directory = directory,
+                viewId = viewId
             )
         }
     }

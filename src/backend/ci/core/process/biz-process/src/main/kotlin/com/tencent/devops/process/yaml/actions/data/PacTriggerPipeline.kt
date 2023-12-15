@@ -41,6 +41,5 @@ data class PacTriggerPipeline(
     val repoHashId: String,
     val filePath: String,
     val pipelineId: String,
-    val userId: String,
-    val delete: Boolean
+    val userId: String
 )

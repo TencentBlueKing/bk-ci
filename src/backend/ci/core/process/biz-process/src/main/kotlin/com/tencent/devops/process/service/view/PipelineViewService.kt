@@ -543,11 +543,11 @@ class PipelineViewService @Autowired constructor(
                     filter.labelIds
                 ).values.asSequence().flatten().contains(pipelineInfo.pipelineId)
             } else if (filter is PipelineViewFilterByPacRepo) {
-                val pipelineIds = pipelineYamlInfoDao.listPipelineIdWithFolder(
+                val pipelineIds = pipelineYamlInfoDao.listPipelineIdWithDirectory(
                     dslContext = dslContext,
                     projectId = pipelineView.projectId,
                     repoHashId = filter.repoHashId,
-                    folder = filter.folder
+                    directory = filter.directory
                 )
                 pipelineIds.contains(pipelineInfo.pipelineId)
             } else {

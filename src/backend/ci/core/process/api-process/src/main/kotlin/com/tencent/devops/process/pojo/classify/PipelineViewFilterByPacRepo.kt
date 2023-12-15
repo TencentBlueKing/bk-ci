@@ -38,7 +38,7 @@ data class PipelineViewFilterByPacRepo(
     @ApiModelProperty("代码库HashId", required = false)
     val repoHashId: String,
     @ApiModelProperty("文件夹名称", required = false)
-    val folder: String? = null
+    val directory: String? = null
 ) : PipelineViewFilter() {
     companion object {
         const val classType = "filterByPacRepo"

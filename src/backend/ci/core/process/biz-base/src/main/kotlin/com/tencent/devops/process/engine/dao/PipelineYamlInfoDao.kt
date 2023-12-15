@@ -46,6 +46,7 @@ class PipelineYamlInfoDao {
         projectId: String,
         repoHashId: String,
         filePath: String,
+        directory: String,
         pipelineId: String,
         userId: String
     ) {
@@ -56,6 +57,7 @@ class PipelineYamlInfoDao {
                 PROJECT_ID,
                 REPO_HASH_ID,
                 FILE_PATH,
+                DIRECTORY,
                 PIPELINE_ID,
                 CREATOR,
                 MODIFIER,
@@ -65,6 +67,7 @@ class PipelineYamlInfoDao {
                 projectId,
                 repoHashId,
                 filePath,
+                directory,
                 pipelineId,
                 userId,
                 userId,
@@ -124,17 +127,17 @@ class PipelineYamlInfoDao {
         }
     }
 
-    fun listPipelineIdWithFolder(
+    fun listPipelineIdWithDirectory(
         dslContext: DSLContext,
         projectId: String,
         repoHashId: String,
-        folder: String?
+        directory: String?
     ): List<String> {
         return with(TPipelineYamlInfo.T_PIPELINE_YAML_INFO) {
             dslContext.select(PIPELINE_ID).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
-                .let { if (folder == null) it else it.and(FILE_PATH.like(".ci/$folder/%")) }
+                .let { if (directory == null) it else it.and(DIRECTORY.eq(directory)) }
                 .fetch().map { it.value1() }
         }
     }
@@ -178,7 +181,6 @@ class PipelineYamlInfoDao {
             dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
-                .and(DELETE.eq(false))
                 .fetchOne(0, Long::class.java) ?: 0L
         }
     }
@@ -190,8 +192,7 @@ class PipelineYamlInfoDao {
                 repoHashId = repoHashId,
                 filePath = filePath,
                 pipelineId = pipelineId,
-                creator = creator,
-                delete = delete
+                creator = creator
             )
         }
     }

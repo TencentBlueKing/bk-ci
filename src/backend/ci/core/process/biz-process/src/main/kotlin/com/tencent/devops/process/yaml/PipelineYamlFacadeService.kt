@@ -115,8 +115,7 @@ class PipelineYamlFacadeService @Autowired constructor(
                 repoHashId = it.repoHashId,
                 filePath = it.filePath,
                 pipelineId = it.pipelineId,
-                userId = userId,
-                delete = it.delete
+                userId = userId
             )
         }
         yamlPathList.forEach {
@@ -200,8 +199,7 @@ class PipelineYamlFacadeService @Autowired constructor(
                     repoHashId = it.repoHashId,
                     filePath = it.filePath,
                     pipelineId = it.pipelineId,
-                    userId = it.creator,
-                    delete = it.delete
+                    userId = it.creator
                 )
             }
             val eventStr = if (action.metaData.streamObjectKind == StreamObjectKind.REVIEW) {
