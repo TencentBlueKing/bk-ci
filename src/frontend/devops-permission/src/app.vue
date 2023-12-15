@@ -3,6 +3,10 @@
 </template>
 
 <script lang="ts">
-const devopsApp = window.top.document.getElementsByClassName('devops-app')[0];
-devopsApp.setAttribute('class', 'devops-app permission-model');
+try {
+  const devopsApp = window.top?.document.querySelector('.devops-app');
+  devopsApp?.setAttribute('class', 'devops-app permission-model');
+} catch (error) {
+  console.log(error);
+}
 </script>
