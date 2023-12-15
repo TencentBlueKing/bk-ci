@@ -1367,20 +1367,4 @@ class AtomDao : AtomBaseDao() {
                 .orderBy(tAtom.CREATE_TIME.desc()).limit(1).fetchOne(0, String::class.java)
         }
     }
-
-    fun listAtomRepoId(
-        dslContext: DSLContext,
-        offset: Int,
-        limit: Int
-    ): Result<Record3<String, String, LocalDateTime>> {
-        with(TAtom.T_ATOM) {
-            return dslContext.select(ATOM_CODE, REPOSITORY_HASH_ID, DSL.min(CREATE_TIME))
-                .from(this)
-                .where(DELETE_FLAG.eq(false).and(REPOSITORY_HASH_ID.isNotNull))
-                .groupBy(ATOM_CODE)
-                .orderBy(CREATE_TIME.asc(), ID.asc())
-                .limit(limit).offset(offset)
-                .fetch()
-        }
-    }
 }
