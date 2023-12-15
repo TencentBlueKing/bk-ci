@@ -27,8 +27,10 @@
 
 package com.tencent.devops.store.service.common.action.impl
 
-import com.tencent.devops.common.ci.UserUtil
-import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.api.auth.REFERER
+import com.tencent.devops.common.api.util.ThreadLocalUtil
+import com.tencent.devops.common.util.RegexUtils
+import com.tencent.devops.common.web.utils.BkApiUtil
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import javax.annotation.Priority
@@ -42,14 +44,27 @@ class TxFirstStoreHostDecorateImpl : AbstractStoreHostDecorateImpl() {
     val staticRepoPrefixUrl: String? = null
 
     @Value("\${bkrepo.dexStaticRepoPrefixUrl:#{null}}")
-    val dexStaticRepoPrefixUrl: String? = null
+    val devxStaticRepoPrefixUrl: String? = null
 
     override fun handleHostBus(str: String): String {
-        val userId = I18nUtil.getRequestUserId()
-        val hostReplaceFlag = userId == null || UserUtil.isTaiUser(userId)
-        if (hostReplaceFlag && !staticRepoPrefixUrl.isNullOrBlank() && !dexStaticRepoPrefixUrl.isNullOrBlank()) {
+        // 获取请求来源
+        val referer: String?
+        try {
+            referer = BkApiUtil.getHttpServletRequest()?.getHeader(REFERER) ?: ThreadLocalUtil.get(REFERER)?.toString()
+        } finally {
+            // 清空线程变量
+            ThreadLocalUtil.remove(REFERER)
+        }
+        val hostReplaceFlag = if (!referer.isNullOrBlank() && !devxStaticRepoPrefixUrl.isNullOrBlank()) {
+            // 判断请求的域名是否是devx环境的域名
+            val host = RegexUtils.splitDomainContextPath(devxStaticRepoPrefixUrl!!)!!.first
+            referer.contains(host)
+        } else {
+            false
+        }
+        if (hostReplaceFlag && !staticRepoPrefixUrl.isNullOrBlank()) {
             // 进行域名替换
-            return str.replace(staticRepoPrefixUrl!!, dexStaticRepoPrefixUrl!!)
+            return str.replace(staticRepoPrefixUrl!!, devxStaticRepoPrefixUrl!!)
         }
         return str
     }
