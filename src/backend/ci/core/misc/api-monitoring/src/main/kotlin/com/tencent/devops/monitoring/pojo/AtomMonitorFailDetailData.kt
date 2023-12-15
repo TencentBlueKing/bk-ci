@@ -24,21 +24,19 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.monitoring.pojo
 
-package com.tencent.devops.misc
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
-
-@MicroService
-@ComponentScan(
-    "com.tencent.devops.misc",
-    "com.tencent.devops.image",
-    "com.tencent.devops.monitoring"
+@ApiModel("插件执行失败详情统计数据")
+data class AtomMonitorFailDetailData(
+    @ApiModelProperty("系统运行错误执行失败数", required = true)
+    val totalSystemFailNum: Int,
+    @ApiModelProperty("用户配置错误执行失败数", required = true)
+    val totalUserFailNum: Int,
+    @ApiModelProperty("第三方系统接入错误执行失败数", required = true)
+    val totalThirdFailNum: Int,
+    @ApiModelProperty("组件自身原因执行失败数", required = true)
+    val totalComponentFailNum: Int
 )
-class MiscApplication
-
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(MiscApplication::class, args)
-}

@@ -25,20 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc
+dependencies {
+    api(project(":core:common:common-api"))
+    api(project(":core:common:common-web"))
+    api(project(":core:common:common-notify"))
+}
 
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
-
-@MicroService
-@ComponentScan(
-    "com.tencent.devops.misc",
-    "com.tencent.devops.image",
-    "com.tencent.devops.monitoring"
-)
-class MiscApplication
-
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(MiscApplication::class, args)
+plugins {
+    `task-deploy-to-maven`
 }

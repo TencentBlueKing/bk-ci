@@ -25,20 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc
+package com.tencent.devops.monitoring.consumer.processor.monitor
 
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
-
-@MicroService
-@ComponentScan(
-    "com.tencent.devops.misc",
-    "com.tencent.devops.image",
-    "com.tencent.devops.monitoring"
+data class MonitorData(
+    val fields: HashMap<String, Any> = HashMap(),
+    val tags: HashMap<String, String> = HashMap()
 )
-class MiscApplication
-
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(MiscApplication::class, args)
-}

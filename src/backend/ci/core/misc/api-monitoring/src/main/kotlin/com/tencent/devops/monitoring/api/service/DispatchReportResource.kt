@@ -24,21 +24,30 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.monitoring.api.service
 
-package com.tencent.devops.misc
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.monitoring.pojo.DispatchStatus
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
+@Api(tags = ["SERVICE_MONITORING_REPORT"], description = "监控上报")
+@Path("/service/report")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface DispatchReportResource {
 
-@MicroService
-@ComponentScan(
-    "com.tencent.devops.misc",
-    "com.tencent.devops.image",
-    "com.tencent.devops.monitoring"
-)
-class MiscApplication
-
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(MiscApplication::class, args)
+    @ApiOperation("各个dispatch模块上报开机状态")
+    @POST
+    @Path("/dispatch/status")
+    fun dispatch(
+        @ApiParam("构建机开机关机状态", required = true)
+        dispatchStatus: DispatchStatus
+    ): Result<Boolean>
 }

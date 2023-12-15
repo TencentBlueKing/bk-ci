@@ -25,20 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc
-
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
-
-@MicroService
-@ComponentScan(
-    "com.tencent.devops.misc",
-    "com.tencent.devops.image",
-    "com.tencent.devops.monitoring"
-)
-class MiscApplication
-
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(MiscApplication::class, args)
+dependencies {
+    api(project(":core:misc:api-monitoring"))
+    api(project(":core:common:common-notify"))
+    api("org.apache.commons:commons-compress")
+    api("org.json:json")
+    api("org.influxdb:influxdb-java")
 }

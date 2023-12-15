@@ -24,21 +24,20 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.monitoring.resources
 
-package com.tencent.devops.misc
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.monitoring.api.service.DispatchReportResource
+import com.tencent.devops.monitoring.pojo.DispatchStatus
+import com.tencent.devops.monitoring.service.DispatchReportService
+import org.springframework.beans.factory.annotation.Autowired
 
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
+@RestResource
+class DispatchReportResourceImpl @Autowired constructor(private val dispatchReportService: DispatchReportService) :
+    DispatchReportResource {
 
-@MicroService
-@ComponentScan(
-    "com.tencent.devops.misc",
-    "com.tencent.devops.image",
-    "com.tencent.devops.monitoring"
-)
-class MiscApplication
-
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(MiscApplication::class, args)
+    override fun dispatch(dispatchStatus: DispatchStatus): Result<Boolean> {
+        return Result(dispatchReportService.reportDispatchStatus(dispatchStatus))
+    }
 }

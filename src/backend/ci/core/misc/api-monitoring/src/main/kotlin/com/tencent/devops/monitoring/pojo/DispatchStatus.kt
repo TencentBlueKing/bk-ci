@@ -24,21 +24,41 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.monitoring.pojo
 
-package com.tencent.devops.misc
+import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.api.annotation.InfluxTag
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
-
-@MicroService
-@ComponentScan(
-    "com.tencent.devops.misc",
-    "com.tencent.devops.image",
-    "com.tencent.devops.monitoring"
+@ApiModel("dispatch状态上报")
+data class DispatchStatus(
+    @ApiModelProperty("蓝盾项目ID", required = true)
+    val projectId: String,
+    @ApiModelProperty("流水线ID", required = true)
+    val pipelineId: String,
+    @ApiModelProperty("构建ID", required = true)
+    val buildId: String,
+    @ApiModelProperty("vmSeqId", required = true)
+    val vmSeqId: String,
+    @ApiModelProperty("actionType", required = true)
+    val actionType: String,
+    @ApiModelProperty("retryCount", required = false)
+    val retryCount: Long? = 0,
+    @ApiModelProperty("channelCode", required = false)
+    val channelCode: ChannelCode?,
+    @ApiModelProperty("开机时间", required = true)
+    val startTime: Long,
+    @ApiModelProperty("关机时间", required = false)
+    val stopTime: Long?,
+    @ApiModelProperty("蓝盾错误码", required = true)
+    val errorCode: String,
+    @ApiModelProperty("失败原因", required = false)
+    val errorMsg: String?,
+    @ApiModelProperty("错误类型", required = false)
+    val errorType: String? = ErrorType.SYSTEM.name,
+    @InfluxTag
+    @ApiModelProperty("BuildType", required = false)
+    val buildType: String
 )
-class MiscApplication
-
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(MiscApplication::class, args)
-}

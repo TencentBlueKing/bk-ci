@@ -25,20 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc
+package com.tencent.devops.monitoring.service
 
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
+import com.tencent.devops.monitoring.pojo.DispatchStatus
 
-@MicroService
-@ComponentScan(
-    "com.tencent.devops.misc",
-    "com.tencent.devops.image",
-    "com.tencent.devops.monitoring"
-)
-class MiscApplication
+interface DispatchReportService {
 
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(MiscApplication::class, args)
+    fun reportDispatchStatus(dispatchStatus: DispatchStatus): Boolean
 }
