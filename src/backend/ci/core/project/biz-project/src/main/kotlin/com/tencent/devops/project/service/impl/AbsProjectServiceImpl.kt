@@ -119,7 +119,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val projectExtService: ProjectExtService,
     private val projectApprovalService: ProjectApprovalService,
-    private val clientTokenService: ClientTokenService
+    private val clientTokenService: ClientTokenService,
     private val profile: Profile
 ) : ProjectService {
 
