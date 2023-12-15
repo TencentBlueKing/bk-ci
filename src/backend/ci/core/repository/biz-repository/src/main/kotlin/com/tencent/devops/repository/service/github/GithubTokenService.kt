@@ -30,21 +30,21 @@ package com.tencent.devops.repository.service.github
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.RepoAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.dao.GithubTokenDao
 import com.tencent.devops.repository.pojo.github.GithubToken
 import com.tencent.devops.repository.pojo.oauth.GithubTokenType
-import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Service
 class GithubTokenService @Autowired constructor(
@@ -64,7 +64,7 @@ class GithubTokenService @Autowired constructor(
         scope: String,
         githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP
     ) {
-        val encryptedAccessToken = AESUtil.encrypt(aesKey, accessToken)
+        val encryptedAccessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, accessToken)
         if (githubTokenDao.getOrNull(dslContext, userId, githubTokenType) == null) {
             githubTokenDao.create(dslContext, userId, encryptedAccessToken, tokenType, scope, githubTokenType)
         } else {
@@ -81,9 +81,8 @@ class GithubTokenService @Autowired constructor(
         tokenType: GithubTokenType = GithubTokenType.GITHUB_APP
     ): GithubToken? {
         val githubTokenRecord = githubTokenDao.getOrNull(dslContext, userId, tokenType) ?: return null
-        logger.info("github aesKey:$aesKey")
         return GithubToken(
-            AESUtil.decrypt(aesKey, githubTokenRecord.accessToken),
+            BkCryptoUtil.decryptSm4OrAes(aesKey, githubTokenRecord.accessToken),
             githubTokenRecord.tokenType,
             githubTokenRecord.scope
         )
