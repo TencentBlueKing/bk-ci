@@ -26,41 +26,41 @@
  *
  */
 
-package com.tencent.devops.repository.dao
+package com.tencent.devops.process.engine.dao
 
-import com.tencent.devops.model.repository.tables.TRepositoryYamlSync
-import com.tencent.devops.repository.pojo.RepoYamlSyncInfo
+import com.tencent.devops.model.process.tables.TPipelineYamlSync
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlSyncInfo
 import com.tencent.devops.repository.pojo.enums.RepoYamlSyncStatusEnum
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class RepositoryYamlSyncDao {
+class PipelineYamlSyncDao {
 
     fun batchAdd(
         dslContext: DSLContext,
         projectId: String,
-        repositoryId: Long,
-        syncFileInfoList: List<RepoYamlSyncInfo>
+        repoHashId: String,
+        syncFileInfoList: List<PipelineYamlSyncInfo>
     ) {
         if (syncFileInfoList.isEmpty()) {
             return
         }
         val now = LocalDateTime.now()
         dslContext.batch(syncFileInfoList.map {
-            with(TRepositoryYamlSync.T_REPOSITORY_YAML_SYNC) {
+            with(TPipelineYamlSync.T_PIPELINE_YAML_SYNC) {
                 dslContext.insertInto(
                     this,
                     PROJECT_ID,
-                    REPOSITORY_ID,
+                    REPO_HASH_ID,
                     FILE_PATH,
                     SYNC_STATUS,
                     CREATE_TIME,
                     UPDATE_TIME
                 ).values(
                     projectId,
-                    repositoryId,
+                    repoHashId,
                     it.filePath,
                     it.syncStatus.name,
                     now,
@@ -73,16 +73,16 @@ class RepositoryYamlSyncDao {
     fun updateSyncStatus(
         dslContext: DSLContext,
         projectId: String,
-        repositoryId: Long,
-        syncFileInfo: RepoYamlSyncInfo
+        repoHashId: String,
+        syncFileInfo: PipelineYamlSyncInfo
     ) {
-        with(TRepositoryYamlSync.T_REPOSITORY_YAML_SYNC) {
+        with(TPipelineYamlSync.T_PIPELINE_YAML_SYNC) {
             dslContext.update(this)
                 .set(SYNC_STATUS, syncFileInfo.syncStatus.name)
                 .set(REASON, syncFileInfo.reason)
                 .set(REASON_DETAIL, syncFileInfo.reasonDetail)
                 .where(PROJECT_ID.eq(projectId))
-                .and(REPOSITORY_ID.eq(repositoryId))
+                .and(REPO_HASH_ID.eq(repoHashId))
                 .and(FILE_PATH.eq(syncFileInfo.filePath))
                 .execute()
         }
@@ -91,12 +91,12 @@ class RepositoryYamlSyncDao {
     fun delete(
         dslContext: DSLContext,
         projectId: String,
-        repositoryId: Long
+        repoHashId: String,
     ) {
-        with(TRepositoryYamlSync.T_REPOSITORY_YAML_SYNC) {
+        with(TPipelineYamlSync.T_PIPELINE_YAML_SYNC) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(REPOSITORY_ID.eq(repositoryId))
+                .and(REPO_HASH_ID.eq(repoHashId))
                 .execute()
         }
     }
@@ -104,16 +104,16 @@ class RepositoryYamlSyncDao {
     fun listYamlSync(
         dslContext: DSLContext,
         projectId: String,
-        repositoryId: Long,
+        repoHashId: String,
         syncStatus: String? = null
-    ): List<RepoYamlSyncInfo> {
-        with(TRepositoryYamlSync.T_REPOSITORY_YAML_SYNC) {
+    ): List<PipelineYamlSyncInfo> {
+        with(TPipelineYamlSync.T_PIPELINE_YAML_SYNC) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(REPOSITORY_ID.eq(repositoryId))
+                .and(REPO_HASH_ID.eq(repoHashId))
                 .let { if (syncStatus == null) it else it.and(SYNC_STATUS.eq(syncStatus)) }
                 .fetch().map {
-                    RepoYamlSyncInfo(
+                    PipelineYamlSyncInfo(
                         filePath = it.filePath,
                         syncStatus = RepoYamlSyncStatusEnum.valueOf(it.syncStatus),
                         reason = it.reason,
@@ -126,13 +126,13 @@ class RepositoryYamlSyncDao {
     fun countYamlSync(
         dslContext: DSLContext,
         projectId: String,
-        repositoryId: Long,
+        repoHashId: String,
         syncStatus: String
     ): Int {
-        with(TRepositoryYamlSync.T_REPOSITORY_YAML_SYNC) {
+        with(TPipelineYamlSync.T_PIPELINE_YAML_SYNC) {
             return dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(REPOSITORY_ID.eq(repositoryId))
+                .and(REPO_HASH_ID.eq(repoHashId))
                 .and(SYNC_STATUS.eq(syncStatus))
                 .fetchOne(0, Int::class.java) ?: 0
         }

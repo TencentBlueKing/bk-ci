@@ -29,16 +29,24 @@
 package com.tencent.devops.process.yaml
 
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.engine.dao.PipelineYamlSyncDao
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlSyncInfo
 import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
 import com.tencent.devops.repository.api.ServiceRepositoryPacResource
-import com.tencent.devops.repository.pojo.RepoYamlSyncInfo
 import com.tencent.devops.repository.pojo.enums.RepoYamlSyncStatusEnum
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class PipelineYamlSyncService @Autowired constructor(
-    private val client: Client
+    private val client: Client,
+    private val dslContext: DSLContext,
+    private val pipelineYamlSyncDao: PipelineYamlSyncDao,
+    private val redisOperation: RedisOperation
 ) {
 
     fun initPacSyncDetail(
@@ -47,24 +55,43 @@ class PipelineYamlSyncService @Autowired constructor(
         yamlPathList: List<YamlPathListEntry>
     ) {
         val syncFileInfoList =
-            yamlPathList.map { RepoYamlSyncInfo(filePath = it.yamlPath, syncStatus = RepoYamlSyncStatusEnum.SYNC) }
-        client.get(ServiceRepositoryPacResource::class).initPacSyncDetail(
-            projectId = projectId,
-            repositoryHashId = repoHashId,
-            syncFileInfoList = syncFileInfoList
-        )
+            yamlPathList.map { PipelineYamlSyncInfo(filePath = it.yamlPath, syncStatus = RepoYamlSyncStatusEnum.SYNC) }
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            pipelineYamlSyncDao.delete(
+                dslContext = transactionContext,
+                projectId = projectId,
+                repoHashId = repoHashId
+            )
+            pipelineYamlSyncDao.batchAdd(
+                dslContext = transactionContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                syncFileInfoList = syncFileInfoList
+            )
+        }
+        // 修改代码库同步状态
+        if (syncFileInfoList.isNotEmpty()) {
+            client.get(ServiceRepositoryPacResource::class).updateYamlSyncStatus(
+                projectId = projectId,
+                repoHashId = repoHashId,
+                syncStatus = RepoYamlSyncStatusEnum.SYNC.name
+            )
+        }
     }
 
     /**
      * 同步成功
      */
     fun syncSuccess(projectId: String, repoHashId: String, filePath: String) {
-        val syncFileInfo = RepoYamlSyncInfo(filePath = filePath, syncStatus = RepoYamlSyncStatusEnum.SUCCEED)
-        client.get(ServiceRepositoryPacResource::class).updatePacSyncStatus(
+        val syncFileInfo = PipelineYamlSyncInfo(filePath = filePath, syncStatus = RepoYamlSyncStatusEnum.SUCCEED)
+        pipelineYamlSyncDao.updateSyncStatus(
+            dslContext = dslContext,
             projectId = projectId,
-            repositoryHashId = repoHashId,
+            repoHashId = repoHashId,
             syncFileInfo = syncFileInfo
         )
+        updateYamlSyncStatus(projectId = projectId, repoHashId = repoHashId, syncFileInfo = syncFileInfo)
     }
 
     /**
@@ -77,16 +104,64 @@ class PipelineYamlSyncService @Autowired constructor(
         reason: String,
         reasonDetail: String
     ) {
-        val syncFileInfo = RepoYamlSyncInfo(
+        val syncFileInfo = PipelineYamlSyncInfo(
             filePath = filePath,
             syncStatus = RepoYamlSyncStatusEnum.FAILED,
             reason = reason,
             reasonDetail = reasonDetail
         )
-        client.get(ServiceRepositoryPacResource::class).updatePacSyncStatus(
+        updateYamlSyncStatus(projectId = projectId, repoHashId = repoHashId, syncFileInfo = syncFileInfo)
+    }
+
+    fun listSyncFailedYaml(
+        projectId: String,
+        repoHashId: String
+    ): List<PipelineYamlSyncInfo> {
+        return pipelineYamlSyncDao.listYamlSync(
+            dslContext = dslContext,
             projectId = projectId,
-            repositoryHashId = repoHashId,
+            repoHashId = repoHashId,
+            syncStatus = RepoYamlSyncStatusEnum.FAILED.name
+        )
+    }
+
+    private fun updateYamlSyncStatus(
+        projectId: String,
+        repoHashId: String,
+        syncFileInfo: PipelineYamlSyncInfo
+    ) {
+        pipelineYamlSyncDao.updateSyncStatus(
+            dslContext = dslContext,
+            projectId = projectId,
+            repoHashId = repoHashId,
             syncFileInfo = syncFileInfo
         )
+        val lock = RedisLock(
+            redisOperation,
+            "pipeline:yaml:sync:$projectId:$repoHashId", 60L
+        )
+        // 修改代码库整体同步状态
+        lock.use {
+            lock.lock()
+            val syncStatusList = pipelineYamlSyncDao.listYamlSync(
+                dslContext = dslContext,
+                projectId = projectId,
+                repoHashId = repoHashId
+            ).map { it.syncStatus }
+            // 还有正在同步的文件,不修改状态
+            if (syncStatusList.contains(RepoYamlSyncStatusEnum.SYNC)) {
+                return
+            }
+            val syncStatus = if (syncStatusList.contains(RepoYamlSyncStatusEnum.FAILED)) {
+                RepoYamlSyncStatusEnum.FAILED.name
+            } else {
+                RepoYamlSyncStatusEnum.SUCCEED.name
+            }
+            client.get(ServiceRepositoryPacResource::class).updateYamlSyncStatus(
+                projectId = projectId,
+                repoHashId = repoHashId,
+                syncStatus = syncStatus
+            )
+        }
     }
 }

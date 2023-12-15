@@ -26,41 +26,37 @@
  *
  */
 
-package com.tencent.devops.process.api.service
+package com.tencent.devops.process.api
 
-import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
+import com.tencent.devops.process.api.user.UserPipelineYamlResource
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlSyncInfo
 import com.tencent.devops.process.yaml.PipelineYamlService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.process.yaml.PipelineYamlSyncService
 
 @RestResource
-class ServicePipelinePacResourceImpl @Autowired constructor(
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService,
+class UserPipelineYamlResourceImpl(
+    private val pipelineYamlSyncService: PipelineYamlSyncService,
     private val pipelineYamlService: PipelineYamlService
-) : ServicePipelinePacResource {
-    override fun enable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.enablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-    }
-
-    override fun disable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.disablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-    }
+) : UserPipelineYamlResource {
 
     override fun countYamlPipeline(userId: String, projectId: String, repoHashId: String): Result<Long> {
         return Result(
             pipelineYamlService.countPipelineYaml(
+                projectId = projectId,
+                repoHashId = repoHashId
+            )
+        )
+    }
+
+    override fun listSyncFailedYaml(
+        userId: String,
+        projectId: String,
+        repoHashId: String
+    ): Result<List<PipelineYamlSyncInfo>> {
+        return Result(
+            pipelineYamlSyncService.listSyncFailedYaml(
                 projectId = projectId,
                 repoHashId = repoHashId
             )

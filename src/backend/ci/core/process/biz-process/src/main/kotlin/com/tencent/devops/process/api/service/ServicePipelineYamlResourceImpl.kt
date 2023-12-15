@@ -26,20 +26,32 @@
  *
  */
 
-package com.tencent.devops.repository.pojo
+package com.tencent.devops.process.api.service
 
-import com.tencent.devops.repository.pojo.enums.RepoYamlSyncStatusEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.yaml.PipelineYamlFacadeService
+import org.springframework.beans.factory.annotation.Autowired
 
-@ApiModel("pac同步文件信息")
-data class RepoYamlSyncInfo(
-    @ApiModelProperty("文件路径", required = true)
-    val filePath: String,
-    @ApiModelProperty("同步状态", required = true)
-    val syncStatus: RepoYamlSyncStatusEnum = RepoYamlSyncStatusEnum.SYNC,
-    @ApiModelProperty("原因", required = false)
-    var reason: String? = null,
-    @ApiModelProperty("原因详情", required = false)
-    var reasonDetail: String? = null,
-)
+@RestResource
+class ServicePipelineYamlResourceImpl @Autowired constructor(
+    private val pipelineYamlFacadeService: PipelineYamlFacadeService
+) : ServicePipelineYamlResource {
+    override fun enable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
+        pipelineYamlFacadeService.enablePac(
+            userId = userId,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            scmType = scmType
+        )
+    }
+
+    override fun disable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
+        pipelineYamlFacadeService.disablePac(
+            userId = userId,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            scmType = scmType
+        )
+    }
+}

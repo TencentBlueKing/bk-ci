@@ -26,52 +26,56 @@
  *
  */
 
-package com.tencent.devops.repository.api
+package com.tencent.devops.process.api.user
 
-import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlSyncInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
-import javax.ws.rs.POST
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_PAC_REPOSITORY"], description = "服务-PAC-代码库")
-@Path("/service/repositories/pac")
+@Api(tags = ["USER_PIPELINE_YAML"], description = "用户-流水线yaml")
+@Path("/user/pipeline/yaml")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceRepositoryPacResource {
-    @ApiOperation("更新pac同步状态")
-    @POST
-    @Path("/{projectId}/{repositoryHashId}/updatePacSyncStatus")
-    fun updateYamlSyncStatus(
+interface UserPipelineYamlResource {
+
+    @ApiOperation("获取开启pac的流水线数量")
+    @GET
+    @Path("/{projectId}/{repoHashId}/count")
+    fun countYamlPipeline(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("代码库hashId", required = true)
+        @PathParam("repoHashId")
+        repoHashId: String
+    ): Result<Long>
+
+    @ApiOperation("获取同步失败yaml详情")
+    @GET
+    @Path("/{projectId}/{repoHashId}/listSyncFailedYaml")
+    fun listSyncFailedYaml(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("代码库哈希ID", required = true)
         @PathParam("repoHashId")
-        repoHashId: String,
-        @ApiParam("同步状态", required = true)
-        @QueryParam("syncStatus")
-        syncStatus: String
-    ): Result<Boolean>
-
-    @ApiOperation("根据第三方代码库平台ID获取代码库")
-    @GET
-    @Path("/")
-    fun getPacRepository(
-        @ApiParam("第三方仓库ID", required = true)
-        @QueryParam("externalId")
-        externalId: String,
-        @ApiParam("仓库类型", required = true)
-        @QueryParam("scmType")
-        scmType: ScmType
-    ): Result<Repository?>
+        repoHashId: String
+    ): Result<List<PipelineYamlSyncInfo>>
 }

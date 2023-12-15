@@ -26,35 +26,20 @@
  *
  */
 
-package com.tencent.devops.repository.resources
+package com.tencent.devops.process.pojo.pipeline
 
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.api.ServiceRepositoryPacResource
-import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.repository.service.RepositoryPacService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.repository.pojo.enums.RepoYamlSyncStatusEnum
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class ServiceRepositoryPacResourceImpl @Autowired constructor(
-    private val repositoryPacService: RepositoryPacService
-) : ServiceRepositoryPacResource {
-
-    override fun updateYamlSyncStatus(
-        projectId: String,
-        repoHashId: String,
-        syncStatus: String
-    ): Result<Boolean> {
-        repositoryPacService.updateYamlSyncStatus(
-            projectId = projectId,
-            repoHashId = repoHashId,
-            syncStatus = syncStatus
-        )
-        return Result(true)
-    }
-
-    override fun getPacRepository(externalId: String, scmType: ScmType): Result<Repository?> {
-        return Result(repositoryPacService.getPacRepository(externalId = externalId, scmType = scmType))
-    }
-}
+@ApiModel("pac同步文件信息")
+data class PipelineYamlSyncInfo(
+    @ApiModelProperty("文件路径", required = true)
+    val filePath: String,
+    @ApiModelProperty("同步状态", required = true)
+    val syncStatus: RepoYamlSyncStatusEnum = RepoYamlSyncStatusEnum.SYNC,
+    @ApiModelProperty("原因", required = false)
+    var reason: String? = null,
+    @ApiModelProperty("原因详情", required = false)
+    var reasonDetail: String? = null,
+)

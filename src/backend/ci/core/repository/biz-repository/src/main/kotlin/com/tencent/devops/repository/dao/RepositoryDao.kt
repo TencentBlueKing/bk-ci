@@ -485,7 +485,7 @@ class RepositoryDao {
         }
     }
 
-    fun updatePacSyncStatus(
+    fun updateYamlSyncStatus(
         dslContext: DSLContext,
         repositoryId: Long,
         syncStatus: String
