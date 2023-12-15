@@ -25,16 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-util"))
-    api(project(":core:common:common-service"))
-    api("org.springframework.boot:spring-boot")
-    api("org.springframework.boot:spring-boot-autoconfigure")
-    api("org.springframework.boot:spring-boot-configuration-processor")
-    api("io.jsonwebtoken:jjwt-api")
-    api("com.tencent.bk.sdk:crypto-java-sdk")
-    implementation("org.springframework:spring-context")
-    implementation("com.google.guava:guava")
-    runtimeOnly("io.jsonwebtoken:jjwt-impl")
-    runtimeOnly("io.jsonwebtoken:jjwt-jackson")
+package com.tencent.devops.project.resources
+
+import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.open.OpenProjectResource
+import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.service.ProjectService
+
+@RestResource
+class OpenProjectResourceImpl constructor(
+    private val projectService: ProjectService
+) : OpenProjectResource {
+    override fun get(
+        token: String,
+        projectId: String
+    ): Result<ProjectVO> {
+        return Result(
+            projectService.getByEnglishNameByOpen(
+                englishName = projectId,
+                token = token
+            ) ?: throw OperationException("project $projectId not found")
+        )
+    }
 }
