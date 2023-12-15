@@ -462,7 +462,6 @@ class RepositoryDao {
                 .set(UPDATED_TIME, LocalDateTime.now())
                 .set(UPDATED_USER, userId)
                 .set(ENABLE_PAC, true)
-                .set(YAML_SYNC_STATUS, RepoYamlSyncStatusEnum.SYNC.name)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPOSITORY_ID.eq(repositoryId))
                 .execute()

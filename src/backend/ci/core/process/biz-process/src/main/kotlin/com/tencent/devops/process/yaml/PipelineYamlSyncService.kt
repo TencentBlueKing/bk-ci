@@ -70,14 +70,16 @@ class PipelineYamlSyncService @Autowired constructor(
                 syncFileInfoList = syncFileInfoList
             )
         }
-        // 修改代码库同步状态
-        if (syncFileInfoList.isEmpty()) {
-            client.get(ServiceRepositoryPacResource::class).updateYamlSyncStatus(
-                projectId = projectId,
-                repoHashId = repoHashId,
-                syncStatus = RepoYamlSyncStatusEnum.SUCCEED.name
-            )
+        val syncStatus = if (syncFileInfoList.isEmpty()) {
+            RepoYamlSyncStatusEnum.SUCCEED.name
+        } else {
+            RepoYamlSyncStatusEnum.FAILED.name
         }
+        client.get(ServiceRepositoryPacResource::class).updateYamlSyncStatus(
+            projectId = projectId,
+            repoHashId = repoHashId,
+            syncStatus = syncStatus
+        )
     }
 
     /**
