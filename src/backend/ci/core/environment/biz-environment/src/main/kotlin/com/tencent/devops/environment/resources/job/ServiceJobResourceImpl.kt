@@ -60,6 +60,8 @@ class ServiceJobResourceImpl @Autowired constructor(
 ) : ServiceJobResource {
     companion object {
         private val logger = LoggerFactory.getLogger(ServiceJobResourceImpl::class.java)
+        private const val EXPIRATION_TIME_THREE_MONTH = "three months"
+        private const val EXPIRATION_TIME_ONE_MONTH = "one month"
     }
 
     override fun executeScript(
@@ -190,9 +192,12 @@ class ServiceJobResourceImpl @Autowired constructor(
 
     private fun checkJobInsBelongToProj(projectId: String, jobInstanceId: Long) {
         if (!permissionManageService.isJobInsBelongToProj(projectId, jobInstanceId)) {
+            val expirationTime =
+                if (logger.isDebugEnabled) EXPIRATION_TIME_THREE_MONTH
+                else EXPIRATION_TIME_ONE_MONTH
             throw OauthForbiddenException(
                 message = "The job instance you have queried doesn't belong to the current project " +
-                    "or more than three months."
+                    "or more than " + expirationTime + "."
             )
         }
     }
