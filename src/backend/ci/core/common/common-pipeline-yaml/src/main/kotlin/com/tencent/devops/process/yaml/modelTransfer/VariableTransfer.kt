@@ -226,7 +226,7 @@ class VariableTransfer @Autowired constructor() {
                     glob = variable.props?.glob,
                     properties = variable.props?.properties,
                     readOnly = variable.readonly ?: false,
-                    valueNotEmpty = variable.valueNotEmpty
+                    valueNotEmpty = variable.valueNotEmpty ?: false
                 )
             )
         }
