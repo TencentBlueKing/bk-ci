@@ -141,7 +141,11 @@ class PipelineWebhookService @Autowired constructor(
         val pipelineWebhook = PipelineWebhook(
             projectId = projectId,
             pipelineId = pipelineId,
-            repositoryType = scmType,
+            repositoryType = if (scmType == ScmType.CODE_TGIT_CE) {
+                ScmType.CODE_TGIT
+            } else {
+                scmType
+            },
             repoType = repositoryConfig.repositoryType,
             repoHashId = repositoryConfig.repositoryHashId,
             repoName = repositoryConfig.repositoryName,

@@ -36,7 +36,7 @@ import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.vuexInpu
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("TGit_Ce事件触发", description = CodeTGitWebHookTriggerElement.classType)
+@ApiModel("TGit_Ce事件触发", description = CodeTGitCeWebHookTriggerElement.classType)
 data class CodeTGitCeWebHookTriggerElement(
     @ApiModelProperty("任务名称", required = true)
     override val name: String = "TGit变更触发",
