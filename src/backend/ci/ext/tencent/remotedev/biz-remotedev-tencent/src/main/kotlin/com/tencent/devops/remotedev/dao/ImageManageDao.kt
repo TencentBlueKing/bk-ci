@@ -21,6 +21,7 @@ class ImageManageDao {
         return with(TProjectImages.T_PROJECT_IMAGES) {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
+                .and(STATUS.notEqual(ImageStatus.DELETED.ordinal))
                 .orderBy(CREATE_TIME.desc())
                 .fetch()
         }
