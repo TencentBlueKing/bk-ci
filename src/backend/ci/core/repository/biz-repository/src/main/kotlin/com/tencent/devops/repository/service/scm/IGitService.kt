@@ -370,4 +370,63 @@ interface IGitService {
         path: String?,
         ignoreWhiteSpace: Boolean?
     ): Result<List<GitDiff>>
+
+    fun createBranch(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        gitCreateBranch: GitCreateBranch
+    ): Result<Boolean>
+
+    fun listMergeRequest(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        gitListMergeRequest: GitListMergeRequest
+    ): Result<List<GitMrInfo>>
+
+    fun createMergeRequest(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        gitCreateMergeRequest: GitCreateMergeRequest
+    ): Result<GitMrInfo>
+
+    fun getProtectBranchRuleId(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        branch: String
+    ): Result<Int?>
+
+    fun createProtectBranchRules(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        ruleMap: Map<String, Any>
+    ): Result<Int>
+
+    fun setupProtectBranch(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        branch: String,
+        ruleId: Int
+    ): Result<Boolean>
+
+    fun updateProtectBranchRule(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        ruleId: Int,
+        ruleMap: Map<String, Any>
+    ): Result<Boolean>
+
+    fun updateProjectUserAccessLevel(
+        userId: Int,
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        accessLevel: Int
+    ): Result<Boolean>
 }
