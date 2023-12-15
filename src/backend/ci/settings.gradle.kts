@@ -114,10 +114,13 @@ include(":core:log:model-log")
 
 include(":core:misc")
 include(":core:misc:api-misc")
+include(":core:misc:api-image")
 include(":core:misc:biz-misc")
+include(":core:misc:biz-image")
 include(":core:misc:biz-misc-sample")
 include(":core:misc:boot-misc")
 include(":core:misc:model-misc")
+include(":core:misc:model-image")
 
 include(":core:quality")
 include(":core:quality:api-quality")
