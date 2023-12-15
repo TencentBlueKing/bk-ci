@@ -29,8 +29,13 @@ package com.tencent.devops.misc
 
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
+import org.springframework.context.annotation.ComponentScan
 
 @MicroService
+@ComponentScan(
+    "com.tencent.devops.misc",
+    "com.tencent.devops.image"
+)
 class MiscApplication
 
 fun main(args: Array<String>) {
