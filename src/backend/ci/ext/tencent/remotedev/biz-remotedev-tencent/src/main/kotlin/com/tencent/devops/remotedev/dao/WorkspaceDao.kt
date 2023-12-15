@@ -460,7 +460,7 @@ class WorkspaceDao {
             conditions.add(
                 t1.NAME.`in`(
                     DSL.selectDistinct(t3.WORKSPACE_NAME).from(t3).where(
-                        t3.HOST_IP.endsWith(".$ip")
+                        t3.HOST_IP.like("%.$ip"))
                     )
                 )
             )
@@ -521,9 +521,9 @@ class WorkspaceDao {
         }
 
         if (!ips.isNullOrEmpty()) {
-            val ipsCond = t2.HOST_IP.like("%${ips.first()}")
+            val ipsCond = t2.HOST_IP.like("%.${ips.first()}")
             ips.drop(1).forEach { ip ->
-                ipsCond.or(t2.HOST_IP.like("%$ip"))
+                ipsCond.or(t2.HOST_IP.like("%.$ip"))
             }
             conditions.add(ipsCond)
         }
