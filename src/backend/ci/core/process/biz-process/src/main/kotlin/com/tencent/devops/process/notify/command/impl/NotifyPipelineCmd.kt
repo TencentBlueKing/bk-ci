@@ -38,7 +38,8 @@ abstract class NotifyPipelineCmd @Autowired constructor(
         val pipelineName = pipelineInfo.pipelineName
         val executionVar = getExecutionVariables(
             pipelineId = pipelineId,
-            vars = commandContext.variables as MutableMap<String, String>)
+            vars = commandContext.variables as MutableMap<String, String>
+        )
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId) ?: return
         val timeDuration = commandContext.variables[PIPELINE_TIME_DURATION]?.toLong() ?: 0L
         if (timeDuration > 0) {
@@ -69,7 +70,7 @@ abstract class NotifyPipelineCmd @Autowired constructor(
             "trigger" to trigger,
             "username" to user,
             "failTask" to failTask,
-            "duration" to DateTimeUtil.formatMillSecond(timeDuration)
+            "duration" to DateTimeUtil.formatMillSecond(timeDuration * 1000)
         )
         commandContext.notifyValue.putAll(pipelineMap)
     }
