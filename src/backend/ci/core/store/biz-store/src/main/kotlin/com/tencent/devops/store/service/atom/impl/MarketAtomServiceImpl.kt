@@ -1438,18 +1438,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val version = atomItem.version
             val atomEnvResult = marketAtomEnvService.getMarketAtomEnvInfo(projectCode, atomCode, version)
             val atomEnv = atomEnvResult.data
-            if (atomEnvResult.isNotOk()) {
-                throw ErrorCodeException(
-                    errorCode = atomEnvResult.status.toString(),
-                    defaultMessage = atomEnvResult.message
-                )
-            }
-            if (atomEnv == null) {
-                throw ErrorCodeException(
+                ?: throw ErrorCodeException(
                     errorCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
                     params = arrayOf(projectCode, atomCode)
                 )
-            }
             val atomPostInfo = atomEnv.atomPostInfo
             if (atomPostInfo != null) {
                 postAtoms.add(atomPostInfo)
