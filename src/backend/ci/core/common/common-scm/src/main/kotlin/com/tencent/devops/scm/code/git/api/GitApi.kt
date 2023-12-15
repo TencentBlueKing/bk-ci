@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.constant.HTTP_403
 import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.constant.HTTP_405
 import com.tencent.devops.common.api.constant.HTTP_422
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.prometheus.BkTimedAspect
@@ -401,6 +402,25 @@ open class GitApi {
         }
     }
 
+    private fun callMethod(operation: String, request: Request): Map<String, Any> {
+        val sample = Timer.start(SpringContextUtil.getBean(MeterRegistry::class.java))
+        var exceptionClass = BkTimedAspect.DEFAULT_EXCEPTION_TAG_VALUE
+        try {
+            return OkhttpUtils.doRedirectHttp(request) { response ->
+                if (!response.isSuccessful) {
+                    handleApiException(operation, response.code, response.body?.string() ?: "")
+                }
+                JsonUtil.toMap(response.body!!.string())
+            }
+        } catch (err: Exception) {
+            exceptionClass = err.javaClass.simpleName
+            throw err
+        } finally {
+            val tags = Tags.of("operation", operation)
+            record("bk_tgit_api_time", tags, "工蜂接口耗时度量", sample, exceptionClass)
+        }
+    }
+
     fun record(
         metricName: String,
         tags: Iterable<Tag>,
@@ -685,50 +705,6 @@ open class GitApi {
         return JsonUtil.getObjectMapper().readValue(responseBody)
     }
 
-    fun listMergeRequest(
-        host: String,
-        token: String,
-        projectName: String,
-        sourceBranch: String?,
-        targetBranch: String?,
-        state: String?,
-        page: Int,
-        perPage: Int
-    ): List<GitMrInfo> {
-        val queryParams =
-            "source_branch=$sourceBranch&target_branch=$targetBranch&state=$state&page=$page&per_page=$perPage"
-        val url = "projects/${urlEncode(projectName)}/merge_requests"
-        logger.info("list mr for project($projectName): url($url)")
-        val request = get(host, token, url, queryParams)
-        return JsonUtil.getObjectMapper().readValue<List<GitMrInfo>>(
-            getBody(getMessageByLocale(CommonMessageCode.OPERATION_LIST_MR), request)
-        )
-    }
-
-    fun createMergeRequest(
-        host: String,
-        token: String,
-        projectName: String,
-        gitCreateMergeRequest: GitCreateMergeRequest
-    ): GitMrInfo {
-        val body = JsonUtil.getObjectMapper().writeValueAsString(gitCreateMergeRequest)
-        val url = "projects/${urlEncode(projectName)}/merge_requests/"
-        logger.info("create mr for project($projectName): url($url), $body")
-        val request = post(host, token, url, body)
-        try {
-            return callMethod(
-                operation = getMessageByLocale(CommonMessageCode.OPERATION_ADD_MR),
-                request = request,
-                classOfT = GitMrInfo::class.java
-            )
-        } catch (t: GitApiException) {
-            if (t.code == 403) {
-                throw GitApiException(t.code, getMessageByLocale(CommonMessageCode.ADD_MR_FAIL))
-            }
-            throw t
-        }
-    }
-
     /**
      * 获取项目下保护分支所属规则组ID
      */
@@ -800,7 +776,6 @@ open class GitApi {
         callMethod(CommonMessageCode.UPDATE_PROTECT_BRANCH_RULE, request)
         return true
     }
-
 
     /**
      * 修改项目组用户权限等级

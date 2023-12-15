@@ -245,6 +245,11 @@ object CommonMessageCode {
     // 用户 {0} 申请{1}蓝盾项目 {2} ,请审批！
     const val BK_USER_REQUESTS_THE_PROJECT = "bkUserRequestsTheProject"
     const val BK_ENV_NOT_YET_SUPPORTED = "bkEnvNotYetSupported" // 尚未支持 {0} {1}，请联系 管理员 添加对应版本
+    const val GET_PROTECT_BRANCH_RULE = "bkGetProtectBranchRule" // 获取项目下保护分支所属规则
+    const val UPDATE_PROTECT_BRANCH_RULE = "bkUpdateProtectBranchRule" // 更新保护分支所属规则
+    const val UPDATE_PROJECT_USER_ACCESS_LEVEL = "bkUpdateProjectUserAccessLevel" // 更新项目用户权限级别
+    const val CREATE_PROTECT_BRANCH_RULE = "bkCreateProtectBranchRulse" // 创建保护分支规则组
+    const val SETUP_PROTECT_BRANCH = "bkSetupProtectBranch" // 设置保护分支
 
     const val BK_BUILD_ENV_TYPE = "BUILD_ENV_TYPE_" // 构建环境-
     const val BK_BUILD_ENV_TYPE_BUILDLESS = "BUILD_ENV_TYPE_BUILDLESS" // 无编译环境
