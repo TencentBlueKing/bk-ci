@@ -371,27 +371,6 @@ interface IGitService {
         ignoreWhiteSpace: Boolean?
     ): Result<List<GitDiff>>
 
-    fun createBranch(
-        token: String,
-        tokenType: TokenTypeEnum,
-        gitProjectId: String,
-        gitCreateBranch: GitCreateBranch
-    ): Result<Boolean>
-
-    fun listMergeRequest(
-        token: String,
-        tokenType: TokenTypeEnum,
-        gitProjectId: String,
-        gitListMergeRequest: GitListMergeRequest
-    ): Result<List<GitMrInfo>>
-
-    fun createMergeRequest(
-        token: String,
-        tokenType: TokenTypeEnum,
-        gitProjectId: String,
-        gitCreateMergeRequest: GitCreateMergeRequest
-    ): Result<GitMrInfo>
-
     fun getProtectBranchRuleId(
         token: String,
         tokenType: TokenTypeEnum,
