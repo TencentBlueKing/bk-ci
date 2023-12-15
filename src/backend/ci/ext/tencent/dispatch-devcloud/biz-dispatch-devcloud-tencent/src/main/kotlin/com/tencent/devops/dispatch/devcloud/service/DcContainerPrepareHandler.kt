@@ -239,7 +239,6 @@ class DcContainerPrepareHandler @Autowired constructor(
         try {
             lock.lock()
             for (i in 1..BUILD_POOL_SIZE) {
-                logger.info("${handlerContext.buildLogKey} poolNo is $i")
                 handlerContext.poolNo = i
                 if (idleContainer(handlerContext)) {
                     return

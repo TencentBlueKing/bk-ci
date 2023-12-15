@@ -83,7 +83,7 @@ class PermissionService @Autowired constructor(
 
     private val workspaceOwnerCache = CacheBuilder.newBuilder()
         .maximumSize(1000)
-        .expireAfterWrite(5, TimeUnit.MINUTES)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
         .build(
             object : CacheLoader<String, List<String>>() {
                 override fun load(name: String): List<String> {
@@ -100,7 +100,7 @@ class PermissionService @Autowired constructor(
 
     private val workspaceViewerCache = CacheBuilder.newBuilder()
         .maximumSize(1000)
-        .expireAfterWrite(5, TimeUnit.MINUTES)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
         .build(
             object : CacheLoader<String, List<String>>() {
                 override fun load(name: String): List<String> {
@@ -112,10 +112,17 @@ class PermissionService @Autowired constructor(
     fun checkOwnerPermission(userId: String, workspaceName: String, projectId: String) {
         if (!enablePermission) return
 
-        if (!workspaceOwnerCache.get(workspaceName).contains(userId) && !checkUserVisitPermission(userId, projectId)) {
+        if (!workspaceOwnerCache.get(workspaceName).contains(userId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need permission to access workspace $workspaceName")
+                params = arrayOf("You need owner permission to access workspace $workspaceName")
+            )
+        }
+
+        if (!checkUserVisitPermission(userId, projectId)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You need permission to access project $projectId")
             )
         }
     }
@@ -129,11 +136,17 @@ class PermissionService @Autowired constructor(
     fun checkViewerPermission(userId: String, workspaceName: String, projectId: String) {
         if (!enablePermission) return
 
-        if (!workspaceViewerCache.get(workspaceName).contains(userId) && !checkUserVisitPermission(userId, projectId)
-        ) {
+        if (!workspaceViewerCache.get(workspaceName).contains(userId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need permission to access workspace $workspaceName")
+                params = arrayOf("You need viewer permission to access workspace $workspaceName")
+            )
+        }
+
+        if (!checkUserVisitPermission(userId, projectId) && !redisCache.checkExpertSupportUser(userId)) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You need permission to access project $projectId")
             )
         }
     }
@@ -170,15 +183,14 @@ class PermissionService @Autowired constructor(
         userId: String,
         projectCode: String
     ): Boolean {
-        return kotlin.runCatching {
-            client.get(ServiceProjectResource::class).verifyUserProjectPermission(
-                projectCode = projectCode,
-                userId = userId
-            ).data
-        }.getOrNull() ?: throw ErrorCodeException(
-            errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-            params = arrayOf("You need permission to access project $projectCode")
-        )
+//        return kotlin.runCatching {
+//            client.get(ServiceProjectResource::class).verifyUserProjectPermission(
+//                projectCode = projectCode,
+//                userId = userId
+//            ).data
+//        }.getOrNull() ?: false
+        // todo 待所有项目迁移到rbac。再做权限判断。
+        return true
     }
 
     private fun initRedisUser(params: UserOnePassword): String {

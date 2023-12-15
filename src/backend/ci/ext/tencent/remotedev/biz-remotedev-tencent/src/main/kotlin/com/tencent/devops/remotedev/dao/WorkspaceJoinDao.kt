@@ -386,7 +386,7 @@ class WorkspaceJoinDao {
             fields.add(TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL)
         }
 
-        return dslContext.select(fields)
+        return dslContext.selectDistinct(fields)
             .from(TWorkspace.T_WORKSPACE)
             .joinTable(search)
             .where(conditions)

@@ -1,6 +1,16 @@
 {
   "allowedLicenses": [
     {
+      "moduleLicense": "GNU GPL v2.0 license with classpath exception",
+      "moduleName": "com.tencent.kona:kona-crypto",
+      "desc": "Tencent 类库 , 可以直接引用"
+    },
+    {
+      "moduleLicense": "GNU GPL v2.0 license with classpath exception",
+      "moduleName": "com.tencent.kona:kona-pkix",
+      "desc": "Tencent 类库 , 可以直接引用"
+    },
+    {
       "moduleLicense": "GNU General Public License (GPL)",
       "moduleName": "org.tmatesoft.sqljet:sqljet",
       "desc": "https://sqlite.org/copyright.html 属于公共领域完全不需要许可,使用上不受任何限制."

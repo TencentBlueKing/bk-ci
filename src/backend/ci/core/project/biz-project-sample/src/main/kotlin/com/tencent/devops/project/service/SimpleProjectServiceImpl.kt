@@ -36,6 +36,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.CommonUtils
@@ -73,6 +74,7 @@ class SimpleProjectServiceImpl @Autowired constructor(
     objectMapper: ObjectMapper,
     projectExtService: ProjectExtService,
     projectApprovalService: ProjectApprovalService,
+    clientTokenService: ClientTokenService,
     profile: Profile
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
@@ -88,6 +90,7 @@ class SimpleProjectServiceImpl @Autowired constructor(
     objectMapper = objectMapper,
     projectExtService = projectExtService,
     projectApprovalService = projectApprovalService,
+    clientTokenService = clientTokenService,
     profile = profile
 ) {
 

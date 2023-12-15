@@ -25,16 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-util"))
-    api(project(":core:common:common-service"))
-    api("org.springframework.boot:spring-boot")
-    api("org.springframework.boot:spring-boot-autoconfigure")
-    api("org.springframework.boot:spring-boot-configuration-processor")
-    api("io.jsonwebtoken:jjwt-api")
-    api("com.tencent.bk.sdk:crypto-java-sdk")
-    implementation("org.springframework:spring-context")
-    implementation("com.google.guava:guava")
-    runtimeOnly("io.jsonwebtoken:jjwt-impl")
-    runtimeOnly("io.jsonwebtoken:jjwt-jackson")
+package com.tencent.devops.project.api.open
+
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
+import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["OPEN_PROJECT"], description = "项目OPEN接口")
+@Path("/open/project/")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpenProjectResource {
+    @GET
+    @Path("/{projectId}")
+    @ApiOperation("获取项目信息")
+    fun get(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("token")
+        token: String,
+        @ApiParam(value = "项目ID")
+        @PathParam("projectId")
+        projectId: String
+    ): Result<ProjectVO>
 }
