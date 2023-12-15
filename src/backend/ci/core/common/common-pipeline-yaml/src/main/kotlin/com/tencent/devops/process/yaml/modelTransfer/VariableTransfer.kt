@@ -34,8 +34,12 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildContainerType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
+import com.tencent.devops.process.utils.FIXVERSION
+import com.tencent.devops.process.utils.MAJORVERSION
+import com.tencent.devops.process.utils.MINORVERSION
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.v3.models.BuildContainerTypeYaml
+import com.tencent.devops.process.yaml.v3.models.RecommendedVersion
 import com.tencent.devops.process.yaml.v3.models.Variable
 import com.tencent.devops.process.yaml.v3.models.VariablePropOption
 import com.tencent.devops.process.yaml.v3.models.VariablePropType
@@ -49,11 +53,14 @@ class VariableTransfer @Autowired constructor() {
 
     companion object {
         private val logger = LoggerFactory.getLogger(VariableTransfer::class.java)
+        private val ignoredVariable =
+            listOf(MAJORVERSION, "MajorVersion", MINORVERSION, "MinorVersion", FIXVERSION, "FixVersion")
     }
 
     fun makeVariableFromModel(model: Model): Map<String, Variable>? {
         val result = mutableMapOf<String, Variable>()
         (model.stages[0].containers[0] as TriggerContainer).params.forEach {
+            if (it.id in ignoredVariable) return@forEach
             val props = when {
                 // 不带
                 it.type == BuildFormPropertyType.STRING && it.desc.isNullOrEmpty() -> null
@@ -148,6 +155,35 @@ class VariableTransfer @Autowired constructor() {
         } else {
             result
         }
+    }
+
+    fun makeRecommendedVersion(model: Model): RecommendedVersion? {
+        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val res = if (triggerContainer.buildNo != null) {
+            with(triggerContainer.buildNo) {
+                RecommendedVersion(
+                    enabled = true, allowModifyAtStartup = this!!.required, buildNo = RecommendedVersion.BuildNo(
+                        this.buildNo,
+                        RecommendedVersion.Strategy.parse(this.buildNoType).alis
+                    )
+                )
+            }
+        } else return null
+
+        (model.stages[0].containers[0] as TriggerContainer).params.forEach {
+            if (it.id == MAJORVERSION || it.id == "MajorVersion") {
+                res.major = it.defaultValue.toString().toIntOrNull() ?: 0
+            }
+
+            if (it.id == MINORVERSION || it.id == "MinorVersion") {
+                res.minor = it.defaultValue.toString().toIntOrNull() ?: 0
+            }
+
+            if (it.id == FIXVERSION || it.id == "FixVersion") {
+                res.fix = it.defaultValue.toString().toIntOrNull() ?: 0
+            }
+        }
+        return res
     }
 
     fun makeVariableFromYaml(

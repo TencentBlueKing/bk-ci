@@ -58,7 +58,7 @@ data class TriggerContainer(
     @ApiModelProperty("模板参数构建", required = false)
     val templateParams: List<BuildFormProperty>? = null,
     @ApiModelProperty("构建版本号", required = false)
-    val buildNo: BuildNo? = null,
+    var buildNo: BuildNo? = null,
     @ApiModelProperty(
         "是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储",
         required = false,
