@@ -27,6 +27,7 @@
 
 package com.tencent.devops.image.api
 
+import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
@@ -51,6 +52,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/image")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.MULTIPART_FORM_DATA)
+@ServiceInterface("misc")
 interface ServiceImageResource {
 
     @ApiOperation("获取项目Docker构建镜像列表")

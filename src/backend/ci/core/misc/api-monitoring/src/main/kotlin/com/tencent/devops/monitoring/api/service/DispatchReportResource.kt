@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.monitoring.api.service
 
+import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.monitoring.pojo.DispatchStatus
 import io.swagger.annotations.Api
@@ -41,6 +42,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/report")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@ServiceInterface("misc")
 interface DispatchReportResource {
 
     @ApiOperation("各个dispatch模块上报开机状态")
