@@ -1222,7 +1222,6 @@ class RepositoryService @Autowired constructor(
                 }
                 page++
             } while (repoAllMembers?.size == PageUtil.DEFAULT_PAGE_SIZE)
-
         } catch (ignore: Throwable) {
             logger.error("update atom[$repositoryHashId] project protection branch default rules error", ignore)
         }
