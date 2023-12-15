@@ -1206,7 +1206,6 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_INFO`
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '流水线yaml信息表';
 
 
-
 CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_VERSION`
 (
     `PROJECT_ID`    varchar(64)  NOT NULL COMMENT '蓝盾项目ID',
@@ -1225,5 +1224,18 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_VERSION`
     `UPDATE_TIME`   timestamp             default CURRENT_TIMESTAMP not null comment '修改时间',
     PRIMARY KEY (`PROJECT_ID`, `REPO_HASH_ID`, `FILE_PATH`, `BLOB_ID`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '流水线yaml版本';
+
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_SYNC`
+(
+    `PROJECT_ID`    varchar(64)  not null comment '项目ID',
+    `REPO_HASH_ID` varchar(64)   NOT NULL COMMENT '代码库HASH ID',
+    `FILE_PATH`     varchar(512) NOT NULL DEFAULT '' COMMENT '文件路径',
+    `SYNC_STATUS`   VARCHAR(10)  NULL COMMENT 'ci文件同步状态',
+    `REASON`         varchar(100)         DEFAULT NULL COMMENT '失败原因',
+    `REASON_DETAIL`  text                 DEFAULT NULL COMMENT '原因详情',
+    `CREATE_TIME`   timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATE_TIME`  timestamp   default CURRENT_TIMESTAMP null comment '更新时间',
+    PRIMARY KEY (`PROJECT_ID`, `REPO_HASH_ID`, `FILE_PATH`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='yaml文件同步记录';
 
 SET FOREIGN_KEY_CHECKS = 1;

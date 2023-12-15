@@ -71,11 +71,11 @@ class PipelineYamlSyncService @Autowired constructor(
             )
         }
         // 修改代码库同步状态
-        if (syncFileInfoList.isNotEmpty()) {
+        if (syncFileInfoList.isEmpty()) {
             client.get(ServiceRepositoryPacResource::class).updateYamlSyncStatus(
                 projectId = projectId,
                 repoHashId = repoHashId,
-                syncStatus = RepoYamlSyncStatusEnum.SYNC.name
+                syncStatus = RepoYamlSyncStatusEnum.SUCCEED.name
             )
         }
     }

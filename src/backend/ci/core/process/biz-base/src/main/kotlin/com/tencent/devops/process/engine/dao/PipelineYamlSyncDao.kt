@@ -48,26 +48,28 @@ class PipelineYamlSyncDao {
             return
         }
         val now = LocalDateTime.now()
-        dslContext.batch(syncFileInfoList.map {
-            with(TPipelineYamlSync.T_PIPELINE_YAML_SYNC) {
-                dslContext.insertInto(
-                    this,
-                    PROJECT_ID,
-                    REPO_HASH_ID,
-                    FILE_PATH,
-                    SYNC_STATUS,
-                    CREATE_TIME,
-                    UPDATE_TIME
-                ).values(
-                    projectId,
-                    repoHashId,
-                    it.filePath,
-                    it.syncStatus.name,
-                    now,
-                    now
-                ).onDuplicateKeyIgnore()
+        with(TPipelineYamlSync.T_PIPELINE_YAML_SYNC) {
+            dslContext.insertInto(
+                this,
+                PROJECT_ID,
+                REPO_HASH_ID,
+                FILE_PATH,
+                SYNC_STATUS,
+                CREATE_TIME,
+                UPDATE_TIME
+            ).also { insert ->
+                syncFileInfoList.forEach { syncFileInfo ->
+                    insert.values(
+                        projectId,
+                        repoHashId,
+                        syncFileInfo.filePath,
+                        syncFileInfo.syncStatus.name,
+                        now,
+                        now
+                    ).onDuplicateKeyIgnore()
+                }
             }
-        }).execute()
+        }.execute()
     }
 
     fun updateSyncStatus(

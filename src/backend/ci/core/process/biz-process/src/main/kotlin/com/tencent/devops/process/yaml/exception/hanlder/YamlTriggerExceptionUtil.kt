@@ -30,7 +30,6 @@ package com.tencent.devops.process.yaml.exception.hanlder
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.I18Variable
-import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.yaml.exception.YamlTriggerException
@@ -46,23 +45,6 @@ object YamlTriggerExceptionUtil {
             is ErrorCodeException -> Pair(
                 PipelineTriggerStatus.FAILED.name,
                 I18Variable(code = exception.errorCode, params = exception.params?.toList()).toJsonStr()
-            )
-            else -> Pair(
-                PipelineTriggerReason.UNKNOWN_ERROR.name,
-                exception.message ?: PipelineTriggerReason.UNKNOWN_ERROR.detail
-            )
-        }
-    }
-
-    fun getI18Reason(exception: Exception): Pair<String, String> {
-        return when (exception) {
-            is YamlTriggerException -> Pair(
-                PipelineTriggerStatus.FAILED.name,
-                I18Variable(code = exception.errorCode, params = exception.params?.toList()).getCodeLanMessage()
-            )
-            is ErrorCodeException -> Pair(
-                PipelineTriggerStatus.FAILED.name,
-                I18Variable(code = exception.errorCode, params = exception.params?.toList()).getCodeLanMessage()
             )
             else -> Pair(
                 PipelineTriggerReason.UNKNOWN_ERROR.name,

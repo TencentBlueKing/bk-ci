@@ -82,7 +82,7 @@ class PipelineYamlTriggerListener @Autowired constructor(
             }
             action
         } catch (ignored: Throwable) {
-            logger.warn("enable pipeline yaml|load|action|error", ignored)
+            logger.warn("Failed to load action when enable pac|$projectId", ignored)
             return
         }
         val repoHashId = action.data.setting.repoHashId
@@ -91,8 +91,8 @@ class PipelineYamlTriggerListener @Autowired constructor(
             pipelineYamlRepositoryService.deployYamlPipeline(projectId = projectId, action = action)
             pipelineYamlSyncService.syncSuccess(projectId = projectId, repoHashId = repoHashId, filePath = filePath)
         } catch (ignored: Exception) {
-            logger.warn("enable pipeline yaml error", ignored)
-            val (reason, reasonDetail) = YamlTriggerExceptionUtil.getI18Reason(exception = ignored)
+            logger.warn("Failed to sync pipeline yaml when enable pac|$projectId|$repoHashId|$filePath", ignored)
+            val (reason, reasonDetail) = YamlTriggerExceptionUtil.getReason(exception = ignored)
             pipelineYamlSyncService.syncFailed(
                 projectId = projectId,
                 repoHashId = repoHashId,
