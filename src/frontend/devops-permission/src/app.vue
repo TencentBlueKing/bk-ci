@@ -4,7 +4,7 @@
 
 <script lang="ts">
 try {
-  const devopsApp = window.top?.document.querySelector('devops-app');
+  const devopsApp = window.top?.document.querySelector('.devops-app');
   devopsApp?.setAttribute('class', 'devops-app permission-model');
 } catch (error) {
   console.log(error);
