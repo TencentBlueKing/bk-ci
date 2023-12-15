@@ -43,10 +43,8 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.CookieUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.service.ServiceLocaleResource
-import java.net.URLDecoder
 import org.slf4j.LoggerFactory
-import org.springframework.web.context.request.RequestContextHolder
-import org.springframework.web.context.request.ServletRequestAttributes
+import java.net.URLDecoder
 
 object I18nUtil {
 
