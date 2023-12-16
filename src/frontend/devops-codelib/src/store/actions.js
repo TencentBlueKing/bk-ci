@@ -569,7 +569,7 @@ const actions = {
         projectId,
         repositoryHashId
     }) {
-        return vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repositoryHashId}/count`)
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/yaml/${projectId}/${repositoryHashId}/count`)
     },
 
     /**
@@ -579,7 +579,7 @@ const actions = {
         projectId,
         repositoryHashId
     }) {
-        return vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repositoryHashId}/listYamlSync`)
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/yaml/${projectId}/${repositoryHashId}/listSyncFailedYaml`)
     }
 }
 
