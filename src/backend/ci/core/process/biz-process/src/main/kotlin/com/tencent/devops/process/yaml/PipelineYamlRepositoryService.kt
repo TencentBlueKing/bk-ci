@@ -185,7 +185,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             repoHashId = repoHashId,
-            projectName = action.data.setting.projectName,
+            gitProjectName = action.data.setting.projectName,
             directory = directory
         )
         pipelineYamlService.save(
@@ -208,7 +208,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
         userId: String,
         projectId: String,
         repoHashId: String,
-        projectName: String,
+        gitProjectName: String,
         directory: String
     ): Long? {
         val pipelineYamlView = pipelineYamlService.getPipelineYamlView(
@@ -221,9 +221,9 @@ class PipelineYamlRepositoryService @Autowired constructor(
             return null
         }
         val name = if (directory == Constansts.ciFileDirectoryName) {
-            "$YAML_VIEW_PREFIX$projectName"
+            "$YAML_VIEW_PREFIX$gitProjectName"
         } else {
-            "$YAML_VIEW_PREFIX$projectName-${directory.removePrefix(".ci/")}"
+            "$YAML_VIEW_PREFIX$gitProjectName-${directory.removePrefix(".ci/")}"
         }
         val pipelineView = PipelineViewForm(
             name = name,
@@ -327,10 +327,12 @@ class PipelineYamlRepositoryService @Autowired constructor(
         pipelineId: String,
         version: Int,
         versionName: String,
-        repoHashId: String,
-        filePath: String,
+        action: BaseAction,
         yamlFile: YamlPathListEntry
     ) {
+        val repoHashId = action.data.setting.repoHashId
+        val filePath = yamlFile.yamlPath
+
         val webhooks =
             getWebhooks(
             projectId = projectId,
@@ -354,6 +356,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 repoHashId = repoHashId,
                 filePath = filePath,
                 yamlFile = yamlFile,
+                gitProjectName = action.data.setting.projectName,
                 webhooks = webhooks
             )
         }
@@ -368,6 +371,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
         repoHashId: String,
         filePath: String,
         yamlFile: YamlPathListEntry,
+        gitProjectName: String,
         webhooks: List<PipelineWebhookVersion>
     ) {
         val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
@@ -381,7 +385,8 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 repoHashId = repoHashId,
-                directory = directory
+                directory = directory,
+                gitProjectName = gitProjectName
             )
             pipelineYamlService.save(
                 projectId = projectId,
