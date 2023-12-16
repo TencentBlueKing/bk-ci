@@ -76,6 +76,20 @@ class PipelineYamlViewDao {
         }
     }
 
+    fun getByViewId(
+        dslContext: DSLContext,
+        projectId: String,
+        viewId: Long
+    ): PipelineYamlView? {
+        with(TPipelineYamlView.T_PIPELINE_YAML_VIEW) {
+            val record = dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(VIEW_ID.eq(viewId))
+                .fetchOne()
+            return record?.let { convert(it) }
+        }
+    }
+
     fun listViewIds(
         dslContext: DSLContext,
         projectId: String,

@@ -46,6 +46,7 @@ import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.yaml.actions.BaseAction
 import com.tencent.devops.process.yaml.actions.GitActionCommon
+import com.tencent.devops.process.yaml.common.Constansts
 import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferAspectLoader
 import com.tencent.devops.process.yaml.pojo.PipelineYamlTriggerLock
 import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
@@ -65,6 +66,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineYamlRepositoryService::class.java)
+        private const val YAML_VIEW_PREFIX = "[PAC]"
     }
 
     fun deployYamlPipeline(
@@ -105,7 +107,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
     }
 
     /**
-     * 创建yaml流水线,如果流水线不存在则创建，创建则更新版本
+     * 创建yaml流水线,如果流水线不存在则创建，存在则更新版本
      */
     private fun createPipelineIfAbsent(
         projectId: String,
@@ -183,6 +185,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             repoHashId = repoHashId,
+            projectName = action.data.setting.projectName,
             directory = directory
         )
         pipelineYamlService.save(
@@ -205,6 +208,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
         userId: String,
         projectId: String,
         repoHashId: String,
+        projectName: String,
         directory: String
     ): Long? {
         val pipelineYamlView = pipelineYamlService.getPipelineYamlView(
@@ -216,8 +220,13 @@ class PipelineYamlRepositoryService @Autowired constructor(
         if (pipelineYamlView != null) {
             return null
         }
+        val name = if (directory == Constansts.ciFileDirectoryName) {
+            "$YAML_VIEW_PREFIX$projectName"
+        } else {
+            "$YAML_VIEW_PREFIX$projectName-${directory.removePrefix(".ci/")}"
+        }
         val pipelineView = PipelineViewForm(
-            name = "GIT-$directory",
+            name = name,
             projected = true,
             viewType = PipelineViewType.DYNAMIC,
             logic = Logic.AND,

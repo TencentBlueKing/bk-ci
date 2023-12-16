@@ -149,6 +149,11 @@ class PipelineViewGroupService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND,
             params = arrayOf(viewIdEncode)
         )
+        pipelineYamlViewDao.getByViewId(dslContext = dslContext, projectId = projectId, viewId = viewId)?.let {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.YAML_VIEW_CANNOT_UPDATE
+            )
+        }
         // 校验
         checkPermission(userId, projectId, pipelineView.projected, oldView.createUser)
         if (pipelineView.projected != oldView.isProject) {
@@ -225,6 +230,11 @@ class PipelineViewGroupService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND,
             params = arrayOf(viewIdEncode)
         )
+        pipelineYamlViewDao.getByViewId(dslContext = dslContext, projectId = projectId, viewId = viewId)?.let {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.YAML_VIEW_CANNOT_DELETE
+            )
+        }
         checkPermission(userId, projectId, oldView.isProject, oldView.createUser)
         var result = false
         dslContext.transaction { t ->
@@ -636,6 +646,11 @@ class PipelineViewGroupService @Autowired constructor(
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_VIEW_GROUP_NO_PERMISSION,
                 defaultMessage = "user:$userId has no permission to edit view group, project:$projectId"
+            )
+        }
+        pipelineYamlViewDao.getByViewId(dslContext = dslContext, projectId = projectId, viewId = viewId)?.let {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.YAML_VIEW_CANNOT_BULK_REMOVE
             )
         }
         pipelineViewGroupDao.batchRemove(dslContext, projectId, viewId, bulkRemove.pipelineIds)

@@ -131,6 +131,6 @@ object GitActionCommon {
     }
 
     fun getCiDirectory(filePath: String): String {
-        return filePath.let { it.substring(0, it.indexOfLast { c -> c == '/' } + 1) }
+        return filePath.let { it.substring(0, it.indexOfLast { c -> c == '/' }) }
     }
 }
