@@ -31,6 +31,15 @@
                         <div class="step-name-text" v-bk-overflow-tips>
                             {{ stepInstanceData.name }}
                         </div>
+                        <div class="task-instance-action">
+                            <div
+                                class="action-btn detail-btn"
+                                @click="handleShowDetail"
+                                v-bk-tooltips.bottom="$t('environment.全局变量')"
+                            >
+                                <Icon name="detail-line" size="14" />
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -75,11 +84,22 @@
                 />
             </div>
         </div>
+        <bk-sideslider
+            :is-show.sync="isShowDetail"
+            quick-close
+            :show-footer="false"
+            :title="$t('environment.全局变量')"
+            :width="960">
+            <step-detail-view
+                :step-instance-id="stepInstanceId"
+                :job-instance-id="jobInstanceId" />
+        </bk-sideslider>
     </div>
 </template>
 
 <script>
     import ipList from '@/components/ipList'
+    import StepDetailView from './step-detail-view'
     import ExecutionInfo from '@/components/executionInfo'
     import { mapActions } from 'vuex'
     import {
@@ -90,7 +110,8 @@
     export default {
         components: {
             ipList,
-            ExecutionInfo
+            ExecutionInfo,
+            StepDetailView
         },
         data () {
             return {
@@ -104,7 +125,8 @@
                 activeHostId: 0,
                 activeIp: '',
                 activeBkCloudId: 0,
-                activeIpStatus: ''
+                activeIpStatus: '',
+                isShowDetail: false
             }
         },
         computed: {
@@ -131,10 +153,13 @@
             },
             ipList () {
                 const key = Object.keys(this.groupListMap)[this.activeGroupIndex]
-                this.activeHostId = this.groupListMap[key] && this.groupListMap[key].length && this.groupListMap[key][0].bkHostId
-                this.activeIp = this.groupListMap[key] && this.groupListMap[key].length && this.groupListMap[key][0].ip
-                this.activeBkCloudId = this.groupListMap[key] && this.groupListMap[key].length && this.groupListMap[key][0].bkCloudId
-                this.activeIpStatus = this.groupListMap[key] && this.groupListMap[key].length && getAgentStatus(this.groupListMap[key][0].status)
+                const group = (this.groupListMap[key] && this.groupListMap[key][0]) || {}
+
+                this.activeHostId = group.bkHostId
+                this.activeIp = group.ip
+                this.activeBkCloudId = group.bkCloudId
+                this.activeIpStatus = getAgentStatus(group.status)
+
                 return this.groupListMap[key] && this.groupListMap[key].map(i => {
                     return {
                         ...i,
@@ -188,6 +213,9 @@
                 }).finally(() => {
                     this.isLoading = false
                 })
+            },
+            handleShowDetail () {
+                console.log(123)
             }
         }
     }
@@ -297,6 +325,7 @@
             }
             .step-name-box {
                 display: flex;
+                justify-content: space-between;
                 align-items: center;
                 margin-top: 10px;
             }
@@ -309,6 +338,20 @@
                 color: #313238;
                 text-overflow: ellipsis;
                 white-space: nowrap;
+            }
+            .action-btn {
+                display: flex;
+                width: 32px;
+                height: 32px;
+                margin-left: 8px;
+                font-size: 16px;
+                color: #979ba5;
+                cursor: pointer;
+                background: #fff;
+                border: 1px solid #c4c6cc;
+                border-radius: 2px;
+                align-items: center;
+                justify-content: center;
             }
         }
         .step-execute-host-group {

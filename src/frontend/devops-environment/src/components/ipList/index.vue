@@ -4,6 +4,7 @@
         :size="size"
         height="100%"
         class="ip-table"
+        :scroll-loading="scrollLoading"
         :row-class-name="rowClassName"
         @row-click="handleRowClick"
     >
@@ -103,7 +104,8 @@
             return {
                 tableColumn: [],
                 selectedTableColumn: [],
-                tableSize: 'small'
+                tableSize: 'small',
+                scrollLoading: true
             }
         },
         computed: {

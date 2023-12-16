@@ -422,7 +422,13 @@ const actions = {
     },
     getStepInstanceStatus (_, { projectId, jobInstanceId, stepInstanceId }) {
         return vue.$ajax.get(`${prefix}/user/job/${projectId}/get_step_instance_status?jobInstanceId=${jobInstanceId}&stepInstanceId=${stepInstanceId}`)
+    },
+    getStepInstanceDetail (_, {
+        projectId, jobInstanceId, stepInstanceId
+    }) {
+        return vue.$ajax.get(`${prefix}/user/job/${projectId}/get_step_instance_detail?jobInstanceId=${jobInstanceId}&stepInstanceId=${stepInstanceId}`)
     }
+
 }
 
 export default actions

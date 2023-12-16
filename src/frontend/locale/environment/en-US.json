@@ -356,5 +356,6 @@
     "等待开始": "Waiting to start",
     "上传中": "Uploading",
     "下载中": "Downloading",
-    "失败": "Fail"
+    "失败": "Fail",
+    "步骤内容": "Step details"
 }
