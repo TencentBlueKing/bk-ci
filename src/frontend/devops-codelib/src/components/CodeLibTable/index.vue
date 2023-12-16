@@ -479,7 +479,8 @@
                         scmType: row.type,
                         id: row.repositoryHashId,
                         page: this.page,
-                        limit: this.pagination.limit
+                        limit: this.pagination.limit,
+                        projectId: this.projectId
                     }))
                     this.$emit('updateFlod', true)
                     this.$emit('update:curRepoId', row.repositoryHashId)
