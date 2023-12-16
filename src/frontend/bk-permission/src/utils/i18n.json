@@ -58,7 +58,10 @@
                 "关闭": "关闭",
                 "权限申请单已提交": "权限申请单已提交",
                 "尚未开启流水线组权限管理。开启后，可以给组内流水线批量添加编辑者、执行者或查看者权限": "尚未开启流水线组权限管理。开启后，可以给组内流水线批量添加编辑者、执行者或查看者权限",
-                "尚未开启此流水线权限管理功能": "尚未开启此流水线权限管理功能"
+                "尚未开启此流水线权限管理功能": "尚未开启此流水线权限管理功能",
+                "流水线管理": "流水线管理",
+                "流水线模板管理": "流水线模板管理",
+                "流水线组管理": "流水线组管理"
         },
         "en-US": {
                 "开启权限管理": "Turn on permission management",
@@ -118,6 +121,9 @@
                 "关闭": "Close",
                 "权限申请单已提交": "Permission application has been submitted",
                 "尚未开启流水线组权限管理。开启后，可以给组内流水线批量添加编辑者、执行者或查看者权限": "Pipeline group permission management is not yet enabled. Once enabled, it will be possible to add editors, executors, or viewers permissions in bulk to pipelines within the group.",
-                "尚未开启此流水线权限管理功能": "The permission management function of this pipeline has not been enabled"
+                "尚未开启此流水线权限管理功能": "The permission management function of this pipeline has not been enabled",
+                "流水线管理": "Pipeline Management",
+                "流水线模板管理": "Pipeline Template Management",
+                "流水线组管理": "Pipeline Group Management"
         }
 }
