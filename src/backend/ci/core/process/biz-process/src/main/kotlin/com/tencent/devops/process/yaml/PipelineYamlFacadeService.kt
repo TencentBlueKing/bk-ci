@@ -297,13 +297,12 @@ class PipelineYamlFacadeService @Autowired constructor(
             targetAction = targetAction
         )
         pipelineYamlRepositoryService.releaseYamlPipeline(
-            projectId = projectId,
-            repoHashId = repoHashId,
-            filePath = filePath,
-            pipelineId = pipelineId,
             userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
             version = version,
             versionName = versionName,
+            action = action,
             yamlFile = yamlFile
         )
     }
