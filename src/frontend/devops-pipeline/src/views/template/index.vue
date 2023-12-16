@@ -94,7 +94,7 @@
                     this.sideMenuList[0].list.push({
                         id: 'templatePermission',
                         name: this.$t('template.permissionSetting'),
-                        icon: 'icon-permission'
+                        icon: 'permission'
                     })
                 }
             })

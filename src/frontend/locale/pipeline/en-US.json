@@ -423,7 +423,8 @@
         "title": "No access to this pipeline template",
         "desc": "You do not have permission to view the pipeline template, please apply for permission",
         "apply": "Apply"
-    }
+    },
+    "editStoreTemplateTips": "The development store template does not support editing"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",

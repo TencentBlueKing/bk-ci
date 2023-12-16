@@ -27,13 +27,13 @@
         margin: 139px auto 0;
         text-align: center;
         .title {
-            margin: 27px 0 30px 24px;
+            margin: 10px 0 20px;
             color: #313238;
             font-size: 20px;
             font-weight: normal;
         }
         .desc {
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             color: #979BA5;
             font-size: 14px;
             font-weight: 400;

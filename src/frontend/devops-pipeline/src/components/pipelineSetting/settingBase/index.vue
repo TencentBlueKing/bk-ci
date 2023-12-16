@@ -11,7 +11,9 @@
                         v-for="(filter, index) in tagGroupList"
                         :key="index">
                         <label class="group-title">{{filter.name}}</label>
-                        <bk-select :value="labelValues[index]"
+                        <bk-select
+                            ext-cls="setting-select"
+                            :value="labelValues[index]"
                             @selected="handleLabelSelect(index, arguments)"
                             @clear="handleLabelSelect(index, [[]])"
                             multiple
@@ -476,6 +478,9 @@
                 height: 0;
                 width: 0;
                 clear: both;
+            }
+            .setting-select {
+                background: #fff;
             }
             .group-inline  {
                 float: left;

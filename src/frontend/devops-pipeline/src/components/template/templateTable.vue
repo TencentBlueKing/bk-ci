@@ -67,7 +67,6 @@
                                                 action: TEMPLATE_RESOURCE_ACTION.VIEW
                                             }
                                         }"
-                                        :class="[canCreatePP ? 'create-permission' : 'not-create-permission', 'pipeline-instance']"
                                     >
                                         {{ row.associatePipelines.length }}
                                     </div>

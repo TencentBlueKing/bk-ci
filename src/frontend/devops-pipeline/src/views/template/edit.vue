@@ -3,8 +3,22 @@
         <template v-if="template">
             <pipeline :pipeline="pipeline" :template-type="template.templateType" :is-saving="isSaving" :is-editing="isEditing">
                 <div slot="pipeline-bar">
+                    <span
+                        v-if="template.templateType === 'CONSTRAINT' && isEnabledPermission"
+                        v-bk-tooltips="{
+                            content: $t('template.editStoreTemplateTips'),
+                            disabled: template.templateType !== 'CONSTRAINT'
+                        }"
+                    >
+                        <bk-button
+                            theme="primary"
+                            disabled
+                        >
+                            {{ $t('save') }}
+                        </bk-button>
+                    </span>
                     <bk-button
-                        v-if="isEnabledPermission"
+                        v-else-if="template.templateType !== 'CONSTRAINT' && isEnabledPermission"
                         @click="savePipeline()"
                         theme="primary"
                         v-perm="{
@@ -19,7 +33,7 @@
                         {{ $t('save') }}
                     </bk-button>
                     <bk-button
-                        v-else
+                        v-else-if="!isEnabledPermission"
                         @click="savePipeline()" theme="primary"
                         :disabled="isSaveDisable"
                     >
@@ -354,6 +368,10 @@
                 })
             },
             leaveConfirm (to, from, next) {
+                if (this.template.templateType === 'CONSTRAINT') {
+                    next(true)
+                    return
+                }
                 if (this.isEditing) {
                     navConfirm({ content: this.confirmMsg, type: 'warning', cancelText: this.cancelText })
                         .then(() => next())

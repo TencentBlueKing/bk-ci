@@ -63,12 +63,6 @@
                     <bk-table-column type="selection" width="60" align="center" :selectable="isUpdating"></bk-table-column>
                     <bk-table-column :label="$t('pipelineName')" prop="pipelineName">
                         <template slot-scope="props">
-                            <label
-                                v-if="!props.row.hasPermission"
-                                class="disabled-checkbox bk-form-checkbox is-disabled"
-                            >
-                                <span class="bk-checkbox"></span>
-                            </label>
                             <span class="pipeline-name" :title="props.row.pipelineName" @click="toPipelineHistory(props.row.pipelineId)">{{ props.row.pipelineName }}</span>
                         </template>
                     </bk-table-column>
@@ -367,6 +361,7 @@
             },
             selectItem (items) {
                 this.selectItemList = items.filter(i => i.hasPermission)
+                return items.filter(i => i.hasPermission)
             },
             async handlePageChange (page) {
                 if (page !== this.pagination.current) {
@@ -484,7 +479,7 @@
                 }
             },
             isUpdating (row) {
-                return row.status !== 'UPDATING'
+                return row.status !== 'UPDATING' && row.hasPermission
             },
             comfireHandler () {
 
@@ -589,15 +584,6 @@
                 display: inline-block;
                 margin-right: 20px;
                 cursor: pointer;
-            }
-            .is-disabled {
-                display: flex;
-                width: 60px;
-                height: 42px;
-                align-items: center;
-                justify-content: space-around;
-                color: #ccc;
-                cursor: not-allowed;
             }
         }
         .batch-update {
