@@ -52,6 +52,7 @@ import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.api.user.UserPipelineViewResource
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
+import kotlin.math.log
 
 @Suppress("TooManyFunctions", "LongMethod", "LongParameterList")
 class RbacPermissionService constructor(
@@ -625,6 +626,7 @@ class RbacPermissionService constructor(
         } else {
             emptyList()
         }
-        return result.apply { result.toMutableList().addAll(resourceCreateByUserWithinOneMinute) }.distinct()
+        logger.debug("resource create by user within one minute:$resourceCreateByUserWithinOneMinute")
+        return result.toMutableList().apply { addAll(resourceCreateByUserWithinOneMinute) }.distinct()
     }
 }
