@@ -577,7 +577,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                         setCache(
                             atomRunInfoKey = atomRunInfoKey,
                             version = it.version,
-                            atomCode = it.atomCode,
+                            atomCode = it.atomCode
                         )
                     )
                 } else {
@@ -588,7 +588,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     setCache(
                         atomRunInfoKey = atomRunInfoKey,
                         version = it.version,
-                        atomCode = it.atomCode,
+                        atomCode = it.atomCode
                     )
                 )
             }
