@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.ApigwTemplateResource
+import com.tencent.devops.openapi.utils.ApigwParamUtil
 import com.tencent.devops.process.api.template.ServicePTemplateResource
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.TemplateListModel
@@ -58,8 +59,8 @@ class ApigwTemplateResourceImpl @Autowired constructor(private val client: Clien
             projectId = projectId,
             templateType = templateType,
             storeFlag = storeFlag,
-            page = page,
-            pageSize = pageSize
+            page = page ?: 1,
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
         )
     }
 
@@ -94,8 +95,8 @@ class ApigwTemplateResourceImpl @Autowired constructor(private val client: Clien
             userId = userId,
             projectId = projectId,
             templateType = null,
-            page = page,
-            pageSize = pageSize
+            page = page ?: 1,
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
         )
     }
 
