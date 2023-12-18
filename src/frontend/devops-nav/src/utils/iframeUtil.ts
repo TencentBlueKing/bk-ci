@@ -26,6 +26,12 @@ function iframeUtil (router: any) {
             params
         }, '*')
     }
+    
+    utilMap.updateTabTitle = function (title: string): void {
+        if (title) {
+            document.title = title
+        }
+    }
 
     utilMap.hookTrigger = function (hook) {
         switch (hook.target.type) {
