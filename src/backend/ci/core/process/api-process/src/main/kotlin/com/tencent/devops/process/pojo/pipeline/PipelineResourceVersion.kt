@@ -28,6 +28,7 @@
 package com.tencent.devops.process.pojo.pipeline
 
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.enums.BranchVersionLifecycle
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -64,6 +65,8 @@ data class PipelineResourceVersion(
     val referCount: Int? = null,
     @ApiModelProperty("草稿版本标识", required = false)
     val status: VersionStatus? = VersionStatus.RELEASED,
+    @ApiModelProperty("分支版本状态", required = false)
+    val branchLifecycle: BranchVersionLifecycle? = null,
     @ApiModelProperty("版本变更说明", required = false)
     val description: String? = null,
     @ApiModelProperty("调试构建ID", required = false)
