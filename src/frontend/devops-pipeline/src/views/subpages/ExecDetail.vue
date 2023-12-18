@@ -368,6 +368,9 @@
         watch: {
             execDetail (val) {
                 this.isLoading = val === null
+                if (val) {
+                    this.$updateTabTitle?.(`#${val.buildNum}  ${val.buildMsg} | ${val.pipelineName}`)
+                }
             },
             'routerParams.buildNo': {
                 handler (val, oldVal) {
