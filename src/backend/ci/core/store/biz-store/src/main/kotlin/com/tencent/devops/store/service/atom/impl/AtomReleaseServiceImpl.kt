@@ -961,13 +961,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             userId = userId,
             msg = I18nUtil.getCodeLanMessage(UN_RELEASE)
         )
-        // 处理插件缓存
-        marketAtomCommonService.handleAtomCache(
-            atomId = atomId,
-            atomCode = atomCode,
-            version = record.version,
-            releaseFlag = false
-        )
         // 更新插件当前大版本内是否有测试版本标识
         redisOperation.hset(
             key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
@@ -1127,14 +1120,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             // 通过websocket推送状态变更消息
             storeWebsocketService.sendWebsocketMessage(userId, atomId)
         }
-        val tAtomRecord = marketAtomDao.getAtomRecordById(dslContext, atomId)!!
-        // 处理插件缓存
-        marketAtomCommonService.handleAtomCache(
-            atomId = atomId,
-            atomCode = atomCode,
-            version = tAtomRecord.version,
-            releaseFlag = false
-        )
         return Result(true)
     }
 

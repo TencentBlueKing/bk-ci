@@ -337,7 +337,7 @@ class TemplateFacadeService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
         val templateModel: Model = objectMapper.readValue(template)
-        checkTemplateAtoms(templateModel, userId)
+        checkTemplateAtomsForExplicitVersion(templateModel, userId)
         val templateId = UUIDUtil.generate()
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -540,7 +540,7 @@ class TemplateFacadeService @Autowired constructor(
         logger.info("Start to update the template $templateId by user $userId - ($template)")
         checkPermission(projectId, userId)
         checkTemplate(template, projectId)
-        checkTemplateAtoms(template, userId)
+        checkTemplateAtomsForExplicitVersion(template, userId)
         val latestTemplate = templateDao.getLatestTemplate(dslContext, projectId, templateId)
         if (latestTemplate.type == TemplateType.CONSTRAINT.name && latestTemplate.storeFlag == true) {
             throw ErrorCodeException(
@@ -1644,7 +1644,7 @@ class TemplateFacadeService @Autowired constructor(
                 errorCode = ERROR_TEMPLATE_NOT_EXISTS
             )
         val templateModel: Model = objectMapper.readValue(template.template)
-        checkTemplateAtoms(templateModel, userId, true)
+        checkTemplateAtomsForExplicitVersion(templateModel, userId, true)
         // 当更新的实例数量较小则走同步更新逻辑，较大走异步更新逻辑
         if (instances.size <= maxSyncInstanceNum) {
             val successPipelines = ArrayList<String>()
@@ -2048,9 +2048,9 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     /**
-     * 检查模板中是否存在已下架、测试中插件
+     * 检查模板中是否存在已下架、测试中插件(明确版本号)
      */
-    fun checkTemplateAtoms(template: Model, userId: String, flag: Boolean? = false) {
+    fun checkTemplateAtomsForExplicitVersion(template: Model, userId: String, flag: Boolean? = false) {
         val codeVersions = mutableSetOf<AtomCodeVersionReqItem>()
         template.stages.forEach { stage ->
             stage.containers.forEach { container ->

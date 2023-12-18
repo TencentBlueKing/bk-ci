@@ -294,31 +294,6 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
-    /*fun getAtomInfos(
-        dslContext: DSLContext,
-        atomCode: String,
-        version: String
-    ): AtomStatusInfo {
-        with(TAtom.T_ATOM) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(ATOM_CODE.eq(atomCode))
-            if (VersionUtils.isLatestVersion(version)) {
-                conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
-            } else {
-                conditions.add(VERSION.eq(version))
-            }
-            return dslContext.select(ATOM_CODE, NAME, VERSION, ATOM_STATUS)
-                .from(this)
-                .where(conditions)
-                .orderBy(CREATE_TIME.desc())
-                .limit(1)
-                .fetchOne()?.into(AtomStatusInfo::class.java) ?: throw ErrorCodeException(
-                    errorCode = USER_ATOM_VERSION_IS_NOT_EXIST,
-                    params = arrayOf(atomCode, version)
-                )
-        }
-    }*/
-
     fun getPipelineAtom(
         dslContext: DSLContext,
         projectCode: String,

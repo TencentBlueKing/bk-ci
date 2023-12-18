@@ -37,7 +37,6 @@ import com.tencent.devops.common.api.constant.KEY_SUMMARY
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.KEY_WEIGHT
 import com.tencent.devops.common.api.constant.NAME
-import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.SystemModuleEnum
@@ -574,28 +573,42 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             if (!atomRunInfoJson.isNullOrBlank()) {
                 val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
                 if (atomRunInfo.atomStatus == null) {
-                    val atomRunInfoFromDb = getAtomRunInfo(
-                        atomCode = it.atomCode,
-                        version = it.version,
-                        dslContext = dslContext
+                    atomRunInfos.add(
+                        setCache(
+                            atomRunInfoKey = atomRunInfoKey,
+                            version = it.version,
+                            atomCode = it.atomCode,
+                        )
                     )
-                    atomRunInfos.add(atomRunInfoFromDb)
-                    // 将db中的环境信息写入缓存
-                    redisOperation.hset(atomRunInfoKey, it.version, JsonUtil.toJson(atomRunInfoFromDb))
+                } else {
+                    atomRunInfos.add(atomRunInfo)
                 }
-                atomRunInfos.add(atomRunInfo)
             } else {
-                val atomRunInfoFromDb = getAtomRunInfo(
-                    atomCode = it.atomCode,
-                    version = it.version,
-                    dslContext = dslContext
+                atomRunInfos.add(
+                    setCache(
+                        atomRunInfoKey = atomRunInfoKey,
+                        version = it.version,
+                        atomCode = it.atomCode,
+                    )
                 )
-                atomRunInfos.add(atomRunInfoFromDb)
-                // 将db中的环境信息写入缓存
-                redisOperation.hset(atomRunInfoKey, it.version, JsonUtil.toJson(atomRunInfoFromDb))
             }
         }
         return Result(atomRunInfos)
+    }
+
+    fun setCache(
+        atomRunInfoKey: String,
+        version: String,
+        atomCode: String
+    ): AtomRunInfo{
+        val atomRunInfoFromDb = getAtomRunInfo(
+            atomCode = atomCode,
+            version = version,
+            dslContext = dslContext
+        )
+        // 将db中的环境信息写入缓存
+        redisOperation.hset(atomRunInfoKey, version, JsonUtil.toJson(atomRunInfoFromDb))
+        return atomRunInfoFromDb
     }
 
     fun getAtomRunInfo(
