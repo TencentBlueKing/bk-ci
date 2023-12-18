@@ -521,90 +521,8 @@ environment:
     targetCPU: 80
     targetMemory: 80
 
-# image Deployment
-image:
-  enabled: false
-  replicas: 1
-  podLabels: {}
-  resources:
-    requests:
-      cpu: 500m
-      memory: 2000Mi
-    limits:
-      cpu: 1000m
-      memory: 2500Mi
-  jvm:
-    heapPct: "60.0"
-    initSecs: 20
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
-
 # misc Deployment
 misc:
-  enabled: false
-  replicas: 1
-  podLabels: {}
-  resources:
-    requests:
-      cpu: 500m
-      memory: 2000Mi
-    limits:
-      cpu: 1000m
-      memory: 2500Mi
-  jvm:
-    heapPct: "60.0"
-    initSecs: 20
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
-
-# monitoring Deployment
-monitoring:
   enabled: false
   replicas: 1
   podLabels: {}
@@ -690,47 +608,6 @@ openapi:
   enabled: false
   secret:
     enabled: false
-  replicas: 1
-  podLabels: {}
-  resources:
-    requests:
-      cpu: 500m
-      memory: 2000Mi
-    limits:
-      cpu: 1000m
-      memory: 2500Mi
-  jvm:
-    heapPct: "60.0"
-    initSecs: 20
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
-
-# plugin Deployment
-plugin:
-  enabled: false
   replicas: 1
   podLabels: {}
   resources:
