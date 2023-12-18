@@ -29,7 +29,11 @@ package com.tencent.devops.common.api.util
 
 object ThreadLocalUtil {
 
-    private val threadLocalMap = ThreadLocal<MutableMap<String, Any>>()
+    private val threadLocalMap = object : ThreadLocal<MutableMap<String, Any>>() {
+        override fun initialValue(): MutableMap<String, Any> {
+            return mutableMapOf()
+        }
+    }
 
     /**
      * 根据 key 获取线程变量
