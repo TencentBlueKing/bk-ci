@@ -229,7 +229,7 @@
                 const listTotalHeight = windowHeight - top - tableHeadHeight - paginationHeight - windownOffsetBottom - 52
                 const tableRowHeight = 42
 
-                const isCacheProject = this.projectId === cache.projectId
+                const isCacheProject = this.projectId === (cache && cache.projectId)
                 this.aliasName = query.searchName || ''
                 const id = isCacheProject ? query.id || (cache && cache.id) : ''
                 const scmType = isCacheProject ? query.scmType || (cache && cache.scmType) : ''
