@@ -38,7 +38,8 @@ import org.springframework.stereotype.Service
 class StreamAsyncService @Autowired constructor(
     private val dslContext: DSLContext,
     private val streamPipelineBranchDao: StreamPipelineBranchDao,
-    private val scmService: StreamScmService
+    private val scmService: StreamScmService,
+    private val streamGitTokenService: StreamGitTokenService
 ) {
     companion object {
         private const val pageSize = 1000L
@@ -76,11 +77,11 @@ class StreamAsyncService @Autowired constructor(
         var flag = true
         var page = 1
         val token = try {
-            scmService.getToken(gitProjectId.toString())
+            streamGitTokenService.getToken(gitProjectId)
         } catch (e: Throwable) {
             logger.warn("StreamAsyncService|checkBranch|get token error|gitProjectId|$gitProjectId|error| ${e.message}")
             return
-        }.accessToken
+        }
 
         while (flag) {
             // 分页查出工蜂现有的分支
