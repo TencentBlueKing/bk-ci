@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.resources.op
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpWindowsConfigResource
@@ -60,5 +61,9 @@ class OpWindowsConfigResourceImpl @Autowired constructor(
 
     override fun deleteSpec(userId: String, projectId: String, size: String): Result<Boolean> {
         return Result(windowsResourceConfigService.deleteSpec(projectId, size))
+    }
+
+    override fun fetchSpec(userId: String, page: Int?, pageSize: Int?): Result<Page<WindowsSpecResInfo>> {
+        return Result(windowsResourceConfigService.fetchSpec(page, pageSize))
     }
 }

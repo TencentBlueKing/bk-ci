@@ -27,6 +27,8 @@
 
 package com.tencent.devops.remotedev.service
 
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.remotedev.dao.WindowsResourceTypeDao
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.dao.WindowsSpecResourceDao
@@ -97,7 +99,7 @@ class WindowsResourceConfigService @Autowired constructor(
     ): Boolean {
         logger.info(
             "WorkspaceTemplateService|updateWorkspaceTemplate|" +
-                "id|$id|windowsResourceConfig|$windowsResourceConfig"
+                    "id|$id|windowsResourceConfig|$windowsResourceConfig"
         )
 
         // 更新模板信息
@@ -116,7 +118,7 @@ class WindowsResourceConfigService @Autowired constructor(
     ): Boolean {
         logger.info(
             "WorkspaceTemplateService|updateWindowsResourceZone|" +
-                "id|$id|windowsResourceConfig|$windowsResourceConfig"
+                    "id|$id|windowsResourceConfig|$windowsResourceConfig"
         )
 
         // 更新模板信息
@@ -170,5 +172,26 @@ class WindowsResourceConfigService @Autowired constructor(
         size: String
     ): Boolean {
         return windowsSpecResourceDao.delete(dslContext = dslContext, projectId = projectId, size = size)
+    }
+
+    fun fetchSpec(
+        page: Int?,
+        pageSize: Int?
+    ): Page<WindowsSpecResInfo> {
+        val limit = PageUtil.convertPageSizeToSQLLimit(page ?: 1, pageSize ?: 20)
+        val count = windowsSpecResourceDao.fetchSpecCount(dslContext)
+        val recode = windowsSpecResourceDao.fetchSpec(dslContext, limit).map {
+            WindowsSpecResInfo(
+                projectId = it.projectId,
+                size = it.size,
+                quota = it.quota
+            )
+        }
+        return Page(
+            page = page ?: 1,
+            pageSize = pageSize ?: 20,
+            count = count,
+            records = recode
+        )
     }
 }

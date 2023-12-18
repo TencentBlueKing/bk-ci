@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.api.op
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
@@ -167,4 +168,19 @@ interface OpWindowsConfigResource {
         @QueryParam("size")
         size: String
     ): Result<Boolean>
+
+    @ApiOperation("特殊机型配额列表")
+    @DELETE
+    @Path("/spec/list")
+    fun fetchSpec(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("第几页", required = true)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页数据条数", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<WindowsSpecResInfo>>
 }

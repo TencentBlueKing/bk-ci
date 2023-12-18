@@ -1,7 +1,10 @@
 package com.tencent.devops.remotedev.dao
 
+import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.model.remotedev.tables.TWindowsSpecResource
+import com.tencent.devops.model.remotedev.tables.records.TWindowsSpecResourceRecord
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -45,6 +48,23 @@ class WindowsSpecResourceDao {
     ): Int? {
         with(TWindowsSpecResource.T_WINDOWS_SPEC_RESOURCE) {
             return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).and(SIZE.eq(size)).fetchAny()?.quota
+        }
+    }
+
+    fun fetchSpec(
+        dslContext: DSLContext,
+        sqlLimit: SQLLimit
+    ): Result<TWindowsSpecResourceRecord> {
+        with(TWindowsSpecResource.T_WINDOWS_SPEC_RESOURCE) {
+            return dslContext.selectFrom(this).limit(sqlLimit.limit).offset(sqlLimit.offset).fetch()
+        }
+    }
+
+    fun fetchSpecCount(
+        dslContext: DSLContext
+    ): Long {
+        with(TWindowsSpecResource.T_WINDOWS_SPEC_RESOURCE) {
+            return dslContext.selectCount().from(this).fetchOne(0, Long::class.java)!!
         }
     }
 }
