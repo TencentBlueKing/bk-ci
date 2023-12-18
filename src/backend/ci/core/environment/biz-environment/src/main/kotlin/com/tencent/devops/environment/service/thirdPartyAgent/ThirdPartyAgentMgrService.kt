@@ -295,6 +295,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         user: String,
         projectId: String,
         nodeHashId: String,
+        status: String?,
+        pipelineId: String?,
         page: Int?,
         pageSize: Int?
     ): Page<AgentBuildDetail> {
@@ -311,6 +313,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         val agentHashId = HashUtil.encodeLongId(agentRecord.id)
         val agentBuildPage = client.get(ServiceAgentResource::class).listAgentBuild(
             agentId = agentHashId,
+            status = status,
+            pipelineId = pipelineId,
             page = page,
             pageSize = pageSize
         )

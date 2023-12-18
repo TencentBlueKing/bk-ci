@@ -31,9 +31,11 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
+import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentDetail
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -93,7 +95,10 @@ interface ApigwEnvironmentAgentResourceV4 {
         nodeHashId: String
     ): Result<NodeWithPermission?>
 
-    @ApiOperation("获取指定第三方构建机详情信息", tags = ["v4_user_node_third_part_detail", "v4_app_node_third_part_detail"])
+    @ApiOperation(
+        "获取指定第三方构建机详情信息",
+        tags = ["v4_user_node_third_part_detail", "v4_app_node_third_part_detail"]
+    )
     @Path("/third_part_agent_node_detail")
     @GET
     fun getNodeDetail(
@@ -119,4 +124,43 @@ interface ApigwEnvironmentAgentResourceV4 {
         @QueryParam("agentHashId")
         agentHashId: String?
     ): Result<ThirdPartyAgentDetail?>
+
+    @ApiOperation("获取第三方构建机任务")
+    @GET
+    @Path("/third_part_agent_builds")
+    fun listAgentBuilds(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("节点 hashId (nodeHashId、nodeName、agentHashId 三个参数任选其一填入即可)", required = false)
+        @QueryParam("nodeHashId")
+        nodeHashId: String?,
+        @ApiParam("节点 别名 (nodeHashId、nodeName、agentHashId 三个参数任选其一填入即可)", required = false)
+        @QueryParam("nodeName")
+        nodeName: String?,
+        @ApiParam("节点 agentId (nodeHashId、nodeName、agentHashId 三个参数任选其一填入即可)", required = false)
+        @QueryParam("agentHashId")
+        agentHashId: String?,
+        @ApiParam("筛选此状态，支持4种输入(QUEUE,RUNNING,DONE,FAILURE)", required = false)
+        @QueryParam("status")
+        status: String?,
+        @ApiParam("筛选此pipelineId", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?,
+        @ApiParam("第几页", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页条数(默认20, 最大100)", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<AgentBuildDetail>>
 }

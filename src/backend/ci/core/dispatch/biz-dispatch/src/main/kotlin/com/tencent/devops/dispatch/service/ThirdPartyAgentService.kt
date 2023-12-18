@@ -223,9 +223,9 @@ class ThirdPartyAgentService @Autowired constructor(
                 // 只有凭据ID的参与计算
                 if (dockerInfo != null) {
                     if ((
-                        dockerInfo.credential?.user.isNullOrBlank() &&
-                            dockerInfo.credential?.password.isNullOrBlank()
-                        ) &&
+                            dockerInfo.credential?.user.isNullOrBlank() &&
+                                dockerInfo.credential?.password.isNullOrBlank()
+                            ) &&
                         !(dockerInfo.credential?.credentialId.isNullOrBlank())
                     ) {
                         val (userName, password) = try {
@@ -379,15 +379,33 @@ class ThirdPartyAgentService @Autowired constructor(
         }
     }
 
-    fun listAgentBuilds(agentId: String, page: Int?, pageSize: Int?): Page<AgentBuildInfo> {
+    fun listAgentBuilds(
+        agentId: String,
+        status: String?,
+        pipelineId: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Page<AgentBuildInfo> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
         val offset = sqlLimit.offset
         val limit = sqlLimit.limit
 
-        val agentBuildCount = thirdPartyAgentBuildDao.countAgentBuilds(dslContext, agentId)
-        val agentBuilds = thirdPartyAgentBuildDao.listAgentBuilds(dslContext, agentId, offset, limit).map {
+        val agentBuildCount = thirdPartyAgentBuildDao.countAgentBuilds(
+            dslContext = dslContext,
+            agentId = agentId,
+            status = status,
+            pipelineId = pipelineId
+        )
+        val agentBuilds = thirdPartyAgentBuildDao.listAgentBuilds(
+            dslContext = dslContext,
+            agentId = agentId,
+            status = status,
+            pipelineId = pipelineId,
+            offset = offset,
+            limit = limit
+        ).map {
             AgentBuildInfo(
                 projectId = it.projectId,
                 agentId = it.agentId,
@@ -453,9 +471,9 @@ class ThirdPartyAgentService @Autowired constructor(
         // 有些并发情况可能会导致在finish时AgentBuild状态没有被置为Done在这里改一下
         val buildRecord = thirdPartyAgentBuildDao.get(dslContext, buildInfo.buildId, buildInfo.vmSeqId)
         if (buildRecord != null && (
-            buildRecord.status != PipelineTaskStatus.DONE.status ||
-                buildRecord.status != PipelineTaskStatus.FAILURE.status
-            )
+                buildRecord.status != PipelineTaskStatus.DONE.status ||
+                    buildRecord.status != PipelineTaskStatus.FAILURE.status
+                )
         ) {
             thirdPartyAgentBuildDao.updateStatus(
                 dslContext = dslContext,
