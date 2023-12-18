@@ -66,7 +66,8 @@
         watch: {
             'curPipeline.pipelineName': {
                 handler (val) {
-                    window.top.document.title = val ? `${val} | ${this.$t('pipeline')}` : this.$t('documentTitlePipeline')
+                    const title = val ? `${val} | ${this.$t('pipeline')}` : this.$t('documentTitlePipeline')
+                    this.$updateTabTitle?.(title)
                 },
                 immediate: true
             }

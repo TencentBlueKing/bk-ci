@@ -369,7 +369,7 @@
             execDetail (val) {
                 this.isLoading = val === null
                 if (val) {
-                    window.top.document.title = `#${val.buildNum}  ${val.buildMsg} | ${val.pipelineName}`
+                    this.$updateTabTitle?.(`#${val.buildNum}  ${val.buildMsg} | ${val.pipelineName}`)
                 }
             },
             'routerParams.buildNo': {

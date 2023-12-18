@@ -59,7 +59,7 @@
             }
         },
         created () {
-            window.top.document.title = this.$t('documentTitlePipeline')
+            this.$updateTabTitle?.(this.$t('documentTitlePipeline'))
             this.$store.dispatch('requestProjectDetail', { projectId: this.$route.params.projectId })
         }
     }
