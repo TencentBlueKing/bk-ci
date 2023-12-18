@@ -141,15 +141,18 @@ export default {
     },
     requestTemplate: async ({ commit, dispatch, getters }, { projectId, templateId, version }) => {
         try {
+            const versionQuery = version
+                ? {
+                    version
+                }
+                : null
             const [templateRes, atomPropRes] = await Promise.all([
                 request.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}`, {
-                    params: version
-                        ? {
-                            version
-                        }
-                        : null
+                    params: versionQuery
                 }),
-                request.get(`/${PROCESS_API_URL_PREFIX}/user/template/atoms/projects/${projectId}/templates/${templateId}/atom/prop/list`)
+                request.get(`/${PROCESS_API_URL_PREFIX}/user/template/atoms/projects/${projectId}/templates/${templateId}/atom/prop/list`, {
+                    params: versionQuery
+                })
             ])
             const template = templateRes.data.template
             const atomProp = atomPropRes.data
