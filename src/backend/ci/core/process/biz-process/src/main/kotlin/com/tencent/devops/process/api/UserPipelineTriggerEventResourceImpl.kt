@@ -122,7 +122,14 @@ class UserPipelineTriggerEventResourceImpl(
             pipelineTriggerEventService.listRepoTriggerEvent(
                 projectId = projectId,
                 repoHashId = repoHashId,
-                triggerType = triggerType,
+                triggerType = triggerType.let {
+                    // 兼容TGit存量数据的triggerType
+                    if (triggerType == ScmType.CODE_TGIT_CE.name) {
+                        ScmType.CODE_TGIT.name
+                    } else {
+                        it
+                    }
+                },
                 eventType = eventType,
                 triggerUser = triggerUser,
                 pipelineId = pipelineId,
