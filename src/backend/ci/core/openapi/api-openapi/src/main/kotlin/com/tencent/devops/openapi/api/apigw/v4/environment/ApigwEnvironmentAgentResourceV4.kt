@@ -125,7 +125,10 @@ interface ApigwEnvironmentAgentResourceV4 {
         agentHashId: String?
     ): Result<ThirdPartyAgentDetail?>
 
-    @ApiOperation("获取第三方构建机任务")
+    @ApiOperation(
+        "获取第三方构建机任务",
+        tags = ["v4_user_node_third_part_builds", "v4_app_node_third_part_builds"]
+    )
     @GET
     @Path("/third_part_agent_builds")
     fun listAgentBuilds(
