@@ -292,7 +292,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     }
 
     fun listAgentBuilds(
-        user: String,
+        userId: String,
         projectId: String,
         nodeHashId: String,
         status: String?,
@@ -301,6 +301,17 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         pageSize: Int?
     ): Page<AgentBuildDetail> {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
+        if (!environmentPermissionService.checkNodePermission(
+                userId = userId,
+                projectId = projectId,
+                nodeId = nodeId,
+                permission = AuthPermission.VIEW
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = ERROR_NODE_NO_VIEW_PERMISSSION
+            )
+        }
         val agentRecord = thirdPartyAgentDao.getAgentByNodeId(
             dslContext = dslContext,
             nodeId = nodeId,

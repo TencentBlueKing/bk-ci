@@ -209,7 +209,7 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         checkNodeId(nodeHashId)
         return Result(
             thirdPartyAgentService.listAgentBuilds(
-                user = userId,
+                userId = userId,
                 projectId = projectId,
                 nodeHashId = nodeHashId,
                 status = null,
