@@ -1203,6 +1203,7 @@ class RepositoryService @Autowired constructor(
                 pageSize = PageUtil.DEFAULT_PAGE_SIZE,
                 tokenType = TokenTypeEnum.OAUTH
             ).data?.filter { it.accessLevel >= GitAccessLevelEnum.MASTER.level } ?: emptyList()
+            val groupAllMemberNames = groupAllMembers.map { it.username }
             // 获取项目有权限的成员列表
             var page = PageUtil.DEFAULT_PAGE
             do {
@@ -1216,7 +1217,7 @@ class RepositoryService @Autowired constructor(
                 ).data
                 if (!repoAllMembers.isNullOrEmpty()) {
                     // 设置项目有MASTER权限的成员默认权限级别为DEVELOP
-                    (repoAllMembers - groupAllMembers).forEach {
+                    repoAllMembers.filter { !(groupAllMemberNames.contains(it.username)) }.forEach {
                         if (it.accessLevel == GitAccessLevelEnum.MASTER.level) {
                             gitService.updateProjectUserAccessLevel(
                                 userId = it.id,
