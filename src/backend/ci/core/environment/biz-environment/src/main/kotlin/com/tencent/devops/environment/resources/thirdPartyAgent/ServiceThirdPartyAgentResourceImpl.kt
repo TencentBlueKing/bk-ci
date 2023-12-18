@@ -246,20 +246,9 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
 
             else -> null
         } ?: throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_NAME_OR_ID_INVALID)
-        if (!permissionService.checkNodePermission(
-                userId = userId,
-                projectId = projectId,
-                nodeId = HashUtil.decodeIdToLong(hashId),
-                permission = AuthPermission.VIEW
-            )
-        ) {
-            throw ErrorCodeException(
-                errorCode = ERROR_NODE_NO_VIEW_PERMISSSION
-            )
-        }
         return Result(
             thirdPartyAgentService.listAgentBuilds(
-                user = userId,
+                userId = userId,
                 projectId = projectId,
                 nodeHashId = hashId,
                 status = status,
