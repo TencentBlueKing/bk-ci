@@ -170,7 +170,7 @@ interface OpWindowsConfigResource {
     ): Result<Boolean>
 
     @ApiOperation("特殊机型配额列表")
-    @DELETE
+    @GET
     @Path("/spec/list")
     fun fetchSpec(
         @ApiParam(value = "用户ID", required = true)
