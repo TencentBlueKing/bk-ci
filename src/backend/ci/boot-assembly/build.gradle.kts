@@ -40,7 +40,7 @@ dependencies {
     implementation(project(":core:misc:biz-misc-sample"))
     implementation(project(":core:notify:biz-notify"))
     implementation(project(":core:openapi:biz-openapi"))
-    implementation(project(":core:plugin:biz-plugin"))
+    implementation(project(":core:misc:biz-plugin"))
     implementation(project(":core:process:biz-engine"))
     implementation(project(":core:process:biz-process"))
     implementation(project(":core:project:biz-project-sample"))

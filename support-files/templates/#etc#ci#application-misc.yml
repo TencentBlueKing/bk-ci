@@ -84,3 +84,9 @@ influxdb:
   server: __BK_CI_INFLUXDB_ADDR__
   userName: __BK_CI_INFLUXDB_USER__
   password: __BK_CI_INFLUXDB_PASSWORD__
+
+plugin:
+  codecc:
+    path: __BK_CODECC_DATA_DIR__/tools
+    covFile: build_dev.py
+    toolFile: build_tool_dev.py

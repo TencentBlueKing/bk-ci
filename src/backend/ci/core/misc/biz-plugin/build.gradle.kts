@@ -26,12 +26,12 @@
  */
 
 dependencies {
-    api(project(":core:plugin:model-plugin"))
+    api(project(":core:misc:model-plugin"))
     api(project(":core:common:common-api"))
     api(project(":core:common:common-web"))
     api(project(":core:common:common-service"))
     api(project(":core:common:common-client"))
-    api(project(":core:plugin:api-plugin"))
+    api(project(":core:misc:api-plugin"))
     api(project(":core:process:api-process"))
     api(project(":core:repository:api-repository"))
     api(project(":core:quality:api-quality"))

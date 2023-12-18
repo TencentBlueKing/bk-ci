@@ -35,7 +35,8 @@ import org.springframework.context.annotation.ComponentScan
 @ComponentScan(
     "com.tencent.devops.misc",
     "com.tencent.devops.image",
-    "com.tencent.devops.monitoring"
+    "com.tencent.devops.monitoring",
+    "com.tencent.devops.plugin"
 )
 class MiscApplication
 
