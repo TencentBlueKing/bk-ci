@@ -48,9 +48,7 @@ var moduleNames = when (val moduleName = name.split("-")[1]) {
             "plugin",
             "quality",
             "artifactory",
-            "environment",
-            "image",
-            "monitoring"
+            "environment"
         )
     }
 
