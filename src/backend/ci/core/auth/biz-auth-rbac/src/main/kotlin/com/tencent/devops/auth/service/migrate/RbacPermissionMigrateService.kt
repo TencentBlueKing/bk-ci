@@ -197,6 +197,7 @@ class RbacPermissionMigrateService constructor(
     }
 
     override fun migrateSpecificResource(migrateResourceDTO: MigrateResourceDTO): Boolean {
+        logger.info("start to migrate specific resource |$migrateResourceDTO")
         val projectCodes = migrateResourceDTO.projectCodes ?: return true
         val resourceType = migrateResourceDTO.resourceType
         val isMigrateProjectResource = migrateResourceDTO.migrateProjectResource == true
