@@ -28,30 +28,18 @@
 package com.tencent.devops.remotedev.service.workspace
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
-import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
-import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
-import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
-import com.tencent.devops.remotedev.service.BkTicketService
-import com.tencent.devops.remotedev.service.PermissionService
-import com.tencent.devops.remotedev.service.SshPublicKeysService
-import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("LongMethod")
