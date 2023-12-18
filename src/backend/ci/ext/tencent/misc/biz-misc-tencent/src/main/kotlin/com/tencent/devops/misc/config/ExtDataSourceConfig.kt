@@ -116,6 +116,33 @@ class ExtDataSourceConfig {
     }
 
     @Bean
+    fun monitoringDataSource(
+        @Value("\${spring.datasource.monitoring.url}")
+        datasourceUrl: String,
+        @Value("\${spring.datasource.monitoring.username}")
+        datasourceUsername: String,
+        @Value("\${spring.datasource.monitoring.password}")
+        datasourcePassword: String,
+        @Value("\${spring.datasource.monitoring.initSql:#{null}}")
+        datasourceInitSql: String? = null,
+        @Value("\${spring.datasource.monitoring.leakDetectionThreshold:#{0}}")
+        datasourceLeakDetectionThreshold: Long = 0
+    ): DataSource {
+        return HikariDataSource().apply {
+            poolName = "DBPool-Process-monitoring"
+            jdbcUrl = datasourceUrl
+            username = datasourceUsername
+            password = datasourcePassword
+            driverClassName = Driver::class.java.name
+            minimumIdle = 1
+            maximumPoolSize = 5
+            idleTimeout = 60000
+            connectionInitSql = datasourceInitSql
+            leakDetectionThreshold = datasourceLeakDetectionThreshold
+        }
+    }
+
+    @Bean
     fun tsourceJooqConfiguration(
         @Qualifier("tsourceDataSource")
         tsourceDataSource: DataSource
