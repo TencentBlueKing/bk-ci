@@ -70,7 +70,7 @@
                                         v-if="isEnabledPermission"
                                         theme="primary"
                                         text
-                                        :disabled="!template.hasPermission || currentVersionId === props.row.version || template.templateType === 'CONSTRAINT'"
+                                        :disabled="template.templateType === 'CONSTRAINT'"
                                         @click="deleteVersion(props.row)"
                                         v-perm="{
                                             permissionData: {
