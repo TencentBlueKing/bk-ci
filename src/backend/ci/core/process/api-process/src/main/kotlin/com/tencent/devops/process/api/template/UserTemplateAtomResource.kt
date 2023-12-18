@@ -30,9 +30,6 @@ package com.tencent.devops.process.api.template
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.template.TemplateListModel
-import com.tencent.devops.process.pojo.template.TemplateModelDetail
-import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.store.pojo.atom.AtomProp
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -43,7 +40,6 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_TEMPLATE_ATOM"], description = "用户-模板-插件资源")
