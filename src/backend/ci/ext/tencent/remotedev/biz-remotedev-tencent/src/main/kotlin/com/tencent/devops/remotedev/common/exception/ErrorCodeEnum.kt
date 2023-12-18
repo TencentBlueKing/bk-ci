@@ -184,7 +184,7 @@ enum class ErrorCodeEnum(
     PROJECT_DESKTOP_SPEC_RESOURCES_INSUFFICIENT(
         errorType = ErrorType.USER,
         errorCode = "2132035",
-        formatErrorMessage = "Insufficient quota for special model {0} in current project, currently {1}"
+        formatErrorMessage = "project insufficient quota for {0}.Quota {1}, but already {2} instances."
     );
 
     fun getErrorMessage(): String {

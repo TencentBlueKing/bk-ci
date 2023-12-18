@@ -203,7 +203,7 @@ class CreateControl @Autowired constructor(
             if (count >= specQuota) {
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.PROJECT_DESKTOP_SPEC_RESOURCES_INSUFFICIENT.errorCode,
-                    params = arrayOf(workspaceCreate.windowsType.trim(), specQuota.toString())
+                    params = arrayOf(workspaceCreate.windowsType.trim(), specQuota.toString(), count.toString())
                 )
             }
         }
