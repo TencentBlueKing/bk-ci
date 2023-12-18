@@ -28,9 +28,11 @@
 package com.tencent.devops.remotedev.api.op
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
+import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -141,4 +143,44 @@ interface OpWindowsConfigResource {
         @QueryParam("id")
         id: Long
     ): Result<Boolean>
+
+    @ApiOperation("创建或者更新特殊机型配置")
+    @POST
+    @Path("/spec/createOrUpdate")
+    fun createOrUpdateSpec(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: WindowsSpecResInfo
+    ): Result<Boolean>
+
+    @ApiOperation("删除特殊机型配额")
+    @DELETE
+    @Path("/spec/delete")
+    fun deleteSpec(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam(value = "机型", required = true)
+        @QueryParam("size")
+        size: String
+    ): Result<Boolean>
+
+    @ApiOperation("特殊机型配额列表")
+    @GET
+    @Path("/spec/list")
+    fun fetchSpec(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("第几页", required = true)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页数据条数", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<WindowsSpecResInfo>>
 }

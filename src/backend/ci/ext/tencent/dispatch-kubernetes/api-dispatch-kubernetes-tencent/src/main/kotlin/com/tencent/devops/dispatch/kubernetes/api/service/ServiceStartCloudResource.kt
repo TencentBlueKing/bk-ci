@@ -122,5 +122,5 @@ interface ServiceStartCloudResource {
     @Path("/resource/vm")
     fun getResourceVm(
         data: ResourceVmReq
-    ): Result<ResourceVmRespData>
+    ): Result<List<ResourceVmRespData>?>
 }
