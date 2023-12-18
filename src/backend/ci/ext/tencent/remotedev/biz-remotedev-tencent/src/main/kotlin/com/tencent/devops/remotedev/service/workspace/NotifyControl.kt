@@ -57,24 +57,12 @@ import java.util.concurrent.TimeUnit
 @Suppress("LongMethod")
 class NotifyControl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
-    private val workspaceHistoryDao: WorkspaceHistoryDao,
-    private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
-    private val permissionService: PermissionService,
-    private val sshService: SshPublicKeysService,
-    private val client: Client,
-    private val dispatcher: RemoteDevDispatcher,
-    private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val redisHeartBeat: RedisHeartBeat,
-    private val remoteDevBillingDao: RemoteDevBillingDao,
-    private val bkTicketServie: BkTicketService,
     private val workspaceCommon: WorkspaceCommon
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(NotifyControl::class.java)
-        private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
     }
 
     fun notifyWorkspaceInfo(
