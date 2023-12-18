@@ -34,8 +34,11 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.dao.template.TemplateDao
+import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.pojo.atom.AtomProp
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -43,7 +46,8 @@ import javax.ws.rs.core.Response
 
 @Service
 class TemplateAtomService @Autowired constructor(
-    private val templateService: TemplateFacadeService,
+    private val templateDao: TemplateDao,
+    private val dslContext: DSLContext,
     private val client: Client
 ) {
 
@@ -54,9 +58,19 @@ class TemplateAtomService @Autowired constructor(
     fun getTemplateAtomPropList(
         userId: String,
         projectId: String,
-        templateId: String
+        templateId: String,
+        version: Long? = null
     ): Result<Map<String, AtomProp>?> {
-        val modelStr = templateService.getLatestVersion(projectId, templateId).template
+        var templateObj = if (version != null) {
+            templateDao.getTemplate(dslContext = dslContext, version = version)
+        } else {
+            // 版本号为空则默认查最新版本的模板
+            templateDao.getLatestTemplate(dslContext, projectId, templateId)
+        }
+        if (templateObj?.type == TemplateType.CONSTRAINT.name) {
+            templateObj = templateDao.getTemplate(dslContext, templateObj.srcTemplateId)
+        }
+        val modelStr = templateObj?.template
         if (modelStr.isNullOrBlank()) {
             logger.warn("The template is not exist [$projectId|$userId|$templateId]")
             throw ErrorCodeException(

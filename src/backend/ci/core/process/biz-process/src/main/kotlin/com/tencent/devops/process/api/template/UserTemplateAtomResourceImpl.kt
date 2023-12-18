@@ -41,8 +41,14 @@ class UserTemplateAtomResourceImpl @Autowired constructor(
     override fun getTemplateAtomPropList(
         userId: String,
         projectId: String,
-        templateId: String
+        templateId: String,
+        version: Long?
     ): Result<Map<String, AtomProp>?> {
-        return templateAtomService.getTemplateAtomPropList(userId, projectId, templateId)
+        return templateAtomService.getTemplateAtomPropList(
+            userId = userId,
+            projectId = projectId,
+            templateId = templateId,
+            version = version
+        )
     }
 }
