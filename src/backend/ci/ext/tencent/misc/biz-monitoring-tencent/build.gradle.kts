@@ -33,7 +33,6 @@ dependencies {
     api(project(":core:misc:biz-monitoring"))
     api(project(":ext:tencent:misc:model-monitoring-tencent"))
     api(project(":ext:tencent:common:common-notify-tencent"))
-    api(project(":core:common:common-db"))
     api(project(":core:common:common-client"))
     api("org.apache.commons:commons-compress")
     api("org.json:json")
