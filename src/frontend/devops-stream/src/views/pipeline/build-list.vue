@@ -293,7 +293,8 @@
         preciseDiff,
         timeFormatter,
         modifyHtmlTitle,
-        debounce
+        debounce,
+        throttle
     } from '@/utils'
     import optMenu from '@/components/opt-menu'
     import codeSection from '@/components/code-section'
@@ -629,7 +630,7 @@
             },
 
             loopGetList () {
-                register.installWsMessage(this.getBuildData, 'IFRAMEprocess', 'history')
+                register.installWsMessage(throttle(this.getBuildData, 2000), 'IFRAMEprocess', 'history')
             },
 
             getBuildData () {
