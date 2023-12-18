@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
+import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import io.swagger.annotations.Api
@@ -122,5 +123,13 @@ interface ServiceRemoteDevResource {
         owner: String?,
         @ApiParam(value = "分配数据，必填", required = true)
         data: OpProjectWorkspaceAssignData
+    ): Result<Boolean>
+
+    @ApiOperation("用来通知蓝盾客户端消息")
+    @POST
+    @Path("/notify")
+    fun notifyWorkspaceInfo(
+        @ApiParam(value = "通知信息", required = true)
+        notifyData: WorkspaceNotifyData
     ): Result<Boolean>
 }

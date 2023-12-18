@@ -491,7 +491,6 @@ CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_EXPERT_SUPPORT_CONFIG` (
     KEY `idx_type` (`TYPE`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
 -- ----------------------------
 -- Table structure for T_DAILY_CGS_DATA 统计每天云桌面的数据快照
 -- ----------------------------
@@ -506,5 +505,16 @@ CREATE TABLE IF NOT EXISTS `T_DAILY_CGS_DATA` (
     KEY `idx_date` (`DATE`),
     KEY `idx_type` (`OWNER_TYPE`)
     ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COMMENT='统计每天云桌面的数据快照';
+
+-- ----------------------------
+-- Table structure for T_WINDOWS_SPEC_RESOURCE windows特殊机型配额表
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_WINDOWS_SPEC_RESOURCE` (
+	`PROJECT_ID` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT '' NOT NULL COMMENT '项目ID',
+	`SIZE` varchar(10) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT '' NOT NULL COMMENT '资源类型',
+	`QUOTA` INT NOT NULL COMMENT '配额',
+    PRIMARY KEY (`PROJECT_ID`, `SIZE`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='windows特殊机型配额表';
+
 
 SET FOREIGN_KEY_CHECKS = 1;

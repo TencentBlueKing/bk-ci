@@ -591,8 +591,8 @@ class WorkspaceStartCloudClient @Autowired constructor(
 
     fun getResourceVm(
         data: ResourceVmReq
-    ): ResourceVmRespData {
-        val url = "$bcsCloudUrl/api/v1/remotedevenv/resource/vm"
+    ): List<ResourceVmRespData>? {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/resource/vm/list"
         val body = JsonUtil.toJson(data, false)
         val request = Request.Builder()
             .url(url)
@@ -614,7 +614,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 logger.debug("get resource vm body: $body response: $responseContent")
                 val resp: ResourceVmResp = jacksonObjectMapper().readValue(responseContent)
                 if (OK == resp.code) {
-                    return resp.data
+                    return resp.data?.zoneResources
                 } else {
                     throw BuildFailureException(
                         ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,

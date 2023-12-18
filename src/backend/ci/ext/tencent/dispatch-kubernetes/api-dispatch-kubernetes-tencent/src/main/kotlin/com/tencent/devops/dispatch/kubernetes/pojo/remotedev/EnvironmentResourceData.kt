@@ -20,7 +20,7 @@ data class EnvironmentResourceData(
     var locked: Boolean? = false,
     val projectId: String?,
     val disk: String?,
-    val hDisk: String?
+    val hdisk: String?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
