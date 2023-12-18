@@ -1195,6 +1195,14 @@ class RepositoryService @Autowired constructor(
                     ruleMap = ruleMap
                 )
             }
+            // 获取项目组管理员列表
+            val groupAllMembers = gitService.getProjectGroupMembersAll(
+                token = accessToken.accessToken,
+                gitProjectId = DEFAULT_PROJECT_GROUP_NAME,
+                page = PageUtil.DEFAULT_PAGE,
+                pageSize = PageUtil.DEFAULT_PAGE_SIZE,
+                tokenType = TokenTypeEnum.OAUTH
+            ).data?.filter { it.accessLevel >= GitAccessLevelEnum.MASTER.level } ?: emptyList()
             // 获取项目有权限的成员列表
             var page = PageUtil.DEFAULT_PAGE
             do {
@@ -1208,7 +1216,7 @@ class RepositoryService @Autowired constructor(
                 ).data
                 if (!repoAllMembers.isNullOrEmpty()) {
                     // 设置项目有MASTER权限的成员默认权限级别为DEVELOP
-                    repoAllMembers.forEach {
+                    (repoAllMembers - groupAllMembers).forEach {
                         if (it.accessLevel == GitAccessLevelEnum.MASTER.level) {
                             gitService.updateProjectUserAccessLevel(
                                 userId = it.id,
@@ -1231,5 +1239,6 @@ class RepositoryService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(RepositoryService::class.java)
         const val MAX_ALIAS_LENGTH = 255
+        const val DEFAULT_PROJECT_GROUP_NAME = "bkdevops-plugins-test"
     }
 }

@@ -284,6 +284,14 @@ interface IGitService {
         token: String
     ): Result<List<GitMember>>
 
+    fun getProjectGroupMembersAll(
+        gitProjectId: String,
+        page: Int,
+        pageSize: Int,
+        tokenType: TokenTypeEnum,
+        token: String
+    ): Result<List<GitMember>>
+
     fun getGitFileInfo(
         gitProjectId: String,
         filePath: String?,

@@ -1592,6 +1592,32 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "获取项目组有权限的成员列表"], value = "bk_tgit_api_time")
+    override fun getProjectGroupMembersAll(
+        gitProjectId: String,
+        page: Int,
+        pageSize: Int,
+        tokenType: TokenTypeEnum,
+        token: String
+    ): Result<List<GitMember>> {
+        val newPage = if (page == 0) 1 else page
+        val newPageSize = if (pageSize > 100) 100 else pageSize
+        val url = StringBuilder(
+            "$gitCIUrl/api/v3/groups/${URLEncoder.encode(gitProjectId, "UTF8")}/members/all"
+        )
+        setToken(tokenType, url, token)
+        url.append("&page=$newPage&per_page=$newPageSize")
+        logger.info("getProjectGroupMembersAll request url: $url")
+        val request = Request.Builder().url(url.toString()).get().build()
+        OkhttpUtils.doHttp(request).use {
+            val data = it.body!!.string()
+            if (!it.isSuccessful) {
+                throw RuntimeException("fail to getProjectGroupMembersAll with: $url($data)")
+            }
+            return Result(JsonUtil.to(data, object : TypeReference<List<GitMember>>() {}))
+        }
+    }
+
     @BkTimed(extraTags = ["operation", "git_file_info"], value = "bk_tgit_api_time")
     override fun getGitFileInfo(
         gitProjectId: String,
