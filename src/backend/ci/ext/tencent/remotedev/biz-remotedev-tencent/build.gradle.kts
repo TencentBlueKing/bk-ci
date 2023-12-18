@@ -35,7 +35,7 @@ dependencies {
     api(project(":core:common:common-client"))
     api(project(":core:common:common-redis"))
     api(project(":core:common:common-db"))
-    api(project(":core:common:common-kafka"))
+    api(project(":ext:tencent:common:common-kafka-tencent"))
     api(project(":core:common:common-websocket"))
     api(project(":core:notify:api-notify"))
     api(project(":core:auth:api-auth"))
