@@ -59,6 +59,7 @@
             }
         },
         created () {
+            this.$updateTabTitle?.(this.$t('documentTitlePipeline'))
             this.$store.dispatch('requestProjectDetail', { projectId: this.$route.params.projectId })
         }
     }

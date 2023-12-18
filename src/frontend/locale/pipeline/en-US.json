@@ -1223,5 +1223,6 @@
   "downloadLater": "Download later",
   "downloadDisabledTips": "Exceeds 10 GB. Please download in batches from the artifact repository.",
   "templateName": "Template",
-  "templateVersion": "Template Version"
+  "templateVersion": "Template Version",
+  "documentTitlePipeline": "Pipeline | BK-CI | Tencent BlueKing"
 }
