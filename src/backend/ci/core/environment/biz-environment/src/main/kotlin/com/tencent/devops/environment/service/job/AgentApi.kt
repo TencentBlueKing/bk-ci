@@ -40,10 +40,10 @@ import org.springframework.stereotype.Component
 
 @Component("AgentApi")
 class AgentApi {
-    @Value("\${job.bkDevBkAppCode:}")
+    @Value("\${job.bkAppCode:}")
     private val bkAppCode = ""
 
-    @Value("\${job.bkDevBkAppSecret:}")
+    @Value("\${job.bkAppSecret:}")
     private val bkAppSecret = ""
 
     @Value("\${job.bkScopeType:#{null}}")
