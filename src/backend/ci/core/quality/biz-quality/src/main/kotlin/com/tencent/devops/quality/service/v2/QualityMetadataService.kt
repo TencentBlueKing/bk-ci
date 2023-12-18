@@ -217,6 +217,7 @@ class QualityMetadataService @Autowired constructor(
         val data = metadataDao.listByElementType(dslContext, elementType)
         val testData = data?.filter { it.extra == IN_READY_TEST } ?: listOf()
         val prodData = data?.filter { !(it.extra.startsWith(IN_READY_TEST)) } ?: listOf()
+        logger.info("serviceRefreshMetadata listByElementType:$data |testData:$testData|prodData:$prodData")
         val userId = testData.firstOrNull()?.createUser ?: ""
 
         val resultMap = mutableMapOf<String, String>()
