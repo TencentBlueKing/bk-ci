@@ -730,6 +730,7 @@ class PipelineRepositoryService constructor(
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion,
                     versionStatus = versionStatus,
+                    branchLifecycle = null,
                     description = description
                 )
                 // 初始化流水线构建统计表
@@ -933,6 +934,7 @@ class PipelineRepositoryService constructor(
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion,
                     versionStatus = versionStatus,
+                    branchLifecycle = null,
                     description = description,
                     baseVersion = realBaseVersion ?: (version - 1)
                 )
@@ -1235,6 +1237,7 @@ class PipelineRepositoryService constructor(
                 triggerVersion = resultVersion!!.triggerVersion,
                 settingVersion = resultVersion!!.settingVersion,
                 versionStatus = VersionStatus.COMMITTING,
+                branchLifecycle = null,
                 description = resultVersion!!.description
             )
         }
