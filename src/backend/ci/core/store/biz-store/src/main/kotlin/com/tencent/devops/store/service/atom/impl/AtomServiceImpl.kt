@@ -600,7 +600,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         atomRunInfoKey: String,
         version: String,
         atomCode: String
-    ): AtomRunInfo{
+    ): AtomRunInfo {
         val atomRunInfoFromDb = getAtomRunInfo(
             atomCode = atomCode,
             version = version,
