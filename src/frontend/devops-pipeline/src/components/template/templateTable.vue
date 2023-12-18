@@ -56,6 +56,7 @@
                                 <td width="8%">
                                     <div
                                         v-if="isEnabledPermission"
+                                        class="pipeline-instance"
                                         @click="toInstanceList(row)"
                                         v-perm="{
                                             hasPermission: row.canView,
