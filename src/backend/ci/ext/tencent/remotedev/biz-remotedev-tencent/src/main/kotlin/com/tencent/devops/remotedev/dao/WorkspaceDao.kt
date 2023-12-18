@@ -216,6 +216,23 @@ class WorkspaceDao {
         }
     }
 
+    /**
+     * 获取正在使用的 workspace
+     */
+    fun fetchUserWorkspaceName(
+        dslContext: DSLContext,
+        projectId: String,
+        ownerType: WorkspaceOwnerType
+    ): Set<String> {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(OWNER_TYPE.eq(ownerType.name))
+                .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                .fetch().map { it.name }.toSet()
+        }
+    }
+
     private fun TWorkspace.unionSelect(
         shared: TWorkspaceShared,
         creator: String,
@@ -438,8 +455,10 @@ class WorkspaceDao {
         val t2 = TWorkspaceShared.T_WORKSPACE_SHARED.`as`("t2")
         val t3 = TWorkspaceWindows.T_WORKSPACE_WINDOWS.`as`("t3")
         val conditions = mutableListOf<Condition>()
-        conditions.add(t1.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal).and(t1.STATUS.notEqual(WorkspaceStatus.PREPARING.ordinal))
-        .and(t1.STATUS.notEqual(WorkspaceStatus.DELIVERING_FAILED.ordinal)))
+        conditions.add(
+            t1.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal).and(t1.STATUS.notEqual(WorkspaceStatus.PREPARING.ordinal))
+                .and(t1.STATUS.notEqual(WorkspaceStatus.DELIVERING_FAILED.ordinal))
+        )
 
         status?.let {
             conditions.add(t1.STATUS.eq(it.ordinal))
@@ -481,7 +500,13 @@ class WorkspaceDao {
             .and(t1.OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
             .unionAll(
                 dslContext.selectDistinct(
-                    t1.NAME, t1.DISPLAY_NAME, t1.PROJECT_ID, t1.CREATOR, t1.STATUS, t1.CREATE_TIME, t1.CREATOR.`as`("SHARED_USER")
+                    t1.NAME,
+                    t1.DISPLAY_NAME,
+                    t1.PROJECT_ID,
+                    t1.CREATOR,
+                    t1.STATUS,
+                    t1.CREATE_TIME,
+                    t1.CREATOR.`as`("SHARED_USER")
                 )
                     .from(t1)
                     .where(conditions)
@@ -792,22 +817,24 @@ class WorkspaceDao {
         if (cgsList.isNullOrEmpty()) {
             return
         }
-        dslContext.batch(cgsList.map {
-            with(TDailyCgsData.T_DAILY_CGS_DATA) {
-                dslContext.insertInto(
-                    this,
-                    DATE,
-                    OWNER_TYPE,
-                    NUMBER,
-                    CREATE_TIME
-                ).values(
-                    it["CUR_DATE"] as String,
-                    it["OWNER_TYPE"] as String,
-                    it["VALUE"] as Int,
-                    LocalDateTime.now()
-                ).onDuplicateKeyIgnore()
+        dslContext.batch(
+            cgsList.map {
+                with(TDailyCgsData.T_DAILY_CGS_DATA) {
+                    dslContext.insertInto(
+                        this,
+                        DATE,
+                        OWNER_TYPE,
+                        NUMBER,
+                        CREATE_TIME
+                    ).values(
+                        it["CUR_DATE"] as String,
+                        it["OWNER_TYPE"] as String,
+                        it["VALUE"] as Int,
+                        LocalDateTime.now()
+                    ).onDuplicateKeyIgnore()
+                }
             }
-        }).execute()
+        ).execute()
     }
 
     fun fetchDailyCgsData(

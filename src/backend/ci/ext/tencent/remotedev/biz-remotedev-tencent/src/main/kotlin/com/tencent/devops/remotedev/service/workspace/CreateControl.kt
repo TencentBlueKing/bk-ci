@@ -54,6 +54,7 @@ import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.RemoteDevCommonConfig
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
+import com.tencent.devops.remotedev.dao.WindowsSpecResourceDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
@@ -112,7 +113,8 @@ class CreateControl @Autowired constructor(
     private val workspaceCommon: WorkspaceCommon,
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val deliverControl: DeliverControl,
-    private val bkccService: BKCCService
+    private val bkccService: BKCCService,
+    private val windowsSpecResourceDao: WindowsSpecResourceDao
 ) {
 
     companion object {
@@ -175,17 +177,35 @@ class CreateControl @Autowired constructor(
         val projectLimit = projectInfo.properties?.cloudDesktopNum
             ?: redisCache.get(RedisKeys.REDIS_PROJECT_WIN_COUNT_LIMIT)?.toInt()
             ?: 20
-        val count = workspaceDao.countUserWorkspace(
+        val workspaceNames = workspaceDao.fetchUserWorkspaceName(
             dslContext = dslContext,
             projectId = projectInfo.englishName,
-            ownerType = WorkspaceOwnerType.PROJECT,
-            unionShared = false
+            ownerType = WorkspaceOwnerType.PROJECT
         )
-        if (count + workspaceCreate.count > projectLimit) {
+        if (workspaceNames.size + workspaceCreate.count > projectLimit) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.PROJECT_DESKTOP_RESOURCES_INSUFFICIENT.errorCode,
                 params = arrayOf(projectLimit.toString())
             )
+        }
+        // 检查是否有特殊机型的配额限制
+        val specQuota = windowsSpecResourceDao.fetchQuota(
+            dslContext = dslContext,
+            projectId = projectInfo.englishName,
+            size = workspaceCreate.windowsType.trim()
+        )
+        if (specQuota != null) {
+            val count = workspaceWindowsDao.fetchUsedSizeCount(
+                dslContext = dslContext,
+                workspaceNames = workspaceNames,
+                size = workspaceCreate.windowsType.trim()
+            )
+            if (count >= specQuota) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.PROJECT_DESKTOP_SPEC_RESOURCES_INSUFFICIENT.errorCode,
+                    params = arrayOf(workspaceCreate.windowsType.trim(), specQuota.toString(), count.toString())
+                )
+            }
         }
 
         // 检查自定义和非自定义镜像额度
@@ -666,7 +686,7 @@ class CreateControl @Autowired constructor(
         if (yaml.isBlank()) {
             logger.warn(
                 "create workspace get devfile blank,return." +
-                        "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
+                    "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
             )
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
@@ -870,9 +890,9 @@ class CreateControl @Autowired constructor(
     private fun startCloudResourceCountCheck(type: String, zone: String) =
         workspaceCommon.syncStartCloudResourceList().count {
             it.status == 11 &&
-                    it.machineType == type &&
-                    it.zoneId.replace(Regex("\\d+"), "") == zone &&
-                    it.locked != true
+                it.machineType == type &&
+                it.zoneId.replace(Regex("\\d+"), "") == zone &&
+                it.locked != true
         }
 
     private fun doPreparing(workspace: Workspace) {
@@ -900,7 +920,7 @@ class CreateControl @Autowired constructor(
             userId
         }
         return subUserId.replace(Regex("[@_]"), "-") +
-                "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
+            "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
     }
 
     // 判断用户定义的镜像是否在默认镜像白名单列表中
