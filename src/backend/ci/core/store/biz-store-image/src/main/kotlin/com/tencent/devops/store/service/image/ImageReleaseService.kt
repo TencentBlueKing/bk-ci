@@ -687,7 +687,7 @@ abstract class ImageReleaseService {
                 imageType = imageSourceType,
                 registryUser = userName,
                 registryPwd = password,
-                registryHost = imageRecord.imageRepoUrl!!
+                registryHost = imageRecord.imageRepoUrl
             )
             val checkImageInitPipelineResp = client.get(ServicePipelineInitResource::class)
                 .initCheckImagePipeline(userId, projectCode!!, checkImageInitPipelineReq).data

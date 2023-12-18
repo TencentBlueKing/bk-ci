@@ -73,7 +73,7 @@ class CheckImageInitPipelineService @Autowired constructor(
         startParams["imageCode"] = imageCode
         startParams["imageName"] = imageName
         startParams["version"] = version
-        startParams["registryHost"] = registryHost
+        registryHost?.let { startParams["registryHost"] = it }
         imageType?.let { startParams["imageType"] = it }
         registryUser?.let { startParams["registryUser"] = it }
         registryPwd?.let { startParams["registryPwd"] = it }
