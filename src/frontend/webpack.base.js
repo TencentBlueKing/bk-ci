@@ -1,4 +1,6 @@
 const path = require('path')
+const fs = require('fs')
+const webpack = require('webpack')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
 const { VueLoaderPlugin } = require('vue-loader')
@@ -95,9 +97,11 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
         },
         plugins: [
             // new BundleAnalyzerPlugin(),
+            new webpack.HotModuleReplacementPlugin(),
             new VueLoaderPlugin(),
             new BundleWebpackPlugin({
                 dist: envDist,
+                isDev,
                 bundleName: 'assets_bundle'
             }),
             new MiniCssExtractPlugin({
@@ -151,12 +155,20 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             vuex: 'Vuex'
         },
         devServer: {
-            static: path.join(__dirname, envDist),
+            static: {
+                directory: path.join(__dirname, envDist),
+                watch: false
+            },
             allowedHosts: 'all',
             historyApiFallback: true,
             client: {
-                webSocketURL: 'auto://127.0.0.1:' + port + '/ws'
+                webSocketURL: 'ws://127.0.0.1:' + port + '/ws'
             },
+            // 可以在本地生成证书，开启Https
+            // https: {
+            //     key: fs.readFileSync(path.join(__dirname, 'localhost+2-key.pem')),
+            //     cert: fs.readFileSync(path.join(__dirname, './localhost+2.pem'))
+            // },
             hot: isDev,
             port
         }

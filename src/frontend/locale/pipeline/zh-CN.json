@@ -1269,6 +1269,7 @@
   "submitSetting": "提交设置",
   "commitMsgPlaceholder": "请输入提交信息",
   "commitMsgDesc": "将作为 commit message 提交到代码库",
+  "versionDescPlaceholder": "请输入版本描述",
   "targetBranch": "目标分支",
   "pipelineSetting": "流水线设置",
   "COMMIT_TO_MASTER": "提交到默认分支",

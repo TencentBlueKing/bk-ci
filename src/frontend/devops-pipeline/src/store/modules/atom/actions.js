@@ -147,8 +147,10 @@ export default {
     },
     requestTemplate: async ({ commit, dispatch }, { projectId, templateId, version }) => {
         try {
-            const url = version ? `/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}?version=${version}` : `/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}`
-            const response = await request.get(url)
+            const url = `/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}`
+            const response = await request.get(url, {
+                params: version ? { version } : {}
+            })
             dispatch('setPipeline', response.data.template)
             commit(SET_TEMPLATE, {
                 template: response.data
@@ -174,7 +176,9 @@ export default {
         try {
             const [pipelineRes, atomPropRes] = await Promise.all([
                 request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version ?? ''}`),
-                request.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/projects/${projectId}/pipelines/${pipelineId}/atom/prop/list`)
+                request.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/projects/${projectId}/pipelines/${pipelineId}/atom/prop/list`, {
+                    params: version ? { version } : {}
+                })
             ])
             const { setting, model } = pipelineRes.data.modelAndSetting
             const atomProp = atomPropRes.data

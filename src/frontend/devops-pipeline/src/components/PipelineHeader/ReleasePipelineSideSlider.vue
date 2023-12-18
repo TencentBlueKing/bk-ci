@@ -129,9 +129,9 @@
                         <bk-input
                             type="textarea"
                             v-model="releaseParams.description"
-                            :placeholder="$t('commitMsgPlaceholder')"
+                            :placeholder="$t(releaseParams.enablePac ? 'commitMsgPlaceholder' : 'versionDescPlaceholder')"
                         />
-                        <span class="release-pac-version-desc">
+                        <span v-if="releaseParams.enablePac" class="release-pac-version-desc">
                             {{ $t('commitMsgDesc') }}
                         </span>
                     </bk-form-item>
