@@ -147,6 +147,7 @@ class StreamBuildReviewListener @Autowired constructor(
                 reviewType = buildReviewEvent.reviewType
             )
             action.data.context.requestEventId = requestEvent.id
+            action.data.context.mrTargetBranch = requestEvent.targetBranch
 
             when (buildReviewEvent.reviewType) {
                 BuildReviewType.STAGE_REVIEW, BuildReviewType.QUALITY_CHECK_IN, BuildReviewType.QUALITY_CHECK_OUT -> {

@@ -70,7 +70,8 @@ data class StreamTriggerContext(
     var gitMrReviewInfo: GitMrReviewInfo? = null,
     var gitMrInfo: GitMrInfo? = null,
     var gitDefaultBranchLatestCommitInfo: Pair<String?, GitCommit?>? = null,
-    var extensionAction: String? = null
+    var extensionAction: String? = null,
+    var mrTargetBranch: String? = null
 )
 
 /**
