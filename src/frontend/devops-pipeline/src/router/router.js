@@ -19,6 +19,7 @@
 
 import zyPipelineRoute from './zhiyan'
 import ftpPipelineRoute from './ftp'
+import tapdPipelineRoute from './tapd'
 
 const pipelines = () => import(/* webpackChunkName: "pipelines" */'../views')
 
@@ -298,6 +299,11 @@ const routes = [
         path: '/pipeline/ftp/:projectId',
         component: pipelines,
         children: ftpPipelineRoute
+    },
+    {
+        path: '/pipeline/tapd/:projectId',
+        component: pipelines,
+        children: tapdPipelineRoute
     }
 ]
 
