@@ -40,7 +40,18 @@ dependencies {
 
 var moduleNames = when (val moduleName = name.split("-")[1]) {
     "misc" -> {
-        listOf("process", "project", "repository", "dispatch", "plugin", "quality", "artifactory", "environment")
+        listOf(
+            "process",
+            "project",
+            "repository",
+            "dispatch",
+            "plugin",
+            "quality",
+            "artifactory",
+            "environment",
+            "image",
+            "monitoring"
+        )
     }
 
     "statistics" -> {
