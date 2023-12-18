@@ -191,7 +191,7 @@
             this.init()
             this.projectList = this.$store.state.projectList
             if (this.userId) {
-                this.aliasName = JSON.parse(localStorage.getItem(CODE_REPOSITORY_SEARCH_VAL))
+                this.aliasName = JSON.parse(localStorage.getItem(CODE_REPOSITORY_SEARCH_VAL)) || ''
             }
 
             this.refreshCodelibList()
@@ -258,7 +258,7 @@
             clearAliasName () {
                 if (this.aliasName === '') {
                     this.refreshCodelibList()
-                    localStorage.setItem(CODE_REPOSITORY_SEARCH_VAL, JSON.stringify(this.aliasName))
+                    localStorage.removeItem(CODE_REPOSITORY_SEARCH_VAL)
                 }
             },
 
@@ -293,11 +293,11 @@
             },
 
             handleEnterSearch (val) {
-                localStorage.setItem(CODE_REPOSITORY_SEARCH_VAL, JSON.stringify(val))
+                localStorage.setItem(CODE_REPOSITORY_SEARCH_VAL, JSON.stringify(val.trim()))
                 this.$router.push({
                     query: {
                         ...this.$route.query,
-                        searchName: val
+                        searchName: val.trim()
                     }
                 })
                 this.refreshCodelibList(this.projectId, 1)
@@ -346,8 +346,13 @@
                 this.sortBy = sortBy
                 this.sortType = sortType
                 this.refreshCodelibList()
-                localStorage.setItem('codelibSortType', sortType)
-                localStorage.setItem('codelibSortBy', sortBy)
+                if (sortBy && sortType) {
+                    localStorage.setItem('codelibSortType', sortType)
+                    localStorage.setItem('codelibSortBy', sortBy)
+                } else {
+                    localStorage.removeItem('codelibSortType')
+                    localStorage.removeItem('codelibSortBy')
+                }
                 this.$router.push({
                     query: {
                         ...this.$route.query,
