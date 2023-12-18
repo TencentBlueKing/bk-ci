@@ -33,5 +33,6 @@ package com.tencent.devops.remotedev.pojo.image
 enum class ImageStatus {
     BUILDING,
     SUCCESS,
-    FAILURE;
+    FAILURE,
+    DELETED;
 }
