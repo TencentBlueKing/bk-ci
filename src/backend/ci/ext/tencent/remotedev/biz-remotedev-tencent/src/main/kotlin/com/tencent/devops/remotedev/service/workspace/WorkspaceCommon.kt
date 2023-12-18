@@ -32,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.redis.RedisOperation
@@ -63,6 +64,7 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
+import com.tencent.devops.remotedev.pojo.WorkspaceKafkaInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
@@ -113,7 +115,8 @@ class WorkspaceCommon @Autowired constructor(
     private val deleteControl: DeleteControl,
     private val objectMapper: ObjectMapper,
     private val whiteListService: WhiteListService,
-    private val workspaceWindowsDao: WorkspaceWindowsDao
+    private val workspaceWindowsDao: WorkspaceWindowsDao,
+    private val kafkaClient: KafkaClient
 ) {
 
     companion object {
@@ -123,6 +126,9 @@ class WorkspaceCommon @Autowired constructor(
 
     @Value("\${notice.wework:#{null}}")
     private var weworkId: String? = null
+
+    @Value("\${spring.kafka.topics.cgsInfoTopic:#{null}}")
+    val buildCommitsTopic: String? = null
 
     // 封装统一分发WS的方法
     fun dispatchWebsocketPushEvent(
@@ -687,6 +693,20 @@ class WorkspaceCommon @Autowired constructor(
             }.onFailure {
                 logger.warn("notify WINDOWS_GPU_SAFE_INIT_FAILED fail ${it.message}")
             }
+        }
+    }
+
+    // 云桌面删除成功后往kafka发送消息
+    fun sendCgsInfo2Kafka(workspaceKafkaInfo: WorkspaceKafkaInfo) {
+        if (buildCommitsTopic.isNullOrBlank()) return
+        kotlin.runCatching {
+            kafkaClient.send(
+                buildCommitsTopic!!, JsonUtil.toJson(
+                workspaceKafkaInfo
+            )
+            )
+        }.onFailure {
+            logger.warn("send cgs info 2 kafka fail ${it.message}")
         }
     }
 }

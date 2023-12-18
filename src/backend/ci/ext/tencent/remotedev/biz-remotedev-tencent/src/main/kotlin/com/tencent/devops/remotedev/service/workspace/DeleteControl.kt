@@ -52,6 +52,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
+import com.tencent.devops.remotedev.pojo.WorkspaceKafkaInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
@@ -380,6 +381,16 @@ class DeleteControl @Autowired constructor(
                     )
                 )
             }
+
+            // 删除成功后发送kafka消息给安全侧消费
+            workspaceCommon.sendCgsInfo2Kafka(
+                workspaceKafkaInfo = WorkspaceKafkaInfo(
+                    workspaceName = workspaceName,
+                    projectId = workspace.projectId,
+                    ip = detail?.environmentIP ?: "",
+                    regionId = (detail?.regionId ?: "").toString()
+                )
+            )
         } else {
             workspaceDao.updateWorkspaceStatus(
                 workspaceName = workspaceName,
