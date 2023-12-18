@@ -114,7 +114,7 @@ class StartCloudInterfaceService @Autowired constructor(
                     locked = it.basic?.needLock,
                     projectId = it.basic?.projectId ?: "",
                     disk = it.pvcs?.firstOrNull { pvc -> pvc.pvcClass == "ssd" }?.pvcSize,
-                    hDisk = it.pvcs?.firstOrNull { pvc -> pvc.pvcClass == "hdd" }?.pvcSize
+                    hdisk = it.pvcs?.firstOrNull { pvc -> pvc.pvcClass == "hdd" }?.pvcSize
                 )
             )
         }
@@ -145,7 +145,7 @@ class StartCloudInterfaceService @Autowired constructor(
                 locked = ByteUtils.byte2Bool(it.locked),
                 projectId = it.projectId,
                 disk = it.disk,
-                hDisk = it.hdisk
+                hdisk = it.hdisk
             )
         }
     }

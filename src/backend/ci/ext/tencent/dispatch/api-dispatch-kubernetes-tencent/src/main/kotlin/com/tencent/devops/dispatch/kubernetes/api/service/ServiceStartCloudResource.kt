@@ -124,7 +124,7 @@ interface ServiceStartCloudResource {
     @Path("/resource/vm")
     fun getResourceVm(
         data: ResourceVmReq
-    ): Result<ResourceVmRespData>
+    ): Result<List<ResourceVmRespData>?>
 
     @ApiOperation("根据eid拿到对应vm信息")
     @GET

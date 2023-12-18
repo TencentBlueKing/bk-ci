@@ -47,6 +47,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmRespData
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts
@@ -121,6 +122,17 @@ class CreateControl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(CreateControl::class.java)
         private const val BLANK_TEMPLATE_YAML_NAME = "BLANK"
         private const val BLANK_TEMPLATE_ID = 1
+
+        fun sumResourceVmFree(res: List<ResourceVmRespData>?, zoneShortName: String, size: String): Int? {
+            return res?.filter {
+                it.zoneId.startsWith(zoneShortName) &&
+                        it.machineResources?.any { ma -> ma.machineType == size } == true
+            }?.sumOf {
+                it.machineResources
+                    ?.filter { res -> res.machineType == size }
+                    ?.sumOf { ma -> ma.free ?: 0 } ?: 0
+            }
+        }
     }
 
     // 用于控制台上创建
@@ -210,19 +222,32 @@ class CreateControl @Autowired constructor(
 
         // 检查自定义和非自定义镜像额度
         if (workspaceCreate.imageCosFile.isNotBlank()) {
-            val resource = client.get(ServiceStartCloudResource::class).getResourceVm(
+            val data = client.get(ServiceStartCloudResource::class).getResourceVm(
                 ResourceVmReq(
                     zoneId = windowsZone.zoneShortName,
                     machineType = windowsConfig.size
                 )
-            ).data!!
-            if (resource.free < workspaceCreate.count) {
+            ).data
+            val free = sumResourceVmFree(
+                res = data,
+                zoneShortName = windowsZone.zoneShortName,
+                size = windowsConfig.size
+            ) ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
+                params = arrayOf(
+                    windowsZone.zone,
+                    windowsConfig.size,
+                    "0",
+                    workspaceCreate.count.toString()
+                )
+            )
+            if (free < workspaceCreate.count) {
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
                     params = arrayOf(
                         windowsZone.zone,
                         windowsConfig.size,
-                        resource.free.toString(),
+                        free.toString(),
                         workspaceCreate.count.toString()
                     )
                 )

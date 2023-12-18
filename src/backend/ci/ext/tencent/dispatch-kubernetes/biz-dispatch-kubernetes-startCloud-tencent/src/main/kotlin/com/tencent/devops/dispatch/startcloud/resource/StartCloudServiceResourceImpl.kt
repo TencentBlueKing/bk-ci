@@ -81,7 +81,7 @@ class StartCloudServiceResourceImpl @Autowired constructor(
         return Result(startCloudInterfaceService.unShareWorkspace(operator, resourceId, receivers))
     }
 
-    override fun getResourceVm(data: ResourceVmReq): Result<ResourceVmRespData> {
+    override fun getResourceVm(data: ResourceVmReq): Result<List<ResourceVmRespData>?> {
         return Result(workspaceStartCloudClient.getResourceVm(data))
     }
 }
