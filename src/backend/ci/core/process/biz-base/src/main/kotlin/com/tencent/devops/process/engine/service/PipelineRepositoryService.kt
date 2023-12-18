@@ -813,9 +813,7 @@ class PipelineRepositoryService constructor(
                         triggerVersion, originModel, model
                     )
                 }
-                versionName = PipelineVersionUtils.getVersionName(
-                    pipelineVersion, triggerVersion, settingVersion
-                )
+
                 watcher.start("updatePipelineInfo")
                 // 旧逻辑 bak —— 写入INFO表后进行了version的自动+1
                 // 新逻辑 #8161
@@ -863,6 +861,11 @@ class PipelineRepositoryService constructor(
                             pipelineId = pipelineId
                         )
                         operationLogType = OperationLogType.RELEASE_MASTER_VERSION
+                        val newVersionName = PipelineVersionUtils.getVersionName(
+                            pipelineVersion, triggerVersion, settingVersion
+                        )
+                        versionName = newVersionName
+                        operationLogParams = newVersionName
                         version = if (draftVersion == null || baseVersion == null) {
                             // 没有已有草稿或者旧接口保存时，直接增加正式版本，基准为上一个发布版本
                             val latestVersion = pipelineResourceVersionDao.getVersionResource(
@@ -871,14 +874,12 @@ class PipelineRepositoryService constructor(
                                 pipelineId = pipelineId,
                                 version = null
                             )
-                            versionName?.let { operationLogParams = it }
                             realBaseVersion = realBaseVersion ?: latestVersion?.version ?: 0
                             (latestVersion?.version ?: 0) + 1
                         } else {
                             if (draftVersion.baseVersion != baseVersion) throw ErrorCodeException(
                                 errorCode = ProcessMessageCode.ERROR_PIPELINE_IS_NOT_THE_LATEST
                             )
-                            operationLogParams = draftVersion.versionName ?: draftVersion.version.toString()
                             draftVersion.version
                         }
 
