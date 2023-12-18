@@ -62,7 +62,8 @@ class RbacPermissionService constructor(
     private val authResourceCodeConverter: AuthResourceCodeConverter,
     private val permissionSuperManagerService: PermissionSuperManagerService,
     private val rbacCacheService: RbacCacheService,
-    private val client: Client
+    private val client: Client,
+    private val authUserDailyService: AuthUserDailyService
 ) : PermissionService {
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionService::class.java)
@@ -209,7 +210,11 @@ class RbacPermissionService constructor(
                 .resources(listOf(resourceNode))
                 .build()
 
-            return policyService.verifyPermissions(queryPolicyDTO)
+            val result = policyService.verifyPermissions(queryPolicyDTO)
+            if (result) {
+                authUserDailyService.save(projectId = projectCode, userId = userId)
+            }
+            return result
         } finally {
             watcher.stop()
             LogUtils.printCostTimeWE(watcher)
@@ -288,11 +293,14 @@ class RbacPermissionService constructor(
                 .attribute(attribute)
                 .system(iamConfiguration.systemId)
                 .build()
-            return policyService.batchVerifyPermissions(
+            val result = policyService.batchVerifyPermissions(
                 userId,
                 actionList,
                 listOf(resourceDTO)
             )
+            result.values.filter { it }
+                .forEach { _ -> authUserDailyService.save(projectId = projectCode, userId = userId) }
+            return result
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to batch validate user resource permission|" +

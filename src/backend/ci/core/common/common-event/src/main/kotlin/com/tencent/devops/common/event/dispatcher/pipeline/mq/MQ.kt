@@ -307,6 +307,10 @@ object MQ {
     const val ROUTE_AUTH_RESOURCE_GROUP_MODIFY = "r.auth.resource.group.modify"
     const val QUEUE_AUTH_RESOURCE_GROUP_MODIFY = "q.auth.resource.group.modify"
 
+    const val EXCHANGE_PROJECT_USER_DAILY_FANOUT = "e.metrics.project.user.daily.exchange.fanout"
+    const val QUEUE_PROJECT_USER_DAILY_METRICS = "q.metrics.project.user.daily.queue"
+
+
     // 数据库分片
     const val EXCHANGE_SHARDING_ROUTING_RULE_FANOUT = "e.sharding.routing.rule.exchange.fanout"
 }
