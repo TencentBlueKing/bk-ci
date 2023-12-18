@@ -221,6 +221,9 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         page: Int?,
         pageSize: Int?
     ): Future<MarketTemplateResp> {
+        BkApiUtil.getHttpServletRequest()?.let {
+            ThreadLocalUtil.set(REFERER, it.getHeader(REFERER))
+        }
         return executor.submit(Callable<MarketTemplateResp> {
             val installedTemplates = mutableListOf<MarketItem>()
             val canInstallTemplates = mutableListOf<MarketItem>()
@@ -276,61 +279,62 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             classifyList?.forEach {
                 classifyMap[it.id] = it.classifyCode
             }
-            BkApiUtil.getHttpServletRequest()?.let {
-                ThreadLocalUtil.set(REFERER, it.getHeader(REFERER))
-            }
-            templates.forEach {
-                val code = it[tTemplate.TEMPLATE_CODE] as String
-                val visibleList = templateVisibleData?.get(code)
-                val statistic = templateStatisticData[code]
-                val honorInfos = templateHonorInfoMap[code]
-                val indexInfos = templateIndexInfosMap[code]
-                val members = memberData?.get(code)
-                val publicFlag = it[tTemplate.PUBLIC_FLAG] as Boolean
-                val canInstall = storeCommonService.generateInstallFlag(
-                    defaultFlag = publicFlag,
-                    members = members,
-                    userId = userId,
-                    visibleList = visibleList,
-                    userDeptList = userDeptList
-                )
-                val installed = installedTemplateCodes?.contains(code)
-                val classifyId = it[tTemplate.CLASSIFY_ID] as String
-                val logoUrl = it[tTemplate.LOGO_URL]
-                val marketItem = MarketItem(
-                    id = it[tTemplate.ID] as String,
-                    name = it[tTemplate.TEMPLATE_NAME] as String,
-                    code = code,
-                    version = it[tTemplate.VERSION] as String,
-                    type = "",
-                    rdType = TemplateRdTypeEnum.getTemplateRdType((it[tTemplate.TEMPLATE_RD_TYPE] as Byte).toInt()),
-                    classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
-                    logoUrl = logoUrl?.let {
-                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
-                    },
-                    publisher = it[tTemplate.PUBLISHER] as String,
-                    os = listOf(),
-                    downloads = statistic?.downloads
-                        ?: 0,
-                    score = statistic?.score
-                        ?: 0.toDouble(),
-                    summary = it[tTemplate.SUMMARY],
-                    flag = canInstall,
-                    publicFlag = it[tTemplate.PUBLIC_FLAG] as Boolean,
-                    buildLessRunFlag = false,
-                    docsLink = "",
-                    modifier = it[tTemplate.MODIFIER] as String,
-                    updateTime = DateTimeUtil.toDateTime(it[tTemplate.UPDATE_TIME] as LocalDateTime),
-                    installed = installed,
-                    honorInfos = honorInfos,
-                    indexInfos = indexInfos,
-                    hotFlag = statistic?.hotFlag
-                )
-                when {
-                    installed == true -> installedTemplates.add(marketItem)
-                    canInstall -> canInstallTemplates.add(marketItem)
-                    else -> cannotInstallTemplates.add(marketItem)
+            try {
+                templates.forEach {
+                    val code = it[tTemplate.TEMPLATE_CODE] as String
+                    val visibleList = templateVisibleData?.get(code)
+                    val statistic = templateStatisticData[code]
+                    val honorInfos = templateHonorInfoMap[code]
+                    val indexInfos = templateIndexInfosMap[code]
+                    val members = memberData?.get(code)
+                    val publicFlag = it[tTemplate.PUBLIC_FLAG] as Boolean
+                    val canInstall = storeCommonService.generateInstallFlag(
+                        defaultFlag = publicFlag,
+                        members = members,
+                        userId = userId,
+                        visibleList = visibleList,
+                        userDeptList = userDeptList
+                    )
+                    val installed = installedTemplateCodes?.contains(code)
+                    val classifyId = it[tTemplate.CLASSIFY_ID] as String
+                    val logoUrl = it[tTemplate.LOGO_URL]
+                    val marketItem = MarketItem(
+                        id = it[tTemplate.ID] as String,
+                        name = it[tTemplate.TEMPLATE_NAME] as String,
+                        code = code,
+                        version = it[tTemplate.VERSION] as String,
+                        type = "",
+                        rdType = TemplateRdTypeEnum.getTemplateRdType((it[tTemplate.TEMPLATE_RD_TYPE] as Byte).toInt()),
+                        classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
+                        logoUrl = logoUrl?.let {
+                            StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                        },
+                        publisher = it[tTemplate.PUBLISHER] as String,
+                        os = listOf(),
+                        downloads = statistic?.downloads
+                            ?: 0,
+                        score = statistic?.score
+                            ?: 0.toDouble(),
+                        summary = it[tTemplate.SUMMARY],
+                        flag = canInstall,
+                        publicFlag = it[tTemplate.PUBLIC_FLAG] as Boolean,
+                        buildLessRunFlag = false,
+                        docsLink = "",
+                        modifier = it[tTemplate.MODIFIER] as String,
+                        updateTime = DateTimeUtil.toDateTime(it[tTemplate.UPDATE_TIME] as LocalDateTime),
+                        installed = installed,
+                        honorInfos = honorInfos,
+                        indexInfos = indexInfos,
+                        hotFlag = statistic?.hotFlag
+                    )
+                    when {
+                        installed == true -> installedTemplates.add(marketItem)
+                        canInstall -> canInstallTemplates.add(marketItem)
+                        else -> cannotInstallTemplates.add(marketItem)
+                    }
                 }
+            } finally {
+                ThreadLocalUtil.remove(REFERER)
             }
 
             return@Callable MarketTemplateResp(

@@ -269,6 +269,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         pageSize: Int?,
         urlProtocolTrim: Boolean = false
     ): Future<MarketAtomResp> {
+        BkApiUtil.getHttpServletRequest()?.let {
+            ThreadLocalUtil.set(REFERER, it.getHeader(REFERER))
+        }
         return executor.submit(Callable<MarketAtomResp> {
             val results = mutableListOf<MarketItem>()
             // 获取插件
@@ -323,71 +326,72 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             classifyList?.forEach {
                 classifyMap[it.id] = it.classifyCode
             }
-            BkApiUtil.getHttpServletRequest()?.let {
-                ThreadLocalUtil.set(REFERER, it.getHeader(REFERER))
-            }
-            atoms.forEach {
-                val atomCode = it[tAtom.ATOM_CODE] as String
-                val visibleList = atomVisibleData?.get(atomCode)
-                val statistic = atomStatisticData[atomCode]
-                val atomHonorInfos = atomHonorInfoMap[atomCode]
-                val atomIndexInfos = atomIndexInfosMap[atomCode]
-                val members = memberData?.get(atomCode)
-                val defaultFlag = it[tAtom.DEFAULT_FLAG] as Boolean
-                val flag = storeCommonService.generateInstallFlag(defaultFlag = defaultFlag,
-                    members = members,
-                    userId = userId,
-                    visibleList = visibleList,
-                    userDeptList = userDeptList)
-                val classifyId = it[tAtom.CLASSIFY_ID] as String
-                var logoUrl = it[tAtom.LOGO_URL]
-                logoUrl = logoUrl?.let {
-                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
-                }
-                logoUrl = if (logoUrl?.contains("?") == true) {
-                    logoUrl.plus("&logo=true")
-                } else {
-                    logoUrl?.plus("?logo=true")
-                }
-                if (urlProtocolTrim) { // #4796 LogoUrl跟随主站协议
-                    logoUrl = RegexUtils.trimProtocol(logoUrl)
-                }
-                val osStr = it[tAtom.OS]
-                results.add(
-                    MarketItem(
-                        id = it[tAtom.ID] as String,
-                        name = it[tAtom.NAME] as String,
-                        code = atomCode,
-                        version = it[tAtom.VERSION] as String,
-                        type = it[tAtom.JOB_TYPE] as String,
-                        rdType = AtomTypeEnum.getAtomType((it[tAtom.ATOM_TYPE] as Byte).toInt()),
-                        classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
-                        category = AtomCategoryEnum.getAtomCategory((it[tAtom.CATEGROY] as Byte).toInt()),
-                        logoUrl = logoUrl,
-                        publisher = it[tAtom.PUBLISHER] as String,
-                        os = if (!osStr.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(
-                            osStr,
-                            List::class.java
-                        ) as List<String> else null,
-                        downloads = statistic?.downloads ?: 0,
-                        score = statistic?.score ?: 0.toDouble(),
-                        summary = it[tAtom.SUMMARY],
-                        flag = flag,
-                        publicFlag = it[tAtom.DEFAULT_FLAG] as Boolean,
-                        buildLessRunFlag = if (it[tAtom.BUILD_LESS_RUN_FLAG] == null) {
-                            false
-                        } else it[tAtom.BUILD_LESS_RUN_FLAG] as Boolean,
-                        docsLink = if (it[tAtom.DOCS_LINK] == null) "" else it[tAtom.DOCS_LINK] as String,
-                        modifier = it[tAtom.MODIFIER] as String,
-                        updateTime = DateTimeUtil.toDateTime(it[tAtom.UPDATE_TIME] as LocalDateTime),
-                        recommendFlag = it[tAtomFeature.RECOMMEND_FLAG],
-                        yamlFlag = it[tAtomFeature.YAML_FLAG],
-                        recentExecuteNum = statistic?.recentExecuteNum ?: 0,
-                        indexInfos = atomIndexInfos,
-                        honorInfos = atomHonorInfos,
-                        hotFlag = statistic?.hotFlag
+            try {
+                atoms.forEach {
+                    val atomCode = it[tAtom.ATOM_CODE] as String
+                    val visibleList = atomVisibleData?.get(atomCode)
+                    val statistic = atomStatisticData[atomCode]
+                    val atomHonorInfos = atomHonorInfoMap[atomCode]
+                    val atomIndexInfos = atomIndexInfosMap[atomCode]
+                    val members = memberData?.get(atomCode)
+                    val defaultFlag = it[tAtom.DEFAULT_FLAG] as Boolean
+                    val flag = storeCommonService.generateInstallFlag(defaultFlag = defaultFlag,
+                        members = members,
+                        userId = userId,
+                        visibleList = visibleList,
+                        userDeptList = userDeptList)
+                    val classifyId = it[tAtom.CLASSIFY_ID] as String
+                    var logoUrl = it[tAtom.LOGO_URL]
+                    logoUrl = logoUrl?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                    }
+                    logoUrl = if (logoUrl?.contains("?") == true) {
+                        logoUrl.plus("&logo=true")
+                    } else {
+                        logoUrl?.plus("?logo=true")
+                    }
+                    if (urlProtocolTrim) { // #4796 LogoUrl跟随主站协议
+                        logoUrl = RegexUtils.trimProtocol(logoUrl)
+                    }
+                    val osStr = it[tAtom.OS]
+                    results.add(
+                        MarketItem(
+                            id = it[tAtom.ID] as String,
+                            name = it[tAtom.NAME] as String,
+                            code = atomCode,
+                            version = it[tAtom.VERSION] as String,
+                            type = it[tAtom.JOB_TYPE] as String,
+                            rdType = AtomTypeEnum.getAtomType((it[tAtom.ATOM_TYPE] as Byte).toInt()),
+                            classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
+                            category = AtomCategoryEnum.getAtomCategory((it[tAtom.CATEGROY] as Byte).toInt()),
+                            logoUrl = logoUrl,
+                            publisher = it[tAtom.PUBLISHER] as String,
+                            os = if (!osStr.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(
+                                osStr,
+                                List::class.java
+                            ) as List<String> else null,
+                            downloads = statistic?.downloads ?: 0,
+                            score = statistic?.score ?: 0.toDouble(),
+                            summary = it[tAtom.SUMMARY],
+                            flag = flag,
+                            publicFlag = it[tAtom.DEFAULT_FLAG] as Boolean,
+                            buildLessRunFlag = if (it[tAtom.BUILD_LESS_RUN_FLAG] == null) {
+                                false
+                            } else it[tAtom.BUILD_LESS_RUN_FLAG] as Boolean,
+                            docsLink = if (it[tAtom.DOCS_LINK] == null) "" else it[tAtom.DOCS_LINK] as String,
+                            modifier = it[tAtom.MODIFIER] as String,
+                            updateTime = DateTimeUtil.toDateTime(it[tAtom.UPDATE_TIME] as LocalDateTime),
+                            recommendFlag = it[tAtomFeature.RECOMMEND_FLAG],
+                            yamlFlag = it[tAtomFeature.YAML_FLAG],
+                            recentExecuteNum = statistic?.recentExecuteNum ?: 0,
+                            indexInfos = atomIndexInfos,
+                            honorInfos = atomHonorInfos,
+                            hotFlag = statistic?.hotFlag
+                        )
                     )
-                )
+                }
+            } finally {
+                ThreadLocalUtil.remove(REFERER)
             }
 
             return@Callable MarketAtomResp(count, page, pageSize, results)
