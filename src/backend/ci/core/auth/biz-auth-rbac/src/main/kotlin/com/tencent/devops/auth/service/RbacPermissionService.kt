@@ -52,7 +52,6 @@ import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.api.user.UserPipelineViewResource
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
-import kotlin.math.log
 
 @Suppress("TooManyFunctions", "LongMethod", "LongParameterList")
 class RbacPermissionService constructor(
