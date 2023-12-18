@@ -25,11 +25,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:misc:api-image"))
-    api(project(":core:store:api-store"))
-}
-
 plugins {
-    `task-deploy-to-maven`
+    `task-gen-jooq`
 }
