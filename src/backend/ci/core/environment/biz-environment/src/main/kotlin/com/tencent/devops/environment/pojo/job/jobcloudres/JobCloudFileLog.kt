@@ -24,5 +24,11 @@ data class JobCloudFileLog(
     val status: Int,
     @ApiModelProperty(value = "文件分发日志内容", required = true)
     @JsonProperty("log_content")
-    val logContent: String
+    val logContent: String,
+    @ApiModelProperty(value = "文件大小")
+    val size: String?,
+    @ApiModelProperty(value = "文件传输速率")
+    val speed: String?,
+    @ApiModelProperty(value = "文件传输进度")
+    val process: String?
 )

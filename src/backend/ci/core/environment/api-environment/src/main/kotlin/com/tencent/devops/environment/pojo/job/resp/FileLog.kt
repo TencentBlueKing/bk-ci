@@ -18,5 +18,11 @@ data class FileLog(
     @ApiModelProperty(value = "任务状态", notes = "1-等待开始，2-上传中，3-下载中，4-成功，5-失败", required = true)
     val status: Int,
     @ApiModelProperty(value = "文件分发日志内容", required = true)
-    val logContent: String
+    val logContent: String,
+    @ApiModelProperty(value = "文件大小")
+    val size: String?,
+    @ApiModelProperty(value = "文件传输速率")
+    val speed: String?,
+    @ApiModelProperty(value = "文件传输进度")
+    val process: String?
 )

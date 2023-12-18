@@ -294,7 +294,10 @@ class JobService @Autowired constructor(
                                     },
                                     destPath = jobCloudFileLog.destPath,
                                     status = jobCloudFileLog.status,
-                                    logContent = jobCloudFileLog.logContent
+                                    logContent = jobCloudFileLog.logContent,
+                                    size = jobCloudFileLog.size,
+                                    speed = jobCloudFileLog.speed,
+                                    process = jobCloudFileLog.process
                                 )
                             }
                         )
