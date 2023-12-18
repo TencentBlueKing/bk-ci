@@ -48,13 +48,7 @@ class TxFirstStoreHostDecorateImpl : AbstractStoreHostDecorateImpl() {
 
     override fun handleHostBus(str: String): String {
         // 获取请求来源
-        val referer: String?
-        try {
-            referer = BkApiUtil.getHttpServletRequest()?.getHeader(REFERER) ?: ThreadLocalUtil.get(REFERER)?.toString()
-        } finally {
-            // 清空线程变量
-            ThreadLocalUtil.remove(REFERER)
-        }
+        val referer = BkApiUtil.getHttpServletRequest()?.getHeader(REFERER) ?: ThreadLocalUtil.get(REFERER)?.toString()
         val hostReplaceFlag = if (!referer.isNullOrBlank() && !devxStaticRepoPrefixUrl.isNullOrBlank()) {
             // 判断请求来源的域名是否是devx环境的域名
             val host = RegexUtils.splitDomainContextPath(devxStaticRepoPrefixUrl!!)!!.first
