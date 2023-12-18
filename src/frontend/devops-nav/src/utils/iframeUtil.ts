@@ -1,5 +1,5 @@
 import eventBus from './eventBus'
-import { toggleAsidePanel, toggleDialog, goToPage } from './util'
+import { goToPage, toggleAsidePanel, toggleDialog } from './util'
 
 interface UrlParam {
     url: string
