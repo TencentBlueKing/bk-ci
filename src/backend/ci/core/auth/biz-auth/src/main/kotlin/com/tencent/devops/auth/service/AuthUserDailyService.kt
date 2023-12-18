@@ -32,6 +32,7 @@ import com.google.common.hash.BloomFilter
 import com.google.common.hash.Funnels
 import com.tencent.devops.auth.dao.AuthUserDailyDao
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.nio.charset.Charset
@@ -44,6 +45,7 @@ class AuthUserDailyService @Autowired constructor(
 ) {
 
     companion object {
+        private val logger = LoggerFactory.getLogger(AuthUserDailyService::class.java)
         // 期待的用户数10w
         private const val EXPECTED_USER_COUNT = 100000
         private val bloomFilter = BloomFilter.create(
@@ -57,14 +59,18 @@ class AuthUserDailyService @Autowired constructor(
         projectId: String,
         userId: String
     ) {
-        val bloomKey = "${projectId}_$userId"
-        if (!bloomFilter.mightContain(bloomKey)) {
-            authUserDailyDao.save(
-                dslContext = dslContext,
-                projectId = projectId,
-                userId = userId
-            )
-            bloomFilter.put(bloomKey)
+        try {
+            val bloomKey = "${projectId}_$userId"
+            if (!bloomFilter.mightContain(bloomKey)) {
+                authUserDailyDao.save(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    userId = userId
+                )
+                bloomFilter.put(bloomKey)
+            }
+        } catch (ignored: Throwable) {
+            logger.error("save auth user error", ignored)
         }
     }
 }
