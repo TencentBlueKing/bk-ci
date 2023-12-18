@@ -269,10 +269,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         pageSize: Int?,
         urlProtocolTrim: Boolean = false
     ): Future<MarketAtomResp> {
-        BkApiUtil.getHttpServletRequest()?.let {
-            ThreadLocalUtil.set(REFERER, it.getHeader(REFERER))
-        }
+        val referer = BkApiUtil.getHttpServletRequest()?.getHeader(REFERER)
         return executor.submit(Callable<MarketAtomResp> {
+            referer?.let {
+                ThreadLocalUtil.set(REFERER, referer)
+            }
             val results = mutableListOf<MarketItem>()
             // 获取插件
             val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode.split(",")
