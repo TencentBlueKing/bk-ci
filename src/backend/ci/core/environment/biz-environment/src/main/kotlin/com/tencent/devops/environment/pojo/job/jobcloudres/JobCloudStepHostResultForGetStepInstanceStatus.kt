@@ -35,9 +35,6 @@ data class JobCloudStepHostResultForGetStepInstanceStatus(
         value = "用户通过job_success/job_fail函数模板自定义输出的结果。仅脚本任务存在该参数", allowEmptyValue = true
     )
     val tag: String? = null,
-    @ApiModelProperty(value = "基于status与tag字段的分组键，仅用于调用方验证分组内数据数量是否正确，请勿强依赖该字段")
-    @JsonProperty("group_key")
-    val groupKey: String?,
     @ApiModelProperty(value = "脚本任务exit code", required = true)
     @JsonProperty("exit_code")
     val exitCode: Int?,

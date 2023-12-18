@@ -86,6 +86,7 @@ import com.tencent.devops.environment.pojo.job.resp.ScriptExecuteResult
 import com.tencent.devops.environment.pojo.job.resp.ScriptStepInfo
 import com.tencent.devops.environment.pojo.job.resp.StepHostResult
 import com.tencent.devops.environment.pojo.job.resp.StepHostResultForGetStepInstanceStatus
+import com.tencent.devops.environment.pojo.job.resp.StepResultGroup
 import com.tencent.devops.environment.pojo.job.resp.TaskTerminateResult
 import com.tencent.devops.environment.pojo.job.resp.TopoNode
 import com.tencent.devops.environment.pojo.job.resp.VariableServer
@@ -652,22 +653,29 @@ class JobService @Autowired constructor(
                     endTime = jobCloudGetStepInstanceStatus.endTime,
                     type = jobCloudGetStepInstanceStatus.type,
                     startTime = jobCloudGetStepInstanceStatus.startTime,
-                    stepHostResultList = jobCloudGetStepInstanceStatus.stepHostResultList.map { stepHostResult ->
-                        StepHostResultForGetStepInstanceStatus(
-                            bkHostId = stepHostResult.bkHostId,
-                            ip = stepHostResult.ip,
-                            ipv6 = stepHostResult.ipv6,
-                            bkCloudId = stepHostResult.bkCloudId,
-                            bkAgentId = stepHostResult.bkAgentId,
-                            bkCloudName = stepHostResult.bkCloudName,
-                            status = stepHostResult.status,
-                            statusDesc = stepHostResult.statusDesc,
-                            tag = stepHostResult.tag,
-                            groupKey = stepHostResult.groupKey,
-                            exitCode = stepHostResult.exitCode,
-                            startTime = stepHostResult.startTime,
-                            endTime = stepHostResult.endTime,
-                            totalTime = stepHostResult.totalTime
+                    stepResultGroupList = jobCloudGetStepInstanceStatus.stepResultGroupList.map { stepResultGroup ->
+                        StepResultGroup(
+                            resultType = stepResultGroup.resultType,
+                            resultTypeDesc = stepResultGroup.resultTypeDesc,
+                            tag = stepResultGroup.tag,
+                            hostSize = stepResultGroup.hostSize,
+                            hostResultList = stepResultGroup.hostResultList.map { stepHostResult ->
+                                StepHostResultForGetStepInstanceStatus(
+                                    bkHostId = stepHostResult.bkHostId,
+                                    ip = stepHostResult.ip,
+                                    ipv6 = stepHostResult.ipv6,
+                                    bkCloudId = stepHostResult.bkCloudId,
+                                    bkAgentId = stepHostResult.bkAgentId,
+                                    bkCloudName = stepHostResult.bkCloudName,
+                                    status = stepHostResult.status,
+                                    statusDesc = stepHostResult.statusDesc,
+                                    tag = stepHostResult.tag,
+                                    exitCode = stepHostResult.exitCode,
+                                    startTime = stepHostResult.startTime,
+                                    endTime = stepHostResult.endTime,
+                                    totalTime = stepHostResult.totalTime
+                                )
+                            }
                         )
                     }
                 )

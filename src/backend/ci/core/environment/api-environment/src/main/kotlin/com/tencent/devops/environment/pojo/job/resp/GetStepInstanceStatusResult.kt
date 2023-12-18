@@ -24,6 +24,6 @@ data class GetStepInstanceStatusResult(
     val type: Int,
     @ApiModelProperty(value = "开始执行时间，Unix时间戳，单位毫秒")
     val startTime: Long,
-    @ApiModelProperty(value = "每个主机的任务执行结果")
-    val stepHostResultList: List<StepHostResultForGetStepInstanceStatus>
+    @ApiModelProperty(value = "任务执行结果分组列表")
+    val stepResultGroupList: List<StepResultGroup>
 )

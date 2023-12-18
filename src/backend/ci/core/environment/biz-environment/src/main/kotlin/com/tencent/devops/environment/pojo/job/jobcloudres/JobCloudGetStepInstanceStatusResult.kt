@@ -31,7 +31,7 @@ data class JobCloudGetStepInstanceStatusResult(
     @ApiModelProperty(value = "开始执行时间，Unix时间戳，单位毫秒")
     @JsonProperty("start_time")
     val startTime: Long,
-    @ApiModelProperty(value = "每个主机的任务执行结果")
-    @JsonProperty("step_host_result_list")
-    val stepHostResultList: List<JobCloudStepHostResultForGetStepInstanceStatus>
+    @ApiModelProperty(value = "任务执行结果分组列表")
+    @JsonProperty("step_result_group_list")
+    val stepResultGroupList: List<JobCloudStepResultGroup>
 )
