@@ -69,6 +69,18 @@ interface ServiceGitCiResource {
         gitProjectId: String
     ): Result<GitToken>
 
+    @ApiOperation("从缓存获取项目的超级token")
+    @GET
+    @Path("/getTokenFromCache")
+    fun getTokenFromCache(
+        @ApiParam("gitProjectId", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam("requestNew", required = false)
+        @QueryParam("requestNew")
+        requestNew: Boolean? = false
+    ): Result<String>
+
     @ApiOperation("校验用户git项目权限")
     @GET
     @Path("/checkUserGitAuth")

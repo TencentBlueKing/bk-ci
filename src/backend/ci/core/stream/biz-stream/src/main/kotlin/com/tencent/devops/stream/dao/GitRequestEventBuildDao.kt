@@ -680,23 +680,6 @@ class GitRequestEventBuildDao {
         dslContext.batchUpdate(builds).execute()
     }
 
-    fun lastBuildByProject(dslContext: DSLContext, gitProjectIds: Set<Long>?): List<TGitRequestEventBuildRecord> {
-        if (gitProjectIds.isNullOrEmpty()) {
-            return emptyList()
-        }
-        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            return dslContext.selectFrom(this)
-                .where(
-                    UPDATE_TIME.`in`(
-                        dslContext.select(DSL.max(UPDATE_TIME))
-                            .from(this)
-                            .groupBy(GIT_PROJECT_ID)
-                            .having(GIT_PROJECT_ID.`in`(gitProjectIds))
-                    )
-                ).fetch()
-        }
-    }
-
     fun isBuildExist(dslContext: DSLContext, buildId: String): Boolean {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext.selectCount().from(this)
@@ -771,7 +754,8 @@ class GitRequestEventBuildDao {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val records = dslContext.select(DSL.max(ID))
                 .from(this)
-                .groupBy(PIPELINE_ID).having(PIPELINE_ID.`in`(pipelineIds))
+                .where(PIPELINE_ID.`in`(pipelineIds))
+                .groupBy(PIPELINE_ID)
                 .fetch()
             return if (records.isEmpty()) {
                 emptyList()

@@ -35,24 +35,28 @@ import com.tencent.devops.dispatch.docker.service.ExtDockerResourceOptionsServic
 import com.tencent.devops.dispatch.docker.service.ExtDockerResourceOptionsServiceImpl
 import com.tencent.devops.dispatch.docker.service.debug.ExtDebugService
 import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.DependsOn
 import org.springframework.core.Ordered
 
 @Suppress("ALL")
 @Configuration
 @ConditionalOnWebApplication
+@DependsOn(value = ["jooqConfiguration"])
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class DispatchDockerBeanConfiguration {
+class DispatchDockerBeanConfiguration @Autowired constructor(
+    private val dslContext: DSLContext
+) {
 
     @Bean
     @ConditionalOnMissingBean(DockerHostProxyService::class)
     fun dockerHostProxyService(
-        pipelineDockerIPInfoDao: PipelineDockerIPInfoDao,
-        dslContext: DSLContext
+        pipelineDockerIPInfoDao: PipelineDockerIPInfoDao
     ) = DockerHostProxyServiceImpl(pipelineDockerIPInfoDao, dslContext)
 
     @Bean

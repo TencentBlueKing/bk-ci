@@ -2,6 +2,7 @@ package com.tencent.devops.auth.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import io.swagger.annotations.Api
@@ -21,6 +22,11 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceResourceMemberResource {
+
+    /**
+     * @param resourceType 是个枚举类型详见 AuthResourceType
+     * @see AuthResourceType
+     */
     @GET
     @Path("/{projectCode}/getResourceGroupUsers")
     @ApiOperation("获取特定资源下用户组成员")

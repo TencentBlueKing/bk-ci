@@ -57,6 +57,10 @@ class ServiceGitCiResourceImpl @Autowired constructor(
         return Result(gitService.getToken(gitProjectId))
     }
 
+    override fun getTokenFromCache(gitProjectId: String, requestNew: Boolean?): Result<String> {
+        return Result(gitService.getTokenFromCache(gitProjectId, requestNew == true))
+    }
+
     override fun checkUserGitAuth(
         userId: String,
         gitProjectId: String,
@@ -87,8 +91,7 @@ class ServiceGitCiResourceImpl @Autowired constructor(
         token: String,
         gitProjectId: String,
         page: Int,
-        pageSize:
-        Int,
+        pageSize: Int,
         search: String?
     ): Result<List<GitMember>> {
         return Result(gitCiService.getGitCIMembers(token, gitProjectId, page, pageSize, search))
@@ -145,7 +148,7 @@ class ServiceGitCiResourceImpl @Autowired constructor(
     ): Result<GitCodeProjectInfo?> {
         return gitCiService.getGitCodeProjectInfo(
             gitProjectId = gitProjectId,
-            token = gitService.getToken(gitProjectId).accessToken,
+            token = gitService.getTokenFromCache(gitProjectId),
             useAccessToken = true
         )
     }
@@ -227,7 +230,7 @@ class ServiceGitCiResourceImpl @Autowired constructor(
     ): Result<List<GitMember>> {
         return Result(
             gitCiService.getGitCIAllMembers(
-                token = gitService.getToken(gitProjectId).accessToken,
+                token = gitService.getTokenFromCache(gitProjectId),
                 gitProjectId = gitProjectId,
                 page = page,
                 pageSize = pageSize,
