@@ -69,7 +69,10 @@ class CodeCCDispatchListener @Autowired constructor(
     override fun onStartup(dispatchMessage: DispatchMessage) {
         logger.info("CodeCC dispatcher startUp dispatchMessage: $dispatchMessage")
 
-        val codeccDispatchMessage = JsonUtil.to(dispatchMessage.event.dispatchType.value, CodeccDispatchMessage::class.java)
+        val codeccDispatchMessage = JsonUtil.to(
+            json = dispatchMessage.event.dispatchType.value,
+            type = CodeccDispatchMessage::class.java
+        )
 
         // 判断是否为devcloud构建，-101(pcg开源扫描)，-3(闭源扫描)
         if (codeccDispatchMessage.codeccTaskId == -101L || codeccDispatchMessage.codeccTaskId == -3L) {
