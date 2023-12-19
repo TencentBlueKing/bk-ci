@@ -40,7 +40,6 @@ import java.nio.charset.Charset
 import java.time.LocalDate
 import java.util.concurrent.TimeUnit
 
-
 @Service
 @Suppress("UnstableApiUsage")
 class AuthProjectUserMetricsService @Autowired constructor(
