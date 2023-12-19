@@ -86,8 +86,8 @@ class WindowsGpuResourceDao {
                     ByteUtils.bool2Byte(it.imageStandard ?: false),
                     it.node ?: "",
                     it.image ?: "",
-                    it.cpu,
-                    it.mem
+                    it.cpu ?: "",
+                    it.mem ?: ""
                 ).onDuplicateKeyUpdate()
                     .set(STATUS, it.status)
             }
