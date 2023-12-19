@@ -88,6 +88,7 @@
                 :can-skip-element="isShowCheckbox"
                 :handle-change="handleChange"
                 :stage-disabled="stageDisabled"
+                :is-trigger-stage="isTriggerStage"
                 :container-length="computedContainer.length"
                 :container="container"
                 :is-finally-stage="isFinallyStage"
@@ -101,6 +102,7 @@
         <template v-if="reactiveData.editable">
             <span
                 class="add-menu"
+                v-if="!isTriggerStage"
                 @click.stop="toggleAddMenu(!isAddMenuShow)"
             >
                 <span class="add-plus-connector"></span>

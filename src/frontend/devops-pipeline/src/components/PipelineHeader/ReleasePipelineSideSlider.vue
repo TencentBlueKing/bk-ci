@@ -604,9 +604,6 @@
 
 <style lang="scss">
 @import '@/scss/conf';
-.release-pipeline-side-slider {
-    z-index: 2020;
-}
 .release-pipeline-side-slider-header {
     display: flex;
     align-items: center;

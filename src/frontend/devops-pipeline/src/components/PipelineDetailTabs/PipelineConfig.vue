@@ -169,6 +169,8 @@
                     this.init()
                 })
             }
+        },
+        mounted () {
             window.__bk_zIndex_manager.zIndex = 2020
         },
         beforeDestroy () {

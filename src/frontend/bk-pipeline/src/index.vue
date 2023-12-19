@@ -3,9 +3,7 @@
         v-model="computedStages"
         v-bind="dragOptions"
         :move="checkMove"
-        :class="['bk-pipeline', {
-            'editable-bk-pipeline': editable
-        }]"
+        class="bk-pipeline"
     >
         <Stage
             class="list-item"
@@ -303,9 +301,6 @@
   li {
     margin: 0;
     padding: 0;
-  }
-  &.editable-bk-pipeline {
-    padding-left: 50px;
   }
 }
 

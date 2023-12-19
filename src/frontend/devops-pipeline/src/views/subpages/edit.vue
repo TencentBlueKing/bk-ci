@@ -216,11 +216,9 @@
                 }
             }
         },
-        created () {
+        mounted () {
             // HACK： 修复弹窗z-index问题
             window.__bk_zIndex_manager.zIndex = 2020
-        },
-        mounted () {
             if (!this.editfromImport) {
                 this.init()
             }
@@ -422,6 +420,7 @@
             overflow-y: auto;
             flex: 1;
             box-shadow: 0 2px 2px 0 #00000026;
+
         }
         .choose-type-container {
             margin: 26px 24px 20px;
