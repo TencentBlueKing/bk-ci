@@ -78,7 +78,9 @@ import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.UserStoreDeptInfoRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
+import com.tencent.devops.store.pojo.template.InstallProjectTemplateDTO
 import com.tencent.devops.store.pojo.template.InstallTemplateReq
+import com.tencent.devops.store.pojo.template.InstallTemplateResp
 import com.tencent.devops.store.pojo.template.MarketTemplateMain
 import com.tencent.devops.store.pojo.template.MarketTemplateResp
 import com.tencent.devops.store.pojo.template.MyTemplateItem
@@ -100,64 +102,85 @@ import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.service.template.MarketTemplateService
 import com.tencent.devops.store.service.template.TemplateCategoryService
 import com.tencent.devops.store.service.template.TemplateLabelService
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import java.time.LocalDateTime
 import java.util.Optional
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
-import org.jooq.DSLContext
-import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Qualifier
 
 @Suppress("ALL")
 abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTemplateService {
 
     @Autowired
     lateinit var dslContext: DSLContext
+
     @Autowired
     lateinit var marketTemplateDao: MarketTemplateDao
+
     @Autowired
     lateinit var classifyDao: ClassifyDao
+
     @Autowired
     lateinit var templateCategoryRelDao: TemplateCategoryRelDao
+
     @Autowired
     lateinit var templateLabelRelDao: TemplateLabelRelDao
+
     @Autowired
     lateinit var marketAtomDao: MarketAtomDao
+
     @Autowired
     lateinit var atomDao: AtomDao
+
     @Autowired
     lateinit var storeProjectRelDao: StoreProjectRelDao
+
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
+
     @Autowired
     lateinit var templateCategoryService: TemplateCategoryService
+
     @Autowired
     lateinit var templateLabelService: TemplateLabelService
+
     @Autowired
     lateinit var storeTotalStatisticService: StoreTotalStatisticService
+
     @Autowired
     lateinit var storeUserService: StoreUserService
+
     @Autowired
     lateinit var storeProjectService: StoreProjectService
+
     @Autowired
     lateinit var storeCommentService: StoreCommentService
+
     @Autowired
     @Qualifier("templateMemberService")
     lateinit var storeMemberService: StoreMemberService
+
     @Autowired
     lateinit var classifyService: ClassifyService
+
     @Autowired
     lateinit var storeHonorService: StoreHonorService
+
     @Autowired
     lateinit var storeIndexManageService: StoreIndexManageService
+
     @Autowired
     lateinit var storeDeptService: StoreDeptService
+
     @Autowired
     lateinit var storeCommonService: StoreCommonService
+
     @Autowired
     lateinit var client: Client
 
@@ -539,35 +562,37 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             storeCode = templateCode,
             storeType = StoreTypeEnum.TEMPLATE
         )
-        return Result(TemplateDetail(
-            templateId = templateRecord.id,
-            templateCode = templateCode,
-            templateName = templateRecord.templateName,
-            logoUrl = templateRecord.logoUrl?.let {
-                StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
-            },
-            classifyCode = templateClassify?.classifyCode,
-            classifyName = templateClassify?.classifyName,
-            downloads = storeStatistic.downloads,
-            score = storeStatistic.score,
-            summary = templateRecord.summary,
-            templateStatus = TemplateStatusEnum.getTemplateStatus(templateRecord.templateStatus.toInt()),
-            description = templateRecord.description?.let {
-                StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
-            },
-            version = templateRecord.version,
-            templateRdType = TemplateRdTypeEnum.getTemplateRdType(templateRecord.templateRdType.toInt()),
-            categoryList = categoryList,
-            labelList = labelList,
-            latestFlag = templateRecord.latestFlag,
-            publisher = templateRecord.publisher,
-            pubDescription = templateRecord.pubDescription,
-            flag = installFlag,
-            releaseFlag = releaseFlag,
-            userCommentInfo = userCommentInfo,
-            honorInfos = templateHonorInfos,
-            indexInfos = templateIndexInfos
-        ))
+        return Result(
+            TemplateDetail(
+                templateId = templateRecord.id,
+                templateCode = templateCode,
+                templateName = templateRecord.templateName,
+                logoUrl = templateRecord.logoUrl?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+                },
+                classifyCode = templateClassify?.classifyCode,
+                classifyName = templateClassify?.classifyName,
+                downloads = storeStatistic.downloads,
+                score = storeStatistic.score,
+                summary = templateRecord.summary,
+                templateStatus = TemplateStatusEnum.getTemplateStatus(templateRecord.templateStatus.toInt()),
+                description = templateRecord.description?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+                },
+                version = templateRecord.version,
+                templateRdType = TemplateRdTypeEnum.getTemplateRdType(templateRecord.templateRdType.toInt()),
+                categoryList = categoryList,
+                labelList = labelList,
+                latestFlag = templateRecord.latestFlag,
+                publisher = templateRecord.publisher,
+                pubDescription = templateRecord.pubDescription,
+                flag = installFlag,
+                releaseFlag = releaseFlag,
+                userCommentInfo = userCommentInfo,
+                honorInfos = templateHonorInfos,
+                indexInfos = templateIndexInfos
+            )
+        )
     }
 
     /**
@@ -633,17 +658,27 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         userId: String,
         channelCode: ChannelCode,
         installTemplateReq: InstallTemplateReq
-    ): Result<Boolean> {
+    ): Result<InstallTemplateResp> {
         logger.info("installTemplate userId: $userId,channelCode: $channelCode,installTemplateReq: $installTemplateReq")
         val templateCode = installTemplateReq.templateCode
         val projectCodeList = installTemplateReq.projectCodeList
         val template = marketTemplateDao.getLatestTemplateByCode(dslContext, templateCode)
-            ?: return I18nUtil.generateResponseDataObject(
+        if (template == null) {
+            val templateNotExistResponse = I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(templateCode),
                 data = false,
                 language = I18nUtil.getLanguage(userId)
             )
+            return Result(
+                status = templateNotExistResponse.status,
+                message = templateNotExistResponse.message,
+                data = InstallTemplateResp(
+                    result = false,
+                    installProjectTemplateDTO = emptyList()
+                )
+            )
+        }
         // 校验用户是否在模板下插件的可见范围之内和模板的可见范围是否都在其下面的插件可见范围之内
         val validateResult = validateUserTemplateComponentVisibleDept(userId, templateCode, projectCodeList)
         if (validateResult.isNotOk()) {
@@ -661,7 +696,12 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         )
         logger.info("validateInstallResult is: $validateInstallResult")
         if (validateInstallResult.isNotOk()) {
-            return validateInstallResult
+            return Result(
+                InstallTemplateResp(
+                    result = false,
+                    installProjectTemplateDTO = emptyList()
+                )
+            )
         }
         val categoryRecords = templateCategoryRelDao.getCategorysByTemplateId(dslContext, template.id)
         val categoryCodeList = mutableListOf<String>()
@@ -698,7 +738,26 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 projectTemplateMap.putAll(it)
             }
         }
-
+        val templateProjectInfos = client.get(ServicePTemplateResource::class)
+            .getTemplateIdBySrcCode(
+                srcTemplateId = installTemplateReq.templateCode,
+                projectIds = projectCodeList
+            ).data ?: emptyList()
+        val installProjectTemplateDTO = templateProjectInfos.map { optionalTemplateInfo ->
+            InstallProjectTemplateDTO(
+                name = optionalTemplateInfo.name,
+                templateId = optionalTemplateInfo.templateId,
+                projectId = optionalTemplateInfo.projectId,
+                version = optionalTemplateInfo.srcTemplateVersion,
+                versionName = optionalTemplateInfo.versionName,
+                templateType = optionalTemplateInfo.templateType,
+                templateTypeDesc = optionalTemplateInfo.templateTypeDesc,
+                category = optionalTemplateInfo.category,
+                logoUrl = optionalTemplateInfo.logoUrl,
+                stages = optionalTemplateInfo.stages,
+                srcTemplateId = optionalTemplateInfo.srcTemplateId
+            )
+        }
         projectCodeList.removeAll(addMarketTemplateResultKeys)
         // 更新生成的模板的红线规则
         copyQualityRule(
@@ -716,7 +775,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             publicFlag = template.publicFlag,
             channelCode = channelCode
         )
-        return if (projectCodeList.isNullOrEmpty()) {
+        val result = if (projectCodeList.isNullOrEmpty()) {
             installStoreComponentResult
         } else {
             I18nUtil.generateResponseDataObject(
@@ -729,6 +788,14 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 language = I18nUtil.getLanguage(userId)
             )
         }
+        return Result(
+            status = result.status,
+            message = result.message,
+            data = InstallTemplateResp(
+                result = result.data,
+                installProjectTemplateDTO = installProjectTemplateDTO
+            )
+        )
     }
 
     override fun validateUserTemplateComponentVisibleDept(
@@ -993,15 +1060,18 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         try {
             logger.info("start to copy the quality rule for template: $templateCode")
             val sourceTemplate = client.get(ServicePTemplateResource::class).listTemplateById(
-                setOf(templateCode), null, null).data?.templates!!.getValue(templateCode)
+                setOf(templateCode), null, null
+            ).data?.templates!!.getValue(templateCode)
             projectCodeList.forEach { projectCode ->
-                client.get(ServiceQualityRuleResource::class).copyRule(CopyRuleRequest(
-                    sourceTemplate.projectId,
-                    templateCode,
-                    projectCode,
-                    projectTemplateMap[projectCode] ?: "",
-                    userId
-                ))
+                client.get(ServiceQualityRuleResource::class).copyRule(
+                    CopyRuleRequest(
+                        sourceTemplate.projectId,
+                        templateCode,
+                        projectCode,
+                        projectTemplateMap[projectCode] ?: "",
+                        userId
+                    )
+                )
             }
         } catch (e: Exception) {
             logger.error("fail to copy the quality rule for template: $templateCode", e)

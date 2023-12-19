@@ -25,41 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service.iam
+package com.tencent.devops.process.pojo.template
 
-import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
-import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+import org.jooq.Record
+import org.jooq.Result
 
-interface PermissionProjectService {
-
-    fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String>
-
-    fun getProjectGroupAndUserList(projectCode: String): List<BkAuthGroupAndUserList>
-
-    fun getUserProjects(userId: String): List<String>
-
-    fun getUserProjectsByPermission(
-        userId: String,
-        action: String,
-        resourceType: String? = null
-    ): List<String>
-
-    fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Boolean
-
-    fun checkProjectManager(userId: String, projectCode: String): Boolean
-
-    fun createProjectUser(userId: String, projectCode: String, roleCode: String): Boolean
-
-    fun batchCreateProjectUser(
-        userId: String,
-        projectCode: String,
-        roleCode: String,
-        members: List<String>
-    ): Boolean
-
-    fun getProjectRoles(projectCode: String, projectId: String): List<BKAuthProjectRolesResources>
-
-    fun getProjectPermissionInfo(projectCode: String): ProjectPermissionInfoVO
-}
+@ApiModel("模板-权限实体")
+data class TemplateWithPermission(
+    @ApiModelProperty("拥有列表权限的模板记录", required = true)
+    val templatesWithListPermRecords: Result<out Record>?,
+    @ApiModelProperty("拥有查看权限的模板列表ID", required = true)
+    val templatesWithViewPermIds: List<String>?,
+    @ApiModelProperty("拥有编辑权限的模板列表ID", required = true)
+    val templatesWithEditPermIds: List<String>?,
+    @ApiModelProperty("拥有删除权限的模板列表ID", required = true)
+    val templatesWithDeletePermIds: List<String>?,
+    @ApiModelProperty("数量", required = true)
+    val count: Int
+)

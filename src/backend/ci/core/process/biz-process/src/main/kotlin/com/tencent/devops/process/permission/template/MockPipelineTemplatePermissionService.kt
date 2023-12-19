@@ -23,40 +23,47 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.process.permission
+package com.tencent.devops.process.permission.template
 
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 
-class MockPipelineGroupPermissionService : PipelineGroupPermissionService {
-    override fun checkPipelineGroupPermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
-        return true
-    }
-
-    override fun checkPipelineGroupPermission(
+class MockPipelineTemplatePermissionService constructor(
+    authProjectApi: AuthProjectApi,
+    pipelineAuthServiceCode: PipelineAuthServiceCode
+) : AbstractPipelineTemplatePermissionService(
+    authProjectApi = authProjectApi,
+    pipelineAuthServiceCode = pipelineAuthServiceCode
+) {
+    override fun getResourcesByPermission(
         userId: String,
         projectId: String,
-        viewId: Long,
-        permission: AuthPermission
-    ): Boolean {
-        return true
+        permissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<String>> {
+        return emptyMap()
     }
 
     override fun createResource(
         userId: String,
         projectId: String,
-        viewId: Long,
-        viewName: String
+        templateId: String,
+        templateName: String
     ) = Unit
+
+    override fun deleteResource(
+        projectId: String,
+        templateId: String
+    ) = Unit
+
+    override fun enableTemplatePermissionManage(projectId: String): Boolean = false
 
     override fun modifyResource(
         userId: String,
         projectId: String,
-        viewId: Long,
-        viewName: String
+        templateId: String,
+        templateName: String
     ) = Unit
-
-    override fun deleteResource(projectId: String, viewId: Long) = Unit
 }

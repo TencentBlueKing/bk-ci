@@ -23,63 +23,80 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.project.service
+package com.tencent.devops.process.permission.group
 
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
-import com.tencent.devops.project.pojo.AuthProjectCreateInfo
-import com.tencent.devops.project.pojo.ResourceUpdateInfo
 
-@Suppress("TooManyFunctions")
-interface ProjectPermissionService {
+/**
+ * 流水线组权限操作
+ */
+interface PipelineGroupPermissionService {
 
     /**
-     * 校验用户是否有这个项目的权限
-     * @param accessToken 用于超级管理员绕过项目成员的限制，可为空
+     * 校验是否有任意流水线组存在指定的权限
+     * @param userId userId
+     * @param projectId projectId
+     * @param permission 权限
+     * @return 有权限返回true
      */
-    fun verifyUserProjectPermission(accessToken: String? = null, projectCode: String, userId: String): Boolean
-
-    fun createResources(
-        resourceRegisterInfo: ResourceRegisterInfo,
-        authProjectCreateInfo: AuthProjectCreateInfo
-    ): String
-
-    fun deleteResource(projectCode: String)
-
-    fun modifyResource(
-        resourceUpdateInfo: ResourceUpdateInfo
-    )
-
-    fun getUserProjects(userId: String): List<String>
-
-    fun getUserProjectsAvailable(userId: String): Map<String, String>
-
-    fun filterProjects(
+    fun checkPipelineGroupPermission(
         userId: String,
-        permission: AuthPermission,
-        resourceType: String? = null
-    ): List<String>?
-
-    fun verifyUserProjectPermission(
-        accessToken: String? = null,
-        projectCode: String,
-        userId: String,
+        projectId: String,
         permission: AuthPermission
     ): Boolean
 
-    fun cancelCreateAuthProject(
+    /**
+     * 校验是否有流水线组指定权限
+     * @param userId userId
+     * @param projectId projectId
+     * @param viewId 流水线组ID
+     * @param permission 权限
+     * @return 有权限返回true
+     */
+    fun checkPipelineGroupPermission(
         userId: String,
-        projectCode: String
+        projectId: String,
+        viewId: Long,
+        permission: AuthPermission
+    ): Boolean
+
+    /**
+     * 注册流水线组到权限中心与权限关联
+     * @param userId userId
+     * @param projectId projectId
+     * @param viewId 流水线组ID
+     * @param viewName 流水线组名称
+     */
+    fun createResource(
+        userId: String,
+        projectId: String,
+        viewId: Long,
+        viewName: String
     )
 
-    fun cancelUpdateAuthProject(
+    /**
+     * 修改流水线组在权限中心中的资源属性
+     * @param projectId projectId
+     * @param viewId 流水线组ID
+     * @param viewName 流水线组名称
+     */
+    fun modifyResource(
         userId: String,
-        projectCode: String
+        projectId: String,
+        viewId: Long,
+        viewName: String
     )
 
-    fun needApproval(needApproval: Boolean?): Boolean
-
-    fun isShowUserManageIcon(): Boolean
+    /**
+     * 从权限中心删除流水线组资源
+     * @param projectId projectId
+     * @param viewId 流水线组ID
+     */
+    fun deleteResource(
+        projectId: String,
+        viewId: Long
+    )
 }
