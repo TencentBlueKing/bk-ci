@@ -90,9 +90,6 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
     @Autowired
     private lateinit var storePipelineBuildRelDao: StorePipelineBuildRelDao
 
-    @Autowired
-    private lateinit var extServiceImageSecretConfig: ExtServiceImageSecretConfig
-
     override fun handleServicePackage(
         extensionInfo: InitExtServiceDTO,
         userId: String,
