@@ -9,6 +9,7 @@
         </header>
         <div class="setting-content-wrapper">
             <setting-base
+                :is-enabled-permission="isEnabledPermission"
                 @setState="setState"
                 @cancel="exit"
             ></setting-base>
@@ -24,6 +25,9 @@
     export default {
         components: {
             SettingBase
+        },
+        props: {
+            isEnabledPermission: Boolean
         },
         data () {
             return {

@@ -68,7 +68,7 @@
       </template>
       <template v-slot:content>
         <div class="detail-content" v-bkloading="{ isLoading: isDetailLoading }">
-          <div class="title">{{ t('流水线管理') }}</div>
+          <div class="title">{{ permissionTitle }}</div>
           <div class="content">
             <bk-checkbox
               v-for="(item, index) in groupPolicies"
@@ -159,6 +159,16 @@ export default {
       groupPolicies: [],
       groupName: '',
     };
+  },
+  computed: {
+    permissionTitle () {
+      const titleMap = {
+        pipeline: this.t('流水线管理'),
+        pipeline_template: this.t('流水线模板管理'),
+        pipeline_group: this.t('流水线组管理'),
+      }
+      return titleMap[this.resourceType];
+    }
   },
 
   mounted() {

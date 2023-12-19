@@ -419,7 +419,14 @@
     "deleteTemplateTips": "Delete Template ( {0} ) ?",
     "updateStatus": "Update Status",
     "updateDialogTitle": "Update Instance",
-    "updateDialogContent": "The instances are being updated. An email will be notified After the update is completed"
+    "updateDialogContent": "The instances are being updated. An email will be notified After the update is completed",
+    "permissionSetting": "Permission Setting",
+    "accessDeny": {
+      "title": "No access to this pipeline template",
+      "desc": "You do not have permission to view the pipeline template, please apply for permission",
+      "apply": "Apply"
+    },
+    "editStoreTemplateTips": "The development store template does not support editing"
   },
   "newlist": {
     "exportYamlTip": "PreCI is a set of solutions provided by Blue Shield DevOps for developers' pre-CI R&D activities, which can detect problems as early as possible before submitting code and improve code quality. Including IDE plug-ins and command line tools.",
@@ -1233,7 +1240,10 @@
   "apkSignSuccess": "{0} is ready, start downloading",
   "downloadLater": "Download later",
   "unAccessUser": "User {0} is not a member of the current project.",
+  "copyAsTemplateInstance": "Copy As Instance",
   "downloadDisabledTips": "Exceeds 10 GB. Please download in batches from the artifact repository.",
+  "pipelineConstraintModeTips": "In constraint mode, You can't arrange the pipeline freely and should update the instance through template",
+  "copy": "Copy",
   "templateName": "Template",
   "templateVersion": "Template Version",
   "documentTitlePipeline": "Pipeline | BK-CI | Tencent BlueKing"
