@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.metrics.dao.ProjectBuildSummaryDao
+import com.tencent.devops.metrics.service.CacheProjectInfoService
 import com.tencent.devops.metrics.service.ProjectBuildSummaryService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -43,7 +44,8 @@ import java.time.LocalDate
 class ProjectBuildSummaryServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectBuildSummaryDao: ProjectBuildSummaryDao,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val cacheProjectInfoService: CacheProjectInfoService
 ) : ProjectBuildSummaryService {
 
     companion object {
@@ -64,9 +66,11 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
         val lock = RedisLock(redisOperation, projectBuildKey(projectId), 120)
         lock.use {
             lock.lock()
+            val productId = cacheProjectInfoService.getProjectId(projectId)
             projectBuildSummaryDao.saveBuildCount(
                 dslContext = dslContext,
                 projectId = projectId,
+                productId = productId,
                 trigger = trigger,
                 theDate = theDate
             )
@@ -81,6 +85,7 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
         val lock = RedisLock(redisOperation, projectBuildKey(projectId), 120)
         lock.use {
             lock.lock()
+            val productId = cacheProjectInfoService.getProjectId(projectId)
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
                 val insert = projectBuildSummaryDao.saveProjectUser(
@@ -92,6 +97,7 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
                     projectBuildSummaryDao.saveUserCount(
                         dslContext = dslContext,
                         projectId = projectId,
+                        productId = productId,
                         theDate = theDate
                     )
                 }

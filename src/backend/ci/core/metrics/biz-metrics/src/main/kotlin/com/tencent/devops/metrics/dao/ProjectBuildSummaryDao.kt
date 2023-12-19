@@ -53,6 +53,7 @@ class ProjectBuildSummaryDao {
     fun saveBuildCount(
         dslContext: DSLContext,
         projectId: String,
+        productId: Int,
         trigger: String,
         theDate: LocalDate
     ) {
@@ -60,6 +61,7 @@ class ProjectBuildSummaryDao {
         with(TProjectBuildSummaryDaily.T_PROJECT_BUILD_SUMMARY_DAILY) {
             dslContext.insertInto(this)
                 .set(PROJECT_ID, projectId)
+                .set(PRODUCT_ID, productId)
                 .set(BUILD_COUNT, BUILD_COUNT + 1)
                 .set(triggerField, triggerField + 1)
                 .set(THE_DATE, theDate)
@@ -93,11 +95,13 @@ class ProjectBuildSummaryDao {
     fun saveUserCount(
         dslContext: DSLContext,
         projectId: String,
+        productId: Int,
         theDate: LocalDate
     ) {
         with(TProjectBuildSummaryDaily.T_PROJECT_BUILD_SUMMARY_DAILY) {
             dslContext.insertInto(this)
                 .set(PROJECT_ID, projectId)
+                .set(PRODUCT_ID, productId)
                 .set(THE_DATE, theDate)
                 .set(USER_COUNT, USER_COUNT + 1)
                 .onDuplicateKeyUpdate()
