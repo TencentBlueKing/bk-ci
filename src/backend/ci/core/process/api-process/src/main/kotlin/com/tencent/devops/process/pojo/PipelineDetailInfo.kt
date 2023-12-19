@@ -50,6 +50,6 @@ data class PipelineDetailInfo(
     val hasPermission: Boolean,
     @ApiModelProperty("关联模板ID", required = false)
     var templateId: String? = null,
-    @ApiModelProperty("关联模板ID", required = false)
+    @ApiModelProperty("关联模板版本", required = false)
     var templateVersion: Long? = null
 )
