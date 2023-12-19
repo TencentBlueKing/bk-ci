@@ -29,7 +29,7 @@
 package com.tencent.devops.metrics.listener
 
 import com.tencent.devops.common.event.listener.Listener
-import com.tencent.devops.common.event.pojo.measure.ProjectUserCountDailyEvent
+import com.tencent.devops.common.event.pojo.measure.ProjectUserDailyEvent
 import com.tencent.devops.metrics.service.ProjectBuildSummaryService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -38,23 +38,23 @@ import org.springframework.stereotype.Component
 @Component
 class ProjectUserDailyMetricsListener @Autowired constructor(
     private val projectBuildSummaryService: ProjectBuildSummaryService
-) : Listener<ProjectUserCountDailyEvent> {
+) : Listener<ProjectUserDailyEvent> {
 
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectUserDailyMetricsListener::class.java)
     }
 
-    override fun execute(event: ProjectUserCountDailyEvent) {
+    override fun execute(event: ProjectUserDailyEvent) {
         try {
             with(event) {
-                projectBuildSummaryService.saveProjectUserCount(
+                projectBuildSummaryService.saveProjectUser(
                     projectId = projectId,
-                    userCount = userCount,
+                    userId = userId,
                     theDate = theDate
                 )
             }
         } catch (ignored: Throwable) {
-            logger.warn("Fail to insert the metrics ProjectUserCount data", ignored)
+            logger.warn("Fail to insert project user metrics data", ignored)
         }
     }
 }

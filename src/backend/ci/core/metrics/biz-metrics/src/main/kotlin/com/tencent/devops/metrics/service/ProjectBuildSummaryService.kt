@@ -42,11 +42,11 @@ interface ProjectBuildSummaryService {
     )
 
     /**
-     * 保存项目用户数
+     * 保存项目用户
      */
-    fun saveProjectUserCount(
+    fun saveProjectUser(
         projectId: String,
-        userCount: Int,
+        userId: String,
         theDate: LocalDate
     )
 }

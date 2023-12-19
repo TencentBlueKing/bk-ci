@@ -26,15 +26,19 @@
  *
  */
 
-package com.tencent.devops.auth.pojo
+package com.tencent.devops.common.event.pojo.measure
 
-import io.swagger.annotations.ApiModel
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDate
 
-@ApiModel("项目每日用户数")
-data class AuthProjectUserCountDaily(
-    @ApiModelProperty("项目ID", required = true)
-    val projectId: String,
-    @ApiModelProperty("用户数", required = true)
-    val userCount: Int
-)
+@Event(exchange = MQ.EXCHANGE_PROJECT_USER_DAILY_FANOUT)
+data class ProjectUserDailyEvent(
+    @ApiModelProperty("项目ID")
+    override val projectId: String,
+    @ApiModelProperty("用户ID")
+    val userId: String,
+    @ApiModelProperty("统计日期")
+    val theDate: LocalDate
+) : IMeasureEvent(projectId = projectId, pipelineId = "", buildId = "")

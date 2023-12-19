@@ -49,7 +49,7 @@ import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.service.AuthMonitorSpaceService
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.service.AuthResourceService
-import com.tencent.devops.auth.service.AuthUserDailyService
+import com.tencent.devops.auth.service.AuthProjectUserMetricsService
 import com.tencent.devops.auth.service.AuthVerifyRecordService
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.ItsmService
@@ -225,7 +225,7 @@ class RbacAuthConfiguration {
         permissionSuperManagerService: PermissionSuperManagerService,
         rbacCacheService: RbacCacheService,
         client: Client,
-        authUserDailyService: AuthUserDailyService
+        authProjectUserMetricsService: AuthProjectUserMetricsService
     ) = RbacPermissionService(
         authHelper = authHelper,
         authResourceService = authResourceService,
@@ -235,7 +235,7 @@ class RbacAuthConfiguration {
         permissionSuperManagerService = permissionSuperManagerService,
         rbacCacheService = rbacCacheService,
         client = client,
-        authUserDailyService = authUserDailyService
+        authProjectUserMetricsService = authProjectUserMetricsService
     )
 
     @Bean

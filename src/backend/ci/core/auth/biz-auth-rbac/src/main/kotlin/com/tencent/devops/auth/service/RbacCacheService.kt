@@ -33,7 +33,7 @@ class RbacCacheService constructor(
     private val policyService: PolicyService,
     private val iamConfiguration: IamConfiguration,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-    private val authUserDailyService: AuthUserDailyService
+    private val authUserDailyService: AuthProjectUserMetricsService
 ) {
 
     companion object {

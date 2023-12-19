@@ -30,6 +30,7 @@ package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.model.metrics.tables.TProjectBuildSummaryDaily
+import com.tencent.devops.model.metrics.tables.TProjectUserDaily
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
@@ -69,22 +70,38 @@ class ProjectBuildSummaryDao {
         }
     }
 
+    fun saveProjectUser(
+        dslContext: DSLContext,
+        projectId: String,
+        userId: String
+    ): Int {
+        return with(TProjectUserDaily.T_PROJECT_USER_DAILY) {
+            dslContext.insertInto(
+                this,
+                PROJECT_ID,
+                USER_ID,
+                THE_DATE
+            ).values(
+                projectId,
+                userId,
+                LocalDate.now()
+            ).onDuplicateKeyIgnore()
+                .execute()
+        }
+    }
+
     fun saveUserCount(
         dslContext: DSLContext,
         projectId: String,
-        productId: Int,
-        userCount: Int,
         theDate: LocalDate
     ) {
         with(TProjectBuildSummaryDaily.T_PROJECT_BUILD_SUMMARY_DAILY) {
             dslContext.insertInto(this)
                 .set(PROJECT_ID, projectId)
                 .set(THE_DATE, theDate)
-                .set(PRODUCT_ID, productId)
-                .set(USER_COUNT, userCount)
+                .set(USER_COUNT, USER_COUNT + 1)
                 .onDuplicateKeyUpdate()
-                .set(PRODUCT_ID, productId)
-                .set(USER_COUNT, userCount)
+                .set(USER_COUNT, USER_COUNT + 1)
                 .execute()
         }
     }

@@ -28,49 +28,70 @@
 
 package com.tencent.devops.auth.service
 
+import com.google.common.cache.CacheBuilder
 import com.google.common.hash.BloomFilter
 import com.google.common.hash.Funnels
-import com.tencent.devops.auth.dao.AuthUserDailyDao
-import org.jooq.DSLContext
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispatcher
+import com.tencent.devops.common.event.pojo.measure.ProjectUserDailyEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.nio.charset.Charset
+import java.time.LocalDate
+import java.util.concurrent.TimeUnit
 
 
 @Service
-class AuthUserDailyService @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val authUserDailyDao: AuthUserDailyDao
+@Suppress("UnstableApiUsage")
+class AuthProjectUserMetricsService @Autowired constructor(
+    private val measureEventDispatcher: MeasureEventDispatcher
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(AuthUserDailyService::class.java)
+        private val logger = LoggerFactory.getLogger(AuthProjectUserMetricsService::class.java)
         // 期待的用户数10w
         private const val EXPECTED_USER_COUNT = 100000
-        private val bloomFilter = BloomFilter.create(
-            Funnels.stringFunnel(Charset.defaultCharset()),
-            EXPECTED_USER_COUNT,
-            0.001
-        )
+        // 错误率0.1%
+        private const val EXPECTED_FPP = 0.001
+        private val bloomFilterMap = CacheBuilder.newBuilder()
+            .maximumSize(2)
+            .expireAfterWrite(1, TimeUnit.DAYS)
+            .build<LocalDate, BloomFilter<String>>()
     }
 
     fun save(
         projectId: String,
         userId: String
     ) {
+        val theDate = LocalDate.now()
         try {
             val bloomKey = "${projectId}_$userId"
+            val bloomFilter = getBloomFilter(theDate)
             if (!bloomFilter.mightContain(bloomKey)) {
-                authUserDailyDao.save(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    userId = userId
+                measureEventDispatcher.dispatch(
+                    ProjectUserDailyEvent(
+                        projectId = projectId,
+                        userId = userId,
+                        theDate = theDate
+                    )
                 )
                 bloomFilter.put(bloomKey)
             }
         } catch (ignored: Throwable) {
             logger.error("save auth user error", ignored)
         }
+    }
+
+    private fun getBloomFilter(theDate: LocalDate): BloomFilter<String> {
+        var bloomFilter = bloomFilterMap.getIfPresent(theDate)
+        if (bloomFilter == null) {
+            bloomFilter = BloomFilter.create(
+                Funnels.stringFunnel(Charset.defaultCharset()),
+                EXPECTED_USER_COUNT,
+                EXPECTED_FPP
+            )
+            bloomFilterMap.put(theDate, bloomFilter)
+        }
+        return bloomFilter!!
     }
 }

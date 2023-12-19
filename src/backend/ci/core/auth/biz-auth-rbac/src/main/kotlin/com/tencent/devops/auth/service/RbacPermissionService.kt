@@ -63,7 +63,7 @@ class RbacPermissionService constructor(
     private val permissionSuperManagerService: PermissionSuperManagerService,
     private val rbacCacheService: RbacCacheService,
     private val client: Client,
-    private val authUserDailyService: AuthUserDailyService
+    private val authProjectUserMetricsService: AuthProjectUserMetricsService
 ) : PermissionService {
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionService::class.java)
@@ -212,7 +212,7 @@ class RbacPermissionService constructor(
 
             val result = policyService.verifyPermissions(queryPolicyDTO)
             if (result) {
-                authUserDailyService.save(projectId = projectCode, userId = userId)
+                authProjectUserMetricsService.save(projectId = projectCode, userId = userId)
             }
             return result
         } finally {
@@ -299,7 +299,7 @@ class RbacPermissionService constructor(
                 listOf(resourceDTO)
             )
             result.values.filter { it }
-                .forEach { _ -> authUserDailyService.save(projectId = projectCode, userId = userId) }
+                .forEach { _ -> authProjectUserMetricsService.save(projectId = projectCode, userId = userId) }
             return result
         } finally {
             logger.info(

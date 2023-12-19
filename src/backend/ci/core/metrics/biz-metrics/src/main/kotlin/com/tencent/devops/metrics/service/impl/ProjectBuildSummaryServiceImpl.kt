@@ -29,13 +29,12 @@
 package com.tencent.devops.metrics.service.impl
 
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.metrics.dao.ProjectBuildSummaryDao
 import com.tencent.devops.metrics.service.ProjectBuildSummaryService
-import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDate
@@ -44,8 +43,7 @@ import java.time.LocalDate
 class ProjectBuildSummaryServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectBuildSummaryDao: ProjectBuildSummaryDao,
-    private val redisOperation: RedisOperation,
-    private val client: Client
+    private val redisOperation: RedisOperation
 ) : ProjectBuildSummaryService {
 
     companion object {
@@ -65,6 +63,7 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
         } ?: LocalDate.now()
         val lock = RedisLock(redisOperation, projectBuildKey(projectId), 120)
         lock.use {
+            lock.lock()
             projectBuildSummaryDao.saveBuildCount(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -74,21 +73,29 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
         }
     }
 
-    override fun saveProjectUserCount(
+    override fun saveProjectUser(
         projectId: String,
-        userCount: Int,
+        userId: String,
         theDate: LocalDate
     ) {
-        val productId = client.get(ServiceProjectResource::class).get(projectId).data?.productId ?: return
         val lock = RedisLock(redisOperation, projectBuildKey(projectId), 120)
         lock.use {
-            projectBuildSummaryDao.saveUserCount(
-                dslContext = dslContext,
-                projectId = projectId,
-                productId = productId,
-                userCount = userCount,
-                theDate = theDate
-            )
+            lock.lock()
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                val insert = projectBuildSummaryDao.saveProjectUser(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    userId = userId
+                )
+                if (insert > 0) {
+                    projectBuildSummaryDao.saveUserCount(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        theDate = theDate
+                    )
+                }
+            }
         }
     }
 }
