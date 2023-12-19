@@ -1023,15 +1023,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 errorCode = PROJECT_NOT_EXIST,
                 defaultMessage = "project($englishName) not exist!"
             )
-        ActionAuditContext.current()
-            .setInstanceName(projectInfo.projectName)
-        if (enabled) {
-            ActionAuditContext.current()
-                .addAttribute(PROJECT_ENABLE_OR_DISABLE_TEMPLATE, "enable")
-        } else {
-            ActionAuditContext.current()
-                .addAttribute(PROJECT_ENABLE_OR_DISABLE_TEMPLATE, "disable")
-        }
         if (checkPermission) {
             val verify = validatePermission(
                 userId = userId!!,
@@ -1044,6 +1035,15 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL)
                 )
             }
+        }
+        ActionAuditContext.current()
+            .setInstanceName(projectInfo.projectName)
+        if (enabled) {
+            ActionAuditContext.current()
+                .addAttribute(PROJECT_ENABLE_OR_DISABLE_TEMPLATE, "enable")
+        } else {
+            ActionAuditContext.current()
+                .addAttribute(PROJECT_ENABLE_OR_DISABLE_TEMPLATE, "disable")
         }
         projectDao.updateUsableStatus(
             dslContext = dslContext,
