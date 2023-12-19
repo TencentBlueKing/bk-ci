@@ -212,7 +212,13 @@ object AtomUtils {
             ).data!!
         atomInfos.forEach {
             logger.info("AtomInfo $it ,status: ${it.atomStatus}")
-            val atomStatus = AtomStatusEnum.getAtomStatus(it.atomStatus!!.toInt())
+            var atomStatus: String
+            try {
+                atomStatus = AtomStatusEnum.getAtomStatus(it.atomStatus!!.toInt())
+            } catch (e: Exception) {
+                atomStatus = it.atomStatus.toString()
+                logger.info("check template atom failed, atomCode: ${it.atomCode}, message: ${e.message}")
+            }
             logger.info("AtomInfo $it ,status: $atomStatus")
             logger.info("params: ${AtomStatusEnum.valueOf(atomStatus).getI18n(I18nUtil.getLanguage(userId))}")
             if (atomStatus != AtomStatusEnum.RELEASED.name) {
