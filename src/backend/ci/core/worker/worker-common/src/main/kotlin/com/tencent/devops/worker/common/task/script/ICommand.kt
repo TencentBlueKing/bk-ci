@@ -36,6 +36,7 @@ import com.tencent.devops.worker.common.JOB_OS_CONTEXT
 import com.tencent.devops.worker.common.WORKSPACE_CONTEXT
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.expression.SpecialFunctions
+import com.tencent.devops.worker.common.service.CIKeywordsService
 import com.tencent.devops.worker.common.utils.CredentialUtils
 import com.tencent.devops.worker.common.utils.TemplateAcrossInfoUtil
 import java.io.File
@@ -87,7 +88,8 @@ interface ICommand {
                 contextPair = EnvReplacementParser.getCustomExecutionContextByMap(
                     variables = contextMap,
                     extendNamedValueMap = listOf(
-                        CredentialUtils.CredentialRuntimeNamedValue(targetProjectId = acrossTargetProjectId)
+                        CredentialUtils.CredentialRuntimeNamedValue(targetProjectId = acrossTargetProjectId),
+                        CIKeywordsService.CIKeywordsRuntimeNamedValue()
                     )
                 ),
                 functions = SpecialFunctions.functions,
@@ -98,13 +100,21 @@ interface ICommand {
                 command,
                 object : KeyReplacement {
                     override fun getReplacement(key: String): String? = contextMap[key] ?: try {
-                        CredentialUtils.getCredential(
-                            credentialId = key,
-                            showErrorLog = false,
-                            acrossProjectId = acrossTargetProjectId
-                        )[0]
+                        if (key == CI_TOKEN_CONTEXT) {
+                            CIKeywordsService.getOrRequestToken()
+                        } else {
+                            CredentialUtils.getCredential(
+                                credentialId = key,
+                                showErrorLog = false,
+                                acrossProjectId = acrossTargetProjectId
+                            )[0]
+                        }
                     } catch (ignore: Exception) {
-                        CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId)
+                        if (key == CI_TOKEN_CONTEXT) {
+                            null
+                        } else {
+                            CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId)
+                        }
                     }
                 }
             )

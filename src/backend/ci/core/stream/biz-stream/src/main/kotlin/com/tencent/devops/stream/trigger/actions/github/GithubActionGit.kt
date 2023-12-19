@@ -124,6 +124,7 @@ abstract class GithubActionGit(
                 false
             },
             reportData = reportData,
+            targetBranch = null,
             addCommitCheck = api::addCommitCheck
         )
     }

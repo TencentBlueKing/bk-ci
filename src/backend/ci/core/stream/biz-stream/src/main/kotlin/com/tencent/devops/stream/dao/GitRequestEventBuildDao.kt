@@ -680,23 +680,6 @@ class GitRequestEventBuildDao {
         dslContext.batchUpdate(builds).execute()
     }
 
-    fun lastBuildByProject(dslContext: DSLContext, gitProjectIds: Set<Long>?): List<TGitRequestEventBuildRecord> {
-        if (gitProjectIds.isNullOrEmpty()) {
-            return emptyList()
-        }
-        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            return dslContext.selectFrom(this)
-                .where(
-                    UPDATE_TIME.`in`(
-                        dslContext.select(DSL.max(UPDATE_TIME))
-                            .from(this)
-                            .groupBy(GIT_PROJECT_ID)
-                            .having(GIT_PROJECT_ID.`in`(gitProjectIds))
-                    )
-                ).fetch()
-        }
-    }
-
     fun isBuildExist(dslContext: DSLContext, buildId: String): Boolean {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext.selectCount().from(this)

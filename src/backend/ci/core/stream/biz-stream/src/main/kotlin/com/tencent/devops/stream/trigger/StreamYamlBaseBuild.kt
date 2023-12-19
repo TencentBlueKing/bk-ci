@@ -516,7 +516,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                     state = StreamCommitCheckState.PENDING,
                     block = action.data.setting.enableMrBlock &&
                         action.metaData.isStreamMr(),
-                    context = "${pipeline.filePath}@${action.metaData.streamObjectKind.name}",
+                    context = "${pipeline.displayName}@${action.metaData.streamObjectKind.name}",
                     targetUrl = StreamPipelineUtils.genStreamV2BuildUrl(
                         homePage = streamGitConfig.streamUrl ?: throw ParamBlankException(
                             I18nUtil.getCodeLanMessage(

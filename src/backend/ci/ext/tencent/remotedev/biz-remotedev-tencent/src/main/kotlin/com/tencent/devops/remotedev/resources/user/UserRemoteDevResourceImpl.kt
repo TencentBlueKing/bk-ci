@@ -28,7 +28,10 @@
 package com.tencent.devops.remotedev.resources.user
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.remotedev.api.user.UserRemoteDevResource
 import com.tencent.devops.remotedev.pojo.BKGPT
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
@@ -59,7 +62,8 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val workspaceCommon: WorkspaceCommon,
     private val permissionService: PermissionService,
-    private val expertSupportService: ExpertSupportService
+    private val expertSupportService: ExpertSupportService,
+    private val client: Client
 ) : UserRemoteDevResource {
 
     companion object {
@@ -126,7 +130,19 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         return Result(windowsResourceConfigService.getAllZone())
     }
 
-    override fun allWindowsQuota(userId: String): Result<Map<String, Map<String, Int>>> {
+    override fun allWindowsQuota(userId: String, searchCustom: Boolean?): Result<Map<String, Map<String, Int>>> {
+        if (searchCustom == true) {
+            val res = mutableMapOf<String, MutableMap<String, Int>>()
+            client.get(ServiceStartCloudResource::class).getResourceVm(ResourceVmReq(null, null)).data
+                ?.forEach { resource ->
+                    val key = resource.zoneId.replace(Regex("\\d+"), "")
+                    val map = res.getOrPut(key) { mutableMapOf() }
+                    resource.machineResources?.forEach { mas ->
+                        map[mas.machineType] = (map[mas.machineType] ?: 0) + (mas.free ?: 0)
+                    }
+                }
+            return Result(res)
+        }
         val res = mutableMapOf<String, MutableMap<String, Int>>()
         logger.info("allWindowsQuota|$userId")
         workspaceCommon.syncStartCloudResourceList().forEach {

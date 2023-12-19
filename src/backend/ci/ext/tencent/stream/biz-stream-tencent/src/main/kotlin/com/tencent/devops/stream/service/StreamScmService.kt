@@ -61,12 +61,12 @@ import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.GitRequestEventForHandle
 import com.tencent.devops.stream.pojo.enums.GitCodeApiStatus
-import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Service
 class StreamScmService @Autowired constructor(
@@ -87,13 +87,14 @@ class StreamScmService @Autowired constructor(
     // 注意，应该优先从 stream gitToken获取token 如非必要，不应该调用这个
     @Throws(ErrorCodeException::class)
     fun getToken(
-        gitProjectId: String
-    ): GitToken {
+        gitProjectId: String,
+        requestNew: Boolean? = false
+    ): String {
         return retryFun(
             log = "$gitProjectId get token fail",
             apiErrorCode = ErrorCodeEnum.GET_TOKEN_ERROR,
             action = {
-                client.getScm(ServiceGitCiResource::class).getToken(gitProjectId).data!!
+                client.getScm(ServiceGitCiResource::class).getTokenFromCache(gitProjectId, requestNew).data!!
             }
         )
     }
@@ -126,10 +127,11 @@ class StreamScmService @Autowired constructor(
 
     // 针对刚开始的获取项目信息获取超级token，遇到报错一定是项目不存在返回项目不存在信息
     fun getTokenForProject(
-        gitProjectId: String
-    ): GitToken? {
+        gitProjectId: String,
+        requestNew: Boolean?
+    ): String? {
         try {
-            return client.getScm(ServiceGitCiResource::class).getToken(gitProjectId).data!!
+            return client.getScm(ServiceGitCiResource::class).getTokenFromCache(gitProjectId, requestNew).data!!
         } catch (e: Throwable) {
             when (e) {
                 is ClientException -> {

@@ -9,6 +9,7 @@ import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
+import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.service.PermissionService
@@ -16,6 +17,7 @@ import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
+import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import java.net.URLDecoder
 
@@ -27,7 +29,8 @@ class ServiceRemoteDevResourceImpl(
     private val desktopWorkspaceService: DesktopWorkspaceService,
     private val createControl: CreateControl,
     private val workspaceCommon: WorkspaceCommon,
-    private val windowsResourceConfigService: WindowsResourceConfigService
+    private val windowsResourceConfigService: WindowsResourceConfigService,
+    private val notifyControl: NotifyControl
 ) : ServiceRemoteDevResource {
     override fun validateUserTicket(userId: String, isOffshore: Boolean, ticket: String): Result<Boolean> {
         return Result(
@@ -105,6 +108,13 @@ class ServiceRemoteDevResourceImpl(
             )
             Thread.sleep(500)
         }
+        return Result(true)
+    }
+
+    override fun notifyWorkspaceInfo(notifyData: WorkspaceNotifyData): Result<Boolean> {
+        notifyControl.notifyWorkspaceInfo(
+            notifyData = notifyData
+        )
         return Result(true)
     }
 }
