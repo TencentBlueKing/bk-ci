@@ -328,13 +328,15 @@ class ExperienceDownloadService @Autowired constructor(
                 platform = experienceRecord.platform,
                 recordId = experienceRecord.id
             )
-            measureEventDispatcher.dispatch(
-                ProjectUserDailyEvent(
-                    projectId = experienceRecord.projectId,
-                    userId = userId,
-                    theDate = LocalDate.now()
+            if (experiencePublicDao.countByRecordId(dslContext = dslContext, recordId = experienceRecord.id) == 0) {
+                measureEventDispatcher.dispatch(
+                    ProjectUserDailyEvent(
+                        projectId = experienceRecord.projectId,
+                        userId = userId,
+                        theDate = LocalDate.now()
+                    )
                 )
-            )
+            }
         } catch (e: Exception) {
             logger.warn("addDownloadRecord error", e)
         }
