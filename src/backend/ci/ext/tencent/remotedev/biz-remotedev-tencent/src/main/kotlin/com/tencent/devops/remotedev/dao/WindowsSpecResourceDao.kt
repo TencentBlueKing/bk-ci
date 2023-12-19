@@ -1,6 +1,7 @@
 package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.common.api.model.SQLLimit
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TWindowsSpecResource
 import com.tencent.devops.model.remotedev.tables.records.TWindowsSpecResourceRecord
 import org.jooq.DSLContext
@@ -64,7 +65,7 @@ class WindowsSpecResourceDao {
         dslContext: DSLContext
     ): Long {
         with(TWindowsSpecResource.T_WINDOWS_SPEC_RESOURCE) {
-            return dslContext.selectCount().from(this).fetchOne(0, Long::class.java)!!
+            return dslContext.selectCount().from(this).skipCheck().fetchOne(0, Long::class.java)!!
         }
     }
 }
