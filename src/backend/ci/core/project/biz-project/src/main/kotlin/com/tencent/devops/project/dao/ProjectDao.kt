@@ -177,7 +177,11 @@ class ProjectDao {
     /**
      * 根据英文名称(projectCode)查询name
      */
-    fun listByCodes(dslContext: DSLContext, projectCodeList: Set<String>, enabled: Boolean?): Result<TProjectRecord> {
+    fun listByCodes(
+        dslContext: DSLContext,
+        projectCodeList: Set<String>,
+        enabled: Boolean?
+    ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this).where(ENGLISH_NAME.`in`(projectCodeList))
                 .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))

@@ -49,4 +49,16 @@ class OpenProjectResourceImpl constructor(
             ) ?: throw OperationException("project $projectId not found")
         )
     }
+
+    override fun listByProjectCodes(
+        token: String,
+        projectCodes: Set<String>
+    ): Result<List<ProjectVO>> {
+        return Result(
+            projectService.listByOpen(
+                token = token,
+                projectCodes = projectCodes
+            )
+        )
+    }
 }
