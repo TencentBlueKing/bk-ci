@@ -1,6 +1,7 @@
 package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.common.db.utils.skipCheck
+import com.tencent.devops.model.remotedev.tables.TWindowsResourceType
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
@@ -112,5 +113,24 @@ class WorkspaceWindowsDao {
                         .skipCheck()
                 )
         )
+    }
+
+    /**
+     * 查询用户使用了多少台指定机型的机器
+     */
+    fun fetchUsedSizeCount(
+        dslContext: DSLContext,
+        workspaceNames: Set<String>,
+        size: String
+    ): Int {
+        return dslContext.selectCount()
+            .from(TWorkspaceWindows.T_WORKSPACE_WINDOWS, TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE)
+            .where(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME.`in`(workspaceNames))
+            .and(
+                TWorkspaceWindows.T_WORKSPACE_WINDOWS.WIN_CONFIG_ID.cast(Long::class.java)
+                    .eq(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.ID)
+            )
+            .and(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE.eq(size))
+            .fetchOne(0, Int::class.java)!!
     }
 }

@@ -7,6 +7,7 @@ import com.tencent.devops.openapi.api.apigw.ApigwRemoteDevResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
+import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import org.slf4j.LoggerFactory
@@ -99,6 +100,17 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(
             projectId = projectId,
             ip = null
+        )
+    }
+
+    override fun notifyWorkspaceInfo(
+        appCode: String?,
+        apigwType: String?,
+        notifyData: WorkspaceNotifyData
+    ): Result<Boolean> {
+        logger.info("notify workspace|notifyData|$notifyData")
+        return client.get(ServiceRemoteDevResource::class).notifyWorkspaceInfo(
+            notifyData = notifyData
         )
     }
 }
