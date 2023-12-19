@@ -149,7 +149,7 @@ class StartCloudInterfaceService @Autowired constructor(
                 )
             )
         }
-        logger.info("syncStartCloudResourceList|resourceList|${resList.size}")
+        logger.debug("syncStartCloudResourceList|resourceList|{}", resList)
         windowsGpuResourceDao.deleteAllResource(dslContext)
         windowsGpuResourceDao.createOrUpdateResource(dslContext, resList)
         return resList
