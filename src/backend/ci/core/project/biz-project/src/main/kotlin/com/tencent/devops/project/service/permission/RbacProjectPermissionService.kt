@@ -230,12 +230,17 @@ class RbacProjectPermissionService(
 
     override fun isShowUserManageIcon(): Boolean = true
 
-    override fun filterProjects(userId: String, permission: AuthPermission): List<String>? {
+    override fun filterProjects(
+        userId: String,
+        permission: AuthPermission,
+        resourceType: String?
+    ): List<String>? {
         return authProjectApi.getUserProjectsByPermission(
             serviceCode = projectAuthServiceCode,
             userId = userId,
             permission = permission,
-            supplier = null
+            supplier = null,
+            resourceType = resourceType
         )
     }
 

@@ -38,6 +38,7 @@ import com.tencent.devops.project.pojo.OrgInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ProjectWithPermission
@@ -220,6 +221,16 @@ interface ServiceProjectResource {
         @ApiParam("项目名称", required = true)
         @QueryParam("projectName")
         projectName: String
+    ): Result<Boolean>
+
+    @PUT
+    @Path("/{projectCode}/properties")
+    fun updateProjectProperties(
+        @ApiParam("项目Code", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("项目名称", required = true)
+        properties: ProjectProperties
     ): Result<Boolean>
 
     @GET

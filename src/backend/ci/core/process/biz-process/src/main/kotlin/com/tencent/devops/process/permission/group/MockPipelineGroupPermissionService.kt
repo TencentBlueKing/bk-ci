@@ -26,77 +26,37 @@
  *
  */
 
-package com.tencent.devops.process.permission
+package com.tencent.devops.process.permission.group
 
 import com.tencent.devops.common.auth.api.AuthPermission
 
-/**
- * 流水线组权限操作
- */
-interface PipelineGroupPermissionService {
+class MockPipelineGroupPermissionService : PipelineGroupPermissionService {
+    override fun checkPipelineGroupPermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
+        return true
+    }
 
-    /**
-     * 校验是否有任意流水线组存在指定的权限
-     * @param userId userId
-     * @param projectId projectId
-     * @param permission 权限
-     * @return 有权限返回true
-     */
-    fun checkPipelineGroupPermission(
-        userId: String,
-        projectId: String,
-        permission: AuthPermission
-    ): Boolean
-
-    /**
-     * 校验是否有流水线组指定权限
-     * @param userId userId
-     * @param projectId projectId
-     * @param viewId 流水线组ID
-     * @param permission 权限
-     * @return 有权限返回true
-     */
-    fun checkPipelineGroupPermission(
+    override fun checkPipelineGroupPermission(
         userId: String,
         projectId: String,
         viewId: Long,
         permission: AuthPermission
-    ): Boolean
+    ): Boolean {
+        return true
+    }
 
-    /**
-     * 注册流水线组到权限中心与权限关联
-     * @param userId userId
-     * @param projectId projectId
-     * @param viewId 流水线组ID
-     * @param viewName 流水线组名称
-     */
-    fun createResource(
+    override fun createResource(
         userId: String,
         projectId: String,
         viewId: Long,
         viewName: String
-    )
+    ) = Unit
 
-    /**
-     * 修改流水线组在权限中心中的资源属性
-     * @param projectId projectId
-     * @param viewId 流水线组ID
-     * @param viewName 流水线组名称
-     */
-    fun modifyResource(
+    override fun modifyResource(
         userId: String,
         projectId: String,
         viewId: Long,
         viewName: String
-    )
+    ) = Unit
 
-    /**
-     * 从权限中心删除流水线组资源
-     * @param projectId projectId
-     * @param viewId 流水线组ID
-     */
-    fun deleteResource(
-        projectId: String,
-        viewId: Long
-    )
+    override fun deleteResource(projectId: String, viewId: Long) = Unit
 }

@@ -25,6 +25,9 @@
             },
             {
               "id": "project_manage"
+            },
+            {
+              "id": "project_manage-archived-pipeline"
             }
           ]
         },
@@ -58,6 +61,9 @@
             },
             {
               "id": "pipeline_manage"
+            },
+            {
+              "id": "pipeline_archive"
             }
           ]
         },
