@@ -69,6 +69,7 @@
                             <p class="pipeline-template-title" :title="temp.name">
                                 <span>{{ temp.name }}</span>
                                 <logo
+                                    v-if="temp.isStore"
                                     class="is-store-template"
                                     name="is-store"
                                     size="22"

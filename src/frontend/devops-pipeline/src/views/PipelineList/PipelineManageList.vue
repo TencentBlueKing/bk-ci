@@ -121,10 +121,7 @@
             @cancel="closeSaveAsDialog"
             @done="refresh"
         />
-        <pipeline-template-popup
-            :toggle-popup="toggleTemplatePopup"
-            :is-show.sync="templatePopupShow"
-        />
+
         <import-pipeline-popup
             :is-show.sync="importPipelinePopupShow"
         />
@@ -145,7 +142,6 @@
     import PipelineSearcher from './PipelineSearcher'
     import PipelineTableView from '@/components/pipelineList/PipelineTableView'
     import PipelinesCardView from '@/components/pipelineList/PipelinesCardView'
-    import PipelineTemplatePopup from '@/components/pipelineList/PipelineTemplatePopup'
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import PipelineGroupEditDialog from '@/views/PipelineList/PipelineGroupEditDialog'
 
@@ -171,7 +167,6 @@
             PipelinesCardView,
             PipelineTableView,
             PipelineSearcher,
-            PipelineTemplatePopup,
             ImportPipelinePopup,
             PipelineGroupEditDialog
         },
@@ -182,13 +177,11 @@
                 layout: this.getLs('pipelineLayout') || TABLE_LAYOUT,
                 hasCreatePermission: false,
                 filters: restQuery,
-                templatePopupShow: false,
                 importPipelinePopupShow: false,
                 activeGroup: null,
                 newPipelineDropdown: [{
                     text: this.$t('newPipelineFromTemplateLabel'),
                     action: () => {
-                        console.log(1111)
                         this.$router.push({
                             name: 'createPipeline'
                         })
@@ -385,13 +378,6 @@
                 this.hasCreatePermission = res
             },
 
-            toggleTemplatePopup () {
-                if (!this.hasCreatePermission) {
-                    this.toggleCreatePermission()
-                } else {
-                    this.templatePopupShow = !this.templatePopupShow
-                }
-            },
             handleAddToGroup () {
                 if (this.currentGroup) {
                     this.activeGroup = this.currentGroup
@@ -404,10 +390,6 @@
 
             toggleImportPipelinePopup () {
                 this.importPipelinePopupShow = !this.importPipelinePopupShow
-            },
-
-            toggleCreatePermission () {
-                this.setPermissionConfig(this.$permissionResourceMap.pipeline, this.$permissionActionMap.create)
             },
             refresh () {
                 this.$refs.pipelineBox?.refresh?.()
