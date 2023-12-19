@@ -30,6 +30,7 @@ package com.tencent.devops.common.service.utils
 import org.springframework.beans.BeansException
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
+import org.springframework.core.env.get
 import org.springframework.stereotype.Component
 
 /**
@@ -99,6 +100,10 @@ class SpringContextUtil : ApplicationContextAware {
         @Throws(BeansException::class)
         fun <T : Any> getBeansWithClass(clazz: Class<T>): List<T> {
             return applicationContext!!.getBeansOfType(clazz).values.toList()
+        }
+
+        fun getValue(key: String): String? {
+            return applicationContext?.environment?.get(key)
         }
     }
 }
