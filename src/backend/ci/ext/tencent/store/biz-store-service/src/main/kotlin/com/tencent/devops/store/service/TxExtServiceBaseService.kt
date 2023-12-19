@@ -270,6 +270,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             startParams["imageTag"] = version
             startParams["extServiceDeployInfo"] = JsonUtil.toJson(deployApp)
             startParams["script"] = script
+            startParams["branch"] = MASTER
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartup(
                 userId, projectCode!!, servicePipelineRelRecord.pipelineId, startParams,
                 ChannelCode.AM
