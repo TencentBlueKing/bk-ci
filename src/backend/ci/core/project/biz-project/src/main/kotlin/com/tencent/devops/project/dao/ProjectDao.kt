@@ -435,12 +435,17 @@ class ProjectDao {
         }
     }
 
-    fun updateUsableStatus(dslContext: DSLContext, userId: String, projectId: String, enabled: Boolean): Int {
+    fun updateUsableStatus(
+        dslContext: DSLContext,
+        userId: String?,
+        projectId: String,
+        enabled: Boolean
+    ): Int {
         with(TProject.T_PROJECT) {
             return dslContext.update(this)
                 .set(ENABLED, enabled)
                 .set(UPDATED_AT, LocalDateTime.now())
-                .set(UPDATOR, userId)
+                .let { if (userId == null) it else it.set(UPDATOR, userId) }
                 .where(PROJECT_ID.eq(projectId))
                 .execute()
         }
@@ -871,6 +876,19 @@ class ProjectDao {
         with(TProject.T_PROJECT) {
             dslContext.update(this)
                 .set(SUBJECT_SCOPES, subjectScopesStr)
+                .where(ENGLISH_NAME.eq(englishName))
+                .execute()
+        }
+    }
+
+    fun updateProductId(
+        dslContext: DSLContext,
+        englishName: String,
+        productId: Int
+    ) {
+        with(TProject.T_PROJECT) {
+            dslContext.update(this)
+                .set(PRODUCT_ID, productId)
                 .where(ENGLISH_NAME.eq(englishName))
                 .execute()
         }
