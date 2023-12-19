@@ -456,7 +456,8 @@ class AtomDao : AtomBaseDao() {
         with(TAtom.T_ATOM) {
             return dslContext.select(
                 VERSION.`as`(KEY_VERSION),
-                ATOM_STATUS.`as`(KEY_ATOM_STATUS)
+                ATOM_STATUS.`as`(KEY_ATOM_STATUS),
+                BRANCH_TEST_FLAG.`as`(KEY_BRANCH_TEST_FLAG)
             ).from(this)
                 .where(
                     generateGetPipelineAtomCondition(

@@ -25,46 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.util
+package com.tencent.devops.process.api.template
 
-object ThreadLocalUtil {
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.service.template.TemplateAtomService
+import com.tencent.devops.store.pojo.atom.AtomProp
+import org.springframework.beans.factory.annotation.Autowired
 
-    private val threadLocalMap = object : ThreadLocal<MutableMap<String, Any>>() {
-        override fun initialValue(): MutableMap<String, Any> {
-            return mutableMapOf()
-        }
-    }
+@RestResource
+class UserTemplateAtomResourceImpl @Autowired constructor(
+    private val templateAtomService: TemplateAtomService
+) : UserTemplateAtomResource {
 
-    /**
-     * 根据 key 获取线程变量
-     * @param key 变量 key
-     * @return 变量值
-     */
-    fun get(key: String): Any? {
-        return threadLocalMap.get()[key]
-    }
-
-    /**
-     * 设置线程变量
-     * @param key 变量 key
-     * @param value 变量值
-     */
-    fun set(key: String, value: Any) {
-        threadLocalMap.get()[key] = value
-    }
-
-    /**
-     * 移除线程变量
-     * @param key 变量 key
-     */
-    fun remove(key: String) {
-        threadLocalMap.get().remove(key)
-    }
-
-    /**
-     * 清空当前线程变量
-     */
-    fun clear() {
-        threadLocalMap.get().clear()
+    override fun getTemplateAtomPropList(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        version: Long?
+    ): Result<Map<String, AtomProp>?> {
+        return templateAtomService.getTemplateAtomPropList(
+            userId = userId,
+            projectId = projectId,
+            templateId = templateId,
+            version = version
+        )
     }
 }
