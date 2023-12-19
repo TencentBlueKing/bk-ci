@@ -52,7 +52,6 @@
                             slot="content"
                             class="all-service-list"
                             column-width="190px"
-                            :get-document-title="getDocumentTitle"
                             :with-hover="false"
                             :services="services"
                         />
