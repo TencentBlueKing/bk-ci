@@ -444,6 +444,11 @@ class RbacPermissionService constructor(
                     AuthPermission.get(authPermission) to resources.map { resource -> resource.resourceCode }
                 }
             }
+            val resourceCode2IamResourceCode = authResourceCodeConverter.batchCode2IamCode(
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCodes = resources.map { it.resourceCode }
+            )
             val instanceList = resources.map { resource ->
                 val paths = mutableListOf<PathInfoDTO>()
                 resourcesPaths(
@@ -455,11 +460,7 @@ class RbacPermissionService constructor(
                 )
                 val instance = InstanceDTO()
                 instance.type = resource.resourceType
-                instance.id = authResourceCodeConverter.code2IamCode(
-                    projectCode = projectCode,
-                    resourceType = resource.resourceType,
-                    resourceCode = resource.resourceCode
-                )
+                instance.id = resourceCode2IamResourceCode[resource.resourceCode]
                 instance.system = iamConfiguration.systemId
                 instance.paths = paths
                 instance
