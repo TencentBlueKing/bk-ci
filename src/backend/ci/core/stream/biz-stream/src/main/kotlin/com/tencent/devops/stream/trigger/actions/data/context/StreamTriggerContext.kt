@@ -74,7 +74,7 @@ data class StreamTriggerContext(
     var gitDefaultBranchLatestCommitInfo: Pair<String?, GitCommit?>? = null,
     var extensionAction: String? = null,
     var mrTargetBranch: String? = null,
-    var triggerOn: TriggerOn
+    var triggerOn: TriggerOn? = null
 )
 
 /**
