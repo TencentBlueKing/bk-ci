@@ -22,7 +22,6 @@ let mod: Route[] = []
 for (const key in window.Pages) {
     mod = mod.concat(window.Pages[key].routes)
 }
-
 const iframeRoutes = window.serviceObject.iframeRoutes.map(r => ({
     path: urlJoin('/console', r.path, ':restPath*'),
     name: r.name,
@@ -88,13 +87,11 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
     }
     
     router.beforeEach((to, from, next) => {
-        if (to.name !== from.name) {
-            document.title = window.currentPage ? String(`${window.currentPage.name} | ${i18n.t('documentTitle')}`) : String(i18n.t('documentTitle'))
-        }
-
         const serviceAlias = getServiceAliasByPath(to.path)
         const currentPage = window.serviceObject.serviceMap[serviceAlias]
-
+        if (to.name !== from.name) {
+            document.title = currentPage ? String(`${currentPage.name} | ${i18n.t('documentTitle')}`) : String(i18n.t('documentTitle'))
+        }
         window.currentPage = currentPage
         store.dispatch('updateCurrentPage', currentPage) // update currentPage
         if (!currentPage) { // console 首页
