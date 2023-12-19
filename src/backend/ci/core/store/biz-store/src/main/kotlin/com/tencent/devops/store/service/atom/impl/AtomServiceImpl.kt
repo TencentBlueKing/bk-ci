@@ -593,6 +593,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 )
             }
         }
+        logger.info("atomRunInfos is : $atomRunInfos")
         return Result(atomRunInfos)
     }
 

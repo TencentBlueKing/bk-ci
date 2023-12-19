@@ -2065,6 +2065,7 @@ class TemplateFacadeService @Autowired constructor(
                 }
             }
         }
+        logger.info("codeVersions is : $codeVersions")
         if (codeVersions.isNotEmpty()) {
             AtomUtils.checkTemplateAtoms(
                 codeVersions = codeVersions,
