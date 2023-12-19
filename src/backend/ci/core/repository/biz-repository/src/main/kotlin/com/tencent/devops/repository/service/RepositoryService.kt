@@ -731,12 +731,19 @@ class RepositoryService @Autowired constructor(
         val permissionToListMap = repositoryPermissionService.filterRepositories(
             userId = userId,
             projectId = projectId,
-            authPermissions = setOf(AuthPermission.LIST, AuthPermission.EDIT, AuthPermission.DELETE, AuthPermission.USE)
+            authPermissions = setOf(
+                AuthPermission.LIST,
+                AuthPermission.EDIT,
+                AuthPermission.DELETE,
+                AuthPermission.USE,
+                AuthPermission.VIEW
+            )
         )
         val hasListPermissionRepoList = permissionToListMap[AuthPermission.LIST]!!
         val hasEditPermissionRepoList = permissionToListMap[AuthPermission.EDIT]!!
         val hasDeletePermissionRepoList = permissionToListMap[AuthPermission.DELETE]!!
         val hasUsePermissionRepoList = permissionToListMap[AuthPermission.USE]!!
+        val hasViewPermissionRepoList = permissionToListMap[AuthPermission.VIEW]!!
         val count =
             repositoryDao.countByProject(
                 dslContext = dslContext,
@@ -770,6 +777,7 @@ class RepositoryService @Autowired constructor(
             val hasEditPermission = hasEditPermissionRepoList.contains(it.repositoryId)
             val hasDeletePermission = hasDeletePermissionRepoList.contains(it.repositoryId)
             val hasUsePermission = hasUsePermissionRepoList.contains(it.repositoryId)
+            val hasViewPermission = hasViewPermissionRepoList.contains(it.repositoryId)
             val authInfo = repoAuthInfoMap[it.repositoryId]
             RepositoryInfoWithPermission(
                 repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
@@ -780,6 +788,7 @@ class RepositoryService @Autowired constructor(
                 canEdit = hasEditPermission,
                 canDelete = hasDeletePermission,
                 canUse = hasUsePermission,
+                canView = hasViewPermission,
                 authType = authInfo?.authType ?: RepoAuthType.HTTP.name,
                 svnType = authInfo?.svnType,
                 authIdentity = authInfo?.credentialId?.ifBlank { it.userId },
