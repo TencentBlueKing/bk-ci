@@ -41,7 +41,11 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
@@ -58,6 +62,7 @@ import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_NAME
@@ -83,7 +88,8 @@ class SubPipelineStartUpService @Autowired constructor(
     private val subPipelineStatusService: SubPipelineStatusService,
     private val pipelineTaskService: PipelineTaskService,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
-    private val pipelinePermissionService: PipelinePermissionService
+    private val pipelinePermissionService: PipelinePermissionService,
+    private val pipelineUrlBean: PipelineUrlBean
 ) {
 
     companion object {
@@ -217,6 +223,15 @@ class SubPipelineStartUpService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
         )
 
+        val parentBuildInfo = pipelineRuntimeService.getBuildInfo(
+            projectId = parentProjectId,
+            buildId = parentBuildId
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+            params = arrayOf(parentBuildId)
+        )
+
         val startEpoch = System.currentTimeMillis()
         try {
 
@@ -236,8 +251,25 @@ class SubPipelineStartUpService @Autowired constructor(
                 BuildParameters(key = PIPELINE_START_PARENT_PIPELINE_NAME, value = parentPipelineInfo.pipelineName)
             params[PIPELINE_START_PARENT_BUILD_ID] =
                 BuildParameters(key = PIPELINE_START_PARENT_BUILD_ID, value = parentBuildId)
+            params[PIPELINE_START_PARENT_BUILD_NUM] =
+                BuildParameters(key = PIPELINE_START_PARENT_BUILD_NUM, value = parentBuildInfo.buildNum)
             params[PIPELINE_START_PARENT_BUILD_TASK_ID] =
                 BuildParameters(key = PIPELINE_START_PARENT_BUILD_TASK_ID, value = parentTaskId)
+            params[PIPELINE_GIT_EVENT_URL] =
+                BuildParameters(
+                    key = PIPELINE_GIT_EVENT_URL,
+                    value = pipelineUrlBean.genBuildDetailUrl(
+                        projectCode = parentProjectId,
+                        pipelineId = parentPipelineId,
+                        buildId = parentBuildId,
+                        position = null,
+                        stageId = null,
+                        needShortUrl = false
+                    )
+                )
+            // 给触发材料展示时使用
+            params[PIPELINE_WEBHOOK_EVENT_TYPE] =
+                BuildParameters(key = PIPELINE_WEBHOOK_EVENT_TYPE, value = CodeEventType.PARENT_PIPELINE.name)
             // 兼容子流水线插件按照名称调用,传递的参数没有在子流水线变量中声明，仍然可以传递
             parameters.forEach {
                 if (!params.containsKey(it.key)) {

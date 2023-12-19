@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_CREATE_TIME
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_CREATOR
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_GROUP
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_ID
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_NAME
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
@@ -126,6 +127,7 @@ object ModelParameters {
             val (group, name) = GitUtils.getRepoGroupAndName(gitProjectName)
             startParams[PIPELINE_GIT_REPO_NAME] = name
             startParams[PIPELINE_GIT_REPO_GROUP] = group
+            startParams[PIPELINE_GIT_REPO_ID] = streamGitProjectInfo.gitProjectId
         }
 
         // 用户自定义变量
