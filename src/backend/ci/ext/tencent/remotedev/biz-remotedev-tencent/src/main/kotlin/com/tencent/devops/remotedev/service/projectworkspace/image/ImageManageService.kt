@@ -99,7 +99,7 @@ class ImageManageService @Autowired constructor(
     )
     fun deleteProjectImage(userId: String, projectId: String, imageId: String): Boolean {
         logger.info("$userId delete projectImage: $imageId")
-        imageManageDao.deleteWorkspaceImage(projectId, imageId, dslContext)
+        imageManageDao.updateWorkspaceImageStatus(projectId, imageId, ImageStatus.DELETED, dslContext)
         return true
     }
 }

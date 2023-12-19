@@ -2,7 +2,9 @@ package com.tencent.devops.remotedev.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
+import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import io.swagger.annotations.Api
@@ -107,5 +109,27 @@ interface ServiceRemoteDevResource {
         @ApiParam(value = "机器uid", required = true)
         @QueryParam("uid")
         uid: String
+    ): Result<Boolean>
+
+    @ApiOperation("提供给BCS做分配云桌面给指定用户")
+    @POST
+    @Path("/assignWorkspace")
+    fun assignWorkspace(
+        @ApiParam(value = "操作人，必填", required = true)
+        @QueryParam("operator")
+        operator: String,
+        @ApiParam(value = "拥有者，为空则表示不分配，只交付项目", required = false)
+        @QueryParam("owner")
+        owner: String?,
+        @ApiParam(value = "分配数据，必填", required = true)
+        data: OpProjectWorkspaceAssignData
+    ): Result<Boolean>
+
+    @ApiOperation("用来通知蓝盾客户端消息")
+    @POST
+    @Path("/notify")
+    fun notifyWorkspaceInfo(
+        @ApiParam(value = "通知信息", required = true)
+        notifyData: WorkspaceNotifyData
     ): Result<Boolean>
 }

@@ -244,10 +244,15 @@ class RbacPermissionResourceService(
                 projectName = resourceName
             )
         } else {
+            val projectInfo = authResourceService.get(
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode
+            )
             permissionSubsetManagerService.modifySubsetManager(
                 subsetManagerId = resourceInfo.relationId,
                 projectCode = projectCode,
-                projectName = resourceInfo.resourceName,
+                projectName = projectInfo.resourceName,
                 resourceType = resourceType,
                 resourceCode = resourceCode,
                 resourceName = resourceName,

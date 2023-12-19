@@ -2,8 +2,10 @@ package com.tencent.devops.remotedev.service.redis
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.dao.WhiteListDao
 import com.tencent.devops.remotedev.pojo.WhiteListType
+import com.tencent.devops.remotedev.pojo.expert.ExpertSupportConfigType
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -17,7 +19,8 @@ class RedisCacheService @Autowired constructor(
     private val redisOperation: RedisOperation,
     @Qualifier("redisStringHashOperation")
     private val redisHashOperation: RedisOperation,
-    private val whiteListDao: WhiteListDao
+    private val whiteListDao: WhiteListDao,
+    private val expertSupportDao: ExpertSupportDao
 ) {
 
     companion object {
@@ -53,6 +56,13 @@ class RedisCacheService @Autowired constructor(
             whiteListDao.get(dslContext, key, WhiteListType.WINDOWS_GPU)?.windowsGpuLimit ?: 0
         }
 
+    private val expertSupportCache = Caffeine.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<ExpertSupportConfigType, List<String>> { type ->
+            expertSupportDao.fetchExpertSupportConfig(dslContext, type).map { it.content }
+        }
+
     fun get(key: String) = redisCache.get(key)
 
     fun getSetMembers(key: String) = redisCacheSet.get(key)
@@ -62,4 +72,7 @@ class RedisCacheService @Autowired constructor(
     fun checkApiWhiteList(name: String) = apiWhiteListCache.get(name) ?: false
 
     fun checkWindowsGpuLimit(name: String) = windowsGpuWhiteListCache.get(name) ?: 0
+
+    fun checkExpertSupportUser(userId: String) =
+        expertSupportCache.get(ExpertSupportConfigType.SUPPORTER)?.contains(userId) ?: false
 }

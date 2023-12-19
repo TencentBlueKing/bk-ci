@@ -5,7 +5,9 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.ApigwRemoteDevResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
+import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
+import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import org.slf4j.LoggerFactory
@@ -72,5 +74,43 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<Boolean> {
         logger.info("check user cgs permission")
         return client.get(ServiceRemoteDevResource::class).checkUserIpPermission(userId, ip)
+    }
+
+    override fun assignWorkspace(
+        appCode: String?,
+        apigwType: String?,
+        operator: String,
+        owner: String?,
+        data: OpProjectWorkspaceAssignData
+    ): Result<Boolean> {
+        logger.info("assign workspace|operator|$operator|owner|$owner|data|$data")
+        return client.get(ServiceRemoteDevResource::class).assignWorkspace(
+            operator = operator,
+            owner = owner,
+            data = data
+        )
+    }
+
+    override fun listWorkspacesWithProjectId(
+        appCode: String?,
+        apigwType: String?,
+        projectId: String
+    ): Result<List<WeSecProjectWorkspace>> {
+        logger.info("List  projects workspace ,projectId:$projectId")
+        return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(
+            projectId = projectId,
+            ip = null
+        )
+    }
+
+    override fun notifyWorkspaceInfo(
+        appCode: String?,
+        apigwType: String?,
+        notifyData: WorkspaceNotifyData
+    ): Result<Boolean> {
+        logger.info("notify workspace|notifyData|$notifyData")
+        return client.get(ServiceRemoteDevResource::class).notifyWorkspaceInfo(
+            notifyData = notifyData
+        )
     }
 }
