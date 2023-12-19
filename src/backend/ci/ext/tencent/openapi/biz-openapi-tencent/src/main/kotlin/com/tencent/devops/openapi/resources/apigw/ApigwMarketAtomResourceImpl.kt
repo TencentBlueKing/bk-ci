@@ -81,7 +81,7 @@ class ApigwMarketAtomResourceImpl @Autowired constructor(private val client: Cli
             atomCode = atomCode,
             username = userId,
             page = page ?: 1,
-            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20
         )
     }
 

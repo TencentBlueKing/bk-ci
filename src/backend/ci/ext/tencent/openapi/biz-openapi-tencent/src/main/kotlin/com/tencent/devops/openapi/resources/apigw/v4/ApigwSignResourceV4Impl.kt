@@ -64,7 +64,7 @@ class ApigwSignResourceV4Impl @Autowired constructor(
             startTime = startTime,
             endTime = endTime,
             page = page ?: 1,
-            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20
         )
     }
 

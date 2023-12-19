@@ -66,7 +66,7 @@ class ApigwRepositoryResourceV2Impl @Autowired constructor(private val client: C
                 projectId = projectId,
                 repositoryType = repositoryType,
                 page = page ?: 1,
-                pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
+                pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20
             )
         } else {
             Result(data = null)
