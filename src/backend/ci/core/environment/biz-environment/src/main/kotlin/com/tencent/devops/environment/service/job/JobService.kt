@@ -656,7 +656,7 @@ class JobService @Autowired constructor(
                     endTime = jobCloudGetStepInstanceStatus.endTime,
                     type = jobCloudGetStepInstanceStatus.type,
                     startTime = jobCloudGetStepInstanceStatus.startTime,
-                    stepResultGroupList = jobCloudGetStepInstanceStatus.stepResultGroupList.map { stepResultGroup ->
+                    stepResultGroupList = jobCloudGetStepInstanceStatus.stepResultGroupList?.map { stepResultGroup ->
                         StepResultGroup(
                             resultType = stepResultGroup.resultType,
                             resultTypeDesc = stepResultGroup.resultTypeDesc,

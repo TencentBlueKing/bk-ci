@@ -33,5 +33,5 @@ data class JobCloudGetStepInstanceStatusResult(
     val startTime: Long,
     @ApiModelProperty(value = "任务执行结果分组列表")
     @JsonProperty("step_result_group_list")
-    val stepResultGroupList: List<JobCloudStepResultGroup>
+    val stepResultGroupList: List<JobCloudStepResultGroup>?
 )
