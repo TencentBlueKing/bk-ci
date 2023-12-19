@@ -16,8 +16,6 @@
         :default-sort="sortField"
         @selection-change="handleSelectChange"
         @header-dragend="handelHeaderDragend"
-        @row-mouse-enter="handleRowMouseEnter"
-        @row-mouse-leave="handleRowMouseLeave"
         v-on="$listeners"
         :key="viewId"
     >
@@ -30,11 +28,13 @@
         </div>
         <bk-table-column v-if="isPatchView" type="selection" width="60" fixed="left" :selectable="checkSelecteable"></bk-table-column>
         <bk-table-column v-if="!isPatchView && !isDeleteView" width="20" fixed="left">
-            <template slot-scope="{ row, $index }">
+            <template slot-scope="{ row }">
                 <bk-button
-                    v-show="showCollectIndex === $index || row.hasCollect"
                     text
-                    class="icon-star-btn"
+                    :class="{
+                        'icon-star-btn': true,
+                        'is-collect': row.hasCollect
+                    }"
                     :theme="row.hasCollect ? 'warning' : ''"
                     @click="collectHandler(row)">
                     <i :class="{
@@ -45,24 +45,35 @@
                 </bk-button>
             </template>
         </bk-table-column>
-        <bk-table-column v-if="allRenderColumnMap.pipelineName" :width="tableWidthMap.pipelineName" min-width="250" fixed="left" sortable="custom" :label="$t('pipelineName')" prop="pipelineName" show-overflow-tooltip>
+        <bk-table-column v-if="allRenderColumnMap.pipelineName" :width="tableWidthMap.pipelineName" min-width="250" fixed="left" sortable="custom" :label="$t('pipelineName')" prop="pipelineName">
             <template slot-scope="props">
                 <!-- hack disabled event -->
-                <span
-                    v-if="props.row.permissions && !props.row.permissions.canView"
-                    class="pointer"
-                    @click="applyPermission(props.row)"
-                >
-                    {{props.row.pipelineName}}
-                </span>
-                <router-link
-                    v-else-if="!props.row.delete && !isDeleteView && props.row.historyRoute"
-                    class="pipeline-cell-link"
-                    :disabled="props.row.permissions && !props.row.permissions.canView"
-                    :to="props.row.historyRoute">
-                    {{props.row.pipelineName}}
-                </router-link>
-                <span v-else>{{props.row.pipelineName}}</span>
+                <div class="pipeline-name-warpper" :key="props.row.pipelineName">
+                    <div class="pipeline-name" v-bk-overflow-tips>
+                        <span
+                            v-if="props.row.permissions && !props.row.permissions.canView"
+                            class="pointer"
+                            @click="applyPermission(props.row)"
+                        >
+                            {{props.row.pipelineName}}
+                        </span>
+                        <router-link
+                            v-else-if="!props.row.delete && !isDeleteView && props.row.historyRoute"
+                            class="pipeline-cell-link"
+                            :disabled="props.row.permissions && !props.row.permissions.canView"
+                            :to="props.row.historyRoute">
+                            {{props.row.pipelineName}}
+                        </router-link>
+                        <span v-else>{{props.row.pipelineName}}</span>
+                    </div>
+                    <logo
+                        v-if="props.row.templateId"
+                        class="ml5 template-mode-icon"
+                        name="template-mode"
+                        size="12"
+                        v-bk-tooltips.right="$t('pipelineConstraintModeTips')"
+                    />
+                </div>
             </template>
         </bk-table-column>
         <bk-table-column v-if="allRenderColumnMap.ownGroupName && (isAllPipelineView || isPatchView || isDeleteView)" :width="tableWidthMap.viewNames" min-width="300" :label="$t('ownGroupName')" prop="viewNames">
@@ -620,12 +631,6 @@
                 // this.tableWidthMap.pipelineName -= 1
                 localStorage.setItem(CACHE_PIPELINE_TABLE_WIDTH_MAP, JSON.stringify(this.tableWidthMap))
             },
-            handleRowMouseEnter (index) {
-                this.showCollectIndex = index
-            },
-            handleRowMouseLeave (index) {
-                this.showCollectIndex = -1
-            },
             setTableColumn (val) {
                 if (val) {
                     this.tableColumn.splice(1, 0, {
@@ -676,6 +681,11 @@
         flex-direction: column;
     }
     .pipeline-list-table {
+        .cell {
+            position: relative;
+            display: -webkit-box !important;
+            -webkit-line-clamp: 1;
+        }
         td {
             position: inherit;
         }
@@ -692,14 +702,43 @@
         ::-webkit-scrollbar-thumb {
             background-color: #DCDEE5 !important;
         }
-    }
-    .exec-pipeline-btn {
-        width: 55px;
-        text-align: left;
-        overflow: hidden;
-    }
-    .icon-star-btn {
-        position: relative;
-        font-size: 14px !important;
+        .pipeline-name-warpper {
+            width: 100%;
+            display: inline-flex;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .pipeline-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .pipeline-cell-link {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .template-mode-icon {
+            flex-shrink: 0;
+            position: relative;
+            top: 2px;
+        }
+        .exec-pipeline-btn {
+            width: 55px;
+            text-align: left;
+            overflow: hidden;
+        }
+        .icon-star-btn {
+            position: relative;
+            font-size: 14px !important;
+            z-index: 999;
+            display: none;
+        }
+        .is-collect {
+            display: block
+        }
+        .bk-table-row.hover-row {
+            .icon-star-btn {
+                display: block
+            }
+        }
     }
 </style>

@@ -153,7 +153,7 @@
                                         projectId: row.projectCode,
                                         resourceType: 'project',
                                         resourceCode: row.projectCode,
-                                        action: RESOURCE_ACTION.ENABLE
+                                        action: RESOURCE_ACTION.MANAGE
                                     }
                                 }"
                                 :disabled="row.approvalStatus === 1"

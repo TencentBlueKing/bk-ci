@@ -417,7 +417,14 @@
     "deleteTemplateTips": "Delete Template ( {0} ) ?",
     "updateStatus": "Update Status",
     "updateDialogTitle": "Update Instance",
-    "updateDialogContent": "The instances are being updated. An email will be notified After the update is completed"
+    "updateDialogContent": "The instances are being updated. An email will be notified After the update is completed",
+    "permissionSetting": "Permission Setting",
+    "accessDeny": {
+        "title": "No access to this pipeline template",
+        "desc": "You do not have permission to view the pipeline template, please apply for permission",
+        "apply": "Apply"
+    },
+    "editStoreTemplateTips": "The development store template does not support editing"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
@@ -1221,7 +1228,10 @@
   "apkSignDurationTips": "Only the first download needs to wait. The preparation time is related to the package size. A 500MB package takes about 1 minute.",
   "apkSignSuccess": "{0} is ready, start downloading",
   "downloadLater": "Download later",
+  "copyAsTemplateInstance": "Copy As Instance",
   "downloadDisabledTips": "Exceeds 10 GB. Please download in batches from the artifact repository.",
+  "pipelineConstraintModeTips": "In constraint mode, You can't arrange the pipeline freely and should update the instance through template",
+  "copy": "Copy",
   "templateName": "Template",
   "templateVersion": "Template Version",
   "documentTitlePipeline": "Pipeline | BK-CI | Tencent BlueKing"
