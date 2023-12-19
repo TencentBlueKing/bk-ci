@@ -49,7 +49,6 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.store.config.ExtServiceImageSecretConfig
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.ExtServiceBuildInfoDao
 import com.tencent.devops.store.dao.common.BusinessConfigDao
