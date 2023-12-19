@@ -754,7 +754,8 @@ class GitRequestEventBuildDao {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val records = dslContext.select(DSL.max(ID))
                 .from(this)
-                .groupBy(PIPELINE_ID).having(PIPELINE_ID.`in`(pipelineIds))
+                .where(PIPELINE_ID.`in`(pipelineIds))
+                .groupBy(PIPELINE_ID)
                 .fetch()
             return if (records.isEmpty()) {
                 emptyList()
