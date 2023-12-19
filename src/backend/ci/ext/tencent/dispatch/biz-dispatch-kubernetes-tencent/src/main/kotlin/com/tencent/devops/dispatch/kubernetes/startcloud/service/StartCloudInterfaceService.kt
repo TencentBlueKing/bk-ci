@@ -143,7 +143,9 @@ class StartCloudInterfaceService @Autowired constructor(
                     hdisk = it.pvcs?.firstOrNull { pvc -> pvc.pvcClass == "hdd" }?.pvcSize,
                     imageStandard = it.basic?.imageStandard,
                     node = it.basic?.node,
-                    image = it.basic?.image
+                    image = it.basic?.image,
+                    cpu = it.basic?.cpu,
+                    mem = it.basic?.mem
                 )
             )
         }
