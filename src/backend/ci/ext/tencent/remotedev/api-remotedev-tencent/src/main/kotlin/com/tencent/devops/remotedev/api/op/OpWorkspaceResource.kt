@@ -138,4 +138,13 @@ interface OpWorkspaceResource {
         @QueryParam("uid")
         uid: String
     ): Result<Boolean>
+
+    @ApiOperation("删过期工作空间，用与定时外手动清理")
+    @GET
+    @Path("/deleteInactivityWorkspace")
+    fun deleteInactivityWorkspace(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<Boolean>
 }

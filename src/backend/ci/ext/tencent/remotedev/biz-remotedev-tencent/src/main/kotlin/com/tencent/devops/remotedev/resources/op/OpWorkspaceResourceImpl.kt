@@ -12,6 +12,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSharedOpUse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
+import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -19,7 +20,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpWorkspaceResourceImpl @Autowired constructor(
     private val workspaceService: WorkspaceService,
     private val workspaceCommon: WorkspaceCommon,
-    private val createControl: CreateControl
+    private val createControl: CreateControl,
+    private val deleteControl: DeleteControl
 ) : OpWorkspaceResource {
 
     @AuditEntry(actionId = ActionId.CGS_SHARE)
@@ -81,5 +83,10 @@ class OpWorkspaceResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         val res = createControl.createWinWorkspaceByVm(userId, oldWorkspaceName, projectId, uid)
         return Result(res)
+    }
+
+    override fun deleteInactivityWorkspace(userId: String): Result<Boolean> {
+        deleteControl.deleteInactivityWorkspace()
+        return Result(true)
     }
 }

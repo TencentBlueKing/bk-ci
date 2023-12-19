@@ -133,6 +133,9 @@ class WorkspaceListener @Autowired constructor(
             backEvent.errorMsg = e.message
             logger.error("Fail to handle workspace operate ($event)", e)
         } finally {
+            if (!backEvent.status) {
+                logger.warn("WORKSPACE_CHANGE_FAILED|${event.type}|event=$event")
+            }
             // 业务逻辑处理完成回调remotedev事件
             remoteDevDispatcher.dispatch(
                 backEvent

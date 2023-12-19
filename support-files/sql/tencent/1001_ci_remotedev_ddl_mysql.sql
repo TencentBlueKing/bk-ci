@@ -155,10 +155,12 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_SHARED` (
     `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
 	`ASSIGN_TYPE` varchar(32) NOT NULL DEFAULT 'VIEWER' COMMENT '分享人所属类型（OWNER、VIEWER）',
     `RESOURCE_ID` varchar(32) NOT NULL DEFAULT '' COMMENT '最长32位字符串， 用于后续调度时传给start sdk',
+    `EXPIRATION` TIMESTAMP NULL COMMENT '过期时间',
     PRIMARY KEY (`ID`),
     KEY `uni_1` (`WORKSPACE_NAME`),
     KEY `uni_2` (`SHARED_USER`),
-    KEY `uni_3` (`OPERATOR`)
+    KEY `uni_3` (`OPERATOR`),
+    KEY `EXPIRATION_IDX` (`EXPIRATION`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '工作空间共享记录表';
 
 -- ----------------------------
@@ -462,7 +464,7 @@ CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_EXPERT_SUPPORT` (
     `HOST_IP` varchar(64) NOT NULL COMMENT '云桌面IP',
     `WORKSPACE_NAME` varchar(128) NOT NULL COMMENT '工作空间名称，唯一性',
 	`CREATOR` varchar(32)  NOT NULL COMMENT '创建人',
-	`SUPPORTER` varchar(32)  NULL COMMENT '协助人',
+	`SUPPORTER` varchar(256)  NULL COMMENT '协助人',
 	`STATUS` varchar(16) NOT NULL COMMENT '单据状态',
 	`CONTENT` varchar(256)  NOT NULL COMMENT '单据内容',
     `CITY` varchar(32) NOT NULL COMMENT '城市',
@@ -489,7 +491,6 @@ CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_EXPERT_SUPPORT_CONFIG` (
     KEY `idx_type` (`TYPE`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
 -- ----------------------------
 -- Table structure for T_DAILY_CGS_DATA 统计每天云桌面的数据快照
 -- ----------------------------
@@ -504,5 +505,16 @@ CREATE TABLE IF NOT EXISTS `T_DAILY_CGS_DATA` (
     KEY `idx_date` (`DATE`),
     KEY `idx_type` (`OWNER_TYPE`)
     ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COMMENT='统计每天云桌面的数据快照';
+
+-- ----------------------------
+-- Table structure for T_WINDOWS_SPEC_RESOURCE windows特殊机型配额表
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_WINDOWS_SPEC_RESOURCE` (
+	`PROJECT_ID` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT '' NOT NULL COMMENT '项目ID',
+	`SIZE` varchar(10) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT '' NOT NULL COMMENT '资源类型',
+	`QUOTA` INT NOT NULL COMMENT '配额',
+    PRIMARY KEY (`PROJECT_ID`, `SIZE`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='windows特殊机型配额表';
+
 
 SET FOREIGN_KEY_CHECKS = 1;

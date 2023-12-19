@@ -173,6 +173,12 @@ class TencentApigwApiFilter(
     }
 
     fun verifyOauth2Authorization(requestContext: ContainerRequestContext): Boolean {
+        val path = requestContext.uriInfo.requestUri.path
+        // 判断是否为合法的路径
+        val apiType = ApiType.parseType(path) ?: return false
+        // 如果是op的接口访问直接跳过jwt认证
+        if (!apiType.verify) return true
+
         val bkApiJwt = requestContext.getHeaderString(jwtHeader)
         val apigwSource = requestContext.getHeaderString(apigwSourceHeader)
         val jwt = parseJwt(bkApiJwt, apigwSource)

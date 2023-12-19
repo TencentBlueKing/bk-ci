@@ -76,7 +76,7 @@ class WindowsGpuResourceDao {
                     ByteUtils.bool2Byte(it.locked ?: false),
                     it.projectId ?: "",
                     it.disk,
-                    it.hDisk
+                    it.hdisk
                 ).onDuplicateKeyUpdate()
                     .set(STATUS, it.status)
             }

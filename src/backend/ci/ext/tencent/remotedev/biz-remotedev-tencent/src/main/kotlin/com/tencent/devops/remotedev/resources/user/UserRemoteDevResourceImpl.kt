@@ -28,7 +28,10 @@
 package com.tencent.devops.remotedev.resources.user
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.remotedev.api.user.UserRemoteDevResource
 import com.tencent.devops.remotedev.pojo.BKGPT
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
@@ -41,12 +44,13 @@ import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.WatermarkService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
+import com.tencent.devops.remotedev.service.expert.ExpertSupportService
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import java.util.concurrent.Executors
-import javax.ws.rs.core.HttpHeaders
 import org.glassfish.jersey.server.ChunkedOutput
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.Executors
+import javax.ws.rs.core.HttpHeaders
 
 @RestResource
 @Suppress("ALL")
@@ -57,7 +61,9 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     private val watermarkService: WatermarkService,
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val workspaceCommon: WorkspaceCommon,
-    private val permissionService: PermissionService
+    private val permissionService: PermissionService,
+    private val expertSupportService: ExpertSupportService,
+    private val client: Client
 ) : UserRemoteDevResource {
 
     companion object {
@@ -114,9 +120,9 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         return Result(userId)
     }
 
-    override fun getAllWindowsResourceConfig(userId: String): Result<List<WindowsResourceTypeConfig>> {
-        logger.info("getAllWindowsResourceConfig|$userId")
-        return Result(windowsResourceConfigService.getAllType())
+    override fun getAllWindowsResourceConfig(userId: String, withUnavailable: Boolean?): Result<List<WindowsResourceTypeConfig>> {
+        logger.info("getAllWindowsResourceConfig|$userId|withUnavailable|$withUnavailable")
+        return Result(windowsResourceConfigService.getAllType(withUnavailable))
     }
 
     override fun getAllWindowsResourceZone(userId: String): Result<List<WindowsResourceZoneConfig>> {
@@ -124,7 +130,19 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         return Result(windowsResourceConfigService.getAllZone())
     }
 
-    override fun allWindowsQuota(userId: String): Result<Map<String, Map<String, Int>>> {
+    override fun allWindowsQuota(userId: String, searchCustom: Boolean?): Result<Map<String, Map<String, Int>>> {
+        if (searchCustom == true) {
+            val res = mutableMapOf<String, MutableMap<String, Int>>()
+            client.get(ServiceStartCloudResource::class).getResourceVm(ResourceVmReq(null, null)).data
+                ?.forEach { resource ->
+                    val key = resource.zoneId.replace(Regex("\\d+"), "")
+                    val map = res.getOrPut(key) { mutableMapOf() }
+                    resource.machineResources?.forEach { mas ->
+                        map[mas.machineType] = (map[mas.machineType] ?: 0) + (mas.free ?: 0)
+                    }
+                }
+            return Result(res)
+        }
         val res = mutableMapOf<String, MutableMap<String, Int>>()
         logger.info("allWindowsQuota|$userId")
         workspaceCommon.syncStartCloudResourceList().forEach {
@@ -139,5 +157,14 @@ class UserRemoteDevResourceImpl @Autowired constructor(
 
     override fun onePassword(userId: String, workspaceName: String): Result<String> {
         return Result(permissionService.init1Password(userId, workspaceName))
+    }
+
+    override fun addExpSup(userId: String, id: Long, workspaceName: String): Result<Boolean> {
+        val (res, message) = expertSupportService.assignExpSup(userId, id, workspaceName)
+        return if (message.isNullOrBlank()) {
+            Result(res)
+        } else {
+            Result(message, res)
+        }
     }
 }

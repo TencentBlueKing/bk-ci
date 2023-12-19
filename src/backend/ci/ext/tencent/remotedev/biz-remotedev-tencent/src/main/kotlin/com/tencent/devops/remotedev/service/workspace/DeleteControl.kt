@@ -66,15 +66,15 @@ import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
+import java.time.Duration
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.Duration
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("LongMethod")
@@ -217,7 +217,7 @@ class DeleteControl @Autowired constructor(
             // 发送处理事件
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
-                    userId = userId,
+                    userId = workspace.createUserId,
                     traceId = bizId,
                     type = UpdateEventType.DELETE,
                     workspaceName = workspace.workspaceName,
@@ -247,7 +247,7 @@ class DeleteControl @Autowired constructor(
             }
         }
         val now = LocalDateTime.now()
-        workspaceDao.fetchNotUsageTimeWinWorkspace(dslContext, status = WorkspaceStatus.SLEEP)
+        workspaceDao.fetchNotUsageTimeWinWorkspace(dslContext, status = WorkspaceStatus.STOPPED)
             ?.parallelStream()?.forEach {
                 MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
                 val retentionTime = redisCache.get(RedisKeys.REDIS_DESTRUCTION_RETENTION_TIME)?.toInt() ?: 3
@@ -300,7 +300,7 @@ class DeleteControl @Autowired constructor(
             )
 
             workspaceCommon.dispatchWebsocketPushEvent(
-                userId = ADMIN_NAME,
+                userId = workspace.createUserId,
                 workspaceName = workspace.workspaceName,
                 workspaceHost = null,
                 errorMsg = null,
@@ -326,7 +326,7 @@ class DeleteControl @Autowired constructor(
                 EnvStatusEnum.deleted -> event.status = true
                 else -> logger.warn(
                     "delete workspace callback with error|" +
-                        "${event.workspaceName}|${workspaceInfo.status}"
+                            "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }
@@ -356,7 +356,7 @@ class DeleteControl @Autowired constructor(
             ) {
                 logger.warn(
                     "delete workspace $workspaceName, but third party agent delete failed." +
-                        "|${workspace.createUserId}|$projectId|${detail?.environmentIP}|${workspace.preciAgentId}"
+                            "|${workspace.createUserId}|$projectId|${detail?.environmentIP}|${workspace.preciAgentId}"
                 )
             }
             // 清心跳
@@ -429,7 +429,7 @@ class DeleteControl @Autowired constructor(
         }
 
         workspaceCommon.dispatchWebsocketPushEvent(
-            userId = operator,
+            userId = ADMIN_NAME,
             workspaceName = workspaceName,
             workspaceHost = null,
             errorMsg = errorMsg,

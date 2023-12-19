@@ -344,7 +344,7 @@ class WorkspaceCommon @Autowired constructor(
      */
     fun notOk2doNextAction(workspace: WorkspaceRecord): Boolean {
         return (
-                workspace.status.notOk2doNextAction(workspace) && Duration.between(
+                workspace.status.notOk2doNextAction(workspace.workspaceSystemType) && Duration.between(
                     workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
                     LocalDateTime.now()
                 ).seconds < DEFAULT_WAIT_TIME
@@ -520,13 +520,16 @@ class WorkspaceCommon @Autowired constructor(
         }.getOrNull()
     }
 
-    fun checkCgsRunning(cgsId: String, status: EnvStatusEnum?): Boolean {
-        return kotlin.runCatching {
-            client.get(ServiceStartCloudResource::class)
-                .checkCgsRunning(cgsId, status).data
-        }.onFailure {
-            logger.warn("Error check cgs running: ${it.message}")
-        }.getOrNull() ?: false
+    /**判断是否已有存在的云桌面归属在项目下
+     * true:表示存在
+     * false:表示不存在
+     */
+
+    fun checkCgsRunning(cgsId: String): Boolean {
+        return workspaceDao.getAvailableCgsWorkspace(
+            dslContext = dslContext,
+            cgsId = cgsId
+        ) > 0
     }
 
     // 获取cgs机型、区域
