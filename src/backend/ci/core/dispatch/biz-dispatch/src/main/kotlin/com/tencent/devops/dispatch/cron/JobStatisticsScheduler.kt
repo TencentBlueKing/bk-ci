@@ -69,7 +69,8 @@ class JobStatisticsScheduler @Autowired constructor(
                 while (cursor.hasNext()) {
                     counter++
                     val keyValue = cursor.next()
-                    val (projectId, jobType, channelCode) = jobQuotaRedisUtils.parseProjectJobTypeConcurrencyKey(keyValue.key)
+                    val (projectId, jobType, channelCode) = jobQuotaRedisUtils
+                        .parseProjectJobTypeConcurrencyKey(keyValue.key)
                     addJobMetricsData(
                         theDate = theDate,
                         projectId = projectId,
