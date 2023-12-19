@@ -179,7 +179,9 @@ class StartCloudInterfaceService @Autowired constructor(
                 hdisk = it.hdisk,
                 imageStandard = ByteUtils.byte2Bool(it.imagestandard),
                 node = it.node,
-                image = it.image
+                image = it.image,
+                cpu = it.cpu,
+                mem = it.memory
             )
         }
     }
