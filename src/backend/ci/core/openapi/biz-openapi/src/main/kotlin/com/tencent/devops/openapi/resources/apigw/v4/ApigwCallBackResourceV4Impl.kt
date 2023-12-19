@@ -102,7 +102,7 @@ class ApigwCallBackResourceV4Impl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             page = page ?: 1,
-            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20
         )
     }
 
@@ -153,7 +153,7 @@ class ApigwCallBackResourceV4Impl @Autowired constructor(
                 DateTimeUtil.stringToLocalDateTime(endTime).timestampmilli()
             },
             page = page ?: 1,
-            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20
         )
     }
 

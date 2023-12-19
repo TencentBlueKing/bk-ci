@@ -130,7 +130,7 @@ class ApigwEnvironmentAgentResourceV4Impl @Autowired constructor(
             status = status,
             pipelineId = pipelineId,
             page = page ?: 1,
-            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20
         )
     }
 

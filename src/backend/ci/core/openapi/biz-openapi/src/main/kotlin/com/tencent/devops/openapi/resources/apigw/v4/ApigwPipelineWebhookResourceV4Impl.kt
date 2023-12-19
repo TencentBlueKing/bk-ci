@@ -58,7 +58,7 @@ class ApigwPipelineWebhookResourceV4Impl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 page = page ?: 1,
-                pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
+                pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20
             )
     }
 
