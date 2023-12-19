@@ -221,7 +221,8 @@ class PipelineRepositoryVersionService(
                     settingVersion = it.settingVersion,
                     status = it.status,
                     debugBuildId = it.debugBuildId,
-                    baseVersion = it.baseVersion
+                    baseVersion = it.baseVersion,
+                    description = it.description
                 )
             )
         }

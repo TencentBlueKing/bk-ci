@@ -450,7 +450,8 @@ class PipelineResourceVersionDao {
                     settingVersion = record.settingVersion,
                     status = record.status?.let { VersionStatus.valueOf(it) },
                     debugBuildId = record.debugBuildId,
-                    baseVersion = record.baseVersion
+                    baseVersion = record.baseVersion,
+                    description = record.description
                 )
             }
         }

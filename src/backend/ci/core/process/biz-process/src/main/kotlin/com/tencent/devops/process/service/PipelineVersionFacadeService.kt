@@ -565,7 +565,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             settingVersion = resource.settingVersion,
             status = resource.status,
             debugBuildId = resource.debugBuildId,
-            baseVersion = resource.baseVersion
+            baseVersion = resource.baseVersion,
+            description = resource.description
         )
     }
 
