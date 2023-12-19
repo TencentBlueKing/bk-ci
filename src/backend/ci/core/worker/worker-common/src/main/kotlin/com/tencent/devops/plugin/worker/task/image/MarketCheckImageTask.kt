@@ -62,20 +62,30 @@ class MarketCheckImageTask : ITask() {
         val registryHost = buildVariableMap["registryHost"]
         val registryUser = buildVariableMap["registryUser"]
         val registryPwd = buildVariableMap["registryPwd"]
-        val userId = buildVariableMap[PIPELINE_START_USER_ID]!!
+        val userId = buildVariableMap[PIPELINE_START_USER_ID] ?: ""
+        if (registryHost == null) {
+            LoggerService.addErrorLine("checkImage fail: registryHost is null")
+            throw TaskExecuteException(
+                errorMsg = "checkImage fail: registryHost is null}",
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorType = ErrorType.USER
+            )
+        }
         val checkImageResult = dockerApi.checkDockerImage(
             userId = userId,
             checkDockerImageRequestList = arrayOf(
                 CheckDockerImageRequest(
                     imageName = imageName.replace("$registryHost/", ""),
-                    registryHost = registryHost!!,
+                    registryHost = registryHost,
                     registryUser = registryUser,
                     registryPwd = registryPwd
                 )
             )
         )
-        LoggerService.addNormalLine("checkImageResult: $checkImageResult")
-        if (checkImageResult.isNotOk() || checkImageResult.data.isNullOrEmpty()) {
+        val checkImageResponse =
+        if (checkImageResult.isOk() && checkImageResult.data!!.isNotEmpty()) {
+            checkImageResult.data!![0]
+        } else {
             LoggerService.addErrorLine(JsonUtil.toJson(checkImageResult))
             throw TaskExecuteException(
                 errorMsg = "checkImage fail: ${checkImageResult.message}",
@@ -83,9 +93,16 @@ class MarketCheckImageTask : ITask() {
                 errorType = ErrorType.USER
             )
         }
+        if (checkImageResponse.errorCode == -1) {
+            LoggerService.addErrorLine(JsonUtil.toJson(checkImageResponse))
+            throw TaskExecuteException(
+                errorMsg = "checkImage fail: ${checkImageResponse.errorMessage}",
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorType = ErrorType.USER
+            )
+        }
         val imageVersion = buildVariableMap["version"]
         // 获取镜像大小上送至商店
-        val checkImageResponse = checkImageResult.data!![0]
         val updateImageResult = dockerApi.updateImageInfo(
             userId = userId,
             projectCode = buildVariables.projectId,
