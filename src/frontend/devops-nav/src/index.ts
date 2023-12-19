@@ -87,7 +87,11 @@ router.afterEach((route) => {
     bsWebSocket.changeRoute(route)
 })
 router.beforeEach((to, from, next) => {
-    document.title = window.currentPage ? String(`${window.currentPage.name} | ${i18n.t('documentTitle')}`) : String(i18n.t('documentTitle'))
+    // title需要展示具体资源的名称时，在子服务上报更新title
+    if (!['pipeline'].includes(to.name)) {
+        document.title = window.currentPage ? String(`${window.currentPage.name} | ${i18n.t('documentTitle')}`) : String(i18n.t('documentTitle'))
+    }
+    
     bsWebSocket.loginOut(from)
     next()
 })
