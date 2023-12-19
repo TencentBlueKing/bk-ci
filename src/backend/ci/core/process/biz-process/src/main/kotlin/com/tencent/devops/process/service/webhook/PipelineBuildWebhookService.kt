@@ -30,6 +30,8 @@ package com.tencent.devops.process.service.webhook
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.pojo.measure.ProjectUserDailyEvent
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispatcher
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -37,6 +39,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
@@ -65,6 +68,7 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
+import java.time.LocalDate
 
 @Suppress("ALL")
 abstract class PipelineBuildWebhookService : ApplicationContextAware {
@@ -83,6 +87,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         pipelineBuildCommitService = applicationContext.getBean(PipelineBuildCommitService::class.java)
         webhookBuildParameterService = applicationContext.getBean(WebhookBuildParameterService::class.java)
         pipelineTriggerEventService = applicationContext.getBean(PipelineTriggerEventService::class.java)
+        measureEventDispatcher = applicationContext.getBean(MeasureEventDispatcher::class.java)
     }
 
     companion object {
@@ -99,6 +104,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         lateinit var pipelineBuildCommitService: PipelineBuildCommitService
         lateinit var webhookBuildParameterService: WebhookBuildParameterService
         lateinit var pipelineTriggerEventService: PipelineTriggerEventService
+        lateinit var measureEventDispatcher: MeasureEventDispatcher
         private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
     }
 
@@ -406,6 +412,15 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                     buildId = buildId,
                     buildParameters = pipelineParamMap.values.toList()
                 )
+                if (startParams[PIPELINE_START_WEBHOOK_USER_ID] != null) {
+                    measureEventDispatcher.dispatch(
+                        ProjectUserDailyEvent(
+                            projectId = projectId,
+                            userId = startParams[PIPELINE_START_WEBHOOK_USER_ID]!!.toString(),
+                            theDate = LocalDate.now()
+                        )
+                    )
+                }
             }
             return buildId
         } catch (ignore: Exception) {

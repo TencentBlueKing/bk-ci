@@ -274,10 +274,17 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT_ATOM` (
   KEY `T_PROJECT_ATOM_PROJECT_ID_IDX` (`PROJECT_ID`,`ATOM_NAME`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='项目下插件关联关系表';
 
+CREATE TABLE IF NOT EXISTS `T_PROJECT_USER_DAILY`
+(
+    `PROJECT_ID` VARCHAR(64) not null comment '项目ID',
+    `USER_ID`    VARCHAR(64) not null comment '用户ID',
+    `THE_DATE`   DATE        not null comment '日期',
+    PRIMARY KEY (`PROJECT_ID`, `USER_ID`, `THE_DATE`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='项目每日用户';
+
 CREATE TABLE IF NOT EXISTS `T_PROJECT_BUILD_SUMMARY_DAILY`
 (
     `PROJECT_ID`           VARCHAR(64)  not null comment '项目ID',
-    `PRODUCT_ID`           int null comment '运营产品ID',
     `USER_COUNT`           int          not null default 0 comment '用户数',
     `BUILD_COUNT`          int          not null default 0 comment '总构建数',
     `MANUAL_BUILD_COUNT`   int          not null default 0 comment '手动触发构建数',
