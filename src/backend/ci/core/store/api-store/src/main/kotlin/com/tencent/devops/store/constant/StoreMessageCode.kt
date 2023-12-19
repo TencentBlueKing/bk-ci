@@ -89,7 +89,7 @@ object StoreMessageCode {
     const val USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID = "2120037" // 研发商店：插件配置文件[error.json]errorCode格式不正确，请检查
     const val TASK_JSON_CONFIGURE_FORMAT_ERROR = "2120038" // 参数[{0}] 的{1} ,请检查task.json配置格式是否正确 \n
     const val GET_ATOM_LANGUAGE_ENV_INFO_FAILED = "2120039" // 获取插件开发语言相关的环境变量信息失败
-    const val TEST_VERSION_PLUGIN_NOT_ALLOWED_USE = "2120040" // 模板中插件（{0}）（{1}），不允许使用
+    const val TEMPLATE_PLUGIN_NOT_ALLOWED_USE = "2120040" // 模板中插件（{0}）（{1}），不允许使用
 
     const val USER_TEMPLATE_VERSION_IS_NOT_FINISH = "2120201" // 研发商店：模板{0}的{1}版本发布未结束，请稍后再试
     const val USER_TEMPLATE_RELEASE_STEPS_ERROR = "2120202" // 研发商店：模板发布流程状态变更顺序不正确

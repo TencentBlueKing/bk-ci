@@ -49,7 +49,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.config.TaskCommonSettingConfig
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
-import com.tencent.devops.store.constant.StoreMessageCode.TEST_VERSION_PLUGIN_NOT_ALLOWED_USE
+import com.tencent.devops.store.constant.StoreMessageCode.TEMPLATE_PLUGIN_NOT_ALLOWED_USE
 import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
@@ -211,7 +211,7 @@ object AtomUtils {
             val atomStatus = AtomStatusEnum.getAtomStatus(it.atomStatus!!.toInt())
             if (atomStatus != AtomStatusEnum.RELEASED.name) {
                 throw ErrorCodeException(
-                    errorCode = TEST_VERSION_PLUGIN_NOT_ALLOWED_USE,
+                    errorCode = TEMPLATE_PLUGIN_NOT_ALLOWED_USE,
                     params = arrayOf(
                         it.atomName,
                         AtomStatusEnum.valueOf(atomStatus).getI18n(I18nUtil.getLanguage(userId))
