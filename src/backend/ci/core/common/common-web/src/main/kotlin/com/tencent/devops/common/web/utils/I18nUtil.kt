@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
 import com.tencent.devops.common.api.enums.RequestChannelTypeEnum
 import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.LocaleUtil
 import com.tencent.devops.common.api.util.MessageUtil
@@ -219,6 +220,13 @@ object I18nUtil {
         } else {
             i18nMessage
         }
+    }
+
+    fun I18Variable.getCodeLanMessage(): String {
+        return getCodeLanMessage(
+            messageCode = code,
+            params = params.toTypedArray()
+        )
     }
 
     /**

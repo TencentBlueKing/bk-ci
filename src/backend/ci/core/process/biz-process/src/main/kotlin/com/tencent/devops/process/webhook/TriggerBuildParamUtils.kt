@@ -28,6 +28,7 @@
 
 package com.tencent.devops.process.webhook
 
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
 import com.tencent.devops.common.pipeline.pojo.BuildParameterGroup
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
@@ -92,7 +93,24 @@ import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_REVIEW_TYPE
 import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_SHA
 import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_SHA_SHORT
 import com.tencent.devops.process.constant.TriggerBuildParamKey.CI_TAG_FROM
+import com.tencent.devops.process.utils.BUILD_NO
+import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
+import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
+import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
+import com.tencent.devops.process.utils.PIPELINE_CREATE_USER
+import com.tencent.devops.process.utils.PIPELINE_ID
+import com.tencent.devops.process.utils.PIPELINE_NAME
+import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
+import com.tencent.devops.process.utils.PIPELINE_START_MOBILE
+import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
+import com.tencent.devops.process.utils.PIPELINE_START_TYPE
+import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.process.utils.PIPELINE_UPDATE_USER
+import com.tencent.devops.process.utils.PIPELINE_VERSION
+import com.tencent.devops.process.utils.PROJECT_NAME
+import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 
+@SuppressWarnings("TooManyFunctions")
 object TriggerBuildParamUtils {
     // map<atomCode, map<event_type, params>>
     private val TRIGGER_BUILD_PARAM_NAME_MAP = mutableMapOf<String, MutableMap<String, List<String>>>()
@@ -114,6 +132,44 @@ object TriggerBuildParamUtils {
         svnWebhookTrigger()
         // p4事件触发参数
         p4WebhookTrigger()
+    }
+
+    fun getBasicParamName() = I18nUtil.getCodeLanMessage("$TRIGGER_BUILD_PARAM_PREFIX.basic")
+
+    fun getBasicBuildParams(): List<BuildEnvParameters> {
+        return listOf(
+            PIPELINE_BUILD_MSG,
+            BUILD_NO,
+            PIPELINE_BUILD_NUM,
+            PIPELINE_BUILD_ID,
+            PIPELINE_ID,
+            PIPELINE_NAME,
+            PIPELINE_CREATE_USER,
+            PIPELINE_UPDATE_USER,
+            PIPELINE_VERSION,
+            PROJECT_NAME,
+            PROJECT_NAME_CHINESE,
+            PIPELINE_START_CHANNEL,
+            PIPELINE_START_USER_ID,
+            PIPELINE_START_TASK_ID,
+            PIPELINE_START_MOBILE
+        ).map {
+            BuildEnvParameters(
+                name = it,
+                desc = I18nUtil.getCodeLanMessage(it)
+            )
+        }.toMutableList().let { list ->
+            list.add(
+                BuildEnvParameters(
+                    name = PIPELINE_START_TYPE,
+                    desc = I18nUtil.getCodeLanMessage(
+                        messageCode = PIPELINE_START_TYPE,
+                        params = arrayOf(StartType.values().joinToString("/") { it.name })
+                    )
+                )
+            )
+            list
+        }
     }
 
     fun getTriggerParamNameMap(atomCode: String): List<BuildParameterGroup> {
@@ -310,7 +366,6 @@ object TriggerBuildParamUtils {
             mapOf(CodeEventType.REVIEW.name to params)
         )
     }
-
 
     /**
      * github事件触发create事件变量名列表

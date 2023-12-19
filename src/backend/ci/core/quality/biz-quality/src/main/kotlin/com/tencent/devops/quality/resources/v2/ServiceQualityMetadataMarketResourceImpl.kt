@@ -41,16 +41,22 @@ class ServiceQualityMetadataMarketResourceImpl @Autowired constructor(
     override fun setTestMetadata(
         userId: String,
         atomCode: String,
+        extra: String,
         metadataList: List<QualityMetaData>
     ): Result<Map<String, Long>> {
-        return Result(qualityMetadataService.serviceSetTestMetadata(userId, atomCode, metadataList))
+        return Result(qualityMetadataService.serviceSetTestMetadata(
+            userId = userId,
+            elementType = atomCode,
+            extra = extra,
+            metadataList = metadataList
+        ))
     }
 
     override fun refreshMetadata(elementType: String): Result<Map<String, String>> {
         return Result(qualityMetadataService.serviceRefreshMetadata(elementType))
     }
 
-    override fun deleteTestMetadata(elementType: String): Result<Int> {
-        return Result(qualityMetadataService.serviceDeleteTestMetadata(elementType))
+    override fun deleteTestMetadata(elementType: String, extra: String): Result<Int> {
+        return Result(qualityMetadataService.serviceDeleteTestMetadata(elementType, extra))
     }
 }

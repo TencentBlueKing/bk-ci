@@ -166,14 +166,6 @@ class MigratePipelineDataTask constructor(
                     migratingShardingDslContext = migratingShardingDslContext,
                     processDataMigrateDao = processDbMigrateDao
                 )
-                // 3.14、迁移T_PIPELINE_WEBHOOK_BUILD_LOG_DETAIL表数据
-                migratePipelineWebhookBuildLogDetailData(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    dslContext = dslContext,
-                    migratingShardingDslContext = migratingShardingDslContext,
-                    processDataMigrateDao = processDbMigrateDao
-                )
                 // 3.15、迁移T_PIPELINE_WEBHOOK_QUEUE表数据
                 migratePipelineWebhookQueueData(
                     projectId = projectId,
@@ -595,32 +587,6 @@ class MigratePipelineDataTask constructor(
             }
             offset += SHORT_PAGE_SIZE
         } while (pipelineSettingVersionRecords.size == SHORT_PAGE_SIZE)
-    }
-
-    private fun migratePipelineWebhookBuildLogDetailData(
-        projectId: String,
-        pipelineId: String,
-        dslContext: DSLContext,
-        migratingShardingDslContext: DSLContext,
-        processDataMigrateDao: ProcessDataMigrateDao
-    ) {
-        var offset = 0
-        do {
-            val webhookBuildLogDetailRecords = processDataMigrateDao.getPipelineWebhookBuildLogDetailRecords(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                limit = SHORT_PAGE_SIZE,
-                offset = offset
-            )
-            if (webhookBuildLogDetailRecords.isNotEmpty()) {
-                processDataMigrateDao.migratePipelineWebhookBuildLogDetailData(
-                    migratingShardingDslContext = migratingShardingDslContext,
-                    webhookBuildLogDetailRecords = webhookBuildLogDetailRecords
-                )
-            }
-            offset += SHORT_PAGE_SIZE
-        } while (webhookBuildLogDetailRecords.size == SHORT_PAGE_SIZE)
     }
 
     private fun migratePipelineWebhookQueueData(

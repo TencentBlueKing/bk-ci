@@ -45,6 +45,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MILEST
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_NUMBER
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_TITLE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_URL
+import com.tencent.devops.common.webhook.pojo.code.github.GithubBaseInfo
 import com.tencent.devops.common.webhook.pojo.code.github.GithubIssueCommentEvent
 
 @CodeWebhookHandler
@@ -85,5 +86,17 @@ class GithubIssueCommentTriggerHandler : GithubCommentTriggerHandler<GithubIssue
             }
         }
         return startParams
+    }
+
+    override fun buildCommentUrl(event: GithubIssueCommentEvent): String {
+        // https://github.com/TencentBlueKing/bk-ci/issues/{{issuesNumber}}#issuecomment-{{commentId}}
+        return with(event) {
+            if (comment.htmlUrl.isNullOrBlank()) {
+                "${GithubBaseInfo.GITHUB_HOME_PAGE_URL}/${repository.fullName}/commit/" +
+                        "${issue.number}#issuecomment-${comment.id}"
+            } else {
+                comment.htmlUrl!!
+            }
+        }
     }
 }

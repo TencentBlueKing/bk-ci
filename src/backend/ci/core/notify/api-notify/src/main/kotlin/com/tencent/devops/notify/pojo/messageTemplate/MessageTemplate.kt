@@ -55,6 +55,8 @@ data class MessageTemplate(
     var wechatTemplate: WechatMessageTemplate? = null,
     @ApiModelProperty("微信群模板", required = false)
     var weworkGroupTemplate: WeworkGroupMessageTemplate? = null,
+    @ApiModelProperty("语音模板", required = false)
+    val voiceTemplate: VoiceTemplate? = null,
     @ApiModelProperty("创建人", required = true)
     val creator: String,
     @ApiModelProperty("修改人", required = true)

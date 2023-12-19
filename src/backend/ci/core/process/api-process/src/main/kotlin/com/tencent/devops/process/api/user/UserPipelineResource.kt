@@ -413,7 +413,10 @@ interface UserPipelineResource {
         pageSize: Int?,
         @ApiParam("流水线排序", required = false, defaultValue = "CREATE_TIME")
         @QueryParam("sortType")
-        sortType: PipelineSortType? = PipelineSortType.CREATE_TIME
+        sortType: PipelineSortType? = PipelineSortType.CREATE_TIME,
+        @ApiParam("流水线名称", required = false)
+        @QueryParam("filterByPipelineName")
+        filterByPipelineName: String?
     ): Result<PipelinePage<Pipeline>>
 
     @ApiOperation("流水线状态列表")
