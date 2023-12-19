@@ -88,6 +88,10 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
     }
     
     router.beforeEach((to, from, next) => {
+        if (to.name !== from.name) {
+            document.title = window.currentPage ? String(`${window.currentPage.name} | ${i18n.t('documentTitle')}`) : String(i18n.t('documentTitle'))
+        }
+
         const serviceAlias = getServiceAliasByPath(to.path)
         const currentPage = window.serviceObject.serviceMap[serviceAlias]
 
