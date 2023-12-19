@@ -285,6 +285,7 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT_USER_DAILY`
 CREATE TABLE IF NOT EXISTS `T_PROJECT_BUILD_SUMMARY_DAILY`
 (
     `PROJECT_ID`           VARCHAR(64)  not null comment '项目ID',
+    `PRODUCT_ID`           int              null comment '产品ID',
     `USER_COUNT`           int          not null default 0 comment '用户数',
     `BUILD_COUNT`          int          not null default 0 comment '总构建数',
     `MANUAL_BUILD_COUNT`   int          not null default 0 comment '手动触发构建数',
