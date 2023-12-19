@@ -211,6 +211,7 @@ object AtomUtils {
                 codeVersions = codeVersions
             ).data!!
         atomInfos.forEach {
+            logger.info("AtomInfo $it ,status: ${it.atomStatus}")
             val atomStatus = AtomStatusEnum.getAtomStatus(it.atomStatus!!.toInt())
             logger.info("AtomInfo $it ,status: $atomStatus")
             logger.info("params: ${AtomStatusEnum.valueOf(atomStatus).getI18n(I18nUtil.getLanguage(userId))}")
