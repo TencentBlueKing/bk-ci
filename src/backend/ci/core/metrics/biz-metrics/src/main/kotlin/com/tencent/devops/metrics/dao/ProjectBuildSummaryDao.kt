@@ -41,10 +41,10 @@ class ProjectBuildSummaryDao {
             mapOf(
                 StartType.MANUAL.name to MANUAL_BUILD_COUNT,
                 StartType.TIME_TRIGGER.name to TIME_BUILD_COUNT,
-                StartType.SERVICE to OPENAPI_BUILD_COUNT,
-                StartType.PIPELINE to SUB_PIPELINE_BUILD_COUNT,
-                StartType.REMOTE to REMOTE_BUILD_COUNT,
-                StartType.WEB_HOOK to WEBHOOK_BUILD_COUNT
+                StartType.SERVICE.name to OPENAPI_BUILD_COUNT,
+                StartType.PIPELINE.name to SUB_PIPELINE_BUILD_COUNT,
+                StartType.REMOTE.name to REMOTE_BUILD_COUNT,
+                StartType.WEB_HOOK.name to WEBHOOK_BUILD_COUNT
             )
         }
     }
