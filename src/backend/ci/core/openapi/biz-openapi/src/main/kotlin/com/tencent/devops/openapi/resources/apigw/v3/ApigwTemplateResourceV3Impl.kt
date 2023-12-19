@@ -62,7 +62,7 @@ class ApigwTemplateResourceV3Impl @Autowired constructor(private val client: Cli
             templateType = templateType,
             storeFlag = storeFlag,
             page = page,
-            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20
         )
     }
 
@@ -98,7 +98,7 @@ class ApigwTemplateResourceV3Impl @Autowired constructor(private val client: Cli
             projectId = projectId,
             templateType = null,
             page = page,
-            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20
         )
     }
 

@@ -83,7 +83,7 @@ class ApigwAtomResourceV3Impl @Autowired constructor(private val client: Client)
             atomCode = atomCode,
             username = userId,
             page = page ?: 1,
-            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20
         )
     }
 
