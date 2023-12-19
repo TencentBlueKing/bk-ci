@@ -5,6 +5,7 @@ object TriggerBuildParamKey {
     const val CI_REPO_TYPE = "ci.repo_type"
     const val CI_REPO_URL = "ci.repo_url"
     const val CI_REPO = "ci.repo"
+    const val CI_REPO_ID = "ci.repo_id"
     const val CI_REPO_GROUP = "ci.repo_group"
     const val CI_REPO_NAME = "ci.repo_name"
     const val CI_REPO_ALIAS_NAME = "ci.repo_alias_name"
@@ -54,7 +55,6 @@ object TriggerBuildParamKey {
     // GIT NOTE参数
     const val CI_NOTE_COMMENT = "ci.note_comment"
     const val CI_NOTE_ID = "ci.note_id"
-    const val CI_REPO_ID = "ci.repo_id"
     const val CI_NOTE_TYPE = "ci.note_type"
     const val CI_NOTE_AUTHOR = "ci.note_author"
     const val CI_CREATE_TIME = "ci.create_time"

@@ -70,12 +70,20 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_MIL
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_OWNER
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_STATE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_TITLE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MILESTONE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MILESTONE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_REVIEWERS
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_NOTE_AUTHOR_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_NOTE_CREATED_AT
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_NOTE_NOTEABLE_TYPE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_NOTE_UPDATED_AT
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_IID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_OWNER
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWABLE_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWERS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_STATE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_ALIAS_NAME
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_REPO_NAME
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BLOCK
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
@@ -249,7 +257,17 @@ object PipelineVarUtil {
         "ci.pipeline_path" to PIPELINE_GIT_YAML_PATH,
         "ci.repo_create_time" to PIPELINE_GIT_REPO_CREATE_TIME,
         "ci.repo_creator" to PIPELINE_GIT_REPO_CREATOR,
-        "ci.remark" to PIPELINE_BUILD_REMARK
+        "ci.remark" to PIPELINE_BUILD_REMARK,
+        "ci.repo_alias_name" to BK_REPO_WEBHOOK_REPO_ALIAS_NAME,
+        "ci.build_msg" to PIPELINE_BUILD_MSG,
+        "ci.event" to PIPELINE_WEBHOOK_EVENT_TYPE,
+        "ci.milestone_name" to BK_REPO_GIT_WEBHOOK_MR_MILESTONE,
+        "ci.milestone_id" to BK_REPO_GIT_WEBHOOK_MR_MILESTONE_ID,
+        "ci.note_type" to BK_REPO_GIT_WEBHOOK_NOTE_NOTEABLE_TYPE,
+        "ci.note_author" to BK_REPO_GIT_WEBHOOK_NOTE_AUTHOR_ID,
+        "ci.create_time" to BK_REPO_GIT_WEBHOOK_NOTE_CREATED_AT,
+        "ci.modify_time" to BK_REPO_GIT_WEBHOOK_NOTE_UPDATED_AT,
+        "ci.review_type" to BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWABLE_TYPE
     )
 
     /**

@@ -141,6 +141,7 @@ object TriggerBuildParamUtils {
      */
     private fun gitWebhookTriggerCommon() {
         val commonParams = listOf(
+            CI_REPO_ID,
             CI_REPO_TYPE,
             CI_REPO_URL,
             CI_REPO,
@@ -249,7 +250,6 @@ object TriggerBuildParamUtils {
         val params = listOf(
             CI_NOTE_COMMENT,
             CI_NOTE_ID,
-            CI_REPO_ID,
             CI_NOTE_TYPE,
             CI_NOTE_AUTHOR,
             CI_CREATE_TIME,
