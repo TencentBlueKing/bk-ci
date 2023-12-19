@@ -1233,5 +1233,6 @@
   "pipelineConstraintModeTips": "In constraint mode, You can't arrange the pipeline freely and should update the instance through template",
   "copy": "Copy",
   "templateName": "Template",
-  "templateVersion": "Template Version"
+  "templateVersion": "Template Version",
+  "documentTitlePipeline": "Pipeline | BK-CI | Tencent BlueKing"
 }

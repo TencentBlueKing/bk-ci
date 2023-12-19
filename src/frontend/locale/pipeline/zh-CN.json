@@ -1238,5 +1238,6 @@
   "pipelineConstraintModeTips": "约束模式下，流水线编排随模板更新，不能自由调整",
   "copy": "复制",
   "templateName": "模板",
-  "templateVersion": "模版版本"
+  "templateVersion": "模版版本",
+  "documentTitlePipeline": "流水线 | 持续集成平台-蓝盾 | 腾讯蓝鲸智云"
 }

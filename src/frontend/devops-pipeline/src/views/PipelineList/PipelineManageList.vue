@@ -319,6 +319,7 @@
             }
         },
         created () {
+            this.$updateTabTitle?.(this.$t('documentTitlePipeline'))
             this.goList()
             this.checkHasCreatePermission()
         },
