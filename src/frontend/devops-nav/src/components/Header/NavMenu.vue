@@ -67,7 +67,6 @@
                             :services="services"
                             :current-page="currentPage"
                             :toggle-collect="toggleCollect"
-                            :get-document-title="getDocumentTitle"
                         />
                     </div>
                 </div>
