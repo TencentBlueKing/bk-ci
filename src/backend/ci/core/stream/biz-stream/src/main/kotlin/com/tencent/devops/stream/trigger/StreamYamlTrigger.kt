@@ -84,7 +84,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-@Suppress("LongParameterList", "LongMethod")
+@Suppress("LongParameterList", "LongMethod", "ComplexMethod")
 class StreamYamlTrigger @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
