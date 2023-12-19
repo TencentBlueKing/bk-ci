@@ -30,6 +30,6 @@ package com.tencent.devops.environment.pojo.job.agentreq
 import io.swagger.annotations.ApiModelProperty
 
 data class TerminalAgentInstallTaskReq(
-    @ApiModelProperty(value = "")
+    @ApiModelProperty(value = "实例ID列表")
     val instanceIdList: List<String>
 )

@@ -32,30 +32,30 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("查询agent任务状态的接口的返回结果")
 data class QueryAgentTaskStatusResult(
-    @ApiModelProperty(value = "", required = true)
+    @ApiModelProperty(value = "作业任务ID", required = true)
     val jobId: Int,
-    @ApiModelProperty(value = "", required = true)
+    @ApiModelProperty(value = "创建者", required = true)
     val createdBy: String,
-    @ApiModelProperty(value = "", required = true)
+    @ApiModelProperty(value = "作业类型", required = true)
     val jobType: String,
-    @ApiModelProperty(value = "", required = true)
+    @ApiModelProperty(value = "作业类型名称", required = true)
     val jobTypeDisplay: String,
-    @ApiModelProperty(value = "", required = true)
+    @ApiModelProperty(value = "过滤的IP列表", required = true)
     val ipFilterList: List<String>,
-    @ApiModelProperty(value = "")
+    @ApiModelProperty(value = "实例记录数量总和")
     val total: Int?,
-    @ApiModelProperty(value = "")
+    @ApiModelProperty(value = "过滤的主机详细信息列表")
     val list: List<HostDetail>?,
-    @ApiModelProperty(value = "", required = true)
+    @ApiModelProperty(value = "任务统计信息", required = true)
     val statistics: Statistics,
-    @ApiModelProperty(value = "", required = true)
+    @ApiModelProperty(value = "执行状态", required = true)
     val status: String,
-    @ApiModelProperty(value = "", required = true)
+    @ApiModelProperty(value = "完成时间", required = true)
     val endTime: String,
-    @ApiModelProperty(value = "", required = true)
+    @ApiModelProperty(value = "启动时间时间", required = true)
     val startTime: String,
-    @ApiModelProperty(value = "", required = true)
+    @ApiModelProperty(value = "执行耗时", required = true)
     val costTime: String,
-    @ApiModelProperty(value = "", required = true)
+    @ApiModelProperty(value = "执行任务元数据信息", required = true)
     val meta: Meta
 )

@@ -33,10 +33,13 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("安装agent的返回结果")
 data class AgentInstallAgentResult(
-    @ApiModelProperty(value = "")
+    @ApiModelProperty(value = "任务ID")
     @JsonProperty("job_id")
     val jobId: Int,
-    @ApiModelProperty(value = "")
+    @ApiModelProperty(value = "任务URL")
+    @JsonProperty("job_url")
+    val jobUrl: String,
+    @ApiModelProperty(value = "过滤失败的主机信息")
     @JsonProperty("ip_filter")
     val ipFilter: List<AgentIpFilter>
 )

@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
 data class AgentRetryAgentInstallTaskReq(
-    @ApiModelProperty(value = "")
+    @ApiModelProperty(value = "实例ID列表")
     @JsonProperty("instance_id_list")
     val instanceIdList: List<String>
 )

@@ -32,28 +32,28 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("安装agent的返回结果中的 主机信息")
 data class IpFilter(
-    @ApiModelProperty(value = "")
+    @ApiModelProperty(value = "主机业务ID")
     val bkBizId: Int,
-    @ApiModelProperty(value = "")
+    @ApiModelProperty(value = "主机业务名称")
     val bkBizName: String,
-    @ApiModelProperty(value = "")
+    @ApiModelProperty(value = "IP地址")
     val ip: String,
-    @ApiModelProperty(value = "")
+    @ApiModelProperty(value = "内网IPV4地址")
     val innerIp: String,
-    @ApiModelProperty(value = "")
+    @ApiModelProperty(value = "内网IPV6地址")
     val innerIpv6: String,
-    @ApiModelProperty(value = "")
+    @ApiModelProperty(value = "主机ID")
     val bkHostId: Int,
-    @ApiModelProperty(value = "")
+    @ApiModelProperty(value = "管控区域名称")
     val bkCloudName: String,
-    @ApiModelProperty(value = "")
+    @ApiModelProperty(value = "管控区域ID")
     val bkCloudId: Int,
-    @ApiModelProperty(value = "")
+    @ApiModelProperty(value = "执行状态")
     val status: String,
-    @ApiModelProperty(value = "")
+    @ApiModelProperty(value = "作业ID")
     val jobId: Int,
-    @ApiModelProperty(value = "")
+    @ApiModelProperty(value = "过滤原因")
     val exception: String,
-    @ApiModelProperty(value = "")
+    @ApiModelProperty(value = "失败的具体信息")
     val msg: String
 )

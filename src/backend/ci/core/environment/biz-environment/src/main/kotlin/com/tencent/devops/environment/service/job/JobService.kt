@@ -736,6 +736,7 @@ class JobService @Autowired constructor(
             errors = agentInstallAgentRes.errors,
             data = InstallAgentResult(
                 jobId = agentInstallAgentRes.data?.jobId,
+                jobUrl = agentInstallAgentRes.data?.jobUrl,
                 ipFilter = agentInstallAgentRes.data?.ipFilter?.map {
                     IpFilter(
                         bkBizId = it.bkBizId,
