@@ -73,7 +73,7 @@ class PCGBuildListener @Autowired constructor(
     }
 
     override fun getVmType(): JobQuotaVmType? {
-        return JobQuotaVmType.OTHER
+        return JobQuotaVmType.DOCKER_PCG
     }
 
     override fun onShutdown(event: PipelineAgentShutdownEvent) {
