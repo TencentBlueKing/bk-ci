@@ -198,8 +198,6 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
         val buildInfo = extServiceBuildInfoDao.getServiceBuildInfo(context, serviceId)
         logger.info("service[$serviceCode] buildInfo is:$buildInfo")
         val script = buildInfo.value1()
-        val repoAddr = extServiceImageSecretConfig.repoRegistryUrl
-        val imageName = "${extServiceImageSecretConfig.imageNamePrefix}$serviceCode"
         // 未正式发布的扩展服务先部署到bcs灰度环境
         val deployApp = extServiceBcsService.generateDeployApp(
             userId = userId,
@@ -213,7 +211,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
                 serviceId = serviceId,
                 serviceCode = serviceCode,
                 version = serviceRecord.version,
-                imageName = imageName,
+                imageName = serviceCode,
                 imageTag = version,
                 extServiceDeployInfo = deployApp,
                 branch = MASTER
@@ -272,7 +270,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             val startParams = mutableMapOf<String, String>() // 启动参数
             startParams["serviceCode"] = serviceCode
             startParams["version"] = serviceRecord.version
-            startParams["imageName"] = imageName
+            startParams["imageName"] = serviceCode
             startParams["imageTag"] = version
             startParams["extServiceDeployInfo"] = JsonUtil.toJson(deployApp)
             startParams["script"] = script
