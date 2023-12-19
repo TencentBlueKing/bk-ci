@@ -82,7 +82,7 @@ BEGIN
                     AND TABLE_NAME = 'T_NODE'
                     AND INDEX_NAME = 'PROJECT_ID') THEN
         ALTER TABLE `T_NODE`
-            ADD INDEX `HOST_ID` (`PROJECT_ID`);
+            ADD INDEX `PROJECT_ID` (`PROJECT_ID`);
     END IF;
 
     IF NOT EXISTS(SELECT 1
@@ -109,7 +109,16 @@ BEGIN
                     AND TABLE_NAME = 'T_NODE'
                     AND INDEX_NAME = 'NODE_IP') THEN
         ALTER TABLE `T_NODE`
-            ADD INDEX `NODE_TYPE` (`NODE_IP`);
+            ADD INDEX `NODE_IP` (`NODE_IP`);
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_NODE'
+                    AND INDEX_NAME = 'DISPLAY_NAME') THEN
+        ALTER TABLE `T_NODE`
+            ADD INDEX `DISPLAY_NAME` (`DISPLAY_NAME`);
     END IF;
 
     IF NOT EXISTS(SELECT 1
