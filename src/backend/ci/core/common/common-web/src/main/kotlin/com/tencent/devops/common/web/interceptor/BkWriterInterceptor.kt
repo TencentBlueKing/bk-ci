@@ -21,8 +21,6 @@ import org.apache.commons.collections4.ListUtils
 import org.slf4j.LoggerFactory
 import org.springframework.core.annotation.AnnotationUtils
 import org.springframework.stereotype.Component
-import org.springframework.web.context.request.RequestContextHolder
-import org.springframework.web.context.request.ServletRequestAttributes
 
 @Provider
 @BkInterfaceI18n
@@ -231,9 +229,8 @@ class BkWriterInterceptor(
         dbI18ndbKeyMap: MutableMap<String, String>,
         bkI18nFieldMap: MutableMap<String, I18nFieldInfo>
     ) {
-        val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
         // 获取模块标识
-        val moduleCode = I18nUtil.getModuleCode(attributes)
+        val moduleCode = I18nUtil.getModuleCode()
         // 获取用户ID
         val userId = I18nUtil.getRequestUserId()
         // 根据用户ID获取语言信息
