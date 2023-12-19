@@ -59,43 +59,60 @@ class JobStatisticsScheduler @Autowired constructor(
     @Scheduled(cron = "0 0 2 * * ? ")
     fun saveJobStatisticsHistory() {
         val redisLock = jobQuotaRedisUtils.getJobStatisticsLock()
-        try {
-            if (redisLock.tryLock()) {
+
+        // 仅在获取锁成功时尝试操作
+        if (redisLock.tryLock()) {
+            try {
                 logger.info("Start save jobStatistics")
-                val theDate = LocalDateTime.now().format(dateTimeFormatter)
-                val cursor = jobQuotaRedisUtils.getLastDayAllProjectConcurrency()
-                val jobMetricsDataList = mutableListOf<DispatchJobMetricsData>()
-                var counter = 0
-                while (cursor.hasNext()) {
-                    counter++
-                    val keyValue = cursor.next()
-                    val (projectId, jobType, channelCode) = jobQuotaRedisUtils
-                        .parseProjectJobTypeConcurrencyKey(keyValue.key)
-                    addJobMetricsData(
-                        theDate = theDate,
-                        projectId = projectId,
-                        jobType = jobType,
-                        channelCode = channelCode,
-                        keyValue = keyValue,
-                        jobMetricsDataList = jobMetricsDataList
-                    )
-
-                    if (counter % 100 == 0) {
-                        println("Start save jobStatistics counter: $counter -> pushAndClear dataMap.")
-                        pushJobStatistics(jobMetricsDataList)
-                        jobMetricsDataList.clear()
-                    }
-                }
-
-                // 最后再把100余数的剩余数据push
-                pushJobStatistics(jobMetricsDataList)
+                val jobMetricsDataList = fetchJobMetricsDataFromRedis()
+                pushJobStatisticsToDB(jobMetricsDataList)
+            } catch (e: Throwable) {
+                logger.error("Save jobStatistics failed.", e)
+            } finally {
+                jobQuotaRedisUtils.deleteLastDayJobKey()
+                jobQuotaRedisUtils.setDayJobKeyExpire()
             }
-        } catch (e: Throwable) {
-            logger.error("Save jobStatistics failed.", e)
-        } finally {
-            redisLock.unlock()
-            jobQuotaRedisUtils.deleteLastDayJobKey()
-            jobQuotaRedisUtils.setDayJobKeyExpire()
+        }
+    }
+
+    private fun fetchJobMetricsDataFromRedis(): MutableList<DispatchJobMetricsData> {
+        val theDate = LocalDateTime.now().format(dateTimeFormatter)
+
+        val jobMetricsDataList = mutableListOf<DispatchJobMetricsData>()
+        val cursor = jobQuotaRedisUtils.getLastDayAllProjectConcurrency()
+
+        while (cursor.hasNext()) {
+            val keyValue = cursor.next()
+            val (projectId, jobType, channelCode) =
+                jobQuotaRedisUtils.parseProjectJobTypeConcurrencyKey(keyValue.key)
+
+            addJobMetricsData(
+                theDate = theDate,
+                projectId = projectId,
+                jobType = jobType,
+                channelCode = channelCode,
+                keyValue = keyValue,
+                jobMetricsDataList = jobMetricsDataList
+            )
+
+            println("Fetch job metrics data from Redis, current count: ${jobMetricsDataList.size}")
+        }
+
+        return jobMetricsDataList
+    }
+
+    private fun pushJobStatisticsToDB(jobMetricsDataList: MutableList<DispatchJobMetricsData>) {
+        jobMetricsDataList.chunked(100).forEach {
+            println("Start push jobStatistics, size: ${it.size}")
+            measureEventDispatcher.dispatch(
+                DispatchJobMetricsEvent(
+                    projectId = "",
+                    pipelineId = "",
+                    buildId = "",
+                    jobMetricsList = it
+                )
+            )
+            println("Job statistics successfully pushed to DB.")
         }
     }
 
@@ -183,17 +200,6 @@ class JobStatisticsScheduler @Autowired constructor(
         } catch (e: Throwable) {
             logger.error("Check pipeline running failed, msg: ${e.message}")
         }
-    }
-
-    private fun pushJobStatistics(jobMetricsDataList: List<DispatchJobMetricsData>) {
-        measureEventDispatcher.dispatch(
-            DispatchJobMetricsEvent(
-                projectId = "",
-                pipelineId = "",
-                buildId = "",
-                jobMetricsList = jobMetricsDataList
-            )
-        )
     }
 
     companion object {
