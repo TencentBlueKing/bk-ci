@@ -27,7 +27,7 @@ class AuthPipelineTemplateService @Autowired constructor(
         callBackInfo: CallbackRequestDTO,
         token: String
     ): CallbackBaseResponseDTO? {
-        logger.info("iam流水线模板回调信息:$callBackInfo")
+        logger.info("iam call back info :$callBackInfo")
         val method = callBackInfo.method
         val page = callBackInfo.page
         val projectId = callBackInfo.filter.parent?.id ?: ""
@@ -73,7 +73,7 @@ class AuthPipelineTemplateService @Autowired constructor(
         )
         val result = ListInstanceInfo()
         if (templatesRecords == null || templatesRecords.isEmpty()) {
-            logger.info("$projectId 项目下无流水线模板")
+            logger.info("There is no pipeline template under the project $projectId ")
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -107,7 +107,7 @@ class AuthPipelineTemplateService @Autowired constructor(
         )
         val result = FetchInstanceInfo()
         if (pipelineTemplateList == null || pipelineTemplateList.isEmpty()) {
-            logger.info("$ids 未匹配到流水线模板")
+            logger.info("$ids does not match to pipeline template")
             return result.buildFetchInstanceFailResult()
         }
 

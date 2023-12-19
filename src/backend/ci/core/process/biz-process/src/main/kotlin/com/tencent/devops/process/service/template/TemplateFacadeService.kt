@@ -886,14 +886,20 @@ class TemplateFacadeService @Autowired constructor(
         val templatesWithViewPermIds = templatesByPermissionMap[AuthPermission.VIEW]
         // 公共模板如 流水线空白模板，不需要权限校验，直接返回
         val templatesWithListPermIds = if (includePublicFlag == true) {
-            templateDao.getTemplateByType(
-                dslContext = dslContext,
-                projectId = "",
-                templateType = TemplateType.PUBLIC
-            ).map { it.id }
+            templateDao.getPublicTemplate(dslContext = dslContext)
         } else {
             emptyList()
         }.toMutableList().apply { addAll(templatesByPermissionMap[AuthPermission.LIST] ?: emptyList()) }
+
+        if (templatesWithListPermIds.isEmpty()) {
+            return TemplateWithPermission(
+                templatesWithListPermRecords = null,
+                templatesWithViewPermIds = null,
+                templatesWithEditPermIds = null,
+                templatesWithDeletePermIds = null,
+                count = 0
+            )
+        }
 
         val templatesWithListPermRecords = templateDao.listTemplate(
             dslContext = dslContext,

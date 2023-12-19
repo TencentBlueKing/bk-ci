@@ -332,17 +332,15 @@ class TemplateDao {
         }
     }
 
-    fun getTemplateByType(
-        dslContext: DSLContext,
-        projectId: String,
-        templateType: TemplateType
-    ): Result<TTemplateRecord> {
+    fun getPublicTemplate(
+        dslContext: DSLContext
+    ): List<String> {
         with(TTemplate.T_TEMPLATE) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(TYPE.eq(templateType.name))
+            return dslContext.select(ID).from(this)
+                .where(PROJECT_ID.eq(""))
+                .and(TYPE.eq(TemplateType.PUBLIC.name))
                 .orderBy(CREATED_TIME.asc())
-                .fetch()
+                .fetch(0, String::class.java)
         }
     }
 
@@ -489,7 +487,7 @@ class TemplateDao {
         if (templateType != null) {
             conditions.add(tTemplate.TYPE.eq(templateType.name))
         }
-        if (templateIdList != null) {
+        if (!templateIdList.isNullOrEmpty()) {
             conditions.add(tTemplate.ID.`in`(templateIdList))
         }
         if (storeFlag != null) {
