@@ -41,6 +41,7 @@ enum class JobQuotaVmType(val displayName: String) {
     DOCKER_GITCI("工蜂CI构建机"),
     DOCKER_STREAM("STREAM构建机"),
     DOCKER_BCS("Docker on Bcs"),
+    DOCKER_PCG("PCG公共构建资源"),
     ALL("所有类型");
 
     companion object {
