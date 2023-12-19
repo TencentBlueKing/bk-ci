@@ -49,5 +49,7 @@ data class PipelineDetailInfo(
     @ApiModelProperty("是否有编辑权限")
     val hasPermission: Boolean,
     @ApiModelProperty("关联模板ID", required = false)
-    var templateId: String? = null
+    var templateId: String? = null,
+    @ApiModelProperty("关联模板版本", required = false)
+    var templateVersion: Long? = null
 )

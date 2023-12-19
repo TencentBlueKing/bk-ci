@@ -40,7 +40,11 @@ data class TemplateListModel(
     @ApiModelProperty("模型", required = false)
     val models: List<TemplateModel>,
     @ApiModelProperty("数量", required = false)
-    val count: Int
+    val count: Int,
+    @ApiModelProperty("是否有创建模板权限", required = false)
+    val hasCreatePermission: Boolean? = null,
+    @ApiModelProperty("是否开启模板权限", required = false)
+    val enableTemplatePermissionManage: Boolean? = null
 )
 
 @ApiModel("模板模型")
@@ -68,5 +72,11 @@ data class TemplateModel(
     @ApiModelProperty("是否有可更新实例", required = true)
     val hasInstance2Upgrade: Boolean,
     @ApiModelProperty("是否有模版操作权限", required = true)
-    val hasPermission: Boolean
+    val hasPermission: Boolean,
+    @ApiModelProperty("是否有模版查看权限", required = true)
+    val canView: Boolean? = null,
+    @ApiModelProperty("是否有模版编辑权限", required = true)
+    val canEdit: Boolean? = null,
+    @ApiModelProperty("是否有模版删除权限", required = true)
+    val canDelete: Boolean? = null
 )
