@@ -107,11 +107,11 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
-import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger
 import javax.ws.rs.core.Response
 
@@ -725,7 +725,7 @@ class PipelineRepositoryService constructor(
                     model = model,
                     yaml = yamlStr,
                     baseVersion = baseVersion ?: 0,
-                    versionName = versionName,
+                    versionName = versionName ?: "",
                     pipelineVersion = modelVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion,
@@ -782,7 +782,7 @@ class PipelineRepositoryService constructor(
         var version = 0
         val lock = PipelineModelLock(redisOperation, pipelineId)
         val watcher = Watcher(id = "updatePipeline#$pipelineId#$versionStatus")
-        var versionName: String? = null
+        var versionName: String = ""
         var realBaseVersion = baseVersion
         var operationLogType = OperationLogType.NORMAL_SAVE_OPERATION
         var operationLogParams = versionName ?: "init"
@@ -1210,11 +1210,14 @@ class PipelineRepositoryService constructor(
                 originModel = latestVersion.model,
                 newModel = targetVersion.model
             )
+            val now = LocalDateTime.now()
             resultVersion = targetVersion.copy(
                 version = latestVersion.version + 1,
                 pipelineVersion = pipelineVersion,
                 triggerVersion = triggerVersion,
                 settingVersion = targetVersion.settingVersion,
+                createTime = now,
+                updateTime = now,
                 versionName = PipelineVersionUtils.getVersionName(
                     pipelineVersion, triggerVersion, targetVersion.settingVersion
                 )
@@ -1285,7 +1288,7 @@ class PipelineRepositoryService constructor(
                     pipelineViewGroupDao.delete(transactionContext, projectId, pipelineId)
                 } else {
                     // 删除前改名，防止名称占用
-                    val deleteTime = LocalDateTime.now().toString("yyMMddHHmmSS")
+                    val deleteTime = org.joda.time.LocalDateTime.now().toString("yyMMddHHmmSS")
                     var deleteName = "${record.pipelineName}[$deleteTime]"
                     if (deleteName.length > MAX_LEN_FOR_NAME) { // 超过截断，且用且珍惜
                         deleteName = deleteName.substring(0, MAX_LEN_FOR_NAME)

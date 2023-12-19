@@ -54,7 +54,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerEle
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
-import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.RepoPipelineRefInfo
 import com.tencent.devops.repository.pojo.RepoPipelineRefRequest
@@ -78,7 +78,7 @@ import java.util.concurrent.TimeUnit
 @Service
 class RepoPipelineRefService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineResDao: PipelineResDao,
+    private val pipelineResDao: PipelineResourceDao,
     private val objectMapper: ObjectMapper,
     private val client: Client,
     private val modelTaskDao: PipelineModelTaskDao

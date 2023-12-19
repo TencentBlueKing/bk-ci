@@ -39,6 +39,8 @@ data class PipelineVersionSimple(
     val creator: String,
     @ApiModelProperty("创建时间戳", required = true)
     val createTime: Long,
+    @ApiModelProperty("更新时间戳", required = true)
+    val updateTime: Long?,
     @ApiModelProperty("流水线版本号", required = true)
     val version: Int,
     @ApiModelProperty("流水线版本名称", required = true)

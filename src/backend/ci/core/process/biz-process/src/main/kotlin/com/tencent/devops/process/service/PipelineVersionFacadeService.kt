@@ -70,6 +70,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Service
@@ -556,6 +557,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             creator = resource.creator,
             createTime = resource.createTime.timestampmilli(),
+            updateTime = resource.updateTime?.timestampmilli(),
             version = resource.version,
             versionName = resource.versionName ?: "init",
             referFlag = resource.referFlag,
