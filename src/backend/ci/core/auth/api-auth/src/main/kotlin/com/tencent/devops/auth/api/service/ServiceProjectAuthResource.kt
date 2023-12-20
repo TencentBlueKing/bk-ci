@@ -108,7 +108,10 @@ interface ServiceProjectAuthResource {
         userId: String,
         @PathParam("action")
         @ApiParam("项目资源类型action", required = true)
-        action: String
+        action: String,
+        @QueryParam("resourceType")
+        @ApiParam("资源类型", required = true)
+        resourceType: String? = null
     ): Result<List<String>>
 
     @GET

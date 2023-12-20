@@ -28,6 +28,7 @@ object AuthI18nConstants {
     const val BK_PROJECT_ID = "bkProjectId" // 项目ID
     const val BK_PROJECT_DESC = "bkProjectDesc" // 项目描述
     const val BK_ORGANIZATION = "bkOrganization" // 所属组织
+    const val BK_PROJECT_PRODUCT = "bkProjectProduct" // 项目所属运营产品
     const val BK_AUTH_SECRECY = "bkAuthSecrecy" // 项目性质
     const val BK_SUBJECT_SCOPES = "bkSubjectScopes" // 最大可授权人员范围
     const val BK_RESOURCE_TYPE_NAME = "bkResourceTypeName" // 资源类型名称
@@ -35,6 +36,7 @@ object AuthI18nConstants {
     const val BK_GROUP_NAME = "bkGroupName" // 用户组名称
     const val BK_VALIDITY_PERIOD = "bkValidityPeriod" // 申请期限
     const val BK_CREATE_PROJECT_APPROVAL = "bkCreateProjectApproval" // 创建项目{0}审批
+    const val BK_UPDATE_PROJECT_APPROVAL = "bkUpdateProjectApproval" // 修改项目{0}审批
     const val BK_APPLY_TO_JOIN_PROJECT = "bkApplyToJoinProject" // 申请加入项目
     const val BK_APPLY_TO_JOIN_GROUP = "bkApplyToJoinGroup" // 申请加入用户组
     const val BK_DAY = "bkDay" // days

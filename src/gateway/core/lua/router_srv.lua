@@ -38,6 +38,11 @@ if service_name == "bkrepo" then
     return
 end
 
+-- 服务重写
+if service_name == "dispatch-docker" or service_name == "dispatch-kubernetes" then
+    service_name = "dispatch"
+end
+
 -- 获取灰度设置
 local cache_tail = ""
 local ns_config = nil

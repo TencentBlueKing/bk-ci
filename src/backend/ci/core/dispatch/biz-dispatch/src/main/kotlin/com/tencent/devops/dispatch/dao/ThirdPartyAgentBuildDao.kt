@@ -34,10 +34,10 @@ import com.tencent.devops.dispatch.pojo.thirdPartyAgent.BuildJobType
 import com.tencent.devops.model.dispatch.tables.TDispatchThirdpartyAgentBuild
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
 import org.jooq.DSLContext
+import org.jooq.JSON
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
-import org.jooq.JSON
 
 @Repository
 @Suppress("ALL")
@@ -94,7 +94,8 @@ class ThirdPartyAgentBuildDao {
                     .set(AGENT_IP, agentIp)
                     .set(NODE_ID, nodeId)
                     .set(
-                        DOCKER_INFO, if (dockerInfo == null) {
+                        DOCKER_INFO,
+                        if (dockerInfo == null) {
                             null
                         } else {
                             JSON.json(JsonUtil.toJson(dockerInfo, formatted = false))
