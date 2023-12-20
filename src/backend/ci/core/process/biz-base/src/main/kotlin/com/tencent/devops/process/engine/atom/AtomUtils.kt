@@ -219,14 +219,13 @@ object AtomUtils {
                 atomStatus = it.atomStatus.toString()
                 logger.info("check template atom failed, atomStatus: $atomStatus, message: ${e.message}")
             }
-            val msg = AtomStatusEnum.valueOf(atomStatus).getI18n(I18nUtil.getLanguage(userId))
-            logger.info("params: $msg")
+            logger.info("params: ${AtomStatusEnum.valueOf(atomStatus).getI18n(I18nUtil.getLanguage(userId))}")
             if (atomStatus != AtomStatusEnum.RELEASED.name) {
                 throw ErrorCodeException(
                     errorCode = TEMPLATE_PLUGIN_NOT_ALLOWED_USE,
                     params = arrayOf(
                         it.atomName,
-                        msg
+                        AtomStatusEnum.valueOf(atomStatus).getI18n(I18nUtil.getLanguage(userId))
                     )
                 )
             }
