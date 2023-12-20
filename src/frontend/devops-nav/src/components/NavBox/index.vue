@@ -69,9 +69,9 @@
 <script lang="ts">
     import Vue from 'vue'
     import { Component, Prop } from 'vue-property-decorator'
-    import { urlJoin, getServiceAliasByPath, isAbsoluteUrl } from '../../utils/util'
-    import eventBus from '../../utils/eventBus'
     import { getProjectId } from '../../router'
+    import eventBus from '../../utils/eventBus'
+    import { getServiceAliasByPath, isAbsoluteUrl, urlJoin } from '../../utils/util'
 
     @Component
     export default class NavBox extends Vue {
