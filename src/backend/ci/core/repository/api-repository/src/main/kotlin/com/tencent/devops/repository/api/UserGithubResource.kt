@@ -78,4 +78,22 @@ interface UserGithubResource {
     @GET
     @Path("/githubAppUrl")
     fun getGithubAppUrl(): Result<GithubAppUrl>
+
+    @ApiOperation("根据用户ID判断用户是否已经oauth认证")
+    @GET
+    @Path("/isOauth")
+    fun isOAuth(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "蓝盾项目", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam(value = "是否刷新token", required = false)
+        @QueryParam("refreshToken")
+        refreshToken: Boolean? = false,
+        @ApiParam(value = "重置授权类型,前端根据不同代码库类型,在重置授权时跳转不同的弹框", required = false)
+        @QueryParam("resetType")
+        resetType: String?
+    ): Result<AuthorizeResult>
 }

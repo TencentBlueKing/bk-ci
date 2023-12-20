@@ -48,5 +48,6 @@ object Versions {
     const val jgit = "5.13.1.202206130422-r"
     const val iam = "1.0.41-SNAPSHOT"
     const val disklrucache = "2.0.2"
+    const val BkCrypto = "1.1.3"
     const val audit = "1.0.8"
 }

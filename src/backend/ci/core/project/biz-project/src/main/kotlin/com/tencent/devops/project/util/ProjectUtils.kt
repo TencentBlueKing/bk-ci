@@ -43,7 +43,9 @@ object ProjectUtils {
     fun packagingBean(
         tProjectRecord: TProjectRecord,
         managePermission: Boolean? = null,
-        showUserManageIcon: Boolean? = null
+        showUserManageIcon: Boolean? = null,
+        viewPermission: Boolean? = null,
+        pipelineTemplateInstallPerm: Boolean? = null
     ): ProjectVO {
         return ProjectVO(
             /* 已经投产旧插件的使用字段兼容 */
@@ -110,7 +112,9 @@ object ProjectUtils {
             managePermission = managePermission,
             showUserManageIcon = showUserManageIcon,
             channelCode = tProjectRecord.channel,
-            productId = tProjectRecord.productId
+            productId = tProjectRecord.productId,
+            canView = viewPermission,
+            pipelineTemplateInstallPerm = pipelineTemplateInstallPerm
         )
     }
 

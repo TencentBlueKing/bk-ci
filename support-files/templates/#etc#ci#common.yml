@@ -132,9 +132,6 @@ spring:
       - index: 23
         name: T_PIPELINE_VIEW_USER_SETTINGS
         databaseShardingStrategy: SHARDING
-      - index: 24
-        name: T_PIPELINE_WEBHOOK_BUILD_LOG_DETAIL
-        databaseShardingStrategy: SHARDING
       - index: 25
         name: T_PIPELINE_WEBHOOK_QUEUE
         databaseShardingStrategy: SHARDING
@@ -219,7 +216,13 @@ spring:
       - index: 52
         name: T_PIPELINE_BUILD_RECORD_TASK
         databaseShardingStrategy: SHARDING
-
+      - index: 53
+        name: T_PIPELINE_TRIGGER_EVENT
+        databaseShardingStrategy: SHARDING
+      - index: 54
+        name: T_PIPELINE_TRIGGER_DETAIL
+        databaseShardingStrategy: SHARDING
+      
 
 endpoints:
   metrics:
@@ -374,6 +377,10 @@ wechatWork:
   aesKey: __BK_CI_WECHATWORK_AESKEY__
   url: __BK_CI_WECHATWORK_URL__
 
+# 是否开启国密sm4算法
+sm4:
+  enabled: __BK_CI_SM4_ENABLED__
+  key: "__BK_CI_SM4_KEY__"
 # 是否开启审计
 audit:
   enabled: __BK_CI_AUDIT_ENABLED__
