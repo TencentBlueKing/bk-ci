@@ -72,12 +72,12 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
-import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
+import java.util.concurrent.TimeUnit
 
 /**
  *
@@ -268,7 +268,10 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 containerHashId = task.containerHashId,
                 queueTimeoutMinutes = param.jobControlOption?.prepareTimeout,
                 containerType = task.containerType,
-                customBuildEnv = param.customBuildEnv
+                customBuildEnv = param.customBuildEnv,
+                singleNodeConcurrency = param.jobControlOption?.singleNodeConcurrency,
+                allNodeConcurrency = param.jobControlOption?.allNodeConcurrency,
+                jobId = container.jobId
             )
         )
     }

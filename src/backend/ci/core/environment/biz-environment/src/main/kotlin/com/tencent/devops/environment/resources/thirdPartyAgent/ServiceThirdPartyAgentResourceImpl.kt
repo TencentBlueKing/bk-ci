@@ -39,8 +39,8 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_VIEW_PERMISSSION
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
-import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentDetail
@@ -49,8 +49,8 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgrad
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCreate
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineSeqId
-import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.service.NodeService
+import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.service.thirdPartyAgent.AgentPipelineService
 import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentMgrService
 import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentPipelineService
@@ -83,8 +83,10 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     override fun getAgentsByEnvId(projectId: String, envId: String) =
         Result(thirdPartyAgentService.getAgentByEnvId(projectId, envId))
 
-    override fun getAgentsByEnvName(projectId: String, envName: String): Result<List<ThirdPartyAgent>> =
-        Result(thirdPartyAgentService.getAgnetByEnvName(projectId, envName))
+    override fun getAgentsByEnvName(projectId: String, envName: String): Result<List<ThirdPartyAgent>> {
+        val (_, res) = thirdPartyAgentService.getAgnetByEnvName(projectId, envName)
+        return Result(res)
+    }
 
     override fun upgrade(projectId: String, agentId: String, secretKey: String, tag: String) =
         thirdPartyAgentService.checkIfCanUpgrade(projectId, agentId, secretKey, tag)
@@ -154,11 +156,13 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
             } else {
                 list.sortedBy { it.pipelineName }
             }
+
             "lastBuildTime" -> if (sortDirection == "DESC") {
                 list.sortedByDescending { it.lastBuildTime }
             } else {
                 list.sortedBy { it.lastBuildTime }
             }
+
             else -> list
         }
     }
@@ -198,6 +202,7 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
                 nodeName,
                 listOf(NodeType.THIRDPARTY.name)
             ).firstOrNull()?.nodeHashId
+
             else -> null
         } ?: throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_NAME_OR_ID_INVALID)
         if (!permissionService.checkNodePermission(
@@ -212,5 +217,12 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
             )
         }
         return Result(thirdPartyAgentService.getAgentDetail(userId, projectId, hashId))
+    }
+
+    override fun getAgentsByEnvNameWithId(
+        projectId: String,
+        envName: String
+    ): Result<Pair<Long?, List<ThirdPartyAgent>>> {
+        return Result(thirdPartyAgentService.getAgnetByEnvName(projectId, envName))
     }
 }

@@ -83,7 +83,9 @@ class ThirdPartyAgentService @Autowired constructor(
         thirdPartyAgentWorkspace: String,
         event: PipelineAgentStartupEvent,
         retryCount: Int = 0,
-        dockerInfo: ThirdPartyAgentDockerInfoDispatch?
+        dockerInfo: ThirdPartyAgentDockerInfoDispatch?,
+        envId: Long?,
+        jobId: String?
     ) {
         with(event) {
             try {
@@ -102,12 +104,22 @@ class ThirdPartyAgentService @Autowired constructor(
                     nodeId = HashUtil.decodeIdToLong(agent.nodeId ?: ""),
                     dockerInfo = dockerInfo,
                     executeCount = event.executeCount,
-                    containerHashId = event.containerHashId
+                    containerHashId = event.containerHashId,
+                    envId = envId,
+                    jobId = jobId
                 )
             } catch (e: DeadlockLoserDataAccessException) {
                 logger.warn("Fail to add the third party agent build of ($buildId|$vmSeqId|${agent.agentId}")
                 if (retryCount <= QUEUE_RETRY_COUNT) {
-                    queueBuild(agent, thirdPartyAgentWorkspace, event, retryCount + 1, dockerInfo)
+                    queueBuild(
+                        agent = agent,
+                        thirdPartyAgentWorkspace = thirdPartyAgentWorkspace,
+                        event = event,
+                        retryCount = retryCount + 1,
+                        dockerInfo = dockerInfo,
+                        envId = envId,
+                        jobId = jobId
+                    )
                 } else {
                     throw OperationException("Fail to add the third party agent build")
                 }
@@ -166,7 +178,7 @@ class ThirdPartyAgentService @Autowired constructor(
             if (agentResult.data!!.secretKey != secretKey) {
                 logger.warn(
                     "The secretKey($secretKey) is not match the expect one(${agentResult.data!!.secretKey} " +
-                        "of project($projectId) and agent($agentId)"
+                            "of project($projectId) and agent($agentId)"
                 )
                 throw NotFoundException("Fail to get the agent")
             }
@@ -205,7 +217,7 @@ class ThirdPartyAgentService @Autowired constructor(
                 } catch (e: RemoteServiceException) {
                     logger.warn(
                         "notify agent task[$build.projectId|${build.buildId}|${build.vmSeqId}|$agentId]" +
-                            " claim failed, cause: ${e.message} agent project($projectId)"
+                                " claim failed, cause: ${e.message} agent project($projectId)"
                     )
                 }
 
@@ -223,9 +235,9 @@ class ThirdPartyAgentService @Autowired constructor(
                 // 只有凭据ID的参与计算
                 if (dockerInfo != null) {
                     if ((
-                        dockerInfo.credential?.user.isNullOrBlank() &&
-                            dockerInfo.credential?.password.isNullOrBlank()
-                        ) &&
+                                dockerInfo.credential?.user.isNullOrBlank() &&
+                                        dockerInfo.credential?.password.isNullOrBlank()
+                                ) &&
                         !(dockerInfo.credential?.credentialId.isNullOrBlank())
                     ) {
                         val (userName, password) = try {
@@ -453,9 +465,9 @@ class ThirdPartyAgentService @Autowired constructor(
         // 有些并发情况可能会导致在finish时AgentBuild状态没有被置为Done在这里改一下
         val buildRecord = thirdPartyAgentBuildDao.get(dslContext, buildInfo.buildId, buildInfo.vmSeqId)
         if (buildRecord != null && (
-            buildRecord.status != PipelineTaskStatus.DONE.status ||
-                buildRecord.status != PipelineTaskStatus.FAILURE.status
-            )
+                    buildRecord.status != PipelineTaskStatus.DONE.status ||
+                            buildRecord.status != PipelineTaskStatus.FAILURE.status
+                    )
         ) {
             thirdPartyAgentBuildDao.updateStatus(
                 dslContext = dslContext,
@@ -479,6 +491,36 @@ class ThirdPartyAgentService @Autowired constructor(
                 message = buildInfo.message,
                 error = buildInfo.error
             )
+        )
+    }
+
+    fun countProjectJobRunningAndQueueAll(
+        pipelineId: String,
+        envId: Long,
+        jobId: String,
+        projectId: String?
+    ): Long {
+        return thirdPartyAgentBuildDao.countProjectJobRunningAndQueueAll(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            envId = envId,
+            jobId = jobId,
+            projectId = projectId
+        )
+    }
+
+    fun countAgentsJobRunningAndQueueAll(
+        pipelineId: String,
+        envId: Long,
+        jobId: String,
+        agentIds: Set<String>?
+    ): Map<String, Int> {
+        return thirdPartyAgentBuildDao.countAgentsJobRunningAndQueueAll(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            envId = envId,
+            jobId = jobId,
+            agentIds = agentIds
         )
     }
 

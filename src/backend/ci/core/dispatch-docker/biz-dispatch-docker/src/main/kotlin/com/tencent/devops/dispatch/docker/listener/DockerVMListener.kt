@@ -220,7 +220,10 @@ class DockerVMListener @Autowired constructor(
                     containerHashId = containerHashId,
                     containerType = containerType,
                     customBuildEnv = customBuildEnv,
-                    dockerRoutingType = dockerRoutingType.name
+                    dockerRoutingType = dockerRoutingType.name,
+                    singleNodeConcurrency = null,
+                    allNodeConcurrency = null,
+                    jobId = null
                 )
             )
         }
