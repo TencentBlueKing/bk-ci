@@ -132,7 +132,7 @@ install_config_exist "${BK_CI_GATEWAY_IP:-}" \
   "ci(gateway)" \
   "必须配置CI网关."
 install_config_exist "${BK_CI_DISPATCH_DOCKER_IP_COMMA:-}" \
-  "ci(dispatch-docker)" \
+  "ci(dispatch)" \
   "没有公共构建机调度服务. 即便不配置ci(dockerhost), 也需要配置此项."
 install_config_exist "${BK_CI_DOCKERHOST_IP_COMMA:-}" \
   "ci(dockerhost)" \

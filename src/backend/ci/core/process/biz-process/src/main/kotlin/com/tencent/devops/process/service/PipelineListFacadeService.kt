@@ -1770,7 +1770,9 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             permission = AuthPermission.EDIT
         )
-        val templateId = templatePipelineDao.get(dslContext, projectId, pipelineId)?.templateId
+        val templatePipelineInfo = templatePipelineDao.get(dslContext, projectId, pipelineId)
+        val templateId = templatePipelineInfo?.templateId
+        val templateVersion = templatePipelineInfo?.version
         val instanceFromTemplate = templateId != null
         val favorInfos = pipelineFavorDao.listByPipelineId(
             dslContext = dslContext,
@@ -1795,7 +1797,8 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineVersion = pipelineInfo.version.toString(),
             deploymentTime = DateTimeUtil.toDateTime(pipelineInfo.updateTime),
             hasPermission = hasEditPermission,
-            templateId = templateId
+            templateId = templateId,
+            templateVersion = templateVersion
         )
     }
 

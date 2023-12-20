@@ -47,6 +47,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmRespData
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts
@@ -54,6 +55,7 @@ import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.RemoteDevCommonConfig
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
+import com.tencent.devops.remotedev.dao.WindowsSpecResourceDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
@@ -112,13 +114,25 @@ class CreateControl @Autowired constructor(
     private val workspaceCommon: WorkspaceCommon,
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val deliverControl: DeliverControl,
-    private val bkccService: BKCCService
+    private val bkccService: BKCCService,
+    private val windowsSpecResourceDao: WindowsSpecResourceDao
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(CreateControl::class.java)
         private const val BLANK_TEMPLATE_YAML_NAME = "BLANK"
         private const val BLANK_TEMPLATE_ID = 1
+
+        fun sumResourceVmFree(res: List<ResourceVmRespData>?, zoneShortName: String, size: String): Int? {
+            return res?.filter {
+                it.zoneId.startsWith(zoneShortName) &&
+                        it.machineResources?.any { ma -> ma.machineType == size } == true
+            }?.sumOf {
+                it.machineResources
+                    ?.filter { res -> res.machineType == size }
+                    ?.sumOf { ma -> ma.free ?: 0 } ?: 0
+            }
+        }
     }
 
     // 用于控制台上创建
@@ -175,34 +189,65 @@ class CreateControl @Autowired constructor(
         val projectLimit = projectInfo.properties?.cloudDesktopNum
             ?: redisCache.get(RedisKeys.REDIS_PROJECT_WIN_COUNT_LIMIT)?.toInt()
             ?: 20
-        val count = workspaceDao.countUserWorkspace(
+        val workspaceNames = workspaceDao.fetchUserWorkspaceName(
             dslContext = dslContext,
             projectId = projectInfo.englishName,
-            ownerType = WorkspaceOwnerType.PROJECT,
-            unionShared = false
+            ownerType = WorkspaceOwnerType.PROJECT
         )
-        if (count + workspaceCreate.count > projectLimit) {
+        if (workspaceNames.size + workspaceCreate.count > projectLimit) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.PROJECT_DESKTOP_RESOURCES_INSUFFICIENT.errorCode,
                 params = arrayOf(projectLimit.toString())
             )
         }
+        // 检查是否有特殊机型的配额限制
+        val specQuota = windowsSpecResourceDao.fetchQuota(
+            dslContext = dslContext,
+            projectId = projectInfo.englishName,
+            size = workspaceCreate.windowsType.trim()
+        )
+        if (specQuota != null) {
+            val count = workspaceWindowsDao.fetchUsedSizeCount(
+                dslContext = dslContext,
+                workspaceNames = workspaceNames,
+                size = workspaceCreate.windowsType.trim()
+            )
+            if (count >= specQuota) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.PROJECT_DESKTOP_SPEC_RESOURCES_INSUFFICIENT.errorCode,
+                    params = arrayOf(workspaceCreate.windowsType.trim(), specQuota.toString(), count.toString())
+                )
+            }
+        }
 
         // 检查自定义和非自定义镜像额度
         if (workspaceCreate.imageCosFile.isNotBlank()) {
-            val resource = client.get(ServiceStartCloudResource::class).getResourceVm(
+            val data = client.get(ServiceStartCloudResource::class).getResourceVm(
                 ResourceVmReq(
                     zoneId = windowsZone.zoneShortName,
                     machineType = windowsConfig.size
                 )
-            ).data!!
-            if (resource.free < workspaceCreate.count) {
+            ).data
+            val free = sumResourceVmFree(
+                res = data,
+                zoneShortName = windowsZone.zoneShortName,
+                size = windowsConfig.size
+            ) ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
+                params = arrayOf(
+                    windowsZone.zone,
+                    windowsConfig.size,
+                    "0",
+                    workspaceCreate.count.toString()
+                )
+            )
+            if (free < workspaceCreate.count) {
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
                     params = arrayOf(
                         windowsZone.zone,
                         windowsConfig.size,
-                        resource.free.toString(),
+                        free.toString(),
                         workspaceCreate.count.toString()
                     )
                 )
@@ -666,7 +711,7 @@ class CreateControl @Autowired constructor(
         if (yaml.isBlank()) {
             logger.warn(
                 "create workspace get devfile blank,return." +
-                        "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
+                    "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
             )
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
@@ -870,9 +915,9 @@ class CreateControl @Autowired constructor(
     private fun startCloudResourceCountCheck(type: String, zone: String) =
         workspaceCommon.syncStartCloudResourceList().count {
             it.status == 11 &&
-                    it.machineType == type &&
-                    it.zoneId.replace(Regex("\\d+"), "") == zone &&
-                    it.locked != true
+                it.machineType == type &&
+                it.zoneId.replace(Regex("\\d+"), "") == zone &&
+                it.locked != true
         }
 
     private fun doPreparing(workspace: Workspace) {
@@ -900,7 +945,7 @@ class CreateControl @Autowired constructor(
             userId
         }
         return subUserId.replace(Regex("[@_]"), "-") +
-                "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
+            "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
     }
 
     // 判断用户定义的镜像是否在默认镜像白名单列表中
