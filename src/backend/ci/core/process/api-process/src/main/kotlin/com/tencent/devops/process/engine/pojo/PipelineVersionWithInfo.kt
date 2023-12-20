@@ -47,9 +47,9 @@ data class PipelineVersionWithInfo(
     @ApiModelProperty("版本")
     var version: Int = 1,
     @ApiModelProperty("创建时间")
-    val createTime: Long = 0,
+    val createTime: Long,
     @ApiModelProperty("更新时间")
-    val updateTime: Long = 0,
+    val updateTime: Long?,
     @ApiModelProperty("版本创建者")
     val creator: String,
     @ApiModelProperty("上一次的更新者")

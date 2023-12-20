@@ -724,7 +724,7 @@ class PipelineRepositoryService constructor(
                     version = 1,
                     model = model,
                     yaml = yamlStr,
-                    baseVersion = baseVersion ?: 0,
+                    baseVersion = baseVersion,
                     versionName = versionName ?: "",
                     pipelineVersion = modelVersion,
                     triggerVersion = triggerVersion,
