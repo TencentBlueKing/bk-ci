@@ -1,0 +1,78 @@
+.compose-form-item {
+  display: inline-block;
+
+  & > .bk-form-control,
+  & > .bk-select,
+  & > .bk-cascade,
+  & > .bk-color-picker,
+  & > .bk-date-picker,
+  & > .bk-tag-input,
+  & > .bk-tag-selector,
+  & > .search-select-wrap,
+  & > .bk-button {
+    float: left;
+    width: auto;
+    margin-left: -1px;
+  }
+
+  .bk-form-input,
+  .bk-form-password,
+  .bk-form-textarea,
+  .bk-select,
+  .bk-cascade,
+  .bk-color-picker,
+  .bk-date-picker .bk-date-picker-editor,
+  .bk-tag-input,
+  .bk-search-select,
+  .bk-button {
+    border-radius: 0;
+  }
+
+  .bk-form-control.control-active,
+  .bk-select.is-focus,
+  .bk-cascade.is-focus,
+  .bk-color-picker.bk-color-picker-show-dropdown,
+  .bk-color-picker:hover,
+  .bk-date-picker .bk-date-picker-editor:focus,
+  .bk-tag-input.active,
+  .bk-tag-selector,
+  .bk-search-select.is-focus {
+    z-index: 0;
+    opacity: 100%;
+  }
+
+  .compose-form-item-first {
+    .bk-form-input,
+    .bk-form-password,
+    .bk-form-textarea,
+    &.bk-select,
+    &.bk-cascade,
+    &.bk-color-picker,
+    &.bk-date-picker .bk-date-picker-editor,
+    &.bk-tag-input,
+    .bk-tag-input,
+    .bk-search-select,
+    .bk-button {
+      margin-left: 0;
+      border-bottom-left-radius: 2px;
+      border-top-left-radius: 2px;
+    }
+  }
+
+  .compose-form-item-last {
+    .bk-form-input,
+    .bk-form-password,
+    .bk-form-textarea,
+    &.bk-select,
+    &.bk-cascade,
+    &.bk-color-picker,
+    &.bk-date-picker .bk-date-picker-editor,
+    &.bk-tag-input,
+    .bk-tag-input,
+    .bk-search-select,
+    .bk-button {
+      border-top-right-radius: 2px;
+      border-bottom-right-radius: 2px;
+    }
+  }
+}

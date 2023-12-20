@@ -2,7 +2,8 @@
     <div
         class="step-execute-script-log"
         v-bkloading="{
-            isLoading, opacity: .1
+            isLoading,
+            opacity: .1
         }">
         <div class="log-wraper">
             <div id="executeScriptLog" style="height: 100%;" />
@@ -50,7 +51,7 @@
         data () {
             return {
                 // 日志loading，切换主机的时候才显示
-                isLoading: true,
+                isLoading: false,
                 // 自动动滚动到底部
                 isWillAutoScroll: true
             }
@@ -67,20 +68,6 @@
             }
         },
         watch: {
-            /**
-             * @desc 查看的日志目标改变，重新获取日志
-             *
-             * 日志目标改变，重置页面操作的数据
-             */
-            name: {
-                handler () {
-                    // 日志自动滚动
-                    this.isLoading = true
-                    this.autoScrollTimeout()
-                    // this.fetchLogContent()
-                },
-                immediate: true
-            },
             /**
              * @desc 字体大小改变时虚拟滚动重新计算
              */
@@ -99,10 +86,22 @@
                 },
                 immediate: true
             },
-            hostId (val) {
-                if (val) {
-                    this.fetchLogContent()
-                }
+            /**
+             * @desc 查看的日志目标改变，重新获取日志
+             *
+             * 日志目标改变，重置页面操作的数据
+             */
+            hostId: {
+                handler (val) {
+                    if (val) {
+                        this.autoScrollTimeout()
+                        this.fetchLogContent()
+                    } else {
+                        this.editor.setValue('')
+                        this.editor.clearSelection()
+                    }
+                },
+                immediate: true
             }
         },
         created () {

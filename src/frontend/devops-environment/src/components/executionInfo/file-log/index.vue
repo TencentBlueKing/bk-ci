@@ -14,12 +14,12 @@
                 :render-content-map="renderContentMap"
                 @on-toggle="handleToggle" />
         </div>
-        <div ref="load" class="load-more" v-if="fileTaskLogs.length && !renderList.length">
+        <!-- <div ref="load" class="load-more" v-if="fileTaskLogs.length && !renderList.length">
             <div class="loading-flag">
                 <icon name="loading" size="16" />
             </div>
             <div>{{ $t('environment.加载中') }}</div>
-        </div>
+        </div> -->
     </div>
 </template>
 <script>
@@ -65,16 +65,18 @@
         computed: {
             renderList () {
                 let uploadLogs = []
-                let downloadLogs = []
+                // let downloadLogs = []
                 this.fileTaskLogs.forEach(log => {
-                    const mode = log.fileLogList[0].mode
-                    if (mode === 0) {
-                        uploadLogs = log.fileLogList
-                    } else if (mode === 1) {
-                        downloadLogs = log.fileLogList
-                    }
+                    uploadLogs = log.fileLogList
+                    // const mode = log.fileLogList[0].mode
+                    // if (mode === 0) {
+                    //     uploadLogs = log.fileLogList
+                    // } else if (mode === 1) {
+                    //     downloadLogs = log.fileLogList
+                    // }
                 })
-                return this.mode === 'upload' ? uploadLogs : downloadLogs
+                // return this.mode === 'upload' ? uploadLogs : downloadLogs
+                return uploadLogs
             },
             jobInstanceId () {
                 return this.$route.query.jobInstanceId
@@ -92,7 +94,10 @@
              */
             hostId: {
                 handler (val) {
-                    if (!val) return
+                    if (!val) {
+                        this.fileTaskLogs = []
+                        return
+                    }
                     this.isLoading = true
                     this.page = 0
 
@@ -125,7 +130,7 @@
              * 如果文件信息里面不包含日志内容，需要异步获取文件内容
              */
             fetchData () {
-                if (!this.ip) {
+                if (!this.hostId) {
                     this.isLoading = false
                     this.fileTaskLogs = []
                 }
@@ -140,7 +145,7 @@
                         
                         if (this.fileTaskLogs.length > 0 && !this.isMemoChange) {
                             this.openMemo = {
-                                [this.fileTaskLogs[0].taskId]: true
+                                0: true
                             }
                             this.isMemoChange = true
                         }
@@ -177,9 +182,9 @@
              *
              * 展开时需要重新获取一次日志
              */
-            handleToggle (taskId, toggle) {
+            handleToggle (index, toggle) {
                 const openMemo = { ...this.openMemo }
-                openMemo[taskId] = toggle
+                openMemo[index] = toggle
                 this.openMemo = Object.freeze(openMemo)
                 if (toggle) {
                     this.fetchFileLogOfFile()

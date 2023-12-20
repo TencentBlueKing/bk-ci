@@ -13,11 +13,12 @@
             const { props, listeners, parent } = context
             const {
                 data,
+                index,
                 openMemo,
                 renderContentMap,
                 isContentLoading
             } = props
-            const isContentOpen = Boolean(openMemo[data.taskId])
+            const isContentOpen = Boolean(openMemo[index])
 
             const classes = {
                 'step-detail-file-log-block': true,
@@ -25,7 +26,7 @@
                 toggle: isContentOpen
             }
             // 异步获取日志的loading状态
-            const logContent = renderContentMap[data.taskId] || data.logContent
+            const logContent = renderContentMap[index] || data.logContent
             if (isContentLoading && !logContent) {
                 classes['content-loading'] = true
             }
@@ -35,10 +36,9 @@
                 return wholeProgress.slice(0, Math.floor(process * wholeProgress.length) || 1)
             }
             const handleToggle = () => {
-                listeners['on-toggle'](data.taskId, !isContentOpen)
+                listeners['on-toggle'](index, !isContentOpen)
             }
             const statusDescMap = (status) => {
-                console.log(status, 'status')
                 const descMap = {
                     1: parent.$t('environment.等待开始'),
                     2: parent.$t('environment.上传中'),
@@ -53,11 +53,11 @@
                 <div class="log-header" onClick={handleToggle}>
                     <icon name="down-shape" size="14" class="log-toggle" />
                     <span>{ parent.$t('environment.文件名') }：{ data.srcPath }</span>
-                    <span>{ parent.$t('environment.文件大小') }：{ data.fileSize }</span>
+                    <span>{ parent.$t('environment.文件大小') }：{ data.size }</span>
                     <span>{ parent.$t('environment.状态') }：<span class="status">{ statusDescMap(data.status) }</span></span>
                     <span>{ parent.$t('environment.源服务器 IP') }：{ data.srcHost.ip }</span>
                     <span>{ parent.$t('environment.速率') }：{ data.speed }</span>
-                    <span>{ parent.$t('environment.进度') }：{ data.progress }</span>
+                    <span>{ parent.$t('environment.进度') }：{ data.process }</span>
                 </div>
                 {
                     isContentOpen && (

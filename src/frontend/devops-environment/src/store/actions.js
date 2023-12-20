@@ -401,12 +401,12 @@ const actions = {
     removeProjectShare (_, { projectId, envHashId, sharedProjectId }) {
         return vue.$ajax.delete(`${prefix}/user/environment/${projectId}/${envHashId}/${sharedProjectId}/sharedProject`)
     },
-    // getJobInstanceStatus (_, {
-    //     projectId,
-    //     jobInstanceId
-    // }) {
-    //     return vue.$ajax.get(`${prefix}/user/job/${projectId}/query_job_instance_status?jobInstanceId=${jobInstanceId}`)
-    // },
+    getJobInstanceStatus (_, {
+        projectId,
+        jobInstanceId
+    }) {
+        return vue.$ajax.get(`${prefix}/user/job/${projectId}/query_job_instance_status?jobInstanceId=${jobInstanceId}&returnIpResult=false`)
+    },
     getJobInstanceLogs (_, {
         projectId,
         jobInstanceId,
@@ -420,8 +420,10 @@ const actions = {
             stepInstanceId
         })
     },
-    getStepInstanceStatus (_, { projectId, jobInstanceId, stepInstanceId }) {
-        return vue.$ajax.get(`${prefix}/user/job/${projectId}/get_step_instance_status?jobInstanceId=${jobInstanceId}&stepInstanceId=${stepInstanceId}`)
+    getStepInstanceStatus (_, { projectId, params }) {
+        return vue.$ajax.get(`${prefix}/user/job/${projectId}/get_step_instance_status`, {
+            params
+        })
     },
     getStepInstanceDetail (_, {
         projectId, jobInstanceId, stepInstanceId

@@ -4,8 +4,9 @@
         :size="size"
         height="100%"
         class="ip-table"
-        :scroll-loading="scrollLoading"
+        :scroll-loading="{ isLoading: paginationChangeLoading }"
         :row-class-name="rowClassName"
+        @scroll-end="handleScrollEnd"
         @row-click="handleRowClick"
     >
         <bk-table-column
@@ -86,26 +87,39 @@
                 :size="tableSize"
                 @setting-change="handleSettingChange" />
         </bk-table-column>
+        <template #empty>
+            <EmptyTableStatus :type="isSearch ? 'search-empty' : 'empty'" @clear="clearFilter" />
+        </template>
     </bk-table>
 </template>
+
 <script>
+    import EmptyTableStatus from '@/components/empty-table-status.vue'
+
     const TABLE_COLUMN_CACHE = 'env_ip_list_columns'
     export default {
+        components: {
+            EmptyTableStatus
+        },
         props: {
             list: {
                 type: Array,
                 default: () => []
             },
+            isSearch: Boolean,
             ip: String,
             bkCloudId: Number,
-            hostId: Number
+            hostId: Number,
+            activeGroupIndex: Number,
+            paginationChangeLoading: Boolean
         },
         data () {
             return {
                 tableColumn: [],
                 selectedTableColumn: [],
                 tableSize: 'small',
-                scrollLoading: true
+                page: 1,
+                pageSize: 20
             }
         },
         computed: {
@@ -114,6 +128,12 @@
                     result[item.id] = true
                     return result
                 }, {})
+            }
+        },
+        watch: {
+            // 切换group时重置翻页
+            activeGroupIndex () {
+                this.page = 1
             }
         },
         created () {
@@ -183,6 +203,16 @@
 
             rowClassName ({ row }) {
                 return row && row.bkHostId === this.hostId ? 'active' : ''
+            },
+
+            handleScrollEnd () {
+                this.page += 1
+                this.$emit('on-pagination-change', this.page * this.pageSize)
+            },
+
+            clearFilter () {
+                this.page = 1
+                this.$emit('on-clear-filter')
             }
         }
     }

@@ -5,10 +5,10 @@
                 <bk-breadcrumb-item :to="{ path: '/console/environment' }">{{ $t('environment.environmentManage') }}</bk-breadcrumb-item>
                 <bk-breadcrumb-item>{{ stepInstanceData.name }}</bk-breadcrumb-item>
             </bk-breadcrumb>
-            <div class="status-box" :class="statusStyleMap[checkStatus(stepInstanceData.status)]">
+            <div class="status-box" :class="statusStyleMap[checkStatus(stepInstanceData.stepStatus)]">
                 <div class="status">
                     <span>{{ $t('environment.状态') }}：</span>
-                    <span class="status-text">{{ stepStatusMap[stepInstanceData.status] }}</span>
+                    <span class="status-text">{{ stepStatusMap[stepInstanceData.stepStatus] }}</span>
                 </div>
                 <div class="time">
                     <span>{{ $t('environment.总耗时') }}：</span>
@@ -31,18 +31,53 @@
                         <div class="step-name-text" v-bk-overflow-tips>
                             {{ stepInstanceData.name }}
                         </div>
-                        <div class="task-instance-action">
-                            <div
-                                class="action-btn detail-btn"
-                                @click="handleShowDetail"
-                                v-bk-tooltips.bottom="$t('environment.全局变量')"
-                            >
-                                <Icon name="detail-line" size="14" />
+                        <div class="step-action-box">
+                            <div class="log-search-box">
+                                <compose-form-item>
+                                    <bk-select
+                                        v-model="searchModel"
+                                        :clearable="false"
+                                        style="width: 100px;">
+                                        <bk-option
+                                            id="log"
+                                            :name="$t('environment.搜索日志')" />
+                                        <bk-option
+                                            id="ip"
+                                            :name="$t('environment.搜索 IP')" />
+                                    </bk-select>
+                                    <bk-input
+                                        v-if="searchModel === 'log'"
+                                        key="log"
+                                        :disabled="isFile"
+                                        right-icon="bk-icon icon-search"
+                                        style="width: 292px;"
+                                        v-bk-tooltips="{
+                                            content: isFile ? $t('environment.分发文件步骤不支持日志搜索') : '',
+                                            disabled: !isFile
+                                        }"
+                                        :value="keyword"
+                                        @keyup="handleLogSearch" />
+                                    <bk-input
+                                        v-if="searchModel === 'ip'"
+                                        key="ip"
+                                        right-icon="bk-icon icon-search"
+                                        style="width: 292px;"
+                                        :value="searchIp"
+                                        @keyup="handleIPSearch" />
+                                </compose-form-item>
+                            </div>
+                            <div class="task-instance-action">
+                                <div
+                                    class="action-btn detail-btn"
+                                    @click="handleShowDetail"
+                                    v-bk-tooltips.bottom="$t('environment.全局变量')"
+                                >
+                                    <Icon name="detail-line" size="14" />
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
             </div>
             <div class="step-execute-host-group">
                 <div class="group-tab">
@@ -50,12 +85,12 @@
                              'tab-item': true,
                              'active': activeGroupIndex === index
                          }"
-                        v-for="(value, key, index) in groupListMap"
-                        :key="key"
-                        @click="activeGroupIndex = index"
+                        v-for="(item, index) in stepResultGroupList"
+                        :key="index"
+                        @click="handleChangeGroup(index)"
                     >
-                        <div class="group-name" v-bk-overflow-tips>{{ key }}</div>
-                        <div class="group-nums">{{ value.length }}</div>
+                        <div class="group-name" v-bk-overflow-tips>{{ `${item.resultTypeDesc}` }} {{ item.tag ? `(${item.tag})` : '' }}</div>
+                        <div class="group-nums">{{ item.hostSize }}</div>
                     </div>
                 </div>
             </div>
@@ -69,9 +104,14 @@
                 <ip-list
                     :list="ipList"
                     :ip.sync="activeIp"
-                    :ip-status.sync="activeIpStatus"
+                    :is-search="isSearch"
                     :host-id.sync="activeHostId"
+                    :ip-status.sync="activeIpStatus"
                     :bk-cloud-id.sync="activeBkCloudId"
+                    :active-group-index="activeGroupIndex"
+                    :pagination-change-loading="paginationChangeLoading"
+                    @on-pagination-change="handleIpListPageChange"
+                    @on-clear-filter="handleClearFilter"
                 />
             </div>
             <div class="container-right">
@@ -101,6 +141,7 @@
     import ipList from '@/components/ipList'
     import StepDetailView from './step-detail-view'
     import ExecutionInfo from '@/components/executionInfo'
+    import ComposeFormItem from '@/components/compose-form-item'
     import { mapActions } from 'vuex'
     import {
         statusStyleMap,
@@ -111,22 +152,32 @@
         components: {
             ipList,
             ExecutionInfo,
-            StepDetailView
+            StepDetailView,
+            ComposeFormItem
         },
         data () {
             return {
+                // 搜索模式
+                searchModel: 'log',
                 stepInstanceData: {},
+                stepResultGroupList: [],
                 stepStatusMap: {},
                 statusStyleMap,
                 checkStatus,
                 groupListMap: {},
-                activeGroupIndex: -1,
+                activeGroupIndex: 0,
                 isLoading: false,
                 activeHostId: 0,
                 activeIp: '',
                 activeBkCloudId: 0,
                 activeIpStatus: '',
-                isShowDetail: false
+                isShowDetail: false,
+                isHostLoading: true,
+                paginationChangeLoading: false,
+                hasLoadEnd: false,
+                maxHostNumPerGroup: 20,
+                keyword: '',
+                searchIp: ''
             }
         },
         computed: {
@@ -144,6 +195,9 @@
                 // 文件分发 - FILE
                 return this.$route.query.jobInstanceType
             },
+            isFile () {
+                return this.jobInstanceType === 'FILE'
+            },
             stepTypeText () {
                 const typeTextMap = {
                     SCRIPT: this.$t('environment.scriptExecution'),
@@ -152,20 +206,36 @@
                 return typeTextMap[this.jobInstanceType]
             },
             ipList () {
-                const key = Object.keys(this.groupListMap)[this.activeGroupIndex]
-                const group = (this.groupListMap[key] && this.groupListMap[key][0]) || {}
-
-                this.activeHostId = group.bkHostId
-                this.activeIp = group.ip
-                this.activeBkCloudId = group.bkCloudId
-                this.activeIpStatus = getAgentStatus(group.status)
-
-                return this.groupListMap[key] && this.groupListMap[key].map(i => {
-                    return {
-                        ...i,
-                        result: getAgentStatus(i.status)
-                    }
-                })
+                if (this.stepResultGroupList.length) {
+                    const activeItem = this.stepResultGroupList[this.activeGroupIndex].hostResultList[0] || {}
+                    this.activeHostId = activeItem.bkHostId
+                    this.activeIp = activeItem.ip
+                    this.activeBkCloudId = activeItem.bkCloudId
+                    this.activeIpStatus = getAgentStatus(activeItem.status)
+    
+                    return this.stepResultGroupList[this.activeGroupIndex].hostResultList.map(i => {
+                        return {
+                            ...i,
+                            result: getAgentStatus(i.status)
+                        }
+                    })
+                }
+                return []
+            },
+            resultType () {
+                if (this.stepResultGroupList.length) {
+                    return this.stepResultGroupList[this.activeGroupIndex].resultType
+                }
+                return ''
+            },
+            tag () {
+                if (this.stepResultGroupList.length) {
+                    return this.stepResultGroupList[this.activeGroupIndex].tag
+                }
+                return ''
+            },
+            isSearch () {
+                return !!this.keyword || !!this.searchIp
             }
         },
         created () {
@@ -182,40 +252,117 @@
                 10: this.$t('environment.步骤强制终止中'),
                 11: this.$t('environment.步骤强制终止成功')
             }
+            this.fetchJobInstanceStatus()
             this.fetchStepInstanceStatus()
         },
         methods: {
             ...mapActions('environment', [
+                'getJobInstanceStatus',
                 'getStepInstanceStatus'
             ]),
-            fetchStepInstanceStatus () {
+            /**
+             * @description: 获取步骤执行结果
+             */
+            fetchJobInstanceStatus () {
                 this.isLoading = true
+                this.getJobInstanceStatus({
+                    projectId: this.projectId,
+                    jobInstanceId: this.jobInstanceId
+                }).then(res => {
+                    this.stepInstanceData = res.stepInstanceList[0] || {}
+                }).finally(() => {
+                    this.isLoading = false
+                })
+            },
+            fetchStepInstanceStatus () {
                 this.getStepInstanceStatus({
                     projectId: this.projectId,
-                    jobInstanceId: this.jobInstanceId,
-                    stepInstanceId: this.stepInstanceId
+                    params: {
+                        jobInstanceId: this.jobInstanceId,
+                        stepInstanceId: this.stepInstanceId,
+                        status: this.resultType,
+                        tag: this.tag,
+                        keyword: this.keyword,
+                        searchIp: this.searchIp,
+                        maxHostNumPerGroup: this.maxHostNumPerGroup
+                    }
                 }).then(res => {
-                    this.stepInstanceData = res
-
-                    this.stepInstanceData.stepHostResultList.forEach(item => {
-                        const key = item.statusDesc + item.tag
-                        if (!this.groupListMap[key]) {
-                            this.groupListMap[key] = []
-                        }
-                        this.groupListMap[key].push(item)
-                    })
-                    this.activeGroupIndex = 0
+                    this.stepResultGroupList = res.stepResultGroupList || []
+                    if (this.stepResultGroupList.length) {
+                        this.hasLoadEnd = this.ipList.length === this.stepResultGroupList[this.activeGroupIndex].hostSize
+                    }
                 }).catch(error => {
                     this.$bkMessage({
                         theme: 'error',
                         message: error.message || error
                     })
                 }).finally(() => {
-                    this.isLoading = false
+                    this.isHostLoading = false
+                    this.paginationChangeLoading = false
                 })
             },
             handleShowDetail () {
                 console.log(123)
+            },
+            handleChangeGroup (index) {
+                this.activeGroupIndex = index
+                this.hasLoadEnd = false
+                this.fetchStepInstanceStatus()
+            },
+            handleIpListPageChange (pageSize) {
+                if (this.hasLoadEnd || !this.stepResultGroupList.length) return
+                this.paginationChangeLoading = true
+                this.maxHostNumPerGroup = pageSize
+                this.fetchStepInstanceStatus()
+            },
+
+            handleClearFilter () {
+                this.keyword = ''
+                this.searchIp = ''
+                this.fetchStepInstanceStatus()
+            },
+            handleLogSearch (value, event) {
+                if (event.isComposing) {
+                    // 跳过输入法复合事件
+                    return
+                }
+
+                // 输入框的值被清空直接触发搜索
+                // enter键开始搜索
+                if ((value === '' && value !== this.keyword)
+                    || event.keyCode === 13
+                    || event.type === 'click') {
+                    this.activeHostId = 0
+                    this.activeIp = ''
+                    this.activeBkCloudId = 0
+                    this.activeIpStatus = ''
+                    this.isHostLoading = true
+                    this.maxHostNumPerGroup = 20
+                    this.keyword = value
+                    this.searchIp = ''
+                    this.fetchStepInstanceStatus()
+                }
+            },
+            handleIPSearch (value, event) {
+                if (event.isComposing) {
+                    // 跳过输入法复合事件
+                    return
+                }
+
+                // 输入框的值被清空直接触发搜索
+                // enter键开始搜索
+                if ((value === '' && value !== this.searchIp)
+                    || event.keyCode === 13) {
+                    this.activeHostId = 0
+                    this.activeIp = ''
+                    this.activeBkCloudId = 0
+                    this.activeIpStatus = ''
+                    this.isHostLoading = true
+                    this.maxHostNumPerGroup = 20
+                    this.keyword = ''
+                    this.searchIp = value
+                    this.fetchStepInstanceStatus()
+                }
             }
         }
     }
@@ -330,6 +477,7 @@
                 margin-top: 10px;
             }
             .step-name-text {
+                flex: 1;
                 height: 24px;
                 max-width: 600px;
                 overflow: hidden;
@@ -338,6 +486,9 @@
                 color: #313238;
                 text-overflow: ellipsis;
                 white-space: nowrap;
+            }
+            .step-action-box {
+                display: flex;
             }
             .action-btn {
                 display: flex;
@@ -352,6 +503,27 @@
                 border-radius: 2px;
                 align-items: center;
                 justify-content: center;
+            }
+        }
+        .log-search-box {
+            position: relative;
+            display: flex;
+            flex: 0 0 391px;
+            background: #fff;
+
+            .search-loading {
+            position: absolute;
+            top: 1px;
+            right: 13px;
+            bottom: 1px;
+            display: flex;
+            align-items: center;
+            color: #c4c6cc;
+            background: #fff;
+
+            .loading-flag {
+                animation: list-loading-ani 1s linear infinite;
+            }
             }
         }
         .step-execute-host-group {

@@ -357,5 +357,10 @@
     "上传中": "Uploading",
     "下载中": "Downloading",
     "失败": "Fail",
-    "步骤内容": "Step details"
+    "步骤内容": "Step details",
+    "搜索日志": "Log search",
+    "搜索 IP": "IP search",
+    "分发文件步骤不支持日志搜索": "Sorry, file transfer task not support log search",
+    "分发文件步骤不支持日志导出": "Sorry, file transfer task not support log export",
+    "全局变量": "Global variables"
 }

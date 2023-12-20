@@ -2,7 +2,7 @@
     <div ref="infoBox" class="step-execution-info-box" :style="boxStyles">
         <div class="tab-container">
             <div :class="['tab-title', ipStatus]">
-                <span class="host-ip">{{ bkCloudId }}:{{ ip }}</span>
+                <span class="host-ip" v-if="ip">{{ bkCloudId }}:{{ ip }}</span>
             </div>
             <div class="split-line" />
             <div
@@ -19,12 +19,12 @@
                     @click="handleTogglePanel('download')">
                     {{ $t('environment.下载信息') }}
                 </div>
-                <div
+                <!-- <div
                     class="tab-item"
                     :class="{ active: activePanel === 'upload' }"
                     @click="handleTogglePanel('upload')">
                     {{ $t('environment.上传源信息') }}
-                </div>
+                </div> -->
             </template>
             <div class="extend-box">
                 <!-- <div
