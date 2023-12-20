@@ -113,6 +113,7 @@ class PipelineStageTagDao {
             val record = dslContext.selectFrom(this)
                 .orderBy(WEIGHT.desc())
                 .limit(1)
+                .skipCheck()
                 .fetchOne()
             return if (record == null) null else convert(record, true)
         }
@@ -136,6 +137,7 @@ class PipelineStageTagDao {
             return dslContext.selectCount().from(this)
                 .where(STAGE_TAG_NAME.eq(stageTagName))
                 .or(WEIGHT.eq(weight))
+                .skipCheck()
                 .fetchOne()
         }
     }
