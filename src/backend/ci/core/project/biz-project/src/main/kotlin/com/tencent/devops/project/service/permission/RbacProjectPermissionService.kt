@@ -107,14 +107,6 @@ class RbacProjectPermissionService(
                 subjectScopes = subjectScopes,
                 tipsStatus = tipsStatus
             )
-            if (approvalStatus == ProjectApproveStatus.APPROVED.status) {
-                // 创建兼容的权限中心项目
-                authProjectId = projectExtService.createOldAuthProject(
-                    userId = userId,
-                    accessToken = accessToken,
-                    projectCreateInfo = projectCreateInfo
-                ) ?: ""
-            }
         }
         authResourceApi.createResource(
             user = authProjectCreateInfo.userId,
@@ -238,12 +230,17 @@ class RbacProjectPermissionService(
 
     override fun isShowUserManageIcon(): Boolean = true
 
-    override fun filterProjects(userId: String, permission: AuthPermission): List<String>? {
+    override fun filterProjects(
+        userId: String,
+        permission: AuthPermission,
+        resourceType: String?
+    ): List<String>? {
         return authProjectApi.getUserProjectsByPermission(
             serviceCode = projectAuthServiceCode,
             userId = userId,
             permission = permission,
-            supplier = null
+            supplier = null,
+            resourceType = resourceType
         )
     }
 

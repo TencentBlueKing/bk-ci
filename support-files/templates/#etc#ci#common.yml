@@ -384,6 +384,10 @@ wechatWork:
   aesKey: __BK_CI_WECHATWORK_AESKEY__
   url: __BK_CI_WECHATWORK_URL__
 
+# 是否开启国密sm4算法
+sm4:
+  enabled: __BK_CI_SM4_ENABLED__
+  key: "__BK_CI_SM4_KEY__"
 # 是否开启审计
 audit:
   enabled: __BK_CI_AUDIT_ENABLED__
