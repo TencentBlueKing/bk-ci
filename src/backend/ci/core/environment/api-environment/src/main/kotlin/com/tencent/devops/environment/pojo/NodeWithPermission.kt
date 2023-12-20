@@ -42,8 +42,6 @@ data class NodeWithPermission(
     val ip: String,
     @ApiModelProperty("节点状态", required = true)
     val nodeStatus: String,
-    @ApiModelProperty("agent状态", required = true)
-    val agentStatus: Boolean,
     @ApiModelProperty("节点类型", required = true)
     val nodeType: String,
     @ApiModelProperty("操作系统", required = false)
@@ -78,6 +76,10 @@ data class NodeWithPermission(
     val pipelineRefCount: Int? = 0,
     @ApiModelProperty("流水线Job引用数")
     val lastBuildTime: String? = "",
+    @ApiModelProperty("agent状态", required = true)
+    val agentStatus: Boolean,
+    @ApiModelProperty("agent版本", required = true)
+    val agentVersion: String,
     @ApiModelProperty("agent hash id")
     val agentHashId: String? = ""
 )

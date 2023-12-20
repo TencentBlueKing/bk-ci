@@ -270,7 +270,6 @@ class NodeService @Autowired constructor(
                 name = it.nodeName,
                 ip = it.nodeIp,
                 nodeStatus = nodeStatus,
-                agentStatus = getAgentStatus(it),
                 nodeType = it.nodeType,
                 osName = it.osName,
                 createdUser = it.createdUser,
@@ -293,6 +292,8 @@ class NodeService @Autowired constructor(
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastModifyTime)
                 },
                 lastModifyUser = it.lastModifyUser ?: "",
+                agentStatus = getAgentStatus(it),
+                agentVersion = it.agentVersion,
                 agentHashId = HashUtil.encodeLongId(thirdPartyAgent?.id ?: 0L)
             )
         }
@@ -357,7 +358,6 @@ class NodeService @Autowired constructor(
                 name = it.nodeName,
                 ip = it.nodeIp,
                 nodeStatus = NodeStatus.getStatusName(it.nodeStatus),
-                agentStatus = getAgentStatus(it),
                 nodeType = NodeType.getTypeName(it.nodeType),
                 osName = it.osName,
                 createdUser = it.createdUser,
@@ -380,6 +380,8 @@ class NodeService @Autowired constructor(
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastModifyTime)
                 },
                 lastModifyUser = it.lastModifyUser ?: "",
+                agentStatus = getAgentStatus(it),
+                agentVersion = it.agentVersion,
                 agentHashId = HashUtil.encodeLongId(thirdPartyAgent?.id ?: 0L)
             )
         }
@@ -410,7 +412,6 @@ class NodeService @Autowired constructor(
                 name = it.nodeName,
                 ip = it.nodeIp,
                 nodeStatus = NodeStatus.getStatusName(it.nodeStatus),
-                agentStatus = getAgentStatus(it),
                 nodeType = NodeType.getTypeName(it.nodeType),
                 osName = it.osName,
                 createdUser = it.createdUser,
@@ -432,6 +433,8 @@ class NodeService @Autowired constructor(
                 } else {
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastModifyTime)
                 },
+                agentStatus = getAgentStatus(it),
+                agentVersion = it.agentVersion,
                 lastModifyUser = it.lastModifyUser ?: ""
             )
         }
@@ -581,6 +584,7 @@ class NodeService @Autowired constructor(
                 ip = it.nodeIp,
                 nodeStatus = it.nodeStatus,
                 agentStatus = getAgentStatus(it),
+                agentVersion = it.agentVersion,
                 nodeType = it.nodeType,
                 osName = it.osName,
                 createdUser = it.createdUser,
