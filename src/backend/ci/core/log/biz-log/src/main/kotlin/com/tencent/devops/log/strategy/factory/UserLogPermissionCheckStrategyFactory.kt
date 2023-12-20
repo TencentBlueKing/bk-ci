@@ -33,7 +33,6 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.log.strategy.bus.IUserLogPermissionCheckStrategy
 import com.tencent.devops.log.strategy.bus.impl.UserArchivedLogPermissionCheckStrategy
 import com.tencent.devops.log.strategy.bus.impl.UserNormalLogPermissionCheckStrategy
-import java.util.concurrent.ConcurrentHashMap
 
 object UserLogPermissionCheckStrategyFactory {
 

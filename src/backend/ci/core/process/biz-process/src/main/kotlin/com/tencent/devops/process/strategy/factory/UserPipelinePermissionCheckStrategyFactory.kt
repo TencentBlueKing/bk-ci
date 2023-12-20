@@ -33,9 +33,7 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.strategy.bus.IUserPipelinePermissionCheckStrategy
 import com.tencent.devops.process.strategy.bus.impl.UserArchivedPipelinePermissionCheckStrategy
 import com.tencent.devops.process.strategy.bus.impl.UserNormalPipelinePermissionCheckStrategy
-import org.springframework.stereotype.Component
 
-@Component
 object UserPipelinePermissionCheckStrategyFactory {
 
     private const val ARCHIVED_STRATEGY = "archivedStrategy"
