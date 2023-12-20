@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.dao
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TExtensionService
 import com.tencent.devops.model.store.tables.TExtensionServiceFeature
@@ -51,6 +52,7 @@ import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record2
 import org.jooq.Result
+import org.jooq.conf.ParamType
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
@@ -223,7 +225,7 @@ class ExtServiceDao {
         val a = TExtensionService.T_EXTENSION_SERVICE.`as`("a")
         val b = TStoreMember.T_STORE_MEMBER.`as`("b")
         val conditions = generateGetMemberConditions(a, userId, b, serviceName)
-        return dslContext.select(a.SERVICE_CODE.countDistinct())
+        return dslContext.select(DSL.countDistinct(a.SERVICE_CODE))
             .from(a)
             .leftJoin(b)
             .on(a.SERVICE_CODE.eq(b.STORE_CODE))
@@ -250,8 +252,8 @@ class ExtServiceDao {
     ): Result<out Record>? {
         val a = TExtensionService.T_EXTENSION_SERVICE.`as`("a")
         val b = TStoreMember.T_STORE_MEMBER.`as`("b")
-        val t = dslContext.select(a.SERVICE_CODE.`as`("serviceCode"), a.CREATE_TIME.max().`as`("createTime")).from(a)
-            .groupBy(a.SERVICE_CODE) // 查找每组serviceCode最新的记录
+        val t = dslContext.select(a.SERVICE_CODE.`as`("serviceCode"), DSL.max(a.CREATE_TIME).`as`("createTime"))
+            .from(a).groupBy(a.SERVICE_CODE) // 查找每组serviceCode最新的记录
         val conditions = generateGetMemberConditions(a, userId, b, serviceName)
         val baseStep = dslContext.select(
             a.ID.`as`("serviceId"),
@@ -372,13 +374,6 @@ class ExtServiceDao {
         }
     }
 
-    fun listServiceByName(dslContext: DSLContext, serviceName: String): Result<TExtensionServiceRecord>? {
-        return with(TExtensionService.T_EXTENSION_SERVICE) {
-            dslContext.selectFrom(this).where(DELETE_FLAG.eq(false)).and(SERVICE_NAME.eq(serviceName))
-                .orderBy(CREATE_TIME.desc()).fetch()
-        }
-    }
-
     fun listServiceByStatus(
         dslContext: DSLContext,
         serviceStatus: ExtServiceStatusEnum,
@@ -448,22 +443,6 @@ class ExtServiceDao {
         }
     }
 
-    fun getAllServiceClassify(dslContext: DSLContext): Result<out Record>? {
-        val a = TExtensionService.T_EXTENSION_SERVICE.`as`("a")
-        val b = TClassify.T_CLASSIFY.`as`("b")
-        val conditions = setExtServiceVisibleCondition(a)
-        conditions.add(0, a.CLASSIFY_ID.eq(b.ID))
-        val serviceNum = dslContext.selectCount().from(a).where(conditions).asField<Int>("serviceNum")
-        return dslContext.select(
-            b.ID.`as`("id"),
-            b.CLASSIFY_CODE.`as`("classifyCode"),
-            b.CLASSIFY_NAME.`as`("classifyName"),
-            serviceNum,
-            b.CREATE_TIME.`as`("createTime"),
-            b.UPDATE_TIME.`as`("updateTime")
-        ).from(b).where(b.TYPE.eq(StoreTypeEnum.SERVICE.type.toByte())).orderBy(b.WEIGHT.desc()).fetch()
-    }
-
     /**
      * 扩展服务商店搜索结果，总数
      */
@@ -478,7 +457,7 @@ class ExtServiceDao {
     ): Int {
         val (ta, conditions) = formatConditions(keyword, classifyCode, dslContext)
 
-        val baseStep = dslContext.select(ta.ID.countDistinct()).from(ta)
+        val baseStep = dslContext.select(DSL.countDistinct(ta.ID)).from(ta)
 
         if (rdType != null) {
             val taf = TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE.`as`("taf")
@@ -487,7 +466,7 @@ class ExtServiceDao {
         }
 
         val storeType = StoreTypeEnum.SERVICE.type.toByte()
-        if (labelCodeList != null && labelCodeList.isNotEmpty()) {
+        if (!labelCodeList.isNullOrEmpty()) {
             val c = TLabel.T_LABEL.`as`("c")
             val labelIdList = dslContext.select(c.ID)
                 .from(c)
@@ -517,7 +496,7 @@ class ExtServiceDao {
             conditions.add(t.field("STORE_TYPE", Byte::class.java)!!.eq(storeType))
         }
 
-        return baseStep.where(conditions).fetchOne(0, Int::class.java)!!
+        return baseStep.where(conditions).skipCheck().fetchOne(0, Int::class.java)!!
     }
 
     /**
@@ -563,7 +542,7 @@ class ExtServiceDao {
         // 查找每组serviceCode最新的记录
         val tmp = dslContext.select(
             a.SERVICE_CODE.`as`("serviceCode"),
-            a.CREATE_TIME.max().`as`("createTime")
+            DSL.max(a.CREATE_TIME).`as`("createTime")
         ).from(a).groupBy(a.SERVICE_CODE)
         val ta = dslContext.select(a.SERVICE_CODE.`as`("serviceCode"), a.SERVICE_STATUS.`as`("serviceStatus")).from(a).join(tmp)
             .on(a.SERVICE_CODE.eq(tmp.field("serviceCode", String::class.java)).and(a.CREATE_TIME.eq(tmp.field("createTime", LocalDateTime::class.java))))
@@ -640,8 +619,8 @@ class ExtServiceDao {
         val c = TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL.`as`("c")
         val d = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("d")
 
-        var selectFeild = dslContext.select(
-            a.ID.countDistinct()
+        val selectFeild = dslContext.select(
+            DSL.countDistinct(a.ID)
         ).from(a).join(b).on(a.SERVICE_CODE.eq(b.SERVICE_CODE)).join(d).on(a.SERVICE_CODE.eq(d.STORE_CODE))
 
         val conditions = mutableListOf<Condition>()
@@ -722,7 +701,7 @@ class ExtServiceDao {
             .on(ta.SERVICE_CODE.eq(taf.SERVICE_CODE))
 
         val storeType = StoreTypeEnum.SERVICE.type.toByte()
-        if (labelCodeList != null && labelCodeList.isNotEmpty()) {
+        if (!labelCodeList.isNullOrEmpty()) {
             val c = TLabel.T_LABEL.`as`("c")
             val labelIdList = dslContext.select(c.ID)
                 .from(c)
@@ -779,11 +758,13 @@ class ExtServiceDao {
         } else {
             baseStep.where(conditions)
         }
-        logger.info(baseStep.getSQL(true))
+        if (logger.isDebugEnabled) {
+            logger.debug(baseStep.getSQL(ParamType.INLINED))
+        }
         return if (null != page && null != pageSize) {
-            baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            baseStep.limit((page - 1) * pageSize, pageSize).skipCheck().fetch()
         } else {
-            baseStep.fetch()
+            baseStep.skipCheck().fetch()
         }
     }
 
