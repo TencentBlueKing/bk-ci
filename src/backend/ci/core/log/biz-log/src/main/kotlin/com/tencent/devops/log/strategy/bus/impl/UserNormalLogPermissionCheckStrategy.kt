@@ -34,7 +34,9 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.log.service.LogPermissionService
 import com.tencent.devops.log.strategy.bus.IUserLogPermissionCheckStrategy
+import org.springframework.stereotype.Component
 
+@Component
 class UserNormalLogPermissionCheckStrategy : IUserLogPermissionCheckStrategy {
 
     override fun checkUserLogPermission(

@@ -55,6 +55,7 @@ import com.tencent.devops.model.process.tables.TPipelineResource
 import com.tencent.devops.model.process.tables.TPipelineResourceVersion
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.TPipelineSettingVersion
+import com.tencent.devops.model.process.tables.TPipelineTimer
 import com.tencent.devops.model.process.tables.TPipelineTriggerDetail
 import com.tencent.devops.model.process.tables.TPipelineTriggerEvent
 import com.tencent.devops.model.process.tables.TPipelineTriggerReview
@@ -438,6 +439,14 @@ class ProcessDataDeleteDao {
 
     fun deletePipelineWebhook(dslContext: DSLContext, projectId: String, pipelineId: String) {
         with(TPipelineWebhook.T_PIPELINE_WEBHOOK) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
+                .execute()
+        }
+    }
+
+    fun deletePipelineTimer(dslContext: DSLContext, projectId: String, pipelineId: String) {
+        with(TPipelineTimer.T_PIPELINE_TIMER) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
                 .execute()

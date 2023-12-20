@@ -115,6 +115,9 @@ class ProcessDataMigrateService @Autowired constructor(
     @Value("\${sharding.migration.sourceDbDataDeleteFlag:#{false}}")
     private val migrationSourceDbDataDeleteFlag: Boolean = false
 
+    @Value("\${sharding.migration.processDbUnionClusterFlag:#{true}}")
+    private val migrationProcessDbUnionClusterFlag: Boolean = true
+
     @PostConstruct
     fun init() {
         // 启动的时候重置redis中存储的同时迁移的项目数量，防止因为服务异常停了造成程序执行出错
@@ -490,7 +493,8 @@ class ProcessDataMigrateService @Autowired constructor(
                         dslContext = context,
                         projectId = projectId,
                         targetClusterName = clusterName,
-                        targetDataSourceName = shardingRoutingRule
+                        targetDataSourceName = shardingRoutingRule,
+                        broadcastTableDeleteFlag = !migrationProcessDbUnionClusterFlag
                     )
                 }
                 // 更新项目的路由规则

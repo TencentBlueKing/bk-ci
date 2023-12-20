@@ -44,4 +44,12 @@ object BkApiUtil {
     fun getPermissionFlag(): Boolean? {
         return apiPermissionThreadLocal.get()
     }
+
+    /**
+     * 从ThreadLocal中移除当前线程中的接口权限校验标识
+     * @return 布尔值
+     */
+    fun removePermissionFlag() {
+        apiPermissionThreadLocal.remove()
+    }
 }

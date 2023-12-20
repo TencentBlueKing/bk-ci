@@ -100,6 +100,7 @@ class FeignConfiguration @Autowired constructor(
             val permissionFlag = BkApiUtil.getPermissionFlag()
             if (permissionFlag != null) {
                 requestTemplate.header(API_PERMISSION, permissionFlag.toString())
+                BkApiUtil.removePermissionFlag()
             }
 
             // 设置服务名称

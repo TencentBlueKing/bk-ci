@@ -39,6 +39,7 @@ import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -54,12 +55,18 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
         private const val DEFAULT_PAGE_SIZE = 20
     }
 
+    @Value("\${process.clearBaseBuildData:false}")
+    private val clearBaseBuildData: Boolean = false
+
     /**
      * 删除process数据库数据
      * @param dslContext jooq上下文
      * @param projectId 项目ID
+     * @param pipelineId 流水线ID
      * @param targetClusterName 迁移集群
      * @param targetDataSourceName 迁移数据源名称
+     * @param migrationLock 迁移锁
+     * @param broadcastTableDeleteFlag 广播表删除标识
      */
     fun deleteProcessData(
         dslContext: DSLContext,
@@ -67,7 +74,8 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
         pipelineId: String? = null,
         targetClusterName: String,
         targetDataSourceName: String,
-        migrationLock: MigrationLock? = null
+        migrationLock: MigrationLock? = null,
+        broadcastTableDeleteFlag: Boolean? = true
     ) {
         try {
             migrationLock?.lock()
@@ -86,7 +94,8 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     targetClusterName = targetClusterName,
-                    targetDataSourceName = targetDataSourceName
+                    targetDataSourceName = targetDataSourceName,
+                    broadcastTableDeleteFlag = broadcastTableDeleteFlag
                 )
             } else {
                 throw ErrorCodeException(
@@ -104,11 +113,17 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
         projectId: String,
         pipelineId: String? = null,
         targetClusterName: String,
-        targetDataSourceName: String
+        targetDataSourceName: String,
+        broadcastTableDeleteFlag: Boolean? = true
     ) {
         if (!pipelineId.isNullOrBlank()) {
             // 如果流水线ID不为空，只需清理与流水线直接相关的数据
-            deleteProjectPipelineRelData(dslContext, projectId, mutableListOf(pipelineId))
+            deleteProjectPipelineRelData(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineIds = mutableListOf(pipelineId),
+                broadcastTableDeleteFlag = broadcastTableDeleteFlag
+            )
             return
         }
         var minPipelineInfoId = processDao.getMinPipelineInfoIdByProjectId(dslContext, projectId)
@@ -127,7 +142,12 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                     pipelineId = pipelineIds[pipelineIds.size - 1]
                 )?.id ?: 0L) + 1
             }
-            deleteProjectPipelineRelData(dslContext, projectId, pipelineIds)
+            deleteProjectPipelineRelData(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineIds = pipelineIds,
+                broadcastTableDeleteFlag = broadcastTableDeleteFlag
+            )
         } while (pipelineIds?.size == DEFAULT_PAGE_SIZE)
         // 如果流水线ID为空，与项目直接相关的数据也需要清理
         deleteProjectDirectlyRelData(
@@ -147,7 +167,8 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
     private fun deleteProjectPipelineRelData(
         dslContext: DSLContext,
         projectId: String,
-        pipelineIds: MutableList<String>?
+        pipelineIds: MutableList<String>?,
+        broadcastTableDeleteFlag: Boolean? = true
     ) {
         val tPipelineBuildHistory = TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY
         pipelineIds?.forEach { pipelineId ->
@@ -173,12 +194,10 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                     processDataDeleteDao.deletePipelineWebhookQueue(dslContext, projectId, buildIds)
                     processDataDeleteDao.deletePipelineBuildTask(dslContext, projectId, buildIds)
                     processDataDeleteDao.deleteReport(
-                        dslContext = dslContext, projectId = projectId,
-                        pipelineId = pipelineId, buildIds = buildIds
+                        dslContext = dslContext, projectId = projectId, pipelineId = pipelineId, buildIds = buildIds
                     )
                     processDataDeleteDao.deletePipelineBuildTemplateAcrossInfo(
-                        dslContext = dslContext, projectId = projectId,
-                        pipelineId = pipelineId, buildIds = buildIds
+                        dslContext = dslContext, projectId = projectId, pipelineId = pipelineId, buildIds = buildIds
                     )
                     processDataDeleteDao.deletePipelineTriggerReview(dslContext, projectId, buildIds)
                 }
@@ -189,8 +208,11 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                 processDataDeleteDao.deletePipelineRecentUse(dslContext, projectId, pipelineId)
                 processDataDeleteDao.deletePipelineTriggerDetail(dslContext, projectId, pipelineId)
                 processDataDeleteDao.deletePipelineAuditResource(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineRemoteAuth(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineWebhook(dslContext, projectId, pipelineId)
+                if (broadcastTableDeleteFlag != false) {
+                    processDataDeleteDao.deletePipelineRemoteAuth(dslContext, projectId, pipelineId)
+                    processDataDeleteDao.deletePipelineWebhook(dslContext, projectId, pipelineId)
+                    processDataDeleteDao.deletePipelineTimer(dslContext, projectId, pipelineId)
+                }
                 offset += DEFAULT_PAGE_SIZE
             } while (historyInfoRecords?.size == DEFAULT_PAGE_SIZE)
         }
@@ -256,10 +278,12 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
         processDataDeleteDao.deletePipelineViewUserLastView(dslContext, projectId)
         processDataDeleteDao.deletePipelineViewUserSettings(dslContext, projectId)
         processDataDeleteDao.deleteProjectPipelineCallback(dslContext, projectId)
-        processDataDeleteDao.deleteProjectPipelineCallbackHistory(dslContext, projectId)
         processDataDeleteDao.deleteTemplate(dslContext, projectId)
         processDataDeleteDao.deletePipelineViewTop(dslContext, projectId)
-        processDataDeleteDao.deletePipelineTriggerEvent(dslContext, projectId)
+        if (clearBaseBuildData) {
+            processDataDeleteDao.deletePipelineTriggerEvent(dslContext, projectId)
+            processDataDeleteDao.deleteProjectPipelineCallbackHistory(dslContext, projectId)
+        }
         logger.info("project[$projectId] deleteProjectDirectlyRelData success!")
     }
 }
