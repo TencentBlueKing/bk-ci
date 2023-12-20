@@ -78,8 +78,8 @@ data class NodeWithPermission(
     val lastBuildTime: String? = "",
     @ApiModelProperty("agent状态", required = true)
     val agentStatus: Boolean,
-    @ApiModelProperty("agent版本", required = true)
-    val agentVersion: String,
+    @ApiModelProperty("agent版本")
+    val agentVersion: String?,
     @ApiModelProperty("agent hash id")
     val agentHashId: String? = ""
 )
