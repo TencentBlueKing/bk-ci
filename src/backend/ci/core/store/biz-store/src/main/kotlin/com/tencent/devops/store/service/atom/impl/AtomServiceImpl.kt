@@ -566,14 +566,18 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     override fun getAtomInfos(
         codeVersions: Set<AtomCodeVersionReqItem>
     ): Result<List<AtomRunInfo>> {
+        logger.info("getAtomInfos codeVersions $codeVersions")
         val atomRunInfos = mutableListOf<AtomRunInfo>()
         codeVersions.forEach {
             val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, it.atomCode)
             val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, it.version)
             logger.info("atomRunInfoJson is : $atomRunInfoJson")
+            logger.info("it.version is : ${it.version}")
             if (!atomRunInfoJson.isNullOrBlank()) {
                 val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
-                if (atomRunInfo.atomStatus == null) {
+                if (atomRunInfo.atomStatus != null && atomRunInfo.version == it.version) {
+                    atomRunInfos.add(atomRunInfo)
+                } else {
                     atomRunInfos.add(
                         setCache(
                             atomRunInfoKey = atomRunInfoKey,
@@ -581,8 +585,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                             atomCode = it.atomCode
                         )
                     )
-                } else {
-                    atomRunInfos.add(atomRunInfo)
                 }
             } else {
                 atomRunInfos.add(
