@@ -131,13 +131,15 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
                 userId = userId
             )
         } catch (ignored: Throwable) {
+            val errorMsg = ignored.message
             logger.warn("migrateData project:[$projectId],pipeline[$pipelineId] run task fail", ignored)
-            // 迁移流水线数据失败发送失败消息通知用户
-            sendMigrateProcessDataFailMsg(
+            doMigrationErrorBus(
+                archiveDbShardingRoutingRule = archiveDbShardingRoutingRule,
                 projectId = projectId,
                 pipelineId = pipelineId,
+                migrationLock = migrationLock,
                 userId = userId,
-                errorMsg = ignored.message
+                errorMsg = errorMsg
             )
             return
         } finally {
@@ -147,6 +149,44 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
                 item = pipelineId
             )
         }
+    }
+
+    private fun doMigrationErrorBus(
+        archiveDbShardingRoutingRule: ShardingRoutingRule?,
+        projectId: String,
+        pipelineId: String,
+        migrationLock: MigrationLock,
+        userId: String,
+        errorMsg: String?
+    ) {
+        try {
+            if (archiveDbShardingRoutingRule != null) {
+                processMigrationDataDeleteService.deleteProcessData(
+                    dslContext = archiveShardingDslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    targetClusterName = archiveDbShardingRoutingRule.clusterName,
+                    targetDataSourceName = archiveDbShardingRoutingRule.dataSourceName,
+                    migrationLock = migrationLock
+                )
+            }
+        } catch (ignored: Throwable) {
+            logger.warn("migrateData project:[$projectId],pipeline[$pipelineId] doMigrationErrorBus fail", ignored)
+            sendMigrateProcessDataFailMsg(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                errorMsg = ignored.message
+            )
+            return
+        }
+        // 迁移流水线数据失败发送失败消息通知用户
+        sendMigrateProcessDataFailMsg(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            errorMsg = errorMsg
+        )
     }
 
     private fun doAfterMigrationBus(
