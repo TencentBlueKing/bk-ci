@@ -24,43 +24,31 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.store.resources.atom
+
+package com.tencent.devops.process.api.template
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.web.annotation.SensitiveApiPermission
-import com.tencent.devops.store.api.atom.BuildAtomResource
-import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
-import com.tencent.devops.store.pojo.common.StoreProcessInfo
-import com.tencent.devops.store.pojo.common.VersionInfo
-import com.tencent.devops.store.service.atom.AtomReleaseService
-import com.tencent.devops.store.service.atom.AtomService
+import com.tencent.devops.process.service.template.TemplateAtomService
+import com.tencent.devops.store.pojo.atom.AtomProp
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class BuildAtomResourceImpl @Autowired constructor(
-    private val atomService: AtomService,
-    private val atomReleaseService: AtomReleaseService
-) : BuildAtomResource {
+class UserTemplateAtomResourceImpl @Autowired constructor(
+    private val templateAtomService: TemplateAtomService
+) : UserTemplateAtomResource {
 
-    override fun getAtomDefaultValidVersion(projectCode: String, atomCode: String): Result<VersionInfo?> {
-        return atomService.getAtomDefaultValidVersion(projectCode, atomCode)
-    }
-
-    @SensitiveApiPermission("branch_test_version_management")
-    override fun createAtomBranchTestVersion(
+    override fun getTemplateAtomPropList(
         userId: String,
-        marketAtomUpdateRequest: MarketAtomUpdateRequest
-    ): Result<String> {
-        return atomReleaseService.creatAtomBranchTestVersion(userId, marketAtomUpdateRequest)
-    }
-
-    @SensitiveApiPermission("branch_test_version_management")
-    override fun endBranchVersionTest(userId: String, atomCode: String, branch: String): Result<Boolean> {
-        return atomReleaseService.endBranchVersionTest(userId, atomCode, branch)
-    }
-
-    override fun getProcessInfo(userId: String, atomId: String): Result<StoreProcessInfo> {
-        return atomReleaseService.getProcessInfo(userId, atomId)
+        projectId: String,
+        templateId: String,
+        version: Long?
+    ): Result<Map<String, AtomProp>?> {
+        return templateAtomService.getTemplateAtomPropList(
+            userId = userId,
+            projectId = projectId,
+            templateId = templateId,
+            version = version
+        )
     }
 }
