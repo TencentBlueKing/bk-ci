@@ -209,6 +209,7 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                 processDataDeleteDao.deletePipelineTriggerDetail(dslContext, projectId, pipelineId)
                 processDataDeleteDao.deletePipelineAuditResource(dslContext, projectId, pipelineId)
                 if (broadcastTableDeleteFlag != false) {
+                    // 如果广播表数据清理标识不是false才清理广播表的数据（迁移库如果和原库一起组成数据库集群则不需要清理广播表数据）
                     processDataDeleteDao.deletePipelineRemoteAuth(dslContext, projectId, pipelineId)
                     processDataDeleteDao.deletePipelineWebhook(dslContext, projectId, pipelineId)
                     processDataDeleteDao.deletePipelineTimer(dslContext, projectId, pipelineId)
