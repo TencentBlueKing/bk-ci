@@ -12,7 +12,7 @@ require (
 	github.com/kardianos/service v1.2.2
 	github.com/nicksnyder/go-i18n/v2 v2.2.1
 	github.com/pkg/errors v0.9.1
-	github.com/sirupsen/logrus v1.9.0
+	github.com/sirupsen/logrus v1.9.3
 	golang.org/x/text v0.13.0
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
@@ -72,6 +72,7 @@ require (
 )
 
 require (
+	github.com/TencentBlueKing/bk-ci/agentcommon v0.0.0-00010101000000-000000000000
 	github.com/fsouza/go-dockerclient v1.9.7
 	github.com/gorilla/websocket v1.5.0
 	golang.org/x/sync v0.1.0
