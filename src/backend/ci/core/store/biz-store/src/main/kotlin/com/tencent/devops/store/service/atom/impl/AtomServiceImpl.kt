@@ -566,13 +566,10 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     override fun getAtomInfos(
         codeVersions: Set<AtomCodeVersionReqItem>
     ): Result<List<AtomRunInfo>> {
-        logger.info("getAtomInfos codeVersions $codeVersions")
         val atomRunInfos = mutableListOf<AtomRunInfo>()
         codeVersions.forEach {
             val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, it.atomCode)
             val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, it.version)
-            logger.info("atomRunInfoJson is : $atomRunInfoJson")
-            logger.info("it.version is : ${it.version}")
             if (!atomRunInfoJson.isNullOrBlank()) {
                 val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
                 if (atomRunInfo.atomStatus != null && atomRunInfo.version == it.version) {
@@ -628,8 +625,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
             params = arrayOf("$atomCode:$version")
         )
-        logger.info("atomStatus is : ${tAtomRecord.atomStatus}")
-        logger.info("tAtomRecord is : $tAtomRecord")
         val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
             dslContext = dslContext,
             storeCode = atomCode,

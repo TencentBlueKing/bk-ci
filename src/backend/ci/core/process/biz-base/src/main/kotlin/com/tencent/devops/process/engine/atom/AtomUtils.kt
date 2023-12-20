@@ -56,11 +56,8 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.StoreParam
 import com.tencent.devops.store.pojo.common.StoreVersion
-import org.slf4j.LoggerFactory
 
 object AtomUtils {
-
-    private val logger = LoggerFactory.getLogger(AtomUtils::class.java)
 
     /**
      * 解析出Container中的市场插件，如果市场插件相应版本找不到就抛出异常
@@ -211,15 +208,11 @@ object AtomUtils {
                 codeVersions = codeVersions
             ).data!!
         atomInfos.forEach {
-            logger.info("AtomInfo $it ,status: ${it.atomStatus}")
-            var atomStatus: String
-            try {
-                atomStatus = AtomStatusEnum.getAtomStatus(it.atomStatus!!.toInt())
+            val atomStatus = try {
+                AtomStatusEnum.getAtomStatus(it.atomStatus!!.toInt())
             } catch (e: Exception) {
-                atomStatus = it.atomStatus.toString()
-                logger.info("check template atom failed, atomStatus: $atomStatus, message: ${e.message}")
+                it.atomStatus.toString()
             }
-            logger.info("params: ${AtomStatusEnum.valueOf(atomStatus).getI18n(I18nUtil.getLanguage(userId))}")
             if (atomStatus != AtomStatusEnum.RELEASED.name) {
                 throw ErrorCodeException(
                     errorCode = TEMPLATE_PLUGIN_NOT_ALLOWED_USE,
