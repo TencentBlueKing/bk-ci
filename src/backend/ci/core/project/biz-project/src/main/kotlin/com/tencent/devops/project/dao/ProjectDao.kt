@@ -135,19 +135,28 @@ class ProjectDao {
         val deptId = migrateProjectConditionDTO.deptId
         val excludedProjectCodes = migrateProjectConditionDTO.excludedProjectCodes
         val creator = migrateProjectConditionDTO.projectCreator
+        val routerTag = migrateProjectConditionDTO.routerTag
         return with(TProject.T_PROJECT) {
             dslContext.selectFrom(this)
                 .where(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
-                .and(CHANNEL.eq(ProjectChannelCode.BS.name))
-                .and(
-                    ROUTER_TAG.notContains(AuthSystemType.RBAC_AUTH_TYPE.value)
-                        .or(ROUTER_TAG.isNull)
-                )
+                .and(CHANNEL.eq(ProjectChannelCode.BS.name).or(CHANNEL.eq(ProjectChannelCode.PREBUILD.name)))
+                .let {
+                    if (routerTag == null) {
+                        it.and(
+                            ROUTER_TAG.notContains(AuthSystemType.RBAC_AUTH_TYPE.value)
+                                .or(ROUTER_TAG.isNull)
+                        )
+                    } else {
+                        it.and(
+                            ROUTER_TAG.contains(routerTag.value).or(ROUTER_TAG.contains("devx"))
+                        )
+                    }
+                }
                 .let { if (centerId == null) it else it.and(CENTER_ID.eq(centerId)) }
                 .let { if (deptId == null) it else it.and(DEPT_ID.eq(deptId)) }
                 .let { if (creator == null) it else it.and(CREATOR.eq(creator)) }
                 .let { if (excludedProjectCodes == null) it else it.and(ENGLISH_NAME.notIn(excludedProjectCodes)) }
-                .orderBy(CREATED_AT.desc())
+                .orderBy(CREATED_AT.asc())
                 .limit(limit)
                 .offset(offset)
                 .fetch()
@@ -326,7 +335,8 @@ class ProjectDao {
         projectId: String,
         channelCode: ProjectChannelCode? = ProjectChannelCode.BS,
         approvalStatus: Int,
-        subjectScopesStr: String
+        subjectScopesStr: String,
+        properties: ProjectProperties?
     ): Int {
         with(TProject.T_PROJECT) {
             return dslContext.insertInto(
@@ -380,7 +390,7 @@ class ProjectDao {
                 userDeptDetail.centerName,
                 channelCode!!.name,
                 true,
-                projectCreateInfo.properties?.let {
+                properties?.let {
                     JsonUtil.toJson(it, false)
                 },
                 subjectScopesStr,

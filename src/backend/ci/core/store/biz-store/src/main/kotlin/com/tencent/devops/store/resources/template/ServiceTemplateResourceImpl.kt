@@ -43,10 +43,15 @@ class ServiceTemplateResourceImpl @Autowired constructor(
 ) : ServiceTemplateResource {
     override fun installTemplate(userId: String, installTemplateReq: InstallTemplateReq): Result<Boolean> {
         // 可见与可安装鉴权在marketTemplateService中实现
-        return marketTemplateService.installTemplate(
+        val installResult = marketTemplateService.installTemplate(
             userId = userId,
             channelCode = ChannelCode.BS,
             installTemplateReq = installTemplateReq
+        )
+        return Result(
+            status = installResult.status,
+            message = installResult.message,
+            data = installResult.data?.result ?: false
         )
     }
 

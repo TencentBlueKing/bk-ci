@@ -100,12 +100,14 @@ class RbacAuthProjectApi @Autowired constructor(
         serviceCode: AuthServiceCode,
         userId: String,
         permission: AuthPermission,
-        supplier: (() -> List<String>)?
+        supplier: (() -> List<String>)?,
+        resourceType: String?
     ): List<String> {
         return client.get(ServiceProjectAuthResource::class).getUserProjectsByPermission(
             token = tokenService.getSystemToken()!!,
             userId = userId,
-            action = permission.value
+            action = permission.value,
+            resourceType = resourceType
         ).data ?: emptyList()
     }
 
