@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -59,6 +58,7 @@ import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import org.springframework.util.CollectionUtils
 
+@Suppress("LongParameterList")
 @Service
 class OpProjectServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
@@ -69,7 +69,6 @@ class OpProjectServiceImpl @Autowired constructor(
     private val projectDispatcher: ProjectDispatcher,
     private val paasCCService: ProjectPaasCCService,
     private val bkAuthProjectApi: AuthProjectApi,
-    private val bsAuthTokenApi: AuthTokenApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val projectRemoteDevService: ProjectRemoteDevService
 ) : AbsOpProjectServiceImpl(
@@ -189,8 +188,7 @@ class OpProjectServiceImpl @Autowired constructor(
             throw OperationException(I18nUtil.getCodeLanMessage(messageCode = PROJECT_NOT_EXIST))
         }
         var isSyn = false
-        val accessToken = bsAuthTokenApi.getAccessToken(pipelineAuthServiceCode)
-        val paasProjectInfo = paasCCService.getPaasCCProjectInfo(projectCode, accessToken)
+        val paasProjectInfo = paasCCService.getPaasCCProjectInfo(projectCode, "")
         if (paasProjectInfo == null) {
             logger.info("synProject projectCode:$projectCode, paasCC is not exist. start Syn")
             if (isRefresh!!) {

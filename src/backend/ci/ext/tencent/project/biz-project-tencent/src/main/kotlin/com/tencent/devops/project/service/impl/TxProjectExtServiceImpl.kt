@@ -53,14 +53,11 @@ class TxProjectExtServiceImpl(
         logger.info("create bkrepo project ${projectCreateInfo.englishName} success: $createSuccess")
 
         if (createExtInfo.needAuth!!) {
-            val newAccessToken = if (accessToken.isNullOrBlank()) {
-                bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
-            } else accessToken
             // 添加paas项目
             projectPaasCCService.createPaasCCProject(
                 userId = userId,
                 projectId = authProjectId,
-                accessToken = newAccessToken,
+                accessToken = "",
                 projectCreateInfo = projectCreateInfo
             )
         }
