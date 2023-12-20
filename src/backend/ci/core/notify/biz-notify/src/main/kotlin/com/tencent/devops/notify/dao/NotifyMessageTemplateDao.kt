@@ -136,10 +136,8 @@ class NotifyMessageTemplateDao {
         commonTemplateId: String
     ): TRtxNotifyMessageTemplateRecord? {
         with(TRtxNotifyMessageTemplate.T_RTX_NOTIFY_MESSAGE_TEMPLATE) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(COMMON_TEMPLATE_ID.contains(commonTemplateId))
             return dslContext.selectFrom(this)
-                .where(conditions)
+                .where(COMMON_TEMPLATE_ID.eq(commonTemplateId))
                 .fetchOne()
         }
     }
