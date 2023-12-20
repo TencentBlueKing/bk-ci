@@ -49,6 +49,14 @@ object BkApiUtil {
     }
 
     /**
+     * 从ThreadLocal中移除当前线程中的接口权限校验标识
+     * @return 布尔值
+     */
+    fun removePermissionFlag() {
+        apiPermissionThreadLocal.remove()
+    }
+
+    /**
      * 获取request对象
      * @return request对象
      */

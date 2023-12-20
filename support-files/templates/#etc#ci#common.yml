@@ -362,6 +362,8 @@ sharding:
     maxProjectCount: 5 # 同时迁移项目最大数量
     processDbMicroServices: "process,engine,misc,lambda" #使用process数据库的微服务
     sourceDbDataDeleteFlag: false # 迁移成功后是否删除原库数据
+  tableShardingStrategy:
+    defaultShardingNum: 1 # 默认分表数量
 
 cluster:
   tag: __BK_CI_CLUSTER_TAG__

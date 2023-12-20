@@ -27,10 +27,12 @@
 
 package com.tencent.devops.log.strategy.factory
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.log.strategy.bus.IUserLogPermissionCheckStrategy
 import com.tencent.devops.log.strategy.bus.impl.UserArchivedLogPermissionCheckStrategy
 import com.tencent.devops.log.strategy.bus.impl.UserNormalLogPermissionCheckStrategy
-import java.util.concurrent.ConcurrentHashMap
 
 object UserLogPermissionCheckStrategyFactory {
 
@@ -38,7 +40,15 @@ object UserLogPermissionCheckStrategyFactory {
 
     private const val NORMAL_LOG_STRATEGY = "normalLogStrategy"
 
-    private val logStrategyMap = ConcurrentHashMap<String, IUserLogPermissionCheckStrategy>()
+    private val logStrategyMap = HashMap<String, IUserLogPermissionCheckStrategy>()
+
+    init {
+        // 初始化策略
+        logStrategyMap[ARCHIVED_LOG_STRATEGY] =
+            SpringContextUtil.getBean(UserArchivedLogPermissionCheckStrategy::class.java)
+        logStrategyMap[NORMAL_LOG_STRATEGY] =
+            SpringContextUtil.getBean(UserNormalLogPermissionCheckStrategy::class.java)
+    }
 
     fun createUserLogPermissionCheckStrategy(
         archiveFlag: Boolean? = null
@@ -48,18 +58,6 @@ object UserLogPermissionCheckStrategyFactory {
         } else {
             NORMAL_LOG_STRATEGY
         }
-        var userLogPermissionCheckStrategy = logStrategyMap[key]
-        if (archiveFlag == true) {
-            if (userLogPermissionCheckStrategy == null) {
-                userLogPermissionCheckStrategy = UserArchivedLogPermissionCheckStrategy()
-                logStrategyMap[ARCHIVED_LOG_STRATEGY] = userLogPermissionCheckStrategy
-            }
-        } else {
-            if (userLogPermissionCheckStrategy == null) {
-                userLogPermissionCheckStrategy = UserNormalLogPermissionCheckStrategy()
-                logStrategyMap[NORMAL_LOG_STRATEGY] = userLogPermissionCheckStrategy
-            }
-        }
-        return userLogPermissionCheckStrategy
+        return logStrategyMap[key] ?: throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
     }
 }

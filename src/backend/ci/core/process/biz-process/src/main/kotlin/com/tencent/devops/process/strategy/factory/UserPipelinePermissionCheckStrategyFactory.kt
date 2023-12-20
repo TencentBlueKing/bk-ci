@@ -27,10 +27,12 @@
 
 package com.tencent.devops.process.strategy.factory
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.strategy.bus.IUserPipelinePermissionCheckStrategy
 import com.tencent.devops.process.strategy.bus.impl.UserArchivedPipelinePermissionCheckStrategy
 import com.tencent.devops.process.strategy.bus.impl.UserNormalPipelinePermissionCheckStrategy
-import java.util.concurrent.ConcurrentHashMap
 
 object UserPipelinePermissionCheckStrategyFactory {
 
@@ -38,7 +40,15 @@ object UserPipelinePermissionCheckStrategyFactory {
 
     private const val NORMAL_STRATEGY = "normalStrategy"
 
-    private val strategyMap = ConcurrentHashMap<String, IUserPipelinePermissionCheckStrategy>()
+    private val strategyMap = HashMap<String, IUserPipelinePermissionCheckStrategy>()
+
+    init {
+        // 初始化策略
+        strategyMap[ARCHIVED_STRATEGY] =
+            SpringContextUtil.getBean(UserArchivedPipelinePermissionCheckStrategy::class.java)
+        strategyMap[NORMAL_STRATEGY] =
+            SpringContextUtil.getBean(UserNormalPipelinePermissionCheckStrategy::class.java)
+    }
 
     fun createUserPipelinePermissionCheckStrategy(
         archiveFlag: Boolean? = null
@@ -48,18 +58,6 @@ object UserPipelinePermissionCheckStrategyFactory {
         } else {
             NORMAL_STRATEGY
         }
-        var userPipelinePermissionCheckStrategy = strategyMap[key]
-        if (archiveFlag == true) {
-            if (userPipelinePermissionCheckStrategy == null) {
-                userPipelinePermissionCheckStrategy = UserArchivedPipelinePermissionCheckStrategy()
-                strategyMap[ARCHIVED_STRATEGY] = userPipelinePermissionCheckStrategy
-            }
-        } else {
-            if (userPipelinePermissionCheckStrategy == null) {
-                userPipelinePermissionCheckStrategy = UserNormalPipelinePermissionCheckStrategy()
-                strategyMap[NORMAL_STRATEGY] = userPipelinePermissionCheckStrategy
-            }
-        }
-        return userPipelinePermissionCheckStrategy
+        return strategyMap[key] ?: throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
     }
 }

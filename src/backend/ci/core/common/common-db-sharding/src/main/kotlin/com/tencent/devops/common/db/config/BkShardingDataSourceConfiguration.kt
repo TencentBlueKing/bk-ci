@@ -231,8 +231,8 @@ class BkShardingDataSourceConfiguration {
     private fun generateTableRuleConfigs(
         tableRuleConfigs: List<TableRuleConfig>?,
         config: DataSourceProperties
-    ): List<TableRuleConfig> {
-        return if (tableRuleConfigs.isNullOrEmpty()) {
+    ): List<TableRuleConfig>? {
+        return if (tableRuleConfigs.isNullOrEmpty() && defaultTableShardingNum > 1) {
             // 如果分表规则为空，则复用默认的分表规则
             val finalTableRuleConfigs = mutableListOf<TableRuleConfig>()
             config.tableRuleConfigs.forEach { tableRuleConfig ->
@@ -298,7 +298,7 @@ class BkShardingDataSourceConfiguration {
                 AlgorithmConfiguration(CLASS_BASED, dbShardingAlgorithmProps)
         }
         // 生成table分片算法配置
-        if (!tableAlgorithmClassName.isNullOrBlank()) {
+        if (!tableAlgorithmClassName.isNullOrBlank() && !tableRuleConfigs.isNullOrEmpty()) {
             val tableShardingAlgorithmProps = Properties()
             tableShardingAlgorithmProps.setProperty(STRATEGY, STANDARD)
             tableShardingAlgorithmProps.setProperty(ALGORITHM_CLASS_NAME, tableAlgorithmClassName)

@@ -35,7 +35,9 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.strategy.bus.IUserPipelinePermissionCheckStrategy
+import org.springframework.stereotype.Component
 
+@Component
 class UserArchivedPipelinePermissionCheckStrategy : IUserPipelinePermissionCheckStrategy {
 
     override fun checkUserPipelinePermission(

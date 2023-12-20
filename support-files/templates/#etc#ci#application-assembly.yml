@@ -435,7 +435,7 @@ sharding:
     archiveAlgorithmClassName: "com.tencent.devops.process.sharding.BkProcessArchiveDatabaseShardingAlgorithm"
   tableShardingStrategy:
     archiveAlgorithmClassName: "com.tencent.devops.process.sharding.BkProcessArchiveTableShardingAlgorithm"
-    defaultShardingNum: 2
+    defaultShardingNum: 1
   archiveFlag: Y
   defaultFlag: N
   shardingField: PROJECT_ID
