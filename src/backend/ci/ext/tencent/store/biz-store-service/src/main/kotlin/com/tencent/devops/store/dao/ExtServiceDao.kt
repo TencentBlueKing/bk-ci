@@ -288,9 +288,9 @@ class ExtServiceDao {
             .groupBy(a.SERVICE_CODE)
             .orderBy(a.UPDATE_TIME.desc())
         return if (null != page && null != pageSize) {
-            baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            baseStep.limit((page - 1) * pageSize, pageSize).skipCheck().fetch()
         } else {
-            baseStep.fetch()
+            baseStep.skipCheck().fetch()
         }
     }
 
@@ -312,9 +312,9 @@ class ExtServiceDao {
         conditions.add(a.DELETE_FLAG.eq(false))
         val whereStep = dslContext.selectFrom(a).where(conditions).orderBy(a.CREATE_TIME.desc())
         return if (null != page && null != pageSize) {
-            whereStep.limit((page - 1) * pageSize, pageSize).fetch()
+            whereStep.limit((page - 1) * pageSize, pageSize).skipCheck().fetch()
         } else {
-            whereStep.fetch()
+            whereStep.skipCheck().fetch()
         }
     }
 
@@ -354,7 +354,7 @@ class ExtServiceDao {
     fun listServiceByCode(dslContext: DSLContext, serviceCode: String): Result<TExtensionServiceRecord>? {
         return with(TExtensionService.T_EXTENSION_SERVICE) {
             dslContext.selectFrom(this).where(DELETE_FLAG.eq(false)).and(SERVICE_CODE.eq(serviceCode))
-                .orderBy(CREATE_TIME.desc()).fetch()
+                .orderBy(CREATE_TIME.desc()).skipCheck().fetch()
         }
     }
 
@@ -389,9 +389,9 @@ class ExtServiceDao {
                 baseStep.orderBy(CREATE_TIME.asc())
             }
             return if (null != page && null != pageSize) {
-                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+                baseStep.limit((page - 1) * pageSize, pageSize).skipCheck().fetch()
             } else {
-                baseStep.fetch()
+                baseStep.skipCheck().fetch()
             }
         }
     }
@@ -479,7 +479,7 @@ class ExtServiceDao {
         if (bkService != null) {
             val tir = TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL.`as`("tir")
             val serviceIdList = dslContext.select(tir.SERVICE_ID).from(tir)
-                .where(tir.BK_SERVICE_ID.eq(bkService)).fetch().map { it["SERVICE_ID"] as String }
+                .where(tir.BK_SERVICE_ID.eq(bkService)).skipCheck().fetch().map { it["SERVICE_ID"] as String }
             conditions.add(ta.ID.`in`(serviceIdList))
         }
 
@@ -600,9 +600,9 @@ class ExtServiceDao {
         val t = selectField.where(conditions).orderBy(orderByStep)
         val baseStep = dslContext.select().from(t)
         return if (null != page && null != pageSize) {
-            baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            baseStep.limit((page - 1) * pageSize, pageSize).skipCheck().fetch()
         } else {
-            baseStep.fetch()
+            baseStep.skipCheck().fetch()
         }
     }
 
@@ -706,7 +706,7 @@ class ExtServiceDao {
             val labelIdList = dslContext.select(c.ID)
                 .from(c)
                 .where(c.LABEL_CODE.`in`(labelCodeList)).and(c.TYPE.eq(storeType))
-                .fetch().map { it["ID"] as String }
+                .skipCheck().fetch().map { it["ID"] as String }
             val talr = TExtensionServiceLabelRel.T_EXTENSION_SERVICE_LABEL_REL.`as`("talr")
             baseStep.leftJoin(talr).on(ta.ID.eq(talr.SERVICE_ID))
             conditions.add(talr.LABEL_ID.`in`(labelIdList))
@@ -719,7 +719,7 @@ class ExtServiceDao {
         if (bkService != null) {
             val tir = TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL.`as`("tir")
             val serviceIdList = dslContext.select(tir.SERVICE_ID).from(tir)
-                .where(tir.BK_SERVICE_ID.eq(bkService)).fetch().map { it["SERVICE_ID"] as String }
+                .where(tir.BK_SERVICE_ID.eq(bkService)).skipCheck().fetch().map { it["SERVICE_ID"] as String }
             conditions.add(ta.ID.`in`(serviceIdList))
         }
         if (score != null) {
