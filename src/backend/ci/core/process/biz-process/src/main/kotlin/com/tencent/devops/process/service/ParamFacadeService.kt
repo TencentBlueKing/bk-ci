@@ -135,7 +135,7 @@ class ParamFacadeService @Autowired constructor(
         val options = refs.map {
             BuildFormValue(it, it)
         }
-        val searchUrl = "/process/api/user/scm/$projectId/${formProperty.repoHashId}/refs?search={words}"
+        val searchUrl = "/process/api/user/buildParam/$projectId/${formProperty.repoHashId}/gitRefs?search={words}"
         val replaceKey = "{words}"
         return copyFormProperty(
             property = formProperty,
@@ -274,10 +274,19 @@ class ParamFacadeService @Autowired constructor(
     ): BuildFormProperty {
         try {
             val hasPermissionPipelines = getHasPermissionPipelineList(userId, projectId)
-            val aliasName = hasPermissionPipelines
+            val options = hasPermissionPipelines
                 .filter { pipelineId == null || !it.pipelineId.contains(pipelineId) }
                 .map { BuildFormValue(it.pipelineName, it.pipelineName) }
-            return copyFormProperty(subPipelineFormProperty, aliasName)
+            val searchUrl = "/process/api/user/buildParam/subPipeline/$projectId/?" +
+                    "permission=${AuthPermission.EXECUTE.name}&excludePipelineId=$pipelineId" +
+                    "&pipelineName={words}&page=1&pageSize=100"
+            val replaceKey = "{words}"
+            return copyFormProperty(
+                property = subPipelineFormProperty,
+                options = options,
+                searchUrl = searchUrl,
+                replaceKey = replaceKey
+            )
         } catch (t: Throwable) {
             logger.warn("[$userId|$projectId] Fail to filter the properties of subpipelines", t)
             throw OperationException(
@@ -356,7 +365,13 @@ class ParamFacadeService @Autowired constructor(
             // 获取项目下所有流水线，并过滤出有权限部分，有权限列表为空时返回项目所有流水线
             watcher.start("s_r_summary")
             val buildPipelineRecords =
-                pipelineRuntimeService.getBuildPipelineRecords(projectId, ChannelCode.BS, hasPermissionList)
+                pipelineRuntimeService.getBuildPipelineRecords(
+                    projectId = projectId,
+                    channelCode = ChannelCode.BS,
+                    pipelineIds = hasPermissionList,
+                    page = 1,
+                    pageSize = 100
+                )
             watcher.stop()
 
             return buildPipelineRecords.map {

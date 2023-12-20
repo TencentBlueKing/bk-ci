@@ -38,6 +38,7 @@ import com.tencent.devops.process.plugin.ElementBizPlugin
 import com.tencent.devops.process.plugin.annotation.ElementBiz
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
 import com.tencent.devops.process.plugin.trigger.util.CronExpressionUtils
+import com.tencent.devops.process.utils.PIPELINE_TIMER_DISABLE
 import org.quartz.CronExpression
 import org.slf4j.LoggerFactory
 
@@ -65,7 +66,9 @@ class TimerTriggerElementBizPlugin constructor(
         val crontabExpressions = mutableSetOf<String>()
         val params = (container as TriggerContainer).params.associate { it.id to it.defaultValue.toString() }
         logger.info("[$pipelineId]|$userId| Timer trigger [${element.name}] enable=${element.isElementEnable()}")
-        if (element.isElementEnable()) {
+        // 在流水线参数上配置BK_CI_TIMER_DISABLE,禁用定时触发器插件
+        val isParamEnable = params[PIPELINE_TIMER_DISABLE]?.toBoolean() ?: true
+        if (element.isElementEnable() && isParamEnable) {
 
             val eConvertExpressions = element.convertExpressions(params = params)
             if (eConvertExpressions.isEmpty()) {
