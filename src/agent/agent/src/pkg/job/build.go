@@ -109,7 +109,7 @@ func DoPollAndBuild() {
 			continue
 		}
 
-		dockerCanRun, normalCanRun := checkParallelTaskCount()
+		dockerCanRun, normalCanRun := CheckParallelTaskCount()
 		if !dockerCanRun && !normalCanRun {
 			continue
 		}
@@ -177,13 +177,10 @@ func DoPollAndBuild() {
 }
 
 // checkParallelTaskCount 检查当前运行的最大任务数
-func checkParallelTaskCount() (dockerCanRun bool, normalCanRun bool) {
+func CheckParallelTaskCount() (dockerCanRun bool, normalCanRun bool) {
 	// 检查docker任务
 	dockerInstanceCount := GBuildDockerManager.GetInstanceCount()
 	if config.GAgentConfig.DockerParallelTaskCount != 0 && dockerInstanceCount >= config.GAgentConfig.DockerParallelTaskCount {
-		logs.Info(fmt.Sprintf("DOCKER_JOB|parallel docker task count exceed , wait job done, "+
-			"maxJob config: %d, instance count: %d",
-			config.GAgentConfig.DockerParallelTaskCount, dockerInstanceCount))
 		dockerCanRun = false
 	} else {
 		dockerCanRun = true
@@ -192,9 +189,6 @@ func checkParallelTaskCount() (dockerCanRun bool, normalCanRun bool) {
 	// 检查普通任务
 	instanceCount := GBuildManager.GetInstanceCount()
 	if config.GAgentConfig.ParallelTaskCount != 0 && instanceCount >= config.GAgentConfig.ParallelTaskCount {
-		logs.Info(fmt.Sprintf("parallel task count exceed , wait job done, "+
-			"ParallelTaskCount config: %d, instance count: %d",
-			config.GAgentConfig.ParallelTaskCount, instanceCount))
 		normalCanRun = false
 	} else {
 		normalCanRun = true

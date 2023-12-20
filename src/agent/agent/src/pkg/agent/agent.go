@@ -28,17 +28,17 @@
 package agent
 
 import (
+	"time"
+
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/collector"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/cron"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/heartbeat"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/imagedebug"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/pipeline"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
 
 func Run(isDebug bool) {
@@ -55,21 +55,71 @@ func Run(isDebug bool) {
 	// 数据采集
 	go collector.DoAgentCollect()
 
-	// 心跳
-	go heartbeat.DoAgentHeartbeat()
+	// // 心跳
+	// go heartbeat.DoAgentHeartbeat()
 
-	// 检查升级
-	go upgrade.DoPollAndUpgradeAgent()
+	// // 检查升级
+	// go upgrade.DoPollAndUpgradeAgent()
 
-	// 启动pipeline
-	go pipeline.Start()
+	// // 启动pipeline
+	// go pipeline.Start()
 
 	// 定期清理
 	go cron.CleanJob()
 	go cron.CleanDebugContainer()
 
-	// 登录调试任务
-	go imagedebug.DoPullAndDebug()
+	// // 登录调试任务
+	// go imagedebug.DoPullAndDebug()
 
-	job.DoPollAndBuild()
+	// job.DoPollAndBuild()
+	doAsk()
+}
+
+func doAsk() {
+	for {
+		time.Sleep(5 * time.Second)
+
+		// 判断除了 heartbeat 的其他模块是否需要获取
+		buildType := checkBuildType()
+		upgrade := checkUpgrade()
+		dockerDebug := checkDockerDebug()
+		pipeline := checkPipeline()
+
+		
+	}
+}
+
+func checkBuildType() api.BuildJobType {
+	dockerCanRun, normalCanRun := job.CheckParallelTaskCount()
+	if !dockerCanRun && !normalCanRun {
+		return api.NoneBuildType
+	}
+	if dockerCanRun && normalCanRun {
+		return api.AllBuildType
+	} else if normalCanRun {
+		return api.BinaryBuildType
+	} else {
+		return api.DockerBuildType
+	}
+}
+
+func checkUpgrade() bool {
+	if job.CheckRunningJob() {
+		return false
+	}
+	return true
+}
+
+func checkDockerDebug() bool {
+	if config.GAgentConfig.EnableDockerBuild {
+		return true
+	}
+	return false
+}
+
+func checkPipeline() bool {
+	if config.GAgentConfig.EnablePipeline {
+		return true
+	}
+	return false
 }

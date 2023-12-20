@@ -55,6 +55,7 @@ const (
 	AllBuildType    BuildJobType = "ALL"
 	DockerBuildType BuildJobType = "DOCKER"
 	BinaryBuildType BuildJobType = "BINARY"
+	NoneBuildType   BuildJobType = "NONE"
 )
 
 type ThirdPartyDockerBuildInfo struct {
@@ -158,6 +159,7 @@ type AgentHeartbeatResponse struct {
 type AgentPropsResp struct {
 	IgnoreLocalIps string `json:"ignoreLocalIps"`
 	KeepLogsHours  int    `json:"keepLogsHours"`
+	EnablePipeline bool   `json:"enablePipeline"`
 }
 
 type UpgradeInfo struct {
@@ -226,4 +228,25 @@ type ImageDebugFinish struct {
 	DebugUrl   string `json:"debugUrl"`
 	Success    bool   `json:"success"`
 	Error      *Error `json:"error"`
+}
+
+type AskInfo struct {
+	Enable  AskEnable          `json:"askEnable"`
+	Heart   AgentHeartbeatInfo `json:"heartbeat"`
+	Upgrade UpgradeInfo        `json:"upgrade"`
+}
+
+type AskEnable struct {
+	Build       bool `json:"build"`
+	Upgrade     bool `json:"upgrade"`
+	DockerDebug bool `json:"dockerBuild"`
+	Pipeline    bool `json:"pipeline"`
+}
+
+type AskResp struct {
+	Heart    AgentHeartbeatResponse `json:"heartbeat"`
+	Build    *ThirdPartyBuildInfo   `json:"build"`
+	Upgrade  *UpgradeItem           `json:"upgrade"`
+	Pipeline *map[string]any        `json:"pipeline"`
+	Debug    *ImageDebug            `json:"debug"`
 }

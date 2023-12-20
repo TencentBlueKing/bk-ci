@@ -215,3 +215,8 @@ func AddLogRedLine(buildId string, message *LogMessage, vmSeqId string) (*httput
 		Post(url).Body(message).SetHeaders(headers).Execute().
 		IntoDevopsResult()
 }
+
+func Ask(info *AskInfo) (*httputil.AgentResult, error) {
+	url := buildUrl("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/ask")
+	return httputil.NewHttpClient().Post(url).Body(info).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoAgentResult()
+}
