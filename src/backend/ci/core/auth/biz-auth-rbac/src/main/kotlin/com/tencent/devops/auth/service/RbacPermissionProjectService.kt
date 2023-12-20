@@ -101,12 +101,20 @@ class RbacPermissionProjectService(
 
     override fun getUserProjectsByPermission(
         userId: String,
-        action: String
+        action: String,
+        resourceType: String?
     ): List<String> {
         logger.info("[rbac] get user projects by permission|$userId|$action")
         val startEpoch = System.currentTimeMillis()
         try {
-            val useAction = RbacAuthUtils.buildAction(AuthPermission.get(action), AuthResourceType.PROJECT)
+            val finalResourceType = if (resourceType == null) {
+                AuthResourceType.PROJECT
+            } else {
+                AuthResourceType.get(resourceType)
+            }
+            val useAction = RbacAuthUtils.buildAction(
+                AuthPermission.get(action), finalResourceType
+            )
             val instanceMap = authHelper.groupRbacInstanceByType(userId, useAction)
             return if (instanceMap.contains("*")) {
                 logger.info("super manager has all project|$userId")

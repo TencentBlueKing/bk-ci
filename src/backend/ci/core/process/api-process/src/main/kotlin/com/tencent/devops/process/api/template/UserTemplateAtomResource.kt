@@ -23,40 +23,47 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.process.permission
+package com.tencent.devops.process.api.template
 
-import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.atom.AtomProp
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-class MockPipelineGroupPermissionService : PipelineGroupPermissionService {
-    override fun checkPipelineGroupPermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
-        return true
-    }
+@Api(tags = ["USER_TEMPLATE_ATOM"], description = "用户-模板-插件资源")
+@Path("/user/template/atoms")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserTemplateAtomResource {
 
-    override fun checkPipelineGroupPermission(
+    @ApiOperation("获取模板下插件属性列表")
+    @GET
+    @Path("/projects/{projectId}/templates/{templateId}/atom/prop/list")
+    fun getTemplateAtomPropList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
         projectId: String,
-        viewId: Long,
-        permission: AuthPermission
-    ): Boolean {
-        return true
-    }
-
-    override fun createResource(
-        userId: String,
-        projectId: String,
-        viewId: Long,
-        viewName: String
-    ) = Unit
-
-    override fun modifyResource(
-        userId: String,
-        projectId: String,
-        viewId: Long,
-        viewName: String
-    ) = Unit
-
-    override fun deleteResource(projectId: String, viewId: Long) = Unit
+        @ApiParam("模板ID", required = true)
+        @PathParam("templateId")
+        templateId: String,
+        @ApiParam("模板版本", required = false)
+        @QueryParam("version")
+        version: Long?
+    ): Result<Map<String, AtomProp>?>
 }
