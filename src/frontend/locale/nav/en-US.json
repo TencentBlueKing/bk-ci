@@ -211,6 +211,6 @@
     "documentation": "Documentation",
     "community": "Community",
     "websocketNotice": "Websocket Notice",
-    "websocketInterupt": "Websocket connection interrupted",
+    "websocketInterupt": "Websocket connection interrupted, cannot automatically obtain the current pipeline running status. Reconnect?",
     "reconnect": "Reconnect"
 }
