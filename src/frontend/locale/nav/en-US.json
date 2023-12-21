@@ -209,5 +209,8 @@
         "manage": "Manage"
     },
     "documentation": "Documentation",
-    "community": "Community"
+    "community": "Community",
+    "websocketNotice": "Websocket Notice",
+    "websocketInterupt": "Websocket connection interrupted",
+    "reconnect": "Reconnect"
 }

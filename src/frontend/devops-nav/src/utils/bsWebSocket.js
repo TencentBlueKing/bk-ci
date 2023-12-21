@@ -1,5 +1,5 @@
-import SockJS from 'sockjs-client'
 import cookie from 'js-cookie'
+import SockJS from 'sockjs-client'
 const Stomp = require('stompjs/lib/stomp.js').Stomp
 
 function uuid () {
@@ -20,6 +20,7 @@ class BlueShieldWebSocket {
         this.userName = window.userInfo && window.userInfo.username ? window.userInfo.username : 'bkDevops'
         this.uuid = uuid()
         this.stompClient = {}
+        this.notifyInstance = null
         
         this.connect()
         this.closePageDisConnect()
@@ -33,11 +34,16 @@ class BlueShieldWebSocket {
         this.stompClient.debug = null
         this.isConnecting = true
         this.stompClient.connect({}, () => {
+            console.log('websocket connected', this.connectCallBack)
+            if (this.notifyInstance && typeof this.notifyInstance.close === 'function') {
+                this.notifyInstance.close()
+            }
             this.isConnecting = false
             this.stompClient.subscribe(`/topic/bk/notify/${this.uuid}`, (res) => {
                 this.handleMessage(res)
             })
             this.connectErrTime = 1
+            this.changeRoute(window.devops.$router.currentRoute)
             if (this.connectCallBack.length) {
                 this.connectCallBack.forEach(callBack => callBack())
                 this.connectCallBack = []
@@ -52,6 +58,43 @@ class BlueShieldWebSocket {
                 window.devops.$bkMessage({ message: err.message || 'websocket connection failed, please try again later', theme: 'error' })
             }
         })
+        
+        socket.onclose = (err) => {
+            console.log(err, socket, this.stompClient)
+            const vm = window.devops
+            const h = vm.$createElement
+            vm.$t('websocket connection failed')
+            this.notifyInstance = vm.$bkNotify({
+                title: vm.$t('websocketNotice'),
+                limit: 1,
+                message: h('p', {}, [
+                    vm.$t('websocketInterupt'),
+                    h('br'),
+                    h('bk-button', {
+                        props: {
+                            text: true
+                        },
+                        on: {
+                            click: () => {
+                                this.notifyInstance.close()
+                                this.connectCallBack.push(() => {
+                                    this.handleMessage({
+                                        body: JSON.stringify({
+                                            webSocketType: 'IFRAME',
+                                            page: window.devops.$router.currentRoute.path,
+                                            message: JSON.stringify('WEBSOCKET_RECONNECT')
+                                        })
+                                    })
+                                })
+                                this.connect()
+                            }
+                        }
+                    }, vm.$t('reconnect'))
+                ]),
+                theme: 'error',
+                delay: 0
+            })
+        }
     }
 
     handleMessage (res) {

@@ -209,5 +209,8 @@
         "manage": "管理"
     },
     "documentation": "产品文档",
-    "community": "开源社区"
+    "community": "开源社区",
+    "websocketNotice": "websocket连接",
+    "websocketInterupt": "websocket连接中断，无法及时更新流水线状态",
+    "reconnect": "重新连接"
 }
