@@ -9,7 +9,8 @@
                 <template v-else>
                     <i v-if="isActiveDraft" class="devops-icon icon-draft" />
                     <i v-else class="devops-icon icon-check-circle" />
-                    <span>
+                    <span v-if="isActiveDraft">{{ $t('editPage.draftVersion', [draftBaseVersionName]) }}</span>
+                    <span v-else>
                         {{ activeVersionName }}
                     </span>
                     <i class="devops-icon icon-shift" />
@@ -124,11 +125,21 @@
             },
             isActiveDraft () {
                 return this.activeVersion?.isDraft ?? false
+            },
+            draftBaseVersionName () {
+                if (this.activeVersion?.baseVersion) {
+                    const baseVersionName = this.versionList.find(item => item.version === this.activeVersion?.baseVersion)?.versionName ?? '--'
+                    return `V${this.activeVersion?.baseVersion} (${baseVersionName})`
+                }
+                return '--'
             }
         },
         watch: {
             value (val) {
                 this.activeVersion = this.versionList.find(item => item.version === val)
+            },
+            pipelineId () {
+                this.handlePipelineVersionList()
             }
         },
         created () {
@@ -164,7 +175,8 @@
                             isRelease: item.status === 'RELEASED'
                         }
                     })
-                    this.activeVersion = this.versionList.find(item => item.version === this.value)
+                    const activeVersion = this.versionList.find(item => item.version === this.value)
+                    this.switchVersion(activeVersion)
                 }).catch(err => {
                     this.$showTips({
                         message: err.message || err,
@@ -178,10 +190,12 @@
                 return this.versionList.find(item => item.isDraft)?.versionName ?? ''
             },
             switchVersion (version) {
-                this.activeVersion = version
-                this.$emit('change', version.version, version)
-                this.$emit('input', version.version, version)
-                this.$emit('update:value', version.version, version)
+                if (version) {
+                    this.activeVersion = version
+                    this.$emit('change', version.version, version)
+                    this.$emit('input', version.version, version)
+                    this.$emit('update:value', version.version, version)
+                }
             },
             isCurrentVersion (version) {
                 return version?.version === this.pipelineInfo?.releaseVersion

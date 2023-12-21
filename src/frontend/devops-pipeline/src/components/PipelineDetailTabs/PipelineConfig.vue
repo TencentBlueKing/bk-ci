@@ -26,6 +26,11 @@
                 {{$t('diff')}}
             </VersionDiffEntry>
         </header>
+        <bk-alert
+            v-if="isActiveDraft"
+            :title="$t('draftInfoTips', [activePipelineVersionModel.creator, draftLastUpdateTime])"
+        />
+
         <section class="pipeline-model-content">
             <YamlEditor
                 v-if="isCodeMode"
@@ -57,6 +62,7 @@
     import Logo from '@/components/Logo'
     import VersionDiffEntry from './VersionDiffEntry'
     import RollbackEntry from './RollbackEntry'
+    import { convertTime } from '@/utils/util'
     export default {
         components: {
             ModeSwitch,
@@ -74,6 +80,7 @@
                 isLoading: false,
                 yaml: '',
                 activePipelineVersion: null,
+                activePipelineVersionModel: null,
                 activePipelineVersionName: '',
                 yamlHighlightBlockMap: {},
                 yamlHighlightBlock: []
@@ -105,6 +112,12 @@
             },
             isCurrentVersion () {
                 return this.activePipelineVersion === this.pipelineInfo?.releaseVersion
+            },
+            isActiveDraft () {
+                return this.activePipelineVersionModel?.isDraft ?? false
+            },
+            draftLastUpdateTime () {
+                return convertTime(this.activePipelineVersionModel?.updateTime)
             },
             draftVersionName () {
                 return this.$refs?.versionSideslider?.getDraftVersion()
@@ -216,9 +229,12 @@
             },
             handleVersionChange (versionId, version) {
                 this.activePipelineVersionName = version.versionName
-                this.$nextTick(() => {
-                    this.init()
-                })
+                this.activePipelineVersionModel = version
+                if (versionId !== this.activePipelineVersion) {
+                    this.$nextTick(() => {
+                        this.init()
+                    })
+                }
             }
         }
     }
@@ -232,10 +248,10 @@
         flex-direction: column;
         overflow: hidden;
         position: static !important;
+        grid-gap: 16px;
         .pipeline-config-header {
             display: flex;
             align-items: center;
-            margin-bottom: 24px;
             flex-shrink: 0;
             grid-gap: 16px;
             .text-link {

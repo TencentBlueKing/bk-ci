@@ -107,7 +107,7 @@
                     prop: 'versionName',
                     label: this.$t('versionNum')
                 }, {
-                    prop: 'desc',
+                    prop: 'description',
                     label: this.$t('versionDesc')
                 }, {
                     prop: 'createTime',

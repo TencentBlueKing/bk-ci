@@ -970,7 +970,7 @@
       "otherChoice": "其他选项"
     },
     "stageOption": "流程控制选项",
-    "draftVersion": "草稿 (基于 {0}) ",
+    "draftVersion": "草稿：(基于 {0}) ",
     "releaseVersion": "{0} 已发布",
     "pipelineVersionSaveAt": "版本{0}保存于{1}",
     "saveDraftSuccess": "{0} 草稿保存成功",
@@ -1302,5 +1302,6 @@
   "draftExecDetail": "调试详情",
   "disableSuc": "流水线【{0}】禁用成功",
   "paramFill": "填写参数",
-  "stepPreview": "预览步骤"
+  "stepPreview": "预览步骤",
+  "draftInfoTips": "当前草稿尚未发布，最近保存：{0} {1}"
 }

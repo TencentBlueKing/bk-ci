@@ -966,7 +966,7 @@
       "otherChoice": "Other Choice"
     },
     "stageOption": "Control option",
-    "draftVersion": "Draft (created from {0}) ",
+    "draftVersion": "Draft: (created from {0}) ",
     "releaseVersion": "{0} released",
     "pipelineVersionSaveAt": "Version {0} save at {1}",
     "saveDraftSuccess": "{0} Draft save successfully",
@@ -1296,5 +1296,6 @@
   "draftExecDetail": "调试详情",
   "disableSuc": "Disable [{0}] successfully",
   "paramFill": "填写参数",
-  "stepPreview": "预览步骤"
+  "stepPreview": "预览步骤",
+  "draftInfoTips": "当前草稿尚未发布，最近保存：{0} {1}"
 }
