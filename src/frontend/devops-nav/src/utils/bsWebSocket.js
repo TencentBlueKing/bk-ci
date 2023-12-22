@@ -64,36 +64,43 @@ class BlueShieldWebSocket {
             const vm = window.devops
             const h = vm.$createElement
             vm.$t('websocket connection failed')
-            this.notifyInstance = vm.$bkNotify({
-                title: vm.$t('websocketNotice'),
-                limit: 1,
-                message: h('p', {}, [
-                    vm.$t('websocketInterupt'),
-                    h('br'),
-                    h('bk-button', {
-                        props: {
-                            text: true
-                        },
-                        on: {
-                            click: () => {
-                                this.notifyInstance.close()
-                                this.connectCallBack.push(() => {
-                                    this.handleMessage({
-                                        body: JSON.stringify({
-                                            webSocketType: 'IFRAME',
-                                            page: window.devops.$router.currentRoute.path,
-                                            message: JSON.stringify('WEBSOCKET_RECONNECT')
+            if (this.hasWebSocket(vm.$router.currentRoute)) {
+                if (vm.$router.currentRoute.name === 'pipelinesDetail') {
+                    this.notifyInstance = vm.$bkNotify({
+                        title: vm.$t('websocketNotice'),
+                        limit: 1,
+                        message: h('p', {}, [
+                            vm.$t('websocketInterupt'),
+                            h('br'),
+                            h('bk-button', {
+                                props: {
+                                    text: true
+                                },
+                                on: {
+                                    click: () => {
+                                        this.notifyInstance.close()
+                                        this.connectCallBack.push(() => {
+                                            this.handleMessage({
+                                                body: JSON.stringify({
+                                                    webSocketType: 'IFRAME',
+                                                    page: window.devops.$router.currentRoute.path,
+                                                    message: JSON.stringify('WEBSOCKET_RECONNECT')
+                                                })
+                                            })
                                         })
-                                    })
-                                })
-                                this.connect()
-                            }
-                        }
-                    }, vm.$t('reconnect'))
-                ]),
-                theme: 'error',
-                delay: 0
-            })
+                                        this.connect()
+                                    }
+                                }
+                            }, vm.$t('reconnect'))
+                        ]),
+                        theme: 'error',
+                        delay: 0
+                    })
+                } else {
+                    console.log('other page close reconnect')
+                    this.connect()
+                }
+            }
         }
     }
 
@@ -138,11 +145,19 @@ class BlueShieldWebSocket {
         vm.$bkNotify(notify)
     }
 
+    detectHasWebsocket (router) {
+        try {
+            const meta = router.meta || {}
+            const path = router.path
+            const pathRegs = meta.webSocket || []
+            return pathRegs.some((reg) => reg && new RegExp(reg).test(path))
+        } catch (error) {
+            return false
+        }
+    }
+
     changeRoute (router) {
-        const meta = router.meta || {}
-        const path = router.path
-        const pathRegs = meta.webSocket || []
-        const hasWebSocket = pathRegs.some((reg) => reg && new RegExp(reg).test(path))
+        const hasWebSocket = this.detectHasWebsocket(router)
         const currentPage = window.currentPage || {}
         const showProjectList = currentPage.show_project_list || false
         const projectId = cookie.get(X_DEVOPS_PROJECT_ID)
