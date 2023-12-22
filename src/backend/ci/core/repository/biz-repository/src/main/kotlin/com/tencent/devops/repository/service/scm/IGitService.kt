@@ -285,7 +285,7 @@ interface IGitService {
     ): Result<List<GitMember>>
 
     fun getProjectGroupMembersAll(
-        gitProjectId: String,
+        gitProjectGroupId: String,
         page: Int,
         pageSize: Int,
         tokenType: TokenTypeEnum,

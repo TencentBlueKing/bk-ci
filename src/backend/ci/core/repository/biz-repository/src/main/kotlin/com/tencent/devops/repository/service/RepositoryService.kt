@@ -1198,7 +1198,7 @@ class RepositoryService @Autowired constructor(
             // 获取项目组管理员列表
             val groupAllMembers = gitService.getProjectGroupMembersAll(
                 token = accessToken.accessToken,
-                gitProjectId = DEFAULT_PROJECT_GROUP_NAME,
+                gitProjectGroupId = DEFAULT_PROJECT_GROUP_NAME,
                 page = PageUtil.DEFAULT_PAGE,
                 pageSize = PageUtil.DEFAULT_PAGE_SIZE,
                 tokenType = TokenTypeEnum.OAUTH

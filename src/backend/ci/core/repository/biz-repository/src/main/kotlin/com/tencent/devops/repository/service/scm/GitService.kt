@@ -1594,7 +1594,7 @@ class GitService @Autowired constructor(
 
     @BkTimed(extraTags = ["operation", "获取项目组有权限的成员列表"], value = "bk_tgit_api_time")
     override fun getProjectGroupMembersAll(
-        gitProjectId: String,
+        gitProjectGroupId: String,
         page: Int,
         pageSize: Int,
         tokenType: TokenTypeEnum,
