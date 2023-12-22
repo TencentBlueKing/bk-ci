@@ -124,7 +124,8 @@ class PipelineBuildService(
         startValues: Map<String, String>? = null,
         handlePostFlag: Boolean = true,
         webHookStartParam: MutableMap<String, BuildParameters> = mutableMapOf(),
-        triggerReviewers: List<String>? = null
+        triggerReviewers: List<String>? = null,
+        isRetry: Boolean? = false
     ): BuildId {
 
         var acquire = false
@@ -208,7 +209,8 @@ class PipelineBuildService(
                     maxQueueSize = setting.maxQueueSize,
                     concurrencyGroup = context.concurrencyGroup,
                     concurrencyCancelInProgress = setting.concurrencyCancelInProgress,
-                    maxConRunningQueueSize = setting.maxConRunningQueueSize
+                    maxConRunningQueueSize = setting.maxConRunningQueueSize,
+                    isRetry = isRetry
                 )
             )
             if (interceptResult.isNotOk()) {

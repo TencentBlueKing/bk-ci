@@ -54,5 +54,7 @@ data class InterceptData(
     @ApiModelProperty("并发时,是否相同group取消正在执行的流水线", required = false)
     val concurrencyCancelInProgress: Boolean = false,
     @ApiModelProperty("并发构建数量限制", required = false)
-    val maxConRunningQueueSize: Int? // MULTIPLE类型时，并发构建数量限制
+    val maxConRunningQueueSize: Int?, // MULTIPLE类型时，并发构建数量限制
+    @ApiModelProperty("是否为重试操作", required = false)
+    val isRetry: Boolean? = false
 )
