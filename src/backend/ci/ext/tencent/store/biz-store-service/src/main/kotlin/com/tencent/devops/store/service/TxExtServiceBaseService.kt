@@ -190,7 +190,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             dslContext = context,
             storeCode = serviceCode,
             storeType = StoreTypeEnum.SERVICE.type.toByte()
-        ) // 查找新增扩展服务时关联的项目
+        )!! // 查找新增扩展服务时关联的项目
         val buildInfo = extServiceBuildInfoDao.getServiceBuildInfo(context, serviceId)
         logger.info("service[$serviceCode] buildInfo is:$buildInfo")
         val script = buildInfo.value1()
@@ -199,7 +199,8 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             userId = userId,
             namespaceName = extServiceBcsNameSpaceConfig.grayNamespaceName,
             serviceCode = serviceCode,
-            version = version
+            version = version,
+            projectId = projectCode
         )
         if (null == servicePipelineRelRecord) {
             // 为用户初始化构建流水线并触发执行
@@ -240,7 +241,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
                 extServiceBaseInfo = serviceBaseInfo
             )
             val serviceMarketInitPipelineResp = client.get(ServiceExtServiceBuildPipelineInitResource::class)
-                .initExtServiceBuildPipeline(userId, projectCode!!, extServiceBuildInitPipelineReq).data
+                .initExtServiceBuildPipeline(userId, projectCode, extServiceBuildInitPipelineReq).data
             logger.info("the serviceMarketInitPipelineResp is:$serviceMarketInitPipelineResp")
             if (null != serviceMarketInitPipelineResp) {
                 storePipelineRelDao.add(
