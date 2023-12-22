@@ -65,7 +65,7 @@ class BlueShieldWebSocket {
             const currentRoute = vm.$router.currentRoute
             const h = vm.$createElement
             vm.$t('websocket connection failed')
-            if (this.hasWebSocket(currentRoute)) {
+            if (this.detectHasWebsocket(currentRoute)) {
                 if (currentRoute.path.indexOf('executeDetail') > -1) {
                     this.notifyInstance = vm.$bkNotify({
                         title: vm.$t('websocketNotice'),
