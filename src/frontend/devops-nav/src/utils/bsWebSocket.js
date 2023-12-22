@@ -62,10 +62,11 @@ class BlueShieldWebSocket {
         socket.onclose = (err) => {
             console.log(err, socket, this.stompClient)
             const vm = window.devops
+            const currentRoute = vm.$router.currentRoute
             const h = vm.$createElement
             vm.$t('websocket connection failed')
-            if (this.hasWebSocket(vm.$router.currentRoute)) {
-                if (vm.$router.currentRoute.name === 'pipelinesDetail') {
+            if (this.hasWebSocket(currentRoute)) {
+                if (currentRoute.path.indexOf('executeDetail') > -1) {
                     this.notifyInstance = vm.$bkNotify({
                         title: vm.$t('websocketNotice'),
                         limit: 1,
@@ -83,7 +84,7 @@ class BlueShieldWebSocket {
                                             this.handleMessage({
                                                 body: JSON.stringify({
                                                     webSocketType: 'IFRAME',
-                                                    page: window.devops.$router.currentRoute.path,
+                                                    page: currentRoute.path,
                                                     message: JSON.stringify('WEBSOCKET_RECONNECT')
                                                 })
                                             })
