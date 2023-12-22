@@ -430,7 +430,6 @@ const actions = {
     }) {
         return vue.$ajax.get(`${prefix}/user/job/${projectId}/get_step_instance_detail?jobInstanceId=${jobInstanceId}&stepInstanceId=${stepInstanceId}`)
     }
-
 }
 
 export default actions

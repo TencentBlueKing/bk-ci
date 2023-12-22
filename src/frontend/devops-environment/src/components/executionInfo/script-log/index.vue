@@ -97,8 +97,8 @@
                         this.autoScrollTimeout()
                         this.fetchLogContent()
                     } else {
-                        this.editor.setValue('')
-                        this.editor.clearSelection()
+                        this.editor && this.editor.setValue('')
+                        this.editor && this.editor.clearSelection()
                     }
                 },
                 immediate: true

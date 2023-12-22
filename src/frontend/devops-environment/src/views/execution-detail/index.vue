@@ -72,7 +72,7 @@
                                     @click="handleShowDetail"
                                     v-bk-tooltips.bottom="$t('environment.全局变量')"
                                 >
-                                    <Icon name="detail-line" size="14" />
+                                    <icon name="detail-line" size="14" />
                                 </div>
                             </div>
                         </div>
@@ -127,22 +127,25 @@
         <bk-sideslider
             :is-show.sync="isShowDetail"
             quick-close
+            ext-cls="step-detail-sideslider"
             :show-footer="false"
-            :title="$t('environment.全局变量')"
+            :title="$t('environment.查看步骤内容')"
             :width="960">
-            <step-detail-view
-                :step-instance-id="stepInstanceId"
-                :job-instance-id="jobInstanceId" />
+            <div slot="content">
+                <step-detail-view
+                    :step-instance-id="stepInstanceId"
+                    :job-instance-id="jobInstanceId" />
+            </div>
         </bk-sideslider>
     </div>
 </template>
 
 <script>
+    import { mapActions } from 'vuex'
     import ipList from '@/components/ipList'
     import StepDetailView from './step-detail-view'
     import ExecutionInfo from '@/components/executionInfo'
     import ComposeFormItem from '@/components/compose-form-item'
-    import { mapActions } from 'vuex'
     import {
         statusStyleMap,
         checkStatus,
@@ -208,10 +211,12 @@
             ipList () {
                 if (this.stepResultGroupList.length) {
                     const activeItem = this.stepResultGroupList[this.activeGroupIndex].hostResultList[0] || {}
-                    this.activeHostId = activeItem.bkHostId
-                    this.activeIp = activeItem.ip
-                    this.activeBkCloudId = activeItem.bkCloudId
-                    this.activeIpStatus = getAgentStatus(activeItem.status)
+                    if (!this.activeHostId) {
+                        this.activeHostId = activeItem.bkHostId
+                        this.activeIp = activeItem.ip
+                        this.activeBkCloudId = activeItem.bkCloudId
+                        this.activeIpStatus = getAgentStatus(activeItem.status)
+                    }
     
                     return this.stepResultGroupList[this.activeGroupIndex].hostResultList.map(i => {
                         return {
@@ -302,7 +307,7 @@
                 })
             },
             handleShowDetail () {
-                console.log(123)
+                this.isShowDetail = true
             },
             handleChangeGroup (index) {
                 this.activeGroupIndex = index
@@ -634,6 +639,11 @@
             overflow: hidden;
             flex-direction: column;
             flex: 1;
+        }
+    }
+    .step-detail-sideslider {
+        .bk-sideslider-wrapper {
+            overflow-y: hidden;
         }
     }
 </style>

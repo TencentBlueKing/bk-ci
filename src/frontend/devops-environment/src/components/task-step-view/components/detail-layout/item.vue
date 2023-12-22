@@ -1,33 +1,31 @@
-
-
 <template>
-  <div
-    class="detail-item"
-    :class="`design-layout-${layout}`">
-    <div class="detail-label">
-      <span>{{ label }}</span>
+    <div
+        class="detail-item"
+        :class="`design-layout-${layout}`">
+        <div class="detail-label">
+            <span>{{ label }}</span>
+        </div>
+        <div class="detail-content">
+            <slot />
+        </div>
     </div>
-    <div class="detail-content">
-      <slot />
-    </div>
-  </div>
 </template>
 <script>
-  export default {
-    name: '',
-    props: {
-      label: {
-        type: String,
-        default: '',
-      },
-      layout: {
-        type: String,
-        default: '', // horizontal, vertical
-      },
-    },
-  };
+    export default {
+        name: '',
+        props: {
+            label: {
+                type: String,
+                default: ''
+            },
+            layout: {
+                type: String,
+                default: '' // horizontal, vertical
+            }
+        }
+    }
 </script>
-<style lang='postcss' scoped>
+<style lang='scss' scoped>
   .detail-item {
     display: flex;
     font-size: 14px;
