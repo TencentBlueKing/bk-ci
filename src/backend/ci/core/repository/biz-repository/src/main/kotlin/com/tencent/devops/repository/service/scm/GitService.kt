@@ -1603,7 +1603,7 @@ class GitService @Autowired constructor(
         val newPage = if (page == 0) 1 else page
         val newPageSize = if (pageSize > 100) 100 else pageSize
         val url = StringBuilder(
-            "$gitCIUrl/api/v3/groups/${URLEncoder.encode(gitProjectId, "UTF8")}/members/all"
+            "$gitCIUrl/api/v3/groups/${URLEncoder.encode(gitProjectGroupId, "UTF8")}/members/all"
         )
         setToken(tokenType, url, token)
         url.append("&page=$newPage&per_page=$newPageSize")
