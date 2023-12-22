@@ -38,7 +38,7 @@
   .bk-tag-selector,
   .bk-search-select.is-focus {
     z-index: 0;
-    opacity: 100%;
+    opacity: 1;
   }
 
   .compose-form-item-first {

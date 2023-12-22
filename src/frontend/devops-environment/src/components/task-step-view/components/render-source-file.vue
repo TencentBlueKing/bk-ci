@@ -35,9 +35,11 @@
                                     <render-file-path :data="row.fileList" />
                                 </td>
                                 <td>
-                                    <render-file-server :data="row" />
+                                    <render-file-server type="server" :data="row" />
                                 </td>
-                                <td></td>
+                                <td>
+                                    <render-file-server type="agent" :data="row" />
+                                </td>
                                 <!-- <td>
                                     <server-host-agent
                                         :host-list="row.host.hostNodeInfo.hostList"
@@ -105,99 +107,101 @@
     }
 </script>
 <style lang='scss'>
-  .render-server-file {
+.render-server-file {
     flex: 1;
 
     .bk-collapse-item-header {
-      display: flex;
-      align-items: center;
-      padding-left: 23px;
-
-      .collapse-title {
+        display: flex;
+        align-items: center;
         padding-left: 23px;
-      }
+
+        .collapse-title {
+            padding-left: 23px;
+        }
+        .strong {
+            color: #3a84ff;
+            font-weight: 700;
+        }
     }
 
     table {
-      width: 100%;
-      line-height: 20px;
-      background: #fff;
+        width: 100%;
+        line-height: 20px;
+        background: #fff;
 
-      tr:nth-child(n+2) {
+        tr:nth-child(n+2) {
+            td {
+                border-top: 1px solid #dcdee5;
+            }
+        }
+
+        th,
         td {
-          border-top: 1px solid #dcdee5;
+            height: 42px;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            padding-left: 16px;
+            font-size: 12px;
+            text-align: left;
+
+            &:first-child {
+                padding-left: 60px;
+            }
         }
-      }
 
-      th,
-      td {
-        height: 42px;
-        padding-top: 5px;
-        padding-bottom: 5px;
-        padding-left: 16px;
-        font-size: 12px;
-        text-align: left;
-
-        &:first-child {
-          padding-left: 60px;
+        th {
+            font-weight: normal;
+            color: #313238;
+            border-bottom: 1px solid #dcdee5;
         }
-      }
 
-      th {
-        font-weight: normal;
-        color: #313238;
-        border-bottom: 1px solid #dcdee5;
-      }
+        td {
+            color: #63656e;
 
-      td {
-        color: #63656e;
-
-        .file-path {
-          display: inline-block;
-          max-width: 100%;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+            .file-path {
+                display: inline-block;
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
         }
-      }
     }
 
     .source-file-alias {
-      cursor: pointer;
-
-      &:hover {
-        color: #3a84ff !important;
-
-        .source-file-icon {
-          display: inline;
+        cursor: pointer;
+        &:hover {
+            color: #3a84ff !important;
+            .source-file-icon {
+                display: inline;
+            }
         }
-      }
     }
 
     .source-file-icon {
-      display: none;
+        display: none;
     }
 
     .bk-table-empty-block {
-      display: none;
+        display: none;
     }
 
     .source-file-tips-box {
-      max-width: 300px;
-      max-height: 280px;
-      min-width: 60px;
-      overflow-y: auto;
-      .row {
-        word-break: break-all;
-      }
+        max-width: 300px;
+        max-height: 280px;
+        min-width: 60px;
+        overflow-y: auto;
+        .row {
+            word-break: break-all;
+        }
 
-      .dot {
-        display: inline-block;
-        width: 6px;
-        height: 6px;
-        background: currentcolor;
-        border-radius: 50%;
-      }
+        .dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background: currentcolor;
+            border-radius: 50%;
+        }
     }
-  }
+}
 </style>

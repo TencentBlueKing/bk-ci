@@ -91,6 +91,7 @@
         watch: {
             /**
              * @desc 查看的日志目标改变，重新获取日志
+             * 展开第一个文件的日志,其他收起
              */
             hostId: {
                 handler (val) {
@@ -100,6 +101,9 @@
                     }
                     this.isLoading = true
                     this.page = 0
+                    this.openMemo = {
+                        0: true
+                    }
 
                     this.fetchData()
                     if (this.$refs.contentBox) {
@@ -179,16 +183,11 @@
             }, 80),
             /**
              * @desc 文件日志展开收起
-             *
-             * 展开时需要重新获取一次日志
              */
             handleToggle (index, toggle) {
                 const openMemo = { ...this.openMemo }
                 openMemo[index] = toggle
                 this.openMemo = Object.freeze(openMemo)
-                if (toggle) {
-                    this.fetchFileLogOfFile()
-                }
             }
         }
     }

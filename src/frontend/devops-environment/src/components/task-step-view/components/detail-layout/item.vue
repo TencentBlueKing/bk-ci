@@ -12,7 +12,7 @@
 </template>
 <script>
     export default {
-        name: '',
+        name: 'BkciDetailLayoutItem',
         props: {
             label: {
                 type: String,

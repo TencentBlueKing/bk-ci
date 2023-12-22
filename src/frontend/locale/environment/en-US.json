@@ -391,5 +391,7 @@
     "服务器列表": "Host",
     "Agent 状态": "Agent status",
     "服务器账号": "Account",
-    "台主机": "host(s)"
+    "台主机": "host(s)",
+    "服务器文件-服务器列表": "Remote file - hosts",
+    "主机ID": "Hose ID"
 }

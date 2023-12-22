@@ -1,15 +1,20 @@
 
 <template>
-    <div class="execute-history-file-server">
+    <div :class="isServer ? 'execute-history-file-server' : 'execute-history-agent-status'">
         <div
             class="server-agent-text"
             @click="handlerView"
         >
-            123
+            <template v-if="isServer">
+                <span class="strong">{{ hostList.length }}</span>{{ $t('environment.台主机') }}
+            </template>
+            <template v-else>
+                123
+            </template>
         </div>
         <bk-dialog
             v-model="isShowDetail"
-            class="execute-distory-step-view-server-detail-dialog"
+            class="execute-history-step-view-server-detail-dialog"
             :ok-text="$t('environment.关闭')"
             :width="1020">
             <template #header>
@@ -17,14 +22,26 @@
                     <span>{{ $t('environment.服务器文件-服务器列表') }}</span>
                     <i
                         class="dialog-close-btn bk-icon icon-close"
-                        @click="handleClose" />
+                        @click="handlerClose" />
                 </div>
             </template>
             <div class="content-wraper">
-                123
+                <bk-table
+                    :data="hostList"
+                    :outer-border="false"
+                    :header-border="false"
+                    :max-height="500"
+                >
+                    <bk-table-column :label="$t('environment.主机ID')" prop="source"></bk-table-column>
+                    <bk-table-column label="Agent ID" prop="agentId"></bk-table-column>
+                    <bk-table-column label="IPv4" prop="ipv4"></bk-table-column>
+                    <bk-table-column label="IPv6" prop="ipv4"></bk-table-column>
+                    <bk-table-column :label="$t('environment.管控区域')" prop="source"></bk-table-column>
+                    <bk-table-column :label="$t('environment.Agent 状态')" prop="source"></bk-table-column>
+                </bk-table>
             </div>
             <template #footer>
-                <bk-button @click="handleClose">
+                <bk-button @click="handlerClose">
                     {{ $t('关闭') }}
                 </bk-button>
             </template>
@@ -37,6 +54,10 @@
             data: {
                 type: Object,
                 required: true
+            },
+            type: {
+                type: String,
+                required: true
             }
         },
         data () {
@@ -45,9 +66,17 @@
                 hostNodeInfo: {}
             }
         },
+        computed: {
+            isServer () {
+                return this.type === 'server'
+            },
+            hostList () {
+                return this.data.server.hostList || []
+            }
+        },
         methods: {
             handlerView () {
-                this.hostNodeInfo = this.data.host.hostNodeInfo
+                this.hostNodeInfo = this.data.server.hostList
                 this.isShowDetail = true
             },
             handlerClose () {
@@ -68,6 +97,11 @@
     }
 
     .server-agent-text {
+        .strong {
+            color: #3a84ff;
+            font-weight: 700;
+            padding-right: 5px;
+        }
         .sep-location {
             &::before {
                 content: "";
@@ -75,8 +109,14 @@
         }
     }
 }
+.execute-history-agent-status {
+    min-height: 30px;
+    padding: 5px;
+    margin-left: -6px;
+    cursor: pointer;
+}
 
-.execute-distory-step-view-server-detail-dialog {
+.execute-history-step-view-server-detail-dialog {
     .ip-selector-view-host{
         margin-top: 0 !important;
     }
@@ -119,7 +159,7 @@
     }
 
     .content-wraper {
-        height: 550px;
+        height: 500px;
         margin-top: -1px;
     }
 

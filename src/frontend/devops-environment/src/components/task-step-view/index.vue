@@ -43,7 +43,7 @@
                     1: this.$t('environment.执行脚本'),
                     2: this.$t('environment.分发文件')
                 }
-                return typeMap[this.data.type]
+                return typeMap[this.data.type] || ''
             },
             stepCom () {
                 const taskStepMap = {
