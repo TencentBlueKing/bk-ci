@@ -209,7 +209,6 @@ class ExtServiceBuildDeployTask : ITask() {
                 bcsUrl = deployApp.bcsUrl,
                 token = deployApp.token
             ).data
-            LoggerService.addNormalLine("ExtServiceBuildDeployTask deployment: $deployment")
             logger.info("ExtServiceBuildDeployTask deployment: $deployment")
             if (deployment == null) {
                 throw TaskExecuteException(
