@@ -108,7 +108,7 @@ class ExtServiceBcsService {
         version: String,
         checkPermissionFlag: Boolean = true
     ): DeployApp {
-        val imageName = "$projectId/$serviceCode"
+        val imageName = "$projectId/image/$serviceCode"
         val grayFlag = namespaceName == extServiceBcsNameSpaceConfig.grayNamespaceName
         val host = if (grayFlag) extServiceIngressConfig.grayHost else extServiceIngressConfig.host
         val scopes = "ALL," + if (grayFlag) "TEST" else "PRD"
