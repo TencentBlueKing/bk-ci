@@ -61,14 +61,16 @@ import com.tencent.devops.dispatch.utils.redis.ThirdPartyRedisBuild
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.pojo.SetContextVarData
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
-import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import javax.ws.rs.core.Response
 
 @Component
 @Suppress("UNUSED", "ComplexMethod", "LongMethod", "NestedBlockDepth", "MagicNumber")
@@ -336,6 +338,29 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 atoms = event.atoms
             )
         )
+
+        // 添加上下文关键字 jobs.<job_id>.container.node_alias
+        if (event.jobId.isNullOrBlank() || agent.nodeId.isNullOrBlank()) {
+            return
+        }
+        try {
+            val contextVal = client.get(ServiceThirdPartyAgentResource::class).getAgentDetail(
+                userId = event.userId,
+                projectId = event.projectId,
+                agentHashId = agentId
+            ).data?.displayName ?: ""
+            client.get(ServiceVarResource::class).setContextVar(
+                SetContextVarData(
+                    projectId = event.projectId,
+                    pipelineId = event.pipelineId,
+                    buildId = event.buildId,
+                    contextName = "jobs.${event.jobId}.container.node_alias",
+                    contextVal = contextVal
+                )
+            )
+        } catch (e: Exception) {
+            logger.error("inQueue｜setContextVar|error", e)
+        }
     }
 
     private fun saveAgentInfoToBuildDetail(event: PipelineAgentStartupEvent, agent: ThirdPartyAgent) {
