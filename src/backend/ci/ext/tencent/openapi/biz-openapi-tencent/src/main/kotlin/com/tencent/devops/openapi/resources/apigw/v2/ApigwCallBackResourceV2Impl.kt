@@ -36,6 +36,7 @@ import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v2.ApigwCallBackResourceV2
+import com.tencent.devops.openapi.utils.ApigwParamUtil
 import com.tencent.devops.process.api.service.ServiceCallBackResource
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import org.slf4j.LoggerFactory
@@ -76,8 +77,8 @@ class ApigwCallBackResourceV2Impl @Autowired constructor(
         return client.get(ServiceCallBackResource::class).list(
             userId = userId,
             projectId = projectId,
-            page = page,
-            pageSize = pageSize
+            page = page ?: 1,
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20
         )
     }
 
@@ -122,8 +123,8 @@ class ApigwCallBackResourceV2Impl @Autowired constructor(
             } else {
                 DateTimeUtil.stringToLocalDateTime(endTime).timestamp()
             },
-            page = page,
-            pageSize = pageSize
+            page = page ?: 1,
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20
         )
     }
 
