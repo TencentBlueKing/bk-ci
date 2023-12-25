@@ -103,7 +103,10 @@ class AuthProjectService @Autowired constructor(
         logger.info("getProjectInfo ids[$idList], attribute[$attribute]")
         authTokenApi.checkToken(token)
         val ids = idList.toSet()
-        val projectInfo = projectService.list(ids)
+        val projectInfo = projectService.list(
+            projectCodes = ids,
+            enabled = true
+        )
         val entityList = mutableListOf<InstanceInfoDTO>()
 
         projectInfo?.map {

@@ -44,5 +44,9 @@ enum class PipelineTaskStatus(val status: Int) {
             }
             throw NotFoundException("Can't find the pipeline task status($status)")
         }
+
+        fun parse(input: String): PipelineTaskStatus {
+            return values().find { it.name == input } ?: DONE
+        }
     }
 }

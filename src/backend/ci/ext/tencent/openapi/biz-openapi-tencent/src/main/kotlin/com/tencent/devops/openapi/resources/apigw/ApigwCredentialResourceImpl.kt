@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.ApigwCredentialResource
+import com.tencent.devops.openapi.utils.ApigwParamUtil
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.Credential
 import com.tencent.devops.ticket.pojo.enums.Permission
@@ -56,8 +57,8 @@ class ApigwCredentialResourceImpl @Autowired constructor(private val client: Cli
             projectId = projectId,
             credentialTypesString = credentialTypesString,
             permission = permission,
-            page = page,
-            pageSize = pageSize,
+            page = page ?: 1,
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
             keyword = null
         )
     }
