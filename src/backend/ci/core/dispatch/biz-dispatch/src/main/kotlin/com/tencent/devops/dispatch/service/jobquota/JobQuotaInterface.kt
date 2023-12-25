@@ -25,22 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.utils
+package com.tencent.devops.dispatch.service.jobquota
 
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.dispatch.pojo.JobConcurrencyHistory
+import com.tencent.devops.dispatch.pojo.JobQuotaHistory
 
-class JobQuotaProjectLock(
-    redisOperation: RedisOperation,
-    projectId: String
-) {
+interface JobQuotaInterface {
+    /**
+     * 保存Job配额相关构建记录
+     */
+    fun saveJobQuotaHistory(jobQuotaHistory: JobQuotaHistory)
 
-    private val redisLock = RedisLock(redisOperation, "DISPATCH_JOB_QUOTA_$projectId", 60L)
-
-    fun tryLock() = redisLock.tryLock()
-
-    fun lock() = redisLock.lock()
-
-    fun unlock() =
-        redisLock.unlock()
+    /**
+     * 包含Job的并发数据
+     */
+    fun saveJobConcurrency(jobConcurrencyHistory: JobConcurrencyHistory)
 }

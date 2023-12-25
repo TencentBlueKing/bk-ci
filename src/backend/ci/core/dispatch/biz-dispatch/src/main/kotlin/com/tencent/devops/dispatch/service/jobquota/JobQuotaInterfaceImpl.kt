@@ -25,28 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.service
+package com.tencent.devops.dispatch.service.jobquota
 
-import com.tencent.devops.common.event.pojo.measure.BuildEndPipelineMetricsData
-import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
+import com.tencent.devops.dispatch.pojo.JobConcurrencyHistory
+import com.tencent.devops.dispatch.pojo.JobQuotaHistory
 
-interface MetricsDataReportService {
-
+class JobQuotaInterfaceImpl : JobQuotaInterface {
     /**
-     * 上报流水线构建指标数据
-     * @param buildEndPipelineMetricsData 构建结束后流水线指标数据
-     * @return 布尔值
+     * 保存Job配额相关构建记录
      */
-    fun metricsDataReport(
-        buildEndPipelineMetricsData: BuildEndPipelineMetricsData
-    ): Boolean
+    override fun saveJobQuotaHistory(jobQuotaHistory: JobQuotaHistory) {
+        // save job quota history
+    }
 
-    /**
-     * 上报dispatch Job度量数据
-     * @param dispatchJobMetricsDataList job度量数据
-     * @return 布尔值
-     */
-    fun saveDispatchJobMetrics(
-        dispatchJobMetricsDataList: List<DispatchJobMetricsData>
-    ): Boolean
+    override fun saveJobConcurrency(jobConcurrencyHistory: JobConcurrencyHistory) {
+        // save job concurrency history
+    }
 }

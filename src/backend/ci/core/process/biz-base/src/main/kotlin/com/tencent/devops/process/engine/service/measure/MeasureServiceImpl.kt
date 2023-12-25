@@ -46,7 +46,7 @@ import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ProjectCacheService
-import com.tencent.devops.process.service.measure.MeasureEventDispatcher
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispatcher
 import com.tencent.devops.process.template.service.TemplateService
 import org.apache.lucene.util.RamUsageEstimator
 import org.jooq.DSLContext

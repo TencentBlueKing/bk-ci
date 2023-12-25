@@ -25,28 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.service
+package com.tencent.devops.metrics.listener
 
-import com.tencent.devops.common.event.pojo.measure.BuildEndPipelineMetricsData
-import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsEvent
+import com.tencent.devops.metrics.service.MetricsDataReportService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-interface MetricsDataReportService {
+@Component
+class DispatchJobMetricsListener @Autowired constructor(
+    private val metricsDataReportService: MetricsDataReportService
+) : Listener<DispatchJobMetricsEvent> {
 
-    /**
-     * 上报流水线构建指标数据
-     * @param buildEndPipelineMetricsData 构建结束后流水线指标数据
-     * @return 布尔值
-     */
-    fun metricsDataReport(
-        buildEndPipelineMetricsData: BuildEndPipelineMetricsData
-    ): Boolean
+    override fun execute(event: DispatchJobMetricsEvent) {
+        try {
+            val dispatchJobMetricsDataList = event.jobMetricsList
+            metricsDataReportService.saveDispatchJobMetrics(dispatchJobMetricsDataList)
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to insert the metrics data", ignored)
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.SYSTEM_ERROR,
+                defaultMessage = "Fail to insert the metrics data"
+            )
+        }
+    }
 
-    /**
-     * 上报dispatch Job度量数据
-     * @param dispatchJobMetricsDataList job度量数据
-     * @return 布尔值
-     */
-    fun saveDispatchJobMetrics(
-        dispatchJobMetricsDataList: List<DispatchJobMetricsData>
-    ): Boolean
+    companion object {
+        private val logger = LoggerFactory.getLogger(DispatchJobMetricsListener::class.java)
+    }
 }
