@@ -164,7 +164,7 @@ object TriggerBuildParamUtils {
                     name = PIPELINE_START_TYPE,
                     desc = I18nUtil.getCodeLanMessage(
                         messageCode = PIPELINE_START_TYPE,
-                        params = arrayOf(StartType.values().joinToString("/") { it.name })
+                        params = arrayOf(StartType.values().joinToString(", ") { it.name })
                     )
                 )
             )
