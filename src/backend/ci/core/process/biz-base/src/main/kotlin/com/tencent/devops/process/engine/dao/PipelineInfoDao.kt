@@ -63,7 +63,8 @@ class PipelineInfoDao {
         manualStartup: Boolean,
         canElementSkip: Boolean,
         taskCount: Int,
-        id: Long? = null
+        id: Long? = null,
+        onlyDraft: Boolean? = false
     ): Int {
         val count = with(T_PIPELINE_INFO) {
             dslContext.insertInto(
@@ -81,7 +82,8 @@ class PipelineInfoDao {
                 MANUAL_STARTUP,
                 ELEMENT_SKIP,
                 TASK_COUNT,
-                ID
+                ID,
+                ONLY_DRAFT
             )
                 .values(
                     pipelineId,
@@ -95,7 +97,8 @@ class PipelineInfoDao {
                     if (manualStartup) 1 else 0,
                     if (canElementSkip) 1 else 0,
                     taskCount,
-                    id
+                    id,
+                    onlyDraft
                 )
                 .execute()
         }
@@ -116,7 +119,8 @@ class PipelineInfoDao {
         canElementSkip: Boolean? = null,
         taskCount: Int = 0,
         latestVersion: Int = 0,
-        updateLastModifyUser: Boolean? = true
+        updateLastModifyUser: Boolean? = true,
+        onlyDraft: Boolean? = null
     ): Boolean {
         return with(T_PIPELINE_INFO) {
             val update = dslContext.update(this)
@@ -146,6 +150,9 @@ class PipelineInfoDao {
             }
             if (userId != null && updateLastModifyUser == true) {
                 update.set(LAST_MODIFY_USER, userId)
+            }
+            onlyDraft?.let {
+                update.set(ONLY_DRAFT, onlyDraft)
             }
             update.set(UPDATE_TIME, LocalDateTime.now())
                 .where(conditions)
@@ -604,7 +611,8 @@ class PipelineInfoDao {
                     canManualStartup = manualStartup == 1,
                     canElementSkip = elementSkip == 1,
                     taskCount = taskCount,
-                    id = id
+                    id = id,
+                    onlyDraft = onlyDraft
                 )
             }
         } else {

@@ -69,5 +69,7 @@ data class PipelineInfo(
     @ApiModelProperty("流水线组名称列表", required = false)
     var viewNames: List<String>? = null,
     @ApiModelProperty("约束模式下的模板信息", required = false)
-    var templateInfo: TemplateInfo? = null
+    var templateInfo: TemplateInfo? = null,
+    @ApiModelProperty("仅存在草稿", required = false)
+    var onlyDraft: Boolean? = false
 )

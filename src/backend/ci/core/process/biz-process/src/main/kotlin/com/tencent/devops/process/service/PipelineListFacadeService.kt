@@ -1513,7 +1513,8 @@ class PipelineListFacadeService @Autowired constructor(
                     hasCollect = favorPipelines.contains(pipelineId),
                     updater = it.lastModifyUser,
                     creator = it.creator,
-                    delete = it.delete
+                    delete = it.delete,
+                    onlyDraft = it.onlyDraft
                 )
             )
         }
@@ -1821,7 +1822,8 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineDesc = pipelineInfo.pipelineDesc,
             createTime = pipelineInfo.createTime,
             updateTime = pipelineInfo.updateTime,
-            viewNames = pipelineInfo.viewNames
+            viewNames = pipelineInfo.viewNames,
+            onlyDraft = pipelineInfo.onlyDraft
         )
     }
 

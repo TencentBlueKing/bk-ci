@@ -58,6 +58,8 @@ data class PipelineDetailInfo(
     val createTime: Long = 0,
     @ApiModelProperty("更新时间")
     val updateTime: Long = 0,
+    @ApiModelProperty("仅存在草稿", required = false)
+    var onlyDraft: Boolean? = false,
     @ApiModelProperty("流水线组名称列表", required = false)
     var viewNames: List<String>? = null
 )

@@ -147,6 +147,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             detailInfo = detailInfo
         )
         val version = draftVersion?.version ?: releaseVersion!!.version
+        val versionName = draftVersion?.versionName ?: releaseVersion!!.versionName
         pipelineRecentUseService.record(userId, projectId, pipelineId)
         return PipelineDetail(
             pipelineId = detailInfo.pipelineId,
@@ -162,8 +163,9 @@ class PipelineVersionFacadeService @Autowired constructor(
             createTime = detailInfo.createTime,
             updateTime = detailInfo.updateTime,
             viewNames = detailInfo.viewNames,
+            onlyDraft = detailInfo.onlyDraft,
             version = version,
-            versionName = draftVersion?.versionName ?: releaseVersion!!.versionName,
+            versionName = versionName,
             releaseVersion = releaseVersion?.version,
             releaseVersionName = releaseVersion?.versionName,
             baseVersionStatus = baseVersionStatus,

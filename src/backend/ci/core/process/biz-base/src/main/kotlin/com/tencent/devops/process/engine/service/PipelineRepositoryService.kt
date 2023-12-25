@@ -615,7 +615,8 @@ class PipelineRepositoryService constructor(
                     manualStartup = canManualStartup,
                     canElementSkip = canElementSkip,
                     taskCount = taskCount,
-                    id = id
+                    id = id,
+                    onlyDraft = versionStatus == VersionStatus.COMMITTING
                 )
                 model.latestVersion = modelVersion
                 if (model.instanceFromTemplate != true) {
@@ -894,7 +895,8 @@ class PipelineRepositoryService constructor(
                             manualStartup = canManualStartup,
                             canElementSkip = canElementSkip,
                             taskCount = taskCount,
-                            latestVersion = model.latestVersion
+                            latestVersion = model.latestVersion,
+                            onlyDraft = false
                         )
                         model.latestVersion = version
                     }
@@ -1493,7 +1495,8 @@ class PipelineRepositoryService constructor(
                 userId = userId,
                 pipelineName = setting.pipelineName,
                 pipelineDesc = setting.desc,
-                updateLastModifyUser = updateLastModifyUser
+                updateLastModifyUser = updateLastModifyUser,
+                onlyDraft = false
             )
             if (version > 0) { // #671 兼容无版本要求的修改入口，比如改名，或者只读流水线的修改操作, version=0
                 if (old?.maxPipelineResNum != null) {
