@@ -4,20 +4,18 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.devops.auth.api.service.ServiceMonitorSpaceResource
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.ProjectProperties
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.apache.commons.codec.digest.HmacAlgorithms
+import org.apache.commons.codec.digest.HmacUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -31,7 +29,6 @@ import org.springframework.stereotype.Service
 class ProjectRemoteDevService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val client: Client,
-    private val bkRepoClient: BkRepoClient,
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao
 ) {
@@ -48,17 +45,14 @@ class ProjectRemoteDevService @Autowired constructor(
     @Value("\${remoteDev.bkrepoDevxUrl:}")
     val bkrepoDevxUrl = ""
 
-    @Value("\${remoteDev.bkrepoDevxHeaderUserAuth:}")
-    val bkrepoDevxHeaderUserAuth = ""
-
-    @Value("\${remoteDev.bkrepoLsyncProxyUrl:}")
-    val bkrepoLsyncProxyUrl = ""
+    @Value("\${remoteDev.bkrepoDevxSha256Key:}")
+    val bkrepoDevxSha256Key = ""
 
     // 开启 remotedev 相关逻辑
     fun enableRemoteDev(
         userId: String,
         projectCode: String,
-        projectName: String
+        enableRepoData: EnableBkRepoData
     ) {
         // 迁移监控权限, 从 auth 获取 bizid
         if (migrateMonitorResource(listOf(projectCode))) {
@@ -82,11 +76,8 @@ class ProjectRemoteDevService @Autowired constructor(
             }
         }
 
-        // 创建 lsync generic类型的仓库，做单向同步盘
-        if (existRepoProject(projectCode) != true) {
-            createRepoProject(projectCode, projectName)
-        }
-        createLsyncGeneric(projectCode)
+        // 启动bkrepo相关配置
+        enableBkRepo(enableRepoData)
     }
 
     private fun quickImportDashboard(
@@ -134,146 +125,38 @@ class ProjectRemoteDevService @Autowired constructor(
         }
     }
 
-    private fun createLsyncGeneric(
-        projectId: String
+    // 启动bkrepo相关配置
+    private fun enableBkRepo(
+        data: EnableBkRepoData
     ) {
-        // 创建 devx 的 lsync
-        val requestData = CreateRepoData(
-            projectId = projectId,
-            name = "lsync",
-            type = "GENERIC",
-            category = "COMPOSITE",
-            public = false,
-            description = "repo",
-            configuration = CreateRepoConfigData(
-                type = "composite",
-                proxy = CreateRepoConfigProxy(
-                    channelList = listOf(
-                        CreateRepoConfigProxyData(
-                            public = false,
-                            name = "lsync",
-                            url = "$bkrepoLsyncProxyUrl/$projectId/lsync"
-                        )
-                    )
-                )
-            ),
-            storageCredentialsKey = null
-        )
-        val url = "$bkrepoDevxUrl/repository/api/repo/create"
-        val requestBody = objectMapper.writeValueAsString(requestData)
-            .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+        val body = objectMapper.writeValueAsString(data)
+        val url = "$bkrepoDevxUrl/repository/api/webhook/receiver/bkci"
+        val requestBody = body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
         val request = Request.Builder()
             .url(url)
-            .headers(getBkrepoCommonHeaders().toHeaders())
-            .post(requestBody)
-            .build()
-        try {
-            OkhttpUtils.doHttp(request).use {
-                val responseStr = it.body!!.string()
-                if (!it.isSuccessful) {
-                    logger.warn("createLsyncGeneric request failed, uri:($url)|response: ($responseStr)")
-                    return
-                }
-            }
-        } catch (e: Exception) {
-            logger.error("createLsyncGeneric request api[${request.url.toUrl()}] error: ${e.localizedMessage}")
-        }
-
-        // 创建 idc 的 lsync
-        val url2 = "${bkRepoClient.getRkRepoIdcHost()}/api/repository/api/repo/create"
-        val requestBody2 = objectMapper.writeValueAsString(
-            mapOf(
-                "projectId" to projectId,
-                "name" to "lsync",
-                "type" to "GENERIC",
-                "category" to "COMPOSITE",
-                "display" to false
+            .headers(
+                mapOf(
+                    "X-DEVOPS-EVENT" to "DEVX_ENABLED",
+                    "X-DEVOPS-SIGNATURE-256" to HmacUtils(
+                        HmacAlgorithms.HMAC_SHA_256,
+                        bkrepoDevxSha256Key
+                    ).hmacHex(body)
+                ).toHeaders()
             )
-        ).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
-        val request2 = Request.Builder()
-            .url(url2)
-            .headers(getBkrepoIdcCommonHeaders(BKREPO_ROOT_USERID, projectId).toHeaders())
-            .post(requestBody2)
-            .build()
-        try {
-            OkhttpUtils.doHttp(request2).use {
-                val responseStr = it.body!!.string()
-                if (!it.isSuccessful) {
-                    logger.warn("createLsyncGeneric idc request failed, uri:($url2)|response: ($responseStr)")
-                    return
-                }
-            }
-        } catch (e: Exception) {
-            logger.error("createLsyncGeneric idc request api[${request.url.toUrl()}] error: ${e.localizedMessage}")
-        }
-    }
-
-    private fun existRepoProject(projectId: String): Boolean? {
-        val url = "$bkrepoDevxUrl/repository/api/project/exist/$projectId"
-        val request = Request.Builder()
-            .url(url)
-            .headers(getBkrepoCommonHeaders().toHeaders())
-            .get()
-            .build()
-        try {
-            OkhttpUtils.doHttp(request).use {
-                val responseStr = it.body!!.string()
-                if (!it.isSuccessful) {
-                    logger.warn("existRepoProject request failed, uri:($url)|response: ($responseStr)")
-                    return false
-                }
-                val resp = objectMapper.readValue<Response<Boolean?>>(responseStr)
-                return resp.data
-            }
-        } catch (e: Exception) {
-            logger.error("existRepoProject request api[${request.url.toUrl()}] error: ${e.localizedMessage}")
-        }
-
-        return false
-    }
-
-    private fun createRepoProject(projectId: String, projectName: String) {
-        val requestData = CreateProjectData(
-            name = projectId,
-            displayName = projectName,
-            description = ""
-        )
-        val url = "$bkrepoDevxUrl/repository/api/project/create"
-        val requestBody = objectMapper.writeValueAsString(requestData)
-            .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
-        val request = Request.Builder()
-            .url(url)
-            .headers(getBkrepoCommonHeaders().toHeaders())
             .post(requestBody)
             .build()
+        logger.debug("enableBkRepo|{}|{}", request.headers, body)
         try {
             OkhttpUtils.doHttp(request).use {
                 val responseStr = it.body!!.string()
                 if (!it.isSuccessful) {
-                    logger.warn("createRepoProject request failed, uri:($url)|response: ($responseStr)")
+                    logger.warn("enableBkRepo request failed, uri:($url)|response: ($responseStr)")
                     return
                 }
             }
         } catch (e: Exception) {
-            logger.error("createRepoProject request api[${request.url.toUrl()}] error: ${e.localizedMessage}")
+            logger.error("enableBkRepo request api[${request.url.toUrl()}] error: ${e.localizedMessage}")
         }
-    }
-
-    private fun getBkrepoCommonHeaders(): MutableMap<String, String> {
-        val headers = mutableMapOf<String, String>()
-        headers["Authorization"] = bkrepoDevxHeaderUserAuth
-        headers["X-BKREPO-UID"] = BKREPO_ROOT_USERID
-        return headers
-    }
-
-    private fun getBkrepoIdcCommonHeaders(userId: String, projectId: String): MutableMap<String, String> {
-        val headers = mutableMapOf<String, String>()
-        headers["X-BKREPO-UID"] = userId
-        headers["X-BKREPO-PROJECT-ID"] = projectId
-        headers[AUTH_HEADER_DEVOPS_PROJECT_ID] = projectId
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
-        devopsToken?.let { headers["X-DEVOPS-TOKEN"] = it }
-        return headers
     }
 
     fun updateRemoteDevInfo(projectCode: String, addcloudDesktopNum: Int): Boolean {
@@ -288,7 +171,6 @@ class ProjectRemoteDevService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectRemoteDevService::class.java)
-        private const val BKREPO_ROOT_USERID = "admin"
     }
 }
 
@@ -306,34 +188,15 @@ data class BkMonitorResp(
     val message: String
 )
 
-data class CreateRepoData(
-    val projectId: String,
-    val name: String,
-    val type: String,
-    val category: String,
-    val public: Boolean,
-    val description: String?,
-    val configuration: CreateRepoConfigData,
-    val storageCredentialsKey: Any?
-)
-
-data class CreateRepoConfigData(
-    val type: String,
-    val proxy: CreateRepoConfigProxy
-)
-
-data class CreateRepoConfigProxy(
-    val channelList: List<CreateRepoConfigProxyData>
-)
-
-data class CreateRepoConfigProxyData(
-    val public: Boolean,
-    val name: String,
-    val url: String
-)
-
-data class CreateProjectData(
-    val name: String,
-    val displayName: String,
-    val description: String
+data class EnableBkRepoData(
+    val projectName: String,
+    val projectCode: String,
+    val bgId: String,
+    val bgName: String,
+    val centerId: String,
+    val centerName: String,
+    val deptId: String,
+    val deptName: String,
+    val englishName: String,
+    val productId: Int,
 )
