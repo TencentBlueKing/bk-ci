@@ -125,7 +125,7 @@ class PipelineBuildService(
         handlePostFlag: Boolean = true,
         webHookStartParam: MutableMap<String, BuildParameters> = mutableMapOf(),
         triggerReviewers: List<String>? = null,
-        isRetry: Boolean? = false
+        retry: Boolean? = false
     ): BuildId {
 
         var acquire = false
@@ -210,7 +210,7 @@ class PipelineBuildService(
                     concurrencyGroup = context.concurrencyGroup,
                     concurrencyCancelInProgress = setting.concurrencyCancelInProgress,
                     maxConRunningQueueSize = setting.maxConRunningQueueSize,
-                    isRetry = isRetry
+                    retry = retry
                 )
             )
             if (interceptResult.isNotOk()) {

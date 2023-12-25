@@ -76,7 +76,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
             return Response(OK, I18nUtil.getCodeLanMessage(BK_NON_TIMED_TRIGGER_SKIP))
         }
         // 定时触发，如果流水线执行失败，此时重试流水线不校验源码是否变更
-        if (task.isRetry == true) {
+        if (task.retry == true) {
             return Response(OK, I18nUtil.getCodeLanMessage(BK_RETRY_TIMED_TRIGGER_SKIP))
         }
 

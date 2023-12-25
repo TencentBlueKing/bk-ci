@@ -56,5 +56,5 @@ data class InterceptData(
     @ApiModelProperty("并发构建数量限制", required = false)
     val maxConRunningQueueSize: Int?, // MULTIPLE类型时，并发构建数量限制
     @ApiModelProperty("是否为重试操作", required = false)
-    val isRetry: Boolean? = false
+    val retry: Boolean? = false
 )
