@@ -737,7 +737,7 @@ class PipelineRuntimeService @Autowired constructor(
                         taskBuildRecords = taskBuildRecords
                     )
                     // 清理options变量
-                    PipelineUtils.cleanOptions(container.params)
+                    container.params = PipelineUtils.cleanOptions(container.params)
                     return@nextContainer
                 } else if (container is NormalContainer) {
                     if (!ContainerUtils.isNormalContainerEnable(container)) {

@@ -194,8 +194,9 @@ object PipelineUtils {
                 BuildFormPropertyType.SVN_TAG,
                 BuildFormPropertyType.GIT_REF,
                 BuildFormPropertyType.CODE_LIB,
-                BuildFormPropertyType.SUB_PIPELINE ->
-                    filterParams.add(it.copy(options = emptyList()))
+                BuildFormPropertyType.SUB_PIPELINE -> {
+                    filterParams.add(it.copy(options = emptyList(), replaceKey = null, searchUrl = null))
+                }
 
                 else ->
                     filterParams.add(it)
