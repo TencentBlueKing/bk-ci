@@ -8,6 +8,10 @@
     h5 {
         font-weight: normal;
         font-size: 14px;
+        color:#333c48;
+        > span:first-child {
+            color: #737987;
+        }
     }
 
     h3 {
