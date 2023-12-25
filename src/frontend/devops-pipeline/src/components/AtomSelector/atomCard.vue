@@ -75,7 +75,7 @@
                 :loading="isInstalling"
             >{{ $t('editPage.install') }}
             </bk-button>
-            <p class="atom-from">{{`${atom.publisher} ${$t('editPage.provided')}`}}</p>
+            <p class="atom-from" :title="`${atom.publisher} ${$t('editPage.provided')}`">{{`${atom.publisher} ${$t('editPage.provided')}`}}</p>
             <a v-if="atom.docsLink" target="_blank" class="atom-link" :href="atom.docsLink">{{ $t('newlist.knowMore') }}</a>
         </div>
     </div>
