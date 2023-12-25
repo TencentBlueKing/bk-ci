@@ -1,4 +1,4 @@
-package com.tencent.devops.common.auth.api.pojo
+package com.tencent.devops.auth.pojo.dto
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty

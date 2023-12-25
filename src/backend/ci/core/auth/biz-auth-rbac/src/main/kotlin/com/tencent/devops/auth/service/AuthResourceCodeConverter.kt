@@ -85,7 +85,11 @@ class AuthResourceCodeConverter @Autowired constructor(
     /**
      * 批量权限中心资源code转成蓝盾资源code
      */
-    fun batchCode2IamCode(projectCode: String, resourceType: String, resourceCodes: List<String>): List<String> {
+    fun batchCode2IamCode(
+        projectCode: String,
+        resourceType: String,
+        resourceCodes: List<String>
+    ): Map<String/*resourceCode*/, String/*IamResourceCode*/> {
         return if (needConvert(resourceType)) {
             authResourceDao.getIamCodeByResourceCodes(
                 dslContext = dslContext,
@@ -94,7 +98,7 @@ class AuthResourceCodeConverter @Autowired constructor(
                 resourceCodes = resourceCodes
             )
         } else {
-            resourceCodes
+            resourceCodes.associateWith { it }
         }
     }
 
@@ -143,6 +147,7 @@ class AuthResourceCodeConverter @Autowired constructor(
     private fun needConvert(resourceType: String): Boolean {
         return resourceType == AuthResourceType.TICKET_CREDENTIAL.value ||
             resourceType == AuthResourceType.TICKET_CERT.value ||
-            resourceType == AuthResourceType.PIPELINE_DEFAULT.value
+            resourceType == AuthResourceType.PIPELINE_DEFAULT.value ||
+            resourceType == AuthResourceType.PIPELINE_TEMPLATE.value
     }
 }

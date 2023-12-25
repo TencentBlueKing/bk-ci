@@ -75,7 +75,7 @@ interface ApigwTemplateResource {
         @QueryParam("page")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         page: Int?,
-        @ApiParam("每页数量", required = false)
+        @ApiParam("每页条数(默认20, 最大100)", required = false)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         pageSize: Int?
@@ -131,7 +131,7 @@ interface ApigwTemplateResource {
         @QueryParam("page")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         page: Int?,
-        @ApiParam("每页数量", required = false)
+        @ApiParam("每页条数(默认20, 最大100)", required = false)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         pageSize: Int?

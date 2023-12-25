@@ -169,7 +169,6 @@ include(":core:repository:plugin-github")
 include(":core:ticket")
 include(":core:ticket:api-ticket")
 include(":core:ticket:biz-ticket")
-include(":core:ticket:biz-ticket-sample")
 include(":core:ticket:boot-ticket")
 include(":core:ticket:model-ticket")
 

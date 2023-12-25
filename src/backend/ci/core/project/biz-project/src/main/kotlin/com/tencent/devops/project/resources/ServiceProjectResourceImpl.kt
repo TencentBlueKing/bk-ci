@@ -37,6 +37,7 @@ import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ProjectWithPermission
@@ -96,7 +97,7 @@ class ServiceProjectResourceImpl @Autowired constructor(
     }
 
     override fun listByProjectCode(projectCodes: Set<String>): Result<List<ProjectVO>> {
-        return Result(projectService.list(projectCodes))
+        return Result(projectService.list(projectCodes = projectCodes, enabled = true))
     }
 
     override fun listOnlyByProjectCode(projectCodes: Set<String>): Result<List<ProjectVO>> {
@@ -163,6 +164,15 @@ class ServiceProjectResourceImpl @Autowired constructor(
     override fun updateProjectName(userId: String, projectCode: String, projectName: String): Result<Boolean> {
         return Result(
             projectService.updateProjectName(userId = userId, projectId = projectCode, projectName = projectName)
+        )
+    }
+
+    override fun updateProjectProperties(projectCode: String, properties: ProjectProperties): Result<Boolean> {
+        return Result(
+            projectService.updateProjectProperties(
+                projectCode = projectCode,
+                properties = properties
+            )
         )
     }
 

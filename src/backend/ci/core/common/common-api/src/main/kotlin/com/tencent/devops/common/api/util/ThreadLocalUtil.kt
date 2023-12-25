@@ -25,7 +25,46 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:ticket:biz-ticket"))
-    api(project(":core:project:api-project"))
+package com.tencent.devops.common.api.util
+
+object ThreadLocalUtil {
+
+    private val threadLocalMap = object : ThreadLocal<MutableMap<String, Any>>() {
+        override fun initialValue(): MutableMap<String, Any> {
+            return mutableMapOf()
+        }
+    }
+
+    /**
+     * 根据 key 获取线程变量
+     * @param key 变量 key
+     * @return 变量值
+     */
+    fun get(key: String): Any? {
+        return threadLocalMap.get()[key]
+    }
+
+    /**
+     * 设置线程变量
+     * @param key 变量 key
+     * @param value 变量值
+     */
+    fun set(key: String, value: Any) {
+        threadLocalMap.get()[key] = value
+    }
+
+    /**
+     * 移除线程变量
+     * @param key 变量 key
+     */
+    fun remove(key: String) {
+        threadLocalMap.get().remove(key)
+    }
+
+    /**
+     * 清空当前线程变量
+     */
+    fun clear() {
+        threadLocalMap.get().clear()
+    }
 }
