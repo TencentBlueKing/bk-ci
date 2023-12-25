@@ -44,6 +44,7 @@ export default {
     unInstallWsMessage () {
         window.removeEventListener('message', this.callBack)
         this.callBack = () => {}
+        this.onReconnect = () => {}
     },
 
     openDialogWebSocket (callBack, payLoad) {
