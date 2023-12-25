@@ -108,7 +108,8 @@ class CodeCCDispatchListener @Autowired constructor(
                         routeKeySuffix = DispatchRouteKeySuffix.DEVCLOUD.routeKeySuffix,
                         containerId = containerId,
                         containerHashId = containerHashId,
-                        customBuildEnv = customBuildEnv
+                        customBuildEnv = customBuildEnv,
+                        jobId = jobId
                     )
                 )
             }
@@ -153,7 +154,8 @@ class CodeCCDispatchListener @Autowired constructor(
                     routeKeySuffix = DispatchRouteKeySuffix.DOCKER_VM.routeKeySuffix,
                     containerId = containerId,
                     containerHashId = containerHashId,
-                    customBuildEnv = customBuildEnv
+                    customBuildEnv = customBuildEnv,
+                    jobId = jobId
                 )
             )
         }
