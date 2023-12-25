@@ -178,7 +178,7 @@ class ThirdPartyAgentService @Autowired constructor(
             if (agentResult.data!!.secretKey != secretKey) {
                 logger.warn(
                     "The secretKey($secretKey) is not match the expect one(${agentResult.data!!.secretKey} " +
-                            "of project($projectId) and agent($agentId)"
+                        "of project($projectId) and agent($agentId)"
                 )
                 throw NotFoundException("Fail to get the agent")
             }
@@ -217,7 +217,7 @@ class ThirdPartyAgentService @Autowired constructor(
                 } catch (e: RemoteServiceException) {
                     logger.warn(
                         "notify agent task[$build.projectId|${build.buildId}|${build.vmSeqId}|$agentId]" +
-                                " claim failed, cause: ${e.message} agent project($projectId)"
+                            " claim failed, cause: ${e.message} agent project($projectId)"
                     )
                 }
 
@@ -235,9 +235,9 @@ class ThirdPartyAgentService @Autowired constructor(
                 // 只有凭据ID的参与计算
                 if (dockerInfo != null) {
                     if ((
-                                dockerInfo.credential?.user.isNullOrBlank() &&
-                                        dockerInfo.credential?.password.isNullOrBlank()
-                                ) &&
+                        dockerInfo.credential?.user.isNullOrBlank() &&
+                            dockerInfo.credential?.password.isNullOrBlank()
+                        ) &&
                         !(dockerInfo.credential?.credentialId.isNullOrBlank())
                     ) {
                         val (userName, password) = try {
@@ -465,9 +465,9 @@ class ThirdPartyAgentService @Autowired constructor(
         // 有些并发情况可能会导致在finish时AgentBuild状态没有被置为Done在这里改一下
         val buildRecord = thirdPartyAgentBuildDao.get(dslContext, buildInfo.buildId, buildInfo.vmSeqId)
         if (buildRecord != null && (
-                    buildRecord.status != PipelineTaskStatus.DONE.status ||
-                            buildRecord.status != PipelineTaskStatus.FAILURE.status
-                    )
+            buildRecord.status != PipelineTaskStatus.DONE.status ||
+                buildRecord.status != PipelineTaskStatus.FAILURE.status
+            )
         ) {
             thirdPartyAgentBuildDao.updateStatus(
                 dslContext = dslContext,

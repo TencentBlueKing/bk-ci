@@ -475,27 +475,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         }
 
         // 判断是否有 jobEnv 的限制，检查全集群限制
-        if (event.allNodeConcurrency != null) {
-            if (envId != null && !event.jobId.isNullOrBlank()) {
-                val c = thirdPartyAgentBuildService.countProjectJobRunningAndQueueAll(
-                    pipelineId = event.pipelineId,
-                    envId = envId,
-                    jobId = event.jobId!!,
-                    projectId = event.projectId
-                )
-                if (c > event.allNodeConcurrency!!) {
-                    jobConcurrencyQueue(event, true, c)
-                    return
-                }
-            } else {
-                logger.warn(
-                    "buildByEnvId|{} has allNodeConcurrency {} but env {}|job {} null",
-                    event.buildId,
-                    event.allNodeConcurrency,
-                    envId,
-                    event.jobId
-                )
-            }
+        if (event.allNodeConcurrency != null && checkAllNodeConcurrency(envId, event)) {
+            return
         }
 
         ThirdPartyAgentEnvLock(redisOperation, event.projectId, dispatchType.envName).use { redisLock ->
@@ -512,8 +493,13 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                             (event.os == it.os || event.os == VMBaseOS.ALL.name)
                 }
 
-                var jobEnvActiveAgents = mutableListOf<ThirdPartyAgent>()
+                // 获取锁之后再检查一次，防止多个任务排队等锁导致超出集群并发限制
+                if (event.allNodeConcurrency != null && checkAllNodeConcurrency(envId, event)) {
+                    return
+                }
+
                 // 判断是否有 jobEnv 的限制，筛选单节点的并发数
+                var jobEnvActiveAgents = mutableListOf<ThirdPartyAgent>()
                 if (event.singleNodeConcurrency != null) {
                     if (envId != null && !event.jobId.isNullOrBlank()) {
                         val m = thirdPartyAgentBuildService.countAgentsJobRunningAndQueueAll(
@@ -584,6 +570,33 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                         )
             )
         }
+    }
+
+    private fun checkAllNodeConcurrency(
+        envId: Long?,
+        event: PipelineAgentStartupEvent
+    ): Boolean {
+        if (envId != null && !event.jobId.isNullOrBlank()) {
+            val c = thirdPartyAgentBuildService.countProjectJobRunningAndQueueAll(
+                pipelineId = event.pipelineId,
+                envId = envId,
+                jobId = event.jobId!!,
+                projectId = event.projectId
+            )
+            if (c > event.allNodeConcurrency!!) {
+                jobConcurrencyQueue(event, true, c)
+                return true
+            }
+        } else {
+            logger.warn(
+                "buildByEnvId|{} has allNodeConcurrency {} but env {}|job {} null",
+                event.buildId,
+                event.allNodeConcurrency,
+                envId,
+                event.jobId
+            )
+        }
+        return false
     }
 
     private fun pickupAgent(
