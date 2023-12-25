@@ -169,15 +169,6 @@ func agentHeartbeat(jdkSyncOnce, dockerfileSyncOnce *sync.Once) error {
 		}
 	}
 
-	// 检测agent版本与agent文件是否匹配
-	if config.AgentVersion != heartbeatResponse.MasterVersion {
-		agentFileVersion := config.DetectAgentVersion()
-		if agentFileVersion != "" && config.AgentVersion != agentFileVersion {
-			logs.Warn("agent version mismatch, exiting agent process")
-			systemutil.ExitProcess(1)
-		}
-	}
-
 	logs.Info("agent heartbeat done")
 	return nil
 }

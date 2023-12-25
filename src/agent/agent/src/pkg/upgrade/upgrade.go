@@ -34,6 +34,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade/download"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
@@ -113,6 +115,11 @@ func DoPollAndUpgradeAgent() {
 			logs.Debug("debug no upgrade")
 			continue
 		}
+		// 有任务就放弃升级
+		if job.CheckRunningJob() {
+			logs.Info("has job running skip upgrade")
+			continue
+		}
 		agentUpgrade()
 		logs.Info("upgrade done")
 	}
@@ -169,6 +176,26 @@ func agentUpgrade() {
 	}
 
 	ack = true
+
+	// 进入升级逻辑时防止agent接构建任务，同时确保无任何构建任务在进行
+	// 放到下载文件前，这样就不会因为有长时间构建任务重复下载文件
+	// 使用 trylock 防止有频繁的任务时长时间阻塞住
+	if !job.BuildTotalManager.Lock.TryLock() {
+		return
+	}
+	defer func() {
+		job.BuildTotalManager.Lock.Unlock()
+	}()
+	if job.CheckRunningJob() {
+		logs.Infof(
+			"agent has upgrade item, but has job running prejob: %d, job: %d, dockerJob: %d. so skip.",
+			job.GBuildManager.GetPreInstancesCount(),
+			job.GBuildManager.GetInstanceCount(),
+			job.GBuildDockerManager.GetInstanceCount(),
+		)
+		return
+	}
+
 	logs.Info("[agentUpgrade]|download upgrade files start")
 	changeItems := downloadUpgradeFiles(upgradeItem)
 	if changeItems.checkNoChange() {
@@ -280,6 +307,7 @@ func getJdkVersion() ([]string, error) {
 	jdkVersion, err := command.RunCommand(config.GetJava(), []string{"-version"}, "", nil)
 	if err != nil {
 		logs.Error("agent get jdk version failed: ", err.Error())
+		exitcode.CheckSignError(err, exitcode.ExitSignJdk)
 		return nil, errors.Wrap(err, "agent get jdk version failed")
 	}
 	var jdkV []string
