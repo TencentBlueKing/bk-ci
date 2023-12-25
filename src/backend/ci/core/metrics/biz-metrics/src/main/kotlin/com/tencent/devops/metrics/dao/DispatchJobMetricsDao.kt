@@ -25,18 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.configuration
+package com.tencent.devops.metrics.dao
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.boot.context.properties.EnableConfigurationProperties
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
+import com.tencent.devops.model.metrics.tables.TDispatchJobDailyMetrics
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
 
-@Configuration
-@EnableConfigurationProperties(DispatchProperties::class)
-class DispatchConfiguration {
+@Repository
+class DispatchJobMetricsDao {
 
-    @Bean
-    fun pipelineEventDispatcher(rabbitTemplate: RabbitTemplate) = MQEventDispatcher(rabbitTemplate)
+    fun batchSaveDispatchJobMetrics(
+        dslContext: DSLContext,
+        dispatchJobMetricsData: List<DispatchJobMetricsData>
+    ) {
+        with(TDispatchJobDailyMetrics.T_DISPATCH_JOB_DAILY_METRICS) {
+            dispatchJobMetricsData.forEach { jobMetricsData ->
+                dslContext.insertInto(this)
+                    .set(PROJECT_ID, jobMetricsData.projectId)
+                    .set(PRODUCT_ID, jobMetricsData.productId)
+                    .set(THE_DATE, jobMetricsData.theDate)
+                    .set(JOB_TYPE, jobMetricsData.jobType)
+                    .set(CHANNEL_CODE, jobMetricsData.channelCode)
+                    .set(MAX_JOB_CONCURRENCY, jobMetricsData.maxJobConcurrency)
+                    .set(SUM_JOB_COST, jobMetricsData.sumJobCost)
+                    .set(CHANNEL_CODE, jobMetricsData.channelCode)
+                    .execute()
+            }
+        }
+    }
 }

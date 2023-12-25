@@ -25,21 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.service.dispatcher.agent
+package com.tencent.devops.common.event.pojo.measure
 
-import com.tencent.devops.common.api.pojo.Zone
-
-/** issue_7748 搬用 dispatch sdk 的类，因为sdk集成当前存在问题
- *  @see com.tencent.devops.common.dispatch.sdk.pojo.RedisBuild
- **/
-data class RedisBuild(
-    val vmName: String,
+data class DispatchJobMetricsData(
+    val theDate: String,
     val projectId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val vmSeqId: String,
-    val channelCode: String?,
-    val zone: Zone?,
-    val atoms: Map<String, String> = mapOf(), // 用插件框架开发的插件信息 key为插件code，value为下载路径
-    val executeCount: Int? = 1
+    val productId: String,
+    val jobType: String,
+    val channelCode: String,
+    val maxJobConcurrency: Int,
+    val sumJobCost: Int
 )
