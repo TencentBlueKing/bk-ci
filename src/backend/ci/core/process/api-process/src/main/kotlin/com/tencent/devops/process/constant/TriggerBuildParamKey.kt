@@ -15,9 +15,9 @@ object TriggerBuildParamKey {
     const val CI_BUILD_MSG = "ci.build_msg"
     const val CI_COMMIT_MESSAGE = "ci.commit_message"
     const val CI_ACTION = "ci.action"
+    const val CI_ACTOR = "ci.actor"
 
     // GIT PUSH参数
-    const val CI_ACTOR = "ci.actor"
     const val CI_BEFORE_SHA = "ci.before_sha"
     const val CI_BEFORE_SHA_SHORT = "ci.before_sha_short"
     const val CI_SHA = "ci.sha"

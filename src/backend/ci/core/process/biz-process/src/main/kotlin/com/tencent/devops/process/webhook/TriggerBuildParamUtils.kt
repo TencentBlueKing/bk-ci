@@ -197,6 +197,7 @@ object TriggerBuildParamUtils {
      */
     private fun gitWebhookTriggerCommon() {
         val commonParams = listOf(
+            CI_ACTOR,
             CI_REPO_ID,
             CI_REPO_TYPE,
             CI_REPO_URL,
@@ -227,7 +228,6 @@ object TriggerBuildParamUtils {
      */
     private fun gitWebhookTriggerPush() {
         val params = listOf(
-            CI_ACTOR,
             CI_BEFORE_SHA,
             CI_BEFORE_SHA_SHORT,
             CI_SHA,
