@@ -29,7 +29,7 @@ package com.tencent.devops.environment.pojo.job.agentreq
 
 import io.swagger.annotations.ApiModelProperty
 
-data class QueryAgentStatusFromNodemanReq (
+data class QueryAgentStatusFromNodemanReq(
     @ApiModelProperty(value = "主机ID")
     val bkHostId: List<Int>?,
     @ApiModelProperty(value = "搜索条件")

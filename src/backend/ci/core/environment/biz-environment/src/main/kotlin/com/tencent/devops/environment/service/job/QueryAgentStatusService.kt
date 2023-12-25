@@ -27,20 +27,14 @@
 
 package com.tencent.devops.environment.service.job
 
-import com.tencent.devops.environment.pojo.job.agentreq.AgentCondition
-import com.tencent.devops.environment.pojo.job.agentreq.AgentQueryAgentStatusFromNodemanReq
-import com.tencent.devops.environment.pojo.job.agentreq.AgentQueryAgentStatusFromJobReq
 import com.tencent.devops.environment.pojo.job.agentreq.Condition
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentStatusFromJobReq
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentStatusFromNodemanReq
-import com.tencent.devops.environment.pojo.job.agentres.AgentInfo
-import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentStatusFromJobResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentStatusFromJobResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentStatusFromNodemanResult
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service("QueryAgentStatusService")

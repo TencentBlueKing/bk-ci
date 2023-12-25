@@ -10,7 +10,6 @@ import com.tencent.devops.environment.pojo.job.agentreq.AgentQueryAgentTaskLogRe
 import com.tencent.devops.environment.pojo.job.agentreq.AgentQueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.agentreq.AgentRetryAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentreq.AgentTerminalAgentInstallTaskReq
-import com.tencent.devops.environment.pojo.job.agentreq.Condition
 import com.tencent.devops.environment.pojo.job.req.CreateAccountReq
 import com.tencent.devops.environment.pojo.job.req.DeleteAccountReq
 import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudDeleteAccountResult
@@ -906,20 +905,20 @@ class JobService @Autowired constructor(
             data = agentQueryAgentStatusRes.data?.let {
                 QueryAgentStatusFromNodemanResult(
                     total = it.total,
-                    list = it.list.map { filterHostInfo->
+                    list = it.list.map { filterHostInfo ->
                         FilterHostInfo(
-                            filterHost=filterHostInfo.filterHost,
-                            bkHostId=filterHostInfo.bkHostId,
-                            ip=filterHostInfo.ip,
-                            innerIp=filterHostInfo.innerIp,
-                            innerIpv6=filterHostInfo.innerIpv6,
-                            bkCloudId=filterHostInfo.bkCloudId,
-                            bkCloudName=filterHostInfo.bkCloudName,
-                            bkBizId=filterHostInfo.bkBizId,
-                            bkBizName=filterHostInfo.bkBizName,
-                            jobId=filterHostInfo.jobId,
-                            status=filterHostInfo.status,
-                            statusDisplay=filterHostInfo.statusDisplay
+                            filterHost = filterHostInfo.filterHost,
+                            bkHostId = filterHostInfo.bkHostId,
+                            ip = filterHostInfo.ip,
+                            innerIp = filterHostInfo.innerIp,
+                            innerIpv6 = filterHostInfo.innerIpv6,
+                            bkCloudId = filterHostInfo.bkCloudId,
+                            bkCloudName = filterHostInfo.bkCloudName,
+                            bkBizId = filterHostInfo.bkBizId,
+                            bkBizName = filterHostInfo.bkBizName,
+                            jobId = filterHostInfo.jobId,
+                            status = filterHostInfo.status,
+                            statusDisplay = filterHostInfo.statusDisplay
                         )
                     }
                 )
