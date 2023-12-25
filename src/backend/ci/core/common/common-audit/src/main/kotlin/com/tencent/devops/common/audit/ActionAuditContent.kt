@@ -9,6 +9,7 @@ object ActionAuditContent {
     private const val PROJECT_CODE_CONTENT_TEMPLATE = "[{{@PROJECT_CODE}}]"
     const val PROJECT_CODE_TEMPLATE = "@PROJECT_CODE"
     const val PROJECT_ENABLE_OR_DISABLE_TEMPLATE = "@ENABLE"
+    const val PROJECT_ADD_OR_REMOVE_TEMPLATE = "@ADD"
     const val BUILD_ID_TEMPLATE = "@BUILD_ID"
     const val ASSIGNS_TEMPLATE = "@ASSIGNS"
 
@@ -38,6 +39,14 @@ object ActionAuditContent {
     const val PIPELINE_DELETE_VERSION_CONTENT = "delete pipeline version $CONTENT_TEMPLATE " +
         "in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val PIPELINE_EXECUTE_CONTENT = "execute pipeline $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+
+    // 流水线组
+    const val PIPELINE_GROUP_CREATE_CONTENT = "create pipeline group $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val PIPELINE_GROUP_EDIT_CONTENT = "modify pipeline group $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val PIPELINE_GROUP_VIEW_CONTENT = "get pipeline group info $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val PIPELINE_GROUP_DELETE_CONTENT = "delete pipeline group $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val PIPELINE_GROUP_ADD_REMOVE_CONTENT = "{{$PROJECT_ADD_OR_REMOVE_TEMPLATE}} pipeline group $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val PIPELINE_GROUP_MANAGE_CONTENT = "manage pipeline group $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
 
     // 流水线模板
     const val PIPELINE_TEMPLATE_CREATE_CONTENT = "create template $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
@@ -115,4 +124,30 @@ object ActionAuditContent {
     const val ENV_NODE_DELETE_CONTENT = "delete environment node $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val ENV_NODE_LIST_CONTENT = "list environment node $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val ENV_NODE_USE_CONTENT = "use environment node $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+
+    // 质量红线
+    const val RULE_CREATE_CONTENT = "create rule $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val RULE_DELETE_CONTENT = "delete rule $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val RULE_EDIT_CONTENT = "modify rule $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val RULE_ENABLE_CONTENT = "enable/disable rule $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val QUALITY_GROUP_CREATE_CONTENT = "create quality group $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val QUALITY_GROUP_DELETE_CONTENT = "delete quality group $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val QUALITY_GROUP_EDIT_CONTENT = "modify quality group $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+
+    // 代码库
+    const val REPERTORY_CREATE_CONTENT = "create repertory $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val REPERTORY_VIEW_CONTENT = "get repertory info $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val REPERTORY_EDIT_CONTENT = "modify repertory $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val REPERTORY_DELETE_CONTENT = "delete repertory $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val REPERTORY_USE_CONTENT = "use repertory $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+
+    // 版本体验
+    const val EXPERIENCE_TASK_CREATE_CONTENT = "create experience task $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val EXPERIENCE_TASK_VIEW_CONTENT = "get experience task info $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val EXPERIENCE_TASK_EDIT_CONTENT = "modify experience task $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val EXPERIENCE_TASK_DELETE_CONTENT = "delete experience task $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val EXPERIENCE_GROUP_CREATE_CONTENT = "create experience group $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val EXPERIENCE_GROUP_VIEW_CONTENT = "get experience group info $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val EXPERIENCE_GROUP_EDIT_CONTENT = "modify experience group $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val EXPERIENCE_GROUP_DELETE_CONTENT = "delete experience group $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
 }
