@@ -36,9 +36,13 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/collector"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/cron"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/imagedebug"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/pipeline"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 )
 
 func Run(isDebug bool) {
@@ -55,71 +59,87 @@ func Run(isDebug bool) {
 	// 数据采集
 	go collector.DoAgentCollect()
 
-	// // 心跳
-	// go heartbeat.DoAgentHeartbeat()
-
-	// // 检查升级
-	// go upgrade.DoPollAndUpgradeAgent()
-
-	// // 启动pipeline
-	// go pipeline.Start()
-
 	// 定期清理
 	go cron.CleanJob()
 	go cron.CleanDebugContainer()
 
-	// // 登录调试任务
-	// go imagedebug.DoPullAndDebug()
+	initModules()
 
 	// job.DoPollAndBuild()
 	doAsk()
 }
 
+// 初始化一些模块的初始值
+func initModules() {
+	imagedebug.Init()
+}
+
 func doAsk() {
 	for {
+		// Ask请求
+		enable := genAskEnable()
+		heart, upgrad := genHeartInfoAndUpgrade()
+		result, err := api.Ask(&api.AskInfo{
+			Enable:  enable,
+			Heart:   heart,
+			Upgrade: upgrad,
+		})
+		if err != nil {
+			logs.Error("ask request failed: ", err.Error())
+			continue
+		}
+		if result.IsNotOk() {
+			logs.Error("ask request result failed: ", result.Message)
+			continue
+		}
+		if result.AgentStatus != config.AgentStatusImportOk {
+			logs.Errorf("agent status [%s] not ok", result.AgentStatus)
+			if result.IsAgentDelete() {
+				logs.Warn("agent has deleted, uninstall")
+				upgrade.UninstallAgent()
+				return
+			}
+			continue
+		}
+
+		resp := new(api.AskResp)
+		err = util.ParseJsonToData(result.Data, &resp)
+		if err != nil {
+			logs.Error("parse ask resp failed: ", err.Error())
+			continue
+		}
+
+		// 执行各类任务
+		doAgentJob(enable, resp)
+
+		// 可能是发送请求报错了，所以重新再取一遍
+		if exitcode.GetExitError() != nil {
+			exitcode.Exit()
+		}
+
 		time.Sleep(5 * time.Second)
-
-		// 判断除了 heartbeat 的其他模块是否需要获取
-		buildType := checkBuildType()
-		upgrade := checkUpgrade()
-		dockerDebug := checkDockerDebug()
-		pipeline := checkPipeline()
-
-		
 	}
 }
 
-func checkBuildType() api.BuildJobType {
-	dockerCanRun, normalCanRun := job.CheckParallelTaskCount()
-	if !dockerCanRun && !normalCanRun {
-		return api.NoneBuildType
+func doAgentJob(enable api.AskEnable, resp *api.AskResp) {
+	if resp.Heart != nil {
+		go agentHeartbeat(resp.Heart)
 	}
-	if dockerCanRun && normalCanRun {
-		return api.AllBuildType
-	} else if normalCanRun {
-		return api.BinaryBuildType
-	} else {
-		return api.DockerBuildType
-	}
-}
 
-func checkUpgrade() bool {
-	if job.CheckRunningJob() {
-		return false
+	hasBuild := (enable.Build != api.NoneBuildType) && (resp.Build != nil)
+	if hasBuild {
+		go job.DoBuild(resp.Build)
 	}
-	return true
-}
 
-func checkDockerDebug() bool {
-	if config.GAgentConfig.EnableDockerBuild {
-		return true
+	if enable.Upgrade && resp.Upgrade != nil {
+		go upgrade.AgentUpgrade(resp.Upgrade, hasBuild)
 	}
-	return false
-}
 
-func checkPipeline() bool {
-	if config.GAgentConfig.EnablePipeline {
-		return true
+	if enable.Pipeline && resp.Pipeline != nil {
+		go pipeline.RunPipeline(resp.Pipeline)
 	}
-	return false
+
+	if enable.DockerDebug && resp.Debug != nil {
+		go imagedebug.DoImageDebug(resp.Debug)
+	}
 }

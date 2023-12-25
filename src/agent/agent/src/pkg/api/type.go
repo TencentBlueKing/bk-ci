@@ -237,16 +237,16 @@ type AskInfo struct {
 }
 
 type AskEnable struct {
-	Build       bool `json:"build"`
-	Upgrade     bool `json:"upgrade"`
-	DockerDebug bool `json:"dockerBuild"`
-	Pipeline    bool `json:"pipeline"`
+	Build       BuildJobType `json:"build"`
+	Upgrade     bool         `json:"upgrade"`
+	DockerDebug bool         `json:"dockerBuild"`
+	Pipeline    bool         `json:"pipeline"`
 }
 
 type AskResp struct {
-	Heart    AgentHeartbeatResponse `json:"heartbeat"`
-	Build    *ThirdPartyBuildInfo   `json:"build"`
-	Upgrade  *UpgradeItem           `json:"upgrade"`
-	Pipeline *map[string]any        `json:"pipeline"`
-	Debug    *ImageDebug            `json:"debug"`
+	Heart    *AgentHeartbeatResponse `json:"heartbeat"`
+	Build    *ThirdPartyBuildInfo    `json:"build"`
+	Upgrade  *UpgradeItem            `json:"upgrade"`
+	Pipeline map[string]any          `json:"pipeline"`
+	Debug    *ImageDebug             `json:"debug"`
 }

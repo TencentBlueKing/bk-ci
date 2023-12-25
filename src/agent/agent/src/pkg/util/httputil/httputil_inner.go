@@ -1,5 +1,5 @@
-//go:build out
-// +build out
+//go:build !out
+// +build !out
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -28,8 +28,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package pipeline
+package httputil
 
-func RunPipeline(pipelineData map[string]interface{}) {
-	// 为外部出包使用
+func checkHttpStatusErr(status int, body []byte) {
+	// 检查 http 请求报错并添加至 exitcode，方便代码调试使用
 }

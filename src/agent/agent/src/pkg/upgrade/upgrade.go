@@ -30,14 +30,12 @@ package upgrade
 import (
 	"os"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"time"
 
 	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade/download"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
 
 	"github.com/pkg/errors"
@@ -80,7 +78,6 @@ var DockerFileMd5 struct {
 	// 目前非linux机器不支持，以及一些机器不使用docker就不用计算md5
 	NeedUpgrade bool
 	FileModTime time.Time
-	Lock        sync.Mutex
 	Md5         string
 }
 
@@ -99,34 +96,8 @@ func (u upgradeChangeItem) checkNoChange() bool {
 	return false
 }
 
-// DoPollAndUpgradeAgent 循环，每20s一次执行升级
-func DoPollAndUpgradeAgent() {
-	defer func() {
-		if err := recover(); err != nil {
-			logs.Error("agent upgrade panic: ", err)
-		}
-	}()
-
-	for {
-		time.Sleep(20 * time.Second)
-		logs.Info("try upgrade")
-		// debug模式下关闭升级，方便调试问题
-		if config.IsDebug {
-			logs.Debug("debug no upgrade")
-			continue
-		}
-		// 有任务就放弃升级
-		if job.CheckRunningJob() {
-			logs.Info("has job running skip upgrade")
-			continue
-		}
-		agentUpgrade()
-		logs.Info("upgrade done")
-	}
-}
-
-// agentUpgrade 升级主逻辑
-func agentUpgrade() {
+// AgentUpgrade 升级主逻辑
+func AgentUpgrade(upgradeItem *api.UpgradeItem, hasBuild bool) {
 	// #5806 #5172 升级失败，保证重置回状态，防止一直处于升级状态
 	ack := false
 	success := false
@@ -137,42 +108,16 @@ func agentUpgrade() {
 		}
 	}()
 
-	jdkVersion, err := SyncJdkVersion()
-	if err != nil {
-		logs.Error("[agentUpgrade]|sync jdk version err: ", err.Error())
-		return
-	}
-
-	err = SyncDockerInitFileMd5()
-	if err != nil {
-		logs.Error("[agentUpgrade]|sync docker file md5 err: ", err.Error())
-		return
-	}
-
-	checkResult, err := api.CheckUpgrade(jdkVersion, api.DockerInitFileInfo{
-		FileMd5:     DockerFileMd5.Md5,
-		NeedUpgrade: DockerFileMd5.NeedUpgrade,
-	})
-	if err != nil {
-		ack = true
-		logs.Error("[agentUpgrade]|check upgrade err: ", err.Error())
-		return
-	}
-	if !checkResult.IsOk() {
-		logs.Error("[agentUpgrade]|check upgrade failed: ", checkResult.Message)
-		return
-	}
-
-	if checkResult.IsAgentDelete() {
-		logs.Info("[agentUpgrade]|agent is deleted, skip")
-		return
-	}
-
-	upgradeItem := new(api.UpgradeItem)
-	err = util.ParseJsonToData(checkResult.Data, &upgradeItem)
 	if !upgradeItem.Agent && !upgradeItem.Worker && !upgradeItem.Jdk && !upgradeItem.DockerInitFile {
 		logs.Info("[agentUpgrade]|no need to upgrade agent, skip")
 		return
+	} else {
+		// 如果同时还领取了构建任务那么这次的升级取消
+		if hasBuild {
+			ack = true
+			logs.Info("[agentUpgrade]|has build, skip")
+			return
+		}
 	}
 
 	ack = true
@@ -188,10 +133,10 @@ func agentUpgrade() {
 	}()
 	if job.CheckRunningJob() {
 		logs.Infof(
-			"agent has upgrade item, but has job running prejob: %d, job: %d, dockerJob: %d. so skip.",
-			job.GBuildManager.GetPreInstancesCount(),
-			job.GBuildManager.GetInstanceCount(),
-			job.GBuildDockerManager.GetInstanceCount(),
+			"[agentUpgrade]|agent has upgrade item, but has job running prejob: %s job: %s dockerJob: %s so skip.",
+			job.GBuildManager.GetPreInstancesStr(),
+			job.GBuildManager.GetInstanceStr(),
+			job.GBuildDockerManager.GetInstanceStr(),
 		)
 		return
 	}
@@ -203,7 +148,7 @@ func agentUpgrade() {
 	}
 
 	logs.Info("[agentUpgrade]|download upgrade files done")
-	err = DoUpgradeOperation(changeItems)
+	err := DoUpgradeOperation(changeItems)
 	if err != nil {
 		logs.Error("[agentUpgrade]|do upgrade operation failed", err)
 	} else {
@@ -212,7 +157,7 @@ func agentUpgrade() {
 }
 
 // SyncJdkVersion 同步jdk版本信息
-func SyncJdkVersion() ([]string, error) {
+func SyncJdkVersion() error {
 	// 获取jdk文件状态以及时间
 	stat, err := os.Stat(config.GAgentConfig.JdkDirPath)
 	if err != nil {
@@ -220,9 +165,9 @@ func SyncJdkVersion() ([]string, error) {
 			logs.Error("syncJdkVersion no jdk dir find", err)
 			// jdk版本置为空，否则会一直保持有版本的状态
 			JdkVersion.SetVersion([]string{})
-			return nil, nil
+			return nil
 		}
-		return nil, errors.Wrap(err, "agent check jdk dir error")
+		return errors.Wrap(err, "agent check jdk dir error")
 	}
 	nowModTime := stat.ModTime()
 
@@ -232,16 +177,16 @@ func SyncJdkVersion() ([]string, error) {
 		if err != nil {
 			// 拿取错误时直接下载新的
 			logs.Error("syncJdkVersion getJdkVersion err", err)
-			return nil, nil
+			return nil
 		}
 		JdkVersion.SetVersion(version)
 		JdkVersion.JdkFileModTime = nowModTime
-		return version, nil
+		return nil
 	}
 
 	// 判断文件夹最后修改时间，不一致时不用更改
 	if nowModTime == JdkVersion.JdkFileModTime {
-		return JdkVersion.GetVersion(), nil
+		return nil
 	}
 
 	version, err := getJdkVersion()
@@ -249,11 +194,11 @@ func SyncJdkVersion() ([]string, error) {
 		// 拿取错误时直接下载新的
 		logs.Error("syncJdkVersion getJdkVersion err", err)
 		JdkVersion.SetVersion([]string{})
-		return nil, nil
+		return nil
 	}
 	JdkVersion.SetVersion(version)
 	JdkVersion.JdkFileModTime = nowModTime
-	return version, nil
+	return nil
 }
 
 func SyncDockerInitFileMd5() error {
@@ -261,10 +206,7 @@ func SyncDockerInitFileMd5() error {
 		DockerFileMd5.NeedUpgrade = false
 		return nil
 	}
-	DockerFileMd5.Lock.Lock()
-	defer func() {
-		DockerFileMd5.Lock.Unlock()
-	}()
+
 	DockerFileMd5.NeedUpgrade = true
 
 	filePath := config.GetDockerInitFilePath()
@@ -437,8 +379,8 @@ func downloadUpgradeAgent(workDir, upgradeDir string) (agentChanged bool) {
 		return false
 	}
 
-	logs.Info("newDaemonMd5=" + newDaemonMd5 + ",daemonMd5=" + daemonMd5)
-	logs.Info("newAgentMd5=" + newAgentMd5 + ",agentMd5=" + agentMd5)
+	logs.Info("[agentUpgrade]|newDaemonMd5=" + newDaemonMd5 + ",daemonMd5=" + daemonMd5)
+	logs.Info("[agentUpgrade]|newAgentMd5=" + newAgentMd5 + ",agentMd5=" + agentMd5)
 
 	// #5806 增强检测版本，防止下载出错的情况下，意外被替换
 	agentVersion := config.DetectAgentVersionByDir(systemutil.GetUpgradeDir())
@@ -465,7 +407,7 @@ func downloadUpgradeWorker(workDir, upgradeDir string) (workAgentChanged bool) {
 		return false
 	}
 
-	logs.Info("newWorkerMd5=" + newWorkerMd5 + ",workerMd5=" + workerMd5)
+	logs.Info("[agentUpgrade]|newWorkerMd5=" + newWorkerMd5 + ",workerMd5=" + workerMd5)
 
 	workerVersion := config.DetectWorkerVersionByDir(systemutil.GetUpgradeDir())
 	workAgentChanged = false

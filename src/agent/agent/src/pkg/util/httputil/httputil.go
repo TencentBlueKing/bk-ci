@@ -1,6 +1,3 @@
-//go:build out
-// +build out
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -179,5 +176,9 @@ func (r *HttpClient) Execute() *HttpResult {
 	result.Body = body
 	result.Status = resp.StatusCode
 	logs.Info(fmt.Sprintf("url:[%s]|http status: %s, http respBody: %s", r.url, resp.Status, string(body)))
+
+	// 检查 http 错误异常
+	checkHttpStatusErr(resp.StatusCode, body)
+
 	return result
 }

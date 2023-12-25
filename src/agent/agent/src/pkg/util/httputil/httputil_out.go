@@ -28,8 +28,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package pipeline
+package httputil
 
-func RunPipeline(pipelineData map[string]interface{}) {
-	// 为外部出包使用
+func checkHttpStatusErr(status int, body []byte) {
+	// 检查 http 请求报错并添加至 exitcode，外部版暂无
 }

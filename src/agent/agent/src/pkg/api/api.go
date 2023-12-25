@@ -29,78 +29,14 @@ package api
 
 import (
 	"fmt"
-	"runtime"
 	"strconv"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
-	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/httputil"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
 
 func buildUrl(url string) string {
 	return config.GetGateWay() + url
-}
-
-// TODO
-func Heartbeat(
-	buildInfos []ThirdPartyBuildInfo,
-	jdkVersion []string,
-	dockerTaskList []ThirdPartyDockerTaskInfo,
-	dockerInitFileMd5 DockerInitFileInfo,
-) (*httputil.DevopsResult, error) {
-	url := buildUrl("/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/newHeartbeat")
-
-	var taskList []ThirdPartyTaskInfo
-	for _, info := range buildInfos {
-		taskList = append(taskList, ThirdPartyTaskInfo{
-			ProjectId: info.ProjectId,
-			BuildId:   info.BuildId,
-			VmSeqId:   info.VmSeqId,
-			Workspace: info.Workspace,
-		})
-	}
-	agentHeartbeatInfo := &AgentHeartbeatInfo{
-		MasterVersion:     config.AgentVersion,
-		SlaveVersion:      config.GAgentEnv.SlaveVersion,
-		HostName:          config.GAgentEnv.HostName,
-		AgentIp:           config.GAgentEnv.AgentIp,
-		ParallelTaskCount: config.GAgentConfig.ParallelTaskCount,
-		AgentInstallPath:  systemutil.GetExecutableDir(),
-		StartedUser:       systemutil.GetCurrentUser().Username,
-		TaskList:          taskList,
-		Props: AgentPropsInfo{
-			Arch:              runtime.GOARCH,
-			JdkVersion:        jdkVersion,
-			DockerInitFileMd5: dockerInitFileMd5,
-		},
-		DockerParallelTaskCount: config.GAgentConfig.DockerParallelTaskCount,
-		DockerTaskList:          dockerTaskList,
-		ErrorExitData:           exitcode.GetAndResetExitError(),
-	}
-
-	res := httputil.NewHttpClient().Post(url).Body(agentHeartbeatInfo).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute()
-
-	// 可能是发送请求报错了，所以重新再取一遍
-	if exitcode.GetExitError() != nil {
-		exitcode.Exit()
-	}
-
-	return res.IntoDevopsResult()
-}
-
-// TODO
-func CheckUpgrade(jdkVersion []string, dockerInitFileMd5 DockerInitFileInfo) (*httputil.AgentResult, error) {
-	url := buildUrl("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/upgradeNew")
-
-	info := &UpgradeInfo{
-		WorkerVersion:      config.GAgentEnv.SlaveVersion,
-		GoAgentVersion:     config.AgentVersion,
-		JdkVersion:         jdkVersion,
-		DockerInitFileInfo: dockerInitFileMd5,
-	}
-
-	return httputil.NewHttpClient().Post(url).Body(info).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoAgentResult()
 }
 
 func FinishUpgrade(success bool) (*httputil.AgentResult, error) {
@@ -132,27 +68,9 @@ func AgentStartup() (*httputil.DevopsResult, error) {
 	return httputil.NewHttpClient().Post(url).Body(startInfo).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
 }
 
-// TODO
-func GetAgentStatus() (*httputil.DevopsResult, error) {
-	url := buildUrl("/ms/environment/api/buildAgent/agent/thirdPartyAgent/status")
-	return httputil.NewHttpClient().Get(url).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
-}
-
-// TODO
-func GetBuild(buildType BuildJobType) (*httputil.AgentResult, error) {
-	url := buildUrl(fmt.Sprintf("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/startup?buildType=%s", buildType))
-	return httputil.NewHttpClient().Get(url).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoAgentResult()
-}
-
 func WorkerBuildFinish(buildInfo *ThirdPartyBuildWithStatus) (*httputil.DevopsResult, error) {
 	url := buildUrl("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/workerBuildFinish")
 	return httputil.NewHttpClient().Post(url).Body(buildInfo).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
-}
-
-// TODO
-func GetAgentPipeline() (*httputil.DevopsResult, error) {
-	url := buildUrl("/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/pipelines")
-	return httputil.NewHttpClient().Get(url).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
 }
 
 func UpdatePipelineStatus(response *PipelineResponse) (*httputil.DevopsResult, error) {
@@ -164,12 +82,6 @@ func DownloadAgentInstallBatchZip(saveFile string) error {
 	url := buildUrl(fmt.Sprintf("/ms/environment/api/external/thirdPartyAgent/%s/batch_zip",
 		config.GAgentConfig.BatchInstallKey))
 	return httputil.DownloadAgentInstallScript(url, config.GAgentConfig.GetAuthHeaderMap(), saveFile)
-}
-
-// TODO
-func PullDockerDebugTask() (*httputil.AgentResult, error) {
-	url := buildUrl("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/docker/startupDebug")
-	return httputil.NewHttpClient().Get(url).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoAgentResult()
 }
 
 func FinishDockerDebug(imageDebug *ImageDebug, success bool, debugUrl string, error *Error) (*httputil.DevopsResult, error) {
