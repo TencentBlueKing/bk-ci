@@ -308,8 +308,8 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineName = pipelineName,
-            page = page,
-            pageSize = pageSize
+            page = page ?: 1,
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20
         )
     }
 

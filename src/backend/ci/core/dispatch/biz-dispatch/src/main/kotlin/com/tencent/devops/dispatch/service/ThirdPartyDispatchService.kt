@@ -61,7 +61,9 @@ import com.tencent.devops.dispatch.utils.redis.ThirdPartyRedisBuild
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.pojo.SetContextVarData
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.slf4j.LoggerFactory
@@ -282,6 +284,29 @@ class ThirdPartyDispatchService @Autowired constructor(
                 atoms = dispatchMessage.event.atoms
             )
         )
+
+        // 添加上下文关键字 jobs.<job_id>.container.node_alias
+        if (dispatchMessage.event.jobId.isNullOrBlank() || agent.nodeId.isNullOrBlank()) {
+            return
+        }
+        try {
+            val contextVal = client.get(ServiceThirdPartyAgentResource::class).getAgentDetail(
+                userId = dispatchMessage.event.userId,
+                projectId = dispatchMessage.event.projectId,
+                agentHashId = agentId
+            ).data?.displayName ?: ""
+            client.get(ServiceVarResource::class).setContextVar(
+                SetContextVarData(
+                    projectId = dispatchMessage.event.projectId,
+                    pipelineId = dispatchMessage.event.pipelineId,
+                    buildId = dispatchMessage.event.buildId,
+                    contextName = "jobs.${dispatchMessage.event.jobId}.container.node_alias",
+                    contextVal = contextVal
+                )
+            )
+        } catch (e: Exception) {
+            logger.error("inQueue｜setContextVar|error", e)
+        }
     }
 
     private fun saveAgentInfoToBuildDetail(dispatchMessage: DispatchMessage, agent: ThirdPartyAgent) {
