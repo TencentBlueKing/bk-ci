@@ -69,7 +69,9 @@ class WindowsGpuResourceDao {
                     HDISK,
                     IMAGESTANDARD,
                     NODE,
-                    IMAGE
+                    IMAGE,
+                    CPU,
+                    MEMORY
                 ).values(
                     it.cgsId,
                     it.zoneId,
@@ -83,7 +85,9 @@ class WindowsGpuResourceDao {
                     it.hdisk,
                     ByteUtils.bool2Byte(it.imageStandard ?: false),
                     it.node ?: "",
-                    it.image ?: ""
+                    it.image ?: "",
+                    it.cpu ?: "",
+                    it.mem ?: ""
                 ).onDuplicateKeyUpdate()
                     .set(STATUS, it.status)
             }

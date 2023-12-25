@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.dao.ideatom
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TCategory
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TIdeAtom
@@ -348,7 +349,7 @@ class IdeAtomDao {
             .on(a.CLASSIFY_ID.eq(b.ID))
             .join(t)
             .on(a.ATOM_CODE.eq(t.field("atomCode", String::class.java)))
-        if (categoryCodeList != null && categoryCodeList.isNotEmpty()) {
+        if (!categoryCodeList.isNullOrEmpty()) {
             val tc = TCategory.T_CATEGORY.`as`("tc")
             val categoryIdList = dslContext.select(tc.ID)
                 .from(tc)
@@ -366,7 +367,7 @@ class IdeAtomDao {
             baseStep.join(d).on(a.ID.eq(d.ATOM_ID))
             conditions.add(d.LABEL_ID.`in`(labelIdList))
         }
-        return baseStep.where(conditions).fetchOne(0, Long::class.java)!!
+        return baseStep.where(conditions).skipCheck().fetchOne(0, Long::class.java)!!
     }
 
     fun listOpIdeAtoms(
@@ -437,7 +438,9 @@ class IdeAtomDao {
             baseStep.join(d).on(a.ID.eq(d.ATOM_ID))
             conditions.add(d.LABEL_ID.`in`(labelIdList))
         }
-        return baseStep.where(conditions).orderBy(a.UPDATE_TIME.desc()).limit((page - 1) * pageSize, pageSize).fetch()
+        return baseStep.where(conditions).orderBy(a.UPDATE_TIME.desc()).limit((page - 1) * pageSize, pageSize)
+            .skipCheck()
+            .fetch()
     }
 
     private fun generateQueryOpIdeAtomCondition(
