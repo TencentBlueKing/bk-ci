@@ -212,7 +212,7 @@
             },
             handleBuildNoChange (name, value) {
                 this.updateContainerParams('buildNo', {
-                    ...this.buildNo,
+                    ...this.renderBuildNo,
                     [name]: value
                 })
             },
