@@ -108,7 +108,7 @@
 <style lang="scss" scoped>
     .selector-type-param {
         background-color: #FAFBFD;
-        margin: 24px 0;
+        margin-bottom: 24px;
         .option-type {
             height: 40px;
             display: flex;
