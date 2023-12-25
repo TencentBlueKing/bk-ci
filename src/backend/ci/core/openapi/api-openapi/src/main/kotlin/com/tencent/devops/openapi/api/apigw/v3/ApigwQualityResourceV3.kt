@@ -79,7 +79,7 @@ interface ApigwQualityResourceV3 {
         @ApiParam("页目", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页数目(最大100条)", required = false, defaultValue = "20")
+        @ApiParam("每页条数(默认20, 最大100)", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<QualityRuleSummaryWithPermission>>
@@ -182,7 +182,7 @@ interface ApigwQualityResourceV3 {
         @ApiParam("页号", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页数目(最大100条)", required = false, defaultValue = "20")
+        @ApiParam("每页条数(默认20, 最大100)", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<RuleInterceptHistory>>
@@ -221,7 +221,7 @@ interface ApigwQualityResourceV3 {
         @ApiParam("页号", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页数目(最大100条)", required = false, defaultValue = "20")
+        @ApiParam("每页条数(默认20, 最大100)", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<RuleInterceptHistory>>
