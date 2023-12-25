@@ -78,7 +78,7 @@ func doAsk() {
 	for {
 		// Ask请求
 		enable := genAskEnable()
-		heart, upgrad := genHeartInfoAndUpgrade()
+		heart, upgrad := genHeartInfoAndUpgrade(enable.Upgrade)
 		result, err := api.Ask(&api.AskInfo{
 			Enable:  enable,
 			Heart:   heart,

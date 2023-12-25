@@ -13,7 +13,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
 
-func genHeartInfoAndUpgrade() (api.AgentHeartbeatInfo, api.UpgradeInfo) {
+func genHeartInfoAndUpgrade(upgradeEnable bool) (api.AgentHeartbeatInfo, *api.UpgradeInfo) {
 	var taskList []api.ThirdPartyTaskInfo
 	for _, info := range job.GBuildManager.GetInstances() {
 		taskList = append(taskList, api.ThirdPartyTaskInfo{
@@ -36,30 +36,34 @@ func genHeartInfoAndUpgrade() (api.AgentHeartbeatInfo, api.UpgradeInfo) {
 		NeedUpgrade: upgrade.DockerFileMd5.NeedUpgrade,
 	}
 
-	return api.AgentHeartbeatInfo{
-			MasterVersion:     config.AgentVersion,
-			SlaveVersion:      config.GAgentEnv.SlaveVersion,
-			HostName:          config.GAgentEnv.HostName,
-			AgentIp:           config.GAgentEnv.AgentIp,
-			ParallelTaskCount: config.GAgentConfig.ParallelTaskCount,
-			AgentInstallPath:  systemutil.GetExecutableDir(),
-			StartedUser:       systemutil.GetCurrentUser().Username,
-			TaskList:          taskList,
-			Props: api.AgentPropsInfo{
-				Arch:              runtime.GOARCH,
-				JdkVersion:        jdkVersion,
-				DockerInitFileMd5: dockerInitFile,
-			},
-			DockerParallelTaskCount: config.GAgentConfig.DockerParallelTaskCount,
-			DockerTaskList:          job.GBuildDockerManager.GetInstances(),
-			ErrorExitData:           exitcode.GetAndResetExitError(),
-		},
-		api.UpgradeInfo{
+	var upg *api.UpgradeInfo = nil
+	if upgradeEnable {
+		upg = &api.UpgradeInfo{
 			WorkerVersion:      config.GAgentEnv.SlaveVersion,
 			GoAgentVersion:     config.AgentVersion,
 			JdkVersion:         jdkVersion,
 			DockerInitFileInfo: dockerInitFile,
 		}
+	}
+
+	return api.AgentHeartbeatInfo{
+		MasterVersion:     config.AgentVersion,
+		SlaveVersion:      config.GAgentEnv.SlaveVersion,
+		HostName:          config.GAgentEnv.HostName,
+		AgentIp:           config.GAgentEnv.AgentIp,
+		ParallelTaskCount: config.GAgentConfig.ParallelTaskCount,
+		AgentInstallPath:  systemutil.GetExecutableDir(),
+		StartedUser:       systemutil.GetCurrentUser().Username,
+		TaskList:          taskList,
+		Props: api.AgentPropsInfo{
+			Arch:              runtime.GOARCH,
+			JdkVersion:        jdkVersion,
+			DockerInitFileMd5: dockerInitFile,
+		},
+		DockerParallelTaskCount: config.GAgentConfig.DockerParallelTaskCount,
+		DockerTaskList:          job.GBuildDockerManager.GetInstances(),
+		ErrorExitData:           exitcode.GetAndResetExitError(),
+	}, upg
 }
 
 func genAskEnable() api.AskEnable {

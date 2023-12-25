@@ -233,13 +233,13 @@ type ImageDebugFinish struct {
 type AskInfo struct {
 	Enable  AskEnable          `json:"askEnable"`
 	Heart   AgentHeartbeatInfo `json:"heartbeat"`
-	Upgrade UpgradeInfo        `json:"upgrade"`
+	Upgrade *UpgradeInfo       `json:"upgrade"`
 }
 
 type AskEnable struct {
 	Build       BuildJobType `json:"build"`
 	Upgrade     bool         `json:"upgrade"`
-	DockerDebug bool         `json:"dockerBuild"`
+	DockerDebug bool         `json:"dockerDebug"`
 	Pipeline    bool         `json:"pipeline"`
 }
 
