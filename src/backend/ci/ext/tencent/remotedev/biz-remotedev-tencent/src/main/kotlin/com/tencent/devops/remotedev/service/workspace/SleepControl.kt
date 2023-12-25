@@ -302,7 +302,7 @@ class SleepControl @Autowired constructor(
                 val transactionContext = DSL.using(configuration)
                 workspaceDao.updateWorkspaceStatus(
                     workspaceName = workspaceName,
-                    status = WorkspaceStatus.SLEEP,
+                    status = WorkspaceStatus.STOPPED,
                     dslContext = transactionContext
                 )
                 workspaceOpHistoryDao.createWorkspaceHistory(
@@ -313,7 +313,7 @@ class SleepControl @Autowired constructor(
                     actionMessage = String.format(
                         workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
                         workspace.status.name,
-                        WorkspaceStatus.SLEEP.name
+                        WorkspaceStatus.STOPPED.name
                     )
                 )
             }
