@@ -190,7 +190,6 @@ class PipelineViewGroupService @Autowired constructor(
         ActionAuditContext.current()
             .setInstanceId(viewId.toString())
             .setInstanceName(pipelineView.name)
-            .setOriginInstance(getView(userId, projectId, viewIdEncode))
             .setInstance(pipelineView)
         // 更新视图
         var result = false
