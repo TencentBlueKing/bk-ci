@@ -102,10 +102,8 @@ class NotifyMessageTemplateDao {
         commonTemplateId: String
     ): TWechatNotifyMessageTemplateRecord? {
         with(TWechatNotifyMessageTemplate.T_WECHAT_NOTIFY_MESSAGE_TEMPLATE) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(COMMON_TEMPLATE_ID.contains(commonTemplateId))
             return dslContext.selectFrom(this)
-                .where(conditions)
+                .where(COMMON_TEMPLATE_ID.eq(commonTemplateId))
                 .fetchOne()
         }
     }
@@ -151,7 +149,7 @@ class NotifyMessageTemplateDao {
     ): TEmailsNotifyMessageTemplateRecord? {
         with(TEmailsNotifyMessageTemplate.T_EMAILS_NOTIFY_MESSAGE_TEMPLATE) {
             return dslContext.selectFrom(this)
-                .where(this.COMMON_TEMPLATE_ID.eq(commonTemplateId))
+                .where(COMMON_TEMPLATE_ID.eq(commonTemplateId))
                 .fetchOne()
         }
     }
@@ -166,10 +164,8 @@ class NotifyMessageTemplateDao {
         commonTemplateId: String
     ): TWeworkNotifyMessageTemplateRecord? {
         with(TWeworkNotifyMessageTemplate.T_WEWORK_NOTIFY_MESSAGE_TEMPLATE) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(COMMON_TEMPLATE_ID.contains(commonTemplateId))
             return dslContext.selectFrom(this)
-                .where(conditions)
+                .where(COMMON_TEMPLATE_ID.eq(commonTemplateId))
                 .fetchOne()
         }
     }
