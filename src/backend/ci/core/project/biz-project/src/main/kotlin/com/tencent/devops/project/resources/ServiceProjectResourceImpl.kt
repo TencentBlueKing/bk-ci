@@ -100,7 +100,7 @@ class ServiceProjectResourceImpl @Autowired constructor(
     }
 
     override fun listByProjectCode(projectCodes: Set<String>): Result<List<ProjectVO>> {
-        return Result(projectService.list(projectCodes))
+        return Result(projectService.list(projectCodes = projectCodes, enabled = true))
     }
 
     override fun listOnlyByProjectCode(projectCodes: Set<String>): Result<List<ProjectVO>> {
