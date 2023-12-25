@@ -781,20 +781,39 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun list(projectCodes: Set<String>): List<ProjectVO> {
+    override fun list(
+        projectCodes: Set<String>,
+        enabled: Boolean?
+    ): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            val list = ArrayList<ProjectVO>()
-            projectDao.listByCodes(dslContext, projectCodes, enabled = true).map {
-                list.add(ProjectUtils.packagingBean(it))
-            }
             success = true
-            return list
+            return projectDao.listByCodes(
+                dslContext = dslContext,
+                projectCodeList = projectCodes,
+                enabled = enabled
+            ).map {
+                ProjectUtils.packagingBean(it)
+            }
         } finally {
             projectJmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
         }
+    }
+
+    override fun listByOpen(
+        token: String,
+        projectCodes: Set<String>
+    ): List<ProjectVO> {
+        if (token != clientTokenService.getSystemToken()) {
+            logger.warn("auth token fail: $token")
+            throw TokenForbiddenException("token check fail")
+        }
+        return list(
+            projectCodes = projectCodes,
+            enabled = null
+        )
     }
 
     override fun listOnlyByProjectCode(projectCodes: Set<String>): List<ProjectVO> {

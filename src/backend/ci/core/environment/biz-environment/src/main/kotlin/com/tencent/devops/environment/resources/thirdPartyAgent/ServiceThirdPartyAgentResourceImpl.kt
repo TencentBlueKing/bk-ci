@@ -31,6 +31,7 @@ import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
@@ -40,6 +41,7 @@ import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
+import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentDetail
@@ -153,11 +155,13 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
             } else {
                 list.sortedBy { it.pipelineName }
             }
+
             "lastBuildTime" -> if (sortDirection == "DESC") {
                 list.sortedByDescending { it.lastBuildTime }
             } else {
                 list.sortedBy { it.lastBuildTime }
             }
+
             else -> list
         }
     }
@@ -198,8 +202,49 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
                 nodeName,
                 listOf(NodeType.THIRDPARTY.name)
             ).firstOrNull()?.nodeHashId
+
             else -> null
         } ?: throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_NAME_OR_ID_INVALID)
         return Result(thirdPartyAgentService.getAgentDetail(userId, projectId, hashId))
+    }
+
+    override fun listAgentBuilds(
+        userId: String,
+        projectId: String,
+        nodeHashId: String?,
+        nodeName: String?,
+        agentHashId: String?,
+        status: String?,
+        pipelineId: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<AgentBuildDetail>> {
+        val hashId = when {
+            nodeHashId != null -> nodeHashId
+            nodeName != null -> nodeService.getByDisplayName(
+                userId,
+                projectId,
+                nodeName,
+                listOf(NodeType.THIRDPARTY.name)
+            ).firstOrNull()?.nodeHashId
+
+            agentHashId != null -> thirdPartyAgentService.getAgent(
+                projectId = projectId,
+                agentHashId
+            ).data?.nodeId
+
+            else -> null
+        } ?: throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_NAME_OR_ID_INVALID)
+        return Result(
+            thirdPartyAgentService.listAgentBuilds(
+                userId = userId,
+                projectId = projectId,
+                nodeHashId = hashId,
+                status = status,
+                pipelineId = pipelineId,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 }

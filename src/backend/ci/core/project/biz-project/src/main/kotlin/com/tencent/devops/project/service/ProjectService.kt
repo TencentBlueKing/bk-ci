@@ -182,7 +182,12 @@ interface ProjectService {
 
     fun list(userId: String): List<ProjectVO>
 
-    fun list(projectCodes: Set<String>): List<ProjectVO>
+    fun list(projectCodes: Set<String>, enabled: Boolean?): List<ProjectVO>
+
+    fun listByOpen(
+        token: String,
+        projectCodes: Set<String>
+    ): List<ProjectVO>
 
     fun listOnlyByProjectCode(projectCodes: Set<String>): List<ProjectVO>
 

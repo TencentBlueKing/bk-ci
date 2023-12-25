@@ -237,6 +237,9 @@ class YamlTemplate<T>(
         if (preYamlObject.name.isNullOrBlank()) {
             preYamlObject.name = newYaml.name
         }
+        if (preYamlObject.concurrency == null && newYaml.concurrency != null) {
+            preYamlObject.concurrency = newYaml.concurrency
+        }
     }
 
     private fun replaceVariables(

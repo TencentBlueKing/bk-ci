@@ -734,9 +734,7 @@ CREATE TABLE IF NOT EXISTS `T_STORE_APPROVE`
     `UPDATE_TIME` datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
     `TOKEN` varchar(64) DEFAULT NULL,
     PRIMARY KEY (`ID`),
-    KEY `inx_tsa_applicant` (`APPLICANT`),
-    KEY `inx_tsa_type` (`TYPE`),
-    KEY `inx_tsa_status` (`STATUS`)
+    KEY `inx_tsa_store_code` (`STORE_CODE`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT='审核表';
 
