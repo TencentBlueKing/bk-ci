@@ -59,16 +59,5 @@ enum class TGitMrEventAction(val value: String) {
                 else -> null
             }
         }
-
-        fun getActionValue(event: GithubPullRequestEvent): String? {
-            return when {
-                event.isMerged() -> MERGE.value
-                event.action == "opened" -> OPEN.value
-                event.action == "reopened" -> REOPEN.value
-                event.action == "synchronize" -> PUSH_UPDATE.value
-                event.action == "close" -> CLOSE.value
-                else -> null
-            }
-        }
     }
 }

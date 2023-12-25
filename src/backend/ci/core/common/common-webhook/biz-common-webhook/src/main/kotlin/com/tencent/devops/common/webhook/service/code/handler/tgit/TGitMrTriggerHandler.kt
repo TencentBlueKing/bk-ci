@@ -73,8 +73,8 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
-import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.EventCacheService
+import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
@@ -195,7 +195,6 @@ class TGitMrTriggerHandler(
         return WebhookMatchResult(true)
     }
 
-    @SuppressWarnings("LongMethod")
     override fun getEventFilters(
         event: GitMergeRequestEvent,
         projectId: String,
@@ -205,12 +204,6 @@ class TGitMrTriggerHandler(
     ): List<WebhookFilter> {
         with(webHookParams) {
             val userId = getUsername(event)
-            val eventActionFilter = ContainsFilter(
-                pipelineId = pipelineId,
-                included = getMergeTriggerAction(),
-                triggerOn = TGitMrEventAction.getActionValue(event) ?: "",
-                filterName = "mrActionFilter"
-            )
             val userFilter = UserFilter(
                 pipelineId = pipelineId,
                 triggerOnUser = getUsername(event),
@@ -319,7 +312,7 @@ class TGitMrTriggerHandler(
                 callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry
             )
             return listOf(
-                eventActionFilter, userFilter, targetBranchFilter,
+                userFilter, targetBranchFilter,
                 sourceBranchFilter, skipCiFilter, pathFilter,
                 commitMessageFilter, actionFilter, thirdFilter
             )

@@ -33,7 +33,8 @@ import org.slf4j.LoggerFactory
 class EventTypeFilter(
     private val pipelineId: String,
     private val triggerOnEventType: CodeEventType,
-    private val eventType: CodeEventType?
+    private val eventType: CodeEventType?,
+    private val action: String? = null
 ) : WebhookFilter {
 
     companion object {
@@ -42,19 +43,39 @@ class EventTypeFilter(
 
     override fun doFilter(response: WebhookFilterResponse): Boolean {
         logger.info(
-            "$pipelineId|triggerOnEventType:$triggerOnEventType|eventType:$eventType|eventType filter"
+            "$pipelineId|triggerOnEventType:$triggerOnEventType|eventType:$eventType|action:$action|eventType filter"
         )
         return when (eventType) {
             null -> true
-            CodeEventType.MERGE_REQUEST, CodeEventType.MERGE_REQUEST_ACCEPT -> {
-                triggerOnEventType == CodeEventType.MERGE_REQUEST
-            }
-
-            CodeEventType.PULL_REQUEST, CodeEventType.PULL_REQUEST_ACCEPT -> {
-                triggerOnEventType == CodeEventType.PULL_REQUEST
-            }
-
-            else -> eventType == triggerOnEventType
+            CodeEventType.MERGE_REQUEST, CodeEventType.MERGE_REQUEST_ACCEPT ->
+                isAllowedByMrAction()
+            else ->
+                isAllowedByEventType()
         }
+    }
+
+    private fun isAllowedByEventType(): Boolean {
+        return eventType == triggerOnEventType
+    }
+
+    private fun isAllowedByMrAction(): Boolean {
+        if (triggerOnEventType != CodeEventType.MERGE_REQUEST ||
+            isMrAndMergeAction() ||
+            isMrAcceptNotMergeAction()
+        ) {
+            logger.warn(
+                "$pipelineId|Git mr web hook not match with triggerOnEventType($triggerOnEventType) or action($action)"
+            )
+            return false
+        }
+        return true
+    }
+
+    private fun isMrAndMergeAction(): Boolean {
+        return eventType == CodeEventType.MERGE_REQUEST && action == "merge"
+    }
+
+    private fun isMrAcceptNotMergeAction(): Boolean {
+        return eventType == CodeEventType.MERGE_REQUEST_ACCEPT && action != "merge"
     }
 }

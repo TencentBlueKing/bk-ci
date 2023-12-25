@@ -90,7 +90,8 @@ interface GitHookTriggerHandler<T : CodeWebhookEvent> : CodeWebhookTriggerHandle
             val eventTypeFilter = EventTypeFilter(
                 pipelineId = pipelineId,
                 triggerOnEventType = getEventType(),
-                eventType = eventType
+                eventType = eventType,
+                action = getAction(event)
             )
             return listOf(urlFilter, eventTypeFilter)
         }
