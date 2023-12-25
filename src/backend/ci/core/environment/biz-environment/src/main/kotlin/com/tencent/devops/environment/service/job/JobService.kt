@@ -4,11 +4,13 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VAL
 import com.tencent.devops.environment.pojo.job.agentreq.AgentCondition
 import com.tencent.devops.environment.pojo.job.agentreq.AgentHostForInstallAgent
 import com.tencent.devops.environment.pojo.job.agentreq.AgentInstallAgentReq
-import com.tencent.devops.environment.pojo.job.agentreq.AgentQueryAgentStatusReq
+import com.tencent.devops.environment.pojo.job.agentreq.AgentQueryAgentStatusFromJobReq
+import com.tencent.devops.environment.pojo.job.agentreq.AgentQueryAgentStatusFromNodemanReq
 import com.tencent.devops.environment.pojo.job.agentreq.AgentQueryAgentTaskLogResult
 import com.tencent.devops.environment.pojo.job.agentreq.AgentQueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.agentreq.AgentRetryAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentreq.AgentTerminalAgentInstallTaskReq
+import com.tencent.devops.environment.pojo.job.agentreq.Condition
 import com.tencent.devops.environment.pojo.job.req.CreateAccountReq
 import com.tencent.devops.environment.pojo.job.req.DeleteAccountReq
 import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudDeleteAccountResult
@@ -37,19 +39,22 @@ import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudCreateAccount
 import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudGetStepInstanceDetailResult
 import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudGetStepInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.agentreq.InstallAgentReq
-import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentStatusReq
+import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentStatusFromJobReq
+import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentStatusFromNodemanReq
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLogResult
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentreq.TerminalAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentInfo
 import com.tencent.devops.environment.pojo.job.agentres.AgentInstallAgentResult
-import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentStatusResult
+import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentStatusFromJobResult
+import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentStatusFromNodemanResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentTaskStatusResult
 import com.tencent.devops.environment.pojo.job.resp.Account
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentRetryAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentTerminalAgentInstallTaskResult
+import com.tencent.devops.environment.pojo.job.agentres.FilterHostInfo
 import com.tencent.devops.environment.pojo.job.agentres.HostDetail
 import com.tencent.devops.environment.pojo.job.resp.ApprovalStepInfo
 import com.tencent.devops.environment.pojo.job.resp.AuthorizedAccount
@@ -73,7 +78,8 @@ import com.tencent.devops.environment.pojo.job.agentres.Meta
 import com.tencent.devops.environment.pojo.job.resp.JobInstance
 import com.tencent.devops.environment.pojo.job.resp.JobResult
 import com.tencent.devops.environment.pojo.job.resp.JobStepInstance
-import com.tencent.devops.environment.pojo.job.agentres.QueryAgentStatusResult
+import com.tencent.devops.environment.pojo.job.agentres.QueryAgentStatusFromJobResult
+import com.tencent.devops.environment.pojo.job.agentres.QueryAgentStatusFromNodemanResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.agentres.Statistics
@@ -839,30 +845,81 @@ class JobService @Autowired constructor(
         return queryAgentTaskStatusRes
     }
 
-    fun queryAgentStatus(
+    fun queryAgentStatusFromJob(
         userId: String,
         projectId: String,
-        queryAgentStatusReq: QueryAgentStatusReq
-    ): AgentResult<QueryAgentStatusResult> {
+        queryAgentStatusFromJobReq: QueryAgentStatusFromJobReq
+    ): AgentResult<QueryAgentStatusFromJobResult> {
         AgentApi.setThreadLocal("queryAgentStatus")
-        val queryAgentStatusRequest = AgentQueryAgentStatusReq(
-            hostIdList = queryAgentStatusReq.hostIdList
+        val queryAgentStatusFromJobRequest = AgentQueryAgentStatusFromJobReq(
+            hostIdList = queryAgentStatusFromJobReq.hostIdList
         )
-        val agentQueryAgentStatusRes: AgentResult<AgentQueryAgentStatusResult> = agentApi.executePostRequest(
-            queryAgentStatusRequest, AgentQueryAgentStatusResult::class.java
-        )
-        val queryAgentStatusRes: AgentResult<QueryAgentStatusResult> = AgentResult(
-            code = agentQueryAgentStatusRes.code,
-            result = agentQueryAgentStatusRes.result,
-            message = agentQueryAgentStatusRes.message,
-            errors = agentQueryAgentStatusRes.errors,
-            data = agentQueryAgentStatusRes.data?.let {
-                QueryAgentStatusResult(
+        val agentQueryAgentStatusFromJobRes: AgentResult<AgentQueryAgentStatusFromJobResult> =
+            agentApi.executePostRequest(
+                queryAgentStatusFromJobRequest, AgentQueryAgentStatusFromJobResult::class.java
+            )
+        val queryAgentStatusFromJobRes: AgentResult<QueryAgentStatusFromJobResult> = AgentResult(
+            code = agentQueryAgentStatusFromJobRes.code,
+            result = agentQueryAgentStatusFromJobRes.result,
+            message = agentQueryAgentStatusFromJobRes.message,
+            errors = agentQueryAgentStatusFromJobRes.errors,
+            data = agentQueryAgentStatusFromJobRes.data?.let {
+                QueryAgentStatusFromJobResult(
                     agentInfoList = it.agentInfoList.map { agentInfo ->
                         AgentInfo(
                             bkHostId = agentInfo.bkHostId,
                             status = agentInfo.status,
                             version = agentInfo.version
+                        )
+                    }
+                )
+            }
+        )
+        return queryAgentStatusFromJobRes
+    }
+
+    fun queryAgentStatusFromNodeman(
+        userId: String,
+        projectId: String,
+        queryAgentStatusFromNodemanReq: QueryAgentStatusFromNodemanReq
+    ): AgentResult<QueryAgentStatusFromNodemanResult> {
+        AgentApi.setThreadLocal("queryAgentStatusFromNodeman")
+        val queryAgentStatusFromNodemanRequest = AgentQueryAgentStatusFromNodemanReq(
+            bkHostId = queryAgentStatusFromNodemanReq.bkHostId,
+            conditions = queryAgentStatusFromNodemanReq.conditions?.map {
+                AgentCondition(key = it.key, value = it.value)
+            },
+            extraData = queryAgentStatusFromNodemanReq.extraData,
+            pagesize = queryAgentStatusFromNodemanReq.pagesize,
+            page = queryAgentStatusFromNodemanReq.page,
+            onlyIp = queryAgentStatusFromNodemanReq.onlyIp,
+            runningCount = queryAgentStatusFromNodemanReq.runningCount
+        )
+        val agentQueryAgentStatusRes: AgentResult<AgentQueryAgentStatusFromNodemanResult> = agentApi.executePostRequest(
+            queryAgentStatusFromNodemanRequest, AgentQueryAgentStatusFromNodemanResult::class.java
+        )
+        val queryAgentStatusRes: AgentResult<QueryAgentStatusFromNodemanResult> = AgentResult(
+            code = agentQueryAgentStatusRes.code,
+            result = agentQueryAgentStatusRes.result,
+            message = agentQueryAgentStatusRes.message,
+            errors = agentQueryAgentStatusRes.errors,
+            data = agentQueryAgentStatusRes.data?.let {
+                QueryAgentStatusFromNodemanResult(
+                    total = it.total,
+                    list = it.list.map { filterHostInfo->
+                        FilterHostInfo(
+                            filterHost=filterHostInfo.filterHost,
+                            bkHostId=filterHostInfo.bkHostId,
+                            ip=filterHostInfo.ip,
+                            innerIp=filterHostInfo.innerIp,
+                            innerIpv6=filterHostInfo.innerIpv6,
+                            bkCloudId=filterHostInfo.bkCloudId,
+                            bkCloudName=filterHostInfo.bkCloudName,
+                            bkBizId=filterHostInfo.bkBizId,
+                            bkBizName=filterHostInfo.bkBizName,
+                            jobId=filterHostInfo.jobId,
+                            status=filterHostInfo.status,
+                            statusDisplay=filterHostInfo.statusDisplay
                         )
                     }
                 )

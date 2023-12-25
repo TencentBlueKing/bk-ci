@@ -25,31 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.model
+package com.tencent.devops.environment.pojo.job.agentres
 
-import java.time.LocalDateTime
+import io.swagger.annotations.ApiModelProperty
 
-data class CreateNodeModel(
-    var nodeStringId: String? = "",
-    var projectId: String,
-    var nodeIp: String = "",
-    var nodeName: String = "",
-    var nodeStatus: String = "",
-    var nodeType: String = "",
-    var nodeClusterId: String? = null,
-    var nodeNamespace: String? = null,
-    var createdUser: String = "",
-    var expireTime: LocalDateTime? = null,
-    var osName: String? = null,
-    var operator: String? = null,
-    var bakOperator: String? = null,
-    var agentStatus: Boolean = false,
-    var agentVersion: String = "",
-    var displayName: String = "",
-    var image: String? = "",
-    var taskId: Long? = null,
-    var pipelineRefCount: Int = 0,
-    var lastBuildTime: LocalDateTime? = null,
-    var hostId: Long?,
-    var cloudAreaId: Long? = 0
+data class QueryAgentStatusFromJobResult(
+    @ApiModelProperty(value = "Agent信息列表。若传入的host_id在返回结果的列表中不存在，则表示未查询到该主机的agent信息")
+    val agentInfoList: List<AgentInfo>
 )

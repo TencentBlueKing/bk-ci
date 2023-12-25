@@ -25,31 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.model
+package com.tencent.devops.environment.pojo.job.agentreq
 
-import java.time.LocalDateTime
+import io.swagger.annotations.ApiModelProperty
 
-data class CreateNodeModel(
-    var nodeStringId: String? = "",
-    var projectId: String,
-    var nodeIp: String = "",
-    var nodeName: String = "",
-    var nodeStatus: String = "",
-    var nodeType: String = "",
-    var nodeClusterId: String? = null,
-    var nodeNamespace: String? = null,
-    var createdUser: String = "",
-    var expireTime: LocalDateTime? = null,
-    var osName: String? = null,
-    var operator: String? = null,
-    var bakOperator: String? = null,
-    var agentStatus: Boolean = false,
-    var agentVersion: String = "",
-    var displayName: String = "",
-    var image: String? = "",
-    var taskId: Long? = null,
-    var pipelineRefCount: Int = 0,
-    var lastBuildTime: LocalDateTime? = null,
-    var hostId: Long?,
-    var cloudAreaId: Long? = 0
+data class QueryAgentStatusFromJobReq(
+    @ApiModelProperty(value = "主机ID数组，单次查询主机数量不可超过5000")
+    val hostIdList: List<Int>
 )

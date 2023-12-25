@@ -25,31 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.model
+package com.tencent.devops.environment.pojo.job.agentreq
 
-import java.time.LocalDateTime
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
-data class CreateNodeModel(
-    var nodeStringId: String? = "",
-    var projectId: String,
-    var nodeIp: String = "",
-    var nodeName: String = "",
-    var nodeStatus: String = "",
-    var nodeType: String = "",
-    var nodeClusterId: String? = null,
-    var nodeNamespace: String? = null,
-    var createdUser: String = "",
-    var expireTime: LocalDateTime? = null,
-    var osName: String? = null,
-    var operator: String? = null,
-    var bakOperator: String? = null,
-    var agentStatus: Boolean = false,
-    var agentVersion: String = "",
-    var displayName: String = "",
-    var image: String? = "",
-    var taskId: Long? = null,
-    var pipelineRefCount: Int = 0,
-    var lastBuildTime: LocalDateTime? = null,
-    var hostId: Long?,
-    var cloudAreaId: Long? = 0
+data class AgentQueryAgentStatusFromNodemanReq(
+    @ApiModelProperty(value = "主机ID")
+    @JsonProperty("bk_host_id")
+    val bkHostId: List<Int>?,
+    @ApiModelProperty(value = "搜索条件")
+    @JsonProperty("bk_host_id")
+    val conditions: List<AgentCondition<List<String>>>?,
+    @ApiModelProperty(value = "展示额外信息")
+    @JsonProperty("extra_data")
+    val extraData: List<String>?,
+    @ApiModelProperty(value = "分页大小，默认为10")
+    val pagesize: Int?,
+    @ApiModelProperty(value = "当前页数，默认为1")
+    val page: Int?,
+    @ApiModelProperty(value = "只返回IP，不返回其他字段")
+    @JsonProperty("only_ip")
+    val onlyIp: Boolean?,
+    @ApiModelProperty(value = "是否只返回运行状态统计")
+    @JsonProperty("running_count")
+    val runningCount: Boolean?
 )

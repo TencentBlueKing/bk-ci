@@ -30,7 +30,7 @@ package com.tencent.devops.environment.pojo.job.agentreq
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
-data class AgentQueryAgentStatusReq(
+data class AgentQueryAgentStatusFromJobReq(
     @ApiModelProperty(value = "主机ID数组，单次查询主机数量不可超过5000")
     @JsonProperty("host_id_list")
     val hostIdList: List<Int>

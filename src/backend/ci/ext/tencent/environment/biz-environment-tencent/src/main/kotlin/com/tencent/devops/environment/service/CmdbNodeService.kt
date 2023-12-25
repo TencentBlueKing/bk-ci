@@ -46,6 +46,7 @@ import com.tencent.devops.environment.pojo.job.NodeAgent
 import com.tencent.devops.environment.pojo.job.ccres.CCInfo
 import com.tencent.devops.environment.pojo.job.ccres.CCResp
 import com.tencent.devops.environment.pojo.job.ccres.QueryCCListHostWithoutBizData
+import com.tencent.devops.environment.service.job.QueryAgentStatusService
 import com.tencent.devops.environment.service.job.QueryFromCCService
 import com.tencent.devops.environment.service.job.QueryFromCCService.Companion.FIELD_BK_HOST_ID
 import com.tencent.devops.environment.service.job.QueryFromCCService.Companion.FIELD_BK_HOST_INNERIP
@@ -66,7 +67,8 @@ class CmdbNodeService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val esbAgentClient: EsbAgentClient,
     private val environmentPermissionService: EnvironmentPermissionService,
-    private val queryFromCCService: QueryFromCCService
+    private val queryFromCCService: QueryFromCCService,
+    private val queryAgentStatusService: QueryAgentStatusService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(CmdbNodeService::class.java)
@@ -147,6 +149,7 @@ class CmdbNodeService @Autowired constructor(
         val queryCCIpToCCInfoMap = addNodeToCC(toAddIpToCmdbNodeMap)
 
         val agentStatusMap = esbAgentClient.getAgentStatus(userId, toAddIpList)
+        val agentVersionMap = queryAgentStatusService.getAgentVersions() // TODO
         val toAddNodeList = toAddIpList.map {
             val cmdbNode = cmdbIpToNodeMap[it]!!
             CreateNodeModel(
@@ -161,6 +164,7 @@ class CmdbNodeService @Autowired constructor(
                 operator = cmdbNode.operator,
                 bakOperator = cmdbNode.bakOperator,
                 agentStatus = agentStatusMap[cmdbNode.ip] ?: false,
+                agentVersion = "", // TODO
                 hostId = queryCCIpToCCInfoMap[cmdbNode.ip]?.bkHostId,
                 cloudAreaId = DEFAULT_CLOUD_AREA_ID
             )

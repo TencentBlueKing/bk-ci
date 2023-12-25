@@ -27,11 +27,11 @@
 
 package com.tencent.devops.environment.pojo.job.agentres
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
-data class AgentQueryAgentStatusResult(
-    @ApiModelProperty(value = "Agent信息列表。若传入的host_id在返回结果的列表中不存在，则表示未查询到该主机的agent信息")
-    @JsonProperty("agent_info_list")
-    val agentInfoList: List<AgentInfo>
+data class AgentQueryAgentStatusFromNodemanResult(
+    @ApiModelProperty(value = "实例记录数量总和")
+    val total: Int,
+    @ApiModelProperty(value = "过滤的主机详细信息列表")
+    val list: List<AgentFilterHostInfo>
 )

@@ -67,6 +67,9 @@ class AgentApi {
     @Value("\${job.queryAgentStatusPath:#{\"/api/v3/query_agent_info\"}}")
     private val queryAgentStatusPath = ""
 
+    @Value("\${job.queryAgentStatusFromNodemanPath:#{\"/search\"}}")
+    private val queryAgentStatusFromNodemanPath = ""
+
     @Value("\${job.queryAgentTaskLogPath:#{\"/log\"}}") // 前面要拼 /job/{jobId}
     private val queryAgentTaskLogPath = ""
 
@@ -79,6 +82,7 @@ class AgentApi {
     companion object {
         private const val LOG_OUTPUT_MAX_LENGTH = 4000
         private const val JOB_PERFIX = "/job"
+        private const val HOST_PERFIX = "/host"
         private const val QUERY_AGENT_LOG = "/?instance_id=%s"
 
         private val logger = LoggerFactory.getLogger(AgentApi::class.java)
@@ -209,8 +213,9 @@ class AgentApi {
             "queryAgentTaskLog" -> nodemanApiBaseUrl + JOB_PERFIX + jobId + queryAgentTaskLogPath
             "terminalAgentInstallTask" -> nodemanApiBaseUrl + JOB_PERFIX + jobId + terminalAgentInstallTaskPath
             "retryAgentInstallTask" -> nodemanApiBaseUrl + JOB_PERFIX + jobId + retryAgentInstallTaskPath
+            "queryAgentStatusFromNodeman" -> nodemanApiBaseUrl + HOST_PERFIX + queryAgentStatusFromNodemanPath
 
-            "queryAgentStatus" -> jobCloudApiBaseUrl + queryAgentStatusPath
+            "queryAgentStatusFromJob" -> jobCloudApiBaseUrl + queryAgentStatusPath
 
             else -> ""
         }

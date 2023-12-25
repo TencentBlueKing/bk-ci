@@ -25,11 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo.job.agentreq
+package com.tencent.devops.environment.pojo.job.agentres
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
-data class QueryAgentStatusReq(
-    @ApiModelProperty(value = "主机ID数组，单次查询主机数量不可超过5000")
-    val hostIdList: List<Int>
+data class FilterHostInfo(
+    @ApiModelProperty(value = "是否存在过滤的主机")
+    val filterHost: Boolean?,
+    @ApiModelProperty(value = "主机ID")
+    val bkHostId: Int?,
+    @ApiModelProperty(value = "主机IP地址")
+    val ip: String?,
+    @ApiModelProperty(value = "主机内网IPV4地址")
+    val innerIp: String?,
+    @ApiModelProperty(value = "主机内网IPV6地址")
+    val innerIpv6: String?,
+    @ApiModelProperty(value = "管控区域ID")
+    val bkCloudId: Int?,
+    @ApiModelProperty(value = "管控区域名称")
+    val bkCloudName: String?,
+    @ApiModelProperty(value = "业务ID")
+    val bkBizId: Int?,
+    @ApiModelProperty(value = "业务名称")
+    val bkBizName: String?,
+    @ApiModelProperty(value = "任务ID")
+    val jobId: Int?,
+    @ApiModelProperty(value = "任务执行状态")
+    val status: String?,
+    @ApiModelProperty(value = "任务执行状态名称")
+    val statusDisplay: String?
 )

@@ -3,7 +3,8 @@ package com.tencent.devops.environment.api.job
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.environment.pojo.job.agentreq.InstallAgentReq
-import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentStatusReq
+import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentStatusFromJobReq
+import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentStatusFromNodemanReq
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLogResult
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.req.QueryJobInstanceLogsReq
@@ -17,7 +18,8 @@ import com.tencent.devops.environment.pojo.job.resp.JobResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskStatusResult
 import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceLogsResult
-import com.tencent.devops.environment.pojo.job.agentres.QueryAgentStatusResult
+import com.tencent.devops.environment.pojo.job.agentres.QueryAgentStatusFromJobResult
+import com.tencent.devops.environment.pojo.job.agentres.QueryAgentStatusFromNodemanResult
 import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
 import io.swagger.annotations.Api
@@ -158,10 +160,10 @@ interface UserJobResource {
         queryAgentTaskStatusReq: QueryAgentTaskStatusReq
     ): AgentResult<QueryAgentTaskStatusResult>
 
-    @ApiOperation("查询agent状态的接口")
+    @ApiOperation("查询agent状态的接口 - 从job查询")
     @POST
     @Path("/{projectId}/query_agent_status")
-    fun queryAgentStatus(
+    fun queryAgentStatusFromJob(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -169,8 +171,22 @@ interface UserJobResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "查询agent状态的请求信息", required = true)
-        queryAgentStatusReq: QueryAgentStatusReq
-    ): AgentResult<QueryAgentStatusResult>
+        queryAgentStatusFromJobReq: QueryAgentStatusFromJobReq
+    ): AgentResult<QueryAgentStatusFromJobResult>
+
+    @ApiOperation("查询agent状态的接口 - 从nodeman查询")
+    @POST
+    @Path("/{projectId}/query_agent_status")
+    fun queryAgentStatusFromNodeman(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "查询agent状态的请求信息", required = true)
+        queryAgentStatusFromNodemanReq: QueryAgentStatusFromNodemanReq
+    ): AgentResult<QueryAgentStatusFromNodemanResult>
 
     @ApiOperation("查询agent任务具体日志")
     @GET
