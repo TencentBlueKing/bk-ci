@@ -32,6 +32,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -41,6 +42,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
 	"github.com/kardianos/service"
@@ -129,6 +131,12 @@ func watch() {
 		cmd := exec.Command(agentPath)
 		cmd.Dir = workDir
 
+		// 获取 agent 的错误输出，这样有助于打印出崩溃的堆栈方便排查问题
+		stdErr, errstd := cmd.StderrPipe()
+		if errstd != nil {
+			logs.Error("get agent stderr pipe error", errstd)
+		}
+
 		logs.Info("start devops agent")
 		if !fileutil.Exists(agentPath) {
 			logs.Error("agent file: ", agentPath, " not exists")
@@ -156,7 +164,22 @@ func watch() {
 		logs.Info("devops agent started, pid: ", cmd.Process.Pid)
 		_, err = cmd.Process.Wait()
 		if err != nil {
-			logs.Error("process wait error", err.Error())
+			if exiterr, ok := err.(*exec.ExitError); ok {
+				if exiterr.ExitCode() == constant.DAEMON_EXIT_CODE {
+					logs.Warnf("exit code %d daemon exit", constant.DAEMON_EXIT_CODE)
+					systemutil.ExitProcess(constant.DAEMON_EXIT_CODE)
+				}
+			}
+			logs.Error("agent process error", err)
+			if errstd != nil {
+				return
+			}
+			out, err := io.ReadAll(stdErr)
+			if err != nil {
+				logs.Error("read agent stderr out error", err)
+				return
+			}
+			logs.Error("agent process error out", string(out))
 		}
 		logs.Info("agent process exited")
 
