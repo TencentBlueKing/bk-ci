@@ -143,11 +143,13 @@ class StartCloudInterfaceService @Autowired constructor(
                     hdisk = it.pvcs?.firstOrNull { pvc -> pvc.pvcClass == "hdd" }?.pvcSize,
                     imageStandard = it.basic?.imageStandard,
                     node = it.basic?.node,
-                    image = it.basic?.image
+                    image = it.basic?.image,
+                    cpu = it.basic?.cpuCores.toString(),
+                    mem = it.basic?.memoryLimit
                 )
             )
         }
-        logger.info("syncStartCloudResourceList|resourceList|${resList.size}")
+        logger.debug("syncStartCloudResourceList|resourceList|{}", resList)
         windowsGpuResourceDao.deleteAllResource(dslContext)
         windowsGpuResourceDao.createOrUpdateResource(dslContext, resList)
         return resList
@@ -177,7 +179,9 @@ class StartCloudInterfaceService @Autowired constructor(
                 hdisk = it.hdisk,
                 imageStandard = ByteUtils.byte2Bool(it.imagestandard),
                 node = it.node,
-                image = it.image
+                image = it.image,
+                cpu = it.cpu,
+                mem = it.memory
             )
         }
     }
