@@ -54,6 +54,12 @@ interface ServiceAgentResource {
         @ApiParam("agent Hash ID", required = true)
         @PathParam("agentId")
         agentId: String,
+        @ApiParam("筛选此状态，支持4种输入(QUEUE,RUNNING,DONE,FAILURE)", required = false)
+        @QueryParam("status")
+        status: String?,
+        @ApiParam("筛选此pipelineId", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?,
         @ApiParam("第几页", required = false)
         @QueryParam("page")
         page: Int?,

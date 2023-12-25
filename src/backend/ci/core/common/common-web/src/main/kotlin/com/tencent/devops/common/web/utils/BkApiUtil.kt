@@ -1,6 +1,9 @@
 package com.tencent.devops.common.web.utils
 
 import com.tencent.devops.common.web.constant.BkApiHandleType
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
+import javax.servlet.http.HttpServletRequest
 
 /**
  * API接口工具类
@@ -35,5 +38,14 @@ object BkApiUtil {
      */
     fun getPermissionFlag(): Boolean? {
         return apiPermissionThreadLocal.get()
+    }
+
+    /**
+     * 获取request对象
+     * @return request对象
+     */
+    fun getHttpServletRequest(): HttpServletRequest? {
+        val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
+        return attributes?.request
     }
 }

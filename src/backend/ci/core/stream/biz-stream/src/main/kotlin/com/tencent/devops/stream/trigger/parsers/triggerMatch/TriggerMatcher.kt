@@ -84,9 +84,12 @@ class TriggerMatcher @Autowired constructor(
                     deleteTrigger = false
                 )
             }
+            action.data.context.triggerOn = repoTriggerOn
             action.isMatch(repoTriggerOn)
         } else {
-            action.isMatch(ScriptYmlUtils.formatTriggerOn(newYaml.triggerOn)).copy(
+            val triggerOn = ScriptYmlUtils.formatTriggerOn(newYaml.triggerOn)
+            action.data.context.triggerOn = triggerOn
+            action.isMatch(triggerOn).copy(
                 repoHookName = checkRepoHook(
                     action = action,
                     repoHooks = newYaml.triggerOn?.repoHook
@@ -166,9 +169,12 @@ class TriggerMatcher @Autowired constructor(
                     )
                 )
             }
+            action.data.context.triggerOn = repoTriggerOn
             Pair(null, action.isMatch(repoTriggerOn))
         } else {
-            Pair(trigger?.repoHook, action.isMatch(ScriptYmlUtils.formatTriggerOn(trigger)))
+            val triggerOn = ScriptYmlUtils.formatTriggerOn(trigger)
+            action.data.context.triggerOn = triggerOn
+            Pair(trigger?.repoHook, action.isMatch(triggerOn))
         }
     }
 

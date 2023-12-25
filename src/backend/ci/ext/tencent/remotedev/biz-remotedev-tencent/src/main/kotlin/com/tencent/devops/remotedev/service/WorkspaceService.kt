@@ -772,7 +772,7 @@ class WorkspaceService @Autowired constructor(
             },
             disk = workspaces.sumOf {
                 if (it.status in
-                    setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.SLEEP)
+                    setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.STOPPED)
                 ) {
                     it.disk
                 } else {

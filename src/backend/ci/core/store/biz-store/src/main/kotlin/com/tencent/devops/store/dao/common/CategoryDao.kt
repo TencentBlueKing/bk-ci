@@ -28,6 +28,7 @@
 package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TCategory
 import com.tencent.devops.model.store.tables.records.TCategoryRecord
@@ -154,6 +155,7 @@ class CategoryDao {
                 .selectFrom(this)
                 .where(TYPE.eq(type))
                 .orderBy(CREATE_TIME.desc())
+                .skipCheck()
                 .fetch()
         }
     }

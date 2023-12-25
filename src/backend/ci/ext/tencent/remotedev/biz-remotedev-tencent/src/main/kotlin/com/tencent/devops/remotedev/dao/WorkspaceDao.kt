@@ -704,7 +704,7 @@ class WorkspaceDao {
                     .greaterOrEqual(timeOutDays)
             )
 
-            condition.add(STATUS.eq(WorkspaceStatus.SLEEP.ordinal))
+            condition.add(STATUS.eq(WorkspaceStatus.STOPPED.ordinal))
             condition.add(OWNER_TYPE.eq(ownerType.name))
 
             if (systemType != null) {
