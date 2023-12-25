@@ -462,6 +462,7 @@ class RbacAuthConfiguration {
         authResourceService: AuthResourceService,
         migrateCreatorFixService: MigrateCreatorFixService,
         migratePermissionHandoverService: MigratePermissionHandoverService,
+        permissionGradeManagerService: PermissionGradeManagerService,
         dslContext: DSLContext,
         authMigrationDao: AuthMigrationDao,
         authMonitorSpaceDao: AuthMonitorSpaceDao
@@ -475,6 +476,7 @@ class RbacAuthConfiguration {
         authResourceService = authResourceService,
         migrateCreatorFixService = migrateCreatorFixService,
         migratePermissionHandoverService = migratePermissionHandoverService,
+        permissionGradeManagerService = permissionGradeManagerService,
         dslContext = dslContext,
         authMigrationDao = authMigrationDao,
         authMonitorSpaceDao = authMonitorSpaceDao
