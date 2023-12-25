@@ -292,7 +292,7 @@ class ParamFacadeService @Autowired constructor(
                 .filter { pipelineId == null || !it.pipelineId.contains(pipelineId) }
                 .map { BuildFormValue(it.pipelineName, it.pipelineName) }
             val excludePipelineId = pipelineId ?: ""
-            val searchUrl = "/process/api/user/buildParam/$projectId/subPipeline/?" +
+            val searchUrl = "/process/api/user/buildParam/$projectId/subPipeline?" +
                     "permission=${AuthPermission.EXECUTE.name}&excludePipelineId=$excludePipelineId" +
                     "&pipelineName={words}&page=1&pageSize=100"
             val replaceKey = "{words}"

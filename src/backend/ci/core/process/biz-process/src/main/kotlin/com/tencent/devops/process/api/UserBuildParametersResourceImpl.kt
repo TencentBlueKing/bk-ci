@@ -198,7 +198,7 @@ class UserBuildParametersResourceImpl @Autowired constructor(
             pageSize = pageSize
         ).records
         return Result(
-            pipelineList.map { BuildFormValue(it.pipelineId, it.pipelineName) }
+            pipelineList.map { BuildFormValue(it.pipelineName, it.pipelineName) }
         )
     }
 
