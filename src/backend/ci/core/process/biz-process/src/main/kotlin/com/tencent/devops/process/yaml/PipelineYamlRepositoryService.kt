@@ -66,7 +66,6 @@ class PipelineYamlRepositoryService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineYamlRepositoryService::class.java)
-        private const val YAML_VIEW_PREFIX = "[PAC]"
     }
 
     fun deployYamlPipeline(
@@ -220,10 +219,11 @@ class PipelineYamlRepositoryService @Autowired constructor(
         if (pipelineYamlView != null) {
             return null
         }
+        val path = gitProjectName.substringAfter("/")
         val name = if (directory == Constansts.ciFileDirectoryName) {
-            "$YAML_VIEW_PREFIX$gitProjectName"
+            path
         } else {
-            "$YAML_VIEW_PREFIX$gitProjectName-${directory.removePrefix(".ci/")}"
+            "$path-${directory.removePrefix(".ci/")}"
         }
         val pipelineView = PipelineViewForm(
             name = name,
