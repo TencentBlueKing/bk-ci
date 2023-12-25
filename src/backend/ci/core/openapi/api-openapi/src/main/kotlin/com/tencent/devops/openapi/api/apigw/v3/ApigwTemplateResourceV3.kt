@@ -82,7 +82,7 @@ interface ApigwTemplateResourceV3 {
         @ApiParam("页码", required = true)
         @QueryParam("page")
         page: Int = 1,
-        @ApiParam("每页数量", required = true)
+        @ApiParam("每页条数(默认20, 最大100)", required = true)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         pageSize: Int = 10
@@ -137,7 +137,7 @@ interface ApigwTemplateResourceV3 {
         @ApiParam("页码", required = true)
         @QueryParam("page")
         page: Int = 1,
-        @ApiParam("每页数量", required = true)
+        @ApiParam("每页条数(默认20, 最大100)", required = true)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         pageSize: Int = 10

@@ -63,6 +63,9 @@ interface ServiceMonitorSpaceResource {
     @ApiOperation("迁移监控空间权限资源")
     fun migrateMonitorResource(
         @ApiParam("迁移项目", required = true)
-        projectCodes: List<String>
+        projectCodes: List<String>,
+        @QueryParam("asyncMigrateOtherGroup")
+        @ApiParam("异步迁移其他组", required = false)
+        asyncMigrateOtherGroup: Boolean? = true
     ): Result<Boolean>
 }

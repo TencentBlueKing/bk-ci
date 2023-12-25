@@ -58,10 +58,8 @@ var moduleNames = when (val moduleName = name.split("-")[1]) {
     else -> listOf(moduleName)
 }
 
-if (name == "model-dispatch-kubernetes") {
-    moduleNames = listOf("dispatch_kubernetes")
-} else if (name == "model-dispatch-devcloud-tencent") {
-    moduleNames = listOf("dispatch_devcloud", "dispatch_macos", "dispatch_windows")
+if (name == "model-dispatch-devcloud-tencent") {
+    moduleNames = listOf("dispatch_devcloud", "dispatch_macos", "dispatch_windows", "dispatch_codecc")
 }
 
 val mysqlPrefix: String? = System.getProperty("mysqlPrefix") ?: System.getenv("mysqlPrefix")

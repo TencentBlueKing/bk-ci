@@ -189,7 +189,7 @@ class BcsContainerService @Autowired constructor(
         mem: String,
         disk: String
     ): Pair<String, String> {
-        with(dispatchMessages) {
+        with(dispatchMessages.event) {
             val (host, name, tag) = DispatchKubernetesCommonUtils.parseImage(containerPool.container!!)
             val userName = containerPool.credential?.user
             val password = containerPool.credential?.password
@@ -208,9 +208,9 @@ class BcsContainerService @Autowired constructor(
                     disk = disk,
                     env = mapOf(
                         ENV_KEY_PROJECT_ID to projectId,
-                        ENV_KEY_AGENT_ID to id,
-                        ENV_KEY_AGENT_SECRET_KEY to secretKey,
-                        ENV_KEY_GATEWAY to gateway,
+                        ENV_KEY_AGENT_ID to dispatchMessages.id,
+                        ENV_KEY_AGENT_SECRET_KEY to dispatchMessages.secretKey,
+                        ENV_KEY_GATEWAY to dispatchMessages.gateway,
                         "TERM" to "xterm-256color",
                         SLAVE_ENVIRONMENT to "Bcs",
                         ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.PUBLIC_BCS.name),
@@ -225,7 +225,7 @@ class BcsContainerService @Autowired constructor(
                     "taskId:($bcsTaskId)"
             )
             logsPrinter.printLogs(
-                this,
+                dispatchMessages,
                 I18nUtil.getCodeLanMessage(
                     messageCode = BK_DISTRIBUTE_BUILD_MACHINE_REQUEST_SUCCESS,
                     language = I18nUtil.getDefaultLocaleLanguage()
@@ -241,7 +241,7 @@ class BcsContainerService @Autowired constructor(
                         "vm success, wait vm start..."
                 )
                 logsPrinter.printLogs(
-                    this,
+                    dispatchMessages,
                     I18nUtil.getCodeLanMessage(
                         BK_MACHINE_BUILD_COMPLETED_WAITING_FOR_STARTUP,
                         I18nUtil.getDefaultLocaleLanguage()
@@ -249,7 +249,7 @@ class BcsContainerService @Autowired constructor(
                 )
             } else {
                 // 清除构建异常容器，并重新置构建池为空闲
-                clearExceptionBuilder(builderName)
+                clearExceptionBuilder(builderName, dispatchMessages)
                 throw BuildFailureException(
                     ErrorCodeEnum.BCS_CREATE_VM_ERROR.errorType,
                     ErrorCodeEnum.BCS_CREATE_VM_ERROR.errorCode,
@@ -271,7 +271,7 @@ class BcsContainerService @Autowired constructor(
         mem: String,
         disk: String
     ): String {
-        with(dispatchMessages) {
+        with(dispatchMessages.event) {
             return bcsBuilderClient.operateBuilder(
                 buildId = buildId,
                 vmSeqId = vmSeqId,
@@ -280,9 +280,9 @@ class BcsContainerService @Autowired constructor(
                 param = BcsStartBuilderParams(
                     env = mapOf(
                         ENV_KEY_PROJECT_ID to projectId,
-                        ENV_KEY_AGENT_ID to id,
-                        ENV_KEY_AGENT_SECRET_KEY to secretKey,
-                        ENV_KEY_GATEWAY to gateway,
+                        ENV_KEY_AGENT_ID to dispatchMessages.id,
+                        ENV_KEY_AGENT_SECRET_KEY to dispatchMessages.secretKey,
+                        ENV_KEY_GATEWAY to dispatchMessages.gateway,
                         "TERM" to "xterm-256color",
                         SLAVE_ENVIRONMENT to "Bcs",
                         ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.PUBLIC_BCS.name),
@@ -295,19 +295,21 @@ class BcsContainerService @Autowired constructor(
         }
     }
 
-    private fun DispatchMessage.clearExceptionBuilder(builderName: String) {
-        try {
-            // 下发删除，不管成功失败
-            logger.info("[$buildId]|[$vmSeqId] Delete builder, userId: $userId, builderName: $builderName")
-            bcsBuilderClient.operateBuilder(
-                buildId = buildId,
-                vmSeqId = vmSeqId,
-                userId = userId,
-                name = builderName,
-                param = BcsDeleteBuilderParams()
-            )
-        } catch (e: Exception) {
-            logger.error("[$buildId]|[$vmSeqId] delete builder failed", e)
+    private fun clearExceptionBuilder(builderName: String, dispatchMessages: DispatchMessage) {
+        with(dispatchMessages.event) {
+            try {
+                // 下发删除，不管成功失败
+                logger.info("[$buildId]|[$vmSeqId] Delete builder, userId: $userId, builderName: $builderName")
+                bcsBuilderClient.operateBuilder(
+                    buildId = buildId,
+                    vmSeqId = vmSeqId,
+                    userId = userId,
+                    name = builderName,
+                    param = BcsDeleteBuilderParams()
+                )
+            } catch (e: Exception) {
+                logger.error("[$buildId]|[$vmSeqId] delete builder failed", e)
+            }
         }
     }
 
