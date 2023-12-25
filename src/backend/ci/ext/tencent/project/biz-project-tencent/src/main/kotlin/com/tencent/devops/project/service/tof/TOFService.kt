@@ -211,24 +211,33 @@ class TOFService @Autowired constructor(
         }
     }
 
+    @Suppress("MagicNumber")
     private fun getChildDeptInfos(userId: String, type: OrganizationType, id: Int): List<ChildDeptResponse> {
         try {
             val startTime = System.currentTimeMillis()
             val path = "get_child_dept_infos"
+            val level = when (type) {
+                // bg的下一级不一定是部门，需要往下三层，才能找到BG下所有的部门
+                OrganizationType.dept -> 3
+                // 部门下一级不一定是中心，需要往下四层，才能找到部门所有的中心
+                OrganizationType.center -> 4
+                else -> 1
+            }
             val responseContent = request(
                 path, ChildDeptRequest(
-                    tofAppCode!!,
-                    tofAppSecret!!,
-                    getParentDeptIdByOrganizationType(type, id),
-                    1
-                ), I18nUtil.getCodeLanMessage(
-                    messageCode = QUERY_SUB_DEPARTMENT_FAIL,
-                    language = I18nUtil.getLanguage(userId)
-                )
+                tofAppCode!!,
+                tofAppSecret!!,
+                getParentDeptIdByOrganizationType(type, id),
+                level
+            ), I18nUtil.getCodeLanMessage(
+                messageCode = QUERY_SUB_DEPARTMENT_FAIL,
+                language = I18nUtil.getLanguage(userId)
+            )
             )
             val response: Response<List<ChildDeptResponse>> =
                 objectMapper.readValue(responseContent)
-            if (response.data == null) {
+            val tofDeptInfos = response.data
+            if (tofDeptInfos == null) {
                 logger.warn("Fail o get the child dept info of type $type and id $id with response $responseContent")
                 uploadTofStatus(
                     requestTime = startTime,
@@ -247,6 +256,13 @@ class TOFService @Autowired constructor(
                     )
                 )
             }
+
+            val deptInfos = when (type) {
+                OrganizationType.dept -> tofDeptInfos.filter { it.TypeId == OrganizationType.dept.id }
+                OrganizationType.center -> tofDeptInfos.filter { it.TypeId == OrganizationType.center.id }
+                else -> tofDeptInfos
+            }
+
             uploadTofStatus(
                 requestTime = startTime,
                 statusCode = response.code,
@@ -254,9 +270,9 @@ class TOFService @Autowired constructor(
                 errorCode = SUCCESS,
                 errorMessage = "call tof success"
             )
-            return response.data
-        } catch (t: Throwable) {
-            logger.warn("Fail to get the organization info of type $type and id $id", t)
+            return deptInfos
+        } catch (ex: Exception) {
+            logger.warn("Fail to get the organization info of type $type and id $id", ex)
             throw OperationException(
                 I18nUtil.getCodeLanMessage(
                     messageCode = QUERY_SUB_DEPARTMENT_FAIL,
@@ -290,13 +306,13 @@ class TOFService @Autowired constructor(
                 val path = "get_staff_info_by_login_name"
                 val responseContent = request(
                     path, StaffInfoRequest(
-                        tofAppCode!!,
-                        tofAppSecret!!, operator, userId, bkTicket
-                    ), I18nUtil.getCodeLanMessage(
-                        messageCode = FAILED_USER_INFORMATION,
-                        language = I18nUtil.getLanguage(userId),
-                        params = arrayOf(userId)
-                    )
+                    tofAppCode!!,
+                    tofAppSecret!!, operator, userId, bkTicket
+                ), I18nUtil.getCodeLanMessage(
+                    messageCode = FAILED_USER_INFORMATION,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(userId)
+                )
                 )
                 val response: Response<StaffInfo> = objectMapper.readValue(responseContent)
                 if (response.data == null) {
@@ -426,7 +442,7 @@ class TOFService @Autowired constructor(
             if (!response.isSuccessful) {
                 logger.warn(
                     "Fail to request $request with code ${response.code}, " +
-                            "message ${response.message} and body $responseContent"
+                        "message ${response.message} and body $responseContent"
                 )
                 throw RuntimeException(errorMessage)
             }
@@ -505,20 +521,20 @@ class TOFService @Autowired constructor(
         groupId = staffInfo.groupId
         groupName = staffInfo.groupName
         for (deptInfo in deptInfos) {
-            val level = deptInfo.level
+            val typeId = deptInfo.typeId.toInt()
             val name = deptInfo.name
-            when (level) {
-                "1" -> {
+            when (typeId) {
+                OrganizationType.bg.id -> {
                     bgName = name
                     bgId = deptInfo.id
                 }
 
-                "2" -> {
+                OrganizationType.dept.id -> {
                     deptName = name
                     deptId = deptInfo.id
                 }
 
-                "3" -> {
+                OrganizationType.center.id -> {
                     centerName = name
                     centerId = deptInfo.id
                 }
@@ -555,13 +571,13 @@ class TOFService @Autowired constructor(
             val path = "get_dept_staffs_with_level"
             val responseContent = request(
                 path, DeptStaffsRequest(
-                    dept_id = deptId,
-                    level = level,
-                    app_code = tofAppCode!!,
-                    app_secret = tofAppSecret!!
-                ), I18nUtil.getCodeLanMessage(
-                    messageCode = ProjectMessageCode.QUERY_DEPARTMENT_FAIL
-                )
+                dept_id = deptId,
+                level = level,
+                app_code = tofAppCode!!,
+                app_secret = tofAppSecret!!
+            ), I18nUtil.getCodeLanMessage(
+                messageCode = ProjectMessageCode.QUERY_DEPARTMENT_FAIL
+            )
             )
             val response: Response<List<StaffInfo>> = objectMapper.readValue(responseContent)
             if (response.data == null) {
