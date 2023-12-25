@@ -48,6 +48,7 @@ import com.tencent.devops.common.service.utils.BkServiceUtil
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.BkApiUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
 import com.tencent.devops.misc.lock.MigrationLock
@@ -600,7 +601,11 @@ class ProcessDataMigrateService @Autowired constructor(
                 // 服务器缓存更新失败，抛出错误提示
                 throw ErrorCodeException(
                     errorCode = MiscMessageCode.ERROR_UPDATE_MICRO_SERVICE_LOCAL_RULE_CACHE_FAIL,
-                    params = arrayOf(serviceName)
+                    params = arrayOf(serviceName),
+                    defaultMessage = I18nUtil.getCodeLanMessage(
+                        messageCode = MiscMessageCode.ERROR_UPDATE_MICRO_SERVICE_LOCAL_RULE_CACHE_FAIL,
+                        params = arrayOf(serviceName)
+                    )
                 )
             }
         }

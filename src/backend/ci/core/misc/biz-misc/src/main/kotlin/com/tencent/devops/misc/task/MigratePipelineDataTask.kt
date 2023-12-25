@@ -8,6 +8,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.BkApiUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
 import com.tencent.devops.misc.pojo.constant.MiscMessageCode
 import com.tencent.devops.misc.pojo.process.MigratePipelineDataParam
@@ -268,7 +269,11 @@ class MigratePipelineDataTask constructor(
                 logger.info("migrateProjectData project[$projectId],pipeline[$pipelineId] run task fail", ignored)
                 throw ErrorCodeException(
                     errorCode = MiscMessageCode.ERROR_MIGRATING_PIPELINE_DATA_FAIL,
-                    params = arrayOf(pipelineId)
+                    params = arrayOf(pipelineId),
+                    defaultMessage = I18nUtil.getCodeLanMessage(
+                        messageCode = MiscMessageCode.ERROR_MIGRATING_PIPELINE_DATA_FAIL,
+                        params = arrayOf(pipelineId)
+                    )
                 )
             } finally {
                 // 5、业务逻辑执行完成后释放信号量

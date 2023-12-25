@@ -29,6 +29,7 @@ package com.tencent.devops.misc.service.process
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.dao.process.ProcessDataDeleteDao
 import com.tencent.devops.misc.lock.MigrationLock
@@ -88,7 +89,7 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                 targetDataSourceName = targetDataSourceName
             )
             // 判断是否能删除db中数据
-            if (!projectDataMigrateHistoryService.isDataCanMigrate(queryParam)) {
+            if (projectDataMigrateHistoryService.isDataCanMigrate(queryParam)) {
                 deleteProcessRelData(
                     dslContext = dslContext,
                     projectId = projectId,
@@ -100,7 +101,11 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
             } else {
                 throw ErrorCodeException(
                     errorCode = MiscMessageCode.ERROR_PROJECT_DATA_REPEAT_MIGRATE,
-                    params = arrayOf(projectId)
+                    params = arrayOf(projectId),
+                    defaultMessage = I18nUtil.getCodeLanMessage(
+                        messageCode = MiscMessageCode.ERROR_PROJECT_DATA_REPEAT_MIGRATE,
+                        params = arrayOf(projectId)
+                    )
                 )
             }
         } finally {
@@ -257,12 +262,16 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                 targetDataSourceName = targetDataSourceName
             )
             // 判断是否能删除db中数据
-            if (!projectDataMigrateHistoryService.isDataCanMigrate(queryParam)) {
+            if (projectDataMigrateHistoryService.isDataCanMigrate(queryParam)) {
                 deleteProjectRelData(dslContext, projectId)
             } else {
                 throw ErrorCodeException(
                     errorCode = MiscMessageCode.ERROR_PROJECT_DATA_REPEAT_MIGRATE,
-                    params = arrayOf(projectId)
+                    params = arrayOf(projectId),
+                    defaultMessage = I18nUtil.getCodeLanMessage(
+                        messageCode = MiscMessageCode.ERROR_PROJECT_DATA_REPEAT_MIGRATE,
+                        params = arrayOf(projectId)
+                    )
                 )
             }
         } finally {

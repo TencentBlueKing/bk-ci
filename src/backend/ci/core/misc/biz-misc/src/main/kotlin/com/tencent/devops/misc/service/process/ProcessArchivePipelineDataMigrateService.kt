@@ -103,13 +103,6 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
                 ruleType = ShardingRuleTypeEnum.ARCHIVE_DB
             ).data
         val migrationLock = MigrationLock(redisOperation, projectId, pipelineId)
-        // 执行迁移前的逻辑
-        doPreMigrationBus(
-            archiveDbShardingRoutingRule = archiveDbShardingRoutingRule,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            migrationLock = migrationLock
-        )
         val migratePipelineDataParam = MigratePipelineDataParam(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -120,6 +113,13 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
             processDataMigrateDao = processDataMigrateDao
         )
         try {
+            // 执行迁移前的逻辑
+            doPreMigrationBus(
+                archiveDbShardingRoutingRule = archiveDbShardingRoutingRule,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                migrationLock = migrationLock
+            )
             // 迁移流水线数据
             MigratePipelineDataTask(migratePipelineDataParam).run()
             // 执行迁移完成后的逻辑
