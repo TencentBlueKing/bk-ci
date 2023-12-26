@@ -65,8 +65,10 @@ func Run(isDebug bool) {
 
 	initModules()
 
-	// job.DoPollAndBuild()
-	doAsk()
+	for {
+		doAsk()
+		time.Sleep(5 * time.Second)
+	}
 }
 
 // 初始化一些模块的初始值
@@ -75,50 +77,53 @@ func initModules() {
 }
 
 func doAsk() {
-	for {
-		// Ask请求
-		enable := genAskEnable()
-		heart, upgrad := genHeartInfoAndUpgrade(enable.Upgrade)
-		result, err := api.Ask(&api.AskInfo{
-			Enable:  enable,
-			Heart:   heart,
-			Upgrade: upgrad,
-		})
-		if err != nil {
-			logs.Error("ask request failed: ", err.Error())
-			continue
-		}
-		if result.IsNotOk() {
-			logs.Error("ask request result failed: ", result.Message)
-			continue
-		}
-		if result.AgentStatus != config.AgentStatusImportOk {
-			logs.Errorf("agent status [%s] not ok", result.AgentStatus)
-			if result.IsAgentDelete() {
-				logs.Warn("agent has deleted, uninstall")
-				upgrade.UninstallAgent()
-				return
-			}
-			continue
-		}
+	// Ask请求
+	exiterror := exitcode.GetAndResetExitError()
+	enable := genAskEnable()
+	heart, upgrad := genHeartInfoAndUpgrade(enable.Upgrade, exiterror)
+	result, err := api.Ask(&api.AskInfo{
+		Enable:  enable,
+		Heart:   heart,
+		Upgrade: upgrad,
+	})
 
-		resp := new(api.AskResp)
-		err = util.ParseJsonToData(result.Data, &resp)
-		if err != nil {
-			logs.Error("parse ask resp failed: ", err.Error())
-			continue
+	// 每次发送完请求都判断下是否存在退出报错
+	doneRequestExitError := exitcode.GetAndResetExitError()
+	// 发送前和发送后都有需要专门打印下日志
+	if exiterror != nil || doneRequestExitError != nil {
+		if exiterror != nil {
+			logs.Errorf("ExitError|%s|%s", exiterror.ErrorEnum, exiterror.Message)
 		}
-
-		// 执行各类任务
-		doAgentJob(enable, resp)
-
-		// 可能是发送请求报错了，所以重新再取一遍
-		if exitcode.GetExitError() != nil {
-			exitcode.Exit()
-		}
-
-		time.Sleep(5 * time.Second)
+		exitcode.Exit(doneRequestExitError)
 	}
+
+	if err != nil {
+		logs.Error("ask request failed: ", err.Error())
+		return
+	}
+	if result.IsNotOk() {
+		logs.Error("ask request result failed: ", result.Message)
+		return
+	}
+	if result.AgentStatus != config.AgentStatusImportOk {
+		logs.Errorf("agent status [%s] not ok", result.AgentStatus)
+		if result.IsAgentDelete() {
+			logs.Warn("agent has deleted, uninstall")
+			upgrade.UninstallAgent()
+			return
+		}
+		return
+	}
+
+	resp := new(api.AskResp)
+	err = util.ParseJsonToData(result.Data, &resp)
+	if err != nil {
+		logs.Error("parse ask resp failed: ", err.Error())
+		return
+	}
+
+	// 执行各类任务
+	doAgentJob(enable, resp)
 }
 
 func doAgentJob(enable api.AskEnable, resp *api.AskResp) {
