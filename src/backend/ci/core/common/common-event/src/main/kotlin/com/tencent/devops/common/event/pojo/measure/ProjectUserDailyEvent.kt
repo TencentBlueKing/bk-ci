@@ -23,27 +23,22 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-archive"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-event"))
-    api(project(":core:common:common-wechatwork"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api("net.coobird:thumbnailator")
-    api("com.github.xingePush:xinge")
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:common:common-archive-tencent"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":ext:tencent:experience:api-experience-tencent"))
-    api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":ext:tencent:experience:model-experience-tencent"))
-    api(fileTree(mapOf("dir" to "lib", "includes" to listOf("*.jar"))))
-}
+package com.tencent.devops.common.event.pojo.measure
+
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDate
+
+@Event(exchange = MQ.EXCHANGE_PROJECT_USER_DAILY_FANOUT)
+data class ProjectUserDailyEvent(
+    @ApiModelProperty("项目ID")
+    override val projectId: String,
+    @ApiModelProperty("用户ID")
+    val userId: String,
+    @ApiModelProperty("统计日期")
+    val theDate: LocalDate
+) : IMeasureEvent(projectId = projectId, pipelineId = "", buildId = "")

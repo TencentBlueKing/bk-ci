@@ -23,27 +23,32 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-archive"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-event"))
-    api(project(":core:common:common-wechatwork"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api("net.coobird:thumbnailator")
-    api("com.github.xingePush:xinge")
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:common:common-archive-tencent"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":ext:tencent:experience:api-experience-tencent"))
-    api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":ext:tencent:experience:model-experience-tencent"))
-    api(fileTree(mapOf("dir" to "lib", "includes" to listOf("*.jar"))))
+package com.tencent.devops.metrics.service
+
+import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
+
+@Service
+class CacheProjectInfoService @Autowired constructor(
+    private val client: Client
+) {
+    private val productIdCache = Caffeine.newBuilder()
+        .maximumSize(10000)
+        .expireAfterWrite(1, TimeUnit.DAYS)
+        .build<String, Int>()
+
+    fun getProjectId(projectId: String): Int {
+        return productIdCache.getIfPresent(projectId) ?: run {
+            val productId = client.get(ServiceProjectResource::class).get(projectId).data?.productId ?: 0
+            productIdCache.put(projectId, productId)
+            productId
+        }
+    }
 }
