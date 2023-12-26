@@ -352,13 +352,14 @@ class PipelineSettingDao {
         }
     }
 
-    fun updateSetting(dslContext: DSLContext, projectId: String, pipelineId: String, name: String, desc: String) {
+    fun updateSetting(dslContext: DSLContext, projectId: String, pipelineId: String, name: String, desc: String): PipelineSetting? {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
-            dslContext.update(this)
+            val result = dslContext.update(this)
                 .set(NAME, name)
                 .set(DESC, desc)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
-                .execute()
+                .returning().fetchOne()
+            return mapper.map(result)
         }
     }
 

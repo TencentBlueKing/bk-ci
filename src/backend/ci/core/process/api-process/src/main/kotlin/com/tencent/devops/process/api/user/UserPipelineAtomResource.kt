@@ -119,6 +119,6 @@ interface UserPipelineAtomResource {
         pipelineId: String,
         @ApiParam("指定流水线版本", required = false)
         @QueryParam("version")
-        version: Int?,
+        version: Int?
     ): Result<Map<String, AtomProp>?>
 }

@@ -64,7 +64,6 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.PipelineViewType
@@ -78,7 +77,6 @@ import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.jmx.pipeline.PipelineBean
@@ -127,11 +125,7 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val processJmxApi: ProcessJmxApi,
     private val client: Client,
     private val pipelineInfoDao: PipelineInfoDao,
-    private val transferService: PipelineTransferYamlService,
-    private val pipelineRuntimeService: PipelineRuntimeService,
-    private val redisOperation: RedisOperation,
-    private val pipelineRecentUseService: PipelineRecentUseService,
-    private val pipelineAsCodeService: PipelineAsCodeService
+    private val transferService: PipelineTransferYamlService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -422,25 +416,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 } else {
                     model
                 }
-                watcher.start("generateYaml")
-                val savedYaml = yaml ?: try {
-                    transferService.transfer(
-                        userId = userId,
-                        projectId = projectId,
-                        pipelineId = null,
-                        actionType = TransferActionType.FULL_MODEL2YAML,
-                        data = TransferBody(
-                            modelAndSetting = PipelineModelAndSetting(
-                                model = model,
-                                setting = PipelineSetting(pipelineAsCodeSettings = pipelineAsCodeSettings)
-                            )
-                        )
-                    ).newYaml ?: ""
-                } catch (ignore: Throwable) {
-                    // 旧流水线可能无法转换，用空YAML代替
-                    logger.warn("TRANSFER_YAML|$projectId|$userId", ignore)
-                    null
-                }
+
                 watcher.start("deployPipeline")
                 val result = pipelineRepositoryService.deployPipeline(
                     model = instance,
@@ -454,7 +430,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     versionStatus = versionStatus,
                     templateId = templateId,
                     description = null,
-                    yamlStr = savedYaml,
+                    yamlStr = null,
                     baseVersion = null,
                     pipelineAsCodeSettings = pipelineAsCodeSettings
                 )

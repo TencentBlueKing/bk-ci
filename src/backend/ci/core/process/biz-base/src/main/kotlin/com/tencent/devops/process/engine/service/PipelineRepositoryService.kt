@@ -52,6 +52,7 @@ import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
@@ -96,6 +97,8 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.util.NotifyTemplateUtils
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
@@ -148,6 +151,8 @@ class PipelineRepositoryService constructor(
     private val operationLogService: PipelineOperationLogService,
     private val client: Client,
     private val objectMapper: ObjectMapper,
+    // TODO #8161 增加互转setting
+    private val transferService: PipelineTransferYamlService,
     private val redisOperation: RedisOperation
 ) {
 
@@ -277,7 +282,6 @@ class PipelineRepositoryService constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 model = model,
-                yamlStr = yamlStr,
                 userId = userId,
                 channelCode = channelCode,
                 canManualStartup = canManualStartup,
@@ -580,7 +584,6 @@ class PipelineRepositoryService constructor(
         projectId: String,
         pipelineId: String,
         model: Model,
-        yamlStr: String?,
         userId: String,
         channelCode: ChannelCode,
         canManualStartup: Boolean,
@@ -624,6 +627,25 @@ class PipelineRepositoryService constructor(
                     onlyDraft = versionStatus == VersionStatus.COMMITTING
                 )
                 model.latestVersion = modelVersion
+                var savedSetting = PipelineSetting(pipelineAsCodeSettings = pipelineAsCodeSettings)
+                val savedYaml = yaml ?: try {
+                    transferService.transfer(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = null,
+                        actionType = TransferActionType.FULL_MODEL2YAML,
+                        data = TransferBody(
+                            modelAndSetting = PipelineModelAndSetting(
+                                model = model,
+                                setting = savedSetting
+                            )
+                        )
+                    ).newYaml ?: ""
+                } catch (ignore: Throwable) {
+                    // 旧流水线可能无法转换，用空YAML代替
+                    logger.warn("TRANSFER_YAML|$projectId|$userId", ignore)
+                    null
+                }
                 if (model.instanceFromTemplate != true) {
                     if (null == pipelineSettingDao.getSetting(transactionContext, projectId, pipelineId)) {
                         if (templateId != null && (useSubscriptionSettings == true || useConcurrencyGroup == true)) {
