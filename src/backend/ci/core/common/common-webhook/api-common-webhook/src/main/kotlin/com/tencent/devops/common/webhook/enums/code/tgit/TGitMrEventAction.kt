@@ -28,7 +28,6 @@
 package com.tencent.devops.common.webhook.enums.code.tgit
 
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
-import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 
 /*
  * Stream Mr 事件支持动作
