@@ -19,7 +19,6 @@
     import Vue from 'vue'
     import { Watch } from 'vue-property-decorator'
     import { State, Action } from 'vuex-class'
-    import { mapDocumnetTitle } from '@/utils/constants'
     
     export default class App extends Vue {
         @State('fetchError') fetchError
@@ -40,13 +39,7 @@
             })
         }
 
-        getDocumentTitle (model) {
-            return this.$t(mapDocumnetTitle(model)) as string
-        }
-
         async created () {
-            const model = location.href.split('/')[4]
-            document.title = this.getDocumentTitle(model)
             const announce = await this.getAnnouncement()
             if (announce && announce.id) {
                 this.setAnnouncement(announce)

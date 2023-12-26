@@ -56,7 +56,7 @@ export const BUILD_HISTORY_TABLE_DEFAULT_COLUMNS = [
     'startType',
     'startTime',
     'endTime',
-    'totalTime',
+    'executeTime',
     'artifactList',
     'pipelineVersion',
     'remark',

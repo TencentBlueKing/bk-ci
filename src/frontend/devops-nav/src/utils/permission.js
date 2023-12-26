@@ -37,5 +37,7 @@ export const handleProjectNoPermission = (query, data) => {
 export const RESOURCE_ACTION = {
     ENABLE: 'project_enable',
     EDIT: 'project_edit',
-    CREATE: 'project_create'
+    CREATE: 'project_create',
+    VIEW: 'project_view',
+    MANAGE: 'project_manage'
 }

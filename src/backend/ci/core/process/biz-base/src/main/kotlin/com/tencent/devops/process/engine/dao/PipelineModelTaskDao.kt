@@ -132,6 +132,7 @@ class PipelineModelTaskDao {
 
     fun batchGetPipelineIdByAtomCode(
         dslContext: DSLContext,
+        projectId: String?,
         atomCodeList: List<String>,
         limit: Int,
         offset: Int
@@ -140,6 +141,13 @@ class PipelineModelTaskDao {
             return dslContext.select(PROJECT_ID, PIPELINE_ID)
                 .from(this)
                 .where(ATOM_CODE.`in`(atomCodeList))
+                .let {
+                    if (projectId.isNullOrEmpty()) {
+                        it
+                    } else {
+                        it.and(PROJECT_ID.eq(projectId))
+                    }
+                }
                 .groupBy(PROJECT_ID, PIPELINE_ID)
                 .orderBy(PROJECT_ID, PIPELINE_ID)
                 .offset(offset)

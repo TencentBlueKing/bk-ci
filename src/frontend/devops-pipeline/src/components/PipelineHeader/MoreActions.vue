@@ -61,7 +61,7 @@
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
     import {
-        PROJECT_RESOURCE_ACTION,
+        TEMPLATE_RESOURCE_ACTION,
         RESOURCE_ACTION
     } from '@/utils/permission'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
@@ -144,6 +144,23 @@
                             }
                         },
                         {
+                            ...(pipeline.templateId
+                                ? {
+                                    label: 'copyAsTemplateInstance',
+                                    handler: () => this.copyAsTemplateInstance(pipeline),
+                                    permissionData: {
+                                        projectId,
+                                        resourceType: 'project',
+                                        resourceCode: projectId,
+                                        action: RESOURCE_ACTION.CREATE
+                                    }
+                                }
+                                : {
+                                
+                                })
+                            
+                        },
+                        {
                             label: 'newlist.copyAs',
                             handler: () => this.copyAs(pipeline),
                             permissionData: {
@@ -160,7 +177,7 @@
                                 projectId,
                                 resourceType: 'project',
                                 resourceCode: projectId,
-                                action: PROJECT_RESOURCE_ACTION.MANAGE
+                                action: TEMPLATE_RESOURCE_ACTION.CREATE
                             }
                         },
                         {
@@ -261,6 +278,11 @@
                         theme
                     })
                 }
+            },
+            copyAsTemplateInstance (pipeline) {
+                const pipelineName = (pipeline.pipelineName + '_copy').substring(0, 128)
+                const { templateId, projectId, templateVersion } = pipeline
+                window.top.location.href = `${location.origin}/console/pipeline/${projectId}/template/${templateId}/createInstance/${templateVersion}/${pipelineName}`
             }
         }
     }

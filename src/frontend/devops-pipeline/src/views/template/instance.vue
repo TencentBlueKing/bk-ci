@@ -12,8 +12,31 @@
         <div class="sub-view-port" v-if="showContent && showInstanceList">
             <section class="info-header">
                 <div class="instance-handle-row">
-                    <bk-button class="batch-update" @click="handleBatch()"><span>{{ $t('template.batchUpdate') }}</span></bk-button>
-                    <bk-button theme="primary" @click="createInstance()"><span>{{ $t('template.addInstance') }}</span></bk-button>
+                    <bk-button class="batch-update" :disabled="!selectItemList.length" @click="handleBatch()"><span>{{ $t('template.batchUpdate') }}</span></bk-button>
+                    <bk-button
+                        v-if="isEnabledPermission"
+                        theme="primary"
+                        @click="createInstance()"
+                        v-perm="{
+                            hasPermission: hasCreatePermission,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: projectId,
+                                action: RESOURCE_ACTION.CREATE
+                            }
+                        }"
+                    >
+                        {{ $t('template.addInstance') }}
+                    </bk-button>
+                    <bk-button
+                        v-else
+                        theme="primary"
+                        @click="createInstance()"
+                    >
+                        <span>{{ $t('template.addInstance') }}</span>
+                    </bk-button>
                 </div>
                 <bk-input
                     :placeholder="$t('search')"
@@ -29,16 +52,18 @@
                 <bk-table
                     :data="instanceList"
                     size="small"
+                    ref="instanceList"
                     :pagination="pagination"
                     @page-change="handlePageChange"
                     @page-limit-change="pageLimitChange"
                     @select="selectItem"
                     @select-all="selectItem"
                 >
+                    
                     <bk-table-column type="selection" width="60" align="center" :selectable="isUpdating"></bk-table-column>
                     <bk-table-column :label="$t('pipelineName')" prop="pipelineName">
                         <template slot-scope="props">
-                            <span class="pipeline-name" @click="toPipelineHistory(props.row.pipelineId)">{{ props.row.pipelineName }}</span>
+                            <span class="pipeline-name" :title="props.row.pipelineName" @click="toPipelineHistory(props.row.pipelineId)">{{ props.row.pipelineName }}</span>
                         </template>
                     </bk-table-column>
                     <bk-table-column :label="$t('version')" prop="versionName"></bk-table-column>
@@ -59,9 +84,65 @@
                             <span>{{ localConvertTime(props.row.updateTime) }}</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t('operate')" width="150">
+                    <bk-table-column :label="$t('operate')" width="250">
                         <template slot-scope="props">
-                            <bk-button theme="primary" text :disabled="!props.row.hasPermission" @click="updateInstance(props.row)">{{ $t('edit') }}</bk-button>
+                            <bk-button
+                                v-if="isEnabledPermission"
+                                class="mr10"
+                                theme="primary"
+                                text
+                                @click="updateInstance(props.row)"
+                                v-perm="{
+                                    hasPermission: props.row.hasPermission,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: 'pipeline',
+                                        resourceCode: props.row.pipelineId,
+                                        action: RESOURCE_ACTION.EDIT
+                                    }
+                                }"
+                            >
+                                {{ $t('edit') }}
+                            </bk-button>
+                            <bk-button
+                                v-else
+                                theme="primary"
+                                text
+                                :disabled="!props.row.hasPermission"
+                                @click="updateInstance(props.row)"
+                            >
+                                {{ $t('edit') }}
+                            </bk-button>
+                            <bk-button
+                                v-if="isEnabledPermission"
+                                class="mr10"
+                                theme="primary"
+                                text
+                                @click="copyAsTemplateInstance(props.row)"
+                                v-perm="{
+                                    hasPermission: props.row.hasPermission,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: 'pipeline',
+                                        resourceCode: props.row.pipelineId,
+                                        action: RESOURCE_ACTION.EDIT
+                                    }
+                                }"
+                            >
+                                {{ $t('copy') }}
+                            </bk-button>
+                            <bk-button
+                                v-else
+                                class="mr10"
+                                theme="primary"
+                                text
+                                @click="copyAsTemplateInstance(props.row)"
+                                :disabled="!props.row.hasPermission"
+                            >
+                                {{ $t('copy') }}
+                            </bk-button>
                             <bk-button theme="primary" text @click="toCompared(props.row)">{{ $t('template.diff') }}</bk-button>
                         </template>
                     </bk-table-column>
@@ -95,12 +176,19 @@
     import emptyTips from '@/components/pipelineList/imgEmptyTips'
     import instanceCompared from '@/components/template/instance-compared.vue'
     import { convertTime } from '@/utils/util'
+    import {
+        TEMPLATE_RESOURCE_ACTION,
+        RESOURCE_ACTION
+    } from '@/utils/permission'
 
     export default {
         components: {
             'inner-header': innerHeader,
             'empty-tips': emptyTips,
             'instance-compared': instanceCompared
+        },
+        props: {
+            isEnabledPermission: Boolean
         },
         data () {
             return {
@@ -159,7 +247,8 @@
                         label: this.$t('template.updating'),
                         className: 'updating'
                     }
-                }
+                },
+                hasCreatePermission: false
             }
         },
         computed: {
@@ -174,6 +263,12 @@
             },
             showInstanceList () {
                 return this.showContent && (this.instanceList.length || this.searchable)
+            },
+            TEMPLATE_RESOURCE_ACTION () {
+                return TEMPLATE_RESOURCE_ACTION
+            },
+            RESOURCE_ACTION () {
+                return RESOURCE_ACTION
             }
         },
         watch: {
@@ -232,6 +327,7 @@
                     this.currentVersionName = res.latestVersion.versionName
                     this.instanceList = res.instances
                     this.pagination.count = res.count
+                    this.hasCreatePermission = res.hasCreateTemplateInstancePerm
                 } catch (err) {
                     this.$showTips({
                         message: err.message || err,
@@ -264,7 +360,8 @@
                 this.$router.push(route)
             },
             selectItem (items) {
-                this.selectItemList = items
+                this.selectItemList = items.filter(i => i.hasPermission)
+                return items.filter(i => i.hasPermission)
             },
             async handlePageChange (page) {
                 if (page !== this.pagination.current) {
@@ -382,7 +479,7 @@
                 }
             },
             isUpdating (row) {
-                return row.status !== 'UPDATING'
+                return row.status !== 'UPDATING' && row.hasPermission
             },
             comfireHandler () {
 
@@ -397,6 +494,18 @@
             toPipelineHistory (pipelineId) {
                 const url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/${pipelineId}/history`
                 window.open(url, '_blank')
+            },
+            copyAsTemplateInstance (row) {
+                const route = {
+                    name: 'createInstance',
+                    params: {
+                        projectId: this.projectId,
+                        pipelineId: this.pipelineId,
+                        curVersionId: this.currentVersionId,
+                        pipelineName: (row.pipelineName + '_copy').substring(0, 128)
+                    }
+                }
+                this.$router.push(route)
             }
         }
     }
@@ -452,6 +561,11 @@
                 color: $primaryColor;
                 cursor: pointer;
             }
+            .disabled-checkbox {
+                position: absolute;
+                left: -60px;
+                top:  0;
+            }
             .status-card {
                 max-width: 120px;
                 font-size: 12px;
@@ -470,10 +584,6 @@
                 display: inline-block;
                 margin-right: 20px;
                 cursor: pointer;
-            }
-            .is-disabled {
-                color: #ccc;
-                cursor: not-allowed;
             }
         }
         .batch-update {
