@@ -33,5 +33,5 @@ import io.swagger.annotations.ApiModelProperty
 data class AgentQueryAgentStatusFromJobReq(
     @ApiModelProperty(value = "主机ID数组，单次查询主机数量不可超过5000")
     @JsonProperty("host_id_list")
-    val hostIdList: List<Int>
+    val hostIdList: List<Long>
 )

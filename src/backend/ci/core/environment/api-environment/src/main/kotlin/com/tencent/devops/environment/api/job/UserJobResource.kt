@@ -9,7 +9,7 @@ import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLogResult
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.req.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
-import com.tencent.devops.environment.pojo.job.agentreq.TerminalAgentInstallTaskReq
+import com.tencent.devops.environment.pojo.job.agentreq.TerminateAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.resp.GetStepInstanceDetailResult
 import com.tencent.devops.environment.pojo.job.resp.GetStepInstanceStatusResult
@@ -220,7 +220,7 @@ interface UserJobResource {
         @PathParam("jobId")
         jobId: Int,
         @ApiParam(value = "终止agent安装任务的请求信息", required = true)
-        terminalAgentInstallTaskReq: TerminalAgentInstallTaskReq
+        terminateAgentInstallTaskReq: TerminateAgentInstallTaskReq
     ): AgentResult<TerminalAgentInstallTaskResult>
 
     @ApiOperation("重试agent安装任务的接口")

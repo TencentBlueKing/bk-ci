@@ -9,7 +9,7 @@ import com.tencent.devops.environment.pojo.job.agentreq.AgentQueryAgentStatusFro
 import com.tencent.devops.environment.pojo.job.agentreq.AgentQueryAgentTaskLogResult
 import com.tencent.devops.environment.pojo.job.agentreq.AgentQueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.agentreq.AgentRetryAgentInstallTaskReq
-import com.tencent.devops.environment.pojo.job.agentreq.AgentTerminalAgentInstallTaskReq
+import com.tencent.devops.environment.pojo.job.agentreq.AgentTerminateAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.req.CreateAccountReq
 import com.tencent.devops.environment.pojo.job.req.DeleteAccountReq
 import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudDeleteAccountResult
@@ -43,7 +43,7 @@ import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentStatusFromNode
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLogResult
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
-import com.tencent.devops.environment.pojo.job.agentreq.TerminalAgentInstallTaskReq
+import com.tencent.devops.environment.pojo.job.agentreq.TerminateAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentInfo
 import com.tencent.devops.environment.pojo.job.agentres.AgentInstallAgentResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentStatusFromJobResult
@@ -959,11 +959,11 @@ class JobService @Autowired constructor(
         userId: String,
         projectId: String,
         jobId: Int,
-        terminalAgentInstallTaskReq: TerminalAgentInstallTaskReq
+        terminateAgentInstallTaskReq: TerminateAgentInstallTaskReq
     ): AgentResult<TerminalAgentInstallTaskResult> {
         AgentApi.setThreadLocal("terminalAgentInstallTask")
-        val terminalAgentInstallTaskRequest = AgentTerminalAgentInstallTaskReq(
-            instanceIdList = terminalAgentInstallTaskReq.instanceIdList
+        val terminalAgentInstallTaskRequest = AgentTerminateAgentInstallTaskReq(
+            instanceIdList = terminateAgentInstallTaskReq.instanceIdList
         )
         val agentTrmAgentInstallTaskRes: AgentResult<AgentTerminalAgentInstallTaskResult> = agentApi.executePostRequest(
             terminalAgentInstallTaskRequest, AgentTerminalAgentInstallTaskResult::class.java, jobId
