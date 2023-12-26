@@ -109,7 +109,7 @@ class TOFService @Autowired constructor(
         validate()
         var detail = userDeptCache.getIfPresent(userId)
         if (detail == null) {
-            detail = getDeftFromCache(userId) ?: getDeptFromTof(operator, userId, bkTicket)
+            detail = getDeptFromTof(operator, userId, bkTicket)
             if (detail == null) {
                 logger.info("user $userId is level office")
                 throw OperationException(
@@ -124,7 +124,7 @@ class TOFService @Autowired constructor(
             userDeptCache.put(userId, detail)
         }
 
-        return detail!!
+        return detail
     }
 
     fun getUserDeptDetail(userId: String): UserDeptDetail {
@@ -534,6 +534,10 @@ class TOFService @Autowired constructor(
                 }
             }
         }
+        // 获取部门及部门以上的祖先
+        val index = deptInfos.indexOfFirst { it.typeId.toInt() == OrganizationType.dept.typeId }
+        val filteredDeptInfos = if (index == -1) deptInfos else deptInfos.take(index + 1)
+
         return UserDeptDetail(
             bgName = bgName,
             bgId = bgId,
@@ -543,8 +547,7 @@ class TOFService @Autowired constructor(
             centerId = centerId,
             groupId = groupId,
             groupName = groupName,
-            // 部门及部门以上的祖先
-            deptInfos = deptInfos.take(deptInfos.indexOfFirst { it.typeId.toInt() == OrganizationType.dept.typeId } + 1)
+            deptInfos = filteredDeptInfos
         )
     }
 
