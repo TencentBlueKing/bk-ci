@@ -82,7 +82,7 @@ class QueryAgentStatusService @Autowired constructor(
     private fun getAgentVersionsFromJob(
         userId: String,
         projectId: String,
-        hostIdList: List<Int>
+        hostIdList: List<Long>
     ): AgentResult<QueryAgentStatusFromJobResult> {
         val queryAgentStatusRequest = QueryAgentStatusFromJobReq(
             hostIdList = hostIdList
