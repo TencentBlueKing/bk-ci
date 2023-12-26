@@ -39,6 +39,8 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispatcher
+import com.tencent.devops.common.event.pojo.measure.ProjectUserDailyEvent
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
@@ -62,6 +64,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Service
@@ -75,7 +78,8 @@ class ExperienceDownloadService @Autowired constructor(
     private val experiencePublicDao: ExperiencePublicDao,
     private val experienceBaseService: ExperienceBaseService,
     private val experiencePushService: ExperiencePushService,
-    private val client: Client
+    private val client: Client,
+    private val measureEventDispatcher: MeasureEventDispatcher
 ) {
     fun checkVersion(userId: String, platform: Int, params: List<CheckVersionParam>): List<CheckVersionVO> {
         val experienceRecordIds = if (params.isEmpty()) {
@@ -324,6 +328,15 @@ class ExperienceDownloadService @Autowired constructor(
                 platform = experienceRecord.platform,
                 recordId = experienceRecord.id
             )
+            if (experiencePublicDao.countByRecordId(dslContext = dslContext, recordId = experienceRecord.id) == 0) {
+                measureEventDispatcher.dispatch(
+                    ProjectUserDailyEvent(
+                        projectId = experienceRecord.projectId,
+                        userId = userId,
+                        theDate = LocalDate.now()
+                    )
+                )
+            }
         } catch (e: Exception) {
             logger.warn("addDownloadRecord error", e)
         }

@@ -27,7 +27,6 @@
 
 package com.tencent.devops.dispatch.docker.service
 
-import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.docker.common.Constants
 import org.slf4j.LoggerFactory
@@ -68,8 +67,7 @@ class DockerHostQpcService @Autowired constructor(
         return redisOperation.isMember(Constants.QPC_WHITE_LIST_KEY_PREFIX, gitProjectId)
     }
 
-    fun getQpcUniquePath(dispatchMessage: DispatchMessage): String? {
-        val projectId = dispatchMessage.projectId
+    fun getQpcUniquePath(projectId: String): String? {
         return if (projectId.startsWith("git_") &&
             checkQpcWhitelist(projectId.removePrefix("git_"))
         ) {

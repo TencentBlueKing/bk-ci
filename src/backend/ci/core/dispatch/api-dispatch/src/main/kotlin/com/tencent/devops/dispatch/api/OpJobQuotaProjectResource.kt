@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.api
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.dispatch.pojo.JobQuotaProject
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import io.swagger.annotations.Api
@@ -68,7 +69,10 @@ interface OpJobQuotaProjectResource {
         projectId: String,
         @ApiParam(value = "构建机类型", required = true)
         @PathParam("vmType")
-        vmType: JobQuotaVmType
+        vmType: JobQuotaVmType,
+        @ApiParam(value = "构建来源", required = false)
+        @QueryParam("channelCode")
+        channelCode: String = ChannelCode.BS.name
     ): Result<JobQuotaProject>
 
     @ApiOperation("添加项目的JOB配额信息")
@@ -91,7 +95,10 @@ interface OpJobQuotaProjectResource {
         projectId: String,
         @ApiParam(value = "构建机类型", required = true)
         @PathParam("vmType")
-        vmType: JobQuotaVmType
+        vmType: JobQuotaVmType,
+        @ApiParam(value = "构建来源", required = false)
+        @QueryParam("channelCode")
+        channelCode: String = ChannelCode.BS.name
     ): Result<Boolean>
 
     @ApiOperation("更新项目的JOB配额信息")
@@ -117,6 +124,9 @@ interface OpJobQuotaProjectResource {
         projectId: String,
         @ApiParam(value = "构建机类型", required = true)
         @PathParam("vmType")
-        vmType: JobQuotaVmType
+        vmType: JobQuotaVmType,
+        @ApiParam(value = "构建来源", required = false)
+        @QueryParam("channelCode")
+        channelCode: String = ChannelCode.BS.name
     ): Result<Boolean>
 }

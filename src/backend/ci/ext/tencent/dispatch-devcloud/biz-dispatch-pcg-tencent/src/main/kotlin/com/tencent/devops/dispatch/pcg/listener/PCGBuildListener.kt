@@ -73,7 +73,7 @@ class PCGBuildListener @Autowired constructor(
     }
 
     override fun getVmType(): JobQuotaVmType? {
-        return JobQuotaVmType.OTHER
+        return JobQuotaVmType.DOCKER_PCG
     }
 
     override fun onShutdown(event: PipelineAgentShutdownEvent) {
@@ -83,29 +83,31 @@ class PCGBuildListener @Autowired constructor(
     override fun onStartup(dispatchMessage: DispatchMessage) {
         logger.info("On start up - ($dispatchMessage)")
 
-        val split = dispatchMessage.dispatchMessage.split(":")
-        if (split.size != 5 && split.size != 4) {
-            logger.warn("[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}] " +
-                            "The dispatch message is illegal - (${dispatchMessage.dispatchMessage})")
-            onFailure(
-                ErrorType.USER,
-                ErrorCodeEnum.IMAGE_ILLEGAL_ERROR.errorCode,
-                ErrorCodeEnum.IMAGE_ILLEGAL_ERROR.getErrorMessage(),
-                "The pcg dispatch image is illegal - (${dispatchMessage.dispatchMessage})"
-            )
-        }
+        with(dispatchMessage.event) {
+            val split = dispatchType.value.split(":")
+            if (split.size != 5 && split.size != 4) {
+                logger.warn("[$projectId|$pipelineId|$buildId] " +
+                        "The dispatch message is illegal - (${dispatchType.value})")
+                onFailure(
+                    ErrorType.USER,
+                    ErrorCodeEnum.IMAGE_ILLEGAL_ERROR.errorCode,
+                    ErrorCodeEnum.IMAGE_ILLEGAL_ERROR.getErrorMessage(),
+                    "The pcg dispatch image is illegal - (${dispatchType.value})"
+                )
+            }
 
-        val imgName = split[0]
-        val imgVer = split[1]
-        val os = split[2]
-        val language = split[3]
-        var useRoot = true
-        if (split.size == 5) {
-            useRoot = split[4].toBoolean()
+            val imgName = split[0]
+            val imgVer = split[1]
+            val os = split[2]
+            val language = split[3]
+            var useRoot = true
+            if (split.size == 5) {
+                useRoot = split[4].toBoolean()
+            }
+            logger.info("[$projectId|$pipelineId|$buildId] " +
+                    "get the pcg image ($imgName|$imgVer|$os|$language)")
+            startPCGAgent(imgName, imgVer, os, language, useRoot, dispatchMessage)
         }
-        logger.info("[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}] " +
-                        "get the pcg image ($imgName|$imgVer|$os|$language)")
-        startPCGAgent(imgName, imgVer, os, language, useRoot, dispatchMessage)
     }
 
     override fun onStartupDemote(dispatchMessage: DispatchMessage) {
@@ -122,12 +124,10 @@ class PCGBuildListener @Autowired constructor(
     ) {
 
         val script = dockerInitShell
-        val cmd = with(dispatchMessage) {
-            "cd /data/inotify-tools; sh $script $id $secretKey $gateway $projectId $pipelineId $buildId $vmSeqId ${
-                !keepWorkspaceProjectCache.get(
-                    projectId
-                )
-            }"
+        val cmd = with(dispatchMessage.event) {
+            "cd /data/inotify-tools; sh $script ${dispatchMessage.id} ${dispatchMessage.secretKey} " +
+                    "${dispatchMessage.gateway} $projectId $pipelineId $buildId $vmSeqId ${
+                !keepWorkspaceProjectCache.get(projectId)}"
         }
 
         val param = if (useRoot) {
@@ -138,9 +138,9 @@ class PCGBuildListener @Autowired constructor(
                 img_ver = imgVer,
                 os = os,
                 language = language,
-                project_id = dispatchMessage.projectId,
-                pipeline_id = dispatchMessage.pipelineId,
-                build_id = dispatchMessage.buildId,
+                project_id = dispatchMessage.event.projectId,
+                pipeline_id = dispatchMessage.event.pipelineId,
+                build_id = dispatchMessage.event.buildId,
                 id = dispatchMessage.id,
                 user = "root"
             )
@@ -152,9 +152,9 @@ class PCGBuildListener @Autowired constructor(
                 img_ver = imgVer,
                 os = os,
                 language = language,
-                project_id = dispatchMessage.projectId,
-                pipeline_id = dispatchMessage.pipelineId,
-                build_id = dispatchMessage.buildId,
+                project_id = dispatchMessage.event.projectId,
+                pipeline_id = dispatchMessage.event.pipelineId,
+                build_id = dispatchMessage.event.buildId,
                 id = dispatchMessage.id,
                 user = null
             )
@@ -214,11 +214,11 @@ class PCGBuildListener @Autowired constructor(
 
         log(
             buildLogPrinter,
-            dispatchMessage.buildId,
-            dispatchMessage.containerHashId,
-            dispatchMessage.vmSeqId,
+            dispatchMessage.event.buildId,
+            dispatchMessage.event.containerHashId,
+            dispatchMessage.event.vmSeqId,
             "Success to start up pcg docker on ${getHost(dispatchMessage, jsonResponse)}",
-            dispatchMessage.executeCount
+            dispatchMessage.event.executeCount
         )
     }
 
@@ -246,14 +246,14 @@ class PCGBuildListener @Autowired constructor(
         return try {
             jsonResponse.optJSONObject("data").optString("host")
         } catch (t: Throwable) {
-            logger.warn("[${dispatchMessage.buildId}] Fail to get the pcg docker host - $jsonResponse", t)
+            logger.warn("[${dispatchMessage.event.buildId}] Fail to get the pcg docker host - $jsonResponse", t)
             logRed(
                 buildLogPrinter,
-                dispatchMessage.buildId,
-                dispatchMessage.containerHashId,
-                dispatchMessage.vmSeqId,
+                dispatchMessage.event.buildId,
+                dispatchMessage.event.containerHashId,
+                dispatchMessage.event.vmSeqId,
                 "Fail to get the pcg docker host",
-                dispatchMessage.executeCount
+                dispatchMessage.event.executeCount
             )
             ""
         }
