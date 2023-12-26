@@ -142,7 +142,17 @@ class TOFService @Autowired constructor(
     ): List<OrganizationInfo> {
         validate()
         return getChildDeptInfos(userId, type, id).map {
-            OrganizationInfo(it.ID, it.Name)
+            val nextLevel = if (type == OrganizationType.dept) {
+                it.TypeId != OrganizationType.dept.typeId
+            } else {
+                null
+            }
+            OrganizationInfo(
+                id = it.ID,
+                name = it.Name,
+                typeId = it.TypeId,
+                nextLevel = nextLevel
+            )
         }
     }
 
@@ -505,20 +515,20 @@ class TOFService @Autowired constructor(
         groupId = staffInfo.groupId
         groupName = staffInfo.groupName
         for (deptInfo in deptInfos) {
-            val level = deptInfo.level
+            val typeId = deptInfo.typeId.toInt()
             val name = deptInfo.name
-            when (level) {
-                "1" -> {
+            when (typeId) {
+                OrganizationType.bg.typeId -> {
                     bgName = name
                     bgId = deptInfo.id
                 }
 
-                "2" -> {
+                OrganizationType.dept.typeId -> {
                     deptName = name
                     deptId = deptInfo.id
                 }
 
-                "3" -> {
+                OrganizationType.center.typeId -> {
                     centerName = name
                     centerId = deptInfo.id
                 }
@@ -532,7 +542,10 @@ class TOFService @Autowired constructor(
             centerName = centerName,
             centerId = centerId,
             groupId = groupId,
-            groupName = groupName
+            groupName = groupName,
+            deptInfos = deptInfos.takeWhile { it.typeId.toInt() != OrganizationType.dept.typeId }.plus(
+                deptInfos.find { it.typeId.toInt() == OrganizationType.dept.typeId }
+            )
         )
     }
 
@@ -555,13 +568,13 @@ class TOFService @Autowired constructor(
             val path = "get_dept_staffs_with_level"
             val responseContent = request(
                 path, DeptStaffsRequest(
-                    dept_id = deptId,
-                    level = level,
-                    app_code = tofAppCode!!,
-                    app_secret = tofAppSecret!!
-                ), I18nUtil.getCodeLanMessage(
-                    messageCode = ProjectMessageCode.QUERY_DEPARTMENT_FAIL
-                )
+                dept_id = deptId,
+                level = level,
+                app_code = tofAppCode!!,
+                app_secret = tofAppSecret!!
+            ), I18nUtil.getCodeLanMessage(
+                messageCode = ProjectMessageCode.QUERY_DEPARTMENT_FAIL
+            )
             )
             val response: Response<List<StaffInfo>> = objectMapper.readValue(responseContent)
             if (response.data == null) {

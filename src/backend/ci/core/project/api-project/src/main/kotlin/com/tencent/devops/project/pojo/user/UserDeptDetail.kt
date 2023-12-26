@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.pojo.user
 
+import com.tencent.devops.project.pojo.DeptInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -56,5 +57,7 @@ data class UserDeptDetail(
     @ApiModelProperty("用户ID")
     val userId: String? = null,
     @ApiModelProperty("用户名称")
-    val name: String? = null
+    val name: String? = null,
+    @ApiModelProperty("部门及以上层级")
+    val deptInfos: List<DeptInfo?>? = emptyList()
 )
