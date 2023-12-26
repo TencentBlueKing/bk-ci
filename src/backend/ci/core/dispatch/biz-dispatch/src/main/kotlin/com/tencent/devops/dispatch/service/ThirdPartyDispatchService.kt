@@ -286,8 +286,8 @@ class ThirdPartyDispatchService @Autowired constructor(
             dispatchMessage = dispatchMessage,
             retryCount = 0,
             dockerInfo = dockerInfo,
-            envId,
-            jobId
+            envId = envId,
+            jobId = jobId
         )
 
         thirdPartyAgentBuildRedisUtils.setThirdPartyBuild(
@@ -467,52 +467,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                 checkAllNodeConcurrency(envId, dispatchMessage.event)
 
                 // 判断是否有 jobEnv 的限制，筛选单节点的并发数
-                var jobEnvActiveAgents = mutableListOf<ThirdPartyAgent>()
-                if (dispatchMessage.event.singleNodeConcurrency != null) {
-                    if (envId != null && !dispatchMessage.event.jobId.isNullOrBlank()) {
-                        val m = thirdPartyAgentBuildService.countAgentsJobRunningAndQueueAll(
-                            pipelineId = dispatchMessage.event.pipelineId,
-                            envId = envId,
-                            jobId = dispatchMessage.event.jobId!!,
-                            agentIds = activeAgents.map { it.agentId }.toSet()
-                        )
-                        activeAgents.forEach {
-                            // 为空说明当前节点没有记录就是没有任务直接加
-                            if (m[it.agentId] == null) {
-                                jobEnvActiveAgents.add(it)
-                                return@forEach
-                            }
-                            if (m[it.agentId]!! < dispatchMessage.event.singleNodeConcurrency!!) {
-                                jobEnvActiveAgents.add(it)
-                                return@forEach
-                            }
-                        }
-                        // 没有一个节点满足则进入排队机制
-                        if (jobEnvActiveAgents.isEmpty()) {
-                            throw DispatchRetryMQException(
-                                errorCodeEnum = ErrorCodeEnum.GET_BUILD_RESOURCE_ERROR,
-                                errorMessage = I18nUtil.getCodeLanMessage(
-                                    messageCode = BK_THIRD_JOB_NODE_CURR,
-                                    params = arrayOf(
-                                        dispatchMessage.event.singleNodeConcurrency!!.toString(),
-                                        (dispatchMessage.event.queueTimeoutMinutes ?: 10).toString()
-                                    )
-                                )
-                            )
-                        }
-                    } else {
-                        logger.warn(
-                            "buildByEnvId|{} has allNodeConcurrency {} but env {}|job {} null",
-                            dispatchMessage.event.buildId,
-                            dispatchMessage.event.allNodeConcurrency,
-                            envId,
-                            dispatchMessage.event.jobId
-                        )
-                        jobEnvActiveAgents = activeAgents.toMutableList()
-                    }
-                } else {
-                    jobEnvActiveAgents = activeAgents.toMutableList()
-                }
+                val jobEnvActiveAgents = checkSingleNodeConcurrency(dispatchMessage, envId, activeAgents)
 
                 // 没有可用构建机列表进入下一次重试, 修复获取最近构建构建机超过10次不构建会被驱逐出最近构建机列表的BUG
                 if (jobEnvActiveAgents.isNotEmpty() && pickupAgent(
@@ -559,6 +514,60 @@ class ThirdPartyDispatchService @Autowired constructor(
                         )
             )
         }
+    }
+
+    private fun checkSingleNodeConcurrency(
+        dispatchMessage: DispatchMessage,
+        envId: Long?,
+        activeAgents: List<ThirdPartyAgent>
+    ): List<ThirdPartyAgent> {
+        if (dispatchMessage.event.singleNodeConcurrency == null) {
+            return activeAgents
+        }
+        if (envId == null || dispatchMessage.event.jobId.isNullOrBlank()) {
+            logger.warn(
+                "buildByEnvId|{} has allNodeConcurrency {} but env {}|job {} null",
+                dispatchMessage.event.buildId,
+                dispatchMessage.event.allNodeConcurrency,
+                envId,
+                dispatchMessage.event.jobId
+            )
+            return activeAgents
+        }
+
+        val jobEnvActiveAgents = mutableListOf<ThirdPartyAgent>()
+        val m = thirdPartyAgentBuildService.countAgentsJobRunningAndQueueAll(
+            pipelineId = dispatchMessage.event.pipelineId,
+            envId = envId,
+            jobId = dispatchMessage.event.jobId!!,
+            agentIds = activeAgents.map { it.agentId }.toSet()
+        )
+        activeAgents.forEach {
+            // 为空说明当前节点没有记录就是没有任务直接加
+            if (m[it.agentId] == null) {
+                jobEnvActiveAgents.add(it)
+                return@forEach
+            }
+            if (m[it.agentId]!! < dispatchMessage.event.singleNodeConcurrency!!) {
+                jobEnvActiveAgents.add(it)
+                return@forEach
+            }
+        }
+        // 没有一个节点满足则进入排队机制
+        if (jobEnvActiveAgents.isEmpty()) {
+            throw DispatchRetryMQException(
+                errorCodeEnum = ErrorCodeEnum.GET_BUILD_RESOURCE_ERROR,
+                errorMessage = I18nUtil.getCodeLanMessage(
+                    messageCode = BK_THIRD_JOB_NODE_CURR,
+                    params = arrayOf(
+                        dispatchMessage.event.singleNodeConcurrency!!.toString(),
+                        (dispatchMessage.event.queueTimeoutMinutes ?: 10).toString()
+                    )
+                )
+            )
+        }
+
+        return jobEnvActiveAgents.toList()
     }
 
     private fun checkAllNodeConcurrency(
