@@ -330,7 +330,8 @@ class ImageDao {
         // 公共镜像和普通镜像需排除初始化项目下面有处于测试中或者审核中的镜像
         publicImageCondition.add(
             tImage.IMAGE_CODE.notIn(
-                dslContext.select(tImage.IMAGE_CODE).from(tImage).join(tStoreProjectRel).on(tImage.IMAGE_CODE.eq(tStoreProjectRel.STORE_CODE)).where(
+                dslContext.select(tImage.IMAGE_CODE).from(tImage).join(tStoreProjectRel)
+                    .on(tImage.IMAGE_CODE.eq(tStoreProjectRel.STORE_CODE)).where(
                     initTestImageCondition
                 )
             )
