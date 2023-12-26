@@ -124,7 +124,7 @@ data class GitMrChangeInfo(
     val mrId: String = "",
     val labels: List<String>,
     val description: String? = "",
-    val files: List<GitMrFile>
+    val files: List<GitMrFile>?
 ) {
     data class GitMrFile(
         @JsonProperty("old_path")

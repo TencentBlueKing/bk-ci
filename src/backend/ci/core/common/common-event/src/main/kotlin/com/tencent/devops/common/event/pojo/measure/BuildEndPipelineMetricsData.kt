@@ -45,6 +45,8 @@ data class BuildEndPipelineMetricsData(
     val buildId: String,
     @ApiModelProperty("构建序号", required = true)
     val buildNum: Int,
+    @ApiModelProperty("触发类型", required = true)
+    val trigger: String? = null,
     @ApiModelProperty("代码库地址", required = false)
     val repoUrl: String? = null,
     @ApiModelProperty("代码库分支", required = false)

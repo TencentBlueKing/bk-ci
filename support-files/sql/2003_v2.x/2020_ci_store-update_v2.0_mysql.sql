@@ -76,6 +76,38 @@ BEGIN
         ALTER TABLE T_ATOM ADD LATEST_TEST_FLAG bit(1) DEFAULT b'0' NULL COMMENT '是否为最新测试版本原子， TRUE：最新 FALSE：非最新';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_STORE_APPROVE'
+                     AND INDEX_NAME = 'inx_tsa_store_code') THEN
+        ALTER TABLE T_STORE_APPROVE ADD INDEX `inx_tsa_store_code` (`STORE_CODE`);
+    END IF;
+
+    IF EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_STORE_APPROVE'
+                     AND INDEX_NAME = 'inx_tsa_type') THEN
+        ALTER TABLE T_STORE_APPROVE DROP INDEX `inx_tsa_type`;
+    END IF;
+
+    IF EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_STORE_APPROVE'
+                     AND INDEX_NAME = 'inx_tsa_applicant') THEN
+        ALTER TABLE T_STORE_APPROVE DROP INDEX `inx_tsa_applicant`;
+    END IF;
+
+    IF EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_STORE_APPROVE'
+                     AND INDEX_NAME = 'inx_tsa_status') THEN
+        ALTER TABLE T_STORE_APPROVE DROP INDEX `inx_tsa_status`;
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;
