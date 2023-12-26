@@ -106,6 +106,8 @@ class ThirdPartyAgentBuildDao {
                     )
                     .set(EXECUTE_COUNT, executeCount)
                     .set(CONTAINER_HASH_ID, containerHashId)
+                    .set(ENV_ID, envId)
+                    .set(JOB_ID, jobId)
                     .where(ID.eq(preRecord.id)).execute()
             }
             return dslContext.insertInto(
