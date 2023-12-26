@@ -37,7 +37,7 @@
 
 <style lang="scss" scoped>
     ::v-deep .bk-exception-img.part-img {
-        margin-top: 200px;
+        margin-top: 15%;
     }
     .empty-tips {
         margin-top: 8px;

@@ -420,9 +420,9 @@
     "updateDialogContent": "The instances are being updated. An email will be notified After the update is completed",
     "permissionSetting": "Permission Setting",
     "accessDeny": {
-        "title": "No access to this pipeline template",
-        "desc": "You do not have permission to view the pipeline template, please apply for permission",
-        "apply": "Apply"
+      "title": "No access to this pipeline template",
+      "desc": "You do not have permission to view the pipeline template, please apply for permission",
+      "apply": "Apply"
     },
     "editStoreTemplateTips": "The development store template does not support editing"
   },
@@ -871,7 +871,7 @@
     "provided": "Provided",
     "selected": "Selected",
     "select": "Select",
-    "envUseTips": "Usable under compiling environment, please switch to the corresponding type of job and then try again",
+    "envUseTips": "{0} Usable under compiling environment, please switch to the corresponding type of job and then try again",
     "noEnvUseTips": " This plugin is usable within agentless job, please switch to the corresponding type of job and then try again ",
     "installSuc": "Installed successfully",
     "loadingData": "Loading data",

@@ -23,6 +23,7 @@
             :outer-border="false"
             :row-class-name="rowClassName"
             :pagination="pagination"
+            :default-sort="sortField"
             @header-dragend="handelHeaderDragend"
             @row-click="handleRowSelect"
             @sort-change="handleSortChange"
@@ -195,6 +196,7 @@
     import {
         TABLE_COLUMN_CACHE,
         CODE_REPOSITORY_CACHE,
+        CODE_REPOSITORY_SEARCH_VAL,
         CACHE_CODELIB_TABLE_WIDTH_MAP,
         listColumnsCache
     } from '../../config/'
@@ -321,6 +323,15 @@
                     result[item.id] = true
                     return result
                 }, {})
+            },
+            sortField () {
+                const { sortType, sortBy } = this.$route.query
+                const prop = sortBy ?? localStorage.getItem('codelibSortBy')
+                const order = sortType ?? localStorage.getItem('codelibSortType')
+                return {
+                    prop: this.getkeyByValue(this.sortByMap, prop),
+                    order: this.getkeyByValue(this.sortTypeMap, order)
+                }
             }
         },
 
@@ -423,6 +434,9 @@
                 'deleteRepo',
                 'fetchUsingPipelinesList'
             ]),
+            getkeyByValue (obj, value) {
+                return Object.keys(obj).find(key => obj[key] === value)
+            },
             prettyDateTimeFormat,
 
             /**
@@ -466,7 +480,8 @@
                         scmType: row.type,
                         id: row.repositoryHashId,
                         page: this.page,
-                        limit: this.pagination.limit
+                        limit: this.pagination.limit,
+                        projectId: this.projectId
                     }))
                     this.$emit('updateFlod', true)
                     this.$emit('update:curRepoId', row.repositoryHashId)
@@ -490,6 +505,7 @@
                     query: {}
                 })
                 localStorage.removeItem(CODE_REPOSITORY_CACHE)
+                localStorage.removeItem(CODE_REPOSITORY_SEARCH_VAL)
                 this.$emit('updateFlod', false)
             },
 
@@ -585,7 +601,7 @@
             handleSortChange ({ prop, order }) {
                 const sortBy = this.sortByMap[prop]
                 const sortType = this.sortTypeMap[order]
-                this.$emit('handleSortChange', { sortBy, sortType })
+                this.$emit('handleSortChange', { sortBy, sortType, prop, order })
             },
 
             resetFilter () {
@@ -596,7 +612,6 @@
 
             handelHeaderDragend (newWidth, oldWidth, column) {
                 this.tableWidthMap[column.property] = newWidth
-                console.log(column.property)
                 localStorage.setItem(CACHE_CODELIB_TABLE_WIDTH_MAP, JSON.stringify(this.tableWidthMap))
             }
         }
@@ -623,6 +638,9 @@
 .flod-table {
     td,
     th {
+        width: 400px !important;
+    }
+    .bk-table-empty-block {
         width: 400px !important;
     }
 }

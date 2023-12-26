@@ -209,5 +209,8 @@
         "manage": "Manage"
     },
     "documentation": "Documentation",
-    "community": "Community"
+    "community": "Community",
+    "websocketNotice": "Websocket Notice",
+    "websocketInterupt": "Websocket connection interrupted, cannot automatically obtain the current pipeline running status. Reconnect?",
+    "reconnect": "Reconnect"
 }
