@@ -699,9 +699,6 @@
         ::-webkit-scrollbar {
             background-color: white;
         }
-        ::-webkit-scrollbar-thumb {
-            background-color: #DCDEE5 !important;
-        }
         .pipeline-name-warpper {
             width: 100%;
             display: inline-flex;

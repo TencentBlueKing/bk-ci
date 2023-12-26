@@ -109,6 +109,7 @@
     import layout from '../components/layout'
     import {
         CODE_REPOSITORY_CACHE,
+        CODE_REPOSITORY_SEARCH_VAL,
         codelibTypes,
         getCodelibConfig,
         isGit,
@@ -131,7 +132,7 @@
             CodeLibDetail,
             layout
         },
-
+       
         data () {
             return {
                 RESOURCE_ACTION,
@@ -203,8 +204,14 @@
         },
 
         async mounted () {
+            const { sortType, sortBy } = this.$route.query
+            this.sortType = sortType ?? localStorage.getItem('codelibSortType') ?? ''
+            this.sortBy = sortBy ?? localStorage.getItem('codelibSortBy') ?? ''
             this.init()
             this.projectList = this.$store.state.projectList
+            if (this.userId) {
+                this.aliasName = JSON.parse(localStorage.getItem(CODE_REPOSITORY_SEARCH_VAL)) || ''
+            }
 
             this.refreshCodelibList()
             if (
@@ -241,14 +248,15 @@
                 const tableHeadHeight = 42
                 const paginationHeight = 63
                 const windownOffsetBottom = 20
-                const listTotalHeight = windowHeight - top - tableHeadHeight - paginationHeight - windownOffsetBottom - 52
+                const listTotalHeight = windowHeight - top - tableHeadHeight - paginationHeight - windownOffsetBottom - 74
                 const tableRowHeight = 42
 
+                const isCacheProject = this.projectId === (cache && cache.projectId)
                 this.aliasName = query.searchName || ''
-                const id = query.id || (cache && cache.id) || ''
-                const scmType = query.scmType || (cache && cache.scmType) || ''
-                const page = (cache && cache.page) || 1
-                const limit = (cache && cache.limit) || Math.floor(listTotalHeight / tableRowHeight)
+                const id = isCacheProject ? query.id || (cache && cache.id) : ''
+                const scmType = isCacheProject ? query.scmType || (cache && cache.scmType) : ''
+                const page = isCacheProject ? (cache && cache.page) : 1
+                const limit = isCacheProject ? (cache && cache.limit) : Math.floor(listTotalHeight / tableRowHeight)
                 this.startPage = page
                 this.defaultPagesize = Number(limit)
                 if (id) {
@@ -269,6 +277,7 @@
             clearAliasName () {
                 if (this.aliasName === '') {
                     this.refreshCodelibList()
+                    localStorage.removeItem(CODE_REPOSITORY_SEARCH_VAL)
                 }
             },
 
@@ -285,6 +294,13 @@
                 sortType = this.sortType
             ) {
                 if (!this.userId) this.isLoading = true
+                this.$router.push({
+                    query: {
+                        ...this.$route.query,
+                        sortBy,
+                        sortType
+                    }
+                })
                 await this.requestList({
                     projectId,
                     aliasName,
@@ -296,10 +312,11 @@
             },
 
             handleEnterSearch (val) {
+                localStorage.setItem(CODE_REPOSITORY_SEARCH_VAL, JSON.stringify(val.trim()))
                 this.$router.push({
                     query: {
                         ...this.$route.query,
-                        searchName: val
+                        searchName: val.trim()
                     }
                 })
                 this.refreshCodelibList(this.projectId, 1)
@@ -348,6 +365,20 @@
                 this.sortBy = sortBy
                 this.sortType = sortType
                 this.refreshCodelibList()
+                if (sortBy && sortType) {
+                    localStorage.setItem('codelibSortType', sortType)
+                    localStorage.setItem('codelibSortBy', sortBy)
+                } else {
+                    localStorage.removeItem('codelibSortType')
+                    localStorage.removeItem('codelibSortBy')
+                }
+                this.$router.push({
+                    query: {
+                        ...this.$route.query,
+                        sortBy,
+                        sortType
+                    }
+                })
             },
 
             handleUpdateFlod (payload) {
