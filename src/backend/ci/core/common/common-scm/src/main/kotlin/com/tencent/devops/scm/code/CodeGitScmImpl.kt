@@ -118,7 +118,7 @@ class CodeGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to list all branches", ignored)
             throw ScmException(
-                I18nUtil.getCodeLanMessage(
+                ignored.message ?: I18nUtil.getCodeLanMessage(
                     CommonMessageCode.GIT_TOKEN_FAIL
                 ),
                 ScmType.CODE_GIT.name
@@ -134,7 +134,7 @@ class CodeGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the private key of git", ignored)
             throw ScmException(
-                I18nUtil.getCodeLanMessage(
+                ignored.message ?: I18nUtil.getCodeLanMessage(
                     CommonMessageCode.GIT_SERCRT_WRONG
                 ),
                 ScmType.CODE_GIT.name
@@ -158,7 +158,7 @@ class CodeGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to list all branches", ignored)
             throw ScmException(
-                I18nUtil.getCodeLanMessage(
+                ignored.message ?: I18nUtil.getCodeLanMessage(
                     CommonMessageCode.GIT_TOKEN_FAIL
                 ),
                 ScmType.CODE_GIT.name
@@ -173,7 +173,7 @@ class CodeGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the username and password of git", ignored)
             throw ScmException(
-                I18nUtil.getCodeLanMessage(
+                ignored.message ?: I18nUtil.getCodeLanMessage(
                     CommonMessageCode.GIT_LOGIN_FAIL
                 ),
                 ScmType.CODE_GIT.name
