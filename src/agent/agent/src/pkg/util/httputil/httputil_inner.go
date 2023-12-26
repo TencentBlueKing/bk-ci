@@ -31,21 +31,11 @@
 package httputil
 
 import (
-	"bytes"
-	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
-	"io"
-	"net/http"
-	"net/url"
-	"reflect"
 	"strings"
-	"time"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 )
 
