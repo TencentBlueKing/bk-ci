@@ -25,73 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package heartbeat
+package agent
 
 import (
-	"errors"
-	"time"
-
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
 
-func DoAgentHeartbeat() {
-	defer func() {
-		if err := recover(); err != nil {
-			logs.Error("agent heartbeat panic: ", err)
-		}
-	}()
-
-	// 部分逻辑只在启动时运行一次
-	if _, err := upgrade.SyncJdkVersion(); err != nil {
-		logs.Error("agent heart sync jdkVersion error", err)
-	}
-	if err := upgrade.SyncDockerInitFileMd5(); err != nil {
-		logs.Error("agent heart sync docker file md5 error", err)
-	}
-
-	for {
-		_ = agentHeartbeat()
-		time.Sleep(10 * time.Second)
-	}
-}
-
-func agentHeartbeat() error {
-	result, err := api.Heartbeat(
-		job.GBuildManager.GetInstances(),
-		upgrade.JdkVersion.GetVersion(),
-		job.GBuildDockerManager.GetInstances(),
-		api.DockerInitFileInfo{
-			FileMd5:     upgrade.DockerFileMd5.Md5,
-			NeedUpgrade: upgrade.DockerFileMd5.NeedUpgrade,
-		})
-	if err != nil {
-		logs.Error("agent heartbeat failed: ", err.Error())
-		return errors.New("agent heartbeat failed")
-	}
-	if result.IsNotOk() {
-		logs.Error("agent heartbeat failed: ", result.Message)
-		return errors.New("agent heartbeat failed")
-	}
-
-	heartbeatResponse := new(api.AgentHeartbeatResponse)
-	err = util.ParseJsonToData(result.Data, &heartbeatResponse)
-	if err != nil {
-		logs.Error("agent heartbeat failed: ", err.Error())
-		return errors.New("agent heartbeat failed")
-	}
-
-	if heartbeatResponse.AgentStatus == config.AgentStatusDelete {
-		upgrade.UninstallAgent()
-		return nil
-	}
-
+func agentHeartbeat(heartbeatResponse *api.AgentHeartbeatResponse) {
 	// agent配置
 	configChanged := false
 	if config.GAgentConfig.ParallelTaskCount != heartbeatResponse.ParallelTaskCount {
@@ -130,6 +75,11 @@ func agentHeartbeat() error {
 		configChanged = true
 	}
 
+	if heartbeatResponse.Props.EnablePipeline != config.GAgentConfig.EnablePipeline {
+		config.GAgentConfig.EnablePipeline = heartbeatResponse.Props.EnablePipeline
+		configChanged = true
+	}
+
 	if configChanged {
 		_ = config.GAgentConfig.SaveConfig()
 	}
@@ -148,6 +98,5 @@ func agentHeartbeat() error {
 		}
 	}
 
-	logs.Info("agent heartbeat done")
-	return nil
+	logs.Debug("agent heartbeat done")
 }

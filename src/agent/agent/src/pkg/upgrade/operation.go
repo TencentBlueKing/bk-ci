@@ -210,7 +210,7 @@ func DoUpgradeJdk() error {
 	go func() {
 		files, err := os.ReadDir(workDir)
 		if err != nil {
-			logs.Error("upgrade jdk remove old jdk file error", err)
+			logs.Error("[agentUpgrade]|upgrade jdk remove old jdk file error", err)
 			return
 		}
 		for _, file := range files {
@@ -218,7 +218,7 @@ func DoUpgradeJdk() error {
 				file.Name() != jdkTmpName {
 				err = os.RemoveAll(workDir + "/" + file.Name())
 				if err != nil {
-					logs.Error("upgrade jdk remove old jdk file error", err)
+					logs.Error("[agentUpgrade]|upgrade jdk remove old jdk file error", err)
 				}
 			}
 		}

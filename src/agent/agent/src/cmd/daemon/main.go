@@ -32,6 +32,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -184,6 +185,12 @@ func launch(agentPath string, isDebug bool) (*os.Process, error) {
 		return nil, fmt.Errorf("chmod agent file failed: %v", err)
 	}
 
+	// 获取 agent 的错误输出，这样有助于打印出崩溃的堆栈方便排查问题
+	stdErr, errstd := cmd.StderrPipe()
+	if errstd != nil {
+		logs.Error("get agent stderr pipe error", errstd)
+	}
+
 	if err = cmd.Start(); err != nil {
 		return nil, fmt.Errorf("start agent failed: %v", err)
 	}
@@ -196,6 +203,16 @@ func launch(agentPath string, isDebug bool) (*os.Process, error) {
 					systemutil.ExitProcess(constant.DAEMON_EXIT_CODE)
 				}
 			}
+			logs.Error("agent process error", err)
+			if errstd != nil {
+				return
+			}
+			out, err := io.ReadAll(stdErr)
+			if err != nil {
+				logs.Error("read agent stderr out error", err)
+				return
+			}
+			logs.Error("agent process error out", string(out))
 		}
 	}()
 

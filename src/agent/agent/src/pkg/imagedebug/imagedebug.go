@@ -37,6 +37,11 @@ const (
 
 var imageDebugLogs *logrus.Entry
 
+func Init() {
+	// 区分模块初始化日志，方便查询
+	imageDebugLogs = logs.Logs.WithField("module", "ImageDebug")
+}
+
 type OnceChan[T any] struct {
 	C    chan T
 	once sync.Once
@@ -52,68 +57,7 @@ func (c *OnceChan[T]) SafeClose() {
 	})
 }
 
-func DoPullAndDebug() {
-	if !systemutil.IsLinux() {
-		return
-	}
-
-	defer func() {
-		if err := recover(); err != nil {
-			logs.Error("agent imagedebug panic: ", err)
-		}
-	}()
-
-	// 区分模块初始化日志，方便查询
-	imageDebugLogs = logs.Logs.WithField("module", "ImageDebug")
-
-	for {
-		time.Sleep(imageDebugIntervalInSeconds * time.Second)
-
-		if !config.GAgentConfig.EnableDockerBuild {
-			continue
-		}
-
-		// 接受登录调试任务
-		debugInfo, err := getDebugTask()
-		if err != nil {
-			imageDebugLogs.WithError(err).Warn("get image deubg failed, retry, err")
-			continue
-		}
-		if debugInfo == nil {
-			continue
-		}
-
-		// 启动登录调试
-		go doImageDebug(debugInfo)
-	}
-}
-
-// getDebugTask 从服务器认领要登录调试的信息
-func getDebugTask() (*api.ImageDebug, error) {
-	result, err := api.PullDockerDebugTask()
-	if err != nil {
-		return nil, err
-	}
-
-	if result.IsNotOk() {
-		logs.Error("get debug info failed, message", result.Message)
-		return nil, errors.New("get debug info failed")
-	}
-
-	if result.Data == nil {
-		return nil, nil
-	}
-
-	debugInfo := new(api.ImageDebug)
-	err = util.ParseJsonToData(result.Data, debugInfo)
-	if err != nil {
-		return nil, err
-	}
-
-	return debugInfo, nil
-}
-
-func doImageDebug(debugInfo *api.ImageDebug) {
+func DoImageDebug(debugInfo *api.ImageDebug) {
 	// 容器已经准备就绪，会向其中写入containerid
 	containerReady := NewOnceChan[string]()
 	// 登录调试结束
