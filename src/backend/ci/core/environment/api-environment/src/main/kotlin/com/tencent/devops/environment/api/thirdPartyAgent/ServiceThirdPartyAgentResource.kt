@@ -31,11 +31,13 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.agent.UpgradeItem
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
+import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentDetail
@@ -330,6 +332,39 @@ interface ServiceThirdPartyAgentResource {
         @QueryParam("nodeName")
         nodeName: String?
     ): Result<ThirdPartyAgentDetail?>
+
+    @ApiOperation("获取第三方构建机任务")
+    @GET
+    @Path("/projects/{projectId}/listAgentBuilds")
+    fun listAgentBuilds(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("Node Hash ID", required = false)
+        @QueryParam("nodeHashId")
+        nodeHashId: String?,
+        @ApiParam("Node 别名", required = false)
+        @QueryParam("nodeName")
+        nodeName: String?,
+        @ApiParam("agent Hash ID", required = false)
+        @QueryParam("agentHashId")
+        agentHashId: String?,
+        @ApiParam("筛选此状态，支持4种输入(QUEUE,RUNNING,DONE,FAILURE)", required = false)
+        @QueryParam("status")
+        status: String?,
+        @ApiParam("筛选此pipelineId", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?,
+        @ApiParam("第几页", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页条数", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<AgentBuildDetail>>
 
     @ApiOperation("根据环境名称获取Agent列表,并返回环境ID")
     @GET

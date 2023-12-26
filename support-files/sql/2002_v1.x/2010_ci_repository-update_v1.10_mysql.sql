@@ -32,6 +32,15 @@ BEGIN
         ADD COLUMN `GIT_PROJECT_ID` bigint(20) DEFAULT 0 COMMENT 'GIT项目ID';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_REPOSITORY_GIT_CHECK'
+                    AND COLUMN_NAME = 'TARGET_BRANCH') THEN
+    ALTER TABLE `T_REPOSITORY_GIT_CHECK`
+        ADD COLUMN `TARGET_BRANCH` varchar(1024) default '' not null comment '目标分支';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;
