@@ -33,7 +33,7 @@ import io.swagger.annotations.ApiModelProperty
 data class AgentQueryAgentStatusFromNodemanReq(
     @ApiModelProperty(value = "主机ID")
     @JsonProperty("bk_host_id")
-    val bkHostId: List<Int>?,
+    val bkHostId: List<Long>?,
     @ApiModelProperty(value = "搜索条件")
     @JsonProperty("bk_host_id")
     val conditions: List<AgentCondition<List<String>>>?,
