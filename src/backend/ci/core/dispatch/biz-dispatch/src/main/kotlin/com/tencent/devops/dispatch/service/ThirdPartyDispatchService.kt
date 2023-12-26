@@ -544,8 +544,8 @@ class ThirdPartyDispatchService @Autowired constructor(
             agentIds = activeAgents.map { it.agentId }.toSet()
         )
         activeAgents.forEach {
-            // 为空说明当前节点没有记录就是没有任务直接加
-            if (m[it.agentId] == null) {
+            // 为空说明当前节点没有记录就是没有任务直接加，除非并发是0的情况
+            if (m[it.agentId] == null && dispatchMessage.event.singleNodeConcurrency!! > 0) {
                 jobEnvActiveAgents.add(it)
                 return@forEach
             }
@@ -585,7 +585,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                 jobId = event.jobId!!,
                 projectId = event.projectId
             )
-            if (c > event.allNodeConcurrency!!) {
+            if (c >= event.allNodeConcurrency!!) {
                 throw DispatchRetryMQException(
                     errorCodeEnum = ErrorCodeEnum.GET_BUILD_RESOURCE_ERROR,
                     errorMessage = I18nUtil.getCodeLanMessage(
