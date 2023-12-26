@@ -44,6 +44,7 @@ import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.pojo.ChangeFileInfo
+import com.tencent.devops.scm.pojo.GitApiError
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitCommitReviewInfo
@@ -453,7 +454,8 @@ open class GitApi {
             "Fail to call git api because of code $code and " +
                     "message $body|${getMessageByLocale(operation)}"
         )
-        throw GitApiException(code, body)
+        val apiError = JsonUtil.to(body, GitApiError::class.java)
+        throw GitApiException(code, apiError.message ?: "")
     }
 
     fun listCommits(
