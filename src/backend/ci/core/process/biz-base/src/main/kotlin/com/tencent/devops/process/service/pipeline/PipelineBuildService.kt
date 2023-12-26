@@ -62,6 +62,7 @@ import com.tencent.devops.process.utils.PIPELINE_CREATE_USER
 import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
+import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_MANUAL_USER_ID
@@ -124,8 +125,7 @@ class PipelineBuildService(
         startValues: Map<String, String>? = null,
         handlePostFlag: Boolean = true,
         webHookStartParam: MutableMap<String, BuildParameters> = mutableMapOf(),
-        triggerReviewers: List<String>? = null,
-        retry: Boolean? = false
+        triggerReviewers: List<String>? = null
     ): BuildId {
 
         var acquire = false
@@ -210,7 +210,7 @@ class PipelineBuildService(
                     concurrencyGroup = context.concurrencyGroup,
                     concurrencyCancelInProgress = setting.concurrencyCancelInProgress,
                     maxConRunningQueueSize = setting.maxConRunningQueueSize,
-                    retry = retry
+                    retry = (pipelineParamMap[PIPELINE_RETRY_COUNT]?.value?.toString()?.toInt() ?: 0) > 0
                 )
             )
             if (interceptResult.isNotOk()) {

@@ -546,8 +546,7 @@ class PipelineBuildFacadeService(
                 signPipelineVersion = buildInfo.version,
                 frequencyLimit = true,
                 handlePostFlag = false,
-                webHookStartParam = webHookStartParam,
-                retry = true
+                webHookStartParam = webHookStartParam
             )
         } finally {
             redisLock.unlock()
