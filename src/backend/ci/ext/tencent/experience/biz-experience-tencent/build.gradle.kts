@@ -32,6 +32,7 @@ dependencies {
     api(project(":core:common:common-client"))
     api(project(":core:common:common-archive"))
     api(project(":core:common:common-db"))
+    api(project(":core:common:common-event"))
     api(project(":core:common:common-wechatwork"))
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
     api("net.coobird:thumbnailator")

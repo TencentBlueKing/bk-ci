@@ -32,21 +32,18 @@ import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.common.archive.client.BkRepoClient
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import java.net.URLEncoder
-import javax.ws.rs.NotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
+import java.net.URLEncoder
+import javax.ws.rs.NotFoundException
 
 @Service
 class BkRepoReportService @Autowired constructor(
-    private val bkRepoClient: BkRepoClient,
-    private val commonConfig: CommonConfig
+    private val bkRepoClient: BkRepoClient
 ) : ReportService {
     override fun get(
         userId: String,
@@ -68,10 +65,10 @@ class BkRepoReportService @Autowired constructor(
                 )
             )
 
-        val host = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
+        val host = bkRepoClient.getRkRepoIdcHost()
         val redirectUrlBuilder = StringBuilder()
         redirectUrlBuilder.append(
-            "$host/bkrepo/api/user/generic/$projectId/${RepoUtils.REPORT_REPO}${
+            "$host/web/generic/$projectId/${RepoUtils.REPORT_REPO}${
                 urlEncode(realPath).replace("%2F", "/")
             }?preview=true"
         )

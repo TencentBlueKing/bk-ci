@@ -25,13 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.service
+package com.tencent.devops.dispatch.exception
 
-import com.tencent.devops.dispatch.pojo.JobQuotaHistory
+import com.tencent.devops.common.api.exception.ErrorCodeException
 
-interface JobQuotaInterface {
-    /**
-     * 保存Job配额相关构建记录
-     */
-    fun saveJobQuotaHistory(jobQuotaHistory: JobQuotaHistory)
-}
+class DispatchRetryMQException(
+    errorCodeEnum: ErrorCodeEnum,
+    errorMessage: String?
+) :
+    ErrorCodeException(
+        errorCode = errorCodeEnum.errorCode.toString(),
+        errorType = errorCodeEnum.errorType,
+        defaultMessage = errorMessage
+    )

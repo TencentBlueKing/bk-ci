@@ -53,7 +53,7 @@ class DevCloudMacosService @Autowired constructor(
     fun creatVM(
         dispatchMessage: DispatchMessage
     ): DevCloudMacosVmCreateInfo? {
-        val buildId = dispatchMessage.buildId
+        val buildId = dispatchMessage.event.buildId
 
         var taskId = ""
         val body = ObjectMapper().writeValueAsString(buildCreateBody(dispatchMessage))
@@ -61,7 +61,7 @@ class DevCloudMacosService @Autowired constructor(
         val request = Request.Builder()
             .url(toIdcUrl("$devCloudUrl/api/mac/vm/create"))
             .headers(
-                SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, dispatchMessage.userId)
+                SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, dispatchMessage.event.userId)
                     .toHeaders()
             )
             .post(body.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
@@ -91,7 +91,7 @@ class DevCloudMacosService @Autowired constructor(
 
         // 轮训task执行结果，10min超时
         repeat(200) { times ->
-            val taskResponse = getTaskStatus(taskId, dispatchMessage.userId)
+            val taskResponse = getTaskStatus(taskId, dispatchMessage.event.userId)
             if (taskResponse?.data != null) {
                 when (taskResponse.data.status) {
                     DevCloudCreateMacVMStatus.failed.title, DevCloudCreateMacVMStatus.canceled.title -> {
@@ -115,15 +115,16 @@ class DevCloudMacosService @Autowired constructor(
     }
 
     private fun buildCreateBody(dispatchMessage: DispatchMessage): DevCloudMacosVmCreate {
-        var (systemVersion, xcodeVersion) = dispatchMessage.dispatchMessage.split(":").let { macOSEnv ->
-            when (macOSEnv.size) {
-                0 -> Pair(null, null)
-                1 -> Pair(macOSEnv[0], null)
-                else -> Pair(macOSEnv[0], macOSEnv[1])
+        var (systemVersion, xcodeVersion) = dispatchMessage.event.dispatchType.value.split(":")
+            .let { macOSEnv ->
+                when (macOSEnv.size) {
+                    0 -> Pair(null, null)
+                    1 -> Pair(macOSEnv[0], null)
+                    else -> Pair(macOSEnv[0], macOSEnv[1])
+                }
             }
-        }
 
-        val isStreamProject = dispatchMessage.projectId.startsWith("git_")
+        val isStreamProject = dispatchMessage.event.projectId.startsWith("git_")
 
         if (isStreamProject) {
             val (streamSystemVersion, streamXcodeVersion) = macVmTypeService.getStreamSystemVersionByVersion(
@@ -134,7 +135,7 @@ class DevCloudMacosService @Autowired constructor(
             systemVersion = streamSystemVersion
         }
 
-        return with(dispatchMessage) {
+        return with(dispatchMessage.event) {
             DevCloudMacosVmCreate(
                 project = projectId,
                 pipelineId = pipelineId,

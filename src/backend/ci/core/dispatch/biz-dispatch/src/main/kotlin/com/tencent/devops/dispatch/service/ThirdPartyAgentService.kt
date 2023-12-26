@@ -40,6 +40,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
@@ -51,7 +52,6 @@ import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyAskResp
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildDockerInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
-import com.tencent.devops.dispatch.service.dispatcher.agent.DispatchAgentService
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentUtils
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyAgentBuildRedisUtils
@@ -61,7 +61,6 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgrad
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
-import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -83,18 +82,17 @@ class ThirdPartyAgentService @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
     private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao,
-    private val dispatchAgentService: DispatchAgentService,
     private val thirdPartyAgentDockerService: ThirdPartyAgentDockerService
 ) {
 
     fun queueBuild(
         agent: ThirdPartyAgent,
         thirdPartyAgentWorkspace: String,
-        event: PipelineAgentStartupEvent,
+        dispatchMessage: DispatchMessage,
         retryCount: Int = 0,
         dockerInfo: ThirdPartyAgentDockerInfoDispatch?
     ) {
-        with(event) {
+        with(dispatchMessage.event) {
             try {
                 thirdPartyAgentBuildDao.add(
                     dslContext = dslContext,
@@ -110,13 +108,13 @@ class ThirdPartyAgentService @Autowired constructor(
                     agentIp = agent.ip,
                     nodeId = HashUtil.decodeIdToLong(agent.nodeId ?: ""),
                     dockerInfo = dockerInfo,
-                    executeCount = event.executeCount,
-                    containerHashId = event.containerHashId
+                    executeCount = executeCount,
+                    containerHashId = containerHashId
                 )
             } catch (e: DeadlockLoserDataAccessException) {
                 logger.warn("Fail to add the third party agent build of ($buildId|$vmSeqId|${agent.agentId}")
                 if (retryCount <= QUEUE_RETRY_COUNT) {
-                    queueBuild(agent, thirdPartyAgentWorkspace, event, retryCount + 1, dockerInfo)
+                    queueBuild(agent, thirdPartyAgentWorkspace, dispatchMessage, retryCount + 1, dockerInfo)
                 } else {
                     throw OperationException("Fail to add the third party agent build")
                 }
@@ -149,7 +147,6 @@ class ThirdPartyAgentService @Autowired constructor(
         buildType: BuildJobType
     ): AgentResult<ThirdPartyBuildInfo?> {
         // Get the queue status build by buildId and agentId
-        logger.debug("Start the third party agent($agentId) of project($projectId)")
         try {
             val agentResult = try {
                 client.get(ServiceThirdPartyAgentResource::class).getAgentById(projectId, agentId)
@@ -185,8 +182,6 @@ class ThirdPartyAgentService @Autowired constructor(
                 throw NotFoundException("Fail to get the agent")
             }
 
-            logger.debug("Third party agent($agentId) start up")
-
             val redisLock = ThirdPartyAgentLock(redisOperation, projectId, agentId)
             try {
                 redisLock.lock()
@@ -194,10 +189,6 @@ class ThirdPartyAgentService @Autowired constructor(
                     logger.debug("There is not build by agent($agentId) in queue")
                     return AgentResult(AgentStatus.IMPORT_OK, null)
                 }
-
-                logger.debug(
-                    "Third party agent($agentId) start up agent project($projectId) build project(${build.projectId})"
-                )
 
                 logger.info("Start the build(${build.buildId}) of agent($agentId) and seq(${build.vmSeqId})")
                 thirdPartyAgentBuildDao.updateStatus(dslContext, build.id, PipelineTaskStatus.RUNNING)
@@ -373,18 +364,10 @@ class ThirdPartyAgentService @Autowired constructor(
             }
             records.forEach {
                 finishBuild(it, success)
-                if (it.dockerInfo != null) {
-                    // 第三方构建机可能是docker构建机时需要在这里删除docker类型的redisKey
-                    dispatchAgentService.shutdown(event)
-                }
             }
         } else {
             val record = thirdPartyAgentBuildDao.get(dslContext, buildId, vmSeqId) ?: return
             finishBuild(record, success)
-            if (record.dockerInfo != null) {
-                // 第三方构建机可能是docker构建机时需要在这里删除docker类型的redisKey
-                dispatchAgentService.shutdown(event)
-            }
         }
     }
 

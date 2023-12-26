@@ -34,7 +34,9 @@ data class JobQuotaHistory(
     val vmSeqId: String,
     val executeCount: Int,
     val vmType: String,
+    val channelCode: String,
     val createTime: String,
     val agentStartTime: String,
-    val agentFinishTime: String
+    val agentFinishTime: String,
+    val costTime: Long
 )

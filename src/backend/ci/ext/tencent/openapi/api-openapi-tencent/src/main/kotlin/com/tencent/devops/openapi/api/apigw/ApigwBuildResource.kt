@@ -149,7 +149,7 @@ interface ApigwBuildResource {
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @ApiParam("每页条数(默认20, 最大100)", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<BuildHistoryPage<BuildHistory>>

@@ -124,6 +124,7 @@ import org.springframework.stereotype.Service
 import org.springframework.util.FileSystemUtils
 import org.springframework.util.StringUtils
 import java.io.File
+import java.net.HttpRetryException
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.file.Files
@@ -1748,7 +1749,12 @@ class GitService @Autowired constructor(
                     )
                 }
                 val data = it.body!!.string()
-                JsonUtil.to(data, GitMrChangeInfo::class.java)
+                JsonUtil.to(data, GitMrChangeInfo::class.java).also { info ->
+                    // 工蜂变更文件多的时候，初始计算较久，有可能返回为null，这时候需要重试直到拿到files。
+                    if (info.files == null) {
+                        throw HttpRetryException(it.message, it.code)
+                    }
+                }
             }
         }
     }
