@@ -101,12 +101,20 @@ class RbacPermissionProjectService(
 
     override fun getUserProjectsByPermission(
         userId: String,
-        action: String
+        action: String,
+        resourceType: String?
     ): List<String> {
         logger.info("[rbac] get user projects by permission|$userId|$action")
         val startEpoch = System.currentTimeMillis()
         try {
-            val useAction = RbacAuthUtils.buildAction(AuthPermission.get(action), AuthResourceType.PROJECT)
+            val finalResourceType = if (resourceType == null) {
+                AuthResourceType.PROJECT
+            } else {
+                AuthResourceType.get(resourceType)
+            }
+            val useAction = RbacAuthUtils.buildAction(
+                AuthPermission.get(action), finalResourceType
+            )
             val instanceMap = authHelper.groupRbacInstanceByType(userId, useAction)
             return if (instanceMap.contains("*")) {
                 logger.info("super manager has all project|$userId")
@@ -194,7 +202,7 @@ class RbacPermissionProjectService(
             pageInfoDTO
         ).results.filter {
             it.type == type
-        }.associateBy { it.name }
+        }.associateBy { it.id }
         val addMembers = mutableListOf<String>()
         // 预期的过期天数
         val expectExpiredAt = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(VALID_EXPIRED_AT)
@@ -213,6 +221,7 @@ class RbacPermissionProjectService(
             )
             addMembers.add(it)
         }
+        logger.info("batch add project user:$userId|$projectCode|$roleCode|$addMembers")
         if (addMembers.isNotEmpty()) {
             val iamMemberInfos = addMembers.map { ManagerMember(type, it) }
             val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(expiredAt)

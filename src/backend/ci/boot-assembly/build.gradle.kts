@@ -48,7 +48,7 @@ dependencies {
     implementation(project(":core:repository:biz-repository-sample"))
     implementation(project(":core:store:biz-store-sample"))
     implementation(project(":core:store:biz-store-image-sample"))
-    implementation(project(":core:ticket:biz-ticket-sample"))
+    implementation(project(":core:ticket:biz-ticket"))
     implementation(project(":core:websocket:biz-websocket"))
 }
 

@@ -156,7 +156,11 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
 
     override fun isShowUserManageIcon(): Boolean = false
 
-    override fun filterProjects(userId: String, permission: AuthPermission): List<String>? = null
+    override fun filterProjects(
+        userId: String,
+        permission: AuthPermission,
+        resourceType: String?
+    ): List<String>? = null
 
     companion object {
         private val projectResourceType = AuthResourceType.PROJECT

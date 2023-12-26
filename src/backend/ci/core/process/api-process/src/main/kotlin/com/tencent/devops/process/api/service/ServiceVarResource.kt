@@ -28,11 +28,13 @@
 package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.SetContextVarData
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
@@ -79,4 +81,11 @@ interface ServiceVarResource {
         @QueryParam("contextName")
         contextName: String?
     ): Result<Map<String, String>>
+
+    @ApiOperation("针对构建写入上下文变量")
+    @Path("/set_build_context")
+    @POST
+    fun setContextVar(
+        data: SetContextVarData
+    )
 }

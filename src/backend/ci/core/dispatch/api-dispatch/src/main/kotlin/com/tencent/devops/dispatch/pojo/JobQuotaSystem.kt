@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.pojo
 
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -35,32 +36,26 @@ import io.swagger.annotations.ApiModelProperty
 data class JobQuotaSystem(
     @ApiModelProperty("构建机类型", required = true)
     val vmType: JobQuotaVmType,
-    @ApiModelProperty("蓝盾系统最大并发JOB数，默认500", required = false)
+    @ApiModelProperty("构建来源，默认BS", required = true)
+    val channelCode: String = ChannelCode.BS.name,
+    @ApiModelProperty("蓝盾系统最大并发JOB数，默认5000", required = false)
     val runningJobMaxSystem: Int,
-    @ApiModelProperty("单项目默认最大并发JOB数， 默认50", required = false)
+    @ApiModelProperty("单项目默认最大并发JOB数， 默认500", required = false)
     val runningJobMaxProject: Int,
-    @ApiModelProperty("系统默认所有单个JOB最大执行时间，默认8小时", required = false)
+    @ApiModelProperty("系统默认所有单个JOB最大执行时间，默认24小时", required = false)
     val runningTimeJobMax: Int,
-    @ApiModelProperty("默认单项目所有JOB最大执行时间，默认40小时/月", required = false)
+    @ApiModelProperty("默认单项目所有JOB最大执行时间，默认5000小时/月", required = false)
     val runningTimeJobMaxProject: Int,
-    @ApiModelProperty("工蜂CI系统总最大并发JOB数量，默认devcloud默认300，macos默认100", required = false)
-    val runningJobMaxGitCiSystem: Int,
-    @ApiModelProperty("工蜂CI单项目最大并发JOB数量，默认10个", required = false)
-    val runningJobMaxGitCiProject: Int,
-    @ApiModelProperty("工蜂CI单JOB最大执行时间，默认8小时", required = false)
-    val runningTimeJobMaxGitCi: Int,
-    @ApiModelProperty("工蜂CI单项目最大执行时间，默认40小时/月", required = false)
-    val runningTimeJobMaxProjectGitCi: Int,
-    @ApiModelProperty("项目执行job数量告警阈值，百分比，默认80%", required = false)
+    @ApiModelProperty("项目执行job数量告警阈值，百分比，默认80", required = false)
     val projectRunningJobThreshold: Int,
-    @ApiModelProperty("项目执行job时间告警阈值，百分比，默认80%", required = false)
+    @ApiModelProperty("项目执行job时间告警阈值，百分比，默认80", required = false)
     val projectRunningTimeThreshold: Int,
-    @ApiModelProperty("系统执行job数量告警阈值，百分比，默认80%", required = false)
+    @ApiModelProperty("系统执行job数量告警阈值，百分比，默认80", required = false)
     val systemRunningJobThreshold: Int,
     @ApiModelProperty("创建时间", required = false)
-    val createdTime: Long?,
+    val createdTime: String,
     @ApiModelProperty("修改时间", required = false)
-    val updatedTime: Long?,
+    val updatedTime: String,
     @ApiModelProperty("操作人", required = false)
-    val operator: String?
+    val operator: String
 )
