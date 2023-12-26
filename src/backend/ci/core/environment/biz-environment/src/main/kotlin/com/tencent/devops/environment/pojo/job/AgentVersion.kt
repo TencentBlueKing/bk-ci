@@ -25,33 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo.job.agentres
+package com.tencent.devops.environment.pojo.job
 
 import io.swagger.annotations.ApiModelProperty
 
-data class FilterHostInfo(
-    @ApiModelProperty(value = "是否存在过滤的主机")
-    val filterHost: Boolean?,
-    @ApiModelProperty(value = "主机ID")
-    val bkHostId: Long?,
-    @ApiModelProperty(value = "主机IP地址")
+data class AgentVersion(
+    @ApiModelProperty(value = "IP地址")
     val ip: String?,
-    @ApiModelProperty(value = "主机内网IPV4地址")
-    val innerIp: String?,
-    @ApiModelProperty(value = "主机内网IPV6地址")
-    val innerIpv6: String?,
-    @ApiModelProperty(value = "管控区域ID")
-    val bkCloudId: Int?,
-    @ApiModelProperty(value = "管控区域名称")
-    val bkCloudName: String?,
-    @ApiModelProperty(value = "业务ID")
-    val bkBizId: Int?,
-    @ApiModelProperty(value = "业务名称")
-    val bkBizName: String?,
-    @ApiModelProperty(value = "任务ID")
-    val jobId: Int?,
-    @ApiModelProperty(value = "任务执行状态")
-    val status: String?,
-    @ApiModelProperty(value = "任务执行状态名称")
-    val statusDisplay: String?
-)
+    @ApiModelProperty(value = "host id")
+    val bkHostId: Long?,
+    @ApiModelProperty(value = "是否已安装，true-已安装，false-未安装")
+    val installedTag: Boolean?,
+    @ApiModelProperty(value = "agent版本")
+    val version: String?,
+    @ApiModelProperty(value = "agent状态", notes = "0-异常，1-正常")
+    val status: Int?
+) {
+    constructor(bkHostId: Long?, installedTag: Boolean?, version: String?, status: Int?) : this(
+        ip = null, bkHostId, installedTag, version, status
+    )
+
+    constructor(bkHostId: Long?, installedTag: Boolean?) : this(
+        ip = null, bkHostId, installedTag, version = null, status = null
+    )
+
+    constructor(ip: String?, bkHostId: Long?) : this(
+        ip, bkHostId, installedTag = null, version = null, status = null
+    )
+}

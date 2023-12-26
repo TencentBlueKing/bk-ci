@@ -42,6 +42,7 @@ import com.tencent.devops.environment.pojo.CmdbNode
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.job.AddCmdbNodesRes
+import com.tencent.devops.environment.pojo.job.AgentVersion
 import com.tencent.devops.environment.pojo.job.NodeAgent
 import com.tencent.devops.environment.pojo.job.ccres.CCInfo
 import com.tencent.devops.environment.pojo.job.ccres.CCResp
@@ -136,7 +137,7 @@ class CmdbNodeService @Autowired constructor(
         // 只添加不存在的节点
         val existNodeList = nodeDao.listServerAndDevCloudNodes(dslContext, projectId) // 已存在 节点db记录
         val existIpList = existNodeList.map { it.nodeIp }.toSet() // 已存在 节点ip
-        val toAddIpList = nodeIps.filterNot { existIpList.contains(it) }.toSet() // 要添加的 节点ip
+        val toAddIpList = nodeIps.filterNot { existIpList.contains(it) }.filterNot { it.isEmpty() } // 要添加的 节点ip
         val toAddIpToCmdbNodeMap = cmdbIpToNodeMap.filter { toAddIpList.contains(it.key) } // 要添加的 节点ip - cmdb记录映射
         ImportServerNodeUtils.checkImportCount(
             dslContext = dslContext,
@@ -149,7 +150,11 @@ class CmdbNodeService @Autowired constructor(
         val queryCCIpToCCInfoMap = addNodeToCC(toAddIpToCmdbNodeMap)
 
         val agentStatusMap = esbAgentClient.getAgentStatus(userId, toAddIpList)
-        val agentVersionMap = queryAgentStatusService.getAgentVersions() // TODO
+        val ipAndHostIdList = queryCCIpToCCInfoMap.values.map {
+            AgentVersion(ip = it.bkHostInnerip, bkHostId = it.bkHostId)
+        }
+        val agentVersionList = queryAgentStatusService.getAgentVersions(userId, projectId, ipAndHostIdList)
+        val ipToAgentVersionMap = agentVersionList?.associateBy { it.ip }
         val toAddNodeList = toAddIpList.map {
             val cmdbNode = cmdbIpToNodeMap[it]!!
             CreateNodeModel(
@@ -164,7 +169,7 @@ class CmdbNodeService @Autowired constructor(
                 operator = cmdbNode.operator,
                 bakOperator = cmdbNode.bakOperator,
                 agentStatus = agentStatusMap[cmdbNode.ip] ?: false,
-                agentVersion = "", // TODO
+                agentVersion = ipToAgentVersionMap?.get(cmdbNode.ip)?.version ?: "",
                 hostId = queryCCIpToCCInfoMap[cmdbNode.ip]?.bkHostId,
                 cloudAreaId = DEFAULT_CLOUD_AREA_ID
             )
@@ -187,7 +192,7 @@ class CmdbNodeService @Autowired constructor(
                 NodeAgent(
                     nodeIp = it.nodeIp,
                     nodesAgentStatus = if (it.agentStatus) 1 else 0,
-                    nodesAgentVersion = "1.0.0"
+                    nodesAgentVersion = it.agentVersion
                 )
             },
             agentAbnormalNodesCount = toAddNodeList.filterNot { it.agentStatus }.size,

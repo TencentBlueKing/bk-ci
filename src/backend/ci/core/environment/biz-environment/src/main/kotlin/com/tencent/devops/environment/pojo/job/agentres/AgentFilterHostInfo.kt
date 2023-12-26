@@ -36,7 +36,7 @@ data class AgentFilterHostInfo(
     val filterHost: Boolean?,
     @ApiModelProperty(value = "主机ID")
     @JsonProperty("bk_host_id")
-    val bkHostId: Int?,
+    val bkHostId: Long?,
     @ApiModelProperty(value = "主机IP地址")
     val ip: String?,
     @ApiModelProperty(value = "主机内网IPV4地址")

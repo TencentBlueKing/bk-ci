@@ -33,6 +33,7 @@ import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentStatusFromNode
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentStatusFromJobResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentStatusFromNodemanResult
+import com.tencent.devops.environment.pojo.job.AgentVersion
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -50,16 +51,61 @@ class QueryAgentStatusService @Autowired constructor(
         private const val DEFAULT_PAGE = 1
         private const val DEFAULT_ONLY_IP = false
         private const val DEFAULT_RUNNING_COUNT = false
+        private const val INSTALLED_AGENT_TAG = true
+        private const val NOT_INSTALLED_AGENT_TAG = false
     }
 
-    fun getAgentVersions() {
-        TODO()
+    fun getAgentVersions(
+        userId: String,
+        projectId: String,
+        ipAndHostIdList: List<AgentVersion>
+    ): List<AgentVersion>? {
+        val hostIdList = ipAndHostIdList.mapNotNull { it.bkHostId }
+        val ipList = ipAndHostIdList.mapNotNull { it.ip }
+        val nodemanRes = getAgentVersionsFromNodeman(userId, projectId, hostIdList, ipList)
+        val total = nodemanRes.data?.total ?: 0
+        val installedHostIdList = if (total > 0) {
+            nodemanRes.data?.list?.filter { it.status != "NOT_INSTALLED" }?.mapNotNull { it.bkHostId } // 已安装agent，查job
+        } else null
+        val installedAgentVersionList =
+            if (installedHostIdList.isNullOrEmpty())
+                emptyList()
+            else {
+                val jobRes = getAgentVersionsFromJob(userId, projectId, installedHostIdList)
+                jobRes.data?.agentInfoList?.map {
+                    AgentVersion(
+                        bkHostId = it.bkHostId,
+                        installedTag = INSTALLED_AGENT_TAG,
+                        version = it.version,
+                        status = it.status
+                    )
+                }
+            }
+        val notInstalledAgentHostIdList = nodemanRes.data?.list?.filter { // 未安装agent，不再查job了
+            it.status == "NOT_INSTALLED"
+        }?.mapNotNull { it.bkHostId }
+        val notInstalledAgentList =
+            if (notInstalledAgentHostIdList.isNullOrEmpty())
+                emptyList()
+            else {
+                notInstalledAgentHostIdList.map {
+                    AgentVersion(
+                        bkHostId = it,
+                        installedTag = NOT_INSTALLED_AGENT_TAG
+                    )
+                }
+            }
+        if (logger.isDebugEnabled)
+            logger.debug("[getAgentVersions]installedAgentVersionList:$installedAgentVersionList")
+        if (logger.isDebugEnabled)
+            logger.debug("[getAgentVersions]notInstalledAgentList:$notInstalledAgentList")
+        return (installedAgentVersionList ?: emptyList()) + notInstalledAgentList
     }
 
     private fun getAgentVersionsFromNodeman(
         userId: String,
         projectId: String,
-        hostIdList: List<Int>,
+        hostIdList: List<Long>,
         ipList: List<String>
     ): AgentResult<QueryAgentStatusFromNodemanResult> {
         val getAgentVersionsFromNodemanReq = QueryAgentStatusFromNodemanReq(

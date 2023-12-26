@@ -31,7 +31,7 @@ import io.swagger.annotations.ApiModelProperty
 
 data class QueryAgentStatusFromNodemanReq(
     @ApiModelProperty(value = "主机ID")
-    val bkHostId: List<Int>?,
+    val bkHostId: List<Long>?,
     @ApiModelProperty(value = "搜索条件")
     val conditions: List<Condition<List<String>>>?,
     @ApiModelProperty(value = "展示额外信息")
