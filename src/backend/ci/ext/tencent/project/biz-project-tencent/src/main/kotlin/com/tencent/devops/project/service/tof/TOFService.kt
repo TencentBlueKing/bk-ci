@@ -221,24 +221,16 @@ class TOFService @Autowired constructor(
         }
     }
 
-    @Suppress("MagicNumber")
     private fun getChildDeptInfos(userId: String, type: OrganizationType, id: Int): List<ChildDeptResponse> {
         try {
             val startTime = System.currentTimeMillis()
             val path = "get_child_dept_infos"
-            val level = when (type) {
-                // bg的下一级不一定是部门，需要往下三层，才能找到BG下所有的部门
-                OrganizationType.dept -> 3
-                // 部门下一级不一定是中心，需要往下四层，才能找到部门所有的中心
-                OrganizationType.center -> 4
-                else -> 1
-            }
             val responseContent = request(
                 path, ChildDeptRequest(
                 tofAppCode!!,
                 tofAppSecret!!,
                 getParentDeptIdByOrganizationType(type, id),
-                level
+                1
             ), I18nUtil.getCodeLanMessage(
                 messageCode = QUERY_SUB_DEPARTMENT_FAIL,
                 language = I18nUtil.getLanguage(userId)
@@ -246,8 +238,7 @@ class TOFService @Autowired constructor(
             )
             val response: Response<List<ChildDeptResponse>> =
                 objectMapper.readValue(responseContent)
-            val tofDeptInfos = response.data
-            if (tofDeptInfos == null) {
+            if (response.data == null) {
                 logger.warn("Fail o get the child dept info of type $type and id $id with response $responseContent")
                 uploadTofStatus(
                     requestTime = startTime,
@@ -266,13 +257,6 @@ class TOFService @Autowired constructor(
                     )
                 )
             }
-
-            val deptInfos = when (type) {
-                OrganizationType.dept -> tofDeptInfos.filter { it.TypeId == OrganizationType.dept.id }
-                OrganizationType.center -> tofDeptInfos.filter { it.TypeId == OrganizationType.center.id }
-                else -> tofDeptInfos
-            }
-
             uploadTofStatus(
                 requestTime = startTime,
                 statusCode = response.code,
@@ -280,9 +264,9 @@ class TOFService @Autowired constructor(
                 errorCode = SUCCESS,
                 errorMessage = "call tof success"
             )
-            return deptInfos
-        } catch (ex: Exception) {
-            logger.warn("Fail to get the organization info of type $type and id $id", ex)
+            return response.data
+        } catch (t: Throwable) {
+            logger.warn("Fail to get the organization info of type $type and id $id", t)
             throw OperationException(
                 I18nUtil.getCodeLanMessage(
                     messageCode = QUERY_SUB_DEPARTMENT_FAIL,
@@ -559,9 +543,8 @@ class TOFService @Autowired constructor(
             centerId = centerId,
             groupId = groupId,
             groupName = groupName,
-            deptInfos = deptInfos.takeWhile { it.typeId.toInt() != OrganizationType.dept.typeId }.plus(
-                deptInfos.find { it.typeId.toInt() == OrganizationType.dept.typeId }
-            )
+            // 部门及部门以上的祖先
+            deptInfos = deptInfos.take(deptInfos.indexOfFirst { it.typeId.toInt() == OrganizationType.dept.typeId } + 1)
         )
     }
 
