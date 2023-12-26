@@ -54,7 +54,6 @@ import com.tencent.devops.dispatch.constants.BK_SEARCHING_AGENT_MOST_IDLE
 import com.tencent.devops.dispatch.constants.BK_SEARCHING_AGENT_PARALLEL_AVAILABLE
 import com.tencent.devops.dispatch.constants.BK_THIRD_JOB_ENV_CURR
 import com.tencent.devops.dispatch.constants.BK_THIRD_JOB_NODE_CURR
-import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
 import com.tencent.devops.dispatch.exception.DispatchRetryMQException
 import com.tencent.devops.dispatch.exception.ErrorCodeEnum
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentEnvLock
@@ -168,11 +167,10 @@ class ThirdPartyDispatchService @Autowired constructor(
                 workspace = dispatchType.workspace,
                 dockerInfo = dispatchType.dockerInfo,
                 envId = null,
-                jobId = event.jobId
+                jobId = dispatchMessage.event.jobId
             )
         ) {
             logDebug(
-                client = client,
                 buildLogPrinter = buildLogPrinter,
                 dispatchMessage = dispatchMessage,
                 message = I18nUtil.getCodeLanMessage(
@@ -184,7 +182,8 @@ class ThirdPartyDispatchService @Autowired constructor(
             throw DispatchRetryMQException(
                 errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
                 errorMessage = ErrorCodeEnum.CONSTANT_AGENTS_UPGRADING_OR_TIMED_OUT.getErrorMessage(
-                    params = arrayOf(dispatchType.displayName))
+                    params = arrayOf(dispatchType.displayName)
+                )
             )
         }
     }
@@ -448,9 +447,7 @@ class ThirdPartyDispatchService @Autowired constructor(
         }
 
         // 判断是否有 jobEnv 的限制，检查全集群限制
-        if (dispatchMessage.event.allNodeConcurrency != null && checkAllNodeConcurrency(envId, dispatchMessage.event)) {
-            return
-        }
+        checkAllNodeConcurrency(envId, dispatchMessage.event)
 
         ThirdPartyAgentEnvLock(redisOperation, dispatchMessage.event.projectId, dispatchType.envName).use { redisLock ->
             val lock = redisLock.tryLock(timeout = 5000) // # 超时尝试锁定，防止环境过热锁定时间过长，影响其他环境构建
@@ -463,22 +460,20 @@ class ThirdPartyDispatchService @Autowired constructor(
                  */
                 val activeAgents = agentResData.filter {
                     it.status == AgentStatus.IMPORT_OK &&
-                            (dispatchMessage.event.os == it.os || dispatchMessage.event.os == VMBaseOS.ALL.name)
+                        (dispatchMessage.event.os == it.os || dispatchMessage.event.os == VMBaseOS.ALL.name)
                 }
 
                 // 获取锁之后再检查一次，防止多个任务排队等锁导致超出集群并发限制
-                if (event.allNodeConcurrency != null && checkAllNodeConcurrency(envId, event)) {
-                    return
-                }
+                checkAllNodeConcurrency(envId, dispatchMessage.event)
 
                 // 判断是否有 jobEnv 的限制，筛选单节点的并发数
                 var jobEnvActiveAgents = mutableListOf<ThirdPartyAgent>()
-                if (event.singleNodeConcurrency != null) {
-                    if (envId != null && !event.jobId.isNullOrBlank()) {
+                if (dispatchMessage.event.singleNodeConcurrency != null) {
+                    if (envId != null && !dispatchMessage.event.jobId.isNullOrBlank()) {
                         val m = thirdPartyAgentBuildService.countAgentsJobRunningAndQueueAll(
-                            pipelineId = event.pipelineId,
+                            pipelineId = dispatchMessage.event.pipelineId,
                             envId = envId,
-                            jobId = event.jobId!!,
+                            jobId = dispatchMessage.event.jobId!!,
                             agentIds = activeAgents.map { it.agentId }.toSet()
                         )
                         activeAgents.forEach {
@@ -487,23 +482,31 @@ class ThirdPartyDispatchService @Autowired constructor(
                                 jobEnvActiveAgents.add(it)
                                 return@forEach
                             }
-                            if (m[it.agentId]!! < event.singleNodeConcurrency!!) {
+                            if (m[it.agentId]!! < dispatchMessage.event.singleNodeConcurrency!!) {
                                 jobEnvActiveAgents.add(it)
                                 return@forEach
                             }
                         }
                         // 没有一个节点满足则进入排队机制
                         if (jobEnvActiveAgents.isEmpty()) {
-                            jobConcurrencyQueue(event, false, null)
-                            return
+                            throw DispatchRetryMQException(
+                                errorCodeEnum = ErrorCodeEnum.GET_BUILD_RESOURCE_ERROR,
+                                errorMessage = I18nUtil.getCodeLanMessage(
+                                    messageCode = BK_THIRD_JOB_NODE_CURR,
+                                    params = arrayOf(
+                                        dispatchMessage.event.singleNodeConcurrency!!.toString(),
+                                        (dispatchMessage.event.queueTimeoutMinutes ?: 10).toString()
+                                    )
+                                )
+                            )
                         }
                     } else {
                         logger.warn(
                             "buildByEnvId|{} has allNodeConcurrency {} but env {}|job {} null",
-                            event.buildId,
-                            event.allNodeConcurrency,
+                            dispatchMessage.event.buildId,
+                            dispatchMessage.event.allNodeConcurrency,
                             envId,
-                            event.jobId
+                            dispatchMessage.event.jobId
                         )
                         jobEnvActiveAgents = activeAgents.toMutableList()
                     }
@@ -512,7 +515,13 @@ class ThirdPartyDispatchService @Autowired constructor(
                 }
 
                 // 没有可用构建机列表进入下一次重试, 修复获取最近构建构建机超过10次不构建会被驱逐出最近构建机列表的BUG
-                if (jobEnvActiveAgents.isNotEmpty() && pickupAgent(jobEnvActiveAgents, dispatchMessage, dispatchType, envId)) {
+                if (jobEnvActiveAgents.isNotEmpty() && pickupAgent(
+                        activeAgents = jobEnvActiveAgents,
+                        dispatchMessage = dispatchMessage,
+                        dispatchType = dispatchType,
+                        envId = envId
+                    )
+                ) {
                     return
                 }
             } else {
@@ -555,7 +564,10 @@ class ThirdPartyDispatchService @Autowired constructor(
     private fun checkAllNodeConcurrency(
         envId: Long?,
         event: PipelineAgentStartupEvent
-    ): Boolean {
+    ) {
+        if (event.allNodeConcurrency == null) {
+            return
+        }
         if (envId != null && !event.jobId.isNullOrBlank()) {
             val c = thirdPartyAgentBuildService.countProjectJobRunningAndQueueAll(
                 pipelineId = event.pipelineId,
@@ -564,8 +576,17 @@ class ThirdPartyDispatchService @Autowired constructor(
                 projectId = event.projectId
             )
             if (c > event.allNodeConcurrency!!) {
-                jobConcurrencyQueue(event, true, c)
-                return true
+                throw DispatchRetryMQException(
+                    errorCodeEnum = ErrorCodeEnum.GET_BUILD_RESOURCE_ERROR,
+                    errorMessage = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_THIRD_JOB_ENV_CURR,
+                        params = arrayOf(
+                            c.toString(),
+                            event.allNodeConcurrency!!.toString(),
+                            (event.queueTimeoutMinutes ?: 10).toString()
+                        )
+                    )
+                )
             }
         } else {
             logger.warn(
@@ -576,7 +597,6 @@ class ThirdPartyDispatchService @Autowired constructor(
                 event.jobId
             )
         }
-        return false
     }
 
     private fun pickupAgent(
@@ -685,7 +705,7 @@ class ThirdPartyDispatchService @Autowired constructor(
         /**
          * 第四优先级的agent: 当前有构建任务,选当前正在运行任务最少的构建机(没有达到当前构建机的最大并发数)
          */
-        if (startAvailableAgents(event, dispatchType, allAgents, hasTryAgents, envId)
+        if (startAvailableAgents(dispatchMessage, dispatchType, allAgents, hasTryAgents, envId)
         ) {
             logger.info("${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
                     "dispatchType=$dispatchType|Get Lv.4")
@@ -703,68 +723,6 @@ class ThirdPartyDispatchService @Autowired constructor(
             )
         }
         return false
-    }
-
-    override fun retry(
-        client: Client,
-        buildLogPrinter: BuildLogPrinter,
-        pipelineEventDispatcher: PipelineEventDispatcher,
-        event: PipelineAgentStartupEvent,
-        errorCodeEnum: ErrorCodeEnum?,
-        errorMessage: String?
-    ) {
-        if (event.retryTime > 6 * (event.queueTimeoutMinutes ?: 10)) {
-            // 置为失败
-            onFailBuild(
-                client = client,
-                buildLogPrinter = buildLogPrinter,
-                event = event,
-                errorType = errorCodeEnum?.errorType ?: ErrorCodeEnum.SYSTEM_ERROR.errorType,
-                errorCode = errorCodeEnum?.errorCode ?: ErrorCodeEnum.SYSTEM_ERROR.errorCode,
-                errorMsg = errorMessage ?: "Fail to start up after 60 retries"
-            )
-            return
-        }
-        logDebug(
-            buildLogPrinter = buildLogPrinter,
-            event = event,
-            message = I18nUtil.getCodeLanMessage(
-                messageCode = BK_AGENT_IS_BUSY,
-                language = I18nUtil.getDefaultLocaleLanguage()
-            ) + " - retry: ${event.retryTime + 1}"
-        )
-
-        event.retryTime += 1
-        event.delayMills = 10000
-        pipelineEventDispatcher.dispatch(event)
-    }
-
-    private fun jobConcurrencyQueue(
-        event: PipelineAgentStartupEvent,
-        isEnv: Boolean,
-        count: Long?
-    ) {
-        val queTime = event.queueTimeoutMinutes ?: 10
-        log(
-            buildLogPrinter = buildLogPrinter,
-            event = event,
-            message = I18nUtil.getCodeLanMessage(
-                messageCode = if (isEnv) {
-                    BK_THIRD_JOB_ENV_CURR
-                } else {
-                    BK_THIRD_JOB_NODE_CURR
-                },
-                language = I18nUtil.getDefaultLocaleLanguage(),
-                params = if (isEnv) {
-                    arrayOf(count!!.toString(), event.allNodeConcurrency!!.toString(), queTime.toString())
-                } else {
-                    arrayOf(event.singleNodeConcurrency!!.toString(), queTime.toString())
-                }
-            )
-        )
-        // 排队时间
-        event.delayMills = queTime * 60 * 1000
-        pipelineEventDispatcher.dispatch(event)
     }
 
     private fun startEmptyAgents(
@@ -834,7 +792,14 @@ class ThirdPartyDispatchService @Autowired constructor(
             return false
         }
         hasTryAgents.add(agent.agentId)
-        return buildByAgentId(dispatchMessage, agent, dispatchType.workspace, dispatchType.dockerInfo, envId)
+        return buildByAgentId(
+            dispatchMessage = dispatchMessage,
+            agent = agent,
+            workspace = dispatchType.workspace,
+            dockerInfo = dispatchType.dockerInfo,
+            envId = envId,
+            jobId = dispatchMessage.event.jobId
+        )
     }
 
     private fun getRunningCnt(agentId: String, runningBuildsMapper: HashMap<String, Int>): Int {
