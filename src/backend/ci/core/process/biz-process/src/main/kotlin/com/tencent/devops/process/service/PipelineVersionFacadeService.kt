@@ -163,7 +163,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             createTime = detailInfo.createTime,
             updateTime = detailInfo.updateTime,
             viewNames = detailInfo.viewNames,
-            onlyDraft = detailInfo.onlyDraft,
+            onlyDraft = detailInfo.onlyDraft == true,
             version = version,
             versionName = versionName,
             releaseVersion = releaseVersion?.version,

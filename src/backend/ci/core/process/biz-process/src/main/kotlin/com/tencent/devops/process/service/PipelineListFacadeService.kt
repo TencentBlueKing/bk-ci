@@ -1514,7 +1514,7 @@ class PipelineListFacadeService @Autowired constructor(
                     updater = it.lastModifyUser,
                     creator = it.creator,
                     delete = it.delete,
-                    onlyDraft = it.onlyDraft
+                    onlyDraft = it.onlyDraft == true
                 )
             )
         }
@@ -1823,7 +1823,7 @@ class PipelineListFacadeService @Autowired constructor(
             createTime = pipelineInfo.createTime,
             updateTime = pipelineInfo.updateTime,
             viewNames = pipelineInfo.viewNames,
-            onlyDraft = pipelineInfo.onlyDraft
+            onlyDraft = pipelineInfo.onlyDraft == true
         )
     }
 
