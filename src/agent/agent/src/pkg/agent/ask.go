@@ -13,7 +13,10 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
 
-func genHeartInfoAndUpgrade(upgradeEnable bool) (api.AgentHeartbeatInfo, *api.UpgradeInfo) {
+func genHeartInfoAndUpgrade(
+	upgradeEnable bool,
+	exitError *exitcode.ExitErrorType,
+) (api.AgentHeartbeatInfo, *api.UpgradeInfo) {
 	var taskList []api.ThirdPartyTaskInfo
 	for _, info := range job.GBuildManager.GetInstances() {
 		taskList = append(taskList, api.ThirdPartyTaskInfo{
@@ -62,7 +65,7 @@ func genHeartInfoAndUpgrade(upgradeEnable bool) (api.AgentHeartbeatInfo, *api.Up
 		},
 		DockerParallelTaskCount: config.GAgentConfig.DockerParallelTaskCount,
 		DockerTaskList:          job.GBuildDockerManager.GetInstances(),
-		ErrorExitData:           exitcode.GetAndResetExitError(),
+		ErrorExitData:           exitError,
 	}, upg
 }
 

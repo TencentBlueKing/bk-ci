@@ -36,17 +36,13 @@ func AddExitError(enum ExitErrorEnum, msg string) {
 	}
 }
 
-func GetExitError() *ExitErrorType {
-	return exitError
-}
-
 func GetAndResetExitError() *ExitErrorType {
 	exit := exitError
 	exitError = nil
 	return exit
 }
 
-func Exit() {
+func Exit(exitError *ExitErrorType) {
 	if exitError != nil {
 		logs.Errorf("ExitError|%s|%s", exitError.ErrorEnum, exitError.Message)
 	}
