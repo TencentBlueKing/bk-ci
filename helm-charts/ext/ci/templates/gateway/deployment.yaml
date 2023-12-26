@@ -56,8 +56,15 @@ spec:
       {{- end }}
       {{ if .Values.gateway.sysctl.enabled -}}
       initContainers:
-        - name: frontend
+        - name: busybox
           image: busybox
+          resources:
+            limits:
+              cpu: "1"
+              memory: 1Gi
+            requests:
+              cpu: "1"
+              memory: 1Gi
           securityContext:
             privileged: true
           command:
