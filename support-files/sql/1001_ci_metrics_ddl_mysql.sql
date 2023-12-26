@@ -311,7 +311,8 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT_BUILD_SUMMARY_DAILY`
     `TIME_BUILD_COUNT`     int          not null default 0 comment '定时触发构建数',
     `SUB_PIPELINE_BUILD_COUNT` int          not null default 0 comment '子流水线触发构建数',
     `THE_DATE`             DATE         not null comment '日期',
-    PRIMARY KEY (`PROJECT_ID`, `THE_DATE`)
+    PRIMARY KEY (`PROJECT_ID`, `THE_DATE`),
+    INDEX `IDX_PRODUCT_ID`(`PRODUCT_ID`,`THE_DATE`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='项目每日构建汇总表';
 
 SET FOREIGN_KEY_CHECKS = 1;

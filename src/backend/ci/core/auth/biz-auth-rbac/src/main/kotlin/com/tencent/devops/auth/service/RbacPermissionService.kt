@@ -298,8 +298,9 @@ class RbacPermissionService constructor(
                 actionList,
                 listOf(resourceDTO)
             )
-            result.values.filter { it }
-                .forEach { _ -> authProjectUserMetricsService.save(projectId = projectCode, userId = userId) }
+            if (result.values.any { it }) {
+                authProjectUserMetricsService.save(projectId = projectCode, userId = userId)
+            }
             return result
         } finally {
             logger.info(
