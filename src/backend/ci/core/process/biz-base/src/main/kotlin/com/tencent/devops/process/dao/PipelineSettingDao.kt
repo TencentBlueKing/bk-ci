@@ -69,8 +69,6 @@ class PipelineSettingDao {
         settingVersion: Int
     ): PipelineSetting? {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
-            val successType = successNotifyTypes.split(",").filter { i -> i.isNotBlank() }
-                .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
             val failType = failNotifyTypes.split(",").filter { i -> i.isNotBlank() }
                 .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
             val failSubscription = Subscription(
