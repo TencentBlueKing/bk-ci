@@ -54,6 +54,7 @@ spec:
       {{- if .Values.gateway.podSecurityContext.enabled }}
       securityContext: {{- omit .Values.gateway.podSecurityContext "enabled" | toYaml | nindent 8 }}
       {{- end }}
+      {{ if .Values.gateway.sysctl.enabled -}}
       initContainers:
         - name: frontend
           image: busybox
@@ -65,6 +66,7 @@ spec:
             - |
               sysctl -w net.ipv4.tcp_tw_reuse=0
               sysctl -w net.ipv4.tcp_max_tw_buckets=16384
+      {{- end }}
       containers:
         - name: gateway
           image: {{ include "bkci-gateway.image" . }}
