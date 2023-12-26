@@ -93,7 +93,7 @@ func cleanDumpFile(timeBeforeInHours int) {
 		}
 		info, err := file.Info()
 		if err != nil {
-			logs.Warnf("get file %s info error %s", file.Name(), err.Error())
+			logs.Warnf("cleanDumpFile|get file %s info error %s", file.Name(), err.Error())
 			return
 		}
 		if strings.HasPrefix(file.Name(), "hs_err_pid") && int(time.Since(info.ModTime()).Hours()) > timeBeforeInHours {
@@ -124,7 +124,7 @@ func cleanLogFile(timeBeforeInHours int) {
 		}
 		info, err := file.Info()
 		if err != nil {
-			logs.Warnf("get file %s info error %s", file.Name(), err.Error())
+			logs.Warnf("cleanLogFile|get file %s info error %s", file.Name(), err.Error())
 			return
 		}
 		if strings.HasSuffix(file.Name(), ".log") && int(time.Since(info.ModTime()).Hours()) > timeBeforeInHours {
@@ -137,7 +137,6 @@ func cleanLogFile(timeBeforeInHours int) {
 			}
 		}
 	}
-	logs.Info("clean log file done")
 
 	// 清理docker构建记录
 	dockerLogDir := job_docker.LocalDockerWorkSpaceDirName + "/logs"
@@ -157,7 +156,7 @@ func cleanLogFile(timeBeforeInHours int) {
 		}
 		info, err := file.Info()
 		if err != nil {
-			logs.Warnf("get file %s info error %s", file.Name(), err.Error())
+			logs.Warnf("cleanLogFile docker|get file %s info error %s", file.Name(), err.Error())
 			return
 		}
 		if int(time.Since(info.ModTime()).Hours()) > timeBeforeInHours {

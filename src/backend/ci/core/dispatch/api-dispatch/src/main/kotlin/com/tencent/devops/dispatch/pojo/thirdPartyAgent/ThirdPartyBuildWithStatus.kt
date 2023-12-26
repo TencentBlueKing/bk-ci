@@ -48,5 +48,7 @@ data class ThirdPartyBuildWithStatus(
     @ApiModelProperty("message信息")
     val message: String?,
     @ApiModelProperty("错误信息")
-    val error: Error?
+    val error: Error?,
+    @ApiModelProperty("流水线执行次数")
+    val executeCount: Int?
 )

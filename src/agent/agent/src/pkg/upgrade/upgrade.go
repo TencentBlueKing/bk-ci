@@ -62,9 +62,9 @@ type JdkVersionType struct {
 func (j *JdkVersionType) GetVersion() []string {
 	data := j.version.Load()
 	if data == nil {
-		return []string{}
+		return make([]string, 0)
 	} else {
-		return j.version.Load().([]string)
+		return data.([]string)
 	}
 }
 
@@ -307,7 +307,7 @@ func getJdkVersion() ([]string, error) {
 	jdkVersion, err := command.RunCommand(config.GetJava(), []string{"-version"}, "", nil)
 	if err != nil {
 		logs.Error("agent get jdk version failed: ", err.Error())
-		exitcode.CheckSignError(err, exitcode.ExitSignJdk)
+		exitcode.CheckSignalError(err, exitcode.ExitSignJdk)
 		return nil, errors.Wrap(err, "agent get jdk version failed")
 	}
 	var jdkV []string

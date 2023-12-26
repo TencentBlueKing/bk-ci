@@ -200,7 +200,7 @@ func DetectWorkerVersionByDir(workDir string) string {
 	if err != nil {
 		logs.Error("detect worker version failed: ", err.Error())
 		logs.Warn("output: ", string(output))
-		exitcode.CheckSignError(err, exitcode.ExitSignWorker)
+		exitcode.CheckSignalError(err, exitcode.ExitSignWorker)
 		GAgentEnv.SlaveVersion = ""
 		return ""
 	}
