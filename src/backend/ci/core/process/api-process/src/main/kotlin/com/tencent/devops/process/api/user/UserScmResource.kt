@@ -105,6 +105,10 @@ interface UserScmResource {
     @ApiOperation("列出仓库分支和tag集合")
     @GET
     @Path("/{projectId}/{repositoryId}/refs")
+    @Deprecated(
+        replaceWith = ReplaceWith("UserBuildParametersResource.listGitRefs"),
+        message = "流水线下拉参数,统一到UserBuildParametersResource维护"
+    )
     fun listRefs(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
