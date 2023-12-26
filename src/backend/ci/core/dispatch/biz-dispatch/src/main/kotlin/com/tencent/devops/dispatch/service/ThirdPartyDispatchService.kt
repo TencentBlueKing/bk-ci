@@ -30,6 +30,7 @@ package com.tencent.devops.dispatch.service
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
@@ -429,7 +430,7 @@ class ThirdPartyDispatchService @Autowired constructor(
         }
 
         val (envId, agentResData) = when (dispatchType.agentType) {
-            AgentType.ID -> Pair(dispatchType.envName.toLongOrNull(), (agentsResult.data!! as List<ThirdPartyAgent>))
+            AgentType.ID -> Pair(HashUtil.decodeIdToLong(dispatchType.envName), (agentsResult.data!! as List<ThirdPartyAgent>))
             AgentType.NAME -> (agentsResult.data as Pair<Long?, List<ThirdPartyAgent>>)
         }
 
@@ -526,7 +527,7 @@ class ThirdPartyDispatchService @Autowired constructor(
         }
         if (envId == null || dispatchMessage.event.jobId.isNullOrBlank()) {
             logger.warn(
-                "buildByEnvId|{} has allNodeConcurrency {} but env {}|job {} null",
+                "buildByEnvId|{} has singleNodeConcurrency {} but env {}|job {} null",
                 dispatchMessage.event.buildId,
                 dispatchMessage.event.allNodeConcurrency,
                 envId,
