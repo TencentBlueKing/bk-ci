@@ -162,7 +162,7 @@ interface UserJobResource {
 
     @ApiOperation("查询agent状态的接口 - 从job查询")
     @POST
-    @Path("/{projectId}/query_agent_status")
+    @Path("/{projectId}/query_agent_status_from_job")
     fun queryAgentStatusFromJob(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -176,7 +176,7 @@ interface UserJobResource {
 
     @ApiOperation("查询agent状态的接口 - 从nodeman查询")
     @POST
-    @Path("/{projectId}/query_agent_status")
+    @Path("/{projectId}/query_agent_status_from_nodeman")
     fun queryAgentStatusFromNodeman(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
