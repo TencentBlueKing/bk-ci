@@ -1,6 +1,9 @@
 package com.tencent.devops.process.constant
 
-object TriggerBuildParamKey {
+/**
+ * 流水线上下文变量Key
+ */
+object PipelineBuildParamKey {
     // GIT 触发公共参数
     const val CI_REPO_TYPE = "ci.repo_type"
     const val CI_REPO_URL = "ci.repo_url"
@@ -71,4 +74,15 @@ object TriggerBuildParamKey {
     // GIT REVIEW参数
     const val CI_CREATE_REF = "ci.create_ref"
     const val CI_CREATE_REF_TYPE = "ci.create_type"
+
+    // 流水线基础变量
+    const val CI_BUILD_NO = "ci.build-no"
+    const val CI_PIPELINE_CREATOR = "ci.pipeline_creator"
+    const val CI_PIPELINE_MODIFIER = "ci.pipeline_modifier"
+    const val CI_PIPELINE_VERSION = "ci.pipeline_version"
+    const val CI_PROJECT_ID = "ci.project_id"
+    const val CI_PROJECT_NAME = "ci.project_name"
+    const val CI_BUILD_START_TYPE = "ci.build_start_type"
+    const val CI_PIPELINE_ID = "ci.pipeline_id"
+    const val CI_BUILD_ID = "ci.build_id"
 }

@@ -268,7 +268,14 @@ object PipelineVarUtil {
         "ci.note_author" to BK_REPO_GIT_WEBHOOK_NOTE_AUTHOR_ID,
         "ci.create_time" to BK_REPO_GIT_WEBHOOK_NOTE_CREATED_AT,
         "ci.modify_time" to BK_REPO_GIT_WEBHOOK_NOTE_UPDATED_AT,
-        "ci.review_type" to BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWABLE_TYPE
+        "ci.review_type" to BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWABLE_TYPE,
+        "ci.build-no" to BUILD_NO,
+        "ci.pipeline_creator" to PIPELINE_CREATE_USER,
+        "ci.pipeline_modifier" to PIPELINE_UPDATE_USER,
+        "ci.pipeline_version" to PIPELINE_VERSION,
+        "ci.project_id" to PROJECT_NAME,
+        "ci.project_name" to PROJECT_NAME_CHINESE,
+        "ci.build_start_type" to PIPELINE_START_TYPE
     )
 
     /**
