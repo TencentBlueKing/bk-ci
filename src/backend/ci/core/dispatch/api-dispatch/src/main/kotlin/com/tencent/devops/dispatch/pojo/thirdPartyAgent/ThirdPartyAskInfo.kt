@@ -3,7 +3,7 @@ package com.tencent.devops.dispatch.pojo.thirdPartyAgent
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.tencent.devops.common.api.pojo.agent.NewHeartbeatInfo
 import com.tencent.devops.common.api.pojo.agent.UpgradeItem
-import com.tencent.devops.environment.pojo.thirdPartyAgent.HeartbeatResponse
+import com.tencent.devops.environment.pojo.thirdPartyAgent.AskHeartbeatResponse
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentPipeline
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
 
@@ -23,7 +23,7 @@ data class AskEnable(
 )
 
 data class ThirdPartyAskResp(
-    val heartbeat: HeartbeatResponse?,
+    val heartbeat: AskHeartbeatResponse?,
     val build: ThirdPartyBuildInfo?,
     val upgrade: UpgradeItem?,
     val pipeline: ThirdPartyAgentPipeline?,

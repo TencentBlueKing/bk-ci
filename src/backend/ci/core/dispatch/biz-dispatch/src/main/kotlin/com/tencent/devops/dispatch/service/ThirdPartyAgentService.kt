@@ -598,7 +598,7 @@ class ThirdPartyAgentService @Autowired constructor(
             status = 0,
             message = null,
             agentStatus = if (heartR != null) {
-                AgentStatus.fromString(heartR.AgentStatus)
+                AgentStatus.fromString(heartR.agentStatus)
             } else {
                 null
             },

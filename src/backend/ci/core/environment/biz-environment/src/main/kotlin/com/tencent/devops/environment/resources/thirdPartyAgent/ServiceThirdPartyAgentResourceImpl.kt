@@ -45,7 +45,7 @@ import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
-import com.tencent.devops.environment.pojo.thirdPartyAgent.HeartbeatResponse
+import com.tencent.devops.environment.pojo.thirdPartyAgent.AskHeartbeatResponse
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
@@ -228,8 +228,12 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         agentId: String,
         secretKey: String,
         heartbeatInfo: NewHeartbeatInfo
-    ): Result<HeartbeatResponse> {
-        return Result(thirdPartyAgentService.newHeartbeat(projectId, agentId, secretKey, heartbeatInfo))
+    ): Result<AskHeartbeatResponse> {
+        return Result(
+            AskHeartbeatResponse(
+                thirdPartyAgentService.newHeartbeat(projectId, agentId, secretKey, heartbeatInfo)
+            )
+        )
     }
 
     override fun getPipelines(projectId: String, agentId: String, secretKey: String): Result<ThirdPartyAgentPipeline?> {

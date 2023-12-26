@@ -41,7 +41,7 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
-import com.tencent.devops.environment.pojo.thirdPartyAgent.HeartbeatResponse
+import com.tencent.devops.environment.pojo.thirdPartyAgent.AskHeartbeatResponse
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
@@ -352,7 +352,7 @@ interface ServiceThirdPartyAgentResource {
         secretKey: String,
         @ApiParam("内容", required = false)
         heartbeatInfo: NewHeartbeatInfo
-    ): Result<HeartbeatResponse>
+    ): Result<AskHeartbeatResponse>
 
     @ApiOperation("查询Agent的管道")
     @GET
