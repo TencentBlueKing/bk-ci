@@ -59,11 +59,11 @@ spec:
           image: busybox
           resources:
             limits:
-              cpu: "8"
-              memory: 4Gi
+              cpu: "1"
+              memory: 1Gi
             requests:
-              cpu: "8"
-              memory: 4Gi
+              cpu: "1"
+              memory: 1Gi
           securityContext:
             privileged: true
           command:
