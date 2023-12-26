@@ -46,6 +46,8 @@ import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.AgentBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.BuildJobType
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyAskInfo
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyAskResp
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildDockerInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
@@ -65,6 +67,12 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DeadlockLoserDataAccessException
 import org.springframework.stereotype.Service
+import java.util.concurrent.CancellationException
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import javax.ws.rs.NotFoundException
 
 @Service
@@ -75,7 +83,8 @@ class ThirdPartyAgentService @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
     private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao,
-    private val dispatchAgentService: DispatchAgentService
+    private val dispatchAgentService: DispatchAgentService,
+    private val thirdPartyAgentDockerService: ThirdPartyAgentDockerService
 ) {
 
     fun queueBuild(
@@ -481,6 +490,146 @@ class ThirdPartyAgentService @Autowired constructor(
                 error = buildInfo.error
             )
         )
+    }
+
+    private val askExecutor = ThreadPoolExecutor(
+        100,
+        100,
+        0L,
+        TimeUnit.MILLISECONDS,
+        LinkedBlockingQueue(3000)
+    )
+
+    fun ask(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        info: ThirdPartyAskInfo
+    ): AgentResult<ThirdPartyAskResp> {
+        val heartBeatF = CompletableFuture.supplyAsync({
+            client.get(ServiceThirdPartyAgentResource::class).newHeartbeat(
+                projectId = projectId,
+                agentId = agentId,
+                secretKey = secretKey,
+                heartbeatInfo = info.heartbeat
+            )
+        }, askExecutor)
+
+        val upgradeF = if (info.askEnable.upgrade && info.upgrade != null) {
+            CompletableFuture.supplyAsync({
+                checkIfCanUpgradeByVersionNew(
+                    projectId = projectId,
+                    agentId = agentId,
+                    secretKey = secretKey,
+                    info = info.upgrade!!
+                )
+            }, askExecutor)
+        } else {
+            null
+        }
+
+        val buildType = BuildJobType.toEnum(info.askEnable.build)
+        val buildF = if (buildType != BuildJobType.NONE) {
+            CompletableFuture.supplyAsync({
+                startBuild(projectId = projectId, agentId = agentId, secretKey = secretKey, buildType = buildType)
+            }, askExecutor)
+        } else {
+            null
+        }
+
+        val pipelineF = if (info.askEnable.pipeline) {
+            CompletableFuture.supplyAsync({
+                client.get(ServiceThirdPartyAgentResource::class).getPipelines(
+                    projectId = projectId,
+                    agentId = agentId,
+                    secretKey = secretKey
+                )
+            }, askExecutor)
+        } else {
+            null
+        }
+
+        val dockerDebugF = if (info.askEnable.dockerDebug) {
+            CompletableFuture.supplyAsync({
+                thirdPartyAgentDockerService.startDockerDebug(
+                    projectId = projectId, agentId = agentId, secretKey = secretKey
+                )
+            }, askExecutor)
+        } else {
+            null
+        }
+
+        val heartR = try {
+            heartBeatF.get()?.data
+        } catch (e: Exception) {
+            askExceptionDeal(agentId, e)
+            null
+        }
+        val buildR = try {
+            buildF?.get()?.data
+        } catch (e: Exception) {
+            askExceptionDeal(agentId, e)
+            null
+        }
+        val upgradeR = try {
+            upgradeF?.get()?.data
+        } catch (e: Exception) {
+            askExceptionDeal(agentId, e)
+            null
+        }
+        val pipelineR = try {
+            pipelineF?.get()?.data
+        } catch (e: Exception) {
+            askExceptionDeal(agentId, e)
+            null
+        }
+        val dockerDebugR = try {
+            dockerDebugF?.get()?.data
+        } catch (e: Exception) {
+            askExceptionDeal(agentId, e)
+            null
+        }
+
+        if (heartR == null && buildR == null && upgradeR == null && pipelineR == null && dockerDebugR == null) {
+            return AgentResult(1, "data is null")
+        }
+
+        return AgentResult(
+            status = 0,
+            message = null,
+            agentStatus = if (heartR != null) {
+                AgentStatus.fromString(heartR.AgentStatus)
+            } else {
+                null
+            },
+            data = ThirdPartyAskResp(
+                heartbeat = heartR,
+                build = buildR,
+                upgrade = upgradeR,
+                pipeline = pipelineR,
+                debug = dockerDebugR
+            )
+        )
+    }
+
+    fun askExceptionDeal(agentId: String, e: Exception) {
+        return when (e) {
+            is CancellationException -> {
+                logger.warn("$agentId ask cancelled", e)
+            }
+
+            is ExecutionException -> {
+                logger.warn("$agentId ask exec error", e.cause)
+            }
+
+            is InterruptedException -> {
+                logger.warn("$agentId ask interrupted", e)
+            }
+
+            else -> {
+                logger.warn("$agentId ask unknow error", e)
+            }
+        }
     }
 
     companion object {
