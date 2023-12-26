@@ -167,7 +167,7 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
     @SuppressWarnings("ComplexCondition")
     override fun preMatch(event: GithubPullRequestEvent): WebhookMatchResult {
         if (event.getActionValue() == null) {
-            logger.info("Github pull request no open or update")
+            logger.info("The github pull request does not meet the triggering conditions $event")
             return WebhookMatchResult(false)
         }
         return WebhookMatchResult(true)

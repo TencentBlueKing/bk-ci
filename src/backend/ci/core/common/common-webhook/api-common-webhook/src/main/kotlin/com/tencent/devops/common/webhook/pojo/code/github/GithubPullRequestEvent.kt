@@ -60,7 +60,7 @@ data class GithubPullRequestEvent(
             action == "opened" -> TGitMrEventAction.OPEN.value
             action == "reopened" -> TGitMrEventAction.REOPEN.value
             action == "synchronize" -> TGitMrEventAction.PUSH_UPDATE.value
-            action == "close" -> TGitMrEventAction.CLOSE.value
+            action == "closed" -> TGitMrEventAction.CLOSE.value
             else -> null
         }
     }
