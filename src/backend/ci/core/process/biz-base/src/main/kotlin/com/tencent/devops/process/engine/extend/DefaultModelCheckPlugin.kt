@@ -132,6 +132,16 @@ open class DefaultModelCheckPlugin constructor(
                 }
             }
 
+            // #9810 检查 jobId 是否都存在以及不超过 32 位
+            containers.forEach { con ->
+                if (!con.jobId.isNullOrBlank() && con.jobId!!.length > 32) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_PIPELINE_JOB_ID_FORMAT,
+                        params = arrayOf((con.id ?: ""), "32")
+                    )
+                }
+            }
+
             // #4531 检查stage审核组配置是否符合要求
             stage.checkStageReviewers()
 

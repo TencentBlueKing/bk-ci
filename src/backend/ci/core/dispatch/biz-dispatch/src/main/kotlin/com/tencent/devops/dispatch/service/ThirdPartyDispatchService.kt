@@ -305,7 +305,7 @@ class ThirdPartyDispatchService @Autowired constructor(
         )
 
         // 添加上下文关键字 jobs.<job_id>.container.node_alias
-        if (dispatchMessage.event.jobId.isNullOrBlank() || agent.nodeId.isNullOrBlank()) {
+        if (dispatchMessage.event.jobId.isNullOrBlank()) {
             return
         }
         try {
