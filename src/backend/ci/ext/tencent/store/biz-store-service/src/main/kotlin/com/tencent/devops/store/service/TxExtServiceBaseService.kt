@@ -49,6 +49,7 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.store.config.ExtServiceImageSecretConfig
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.ExtServiceBuildInfoDao
 import com.tencent.devops.store.dao.common.BusinessConfigDao
@@ -58,6 +59,7 @@ import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.constants.KEY_EXT_SERVICE_ITEMS_PREFIX
 import com.tencent.devops.store.pojo.dto.ExtServiceBaseInfoDTO
+import com.tencent.devops.store.pojo.dto.ExtServiceImageInfoDTO
 import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
 import com.tencent.devops.store.pojo.enums.ExtServicePackageSourceTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
@@ -88,6 +90,9 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
 
     @Autowired
     private lateinit var storePipelineBuildRelDao: StorePipelineBuildRelDao
+
+    @Autowired
+    private lateinit var extServiceImageSecretConfig: ExtServiceImageSecretConfig
 
     override fun handleServicePackage(
         extensionInfo: InitExtServiceDTO,
@@ -190,17 +195,25 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             dslContext = context,
             storeCode = serviceCode,
             storeType = StoreTypeEnum.SERVICE.type.toByte()
-        )!! // 查找新增扩展服务时关联的项目
+        ) // 查找新增扩展服务时关联的项目
         val buildInfo = extServiceBuildInfoDao.getServiceBuildInfo(context, serviceId)
         logger.info("service[$serviceCode] buildInfo is:$buildInfo")
         val script = buildInfo.value1()
+        val repoAddr = extServiceImageSecretConfig.repoRegistryUrl
+        val imageName = "${extServiceImageSecretConfig.imageNamePrefix}$serviceCode"
+        val extServiceImageInfo = ExtServiceImageInfoDTO(
+            imageName = imageName,
+            imageTag = version,
+            repoAddr = repoAddr,
+            username = extServiceImageSecretConfig.repoUsername,
+            password = extServiceImageSecretConfig.repoPassword
+        )
         // 未正式发布的扩展服务先部署到bcs灰度环境
         val deployApp = extServiceBcsService.generateDeployApp(
             userId = userId,
             namespaceName = extServiceBcsNameSpaceConfig.grayNamespaceName,
             serviceCode = serviceCode,
-            version = version,
-            projectId = projectCode
+            version = version
         )
         if (null == servicePipelineRelRecord) {
             // 为用户初始化构建流水线并触发执行
@@ -208,8 +221,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
                 serviceId = serviceId,
                 serviceCode = serviceCode,
                 version = serviceRecord.version,
-                imageName = serviceCode,
-                imageTag = version,
+                extServiceImageInfo = extServiceImageInfo,
                 extServiceDeployInfo = deployApp,
                 branch = MASTER
             )
@@ -241,7 +253,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
                 extServiceBaseInfo = serviceBaseInfo
             )
             val serviceMarketInitPipelineResp = client.get(ServiceExtServiceBuildPipelineInitResource::class)
-                .initExtServiceBuildPipeline(userId, projectCode, extServiceBuildInitPipelineReq).data
+                .initExtServiceBuildPipeline(userId, projectCode!!, extServiceBuildInitPipelineReq).data
             logger.info("the serviceMarketInitPipelineResp is:$serviceMarketInitPipelineResp")
             if (null != serviceMarketInitPipelineResp) {
                 storePipelineRelDao.add(
@@ -272,6 +284,9 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             startParams["extServiceDeployInfo"] = JsonUtil.toJson(deployApp)
             startParams["script"] = script
             startParams["branch"] = MASTER
+            startParams["repoAddr"] = repoAddr
+            startParams["userName"] = extServiceImageSecretConfig.repoUsername
+            startParams["repoPassword"] = extServiceImageSecretConfig.repoPassword
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartup(
                 userId, projectCode!!, servicePipelineRelRecord.pipelineId, startParams,
                 ChannelCode.AM

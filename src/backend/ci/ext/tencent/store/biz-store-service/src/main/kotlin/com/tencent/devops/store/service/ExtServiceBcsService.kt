@@ -46,7 +46,6 @@ import com.tencent.devops.store.config.ExtServiceIngressConfig
 import com.tencent.devops.store.config.ExtServiceServiceConfig
 import com.tencent.devops.store.dao.ExtServiceFeatureDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
-import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.ExtServiceFeatureUpdateInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreEnvVarService
@@ -97,18 +96,14 @@ class ExtServiceBcsService {
     @Autowired
     private lateinit var storeEnvVarService: StoreEnvVarService
 
-    @Autowired
-    private lateinit var storeProjectRelDao: StoreProjectRelDao
-
     fun generateDeployApp(
         userId: String,
-        projectId: String,
         namespaceName: String,
         serviceCode: String,
         version: String,
         checkPermissionFlag: Boolean = true
     ): DeployApp {
-        val imageName = "$projectId/image/$serviceCode"
+        val imageName = "${extServiceImageSecretConfig.imageNamePrefix}$serviceCode"
         val grayFlag = namespaceName == extServiceBcsNameSpaceConfig.grayNamespaceName
         val host = if (grayFlag) extServiceIngressConfig.grayHost else extServiceIngressConfig.host
         val scopes = "ALL," + if (grayFlag) "TEST" else "PRD"
@@ -202,19 +197,12 @@ class ExtServiceBcsService {
         } else {
             extServiceBcsNameSpaceConfig.grayNamespaceName
         }
-        // 获取微扩展的初始化项目
-        val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
-            dslContext = dslContext,
-            storeCode = serviceCode,
-            storeType = StoreTypeEnum.SERVICE.type.toByte()
-        )!!
         val deployApp = generateDeployApp(
             userId = userId,
             namespaceName = namespaceName,
             serviceCode = serviceCode,
             version = version,
-            checkPermissionFlag = checkPermissionFlag,
-            projectId = initProjectCode
+            checkPermissionFlag = checkPermissionFlag
         )
         val bcsDeployAppResult = client.get(ServiceBcsResource::class).bcsDeployApp(
             userId = userId,

@@ -38,6 +38,7 @@ import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildInitPipelineReq
 import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildInitPipelineResp
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.store.pojo.dto.ExtServiceBaseInfoDTO
+import com.tencent.devops.store.pojo.dto.ExtServiceImageInfoDTO
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -75,8 +76,6 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
         val extServiceBaseInfo = extServiceBuildInitPipelineReq.extServiceBaseInfo
         startParams[ExtServiceBaseInfoDTO::serviceCode.name] = extServiceBaseInfo.serviceCode
         startParams[ExtServiceBaseInfoDTO::version.name] = extServiceBaseInfo.version
-        startParams[ExtServiceBaseInfoDTO::imageName.name] = extServiceBaseInfo.imageName
-        startParams[ExtServiceBaseInfoDTO::imageTag.name] = extServiceBaseInfo.imageTag
         startParams[ExtServiceBaseInfoDTO::extServiceDeployInfo.name] =
             JsonUtil.toJson(extServiceBaseInfo.extServiceDeployInfo)
         startParams[KEY_SCRIPT] = extServiceBuildInitPipelineReq.script
@@ -84,6 +83,11 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
         if (!branch.isNullOrBlank()) {
             startParams[KEY_BRANCH] = branch
         }
+        startParams[ExtServiceImageInfoDTO::imageName.name] = extServiceBaseInfo.extServiceImageInfo.imageName
+        startParams[ExtServiceImageInfoDTO::imageTag.name] = extServiceBaseInfo.extServiceImageInfo.imageTag
+        startParams[ExtServiceImageInfoDTO::username.name] = extServiceBaseInfo.extServiceImageInfo.username
+        startParams[ExtServiceImageInfoDTO::password.name] = extServiceBaseInfo.extServiceImageInfo.password
+        startParams[ExtServiceImageInfoDTO::repoAddr.name] = extServiceBaseInfo.extServiceImageInfo.repoAddr
         var serviceBuildStatus = ExtServiceStatusEnum.BUILDING
         var buildId: String? = null
         try {
