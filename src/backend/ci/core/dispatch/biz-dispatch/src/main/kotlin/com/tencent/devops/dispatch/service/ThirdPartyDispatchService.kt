@@ -430,7 +430,10 @@ class ThirdPartyDispatchService @Autowired constructor(
         }
 
         val (envId, agentResData) = when (dispatchType.agentType) {
-            AgentType.ID -> Pair(HashUtil.decodeIdToLong(dispatchType.envName), (agentsResult.data!! as List<ThirdPartyAgent>))
+            AgentType.ID -> Pair(
+                HashUtil.decodeIdToLong(dispatchType.envName),
+                (agentsResult.data!! as List<ThirdPartyAgent>)
+            )
             AgentType.NAME -> (agentsResult.data as Pair<Long?, List<ThirdPartyAgent>>)
         }
 
