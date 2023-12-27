@@ -221,7 +221,12 @@ class TOFService @Autowired constructor(
         }
     }
 
-    private fun getChildDeptInfos(userId: String, type: OrganizationType, id: Int): List<ChildDeptResponse> {
+    fun getChildDeptInfos(
+        userId: String? = null,
+        type: OrganizationType,
+        id: Int,
+        level: Int = 1
+    ): List<ChildDeptResponse> {
         try {
             val startTime = System.currentTimeMillis()
             val path = "get_child_dept_infos"
@@ -230,7 +235,7 @@ class TOFService @Autowired constructor(
                 tofAppCode!!,
                 tofAppSecret!!,
                 getParentDeptIdByOrganizationType(type, id),
-                1
+                level
             ), I18nUtil.getCodeLanMessage(
                 messageCode = QUERY_SUB_DEPARTMENT_FAIL,
                 language = I18nUtil.getLanguage(userId)
