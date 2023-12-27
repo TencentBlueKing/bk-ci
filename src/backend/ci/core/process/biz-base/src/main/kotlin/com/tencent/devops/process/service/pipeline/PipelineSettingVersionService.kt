@@ -34,8 +34,8 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
-import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.PipelineDetailInfo
 import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 import com.tencent.devops.process.service.label.PipelineGroupService
@@ -48,7 +48,7 @@ class PipelineSettingVersionService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val pipelineGroupService: PipelineGroupService,
-    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineSettingVersionDao: PipelineSettingVersionDao
 ) {
 
@@ -61,7 +61,7 @@ class PipelineSettingVersionService @Autowired constructor(
         version: Int
     ): PipelineSetting {
         // 正式版本的流水线设置
-        var settingInfo = pipelineRepositoryService.getSetting(projectId, pipelineId)
+        var settingInfo = pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
         val groups = pipelineGroupService.getGroups(userId, projectId, pipelineId)
         val labels = ArrayList<String>()
         groups.forEach {
