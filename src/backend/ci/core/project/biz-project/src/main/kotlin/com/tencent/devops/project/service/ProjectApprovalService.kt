@@ -275,6 +275,8 @@ class ProjectApprovalService @Autowired constructor(
                 description = description ?: "",
                 bgId = bgId?.toLong() ?: 0L,
                 bgName = bgName ?: "",
+                businessLineId = businessLineId,
+                businessLineName = businessLineName,
                 deptId = deptId?.toLong() ?: 0L,
                 deptName = deptName ?: "",
                 centerId = centerId?.toLong() ?: 0L,

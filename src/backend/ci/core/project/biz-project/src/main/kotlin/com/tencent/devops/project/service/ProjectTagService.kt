@@ -460,6 +460,8 @@ class ProjectTagService @Autowired constructor(
             creatorCenterName = projectData.creatorCenterName,
             bgId = projectData.bgId,
             bgName = projectData.bgName,
+            businessLineId = projectData.businessLineId,
+            businessLineName = projectData.businessLineName,
             deptId = projectData.deptId,
             deptName = projectData.deptName,
             centerId = projectData.centerId,

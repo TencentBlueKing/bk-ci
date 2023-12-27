@@ -75,6 +75,43 @@ BEGIN
         ADD COLUMN `PRODUCT_NAME` VARCHAR(64) DEFAULT NULL comment '运营产品名称';
     END IF;
 
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PROJECT'
+                    AND COLUMN_NAME = 'business_line_id') THEN
+    ALTER TABLE `T_PROJECT`
+        ADD COLUMN `business_line_id` bigint(20) DEFAULT NULL COMMENT '业务线ID';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PROJECT'
+                    AND COLUMN_NAME = 'business_line_name') THEN
+    ALTER TABLE `T_PROJECT`
+        ADD COLUMN `business_line_name` varchar(255) DEFAULT NULL COMMENT '业务线名称';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PROJECT_APPROVAL'
+                    AND COLUMN_NAME = 'business_line_id') THEN
+    ALTER TABLE `T_PROJECT_APPROVAL`
+        ADD COLUMN `BUSINESS_LINE_ID` bigint(20) DEFAULT NULL COMMENT '业务线ID';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PROJECT_APPROVAL'
+                    AND COLUMN_NAME = 'BUSINESS_LINE_NAME') THEN
+    ALTER TABLE `T_PROJECT_APPROVAL`
+        ADD COLUMN `BUSINESS_LINE_NAME` varchar(255) DEFAULT NULL COMMENT '业务线名称';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;
