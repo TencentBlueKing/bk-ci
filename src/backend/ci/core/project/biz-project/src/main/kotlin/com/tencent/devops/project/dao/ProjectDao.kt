@@ -347,6 +347,8 @@ class ProjectDao {
                 DESCRIPTION,
                 BG_ID,
                 BG_NAME,
+                BUSINESS_LINE_ID,
+                BUSINESS_LINE_NAME,
                 DEPT_ID,
                 DEPT_NAME,
                 CENTER_ID,
@@ -374,6 +376,8 @@ class ProjectDao {
                 projectCreateInfo.description,
                 projectCreateInfo.bgId,
                 projectCreateInfo.bgName,
+                projectCreateInfo.businessLineId,
+                projectCreateInfo.businessLineName,
                 projectCreateInfo.deptId,
                 projectCreateInfo.deptName,
                 projectCreateInfo.centerId,
@@ -414,6 +418,8 @@ class ProjectDao {
                 .set(PROJECT_NAME, projectUpdateInfo.projectName)
                 .set(BG_ID, projectUpdateInfo.bgId)
                 .set(BG_NAME, projectUpdateInfo.bgName)
+                .set(BUSINESS_LINE_ID, projectUpdateInfo.businessLineId)
+                .set(BUSINESS_LINE_NAME, projectUpdateInfo.businessLineName)
                 .set(CENTER_ID, projectUpdateInfo.centerId)
                 .set(CENTER_NAME, projectUpdateInfo.centerName)
                 .set(DEPT_ID, projectUpdateInfo.deptId)
@@ -635,6 +641,8 @@ class ProjectDao {
                 .set(PROJECT_NAME, projectInfoRequest.projectName)
                 .set(BG_ID, projectInfoRequest.bgId)
                 .set(BG_NAME, projectInfoRequest.bgName)
+                .set(BUSINESS_LINE_ID, projectInfoRequest.businessLineId)
+                .set(BUSINESS_LINE_NAME, projectInfoRequest.businessLineName)
                 .set(DEPT_ID, projectInfoRequest.deptId)
                 .set(DEPT_NAME, projectInfoRequest.deptName)
                 .set(CENTER_ID, projectInfoRequest.centerId)
