@@ -174,11 +174,11 @@ class RepositoryPacService @Autowired constructor(
             )
         }
         val codeRepositoryService = CodeRepositoryServiceRegistrar.getServiceByScmType(repository.type)
-        val ciDirExists = codeRepositoryService.checkCiDirExists(
+        val ciDirExists = codeRepositoryService.getGitFileTree(
             projectId = projectId,
             userId = userId,
             repository = repository
-        )
+        ).isNotEmpty()
         if (ciDirExists) {
             throw ErrorCodeException(
                 errorCode = RepositoryMessageCode.ERROR_REPO_CI_DIR_EXISTS
@@ -204,11 +204,38 @@ class RepositoryPacService @Autowired constructor(
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         val repository = repositoryDao.get(dslContext = dslContext, repositoryId = repositoryId, projectId = projectId)
         val codeRepositoryService = CodeRepositoryServiceRegistrar.getServiceByScmType(repository.type)
-        return codeRepositoryService.checkCiDirExists(
+        return codeRepositoryService.getGitFileTree(
             projectId = projectId,
             userId = userId,
             repository = repository
+        ).isNotEmpty()
+    }
+
+    fun getCiSubDir(
+        userId: String,
+        projectId: String,
+        repositoryHashId: String
+    ): List<String> {
+        val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
+        // 权限校验
+        repositoryService.validatePermission(
+            user = userId,
+            projectId = projectId,
+            repositoryId = repositoryId,
+            authPermission = AuthPermission.VIEW,
+            message = MessageUtil.getMessageByLocale(
+                messageCode = RepositoryMessageCode.USER_VIEW_PEM_ERROR,
+                params = arrayOf(userId, projectId, repositoryHashId),
+                language = I18nUtil.getLanguage(userId)
+            )
         )
+        val repository = repositoryDao.get(dslContext = dslContext, repositoryId = repositoryId, projectId = projectId)
+        val codeRepositoryService = CodeRepositoryServiceRegistrar.getServiceByScmType(repository.type)
+        return codeRepositoryService.getGitFileTree(
+            projectId = projectId,
+            userId = userId,
+            repository = repository
+        ).filter { it.type == "tree" }.map { it.name }
     }
 
     fun updateYamlSyncStatus(

@@ -55,6 +55,7 @@ import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.repository.service.scm.IScmOauthService
 import com.tencent.devops.repository.service.scm.IScmService
+import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -342,18 +343,18 @@ class CodeGitRepositoryService @Autowired constructor(
         }
     }
 
-    override fun checkCiDirExists(projectId: String, userId: String, repository: TRepositoryRecord): Boolean {
+    override fun getGitFileTree(projectId: String, userId: String, repository: TRepositoryRecord): List<GitFileInfo> {
         val codeGitRepository = compose(repository)
         val credentialInfo = getCredentialInfo(projectId = projectId, repository = codeGitRepository)
         val gitProjectInfo = getGitProjectInfo(repoUrl = repository.url, token = credentialInfo.token)
-        return gitService.getGitRepositoryTreeInfo(
-            userId = userId,
-            repoName = gitProjectInfo.id.toString(),
-            refName = gitProjectInfo.defaultBranch,
+        return gitService.getGitFileTree(
+            gitProjectId = gitProjectInfo.id.toString(),
+            ref = gitProjectInfo.defaultBranch,
             path = RepositoryConstants.CI_DIR_PATH,
             token = credentialInfo.token,
+            recursive = false,
             tokenType = TokenTypeEnum.OAUTH
-        ).data?.isNotEmpty() ?: false
+        ).data ?: emptyList()
     }
 
     /**

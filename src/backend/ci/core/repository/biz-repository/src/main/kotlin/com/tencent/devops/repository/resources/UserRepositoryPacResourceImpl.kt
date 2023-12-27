@@ -111,6 +111,16 @@ class UserRepositoryPacResourceImpl @Autowired constructor(
         )
     }
 
+    override fun getCiSubDir(userId: String, projectId: String, repositoryHashId: String): Result<List<String>> {
+        return Result(
+            repositoryPacService.getCiSubDir(
+                userId = userId,
+                projectId = projectId,
+                repositoryHashId = repositoryHashId
+            )
+        )
+    }
+
     override fun supportScmType(): Result<List<IdValue>> {
         return Result(listOf(ScmType.CODE_GIT).map {
             IdValue(

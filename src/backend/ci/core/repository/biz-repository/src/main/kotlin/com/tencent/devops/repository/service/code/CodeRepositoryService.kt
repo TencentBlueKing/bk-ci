@@ -29,6 +29,7 @@ package com.tencent.devops.repository.service.code
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryDetailInfo
+import com.tencent.devops.scm.pojo.GitFileInfo
 
 interface CodeRepositoryService<T> {
 
@@ -67,7 +68,8 @@ interface CodeRepositoryService<T> {
      */
     fun pacCheckEnabled(projectId: String, userId: String, repository: TRepositoryRecord, retry: Boolean)
 
-    fun checkCiDirExists(projectId: String, userId: String, repository: TRepositoryRecord): Boolean
+    // TODO 暂时放这里,后面代码库统一优化平台层接口
+    fun getGitFileTree(projectId: String, userId: String, repository: TRepositoryRecord): List<GitFileInfo>
 
     fun getPacRepository(externalId: String): TRepositoryRecord?
 }
