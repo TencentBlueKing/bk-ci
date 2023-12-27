@@ -198,7 +198,7 @@ object AtomUtils {
         return inputTypeConfigMap
     }
 
-    fun checkTemplateAtoms(
+    fun checkTemplateRealVersionAtoms(
         codeVersions: Set<AtomCodeVersionReqItem>,
         userId: String,
         client: Client
@@ -206,13 +206,9 @@ object AtomUtils {
         val atomInfos = client.get(ServiceAtomResource::class)
             .getAtomInfos(
                 codeVersions = codeVersions
-            ).data!!
-        atomInfos.forEach {
-            val atomStatus = try {
-                AtomStatusEnum.getAtomStatus(it.atomStatus!!.toInt())
-            } catch (e: Exception) {
-                it.atomStatus.toString()
-            }
+            ).data
+        atomInfos?.forEach {
+            val atomStatus = AtomStatusEnum.getAtomStatus(it.atomStatus!!.toInt())
             if (atomStatus != AtomStatusEnum.RELEASED.name) {
                 throw ErrorCodeException(
                     errorCode = TEMPLATE_PLUGIN_NOT_ALLOWED_USE,

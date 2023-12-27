@@ -569,7 +569,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             jobType = if (jobType == null) null else JobTypeEnum.valueOf(jobType),
             buildLessRunFlag = atom.buildLessRunFlag,
             inputTypeInfos = generateInputTypeInfos(atom.props),
-            atomStatus = atom.atomStatus.toString()
+            atomStatus = atom.atomStatus
         )
         // 更新插件当前版本号的缓存信息
         redisOperation.hset(

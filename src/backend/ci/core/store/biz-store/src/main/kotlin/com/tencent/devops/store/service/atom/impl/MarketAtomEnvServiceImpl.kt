@@ -234,8 +234,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             initProjectCode = atomEnv.projectCode ?: "",
             jobType = atomEnv.jobType,
             buildLessRunFlag = atomEnv.buildLessRunFlag,
-            inputTypeInfos = marketAtomCommonService.generateInputTypeInfos(atomEnv.props),
-            atomStatus = atomEnv.atomStatus
+            inputTypeInfos = marketAtomCommonService.generateInputTypeInfos(atomEnv.props)
         )
         if (!testFlag) {
             // 将db中的环境信息写入缓存

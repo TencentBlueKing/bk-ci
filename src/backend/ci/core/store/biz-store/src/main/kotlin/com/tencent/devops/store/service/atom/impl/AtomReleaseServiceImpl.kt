@@ -1246,13 +1246,17 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     latestFlag = false
                 )
             )
-            // 处理插件缓存
-            marketAtomCommonService.handleAtomCache(
-                atomId = atomId,
-                atomCode = atomCode,
-                version = version,
-                releaseFlag = false
+            val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode)
+            val versions = atomDao.getVersionsByAtomCode(
+                dslContext = context,
+                atomCode = atomCode
             )
+            versions?.let {
+                redisOperation.hdelete(
+                    key = atomRunInfoKey,
+                    hashKeys = it
+                )
+            }
             val newestReleaseAtomRecord = releaseAtomRecords[0]
             if (newestReleaseAtomRecord.id == atomId) {
                 var tmpAtomId: String? = null

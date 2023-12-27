@@ -638,7 +638,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             jobType = if (tAtomRecord.jobType == null) null else JobTypeEnum.valueOf(tAtomRecord.jobType),
             buildLessRunFlag = tAtomRecord.buildLessRunFlag,
             inputTypeInfos = marketAtomCommonService.generateInputTypeInfos(tAtomRecord.props),
-            atomStatus = tAtomRecord.atomStatus.toString()
+            atomStatus = tAtomRecord.atomStatus
         )
     }
     /**

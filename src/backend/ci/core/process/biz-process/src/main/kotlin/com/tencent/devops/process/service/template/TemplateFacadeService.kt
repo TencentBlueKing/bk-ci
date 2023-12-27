@@ -2326,7 +2326,6 @@ class TemplateFacadeService @Autowired constructor(
                 container.elements.forEach nextElement@{ element ->
                     val atomCode = element.getAtomCode()
                     val version = element.version
-                    // 更新实例要求明确版本号
                     if (flag == true && version.contains("*")) {
                         return@nextElement
                     }
@@ -2334,9 +2333,8 @@ class TemplateFacadeService @Autowired constructor(
                 }
             }
         }
-        logger.info("codeVersions is : $codeVersions")
         if (codeVersions.isNotEmpty()) {
-            AtomUtils.checkTemplateAtoms(
+            AtomUtils.checkTemplateRealVersionAtoms(
                 codeVersions = codeVersions,
                 userId = userId,
                 client = client

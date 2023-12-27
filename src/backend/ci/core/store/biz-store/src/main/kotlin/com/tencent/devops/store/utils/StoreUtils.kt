@@ -83,15 +83,6 @@ object StoreUtils {
     }
 
     /**
-     * 获取组件状态信息Key前缀
-     * @param typeName 类型名称
-     * @param storeCode 组件代码
-     */
-    /*fun getStoreStatusKey(typeName: String, storeCode: String): String {
-        return "$STORE_STATUS_INFO_KEY_PREFIX:$typeName:$storeCode"
-    }*/
-
-    /**
      * 判断当前版本号是否比待比较版本号大
      * @param currentVersion 当前版本号
      * @param compareVersion 待比较版本号
