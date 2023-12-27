@@ -54,7 +54,10 @@ data class GithubPullRequestEvent(
      */
     fun isMerged() = action == "closed" && pullRequest.merged
 
-    fun getActionValue(): String? {
+    /**
+     * 根据当前event获取Pr的实际action
+     */
+    fun getRealAction(): String? {
         return when {
             isMerged() -> TGitMrEventAction.MERGE.value
             action == "opened" -> TGitMrEventAction.OPEN.value

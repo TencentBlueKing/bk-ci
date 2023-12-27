@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ACTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_AUTHOR
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME
@@ -132,7 +133,7 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
     }
 
     override fun getAction(event: GithubPullRequestEvent): String? {
-        return event.getActionValue() ?: ""
+        return event.getRealAction() ?: ""
     }
 
     override fun getEventDesc(event: GithubPullRequestEvent): String {
@@ -165,7 +166,7 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
 
     @SuppressWarnings("ComplexCondition")
     override fun preMatch(event: GithubPullRequestEvent): WebhookMatchResult {
-        if (event.getActionValue() == null) {
+        if (getAction(event) == null) {
             logger.info("The github pull request does not meet the triggering conditions $event")
             return WebhookMatchResult(false)
         }
@@ -185,7 +186,11 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
                 pipelineId = pipelineId,
                 included = WebhookUtils.convert(includeMrAction),
                 triggerOn = getAction(event) ?: "",
-                filterName = "prActionFilter"
+                filterName = "prActionFilter",
+                failedReason = I18Variable(
+                    code = WebhookI18nConstants.PR_ACTION_NOT_MATCH,
+                    params = listOf(getAction(event) ?: "")
+                ).toJsonStr()
             )
             val userFilter = UserFilter(
                 pipelineId = pipelineId,
@@ -228,6 +233,7 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
         val startParams = mutableMapOf<String, Any>()
         startParams[BK_REPO_GIT_WEBHOOK_MR_AUTHOR] = event.sender.login
         startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = event.number
+        startParams[BK_REPO_GIT_WEBHOOK_MR_ACTION] = getAction(event) ?: ""
         pullRequestStartParam(event = event, startParams = startParams)
 
         startParams.putAll(
