@@ -87,7 +87,7 @@ class RebuildWorkspaceHandler @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.CGS_RESTART,
+        actionId = ActionId.CGS_REBUILD_SYSTEM_DISK,
         instance = AuditInstanceRecord(
             resourceType = ResourceTypeId.CGS,
             instanceNames = "#workspaceName",
@@ -95,7 +95,7 @@ class RebuildWorkspaceHandler @Autowired constructor(
         ),
         attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
         scopeId = "#projectId",
-        content = ActionAuditContent.CGS_RESTART_CONTENT
+        content = ActionAuditContent.CGS_REBUILD_SYSTEM_DISK_CONTENT
     )
     fun rebuildWorkspace(
         userId: String,
