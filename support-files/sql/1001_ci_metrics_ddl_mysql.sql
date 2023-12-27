@@ -290,4 +290,29 @@ CREATE TABLE IF NOT EXISTS `T_DISPATCH_JOB_DAILY_METRICS` (
   INDEX `IDX_PRODUCT_ID`(`PRODUCT_ID`,`JOB_TYPE`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '流水线JOB度量数据按天统计表';
 
+CREATE TABLE IF NOT EXISTS `T_PROJECT_USER_DAILY`
+(
+    `PROJECT_ID` VARCHAR(64) not null comment '项目ID',
+    `USER_ID`    VARCHAR(64) not null comment '用户ID',
+    `THE_DATE`   DATE        not null comment '日期',
+    PRIMARY KEY (`PROJECT_ID`, `USER_ID`, `THE_DATE`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='项目每日用户';
+
+CREATE TABLE IF NOT EXISTS `T_PROJECT_BUILD_SUMMARY_DAILY`
+(
+    `PROJECT_ID`           VARCHAR(64)  not null comment '项目ID',
+    `PRODUCT_ID`           int              null comment '产品ID',
+    `USER_COUNT`           int          not null default 0 comment '用户数',
+    `BUILD_COUNT`          int          not null default 0 comment '总构建数',
+    `MANUAL_BUILD_COUNT`   int          not null default 0 comment '手动触发构建数',
+    `OPENAPI_BUILD_COUNT`  int          not null default 0 comment 'openapi构建数',
+    `WEBHOOK_BUILD_COUNT`  int          not null default 0 comment '代码库构建数',
+    `REMOTE_BUILD_COUNT`   int          not null default 0 comment '远程触发构建数',
+    `TIME_BUILD_COUNT`     int          not null default 0 comment '定时触发构建数',
+    `SUB_PIPELINE_BUILD_COUNT` int          not null default 0 comment '子流水线触发构建数',
+    `THE_DATE`             DATE         not null comment '日期',
+    PRIMARY KEY (`PROJECT_ID`, `THE_DATE`),
+    INDEX `IDX_PRODUCT_ID`(`PRODUCT_ID`,`THE_DATE`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='项目每日构建汇总表';
+
 SET FOREIGN_KEY_CHECKS = 1;
