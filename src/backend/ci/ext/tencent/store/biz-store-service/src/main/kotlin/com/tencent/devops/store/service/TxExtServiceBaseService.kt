@@ -205,7 +205,8 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             imageName = imageName,
             imageTag = version,
             repoAddr = repoAddr,
-            ticketId = extServiceImageSecretConfig.ticketId
+            username = extServiceImageSecretConfig.repoUsername,
+            password = extServiceImageSecretConfig.repoPassword
         )
         // 未正式发布的扩展服务先部署到bcs灰度环境
         val deployApp = extServiceBcsService.generateDeployApp(
@@ -284,7 +285,8 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             startParams["script"] = script
             startParams["branch"] = MASTER
             startParams["repoAddr"] = repoAddr
-            startParams["ticketId"] = extServiceImageSecretConfig.ticketId
+            startParams["userName"] = extServiceImageSecretConfig.repoUsername
+            startParams["repoPassword"] = extServiceImageSecretConfig.repoPassword
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartup(
                 userId, projectCode!!, servicePipelineRelRecord.pipelineId, startParams,
                 ChannelCode.AM

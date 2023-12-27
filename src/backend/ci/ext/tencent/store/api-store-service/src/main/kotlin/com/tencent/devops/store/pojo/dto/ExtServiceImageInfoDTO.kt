@@ -38,6 +38,8 @@ data class ExtServiceImageInfoDTO(
     val imageTag: String,
     @ApiModelProperty("镜像仓库地址", required = true)
     val repoAddr: String,
-    @ApiModelProperty("镜像仓库凭证", required = true)
-    val ticketId: String
+    @ApiModelProperty("镜像仓库用户名", required = true)
+    val username: String,
+    @ApiModelProperty("镜像仓库密码", required = true)
+    val password: String
 )
