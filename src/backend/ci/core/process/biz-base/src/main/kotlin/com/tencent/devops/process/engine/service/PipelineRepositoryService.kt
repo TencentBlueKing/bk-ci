@@ -79,6 +79,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineRestoreEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
+import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineName
@@ -295,6 +296,9 @@ class PipelineRepositoryService constructor(
             c.containerHashId = modelContainerIdGenerator.getNextId()
         }
         distIds.add(c.containerHashId!!)
+
+        // 清理无用的options
+        c.params = PipelineUtils.cleanOptions(c.params)
 
         var taskSeq = 0
         c.elements.forEach { e ->
