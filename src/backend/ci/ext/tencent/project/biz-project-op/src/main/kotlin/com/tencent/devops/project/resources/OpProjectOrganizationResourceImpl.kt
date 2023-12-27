@@ -23,13 +23,26 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.project.pojo.enums
+package com.tencent.devops.project.resources
 
-enum class OrganizationType(val typeId: Int) {
-    bg(6),
-    dept(1),
-    center(7),
-    businessLine(8)
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.op.OpProjectOrganizationResource
+import com.tencent.devops.project.service.ProjectOrganizationService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class OpProjectOrganizationResourceImpl @Autowired constructor(
+    val projectOrganizationService: ProjectOrganizationService
+) : OpProjectOrganizationResource {
+    override fun fixProjectOrganization(englishNames: List<String>): Result<Boolean> {
+        return Result(projectOrganizationService.fixProjectOrganization(englishNames = englishNames))
+    }
+
+    override fun fixAllProjectOrganization(channelCode: String?): Result<Boolean> {
+        return Result(projectOrganizationService.fixAllProjectOrganization(channelCode = channelCode))
+    }
 }

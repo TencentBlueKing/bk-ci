@@ -1,9 +1,11 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.enums.OrganizationType
@@ -11,6 +13,7 @@ import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
 
 @Service
 class ProjectOrganizationService constructor(
@@ -65,7 +68,34 @@ class ProjectOrganizationService constructor(
         }
     }
 
+    fun fixProjectOrganization(englishNames: List<String>): Boolean {
+        englishNames.forEach {
+            executor.submit {
+                fixProjectOrganization(englishName = it)
+            }
+        }
+        return true
+    }
+
+    fun fixAllProjectOrganization(channelCode: String? = ChannelCode.BS.name): Boolean {
+        var offset = 0
+        val limit = PageUtil.MAX_PAGE_SIZE
+        do {
+            val projectInfos = projectDao.listByChannel(
+                dslContext = dslContext,
+                limit = limit,
+                offset = offset,
+                channelCodes = listOf(channelCode!!)
+            )
+            fixProjectOrganization(englishNames = projectInfos.map { it.englishName })
+            offset += limit
+        } while (projectInfos.size == limit)
+        return true
+    }
+
+
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectOrganizationService::class.java)
+        private val executor = Executors.newFixedThreadPool(5)
     }
 }

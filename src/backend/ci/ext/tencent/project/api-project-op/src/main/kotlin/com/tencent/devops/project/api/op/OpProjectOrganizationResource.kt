@@ -25,11 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.pojo.enums
+package com.tencent.devops.project.api.op
 
-enum class OrganizationType(val typeId: Int) {
-    bg(6),
-    dept(1),
-    center(7),
-    businessLine(8)
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["OP_ORGANIZATION"], description = "项目组织架构")
+@Path("/op/organization")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpProjectOrganizationResource {
+    @POST
+    @Path("/fixProjectOrganization")
+    @ApiOperation("修正项目组织架构")
+    fun fixProjectOrganization(
+        @ApiParam("", required = true)
+        englishNames: List<String>
+    ): Result<Boolean>
+
+    @POST
+    @Path("/fixAllProjectOrganization")
+    @ApiOperation("全量修正项目组织架构")
+    fun fixAllProjectOrganization(
+        @ApiParam("", required = true)
+        @QueryParam("channelCode")
+        channelCode: String?
+    ): Result<Boolean>
 }
