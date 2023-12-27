@@ -30,5 +30,6 @@ package com.tencent.devops.project.pojo.enums
 enum class OrganizationType(val typeId: Int) {
     bg(6),
     dept(1),
-    center(7)
+    center(7),
+    businessLine(8)
 }

@@ -397,6 +397,9 @@ class TxProjectServiceImpl @Autowired constructor(
         val bgName = projectCreateInfo.bgName.ifEmpty { userDeptDetail.bgName }
         val deptName = projectCreateInfo.deptName.ifEmpty { userDeptDetail.deptName }
         val centerName = projectCreateInfo.centerName.ifEmpty { userDeptDetail.centerName }
+        val businessLineName = projectCreateInfo.businessLineName?.takeIf { it.isNotEmpty() }
+            ?: userDeptDetail.businessLineName
+        val businessLineId = projectCreateInfo.businessLineId ?: userDeptDetail.businessLineId?.toLong()
 
         return projectCreateInfo.copy(
             bgId = bgId,
@@ -404,7 +407,9 @@ class TxProjectServiceImpl @Autowired constructor(
             centerId = centerId,
             centerName = centerName,
             deptId = deptId,
-            deptName = deptName
+            deptName = deptName,
+            businessLineId = businessLineId,
+            businessLineName = businessLineName
         )
     }
 

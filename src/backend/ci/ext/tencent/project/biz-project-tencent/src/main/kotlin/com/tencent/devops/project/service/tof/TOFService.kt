@@ -512,6 +512,8 @@ class TOFService @Autowired constructor(
         var deptName = ""
         var centerId = "0"
         var centerName = ""
+        var businessLineId: String? = null
+        var businessLineName: String? = null
         groupId = staffInfo.groupId
         groupName = staffInfo.groupName
         for (deptInfo in deptInfos) {
@@ -522,7 +524,10 @@ class TOFService @Autowired constructor(
                     bgName = name
                     bgId = deptInfo.id
                 }
-
+                OrganizationType.businessLine.typeId -> {
+                    businessLineName = name
+                    businessLineId = deptInfo.id
+                }
                 OrganizationType.dept.typeId -> {
                     deptName = name
                     deptId = deptInfo.id
@@ -541,6 +546,8 @@ class TOFService @Autowired constructor(
         return UserDeptDetail(
             bgName = bgName,
             bgId = bgId,
+            businessLineName = businessLineName,
+            businessLineId = businessLineId,
             deptName = deptName,
             deptId = deptId,
             centerName = centerName,
