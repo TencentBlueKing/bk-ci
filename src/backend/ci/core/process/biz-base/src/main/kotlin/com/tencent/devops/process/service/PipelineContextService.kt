@@ -293,7 +293,6 @@ class PipelineContextService @Autowired constructor(
             }
         }
 
-
         // other job
         val jobId = if (c.jobId.isNullOrBlank()) return else c.jobId!!
         contextMap["jobs.$jobId.id"] = jobId
