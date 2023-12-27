@@ -42,6 +42,9 @@ import (
 const IOA_ERROR exitcode.ExitErrorEnum = "THIRD_AGENT_EXIT_IOA_ERROR"
 
 func checkHttpStatusErr(status int, body []byte) {
+	if status >= 200 && status < 300 {
+		return
+	}
 	switch status {
 	case 502:
 		// 检查是不是 IOA 报错
