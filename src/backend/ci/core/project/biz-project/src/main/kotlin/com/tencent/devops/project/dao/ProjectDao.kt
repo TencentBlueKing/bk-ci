@@ -36,6 +36,7 @@ import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.PaasProject
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
@@ -915,6 +916,26 @@ class ProjectDao {
         with(TProject.T_PROJECT) {
             dslContext.update(this)
                 .set(PRODUCT_ID, productId)
+                .where(ENGLISH_NAME.eq(englishName))
+                .execute()
+        }
+    }
+
+    fun updateOrganizationByEnglishName(
+        dslContext: DSLContext,
+        englishName: String,
+        projectOrganizationInfo: ProjectOrganizationInfo
+    ) {
+        with(TProject.T_PROJECT) {
+            dslContext.update(this)
+                .set(BG_ID, projectOrganizationInfo.bgId)
+                .set(BG_NAME, projectOrganizationInfo.bgName)
+                .set(BUSINESS_LINE_ID, projectOrganizationInfo.businessLineId)
+                .set(BUSINESS_LINE_NAME, projectOrganizationInfo.businessLineName)
+                .set(DEPT_ID, projectOrganizationInfo.deptId)
+                .set(DEPT_NAME, projectOrganizationInfo.deptName)
+                .set(CENTER_ID, projectOrganizationInfo.centerId)
+                .set(CENTER_NAME, projectOrganizationInfo.centerName)
                 .where(ENGLISH_NAME.eq(englishName))
                 .execute()
         }
