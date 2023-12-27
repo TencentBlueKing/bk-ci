@@ -110,7 +110,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                     count = 1
                 )
             )
-            Thread.sleep(500)
+            Thread.sleep(200)
         }
 
         // 启动流水线完成剩下的分配工作
