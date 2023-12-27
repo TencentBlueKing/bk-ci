@@ -181,6 +181,20 @@ class StartCloudRemoteDevService @Autowired constructor(
         return resp.taskUid
     }
 
+    override fun rebuildWorkspace(userId: String, workspaceName: String, imageCosFile: String): String {
+        val resp = workspaceClient.operateWorkspace(
+            userId = userId,
+            action = EnvironmentAction.REBUILD,
+            workspaceName = workspaceName,
+            environmentOperate = EnvironmentOperate(
+                uid = getEnvironmentUid(workspaceName),
+                image = imageCosFile
+            )
+        )
+
+        return resp.taskUid
+    }
+
     override fun deleteWorkspace(userId: String, workspaceName: String): String {
         val resp = workspaceClient.operateWorkspace(
             userId = userId,

@@ -32,6 +32,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.service.projectworkspace.MakeWorkspaceImageHandler
+import com.tencent.devops.remotedev.service.projectworkspace.RebuildWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.RestartWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.StartWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.StopWorkspaceHandler
@@ -53,7 +54,8 @@ class RemoteDevUpdateListener @Autowired constructor(
     private val startWorkspaceHandler: StartWorkspaceHandler,
     private val stopWorkspaceHandler: StopWorkspaceHandler,
     private val restartWorkspaceHandler: RestartWorkspaceHandler,
-    private val makeWorkspaceImageHandler: MakeWorkspaceImageHandler
+    private val makeWorkspaceImageHandler: MakeWorkspaceImageHandler,
+    private val rebuildWorkspaceHandler: RebuildWorkspaceHandler
 ) : Listener<RemoteDevUpdateEvent> {
 
     override fun execute(event: RemoteDevUpdateEvent) {
@@ -67,6 +69,7 @@ class RemoteDevUpdateListener @Autowired constructor(
                     UpdateEventType.RESTART -> restartWorkspaceHandler.restartWorkspaceCallback(event)
                     UpdateEventType.DELETE -> deleteControl.afterDeleteWorkspace(event)
                     UpdateEventType.MAKE_IMAGE -> makeWorkspaceImageHandler.makeWorkspaceImageCallback(event)
+                    UpdateEventType.REBUILD -> rebuildWorkspaceHandler.rebuildWorkspaceCallback(event)
                     else -> {}
                 }
                 return
