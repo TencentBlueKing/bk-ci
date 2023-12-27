@@ -132,7 +132,7 @@ class RebuildWorkspaceHandler @Autowired constructor(
                     errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
                     params = arrayOf(
                         workspace.workspaceName,
-                        "status is already ${workspace.status}, can't restart now"
+                        "status is already ${workspace.status}, can't rebuild now"
                     )
                 )
             }
@@ -240,7 +240,7 @@ class RebuildWorkspaceHandler @Autowired constructor(
             }
         } else {
             // 启动失败,记录为EXCEPTION
-            logger.warn("restart workspace ${event.workspaceName} failed")
+            logger.warn("rebuild workspace ${event.workspaceName} failed")
             workspaceDao.updateWorkspaceStatus(
                 workspaceName = event.workspaceName,
                 status = WorkspaceStatus.EXCEPTION,

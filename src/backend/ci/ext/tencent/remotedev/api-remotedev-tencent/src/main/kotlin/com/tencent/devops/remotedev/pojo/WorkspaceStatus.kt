@@ -73,7 +73,7 @@ enum class WorkspaceStatus {
     fun notOk2doNextAction(workspaceSystemType: WorkspaceSystemType) =
         (this == PREPARING && workspaceSystemType != WorkspaceSystemType.WINDOWS_GPU) ||
             this == STARTING || this == SLEEPING || this == DELETING || this == STOPPING ||
-            this == RESTARTING || this == MAKING_IMAGE
+            this == RESTARTING || this == MAKING_IMAGE || this == REBUILDING
 }
 
 @Suppress("ALL")
