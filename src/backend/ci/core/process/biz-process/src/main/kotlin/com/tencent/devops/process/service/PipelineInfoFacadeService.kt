@@ -52,6 +52,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelUpdate
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
@@ -628,6 +629,14 @@ class PipelineInfoFacadeService @Autowired constructor(
             versionStatus = versionStatus,
             pipelineAsCodeSettings = pipelineAsCodeSettings
         )
+    }
+
+    fun updateBranchVersion(
+        projectId: String,
+        pipelineId: String,
+        branchVersionAction: BranchVersionAction
+    ) {
+
     }
 
     private fun transferModelAndSetting(

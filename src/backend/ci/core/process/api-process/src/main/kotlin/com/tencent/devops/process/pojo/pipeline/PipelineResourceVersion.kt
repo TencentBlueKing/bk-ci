@@ -68,7 +68,7 @@ data class PipelineResourceVersion(
     @ApiModelProperty("草稿版本标识", required = false)
     val status: VersionStatus? = VersionStatus.RELEASED,
     @ApiModelProperty("分支版本状态", required = false)
-    val branchLifecycle: BranchVersionAction? = null,
+    val branchAction: BranchVersionAction? = null,
     @ApiModelProperty("版本变更说明", required = false)
     val description: String? = null,
     @ApiModelProperty("调试构建ID", required = false)
