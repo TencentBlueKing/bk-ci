@@ -1250,17 +1250,19 @@ class PipelineRepositoryService constructor(
                 newModel = targetVersion.model
             )
             val now = LocalDateTime.now()
-            resultVersion = targetVersion.copy(
+            val versionName = PipelineVersionUtils.getVersionName(
+                pipelineVersion, triggerVersion, targetVersion.settingVersion
+            )
+            val newVersion = targetVersion.copy(
                 version = latestVersion.version + 1,
                 pipelineVersion = pipelineVersion,
                 triggerVersion = triggerVersion,
                 settingVersion = targetVersion.settingVersion,
                 createTime = now,
                 updateTime = now,
-                versionName = PipelineVersionUtils.getVersionName(
-                    pipelineVersion, triggerVersion, targetVersion.settingVersion
-                )
+                versionName = versionName
             )
+            resultVersion = newVersion
             pipelineResourceVersionDao.clearDraftVersion(
                 dslContext = context,
                 projectId = projectId,
@@ -1271,17 +1273,17 @@ class PipelineRepositoryService constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 creator = userId,
-                version = resultVersion!!.version,
-                versionName = resultVersion!!.versionName,
-                model = resultVersion!!.model,
+                version = newVersion.version,
+                versionName = versionName,
+                model = newVersion.model,
                 baseVersion = targetVersion.version,
-                yaml = resultVersion!!.yaml,
-                pipelineVersion = resultVersion!!.pipelineVersion,
-                triggerVersion = resultVersion!!.triggerVersion,
-                settingVersion = resultVersion!!.settingVersion,
+                yaml = newVersion.yaml,
+                pipelineVersion = newVersion.pipelineVersion,
+                triggerVersion = triggerVersion,
+                settingVersion = newVersion.settingVersion,
                 versionStatus = VersionStatus.COMMITTING,
                 branchLifecycle = null,
-                description = resultVersion!!.description
+                description = newVersion.description
             )
         }
         return resultVersion!!
