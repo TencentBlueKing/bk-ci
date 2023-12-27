@@ -35,7 +35,6 @@ data class AgentQueryAgentStatusFromNodemanReq(
     @JsonProperty("bk_host_id")
     val bkHostId: List<Long>?,
     @ApiModelProperty(value = "搜索条件")
-    @JsonProperty("bk_host_id")
     val conditions: List<AgentCondition<List<String>>>?,
     @ApiModelProperty(value = "展示额外信息")
     @JsonProperty("extra_data")
