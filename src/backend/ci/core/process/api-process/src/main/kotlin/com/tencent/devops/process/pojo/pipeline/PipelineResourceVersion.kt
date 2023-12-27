@@ -50,7 +50,7 @@ data class PipelineResourceVersion(
     @ApiModelProperty("创建者", required = true)
     val creator: String,
     @ApiModelProperty("版本名称", required = true)
-    val versionName: String = "",
+    val versionName: String?,
     @ApiModelProperty("版本创建时间", required = true)
     val createTime: LocalDateTime,
     @ApiModelProperty("版本修改时间", required = true)
