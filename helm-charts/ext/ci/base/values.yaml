@@ -1069,6 +1069,8 @@ turbo:
 gateway:
   enabled: false
   replicas: 1
+  sysctl:
+    enabled: true
   podLabels: {}
   resources:
     requests:

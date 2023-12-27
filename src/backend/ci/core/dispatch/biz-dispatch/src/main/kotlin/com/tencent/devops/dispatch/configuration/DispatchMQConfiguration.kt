@@ -30,7 +30,7 @@ package com.tencent.devops.dispatch.configuration
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
-import com.tencent.devops.dispatch.listener.ThirdPartyAgentListener
+import com.tencent.devops.dispatch.listener.ThirdPartyBuildListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
@@ -82,12 +82,12 @@ class DispatchMQConfiguration @Autowired constructor() {
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired thirdAgentDispatchStartQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired thirdPartyAgentListener: ThirdPartyAgentListener,
+        @Autowired thirdPartyBuildListener: ThirdPartyBuildListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
         val adapter = MessageListenerAdapter(
-            thirdPartyAgentListener,
-            thirdPartyAgentListener::listenAgentStartUpEvent.name
+            thirdPartyBuildListener,
+            thirdPartyBuildListener::handleStartup.name
         )
         adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
@@ -120,12 +120,12 @@ class DispatchMQConfiguration @Autowired constructor() {
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired thirdAgentDispatchShutdownQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired thirdPartyAgentListener: ThirdPartyAgentListener,
+        @Autowired thirdPartyBuildListener: ThirdPartyBuildListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
         val adapter = MessageListenerAdapter(
-            thirdPartyAgentListener,
-            thirdPartyAgentListener::listenAgentShutdownEvent.name)
+            thirdPartyBuildListener,
+            thirdPartyBuildListener::handleShutdownMessage.name)
         adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
             connectionFactory = connectionFactory,

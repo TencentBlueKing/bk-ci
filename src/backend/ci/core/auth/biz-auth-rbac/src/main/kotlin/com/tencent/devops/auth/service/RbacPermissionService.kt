@@ -62,7 +62,8 @@ class RbacPermissionService constructor(
     private val authResourceCodeConverter: AuthResourceCodeConverter,
     private val permissionSuperManagerService: PermissionSuperManagerService,
     private val rbacCacheService: RbacCacheService,
-    private val client: Client
+    private val client: Client,
+    private val authProjectUserMetricsService: AuthProjectUserMetricsService
 ) : PermissionService {
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionService::class.java)
@@ -209,7 +210,11 @@ class RbacPermissionService constructor(
                 .resources(listOf(resourceNode))
                 .build()
 
-            return policyService.verifyPermissions(queryPolicyDTO)
+            val result = policyService.verifyPermissions(queryPolicyDTO)
+            if (result) {
+                authProjectUserMetricsService.save(projectId = projectCode, userId = userId)
+            }
+            return result
         } finally {
             watcher.stop()
             LogUtils.printCostTimeWE(watcher)
@@ -288,11 +293,15 @@ class RbacPermissionService constructor(
                 .attribute(attribute)
                 .system(iamConfiguration.systemId)
                 .build()
-            return policyService.batchVerifyPermissions(
+            val result = policyService.batchVerifyPermissions(
                 userId,
                 actionList,
                 listOf(resourceDTO)
             )
+            if (result.values.any { it }) {
+                authProjectUserMetricsService.save(projectId = projectCode, userId = userId)
+            }
+            return result
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to batch validate user resource permission|" +
@@ -342,14 +351,15 @@ class RbacPermissionService constructor(
                         resourceType = resourceType
                     )
                 // 返回具体资源列表
-                else ->
-                    instanceMap[resourceType]?.let {
-                        authResourceCodeConverter.batchIamCode2Code(
-                            projectCode = projectCode,
-                            resourceType = resourceType,
-                            iamResourceCodes = it
-                        )
-                    } ?: emptyList()
+                else -> {
+                    val iamResourceCodes = instanceMap[resourceType] ?: emptyList()
+                    getFinalResourceCodes(
+                        projectCode = projectCode,
+                        resourceType = resourceType,
+                        iamResourceCodes = iamResourceCodes,
+                        createUser = userId
+                    )
+                }
             }
         } finally {
             logger.info(
@@ -410,10 +420,11 @@ class RbacPermissionService constructor(
                 return mapOf(AuthResourceType.PROJECT.value to listOf(projectCode))
             }
             return authHelper.groupRbacInstanceByType(userId, action).mapValues {
-                authResourceCodeConverter.batchIamCode2Code(
+                getFinalResourceCodes(
                     projectCode = projectCode,
                     resourceType = it.key,
-                    iamResourceCodes = it.value
+                    iamResourceCodes = it.value,
+                    createUser = userId
                 )
             }
         } finally {
@@ -442,6 +453,11 @@ class RbacPermissionService constructor(
                     AuthPermission.get(authPermission) to resources.map { resource -> resource.resourceCode }
                 }
             }
+            val resourceCode2IamResourceCode = authResourceCodeConverter.batchCode2IamCode(
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCodes = resources.map { it.resourceCode }
+            )
             val instanceList = resources.map { resource ->
                 val paths = mutableListOf<PathInfoDTO>()
                 resourcesPaths(
@@ -453,11 +469,7 @@ class RbacPermissionService constructor(
                 )
                 val instance = InstanceDTO()
                 instance.type = resource.resourceType
-                instance.id = authResourceCodeConverter.code2IamCode(
-                    projectCode = projectCode,
-                    resourceType = resource.resourceType,
-                    resourceCode = resource.resourceCode
-                )
+                instance.id = resourceCode2IamResourceCode[resource.resourceCode]
                 instance.system = iamConfiguration.systemId
                 instance.paths = paths
                 instance
@@ -478,10 +490,11 @@ class RbacPermissionService constructor(
                     permissionMap[AuthPermission.get(authPermission)] = resources.map { it.resourceCode }
                 } else {
                     val iamResourceCodes = authHelper.isAllowed(userId, action, instanceList)
-                    permissionMap[AuthPermission.get(authPermission)] = authResourceCodeConverter.batchIamCode2Code(
+                    permissionMap[AuthPermission.get(authPermission)] = getFinalResourceCodes(
                         projectCode = projectCode,
                         resourceType = resourceType,
-                        iamResourceCodes = iamResourceCodes
+                        iamResourceCodes = iamResourceCodes,
+                        createUser = userId
                     )
                 }
             }
@@ -599,5 +612,30 @@ class RbacPermissionService constructor(
             resourceType = resourceType,
             action = action
         )
+    }
+
+    private fun getFinalResourceCodes(
+        projectCode: String,
+        resourceType: String,
+        iamResourceCodes: List<String>,
+        createUser: String
+    ): List<String> {
+        val result = authResourceCodeConverter.batchIamCode2Code(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            iamResourceCodes = iamResourceCodes
+        )
+        // 由于权限5s延迟问题，需要将该用户1分钟内创建的资源也拉取出来。
+        val resourceCreateByUserWithinOneMinute = if (resourceType != AuthResourceType.PROJECT.value) {
+            authResourceService.list(
+                projectCode = projectCode,
+                resourceType = resourceType,
+                createUser = createUser
+            )
+        } else {
+            emptyList()
+        }
+        logger.debug("resource create by user within one minute:$resourceCreateByUserWithinOneMinute")
+        return result.toMutableList().apply { addAll(resourceCreateByUserWithinOneMinute) }.distinct()
     }
 }

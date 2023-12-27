@@ -19,7 +19,7 @@ class MacosVMRedisService @Autowired constructor(
     }
 
     fun saveRedisBuild(dispatchMessage: DispatchMessage, vmIp: String) {
-        val macOSEvn = dispatchMessage.dispatchMessage.split(":")
+        val macOSEvn = dispatchMessage.event.dispatchType.value.split(":")
         val pair = when (macOSEvn.size) {
             0 -> Pair(null, null)
             1 -> Pair(macOSEvn[0], null)
@@ -31,10 +31,10 @@ class MacosVMRedisService @Autowired constructor(
             dispatchMessage.id,
             dispatchMessage.secretKey,
             dispatchMessage.gateway,
-            dispatchMessage.projectId,
-            dispatchMessage.pipelineId,
-            dispatchMessage.buildId,
-            dispatchMessage.vmSeqId,
+            dispatchMessage.event.projectId,
+            dispatchMessage.event.pipelineId,
+            dispatchMessage.event.buildId,
+            dispatchMessage.event.vmSeqId,
             pair.first ?: "",
             pair.second ?: "",
             atoms

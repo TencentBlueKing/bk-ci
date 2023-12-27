@@ -34,7 +34,9 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("项目其他配置")
 data class ProjectProperties(
     @ApiModelProperty("YAML流水线功能设置")
-    val pipelineAsCodeSettings: PipelineAsCodeSettings? = null,
+    val pipelineAsCodeSettings: PipelineAsCodeSettings = PipelineAsCodeSettings(
+        enable = false
+    ),
     @ApiModelProperty("是否启用云研发", required = false)
     val remotedev: Boolean? = false,
     @ApiModelProperty("可申请的云桌面数", required = false)
