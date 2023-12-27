@@ -29,7 +29,6 @@ package com.tencent.devops.dispatch.controller
 
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
-import com.sun.org.slf4j.internal.LoggerFactory
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PARAM_
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_NEED_PARAM_
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -52,6 +51,7 @@ import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyDockerDebugInf
 import com.tencent.devops.dispatch.service.ThirdPartyAgentDockerService
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
 
