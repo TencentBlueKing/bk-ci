@@ -556,15 +556,20 @@ class ThirdPartyDispatchService @Autowired constructor(
         }
         // 没有一个节点满足则进入排队机制
         if (jobEnvActiveAgents.isEmpty()) {
-            throw DispatchRetryMQException(
-                errorCodeEnum = ErrorCodeEnum.GET_BUILD_RESOURCE_ERROR,
-                errorMessage = I18nUtil.getCodeLanMessage(
+            log(
+                dispatchMessage.event,
+                I18nUtil.getCodeLanMessage(
                     messageCode = BK_THIRD_JOB_NODE_CURR,
+                    language = I18nUtil.getDefaultLocaleLanguage(),
                     params = arrayOf(
                         dispatchMessage.event.singleNodeConcurrency!!.toString(),
                         (dispatchMessage.event.queueTimeoutMinutes ?: 10).toString()
                     )
                 )
+            )
+            throw DispatchRetryMQException(
+                errorCodeEnum = ErrorCodeEnum.GET_BUILD_RESOURCE_ERROR,
+                errorMessage = ErrorCodeEnum.GET_BUILD_RESOURCE_ERROR.getErrorMessage()
             )
         }
 
@@ -586,16 +591,21 @@ class ThirdPartyDispatchService @Autowired constructor(
                 projectId = event.projectId
             )
             if (c >= event.allNodeConcurrency!!) {
-                throw DispatchRetryMQException(
-                    errorCodeEnum = ErrorCodeEnum.GET_BUILD_RESOURCE_ERROR,
-                    errorMessage = I18nUtil.getCodeLanMessage(
+                log(
+                    event,
+                    I18nUtil.getCodeLanMessage(
                         messageCode = BK_THIRD_JOB_ENV_CURR,
+                        language = I18nUtil.getDefaultLocaleLanguage(),
                         params = arrayOf(
                             c.toString(),
                             event.allNodeConcurrency!!.toString(),
                             (event.queueTimeoutMinutes ?: 10).toString()
                         )
                     )
+                )
+                throw DispatchRetryMQException(
+                    errorCodeEnum = ErrorCodeEnum.GET_BUILD_RESOURCE_ERROR,
+                    errorMessage = ErrorCodeEnum.GET_BUILD_RESOURCE_ERROR.getErrorMessage()
                 )
             }
         } else {
