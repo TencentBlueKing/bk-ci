@@ -571,15 +571,20 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, it.atomCode)
             val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, it.version)
             if (!atomRunInfoJson.isNullOrBlank()) {
-                val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
-                val isConvertibleToInt = try {
-                    atomRunInfo.atomStatus?.toInt() != null
-                } catch (e: NumberFormatException) {
-                    false
-                }
-                if (isConvertibleToInt && atomRunInfo.version == it.version) {
-                    atomRunInfos.add(atomRunInfo)
-                } else {
+                try {
+                    val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
+                    if (atomRunInfo.atomStatus != null && atomRunInfo.version == it.version) {
+                        atomRunInfos.add(atomRunInfo)
+                    } else {
+                        atomRunInfos.add(
+                            setCache(
+                                atomRunInfoKey = atomRunInfoKey,
+                                version = it.version,
+                                atomCode = it.atomCode
+                            )
+                        )
+                    }
+                } catch (e: Exception) {
                     atomRunInfos.add(
                         setCache(
                             atomRunInfoKey = atomRunInfoKey,
@@ -587,6 +592,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                             atomCode = it.atomCode
                         )
                     )
+                    logger.error("atomRunInfoJson convert error: $it", e)
                 }
             } else {
                 atomRunInfos.add(
