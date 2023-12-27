@@ -48,6 +48,7 @@ import com.tencent.devops.common.service.utils.BkServiceUtil
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.BkApiUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
 import com.tencent.devops.misc.lock.MigrationLock
@@ -146,32 +147,44 @@ class ProcessDataMigrateService @Autowired constructor(
                 moduleCode = SystemModuleEnum.PROCESS,
                 ruleType = ShardingRuleTypeEnum.DB
             ).data?.dataSourceName ?: return false
-        // 执行迁移前的逻辑
-        val (migrateProjectExecuteCountKey, projectExecuteCount, routingRuleMap) = doPreMigrationBus(
-            projectId = projectId,
-            sourceDataSourceName = sourceDataSourceName,
-            dataTag = dataTag
-        )
-        // 开启异步任务迁移项目的数据
-        Executors.newFixedThreadPool(1).submit {
-            logger.info("migrateProjectData begin,params:[$userId|$projectId]")
-            try {
-                doMigrateProjectDataTask(
-                    migratingShardingDslContext = migratingShardingDslContext,
-                    userId = userId,
-                    projectId = projectId,
-                    dataTag = dataTag,
-                    cancelFlag = cancelFlag,
-                    sourceDataSourceName = sourceDataSourceName,
-                    routingRuleMap = routingRuleMap,
-                    projectExecuteCount = projectExecuteCount,
-                    migrateProjectExecuteCountKey = migrateProjectExecuteCountKey
-                )
-            } catch (ignored: Throwable) {
-                logger.warn("migrateProjectData doMigrateProjectDataTask fail|params:[$userId|$projectId]", ignored)
-                sendMigrateProcessDataFailMsg(projectId, userId, ignored.message)
+        try {
+            // 执行迁移前的逻辑
+            val (migrateProjectExecuteCountKey, projectExecuteCount, routingRuleMap) = doPreMigrationBus(
+                projectId = projectId,
+                sourceDataSourceName = sourceDataSourceName,
+                dataTag = dataTag
+            )
+            // 开启异步任务迁移项目的数据
+            Executors.newFixedThreadPool(1).submit {
+                logger.info("migrateProjectData begin,params:[$userId|$projectId]")
+                try {
+                    doMigrateProjectDataTask(
+                        migratingShardingDslContext = migratingShardingDslContext,
+                        userId = userId,
+                        projectId = projectId,
+                        dataTag = dataTag,
+                        cancelFlag = cancelFlag,
+                        sourceDataSourceName = sourceDataSourceName,
+                        routingRuleMap = routingRuleMap,
+                        projectExecuteCount = projectExecuteCount,
+                        migrateProjectExecuteCountKey = migrateProjectExecuteCountKey
+                    )
+                } catch (ignored: Throwable) {
+                    logger.warn("migrateProjectData doMigrateProjectDataTask fail|params:[$userId|$projectId]", ignored)
+                    sendMigrateProcessDataFailMsg(projectId, userId, ignored.message)
+                }
+                logger.info("migrateProjectData end,params:[$userId|$projectId]")
             }
-            logger.info("migrateProjectData end,params:[$userId|$projectId]")
+        } finally {
+            // 从正在迁移的项目集合移除该项目
+            redisOperation.removeSetMember(
+                key = MiscUtils.getMigratingProjectsRedisKey(SystemModuleEnum.PROCESS.name),
+                item = projectId
+            )
+            // 更新同时迁移的项目数量
+            redisOperation.increment(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT_KEY, -1)
+            // 解锁项目,允许用户发起新构建等操作
+            redisOperation.removeSetMember(BkApiUtil.getApiAccessLimitProjectsKey(), projectId)
         }
         return true
     }
@@ -314,14 +327,6 @@ class ProcessDataMigrateService @Autowired constructor(
                 migrationLock = migrationLock,
                 errorMsg = errorMsg
             )
-        } finally {
-            // 从正在迁移的项目集合移除该项目
-            redisOperation.removeSetMember(
-                key = MiscUtils.getMigratingProjectsRedisKey(SystemModuleEnum.PROCESS.name),
-                item = projectId
-            )
-            // 更新同时迁移的项目数量
-            redisOperation.increment(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT_KEY, -1)
         }
     }
 
@@ -525,8 +530,6 @@ class ProcessDataMigrateService @Autowired constructor(
         }
         // 删除项目执行次数记录
         redisOperation.delete(getMigrateProjectExecuteCountKey(projectId))
-        // 解锁项目,允许用户发起新构建等操作
-        redisOperation.removeSetMember(BkApiUtil.getApiAccessLimitProjectsKey(), projectId)
         // 发送迁移成功消息
         val titleParams = mapOf(KEY_PROJECT_ID to projectId)
         val bodyParams = mapOf(KEY_PROJECT_ID to projectId, KEY_PIPELINE_NUM to pipelineNum.toString())
@@ -600,7 +603,11 @@ class ProcessDataMigrateService @Autowired constructor(
                 // 服务器缓存更新失败，抛出错误提示
                 throw ErrorCodeException(
                     errorCode = MiscMessageCode.ERROR_UPDATE_MICRO_SERVICE_LOCAL_RULE_CACHE_FAIL,
-                    params = arrayOf(serviceName)
+                    params = arrayOf(serviceName),
+                    defaultMessage = I18nUtil.getCodeLanMessage(
+                        messageCode = MiscMessageCode.ERROR_UPDATE_MICRO_SERVICE_LOCAL_RULE_CACHE_FAIL,
+                        params = arrayOf(serviceName)
+                    )
                 )
             }
         }

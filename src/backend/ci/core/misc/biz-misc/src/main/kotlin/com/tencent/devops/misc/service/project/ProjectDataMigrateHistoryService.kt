@@ -76,9 +76,9 @@ class ProjectDataMigrateHistoryService @Autowired constructor(
             )
         }
         // 判断项目或者流水线的数据是否能迁移
-        return !migratingFlag && projectDataMigrateHistoryDao.getLatestProjectDataMigrateHistory(
+        return !migratingFlag || projectDataMigrateHistoryDao.getLatestProjectDataMigrateHistory(
             dslContext = dslContext,
             queryParam = queryParam
-        ) != null
+        ) == null
     }
 }

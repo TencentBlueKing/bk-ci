@@ -103,13 +103,6 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
                 ruleType = ShardingRuleTypeEnum.ARCHIVE_DB
             ).data
         val migrationLock = MigrationLock(redisOperation, projectId, pipelineId)
-        // 执行迁移前的逻辑
-        doPreMigrationBus(
-            archiveDbShardingRoutingRule = archiveDbShardingRoutingRule,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            migrationLock = migrationLock
-        )
         val migratePipelineDataParam = MigratePipelineDataParam(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -117,9 +110,17 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
             dslContext = dslContext,
             migratingShardingDslContext = archiveShardingDslContext,
             processDao = processDao,
-            processDataMigrateDao = processDataMigrateDao
+            processDataMigrateDao = processDataMigrateDao,
+            archiveFlag = true
         )
         try {
+            // 执行迁移前的逻辑
+            doPreMigrationBus(
+                archiveDbShardingRoutingRule = archiveDbShardingRoutingRule,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                migrationLock = migrationLock
+            )
             // 迁移流水线数据
             MigratePipelineDataTask(migratePipelineDataParam).run()
             // 执行迁移完成后的逻辑
@@ -131,8 +132,49 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
                 userId = userId
             )
         } catch (ignored: Throwable) {
+            val errorMsg = ignored.message
             logger.warn("migrateData project:[$projectId],pipeline[$pipelineId] run task fail", ignored)
-            // 迁移流水线数据失败发送失败消息通知用户
+            doMigrationErrorBus(
+                archiveDbShardingRoutingRule = archiveDbShardingRoutingRule,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                migrationLock = migrationLock,
+                userId = userId,
+                errorMsg = errorMsg
+            )
+            return
+        } finally {
+            // 从正在迁移的流水线集合移除该流水线
+            redisOperation.removeSetMember(
+                key = MiscUtils.getMigratingPipelinesRedisKey(SystemModuleEnum.PROCESS.name),
+                item = pipelineId
+            )
+            // 解锁流水线,允许用户发起新构建等操作
+            redisOperation.removeSetMember(BkApiUtil.getApiAccessLimitPipelinesKey(), pipelineId)
+        }
+    }
+
+    private fun doMigrationErrorBus(
+        archiveDbShardingRoutingRule: ShardingRoutingRule?,
+        projectId: String,
+        pipelineId: String,
+        migrationLock: MigrationLock,
+        userId: String,
+        errorMsg: String?
+    ) {
+        try {
+            if (archiveDbShardingRoutingRule != null) {
+                processMigrationDataDeleteService.deleteProcessData(
+                    dslContext = archiveShardingDslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    targetClusterName = archiveDbShardingRoutingRule.clusterName,
+                    targetDataSourceName = archiveDbShardingRoutingRule.dataSourceName,
+                    migrationLock = migrationLock
+                )
+            }
+        } catch (ignored: Throwable) {
+            logger.warn("migrateData project:[$projectId],pipeline[$pipelineId] doMigrationErrorBus fail", ignored)
             sendMigrateProcessDataFailMsg(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -140,13 +182,14 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
                 errorMsg = ignored.message
             )
             return
-        } finally {
-            // 从正在迁移的流水线集合移除该流水线
-            redisOperation.addSetValue(
-                key = MiscUtils.getMigratingPipelinesRedisKey(SystemModuleEnum.PROCESS.name),
-                item = pipelineId
-            )
         }
+        // 迁移流水线数据失败发送失败消息通知用户
+        sendMigrateProcessDataFailMsg(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            errorMsg = errorMsg
+        )
     }
 
     private fun doAfterMigrationBus(
@@ -206,8 +249,6 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
                         targetDataTag = KEY_ARCHIVE
                     )
                 )
-                // 解锁流水线,允许用户发起新构建等操作
-                redisOperation.removeSetMember(BkApiUtil.getApiAccessLimitPipelinesKey(), pipelineId)
             } finally {
                 migrationLock.unlock()
             }
