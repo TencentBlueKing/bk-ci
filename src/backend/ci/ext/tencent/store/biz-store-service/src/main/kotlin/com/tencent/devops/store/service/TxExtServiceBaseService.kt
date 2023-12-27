@@ -287,7 +287,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             startParams["branch"] = MASTER
             startParams["repoAddr"] = repoAddr
             startParams["userName"] = extServiceImageSecretConfig.repoUsername
-            startParams["repoPassword"] = extServiceImageSecretConfig.repoPassword
+            startParams["password"] = extServiceImageSecretConfig.repoPassword
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartup(
                 userId, projectCode!!, servicePipelineRelRecord.pipelineId, startParams,
                 ChannelCode.AM
