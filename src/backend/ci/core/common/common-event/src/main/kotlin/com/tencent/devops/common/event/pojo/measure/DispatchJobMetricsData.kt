@@ -25,22 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.utils
+package com.tencent.devops.common.event.pojo.measure
 
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
-
-class JobQuotaProjectLock(
-    redisOperation: RedisOperation,
-    projectId: String
-) {
-
-    private val redisLock = RedisLock(redisOperation, "DISPATCH_JOB_QUOTA_$projectId", 60L)
-
-    fun tryLock() = redisLock.tryLock()
-
-    fun lock() = redisLock.lock()
-
-    fun unlock() =
-        redisLock.unlock()
-}
+data class DispatchJobMetricsData(
+    val theDate: String,
+    val projectId: String,
+    val productId: String,
+    val jobType: String,
+    val channelCode: String,
+    val maxJobConcurrency: Int,
+    val sumJobCost: Int
+)

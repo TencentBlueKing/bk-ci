@@ -36,6 +36,7 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -57,4 +58,15 @@ interface OpenProjectResource {
         @PathParam("projectId")
         projectId: String
     ): Result<ProjectVO>
+
+    @POST
+    @Path("/listByProjectCodes")
+    @ApiOperation("查询指定项目")
+    fun listByProjectCodes(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("token")
+        token: String,
+        @ApiParam(value = "项目id", required = true)
+        projectCodes: Set<String>
+    ): Result<List<ProjectVO>>
 }

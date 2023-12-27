@@ -25,18 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.configuration
+package com.tencent.devops.common.event.pojo.measure
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.boot.context.properties.EnableConfigurationProperties
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 
-@Configuration
-@EnableConfigurationProperties(DispatchProperties::class)
-class DispatchConfiguration {
-
-    @Bean
-    fun pipelineEventDispatcher(rabbitTemplate: RabbitTemplate) = MQEventDispatcher(rabbitTemplate)
-}
+@Event(exchange = MQ.EXCHANGE_DISPATCH_JOB_METRICS_FANOUT)
+data class DispatchJobMetricsEvent(
+    override val projectId: String,
+    override val pipelineId: String,
+    override val buildId: String,
+    val jobMetricsList: List<DispatchJobMetricsData>
+) : IMeasureEvent(projectId, pipelineId, buildId)
