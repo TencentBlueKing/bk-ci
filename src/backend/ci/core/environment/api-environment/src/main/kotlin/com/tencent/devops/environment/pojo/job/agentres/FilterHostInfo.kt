@@ -30,28 +30,60 @@ package com.tencent.devops.environment.pojo.job.agentres
 import io.swagger.annotations.ApiModelProperty
 
 data class FilterHostInfo(
-    @ApiModelProperty(value = "是否存在过滤的主机")
-    val filterHost: Boolean?,
+    @ApiModelProperty(value = "管控区域ID")
+    val bkCloudId: Int?,
+    @ApiModelProperty(value = "业务ID")
+    val bkBizId: Int?,
     @ApiModelProperty(value = "主机ID")
     val bkHostId: Long?,
-    @ApiModelProperty(value = "主机IP地址")
-    val ip: String?,
+    @ApiModelProperty(value = "主机名")
+    val bkHostName: String?,
+    @ApiModelProperty(value = "寻址方式，1: 0，静态 2: 1，动态")
+    val bkAddressing: Int?,
+    @ApiModelProperty(value = "操作系统，1：LINUX 2：WINDOWS 3：AIX 4：SOLARIS")
+    val osType: String?,
     @ApiModelProperty(value = "主机内网IPV4地址")
     val innerIp: String?,
     @ApiModelProperty(value = "主机内网IPV6地址")
     val innerIpv6: String?,
-    @ApiModelProperty(value = "管控区域ID")
-    val bkCloudId: Int?,
-    @ApiModelProperty(value = "管控区域名称")
-    val bkCloudName: String?,
-    @ApiModelProperty(value = "业务ID")
-    val bkBizId: Int?,
-    @ApiModelProperty(value = "业务名称")
-    val bkBizName: String?,
-    @ApiModelProperty(value = "任务ID")
-    val jobId: Int?,
+    @ApiModelProperty(value = "外网IPv4地址")
+    val outerIp: String?,
+    @ApiModelProperty(value = "外网IPv6地址")
+    val outerIpv6: String?,
+    @ApiModelProperty(value = "接入点ID")
+    val apId: Int?,
+    @ApiModelProperty(value = "安装通道ID")
+    val installChannelId: Int?,
+    @ApiModelProperty(value = "登录IP")
+    val loginIp: String?,
+    @ApiModelProperty(value = "数据IP")
+    val dataIp: String?,
     @ApiModelProperty(value = "任务执行状态")
     val status: String?,
+    @ApiModelProperty(value = "版本")
+    val version: String?,
+    @ApiModelProperty(value = "创建时间")
+    val createdAt: String?,
+    @ApiModelProperty(value = "更新时间")
+    val updatedAt: String?,
+    @ApiModelProperty(value = "是否手动模式")
+    val isManual: Boolean?,
+    @ApiModelProperty(value = "额外信息")
+    val extraData: List<String>?,
     @ApiModelProperty(value = "任务执行状态名称")
-    val statusDisplay: String?
+    val statusDisplay: String?,
+    @ApiModelProperty(value = "管控区域名称")
+    val bkCloudName: String?,
+    @ApiModelProperty(value = "安装通道名称")
+    val installChannelName: String?,
+    @ApiModelProperty(value = "业务名称")
+    val bkBizName: String?,
+    @ApiModelProperty(value = "鉴权信息")
+    val identityInfo: IdentityInfo?,
+    @ApiModelProperty(value = "")
+    val jobResult: JobResultForFilterHostInfo?,
+    @ApiModelProperty(value = "拓扑信息")
+    val topology: List<String>?,
+    @ApiModelProperty(value = "是否具有操作权限")
+    val operatePermission: Boolean?
 )

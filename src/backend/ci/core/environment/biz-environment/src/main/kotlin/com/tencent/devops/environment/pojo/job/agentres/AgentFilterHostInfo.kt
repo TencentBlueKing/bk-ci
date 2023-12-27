@@ -31,38 +31,85 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
 data class AgentFilterHostInfo(
-    @ApiModelProperty(value = "是否存在过滤的主机")
-    @JsonProperty("filter_host")
-    val filterHost: Boolean?,
+    @ApiModelProperty(value = "管控区域ID")
+    @JsonProperty("bk_cloud_id")
+    val bkCloudId: Int?,
+    @ApiModelProperty(value = "业务ID")
+    @JsonProperty("bk_biz_id")
+    val bkBizId: Int?,
     @ApiModelProperty(value = "主机ID")
     @JsonProperty("bk_host_id")
     val bkHostId: Long?,
-    @ApiModelProperty(value = "主机IP地址")
-    val ip: String?,
+    @ApiModelProperty(value = "主机名")
+    @JsonProperty("bk_host_name")
+    val bkHostName: String?,
+    @ApiModelProperty(value = "寻址方式，1: 0，静态 2: 1，动态")
+    @JsonProperty("bk_addressing")
+    val bkAddressing: Int?,
+    @ApiModelProperty(value = "操作系统，1：LINUX 2：WINDOWS 3：AIX 4：SOLARIS")
+    @JsonProperty("os_type")
+    val osType: String?,
     @ApiModelProperty(value = "主机内网IPV4地址")
     @JsonProperty("inner_ip")
     val innerIp: String?,
     @ApiModelProperty(value = "主机内网IPV6地址")
     @JsonProperty("inner_ipv6")
     val innerIpv6: String?,
-    @ApiModelProperty(value = "管控区域ID")
-    @JsonProperty("bk_cloud_id")
-    val bkCloudId: Int?,
+    @ApiModelProperty(value = "外网IPv4地址")
+    @JsonProperty("outer_ip")
+    val outerIp: String?,
+    @ApiModelProperty(value = "外网IPv6地址")
+    @JsonProperty("outer_ipv6")
+    val outerIpv6: String?,
+    @ApiModelProperty(value = "接入点ID")
+    @JsonProperty("ap_id")
+    val apId: Int?,
+    @ApiModelProperty(value = "安装通道ID")
+    @JsonProperty("install_channel_id")
+    val installChannelId: Int?,
+    @ApiModelProperty(value = "登录IP")
+    @JsonProperty("login_ip")
+    val loginIp: String?,
+    @ApiModelProperty(value = "数据IP")
+    @JsonProperty("data_ip")
+    val dataIp: String?,
+    @ApiModelProperty(value = "任务执行状态")
+    val status: String?,
+    @ApiModelProperty(value = "版本")
+    val version: String?,
+    @ApiModelProperty(value = "创建时间")
+    @JsonProperty("created_at")
+    val createdAt: String?,
+    @ApiModelProperty(value = "更新时间")
+    @JsonProperty("updated_at")
+    val updatedAt: String?,
+    @ApiModelProperty(value = "是否手动模式")
+    @JsonProperty("is_manual")
+    val isManual: Boolean?,
+    @ApiModelProperty(value = "额外信息")
+    @JsonProperty("extra_data")
+    val extraData: List<String>?,
+    @ApiModelProperty(value = "任务执行状态名称")
+    @JsonProperty("status_display")
+    val statusDisplay: String?,
     @ApiModelProperty(value = "管控区域名称")
     @JsonProperty("bk_cloud_name")
     val bkCloudName: String?,
-    @ApiModelProperty(value = "业务ID")
-    @JsonProperty("bk_biz_id")
-    val bkBizId: Int?,
+    @ApiModelProperty(value = "安装通道名称")
+    @JsonProperty("install_channel_name")
+    val installChannelName: String?,
     @ApiModelProperty(value = "业务名称")
     @JsonProperty("bk_biz_name")
     val bkBizName: String?,
-    @ApiModelProperty(value = "任务ID")
-    @JsonProperty("job_id")
-    val jobId: Int?,
-    @ApiModelProperty(value = "任务执行状态")
-    val status: String?,
-    @ApiModelProperty(value = "任务执行状态名称")
-    @JsonProperty("status_display")
-    val statusDisplay: String?
+    @ApiModelProperty(value = "鉴权信息")
+    @JsonProperty("identity_info")
+    val identityInfo: AgentIdentityInfo?,
+    @ApiModelProperty(value = "")
+    @JsonProperty("job_result")
+    val jobResult: AgentJobResultForFilterHostInfo?,
+    @ApiModelProperty(value = "拓扑信息")
+    val topology: List<String>?,
+    @ApiModelProperty(value = "是否具有操作权限")
+    @JsonProperty("operate_permission")
+    val operatePermission: Boolean?
 )

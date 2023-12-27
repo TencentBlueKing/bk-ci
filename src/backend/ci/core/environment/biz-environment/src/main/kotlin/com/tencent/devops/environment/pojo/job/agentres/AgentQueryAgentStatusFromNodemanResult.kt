@@ -27,11 +27,18 @@
 
 package com.tencent.devops.environment.pojo.job.agentres
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
 data class AgentQueryAgentStatusFromNodemanResult(
     @ApiModelProperty(value = "实例记录数量总和")
-    val total: Int,
+    val total: Int?,
     @ApiModelProperty(value = "过滤的主机详细信息列表")
-    val list: List<AgentFilterHostInfo>
+    val list: List<AgentFilterHostInfo>?,
+    @ApiModelProperty(value = "正在运行机器的数量")
+    @JsonProperty("running_count")
+    val runningCount: Int?,
+    @ApiModelProperty(value = "没有操作权限的主机数量")
+    @JsonProperty("no_permission_count")
+    val noPermissionCount: Int?
 )
