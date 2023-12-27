@@ -122,6 +122,8 @@ CREATE TABLE IF NOT EXISTS `T_DISPATCH_THIRDPARTY_AGENT_BUILD` (
   `DOCKER_INFO` json NULL COMMENT '第三方构建机docker构建信息',
   `EXECUTE_COUNT` int(11) NULL COMMENT '流水线执行次数',
   `CONTAINER_HASH_ID` varchar(128) NULL COMMENT '容器ID日志使用',
+  `ENV_ID` bigint(20) NULL COMMENT '第三方构建所属环境',
+  `JOB_ID` VARCHAR(32) NULL COMMENT '当前构建所属jobid',
   PRIMARY KEY (`ID`),
   UNIQUE KEY `BUILD_ID` (`BUILD_ID`,`VM_SEQ_ID`),
   KEY `idx_agent_id` (`AGENT_ID`),
