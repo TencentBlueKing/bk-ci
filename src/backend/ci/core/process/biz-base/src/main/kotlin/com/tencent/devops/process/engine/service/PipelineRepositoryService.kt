@@ -820,10 +820,10 @@ class PipelineRepositoryService constructor(
         var version = 0
         val lock = PipelineModelLock(redisOperation, pipelineId)
         val watcher = Watcher(id = "updatePipeline#$pipelineId#$versionStatus")
-        var versionName: String = ""
+        var versionName = ""
         var realBaseVersion = baseVersion
         var operationLogType = OperationLogType.NORMAL_SAVE_OPERATION
-        var operationLogParams = versionName ?: "init"
+        var operationLogParams = versionName
 
         try {
             lock.lock()

@@ -33,7 +33,7 @@ enum class VersionStatus(val statusName: String) {
     BRANCH("分支版本");
 }
 
-enum class BranchVersionLifecycle(val statusName: String) {
+enum class BranchVersionAction(val statusName: String) {
     ACTIVE("活跃分支（可以被代码推送直接更新）"),
     INACTIVE("不活跃分支（已被发布或已被删除）"),
     CONFLICT("有冲突分支（落后于主干无法直接合入）");

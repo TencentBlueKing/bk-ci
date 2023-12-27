@@ -30,7 +30,7 @@ package com.tencent.devops.process.engine.dao
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.enums.BranchVersionLifecycle
+import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE_VERSION
 import com.tencent.devops.model.process.tables.records.TPipelineResourceVersionRecord
@@ -66,7 +66,7 @@ class PipelineResourceVersionDao {
         triggerVersion: Int?,
         settingVersion: Int?,
         versionStatus: VersionStatus?,
-        branchLifecycle: BranchVersionLifecycle?,
+        branchLifecycle: BranchVersionAction?,
         description: String?
     ): TPipelineResourceVersionRecord? {
         return create(
@@ -102,7 +102,7 @@ class PipelineResourceVersionDao {
         triggerVersion: Int?,
         settingVersion: Int?,
         versionStatus: VersionStatus?,
-        branchLifecycle: BranchVersionLifecycle?,
+        branchLifecycle: BranchVersionAction?,
         description: String?
     ): TPipelineResourceVersionRecord? {
         with(T_PIPELINE_RESOURCE_VERSION) {
@@ -119,7 +119,7 @@ class PipelineResourceVersionDao {
                 .set(TRIGGER_VERSION, triggerVersion)
                 .set(SETTING_VERSION, settingVersion)
                 .set(STATUS, versionStatus?.name)
-                .set(BRANCH_LIFECYCLE, branchLifecycle?.name)
+                .set(BRANCH_ACTION, branchLifecycle?.name)
                 .set(DESCRIPTION, description)
                 .set(BASE_VERSION, baseVersion)
                 .onDuplicateKeyUpdate()
@@ -132,7 +132,7 @@ class PipelineResourceVersionDao {
                 .set(TRIGGER_VERSION, triggerVersion)
                 .set(SETTING_VERSION, settingVersion)
                 .set(STATUS, versionStatus?.name)
-                .set(BRANCH_LIFECYCLE, branchLifecycle?.name)
+                .set(BRANCH_ACTION, branchLifecycle?.name)
                 .set(DESCRIPTION, description)
                 .returning()
                 .fetchOne()
@@ -426,7 +426,7 @@ class PipelineResourceVersionDao {
                     referFlag = record.referFlag,
                     referCount = record.referCount,
                     status = record.status?.let { VersionStatus.valueOf(it) },
-                    branchLifecycle = record.branchLifecycle?.let { BranchVersionLifecycle.valueOf(it) },
+                    branchLifecycle = record.branchAction?.let { BranchVersionAction.valueOf(it) },
                     description = record.description,
                     debugBuildId = record.debugBuildId,
                     baseVersion = record.baseVersion
