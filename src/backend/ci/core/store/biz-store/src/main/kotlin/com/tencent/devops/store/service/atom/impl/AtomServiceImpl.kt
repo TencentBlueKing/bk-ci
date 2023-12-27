@@ -572,7 +572,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, it.version)
             if (!atomRunInfoJson.isNullOrBlank()) {
                 val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
-                if (atomRunInfo.atomStatus != null && atomRunInfo.version == it.version) {
+                val isConvertibleToInt = try {
+                    atomRunInfo.atomStatus?.toInt() != null
+                } catch (e: NumberFormatException) {
+                    false
+                }
+                if (isConvertibleToInt && atomRunInfo.version == it.version) {
                     atomRunInfos.add(atomRunInfo)
                 } else {
                     atomRunInfos.add(
