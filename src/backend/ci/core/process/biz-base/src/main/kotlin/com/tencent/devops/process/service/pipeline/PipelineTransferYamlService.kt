@@ -43,7 +43,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferMark
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferResponse
-import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.yaml.modelTransfer.ElementTransfer
 import com.tencent.devops.process.yaml.modelTransfer.ModelTransfer
@@ -63,6 +63,7 @@ import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplate
 import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplateConf
 import com.tencent.devops.process.yaml.v3.parsers.template.models.GetTemplateParam
 import com.tencent.devops.process.yaml.v3.utils.ScriptYmlUtils
+import org.jooq.DSLContext
 import java.util.LinkedList
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -71,10 +72,11 @@ import org.springframework.stereotype.Service
 @Suppress("ALL")
 @Service
 class PipelineTransferYamlService @Autowired constructor(
+    private val dslContext: DSLContext,
     private val modelTransfer: ModelTransfer,
     private val elementTransfer: ElementTransfer,
     private val pipelineSettingVersionService: PipelineSettingVersionService,
-    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineInfoDao: PipelineInfoDao,
     private val yamlIndexService: YamlIndexService
 ) {
 
@@ -131,7 +133,14 @@ class PipelineTransferYamlService @Autowired constructor(
                 TransferActionType.FULL_YAML2MODEL -> {
                     watcher.start("step_1|FULL_YAML2MODEL start")
                     val pipelineInfo = pipelineId?.let {
-                        pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+                        pipelineInfoDao.convert(
+                            t = pipelineInfoDao.getPipelineInfo(
+                                dslContext = dslContext,
+                                projectId = projectId,
+                                pipelineId = pipelineId
+                            ),
+                            templateId = null
+                        )
                     }
                     val defaultAspects: LinkedList<IPipelineTransferAspect> = LinkedList()
                     val pYml = TransferMapper.getObjectMapper()
@@ -267,19 +276,6 @@ class PipelineTransferYamlService @Autowired constructor(
             line = line,
             column = column,
             data = data
-        )
-    }
-
-    private fun getPipelineResource(
-        projectId: String,
-        pipelineId: String,
-        version: Int?
-    ): PipelineResourceVersion? {
-        // 如果指定版本号则获取对应版本内容，如果未指定则获取最新内容
-        return pipelineRepositoryService.getPipelineResourceVersion(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = version
         )
     }
 }
