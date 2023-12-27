@@ -54,6 +54,7 @@ class PipelineResourceDao {
         version: Int,
         versionName: String?,
         model: Model,
+        yamlStr: String?,
         pipelineVersion: Int,
         triggerVersion: Int,
         settingVersion: Int
@@ -67,6 +68,7 @@ class PipelineResourceDao {
                 .set(VERSION, version)
                 .set(VERSION_NAME, versionName)
                 .set(MODEL, modelString)
+                .set(YAML, yamlStr)
                 .set(CREATOR, creator)
                 .set(CREATE_TIME, LocalDateTime.now())
                 .set(PIPELINE_VERSION, pipelineVersion)

@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.service.transfer
+package com.tencent.devops.process.service.pipeline
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -45,7 +45,6 @@ import com.tencent.devops.common.pipeline.pojo.transfer.TransferMark
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferResponse
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
-import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.yaml.modelTransfer.ElementTransfer
 import com.tencent.devops.process.yaml.modelTransfer.ModelTransfer
 import com.tencent.devops.process.yaml.modelTransfer.PipelineTransferException
@@ -74,7 +73,7 @@ import org.springframework.stereotype.Service
 class PipelineTransferYamlService @Autowired constructor(
     private val modelTransfer: ModelTransfer,
     private val elementTransfer: ElementTransfer,
-    private val pipelineSettingFacadeService: PipelineSettingFacadeService,
+    private val pipelineSettingVersionService: PipelineSettingVersionService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val yamlIndexService: YamlIndexService
 ) {
@@ -203,10 +202,11 @@ class PipelineTransferYamlService @Autowired constructor(
         pipelineId: String,
         resource: PipelineResourceVersion
     ): PreviewResponse {
-        val setting = pipelineSettingFacadeService.userGetSetting(
+        val setting = pipelineSettingVersionService.getPipelineSetting(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
+            detailInfo = null,
             version = resource.settingVersion ?: 1
         )
         val modelAndSetting = PipelineModelAndSetting(
