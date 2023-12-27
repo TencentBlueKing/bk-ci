@@ -110,7 +110,8 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
             dslContext = dslContext,
             migratingShardingDslContext = archiveShardingDslContext,
             processDao = processDao,
-            processDataMigrateDao = processDataMigrateDao
+            processDataMigrateDao = processDataMigrateDao,
+            archiveFlag = true
         )
         try {
             // 执行迁移前的逻辑
@@ -144,10 +145,12 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
             return
         } finally {
             // 从正在迁移的流水线集合移除该流水线
-            redisOperation.addSetValue(
+            redisOperation.removeSetMember(
                 key = MiscUtils.getMigratingPipelinesRedisKey(SystemModuleEnum.PROCESS.name),
                 item = pipelineId
             )
+            // 解锁流水线,允许用户发起新构建等操作
+            redisOperation.removeSetMember(BkApiUtil.getApiAccessLimitPipelinesKey(), pipelineId)
         }
     }
 
@@ -246,8 +249,6 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
                         targetDataTag = KEY_ARCHIVE
                     )
                 )
-                // 解锁流水线,允许用户发起新构建等操作
-                redisOperation.removeSetMember(BkApiUtil.getApiAccessLimitPipelinesKey(), pipelineId)
             } finally {
                 migrationLock.unlock()
             }

@@ -20,7 +20,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
-@Suppress("TooManyFunctions", "LongMethod", "LargeClass", "ComplexMethod")
+@Suppress("TooManyFunctions", "LongMethod", "LargeClass", "ComplexMethod", "LongParameterList")
 class MigratePipelineDataTask constructor(
     private val migratePipelineDataParam: MigratePipelineDataParam
 ) : Runnable {
@@ -43,6 +43,7 @@ class MigratePipelineDataTask constructor(
             val dslContext = migratePipelineDataParam.dslContext
             val migratingShardingDslContext = migratePipelineDataParam.migratingShardingDslContext
             val processDbMigrateDao = migratePipelineDataParam.processDataMigrateDao
+            val archiveFlag = migratePipelineDataParam.archiveFlag
             // 1、获取是否允许执行的信号量
             semaphore?.acquire()
             logger.info("migrateProjectData project[$projectId],pipeline[$pipelineId] start..............")
@@ -53,7 +54,16 @@ class MigratePipelineDataTask constructor(
                     Thread.sleep(DEFAULT_THREAD_SLEEP_TINE)
                 }
                 // 3、开始迁移流水线的数据
-                // 3.1、迁移构建相关表数据
+                // 3.1、迁移T_PIPELINE_INFO表数据
+                migratePipelineInfoData(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    dslContext = dslContext,
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    processDataMigrateDao = processDbMigrateDao,
+                    archiveFlag = archiveFlag
+                )
+                // 3.2、迁移构建相关表数据
                 var offset = 0
                 do {
                     val buildHistoryRecords = processDbMigrateDao.getPipelineBuildHistoryRecords(
@@ -76,7 +86,7 @@ class MigratePipelineDataTask constructor(
                     )
                     offset += MEDIUM_PAGE_SIZE
                 } while (buildHistoryRecords.size == MEDIUM_PAGE_SIZE)
-                // 3.2、迁移T_PIPELINE_BUILD_CONTAINER表数据
+                // 3.3、迁移T_PIPELINE_BUILD_CONTAINER表数据
                 migratePipelineBuildContainerData(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -84,7 +94,7 @@ class MigratePipelineDataTask constructor(
                     migratingShardingDslContext = migratingShardingDslContext,
                     processDataMigrateDao = processDbMigrateDao
                 )
-                // 3.3、迁移T_PIPELINE_BUILD_STAGE表数据
+                // 3.4、迁移T_PIPELINE_BUILD_STAGE表数据
                 migratePipelineBuildStageData(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -92,7 +102,7 @@ class MigratePipelineDataTask constructor(
                     migratingShardingDslContext = migratingShardingDslContext,
                     processDataMigrateDao = processDbMigrateDao
                 )
-                // 3.4、迁移T_PIPELINE_BUILD_TASK表数据
+                // 3.5、迁移T_PIPELINE_BUILD_TASK表数据
                 migratePipelineBuildTaskData(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -100,7 +110,7 @@ class MigratePipelineDataTask constructor(
                     migratingShardingDslContext = migratingShardingDslContext,
                     processDataMigrateDao = processDbMigrateDao
                 )
-                // 3.5、迁移T_PIPELINE_FAVOR表数据
+                // 3.6、迁移T_PIPELINE_FAVOR表数据
                 migratePipelineFavorData(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -108,16 +118,8 @@ class MigratePipelineDataTask constructor(
                     migratingShardingDslContext = migratingShardingDslContext,
                     processDataMigrateDao = processDbMigrateDao
                 )
-                // 3.6、迁移T_PIPELINE_BUILD_SUMMARY表数据
+                // 3.7、迁移T_PIPELINE_BUILD_SUMMARY表数据
                 migratePipelineBuildSummaryData(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    dslContext = dslContext,
-                    migratingShardingDslContext = migratingShardingDslContext,
-                    processDataMigrateDao = processDbMigrateDao
-                )
-                // 3.7、迁移T_PIPELINE_INFO表数据
-                migratePipelineInfoData(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     dslContext = dslContext,
@@ -528,7 +530,8 @@ class MigratePipelineDataTask constructor(
         pipelineId: String,
         dslContext: DSLContext,
         migratingShardingDslContext: DSLContext,
-        processDataMigrateDao: ProcessDataMigrateDao
+        processDataMigrateDao: ProcessDataMigrateDao,
+        archiveFlag: Boolean? = null
     ) {
         val pipelineInfoRecord = processDataMigrateDao.getPipelineInfoRecord(
             dslContext = dslContext,

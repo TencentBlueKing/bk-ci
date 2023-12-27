@@ -44,5 +44,6 @@ data class MigratePipelineDataParam(
     val processDao: ProcessDao,
     val processDataMigrateDao: ProcessDataMigrateDao,
     val semaphore: Semaphore? = null,
-    val doneSignal: CountDownLatch? = null
+    val doneSignal: CountDownLatch? = null,
+    val archiveFlag: Boolean? = null
 )
