@@ -61,7 +61,7 @@ class ThirdPartyBuildListener @Autowired constructor(
         } catch (e: DispatchRetryMQException) {
             // 重试构建消息
             retry(
-                sleepTimeInMS = 5000,
+                sleepTimeInMS = 10000,
                 retryTimes = (6 * (dispatchMessage.event.queueTimeoutMinutes ?: 10)),
                 errorMessage = e.message
             )

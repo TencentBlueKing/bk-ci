@@ -448,7 +448,7 @@ class ThirdPartyDispatchService @Autowired constructor(
         }
 
         // 判断是否有 jobEnv 的限制，检查全集群限制
-        checkAllNodeConcurrency(envId, dispatchMessage.event)
+        checkAllNodeConcurrency(envId, dispatchMessage)
 
         ThirdPartyAgentEnvLock(redisOperation, dispatchMessage.event.projectId, dispatchType.envName).use { redisLock ->
             val lock = redisLock.tryLock(timeout = 5000) // # 超时尝试锁定，防止环境过热锁定时间过长，影响其他环境构建
@@ -465,7 +465,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                 }
 
                 // 获取锁之后再检查一次，防止多个任务排队等锁导致超出集群并发限制
-                checkAllNodeConcurrency(envId, dispatchMessage.event)
+                checkAllNodeConcurrency(envId, dispatchMessage)
 
                 // 判断是否有 jobEnv 的限制，筛选单节点的并发数
                 val jobEnvActiveAgents = checkSingleNodeConcurrency(dispatchMessage, envId, activeAgents)
@@ -556,8 +556,9 @@ class ThirdPartyDispatchService @Autowired constructor(
         }
         // 没有一个节点满足则进入排队机制
         if (jobEnvActiveAgents.isEmpty()) {
-            log(
-                dispatchMessage.event,
+            logDebug(
+                buildLogPrinter,
+                dispatchMessage,
                 I18nUtil.getCodeLanMessage(
                     messageCode = BK_THIRD_JOB_NODE_CURR,
                     language = I18nUtil.getDefaultLocaleLanguage(),
@@ -578,28 +579,29 @@ class ThirdPartyDispatchService @Autowired constructor(
 
     private fun checkAllNodeConcurrency(
         envId: Long?,
-        event: PipelineAgentStartupEvent
+        dispatchMessage: DispatchMessage
     ) {
-        if (event.allNodeConcurrency == null) {
+        if (dispatchMessage.event.allNodeConcurrency == null) {
             return
         }
-        if (envId != null && !event.jobId.isNullOrBlank()) {
+        if (envId != null && !dispatchMessage.event.jobId.isNullOrBlank()) {
             val c = thirdPartyAgentBuildService.countProjectJobRunningAndQueueAll(
-                pipelineId = event.pipelineId,
+                pipelineId = dispatchMessage.event.pipelineId,
                 envId = envId,
-                jobId = event.jobId!!,
-                projectId = event.projectId
+                jobId = dispatchMessage.event.jobId!!,
+                projectId = dispatchMessage.event.projectId
             )
-            if (c >= event.allNodeConcurrency!!) {
-                log(
-                    event,
+            if (c >= dispatchMessage.event.allNodeConcurrency!!) {
+                logDebug(
+                    buildLogPrinter,
+                    dispatchMessage,
                     I18nUtil.getCodeLanMessage(
                         messageCode = BK_THIRD_JOB_ENV_CURR,
                         language = I18nUtil.getDefaultLocaleLanguage(),
                         params = arrayOf(
                             c.toString(),
-                            event.allNodeConcurrency!!.toString(),
-                            (event.queueTimeoutMinutes ?: 10).toString()
+                            dispatchMessage.event.allNodeConcurrency!!.toString(),
+                            (dispatchMessage.event.queueTimeoutMinutes ?: 10).toString()
                         )
                     )
                 )
@@ -611,10 +613,10 @@ class ThirdPartyDispatchService @Autowired constructor(
         } else {
             logger.warn(
                 "buildByEnvId|{} has allNodeConcurrency {} but env {}|job {} null",
-                event.buildId,
-                event.allNodeConcurrency,
+                dispatchMessage.event.buildId,
+                dispatchMessage.event.allNodeConcurrency,
                 envId,
-                event.jobId
+                dispatchMessage.event.jobId
             )
         }
     }
