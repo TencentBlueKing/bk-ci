@@ -62,7 +62,8 @@ abstract class AbsPermissionProjectService @Autowired constructor(
 
     override fun getUserProjectsByPermission(
         userId: String,
-        action: String
+        action: String,
+        resourceType: String?
     ): List<String> {
         return emptyList()
     }
