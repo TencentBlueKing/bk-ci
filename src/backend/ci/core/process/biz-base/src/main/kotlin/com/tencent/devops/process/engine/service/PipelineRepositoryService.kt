@@ -767,6 +767,7 @@ class PipelineRepositoryService constructor(
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion,
                     versionStatus = versionStatus,
+                    // TODO #8161 根据分支版本管理刷新状态
                     branchLifecycle = null,
                     description = description
                 )
