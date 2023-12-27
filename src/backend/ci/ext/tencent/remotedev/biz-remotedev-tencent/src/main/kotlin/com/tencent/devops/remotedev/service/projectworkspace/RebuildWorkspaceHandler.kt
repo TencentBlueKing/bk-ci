@@ -57,6 +57,7 @@ import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
+import com.tencent.devops.remotedev.service.workspace.DeliverControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
@@ -76,7 +77,8 @@ class RebuildWorkspaceHandler @Autowired constructor(
     private val dispatcher: RemoteDevDispatcher,
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val workspaceCommon: WorkspaceCommon,
-    private val workspaceOpHistoryDao: WorkspaceOpHistoryDao
+    private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
+    private val deliverControl: DeliverControl
 ) {
 
     companion object {
@@ -230,6 +232,11 @@ class RebuildWorkspaceHandler @Autowired constructor(
                         WorkspaceStatus.RUNNING.name
                     )
                 )
+            }
+
+            // 重写IOA注册表
+            if (workspace.workspaceSystemType.needSafeInitialization()) {
+                deliverControl.safeInitialization(workspace.projectId, event.userId, event.workspaceName, event.autoAssign)
             }
         } else {
             // 启动失败,记录为EXCEPTION
