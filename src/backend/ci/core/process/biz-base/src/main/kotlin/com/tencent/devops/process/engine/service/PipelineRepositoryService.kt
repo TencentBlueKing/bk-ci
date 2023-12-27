@@ -627,7 +627,12 @@ class PipelineRepositoryService constructor(
                     onlyDraft = versionStatus == VersionStatus.COMMITTING
                 )
                 model.latestVersion = modelVersion
-                var savedSetting = PipelineSetting(pipelineAsCodeSettings = pipelineAsCodeSettings)
+                var savedSetting = PipelineSetting(
+                    pipelineId = pipelineId,
+                    pipelineName = model.name,
+                    desc = model.desc ?: "",
+                    pipelineAsCodeSettings = pipelineAsCodeSettings
+                )
 
                 if (model.instanceFromTemplate != true) {
                     if (null == pipelineSettingDao.getSetting(transactionContext, projectId, pipelineId)) {
@@ -664,6 +669,7 @@ class PipelineRepositoryService constructor(
                             }
                             setting.pipelineAsCodeSettings = null
                             pipelineSettingDao.saveSetting(dslContext, setting)
+                            savedSetting = setting
                         } else {
                             // #3311
                             // 蓝盾正常的BS渠道的默认没设置setting的，将发通知改成失败才发通知
@@ -698,6 +704,7 @@ class PipelineRepositoryService constructor(
                                         .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data,
                                     version = settingVersion
                                 )
+                                savedSetting = setting
                             }
                         }
                     } else {
@@ -707,7 +714,7 @@ class PipelineRepositoryService constructor(
                             pipelineId = pipelineId,
                             name = model.name,
                             desc = model.desc ?: ""
-                        )
+                        )?.let { savedSetting = it }
                     }
                 }
                 // 如果不是草稿保存，最新版本永远是新增逻辑
@@ -732,7 +739,7 @@ class PipelineRepositoryService constructor(
                     logger.warn("TRANSFER_YAML|$projectId|$userId", ignore)
                     null
                 }
-                if (versionStatus == VersionStatus.RELEASED) pipelineResourceDao.create(
+                pipelineResourceDao.create(
                     dslContext = transactionContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
