@@ -29,12 +29,7 @@ package com.tencent.devops.scm.code.git.api
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.HTTP_400
-import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.constant.HTTP_403
-import com.tencent.devops.common.api.constant.HTTP_404
-import com.tencent.devops.common.api.constant.HTTP_405
-import com.tencent.devops.common.api.constant.HTTP_422
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.prometheus.BkTimedAspect
