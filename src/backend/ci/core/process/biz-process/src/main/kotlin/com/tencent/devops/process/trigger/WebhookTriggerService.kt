@@ -97,7 +97,7 @@ class WebhookTriggerService(
             if (repository == null || repository.projectId.isNullOrBlank() || repository.repoHashId.isNullOrBlank()) {
                 return emptyList()
             }
-            return pipelineYamlService.getAllByRepo(
+            return pipelineYamlService.getAllYamlPipeline(
                 projectId = repository.projectId!!,
                 repoHashId = repository.repoHashId!!
             ).map { it.pipelineId }

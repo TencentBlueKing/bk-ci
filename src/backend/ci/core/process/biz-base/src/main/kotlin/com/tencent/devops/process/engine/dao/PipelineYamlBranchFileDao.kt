@@ -31,8 +31,10 @@ package com.tencent.devops.process.engine.dao
 import com.tencent.devops.model.process.tables.TPipelineYamlBranchFile
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
+@Repository
 class PipelineYamlBranchFileDao {
 
     fun save(

@@ -39,6 +39,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.exception.PipelineAlreadyExistException
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
@@ -533,7 +534,17 @@ class PipelineInfoFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        branchName: String,
         branchVersionAction: BranchVersionAction
+    ) {
+
+    }
+
+    fun updateYamlPipelineSetting(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        pipelineAsCodeSettings: PipelineAsCodeSettings
     ) {
 
     }

@@ -28,6 +28,7 @@
 
 package com.tencent.devops.process.yaml
 
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -304,7 +305,6 @@ class PipelineYamlRepositoryService @Autowired constructor(
         val yamlFile = action.data.context.yamlFile!!
         val filePath = yamlFile.yamlPath
         val repoHashId = action.data.setting.repoHashId
-        val branch = action.data.eventCommon.branch
         val userId = action.data.getUserId()
         logger.info("deleteYamlPipeline|$userId|$projectId|yamlFile:$yamlFile")
         try {
@@ -313,11 +313,12 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 repoHashId = repoHashId,
                 filePath = filePath
             )
-            if (pipelineYamlInfo != null) {
+            if (pipelineYamlInfo != null && !yamlFile.ref.isNullOrBlank()) {
                 pipelineInfoFacadeService.updateBranchVersion(
                     userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineYamlInfo.pipelineId,
+                    branchName = yamlFile.ref,
                     branchVersionAction = BranchVersionAction.INACTIVE
                 )
             }
@@ -443,12 +444,49 @@ class PipelineYamlRepositoryService @Autowired constructor(
         }
     }
 
+    fun disablePac(
+        userId: String,
+        projectId: String,
+        repoHashId: String
+    ) {
+        val yamlPipelines = pipelineYamlService.getAllYamlPipeline(projectId = projectId, repoHashId = repoHashId)
+        yamlPipelines.forEach { pipelineYamlInfo ->
+            // 解绑yaml关联的流水线
+            pipelineInfoFacadeService.updateYamlPipelineSetting(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineYamlInfo.pipelineId,
+                pipelineAsCodeSettings = PipelineAsCodeSettings(enable = false)
+            )
+            pipelineYamlService.delete(
+                userId = userId,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = pipelineYamlInfo.filePath
+            )
+        }
+        // 删除流水线组
+        val yamlViews = pipelineYamlService.listRepoYamlView(projectId = projectId, repoHashId = repoHashId)
+        yamlViews.forEach { yamlView ->
+            pipelineViewGroupService.deleteViewGroup(
+                projectId = projectId,
+                userId = userId,
+                viewIdEncode = HashUtil.encodeLongId(yamlView.viewId)
+            )
+            pipelineYamlService.deleteYamlView(
+                projectId = projectId,
+                repoHashId = repoHashId,
+                directory = yamlView.directory
+            )
+        }
+    }
+
     /**
      * TODO 需优化
      * 本来应该在com.tencent.devops.process.engine.service.PipelineWebhookService.addWebhook处理,
      * 但是这个方法是异步的,可能有延迟，所以再保存一次,后续需要优化
      */
-    fun getWebhooks(
+    private fun getWebhooks(
         projectId: String,
         pipelineId: String,
         version: Int,

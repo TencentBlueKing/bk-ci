@@ -101,6 +101,34 @@ class PipelineYamlViewDao {
         }
     }
 
+    fun listRepoYamlView(
+        dslContext: DSLContext,
+        projectId: String,
+        repoHashId: String
+    ): List<PipelineYamlView> {
+        with(TPipelineYamlView.T_PIPELINE_YAML_VIEW) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPO_HASH_ID.eq(repoHashId))
+                .fetch().map { convert(it) }
+        }
+    }
+
+    fun delete(
+        dslContext: DSLContext,
+        projectId: String,
+        repoHashId: String,
+        directory: String
+    ) {
+        with(TPipelineYamlView.T_PIPELINE_YAML_VIEW) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPO_HASH_ID.eq(repoHashId))
+                .and(DIRECTORY.eq(directory))
+                .execute()
+        }
+    }
+
     fun convert(record: TPipelineYamlViewRecord): PipelineYamlView {
         return with(record) {
             PipelineYamlView(

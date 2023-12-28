@@ -159,12 +159,18 @@ class PipelineYamlInfoDao {
 
     fun delete(
         dslContext: DSLContext,
+        userId: String,
         projectId: String,
         repoHashId: String,
-        filePath: String
+        filePath: String,
+        deleteFilePath: String
     ) {
         with(TPipelineYamlInfo.T_PIPELINE_YAML_INFO) {
-            dslContext.deleteFrom(this)
+            dslContext.update(this)
+                .set(DELETE, true)
+                .set(FILE_PATH, deleteFilePath)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .set(MODIFIER, userId)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(FILE_PATH.eq(filePath))

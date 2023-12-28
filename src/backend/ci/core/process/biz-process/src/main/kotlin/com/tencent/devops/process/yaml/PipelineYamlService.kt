@@ -28,8 +28,10 @@
 
 package com.tencent.devops.process.yaml
 
+import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.engine.dao.PipelineWebhookVersionDao
@@ -47,6 +49,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class PipelineYamlService(
@@ -61,6 +64,7 @@ class PipelineYamlService(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineYamlService::class.java)
+        private const val MAX_FILE_PATH_LENGTH = 512
     }
 
     fun save(
@@ -288,7 +292,7 @@ class PipelineYamlService(
         )
     }
 
-    fun getAllByRepo(
+    fun getAllYamlPipeline(
         projectId: String,
         repoHashId: String
     ): List<PipelineYamlInfo> {
@@ -300,25 +304,21 @@ class PipelineYamlService(
     }
 
     fun delete(
+        userId: String,
         projectId: String,
         repoHashId: String,
         filePath: String
     ) {
-        dslContext.transaction { configuration ->
-            val transactionContext = DSL.using(configuration)
-            pipelineYamlInfoDao.delete(
-                dslContext = transactionContext,
-                projectId = projectId,
-                repoHashId = repoHashId,
-                filePath = filePath
-            )
-            pipelineYamlVersionDao.delete(
-                dslContext = transactionContext,
-                projectId = projectId,
-                repoHashId = repoHashId,
-                filePath = filePath
-            )
-        }
+        val deleteTime = DateTimeUtil.toDateTime(LocalDateTime.now(), "yyMMddHHmmSS")
+        val deleteFilePath = "$filePath[$deleteTime]"
+        pipelineYamlInfoDao.delete(
+            dslContext = dslContext,
+            userId = userId,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = filePath,
+            deleteFilePath = deleteFilePath.coerceAtMaxLength(MAX_FILE_PATH_LENGTH)
+        )
     }
 
     fun getPipelineYamlView(
@@ -327,6 +327,30 @@ class PipelineYamlService(
         directory: String
     ): PipelineYamlView? {
         return pipelineYamlViewDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            directory = directory
+        )
+    }
+
+    fun listRepoYamlView(
+        projectId: String,
+        repoHashId: String
+    ): List<PipelineYamlView> {
+        return pipelineYamlViewDao.listRepoYamlView(
+            dslContext = dslContext,
+            projectId = projectId,
+            repoHashId = repoHashId
+        )
+    }
+
+    fun deleteYamlView(
+        projectId: String,
+        repoHashId: String,
+        directory: String
+    ) {
+        pipelineYamlViewDao.delete(
             dslContext = dslContext,
             projectId = projectId,
             repoHashId = repoHashId,

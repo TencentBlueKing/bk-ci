@@ -31,15 +31,18 @@ package com.tencent.devops.process.yaml
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
+import com.tencent.devops.process.pojo.pipeline.PushPipelineResult
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.webhook.WebhookEventFactory
@@ -236,6 +239,11 @@ class PipelineYamlFacadeService @Autowired constructor(
 
     fun disablePac(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
         logger.info("disable pac|$userId|$projectId|$repoHashId|$scmType")
+        pipelineYamlRepositoryService.disablePac(
+            userId = userId,
+            projectId = projectId,
+            repoHashId = repoHashId
+        )
     }
 
     fun getPipelineYamlInfo(
@@ -274,13 +282,16 @@ class PipelineYamlFacadeService @Autowired constructor(
         content: String,
         commitMessage: String,
         targetAction: CodeTargetAction
-    ) {
+    ): PushPipelineResult {
         logger.info("upload yaml file|$userId|$projectId|$repoHashId|$scmType|$version|$versionName")
         val repository = client.get(ServiceRepositoryResource::class).get(
             projectId = projectId,
             repositoryId = repoHashId,
             repositoryType = RepositoryType.ID
-        ).data ?: return
+        ).data ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.GIT_NOT_FOUND,
+            params = arrayOf(repoHashId)
+        )
         val setting = PacRepoSetting(repository = repository)
         val event = PipelineYamlPushActionEvent(
             userId = userId,
@@ -304,6 +315,12 @@ class PipelineYamlFacadeService @Autowired constructor(
             versionName = versionName,
             action = action,
             yamlFile = yamlFile
+        )
+        return PushPipelineResult(
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = yamlFile.yamlPath,
+            branch = yamlFile.ref!!
         )
     }
 }
