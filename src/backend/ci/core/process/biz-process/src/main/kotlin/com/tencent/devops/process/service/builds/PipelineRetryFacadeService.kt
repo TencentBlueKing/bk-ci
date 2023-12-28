@@ -86,7 +86,14 @@ class PipelineRetryFacadeService @Autowired constructor(
         if (taskId.isNullOrEmpty()) {
             return false
         }
-        val taskInfo = pipelineTaskService.getBuildTask(projectId, buildId, taskId) ?: return false
+        val taskInfo = pipelineTaskService.getBuildTask(
+            projectId = projectId, buildId = buildId, taskId = taskId, stepId = null
+        ) ?: pipelineTaskService.getBuildTask(
+            projectId = projectId,
+            buildId = buildId,
+            taskId = null,
+            stepId = taskId
+        ) ?: return false
 
         // 判断待重试task所属job是否为终态。 非终态判断是否是关机未完成。其他task直接报错
         // 此处请求可能早于关机到达。 若还未关机就点击重试，提示用户稍后再试
@@ -119,8 +126,10 @@ class PipelineRetryFacadeService @Autowired constructor(
             buildId = buildId,
             message = "$userId retry fail task ${taskInfo.taskName} when running",
             tag = taskId,
-            jobId = containerInfo.containerId,
-            executeCount = taskInfo.executeCount ?: 1
+            containerHashId = containerInfo.containerId,
+            executeCount = taskInfo.executeCount ?: 1,
+            jobId = null,
+            stepId = taskInfo.stepId
         )
         return true
     }

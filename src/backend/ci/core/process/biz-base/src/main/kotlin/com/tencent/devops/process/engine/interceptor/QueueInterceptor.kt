@@ -179,8 +179,10 @@ class QueueInterceptor @Autowired constructor(
                 buildId = buildInfo.buildId,
                 message = "[$pipelineId] queue outSize,cancel first Queue build",
                 tag = "QueueInterceptor",
-                jobId = "",
-                executeCount = 1
+                containerHashId = "",
+                executeCount = 1,
+                jobId = null,
+                stepId = "QueueInterceptor"
             )
             pipelineEventDispatcher.dispatch(
                 PipelineBuildCancelEvent(
@@ -226,8 +228,10 @@ class QueueInterceptor @Autowired constructor(
                 message = "[concurrency] Canceling since <a target='_blank' href='$detailUrl'>" +
                     "a higher priority waiting request</a> for group($groupName) exists",
                 tag = "QueueInterceptor",
-                jobId = "",
-                executeCount = 1
+                containerHashId = "",
+                executeCount = 1,
+                jobId = null,
+                stepId = "QueueInterceptor"
             )
             pipelineEventDispatcher.dispatch(
                 PipelineBuildCancelEvent(

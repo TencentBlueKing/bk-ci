@@ -52,7 +52,16 @@ class DependOnControlTest {
     @BeforeEach
     fun setUp() {
         justRun {
-            buildLogPrinter.addLine(buildId = "", message = "", tag = "", jobId = "", executeCount = 1, subTag = "")
+            buildLogPrinter.addLine(
+                buildId = "",
+                message = "",
+                tag = "",
+                containerHashId = "",
+                executeCount = 1,
+                subTag = "",
+                jobId = "",
+                stepId = ""
+            )
         }
     }
 
@@ -145,11 +154,11 @@ class DependOnControlTest {
                 TestTool.stageId
             )
         } returns (
-                listOf(
-                    TestTool.genVmBuildContainer(vmSeqId = dependContainerId).copy(status = BuildStatus.RUNNING),
-                    TestTool.genVmBuildContainer(vmSeqId = dependContainerId3).copy(status = BuildStatus.SUCCEED)
-                )
-                )
+            listOf(
+                TestTool.genVmBuildContainer(vmSeqId = dependContainerId).copy(status = BuildStatus.RUNNING),
+                TestTool.genVmBuildContainer(vmSeqId = dependContainerId3).copy(status = BuildStatus.SUCCEED)
+            )
+            )
         Assertions.assertEquals(BuildStatus.RUNNING, dependOnControl.dependOnJobStatus(container = mockJob))
 
         every {
@@ -159,11 +168,11 @@ class DependOnControlTest {
                 TestTool.stageId
             )
         } returns (
-                listOf(
-                    TestTool.genVmBuildContainer(vmSeqId = dependContainerId).copy(status = BuildStatus.SUCCEED),
-                    TestTool.genVmBuildContainer(vmSeqId = dependContainerId3).copy(status = BuildStatus.SUCCEED)
-                )
-                )
+            listOf(
+                TestTool.genVmBuildContainer(vmSeqId = dependContainerId).copy(status = BuildStatus.SUCCEED),
+                TestTool.genVmBuildContainer(vmSeqId = dependContainerId3).copy(status = BuildStatus.SUCCEED)
+            )
+            )
         Assertions.assertEquals(BuildStatus.SUCCEED, dependOnControl.dependOnJobStatus(container = mockJob))
 
         // when fail
@@ -174,11 +183,11 @@ class DependOnControlTest {
                 TestTool.stageId
             )
         } returns (
-                listOf(
-                    TestTool.genVmBuildContainer(vmSeqId = dependContainerId).copy(status = BuildStatus.RUNNING),
-                    TestTool.genVmBuildContainer(vmSeqId = dependContainerId3).copy(status = BuildStatus.FAILED)
-                )
-                )
+            listOf(
+                TestTool.genVmBuildContainer(vmSeqId = dependContainerId).copy(status = BuildStatus.RUNNING),
+                TestTool.genVmBuildContainer(vmSeqId = dependContainerId3).copy(status = BuildStatus.FAILED)
+            )
+            )
         Assertions.assertEquals(BuildStatus.FAILED, dependOnControl.dependOnJobStatus(container = mockJob))
     }
 }

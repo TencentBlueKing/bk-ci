@@ -72,7 +72,9 @@ class CheckConditionalSkipStageCmd constructor(
                 buildId = stage.buildId,
                 message = "[${e.kind}] condition of stage is invalid: ${e.message}",
                 tag = stage.stageId,
-                executeCount = commandContext.executeCount
+                executeCount = commandContext.executeCount,
+                jobId = null,
+                stepId = null
             )
             commandContext.buildStatus = BuildStatus.FAILED
             commandContext.latestSummary = "s(${stage.stageId}) check condition failed"

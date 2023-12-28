@@ -66,7 +66,7 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         buildId: String,
         tag: String?,
         subTag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
@@ -82,7 +82,7 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
                 finished = false,
                 tag = tag,
                 subTag = subTag,
-                jobId = jobId,
+                jobId = containerHashId,
                 executeCount = executeCount
             )
         )

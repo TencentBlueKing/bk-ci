@@ -37,5 +37,6 @@ data class AgentStartMonitor(
     val buildId: String,
     val vmSeqId: String,
     val containerHashId: String?,
-    val executeCount: Int?
+    val executeCount: Int?,
+    val stepId: String?
 )

@@ -175,7 +175,7 @@ class LogServiceESImpl(
                 buildId = buildId,
                 tag = tag,
                 subTag = subTag,
-                jobId = jobId,
+                containerHashId = jobId,
                 executeCount = executeCount,
                 logStorageMode = logStorageMode,
                 finish = finished
@@ -189,8 +189,10 @@ class LogServiceESImpl(
         logType: LogType?,
         tag: String?,
         subTag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
         jobId: String?,
-        executeCount: Int?
+        stepId: String?
     ): QueryLogs {
         return doQueryInitLogs(
             buildId = buildId,
@@ -198,8 +200,10 @@ class LogServiceESImpl(
             logType = logType,
             tag = tag,
             subTag = subTag,
+            containerHashId = containerHashId,
+            executeCount = executeCount,
             jobId = jobId,
-            executeCount = executeCount
+            stepId = stepId
         )
     }
 
@@ -213,10 +217,18 @@ class LogServiceESImpl(
         logType: LogType?,
         tag: String?,
         subTag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
         jobId: String?,
-        executeCount: Int?
+        stepId: String?
     ): QueryLogs {
-        val (queryLogs, index) = getQueryLogs(buildId, jobId, tag, subTag, executeCount)
+        val (queryLogs, index) = getQueryLogs(
+            buildId = buildId,
+            containerHashId = containerHashId,
+            tag = tag,
+            subTag = subTag,
+            executeCount = executeCount
+        )
         if (index.isNullOrBlank()) return queryLogs
         try {
             val query = getQuery(
@@ -225,8 +237,10 @@ class LogServiceESImpl(
                 logType = logType,
                 tag = tag,
                 subTag = subTag,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
                 jobId = jobId,
-                executeCount = executeCount
+                stepId = stepId
             ).must(QueryBuilders.rangeQuery("lineNo").gte(start).lte(end))
 
             val sortOrder = if (fromStart) SortOrder.ASC else SortOrder.DESC
@@ -273,8 +287,10 @@ class LogServiceESImpl(
         logType: LogType?,
         tag: String?,
         subTag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
         jobId: String?,
-        executeCount: Int?
+        stepId: String?
     ): QueryLogs {
         return doQueryLogsAfterLine(
             buildId = buildId,
@@ -283,8 +299,10 @@ class LogServiceESImpl(
             logType = logType,
             tag = tag,
             subTag = subTag,
+            containerHashId = containerHashId,
+            executeCount = executeCount,
             jobId = jobId,
-            executeCount = executeCount
+            stepId = stepId
         )
     }
 
@@ -296,8 +314,10 @@ class LogServiceESImpl(
         size: Int?,
         tag: String?,
         subTag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
         jobId: String?,
-        executeCount: Int?
+        stepId: String?
     ): QueryLogs {
         return doQueryLogsBeforeLine(
             buildId = buildId,
@@ -306,9 +326,11 @@ class LogServiceESImpl(
             logType = logType,
             tag = tag,
             subTag = subTag,
-            jobId = jobId,
+            containerHashId = containerHashId,
             executeCount = executeCount,
-            size = size ?: Constants.NORMAL_MAX_LINES
+            size = size ?: Constants.NORMAL_MAX_LINES,
+            jobId = jobId,
+            stepId = stepId
         )
     }
 
@@ -317,11 +339,13 @@ class LogServiceESImpl(
         buildId: String,
         tag: String?,
         subTag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
-        fileName: String?
+        fileName: String?,
+        jobId: String?,
+        stepId: String?
     ): Response {
-        val (_, index) = getQueryLogs(buildId, jobId, tag, subTag, executeCount)
+        val (_, index) = getQueryLogs(buildId, containerHashId, tag, subTag, executeCount)
         if (index.isNullOrBlank()) return Response.status(Response.Status.NOT_FOUND).build()
         val query = getQuery(
             buildId = buildId,
@@ -329,8 +353,10 @@ class LogServiceESImpl(
             logType = null,
             tag = tag,
             subTag = subTag,
+            containerHashId = containerHashId,
+            executeCount = executeCount,
             jobId = jobId,
-            executeCount = executeCount
+            stepId = stepId
         )
 
         val scrollClient = logClient.hashClient(buildId)
@@ -360,14 +386,16 @@ class LogServiceESImpl(
                     val sourceMap = searchHit.sourceAsMap
 
                     val logLine = LogLine(
-                        sourceMap["lineNo"].toString().toLong(),
-                        sourceMap["timestamp"].toString().toLong(),
-                        sourceMap["message"].toString().removePrefix("\u001b[31m")
+                        lineNo = sourceMap["lineNo"].toString().toLong(),
+                        timestamp = sourceMap["timestamp"].toString().toLong(),
+                        message = sourceMap["message"].toString().removePrefix("\u001b[31m")
                             .removePrefix("\u001b[1m").replace(
                                 "\u001B[m",
                                 ""
                             ).removeSuffix("\u001b[m"),
-                        Constants.DEFAULT_PRIORITY_NOT_DELETED
+                        priority = Constants.DEFAULT_PRIORITY_NOT_DELETED,
+                        containerHashId = sourceMap["containerHashId"]?.toString(),
+                        stepId = sourceMap["stepId"]?.toString()
                     )
                     val dateTime = sdf.format(Date(logLine.timestamp))
                     val str = "$dateTime : ${logLine.message}" + System.lineSeparator()
@@ -397,9 +425,11 @@ class LogServiceESImpl(
         logType: LogType?,
         tag: String?,
         subTag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
-        size: Int
+        size: Int,
+        jobId: String?,
+        stepId: String?
     ): EndPageQueryLogs {
         val queryLogs = EndPageQueryLogs(buildId)
         val result = doGetEndLogs(
@@ -408,9 +438,11 @@ class LogServiceESImpl(
             logType = logType,
             tag = tag,
             subTag = subTag,
-            jobId = jobId,
+            containerHashId = containerHashId,
             executeCount = executeCount,
-            size = size
+            size = size,
+            jobId = jobId,
+            stepId = stepId
         )
         queryLogs.startLineNo = result.logs.lastOrNull()?.lineNo ?: 0
         queryLogs.endLineNo = result.logs.firstOrNull()?.lineNo ?: 0
@@ -425,9 +457,11 @@ class LogServiceESImpl(
         logType: LogType?,
         tag: String?,
         subTag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
-        size: Int?
+        size: Int?,
+        jobId: String?,
+        stepId: String?
     ): QueryLogs {
         return doGetEndLogs(
             buildId = buildId,
@@ -435,9 +469,11 @@ class LogServiceESImpl(
             logType = logType,
             tag = tag,
             subTag = subTag,
-            jobId = jobId,
+            containerHashId = containerHashId,
             executeCount = executeCount,
-            size = size ?: Constants.NORMAL_MAX_LINES
+            size = size ?: Constants.NORMAL_MAX_LINES,
+            jobId = jobId,
+            stepId = stepId
         )
     }
 
@@ -447,12 +483,14 @@ class LogServiceESImpl(
         logType: LogType?,
         tag: String?,
         subTag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        jobId: String?,
+        stepId: String?
     ): PageQueryLogs {
-        var (queryLogs, index) = getQueryLogs(buildId, jobId, tag, subTag, executeCount)
+        var (queryLogs, index) = getQueryLogs(buildId, containerHashId, tag, subTag, executeCount)
         if (index.isNullOrBlank()) return PageQueryLogs(
             buildId = queryLogs.buildId,
             finished = queryLogs.finished,
@@ -468,10 +506,12 @@ class LogServiceESImpl(
                 logType = logType,
                 tag = tag,
                 subTag = subTag,
-                jobId = jobId,
+                containerHashId = containerHashId,
                 executeCount = executeCount,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                jobId = jobId,
+                stepId = stepId
             )
             logSize = getLogSize(
                 index = index,
@@ -480,8 +520,10 @@ class LogServiceESImpl(
                 logType = logType,
                 tag = tag,
                 subTag = subTag,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
                 jobId = jobId,
-                executeCount = executeCount
+                stepId = stepId
             )
             if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
         } catch (e: ElasticsearchStatusException) {
@@ -532,12 +574,20 @@ class LogServiceESImpl(
         logType: LogType?,
         tag: String? = null,
         subTag: String? = null,
-        jobId: String? = null,
+        containerHashId: String? = null,
         executeCount: Int?,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        jobId: String?,
+        stepId: String?
     ): QueryLogs {
-        val (queryLogs, index) = getQueryLogs(buildId, jobId, tag, subTag, executeCount)
+        val (queryLogs, index) = getQueryLogs(
+            buildId = buildId,
+            containerHashId = containerHashId,
+            tag = tag,
+            subTag = subTag,
+            executeCount = executeCount
+        )
         if (index.isNullOrBlank()) return queryLogs
 
         val boolQuery = QueryBuilders.boolQuery()
@@ -553,8 +603,10 @@ class LogServiceESImpl(
             logType = logType,
             tag = tag,
             subTag = subTag,
+            containerHashId = containerHashId,
+            executeCount = executeCount,
             jobId = jobId,
-            executeCount = executeCount
+            stepId = stepId
         ).must(boolQuery)
 
         val scrollClient = logClient.hashClient(buildId)
@@ -594,12 +646,20 @@ class LogServiceESImpl(
         logType: LogType?,
         tag: String?,
         subTag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
-        size: Int
+        size: Int,
+        jobId: String?,
+        stepId: String?
     ): QueryLogs {
-        logger.info("[$buildId|$tag|$subTag|$jobId|$executeCount] doGetEndLogs")
-        val (queryLogs, index) = getQueryLogs(buildId, jobId, tag, subTag, executeCount)
+        logger.info("[$buildId|$tag|$subTag|$containerHashId|$executeCount] doGetEndLogs")
+        val (queryLogs, index) = getQueryLogs(
+            buildId = buildId,
+            containerHashId = containerHashId,
+            tag = tag,
+            subTag = subTag,
+            executeCount = executeCount
+        )
         if (index.isNullOrBlank()) return queryLogs
         try {
             val logSize = getLogSize(
@@ -609,8 +669,10 @@ class LogServiceESImpl(
                 logType = logType,
                 tag = tag,
                 subTag = subTag,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
                 jobId = jobId,
-                executeCount = executeCount
+                stepId = stepId
             )
             if (logSize == 0L) return queryLogs
             val start = if (logSize > size.toLong()) logSize - size.toLong() else 0L
@@ -620,8 +682,10 @@ class LogServiceESImpl(
                 logType = logType,
                 tag = tag,
                 subTag = subTag,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
                 jobId = jobId,
-                executeCount = executeCount
+                stepId = stepId
             ).must(QueryBuilders.rangeQuery("lineNo").gte(start))
             val searchRequest = SearchRequest(index)
                 .source(
@@ -660,10 +724,18 @@ class LogServiceESImpl(
         logType: LogType?,
         tag: String? = null,
         subTag: String? = null,
-        jobId: String? = null,
-        executeCount: Int?
+        containerHashId: String? = null,
+        executeCount: Int?,
+        jobId: String?,
+        stepId: String?
     ): QueryLogs {
-        val (queryLogs, index) = getQueryLogs(buildId, jobId, tag, subTag, executeCount)
+        val (queryLogs, index) = getQueryLogs(
+            buildId = buildId,
+            containerHashId = containerHashId,
+            tag = tag,
+            subTag = subTag,
+            executeCount = executeCount
+        )
         if (index.isNullOrBlank()) return queryLogs
         try {
             val logSize = getLogSize(
@@ -673,8 +745,10 @@ class LogServiceESImpl(
                 logType = logType,
                 tag = tag,
                 subTag = subTag,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
                 jobId = jobId,
-                executeCount = executeCount
+                stepId = stepId
             )
             if (logSize == 0L) return queryLogs
 
@@ -685,11 +759,13 @@ class LogServiceESImpl(
                 logType = logType,
                 tag = tag,
                 subTag = subTag,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
                 jobId = jobId,
-                executeCount = executeCount
+                stepId = stepId
             )
             logger.info(
-                "[$index|$buildId|$tag|$subTag|$jobId|$executeCount] " +
+                "[$index|$buildId|$tag|$subTag|$containerHashId|$executeCount] " +
                         "doQueryInitLogs get the query builder: $boolQueryBuilder"
             )
 
@@ -731,10 +807,18 @@ class LogServiceESImpl(
         logType: LogType?,
         tag: String?,
         subTag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
         jobId: String?,
-        executeCount: Int?
+        stepId: String?
     ): QueryLogs {
-        val (queryLogs, index) = getQueryLogs(buildId, jobId, tag, subTag, executeCount)
+        val (queryLogs, index) = getQueryLogs(
+            buildId = buildId,
+            containerHashId = containerHashId,
+            tag = tag,
+            subTag = subTag,
+            executeCount = executeCount
+        )
         if (index.isNullOrBlank()) return queryLogs
         try {
             val startTime = System.currentTimeMillis()
@@ -745,9 +829,11 @@ class LogServiceESImpl(
                 logType = logType,
                 tag = tag,
                 subTag = subTag,
-                jobId = jobId,
+                containerHashId = containerHashId,
                 executeCount = executeCount,
-                start = start
+                start = start,
+                jobId = jobId,
+                stepId = stepId
             )
             if (logSize == 0L) return queryLogs
             val boolQueryBuilder = getQuery(
@@ -756,12 +842,14 @@ class LogServiceESImpl(
                 logType = logType,
                 tag = tag,
                 subTag = subTag,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
                 jobId = jobId,
-                executeCount = executeCount
+                stepId = stepId
             ).must(QueryBuilders.rangeQuery("lineNo").gte(start))
 
             logger.info(
-                "[$index|$buildId|$tag|$subTag|$jobId|$executeCount] " +
+                "[$index|$buildId|$tag|$subTag|$containerHashId|$executeCount] " +
                         "doQueryLogsAfterLine get the query builder: $boolQueryBuilder"
             )
             val searchRequest = SearchRequest(index)
@@ -829,10 +917,18 @@ class LogServiceESImpl(
         logType: LogType?,
         tag: String?,
         subTag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
         jobId: String?,
-        executeCount: Int?
+        stepId: String?
     ): QueryLogs {
-        val (queryLogs, index) = getQueryLogs(buildId, jobId, tag, subTag, executeCount)
+        val (queryLogs, index) = getQueryLogs(
+            buildId = buildId,
+            containerHashId = containerHashId,
+            tag = tag,
+            subTag = subTag,
+            executeCount = executeCount
+        )
         if (index.isNullOrBlank()) return queryLogs
         try {
             val startTime = System.currentTimeMillis()
@@ -843,9 +939,11 @@ class LogServiceESImpl(
                 logType = logType,
                 tag = tag,
                 subTag = subTag,
-                jobId = jobId,
+                containerHashId = containerHashId,
                 executeCount = executeCount,
-                end = end
+                end = end,
+                jobId = jobId,
+                stepId = stepId
             )
             if (logSize == 0L) return queryLogs
             val start = when {
@@ -867,12 +965,14 @@ class LogServiceESImpl(
                 logType = logType,
                 tag = tag,
                 subTag = subTag,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
                 jobId = jobId,
-                executeCount = executeCount
+                stepId = stepId
             ).must(QueryBuilders.rangeQuery("lineNo").gte(start))
                 .must(QueryBuilders.rangeQuery("lineNo").lte(end))
             logger.info(
-                "[$index|$buildId|$tag|$subTag|$jobId|$executeCount] " +
+                "[$index|$buildId|$tag|$subTag|$containerHashId|$executeCount] " +
                         "doQueryLogsBeforeLine get the query builder: $boolQueryBuilder"
             )
             val searchRequest = SearchRequest(index)
@@ -931,7 +1031,9 @@ class LogServiceESImpl(
                 tag = t,
                 subTag = sourceMap["subTag"]?.toString() ?: "",
                 jobId = sourceMap["jobId"]?.toString() ?: "",
-                executeCount = sourceMap["executeCount"]?.toString()?.toInt() ?: 1
+                executeCount = sourceMap["executeCount"]?.toString()?.toInt() ?: 1,
+                containerHashId = sourceMap["containerHashId"]?.toString() ?: "",
+                stepId = sourceMap["stepId"]?.toString() ?: ""
             )
             logs.add(logLine)
         }
@@ -940,7 +1042,7 @@ class LogServiceESImpl(
 
     private fun getQueryLogs(
         buildId: String,
-        jobId: String?,
+        containerHashId: String?,
         tag: String?,
         subTag: String?,
         executeCount: Int?
@@ -949,7 +1051,7 @@ class LogServiceESImpl(
             buildId = buildId,
             tag = tag,
             subTag = subTag,
-            jobId = jobId,
+            containerHashId = containerHashId,
             executeCount = executeCount
         )
         val indexName = indexService.getBuildIndexName(buildId)
@@ -981,12 +1083,24 @@ class LogServiceESImpl(
         logType: LogType?,
         tag: String?,
         subTag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
         start: Long? = null,
-        end: Long? = null
+        end: Long? = null,
+        jobId: String?,
+        stepId: String?
     ): Long {
-        val query = getQuery(buildId, debug, logType, tag, subTag, jobId, executeCount)
+        val query = getQuery(
+            buildId = buildId,
+            debug = debug,
+            logType = logType,
+            tag = tag,
+            subTag = subTag,
+            containerHashId = containerHashId,
+            executeCount = executeCount,
+            jobId = jobId,
+            stepId = stepId
+        )
         if (start != null) query.must(QueryBuilders.rangeQuery("lineNo").gte(start))
         if (end != null) query.must(QueryBuilders.rangeQuery("lineNo").lte(end))
         val countRequest = CountRequest(index).query(query)
@@ -1095,12 +1209,14 @@ class LogServiceESImpl(
             LogMessageWithLineNo(
                 tag = it.tag,
                 subTag = it.subTag,
-                jobId = it.jobId,
+                containerHashId = it.containerHashId,
                 message = it.message,
                 timestamp = timestamp,
                 logType = it.logType,
                 lineNo = startLineNum++,
-                executeCount = it.executeCount
+                executeCount = it.executeCount,
+                jobId = it.jobId,
+                stepId = it.stepId
             )
         }
     }
@@ -1190,8 +1306,10 @@ class LogServiceESImpl(
         logType: LogType?,
         tag: String?,
         subTag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
         jobId: String?,
-        executeCount: Int?
+        stepId: String?
     ): BoolQueryBuilder {
         val query = QueryBuilders.boolQuery()
         if (!tag.isNullOrBlank()) {
@@ -1200,8 +1318,14 @@ class LogServiceESImpl(
         if (!subTag.isNullOrBlank()) {
             query.must(QueryBuilders.matchQuery("subTag", subTag).operator(Operator.AND))
         }
+        if (!containerHashId.isNullOrBlank()) {
+            query.must(QueryBuilders.matchQuery("containerHashId", containerHashId).operator(Operator.AND))
+        }
         if (!jobId.isNullOrBlank()) {
             query.must(QueryBuilders.matchQuery("jobId", jobId).operator(Operator.AND))
+        }
+        if (!stepId.isNullOrBlank()) {
+            query.must(QueryBuilders.matchQuery("stepId", stepId).operator(Operator.AND))
         }
         if (logType != null) {
             query.must(QueryBuilders.matchQuery("logType", logType.name).operator(Operator.AND))

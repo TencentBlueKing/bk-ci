@@ -87,8 +87,10 @@ class AgentLessListener @Autowired constructor(
                 buildId = event.buildId,
                 message = "Start buildless Docker VM failed. ${discard.message}",
                 tag = VMUtils.genStartVMTaskId(event.vmSeqId),
-                jobId = event.containerHashId,
-                executeCount = event.executeCount ?: 1
+                containerHashId = event.containerHashId,
+                executeCount = event.executeCount ?: 1,
+                jobId = null,
+                stepId = VMUtils.genStartVMTaskId(event.vmSeqId)
             )
 
             val (errorType, errorCode, errorMsg) = if (discard is DockerServiceException) {

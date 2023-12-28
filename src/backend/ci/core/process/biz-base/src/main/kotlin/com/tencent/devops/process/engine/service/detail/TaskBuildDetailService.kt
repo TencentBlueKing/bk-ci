@@ -383,7 +383,8 @@ class TaskBuildDetailService(
                         containerHashId = containerId,
                         buildStatus = buildStatus,
                         executeCount = endElement.executeCount,
-                        message = endElement.errorMsg
+                        message = endElement.errorMsg,
+                        stepId = endElement.stepId
                     )
                 )
                 return false
@@ -510,7 +511,8 @@ class TaskBuildDetailService(
                         containerHashId = containerId,
                         buildStatus = unExecBuildStatus,
                         executeCount = element.executeCount,
-                        message = "Do not meet the run conditions, ignored."
+                        message = "Do not meet the run conditions, ignored.",
+                        stepId = element.stepId
                     )
                 )
             }
