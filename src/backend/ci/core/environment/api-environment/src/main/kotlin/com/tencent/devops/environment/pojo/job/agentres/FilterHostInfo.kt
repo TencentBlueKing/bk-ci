@@ -38,6 +38,8 @@ data class FilterHostInfo(
     val bkHostId: Long?,
     @ApiModelProperty(value = "主机名")
     val bkHostName: String?,
+    @ApiModelProperty(value = "Agent ID")
+    val bkAgentId: String?,
     @ApiModelProperty(value = "寻址方式，1: 0，静态 2: 1，动态")
     val bkAddressing: String?,
     @ApiModelProperty(value = "操作系统，1：LINUX 2：WINDOWS 3：AIX 4：SOLARIS")
