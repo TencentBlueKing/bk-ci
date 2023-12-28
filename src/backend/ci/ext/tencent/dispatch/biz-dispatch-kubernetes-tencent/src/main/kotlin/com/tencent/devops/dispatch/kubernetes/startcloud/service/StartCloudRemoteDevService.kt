@@ -114,7 +114,7 @@ class StartCloudRemoteDevService @Autowired constructor(
 
         val zoneId: String
         val machineType: String
-        if (event.devFile.imageCosFile.isNullOrBlank()) {
+        if (!event.devFile.imageCosFile.isNullOrBlank()) {
             val random = resourceInType.toList().randomOrNull() ?: throw BuildFailureException(
                 ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
