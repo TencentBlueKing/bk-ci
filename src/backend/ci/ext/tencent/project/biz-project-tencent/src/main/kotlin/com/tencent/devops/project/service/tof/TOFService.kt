@@ -544,9 +544,6 @@ class TOFService @Autowired constructor(
                 }
             }
         }
-        // 获取部门及部门以上的祖先
-        val index = deptInfos.indexOfFirst { it.typeId.toInt() == OrganizationType.dept.typeId }
-        val filteredDeptInfos = if (index == -1) deptInfos else deptInfos.take(index + 1)
 
         return UserDeptDetail(
             bgName = bgName,
@@ -559,8 +556,23 @@ class TOFService @Autowired constructor(
             centerId = centerId,
             groupId = groupId,
             groupName = groupName,
-            deptInfos = filteredDeptInfos
+            deptInfos = filterDeptInfos(deptInfos = deptInfos)
         )
+    }
+
+    private fun filterDeptInfos(deptInfos: List<DeptInfo>): List<DeptInfo> {
+        val hasDepartment = deptInfos.firstOrNull { it.typeId.toInt() == OrganizationType.dept.typeId } != null
+        val hasBusinessLine = deptInfos.firstOrNull { it.typeId.toInt() == OrganizationType.businessLine.typeId } != null
+
+        // 获取部门及部门以上的祖先
+        val index = if (hasDepartment) {
+            deptInfos.indexOfFirst { it.typeId.toInt() == OrganizationType.dept.typeId }
+        } else if (hasBusinessLine) {
+            deptInfos.indexOfFirst { it.typeId.toInt() == OrganizationType.businessLine.typeId }
+        } else {
+            -1
+        }
+        return if (index == -1) deptInfos else deptInfos.take(index + 1)
     }
 
     fun checkUserLeave(userInfo: StaffInfo): Boolean {

@@ -26,7 +26,7 @@ class ProjectExtOrganizationService constructor(
 ) {
     @Suppress("MaxLineLength")
     fun fixProjectOrganization(englishName: String) {
-        val projectInfo = projectService.getByEnglishName(englishName) ?: return
+        projectService.getByEnglishName(englishName) ?: return
 
         val managers = client.get(ServiceProjectAuthResource::class).getProjectUsers(
             token = tokenService.getSystemToken(),
@@ -36,7 +36,9 @@ class ProjectExtOrganizationService constructor(
 
         val deptInfos = managers.map { tofService.getUserDeptDetail(it) }
         val deptIds = deptInfos.map { it.deptId }
+        val centerIds = deptInfos.map { it.centerId }
         val isManagerDepartmentSame = deptIds.distinct().size == 1
+        val isManagerCenterSame = centerIds.distinct().size == 1
 
         logger.info("Determine whether project managers have the same organization: $englishName | $isManagerDepartmentSame")
 
@@ -44,12 +46,11 @@ class ProjectExtOrganizationService constructor(
             val deptId = deptIds.first()
             val deptName = deptInfos.first().deptName
             val parentDeptInfos = tofService.getParentDeptInfo(groupId = deptId, level = 10)
-            val childDeptInfos = tofService.getChildDeptInfos(type = OrganizationType.dept, id = deptId.toInt(), level = 10)
 
             val bgInfo = parentDeptInfos.firstOrNull { it.typeId.toInt() == OrganizationType.bg.typeId }
             val businessLineInfo = parentDeptInfos.firstOrNull { it.typeId.toInt() == OrganizationType.businessLine.typeId }
-            val centerId = if (childDeptInfos.map { it.ID }.contains(projectInfo.centerId)) projectInfo.centerId else null
-            val centerName = if (childDeptInfos.map { it.Name }.contains(projectInfo.centerName)) projectInfo.centerName else null
+            val centerId = if (isManagerCenterSame) centerIds.first() else null
+            val centerName = if (isManagerCenterSame) deptInfos.first().centerName else null
 
             projectDao.updateOrganizationByEnglishName(
                 dslContext = dslContext,
