@@ -198,5 +198,5 @@ data class EnableBkRepoData(
     val deptId: String,
     val deptName: String,
     val englishName: String,
-    val productId: Int,
+    val productId: Int
 )
