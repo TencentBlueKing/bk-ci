@@ -85,7 +85,7 @@ object SignUtils {
             overwriteInfo(appDir, wildcardInfo, false, replaceKeyList)
 
             // 扫描是否有其他待签目录
-            val needResignDirs = scanNeedResignFiles(appDir)
+            val needResignDirs = scanNeedResignFiles(appDir, mutableListOf())
             needResignDirs.forEach { resignDir ->
                 resignDir.listFiles()?.forEach { subFile ->
                     when {
@@ -179,7 +179,7 @@ object SignUtils {
             overwriteInfo(appDir, info, replaceBundleId, replaceKeyList)
 
             // 扫描是否有其他待签目录
-            val needResignDirs = scanNeedResignFiles(appDir)
+            val needResignDirs = scanNeedResignFiles(appDir, mutableListOf())
             needResignDirs.forEach { resignDir ->
                 resignDir.listFiles()?.forEach { subFile ->
                     when {
@@ -257,7 +257,7 @@ object SignUtils {
         }
         return try {
             // 扫描是否有下层待签目录
-            val needResignDirs = scanNeedResignFiles(frameworkDir)
+            val needResignDirs = scanNeedResignFiles(frameworkDir, mutableListOf())
             needResignDirs.forEach { resignDir ->
                 resignDir.listFiles()?.forEach { subFile ->
                     // 如果是个其他待签文件则使用主描述文件进行重签
@@ -336,7 +336,7 @@ object SignUtils {
         appList: MutableList<File>
     ) {
         // 扫描是否有待签目录
-        val needResignFiles = scanNeedResignFiles(appDir)
+        val needResignFiles = scanNeedResignFiles(appDir, mutableListOf())
         needResignFiles.forEach { needResginDir ->
             needResginDir.listFiles().forEach { subFile ->
                 // 如果是个拓展则递归进入进行重签
@@ -348,11 +348,17 @@ object SignUtils {
     }
 
     @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-    private fun scanNeedResignFiles(appDir: File): List<File> {
+    private fun scanNeedResignFiles(appDir: File, needResignFiles: MutableList<File>): List<File> {
         logger.info("---- scan app directory start -----")
-        val needResignFiles = mutableListOf<File>()
         appDir.listFiles().forEachIndexed { index, it ->
             if (it.isDirectory && resignFilenamesSet.contains(it.name)) {
+                if (it.name.equals("Frameworks")){
+                    it.listFiles()
+                        .filter {node-> node.isDirectory && node.extension.contains("framework") }.toMutableList()
+                        .forEach {node->
+                            scanNeedResignFiles(node,needResignFiles)
+                        }
+                }
                 needResignFiles.add(it)
                 logger.info("$index -> ${it.absolutePath}")
             }
