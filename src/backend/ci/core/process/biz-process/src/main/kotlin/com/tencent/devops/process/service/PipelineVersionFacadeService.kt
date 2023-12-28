@@ -194,30 +194,19 @@ class PipelineVersionFacadeService @Autowired constructor(
         ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_DRAFT_EXISTS
         )
-        val draftSetting = draftVersion.version.let {
+        val draftSetting = draftVersion.settingVersion?.let {
             pipelineSettingFacadeService.userGetSetting(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = it
             )
-        }
-
-        // TODO #8164 增加同步PAC仓库
-        if (draftVersion.status != VersionStatus.COMMITTING) throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_VERSION_IS_NOT_DRAFT
+        } ?: pipelineSettingFacadeService.userGetSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId
         )
-//        val latestDebugPassed = draftVersion.debugBuildId?.let { debugBuildId ->
-//            val debugBuild = pipelineRuntimeService.getBuildInfo(
-//                projectId = projectId,
-//                pipelineId = pipelineId,
-//                buildId = debugBuildId
-//            )
-//            debugBuild?.status?.isSuccess() == true
-//        } ?: false
-//        if (!latestDebugPassed) throw ErrorCodeException(
-//            errorCode = ProcessMessageCode.ERROR_RELEASE_VERSION_HAS_NOT_PASSED_DEBUGGING
-//        )
+        // TODO #8164 增加同步PAC仓库
         val pushBranchName = "master"
         val (versionStatus, branchName) = if (request.targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE) {
             Pair(VersionStatus.BRANCH, pushBranchName)
