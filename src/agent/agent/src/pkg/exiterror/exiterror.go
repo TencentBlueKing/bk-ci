@@ -13,8 +13,8 @@ import (
 )
 
 type ExitErrorType struct {
-	ErrorEnum ExitErrorEnum
-	Message   string
+	ErrorEnum ExitErrorEnum `json:"errorEnum"`
+	Message   string        `json:"message"`
 }
 
 type ExitErrorEnum string
