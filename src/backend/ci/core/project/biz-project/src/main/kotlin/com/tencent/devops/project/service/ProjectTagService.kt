@@ -66,6 +66,7 @@ class ProjectTagService @Autowired constructor(
     val redisOperation: RedisOperation,
     val projectDao: ProjectDao,
     val objectMapper: ObjectMapper,
+    val projectOrganizationService: ProjectOrganizationService,
     val bkTag: BkTag
 ) {
 
