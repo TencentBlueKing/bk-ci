@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.PipelineModelWithYamlRequest
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
@@ -201,15 +202,7 @@ class PipelineVersionFacadeService @Autowired constructor(
                 version = it
             )
         }
-        val savedSetting = pipelineSettingFacadeService.saveSetting(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            updateVersion = false,
-            setting = draftSetting.copy(
-                desc = request.description ?: ""
-            )
-        )
+
         // TODO #8164 增加同步PAC仓库
         if (draftVersion.status != VersionStatus.COMMITTING) throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_VERSION_IS_NOT_DRAFT
@@ -225,7 +218,23 @@ class PipelineVersionFacadeService @Autowired constructor(
 //        if (!latestDebugPassed) throw ErrorCodeException(
 //            errorCode = ProcessMessageCode.ERROR_RELEASE_VERSION_HAS_NOT_PASSED_DEBUGGING
 //        )
+        val pushBranchName = "master"
+        val (versionStatus, branchName) = if (request.targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE) {
+            Pair(VersionStatus.BRANCH, pushBranchName)
+        } else {
+            Pair(VersionStatus.RELEASED, null)
+        }
         val model = draftVersion.model.copy(staticViews = request.staticViews)
+        val savedSetting = pipelineSettingFacadeService.saveSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            updateVersion = false,
+            versionStatus = versionStatus,
+            setting = draftSetting.copy(
+                desc = request.description ?: ""
+            )
+        )
         val result = pipelineRepositoryService.deployPipeline(
             model = model,
             projectId = projectId,
@@ -235,7 +244,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             create = false,
             updateLastModifyUser = true,
             savedSetting = savedSetting,
-            versionStatus = VersionStatus.RELEASED,
+            versionStatus = versionStatus,
+            branchName = branchName,
             description = request.description?.takeIf { it.isNotBlank() } ?: draftVersion.description,
             yamlStr = draftVersion.yaml,
             baseVersion = draftVersion.baseVersion,
