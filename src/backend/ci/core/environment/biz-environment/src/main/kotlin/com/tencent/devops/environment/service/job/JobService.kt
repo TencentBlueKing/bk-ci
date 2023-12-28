@@ -930,7 +930,7 @@ class JobService @Autowired constructor(
                             createdAt = filterHostInfo.createdAt,
                             updatedAt = filterHostInfo.updatedAt,
                             isManual = filterHostInfo.isManual,
-                            extraData = filterHostInfo.extraData?.map { extraData ->
+                            extraData = filterHostInfo.extraData?.let { extraData ->
                                 ExtraData(
                                     btSpeedLimit = extraData.btSpeedLimit,
                                     enableCompression = extraData.enableCompression,

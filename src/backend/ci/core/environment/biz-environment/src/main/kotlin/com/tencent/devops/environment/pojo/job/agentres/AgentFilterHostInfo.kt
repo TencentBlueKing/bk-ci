@@ -88,7 +88,7 @@ data class AgentFilterHostInfo(
     val isManual: Boolean?,
     @ApiModelProperty(value = "额外信息")
     @JsonProperty("extra_data")
-    val extraData: List<AgentExtraData>?,
+    val extraData: AgentExtraData?,
     @ApiModelProperty(value = "任务执行状态名称")
     @JsonProperty("status_display")
     val statusDisplay: String?,

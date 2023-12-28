@@ -69,7 +69,7 @@ data class FilterHostInfo(
     @ApiModelProperty(value = "是否手动模式")
     val isManual: Boolean?,
     @ApiModelProperty(value = "额外信息")
-    val extraData: List<ExtraData>?,
+    val extraData: ExtraData?,
     @ApiModelProperty(value = "任务执行状态名称")
     val statusDisplay: String?,
     @ApiModelProperty(value = "管控区域名称")
