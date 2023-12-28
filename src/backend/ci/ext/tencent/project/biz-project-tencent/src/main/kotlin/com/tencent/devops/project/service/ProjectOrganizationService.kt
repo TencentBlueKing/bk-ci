@@ -78,18 +78,20 @@ class ProjectOrganizationService constructor(
     }
 
     fun fixAllProjectOrganization(channelCode: String? = ChannelCode.BS.name): Boolean {
-        var offset = 0
-        val limit = PageUtil.MAX_PAGE_SIZE
-        do {
-            val projectInfos = projectDao.listByChannel(
-                dslContext = dslContext,
-                limit = limit,
-                offset = offset,
-                channelCodes = listOf(channelCode!!)
-            )
-            fixProjectOrganization(englishNames = projectInfos.map { it.englishName })
-            offset += limit
-        } while (projectInfos.size == limit)
+        Thread {
+            var offset = 0
+            val limit = PageUtil.MAX_PAGE_SIZE
+            do {
+                val projectInfos = projectDao.listByChannel(
+                    dslContext = dslContext,
+                    limit = limit,
+                    offset = offset,
+                    channelCodes = listOf(channelCode!!)
+                )
+                fixProjectOrganization(englishNames = projectInfos.map { it.englishName })
+                offset += limit
+            } while (projectInfos.size == limit)
+        }.start()
         return true
     }
 
