@@ -44,6 +44,7 @@ import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLogResult
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentreq.TerminateAgentInstallTaskReq
+import com.tencent.devops.environment.pojo.job.agentres.AgentExtraData
 import com.tencent.devops.environment.pojo.job.agentres.AgentInfo
 import com.tencent.devops.environment.pojo.job.agentres.AgentInstallAgentResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentStatusFromJobResult
@@ -53,6 +54,7 @@ import com.tencent.devops.environment.pojo.job.resp.Account
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentRetryAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentTerminalAgentInstallTaskResult
+import com.tencent.devops.environment.pojo.job.agentres.ExtraData
 import com.tencent.devops.environment.pojo.job.agentres.FilterHostInfo
 import com.tencent.devops.environment.pojo.job.agentres.HostDetail
 import com.tencent.devops.environment.pojo.job.agentres.IdentityInfo
@@ -928,7 +930,13 @@ class JobService @Autowired constructor(
                             createdAt = filterHostInfo.createdAt,
                             updatedAt = filterHostInfo.updatedAt,
                             isManual = filterHostInfo.isManual,
-                            extraData = filterHostInfo.extraData,
+                            extraData = filterHostInfo.extraData?.map { extraData ->
+                                ExtraData(
+                                    btSpeedLimit = extraData.btSpeedLimit,
+                                    enableCompression = extraData.enableCompression,
+                                    peerExchangeSwitchForAgent = extraData.peerExchangeSwitchForAgent
+                                )
+                            },
                             statusDisplay = filterHostInfo.statusDisplay,
                             bkCloudName = filterHostInfo.bkCloudName,
                             installChannelName = filterHostInfo.installChannelName,
