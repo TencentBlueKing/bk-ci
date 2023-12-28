@@ -311,5 +311,14 @@ export const actions = {
 
     updateRefreshQualityLoading: ({ commit }, status) => {
         commit(REFRESH_QUALITY_LOADING_MUNTATION, status)
+    },
+
+    getPACRepoList: (_, { projectId, ...params }) => {
+        return request.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/hasPermissionList`, {
+            params
+        })
+    },
+    getPACRepoCiDirList: (_, { projectId, repoHashId }) => {
+        return request.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repoHashId}/ciSubDir`)
     }
 }

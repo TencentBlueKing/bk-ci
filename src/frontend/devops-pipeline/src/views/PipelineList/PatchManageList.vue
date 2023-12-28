@@ -9,12 +9,14 @@
                 >
                     {{$t('patchAddTo')}}
                 </bk-button>
-                <bk-button
-                    :disabled="!isSelected"
-                    @click="toggleDeleteConfirm"
-                >
-                    {{$t('patchDelete')}}
-                </bk-button>
+                <span v-bk-tooltips="notAllowPatchDeleteTips">
+                    <bk-button
+                        :disabled="!isSelected && isPacGroup"
+                        @click="toggleDeleteConfirm"
+                    >
+                        {{$t('patchDelete')}}
+                    </bk-button>
+                </span>
                 <bk-button class="exit-patch-text-btn" text @click="exitPatch">{{$t('exitPatch')}}</bk-button>
 
             </div>
@@ -49,11 +51,11 @@
 </template>
 
 <script>
-    import { mapGetters, mapActions } from 'vuex'
-    import moment from 'moment'
     import PipelineTableView from '@/components/pipelineList/PipelineTableView'
     import AddToGroupDialog from '@/views/PipelineList/AddToGroupDialog'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
+    import moment from 'moment'
+    import { mapActions, mapGetters } from 'vuex'
     import PipelineSearcher from './PipelineSearcher'
     export default {
         name: 'patch-manage-list',
@@ -79,8 +81,19 @@
             currentViewName () {
                 return this.$t(this.groupMap?.[this.$route.params.viewId]?.name ?? '')
             },
+            isPacGroup () {
+                return this.groupMap?.[this.$route.params.viewId]?.pac
+            },
             isSelected () {
                 return this.selected.length > 0
+            },
+            notAllowPatchDeleteTips () {
+                return {
+                    content: this.$t('notAllowPatchDeletePacPipelineTips'),
+                    maxWidth: 360,
+                    disabled: !this.isPacGroup,
+                    delay: [300, 0]
+                }
             }
         },
         created () {

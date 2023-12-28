@@ -142,18 +142,18 @@
 </template>
 
 <script>
-    import { mapActions, mapGetters, mapState } from 'vuex'
-    import {
-        DELETED_VIEW_ID,
-        UNCLASSIFIED_PIPELINE_VIEW_ID,
-        CACHE_PIPELINE_GROUP_NAV_STATUS
-    } from '@/store/constants'
-    import { cacheViewId } from '@/utils/util'
     import Logo from '@/components/Logo'
     import ExtMenu from '@/components/pipelineList/extMenu'
     import {
+        CACHE_PIPELINE_GROUP_NAV_STATUS,
+        DELETED_VIEW_ID,
+        UNCLASSIFIED_PIPELINE_VIEW_ID
+    } from '@/store/constants'
+    import {
         PROJECT_RESOURCE_ACTION
     } from '@/utils/permission'
+    import { cacheViewId } from '@/utils/util'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     export default {
         components: {
             Logo,
@@ -300,7 +300,7 @@
                 if (this.fixedGroupIdSet.has(group.id)) return []
                 const hasPermission = !group.projected || this.isManage
                 return [
-                    ...(hasPermission
+                    ...(hasPermission && !group.pac
                         ? [
                             {
                                 text: this.$t('rename'),
@@ -338,13 +338,12 @@
                             ]
                             : []
                     ),
-                    
                     {
                         text: this.$t(group.top ? 'unStickyTop' : 'stickyTop'),
                         disabled: this.isSticking,
                         handler: () => this.stickTop(group)
                     },
-                    ...(hasPermission
+                    ...(hasPermission && !group.pac
                         ? [
                             {
                                 text: this.$t('delete'),

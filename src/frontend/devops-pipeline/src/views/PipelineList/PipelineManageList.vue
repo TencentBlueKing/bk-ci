@@ -48,6 +48,7 @@
                                 }
                             }"
                             v-if="pipelineGroupType"
+                            :disabled="isPacGroup"
                             @click="handleAddToGroup"
                         >
                             {{$t('pipelineCountEdit')}}
@@ -250,6 +251,9 @@
             currentViewName () {
                 return this.currentGroup?.i18nKey ? this.$t(this.currentGroup.i18nKey) : (this.currentGroup?.name ?? '')
             },
+            isPacGroup () {
+                return this.currentGroup?.pac
+            },
             canNotMangeProjectedGroup () {
                 return this.currentGroup?.projected && !this.isManage
             },
@@ -267,8 +271,10 @@
             },
             noManagePermissionTips () {
                 return {
-                    content: this.$t('groupEditDisableTips'),
-                    disabled: !this.canNotMangeProjectedGroup
+                    content: this.$t(this.isPacGroup ? 'pacGroupDisableTips' : 'groupEditDisableTips'),
+                    maxWidth: 360,
+                    disabled: !this.canNotMangeProjectedGroup && !this.isPacGroup,
+                    delay: [300, 0]
                 }
             },
             sortList () {
