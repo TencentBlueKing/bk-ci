@@ -45,6 +45,7 @@ import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.ProjectInfoResponse
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectTagDao
+import com.tencent.devops.project.pojo.DeptInfo
 import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
@@ -440,7 +441,19 @@ class ProjectTagService @Autowired constructor(
 
         for (i in projectInfos.indices) {
             val projectData = projectInfos[i]
-            val projectInfo = getProjectInfoResponse(projectData)
+            val deptId = projectData.centerId ?: projectData.deptId ?: projectData.businessLineId ?: projectData.bgId
+            val parentDeptInfos = if (deptId != null) {
+                projectOrganizationService.getParentDeptInfos(
+                    deptId = deptId.toString(),
+                    level = 10
+                )
+            } else {
+                emptyList()
+            }
+            val projectInfo = getProjectInfoResponse(
+                projectData = projectData,
+                deptInfos = parentDeptInfos
+            )
             dataList.add(projectInfo)
         }
         dataObj["projectList"] = dataList
@@ -448,7 +461,10 @@ class ProjectTagService @Autowired constructor(
         return com.tencent.devops.project.pojo.Result(dataObj)
     }
 
-    private fun getProjectInfoResponse(projectData: TProjectRecord): ProjectInfoResponse {
+    private fun getProjectInfoResponse(
+        projectData: TProjectRecord,
+        deptInfos: List<DeptInfo>
+    ): ProjectInfoResponse {
         val otherRouterTagMap = projectData.otherRouterTags?.let {
             JsonUtil.to<Map<String, String>>(projectData.otherRouterTags.toString())
         } ?: emptyMap()
@@ -491,7 +507,8 @@ class ProjectTagService @Autowired constructor(
             enableIdc = projectData.enableIdc,
             pipelineLimit = projectData.pipelineLimit,
             properties = projectProperties,
-            productId = projectData.productId
+            productId = projectData.productId,
+            deptInfos = deptInfos
         )
     }
 

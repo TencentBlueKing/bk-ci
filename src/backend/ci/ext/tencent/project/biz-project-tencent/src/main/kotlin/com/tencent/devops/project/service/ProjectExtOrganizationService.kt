@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 
 @Service
-class ProjectOrganizationService constructor(
+class ProjectExtOrganizationService constructor(
     val client: Client,
     val tokenService: ClientTokenService,
     val tofService: TOFService,
@@ -97,7 +97,7 @@ class ProjectOrganizationService constructor(
 
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ProjectOrganizationService::class.java)
+        private val logger = LoggerFactory.getLogger(ProjectExtOrganizationService::class.java)
         private val executor = Executors.newFixedThreadPool(5)
     }
 }

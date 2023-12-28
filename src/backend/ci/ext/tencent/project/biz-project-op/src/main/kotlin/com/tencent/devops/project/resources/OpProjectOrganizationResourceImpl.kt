@@ -31,18 +31,18 @@ package com.tencent.devops.project.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.op.OpProjectOrganizationResource
-import com.tencent.devops.project.service.ProjectOrganizationService
+import com.tencent.devops.project.service.ProjectExtOrganizationService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpProjectOrganizationResourceImpl @Autowired constructor(
-    val projectOrganizationService: ProjectOrganizationService
+    val projectExtOrganizationService: ProjectExtOrganizationService
 ) : OpProjectOrganizationResource {
     override fun fixProjectOrganization(englishNames: List<String>): Result<Boolean> {
-        return Result(projectOrganizationService.fixProjectOrganization(englishNames = englishNames))
+        return Result(projectExtOrganizationService.fixProjectOrganization(englishNames = englishNames))
     }
 
     override fun fixAllProjectOrganization(channelCode: String?): Result<Boolean> {
-        return Result(projectOrganizationService.fixAllProjectOrganization(channelCode = channelCode))
+        return Result(projectExtOrganizationService.fixAllProjectOrganization(channelCode = channelCode))
     }
 }
