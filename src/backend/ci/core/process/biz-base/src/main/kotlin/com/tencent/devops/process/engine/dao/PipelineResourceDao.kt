@@ -85,7 +85,7 @@ class PipelineResourceDao {
         }
     }
 
-    fun getLatestVersionRecord(
+    fun getReleaseVersionRecord(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String

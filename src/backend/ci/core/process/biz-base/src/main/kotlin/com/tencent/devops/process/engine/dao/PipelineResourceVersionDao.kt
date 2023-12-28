@@ -407,6 +407,28 @@ class PipelineResourceVersionDao {
         }
     }
 
+    fun updateBranchVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        branchName: String?,
+        branchVersionAction: BranchVersionAction
+    ): Int {
+        with(T_PIPELINE_RESOURCE_VERSION) {
+            val update = dslContext.update(this)
+                .set(BRANCH_ACTION, branchVersionAction.name)
+                .where(
+                    PIPELINE_ID.eq(pipelineId)
+                        .and(PROJECT_ID.eq(projectId))
+                        .and(STATUS.eq(VersionStatus.BRANCH.name))
+                        // 只有非活跃的分支可以被修改状态
+                        .and(BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name))
+                )
+            branchName?.let { update.and(VERSION_NAME.eq(branchName)) }
+            return update.execute()
+        }
+    }
+
     class PipelineResourceVersionJooqMapper : RecordMapper<TPipelineResourceVersionRecord, PipelineResourceVersion> {
         override fun map(record: TPipelineResourceVersionRecord?): PipelineResourceVersion? {
             return record?.let {
