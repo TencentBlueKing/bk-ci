@@ -39,7 +39,7 @@ data class ExtServiceImageInfoDTO(
     @ApiModelProperty("镜像仓库地址", required = true)
     val repoAddr: String,
     @ApiModelProperty("镜像仓库用户名", required = true)
-    val username: String,
+    val userName: String,
     @ApiModelProperty("镜像仓库密码", required = true)
     val password: String
 )
