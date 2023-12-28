@@ -63,7 +63,13 @@ class OpWindowsConfigResourceImpl @Autowired constructor(
         return Result(windowsResourceConfigService.deleteSpec(projectId, size))
     }
 
-    override fun fetchSpec(userId: String, page: Int?, pageSize: Int?): Result<Page<WindowsSpecResInfo>> {
-        return Result(windowsResourceConfigService.fetchSpec(page, pageSize))
+    override fun fetchSpec(
+        userId: String,
+        projectId: String?,
+        machineType: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<WindowsSpecResInfo>> {
+        return Result(windowsResourceConfigService.fetchSpec(projectId, machineType, page, pageSize))
     }
 }
