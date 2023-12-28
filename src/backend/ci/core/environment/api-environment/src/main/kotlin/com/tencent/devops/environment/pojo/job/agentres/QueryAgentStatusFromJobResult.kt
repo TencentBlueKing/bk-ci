@@ -27,6 +27,7 @@
 
 package com.tencent.devops.environment.pojo.job.agentres
 
+import com.tencent.devops.environment.pojo.job.resp.AgentInfo
 import io.swagger.annotations.ApiModelProperty
 
 data class QueryAgentStatusFromJobResult(

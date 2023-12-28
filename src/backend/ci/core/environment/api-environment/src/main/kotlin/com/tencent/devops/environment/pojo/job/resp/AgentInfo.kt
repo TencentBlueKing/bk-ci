@@ -25,14 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo.job.agentres
+package com.tencent.devops.environment.pojo.job.resp
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
 data class AgentInfo(
     @ApiModelProperty(value = "主机ID")
-    @JsonProperty("bk_host_id")
     val bkHostId: Long,
     @ApiModelProperty(value = "Agent状态：0-异常，1-正常")
     val status: Int,
