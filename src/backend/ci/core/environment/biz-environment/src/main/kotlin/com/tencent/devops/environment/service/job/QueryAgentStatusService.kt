@@ -34,6 +34,7 @@ import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentStatusFromJobResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentStatusFromNodemanResult
 import com.tencent.devops.environment.pojo.job.AgentVersion
+import com.tencent.devops.environment.pojo.job.resp.JobResult
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -135,7 +136,7 @@ class QueryAgentStatusService @Autowired constructor(
         userId: String,
         projectId: String,
         hostIdList: List<Long>
-    ): AgentResult<QueryAgentStatusFromJobResult> {
+    ): JobResult<QueryAgentStatusFromJobResult> {
         val queryAgentStatusRequest = QueryAgentStatusFromJobReq(
             hostIdList = hostIdList
         )
