@@ -76,19 +76,6 @@
                     }))
                 }, {
                     title: this.$t('pipelineConf'),
-                    link: {
-                        handler: () => {
-                            this.$router.push({
-                                name: 'pipelinesEdit',
-                                params: {
-                                    ...this.$route.params,
-                                    version: this.pipelineInfo?.version
-                                }
-                            })
-                        },
-                        icon: 'edit-conf',
-                        title: this.$t('pipelineEdit')
-                    },
                     children: [{
                         title: this.$t('pipelineModel'),
                         name: 'pipeline'

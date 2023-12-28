@@ -37,7 +37,7 @@ export default {
         return state.pipelineInfo?.baseVersionStatus === 'BRANCH'
     },
     isReleasePipeline: state => {
-        return state.pipelineInfo?.baseVersionStatus === 'RELEASED'
+        return !state.pipelineInfo?.onlyDraft
     },
     pacEnabled: state => {
         return state.pipelineInfo?.pipelineAsCodeSettings?.enable ?? false

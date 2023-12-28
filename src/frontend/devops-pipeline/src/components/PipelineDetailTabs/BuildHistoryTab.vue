@@ -35,7 +35,9 @@
 
         computed: {
             ...mapGetters({
-                historyPageStatus: 'pipelines/getHistoryPageStatus'
+                historyPageStatus: 'pipelines/getHistoryPageStatus',
+                isReleasePipeline: 'atom/isReleasePipeline',
+                isCurPipelineLocked: 'atom/isCurPipelineLocked'
             }),
             ...mapState('atom', [
                 'isPropertyPanelVisible',
@@ -57,6 +59,7 @@
                 const { hasNoPermission } = this
                 const title = hasNoPermission ? this.$t('noPermission') : this.$t('history.noBuildRecords')
                 const desc = hasNoPermission ? this.$t('history.noPermissionTips') : this.$t('history.buildEmptyDesc')
+
                 const btns = hasNoPermission
                     ? [{
                         theme: 'primary',
@@ -75,18 +78,26 @@
                         disabled: this.executeStatus,
                         loading: this.executeStatus,
                         handler: () => {
-                            !this.executeStatus && this.$router.push({
+                            const params = {
+                                ...this.$route.params,
+                                version: this.pipelineInfo?.version
+                            }
+                            if (this.isReleasePipeline) {
+                                return this.$router.push({
+                                    name: 'pipelinesEdit',
+                                    params
+                                })
+                            }
+                            !this.executeStatus && !this.isCurPipelineLocked && this.$router.push({
                                 name: 'executePreview',
                                 query: {
                                     ...(this.isDebug ? { debug: '' } : {})
                                 },
-                                params: {
-                                    ...this.$route.params,
-                                    version: this.pipelineInfo?.version
-                                }
+                                params
+
                             })
                         },
-                        text: this.$t('history.startBuildTips')
+                        text: this.$t(this.isReleasePipeline ? 'goEdit' : 'history.startBuildTips')
                     }]
                 return {
                     title,

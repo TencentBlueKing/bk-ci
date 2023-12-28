@@ -543,6 +543,7 @@
     "remark": "备注",
     "noBuildRecords": "构建记录为空",
     "noPermissionTips": "你没有查看该流水线的权限，请切换项目或申请相应权限",
+    "noReleaseBuildEmptyTips": "流水线尚未发布，请先发布，再启动执行。发布流水线后即可触发执行构建任务。系统将为每次构建分配一个唯一 ID，所有构建记录都会展示在这里。",
     "buildEmptyDesc": "定义了流水线之后，你可以手动触发执行一次构建任务，我们会给每个构建分配一个唯一ID，所有的构建记录都会在这里",
     "startBuildTips": "开始构建流水线",
     "loadingErr": "加载出错",
@@ -1209,6 +1210,8 @@
   "triggerRepo": "触发代码库",
   "noBuildHistory": "暂无执行历史",
   "buildNow": "立即执行",
+  "onlyDraftBuildHistoryTips": "流水线尚未发布，请先发布，再启动执行。",
+  "onlyDraftBuildHistoryIdTips": "发布流水线后即可触发执行构建任务",
   "noBuildHistoryTips": "定义流水线后即可手动触发执行一次构建任务。",
   "buildHistoryIdTips": "系统将为每次构建分配一个唯一 ID，所有构建记录都会展示在这里。",
   "triggerEventfilterTips": "触发器类型/事件类型/触发人",
@@ -1303,5 +1306,11 @@
   "disableSuc": "流水线【{0}】禁用成功",
   "paramFill": "填写参数",
   "stepPreview": "预览步骤",
-  "draftInfoTips": "当前草稿尚未发布，最近保存：{0} {1}"
+  "draftInfoTips": "当前草稿尚未发布，最近保存：{0} {1}",
+  "draft": "草稿",
+  "baseOn": "基于{0}",
+  "noReleaseYetTips": "流水线尚未发布，请发布后再执行",
+  "goEdit": "去编辑流水线",
+  "draftPipelineExecTips": "流水线尚未发布，请发布后再执行",
+  "scanQRCodeView": "使用蓝盾 APP<br/>扫码查看构件列表"
 }

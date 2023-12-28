@@ -31,36 +31,26 @@
                 </span>
             </bk-button>
             <!-- <more-actions /> -->
-            <span :class="['publish-pipeline-btn', {
-                'publish-diabled': !canRelease || isEditing
-            }]" @click="showReleaseSlider">
-                <i class="devops-icon icon-check-small" />
-                {{ $t('release') }}
-            </span>
+            <release-button
+                :can-release="canRelease && !isEditing"
+            />
         </aside>
-        <ReleasePipelineSideSlider
-            :version="currentVersion"
-            :base-version-name="baseVersionName"
-            :version-name="versionName"
-            v-model="isReleaseSliderShow"
-        />
     </div>
 </template>
 
 <script>
     import { mapActions, mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
-    // import MoreActions from './MoreActions.vue'
+    import ReleaseButton from './ReleaseButton'
     import ModeSwitch from '@/components/ModeSwitch'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
-    import ReleasePipelineSideSlider from './ReleasePipelineSideSlider'
+
     export default {
         components: {
             PipelineBreadCrumb,
-            // MoreActions,
-            ModeSwitch,
-            ReleasePipelineSideSlider
+            ReleaseButton,
+            ModeSwitch
         },
         data () {
             return {
@@ -227,11 +217,6 @@
                     pipelineSetting
                 )
             },
-            showReleaseSlider () {
-                if (this.canRelease && !this.isEditing) {
-                    this.isReleaseSliderShow = true
-                }
-            },
             goDraftDebugRecord () {
                 if (this.canDebug) {
                     this.$router.push({
@@ -275,27 +260,6 @@
     grid-auto-flow: column;
     height: 100%;
     align-items: center;
-    .publish-pipeline-btn {
-        height: 100%;
-        display: flex;
-        align-items: center;
-        color: white;
-        background: $primaryColor;
-        font-size: 14px;
-        padding: 0 20px;
-        cursor: pointer;
-        &.publish-diabled {
-            background: #DCDEE5;
-            cursor: not-allowed;
-        }
-        .icon-check-small {
-            font-size: 18px;
-        }
-        &.disabled {
-            background: #DCDEE5;
-            cursor: not-allowed;
-        }
-    }
   }
 }
 

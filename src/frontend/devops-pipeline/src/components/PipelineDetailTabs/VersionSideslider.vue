@@ -96,6 +96,7 @@
                 isLoading: false,
                 showVersionSideslider: false,
                 versionList: [],
+                versionMap: {},
                 searchKeyword: '',
                 activeVersion: null,
                 pagination: {
@@ -127,11 +128,7 @@
                 return this.activeVersion?.isDraft ?? false
             },
             draftBaseVersionName () {
-                if (this.activeVersion?.baseVersion) {
-                    const baseVersionName = this.versionList.find(item => item.version === this.activeVersion?.baseVersion)?.versionName ?? '--'
-                    return `V${this.activeVersion?.baseVersion} (${baseVersionName})`
-                }
-                return '--'
+                return this.getDraftBaseVersionName(this.activeVersion?.baseVersion)
             }
         },
         watch: {
@@ -167,11 +164,18 @@
                     pageSize: this.pagination.limit,
                     versionName: this.searchKeyword
                 }).then(({ records, count }) => {
+                    this.versionMap = records.reduce((map, item) => {
+                        map[item.version] = item
+                        return map
+                    }, {})
                     this.versionList = records.map(item => {
+                        const isDraft = item.status === 'COMMITTING'
+                        const displayName = this.generateDisplayName(item.version, item.versionName)
                         return {
                             ...item,
-                            displayName: `V${item.version} (${item.versionName})`,
-                            isDraft: item.status === 'COMMITTING',
+                            displayName: isDraft ? this.$t('draft') : displayName,
+                            description: isDraft ? this.$t('baseOn', [this.getDraftBaseVersionName(item.baseVersion)]) : (item.description || '--'),
+                            isDraft,
                             isRelease: item.status === 'RELEASED'
                         }
                     })
@@ -210,6 +214,16 @@
             },
             closeVersionSideSlider () {
                 this.showVersionSideslider = false
+            },
+            getDraftBaseVersionName (baseVersion) {
+                if (baseVersion) {
+                    const baseVersionName = this.versionMap[baseVersion]?.versionName ?? '--'
+                    return this.generateDisplayName(baseVersion, baseVersionName)
+                }
+                return '--'
+            },
+            generateDisplayName (version, versionName) {
+                return `V${version} (${versionName})`
             }
         }
     }

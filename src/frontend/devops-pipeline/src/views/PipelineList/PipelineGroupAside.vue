@@ -539,6 +539,7 @@
             flex: 1;
             display: flex;
             flex-direction: column;
+            overflow: auto;
             overflow: overlay;
         }
         .pipeline-group-aside-header {
@@ -583,7 +584,7 @@
                 border-bottom: 1px solid #DCDEE5;
             }
         }
-        
+
         .recycle-pipeline-group-footer {
             display: flex;
             align-items: center;
@@ -593,6 +594,7 @@
             cursor: pointer;
             font-size: 14px;
             width: 0;
+            flex-shrink: 0;
             &.expended {
                 width: 100%;
             }

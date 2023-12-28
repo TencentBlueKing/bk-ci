@@ -113,7 +113,8 @@ export default {
                             name: 'pipelinesHistory',
                             params: {
                                 projectId: item.projectId,
-                                pipelineId: item.pipelineId
+                                pipelineId: item.pipelineId,
+                                type: item.onlyDraft ? 'pipeline' : 'history'
                             }
                         },
                         latestBuildRoute: {

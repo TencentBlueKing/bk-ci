@@ -6,9 +6,11 @@
                     <router-link
                         class="pipeline-cell-link"
                         :to="pipeline.historyRoute"
+                        :title="pipeline.pipelineName"
                     >
                         {{pipeline.pipelineName}}
                     </router-link>
+                    <bk-tag v-if="pipeline.onlyDraft" theme="success" class="draft-tag">{{ $t('draft') }}</bk-tag>
                 </h3>
                 <p class="bk-pipeline-card-summary">
                     <span>
@@ -24,7 +26,18 @@
                 </p>
             </aside>
             <aside class="bk-pipeline-card-header-right-aside">
+                <router-link v-if="pipeline.onlyDraft" class="bk-pipeline-card-trigger-btn" :to="{
+                    name: 'pipelinesEdit',
+                    params: {
+                        projectId: pipeline.projectId,
+                        pipelineId: pipeline.pipelineId
+                    }
+                }"
+                >
+                    <i class="devops-icon icon-edit-line" />
+                </router-link>
                 <span
+                    v-else
                     :class="{
                         'bk-pipeline-card-trigger-btn': true,
                         'disabled': pipeline.disabled
@@ -206,7 +219,10 @@
                     color: $primaryColor;
                     margin: 0;
                     font-weight: normal;
-                    @include ellipsis();
+                    display: flex;
+                    .pipeline-cell-link {
+                        @include ellipsis();
+                    }
                 }
                 .bk-pipeline-card-summary {
                     display: flex;
@@ -247,6 +263,9 @@
                     &.disabled {
                         color: #DCDEE5;
                         cursor: not-allowed;
+                    }
+                    .icon-edit-line {
+                        font-size: 20px;
                     }
                     &.bk-pipeline-card-trigger-btn:not(.disabled):hover {
                         color: $primaryColor;

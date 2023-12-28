@@ -498,6 +498,14 @@
                                         on: {
                                             click: () => {
                                                 this.$bkInfo.close(instance.id)
+                                                this.$router.push({
+                                                    name: 'pipelinesHistory',
+                                                    params: {
+                                                        projectId,
+                                                        pipelineId,
+                                                        type: 'pipeline'
+                                                    }
+                                                })
                                             }
                                         }
                                     }, this.$t('查看流水线'))

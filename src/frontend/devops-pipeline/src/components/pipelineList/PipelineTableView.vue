@@ -27,7 +27,7 @@
             </bk-button>
         </div>
         <bk-table-column v-if="isPatchView" type="selection" width="60" fixed="left" :selectable="checkSelecteable"></bk-table-column>
-        <bk-table-column v-if="!isPatchView && !isDeleteView" width="20" fixed="left">
+        <bk-table-column v-if="!isPatchView && !isDeleteView" width="30" fixed="left">
             <template slot-scope="{ row, $index }">
                 <bk-button
                     v-show="showCollectIndex === $index || row.hasCollect"
@@ -57,10 +57,12 @@
                     v-else-if="!props.row.delete && !isDeleteView && props.row.historyRoute"
                     class="pipeline-cell-link"
                     :disabled="!props.row.hasPermission"
-                    :to="props.row.historyRoute">
+                    :to="props.row.historyRoute"
+                >
                     {{props.row.pipelineName}}
                 </router-link>
                 <span v-else>{{props.row.pipelineName}}</span>
+                <bk-tag v-if="props.row.onlyDraft" theme="success" class="draft-tag">{{ $t('draft') }}</bk-tag>
             </template>
         </bk-table-column>
         <bk-table-column v-if="allRenderColumnMap.ownGroupName && (isAllPipelineView || isPatchView || isDeleteView)" :width="tableWidthMap.viewNames" min-width="300" :label="$t('ownGroupName')" prop="viewNames">
@@ -197,6 +199,19 @@
                     @click="applyPermission(props.row)">
                     {{ $t('apply') }}
                 </bk-button>
+                <router-link
+                    v-else-if="props.row.onlyDraft"
+                    class="text-link"
+                    :to="{
+                        name: 'pipelinesEdit',
+                        params: {
+                            projectId: props.row.projectId,
+                            pipelineId: props.row.pipelineId
+                        }
+                    }"
+                >
+                    {{ $t('edit') }}
+                </router-link>
                 <template
                     v-else-if="props.row.hasPermission && !props.row.delete"
                 >

@@ -6,7 +6,9 @@
                 <build-num-switcher v-bind="buildNumConf" />
             </span>
         </pipeline-bread-crumb>
-        <aside class="pipeline-detail-right-aside">
+        <aside :class="['pipeline-detail-right-aside', {
+            'is-debug-exec-detail': isDebugExec
+        }]">
             <bk-button
                 v-if="isRunning"
                 :disabled="loading"
@@ -38,7 +40,10 @@
             >
                 {{ $t(isDebugExec ? "debug" : "exec") }}
             </bk-button>
-            <more-actions />
+            <release-button
+                v-if="isDebugExec"
+                :can-release="canRelease"
+            />
         </aside>
     </div>
 </template>
@@ -46,14 +51,14 @@
 <script>
     import { mapActions, mapGetters, mapState } from 'vuex'
     import BuildNumSwitcher from './BuildNumSwitcher'
-    import MoreActions from './MoreActions.vue'
+    import ReleaseButton from './ReleaseButton'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
 
     export default {
         components: {
             PipelineBreadCrumb,
             BuildNumSwitcher,
-            MoreActions
+            ReleaseButton
         },
         data () {
             return {
@@ -61,13 +66,16 @@
             }
         },
         computed: {
-            ...mapState('atom', ['execDetail', 'pipelineInfo']),
+            ...mapState('atom', ['execDetail', 'pipelineInfo', 'saveStatus']),
             ...mapGetters({
                 isCurPipelineLocked: 'atom/isCurPipelineLocked'
             }),
             ...mapState('pipelines', ['executeStatus']),
             isRunning () {
                 return ['RUNNING', 'QUEUE'].indexOf(this.execDetail?.status) > -1
+            },
+            canRelease () {
+                return (this.pipelineInfo?.canRelease ?? false) && !this.saveStatus
             },
             canManualStartup () {
                 return this.pipelineInfo?.canManualStartup ?? false
@@ -198,7 +206,8 @@
   width: 100%;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px 0 14px;
+  padding: 0 0 0 14px;
+  height: 100%;
   .exec-deatils-operate-divider {
     display: block;
     margin: 0 6px;
@@ -215,6 +224,11 @@
     display: grid;
     grid-gap: 10px;
     grid-auto-flow: column;
+    height: 100%;
+    align-items:center;
+    &:not(.is-debug-exec-detail) {
+        padding-right: 24px;
+    }
   }
 }
 </style>
