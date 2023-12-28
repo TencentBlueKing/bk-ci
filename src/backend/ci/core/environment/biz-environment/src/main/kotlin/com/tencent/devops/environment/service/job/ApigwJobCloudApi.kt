@@ -31,39 +31,6 @@ class ApigwJobCloudApi {
     @Value("\${job.jobCloudApiBaseUrl:#{null}}")
     val jobCloudApiBaseUrl: String? = null
 
-    @Value("\${job.executeScriptPath:#{\"/api/v3/fast_execute_script\"}}")
-    val executeScriptPath: String = ""
-
-    @Value("\${job.distributeFilePath:#{\"/api/v3/fast_transfer_file\"}}")
-    val distributeFilePath: String = ""
-
-    @Value("\${job.terminateTaskPath:#{\"/api/v3/operate_job_instance\"}}")
-    val terminateTaskPath: String = ""
-
-    @Value("\${job.queryJobInstanceStatusPath:#{\"/api/v3/get_job_instance_status\"}}")
-    val queryJobInstanceStatusPath: String = ""
-
-    @Value("\${job.queryJobInstanceLogsPath:#{\"/api/v3/batch_get_job_instance_ip_log\"}}")
-    val queryJobInstanceLogsPath: String = ""
-
-    @Value("\${job.createAccountPath:#{\"/api/v3/create_account\"}}")
-    val createAccountPath: String = ""
-
-    @Value("\${job.deleteAccountPath:#{\"/api/v3/delete_account\"}}")
-    val deleteAccountPath: String = ""
-
-    @Value("\${job.getAccountListPath:#{\"/api/v3/get_account_list\"}}")
-    val getAccountListPath: String = ""
-
-    @Value("\${job.getStepInstanceDetailPath:#{\"/api/v3/get_step_instance_detail\"}}")
-    val getStepInstanceDetailPath: String = ""
-
-    @Value("\${job.getStepInstanceStatusPath:#{\"/api/v3/get_step_instance_status\"}}")
-    val getStepInstanceStatusPath: String = ""
-
-    @Value("\${job.queryAgentInfoPath:#{\"/api/v3/query_agent_info\"}}")
-    val queryAgentInfoPath: String = ""
-
     companion object {
         private const val LOG_OUTPUT_MAX_LENGTH = 4000
 
@@ -76,6 +43,20 @@ class ApigwJobCloudApi {
         private const val GET_STEP_INSTANCE_STATUS =
             "/?bk_scope_type=%s&bk_scope_id=%s&job_instance_id=%s&step_instance_id=%s&execute_count=%s" +
                 "&batch=%s&max_host_num_per_group=%s&keyword=%s&search_ip=%s&status=%s&tag=%s"
+
+        private val postPathMap = mapOf(
+            "executeScript" to "/api/v3/fast_execute_script",
+            "distributeFile" to "/api/v3/fast_transfer_file",
+            "terminateTask" to "/api/v3/operate_job_instance",
+            "queryJobInstanceStatus" to "/api/v3/get_job_instance_status",
+            "queryJobInstanceLogs" to "/api/v3/batch_get_job_instance_ip_log",
+            "createAccount" to "/api/v3/create_account",
+            "deleteAccount" to "/api/v3/delete_account",
+            "getAccountList" to "/api/v3/get_account_list",
+            "getStepInstanceDetail" to "/api/v3/get_step_instance_detail",
+            "getStepInstanceStatus" to "/api/v3/get_step_instance_status",
+            "queryAgentStatusFromJob" to "/api/v3/query_agent_info"
+        )
 
         private val logger = LoggerFactory.getLogger(ApigwJobCloudApi::class.java)
 
@@ -106,20 +87,7 @@ class ApigwJobCloudApi {
             "\"bk_app_secret\": \"${bkAppSecret}\", \"bk_username\": \"$AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE\"}"
         val operationName = getThreadLocal()
         if (logger.isDebugEnabled) logger.debug("[getJobCloudAuthReq] operationName: $operationName")
-        val url = jobCloudApiBaseUrl + when (operationName) {
-            "executeScript" -> executeScriptPath
-            "distributeFile" -> distributeFilePath
-            "terminateTask" -> terminateTaskPath
-            "queryJobInstanceStatus" -> queryJobInstanceStatusPath
-            "queryJobInstanceLogs" -> queryJobInstanceLogsPath
-            "createAccount" -> createAccountPath
-            "deleteAccount" -> deleteAccountPath
-            "getAccountList" -> getAccountListPath
-            "getStepInstanceDetail" -> getStepInstanceDetailPath
-            "getStepInstanceStatus" -> getStepInstanceStatusPath
-            "queryAgentStatusFromJob" -> queryAgentInfoPath
-            else -> ""
-        }
+        val url = jobCloudApiBaseUrl + postPathMap[operationName]
         if (logger.isDebugEnabled) logger.debug("[getJobCloudAuthReq] url: $url")
         val bkScopeId = bkScopeId
         return JobCloudAuthenticationReq(

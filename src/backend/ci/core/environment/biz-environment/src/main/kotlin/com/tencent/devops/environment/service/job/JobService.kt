@@ -1038,9 +1038,10 @@ class JobService @Autowired constructor(
         val retryAgentInstallTaskRequest = AgentRetryAgentInstallTaskReq(
             instanceIdList = retryAgentInstallTaskReq.instanceIdList
         )
-        val agentRetryAgentInstallTaskRes: AgentAgentResult<AgentRetryAgentInstallTaskResult> = agentApi.executePostRequest(
-            retryAgentInstallTaskRequest, AgentRetryAgentInstallTaskResult::class.java, jobId
-        )
+        val agentRetryAgentInstallTaskRes: AgentAgentResult<AgentRetryAgentInstallTaskResult> =
+            agentApi.executePostRequest(
+                retryAgentInstallTaskRequest, AgentRetryAgentInstallTaskResult::class.java, jobId
+            )
         val retryAgentInstallTaskRes: AgentResult<RetryAgentInstallTaskResult> = AgentResult(
             code = agentRetryAgentInstallTaskRes.code,
             result = agentRetryAgentInstallTaskRes.result,
