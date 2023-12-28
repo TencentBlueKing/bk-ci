@@ -38,6 +38,7 @@ import com.tencent.devops.process.plugin.ElementBizPlugin
 import com.tencent.devops.process.plugin.annotation.ElementBiz
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
 import com.tencent.devops.process.plugin.trigger.util.CronExpressionUtils
+import com.tencent.devops.process.utils.PIPELINE_TIMER_DISABLE
 import org.quartz.CronExpression
 import org.slf4j.LoggerFactory
 
@@ -65,7 +66,12 @@ class TimerTriggerElementBizPlugin constructor(
         val crontabExpressions = mutableSetOf<String>()
         val params = (container as TriggerContainer).params.associate { it.id to it.defaultValue.toString() }
         logger.info("[$pipelineId]|$userId| Timer trigger [${element.name}] enable=${element.isElementEnable()}")
-        if (element.isElementEnable()) {
+        /*
+          在模板实例化时,有的流水线需要开启定时任务,有的流水线不需要开启,支持通过流水线变量控制定时任务的开启
+          通过参数禁用定时任务,在流水线参数上配置BK_CI_TIMER_DISABLE,禁用定时触发器插件
+         */
+        val isParamDisable = params[PIPELINE_TIMER_DISABLE]?.toBoolean() ?: false
+        if (element.isElementEnable() && !isParamDisable) {
 
             val eConvertExpressions = element.convertExpressions(params = params)
             if (eConvertExpressions.isEmpty()) {

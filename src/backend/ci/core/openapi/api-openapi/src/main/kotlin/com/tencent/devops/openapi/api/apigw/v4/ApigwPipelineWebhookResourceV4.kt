@@ -71,7 +71,7 @@ interface ApigwPipelineWebhookResourceV4 {
         @ApiParam("页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页大小", required = false)
+        @ApiParam("每页条数(默认20, 最大100)", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<PipelineWebhook>>

@@ -415,7 +415,7 @@ class PipelineTriggerEventDao {
         return with(T_PIPELINE_TRIGGER_DETAIL) {
             val conditions = mutableListOf(
                 EVENT_ID.`in`(eventIds),
-                PROJECT_ID.eq(PROJECT_ID)
+                PROJECT_ID.eq(projectId)
             )
             if (!pipelineName.isNullOrBlank()) {
                 conditions.add(PIPELINE_NAME.like("%$pipelineName%"))
