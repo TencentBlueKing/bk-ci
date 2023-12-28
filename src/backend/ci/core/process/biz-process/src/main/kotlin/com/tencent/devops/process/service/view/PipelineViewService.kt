@@ -545,7 +545,7 @@ class PipelineViewService @Autowired constructor(
             } else if (filter is PipelineViewFilterByPacRepo) {
                 val pipelineIds = pipelineYamlInfoDao.listPipelineIdWithDirectory(
                     dslContext = dslContext,
-                    projectId = pipelineView.projectId,
+                    projectId = projectId,
                     repoHashId = filter.repoHashId,
                     directory = filter.directory
                 )
