@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.store.api.image.op.pojo.ImageInitRequest
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.image.ImageDao
@@ -74,38 +75,45 @@ class SampleImageInitService @Autowired constructor(
         val imageCode = imageInitRequest?.imageCode ?: DEFAULT_IMAGE_CODE
         val ticketId = imageInitRequest?.ticketId
         logger.info("begin init image: $imageInitRequest")
-        // 创建demo项目
-        val demoProjectResult = client.get(ServiceProjectResource::class).get(projectCode)
-        if (demoProjectResult.isNotOk()) {
-            throw ErrorCodeException(
-                statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                errorCode = demoProjectResult.code.toString(),
-                defaultMessage = demoProjectResult.message
-            )
-        }
-        if (demoProjectResult.isOk() && demoProjectResult.data == null) {
-            val createDemoProjectResult = client.get(ServiceProjectResource::class).create(
-                userId = userId,
-                projectCreateInfo = ProjectCreateInfo(
-                    projectName = imageInitRequest?.projectCode ?: "Demo",
-                    englishName = projectCode,
-                    description = imageInitRequest?.projectDesc ?: "demo project"
-                )
-            )
-            if (createDemoProjectResult.isNotOk() || createDemoProjectResult.data != true) {
-                throw ErrorCodeException(
-                    statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                    errorCode = createDemoProjectResult.code.toString(),
-                    defaultMessage = createDemoProjectResult.message
-                )
-            }
-        }
-
-        // 新增镜像
+        // 判断镜像是否存在
         val imageCount = imageDao.countByCode(dslContext, imageCode)
         if (imageCount != 0) {
             return Result(true)
         }
+        // 创建demo项目
+        try {
+            val demoProjectResult = client.get(ServiceProjectResource::class).get(projectCode)
+            if (demoProjectResult.isNotOk()) {
+                throw ErrorCodeException(
+                    statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                    errorCode = demoProjectResult.code.toString(),
+                    defaultMessage = demoProjectResult.message
+                )
+            }
+            if (demoProjectResult.isOk() && demoProjectResult.data == null) {
+                val createDemoProjectResult = client.get(ServiceProjectResource::class).createExtSystem(
+                    userId = userId,
+                    projectInfo = ProjectCreateInfo(
+                        projectName = imageInitRequest?.projectCode ?: "Demo",
+                        englishName = projectCode,
+                        description = imageInitRequest?.projectDesc ?: "demo project"
+                    ),
+                    needAuth = false,
+                    needValidate = true,
+                    channel = ProjectChannelCode.BS
+                )
+                if (createDemoProjectResult.isNotOk() || createDemoProjectResult.data == null) {
+                    throw ErrorCodeException(
+                        statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                        errorCode = createDemoProjectResult.code.toString(),
+                        defaultMessage = createDemoProjectResult.message
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("imageInit , create project : $projectCode failed", e)
+        }
+        // 新增镜像
         val addImageResult = imageReleaseService.addMarketImage(
             userId = userId,
             imageCode = imageCode,

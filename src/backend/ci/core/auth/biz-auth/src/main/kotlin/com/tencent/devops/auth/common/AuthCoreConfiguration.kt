@@ -35,7 +35,9 @@ import com.tencent.devops.auth.refresh.listener.AuthRefreshEventListener
 import com.tencent.devops.auth.service.AuthUserBlackListService
 import com.tencent.devops.auth.utils.HostUtils
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
@@ -47,6 +49,7 @@ import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -60,6 +63,10 @@ class AuthCoreConfiguration {
 
     @Bean
     fun refreshDispatch(rabbitTemplate: RabbitTemplate) = AuthRefreshDispatch(rabbitTemplate)
+
+    @Bean
+    fun measureEventDispatcher(@Qualifier(EXTEND_RABBIT_TEMPLATE_NAME) extendRabbitTemplate: RabbitTemplate) =
+        MeasureEventDispatcher(extendRabbitTemplate)
 
     @Bean
     fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {

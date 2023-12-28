@@ -27,15 +27,14 @@
 
 package com.tencent.devops.environment.resources.thirdPartyAgent
 
-import com.sun.org.slf4j.internal.LoggerFactory
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.agent.NewHeartbeatInfo
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
@@ -44,8 +43,9 @@ import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
+import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
-import com.tencent.devops.environment.pojo.thirdPartyAgent.HeartbeatResponse
+import com.tencent.devops.environment.pojo.thirdPartyAgent.AskHeartbeatResponse
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
@@ -70,8 +70,7 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     private val agentPipelineService: AgentPipelineService,
     private val slaveGatewayService: SlaveGatewayService,
     private val permissionService: EnvironmentPermissionService,
-    private val nodeService: NodeService,
-    private val redisOperation: RedisOperation
+    private val nodeService: NodeService
 ) : ServiceThirdPartyAgentResource {
     override fun getAgentById(projectId: String, agentId: String): AgentResult<ThirdPartyAgent?> {
         return thirdPartyAgentService.getAgent(projectId, agentId)
@@ -223,20 +222,60 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(thirdPartyAgentService.getAgentDetail(userId, projectId, hashId))
     }
 
+    override fun listAgentBuilds(
+        userId: String,
+        projectId: String,
+        nodeHashId: String?,
+        nodeName: String?,
+        agentHashId: String?,
+        status: String?,
+        pipelineId: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<AgentBuildDetail>> {
+        val hashId = when {
+            nodeHashId != null -> nodeHashId
+            nodeName != null -> nodeService.getByDisplayName(
+                userId,
+                projectId,
+                nodeName,
+                listOf(NodeType.THIRDPARTY.name)
+            ).firstOrNull()?.nodeHashId
+
+            agentHashId != null -> thirdPartyAgentService.getAgent(
+                projectId = projectId,
+                agentHashId
+            ).data?.nodeId
+
+            else -> null
+        } ?: throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_NAME_OR_ID_INVALID)
+        return Result(
+            thirdPartyAgentService.listAgentBuilds(
+                userId = userId,
+                projectId = projectId,
+                nodeHashId = hashId,
+                status = status,
+                pipelineId = pipelineId,
+                page = page,
+                pageSize = pageSize
+            )
+        )
+    }
+
     override fun newHeartbeat(
         projectId: String,
         agentId: String,
         secretKey: String,
         heartbeatInfo: NewHeartbeatInfo
-    ): Result<HeartbeatResponse> {
-        return Result(thirdPartyAgentService.newHeartbeat(projectId, agentId, secretKey, heartbeatInfo))
+    ): Result<AskHeartbeatResponse> {
+        return Result(
+            AskHeartbeatResponse(
+                thirdPartyAgentService.newHeartbeat(projectId, agentId, secretKey, heartbeatInfo)
+            )
+        )
     }
 
     override fun getPipelines(projectId: String, agentId: String, secretKey: String): Result<ThirdPartyAgentPipeline?> {
         return Result(thirdPartyAgentPipelineService.getPipelines(projectId, agentId, secretKey))
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(ServiceThirdPartyAgentResourceImpl::class.java)
     }
 }
