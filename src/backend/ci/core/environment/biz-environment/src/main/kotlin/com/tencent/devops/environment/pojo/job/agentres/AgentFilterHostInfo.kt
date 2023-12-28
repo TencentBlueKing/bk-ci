@@ -45,7 +45,7 @@ data class AgentFilterHostInfo(
     val bkHostName: String?,
     @ApiModelProperty(value = "寻址方式，1: 0，静态 2: 1，动态")
     @JsonProperty("bk_addressing")
-    val bkAddressing: Int?,
+    val bkAddressing: String?,
     @ApiModelProperty(value = "操作系统，1：LINUX 2：WINDOWS 3：AIX 4：SOLARIS")
     @JsonProperty("os_type")
     val osType: String?,

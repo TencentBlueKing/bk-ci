@@ -39,7 +39,7 @@ data class HostForInstallAgent(
     @ApiModelProperty(value = "主机ID")
     val bkHostId: Int?,
     @ApiModelProperty(value = "寻址方式，1: 0，静态 2: 1，动态")
-    val bkAddressing: Int?,
+    val bkAddressing: String?,
     @ApiModelProperty(value = "接入点ID")
     val apId: Int?,
     @ApiModelProperty(value = "安装通道ID")

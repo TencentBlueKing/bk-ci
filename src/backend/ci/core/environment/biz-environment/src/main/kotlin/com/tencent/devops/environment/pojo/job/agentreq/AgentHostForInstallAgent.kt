@@ -47,7 +47,7 @@ data class AgentHostForInstallAgent(
     @ApiModelProperty(value = "寻址方式，1: 0，静态 2: 1，动态")
     @JsonProperty("bk_addressing")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    val bkAddressing: Int?,
+    val bkAddressing: String?,
     @ApiModelProperty(value = "接入点ID")
     @JsonProperty("ap_id")
     @JsonInclude(JsonInclude.Include.NON_NULL)
