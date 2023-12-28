@@ -55,9 +55,10 @@ type HttpClient struct {
 }
 
 type HttpResult struct {
-	Body   []byte
-	Status int
-	Error  error
+	Body         []byte
+	Status       int
+	Error        error
+	IgnoreDupLog bool
 }
 
 func IsSuccess(status int) bool {
@@ -115,7 +116,7 @@ func (r *HttpClient) SetForm(key, value string) *HttpClient {
 	return r
 }
 
-func (r *HttpClient) Body(body interface{}) *HttpClient {
+func (r *HttpClient) Body(body interface{}, ignoreDupLog bool) *HttpClient {
 	if nil == body {
 		r.body = bytes.NewReader([]byte(""))
 		return r
@@ -130,11 +131,20 @@ func (r *HttpClient) Body(body interface{}) *HttpClient {
 	}
 	r.body = bytes.NewReader(data)
 
-	logs.Info(fmt.Sprintf("url:[%s]|request body: %s", r.url, string(data)))
+	if ignoreDupLog {
+		logs.Info(fmt.Sprintf("url:[%s]|body repeat as before skip", r.url))
+	} else {
+		logs.Info(fmt.Sprintf("url:[%s]|request body: %s", r.url, string(data)))
+	}
 	return r
 }
 
-func (r *HttpClient) Execute() *HttpResult {
+type IgnoreDupLogResp struct {
+	Status int
+	Resp   string
+}
+
+func (r *HttpClient) Execute(ignoreDupLogResp *IgnoreDupLogResp) *HttpResult {
 	result := new(HttpResult)
 	defer func() {
 		if err := recover(); err != nil {
@@ -175,7 +185,12 @@ func (r *HttpClient) Execute() *HttpResult {
 
 	result.Body = body
 	result.Status = resp.StatusCode
-	logs.Info(fmt.Sprintf("url:[%s]|http status: %s, http respBody: %s", r.url, resp.Status, string(body)))
+	if ignoreDupLogResp != nil && resp.StatusCode == ignoreDupLogResp.Status && string(body) == ignoreDupLogResp.Resp {
+		result.IgnoreDupLog = true
+		logs.Info(fmt.Sprintf("url:[%s]|resp repeat as before skip", r.url))
+	} else {
+		logs.Info(fmt.Sprintf("url:[%s]|http status: %s, http respBody: %s", r.url, resp.Status, string(body)))
+	}
 
 	// 检查 http 错误异常
 	checkHttpStatusErr(resp.StatusCode, body)

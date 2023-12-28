@@ -27,7 +27,6 @@
 
 package com.tencent.devops.environment.resources.thirdPartyAgent
 
-import com.sun.org.slf4j.internal.LoggerFactory
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.OS
@@ -36,7 +35,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.agent.NewHeartbeatInfo
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
@@ -72,8 +70,7 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     private val agentPipelineService: AgentPipelineService,
     private val slaveGatewayService: SlaveGatewayService,
     private val permissionService: EnvironmentPermissionService,
-    private val nodeService: NodeService,
-    private val redisOperation: RedisOperation
+    private val nodeService: NodeService
 ) : ServiceThirdPartyAgentResource {
     override fun getAgentById(projectId: String, agentId: String): AgentResult<ThirdPartyAgent?> {
         return thirdPartyAgentService.getAgent(projectId, agentId)
@@ -280,9 +277,5 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
 
     override fun getPipelines(projectId: String, agentId: String, secretKey: String): Result<ThirdPartyAgentPipeline?> {
         return Result(thirdPartyAgentPipelineService.getPipelines(projectId, agentId, secretKey))
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(ServiceThirdPartyAgentResourceImpl::class.java)
     }
 }

@@ -2,7 +2,8 @@ BINDIR := $(CURDIR)/bin
 CMDDIR := $(CURDIR)/src/cmd
 BuildTime := $(shell date '+%Y-%m-%d.%H:%M:%S%Z')
 GitCommit := $(shell git rev-parse HEAD)
-AGENT_VERSION=v1.12.0-beta.39
+# 出包时通过变量写入为具体的版本号，需要符合如下写法
+AGENT_VERSION=v0.0.0-beta.0
 BUILD_FLAGS := -ldflags="-w -s -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.BuildTime=$(BuildTime) \
 -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.GitCommit=$(GitCommit) -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.AgentVersion=$(AGENT_VERSION)"
 
