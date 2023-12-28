@@ -70,10 +70,12 @@ class QueryAgentStatusService @Autowired constructor(
                 it?.status != "NOT_INSTALLED"
             }?.mapNotNull { it?.bkHostId } // 已安装agent，查job
         } else null
+        if (logger.isDebugEnabled) logger.debug("[getAgentVersions]installedHostIdList:$installedHostIdList")
         val installedAgentVersionList =
-            if (installedHostIdList.isNullOrEmpty())
+            if (installedHostIdList.isNullOrEmpty()) {
+                if (logger.isDebugEnabled) logger.debug("[getAgentVersions]installedHostIdList is null or empty.")
                 emptyList()
-            else {
+            } else {
                 val jobRes = getAgentVersionsFromJob(userId, projectId, installedHostIdList)
                 if (logger.isDebugEnabled) logger.debug("[getAgentVersions]jobRes:$jobRes")
                 jobRes.data?.agentInfoList?.map {
