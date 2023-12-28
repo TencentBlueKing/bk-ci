@@ -95,8 +95,10 @@ class RtxTaskAtom @Autowired constructor(
                         language = I18nUtil.getDefaultLocaleLanguage()
                     ),
                     tag = taskId,
-                    jobId = task.containerHashId,
-                    executeCount = task.executeCount ?: 1
+                    containerHashId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1,
+                    jobId = null,
+                    stepId = task.stepId
                 )
                 AtomResponse(
                     buildStatus = BuildStatus.FAILED,
@@ -116,8 +118,10 @@ class RtxTaskAtom @Autowired constructor(
                         language = I18nUtil.getDefaultLocaleLanguage()
                     ),
                     tag = taskId,
-                    jobId = task.containerHashId,
-                    executeCount = task.executeCount ?: 1
+                    containerHashId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1,
+                    jobId = null,
+                    stepId = task.stepId
                 )
                 AtomResponse(
                     buildStatus = BuildStatus.FAILED,
@@ -137,8 +141,10 @@ class RtxTaskAtom @Autowired constructor(
                         language = I18nUtil.getDefaultLocaleLanguage()
                     ),
                     tag = taskId,
-                    jobId = task.containerHashId,
-                    executeCount = task.executeCount ?: 1
+                    containerHashId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1,
+                    jobId = null,
+                    stepId = task.stepId
                 )
                 AtomResponse(
                     buildStatus = BuildStatus.FAILED,
@@ -184,8 +190,10 @@ class RtxTaskAtom @Autowired constructor(
                     params = arrayOf(message.body, receiversStr)
                 ),
                 tag = taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
 
             message.addAllReceivers(getReceivers(receiversStr))

@@ -68,11 +68,15 @@ class EmailTaskAtom @Autowired constructor(
         val taskId = task.taskId
         val containerId = task.containerHashId
         if (param.receivers.isEmpty()) {
-            buildLogPrinter.addRedLine(buildId,
-                MessageUtil.getMessageByLocale(
+            buildLogPrinter.addRedLine(
+                buildId = buildId,
+                message = MessageUtil.getMessageByLocale(
                     messageCode = BK_RECIPIENT_EMPTY,
                     language = I18nUtil.getDefaultLocaleLanguage()
-                ), taskId, containerId, task.executeCount ?: 1)
+                ), tag = taskId, containerHashId = containerId, executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
+            )
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -84,11 +88,15 @@ class EmailTaskAtom @Autowired constructor(
             )
         }
         if (param.body.isBlank()) {
-            buildLogPrinter.addRedLine(buildId,
-                MessageUtil.getMessageByLocale(
+            buildLogPrinter.addRedLine(
+                buildId = buildId,
+                message = MessageUtil.getMessageByLocale(
                     messageCode = BK_EMAIL_NOTIFICATION_CONTENT_EMPTY,
                     language = I18nUtil.getDefaultLocaleLanguage()
-                ), taskId, containerId, task.executeCount ?: 1)
+                ), tag = taskId, containerHashId = containerId, executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
+            )
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -100,11 +108,15 @@ class EmailTaskAtom @Autowired constructor(
             )
         }
         if (param.title.isBlank()) {
-            buildLogPrinter.addRedLine(buildId,
-                MessageUtil.getMessageByLocale(
+            buildLogPrinter.addRedLine(
+                buildId = buildId,
+                message = MessageUtil.getMessageByLocale(
                     messageCode = BK_MESSAGE_SUBJECT_EMPTY,
                     language = I18nUtil.getDefaultLocaleLanguage()
-                ), taskId, containerId, task.executeCount ?: 1)
+                ), tag = taskId, containerHashId = containerId, executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
+            )
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -132,7 +144,15 @@ class EmailTaskAtom @Autowired constructor(
         }
 
         val receiversStr = parseVariable(param.receivers.joinToString(","), runVariables)
-        buildLogPrinter.addLine(buildId, "send Email message ($emailBody) to $receiversStr", taskId, containerId, task.executeCount ?: 1)
+        buildLogPrinter.addLine(
+            buildId = buildId,
+            message = "send Email message ($emailBody) to $receiversStr",
+            tag = taskId,
+            containerHashId = containerId,
+            executeCount = task.executeCount ?: 1,
+            jobId = null,
+            stepId = task.stepId
+        )
 
         message.addAllReceivers(getSet(receiversStr))
         message.addAllCcs(getCcSet(parseVariable(param.cc.joinToString(","), runVariables)))

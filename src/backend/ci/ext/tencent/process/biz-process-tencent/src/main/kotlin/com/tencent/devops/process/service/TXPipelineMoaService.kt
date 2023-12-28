@@ -166,7 +166,8 @@ class TXPipelineMoaService @Autowired constructor(
             elementId = elementId,
             params = params,
             channelCode = ChannelCode.BS,
-            checkPermission = ChannelCode.isNeedAuth(ChannelCode.BS)
+            checkPermission = ChannelCode.isNeedAuth(ChannelCode.BS),
+            stepId = null
         )
         return Result(true)
     }

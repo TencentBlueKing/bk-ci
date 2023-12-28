@@ -127,6 +127,7 @@ class DevCloudBuildListener @Autowired constructor(
                     dispatchType = dispatchType,
                     customBuildEnv = dispatchMessage.customBuildEnv,
                     containerHashId = containerHashId,
+                    jobId = jobId,
                     persistence = (dispatchType as PublicDevCloudDispathcType).persistence ?: false
                 )
             )
@@ -135,12 +136,13 @@ class DevCloudBuildListener @Autowired constructor(
 
     private fun printLogs(dispatchMessage: DispatchMessage, message: String) {
         log(
-            buildLogPrinter,
-            dispatchMessage.event.buildId,
-            dispatchMessage.event.containerHashId,
-            dispatchMessage.event.vmSeqId,
-            message,
-            dispatchMessage.event.executeCount
+            buildLogPrinter = buildLogPrinter,
+            buildId = dispatchMessage.event.buildId,
+            containerHashId = dispatchMessage.event.containerHashId,
+            vmSeqId = dispatchMessage.event.vmSeqId,
+            message = message,
+            executeCount = dispatchMessage.event.executeCount,
+            jobId = dispatchMessage.event.jobId
         )
     }
 

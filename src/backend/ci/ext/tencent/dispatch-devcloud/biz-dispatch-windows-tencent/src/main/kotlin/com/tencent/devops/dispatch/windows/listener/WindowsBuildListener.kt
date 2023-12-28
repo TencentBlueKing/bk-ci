@@ -92,12 +92,13 @@ class WindowsBuildListener @Autowired constructor(
             // 如果没有找到合适的vm机器，则等待10秒后再执行, 总共执行6次
             try {
                 logRed(
-                    buildLogPrinter,
-                    dispatchMessage.event.buildId,
-                    dispatchMessage.event.containerHashId,
-                    dispatchMessage.event.vmSeqId,
-                    I18nUtil.getCodeLanMessage(BK_NO_FREE_WINDOWS_BUILD_RESOURCE),
-                    dispatchMessage.event.executeCount
+                    buildLogPrinter = buildLogPrinter,
+                    buildId = dispatchMessage.event.buildId,
+                    containerHashId = dispatchMessage.event.containerHashId,
+                    vmSeqId = dispatchMessage.event.vmSeqId,
+                    message = I18nUtil.getCodeLanMessage(BK_NO_FREE_WINDOWS_BUILD_RESOURCE),
+                    executeCount = dispatchMessage.event.executeCount,
+                    jobId = dispatchMessage.event.jobId
                 )
                 retry(sleepTimeInMS = 20000, retryTimes = 3)
             } catch (e: BuildFailureException) {
@@ -125,7 +126,8 @@ class WindowsBuildListener @Autowired constructor(
             containerHashId = dispatchMessage.event.containerHashId,
             vmSeqId = dispatchMessage.event.vmSeqId,
             message = "Windows resource type：$resourceType",
-            executeCount = dispatchMessage.event.executeCount
+            executeCount = dispatchMessage.event.executeCount,
+            jobId = dispatchMessage.event.jobId
         )
         log(
             buildLogPrinter = buildLogPrinter,
@@ -133,7 +135,8 @@ class WindowsBuildListener @Autowired constructor(
             containerHashId = dispatchMessage.event.containerHashId,
             vmSeqId = dispatchMessage.event.vmSeqId,
             message = "Windows build machine IP：${devCloudWindowsInfo?.ip}",
-            executeCount = dispatchMessage.event.executeCount
+            executeCount = dispatchMessage.event.executeCount,
+            jobId = dispatchMessage.event.jobId
         )
 
         logger.info(

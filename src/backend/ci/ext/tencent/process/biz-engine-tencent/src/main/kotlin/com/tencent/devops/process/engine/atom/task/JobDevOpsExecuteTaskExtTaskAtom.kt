@@ -99,7 +99,8 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
                 taskInstanceId = taskInstanceId,
                 operator = operator,
                 buildId = buildId,
-                executeCount = executeCount
+                executeCount = executeCount,
+                stepId = task.stepId
             )
         )
     }
@@ -125,7 +126,15 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
 
         if (param.taskId < 0) {
             logger.warn("taskId is not init of build($buildId)")
-            buildLogPrinter.addRedLine(buildId, "taskId is not init", taskId, containerId, executeCount)
+            buildLogPrinter.addRedLine(
+                buildId = buildId,
+                message = "taskId is not init",
+                tag = taskId,
+                containerHashId = containerId,
+                executeCount = executeCount,
+                jobId = null,
+                stepId = task.stepId
+            )
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -156,10 +165,15 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
 
         val executeTaskReq = ExecuteTaskRequest(operator, arrayListOf(), globalVars, jobTaskTemplateId, timeout)
         val taskInstanceId = jobClient.executeTaskDevops(executeTaskReq, projectId)
-        buildLogPrinter.addLine(buildId, MessageUtil.getMessageByLocale(
-            messageCode = BK_VIEW_RESULT,
-            language = I18nUtil.getDefaultLocaleLanguage()
-        ) + jobClient.getDetailUrl(projectId, taskInstanceId), task.taskId, containerId, executeCount)
+        buildLogPrinter.addLine(
+            buildId = buildId, message = MessageUtil.getMessageByLocale(
+                messageCode = BK_VIEW_RESULT,
+                language = I18nUtil.getDefaultLocaleLanguage()
+            ) + jobClient.getDetailUrl(projectId, taskInstanceId), tag = task.taskId,
+            containerHashId = containerId, executeCount = executeCount,
+            jobId = null,
+            stepId = task.stepId
+        )
         val startTime = System.currentTimeMillis()
 
         val buildStatus = checkStatus(
@@ -171,7 +185,8 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
             taskInstanceId = taskInstanceId,
             operator = operator,
             buildId = buildId,
-            executeCount = executeCount
+            executeCount = executeCount,
+            stepId = task.stepId
         )
 
         task.taskParams[STARTER] = operator
@@ -179,7 +194,15 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
         task.taskParams[BS_ATOM_START_TIME_MILLS] = startTime
 
         if (!BuildStatus.isFinish(buildStatus)) {
-            buildLogPrinter.addLine(buildId, "Waiting for job:$taskInstanceId", task.taskId, containerId, executeCount)
+            buildLogPrinter.addLine(
+                buildId = buildId,
+                message = "Waiting for job:$taskInstanceId",
+                tag = task.taskId,
+                containerHashId = containerId,
+                executeCount = executeCount,
+                jobId = null,
+                stepId = task.stepId
+            )
         }
 
         return if (buildStatus == BuildStatus.FAILED) AtomResponse(
@@ -199,17 +222,20 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
         buildId: String,
         taskId: String,
         containerId: String?,
-        executeCount: Int
+        executeCount: Int,
+        stepId: String?
     ): BuildStatus {
 
         if (System.currentTimeMillis() - startTime > maxRunningMills) {
             logger.warn("job getTimeout. getTimeout minutes:${maxRunningMills / 60000}")
             buildLogPrinter.addRedLine(
-                buildId,
-                "Job getTimeout:${maxRunningMills / 60000} Minutes",
-                taskId,
-                containerId,
-                executeCount
+                buildId = buildId,
+                message = "Job getTimeout:${maxRunningMills / 60000} Minutes",
+                tag = taskId,
+                containerHashId = containerId,
+                executeCount = executeCount,
+                jobId = null,
+                stepId = stepId
             )
             return BuildStatus.EXEC_TIMEOUT
         }
@@ -220,21 +246,25 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
             if (taskResult.success) {
                 logger.info("[$buildId]|SUCCEED|taskInstanceId=$taskId|${taskResult.msg}")
                 buildLogPrinter.addLine(
-                    buildId,
-                    "Job devops execute task success! detail: ${taskResult.msg}",
-                    taskId,
-                    containerId,
-                    executeCount
+                    buildId = buildId,
+                    message = "Job devops execute task success! detail: ${taskResult.msg}",
+                    tag = taskId,
+                    containerHashId = containerId,
+                    executeCount = executeCount,
+                    jobId = null,
+                    stepId = stepId
                 )
                 BuildStatus.SUCCEED
             } else {
                 logger.info("[$buildId]|FAIL|taskInstanceId=$taskId|${taskResult.msg}")
                 buildLogPrinter.addRedLine(
-                    buildId,
-                    "start execute task failed! detail: ${taskResult.msg}",
-                    taskId,
-                    containerId,
-                    executeCount
+                    buildId = buildId,
+                    message = "start execute task failed! detail: ${taskResult.msg}",
+                    tag = taskId,
+                    containerHashId = containerId,
+                    executeCount = executeCount,
+                    jobId = null,
+                    stepId = stepId
                 )
                 BuildStatus.FAILED
             }

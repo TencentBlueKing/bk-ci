@@ -170,12 +170,13 @@ class CodeCCDispatchListener @Autowired constructor(
     private fun printLogs(dispatchMessage: DispatchMessage, message: String) {
         try {
             log(
-                buildLogPrinter,
-                dispatchMessage.event.buildId,
-                dispatchMessage.event.containerHashId,
-                dispatchMessage.event.vmSeqId,
-                message,
-                dispatchMessage.event.executeCount
+                buildLogPrinter = buildLogPrinter,
+                buildId = dispatchMessage.event.buildId,
+                containerHashId = dispatchMessage.event.containerHashId,
+                vmSeqId = dispatchMessage.event.vmSeqId,
+                message = message,
+                executeCount = dispatchMessage.event.executeCount,
+                jobId = dispatchMessage.event.jobId
             )
         } catch (e: Throwable) {
             // 日志有问题就不打日志了，不能影响正常流程
