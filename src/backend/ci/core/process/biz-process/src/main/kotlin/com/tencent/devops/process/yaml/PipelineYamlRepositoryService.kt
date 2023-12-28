@@ -321,12 +321,14 @@ class PipelineYamlRepositoryService @Autowired constructor(
                     branchVersionAction = BranchVersionAction.INACTIVE
                 )
             }
-            pipelineYamlService.deleteBranchFile(
-                projectId = projectId,
-                repoHashId = repoHashId,
-                branch = branch,
-                filePath = filePath
-            )
+            if (!yamlFile.ref.isNullOrBlank()) {
+                pipelineYamlService.deleteBranchFile(
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    branch = yamlFile.ref,
+                    filePath = filePath
+                )
+            }
         } catch (ignored: Exception) {
             logger.error("Failed to delete pipeline yaml|$projectId|${action.format()}", ignored)
             throw ignored

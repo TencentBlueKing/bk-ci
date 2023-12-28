@@ -113,7 +113,8 @@ class EventActionFactory @Autowired constructor(
             }
             is GitMergeRequestEvent -> {
                 val tGitMrAction = TGitMrActionGit(
-                    apiService = tGitApiService
+                    apiService = tGitApiService,
+                    pipelineYamlService = pipelineYamlService
                 )
                 tGitMrAction
             }

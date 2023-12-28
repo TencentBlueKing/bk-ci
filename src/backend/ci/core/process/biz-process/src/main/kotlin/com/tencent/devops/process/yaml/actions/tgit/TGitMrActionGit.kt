@@ -36,6 +36,7 @@ import com.tencent.devops.common.webhook.pojo.code.git.isMrForkEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isMrMergeEvent
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
+import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.process.yaml.actions.BaseAction
 import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.actions.GitBaseAction
@@ -56,7 +57,8 @@ import org.slf4j.LoggerFactory
 import java.util.Base64
 
 class TGitMrActionGit(
-    private val apiService: TGitApiService
+    private val apiService: TGitApiService,
+    private val pipelineYamlService: PipelineYamlService
 ) : TGitActionGit(apiService), GitBaseAction {
 
     companion object {
@@ -135,7 +137,8 @@ class TGitMrActionGit(
 
         // 已经merged的直接返回目标分支的文件列表即可
         if (event.isMrMergeEvent()) {
-            return targetBranchYamlPathList.map { (name, blobId) ->
+            val yamlPathFiles = mutableListOf<YamlPathListEntry>()
+            val targetBranchFiles =  targetBranchYamlPathList.map { (name, blobId) ->
                 YamlPathListEntry(
                     name,
                     CheckType.NO_NEED_CHECK,
@@ -143,6 +146,24 @@ class TGitMrActionGit(
                     blobId
                 )
             }
+            yamlPathFiles.addAll(targetBranchFiles)
+            // 如果分支已经合入默认分支,则需要将源分支产生的分支版本删除
+            if (event.object_attributes.source_branch == data.context.defaultBranch) {
+                val sourceBranchFiles = pipelineYamlService.getAllBranchFilePath(
+                    projectId = data.setting.projectId,
+                    repoHashId = data.setting.repoHashId,
+                    branch = event.object_attributes.source_branch
+                ).map { filePath ->
+                    YamlPathListEntry(
+                        filePath,
+                        CheckType.NEED_DELETE,
+                        event.object_attributes.source_branch,
+                        null
+                    )
+                }
+                yamlPathFiles.addAll(sourceBranchFiles)
+            }
+            return yamlPathFiles
         }
 
         // 获取源分支文件列表
