@@ -65,7 +65,9 @@ class QueryAgentStatusService @Autowired constructor(
         val nodemanRes = getAgentVersionsFromNodeman(userId, projectId, hostIdList, ipList)
         val total = nodemanRes.data?.total ?: 0
         val installedHostIdList = if (total > 0) {
-            nodemanRes.data?.list?.filter { it?.status != "NOT_INSTALLED" }?.mapNotNull { it?.bkHostId } // 已安装agent，查job
+            nodemanRes.data?.list?.filter {
+                it?.status != "NOT_INSTALLED"
+            }?.mapNotNull { it?.bkHostId } // 已安装agent，查job
         } else null
         val installedAgentVersionList =
             if (installedHostIdList.isNullOrEmpty())
