@@ -172,7 +172,7 @@ interface UserJobResource {
         projectId: String,
         @ApiParam(value = "查询agent状态的请求信息", required = true)
         queryAgentStatusFromJobReq: QueryAgentStatusFromJobReq
-    ): AgentResult<QueryAgentStatusFromJobResult>
+    ): JobResult<QueryAgentStatusFromJobResult>
 
     @ApiOperation("查询agent状态的接口 - 从nodeman查询")
     @POST

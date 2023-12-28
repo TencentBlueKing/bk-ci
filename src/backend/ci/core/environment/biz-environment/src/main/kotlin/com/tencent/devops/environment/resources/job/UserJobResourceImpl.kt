@@ -109,7 +109,7 @@ class UserJobResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         queryAgentStatusFromJobReq: QueryAgentStatusFromJobReq
-    ): AgentResult<QueryAgentStatusFromJobResult> {
+    ): JobResult<QueryAgentStatusFromJobResult> {
         checkParamBlank(userId, projectId)
         return jobService.queryAgentStatusFromJob(userId, projectId, queryAgentStatusFromJobReq)
     }
