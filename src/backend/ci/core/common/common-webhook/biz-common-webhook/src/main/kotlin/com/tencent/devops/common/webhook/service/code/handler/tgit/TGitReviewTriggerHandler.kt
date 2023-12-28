@@ -248,6 +248,7 @@ class TGitReviewTriggerHandler(
     private fun getI18Code(state: String) = when (state) {
         GitReviewEvent.ACTION_APPROVED -> WebhookI18nConstants.TGIT_REVIEW_APPROVED_EVENT_DESC
         GitReviewEvent.ACTION_APPROVING -> WebhookI18nConstants.TGIT_REVIEW_APPROVING_EVENT_DESC
+        GitReviewEvent.ACTION_CLOSE -> WebhookI18nConstants.TGIT_REVIEW_CLOSED_EVENT_DESC
         GitReviewEvent.ACTION_CHANGE_DENIED -> WebhookI18nConstants.TGIT_REVIEW_CHANGE_DENIED_EVENT_DESC
         GitReviewEvent.ACTION_CHANGE_REQUIRED -> WebhookI18nConstants.TGIT_REVIEW_CHANGE_REQUIRED_EVENT_DESC
         GitReviewEvent.ACTION_EMPTY -> WebhookI18nConstants.TGIT_REVIEW_CREATED_EVENT_DESC

@@ -38,6 +38,7 @@ import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
@@ -73,7 +74,8 @@ class SimpleProjectServiceImpl @Autowired constructor(
     objectMapper: ObjectMapper,
     projectExtService: ProjectExtService,
     projectApprovalService: ProjectApprovalService,
-    clientTokenService: ClientTokenService
+    clientTokenService: ClientTokenService,
+    profile: Profile
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -88,7 +90,8 @@ class SimpleProjectServiceImpl @Autowired constructor(
     objectMapper = objectMapper,
     projectExtService = projectExtService,
     projectApprovalService = projectApprovalService,
-    clientTokenService = clientTokenService
+    clientTokenService = clientTokenService,
+    profile = profile
 ) {
 
     override fun getDeptInfo(userId: String): UserDeptDetail {
@@ -133,11 +136,13 @@ class SimpleProjectServiceImpl @Autowired constructor(
     override fun getProjectFromAuth(
         userId: String,
         accessToken: String?,
-        permission: AuthPermission
+        permission: AuthPermission,
+        resourceType: String?
     ): List<String>? {
         return projectPermissionService.filterProjects(
             userId = userId,
-            permission = permission
+            permission = permission,
+            resourceType = resourceType
         )
     }
 

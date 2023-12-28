@@ -225,6 +225,22 @@ class AuthResourceDao {
         }
     }
 
+    fun list(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        createUser: String
+    ): List<String> {
+        with(TAuthResource.T_AUTH_RESOURCE) {
+            return dslContext.select(RESOURCE_CODE).from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(CREATE_USER.eq(createUser))
+                .and(CREATE_TIME.ge(LocalDateTime.now().minusMinutes(1)))
+                .fetch(0, String::class.java)
+        }
+    }
+
     fun count(
         dslContext: DSLContext,
         projectCode: String,
@@ -261,13 +277,14 @@ class AuthResourceDao {
         projectCode: String,
         resourceType: String,
         resourceCodes: List<String>
-    ): List<String> {
+    ): Map<String, String> {
         return with(TAuthResource.T_AUTH_RESOURCE) {
-            dslContext.select(RESOURCE_CODE).from(this)
+            dslContext.select(RESOURCE_CODE, IAM_RESOURCE_CODE)
+                .from(this)
                 .where(PROJECT_CODE.eq(projectCode))
                 .and(RESOURCE_TYPE.eq(resourceType))
                 .and(RESOURCE_CODE.`in`(resourceCodes))
-                .fetch(0, String::class.java)
+                .fetchMap(RESOURCE_CODE, IAM_RESOURCE_CODE)
         }
     }
 

@@ -283,33 +283,37 @@ class MigrateResourceService @Autowired constructor(
         )
     }
 
-    fun migrateProjectMonitorResource(
-        projectCode: String,
-        gradeManagerId: String,
-        projectName: String
-    ) {
-        // 注册分级管理员监控权限资源
-        permissionGradeManagerService.modifyGradeManager(
-            gradeManagerId = gradeManagerId,
-            projectCode = projectCode,
-            projectName = projectName,
-            registerMonitorPermission = true
-        )
-    }
-
-    fun migrateMonitorResource(
+    fun migrateProjectResource(
         projectCode: String,
         projectName: String,
         gradeManagerId: String,
-        async: Boolean
+        registerMonitorPermission: Boolean,
+        migrateManagerGroup: Boolean,
+        migrateOtherGroup: Boolean = true
     ) {
-        if (async) {
-            migrateProjectMonitorResource(
-                projectCode = projectCode,
+        logger.info("migrate project resources:$projectCode|$projectName|$gradeManagerId")
+        if (migrateManagerGroup) {
+            permissionGradeManagerService.modifyGradeManager(
                 gradeManagerId = gradeManagerId,
-                projectName = projectName
+                projectCode = projectCode,
+                projectName = projectName,
+                registerMonitorPermission = registerMonitorPermission
             )
         }
+        if (migrateOtherGroup) {
+            migrateProjectOtherGroup(
+                projectCode = projectCode,
+                projectName = projectName,
+                registerMonitorPermission = registerMonitorPermission
+            )
+        }
+    }
+
+    fun migrateProjectOtherGroup(
+        projectCode: String,
+        projectName: String,
+        registerMonitorPermission: Boolean
+    ) {
         val defaultGroupConfigs = authResourceGroupConfigDao.get(
             dslContext = dslContext,
             resourceType = AuthResourceType.PROJECT.value,
@@ -332,7 +336,8 @@ class MigrateResourceService @Autowired constructor(
                 groupCode = groupConfig.groupCode,
                 iamResourceCode = projectCode,
                 resourceName = projectName,
-                iamGroupId = resourceGroupInfo.relationId.toInt()
+                iamGroupId = resourceGroupInfo.relationId.toInt(),
+                registerMonitorPermission = registerMonitorPermission
             )
         }
     }
