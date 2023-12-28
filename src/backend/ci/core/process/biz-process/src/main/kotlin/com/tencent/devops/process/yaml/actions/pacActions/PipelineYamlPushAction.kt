@@ -30,8 +30,6 @@ package com.tencent.devops.process.yaml.actions.pacActions
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.yaml.actions.BaseAction
 import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.actions.data.ActionData
@@ -48,11 +46,6 @@ import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 
 class PipelineYamlPushAction : BaseAction {
-
-    companion object {
-        // pac分支前缀
-        private const val PAC_BRANCH_PREFIX = "bk-ci-pipeline-"
-    }
 
     override val metaData: ActionMetaData = ActionMetaData(StreamObjectKind.UPLOAD)
 
@@ -122,8 +115,6 @@ class PipelineYamlPushAction : BaseAction {
     }
 
     override fun getChangeSet(): Set<String>? = null
-
-    override fun getDeleteYamlFiles(): Set<String>? = null
 
     fun pushYamlFile(
         pipelineId: String,

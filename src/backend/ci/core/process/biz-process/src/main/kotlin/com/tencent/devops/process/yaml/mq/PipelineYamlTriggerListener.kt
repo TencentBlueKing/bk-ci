@@ -124,15 +124,20 @@ class PipelineYamlTriggerListener @Autowired constructor(
         exceptionHandler.handle(action = action) {
             val yamlFile = action.data.context.yamlFile!!
             when (yamlFile.checkType) {
-                CheckType.NEED_CHECK ->
+                CheckType.NEED_CHECK -> {
                     pipelineYamlRepositoryService.deployYamlPipeline(projectId = projectId, action = action)
+                    pipelineYamlBuildService.start(projectId = projectId, action = action, scmType = event.scmType)
+                }
+
+                CheckType.NO_NEED_CHECK ->
+                    pipelineYamlBuildService.start(projectId = projectId, action = action, scmType = event.scmType)
 
                 CheckType.NEED_DELETE ->
                     pipelineYamlRepositoryService.deleteYamlPipeline(projectId = projectId, action = action)
 
                 else -> Unit
             }
-            pipelineYamlBuildService.start(projectId = projectId, action = action, scmType = event.scmType)
+
         }
     }
 }

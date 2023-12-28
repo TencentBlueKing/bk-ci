@@ -45,7 +45,7 @@ import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.webhook.WebhookEventFactory
 import com.tencent.devops.process.yaml.actions.EventActionFactory
 import com.tencent.devops.process.yaml.actions.data.PacRepoSetting
-import com.tencent.devops.process.yaml.actions.data.PacTriggerPipeline
+import com.tencent.devops.process.yaml.actions.data.YamlTriggerPipeline
 import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlEnableActionEvent
 import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlPushActionEvent
 import com.tencent.devops.process.yaml.mq.PipelineYamlEnableEvent
@@ -110,7 +110,7 @@ class PipelineYamlFacadeService @Autowired constructor(
         val path2PipelineExists = pipelineYamlInfoDao.getAllByRepo(
             dslContext = dslContext, projectId = projectId, repoHashId = repoHashId
         ).associate {
-            it.filePath to PacTriggerPipeline(
+            it.filePath to YamlTriggerPipeline(
                 projectId = it.projectId,
                 repoHashId = it.repoHashId,
                 filePath = it.filePath,
@@ -194,7 +194,7 @@ class PipelineYamlFacadeService @Autowired constructor(
             val path2PipelineExists = pipelineYamlInfoDao.getAllByRepo(
                 dslContext = dslContext, projectId = projectId, repoHashId = repoHashId
             ).associate {
-                it.filePath to PacTriggerPipeline(
+                it.filePath to YamlTriggerPipeline(
                     projectId = it.projectId,
                     repoHashId = it.repoHashId,
                     filePath = it.filePath,

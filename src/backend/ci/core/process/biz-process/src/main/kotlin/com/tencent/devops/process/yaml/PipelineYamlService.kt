@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.engine.dao.PipelineWebhookVersionDao
+import com.tencent.devops.process.engine.dao.PipelineYamlBranchFileDao
 import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
 import com.tencent.devops.process.engine.dao.PipelineYamlViewDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlInfo
@@ -54,6 +55,7 @@ class PipelineYamlService(
     private val pipelineYamlVersionDao: PipelineYamlVersionDao,
     private val pipelineWebhookVersionDao: PipelineWebhookVersionDao,
     private val pipelineYamlViewDao: PipelineYamlViewDao,
+    private val pipelineYamlBranchFileDao: PipelineYamlBranchFileDao,
     private val client: Client
 ) {
 
@@ -69,7 +71,7 @@ class PipelineYamlService(
         pipelineId: String,
         userId: String,
         blobId: String,
-        ref: String?,
+        ref: String,
         version: Int,
         versionName: String,
         viewId: Long?,
@@ -100,7 +102,7 @@ class PipelineYamlService(
             )
             if (viewId != null) {
                 pipelineYamlViewDao.save(
-                    dslContext = dslContext,
+                    dslContext = transactionContext,
                     projectId = projectId,
                     repoHashId = repoHashId,
                     directory = directory,
@@ -110,6 +112,13 @@ class PipelineYamlService(
             pipelineWebhookVersionDao.batchSave(
                 dslContext = transactionContext,
                 webhooks = webhooks
+            )
+            pipelineYamlBranchFileDao.save(
+                dslContext = transactionContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                branch = ref,
+                filePath = filePath
             )
         }
     }
@@ -121,7 +130,7 @@ class PipelineYamlService(
         pipelineId: String,
         userId: String,
         blobId: String,
-        ref: String?,
+        ref: String,
         version: Int,
         versionName: String,
         webhooks: List<PipelineWebhookVersion>
@@ -150,6 +159,13 @@ class PipelineYamlService(
             pipelineWebhookVersionDao.batchSave(
                 dslContext = transactionContext,
                 webhooks = webhooks
+            )
+            pipelineYamlBranchFileDao.save(
+                dslContext = transactionContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                branch = ref,
+                filePath = filePath
             )
         }
     }
@@ -315,6 +331,34 @@ class PipelineYamlService(
             projectId = projectId,
             repoHashId = repoHashId,
             directory = directory
+        )
+    }
+
+    fun deleteBranchFile(
+        projectId: String,
+        repoHashId: String,
+        branch: String,
+        filePath: String
+    ) {
+        pipelineYamlBranchFileDao.deleteFile(
+            dslContext = dslContext,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            branch = branch,
+            filePath = filePath
+        )
+    }
+
+    fun getAllBranchFilePath(
+        projectId: String,
+        repoHashId: String,
+        branch: String
+    ): List<String> {
+        return pipelineYamlBranchFileDao.getAllFilePath(
+            dslContext = dslContext,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            branch = branch,
         )
     }
 }

@@ -28,85 +28,68 @@
 
 package com.tencent.devops.process.yaml.actions.pacActions
 
-import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.process.yaml.actions.BaseAction
 import com.tencent.devops.process.yaml.actions.GitActionCommon
+import com.tencent.devops.process.yaml.actions.GitBaseAction
 import com.tencent.devops.process.yaml.actions.data.ActionData
 import com.tencent.devops.process.yaml.actions.data.ActionMetaData
-import com.tencent.devops.process.yaml.actions.data.EventCommonData
-import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlEnableActionEvent
 import com.tencent.devops.process.yaml.git.pojo.ApiRequestRetryInfo
-import com.tencent.devops.process.yaml.git.pojo.PacGitCred
-import com.tencent.devops.process.yaml.git.pojo.tgit.TGitCred
 import com.tencent.devops.process.yaml.git.service.PacGitApiService
 import com.tencent.devops.process.yaml.pojo.CheckType
 import com.tencent.devops.process.yaml.pojo.YamlContent
 import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
-import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 
-class PipelineYamlEnableAction : BaseAction {
-    override val metaData: ActionMetaData = ActionMetaData(StreamObjectKind.ENABLE)
+/**
+ * 分支或tag删除对应的action
+ */
+class PipelineYamlDeleteAction(
+    private val gitAction: GitBaseAction,
+    private val pipelineYamlService: PipelineYamlService
+) : BaseAction {
 
-    override lateinit var data: ActionData
-    fun event() = data.event as PipelineYamlEnableActionEvent
-
-    override lateinit var api: PacGitApiService
+    override val metaData: ActionMetaData = gitAction.metaData
+    override var data: ActionData = gitAction.data
+    override val api: PacGitApiService = gitAction.api
 
     override fun init(): BaseAction? {
-        return initCommonData()
-    }
-
-    private fun initCommonData(): PipelineYamlEnableAction {
-        val event = event()
-        val gitProjectId = getGitProjectIdOrName()
-        val defaultBranch = api.getGitProjectInfo(
-            cred = this.getGitCred(),
-            gitProjectId = gitProjectId,
-            retry = ApiRequestRetryInfo(true)
-        )!!.defaultBranch!!
-        this.data.eventCommon = EventCommonData(
-            gitProjectId = gitProjectId,
-            userId = event.userId,
-            branch = defaultBranch,
-            projectName = data.setting.projectName,
-            scmType = event.scmType
-        )
-        this.data.context.defaultBranch = defaultBranch
+        gitAction.init()
         return this
     }
 
-    override fun getGitProjectIdOrName(gitProjectId: String?) = gitProjectId ?: data.setting.projectName
+    override fun getGitProjectIdOrName(gitProjectId: String?) = gitAction.getGitProjectIdOrName(gitProjectId)
 
-    override fun getGitCred(personToken: String?): PacGitCred {
-        val event = event()
-        return when (event.scmType) {
-            ScmType.CODE_GIT, ScmType.CODE_TGIT -> TGitCred(
-                userId = event().userId,
-                accessToken = personToken,
-                useAccessToken = personToken == null
-            )
-            else -> TODO("对接其他代码库平台时需要补充")
-        }
-    }
+    override fun getGitCred(personToken: String?) = gitAction.getGitCred(personToken)
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
-        return GitActionCommon.getYamlPathList(
-            action = this,
-            gitProjectId = this.getGitProjectIdOrName(),
-            ref = this.data.eventCommon.branch
+        val yamlPathList = mutableListOf<YamlPathListEntry>()
+        val defaultBranchFiles = GitActionCommon.getYamlPathList(
+            action = gitAction,
+            gitProjectId = getGitProjectIdOrName(),
+            ref = data.context.defaultBranch
         ).map { (name, blobId) ->
-            YamlPathListEntry(name, CheckType.NEED_CHECK, this.data.eventCommon.branch, blobId)
+            YamlPathListEntry(name, CheckType.NO_NEED_CHECK, data.context.defaultBranch, blobId)
         }
+        val deleteFileBranchFiles = pipelineYamlService.getAllBranchFilePath(
+            projectId = gitAction.data.setting.projectId,
+            repoHashId = gitAction.data.setting.repoHashId,
+            branch = gitAction.data.eventCommon.branch
+        ).map { filePath ->
+            YamlPathListEntry(filePath, CheckType.NEED_DELETE, gitAction.data.eventCommon.branch, null)
+        }
+        yamlPathList.addAll(defaultBranchFiles)
+        yamlPathList.addAll(deleteFileBranchFiles)
+        return yamlPathList
     }
 
     override fun getYamlContent(fileName: String): YamlContent {
         return YamlContent(
-            ref = data.eventCommon.branch,
+            ref = data.context.defaultBranch!!,
             content = api.getFileContent(
-                cred = this.getGitCred(),
+                cred = gitAction.getGitCred(),
                 gitProjectId = getGitProjectIdOrName(),
                 fileName = fileName,
-                ref = data.eventCommon.branch,
+                ref = data.context.defaultBranch!!,
                 retry = ApiRequestRetryInfo(true)
             )
         )

@@ -23,23 +23,18 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.process.yaml.actions.data
+package com.tencent.devops.common.pipeline.enums
 
-/**
- * pac触发时需要的流水线数据
- * @param projectId 项目ID
- * @param repoHashId 代码库hash id
- * @param filePath 流水线对应的yaml路径
- * @param pipelineId 流水线ID
- * @param userId 触发者
- */
-data class PacTriggerPipeline(
-    val projectId: String,
-    val repoHashId: String,
-    val filePath: String,
-    val pipelineId: String,
-    val userId: String
-)
+enum class VersionStatus(val statusName: String) {
+    RELEASED("已发布版本"),
+    COMMITTING("草稿版本"),
+    BRANCH("分支版本");
+}
+
+enum class BranchVersionAction(val statusName: String) {
+    ACTIVE("活跃分支（可以被代码推送直接更新）"),
+    INACTIVE("不活跃分支（已被发布或已被删除）"),
+    CONFLICT("有冲突分支（落后于主干无法直接合入）");
+}

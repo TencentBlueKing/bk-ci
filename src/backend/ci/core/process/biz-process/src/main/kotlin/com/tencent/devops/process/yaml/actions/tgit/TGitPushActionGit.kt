@@ -100,21 +100,11 @@ class TGitPushActionGit(
                 ref = this.data.eventCommon.branch, blobId = blobId
             )
         }.toMutableList()
-        if (!data.context.deleteCiSet.isNullOrEmpty()) {
-            // 获取默认文件文件列表
-            val defaultBranchYamlList = if (data.eventCommon.branch != data.context.defaultBranch) {
-                GitActionCommon.getYamlPathList(
-                    action = this,
-                    gitProjectId = this.getGitProjectIdOrName(),
-                    ref = data.context.defaultBranch
-                ).map { it.first }
-            } else {
-                emptyList()
-            }
-            // yaml在默认分支不存在，文件删除直接删除流水线
-            val deleteYamlPathList = data.context.deleteCiSet?.filter {
-                !defaultBranchYamlList.contains(it)
-            }?.map {
+        // 非默认分支删除流水线,需要删除分支版本
+        if (!data.context.deleteCiSet.isNullOrEmpty() &&
+            data.eventCommon.branch != data.context.defaultBranch
+        ) {
+            val deleteYamlPathList = data.context.deleteCiSet?.map {
                 YamlPathListEntry(
                     yamlPath = it,
                     checkType = CheckType.NEED_DELETE,

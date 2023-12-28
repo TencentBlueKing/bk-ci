@@ -31,6 +31,7 @@ package com.tencent.devops.process.yaml
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
@@ -284,16 +285,28 @@ class PipelineYamlRepositoryService @Autowired constructor(
         )
     }
 
+    /**
+     * 删除yaml文件
+     *
+     * 1.如果是默认分支删除,不做处理
+     * 2.如果是非默认分支删除
+     *   - 当前流水线有正式版本,分支版本置为删除
+     *   - 当前流水线没有正式版本，分支版本变为草稿版本
+     */
     fun deleteYamlPipeline(
         projectId: String,
         action: BaseAction
     ) {
+        // 如果是默认分支删除yaml,不做任何处理
+        if (action.data.context.defaultBranch != action.data.eventCommon.branch) {
+            return
+        }
         val yamlFile = action.data.context.yamlFile!!
         val filePath = yamlFile.yamlPath
         val repoHashId = action.data.setting.repoHashId
-        val triggerPipeline = action.data.context.pipeline
+        val branch = action.data.eventCommon.branch
         val userId = action.data.getUserId()
-        logger.info("deleteYamlPipeline|$userId|$projectId|pipeline:$triggerPipeline|yamlFile:$yamlFile")
+        logger.info("deleteYamlPipeline|$userId|$projectId|yamlFile:$yamlFile")
         try {
             val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
                 projectId = projectId,
@@ -301,17 +314,19 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 filePath = filePath
             )
             if (pipelineYamlInfo != null) {
-                pipelineInfoFacadeService.deletePipeline(
+                pipelineInfoFacadeService.updateBranchVersion(
                     userId = userId,
                     projectId = projectId,
-                    pipelineId = pipelineYamlInfo.pipelineId
-                )
-                pipelineYamlService.delete(
-                    projectId = projectId,
-                    repoHashId = repoHashId,
-                    filePath = filePath
+                    pipelineId = pipelineYamlInfo.pipelineId,
+                    branchVersionAction = BranchVersionAction.INACTIVE
                 )
             }
+            pipelineYamlService.deleteBranchFile(
+                projectId = projectId,
+                repoHashId = repoHashId,
+                branch = branch,
+                filePath = filePath
+            )
         } catch (ignored: Exception) {
             logger.error("Failed to delete pipeline yaml|$projectId|${action.format()}", ignored)
             throw ignored
@@ -396,7 +411,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 pipelineId = pipelineId,
                 userId = userId,
                 blobId = yamlFile.blobId!!,
-                ref = yamlFile.ref,
+                ref = yamlFile.ref!!,
                 version = version,
                 versionName = versionName,
                 viewId = viewId,
@@ -415,7 +430,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
                     repoHashId = repoHashId,
                     filePath = yamlFile.yamlPath,
                     blobId = yamlFile.blobId,
-                    ref = yamlFile.ref,
+                    ref = yamlFile.ref!!,
                     pipelineId = pipelineId,
                     version = version,
                     versionName = versionName,

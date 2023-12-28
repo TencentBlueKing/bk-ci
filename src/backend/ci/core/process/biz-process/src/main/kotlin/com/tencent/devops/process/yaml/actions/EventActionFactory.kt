@@ -39,10 +39,13 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
+import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.process.yaml.actions.data.ActionData
 import com.tencent.devops.process.yaml.actions.data.EventCommonData
 import com.tencent.devops.process.yaml.actions.data.PacRepoSetting
 import com.tencent.devops.process.yaml.actions.data.context.PacTriggerContext
+import com.tencent.devops.process.yaml.actions.pacActions.PipelineYamlDeleteAction
 import com.tencent.devops.process.yaml.actions.pacActions.PipelineYamlEnableAction
 import com.tencent.devops.process.yaml.actions.pacActions.PipelineYamlPushAction
 import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlEnableActionEvent
@@ -62,7 +65,8 @@ import org.springframework.stereotype.Service
 class EventActionFactory @Autowired constructor(
     private val tGitApiService: TGitApiService,
     private val objectMapper: ObjectMapper,
-    private val client: Client
+    private val client: Client,
+    private val pipelineYamlService: PipelineYamlService
 ) {
 
     companion object {
@@ -101,7 +105,11 @@ class EventActionFactory @Autowired constructor(
                 val tGitPushAction = TGitPushActionGit(
                     apiService = tGitApiService
                 )
-                tGitPushAction
+                if (event.isDeleteBranch()) {
+                    PipelineYamlDeleteAction(gitAction = tGitPushAction, pipelineYamlService = pipelineYamlService)
+                } else {
+                    tGitPushAction
+                }
             }
             is GitMergeRequestEvent -> {
                 val tGitMrAction = TGitMrActionGit(

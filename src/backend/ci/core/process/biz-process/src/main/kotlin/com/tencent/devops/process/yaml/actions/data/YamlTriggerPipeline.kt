@@ -23,35 +23,23 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.process.yaml.actions.data.context
-
-import com.tencent.devops.process.yaml.actions.data.YamlTriggerPipeline
-import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
-import com.tencent.devops.scm.pojo.GitMrInfo
-import com.tencent.devops.scm.pojo.GitMrReviewInfo
+package com.tencent.devops.process.yaml.actions.data
 
 /**
- * pac触发过程中需要用到的上下文数据
- * 注：上下文对象涉及消息传递时，需要确保不是确定对象
- *
- * @param hookRequestId webhook触发的requestId,对应代码库T_REPOSITORY_WEBHOOK_REQUEST的requestId
- * @param pipeline 触发流水线
- * @param yamlFile yaml文件信息
- * @param eventId 触发事件ID,对应T_PIPELINE_TRIGGER_EVENT的eventId
+ * pac触发时需要的流水线数据
+ * @param projectId 项目ID
+ * @param repoHashId 代码库hash id
+ * @param filePath 流水线对应的yaml路径
+ * @param pipelineId 流水线ID
+ * @param userId 触发者
  */
-data class PacTriggerContext(
-    var hookRequestId: Long? = null,
-    var eventId: Long? = null,
-    var pipeline: YamlTriggerPipeline? = null,
-    var yamlFile: YamlPathListEntry? = null,
-    // 默认分支
-    var defaultBranch: String? = null,
-    // 缓存
-    var changeSet: Set<String>? = null,
-    // 删除ci文件列表
-    var deleteCiSet: Set<String>? = null,
-    var gitMrReviewInfo: GitMrReviewInfo? = null,
-    var gitMrInfo: GitMrInfo? = null
+data class YamlTriggerPipeline(
+    val projectId: String,
+    val repoHashId: String,
+    val filePath: String,
+    val pipelineId: String,
+    val userId: String
 )
