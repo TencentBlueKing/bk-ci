@@ -108,7 +108,7 @@ class AgentApi {
         if (logger.isDebugEnabled)
             logger.debug("[${getThreadLocal()}] headers: $headers, url: $url, body: $requestContent")
         val resultFromRes = getResultFromRes(OkhttpUtils.doPost(url, requestContent, headers), classOfU)
-        if (logger.isDebugEnabled) logger.debug("[${getThreadLocal()}] resultFromRes: $resultFromRes")
+        if (logger.isDebugEnabled) logger.debug("[executePostRequest] resultFromRes: $resultFromRes")
         return resultFromRes
     }
 

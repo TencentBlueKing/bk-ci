@@ -63,6 +63,7 @@ class QueryAgentStatusService @Autowired constructor(
         val hostIdList = ipAndHostIdList.mapNotNull { it.bkHostId }
         val ipList = ipAndHostIdList.mapNotNull { it.ip }
         val nodemanRes = getAgentVersionsFromNodeman(userId, projectId, hostIdList, ipList)
+        if (logger.isDebugEnabled) logger.debug("[getAgentVersions]nodemanRes:$nodemanRes")
         val total = nodemanRes.data?.total ?: 0
         val installedHostIdList = if (total > 0) {
             nodemanRes.data?.list?.filter {
@@ -74,6 +75,7 @@ class QueryAgentStatusService @Autowired constructor(
                 emptyList()
             else {
                 val jobRes = getAgentVersionsFromJob(userId, projectId, installedHostIdList)
+                if (logger.isDebugEnabled) logger.debug("[getAgentVersions]jobRes:$jobRes")
                 jobRes.data?.agentInfoList?.map {
                     AgentVersion(
                         bkHostId = it.bkHostId,
@@ -83,6 +85,8 @@ class QueryAgentStatusService @Autowired constructor(
                     )
                 }
             }
+        if (logger.isDebugEnabled)
+            logger.debug("[getAgentVersions]installedAgentVersionList:$installedAgentVersionList")
         val notInstalledAgentHostIdList = nodemanRes.data?.list?.filter { // 未安装agent，不再查job了
             it?.status == "NOT_INSTALLED"
         }?.mapNotNull { it?.bkHostId }
@@ -97,8 +101,6 @@ class QueryAgentStatusService @Autowired constructor(
                     )
                 }
             }
-        if (logger.isDebugEnabled)
-            logger.debug("[getAgentVersions]installedAgentVersionList:$installedAgentVersionList")
         if (logger.isDebugEnabled)
             logger.debug("[getAgentVersions]notInstalledAgentList:$notInstalledAgentList")
         return (installedAgentVersionList ?: emptyList()) + notInstalledAgentList
