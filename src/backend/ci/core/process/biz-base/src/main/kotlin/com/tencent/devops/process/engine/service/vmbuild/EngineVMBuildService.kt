@@ -549,8 +549,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         language = I18nUtil.getDefaultLocaleLanguage()
                     ),
                     tag = task.taskId,
-                    jobId = task.containerHashId,
-                    executeCount = task.executeCount ?: 1
+                    containerHashId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1,
+                    jobId = null,
+                    stepId = task.stepId
                 )
                 BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
             }
@@ -743,8 +745,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     buildId = buildId,
                     message = updateTaskStatusInfo.message,
                     tag = updateTaskStatusInfo.taskId,
-                    jobId = updateTaskStatusInfo.containerHashId,
-                    executeCount = updateTaskStatusInfo.executeCount
+                    containerHashId = updateTaskStatusInfo.containerHashId,
+                    executeCount = updateTaskStatusInfo.executeCount,
+                    jobId = null,
+                    stepId = updateTaskStatusInfo.stepId
                 )
             }
         }
@@ -784,8 +788,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         language = I18nUtil.getDefaultLocaleLanguage()
                     ),
                     tag = task.taskId,
-                    jobId = task.containerHashId,
-                    executeCount = task.executeCount ?: 1
+                    containerHashId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1,
+                    jobId = null,
+                    stepId = task.stepId
                 )
             }
         }
@@ -986,8 +992,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     buildId = buildId,
                     message = errMsg,
                     tag = taskId,
-                    jobId = containerHashId,
-                    executeCount = executeCount ?: 1
+                    containerHashId = containerHashId,
+                    executeCount = executeCount ?: 1,
+                    jobId = null,
+                    stepId = stepId
                 )
             }
         }

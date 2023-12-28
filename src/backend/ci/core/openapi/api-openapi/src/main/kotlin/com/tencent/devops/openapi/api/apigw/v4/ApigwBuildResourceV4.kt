@@ -157,7 +157,7 @@ interface ApigwBuildResourceV4 {
         @ApiParam("构建号(构建ID和构建号，二选其一填入)", required = false)
         @QueryParam("buildNumber")
         buildNumber: Int?,
-        @ApiParam("要重试或跳过的插件ID，或者StageId", required = false)
+        @ApiParam("要重试或跳过的插件ID，或者StageId, 或stepId", required = false)
         @QueryParam("taskId")
         taskId: String? = null,
         @ApiParam("仅重试所有失败Job", required = false)
@@ -487,11 +487,14 @@ interface ApigwBuildResourceV4 {
         @ApiParam("构建ID（b-开头）", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @ApiParam("步骤Id（e-开头）", required = true)
+        @ApiParam("步骤Id（e-开头）", required = false)
         @QueryParam("elementId")
-        elementId: String,
+        elementId: String?,
         @ApiParam("审核信息", required = true)
-        params: ReviewParam
+        params: ReviewParam,
+        @ApiParam("对应stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?
     ): Result<Boolean>
 
     @ApiOperation("获取流水线手动启动分页的参数", tags = ["v4_app_build_startOptions", "v4_user_build_startOptions"])

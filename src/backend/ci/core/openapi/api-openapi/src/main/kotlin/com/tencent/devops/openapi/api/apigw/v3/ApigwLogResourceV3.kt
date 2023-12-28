@@ -82,12 +82,18 @@ interface ApigwLogResourceV3 {
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         elementId: String?,
+        @ApiParam("对应containerHashId (c-开头)", required = false)
+        @QueryParam("containerHashId")
+        containerHashId: String?,
+        @ApiParam("执行次数", required = false)
+        @QueryParam("executeCount")
+        executeCount: Int?,
         @ApiParam("对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
-        @ApiParam("执行次数", required = false)
-        @QueryParam("executeCount")
-        executeCount: Int?
+        @ApiParam("对应stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?
     ): Result<QueryLogs>
 
     @ApiOperation("获取更多日志", tags = ["v3_app_log_more", "v3_user_log_more"])
@@ -131,11 +137,17 @@ interface ApigwLogResourceV3 {
         @QueryParam("tag")
         tag: String?,
         @ApiParam("对应containerHashId (c-开头)", required = false)
-        @QueryParam("jobId")
-        jobId: String?,
+        @QueryParam("containerHashId")
+        containerHashId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?
+        executeCount: Int?,
+        @ApiParam("对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
+        @ApiParam("对应stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?
     ): Result<QueryLogs>
 
     @ApiOperation("获取某行后的日志", tags = ["v3_user_log_after", "v3_app_log_after"])
@@ -170,11 +182,17 @@ interface ApigwLogResourceV3 {
         @QueryParam("tag")
         tag: String?,
         @ApiParam("对应containerHashId (c-开头)", required = false)
-        @QueryParam("jobId")
-        jobId: String?,
+        @QueryParam("containerHashId")
+        containerHashId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?
+        executeCount: Int?,
+        @ApiParam("对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
+        @ApiParam("对应stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?
     ): Result<QueryLogs>
 
     @ApiOperation(
@@ -207,11 +225,17 @@ interface ApigwLogResourceV3 {
         @QueryParam("tag")
         tag: String?,
         @ApiParam("对应containerHashId (c-开头)", required = false)
-        @QueryParam("jobId")
-        jobId: String?,
+        @QueryParam("containerHashId")
+        containerHashId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?
+        executeCount: Int?,
+        @ApiParam("对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
+        @ApiParam("对应stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?
     ): Response
 
     @ApiOperation("获取插件的的日志状态", tags = ["v3_app_log_mode", "v3_user_log_mode"])
@@ -238,10 +262,13 @@ interface ApigwLogResourceV3 {
         buildId: String,
         @ApiParam("对应elementId (e-开头)", required = true)
         @QueryParam("tag")
-        tag: String,
+        tag: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?
+        executeCount: Int?,
+        @ApiParam("对应stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?
     ): Result<QueryLogStatus>
 
     @ApiOperation("获取当前构建的最大行号", tags = ["v3_app_log_line_num", "v3_user_log_line_num"])

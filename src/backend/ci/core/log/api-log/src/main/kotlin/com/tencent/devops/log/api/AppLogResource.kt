@@ -140,9 +140,9 @@ interface AppLogResource {
         @ApiParam("指定subTag", required = false)
         @QueryParam("subTag")
         subTag: String?,
-        @ApiParam("对应jobId", required = false)
+        @ApiParam("对应containerHashId", required = false)
         @QueryParam("jobId")
-        jobId: String?,
+        containerHashId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?

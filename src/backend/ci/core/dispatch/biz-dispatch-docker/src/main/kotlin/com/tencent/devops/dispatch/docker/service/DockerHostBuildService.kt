@@ -232,10 +232,12 @@ class DockerHostBuildService @Autowired constructor(
             )
 
             // 更新dockerTask表(保留之前逻辑)
-            pipelineDockerTaskDao.updateStatus(dslContext,
+            pipelineDockerTaskDao.updateStatus(
+                dslContext,
                 record.buildId,
                 record.vmSeqId,
-                if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
+                if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE
+            )
         } catch (e: Exception) {
             LOG.warn("Finish the docker build(${record.buildId}) error.", e)
         }
@@ -254,8 +256,10 @@ class DockerHostBuildService @Autowired constructor(
                 val timeoutPoolTask = pipelineDockerPoolDao.getTimeOutPool(dslContext)
                 LOG.info("CLEAR_TIME_OUT_BUILD_POOL|pool_size=${timeoutPoolTask.size}|clear it.")
                 for (i in timeoutPoolTask.indices) {
-                    LOG.info("CLEAR_TIME_OUT_BUILD_POOL|(${timeoutPoolTask[i].pipelineId})|" +
-                        "(${timeoutPoolTask[i].vmSeq})|(${timeoutPoolTask[i].poolNo})")
+                    LOG.info(
+                        "CLEAR_TIME_OUT_BUILD_POOL|(${timeoutPoolTask[i].pipelineId})|" +
+                            "(${timeoutPoolTask[i].vmSeq})|(${timeoutPoolTask[i].poolNo})"
+                    )
                 }
                 pipelineDockerPoolDao.updateTimeOutPool(dslContext)
                 message = "timeoutPoolTask.size=${timeoutPoolTask.size}"
@@ -292,9 +296,11 @@ class DockerHostBuildService @Autowired constructor(
                         clusterType = DockerHostClusterType.valueOf(dockerIpInfo.clusterName)
                     )
 
-                    LOG.info("updateTimeoutBuild pipelineId:(${timeoutBuildList[i].pipelineId})," +
+                    LOG.info(
+                        "updateTimeoutBuild pipelineId:(${timeoutBuildList[i].pipelineId})," +
                             " buildId:(${timeoutBuildList[i].buildId}), " +
-                            "poolNo:(${timeoutBuildList[i].poolNo})")
+                            "poolNo:(${timeoutBuildList[i].poolNo})"
+                    )
                 }
             } catch (ignore: Exception) {
                 LOG.warn("updateTimeoutBuild buildId: ${timeoutBuildList[i].buildId} failed", ignore)
@@ -333,13 +339,36 @@ class DockerHostBuildService @Autowired constructor(
         )
     }
 
-    fun log(buildId: String, red: Boolean, message: String, tag: String? = "", jobId: String? = "") {
-        LOG.info("write log from docker host, buildId: $buildId, msg: $message, tag: $tag, jobId= $jobId")
+    fun log(
+        buildId: String,
+        red: Boolean,
+        message: String,
+        tag: String? = "",
+        containerHashId: String? = "",
+        stepId: String? = ""
+    ) {
+        LOG.info("write log from docker host, buildId: $buildId, msg: $message, tag: $tag, jobId= $containerHashId")
         val executeCount = DispatchLogRedisUtils.getRedisExecuteCount(buildId)
         if (red) {
-            buildLogPrinter.addRedLine(buildId, message, tag ?: "", jobId ?: "", executeCount)
+            buildLogPrinter.addRedLine(
+                buildId = buildId,
+                message = message,
+                tag = tag ?: "",
+                containerHashId = containerHashId ?: "",
+                executeCount = executeCount,
+                jobId = null,
+                stepId = stepId
+            )
         } else {
-            buildLogPrinter.addLine(buildId, message, tag ?: "", jobId ?: "", executeCount)
+            buildLogPrinter.addLine(
+                buildId = buildId,
+                message = message,
+                tag = tag ?: "",
+                containerHashId = containerHashId ?: "",
+                executeCount = executeCount,
+                jobId = null,
+                stepId = stepId
+            )
         }
     }
 

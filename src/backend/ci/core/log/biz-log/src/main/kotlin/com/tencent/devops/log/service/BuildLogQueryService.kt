@@ -64,9 +64,11 @@ class BuildLogQueryService @Autowired constructor(
         debug: Boolean?,
         logType: LogType?,
         tag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
-        subTag: String? = null
+        subTag: String? = null,
+        jobId: String?,
+        stepId: String?
     ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.VIEW)
         val startEpoch = System.currentTimeMillis()
@@ -76,10 +78,12 @@ class BuildLogQueryService @Autowired constructor(
                 buildId = buildId,
                 debug = debug ?: false,
                 logType = logType,
-                subTag = subTag,
                 tag = tag,
+                subTag = subTag,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
                 jobId = jobId,
-                executeCount = executeCount
+                stepId = stepId
             )
             result.timeUsed = System.currentTimeMillis() - startEpoch
             success = logStatusSuccess(result.status)
@@ -98,11 +102,13 @@ class BuildLogQueryService @Autowired constructor(
         debug: Boolean?,
         logType: LogType?,
         tag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
         page: Int?,
         pageSize: Int?,
-        subTag: String? = null
+        subTag: String? = null,
+        jobId: String?,
+        stepId: String?
     ): Result<PageQueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.VIEW)
         val startEpoch = System.currentTimeMillis()
@@ -114,10 +120,12 @@ class BuildLogQueryService @Autowired constructor(
                 logType = logType,
                 tag = tag,
                 subTag = subTag,
-                jobId = jobId,
+                containerHashId = containerHashId,
                 executeCount = executeCount,
                 page = page ?: -1,
-                pageSize = pageSize ?: -1
+                pageSize = pageSize ?: -1,
+                jobId = jobId,
+                stepId = stepId
             )
             result.timeUsed = System.currentTimeMillis() - startEpoch
             success = logStatusSuccess(result.status)
@@ -140,9 +148,11 @@ class BuildLogQueryService @Autowired constructor(
         start: Long,
         end: Long,
         tag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
-        subTag: String? = null
+        subTag: String? = null,
+        jobId: String?,
+        stepId: String?
     ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.VIEW)
         val startEpoch = System.currentTimeMillis()
@@ -158,8 +168,10 @@ class BuildLogQueryService @Autowired constructor(
                 logType = logType,
                 tag = tag,
                 subTag = subTag,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
                 jobId = jobId,
-                executeCount = executeCount
+                stepId = stepId
             )
             result.timeUsed = System.currentTimeMillis() - startEpoch
             success = logStatusSuccess(result.status)
@@ -179,9 +191,11 @@ class BuildLogQueryService @Autowired constructor(
         debug: Boolean?,
         logType: LogType?,
         tag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
-        subTag: String? = null
+        subTag: String? = null,
+        jobId: String?,
+        stepId: String?
     ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.VIEW)
         val startEpoch = System.currentTimeMillis()
@@ -194,8 +208,10 @@ class BuildLogQueryService @Autowired constructor(
                 logType = logType,
                 tag = tag,
                 subTag = subTag,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
                 jobId = jobId,
-                executeCount = executeCount
+                stepId = stepId
             )
             result.timeUsed = System.currentTimeMillis() - startEpoch
             success = logStatusSuccess(result.status)
@@ -216,9 +232,11 @@ class BuildLogQueryService @Autowired constructor(
         logType: LogType?,
         size: Int?,
         tag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
-        subTag: String? = null
+        subTag: String? = null,
+        jobId: String?,
+        stepId: String?
     ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.VIEW)
         val startEpoch = System.currentTimeMillis()
@@ -227,13 +245,15 @@ class BuildLogQueryService @Autowired constructor(
             val result = logService.queryLogsBeforeLine(
                 buildId = buildId,
                 end = end,
-                size = size,
                 debug = debug ?: false,
                 logType = logType,
+                size = size,
                 tag = tag,
                 subTag = subTag,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
                 jobId = jobId,
-                executeCount = executeCount
+                stepId = stepId
             )
             result.timeUsed = System.currentTimeMillis() - startEpoch
             success = logStatusSuccess(result.status)
@@ -249,15 +269,17 @@ class BuildLogQueryService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        tag: String,
-        executeCount: Int?
+        tag: String?,
+        executeCount: Int?,
+        stepId: String?
     ): Result<QueryLogStatus> {
         validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.VIEW)
         return Result(
             logStatusService.getStorageMode(
                 buildId = buildId,
                 tag = tag,
-                executeCount = executeCount ?: 1
+                executeCount = executeCount ?: 1,
+                stepId = stepId
             )
         )
     }
@@ -286,10 +308,12 @@ class BuildLogQueryService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         tag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
         fileName: String?,
-        subTag: String? = null
+        subTag: String? = null,
+        jobId: String?,
+        stepId: String?
     ): Response {
         validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.DOWNLOAD)
         val startEpoch = System.currentTimeMillis()
@@ -300,9 +324,11 @@ class BuildLogQueryService @Autowired constructor(
                 buildId = buildId,
                 tag = tag,
                 subTag = subTag,
-                jobId = jobId,
+                containerHashId = containerHashId,
                 executeCount = executeCount,
-                fileName = fileName
+                fileName = fileName,
+                jobId = jobId,
+                stepId = stepId
             )
             success = true
             return result
@@ -320,9 +346,11 @@ class BuildLogQueryService @Autowired constructor(
         debug: Boolean?,
         logType: LogType?,
         tag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
-        subTag: String? = null
+        subTag: String? = null,
+        jobId: String?,
+        stepId: String?
     ): Result<EndPageQueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.VIEW)
         val startEpoch = System.currentTimeMillis()
@@ -335,9 +363,11 @@ class BuildLogQueryService @Autowired constructor(
                 logType = logType,
                 tag = tag,
                 subTag = subTag,
-                jobId = jobId,
+                containerHashId = containerHashId,
                 executeCount = executeCount,
-                size = size
+                size = size,
+                jobId = jobId,
+                stepId = stepId
             )
             result.timeUsed = System.currentTimeMillis() - startEpoch
             success = logStatusSuccess(result.status)
@@ -357,9 +387,11 @@ class BuildLogQueryService @Autowired constructor(
         logType: LogType?,
         size: Int?,
         tag: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int?,
-        subTag: String? = null
+        subTag: String? = null,
+        jobId: String?,
+        stepId: String?
     ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.VIEW)
         val startEpoch = System.currentTimeMillis()
@@ -372,9 +404,11 @@ class BuildLogQueryService @Autowired constructor(
                 logType = logType,
                 tag = tag,
                 subTag = subTag,
-                jobId = jobId,
+                containerHashId = containerHashId,
                 executeCount = executeCount,
-                size = size
+                size = size,
+                jobId = jobId,
+                stepId = stepId
             )
             result.timeUsed = System.currentTimeMillis() - startEpoch
             success = logStatusSuccess(result.status)

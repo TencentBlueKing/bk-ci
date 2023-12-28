@@ -660,7 +660,12 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun startBuild(fullModel: Model, context: StartBuildContext): BuildId {
-        buildLogPrinter.startLog(context.buildId, null, null, context.executeCount)
+        buildLogPrinter.startLog(
+            buildId = context.buildId,
+            tag = null,
+            containerHashId = null,
+            executeCount = context.executeCount
+        )
 
         val defaultStageTagId by lazy { stageTagService.getDefaultStageTag().data?.id }
         context.watcher.start("read_old_data")
@@ -1009,7 +1014,8 @@ class PipelineRuntimeService @Autowired constructor(
             )
             buildLogPrinter.addYellowLine(
                 buildId = context.buildId, message = "Waiting for the review of ${context.triggerReviewers}",
-                tag = TAG, jobId = JOB_ID, executeCount = 1
+                tag = TAG, containerHashId = JOB_ID, executeCount = 1,
+                jobId = null, stepId = TAG
             )
         }
         LogUtils.printCostTimeWE(context.watcher, warnThreshold = 4000, errorThreshold = 8000)
@@ -1206,7 +1212,8 @@ class PipelineRuntimeService @Autowired constructor(
             )
             buildLogPrinter.addYellowLine(
                 buildId = buildInfo.buildId, message = "Approved by user($userId)",
-                tag = TAG, jobId = JOB_ID, executeCount = 1
+                tag = TAG, containerHashId = JOB_ID, executeCount = 1,
+                jobId = null, stepId = TAG
             )
             StartBuildContext.init4SendBuildStartEvent(
                 userId = userId,
@@ -1261,7 +1268,8 @@ class PipelineRuntimeService @Autowired constructor(
         )
         buildLogPrinter.addYellowLine(
             buildId = buildId, message = "Disapproved by user($userId)",
-            tag = TAG, jobId = JOB_ID, executeCount = 1
+            tag = TAG, containerHashId = JOB_ID, executeCount = 1,
+            jobId = null, stepId = TAG
         )
     }
 
@@ -1877,6 +1885,7 @@ class PipelineRuntimeService @Autowired constructor(
             val tasks = pipelineTaskService.getRunningTask(projectId, buildId)
             tasks.forEach { task ->
                 val taskId = task["taskId"]?.toString() ?: ""
+                val stepId = task["stepId"]?.toString() ?: ""
                 logger.info("build($buildId) shutdown by $userId, taskId: $taskId, status: ${task["status"] ?: ""}")
                 val containerId = task["containerId"]?.toString() ?: ""
                 // #7599 兼容短时间取消状态异常优化
@@ -1888,8 +1897,9 @@ class PipelineRuntimeService @Autowired constructor(
                     message = "[concurrency] Canceling since <a target='_blank' href='$detailUrl'>" +
                             "a higher priority waiting request</a> for group($groupName) exists",
                     tag = taskId,
-                    jobId = task["containerId"]?.toString() ?: "",
-                    executeCount = task["executeCount"] as? Int ?: 1
+                    containerHashId = task["containerId"]?.toString() ?: "",
+                    executeCount = task["executeCount"] as? Int ?: 1,
+                    jobId = null, stepId = stepId
                 )
             }
             if (tasks.isEmpty()) {
@@ -1898,8 +1908,9 @@ class PipelineRuntimeService @Autowired constructor(
                     message = "[concurrency] Canceling all since <a target='_blank' href='$detailUrl'>" +
                             "a higher priority waiting request</a> for group($groupName) exists",
                     tag = "QueueInterceptor",
-                    jobId = "",
-                    executeCount = 1
+                    containerHashId = "",
+                    executeCount = 1,
+                    jobId = null, stepId = "QueueInterceptor"
                 )
             }
             try {

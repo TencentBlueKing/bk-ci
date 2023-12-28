@@ -240,7 +240,7 @@ interface ServiceBuildResource {
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("要重试或跳过的插件ID，或者StageId", required = false)
+        @ApiParam("要重试或跳过的插件ID，或者StageId, 或stepId", required = false)
         @QueryParam("taskId")
         taskId: String? = null,
         @ApiParam("仅重试所有失败Job", required = false)
@@ -320,12 +320,15 @@ interface ServiceBuildResource {
         buildId: String,
         @ApiParam("步骤Id", required = true)
         @PathParam("elementId")
-        elementId: String,
+        elementId: String?,
         @ApiParam("审核信息", required = true)
         params: ReviewParam,
         @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        @ApiParam("对应stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?
     ): Result<Boolean>
 
     @ApiOperation("触发审核")
