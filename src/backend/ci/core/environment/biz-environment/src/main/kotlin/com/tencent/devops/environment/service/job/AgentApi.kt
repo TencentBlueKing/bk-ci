@@ -32,7 +32,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.environment.pojo.job.agentres.AgentResult
+import com.tencent.devops.environment.pojo.job.agentres.AgentAgentResult
 import okhttp3.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -101,7 +101,7 @@ class AgentApi {
         }
     }
 
-    fun <T, U : Any> executePostRequest(req: T, classOfU: Class<U>, jobId: Int? = null): AgentResult<U> {
+    fun <T, U : Any> executePostRequest(req: T, classOfU: Class<U>, jobId: Int? = null): AgentAgentResult<U> {
         val (bkAuthorization, url) = getAgentAuthReq(jobId)
         val headers = getAuthHeaderMap(bkAuthorization)
         val requestContent = jacksonObjectMapper().writeValueAsString(req)
@@ -112,7 +112,7 @@ class AgentApi {
         return resultFromRes
     }
 
-    fun <T, U> executeGetRequest(classOfT: Class<T>, jobId: Int? = null, vararg args: U): AgentResult<T> {
+    fun <T, U> executeGetRequest(classOfT: Class<T>, jobId: Int? = null, vararg args: U): AgentAgentResult<T> {
         val operationName = getThreadLocal()
         val (bkAuthorization, url) = getAgentAuthReq(jobId)
         val headers = getAuthHeaderMap(bkAuthorization)
@@ -126,7 +126,7 @@ class AgentApi {
         return getResultFromRes(OkhttpUtils.doGet(urlWithSuffix, headers), classOfT)
     }
 
-    private fun <T> getResultFromRes(response: Response, classOfT: Class<T>): AgentResult<T> {
+    private fun <T> getResultFromRes(response: Response, classOfT: Class<T>): AgentAgentResult<T> {
         val operationName = getThreadLocal()
         removeThreadLocal()
         try {
@@ -138,7 +138,7 @@ class AgentApi {
                 logger.debug("[$operationName] response body(origin): $responseLog")
             }
 
-            val agentResp = jacksonObjectMapper().readValue<AgentResult<T>>(responseBody!!)
+            val agentResp = jacksonObjectMapper().readValue<AgentAgentResult<T>>(responseBody!!)
             if (logger.isDebugEnabled)
                 logger.debug(
                     "[$operationName] response body(deserialized AgentResult<T>): " +
@@ -170,7 +170,7 @@ class AgentApi {
                             logWithLengthLimit(operationResult.toString())
                     )
                 }
-                val agentResult = AgentResult(
+                val agentAgentResult = AgentAgentResult(
                     code = agentResp.code,
                     result = agentResp.result,
                     message = agentResp.message,
@@ -178,8 +178,8 @@ class AgentApi {
                     data = operationResult
                 )
                 if (logger.isDebugEnabled)
-                    logger.debug("[$operationName]agentResult: " + logWithLengthLimit(agentResult.toString()))
-                return agentResult
+                    logger.debug("[$operationName]agentResult: " + logWithLengthLimit(agentAgentResult.toString()))
+                return agentAgentResult
             }
         } catch (exception: Exception) {
             logger.warn("[executeHttpRequest] Failed to execute the HTTP request. Exception:", exception)

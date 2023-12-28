@@ -37,8 +37,6 @@ data class AgentResult<out T>(
     val code: Int,
     @ApiModelProperty("结果bool值")
     val result: Boolean? = null,
-    @ApiModelProperty("请求ID")
-    val jobRequestId: String?,
     @ApiModelProperty("请求失败返回的错误信息")
     val message: String?,
     @ApiModelProperty("请求错误信息")
