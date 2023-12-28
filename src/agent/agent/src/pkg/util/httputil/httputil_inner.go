@@ -51,7 +51,7 @@ func checkHttpStatusErr(status int, body []byte) {
 		data := &iOAResp{}
 		err := json.Unmarshal(body, &data)
 		if err != nil {
-			logs.Errorf("checkHttpStatusErr %d|%s|%s", status, body, err.Error())
+			logs.Errorf("checkHttpStatusErr Unmarshal err %d|%s|%s", status, body, err.Error())
 			return
 		}
 		if (data.Code >= 103000 && data.Code <= 103018) ||
@@ -63,7 +63,7 @@ func checkHttpStatusErr(status int, body []byte) {
 			logs.Errorf("checkHttpStatusErr %d|%s|unknow", status, body)
 		}
 	default:
-		logs.Errorf("checkHttpStatusErr %d|%s|unknow", status, body)
+		logs.Warnf("checkHttpStatusErr %d|%s|unknow", status, body)
 	}
 }
 
