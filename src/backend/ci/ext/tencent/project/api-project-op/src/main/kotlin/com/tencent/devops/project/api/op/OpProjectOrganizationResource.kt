@@ -28,12 +28,16 @@
 package com.tencent.devops.project.api.op
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.project.pojo.OrganizationInfo
+import com.tencent.devops.project.pojo.enums.OrganizationType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
@@ -43,6 +47,17 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpProjectOrganizationResource {
+    @GET
+    @Path("/types/{type}/ids/{id}")
+    fun getOrganizations(
+        @ApiParam("bg, 部门或者中心")
+        @PathParam("type")
+        type: OrganizationType,
+        @ApiParam("ID")
+        @PathParam("id")
+        id: Int
+    ): Result<List<OrganizationInfo>>
+
     @POST
     @Path("/fixProjectOrganization")
     @ApiOperation("修正项目组织架构")

@@ -31,13 +31,30 @@ package com.tencent.devops.project.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.op.OpProjectOrganizationResource
+import com.tencent.devops.project.pojo.OrganizationInfo
+import com.tencent.devops.project.pojo.enums.OrganizationType
 import com.tencent.devops.project.service.ProjectExtOrganizationService
+import com.tencent.devops.project.service.tof.TOFService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpProjectOrganizationResourceImpl @Autowired constructor(
-    val projectExtOrganizationService: ProjectExtOrganizationService
+    val projectExtOrganizationService: ProjectExtOrganizationService,
+    val tofService: TOFService
 ) : OpProjectOrganizationResource {
+
+    override fun getOrganizations(
+        type: OrganizationType,
+        id: Int
+    ): Result<List<OrganizationInfo>> {
+        return Result(
+            tofService.getOrganizationInfo(
+                type = type,
+                id = id
+            )
+        )
+    }
+
     override fun fixProjectOrganization(englishNames: List<String>): Result<Boolean> {
         return Result(projectExtOrganizationService.fixProjectOrganization(englishNames = englishNames))
     }

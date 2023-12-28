@@ -136,7 +136,7 @@ class TOFService @Autowired constructor(
     }
 
     fun getOrganizationInfo(
-        userId: String,
+        userId: String? = null,
         type: OrganizationType,
         id: Int
     ): List<OrganizationInfo> {
