@@ -147,7 +147,12 @@ object RepositoryConfigUtils {
                     repositoryName = EnvUtils.parseEnv(element.repositoryName, variables),
                     repositoryType = element.repositoryType ?: RepositoryType.ID
                 )
-                Triple(ScmType.CODE_GIT, element.eventType, repositoryConfig)
+                val eventType = if (element.eventType == CodeEventType.MERGE_REQUEST_ACCEPT) {
+                    CodeEventType.MERGE_REQUEST
+                } else {
+                    element.eventType
+                }
+                Triple(ScmType.CODE_GIT, eventType, repositoryConfig)
             }
 
             is CodeSVNWebHookTriggerElement -> {
@@ -156,7 +161,7 @@ object RepositoryConfigUtils {
                     repositoryName = EnvUtils.parseEnv(element.repositoryName, variables),
                     repositoryType = element.repositoryType ?: RepositoryType.ID
                 )
-                Triple(ScmType.CODE_SVN, CodeEventType.PUSH_COMMIT, repositoryConfig)
+                Triple(ScmType.CODE_SVN, CodeEventType.POST_COMMIT, repositoryConfig)
             }
 
             is CodeGitlabWebHookTriggerElement -> {
@@ -165,7 +170,12 @@ object RepositoryConfigUtils {
                     repositoryName = EnvUtils.parseEnv(element.repositoryName, variables),
                     repositoryType = element.repositoryType ?: RepositoryType.ID
                 )
-                Triple(ScmType.CODE_GITLAB, element.eventType, repositoryConfig)
+                val eventType = if (element.eventType == CodeEventType.MERGE_REQUEST_ACCEPT) {
+                    CodeEventType.MERGE_REQUEST
+                } else {
+                    element.eventType
+                }
+                Triple(ScmType.CODE_GITLAB, eventType, repositoryConfig)
             }
 
             is CodeGithubWebHookTriggerElement -> {
@@ -183,7 +193,12 @@ object RepositoryConfigUtils {
                     repositoryName = EnvUtils.parseEnv(element.data.input.repositoryName, variables),
                     repositoryType = element.data.input.repositoryType ?: RepositoryType.ID
                 )
-                Triple(ScmType.CODE_TGIT, element.data.input.eventType, repositoryConfig)
+                val eventType = if (element.data.input.eventType == CodeEventType.MERGE_REQUEST_ACCEPT) {
+                    CodeEventType.MERGE_REQUEST
+                } else {
+                    element.data.input.eventType
+                }
+                Triple(ScmType.CODE_TGIT, eventType, repositoryConfig)
             }
 
             is CodeP4WebHookTriggerElement -> {
