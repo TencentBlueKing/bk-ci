@@ -4,7 +4,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VAL
 import com.tencent.devops.environment.pojo.job.agentreq.AgentCondition
 import com.tencent.devops.environment.pojo.job.agentreq.AgentHostForInstallAgent
 import com.tencent.devops.environment.pojo.job.agentreq.AgentInstallAgentReq
-import com.tencent.devops.environment.pojo.job.agentreq.AgentQueryAgentStatusFromJobReq
+import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudQueryAgentStatusFromJobReq
 import com.tencent.devops.environment.pojo.job.agentreq.AgentQueryAgentStatusFromNodemanReq
 import com.tencent.devops.environment.pojo.job.agentreq.AgentQueryAgentTaskLogResult
 import com.tencent.devops.environment.pojo.job.agentreq.AgentQueryAgentTaskStatusReq
@@ -38,7 +38,7 @@ import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudCreateAccount
 import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudGetStepInstanceDetailResult
 import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudGetStepInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.agentreq.InstallAgentReq
-import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentStatusFromJobReq
+import com.tencent.devops.environment.pojo.job.req.QueryAgentStatusFromJobReq
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentStatusFromNodemanReq
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLogResult
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
@@ -46,7 +46,7 @@ import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentreq.TerminateAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentInfo
 import com.tencent.devops.environment.pojo.job.agentres.AgentInstallAgentResult
-import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentStatusFromJobResult
+import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudQueryAgentStatusFromJobResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentStatusFromNodemanResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentTaskStatusResult
 import com.tencent.devops.environment.pojo.job.resp.Account
@@ -853,20 +853,20 @@ class JobService @Autowired constructor(
         userId: String,
         projectId: String,
         queryAgentStatusFromJobReq: QueryAgentStatusFromJobReq
-    ): AgentResult<QueryAgentStatusFromJobResult> {
-        AgentApi.setThreadLocal("queryAgentStatus")
-        val queryAgentStatusFromJobRequest = AgentQueryAgentStatusFromJobReq(
-            hostIdList = queryAgentStatusFromJobReq.hostIdList
+    ): JobResult<QueryAgentStatusFromJobResult> {
+        ApigwJobCloudApi.setThreadLocal(::queryAgentStatusFromJob.name)
+        val queryAgentStatusFromJobRequest = JobCloudQueryAgentStatusFromJobReq(
+            hostIdList = queryAgentStatusFromJobReq.hostIdList,
+            bkUsername = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
         )
-        val agentQueryAgentStatusFromJobRes: AgentAgentResult<AgentQueryAgentStatusFromJobResult> =
-            agentApi.executePostRequest(
-                queryAgentStatusFromJobRequest, AgentQueryAgentStatusFromJobResult::class.java
+        val agentQueryAgentStatusFromJobRes: JobCloudResult<JobCloudQueryAgentStatusFromJobResult> =
+            apigwJobCloudApi.executePostRequest(
+                queryAgentStatusFromJobRequest, JobCloudQueryAgentStatusFromJobResult::class.java
             )
-        val queryAgentStatusFromJobRes: AgentResult<QueryAgentStatusFromJobResult> = AgentResult(
+        val queryAgentStatusFromJobRes: JobResult<QueryAgentStatusFromJobResult> = JobResult(
             code = agentQueryAgentStatusFromJobRes.code,
             result = agentQueryAgentStatusFromJobRes.result,
-            message = agentQueryAgentStatusFromJobRes.message,
-            errors = agentQueryAgentStatusFromJobRes.errors,
+            jobRequestId = agentQueryAgentStatusFromJobRes.jobRequestId,
             data = agentQueryAgentStatusFromJobRes.data?.let {
                 QueryAgentStatusFromJobResult(
                     agentInfoList = it.agentInfoList.map { agentInfo ->

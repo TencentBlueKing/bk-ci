@@ -64,9 +64,6 @@ class AgentApi {
     @Value("\${job.queryAgentTaskStatusPath:#{\"/details\"}}") // 前面要拼 /job/{jobId}
     private val queryAgentTaskStatusPath = ""
 
-    @Value("\${job.queryAgentStatusPath:#{\"/api/v3/query_agent_info\"}}")
-    private val queryAgentStatusPath = ""
-
     @Value("\${job.queryAgentStatusFromNodemanPath:#{\"/search\"}}")
     private val queryAgentStatusFromNodemanPath = ""
 
@@ -214,8 +211,6 @@ class AgentApi {
             "terminalAgentInstallTask" -> nodemanApiBaseUrl + JOB_PERFIX + jobId + terminalAgentInstallTaskPath
             "retryAgentInstallTask" -> nodemanApiBaseUrl + JOB_PERFIX + jobId + retryAgentInstallTaskPath
             "queryAgentStatusFromNodeman" -> nodemanApiBaseUrl + HOST_PERFIX + queryAgentStatusFromNodemanPath
-
-            "queryAgentStatusFromJob" -> jobCloudApiBaseUrl + queryAgentStatusPath
 
             else -> ""
         }

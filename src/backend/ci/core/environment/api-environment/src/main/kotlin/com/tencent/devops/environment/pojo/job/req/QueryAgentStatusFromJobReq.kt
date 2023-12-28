@@ -25,13 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo.job.agentres
+package com.tencent.devops.environment.pojo.job.req
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
-data class AgentQueryAgentStatusFromJobResult(
-    @ApiModelProperty(value = "Agent信息列表。若传入的host_id在返回结果的列表中不存在，则表示未查询到该主机的agent信息")
-    @JsonProperty("agent_info_list")
-    val agentInfoList: List<AgentInfo>
+data class QueryAgentStatusFromJobReq(
+    @ApiModelProperty(value = "主机ID数组，单次查询主机数量不可超过5000")
+    val hostIdList: List<Long>
 )

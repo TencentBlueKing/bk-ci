@@ -61,6 +61,9 @@ class ApigwJobCloudApi {
     @Value("\${job.getStepInstanceStatusPath:#{\"/api/v3/get_step_instance_status\"}}")
     val getStepInstanceStatusPath: String = ""
 
+    @Value("\${job.queryAgentInfoPath:#{\"/api/v3/query_agent_info\"}}")
+    val queryAgentInfoPath: String = ""
+
     companion object {
         private const val LOG_OUTPUT_MAX_LENGTH = 4000
 
@@ -114,6 +117,7 @@ class ApigwJobCloudApi {
             "getAccountList" -> getAccountListPath
             "getStepInstanceDetail" -> getStepInstanceDetailPath
             "getStepInstanceStatus" -> getStepInstanceStatusPath
+            "queryAgentStatusFromJob" -> queryAgentInfoPath
             else -> ""
         }
         if (logger.isDebugEnabled) logger.debug("[getJobCloudAuthReq] url: $url")

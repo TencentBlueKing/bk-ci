@@ -28,7 +28,7 @@
 package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.environment.pojo.job.agentreq.Condition
-import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentStatusFromJobReq
+import com.tencent.devops.environment.pojo.job.req.QueryAgentStatusFromJobReq
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentStatusFromNodemanReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentStatusFromJobResult

@@ -5,7 +5,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.UserJobResource
 import com.tencent.devops.environment.pojo.job.agentreq.InstallAgentReq
-import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentStatusFromJobReq
+import com.tencent.devops.environment.pojo.job.req.QueryAgentStatusFromJobReq
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentStatusFromNodemanReq
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLogResult
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
