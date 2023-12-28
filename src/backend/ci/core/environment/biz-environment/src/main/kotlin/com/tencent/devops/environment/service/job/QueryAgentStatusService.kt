@@ -92,7 +92,7 @@ class QueryAgentStatusService @Autowired constructor(
         val notInstalledAgentHostIdList = nodemanRes.data?.list?.filter { // 未安装agent，不再查job了
             it?.status == "NOT_INSTALLED"
         }?.mapNotNull { it?.bkHostId }
-        val notInstalledAgentList =
+        val notInstalledAgentVersionList =
             if (notInstalledAgentHostIdList.isNullOrEmpty())
                 emptyList()
             else {
@@ -104,8 +104,8 @@ class QueryAgentStatusService @Autowired constructor(
                 }
             }
         if (logger.isDebugEnabled)
-            logger.debug("[getAgentVersions]notInstalledAgentList:$notInstalledAgentList")
-        return (installedAgentVersionList ?: emptyList()) + notInstalledAgentList
+            logger.debug("[getAgentVersions]notInstalledAgentList:$notInstalledAgentVersionList")
+        return (installedAgentVersionList ?: emptyList()) + notInstalledAgentVersionList
     }
 
     private fun getAgentVersionsFromNodeman(

@@ -155,6 +155,7 @@ class CmdbNodeService @Autowired constructor(
         }
         val agentVersionList = queryAgentStatusService.getAgentVersions(userId, projectId, ipAndHostIdList)
         val ipToAgentVersionMap = agentVersionList?.associateBy { it.ip }
+        if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]ipToAgentVersionMap:$ipToAgentVersionMap")
         val toAddNodeList = toAddIpList.map {
             val cmdbNode = cmdbIpToNodeMap[it]!!
             CreateNodeModel(
