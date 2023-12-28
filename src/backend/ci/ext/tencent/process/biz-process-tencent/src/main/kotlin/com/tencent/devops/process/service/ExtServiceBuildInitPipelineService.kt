@@ -85,7 +85,7 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
         }
         startParams[ExtServiceImageInfoDTO::imageName.name] = extServiceBaseInfo.extServiceImageInfo.imageName
         startParams[ExtServiceImageInfoDTO::imageTag.name] = extServiceBaseInfo.extServiceImageInfo.imageTag
-        startParams[ExtServiceImageInfoDTO::username.name] = extServiceBaseInfo.extServiceImageInfo.username
+        startParams[ExtServiceImageInfoDTO::userName.name] = extServiceBaseInfo.extServiceImageInfo.userName
         startParams[ExtServiceImageInfoDTO::password.name] = extServiceBaseInfo.extServiceImageInfo.password
         startParams[ExtServiceImageInfoDTO::repoAddr.name] = extServiceBaseInfo.extServiceImageInfo.repoAddr
         var serviceBuildStatus = ExtServiceStatusEnum.BUILDING

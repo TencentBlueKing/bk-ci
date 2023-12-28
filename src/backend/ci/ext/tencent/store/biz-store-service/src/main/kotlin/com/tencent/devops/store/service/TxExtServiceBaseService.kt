@@ -63,6 +63,7 @@ import com.tencent.devops.store.pojo.dto.ExtServiceImageInfoDTO
 import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
 import com.tencent.devops.store.pojo.enums.ExtServicePackageSourceTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
+import java.util.Base64
 import java.util.concurrent.TimeUnit
 import org.apache.commons.text.StringEscapeUtils
 import org.jooq.DSLContext
@@ -201,12 +202,14 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
         val script = buildInfo.value1()
         val repoAddr = extServiceImageSecretConfig.repoRegistryUrl
         val imageName = "${extServiceImageSecretConfig.imageNamePrefix}$serviceCode"
+        val userName = Base64.getEncoder().encodeToString(extServiceImageSecretConfig.repoUsername.toByteArray())
+        val password = Base64.getEncoder().encodeToString(extServiceImageSecretConfig.repoPassword.toByteArray())
         val extServiceImageInfo = ExtServiceImageInfoDTO(
             imageName = imageName,
             imageTag = version,
             repoAddr = repoAddr,
-            username = extServiceImageSecretConfig.repoUsername,
-            password = extServiceImageSecretConfig.repoPassword
+            userName = userName,
+            password = password
         )
         logger.info("extServiceImageInfo: extServiceImageInfo")
         // 未正式发布的扩展服务先部署到bcs灰度环境
@@ -286,8 +289,10 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             startParams["script"] = script
             startParams["branch"] = MASTER
             startParams["repoAddr"] = repoAddr
-            startParams["userName"] = extServiceImageSecretConfig.repoUsername
-            startParams["password"] = extServiceImageSecretConfig.repoPassword
+            val userName = Base64.getEncoder().encodeToString(extServiceImageSecretConfig.repoUsername.toByteArray())
+            val password = Base64.getEncoder().encodeToString(extServiceImageSecretConfig.repoPassword.toByteArray())
+            startParams["userName"] = userName
+            startParams["password"] = password
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartup(
                 userId, projectCode!!, servicePipelineRelRecord.pipelineId, startParams,
                 ChannelCode.AM
