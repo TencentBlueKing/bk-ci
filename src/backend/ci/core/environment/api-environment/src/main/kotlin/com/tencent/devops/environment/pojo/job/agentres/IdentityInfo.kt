@@ -29,7 +29,13 @@ package com.tencent.devops.environment.pojo.job.agentres
 
 import io.swagger.annotations.ApiModelProperty
 
-data class IdentityInfo (
-    @ApiModelProperty(value = "鉴权信息")
-    val agentIdentityInfo: String?
+data class IdentityInfo(
+    @ApiModelProperty(value = "用户名")
+    val account: String?,
+    @ApiModelProperty(value = "认证方式")
+    val authType: String?,
+    @ApiModelProperty(value = "端口")
+    val port: Int?,
+    @ApiModelProperty(value = "")
+    val reCertification: Boolean?
 )

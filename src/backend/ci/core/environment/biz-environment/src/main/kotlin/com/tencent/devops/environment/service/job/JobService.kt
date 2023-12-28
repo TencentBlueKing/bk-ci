@@ -55,6 +55,7 @@ import com.tencent.devops.environment.pojo.job.agentres.AgentRetryAgentInstallTa
 import com.tencent.devops.environment.pojo.job.agentres.AgentTerminalAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.agentres.FilterHostInfo
 import com.tencent.devops.environment.pojo.job.agentres.HostDetail
+import com.tencent.devops.environment.pojo.job.agentres.IdentityInfo
 import com.tencent.devops.environment.pojo.job.resp.ApprovalStepInfo
 import com.tencent.devops.environment.pojo.job.resp.AuthorizedAccount
 import com.tencent.devops.environment.pojo.job.resp.CreateAccountResult
@@ -73,6 +74,7 @@ import com.tencent.devops.environment.pojo.job.resp.HostInRes
 import com.tencent.devops.environment.pojo.job.resp.HostIpv6
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
 import com.tencent.devops.environment.pojo.job.agentres.IpFilter
+import com.tencent.devops.environment.pojo.job.agentres.JobResultForFilterHostInfo
 import com.tencent.devops.environment.pojo.job.agentres.Meta
 import com.tencent.devops.environment.pojo.job.resp.JobInstance
 import com.tencent.devops.environment.pojo.job.resp.JobResult
@@ -905,22 +907,54 @@ class JobService @Autowired constructor(
             data = agentQueryAgentStatusRes.data?.let {
                 QueryAgentStatusFromNodemanResult(
                     total = it.total,
-                    list = it.list.map { filterHostInfo ->
+                    list = it.list?.map { filterHostInfo ->
                         FilterHostInfo(
-                            filterHost = filterHostInfo.filterHost,
+                            bkCloudId = filterHostInfo.bkCloudId,
+                            bkBizId = filterHostInfo.bkBizId,
                             bkHostId = filterHostInfo.bkHostId,
-                            ip = filterHostInfo.ip,
+                            bkHostName = filterHostInfo.bkHostName,
+                            bkAddressing = filterHostInfo.bkAddressing,
+                            osType = filterHostInfo.osType,
                             innerIp = filterHostInfo.innerIp,
                             innerIpv6 = filterHostInfo.innerIpv6,
-                            bkCloudId = filterHostInfo.bkCloudId,
-                            bkCloudName = filterHostInfo.bkCloudName,
-                            bkBizId = filterHostInfo.bkBizId,
-                            bkBizName = filterHostInfo.bkBizName,
-                            jobId = filterHostInfo.jobId,
+                            outerIp = filterHostInfo.outerIp,
+                            outerIpv6 = filterHostInfo.outerIpv6,
+                            apId = filterHostInfo.apId,
+                            installChannelId = filterHostInfo.installChannelId,
+                            loginIp = filterHostInfo.loginIp,
+                            dataIp = filterHostInfo.dataIp,
                             status = filterHostInfo.status,
-                            statusDisplay = filterHostInfo.statusDisplay
+                            version = filterHostInfo.version,
+                            createdAt = filterHostInfo.createdAt,
+                            updatedAt = filterHostInfo.updatedAt,
+                            isManual = filterHostInfo.isManual,
+                            extraData = filterHostInfo.extraData,
+                            statusDisplay = filterHostInfo.statusDisplay,
+                            bkCloudName = filterHostInfo.bkCloudName,
+                            installChannelName = filterHostInfo.installChannelName,
+                            bkBizName = filterHostInfo.bkBizName,
+                            identityInfo = filterHostInfo.identityInfo?.let { identityInfo ->
+                                IdentityInfo(
+                                    account = identityInfo.account,
+                                    authType = identityInfo.authType,
+                                    port = identityInfo.port,
+                                    reCertification = identityInfo.reCertification
+                                )
+                            },
+                            jobResult = filterHostInfo.jobResult?.let { jobResultForFilterHostInfo ->
+                                JobResultForFilterHostInfo(
+                                    instanceId = jobResultForFilterHostInfo.instanceId,
+                                    jobId = jobResultForFilterHostInfo.jobId,
+                                    status = jobResultForFilterHostInfo.status,
+                                    currentStep = jobResultForFilterHostInfo.currentStep
+                                )
+                            },
+                            topology = filterHostInfo.topology,
+                            operatePermission = filterHostInfo.operatePermission
                         )
-                    }
+                    },
+                    runningCount = it.runningCount,
+                    noPermissionCount = it.noPermissionCount
                 )
             }
         )

@@ -31,7 +31,14 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
 data class AgentIdentityInfo(
-    @ApiModelProperty(value = "鉴权信息")
-    @JsonProperty("agent_identity_info")
-    val agentIdentityInfo: String?
+    @ApiModelProperty(value = "用户名")
+    val account: String?,
+    @ApiModelProperty(value = "认证方式")
+    @JsonProperty("auth_type")
+    val authType: String?,
+    @ApiModelProperty(value = "端口")
+    val port: Int?,
+    @ApiModelProperty(value = "")
+    @JsonProperty("re_certification")
+    val reCertification: Boolean?
 )
