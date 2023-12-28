@@ -91,8 +91,12 @@ func doAsk() {
 	doneRequestExitError := exitcode.GetAndResetExitError()
 	// 发送前和发送后都有需要专门打印下日志
 	if exiterror != nil || doneRequestExitError != nil {
-		if exiterror != nil {
+		if exiterror != nil && doneRequestExitError != nil {
 			logs.Errorf("ExitError|%s|%s", exiterror.ErrorEnum, exiterror.Message)
+			exitcode.Exit(doneRequestExitError)
+		}
+		if exiterror != nil {
+			exitcode.Exit(exiterror)
 		}
 		exitcode.Exit(doneRequestExitError)
 	}

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"sync/atomic"
 	"syscall"
 
@@ -78,49 +79,63 @@ func CheckOsIoError(path string, err error) {
 	logs.Errorf("WriteFileCheck %s|%s", path, err.Error())
 }
 
-var workerSignFlag atomic.Int32 = atomic.Int32{}
+// 避免不必要的错杀，信号错误最少连续持续 10 次以上才能杀掉
 var jdkSignFlag atomic.Int32 = atomic.Int32{}
 
-type ExitSignType string
-
-const (
-	ExitSignJdk    = "signjdk"
-	ExitSignWorker = "signworker"
-)
-
-// 避免不必要的错杀，信号错误最少连续持续 10 次以上才能杀掉
-func CheckSignalError(err error, typ ExitSignType) {
+func CheckSignalJdkError(err error) {
 	if err == nil {
+		if jdkSignFlag.Load() > 0 {
+			jdkSignFlag.Add(-1)
+			logs.Warn("signjdk err nil add -1")
+		}
 		return
 	}
 
 	// 检查是不是需要杀掉的信号
-	if err.Error() != "signal: killed" {
+	if strings.TrimSpace(err.Error()) != "signal: killed" {
+		if jdkSignFlag.Load() > 0 {
+			jdkSignFlag.Add(-1)
+			logs.Warn(fmt.Sprintf("signjdk err %s unkunow add -1", err.Error()))
+		}
 		return
 	}
 
-	var res int32 = 1
-	logs.Warn(fmt.Sprintf("%s %s add 1", typ, err.Error()))
+	jdkSignFlag.Add(1)
+	logs.Warn(fmt.Sprintf("signjdk err %s add 1", err.Error()))
+	if jdkSignFlag.Load() >= 10 {
+		msg := fmt.Sprintf("signjdk err %s time 10, will exit", err.Error())
+		logs.Error(msg)
+		AddExitError(ExitJdkError, msg)
+		return
+	}
+}
 
-	switch typ {
-	case ExitSignJdk:
-		jdkSignFlag.Add(res)
+var workerSignFlag atomic.Int32 = atomic.Int32{}
 
-		if jdkSignFlag.Load() == 10 {
-			msg := fmt.Sprintf("%s %s time 10, will exit", typ, err.Error())
-			logs.Error(msg)
-			AddExitError(ExitJdkError, msg)
-			return
+func CheckSignalWorkerError(err error) {
+	if err == nil {
+		if workerSignFlag.Load() > 0 {
+			workerSignFlag.Add(-1)
+			logs.Warn("signworker err nil add -1")
 		}
+		return
+	}
 
-	case ExitSignWorker:
-		workerSignFlag.Add(res)
-
-		if workerSignFlag.Load() == 10 {
-			msg := fmt.Sprintf("%s %s time 10, will exit", typ, err.Error())
-			logs.Error(msg)
-			AddExitError(ExitWorkerError, msg)
-			return
+	// 检查是不是需要杀掉的信号
+	if strings.TrimSpace(err.Error()) != "signal: killed" {
+		if workerSignFlag.Load() > 0 {
+			workerSignFlag.Add(-1)
+			logs.Warn(fmt.Sprintf("signworker err %s unkunow add -1", err.Error()))
 		}
+		return
+	}
+
+	workerSignFlag.Add(1)
+	logs.Warn(fmt.Sprintf("signworker err %s add 1", err.Error()))
+	if workerSignFlag.Load() >= 10 {
+		msg := fmt.Sprintf("signworker err %s time 10, will exit", err.Error())
+		logs.Error(msg)
+		AddExitError(ExitWorkerError, msg)
+		return
 	}
 }

@@ -29,6 +29,7 @@ package api
 
 import (
 	"fmt"
+	"reflect"
 	"strconv"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
@@ -41,7 +42,8 @@ func buildUrl(url string) string {
 
 func FinishUpgrade(success bool) (*httputil.AgentResult, error) {
 	url := buildUrl("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/upgrade?success=" + strconv.FormatBool(success))
-	return httputil.NewHttpClient().Delete(url).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoAgentResult()
+	return httputil.NewHttpClient().Delete(url).
+		SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute(nil).IntoAgentResult()
 }
 
 func DownloadUpgradeFile(serverFile string, saveFile string) (fileMd5 string, err error) {
@@ -65,17 +67,20 @@ func AgentStartup() (*httputil.DevopsResult, error) {
 		SlaveVersion:  config.GAgentEnv.SlaveVersion,
 	}
 
-	return httputil.NewHttpClient().Post(url).Body(startInfo).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
+	return httputil.NewHttpClient().Post(url).Body(startInfo, false).
+		SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute(nil).IntoDevopsResult()
 }
 
 func WorkerBuildFinish(buildInfo *ThirdPartyBuildWithStatus) (*httputil.DevopsResult, error) {
 	url := buildUrl("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/workerBuildFinish")
-	return httputil.NewHttpClient().Post(url).Body(buildInfo).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
+	return httputil.NewHttpClient().Post(url).Body(buildInfo, false).
+		SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute(nil).IntoDevopsResult()
 }
 
 func UpdatePipelineStatus(response *PipelineResponse) (*httputil.DevopsResult, error) {
 	url := buildUrl("/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/pipelines")
-	return httputil.NewHttpClient().Put(url).Body(response).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
+	return httputil.NewHttpClient().Put(url).Body(response, false).
+		SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute(nil).IntoDevopsResult()
 }
 
 func DownloadAgentInstallBatchZip(saveFile string) error {
@@ -84,7 +89,12 @@ func DownloadAgentInstallBatchZip(saveFile string) error {
 	return httputil.DownloadAgentInstallScript(url, config.GAgentConfig.GetAuthHeaderMap(), saveFile)
 }
 
-func FinishDockerDebug(imageDebug *ImageDebug, success bool, debugUrl string, error *Error) (*httputil.DevopsResult, error) {
+func FinishDockerDebug(
+	imageDebug *ImageDebug,
+	success bool,
+	debugUrl string,
+	error *Error,
+) (*httputil.DevopsResult, error) {
 	url := buildUrl("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/docker/startupDebug")
 	body := &ImageDebugFinish{
 		ProjectId:  imageDebug.ProjectId,
@@ -94,12 +104,16 @@ func FinishDockerDebug(imageDebug *ImageDebug, success bool, debugUrl string, er
 		Success:    success,
 		Error:      error,
 	}
-	return httputil.NewHttpClient().Post(url).Body(body).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
+	return httputil.NewHttpClient().Post(url).Body(body, false).
+		SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute(nil).IntoDevopsResult()
 }
 
 func FetchDockerDebugStatus(debugId int64) (*httputil.DevopsResult, error) {
-	url := buildUrl(fmt.Sprintf("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/docker/debug/status?debugId=%d", debugId))
-	return httputil.NewHttpClient().Get(url).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
+	url := buildUrl(
+		fmt.Sprintf("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/docker/debug/status?debugId=%d", debugId),
+	)
+	return httputil.NewHttpClient().Get(url).
+		SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute(nil).IntoDevopsResult()
 }
 
 // AuthHeaderDevopsBuildId log需要的buildId的header
@@ -113,9 +127,7 @@ func AddLogLine(buildId string, message *LogMessage, vmSeqId string) (*httputil.
 	headers := config.GAgentConfig.GetAuthHeaderMap()
 	headers[AuthHeaderDevopsBuildId] = buildId
 	headers[AuthHeaderDevopsVmSeqId] = vmSeqId
-	return httputil.NewHttpClient().
-		Post(url).Body(message).SetHeaders(headers).Execute().
-		IntoDevopsResult()
+	return httputil.NewHttpClient().Post(url).Body(message, false).SetHeaders(headers).Execute(nil).IntoDevopsResult()
 }
 
 func AddLogRedLine(buildId string, message *LogMessage, vmSeqId string) (*httputil.DevopsResult, error) {
@@ -123,12 +135,34 @@ func AddLogRedLine(buildId string, message *LogMessage, vmSeqId string) (*httput
 	headers := config.GAgentConfig.GetAuthHeaderMap()
 	headers[AuthHeaderDevopsBuildId] = buildId
 	headers[AuthHeaderDevopsVmSeqId] = vmSeqId
-	return httputil.NewHttpClient().
-		Post(url).Body(message).SetHeaders(headers).Execute().
-		IntoDevopsResult()
+	return httputil.NewHttpClient().Post(url).Body(message, false).SetHeaders(headers).Execute(nil).IntoDevopsResult()
+}
+
+// 针对Ask请求做日志特殊处理，优化打印重复日志过多影响排查的问题
+
+var askRequest = struct {
+	Body *AskInfo
+	Resp *httputil.IgnoreDupLogResp
+}{
+	&AskInfo{},
+	&httputil.IgnoreDupLogResp{},
 }
 
 func Ask(info *AskInfo) (*httputil.AgentResult, error) {
 	url := buildUrl("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/ask")
-	return httputil.NewHttpClient().Post(url).Body(info).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoAgentResult()
+
+	bodyEq := reflect.DeepEqual(info, askRequest.Body)
+
+	resp := httputil.NewHttpClient().Post(url).Body(info, bodyEq).
+		SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute(askRequest.Resp)
+
+	if !bodyEq {
+		askRequest.Body = info
+	}
+	if !resp.IgnoreDupLog {
+		askRequest.Resp.Status = resp.Status
+		askRequest.Resp.Resp = string(resp.Body)
+	}
+
+	return resp.IntoAgentResult()
 }
