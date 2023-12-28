@@ -232,4 +232,18 @@ interface ServiceRepositoryResource {
         @ApiParam("流水线引用信息", required = true)
         request: RepoPipelineRefRequest
     ): Result<Boolean>
+
+    @ApiOperation("添加插件库的标志位")
+    @POST
+    @Path("/projects/{projectId}/insertAtomRepoFlag")
+    fun insertAtomRepoFlag(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = false)
+        @PathParam("projectId")
+        projectId: String?,
+        @ApiParam("流水线引用信息", required = false)
+        repoHashIds: Set<String>?
+    ): Result<Boolean>
 }

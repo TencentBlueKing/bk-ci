@@ -37,5 +37,7 @@ data class RepoAuthInfo(
     @ApiModelProperty("授权凭证ID", required = true)
     val credentialId: String,
     @ApiModelProperty("SVN类型", required = false)
-    val svnType: String? = StringUtils.EMPTY
+    val svnType: String? = StringUtils.EMPTY,
+    @ApiModelProperty("插件仓库", required = false)
+    val atomRepo: Boolean? = false
 )

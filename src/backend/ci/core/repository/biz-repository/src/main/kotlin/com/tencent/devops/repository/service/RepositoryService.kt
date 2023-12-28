@@ -166,7 +166,8 @@ class RepositoryService @Autowired constructor(
                 authType = RepoAuthType.OAUTH,
                 projectId = projectCode,
                 repoHashId = null,
-                gitProjectId = 0L
+                gitProjectId = 0L,
+                atomRepo = true
             )
 
             // 关联代码库
@@ -707,11 +708,12 @@ class RepositoryService @Autowired constructor(
             }
         }
         val repositoryList = repositoryRecordList.map {
-            val hasEditPermission = hasEditPermissionRepoList.contains(it.repositoryId)
-            val hasDeletePermission = hasDeletePermissionRepoList.contains(it.repositoryId)
+            val authInfo = repoAuthInfoMap[it.repositoryId]
+            val atomRepo = authInfo?.atomRepo ?: false
+            val hasEditPermission = hasEditPermissionRepoList.contains(it.repositoryId) && atomRepo
+            val hasDeletePermission = hasDeletePermissionRepoList.contains(it.repositoryId) && atomRepo
             val hasUsePermission = hasUsePermissionRepoList.contains(it.repositoryId)
             val hasViewPermission = hasViewPermissionRepoList.contains(it.repositoryId)
-            val authInfo = repoAuthInfoMap[it.repositoryId]
             RepositoryInfoWithPermission(
                 repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
                 aliasName = it.aliasName,
@@ -727,7 +729,8 @@ class RepositoryService @Autowired constructor(
                 authIdentity = authInfo?.credentialId?.ifBlank { it.userId },
                 createTime = it.createdTime.timestamp(),
                 createUser = it.userId,
-                updatedUser = it.updatedUser ?: it.userId
+                updatedUser = it.updatedUser ?: it.userId,
+                atomRepo = atomRepo
             )
         }
         return Pair(SQLPage(count, repositoryList), hasCreatePermission)
@@ -866,7 +869,17 @@ class RepositoryService @Autowired constructor(
         if (record.projectId != projectId) {
             throw NotFoundException("Repository is not part of the project")
         }
-
+        if (record.type == ScmType.CODE_GIT.name) {
+            val codeGitService = CodeRepositoryServiceRegistrar.getServiceByScmType(ScmType.CODE_GIT.name)
+            if ((codeGitService.compose(record) as CodeGitRepository).atomRepo == true) {
+                throw OperationException(
+                    MessageUtil.getMessageByLocale(
+                        RepositoryMessageCode.ATOM_REPO_CAN_NOT_DELETE,
+                        I18nUtil.getLanguage(userId)
+                    )
+                )
+            }
+        }
         deleteResource(projectId, repositoryId)
         val deleteTime = DateTimeUtil.toDateTime(LocalDateTime.now(), "yyMMddHHmmSS")
         val deleteAliasName = "${record.aliasName}[$deleteTime]"
@@ -1139,6 +1152,29 @@ class RepositoryService @Autowired constructor(
             updateUser = userId,
             hashId = repositoryHashId,
             newName = repoRename.name
+        )
+    }
+
+    fun insertAtomRepoFlag(
+        userId: String,
+        projectId: String?,
+        repoHashIds: Set<String>?
+    ) {
+        if (repoHashIds.isNullOrEmpty()) {
+            return
+        }
+        val repositoryIds = repositoryDao.listByProjectIdAndIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            repositoryIds = repoHashIds.map { HashUtil.decodeOtherIdToLong(it) }.toSet(),
+            scmType = ScmType.CODE_GIT
+        ).map {
+            it.repositoryId
+        }.toSet()
+        logger.info("insert atom repo flag, repositoryIds: $repositoryIds, projectId: $projectId")
+        repositoryCodeGitDao.insertAtomRepoFlag(
+            dslContext = dslContext,
+            ids = repositoryIds
         )
     }
 

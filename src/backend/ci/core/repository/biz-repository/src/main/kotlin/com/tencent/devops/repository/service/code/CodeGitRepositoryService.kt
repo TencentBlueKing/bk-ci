@@ -111,6 +111,14 @@ class CodeGitRepositoryService @Autowired constructor(
         repository: CodeGitRepository,
         record: TRepositoryRecord
     ) {
+        if (compose(record).atomRepo == true) {
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    RepositoryMessageCode.ATOM_REPO_CAN_NOT_EDIT,
+                    I18nUtil.getLanguage(userId)
+                )
+            )
+        }
         // 提交的参数与数据库中类型不匹配
         if (record.type != ScmType.CODE_GIT.name) {
             throw OperationException(
@@ -184,7 +192,8 @@ class CodeGitRepositoryService @Autowired constructor(
             authType = RepoAuthType.parse(record.authType),
             projectId = repository.projectId,
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
-            gitProjectId = record.gitProjectId
+            gitProjectId = record.gitProjectId,
+            atomRepo = record.atomRepo
         )
     }
 
@@ -286,7 +295,7 @@ class CodeGitRepositoryService @Autowired constructor(
             } else {
                 it.credentialId
             }
-            RepoAuthInfo(gitAuthType, gitAuthIdentity)
+            RepoAuthInfo(authType = gitAuthType, credentialId = gitAuthIdentity, atomRepo = it.atomRepo)
         }) ?: mapOf()
     }
 

@@ -47,7 +47,8 @@ class RepositoryCodeGitDao {
         userName: String,
         credentialId: String,
         authType: RepoAuthType?,
-        gitProjectId: Long
+        gitProjectId: Long,
+        atomRepo: Boolean? = false
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryCodeGit.T_REPOSITORY_CODE_GIT) {
@@ -60,7 +61,8 @@ class RepositoryCodeGitDao {
                 CREATED_TIME,
                 UPDATED_TIME,
                 AUTH_TYPE,
-                GIT_PROJECT_ID
+                GIT_PROJECT_ID,
+                ATOM_REPO
             )
                 .values(
                     repositoryId,
@@ -70,7 +72,8 @@ class RepositoryCodeGitDao {
                     now,
                     now,
                     authType?.name,
-                    gitProjectId
+                    gitProjectId,
+                    atomRepo
                 ).execute()
         }
     }
@@ -174,6 +177,18 @@ class RepositoryCodeGitDao {
             dslContext.update(this)
                 .set(GIT_PROJECT_ID, gitProjectId)
                 .where(conditions)
+                .execute()
+        }
+    }
+
+    fun insertAtomRepoFlag(
+        dslContext: DSLContext,
+        ids: Set<Long>
+    ) {
+        with(TRepositoryCodeGit.T_REPOSITORY_CODE_GIT) {
+            dslContext.update(this)
+                .set(ATOM_REPO, true)
+                .where(REPOSITORY_ID.`in`(ids))
                 .execute()
         }
     }

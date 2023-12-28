@@ -218,4 +218,17 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         )
         return Result(true)
     }
+
+    override fun insertAtomRepoFlag(
+        userId: String,
+        projectId: String?,
+        repoHashIds: Set<String>?
+    ): Result<Boolean> {
+        repositoryService.insertAtomRepoFlag(
+            userId = userId,
+            projectId = projectId,
+            repoHashIds = repoHashIds
+        )
+        return Result(true)
+    }
 }

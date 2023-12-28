@@ -62,5 +62,7 @@ data class RepositoryInfoWithPermission(
     @ApiModelProperty("svn的protocal类型（http|ssh）", required = false)
     val svnType: String? = null,
     @ApiModelProperty("授权身份", required = true)
-    val authIdentity: String? = null
+    val authIdentity: String? = null,
+    @ApiModelProperty("插件仓库", required = true)
+    val atomRepo: Boolean? = false
 )

@@ -420,4 +420,43 @@ class RepositoryDao {
                 .execute()
         }
     }
+
+    fun listByProjectIdAndIds(
+        dslContext: DSLContext,
+        projectId: String?,
+        repositoryIds: Set<Long>,
+        scmType: ScmType
+    ): List<TRepositoryRecord> {
+        return with(TRepository.T_REPOSITORY) {
+            dslContext.selectFrom(this)
+                .where(
+                    buildConditions(
+                        projectId = projectId,
+                        ids = repositoryIds,
+                        type  = scmType,
+                        delete = true
+                    )
+                ).fetch()
+        }
+    }
+
+    fun buildConditions(
+        projectId: String? = null,
+        ids: Set<Long>? = null,
+        type: ScmType? = null,
+        aliasName: String? = null,
+        delete: Boolean? = null,
+        userId: String? = null
+    ): List<Condition> {
+        return with(TRepository.T_REPOSITORY) {
+            val conditions = mutableListOf<Condition>()
+            if (!projectId.isNullOrBlank()) conditions.add(PROJECT_ID.eq(projectId))
+            if (!ids.isNullOrEmpty()) conditions.add(REPOSITORY_ID.`in`(ids))
+            if (type != null) conditions.add(TYPE.eq(type.name))
+            if (!aliasName.isNullOrBlank()) conditions.add(ALIAS_NAME.like("%$aliasName%"))
+            if (delete != null) conditions.add(IS_DELETED.eq(delete))
+            if (!userId.isNullOrBlank()) conditions.add(USER_ID.eq(userId))
+            conditions
+        }
+    }
 }
