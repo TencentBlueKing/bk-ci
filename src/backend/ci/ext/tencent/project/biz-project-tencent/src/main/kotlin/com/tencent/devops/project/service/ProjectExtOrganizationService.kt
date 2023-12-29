@@ -73,6 +73,7 @@ class ProjectExtOrganizationService constructor(
     }
 
     fun fixProjectOrganization(englishNames: List<String>): Boolean {
+        logger.info("batch fix  project organization:$englishNames")
         englishNames.forEach {
             executor.submit {
                 fixProjectOrganization(englishName = it)
