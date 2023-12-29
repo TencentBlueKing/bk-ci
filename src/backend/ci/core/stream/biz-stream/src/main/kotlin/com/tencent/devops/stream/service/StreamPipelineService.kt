@@ -435,8 +435,8 @@ class StreamPipelineService @Autowired constructor(
         val pipelineNoBuild: Map<String, String>? = if (noBuildPipelines.isEmpty()) {
             emptyMap()
         } else {
-            gitRequestEventNotBuildDao.getPipelinesLastBuild(dslContext, gitProjectId, noBuildPipelines)
-                ?.associate { it.pipelineId to it.branch }
+            gitRequestEventNotBuildDao.getPipelinesLastBuild(dslContext, noBuildPipelines)
+                ?.associate { it.first to it.second }
         }
         pipelineIds.forEach { pipelineId ->
             if (!pipelineBuild?.get(pipelineId).isNullOrBlank()) {

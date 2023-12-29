@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.PipelineModelWithYamlRequest
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
@@ -62,7 +63,7 @@ import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.template.TemplateFacadeService
-import com.tencent.devops.process.service.transfer.PipelineTransferYamlService
+import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.yaml.modelTransfer.PipelineTransferException
@@ -146,6 +147,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             detailInfo = detailInfo
         )
         val version = draftVersion?.version ?: releaseVersion!!.version
+        val versionName = draftVersion?.versionName ?: releaseVersion!!.versionName
         pipelineRecentUseService.record(userId, projectId, pipelineId)
         return PipelineDetail(
             pipelineId = detailInfo.pipelineId,
@@ -161,8 +163,9 @@ class PipelineVersionFacadeService @Autowired constructor(
             createTime = detailInfo.createTime,
             updateTime = detailInfo.updateTime,
             viewNames = detailInfo.viewNames,
+            onlyDraft = detailInfo.onlyDraft == true,
             version = version,
-            versionName = draftVersion?.versionName ?: releaseVersion!!.versionName,
+            versionName = versionName,
             releaseVersion = releaseVersion?.version,
             releaseVersionName = releaseVersion?.versionName,
             baseVersionStatus = baseVersionStatus,
@@ -191,39 +194,36 @@ class PipelineVersionFacadeService @Autowired constructor(
         ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_DRAFT_EXISTS
         )
-        val draftSetting = draftVersion.version.let {
+        val draftSetting = draftVersion.settingVersion?.let {
             pipelineSettingFacadeService.userGetSetting(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = it
             )
+        } ?: pipelineSettingFacadeService.userGetSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+        // TODO #8164 增加同步PAC仓库
+        val pushBranchName = "master"
+        val (versionStatus, branchName) = if (request.targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE) {
+            Pair(VersionStatus.BRANCH, pushBranchName)
+        } else {
+            Pair(VersionStatus.RELEASED, null)
         }
+        val model = draftVersion.model.copy(staticViews = request.staticViews)
         val savedSetting = pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             updateVersion = false,
+            versionStatus = versionStatus,
             setting = draftSetting.copy(
                 desc = request.description ?: ""
             )
         )
-        // TODO #8164 增加同步PAC仓库
-        if (draftVersion.status != VersionStatus.COMMITTING) throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_VERSION_IS_NOT_DRAFT
-        )
-//        val latestDebugPassed = draftVersion.debugBuildId?.let { debugBuildId ->
-//            val debugBuild = pipelineRuntimeService.getBuildInfo(
-//                projectId = projectId,
-//                pipelineId = pipelineId,
-//                buildId = debugBuildId
-//            )
-//            debugBuild?.status?.isSuccess() == true
-//        } ?: false
-//        if (!latestDebugPassed) throw ErrorCodeException(
-//            errorCode = ProcessMessageCode.ERROR_RELEASE_VERSION_HAS_NOT_PASSED_DEBUGGING
-//        )
-        val model = draftVersion.model.copy(staticViews = request.staticViews)
         val result = pipelineRepositoryService.deployPipeline(
             model = model,
             projectId = projectId,
@@ -233,7 +233,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             create = false,
             updateLastModifyUser = true,
             savedSetting = savedSetting,
-            versionStatus = VersionStatus.RELEASED,
+            versionStatus = versionStatus,
+            branchName = branchName,
             description = request.description?.takeIf { it.isNotBlank() } ?: draftVersion.description,
             yamlStr = draftVersion.yaml,
             baseVersion = draftVersion.baseVersion,
@@ -556,6 +557,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             creator = resource.creator,
             createTime = resource.createTime.timestampmilli(),
+            updateTime = resource.updateTime?.timestampmilli(),
             version = resource.version,
             versionName = resource.versionName ?: "init",
             referFlag = resource.referFlag,
@@ -565,7 +567,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             settingVersion = resource.settingVersion,
             status = resource.status,
             debugBuildId = resource.debugBuildId,
-            baseVersion = resource.baseVersion
+            baseVersion = resource.baseVersion,
+            description = resource.description
         )
     }
 

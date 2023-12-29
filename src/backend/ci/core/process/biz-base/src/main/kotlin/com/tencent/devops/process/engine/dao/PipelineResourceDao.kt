@@ -54,6 +54,7 @@ class PipelineResourceDao {
         version: Int,
         versionName: String?,
         model: Model,
+        yamlStr: String?,
         pipelineVersion: Int,
         triggerVersion: Int,
         settingVersion: Int
@@ -67,6 +68,7 @@ class PipelineResourceDao {
                 .set(VERSION, version)
                 .set(VERSION_NAME, versionName)
                 .set(MODEL, modelString)
+                .set(YAML, yamlStr)
                 .set(CREATOR, creator)
                 .set(CREATE_TIME, LocalDateTime.now())
                 .set(PIPELINE_VERSION, pipelineVersion)
@@ -83,7 +85,7 @@ class PipelineResourceDao {
         }
     }
 
-    fun getLatestVersionRecord(
+    fun getReleaseVersionRecord(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String
@@ -120,6 +122,7 @@ class PipelineResourceDao {
                 creator = record.creator,
                 versionName = record.versionName,
                 createTime = record.createTime,
+                updateTime = null,
                 pipelineVersion = record.pipelineVersion,
                 triggerVersion = record.triggerVersion,
                 settingVersion = record.settingVersion

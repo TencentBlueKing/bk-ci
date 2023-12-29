@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.dao
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE_VERSION
 import com.tencent.devops.model.process.tables.records.TPipelineResourceVersionRecord
@@ -57,14 +58,15 @@ class PipelineResourceVersionDao {
         pipelineId: String,
         creator: String,
         version: Int,
-        versionName: String?,
+        versionName: String,
         model: Model,
-        baseVersion: Int,
+        baseVersion: Int?,
         yaml: String?,
         pipelineVersion: Int?,
         triggerVersion: Int?,
         settingVersion: Int?,
         versionStatus: VersionStatus?,
+        branchAction: BranchVersionAction?,
         description: String?
     ): TPipelineResourceVersionRecord? {
         return create(
@@ -81,6 +83,7 @@ class PipelineResourceVersionDao {
             triggerVersion = triggerVersion,
             settingVersion = settingVersion,
             versionStatus = versionStatus,
+            branchAction = branchAction,
             description = description
         )
     }
@@ -91,14 +94,15 @@ class PipelineResourceVersionDao {
         pipelineId: String,
         creator: String,
         version: Int,
-        versionName: String?,
+        versionName: String,
         modelStr: String,
-        baseVersion: Int,
+        baseVersion: Int?,
         yamlStr: String?,
         pipelineVersion: Int?,
         triggerVersion: Int?,
         settingVersion: Int?,
         versionStatus: VersionStatus?,
+        branchAction: BranchVersionAction?,
         description: String?
     ): TPipelineResourceVersionRecord? {
         with(T_PIPELINE_RESOURCE_VERSION) {
@@ -115,6 +119,7 @@ class PipelineResourceVersionDao {
                 .set(TRIGGER_VERSION, triggerVersion)
                 .set(SETTING_VERSION, settingVersion)
                 .set(STATUS, versionStatus?.name)
+                .set(BRANCH_ACTION, branchAction?.name)
                 .set(DESCRIPTION, description)
                 .set(BASE_VERSION, baseVersion)
                 .onDuplicateKeyUpdate()
@@ -127,6 +132,7 @@ class PipelineResourceVersionDao {
                 .set(TRIGGER_VERSION, triggerVersion)
                 .set(SETTING_VERSION, settingVersion)
                 .set(STATUS, versionStatus?.name)
+                .set(BRANCH_ACTION, branchAction?.name)
                 .set(DESCRIPTION, description)
                 .returning()
                 .fetchOne()
@@ -160,20 +166,26 @@ class PipelineResourceVersionDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        version: Int?,
-        includeDraft: Boolean? = null
+        version: Int? = null,
+        includeDraft: Boolean? = null,
+        branchName: String? = null
     ): PipelineResourceVersion? {
         with(T_PIPELINE_RESOURCE_VERSION) {
-            val where = dslContext.selectFrom(this)
+            val query = dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+            // 如果传入分支名称则一定是取最新的分支版本
+            branchName?.let {
+                query.and(STATUS.eq(VersionStatus.BRANCH.name))
+                    .and(VERSION_NAME.eq(branchName))
+            }
             if (version != null) {
-                where.and(VERSION.eq(version))
+                query.and(VERSION.eq(version))
             } else {
                 // 非新的逻辑请求则保持旧逻辑
-                if (includeDraft != true) where.and(STATUS.ne(VersionStatus.COMMITTING.name))
-                where.orderBy(VERSION.desc()).limit(1)
+                if (includeDraft != true) query.and(STATUS.ne(VersionStatus.COMMITTING.name))
+                query.orderBy(VERSION.desc()).limit(1)
             }
-            return where.fetchAny(mapper)
+            return query.fetchAny(mapper)
         }
     }
 
@@ -395,6 +407,28 @@ class PipelineResourceVersionDao {
         }
     }
 
+    fun updateBranchVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        branchName: String?,
+        branchVersionAction: BranchVersionAction
+    ): Int {
+        with(T_PIPELINE_RESOURCE_VERSION) {
+            val update = dslContext.update(this)
+                .set(BRANCH_ACTION, branchVersionAction.name)
+                .where(
+                    PIPELINE_ID.eq(pipelineId)
+                        .and(PROJECT_ID.eq(projectId))
+                        .and(STATUS.eq(VersionStatus.BRANCH.name))
+                        // 只有非活跃的分支可以被修改状态
+                        .and(BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name))
+                )
+            branchName?.let { update.and(VERSION_NAME.eq(branchName)) }
+            return update.execute()
+        }
+    }
+
     class PipelineResourceVersionJooqMapper : RecordMapper<TPipelineResourceVersionRecord, PipelineResourceVersion> {
         override fun map(record: TPipelineResourceVersionRecord?): PipelineResourceVersion? {
             return record?.let {
@@ -413,12 +447,14 @@ class PipelineResourceVersionDao {
                     creator = record.creator,
                     versionName = record.versionName,
                     createTime = record.createTime,
+                    updateTime = record.updateTime,
                     pipelineVersion = record.pipelineVersion,
                     triggerVersion = record.triggerVersion,
                     settingVersion = record.settingVersion,
                     referFlag = record.referFlag,
                     referCount = record.referCount,
                     status = record.status?.let { VersionStatus.valueOf(it) },
+                    branchAction = record.branchAction?.let { BranchVersionAction.valueOf(it) },
                     description = record.description,
                     debugBuildId = record.debugBuildId,
                     baseVersion = record.baseVersion
@@ -433,7 +469,8 @@ class PipelineResourceVersionDao {
                 PipelineVersionSimple(
                     pipelineId = record.pipelineId,
                     creator = record.creator ?: "unknown",
-                    createTime = record.createTime?.timestampmilli() ?: 0,
+                    createTime = record.createTime.timestampmilli(),
+                    updateTime = record.updateTime.timestampmilli(),
                     version = record.version ?: 1,
                     versionName = record.versionName ?: "init",
                     referFlag = record.referFlag,
@@ -443,7 +480,8 @@ class PipelineResourceVersionDao {
                     settingVersion = record.settingVersion,
                     status = record.status?.let { VersionStatus.valueOf(it) },
                     debugBuildId = record.debugBuildId,
-                    baseVersion = record.baseVersion
+                    baseVersion = record.baseVersion,
+                    description = record.description
                 )
             }
         }

@@ -109,6 +109,7 @@ open class DefaultModelCheckPlugin constructor(
         val elementCnt = mutableMapOf<String, Int>()
         val containerCnt = mutableMapOf<String, Int>()
         val lastPosition = model.stages.size - 1
+
         model.stages.forEachIndexed { nowPosition, stage ->
             val containers = stage.containers
             // 判断stage下container数量是否超过系统限制

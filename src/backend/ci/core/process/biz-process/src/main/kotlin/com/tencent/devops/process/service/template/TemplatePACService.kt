@@ -16,7 +16,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferMark
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.service.label.PipelineGroupService
-import com.tencent.devops.process.service.transfer.PipelineTransferYamlService
+import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.yaml.modelTransfer.PipelineTransferException
 import com.tencent.devops.process.yaml.modelTransfer.TransferMapper
 import org.jooq.DSLContext

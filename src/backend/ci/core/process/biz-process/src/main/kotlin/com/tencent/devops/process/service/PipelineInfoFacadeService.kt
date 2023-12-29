@@ -52,6 +52,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelUpdate
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
@@ -64,7 +65,6 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.PipelineViewType
@@ -78,7 +78,6 @@ import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.jmx.pipeline.PipelineBean
@@ -87,11 +86,10 @@ import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
-import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
-import com.tencent.devops.process.service.transfer.PipelineTransferYamlService
+import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.yaml.modelTransfer.aspect.IPipelineTransferAspect
@@ -127,11 +125,7 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val processJmxApi: ProcessJmxApi,
     private val client: Client,
     private val pipelineInfoDao: PipelineInfoDao,
-    private val transferService: PipelineTransferYamlService,
-    private val pipelineRuntimeService: PipelineRuntimeService,
-    private val redisOperation: RedisOperation,
-    private val pipelineRecentUseService: PipelineRecentUseService,
-    private val pipelineAsCodeService: PipelineAsCodeService
+    private val transferService: PipelineTransferYamlService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -310,6 +304,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         param: List<BuildFormProperty>? = null,
         fixTemplateVersion: Long? = null,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
+        branchName: String? = null,
         useSubscriptionSettings: Boolean? = false,
         useLabelSettings: Boolean? = false,
         useConcurrencyGroup: Boolean? = false,
@@ -368,6 +363,15 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
             }
 
+            // 如果为分支版本的报错，必须指定分支名称
+            if (versionStatus == VersionStatus.BRANCH && branchName.isNullOrBlank()) {
+                throw ErrorCodeException(
+                    statusCode = Response.Status.BAD_REQUEST.statusCode,
+                    errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
+                    params = arrayOf("branchName")
+                )
+            }
+
             // 检查用户是否有插件的使用权限
             if (model.srcTemplateId != null) {
                 watcher.start("store_template_perm")
@@ -422,25 +426,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 } else {
                     model
                 }
-                watcher.start("generateYaml")
-                val savedYaml = yaml ?: try {
-                    transferService.transfer(
-                        userId = userId,
-                        projectId = projectId,
-                        pipelineId = null,
-                        actionType = TransferActionType.FULL_MODEL2YAML,
-                        data = TransferBody(
-                            modelAndSetting = PipelineModelAndSetting(
-                                model = model,
-                                setting = PipelineSetting(pipelineAsCodeSettings = pipelineAsCodeSettings)
-                            )
-                        )
-                    ).newYaml ?: ""
-                } catch (ignore: Throwable) {
-                    // 旧流水线可能无法转换，用空YAML代替
-                    logger.warn("TRANSFER_YAML|$projectId|$userId", ignore)
-                    null
-                }
+
                 watcher.start("deployPipeline")
                 val result = pipelineRepositoryService.deployPipeline(
                     model = instance,
@@ -452,9 +438,10 @@ class PipelineInfoFacadeService @Autowired constructor(
                     useSubscriptionSettings = useSubscriptionSettings,
                     useConcurrencyGroup = useConcurrencyGroup,
                     versionStatus = versionStatus,
+                    branchName = branchName,
                     templateId = templateId,
                     description = null,
-                    yamlStr = savedYaml,
+                    yamlStr = null,
                     baseVersion = null,
                     pipelineAsCodeSettings = pipelineAsCodeSettings
                 )
@@ -594,6 +581,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             channelCode = ChannelCode.BS,
             yaml = yml,
             versionStatus = versionStatus,
+            branchName = branchName,
             pipelineAsCodeSettings = pipelineAsCodeSettings
         )
         newResource.setting.projectId = projectId
@@ -651,6 +639,44 @@ class PipelineInfoFacadeService @Autowired constructor(
             savedSetting = savedSetting,
             versionStatus = versionStatus,
             pipelineAsCodeSettings = pipelineAsCodeSettings
+        )
+    }
+
+    fun updateBranchVersion(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        branchName: String,
+        branchVersionAction: BranchVersionAction
+    ) {
+        pipelineRepositoryService.updatePipelineBranchVersion(
+            projectId, pipelineId, branchName, branchVersionAction
+        )
+    }
+
+    fun updateYamlPipelineSetting(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        pipelineAsCodeSettings: PipelineAsCodeSettings
+    ) {
+        val setting = pipelineSettingFacadeService.getSettingInfo(projectId, pipelineId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
+            )
+        if (setting.pipelineAsCodeSettings?.enable == true && !pipelineAsCodeSettings.enable) {
+            // 关闭PAC开关时，将所有分支版本设为
+            pipelineRepositoryService.updatePipelineBranchVersion(
+                projectId, pipelineId, null, BranchVersionAction.INACTIVE
+            )
+        }
+
+        pipelineSettingFacadeService.saveSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            setting = setting.copy(pipelineAsCodeSettings = pipelineAsCodeSettings)
         )
     }
 
@@ -900,6 +926,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         updateLastModifyUser: Boolean? = true,
         savedSetting: PipelineSetting? = null,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
+        branchName: String? = null,
         description: String? = null,
         baseVersion: Int? = null,
         pipelineAsCodeSettings: PipelineAsCodeSettings? = null
@@ -987,6 +1014,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 updateLastModifyUser = updateLastModifyUser,
                 savedSetting = savedSetting,
                 versionStatus = versionStatus,
+                branchName = branchName,
                 description = description,
                 yamlStr = yaml,
                 baseVersion = baseVersion,
@@ -1083,62 +1111,6 @@ class PipelineInfoFacadeService @Autowired constructor(
         setting.pipelineId = pipelineResult.pipelineId // fix 用户端可能不传入pipelineId的问题，或者传错的问题
 
         return pipelineResult
-    }
-
-    fun getPipelineResourceVersion(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        channelCode: ChannelCode,
-        version: Int? = null,
-        checkPermission: Boolean = true,
-        includeDraft: Boolean? = false
-    ): PipelineResourceVersion {
-        if (checkPermission) {
-            val permission = AuthPermission.VIEW
-            pipelinePermissionService.validPipelinePermission(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                permission = permission,
-                message = MessageUtil.getMessageByLocale(
-                    USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                    I18nUtil.getLanguage(userId),
-                    arrayOf(
-                        userId,
-                        projectId,
-                        permission.getI18n(I18nUtil.getLanguage(userId)),
-                        pipelineId
-                    )
-                )
-            )
-        }
-
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
-            )
-
-        if (pipelineInfo.channelCode != channelCode) {
-            throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_CHANNEL_CODE,
-                params = arrayOf(pipelineInfo.channelCode.name)
-            )
-        }
-
-        val resource = pipelineRepositoryService.getPipelineResourceVersion(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = version,
-            includeDraft = includeDraft
-        ) ?: throw ErrorCodeException(
-            statusCode = Response.Status.NOT_FOUND.statusCode,
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
-        )
-        val fixedModel = getFixedModel(resource.model, projectId, pipelineId, userId, pipelineInfo)
-        return resource.copy(model = fixedModel)
     }
 
     @ActionAuditRecord(

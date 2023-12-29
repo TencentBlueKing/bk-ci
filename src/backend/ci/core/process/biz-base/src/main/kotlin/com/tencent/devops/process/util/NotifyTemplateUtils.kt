@@ -28,11 +28,6 @@
 package com.tencent.devops.process.util
 
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
-import com.tencent.devops.process.utils.PIPELINE_NAME
-import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
-import com.tencent.devops.process.utils.PIPELINE_TIME_DURATION
-import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 
 object NotifyTemplateUtils {
 

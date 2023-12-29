@@ -33,7 +33,7 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("流水线名称与Id")
+@ApiModel("流水线预览页完整信息")
 data class PipelineDetail(
     @ApiModelProperty("流水线Id")
     val pipelineId: String,
@@ -75,6 +75,8 @@ data class PipelineDetail(
     var viewNames: List<String>? = null,
     @ApiModelProperty("Lock 类型", required = false)
     val runLockType: PipelineRunLockType? = null,
+    @ApiModelProperty("仅存在草稿", required = false)
+    var onlyDraft: Boolean? = false,
     @ApiModelProperty("PAC配置", required = false)
     val pipelineAsCodeSettings: PipelineAsCodeSettings?
 )

@@ -626,21 +626,12 @@ class ServicePipelineResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<Page<Pipeline>> {
         checkParam(userId, projectId)
-        val bkAuthPermission = when (permission) {
-            Permission.DEPLOY -> AuthPermission.DEPLOY
-            Permission.DOWNLOAD -> AuthPermission.DOWNLOAD
-            Permission.EDIT -> AuthPermission.EDIT
-            Permission.EXECUTE -> AuthPermission.EXECUTE
-            Permission.DELETE -> AuthPermission.DELETE
-            Permission.VIEW -> AuthPermission.VIEW
-            Permission.CREATE -> AuthPermission.CREATE
-            Permission.LIST -> AuthPermission.LIST
-        }
         val result = pipelineListFacadeService.hasPermissionList(
             userId = userId,
             projectId = projectId,
-            authPermission = bkAuthPermission,
+            permission = permission,
             excludePipelineId = excludePipelineId,
+            filterByPipelineName = null,
             page = page,
             pageSize = pageSize
         )

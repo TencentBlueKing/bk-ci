@@ -105,6 +105,7 @@ class PipelineOperationLogService @Autowired constructor(
         ).forEach { versionMap[it.version] = it }
         val detailList = opList.map {
             with(it) {
+                val operationLogStr = "${operationLogType.getI18n(I18nUtil.getRequestUserLanguage())} $params"
                 PipelineOperationDetail(
                     id = id,
                     projectId = projectId,
@@ -112,7 +113,7 @@ class PipelineOperationLogService @Autowired constructor(
                     version = version,
                     operator = operator,
                     operationLogType = operationLogType,
-                    operationLogStr = operationLogType.getI18n(I18nUtil.getRequestUserLanguage()),
+                    operationLogStr = operationLogStr,
                     params = params,
                     description = description,
                     operateTime = operateTime,

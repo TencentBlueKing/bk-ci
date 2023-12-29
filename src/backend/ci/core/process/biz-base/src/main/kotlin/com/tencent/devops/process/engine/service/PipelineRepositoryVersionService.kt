@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
@@ -127,6 +128,7 @@ class PipelineRepositoryVersionService(
         ) ?: return null
         return PipelineVersionWithInfo(
             createTime = pipelineInfo.createTime,
+            updateTime = resource.updateTime?.timestampmilli(),
             creator = pipelineInfo.creator,
             canElementSkip = pipelineInfo.canElementSkip,
             canManualStartup = pipelineInfo.canManualStartup,
@@ -202,6 +204,7 @@ class PipelineRepositoryVersionService(
             list.add(
                 PipelineVersionWithInfo(
                     createTime = pipelineInfo.createTime,
+                    updateTime = it.updateTime,
                     creator = pipelineInfo.creator,
                     canElementSkip = pipelineInfo.canElementSkip,
                     canManualStartup = pipelineInfo.canManualStartup,
@@ -221,7 +224,8 @@ class PipelineRepositoryVersionService(
                     settingVersion = it.settingVersion,
                     status = it.status,
                     debugBuildId = it.debugBuildId,
-                    baseVersion = it.baseVersion
+                    baseVersion = it.baseVersion,
+                    description = it.description
                 )
             )
         }

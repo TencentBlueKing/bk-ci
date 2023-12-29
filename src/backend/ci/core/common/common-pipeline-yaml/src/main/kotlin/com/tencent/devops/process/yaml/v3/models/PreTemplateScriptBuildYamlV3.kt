@@ -61,7 +61,9 @@ data class PreTemplateScriptBuildYamlV3(
     override val notices: List<PacNotices>?,
     override var concurrency: Concurrency? = null,
     @JsonProperty("disable-pipeline")
-    override var disablePipeline: Boolean? = null
+    override var disablePipeline: Boolean? = null,
+    @JsonProperty("recommended-version")
+    override var recommendedVersion: RecommendedVersion? = null
 ) : IPreTemplateScriptBuildYaml, ITemplateFilter {
 
     init {

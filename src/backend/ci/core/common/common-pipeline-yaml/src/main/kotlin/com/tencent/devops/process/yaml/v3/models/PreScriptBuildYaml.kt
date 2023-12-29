@@ -54,6 +54,7 @@ interface PreScriptBuildYamlI : YamlVersion {
     var finally: LinkedHashMap<String, PreJob>?
     val concurrency: Concurrency?
     val disablePipeline: Boolean?
+    val recommendedVersion: RecommendedVersion?
 }
 
 /**
@@ -78,7 +79,8 @@ data class PreScriptBuildYaml(
     var notices: List<GitNotices>?,
     override var finally: LinkedHashMap<String, PreJob>? = null,
     override val concurrency: Concurrency? = null,
-    override val disablePipeline: Boolean? = null
+    override val disablePipeline: Boolean? = null,
+    override val recommendedVersion: RecommendedVersion? = null
 ) : PreScriptBuildYamlI {
     override fun yamlVersion() = YamlVersion.Version.V2_0
 }

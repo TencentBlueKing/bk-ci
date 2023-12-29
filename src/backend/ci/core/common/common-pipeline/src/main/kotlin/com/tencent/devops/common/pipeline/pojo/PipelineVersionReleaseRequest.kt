@@ -37,9 +37,6 @@ data class PipelineVersionReleaseRequest(
     var description: String? = null,
     @ApiModelProperty("模板版本号（为空时默认最新）", required = false)
     var targetAction: CodeTargetAction?,
-    // 只用于展示暂时去掉
-//    @ApiModelProperty("标签", required = false)
-//    var labels: List<String> = emptyList(),
     @ApiModelProperty("静态流水线组", required = false)
     var staticViews: List<String> = emptyList()
 )

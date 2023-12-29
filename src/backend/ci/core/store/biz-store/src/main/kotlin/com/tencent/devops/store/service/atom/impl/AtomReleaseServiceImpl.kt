@@ -617,7 +617,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     atomCode = atomCode,
                     atomName = atomName,
                     indicators = indicators,
-                    version = if (branch == MASTER) null else atomVersion
+                    version = if (atomVersion.startsWith("$TEST-$branch-")) atomVersion else null
                 )
 
                 // 再注册指标

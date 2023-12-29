@@ -69,16 +69,8 @@ class PipelineSettingDao {
         settingVersion: Int
     ): PipelineSetting? {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
-            val successType = successNotifyTypes.split(",").filter { i -> i.isNotBlank() }
-                .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
             val failType = failNotifyTypes.split(",").filter { i -> i.isNotBlank() }
                 .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
-            val successSubscription = Subscription(
-                types = successType,
-                groups = emptySet(),
-                users = "\${$PIPELINE_START_USER_NAME}",
-                content = NotifyTemplateUtils.getCommonShutdownSuccessContent()
-            )
             val failSubscription = Subscription(
                 types = failType,
                 groups = emptySet(),
@@ -114,13 +106,13 @@ class PipelineSettingDao {
                 pipelineName,
                 PipelineRunLockType.toValue(PipelineRunLockType.MULTIPLE),
                 "",
-                successSubscription.users,
+                "",
                 failSubscription.users,
                 "",
                 "",
                 successNotifyTypes,
                 failNotifyTypes,
-                successSubscription.content,
+                "",
                 failSubscription.content,
                 DateTimeUtil.minuteToSecond(PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT),
                 PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
@@ -129,7 +121,7 @@ class PipelineSettingDao {
                 pipelineAsCodeSettings?.let { self ->
                     JsonUtil.toJson(self, false)
                 },
-                JsonUtil.toJson(listOf(successSubscription), false),
+                JsonUtil.toJson(listOf<Subscription>(), false),
                 JsonUtil.toJson(listOf(failSubscription), false),
                 settingVersion
             ).returning().fetchOne()
@@ -360,13 +352,14 @@ class PipelineSettingDao {
         }
     }
 
-    fun updateSetting(dslContext: DSLContext, projectId: String, pipelineId: String, name: String, desc: String) {
+    fun updateSetting(dslContext: DSLContext, projectId: String, pipelineId: String, name: String, desc: String): PipelineSetting? {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
-            dslContext.update(this)
+            val result = dslContext.update(this)
                 .set(NAME, name)
                 .set(DESC, desc)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
-                .execute()
+                .returning().fetchOne()
+            return mapper.map(result)
         }
     }
 

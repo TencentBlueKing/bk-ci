@@ -66,8 +66,7 @@ object EngineService {
         }
         val ret = result.data ?: throw RemoteServiceException("Report builder startup status failed")
 
-        // #5277 将Job上下文传入本次agent任务
-        val jobContext = buildApi.getJobContext().toMutableMap()
+        val jobContext = mutableMapOf<String, String>()
         jobContext[JOB_OS_CONTEXT] = AgentEnv.getOS().name
         return ret.copy(variables = ret.variables.plus(jobContext))
     }

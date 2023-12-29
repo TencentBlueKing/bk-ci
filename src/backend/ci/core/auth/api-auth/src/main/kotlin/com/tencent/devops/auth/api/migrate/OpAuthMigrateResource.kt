@@ -28,9 +28,10 @@
 
 package com.tencent.devops.auth.api.migrate
 
+import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
+import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
-import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -39,7 +40,6 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["AUTH_MIGRATE"], description = "权限-迁移")
@@ -86,18 +86,19 @@ interface OpAuthMigrateResource {
     ): Result<Boolean>
 
     @POST
-    @Path("/{projectCode}/migrateResource")
+    @Path("/migrateSpecificResource")
     @ApiOperation("迁移特定资源类型资源")
-    fun migrateResource(
-        @ApiParam("项目Code", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
-        @ApiParam("资源类型", required = true)
-        @QueryParam("resourceType")
-        resourceType: String,
-        @ApiParam("项目创建人", required = true)
-        @QueryParam("projectCreator")
-        projectCreator: String
+    fun migrateSpecificResource(
+        @ApiParam("迁移资源实体类", required = true)
+        migrateResourceDTO: MigrateResourceDTO
+    ): Result<Boolean>
+
+    @POST
+    @Path("/migrateSpecificResourceOfAllProject")
+    @ApiOperation("迁移所有项目的特定资源类型资源")
+    fun migrateSpecificResourceOfAllProject(
+        @ApiParam("迁移资源实体类", required = true)
+        migrateResourceDTO: MigrateResourceDTO
     ): Result<Boolean>
 
     @POST
@@ -122,13 +123,5 @@ interface OpAuthMigrateResource {
     fun migrateMonitorResource(
         @ApiParam("迁移项目", required = true)
         projectCodes: List<String>
-    ): Result<Boolean>
-
-    @POST
-    @Path("/fitSecToRbacAuth/")
-    @ApiOperation("fitSec升级到rbac权限")
-    fun fitSecToRbacAuth(
-        @ApiParam("按条件迁移项目实体", required = true)
-        migrateProjectConditionDTO: MigrateProjectConditionDTO
     ): Result<Boolean>
 }

@@ -34,19 +34,16 @@ import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_DEFAULT
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
-import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
@@ -60,15 +57,12 @@ import com.tencent.devops.process.pojo.config.StageCommonSettingConfig
 import com.tencent.devops.process.pojo.config.TaskCommonSettingConfig
 import com.tencent.devops.process.pojo.setting.JobCommonSetting
 import com.tencent.devops.process.pojo.setting.PipelineCommonSetting
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.StageCommonSetting
-import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 import com.tencent.devops.process.pojo.setting.TaskCommonSetting
 import com.tencent.devops.process.pojo.setting.TaskComponentCommonSetting
 import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
-import com.tencent.devops.process.service.PipelineSettingVersionService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.utils.PipelineVersionUtils
@@ -89,7 +83,6 @@ class PipelineSettingFacadeService @Autowired constructor(
     private val jobCommonSettingConfig: JobCommonSettingConfig,
     private val taskCommonSettingConfig: TaskCommonSettingConfig,
     private val auditService: AuditService,
-    private val client: Client,
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) {
 
@@ -244,56 +237,14 @@ class PipelineSettingFacadeService @Autowired constructor(
                 )
             )
         }
-        // 正式版本的流水线设置
-        var settingInfo = pipelineRepositoryService.getSetting(projectId, pipelineId)
-        val groups = pipelineGroupService.getGroups(userId, projectId, pipelineId)
-        val labels = ArrayList<String>()
-        groups.forEach {
-            labels.addAll(it.labels)
-        }
-        if (settingInfo == null) {
-            val (pipelineName, pipelineDesc) = detailInfo?.let {
-                Pair(it.pipelineName, it.pipelineDesc)
-            } ?: client.get(ServicePipelineResource::class).getPipelineInfo(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                channelCode = channelCode
-            ).data?.let {
-                Pair(it.pipelineName, it.pipelineDesc)
-            } ?: Pair(null, null)
-            settingInfo = PipelineSetting(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                pipelineName = pipelineName ?: "unknown pipeline name",
-                desc = pipelineDesc ?: "",
-                runLockType = PipelineRunLockType.MULTIPLE,
-                successSubscription = Subscription(),
-                failSubscription = Subscription(),
-                labels = labels,
-                pipelineAsCodeSettings = PipelineAsCodeSettings()
-            )
-        } else {
-            settingInfo.labels = labels
-        }
-
-        if (version > 0) { // #671 目前只接受通知设置的版本管理, 其他属于公共设置不接受版本管理
-            // #8161 除了通知以外增加了其他用户配置作为版本管理
-            pipelineSettingVersionService.getPipelineSettingVersion(projectId, pipelineId, version)?.let { ve ->
-                settingInfo.successSubscriptionList = ve.successSubscriptionList
-                settingInfo.failSubscriptionList = ve.failSubscriptionList
-                settingInfo.labels = ve.labels
-                settingInfo.desc = ve.desc
-                settingInfo.buildNumRule = ve.buildNumRule
-                settingInfo.runLockType = ve.runLockType
-                settingInfo.waitQueueTimeMinute = ve.waitQueueTimeMinute
-                settingInfo.maxQueueSize = ve.maxQueueSize
-                settingInfo.concurrencyGroup = ve.concurrencyGroup
-                settingInfo.concurrencyCancelInProgress = ve.concurrencyCancelInProgress
-                settingInfo.pipelineAsCodeSettings = ve.pipelineAsCodeSettings
-            }
-        }
-
-        return settingInfo
+        return pipelineSettingVersionService.getPipelineSetting(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            detailInfo = detailInfo,
+            channelCode = channelCode,
+            version = version
+        )
     }
 
     fun getCommonSetting(userId: String): PipelineCommonSetting {

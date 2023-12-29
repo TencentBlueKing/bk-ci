@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.option.StageControlOption
+import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.pipeline.pojo.StageReviewGroup
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -47,6 +48,9 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamTyp
 import com.tencent.devops.common.pipeline.utils.TransferUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.utils.FIXVERSION
+import com.tencent.devops.process.utils.MAJORVERSION
+import com.tencent.devops.process.utils.MINORVERSION
 import com.tencent.devops.process.yaml.modelCreate.ModelCommon
 import com.tencent.devops.process.yaml.modelCreate.ModelCreateException
 import com.tencent.devops.process.yaml.modelTransfer.VariableDefault.DEFAULT_CHECKIN_TIMEOUT_HOURS
@@ -56,6 +60,11 @@ import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
 import com.tencent.devops.process.yaml.v3.enums.ContentFormat
+import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
+import com.tencent.devops.process.yaml.v3.models.RecommendedVersion
+import com.tencent.devops.process.yaml.v3.models.Variable
+import com.tencent.devops.process.yaml.v3.models.VariablePropType
+import com.tencent.devops.process.yaml.v3.models.VariableProps
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
@@ -98,12 +107,56 @@ class StageTransfer @Autowired(required = false) constructor(
             startEpoch = null,
             systemElapsed = null,
             elementElapsed = null,
-            params = variableTransfer.makeVariableFromYaml(yamlInput.yaml.formatVariables())
+            params = variableTransfer.makeVariableFromYaml(makeVariables(yamlInput.yaml))
         )
+        with(yamlInput.yaml.recommendedVersion) {
+            if (this != null && this.enabled) {
+                triggerContainer.buildNo = BuildNo(
+                    this.buildNo.initialValue,
+                    RecommendedVersion.Strategy.parse(this.buildNo.strategy).toBuildNoType(),
+                    this.allowModifyAtStartup
+                )
+            }
+        }
         yamlInput.aspectWrapper.setModelJob4Model(triggerContainer, PipelineTransferAspectWrapper.AspectType.AFTER)
 
         val stageId = VMUtils.genStageId(stageIndex)
         return Stage(listOf(triggerContainer), id = stageId, name = stageId)
+    }
+
+    private fun makeVariables(yaml: IPreTemplateScriptBuildYaml): Map<String, Variable> {
+        val variable = yaml.formatVariables()
+        if (yaml.recommendedVersion == null || yaml.recommendedVersion?.enabled == false) return variable
+        return with(yaml.recommendedVersion) {
+            variable.plus(
+                mapOf(
+                    MAJORVERSION to Variable(
+                        value = this!!.major.toString(),
+                        allowModifyAtStartup = allowModifyAtStartup,
+                        props = VariableProps(
+                            type = VariablePropType.VUEX_INPUT.name,
+                            description = I18nUtil.getCodeLanMessage(MAJORVERSION)
+                        )
+                    ),
+                    MINORVERSION to Variable(
+                        value = this!!.minor.toString(),
+                        allowModifyAtStartup = allowModifyAtStartup,
+                        props = VariableProps(
+                            type = VariablePropType.VUEX_INPUT.name,
+                            description = I18nUtil.getCodeLanMessage(MINORVERSION)
+                        )
+                    ),
+                    FIXVERSION to Variable(
+                        value = this!!.fix.toString(),
+                        allowModifyAtStartup = allowModifyAtStartup,
+                        props = VariableProps(
+                            type = VariablePropType.VUEX_INPUT.name,
+                            description = I18nUtil.getCodeLanMessage(FIXVERSION)
+                        )
+                    )
+                )
+            )
+        }
     }
 
     fun yaml2FinallyStage(

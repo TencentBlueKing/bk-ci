@@ -28,6 +28,7 @@
 package com.tencent.devops.process.pojo.pipeline
 
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -49,9 +50,11 @@ data class PipelineResourceVersion(
     @ApiModelProperty("创建者", required = true)
     val creator: String,
     @ApiModelProperty("版本名称", required = true)
-    val versionName: String? = "init",
+    val versionName: String?,
     @ApiModelProperty("版本创建时间", required = true)
     val createTime: LocalDateTime,
+    @ApiModelProperty("版本修改时间", required = true)
+    val updateTime: LocalDateTime?,
     @ApiModelProperty("编排版本号", required = false)
     val pipelineVersion: Int?,
     @ApiModelProperty("触发器版本号", required = false)
@@ -64,6 +67,8 @@ data class PipelineResourceVersion(
     val referCount: Int? = null,
     @ApiModelProperty("草稿版本标识", required = false)
     val status: VersionStatus? = VersionStatus.RELEASED,
+    @ApiModelProperty("分支版本状态", required = false)
+    val branchAction: BranchVersionAction? = null,
     @ApiModelProperty("版本变更说明", required = false)
     val description: String? = null,
     @ApiModelProperty("调试构建ID", required = false)

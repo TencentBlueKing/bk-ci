@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwBuildResourceV3
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
+import com.tencent.devops.openapi.utils.ApigwParamUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
@@ -103,7 +104,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             page = page ?: 1,
-            pageSize = pageSize ?: 20,
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
             channelCode = apiGatewayUtil.getChannelCode(),
             updateTimeDesc = updateTimeDesc,
             materialAlias = null,
@@ -181,7 +182,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
     ): Result<BuildId> {
         logger.info(
             "OPENAPI_BUILD_V3|$userId|retry|$projectId|$pipelineId|$buildId|$taskId|$failedContainer" +
-                "|$skipFailedTask"
+                    "|$skipFailedTask"
         )
         return client.get(ServiceBuildResource::class).retry(
             userId = userId,
@@ -227,7 +228,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
     ): Result<Boolean> {
         logger.info(
             "OPENAPI_BUILD_V3|$userId|manual start stage|$projectId|$pipelineId|$buildId|$stageId|$cancel" +
-                "|$reviewRequest"
+                    "|$reviewRequest"
         )
         return client.get(ServiceBuildResource::class).manualStartStage(
             userId = userId,

@@ -248,6 +248,7 @@ class ModelTransfer @Autowired constructor(
         } else null
         yaml.finally = finally as LinkedHashMap<String, Any>?
         yaml.concurrency = makeConcurrency(modelInput.setting)
+        yaml.recommendedVersion = variableTransfer.makeRecommendedVersion(modelInput.model)
         yaml.disablePipeline = (modelInput.setting.runLockType == PipelineRunLockType.LOCK).nullIfDefault(false)
         return yaml
     }

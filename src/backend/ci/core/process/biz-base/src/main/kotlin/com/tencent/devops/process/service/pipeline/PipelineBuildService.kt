@@ -137,6 +137,11 @@ class PipelineBuildService(
                 params = arrayOf(projectVO.englishName)
             )
         }
+        // 运行时检查stage数量不为1
+        if (model.stages.size <= 1) throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_WITH_EMPTY_STAGE,
+            params = arrayOf()
+        )
 
         val setting = pipelineRepositoryService.getSetting(pipeline.projectId, pipeline.pipelineId)
         val bucketSize = setting!!.maxConRunningQueueSize

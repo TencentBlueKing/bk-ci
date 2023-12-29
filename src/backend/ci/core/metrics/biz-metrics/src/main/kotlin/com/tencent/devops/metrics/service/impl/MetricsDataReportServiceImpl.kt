@@ -33,8 +33,11 @@ import com.tencent.devops.common.api.util.DateTimeUtil.YYYY_MM_DD
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.measure.BuildEndPipelineMetricsData
 import com.tencent.devops.common.event.pojo.measure.BuildEndTaskMetricsData
+import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.metrics.dao.DispatchJobMetricsDao
 import com.tencent.devops.metrics.dao.MetricsDataQueryDao
 import com.tencent.devops.metrics.dao.MetricsDataReportDao
 import com.tencent.devops.metrics.dao.ProjectInfoDao
@@ -57,6 +60,7 @@ import com.tencent.devops.metrics.pojo.po.UpdatePipelineOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineStageOverviewDataPO
 import com.tencent.devops.metrics.service.MetricsDataClearService
 import com.tencent.devops.metrics.service.MetricsDataReportService
+import com.tencent.devops.metrics.service.ProjectBuildSummaryService
 import com.tencent.devops.metrics.utils.ErrorCodeInfoCacheUtil
 import com.tencent.devops.model.metrics.tables.records.TAtomFailSummaryDataRecord
 import com.tencent.devops.model.metrics.tables.records.TAtomOverviewDataRecord
@@ -84,9 +88,11 @@ class MetricsDataReportServiceImpl @Autowired constructor(
     private val metricsDataQueryDao: MetricsDataQueryDao,
     private val metricsDataReportDao: MetricsDataReportDao,
     private val projectInfoDao: ProjectInfoDao,
+    private val dispatchJobMetricsDao: DispatchJobMetricsDao,
     private val metricsDataClearService: MetricsDataClearService,
     private val client: Client,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val projectBuildSummaryService: ProjectBuildSummaryService
 ) : MetricsDataReportService {
 
     companion object {
@@ -203,11 +209,23 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                     }
                 }
             }
+            if (buildEndPipelineMetricsData.channelCode == ChannelCode.BS.name) {
+                projectBuildSummaryService.saveProjectBuildCount(
+                    projectId = projectId,
+                    trigger = buildEndPipelineMetricsData.trigger,
+                    startTime = buildEndPipelineMetricsData.startTime
+                )
+            }
             logger.info("[$projectId|$pipelineId|$buildId]|end metricsDataReport")
         } finally {
             lock.unlock()
         }
 
+        return true
+    }
+
+    override fun saveDispatchJobMetrics(dispatchJobMetricsDataList: List<DispatchJobMetricsData>): Boolean {
+        dispatchJobMetricsDao.batchSaveDispatchJobMetrics(dslContext, dispatchJobMetricsDataList)
         return true
     }
 

@@ -39,6 +39,8 @@ data class PipelineVersionSimple(
     val creator: String,
     @ApiModelProperty("创建时间戳", required = true)
     val createTime: Long,
+    @ApiModelProperty("更新时间戳", required = true)
+    val updateTime: Long?,
     @ApiModelProperty("流水线版本号", required = true)
     val version: Int,
     @ApiModelProperty("流水线版本名称", required = true)
@@ -55,6 +57,8 @@ data class PipelineVersionSimple(
     val settingVersion: Int? = null,
     @ApiModelProperty("草稿版本标识", required = false)
     val status: VersionStatus? = VersionStatus.RELEASED,
+    @ApiModelProperty("版本变更说明", required = false)
+    val description: String? = null,
     @ApiModelProperty("调试构建ID", required = false)
     val debugBuildId: String? = null,
     @ApiModelProperty("该版本的来源版本（空时一定为主路径）", required = false)
