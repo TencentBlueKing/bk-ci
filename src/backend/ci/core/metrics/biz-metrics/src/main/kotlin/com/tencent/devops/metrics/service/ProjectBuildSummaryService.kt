@@ -23,9 +23,30 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-dependencies {
-    api(project(":core:ticket:biz-ticket"))
-    api(project(":core:project:api-project"))
+package com.tencent.devops.metrics.service
+
+import java.time.LocalDate
+
+interface ProjectBuildSummaryService {
+
+    /**
+     * 保存项目构建数
+     */
+    fun saveProjectBuildCount(
+        projectId: String,
+        trigger: String?,
+        startTime: String?
+    )
+
+    /**
+     * 保存项目用户
+     */
+    fun saveProjectUser(
+        projectId: String,
+        userId: String,
+        theDate: LocalDate
+    )
 }

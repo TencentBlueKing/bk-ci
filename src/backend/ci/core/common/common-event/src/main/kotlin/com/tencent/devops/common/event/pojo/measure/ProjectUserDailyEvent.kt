@@ -23,17 +23,22 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.dispatch.service
+package com.tencent.devops.common.event.pojo.measure
 
-import com.tencent.devops.dispatch.pojo.JobQuotaHistory
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDate
 
-class JobQuotaInterfaceImpl : JobQuotaInterface {
-    /**
-     * 保存Job配额相关构建记录
-     */
-    override fun saveJobQuotaHistory(jobQuotaHistory: JobQuotaHistory) {
-        // save job quota history
-    }
-}
+@Event(exchange = MQ.EXCHANGE_PROJECT_USER_DAILY_FANOUT)
+data class ProjectUserDailyEvent(
+    @ApiModelProperty("项目ID")
+    override val projectId: String,
+    @ApiModelProperty("用户ID")
+    val userId: String,
+    @ApiModelProperty("统计日期")
+    val theDate: LocalDate
+) : IMeasureEvent(projectId = projectId, pipelineId = "", buildId = "")

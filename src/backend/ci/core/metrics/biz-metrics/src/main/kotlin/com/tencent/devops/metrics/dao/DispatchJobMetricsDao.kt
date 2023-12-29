@@ -25,22 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.utils
+package com.tencent.devops.metrics.dao
 
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
+import com.tencent.devops.model.metrics.tables.TDispatchJobDailyMetrics
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
 
-class JobQuotaProjectLock(
-    redisOperation: RedisOperation,
-    projectId: String
-) {
+@Repository
+class DispatchJobMetricsDao {
 
-    private val redisLock = RedisLock(redisOperation, "DISPATCH_JOB_QUOTA_$projectId", 60L)
-
-    fun tryLock() = redisLock.tryLock()
-
-    fun lock() = redisLock.lock()
-
-    fun unlock() =
-        redisLock.unlock()
+    fun batchSaveDispatchJobMetrics(
+        dslContext: DSLContext,
+        dispatchJobMetricsData: List<DispatchJobMetricsData>
+    ) {
+        with(TDispatchJobDailyMetrics.T_DISPATCH_JOB_DAILY_METRICS) {
+            dispatchJobMetricsData.forEach { jobMetricsData ->
+                dslContext.insertInto(this)
+                    .set(PROJECT_ID, jobMetricsData.projectId)
+                    .set(PRODUCT_ID, jobMetricsData.productId)
+                    .set(THE_DATE, jobMetricsData.theDate)
+                    .set(JOB_TYPE, jobMetricsData.jobType)
+                    .set(CHANNEL_CODE, jobMetricsData.channelCode)
+                    .set(MAX_JOB_CONCURRENCY, jobMetricsData.maxJobConcurrency)
+                    .set(SUM_JOB_COST, jobMetricsData.sumJobCost)
+                    .set(CHANNEL_CODE, jobMetricsData.channelCode)
+                    .execute()
+            }
+        }
+    }
 }

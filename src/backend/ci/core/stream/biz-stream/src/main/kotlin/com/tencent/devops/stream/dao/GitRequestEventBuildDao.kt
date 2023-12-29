@@ -34,6 +34,8 @@ import com.tencent.devops.model.stream.tables.TGitRequestEvent
 import com.tencent.devops.model.stream.tables.TGitRequestEventBuild
 import com.tencent.devops.model.stream.tables.records.TGitRequestEventBuildRecord
 import com.tencent.devops.stream.pojo.BranchBuilds
+import java.sql.Timestamp
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -42,8 +44,6 @@ import org.jooq.Result
 import org.jooq.SelectConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.sql.Timestamp
-import java.time.LocalDateTime
 
 @Suppress("ComplexCondition", "ComplexMethod")
 @Repository
@@ -754,7 +754,8 @@ class GitRequestEventBuildDao {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val records = dslContext.select(DSL.max(ID))
                 .from(this)
-                .groupBy(PIPELINE_ID).having(PIPELINE_ID.`in`(pipelineIds))
+                .where(PIPELINE_ID.`in`(pipelineIds))
+                .groupBy(PIPELINE_ID)
                 .fetch()
             return if (records.isEmpty()) {
                 emptyList()
