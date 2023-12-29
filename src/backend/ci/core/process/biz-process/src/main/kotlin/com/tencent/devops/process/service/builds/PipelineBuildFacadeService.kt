@@ -128,12 +128,12 @@ import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 
 /**
  *
@@ -495,10 +495,10 @@ class PipelineBuildFacadeService(
                                         buildId = buildId,
                                         taskId = element.id!!
                                     ) ?: run {
-                                            throw ErrorCodeException(
-                                                errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY
-                                            )
-                                        }
+                                        throw ErrorCodeException(
+                                            errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY
+                                        )
+                                    }
                                     paramMap[PIPELINE_RETRY_START_TASK_ID] = BuildParameters(
                                         key = PIPELINE_RETRY_START_TASK_ID, value = element.id!!
                                     )
@@ -885,7 +885,7 @@ class PipelineBuildFacadeService(
                 return@forEachIndexed
             }
             s.containers.forEach { cc ->
-                cc.elements.forEach element@ { el ->
+                cc.elements.forEach element@{ el ->
                     if (!elementId.isNullOrBlank() && el.id != elementId) return@element
                     if (!stepId.isNullOrBlank() && el.stepId != stepId) return@element
                     if (el is ManualReviewUserTaskElement) {

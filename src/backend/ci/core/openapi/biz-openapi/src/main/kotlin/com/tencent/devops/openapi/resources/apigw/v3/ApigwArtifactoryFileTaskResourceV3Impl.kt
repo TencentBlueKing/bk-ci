@@ -30,12 +30,10 @@ package com.tencent.devops.openapi.resources.apigw.v3
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryFileTaskResource
 import com.tencent.devops.artifactory.pojo.CreateFileTaskReq
 import com.tencent.devops.artifactory.pojo.FileTaskInfo
-import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwArtifactoryFileTaskResourceV3
-import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 

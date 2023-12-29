@@ -73,7 +73,7 @@ class ApigwArtifactoryFileTaskResourceV4Impl @Autowired constructor(
     ): Result<FileTaskInfo?> {
         logger.info("OPENAPI_ARTIFACTORY_FILE_TASK_V4|$userId|get status|$projectId|$pipelineId|$buildId|$taskId")
         val realTaskId = if (stepId != null) {
-             client.get(ServicePipelineTaskResource::class).getTaskBuildDetail(
+            client.get(ServicePipelineTaskResource::class).getTaskBuildDetail(
                 projectId, buildId, taskId, stepId
             ).data?.taskId
         } else taskId
