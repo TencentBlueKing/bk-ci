@@ -102,7 +102,10 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 }
             }
         } catch (ignored: Exception) {
-            logger.error("Failed to deploy pipeline yaml|$projectId|${action.format()}", ignored)
+            logger.error(
+                "Failed to deploy pipeline yaml|$projectId|${action.data.setting.repoHashId}|yamlFile:${yamlFile}",
+                ignored
+            )
             throw ignored
         }
     }
@@ -471,7 +474,8 @@ class PipelineYamlRepositoryService @Autowired constructor(
             pipelineViewGroupService.deleteViewGroup(
                 projectId = projectId,
                 userId = userId,
-                viewIdEncode = HashUtil.encodeLongId(yamlView.viewId)
+                viewIdEncode = HashUtil.encodeLongId(yamlView.viewId),
+                checkPac = false
             )
             pipelineYamlService.deleteYamlView(
                 projectId = projectId,

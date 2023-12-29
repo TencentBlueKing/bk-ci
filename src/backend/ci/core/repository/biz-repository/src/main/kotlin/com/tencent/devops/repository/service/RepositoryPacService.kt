@@ -184,6 +184,12 @@ class RepositoryPacService @Autowired constructor(
                 errorCode = RepositoryMessageCode.ERROR_REPO_CI_DIR_EXISTS
             )
         }
+        client.get(ServicePipelineYamlResource::class).disable(
+            userId = userId,
+            projectId = projectId,
+            repoHashId = repositoryHashId,
+            scmType = ScmType.valueOf(repository.type)
+        )
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             repositoryDao.disablePac(

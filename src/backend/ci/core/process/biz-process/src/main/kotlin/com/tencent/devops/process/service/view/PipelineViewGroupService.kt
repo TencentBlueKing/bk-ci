@@ -223,17 +223,20 @@ class PipelineViewGroupService @Autowired constructor(
     fun deleteViewGroup(
         projectId: String,
         userId: String,
-        viewIdEncode: String
+        viewIdEncode: String,
+        checkPac: Boolean = true
     ): Boolean {
         val viewId = HashUtil.decodeIdToLong(viewIdEncode)
         val oldView = pipelineViewDao.get(dslContext, projectId, viewId) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND,
             params = arrayOf(viewIdEncode)
         )
-        pipelineYamlViewDao.getByViewId(dslContext = dslContext, projectId = projectId, viewId = viewId)?.let {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.YAML_VIEW_CANNOT_DELETE
-            )
+        if (checkPac) {
+            pipelineYamlViewDao.getByViewId(dslContext = dslContext, projectId = projectId, viewId = viewId)?.let {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.YAML_VIEW_CANNOT_DELETE
+                )
+            }
         }
         checkPermission(userId, projectId, oldView.isProject, oldView.createUser)
         var result = false
