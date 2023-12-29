@@ -30,6 +30,7 @@ package com.tencent.devops.process.api.template
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
@@ -290,6 +291,36 @@ interface UserPTemplateResource {
     @GET
     @Path("/projects/{projectId}/templates/hasManagerPermission")
     fun hasManagerPermission(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<Boolean>
+
+    @ApiOperation("是否有特定模板权限")
+    @GET
+    @Path("/projects/{projectId}/templates/{templateId}/hasPipelineTemplatePermission")
+    fun hasPipelineTemplatePermission(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("模板ID", required = true)
+        @PathParam("templateId")
+        templateId: String?,
+        @ApiParam("操作", required = true)
+        @QueryParam("permission")
+        permission: AuthPermission
+    ): Result<Boolean>
+
+    @ApiOperation("是否开启模板管理权限")
+    @GET
+    @Path("/projects/{projectId}/templates/enableTemplatePermissionManage")
+    fun enableTemplatePermissionManage(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

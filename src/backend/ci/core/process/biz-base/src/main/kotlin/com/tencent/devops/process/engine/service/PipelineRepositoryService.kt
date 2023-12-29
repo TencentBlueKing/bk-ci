@@ -85,6 +85,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineRestoreEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.enums.OperationLogType
+import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineName
@@ -253,6 +254,17 @@ class PipelineRepositoryService constructor(
                 param.name = param.name ?: param.id
             }
         }
+
+        // 检查jobId长度，并打日志方便后续填充和报错
+        model.stages.forEach { stage ->
+            stage.containers.forEach { con ->
+                if ((con.jobId?.length ?: 0) > 32) {
+                    // TODO: 会在issue #9810 中改为在DefaultModelCheckPlugin中填充和限制jobId的逻辑，这里先打印统计日志
+                    logger.warn("deployPipeline|#9810|$pipelineId|${con.jobId!!.length}")
+                }
+            }
+        }
+
         return if (!create) {
             val pipelineSetting = savedSetting
                 ?: pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
@@ -407,6 +419,9 @@ class PipelineRepositoryService constructor(
             c.containerHashId = modelContainerIdGenerator.getNextId()
         }
         distIds.add(c.containerHashId!!)
+
+        // 清理无用的options
+        c.params = PipelineUtils.cleanOptions(c.params)
 
         var taskSeq = 0
         c.elements.forEach { e ->

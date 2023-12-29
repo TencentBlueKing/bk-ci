@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.model.process.tables.TTemplate
 import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.FAIL_TO_LIST_TEMPLATE_PARAMS
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_ID
@@ -338,6 +339,18 @@ class TemplateDao {
         }
     }
 
+    fun getPublicTemplate(
+        dslContext: DSLContext
+    ): List<String> {
+        with(TTemplate.T_TEMPLATE) {
+            return dslContext.select(ID).from(this)
+                .where(PROJECT_ID.eq(""))
+                .and(TYPE.eq(TemplateType.PUBLIC.name))
+                .orderBy(CREATED_TIME.asc())
+                .fetch(0, String::class.java)
+        }
+    }
+
     fun getSrcTemplateId(dslContext: DSLContext, projectId: String, templateId: String, type: String? = null): String? {
         return with(TTemplate.T_TEMPLATE) {
             val conditions = mutableListOf<Condition>()
@@ -437,10 +450,15 @@ class TemplateDao {
         templateType: TemplateType?,
         templateIdList: Collection<String>?,
         storeFlag: Boolean?,
-        page: Int?,
-        pageSize: Int?,
+        offset: Int?,
+        limit: Int?,
         queryModelFlag: Boolean = true
     ): Result<out Record>? {
+        if (projectId == null && templateIdList == null && limit == null)
+            throw ErrorCodeException(
+                defaultMessage = "list pipeline templates params error",
+                errorCode = FAIL_TO_LIST_TEMPLATE_PARAMS
+            )
         val tTemplate = TTemplate.T_TEMPLATE
 
         val conditions = mutableListOf<Condition>()
@@ -460,8 +478,8 @@ class TemplateDao {
             templateType = templateType,
             templateIdList = templateIdList,
             storeFlag = storeFlag,
-            page = page,
-            pageSize = pageSize,
+            offset = offset,
+            limit = limit,
             tTemplate = tTemplate,
             conditions = conditions,
             queryModelFlag = queryModelFlag
@@ -473,8 +491,8 @@ class TemplateDao {
         templateType: TemplateType?,
         templateIdList: Collection<String>?,
         storeFlag: Boolean?,
-        page: Int?,
-        pageSize: Int?,
+        offset: Int?,
+        limit: Int?,
         tTemplate: TTemplate,
         conditions: MutableList<Condition>,
         queryModelFlag: Boolean = true
@@ -482,7 +500,7 @@ class TemplateDao {
         if (templateType != null) {
             conditions.add(tTemplate.TYPE.eq(templateType.name))
         }
-        if (templateIdList != null && templateIdList.isNotEmpty()) {
+        if (!templateIdList.isNullOrEmpty()) {
             conditions.add(tTemplate.ID.`in`(templateIdList))
         }
         if (storeFlag != null) {
@@ -528,8 +546,8 @@ class TemplateDao {
             .where(conditions)
             .orderBy(tTemplate.WEIGHT.desc(), tTemplate.CREATED_TIME.desc(), tTemplate.VERSION.desc())
 
-        return if (null != page && null != pageSize) {
-            baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+        return if (null != offset && null != limit) {
+            baseStep.limit(offset, limit).fetch()
         } else {
             baseStep.fetch()
         }

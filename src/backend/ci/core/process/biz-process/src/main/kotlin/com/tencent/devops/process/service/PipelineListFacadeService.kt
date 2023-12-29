@@ -76,6 +76,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.Permission
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineDetailInfo
@@ -396,11 +397,22 @@ class PipelineListFacadeService @Autowired constructor(
     fun hasPermissionList(
         userId: String,
         projectId: String,
-        authPermission: AuthPermission,
+        permission: Permission,
         excludePipelineId: String?,
+        filterByPipelineName: String?,
         page: Int?,
         pageSize: Int?
     ): SQLPage<Pipeline> {
+        val authPermission = when (permission) {
+            Permission.DEPLOY -> AuthPermission.DEPLOY
+            Permission.DOWNLOAD -> AuthPermission.DOWNLOAD
+            Permission.EDIT -> AuthPermission.EDIT
+            Permission.EXECUTE -> AuthPermission.EXECUTE
+            Permission.DELETE -> AuthPermission.DELETE
+            Permission.VIEW -> AuthPermission.VIEW
+            Permission.CREATE -> AuthPermission.CREATE
+            Permission.LIST -> AuthPermission.LIST
+        }
 
         val watcher = Watcher(id = "hasPermissionList|$projectId|$userId")
         try {
@@ -418,6 +430,9 @@ class PipelineListFacadeService @Autowired constructor(
                 projectId = projectId,
                 channelCode = ChannelCode.BS,
                 pipelineIds = hasPermissionList,
+                pipelineFilterParamList = pipelineFilterParams(
+                    projectId, filterByPipelineName, null, null
+                ),
                 page = page,
                 pageSize = pageSize
             )
@@ -1792,7 +1807,9 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             permission = AuthPermission.EDIT
         )
-        val templateId = templatePipelineDao.get(dslContext, projectId, pipelineId)?.templateId
+        val templatePipelineInfo = templatePipelineDao.get(dslContext, projectId, pipelineId)
+        val templateId = templatePipelineInfo?.templateId
+        val templateVersion = templatePipelineInfo?.version
         val instanceFromTemplate = templateId != null
         val favorInfos = pipelineFavorDao.listByPipelineId(
             dslContext = dslContext,
@@ -1818,6 +1835,7 @@ class PipelineListFacadeService @Autowired constructor(
             deploymentTime = pipelineInfo.updateTime,
             hasPermission = hasEditPermission,
             templateId = templateId,
+            templateVersion = templateVersion,
             creator = pipelineInfo.creator,
             pipelineDesc = pipelineInfo.pipelineDesc,
             createTime = pipelineInfo.createTime,

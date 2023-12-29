@@ -31,7 +31,6 @@ package com.tencent.devops.process.engine.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
-import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -44,14 +43,9 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitlabElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
@@ -59,8 +53,6 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.RepoPipelineRefInfo
 import com.tencent.devops.repository.pojo.RepoPipelineRefRequest
 import com.tencent.devops.repository.pojo.enums.RepoAtomCategoryEnum
-import kotlin.reflect.full.declaredMemberProperties
-import kotlin.reflect.jvm.isAccessible
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -69,6 +61,8 @@ import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.jvm.isAccessible
 
 /**
  * 流水线代码库使用服务
@@ -235,64 +229,9 @@ class RepoPipelineRefService @Autowired constructor(
         variables: Map<String, String>,
         repoPipelineRefInfos: MutableList<RepoPipelineRefInfo>
     ) {
-        container.elements.forEach e@{ element ->
-            val (triggerType, eventType, repositoryConfig) = when (element) {
-                is CodeGitWebHookTriggerElement -> {
-                    val repositoryConfig = RepositoryConfig(
-                        repositoryHashId = element.repositoryHashId,
-                        repositoryName = EnvUtils.parseEnv(element.repositoryName, variables),
-                        repositoryType = element.repositoryType ?: RepositoryType.ID
-                    )
-                    Triple(ScmType.CODE_GIT.name, element.eventType?.name, repositoryConfig)
-                }
-
-                is CodeSVNWebHookTriggerElement -> {
-                    val repositoryConfig = RepositoryConfig(
-                        repositoryHashId = element.repositoryHashId,
-                        repositoryName = EnvUtils.parseEnv(element.repositoryName, variables),
-                        repositoryType = element.repositoryType ?: RepositoryType.ID
-                    )
-                    Triple(ScmType.CODE_SVN.name, CodeEventType.PUSH_COMMIT.name, repositoryConfig)
-                }
-
-                is CodeGitlabWebHookTriggerElement -> {
-                    val repositoryConfig = RepositoryConfig(
-                        repositoryHashId = element.repositoryHashId,
-                        repositoryName = EnvUtils.parseEnv(element.repositoryName, variables),
-                        repositoryType = element.repositoryType ?: RepositoryType.ID
-                    )
-                    Triple(ScmType.CODE_GITLAB.name, element.eventType?.name, repositoryConfig)
-                }
-
-                is CodeGithubWebHookTriggerElement -> {
-                    val repositoryConfig = RepositoryConfig(
-                        repositoryHashId = element.repositoryHashId,
-                        repositoryName = EnvUtils.parseEnv(element.repositoryName, variables),
-                        repositoryType = element.repositoryType ?: RepositoryType.ID
-                    )
-                    Triple(ScmType.GITHUB.name, element.eventType?.name, repositoryConfig)
-                }
-
-                is CodeTGitWebHookTriggerElement -> {
-                    val repositoryConfig = RepositoryConfig(
-                        repositoryHashId = element.data.input.repositoryHashId,
-                        repositoryName = EnvUtils.parseEnv(element.data.input.repositoryName, variables),
-                        repositoryType = element.data.input.repositoryType ?: RepositoryType.ID
-                    )
-                    Triple(ScmType.CODE_TGIT.name, element.data.input.eventType?.name, repositoryConfig)
-                }
-
-                is CodeP4WebHookTriggerElement -> {
-                    val repositoryConfig = RepositoryConfig(
-                        repositoryHashId = element.data.input.repositoryHashId,
-                        repositoryName = EnvUtils.parseEnv(element.data.input.repositoryName, variables),
-                        repositoryType = element.data.input.repositoryType ?: RepositoryType.ID
-                    )
-                    Triple(ScmType.CODE_P4.name, element.data.input.eventType?.name, repositoryConfig)
-                }
-
-                else -> return@e
-            }
+        container.elements.filterIsInstance<WebHookTriggerElement>().forEach e@{ element ->
+            val (triggerType, eventType, repositoryConfig) =
+                RepositoryConfigUtils.buildWebhookConfig(element = element, variables = variables)
 
             repoPipelineRefInfos.add(
                 RepoPipelineRefInfo(
@@ -306,9 +245,9 @@ class RepoPipelineRefService @Autowired constructor(
                     atomCode = element.getAtomCode(),
                     atomVersion = element.version,
                     atomCategory = RepoAtomCategoryEnum.TRIGGER.name,
-                    triggerType = triggerType,
-                    eventType = eventType,
-                    triggerCondition = JsonUtil.toJson((element as WebHookTriggerElement).triggerCondition())
+                    triggerType = triggerType.name,
+                    eventType = eventType?.name,
+                    triggerCondition = JsonUtil.toJson(element.triggerCondition())
                 )
             )
         }

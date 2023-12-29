@@ -40,6 +40,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwBuildResourceV4
 import com.tencent.devops.openapi.service.IndexService
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
+import com.tencent.devops.openapi.utils.ApigwParamUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
@@ -128,17 +129,17 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
     ): Result<BuildHistoryPage<BuildHistory>> {
         logger.info(
             "OPENAPI_BUILD_V4|$userId|get history build|$projectId|$pipelineId|$page|$pageSize" +
-                "|$updateTimeDesc|materialAlias=$materialAlias|$materialUrl|$materialBranch|$materialCommitId" +
-                "|$materialCommitMessage|status=$status|$trigger|$queueTimeStartTime|$queueTimeEndTime" +
-                "|$startTimeStartTime|startTimeEndTime=$startTimeEndTime|$endTimeStartTime|$endTimeEndTime" +
-                "|$totalTimeMin|$totalTimeMax|remark=$remark|$buildNoStart|$buildNoEnd|$buildMsg|$startUser"
+                    "|$updateTimeDesc|materialAlias=$materialAlias|$materialUrl|$materialBranch|$materialCommitId" +
+                    "|$materialCommitMessage|status=$status|$trigger|$queueTimeStartTime|$queueTimeEndTime" +
+                    "|$startTimeStartTime|startTimeEndTime=$startTimeEndTime|$endTimeStartTime|$endTimeEndTime" +
+                    "|$totalTimeMin|$totalTimeMax|remark=$remark|$buildNoStart|$buildNoEnd|$buildMsg|$startUser"
         )
         return client.get(ServiceBuildResource::class).getHistoryBuild(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             page = page ?: 1,
-            pageSize = pageSize ?: 20,
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
             channelCode = apiGatewayUtil.getChannelCode(),
             updateTimeDesc = updateTimeDesc,
             materialAlias = materialAlias,
@@ -217,7 +218,7 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
     ): Result<BuildId> {
         logger.info(
             "OPENAPI_BUILD_V4|$userId|retry|$projectId|$pipelineId|$buildId|$taskId|$failedContainer" +
-                "|$skipFailedTask"
+                    "|$skipFailedTask"
         )
 
         val checkPipelineId = if (buildId.isNullOrBlank()) {
@@ -274,7 +275,7 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
     ): Result<Boolean> {
         logger.info(
             "OPENAPI_BUILD_V4|$userId|manual start stage|$projectId|$pipelineId|$buildId|$stageId|$cancel" +
-                "|$reviewRequest"
+                    "|$reviewRequest"
         )
         return client.get(ServiceBuildResource::class).manualStartStage(
             userId = userId,

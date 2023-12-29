@@ -31,6 +31,7 @@ import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -136,7 +137,7 @@ class UserPTemplateResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<OptionalTemplateList> {
-        return Result(templateFacadeService.listAllTemplate(projectId, templateType, null, page, pageSize))
+        return Result(templateFacadeService.listAllTemplate(userId, projectId, templateType, null, page, pageSize))
     }
 
     override fun getTemplate(
@@ -213,5 +214,25 @@ class UserPTemplateResourceImpl @Autowired constructor(
         highlightType: HighlightType?
     ): Result<TemplatePreviewDetail> {
         return Result(templatePACService.previewTemplate(userId, projectId, templateId, highlightType))
+    }
+
+    override fun hasPipelineTemplatePermission(
+        userId: String,
+        projectId: String,
+        templateId: String?,
+        permission: AuthPermission
+    ): Result<Boolean> {
+        return Result(
+            templateFacadeService.hasPipelineTemplatePermission(
+                userId = userId,
+                projectId = projectId,
+                templateId = templateId,
+                permission = permission
+            )
+        )
+    }
+
+    override fun enableTemplatePermissionManage(userId: String, projectId: String): Result<Boolean> {
+        return Result(templateFacadeService.enableTemplatePermissionManage(projectId))
     }
 }

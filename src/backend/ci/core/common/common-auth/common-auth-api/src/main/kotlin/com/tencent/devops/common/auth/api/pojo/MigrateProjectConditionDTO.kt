@@ -1,5 +1,6 @@
 package com.tencent.devops.common.auth.api.pojo
 
+import com.tencent.devops.common.auth.enums.AuthSystemType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -16,5 +17,7 @@ data class MigrateProjectConditionDTO(
     @ApiModelProperty("项目ID列表")
     val projectCodes: List<String>? = null,
     @ApiModelProperty("资源类型")
-    val resourceType: String? = null
+    val resourceType: String? = null,
+    @ApiModelProperty("路由tag")
+    val routerTag: AuthSystemType? = null
 )
