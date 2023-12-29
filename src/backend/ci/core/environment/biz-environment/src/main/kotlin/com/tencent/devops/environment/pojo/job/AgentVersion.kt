@@ -41,12 +41,8 @@ data class AgentVersion(
     @ApiModelProperty(value = "agent状态", notes = "0-异常，1-正常")
     val status: Int?
 ) {
-    constructor(bkHostId: Long?, installedTag: Boolean?, version: String?, status: Int?) : this(
-        ip = null, bkHostId, installedTag, version, status
-    )
-
-    constructor(bkHostId: Long?, installedTag: Boolean?) : this(
-        ip = null, bkHostId, installedTag, version = null, status = null
+    constructor(ip: String?, bkHostId: Long?, installedTag: Boolean?) : this(
+        ip, bkHostId, installedTag, version = null, status = null
     )
 
     constructor(ip: String?, bkHostId: Long?) : this(

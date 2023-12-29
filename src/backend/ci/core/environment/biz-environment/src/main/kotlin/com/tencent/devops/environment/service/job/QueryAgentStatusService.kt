@@ -63,6 +63,7 @@ class QueryAgentStatusService @Autowired constructor(
     ): List<AgentVersion>? {
         val hostIdList = ipAndHostIdList.mapNotNull { it.bkHostId }
         val ipList = ipAndHostIdList.mapNotNull { it.ip }
+        val hostIdToAgentVersionMap = ipAndHostIdList.associateBy { it.bkHostId }
         val nodemanRes = getAgentVersionsFromNodeman(userId, projectId, hostIdList, ipList)
         if (logger.isDebugEnabled) logger.debug("[getAgentVersions]nodemanRes:$nodemanRes")
         val total = nodemanRes.data?.total ?: 0
@@ -81,6 +82,7 @@ class QueryAgentStatusService @Autowired constructor(
                 if (logger.isDebugEnabled) logger.debug("[getAgentVersions]jobRes:$jobRes")
                 jobRes.data?.agentInfoList?.map {
                     AgentVersion(
+                        ip = hostIdToAgentVersionMap[it.bkHostId]?.ip,
                         bkHostId = it.bkHostId,
                         installedTag = INSTALLED_AGENT_TAG,
                         version = it.version,
@@ -99,6 +101,7 @@ class QueryAgentStatusService @Autowired constructor(
             else {
                 notInstalledAgentHostIdList.map {
                     AgentVersion(
+                        ip = hostIdToAgentVersionMap[it]?.ip,
                         bkHostId = it,
                         installedTag = NOT_INSTALLED_AGENT_TAG
                     )
