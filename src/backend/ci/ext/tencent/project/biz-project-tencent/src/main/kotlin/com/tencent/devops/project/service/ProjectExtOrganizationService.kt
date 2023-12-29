@@ -40,7 +40,10 @@ class ProjectExtOrganizationService constructor(
         val isManagerDepartmentSame = deptIds.distinct().size == 1
         val isManagerCenterSame = centerIds.distinct().size == 1
 
-        logger.info("Determine whether project managers have the same organization: $englishName | $isManagerDepartmentSame")
+        logger.info(
+            "Determine whether project managers have the same organization: $englishName | " +
+                "$isManagerDepartmentSame|$isManagerCenterSame"
+        )
 
         if (isManagerDepartmentSame) {
             val deptId = deptIds.first()
@@ -80,6 +83,7 @@ class ProjectExtOrganizationService constructor(
 
     fun fixAllProjectOrganization(channelCode: String? = ChannelCode.BS.name): Boolean {
         Thread {
+            logger.info("fix all project organization:$channelCode")
             var offset = 0
             val limit = PageUtil.MAX_PAGE_SIZE
             do {
