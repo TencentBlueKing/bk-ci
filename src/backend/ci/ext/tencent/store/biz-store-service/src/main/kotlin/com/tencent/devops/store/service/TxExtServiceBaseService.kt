@@ -211,7 +211,6 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             userName = userName,
             password = password
         )
-        logger.info("extServiceImageInfo: extServiceImageInfo")
         // 未正式发布的扩展服务先部署到bcs灰度环境
         val deployApp = extServiceBcsService.generateDeployApp(
             userId = userId,
