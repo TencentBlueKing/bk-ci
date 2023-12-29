@@ -27,9 +27,11 @@
 
 package com.tencent.devops.environment.pojo.job.agentres
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("安装agent的返回结果")
 data class InstallAgentResult(
     @ApiModelProperty(value = "任务ID")

@@ -27,10 +27,12 @@
 
 package com.tencent.devops.environment.pojo.job.agentres
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("查询agent任务状态的接口的返回结果")
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class QueryAgentTaskStatusResult(
     @ApiModelProperty(value = "作业任务ID", required = true)
     val jobId: Int,

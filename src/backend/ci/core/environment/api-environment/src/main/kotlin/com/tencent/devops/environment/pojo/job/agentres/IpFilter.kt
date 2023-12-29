@@ -27,9 +27,11 @@
 
 package com.tencent.devops.environment.pojo.job.agentres
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("安装agent的返回结果中的 主机信息")
 data class IpFilter(
     @ApiModelProperty(value = "主机业务ID")

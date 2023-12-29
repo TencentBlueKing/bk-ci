@@ -27,10 +27,12 @@
 
 package com.tencent.devops.environment.pojo.job.agentres
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("Job数据返回包装模型")
 data class AgentResult<out T>(
     @ApiModelProperty("状态码", required = true)

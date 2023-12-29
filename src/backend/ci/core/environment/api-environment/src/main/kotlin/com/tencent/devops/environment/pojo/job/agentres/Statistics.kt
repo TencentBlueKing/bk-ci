@@ -27,8 +27,10 @@
 
 package com.tencent.devops.environment.pojo.job.agentres
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.annotations.ApiModelProperty
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class Statistics(
     @ApiModelProperty(value = "任务实例总数")
     val totalCount: Int,

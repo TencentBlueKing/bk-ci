@@ -56,6 +56,8 @@ data class FilterHostInfo(
     val outerIpv6: String?,
     @ApiModelProperty(value = "接入点ID")
     val apId: Int?,
+    @ApiModelProperty(value = "安装通道ID")
+    val installChannelId: Int?,
     @ApiModelProperty(value = "登录IP")
     val loginIp: String?,
     @ApiModelProperty(value = "数据IP")

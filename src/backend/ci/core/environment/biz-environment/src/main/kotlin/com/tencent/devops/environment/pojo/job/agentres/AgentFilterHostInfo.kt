@@ -69,6 +69,9 @@ data class AgentFilterHostInfo(
     @ApiModelProperty(value = "接入点ID")
     @JsonProperty("ap_id")
     val apId: Int?,
+    @ApiModelProperty(value = "安装通道ID")
+    @JsonProperty("install_channel_id")
+    val installChannelId: Int?,
     @ApiModelProperty(value = "登录IP")
     @JsonProperty("login_ip")
     val loginIp: String?,

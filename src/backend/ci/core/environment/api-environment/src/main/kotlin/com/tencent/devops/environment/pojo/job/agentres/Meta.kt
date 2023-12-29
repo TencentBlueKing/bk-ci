@@ -27,8 +27,10 @@
 
 package com.tencent.devops.environment.pojo.job.agentres
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.annotations.ApiModelProperty
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class Meta(
     @ApiModelProperty(value = "任务对象类型，1: AGENT 2：PLUGIN 3：PROXY", required = true)
     val type: String,
