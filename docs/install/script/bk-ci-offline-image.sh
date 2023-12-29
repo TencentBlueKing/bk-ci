@@ -20,3 +20,4 @@ docker pull $image
 echo "tar start..."
 tar_name=$(echo $image | awk -F '/' '{print $NF}')
 docker save $image >tar/$tar_name.tar
+echo "=============================================================================================="
