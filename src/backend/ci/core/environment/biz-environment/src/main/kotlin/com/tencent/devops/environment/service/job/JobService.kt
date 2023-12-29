@@ -925,6 +925,7 @@ class JobService @Autowired constructor(
                             outerIp = filterHostInfo.outerIp,
                             outerIpv6 = filterHostInfo.outerIpv6,
                             apId = filterHostInfo.apId,
+                            installChannelId = filterHostInfo.installChannelId,
                             loginIp = filterHostInfo.loginIp,
                             dataIp = filterHostInfo.dataIp,
                             status = filterHostInfo.status,
