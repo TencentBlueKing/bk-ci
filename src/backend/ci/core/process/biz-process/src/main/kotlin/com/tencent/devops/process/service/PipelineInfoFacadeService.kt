@@ -581,6 +581,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             channelCode = ChannelCode.BS,
             yaml = yml,
             versionStatus = versionStatus,
+            branchName = branchName,
             pipelineAsCodeSettings = pipelineAsCodeSettings
         )
         newResource.setting.projectId = projectId
