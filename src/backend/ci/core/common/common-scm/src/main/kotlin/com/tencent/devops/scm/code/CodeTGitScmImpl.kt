@@ -127,9 +127,9 @@ class CodeTGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the private key of git", ignored)
             throw ScmException(
-                ignored.message ?: I18nUtil.getCodeLanMessage(
-                    CommonMessageCode.TGIT_SECRET_WRONG
-                ),
+                GitUtils.matchExceptionCode(ignored.message ?: "")?.let {
+                    I18nUtil.getCodeLanMessage(it)
+                } ?: ignored.message ?: I18nUtil.getCodeLanMessage(CommonMessageCode.TGIT_SECRET_WRONG),
                 ScmType.CODE_TGIT.name
             )
         }

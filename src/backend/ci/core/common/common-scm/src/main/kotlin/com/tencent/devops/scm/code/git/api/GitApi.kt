@@ -29,7 +29,12 @@ package com.tencent.devops.scm.code.git.api
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.HTTP_400
+import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.constant.HTTP_403
+import com.tencent.devops.common.api.constant.HTTP_404
+import com.tencent.devops.common.api.constant.HTTP_405
+import com.tencent.devops.common.api.constant.HTTP_422
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.prometheus.BkTimedAspect
@@ -39,7 +44,6 @@ import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.pojo.ChangeFileInfo
-import com.tencent.devops.scm.pojo.GitApiError
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitCommitReviewInfo
@@ -445,12 +449,20 @@ open class GitApi {
     }
 
     private fun handleApiException(operation: String, code: Int, body: String) {
-        logger.warn(
-            "Fail to call git api because of code $code and " +
-                    "message $body|${getMessageByLocale(operation)}"
-        )
-        val apiError = JsonUtil.to(body, GitApiError::class.java)
-        throw GitApiException(code, apiError.message ?: "")
+        logger.warn("Fail to call git api because of code $code and message $body")
+        val msg = when (code) {
+            HTTP_400 -> getMessageByLocale(CommonMessageCode.PARAM_ERROR)
+            HTTP_401 -> getMessageByLocale(CommonMessageCode.AUTH_FAIL, arrayOf("Git token"))
+            HTTP_403 -> getMessageByLocale(CommonMessageCode.ACCOUNT_NO_OPERATION_PERMISSIONS, arrayOf(operation))
+            HTTP_404 -> getMessageByLocale(
+                CommonMessageCode.REPO_NOT_EXIST_OR_NO_OPERATION_PERMISSION,
+                arrayOf("GIT", operation)
+            )
+            HTTP_405 -> getMessageByLocale(CommonMessageCode.GIT_INTERFACE_NOT_EXIST, arrayOf("GIT", operation))
+            HTTP_422 -> getMessageByLocale(CommonMessageCode.GIT_CANNOT_OPERATION, arrayOf("GIT", operation))
+            else -> "Git platform $operation fail"
+        }
+        throw GitApiException(code, msg)
     }
 
     fun listCommits(

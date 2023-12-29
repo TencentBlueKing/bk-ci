@@ -115,9 +115,9 @@ class CodeGitlabScmImpl constructor(
             } catch (ignored: Throwable) {
                 logger.warn("Fail to check the private key of git", ignored)
                 throw ScmException(
-                    ignored.message ?: I18nUtil.getCodeLanMessage(
-                        GITLAB_INVALID
-                    ),
+                    GitUtils.matchExceptionCode(ignored.message ?: "")?.let {
+                        I18nUtil.getCodeLanMessage(it)
+                    } ?: ignored.message ?: I18nUtil.getCodeLanMessage(GITLAB_INVALID),
                     ScmType.CODE_GITLAB.name
                 )
             }

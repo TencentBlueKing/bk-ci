@@ -45,6 +45,7 @@ import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitSession
 import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.scm.utils.code.git.GitUtils.urlEncode
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
@@ -134,9 +135,9 @@ class CodeGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the private key of git", ignored)
             throw ScmException(
-                ignored.message ?: I18nUtil.getCodeLanMessage(
-                    CommonMessageCode.GIT_SERCRT_WRONG
-                ),
+                GitUtils.matchExceptionCode(ignored.message ?: "")?.let {
+                    I18nUtil.getCodeLanMessage(it)
+                } ?: ignored.message ?: I18nUtil.getCodeLanMessage(CommonMessageCode.GIT_SERCRT_WRONG),
                 ScmType.CODE_GIT.name
             )
         }
