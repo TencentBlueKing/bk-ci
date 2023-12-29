@@ -32,11 +32,11 @@ import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.model.remotedev.tables.TWindowsResourceType
 import com.tencent.devops.model.remotedev.tables.records.TWindowsResourceTypeRecord
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class WindowsResourceTypeDao {
@@ -60,7 +60,8 @@ class WindowsResourceTypeDao {
                 HDISK,
                 SDISK,
                 WEIGHT,
-                DESCRIPTION
+                DESCRIPTION,
+                SPEC_MODEL
             ).values(
                 config.size,
                 config.type ?: "",
@@ -74,20 +75,28 @@ class WindowsResourceTypeDao {
                 config.hdisk,
                 config.sdisk,
                 config.weight ?: 0,
-                config.description
+                config.description,
+                config.specModel
             ).returning(ID).fetchOne()!!.id
         }
     }
 
     fun fetchAll(
         dslContext: DSLContext,
-        withUnavailable: Boolean = false
+        withUnavailable: Boolean = false,
+        specModel: Boolean?
     ): List<WindowsResourceTypeConfig> {
         return with(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE) {
-            dslContext.selectFrom(this).let {
-                if (!withUnavailable) it.where(AVAILABLED.eq(1)) else it
+            val sql = dslContext.selectFrom(this)
+            if (!withUnavailable && specModel == null) {
+                sql.where(AVAILABLED.eq(1))
+            } else if (withUnavailable && specModel != null) {
+                sql.where(SPEC_MODEL.eq(specModel))
+            } else if (!withUnavailable && specModel != null) {
+                sql.where(AVAILABLED.eq(1)).and(SPEC_MODEL.eq(specModel))
             }
-                .orderBy(WEIGHT)
+
+            sql.orderBy(WEIGHT)
                 .skipCheck()
                 .fetch(mapper)
         }
@@ -136,6 +145,7 @@ class WindowsResourceTypeDao {
                 .set(DESCRIPTION, config.description)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(WEIGHT, config.weight ?: 0)
+                .set(SPEC_MODEL, config.specModel)
                 .where(ID.eq(id))
                 .execute()
         }

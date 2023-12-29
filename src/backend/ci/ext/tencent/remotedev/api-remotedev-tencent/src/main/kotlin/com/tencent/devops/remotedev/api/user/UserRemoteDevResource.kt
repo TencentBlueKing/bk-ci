@@ -27,6 +27,7 @@
 
 package com.tencent.devops.remotedev.api.user
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
@@ -38,7 +39,9 @@ import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import org.glassfish.jersey.server.ChunkedOutput
 import javax.ws.rs.Consumes
+import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -48,8 +51,6 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.HttpHeaders
 import javax.ws.rs.core.MediaType
-import org.glassfish.jersey.server.ChunkedOutput
-import javax.ws.rs.DefaultValue
 
 @Api(tags = ["USER_WORKSPACE"], description = "用户-工作空间,apiType:内网传user，离岸传desktop")
 @Path("/{apiType:user|desktop}/remotedev")
@@ -151,6 +152,8 @@ interface UserRemoteDevResource {
     fun allWindowsQuota(
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
         @QueryParam("searchCustom")
         searchCustom: Boolean?
     ): Result<Map<String, Map<String, Int>>>
