@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.ApigwMarketAtomResource
+import com.tencent.devops.openapi.utils.ApigwParamUtil
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.api.common.ServiceStoreStatisticResource
 import com.tencent.devops.store.pojo.atom.AtomPipeline
@@ -79,8 +80,8 @@ class ApigwMarketAtomResourceImpl @Autowired constructor(private val client: Cli
         return client.get(ServiceMarketAtomResource::class).getAtomPipelinesByCode(
             atomCode = atomCode,
             username = userId,
-            page = page,
-            pageSize = pageSize
+            page = page ?: 1,
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20
         )
     }
 

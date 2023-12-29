@@ -310,12 +310,7 @@ class WorkspaceCommon @Autowired constructor(
         }
         logger.info("fixUnexpectedStatus|$workspaceName|$status|$workspaceInfo")
         when {
-            workspaceInfo.status == EnvStatusEnum.stopped -> {
-                sleepControl.doStopWS(true, userId, workspaceName)
-                return WorkspaceStatus.SLEEP
-            }
-
-            workspaceInfo.status == EnvStatusEnum.readyToRun -> {
+            workspaceInfo.status == EnvStatusEnum.readyToRun || workspaceInfo.status == EnvStatusEnum.stopped -> {
                 sleepControl.doStopWS(true, userId, workspaceName)
                 return WorkspaceStatus.STOPPED
             }

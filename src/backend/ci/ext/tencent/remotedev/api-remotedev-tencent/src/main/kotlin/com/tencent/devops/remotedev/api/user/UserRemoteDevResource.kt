@@ -150,7 +150,9 @@ interface UserRemoteDevResource {
     @Path("/get_all_windows_resource_quota")
     fun allWindowsQuota(
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
+        userId: String,
+        @QueryParam("searchCustom")
+        searchCustom: Boolean?
     ): Result<Map<String, Map<String, Int>>>
 
     @ApiOperation("获取用户1Password")

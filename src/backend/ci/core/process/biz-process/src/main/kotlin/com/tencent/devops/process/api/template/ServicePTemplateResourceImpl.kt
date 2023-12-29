@@ -129,6 +129,7 @@ class ServicePTemplateResourceImpl @Autowired constructor(
     ): Result<OptionalTemplateList> {
         return Result(
             templateFacadeService.listAllTemplate(
+                userId = userId,
                 projectId = projectId,
                 templateType = templateType,
                 templateIds = null,
@@ -161,7 +162,8 @@ class ServicePTemplateResourceImpl @Autowired constructor(
             templateFacadeService.listAllTemplate(
                 projectId = projectId,
                 templateType = templateType,
-                templateIds = templateIds
+                templateIds = templateIds,
+                checkPermission = false
             )
         )
     }

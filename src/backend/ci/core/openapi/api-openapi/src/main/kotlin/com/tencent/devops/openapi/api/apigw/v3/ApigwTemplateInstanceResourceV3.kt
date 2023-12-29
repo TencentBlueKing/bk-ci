@@ -182,10 +182,10 @@ interface ApigwTemplateInstanceResourceV3 {
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int? = 1,
-        @ApiParam("每页多少条", required = false, defaultValue = "30")
+        @ApiParam("每页条数(默认20, 最大100)", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = false)
-        pageSize: Int? = 30,
+        pageSize: Int? = 20,
         @ApiParam("名字搜索的关键字", required = false)
         @QueryParam("searchKey")
         searchKey: String?,

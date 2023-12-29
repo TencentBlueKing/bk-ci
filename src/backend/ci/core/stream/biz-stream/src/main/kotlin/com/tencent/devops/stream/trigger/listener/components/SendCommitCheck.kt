@@ -119,7 +119,7 @@ class SendCommitCheck @Autowired constructor(
             state = finishData.getGitCommitCheckState(),
             block = action.metaData.isStreamMr() && action.data.setting.enableMrBlock &&
                     !finishData.isSuccess(),
-            context = "${action.data.context.pipeline!!.filePath}@${action.metaData.streamObjectKind.name}",
+            context = "${action.data.context.pipeline!!.displayName}@${action.metaData.streamObjectKind.name}",
             targetUrl = getTargetUrl(action),
             description = getDescByBuildStatus(
                 pipelineName = action.data.context.pipeline!!.displayName,

@@ -93,62 +93,64 @@ class DockerHostClient @Autowired constructor(
         driftIpInfo: String,
         containerPool: Pool
     ) {
-        val dispatchType = dispatchMessage.dispatchType as DockerDispatchType
-        pipelineDockerBuildDao.saveBuildHistory(
-            dslContext = dslContext,
-            projectId = dispatchMessage.projectId,
-            pipelineId = dispatchMessage.pipelineId,
-            buildId = dispatchMessage.buildId,
-            vmSeqId = dispatchMessage.vmSeqId.toInt(),
-            secretKey = dispatchMessage.secretKey,
-            status = PipelineTaskStatus.RUNNING,
-            zone = Zone.SHENZHEN.name,
-            dockerIp = dockerIp,
-            poolNo = poolNo,
-            startupMessage = JsonUtil.toJson(Pool(
-                container = containerPool.container,
-                credential = containerPool.credential,
-                env = null,
-                imageType = dispatchType.imageType?.type
-            ))
-        )
+        with(dispatchMessage.event) {
+            val dispatchType = dispatchType as DockerDispatchType
+            pipelineDockerBuildDao.saveBuildHistory(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                vmSeqId = vmSeqId.toInt(),
+                secretKey = dispatchMessage.secretKey,
+                status = PipelineTaskStatus.RUNNING,
+                zone = Zone.SHENZHEN.name,
+                dockerIp = dockerIp,
+                poolNo = poolNo,
+                startupMessage = JsonUtil.toJson(Pool(
+                    container = containerPool.container,
+                    credential = containerPool.credential,
+                    env = null,
+                    imageType = dispatchType.imageType?.type
+                ))
+            )
 
-        val requestBody = DockerHostBuildInfo(
-            projectId = dispatchMessage.projectId,
-            agentId = dispatchMessage.id,
-            pipelineId = dispatchMessage.pipelineId,
-            buildId = dispatchMessage.buildId,
-            vmSeqId = Integer.valueOf(dispatchMessage.vmSeqId),
-            secretKey = dispatchMessage.secretKey,
-            status = PipelineTaskStatus.RUNNING.status,
-            imageName = containerPool.container!!,
-            containerId = "",
-            poolNo = poolNo,
-            registryUser = containerPool.credential?.user ?: "",
-            registryPwd = containerPool.credential?.password ?: "",
-            imageType = dispatchType.imageType?.type,
-            imagePublicFlag = dispatchType.imagePublicFlag,
-            imageRDType = if (dispatchType.imageRDType == null) {
-                null
-            } else {
-                ImageRDTypeEnum.getImageRDTypeByName(dispatchType.imageRDType!!).name
-            },
-            containerHashId = dispatchMessage.containerHashId,
-            customBuildEnv = dispatchMessage.customBuildEnv,
-            dockerResource = getDockerResource(dispatchType),
-            qpcUniquePath = getQpcUniquePath(dispatchMessage),
-            specialProjectList = getSpecialProjectList()
-        )
+            val requestBody = DockerHostBuildInfo(
+                projectId = projectId,
+                agentId = dispatchMessage.id,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                vmSeqId = Integer.valueOf(vmSeqId),
+                secretKey = dispatchMessage.secretKey,
+                status = PipelineTaskStatus.RUNNING.status,
+                imageName = containerPool.container!!,
+                containerId = "",
+                poolNo = poolNo,
+                registryUser = containerPool.credential?.user ?: "",
+                registryPwd = containerPool.credential?.password ?: "",
+                imageType = dispatchType.imageType?.type,
+                imagePublicFlag = dispatchType.imagePublicFlag,
+                imageRDType = if (dispatchType.imageRDType == null) {
+                    null
+                } else {
+                    ImageRDTypeEnum.getImageRDTypeByName(dispatchType.imageRDType!!).name
+                },
+                containerHashId = containerHashId,
+                customBuildEnv = dispatchMessage.customBuildEnv,
+                dockerResource = getDockerResource(dispatchType),
+                qpcUniquePath = getQpcUniquePath(dispatchMessage),
+                specialProjectList = getSpecialProjectList()
+            )
 
-        pipelineDockerTaskSimpleDao.createOrUpdate(
-            dslContext = dslContext,
-            pipelineId = dispatchMessage.pipelineId,
-            vmSeq = dispatchMessage.vmSeqId,
-            dockerIp = dockerIp,
-            dockerResourceOptionsId = dispatchType.performanceConfigId
-        )
+            pipelineDockerTaskSimpleDao.createOrUpdate(
+                dslContext = dslContext,
+                pipelineId = pipelineId,
+                vmSeq = vmSeqId,
+                dockerIp = dockerIp,
+                dockerResourceOptionsId = dispatchType.performanceConfigId
+            )
 
-        dockerBuildStart(dockerIp, dockerHostPort, requestBody, driftIpInfo)
+            dockerBuildStart(dockerIp, dockerHostPort, requestBody, driftIpInfo)
+        }
     }
 
     fun endBuild(
@@ -375,7 +377,7 @@ class DockerHostClient @Autowired constructor(
     }
 
     private fun getQpcUniquePath(dispatchMessage: DispatchMessage): String? {
-        val projectId = dispatchMessage.projectId
+        val projectId = dispatchMessage.event.projectId
         return if (projectId.startsWith("git_") &&
             dockerHostQpcService.checkQpcWhitelist(projectId.removePrefix("git_"))
         ) {

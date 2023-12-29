@@ -106,6 +106,7 @@ import com.tencent.devops.process.engine.service.record.PipelineBuildRecordServi
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.engine.utils.ContainerUtils
+import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildId
@@ -735,6 +736,8 @@ class PipelineRuntimeService @Autowired constructor(
                         buildStatus = null,
                         taskBuildRecords = taskBuildRecords
                     )
+                    // 清理options变量
+                    container.params = PipelineUtils.cleanOptions(container.params)
                     return@nextContainer
                 } else if (container is NormalContainer) {
                     if (!ContainerUtils.isNormalContainerEnable(container)) {
@@ -1144,12 +1147,13 @@ class PipelineRuntimeService @Autowired constructor(
             }
             containerBuildRecords.add(
                 BuildRecordContainer(
-                    projectId = build.projectId, pipelineId = build.pipelineId, resourceVersion = resourceVersion,
-                    buildId = build.buildId, stageId = build.stageId, containerId = build.containerId,
+                    projectId = build.projectId, pipelineId = build.pipelineId,
+                    resourceVersion = resourceVersion, buildId = build.buildId,
+                    stageId = build.stageId, containerId = build.containerId,
                     containerType = build.containerType, executeCount = build.executeCount,
                     matrixGroupFlag = build.matrixGroupFlag, matrixGroupId = build.matrixGroupId,
-                    status = null, startTime = null, endTime = null, timestamps = mapOf(),
-                    containerVar = containerVar
+                    status = null, startTime = build.startTime,
+                    endTime = build.endTime, timestamps = mapOf(), containerVar = containerVar
                 )
             )
         }
@@ -1160,12 +1164,14 @@ class PipelineRuntimeService @Autowired constructor(
         stageBuildRecords: MutableList<BuildRecordStage>,
         resourceVersion: Int
     ) {
-        updateStageExistsRecord.forEach {
+        updateStageExistsRecord.forEach { build ->
             stageBuildRecords.add(
                 BuildRecordStage(
-                    projectId = it.projectId, pipelineId = it.pipelineId, resourceVersion = resourceVersion,
-                    buildId = it.buildId, stageId = it.stageId, stageSeq = it.seq,
-                    executeCount = it.executeCount, stageVar = mutableMapOf(), timestamps = mapOf()
+                    projectId = build.projectId, pipelineId = build.pipelineId,
+                    resourceVersion = resourceVersion, buildId = build.buildId,
+                    stageId = build.stageId, stageSeq = build.seq,
+                    executeCount = build.executeCount, stageVar = mutableMapOf(),
+                    timestamps = mapOf(), startTime = build.startTime, endTime = build.endTime
                 )
             )
         }

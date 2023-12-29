@@ -36,6 +36,7 @@ import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_FAILED_GET_WORKER_BEE
 import com.tencent.devops.worker.common.env.AgentEnv
+import com.tencent.devops.worker.common.service.CIKeywordsService
 
 @Suppress("UNUSED")
 @ApiPriority(priority = 9)
@@ -73,7 +74,7 @@ class TencentEngineBuildResourceApi : EngineBuildResourceApi(), EngineBuildSDKAp
         // #5277 对所有job下变量做收尾处理，可以在try区域内逐步追加
         try {
             val projectId = AgentEnv.getProjectId()
-            val gitToken = variables[CI_TOKEN_CONTEXT]
+            val gitToken = CIKeywordsService.ciToken
             if (projectId.startsWith("git_") && !gitToken.isNullOrBlank()) {
                 val url = "/ms/repository/api/build/gitci/clearToken?token=$gitToken"
                 val request = buildDelete(url)

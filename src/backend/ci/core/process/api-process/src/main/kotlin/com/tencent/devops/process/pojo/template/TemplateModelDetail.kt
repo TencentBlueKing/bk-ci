@@ -53,7 +53,7 @@ data class TemplateModelDetail(
     @ApiModelProperty("logo的url地址", required = false)
     val logoUrl: String,
     @ApiModelProperty("是否有操作权限", required = false)
-    val hasPermission: Boolean, // 管理员权限
+    val hasPermission: Boolean,
     @ApiModelProperty("参数列表", required = false)
     val params: List<BuildFormProperty>,
     @ApiModelProperty("模板参数构建", required = false)

@@ -114,7 +114,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         }
 
         // 启动流水线完成剩下的分配工作
-        if (data.repoId == null || data.localDriver == null) {
+        if (data.repoId.isNullOrBlank() || data.localDriver.isNullOrBlank()) {
             return Result(true)
         }
         executor.execute {

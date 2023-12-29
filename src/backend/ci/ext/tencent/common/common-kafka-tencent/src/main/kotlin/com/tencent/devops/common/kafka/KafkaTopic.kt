@@ -61,8 +61,10 @@ object KafkaTopic {
     // Stream上报topic
     const val STREAM_BUILD_INFO_TOPIC = "tendata-bkdevops-topic-stream-build-info"
 
-    // quota topic
-    const val JOB_QUOTA_HISYORY_TOPIC = "tendata-bkdevops-topic-job-quota-history"
+    // Job构建耗时历史topic
+    const val JOB_QUOTA_HISTORY_TOPIC = "tendata-bkdevops-topic-job-quota-history"
+    // job并发历史topic
+    const val JOB_CONCURRENCY_HISTORY_TOPIC = "tendata-bkdevops-topic-job-concurrency-history"
 
     const val BUILD_ATOM_METRICS_TOPIC_PREFIX = "tendata-bkdevops-topic-build-atom-metrics"
 }

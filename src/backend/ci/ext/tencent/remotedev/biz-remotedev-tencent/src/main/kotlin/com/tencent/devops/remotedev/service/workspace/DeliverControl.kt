@@ -39,6 +39,7 @@ import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
@@ -151,20 +152,19 @@ class DeliverControl @Autowired constructor(
         assigns: List<ProjectWorkspaceAssign>
     ) {
         logger.info("assignUser2Workspace|$userId|$projectId|$workspaceName|$assigns")
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
         val assign2Owner = assigns.firstOrNull { it.type == WorkspaceShared.AssignType.OWNER }
         val alreadyExist = sharedDao.fetchWorkspaceSharedInfo(dslContext, workspaceName)
         val existOwner = alreadyExist.firstOrNull { it.type == WorkspaceShared.AssignType.OWNER }
         logger.info("assignUser2Workspace|assign2Owner|$assign2Owner|alreadyExist|$alreadyExist")
-
         ActionAuditContext.current()
             .addAttribute(ASSIGNS_TEMPLATE, assigns.joinToString(",") { it.userId })
         when {
             existOwner == null && assign2Owner != null -> {
-                val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
-                    ?: throw ErrorCodeException(
-                        errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-                        params = arrayOf(workspaceName)
-                    )
                 logger.info("assignUser2Workspace|$userId|${assign2Owner.userId}")
                 workspaceCommon.shareWorkspace(
                     workspaceName = workspaceName,
@@ -227,6 +227,21 @@ class DeliverControl @Autowired constructor(
                 mountType = WorkspaceMountType.START
             )
         }
+
+        // 分配完机器后通知客户端，刷新列表
+        workspaceCommon.dispatchWebsocketPushEvent(
+            userId = Constansts.ADMIN_NAME,
+            workspaceName = workspaceName,
+            workspaceHost = null,
+            errorMsg = null,
+            type = WebSocketActionType.WORKSPACE_ASSIGN,
+            status = true,
+            action = WorkspaceAction.ASSIGN,
+            systemType = workspace.workspaceSystemType,
+            workspaceMountType = workspace.workspaceMountType,
+            ownerType = workspace.ownerType,
+            projectId = workspace.projectId
+        )
     }
 
     fun softwareInstallationCompleteCallback(

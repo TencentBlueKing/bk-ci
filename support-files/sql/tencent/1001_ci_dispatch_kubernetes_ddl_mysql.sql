@@ -59,6 +59,8 @@ CREATE TABLE IF NOT EXISTS T_WINDOWS_GPU_POOL
     LOCKED  boolean      default false             not null comment '该资源是否锁定',
     USER_INSTANCE_List text NOT NULL COMMENT '拥有者或共享人详情',
     PROJECT_ID varchar(64)  DEFAULT '' NOT NULL COMMENT '项目ID',
+    CPU varchar(16) NOT NULL DEFAULT '' COMMENT 'CPU',
+    MEMORY varchar(16) NOT NULL DEFAULT '' COMMENT '内存',
     DISK varchar(64)  NULL COMMENT '磁盘',
     HDISK varchar(64)  NULL COMMENT '云磁盘',
     IMAGESTANDARD  boolean      default true             not null comment '是否基础镜像',
