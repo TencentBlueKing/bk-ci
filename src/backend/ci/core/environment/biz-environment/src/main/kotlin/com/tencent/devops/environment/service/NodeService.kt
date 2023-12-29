@@ -85,8 +85,8 @@ class NodeService @Autowired constructor(
     private val slaveGatewayDao: SlaveGatewayDao,
     private val queryFromCCService: QueryFromCCService
 ) {
-    @Value("\${job.bkScopeId:}")
-    private val bkScopeId = ""
+    @Value("\${job.bkBizScopeId:}")
+    private val bkBizScopeId = ""
 
     companion object {
         private val logger = LoggerFactory.getLogger(NodeService::class.java)
@@ -118,7 +118,7 @@ class NodeService @Autowired constructor(
         if (logger.isDebugEnabled) logger.debug("[deleteNodes]hostIdQueryCCList:$hostIdQueryCCList")
 
         // 条件1. 这个业务的bizid等于蓝盾测试机
-        val queryCCEqualBizList = hostIdQueryCCList?.filter { bkScopeId == it.bkBizId.toString() } // cc返回记录中，biz是蓝盾测试机的
+        val queryCCEqualBizList = hostIdQueryCCList?.filter { bkBizScopeId == it.bkBizId.toString() } // cc返回记录中，biz是蓝盾测试机的
         if (logger.isDebugEnabled) logger.debug("[deleteNodes]queryCCEqualBizList:$queryCCEqualBizList")
         val queryCCEqualBizHostIdList = queryCCEqualBizList?.map { Host(it.bkHostId.toLong()) } ?: listOf()
 
