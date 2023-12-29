@@ -173,6 +173,9 @@ elasticsearch:
       size: 10Gi
 rabbitmq:
   enabled: true
+  image: 
+    repository: bkci/rabbitmq-with-delay
+    tag: 0.0.1
   persistence:
     size: 10Gi
   auth:
