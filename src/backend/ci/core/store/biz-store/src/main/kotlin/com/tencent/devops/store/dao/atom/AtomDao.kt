@@ -469,19 +469,6 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
-    fun getVersionsByAtomCode(
-        dslContext: DSLContext,
-        atomCode: String
-    ): List<String>? {
-        with(TAtom.T_ATOM) {
-            val versions = dslContext.select(VERSION)
-                .from(this)
-                .where(ATOM_CODE.eq(atomCode))
-                .orderBy(CREATE_TIME.desc())
-            return versions.fetchInto(String::class.java)
-        }
-    }
-
     @Suppress("UNCHECKED_CAST")
     fun getVersionsByAtomCode(
         dslContext: DSLContext,

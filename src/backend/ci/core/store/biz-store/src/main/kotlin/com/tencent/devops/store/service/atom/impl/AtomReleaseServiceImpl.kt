@@ -1246,17 +1246,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     latestFlag = false
                 )
             )
-            val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode)
-            val versions = atomDao.getVersionsByAtomCode(
-                dslContext = context,
-                atomCode = atomCode
-            )
-            versions?.let {
-                redisOperation.hdelete(
-                    key = atomRunInfoKey,
-                    hashKeys = it
-                )
-            }
+            redisOperation.delete(StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode))
             val newestReleaseAtomRecord = releaseAtomRecords[0]
             if (newestReleaseAtomRecord.id == atomId) {
                 var tmpAtomId: String? = null
