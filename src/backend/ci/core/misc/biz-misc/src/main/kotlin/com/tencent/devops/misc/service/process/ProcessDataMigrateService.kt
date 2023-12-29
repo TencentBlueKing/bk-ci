@@ -53,6 +53,7 @@ import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
 import com.tencent.devops.misc.lock.MigrationLock
 import com.tencent.devops.misc.pojo.constant.MiscMessageCode
+import com.tencent.devops.misc.pojo.process.DeleteMigrationDataParam
 import com.tencent.devops.misc.pojo.process.MigratePipelineDataParam
 import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistory
 import com.tencent.devops.misc.service.project.DataSourceService
@@ -214,13 +215,14 @@ class ProcessDataMigrateService @Autowired constructor(
         }
         val migrationLock = MigrationLock(redisOperation, projectId)
         // 重试迁移需删除迁移库的数据以保证迁移接口的幂等性
-        processMigrationDataDeleteService.deleteProcessData(
+        val deleteMigrationDataParam = DeleteMigrationDataParam(
             dslContext = migratingShardingDslContext,
             projectId = projectId,
             targetClusterName = clusterName,
             targetDataSourceName = shardingRoutingRule,
             migrationLock = migrationLock
         )
+        processMigrationDataDeleteService.deleteProcessData(deleteMigrationDataParam)
         // 查询项目下流水线数量
         val pipelineNum = processDao.getPipelineNumByProjectId(dslContext, projectId)
         // 根据流水线数量计算线程数量
@@ -356,13 +358,14 @@ class ProcessDataMigrateService @Autowired constructor(
         try {
             // 删除迁移库的数据
             shardingRoutingRule?.let {
-                processMigrationDataDeleteService.deleteProcessData(
+                val deleteMigrationDataParam = DeleteMigrationDataParam(
                     dslContext = migratingShardingDslContext,
                     projectId = projectId,
                     targetClusterName = clusterName,
                     targetDataSourceName = shardingRoutingRule,
                     migrationLock = migrationLock
                 )
+                processMigrationDataDeleteService.deleteProcessData(deleteMigrationDataParam)
             }
             // 把项目路由规则还原
             val updateShardingRoutingRule = historyShardingRoutingRule
@@ -494,13 +497,14 @@ class ProcessDataMigrateService @Autowired constructor(
                 val context = DSL.using(t)
                 if (migrationSourceDbDataDeleteFlag) {
                     // 开关打开则删除原库的数据
-                    processMigrationDataDeleteService.deleteProcessData(
+                    val deleteMigrationDataParam = DeleteMigrationDataParam(
                         dslContext = context,
                         projectId = projectId,
                         targetClusterName = clusterName,
                         targetDataSourceName = shardingRoutingRule,
                         broadcastTableDeleteFlag = !migrationProcessDbUnionClusterFlag
                     )
+                    processMigrationDataDeleteService.deleteProcessData(deleteMigrationDataParam)
                 }
                 // 更新项目的路由规则
                 updateShardingRoutingRule(

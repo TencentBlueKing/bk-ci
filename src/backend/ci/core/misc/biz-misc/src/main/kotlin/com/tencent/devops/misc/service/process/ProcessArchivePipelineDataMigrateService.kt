@@ -46,6 +46,7 @@ import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
 import com.tencent.devops.misc.lock.MigrationLock
+import com.tencent.devops.misc.pojo.process.DeleteMigrationDataParam
 import com.tencent.devops.misc.pojo.process.MigratePipelineDataParam
 import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistory
 import com.tencent.devops.misc.service.project.ProjectDataMigrateHistoryService
@@ -164,14 +165,16 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
     ) {
         try {
             if (archiveDbShardingRoutingRule != null) {
-                processMigrationDataDeleteService.deleteProcessData(
+                val deleteMigrationDataParam = DeleteMigrationDataParam(
                     dslContext = archiveShardingDslContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     targetClusterName = archiveDbShardingRoutingRule.clusterName,
                     targetDataSourceName = archiveDbShardingRoutingRule.dataSourceName,
-                    migrationLock = migrationLock
+                    migrationLock = migrationLock,
+                    archivePipelineFlag = true
                 )
+                processMigrationDataDeleteService.deleteProcessData(deleteMigrationDataParam)
             }
         } catch (ignored: Throwable) {
             logger.warn("migrateData project:[$projectId],pipeline[$pipelineId] doMigrationErrorBus fail", ignored)
@@ -227,13 +230,14 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
                     resourceCode = pipelineId
                 )
                 // 删除原库的数据
-                processMigrationDataDeleteService.deleteProcessData(
+                val deleteMigrationDataParam = DeleteMigrationDataParam(
                     dslContext = dslContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     targetClusterName = sourceClusterName,
                     targetDataSourceName = tmpArchiveDbShardingRoutingRule.dataSourceName
                 )
+                processMigrationDataDeleteService.deleteProcessData(deleteMigrationDataParam)
                 // 保存流水线数据迁移成功记录
                 projectDataMigrateHistoryService.add(
                     userId = userId,
@@ -265,14 +269,16 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
     ) {
         // 重试迁移需删除迁移库的数据以保证迁移接口的幂等性
         if (archiveDbShardingRoutingRule != null) {
-            processMigrationDataDeleteService.deleteProcessData(
+            val deleteMigrationDataParam = DeleteMigrationDataParam(
                 dslContext = archiveShardingDslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 targetClusterName = archiveDbShardingRoutingRule.clusterName,
                 targetDataSourceName = archiveDbShardingRoutingRule.dataSourceName,
-                migrationLock = migrationLock
+                migrationLock = migrationLock,
+                archivePipelineFlag = true
             )
+            processMigrationDataDeleteService.deleteProcessData(deleteMigrationDataParam)
         }
         // 把流水线加入正在迁移流水线集合中
         redisOperation.addSetValue(
