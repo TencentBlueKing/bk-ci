@@ -77,7 +77,7 @@ interface ApigwRepositoryResourceV2 {
         @ApiParam("分页", required = false)
         @QueryParam("page")
         page: Int?,
-        @ApiParam("分页大小", required = false)
+        @ApiParam("每页条数(默认20, 最大100)", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<RepositoryInfo>?>

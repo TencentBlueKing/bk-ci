@@ -57,12 +57,10 @@ import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.modelCreate.pojo.enums.DispatchBizType
 import com.tencent.devops.process.yaml.v2.utils.StreamDispatchUtils
 import com.tencent.devops.process.yaml.v2.models.Resources
-import com.tencent.devops.process.yaml.v2.models.ResourcesPools
 import com.tencent.devops.process.yaml.v2.models.job.Container
 import com.tencent.devops.process.yaml.v2.models.job.Container2
 import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.process.yaml.v2.models.job.JobRunsOnType
-import com.tencent.devops.scm.api.ServiceGitCiResource
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.Response
 import com.tencent.devops.common.pipeline.type.agent.Credential as thirdPartDockerCredential
@@ -346,32 +344,5 @@ object TXStreamDispatchUtils {
         }
 
         return containerPool
-    }
-
-    private fun getEnvName(client: Client, poolName: String, pools: List<ResourcesPools>?): String {
-        if (pools.isNullOrEmpty()) {
-            return poolName
-        }
-
-        pools.filter { !it.from.isNullOrBlank() && !it.name.isNullOrBlank() }.forEach label@{
-            if (it.name == poolName) {
-                try {
-                    val repoNameAndPool = it.from!!.split("@")
-                    if (repoNameAndPool.size != 2 || repoNameAndPool[0].isBlank() || repoNameAndPool[1].isBlank()) {
-                        return@label
-                    }
-
-                    val gitProjectInfo =
-                        client.getScm(ServiceGitCiResource::class).getGitCodeProjectInfo(repoNameAndPool[0]).data
-                    val result = "git_${gitProjectInfo!!.id}@${repoNameAndPool[1]}"
-                    return result
-                } catch (e: Exception) {
-                    logger.warn("Get projectInfo from git failed, pools: $pools envName: $poolName. exception:", e)
-                    return poolName
-                }
-            }
-        }
-        logger.info("Get envName from Resource.pools no match.pools: $pools envName: $poolName")
-        return poolName
     }
 }

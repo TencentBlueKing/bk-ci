@@ -33,8 +33,8 @@ import com.tencent.devops.common.api.util.DateTimeUtil.YYYY_MM_DD
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.measure.BuildEndPipelineMetricsData
 import com.tencent.devops.common.event.pojo.measure.BuildEndTaskMetricsData
-import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.metrics.dao.DispatchJobMetricsDao

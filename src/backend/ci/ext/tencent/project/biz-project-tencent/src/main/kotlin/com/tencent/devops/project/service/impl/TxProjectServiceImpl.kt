@@ -120,7 +120,8 @@ class TxProjectServiceImpl @Autowired constructor(
     projectDao: ProjectDao,
     projectJmxApi: ProjectJmxApi,
     redisOperation: RedisOperation,
-    client: Client
+    client: Client,
+    clientTokenService: ClientTokenService
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -134,7 +135,9 @@ class TxProjectServiceImpl @Autowired constructor(
     shardingRoutingRuleAssignService = shardingRoutingRuleAssignService,
     objectMapper = objectMapper,
     projectExtService = projectExtService,
-    projectApprovalService = projectApprovalService
+    projectApprovalService = projectApprovalService,
+    clientTokenService = clientTokenService,
+    profile = profile
 ) {
 
     @Value("\${iam.v0.url:#{null}}")
@@ -271,7 +274,8 @@ class TxProjectServiceImpl @Autowired constructor(
     override fun getProjectFromAuth(
         userId: String,
         accessToken: String?,
-        permission: AuthPermission
+        permission: AuthPermission,
+        resourceType: String?
     ): List<String>? {
         if (rbacTag.isBlank()) {
             return emptyList()
@@ -280,7 +284,8 @@ class TxProjectServiceImpl @Autowired constructor(
             client.getGateway(ServiceProjectAuthResource::class).getUserProjectsByPermission(
                 userId = userId,
                 token = tokenService.getSystemToken()!!,
-                action = permission.value
+                action = permission.value,
+                resourceType = resourceType
             ).data
         }
     }
@@ -512,9 +517,13 @@ class TxProjectServiceImpl @Autowired constructor(
     override fun updateProjectRouterTag(englishName: String) {
         try {
             val tag = bkTag.getLocalTag()
-            // rbac环境创建的项目,需要指定到rbac集群
-            if (tag.contains(rbacTag)) {
-                projectTagService.updateTagByProject(projectCode = englishName, tag = rbacTag)
+            val finalTag = when {
+                tag.contains(rbacTag) -> rbacTag
+                tag.contains(devxTag) -> devxTag
+                else -> null
+            }
+            if (finalTag != null) {
+                projectTagService.updateTagByProject(projectCode = englishName, tag = finalTag)
             }
         } catch (ignore: Exception) {
             logger.warn("Failed to update project router tag", ignore)

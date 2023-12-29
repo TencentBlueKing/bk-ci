@@ -95,10 +95,10 @@ class DevCloudBuildListener @Autowired constructor(
     }
 
     private fun startUp(dispatchMessage: DispatchMessage) {
-        with(dispatchMessage) {
+        with(dispatchMessage.event) {
             // 打印启动日志
             printLogs(
-                this,
+                dispatchMessage,
                 I18nUtil.getCodeLanMessage(
                     messageCode = BK_PREPARE_CREATE_TENCENT_CLOUD_BUILD_MACHINE,
                     language = I18nUtil.getDefaultLocaleLanguage()
@@ -113,21 +113,21 @@ class DevCloudBuildListener @Autowired constructor(
 
             dcContainerPrepareHandler.handlerRequest(
                 DcStartupHandlerContext(
-                    userId = dispatchMessage.userId,
-                    projectId = dispatchMessage.projectId,
-                    pipelineId = dispatchMessage.pipelineId,
-                    buildId = dispatchMessage.buildId,
-                    vmSeqId = dispatchMessage.vmSeqId,
-                    executeCount = dispatchMessage.executeCount,
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    vmSeqId = vmSeqId,
+                    executeCount = executeCount,
                     agentId = dispatchMessage.id,
                     secretKey = dispatchMessage.secretKey,
                     gateway = dispatchMessage.gateway,
-                    dispatchMessage = dispatchMessage.dispatchMessage,
-                    atoms = dispatchMessage.atoms,
-                    dispatchType = dispatchMessage.dispatchType,
+                    dispatchMessage = dispatchType.value,
+                    atoms = atoms,
+                    dispatchType = dispatchType,
                     customBuildEnv = dispatchMessage.customBuildEnv,
-                    containerHashId = dispatchMessage.containerHashId,
-                    persistence = (dispatchMessage.dispatchType as PublicDevCloudDispathcType).persistence ?: false
+                    containerHashId = containerHashId,
+                    persistence = (dispatchType as PublicDevCloudDispathcType).persistence ?: false
                 )
             )
         }
@@ -136,11 +136,11 @@ class DevCloudBuildListener @Autowired constructor(
     private fun printLogs(dispatchMessage: DispatchMessage, message: String) {
         log(
             buildLogPrinter,
-            dispatchMessage.buildId,
-            dispatchMessage.containerHashId,
-            dispatchMessage.vmSeqId,
+            dispatchMessage.event.buildId,
+            dispatchMessage.event.containerHashId,
+            dispatchMessage.event.vmSeqId,
             message,
-            dispatchMessage.executeCount
+            dispatchMessage.event.executeCount
         )
     }
 

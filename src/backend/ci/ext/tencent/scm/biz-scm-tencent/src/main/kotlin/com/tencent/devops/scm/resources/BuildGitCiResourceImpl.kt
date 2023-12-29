@@ -40,7 +40,8 @@ class BuildGitCiResourceImpl @Autowired constructor(
 ) : BuildGitCiResource {
 
     override fun getToken(gitProjectId: String): Result<GitToken> {
-        return Result(gitService.getToken(gitProjectId))
+        val token = gitService.getTokenFromCache(gitProjectId)
+        return Result(GitToken(accessToken = token))
     }
 
     override fun clearToken(token: String): Result<Boolean> {

@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v2.ApigwRepositoryResourceV2
+import com.tencent.devops.openapi.utils.ApigwParamUtil
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.api.ServiceOauthResource
@@ -64,8 +65,8 @@ class ApigwRepositoryResourceV2Impl @Autowired constructor(private val client: C
             client.get(ServiceRepositoryResource::class).listByProject(
                 projectId = projectId,
                 repositoryType = repositoryType,
-                page = page,
-                pageSize = pageSize
+                page = page ?: 1,
+                pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20
             )
         } else {
             Result(data = null)

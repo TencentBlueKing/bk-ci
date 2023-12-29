@@ -119,7 +119,6 @@ class DispatchService constructor(
             secretKey = secretInfo.secretKey,
             gateway = gateway!!,
             customBuildEnv = customBuildEnv,
-            dockerRoutingType = event.dockerRoutingType,
             event = event
         )
     }

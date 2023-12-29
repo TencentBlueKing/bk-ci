@@ -138,7 +138,11 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
 
     override fun isShowUserManageIcon(): Boolean = false
 
-    override fun filterProjects(userId: String, permission: AuthPermission): List<String>? = null
+    override fun filterProjects(
+        userId: String,
+        permission: AuthPermission,
+        resourceType: String?
+    ): List<String>? = null
 
     override fun verifyUserProjectPermission(
         accessToken: String?,
@@ -190,7 +194,8 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
                 MessageUtil.getMessageByLocale(
                     messageCode = FAILED_CREATE_PROJECT_V0,
                     language = I18nUtil.getLanguage(userId)
-                ) + ": ${result.message}")
+                ) + ": ${result.message}"
+            )
         }
         val authProjectForCreateResult = result.data
         return if (authProjectForCreateResult != null) {
