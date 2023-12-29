@@ -105,11 +105,7 @@ class EventActionFactory @Autowired constructor(
                 val tGitPushAction = TGitPushActionGit(
                     apiService = tGitApiService
                 )
-                if (event.isDeleteBranch()) {
-                    PipelineYamlDeleteAction(gitAction = tGitPushAction, pipelineYamlService = pipelineYamlService)
-                } else {
-                    tGitPushAction
-                }
+                tGitPushAction
             }
             is GitMergeRequestEvent -> {
                 val tGitMrAction = TGitMrActionGit(
@@ -151,7 +147,11 @@ class EventActionFactory @Autowired constructor(
         }
         gitAction.data = ActionData(event, PacTriggerContext())
 
-        return gitAction
+        return if (event is GitPushEvent && event.isDeleteBranch()) {
+            PipelineYamlDeleteAction(gitAction = gitAction, pipelineYamlService = pipelineYamlService)
+        } else {
+            gitAction
+        }
     }
 
     fun loadEnableEvent(

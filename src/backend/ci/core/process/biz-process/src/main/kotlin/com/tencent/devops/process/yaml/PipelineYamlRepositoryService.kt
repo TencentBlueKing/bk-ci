@@ -202,6 +202,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
         createYamlViewIfAbsent(
             userId = userId,
             projectId = projectId,
+            pipelineId = pipelineId,
             repoHashId = repoHashId,
             gitProjectName = action.data.setting.projectName,
             directory = directory
@@ -214,6 +215,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
     private fun createYamlViewIfAbsent(
         userId: String,
         projectId: String,
+        pipelineId: String,
         repoHashId: String,
         gitProjectName: String,
         directory: String
@@ -225,6 +227,12 @@ class PipelineYamlRepositoryService @Autowired constructor(
         )
         // 存在则不再创建
         if (pipelineYamlView != null) {
+            // 流水线先创建后保存到T_PIPELINE_YAML_INFO表,再创建流水线时刷新流水线组还加载不到yaml流水线,所以这里需要再加载一次
+            pipelineViewGroupService.updateGroupAfterPipelineCreate(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId
+            )
             return
         }
         val path = gitProjectName.substringAfterLast("/")
@@ -317,7 +325,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
         val filePath = yamlFile.yamlPath
         val repoHashId = action.data.setting.repoHashId
         val userId = action.data.getUserId()
-        logger.info("deleteYamlPipeline|$userId|$projectId|yamlFile:$yamlFile")
+        logger.info("deleteYamlPipeline|$userId|$projectId|$repoHashId|yamlFile:$yamlFile")
         try {
             val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
                 projectId = projectId,
@@ -426,6 +434,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             createYamlViewIfAbsent(
                 userId = userId,
                 projectId = projectId,
+                pipelineId = pipelineId,
                 repoHashId = repoHashId,
                 directory = directory,
                 gitProjectName = gitProjectName
