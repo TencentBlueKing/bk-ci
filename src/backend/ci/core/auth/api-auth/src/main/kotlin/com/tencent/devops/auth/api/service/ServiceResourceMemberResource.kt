@@ -71,7 +71,7 @@ interface ServiceResourceMemberResource {
     @POST
     @Path("/{projectCode}/batchAddResourceGroupMembers/{groupId}")
     @ApiOperation("根据组ID往项目下加人")
-    fun batchCreateProjectUser(
+    fun batchAddResourceGroupMembers(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @ApiParam("认证token", required = true)
         token: String,

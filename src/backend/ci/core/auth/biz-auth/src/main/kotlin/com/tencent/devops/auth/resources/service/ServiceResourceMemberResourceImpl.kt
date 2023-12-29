@@ -48,7 +48,7 @@ class ServiceResourceMemberResourceImpl constructor(
         )
     }
 
-    override fun batchCreateProjectUser(
+    override fun batchAddResourceGroupMembers(
         token: String,
         userId: String,
         projectCode: String,
