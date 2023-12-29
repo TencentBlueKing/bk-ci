@@ -2320,6 +2320,7 @@ class TemplateFacadeService @Autowired constructor(
      * 检查模板中是否存在已下架、测试中插件(明确版本号)
      */
     fun checkTemplateAtomsForExplicitVersion(template: Model, userId: String, flag: Boolean? = false) {
+        logger.info("template Model: $template")
         val codeVersions = mutableSetOf<AtomCodeVersionReqItem>()
         template.stages.forEach { stage ->
             stage.containers.forEach { container ->
