@@ -310,7 +310,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
         action: BaseAction
     ) {
         // 如果是默认分支删除yaml,不做任何处理
-        if (action.data.context.defaultBranch != action.data.eventCommon.branch) {
+        if (action.data.context.defaultBranch == action.data.eventCommon.branch) {
             return
         }
         val yamlFile = action.data.context.yamlFile!!
