@@ -39,11 +39,11 @@ import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwLogResourceV3
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
 
 @RestResource
 class ApigwLogResourceV3Impl @Autowired constructor(
@@ -69,7 +69,7 @@ class ApigwLogResourceV3Impl @Autowired constructor(
     ): Result<QueryLogs> {
         logger.info(
             "OPENAPI_LOG_V3|$userId|get init logs|$projectId|$pipelineId|$buildId|$debug|$elementId|$containerHashId" +
-                    "|$executeCount"
+                "|$executeCount"
         )
         return client.get(ServiceLogResource::class).getInitLogs(
             userId = userId,
@@ -105,7 +105,7 @@ class ApigwLogResourceV3Impl @Autowired constructor(
     ): Result<QueryLogs> {
         logger.info(
             "OPENAPI_LOG_V3|$userId|get more logs|$projectId|$pipelineId|$buildId|$debug|$num|$fromStart" +
-                    "|$start|$end|$tag|$containerHashId|$executeCount"
+                "|$start|$end|$tag|$containerHashId|$executeCount"
         )
         return client.get(ServiceLogResource::class).getMoreLogs(
             userId = userId,
@@ -142,7 +142,7 @@ class ApigwLogResourceV3Impl @Autowired constructor(
     ): Result<QueryLogs> {
         logger.info(
             "OPENAPI_LOG_V3|$userId|get after logs|$projectId|$pipelineId|$buildId|$start|$debug|$tag" +
-                    "|$containerHashId|$executeCount"
+                "|$containerHashId|$executeCount"
         )
         return client.get(ServiceLogResource::class).getAfterLogs(
             userId = userId,
@@ -172,7 +172,8 @@ class ApigwLogResourceV3Impl @Autowired constructor(
         jobId: String?,
         stepId: String?
     ): Response {
-        logger.info("OPENAPI_LOG_V3|$userId|download logs|$projectId|$pipelineId|$buildId|$tag|$containerHashId|$executeCount")
+        logger.info("OPENAPI_LOG_V3|$userId|download logs|$projectId|$pipelineId|$buildId|" +
+            "$tag|$containerHashId|$executeCount")
         val path = StringBuilder("$gatewayUrl/log/api/service/logs/")
         path.append(projectId)
         path.append("/$pipelineId/$buildId/download?executeCount=${executeCount ?: 1}")
