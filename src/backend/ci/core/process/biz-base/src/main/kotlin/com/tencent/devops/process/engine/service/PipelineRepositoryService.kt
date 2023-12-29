@@ -1239,7 +1239,7 @@ class PipelineRepositoryService constructor(
             val context = DSL.using(configuration)
 
             // 获取最新的版本用于比较差异
-            val latestVersion = pipelineResourceDao.getLatestVersionResource(
+            val latestVersion = pipelineResourceVersionDao.getVersionResource(
                 dslContext = context,
                 projectId = projectId,
                 pipelineId = pipelineId
