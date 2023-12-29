@@ -63,20 +63,12 @@ class MarketCheckImageTask : ITask() {
         val registryUser = buildVariableMap["registryUser"]
         val registryPwd = buildVariableMap["registryPwd"]
         val userId = buildVariableMap[PIPELINE_START_USER_ID] ?: ""
-        if (registryHost == null) {
-            LoggerService.addErrorLine("checkImage fail: registryHost is null")
-            throw TaskExecuteException(
-                errorMsg = "checkImage fail: registryHost is null}",
-                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
-                errorType = ErrorType.USER
-            )
-        }
         val checkImageResult = dockerApi.checkDockerImage(
             userId = userId,
             checkDockerImageRequestList = arrayOf(
                 CheckDockerImageRequest(
                     imageName = imageName.replace("$registryHost/", ""),
-                    registryHost = registryHost,
+                    registryHost = registryHost ?: "",
                     registryUser = registryUser,
                     registryPwd = registryPwd
                 )
