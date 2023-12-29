@@ -62,16 +62,16 @@ interface OpProjectOrganizationResource {
     @Path("/fixProjectOrganization")
     @ApiOperation("修正项目组织架构")
     fun fixProjectOrganization(
-        @ApiParam("", required = true)
+        @ApiParam("项目ID列表", required = true)
         englishNames: List<String>
     ): Result<Boolean>
 
     @POST
-    @Path("/fixAllProjectOrganization")
-    @ApiOperation("全量修正项目组织架构")
+    @Path("/fixProjectOrganizationByChannel")
+    @ApiOperation("根据渠道修正项目组织架构")
     fun fixAllProjectOrganization(
-        @ApiParam("", required = true)
+        @ApiParam("渠道", required = true)
         @QueryParam("channelCode")
-        channelCode: String?
+        channelCode: String
     ): Result<Boolean>
 }

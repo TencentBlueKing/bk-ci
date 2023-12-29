@@ -59,7 +59,7 @@ class OpProjectOrganizationResourceImpl @Autowired constructor(
         return Result(projectExtOrganizationService.fixProjectOrganization(englishNames = englishNames))
     }
 
-    override fun fixAllProjectOrganization(channelCode: String?): Result<Boolean> {
+    override fun fixAllProjectOrganization(channelCode: String): Result<Boolean> {
         return Result(projectExtOrganizationService.fixAllProjectOrganization(channelCode = channelCode))
     }
 }

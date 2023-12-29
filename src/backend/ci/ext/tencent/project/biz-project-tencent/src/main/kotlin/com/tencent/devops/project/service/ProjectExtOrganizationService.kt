@@ -73,7 +73,7 @@ class ProjectExtOrganizationService constructor(
     }
 
     fun fixProjectOrganization(englishNames: List<String>): Boolean {
-        logger.info("batch fix  project organization:$englishNames")
+        logger.info("batch fix project organization:$englishNames")
         englishNames.forEach {
             executor.submit {
                 fixProjectOrganization(englishName = it)
@@ -82,7 +82,7 @@ class ProjectExtOrganizationService constructor(
         return true
     }
 
-    fun fixAllProjectOrganization(channelCode: String? = ChannelCode.BS.name): Boolean {
+    fun fixAllProjectOrganization(channelCode: String): Boolean {
         Thread {
             logger.info("fix all project organization:$channelCode")
             var offset = 0
@@ -92,7 +92,7 @@ class ProjectExtOrganizationService constructor(
                     dslContext = dslContext,
                     limit = limit,
                     offset = offset,
-                    channelCodes = listOf(channelCode!!)
+                    channelCodes = listOf(channelCode)
                 )
                 fixProjectOrganization(englishNames = projectInfos.map { it.englishName })
                 offset += limit
