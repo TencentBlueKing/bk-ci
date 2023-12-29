@@ -78,7 +78,6 @@ class PipelineYamlService(
         ref: String,
         version: Int,
         versionName: String,
-        viewId: Long?,
         webhooks: List<PipelineWebhookVersion>
     ) {
         dslContext.transaction { configuration ->
@@ -104,15 +103,6 @@ class PipelineYamlService(
                 versionName = versionName,
                 userId = userId
             )
-            if (viewId != null) {
-                pipelineYamlViewDao.save(
-                    dslContext = transactionContext,
-                    projectId = projectId,
-                    repoHashId = repoHashId,
-                    directory = directory,
-                    viewId = viewId
-                )
-            }
             pipelineWebhookVersionDao.batchSave(
                 dslContext = transactionContext,
                 webhooks = webhooks
@@ -318,6 +308,21 @@ class PipelineYamlService(
             repoHashId = repoHashId,
             filePath = filePath,
             deleteFilePath = deleteFilePath.coerceAtMaxLength(MAX_FILE_PATH_LENGTH)
+        )
+    }
+
+    fun savePipelineYamlView(
+        projectId: String,
+        repoHashId: String,
+        directory: String,
+        viewId: Long
+    ) {
+        pipelineYamlViewDao.save(
+            dslContext = dslContext,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            directory = directory,
+            viewId = viewId
         )
     }
 

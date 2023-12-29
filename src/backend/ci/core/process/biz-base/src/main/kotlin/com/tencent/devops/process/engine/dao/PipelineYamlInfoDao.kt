@@ -108,6 +108,7 @@ class PipelineYamlInfoDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(FILE_PATH.eq(filePath))
+                .and(DELETE.eq(false))
                 .fetchOne()
             return record?.let { convert(it) }
         }
@@ -122,6 +123,7 @@ class PipelineYamlInfoDao {
             val record = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
+                .and(DELETE.eq(false))
                 .fetchOne()
             return record?.let { convert(it) }
         }
@@ -138,6 +140,7 @@ class PipelineYamlInfoDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .let { if (directory == null) it else it.and(DIRECTORY.eq(directory)) }
+                .and(DELETE.eq(false))
                 .fetch().map { it.value1() }
         }
     }
@@ -151,6 +154,7 @@ class PipelineYamlInfoDao {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
+                .and(DELETE.eq(false))
                 .fetch {
                     convert(it)
                 }
@@ -187,6 +191,7 @@ class PipelineYamlInfoDao {
             dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
+                .and(DELETE.eq(false))
                 .fetchOne(0, Long::class.java) ?: 0L
         }
     }

@@ -29,6 +29,7 @@
 package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,21 +38,33 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServicePipelineYamlResourceImpl @Autowired constructor(
     private val pipelineYamlFacadeService: PipelineYamlFacadeService
 ) : ServicePipelineYamlResource {
-    override fun enable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
+    override fun enable(
+        userId: String,
+        projectId: String,
+        repoHashId: String,
+        scmType: ScmType
+    ): Result<Boolean> {
         pipelineYamlFacadeService.enablePac(
             userId = userId,
             projectId = projectId,
             repoHashId = repoHashId,
             scmType = scmType
         )
+        return Result(true)
     }
 
-    override fun disable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
+    override fun disable(
+        userId: String,
+        projectId: String,
+        repoHashId: String,
+        scmType: ScmType
+    ): Result<Boolean> {
         pipelineYamlFacadeService.disablePac(
             userId = userId,
             projectId = projectId,
             repoHashId = repoHashId,
             scmType = scmType
         )
+        return Result(true)
     }
 }

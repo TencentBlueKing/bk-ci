@@ -114,13 +114,12 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
     ): Boolean {
         try {
             logger.info("dispatch pipeline webhook subscriber|repo(${matcher.getRepoName()})")
-
+            EventCacheUtil.initEventCache()
             if (triggerPipelines.isEmpty()) {
                 gitWebhookUnlockDispatcher.dispatchUnlockHookLockEvent(matcher)
                 return false
             }
 
-            EventCacheUtil.initEventCache()
             // 代码库触发的事件ID,一个代码库会触发多条流水线,但应该只有一条触发事件
             val repoEventIdMap = mutableMapOf<String, Long>()
             triggerPipelines.forEach outside@{ subscriber ->

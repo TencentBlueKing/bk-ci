@@ -168,6 +168,9 @@ class PipelineYamlRepositoryService @Autowired constructor(
         logger.info("create yaml pipeline|$projectId|$yamlFile")
         val yamlContent = action.getYamlContent(yamlFile.yamlPath)
         val branch = action.data.eventCommon.branch
+        val userId = action.data.getUserId()
+        val repoHashId = action.data.setting.repoHashId
+        val directory = GitActionCommon.getCiDirectory(yamlFile.yamlPath)
         val deployPipelineResult = pipelineInfoFacadeService.createYamlPipeline(
             userId = action.data.setting.enableUser,
             projectId = projectId,
@@ -178,20 +181,10 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 action.data.setting.aliasName
             })
         )
-        val userId = action.data.getUserId()
         val pipelineId = deployPipelineResult.pipelineId
         val version = deployPipelineResult.version
-        val repoHashId = action.data.setting.repoHashId
-        val directory = GitActionCommon.getCiDirectory(yamlFile.yamlPath)
         val webhooks =
             getWebhooks(projectId = projectId, pipelineId = pipelineId, version = version, repoHashId = repoHashId)
-        val viewId = createYamlViewIfAbsent(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            gitProjectName = action.data.setting.projectName,
-            directory = directory
-        )
         pipelineYamlService.save(
             projectId = projectId,
             repoHashId = repoHashId,
@@ -203,18 +196,28 @@ class PipelineYamlRepositoryService @Autowired constructor(
             version = version,
             versionName = deployPipelineResult.versionName!!,
             userId = userId,
-            viewId = viewId,
             webhooks = webhooks
+        )
+        // 流水线保存后,再创建流水线组,不然流水线组无法加载到流水线
+        createYamlViewIfAbsent(
+            userId = userId,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            gitProjectName = action.data.setting.projectName,
+            directory = directory
         )
     }
 
+    /**
+     * 创建流水线组
+     */
     private fun createYamlViewIfAbsent(
         userId: String,
         projectId: String,
         repoHashId: String,
         gitProjectName: String,
         directory: String
-    ): Long? {
+    ) {
         val pipelineYamlView = pipelineYamlService.getPipelineYamlView(
             projectId = projectId,
             repoHashId = repoHashId,
@@ -222,9 +225,9 @@ class PipelineYamlRepositoryService @Autowired constructor(
         )
         // 存在则不再创建
         if (pipelineYamlView != null) {
-            return null
+            return
         }
-        val path = gitProjectName.substringAfter("/")
+        val path = gitProjectName.substringAfterLast("/")
         val name = if (directory == Constansts.ciFileDirectoryName) {
             path
         } else {
@@ -248,7 +251,12 @@ class PipelineYamlRepositoryService @Autowired constructor(
             userId = userId,
             pipelineView = pipelineView
         )
-        return HashUtil.decodeIdToLong(viewHashId)
+        pipelineYamlService.savePipelineYamlView(
+            projectId = projectId,
+            repoHashId = repoHashId,
+            directory = directory,
+            viewId = HashUtil.decodeIdToLong(viewHashId)
+        )
     }
 
     private fun updateYamlPipeline(
@@ -402,13 +410,6 @@ class PipelineYamlRepositoryService @Autowired constructor(
         )
         if (pipelineYamlInfo == null) {
             val directory = GitActionCommon.getCiDirectory(yamlFile.yamlPath)
-            val viewId = createYamlViewIfAbsent(
-                userId = userId,
-                projectId = projectId,
-                repoHashId = repoHashId,
-                directory = directory,
-                gitProjectName = gitProjectName
-            )
             pipelineYamlService.save(
                 projectId = projectId,
                 repoHashId = repoHashId,
@@ -420,8 +421,14 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 ref = yamlFile.ref!!,
                 version = version,
                 versionName = versionName,
-                viewId = viewId,
                 webhooks = webhooks
+            )
+            createYamlViewIfAbsent(
+                userId = userId,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                directory = directory,
+                gitProjectName = gitProjectName
             )
         } else {
             val pipelineYamlVersion = pipelineYamlService.getPipelineYamlVersion(
