@@ -987,6 +987,15 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
             }
 
+            // 如果为分支版本的报错，必须指定分支名称
+            if (versionStatus == VersionStatus.BRANCH && branchName.isNullOrBlank()) {
+                throw ErrorCodeException(
+                    statusCode = Response.Status.BAD_REQUEST.statusCode,
+                    errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
+                    params = arrayOf("branchName")
+                )
+            }
+
             val existModel = pipelineRepositoryService.getPipelineResourceVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
