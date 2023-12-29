@@ -44,7 +44,7 @@ data class CreateNodeModel(
     var operator: String? = null,
     var bakOperator: String? = null,
     var agentStatus: Boolean = false,
-    var agentVersion: String = "",
+    var agentVersion: String? = null,
     var displayName: String = "",
     var image: String? = "",
     var taskId: Long? = null,

@@ -170,7 +170,7 @@ class CmdbNodeService @Autowired constructor(
                 operator = cmdbNode.operator,
                 bakOperator = cmdbNode.bakOperator,
                 agentStatus = agentStatusMap[cmdbNode.ip] ?: false,
-                agentVersion = ipToAgentVersionMap?.get(cmdbNode.ip)?.version ?: "",
+                agentVersion = ipToAgentVersionMap?.get(cmdbNode.ip)?.version,
                 hostId = queryCCIpToCCInfoMap[cmdbNode.ip]?.bkHostId,
                 cloudAreaId = DEFAULT_CLOUD_AREA_ID
             )

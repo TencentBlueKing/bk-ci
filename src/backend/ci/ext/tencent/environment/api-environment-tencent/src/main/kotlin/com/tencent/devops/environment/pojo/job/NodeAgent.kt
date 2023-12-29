@@ -7,6 +7,6 @@ data class NodeAgent(
     val nodeIp: String,
     @ApiModelProperty(value = "节点agent状态", notes = "0-异常，1-正常，2-未安装", required = true)
     val nodesAgentStatus: Int,
-    @ApiModelProperty(value = "节点agent版本", required = true)
-    val nodesAgentVersion: String
+    @ApiModelProperty(value = "节点agent版本")
+    val nodesAgentVersion: String? = null
 )
