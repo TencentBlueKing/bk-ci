@@ -45,6 +45,7 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
+import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
@@ -79,7 +80,8 @@ class RbacPermissionMigrateService constructor(
     private val permissionGradeManagerService: PermissionGradeManagerService,
     private val dslContext: DSLContext,
     private val authMigrationDao: AuthMigrationDao,
-    private val authMonitorSpaceDao: AuthMonitorSpaceDao
+    private val authMonitorSpaceDao: AuthMonitorSpaceDao,
+    private val cacheService: RbacCacheService
 ) : PermissionMigrateService {
 
     companion object {
@@ -329,6 +331,18 @@ class RbacPermissionMigrateService constructor(
     override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean {
         logger.info("grant group additional authorization|projectCode:$projectCodes")
         projectCodes.forEach { migrateV0PolicyService.grantGroupAdditionalAuthorization(projectCode = it) }
+        return true
+    }
+
+    override fun handoverAllPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
+        val resourceTypeList = cacheService.listResourceTypes().filterNot { it.resourceType == AuthResourceType.PROJECT.value }
+        resourceTypeList.forEach {
+            handoverPermissions(
+                permissionHandoverDTO.copy(
+                    resourceType = it.resourceType
+                )
+            )
+        }
         return true
     }
 
