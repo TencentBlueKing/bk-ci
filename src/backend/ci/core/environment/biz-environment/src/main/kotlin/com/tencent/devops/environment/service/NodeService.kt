@@ -124,7 +124,7 @@ class NodeService @Autowired constructor(
 
         // 条件2. 判断节点在蓝盾中的项目，没在其他项目下：用host_id去T_NODE中查记录，只有等于当前项目id的一个项目。
         val nodeRecordByHostId = nodeDao.getNodesFromHostListByBkHostId(
-            dslContext, projectId, queryCCEqualBizHostIdList
+            dslContext, queryCCEqualBizHostIdList
         )
         if (logger.isDebugEnabled) logger.debug("[deleteNodes]nodeRecordByHostId:$nodeRecordByHostId")
         val hostIdToNodeMap = nodeRecordByHostId.groupBy({ it.hostId }, { it })

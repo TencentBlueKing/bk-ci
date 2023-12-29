@@ -246,6 +246,15 @@ class NodeDao {
         }
     }
 
+    fun getNodesFromHostListByBkHostId(dslContext: DSLContext, hostList: List<Host>): MutableList<TNodeRecord> {
+        val hostIdList = hostList.map { it.bkHostId }
+        return with(TNode.T_NODE) {
+            dslContext.selectFrom(this)
+                .where(HOST_ID.`in`(hostIdList))
+                .fetch()
+        }
+    }
+
     fun getNodesFromHostListByIpAndBkCloudId(dslContext: DSLContext, projectId: String, hostList: List<Host>): List<TNodeRecord> {
         val ipList = hostList.map { it.ip }
         val ipToRecordMap = hostList.associateBy { it.ip }
