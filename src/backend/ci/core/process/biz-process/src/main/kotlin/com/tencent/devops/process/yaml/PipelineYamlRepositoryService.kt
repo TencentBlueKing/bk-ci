@@ -63,7 +63,8 @@ class PipelineYamlRepositoryService @Autowired constructor(
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineWebhookService: PipelineWebhookService,
-    private val pipelineViewGroupService: PipelineViewGroupService
+    private val pipelineViewGroupService: PipelineViewGroupService,
+    private val pipelineYamlSyncService: PipelineYamlSyncService
 ) {
 
     companion object {
@@ -499,6 +500,8 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 directory = yamlView.directory
             )
         }
+        // 删除yaml同步记录
+        pipelineYamlSyncService.delete(projectId = projectId, repoHashId = repoHashId)
     }
 
     /**

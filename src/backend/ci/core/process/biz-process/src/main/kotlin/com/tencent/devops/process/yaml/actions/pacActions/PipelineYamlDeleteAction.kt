@@ -57,6 +57,10 @@ class PipelineYamlDeleteAction(
         return this
     }
 
+    override fun initCacheData() {
+        gitAction.initCacheData()
+    }
+
     override fun getGitProjectIdOrName(gitProjectId: String?) = gitAction.getGitProjectIdOrName(gitProjectId)
 
     override fun getGitCred(personToken: String?) = gitAction.getGitCred(personToken)

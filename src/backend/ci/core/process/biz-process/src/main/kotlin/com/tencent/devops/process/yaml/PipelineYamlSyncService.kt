@@ -143,6 +143,17 @@ class PipelineYamlSyncService @Autowired constructor(
         }
     }
 
+    fun delete(
+        projectId: String,
+        repoHashId: String
+    ) {
+        pipelineYamlSyncDao.delete(
+            dslContext = dslContext,
+            projectId = projectId,
+            repoHashId = repoHashId
+        )
+    }
+
     private fun updateYamlSyncStatus(
         projectId: String,
         repoHashId: String,
