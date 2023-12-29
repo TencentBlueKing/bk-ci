@@ -22,6 +22,6 @@ LINUX
 #### values.yaml的配置可以在哪里看到?
 [Helm Chart README](https://github.com/TencentBlueKing/bk-ci/blob/master/helm-charts/README.md)
 #### 没有网络如何离线安装?
-可以在有网络的机器上, 在`bk-ci-charts.tgz`所在目录中执行[bk-ci-offline-image.sh](./script/bk-ci-offline-image.sh),下载完所有镜像tar, 然后再将tar传到无网络机器中, 使用`docker load < xxx.tar` 导入镜像
+可以在有网络的机器上(且安装了helm和docker), 在`bk-ci-charts.tgz`所在目录中执行[bk-ci-offline-image.sh](./script/bk-ci-offline-image.sh),下载完所有镜像tar, 然后再将tar传到无网络机器中, 使用`docker load < xxx.tar` 导入镜像
 #### minikube 为什么没有使用物理机上的镜像?
 minikube默认推荐driver=docker , 在这种模式下, 需要执行`minikube ssh`进入到起bash环境中 , 或者可以使用`driver=none`的方式安装
