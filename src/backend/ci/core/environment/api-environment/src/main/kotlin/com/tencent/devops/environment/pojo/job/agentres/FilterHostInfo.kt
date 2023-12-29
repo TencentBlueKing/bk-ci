@@ -27,8 +27,10 @@
 
 package com.tencent.devops.environment.pojo.job.agentres
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.annotations.ApiModelProperty
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class FilterHostInfo(
     @ApiModelProperty(value = "管控区域ID")
     val bkCloudId: Int?,
@@ -54,8 +56,6 @@ data class FilterHostInfo(
     val outerIpv6: String?,
     @ApiModelProperty(value = "接入点ID")
     val apId: Int?,
-    @ApiModelProperty(value = "安装通道ID")
-    val installChannelId: Int?,
     @ApiModelProperty(value = "登录IP")
     val loginIp: String?,
     @ApiModelProperty(value = "数据IP")

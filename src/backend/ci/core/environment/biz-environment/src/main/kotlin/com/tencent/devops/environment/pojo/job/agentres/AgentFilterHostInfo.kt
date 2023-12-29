@@ -27,9 +27,11 @@
 
 package com.tencent.devops.environment.pojo.job.agentres
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class AgentFilterHostInfo(
     @ApiModelProperty(value = "管控区域ID")
     @JsonProperty("bk_cloud_id")
@@ -67,9 +69,6 @@ data class AgentFilterHostInfo(
     @ApiModelProperty(value = "接入点ID")
     @JsonProperty("ap_id")
     val apId: Int?,
-    @ApiModelProperty(value = "安装通道ID")
-    @JsonProperty("install_channel_id")
-    val installChannelId: Int?,
     @ApiModelProperty(value = "登录IP")
     @JsonProperty("login_ip")
     val loginIp: String?,
