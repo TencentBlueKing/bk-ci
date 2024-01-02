@@ -202,13 +202,13 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
         val script = buildInfo.value1()
         val repoAddr = extServiceImageSecretConfig.repoRegistryUrl
         val imageName = "${extServiceImageSecretConfig.imageNamePrefix}$serviceCode"
-        val userName = Base64.getEncoder().encodeToString(extServiceImageSecretConfig.repoUsername.toByteArray())
+        val username = Base64.getEncoder().encodeToString(extServiceImageSecretConfig.repoUsername.toByteArray())
         val password = Base64.getEncoder().encodeToString(extServiceImageSecretConfig.repoPassword.toByteArray())
         val extServiceImageInfo = ExtServiceImageInfoDTO(
             imageName = imageName,
             imageTag = version,
             repoAddr = repoAddr,
-            userName = userName,
+            username = username,
             password = password
         )
         // 未正式发布的扩展服务先部署到bcs灰度环境
@@ -288,9 +288,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             startParams["script"] = script
             startParams["branch"] = MASTER
             startParams["repoAddr"] = repoAddr
-            val userName = Base64.getEncoder().encodeToString(extServiceImageSecretConfig.repoUsername.toByteArray())
-            val password = Base64.getEncoder().encodeToString(extServiceImageSecretConfig.repoPassword.toByteArray())
-            startParams["userName"] = userName
+            startParams["userName"] = username
             startParams["password"] = password
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartup(
                 userId, projectCode!!, servicePipelineRelRecord.pipelineId, startParams,
