@@ -42,7 +42,8 @@ import com.tencent.devops.project.constant.ProjectMessageCode.FAILED_USER_INFORM
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_ORG_FAIL
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_PAR_DEPARTMENT_FAIL
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_SUB_DEPARTMENT_FAIL
-import com.tencent.devops.project.pojo.DeptInfo
+import com.tencent.devops.project.pojo.BkDeptInfo
+import com.tencent.devops.project.pojo.TofDeptInfo
 import com.tencent.devops.project.pojo.OrganizationInfo
 import com.tencent.devops.project.pojo.StaffInfo
 import com.tencent.devops.project.pojo.enums.OrganizationType
@@ -141,8 +142,17 @@ class TOFService @Autowired constructor(
         id: Int
     ): List<OrganizationInfo> {
         validate()
-        return getChildDeptInfos(userId, type, id).map {
-            val nextLevel = if (type == OrganizationType.dept) {
+        var childDeptInfos = getChildDeptInfos(
+            userId = userId,
+            type = type,
+            id = id
+        )
+        if (type == OrganizationType.dept) {
+            // 获取部门时，将部门级以下的过滤掉
+            childDeptInfos = childDeptInfos.filterNot { OrganizationType.isBelowTheDept(it.TypeId) }
+        }
+        return childDeptInfos.map {
+            val leaf = if (type == OrganizationType.dept) {
                 it.TypeId != OrganizationType.dept.typeId
             } else {
                 null
@@ -150,13 +160,16 @@ class TOFService @Autowired constructor(
             OrganizationInfo(
                 id = it.ID,
                 name = it.Name,
-                typeId = it.TypeId,
-                nextLevel = nextLevel
+                type = OrganizationType.getOrganizationTypeName(it.TypeId),
+                leaf = leaf
             )
         }
     }
 
-    fun getDeptInfo(userId: String, id: Int): DeptInfo {
+    fun getDeptInfo(
+        userId: String? = null,
+        id: Int
+    ): TofDeptInfo {
         try {
             val path = "get_dept_info"
             val startTime = System.currentTimeMillis()
@@ -201,7 +214,7 @@ class TOFService @Autowired constructor(
                 errorMessage = "call tof success"
             )
             val deptInfoResp = response.data
-            return DeptInfo(
+            return TofDeptInfo(
                 deptInfoResp.TypeId,
                 deptInfoResp.LeaderId,
                 deptInfoResp.Name,
@@ -366,7 +379,7 @@ class TOFService @Autowired constructor(
         return getStaffInfo(null, userId, "")
     }
 
-    fun getParentDeptInfo(groupId: String, level: Int): List<DeptInfo> {
+    fun getParentDeptInfo(groupId: String, level: Int): List<TofDeptInfo> {
         try {
             val path = "get_parent_dept_infos"
             val startTime = System.currentTimeMillis()
@@ -377,7 +390,7 @@ class TOFService @Autowired constructor(
                     messageCode = QUERY_ORG_FAIL
                 )
             )
-            val response: Response<List<DeptInfo>> = objectMapper.readValue(responseContent)
+            val response: Response<List<TofDeptInfo>> = objectMapper.readValue(responseContent)
             if (response.data == null) {
                 logger.warn("Fail to get the parent dept info of |$groupId|$level|$responseContent")
                 uploadTofStatus(
@@ -507,8 +520,15 @@ class TOFService @Autowired constructor(
         logger.info("[$operator}|$userId|$bkTicket] Start to get the dept info")
         val staffInfo = getStaffInfo(operator, userId, bkTicket, userCache)
         if (checkUserLeave(staffInfo)) return null
-        // 通过用户组查询父部门信息　(由于tof系统接口查询结构是从当前机构往上推查询，如果创建者机构层级大于4就查不完整1到3级的机构，所以查询级数设置为10)
-        val deptInfos = getParentDeptInfo(staffInfo.groupId, 10) // 一共三级，从事业群->部门->中心
+        val lowestLevelOrganization = getDeptInfo(id = staffInfo.groupId.toInt())
+        val parentDeptInfo = getParentDeptInfo(staffInfo.groupId, 10)
+        val deptInfos = if (OrganizationType.isGroup(lowestLevelOrganization.typeId.toInt())) {
+            // 若最底层的组织是小组，直接获取小组的祖先，因为其祖先已经包含 bg,业务线，部门，中心
+            parentDeptInfo
+        } else {
+            // 若最底层的组织不是小组，需要获取当前组织以及组织的祖先
+            parentDeptInfo.plus(getDeptInfo(id = staffInfo.groupId.toInt()))
+        }
         var groupId = "0"
         var groupName = ""
         var bgId = "0"
@@ -556,23 +576,27 @@ class TOFService @Autowired constructor(
             centerId = centerId,
             groupId = groupId,
             groupName = groupName,
-            deptInfos = filterDeptInfos(deptInfos = deptInfos)
+            // 该字段只返回部门及部门以上的层级，若不包含部门，将直接置空
+            deptInfos = filterDeptInfos(tofDeptInfos = deptInfos)
         )
     }
 
-    private fun filterDeptInfos(deptInfos: List<DeptInfo>): List<DeptInfo> {
-        val hasDepartment = deptInfos.firstOrNull { it.typeId.toInt() == OrganizationType.dept.typeId } != null
-        val hasBusinessLine = deptInfos.firstOrNull { it.typeId.toInt() == OrganizationType.businessLine.typeId } != null
-
-        // 获取部门及部门以上的祖先
-        val index = if (hasDepartment) {
-            deptInfos.indexOfFirst { it.typeId.toInt() == OrganizationType.dept.typeId }
-        } else if (hasBusinessLine) {
-            deptInfos.indexOfFirst { it.typeId.toInt() == OrganizationType.businessLine.typeId }
-        } else {
+    private fun filterDeptInfos(tofDeptInfos: List<TofDeptInfo>): List<BkDeptInfo> {
+        val isContainsDept = tofDeptInfos.firstOrNull { OrganizationType.isDept(it.typeId.toInt()) } != null
+        // 是否包含部门，若不包含部门，直接置空。
+        val index = if (!isContainsDept) {
             -1
+        } else {
+            tofDeptInfos.indexOfFirst { it.typeId.toInt() == OrganizationType.dept.typeId }
         }
-        return if (index == -1) deptInfos else deptInfos.take(index + 1)
+        val filterTofDeptInfos = if (index == -1) emptyList() else tofDeptInfos.take(index + 1)
+        return filterTofDeptInfos.map {
+            BkDeptInfo(
+                type = OrganizationType.getOrganizationTypeName(it.typeId.toInt()),
+                name = it.name,
+                id = it.id
+            )
+        }
     }
 
     fun checkUserLeave(userInfo: StaffInfo): Boolean {

@@ -29,7 +29,7 @@ package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
-import com.tencent.devops.project.pojo.DeptInfo
+import com.tencent.devops.project.pojo.TofDeptInfo
 import com.tencent.devops.project.pojo.OrganizationInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.StaffInfo
@@ -42,7 +42,7 @@ class ServiceProjectOrganizationResourceImpl @Autowired constructor(
     private val projectOrganizationService: ProjectOrganizationService
 ) : ServiceProjectOrganizationResource {
 
-    override fun getDeptInfo(userId: String?, id: Int): Result<DeptInfo> {
+    override fun getDeptInfo(userId: String?, id: Int): Result<TofDeptInfo> {
         return Result(projectOrganizationService.getDeptInfo(userId, id))
     }
 
@@ -50,7 +50,7 @@ class ServiceProjectOrganizationResourceImpl @Autowired constructor(
         return Result(projectOrganizationService.getOrganizations(userId, type, id))
     }
 
-    override fun getParentDeptInfos(deptId: String, level: Int): Result<List<DeptInfo>> {
+    override fun getParentDeptInfos(deptId: String, level: Int): Result<List<TofDeptInfo>> {
         return Result(projectOrganizationService.getParentDeptInfos(deptId, level))
     }
 

@@ -25,38 +25,47 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.project.pojo.OrganizationInfo
-import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.enums.OrganizationType
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+package com.tencent.devops.project.pojo
 
-@Api(tags = ["USER_PROJECT_ORGANIZATION"], description = "蓝盾项目列表组织架构接口")
-@Path("/user/organizations")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface UserProjectOrganizationResource {
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
-    @GET
-    @Path("/types/{type}/ids/{id}")
-    fun getOrganizations(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("bg, 部门或者中心")
-        @PathParam("type")
-        type: OrganizationType,
-        @ApiParam("ID")
-        @PathParam("id")
-        id: Int
-    ): Result<List<OrganizationInfo>>
+/**
+ * {
+"TypeId": "0",
+"LeaderId": "0",
+"Name": "xxxx",
+"Level": "1",
+"Enabled": "true",
+"SecretaryId": "0",
+"TypeName": "20 系统",
+"VicePresidentId": "0",
+"ParentId": "0",
+"ExProperties": "",
+"ExchangeGroupName": " ",
+"ID": "0"
 }
+ */
+data class TofDeptInfo(
+    @ApiModelProperty(name = "TypeId")
+    @JsonProperty("TypeId")
+    val typeId: String,
+    @ApiModelProperty(name = "LeaderId")
+    @JsonProperty("LeaderId")
+    val leaderId: String,
+    @ApiModelProperty(name = "Name")
+    @JsonProperty("Name")
+    val name: String,
+    @ApiModelProperty(name = "Level")
+    @JsonProperty("Level")
+    val level: String,
+    @ApiModelProperty(name = "Enabled")
+    @JsonProperty("Enabled")
+    val enabled: String,
+    @ApiModelProperty(name = "ParentId")
+    @JsonProperty("ParentId")
+    val parentId: String,
+    @ApiModelProperty(name = "ID")
+    @JsonProperty("ID")
+    val id: String
+)

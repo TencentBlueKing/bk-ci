@@ -45,10 +45,12 @@ import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.ProjectInfoResponse
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectTagDao
-import com.tencent.devops.project.pojo.DeptInfo
+import com.tencent.devops.project.pojo.BkDeptInfo
+import com.tencent.devops.project.pojo.TofDeptInfo
 import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
+import com.tencent.devops.project.pojo.enums.OrganizationType
 import com.tencent.devops.project.pojo.enums.SystemEnums
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -453,7 +455,7 @@ class ProjectTagService @Autowired constructor(
             }
             val projectInfo = getProjectInfoResponse(
                 projectData = projectData,
-                deptInfos = parentDeptInfos
+                tofDeptInfos = parentDeptInfos
             )
             dataList.add(projectInfo)
         }
@@ -464,7 +466,7 @@ class ProjectTagService @Autowired constructor(
 
     private fun getProjectInfoResponse(
         projectData: TProjectRecord,
-        deptInfos: List<DeptInfo>
+        tofDeptInfos: List<TofDeptInfo>
     ): ProjectInfoResponse {
         val otherRouterTagMap = projectData.otherRouterTags?.let {
             JsonUtil.to<Map<String, String>>(projectData.otherRouterTags.toString())
@@ -509,7 +511,13 @@ class ProjectTagService @Autowired constructor(
             pipelineLimit = projectData.pipelineLimit,
             properties = projectProperties,
             productId = projectData.productId,
-            deptInfos = deptInfos
+            deptInfos = tofDeptInfos.map {
+                BkDeptInfo(
+                    type = OrganizationType.getOrganizationTypeName(it.typeId.toInt()),
+                    name = it.name,
+                    id = it.id
+                )
+            }
         )
     }
 

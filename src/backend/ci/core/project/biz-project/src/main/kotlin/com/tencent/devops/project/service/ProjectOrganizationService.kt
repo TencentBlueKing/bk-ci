@@ -27,18 +27,18 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.devops.project.pojo.DeptInfo
+import com.tencent.devops.project.pojo.TofDeptInfo
 import com.tencent.devops.project.pojo.OrgInfo
 import com.tencent.devops.project.pojo.OrganizationInfo
 import com.tencent.devops.project.pojo.StaffInfo
 import com.tencent.devops.project.pojo.enums.OrganizationType
 
 interface ProjectOrganizationService {
-    fun getDeptInfo(userId: String?, id: Int): DeptInfo
+    fun getDeptInfo(userId: String?, id: Int): TofDeptInfo
 
     fun getOrganizations(userId: String, type: OrganizationType, id: Int): List<OrganizationInfo>
 
-    fun getParentDeptInfos(deptId: String, level: Int): List<DeptInfo>
+    fun getParentDeptInfos(deptId: String, level: Int): List<TofDeptInfo>
 
     fun isOrgProject(projectId: String, orgInfos: OrgInfo): Boolean
     fun getDeptStaffsWithLevel(deptId: String, level: Int): List<StaffInfo>

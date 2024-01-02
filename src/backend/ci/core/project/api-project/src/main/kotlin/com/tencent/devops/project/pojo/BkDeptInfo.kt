@@ -27,45 +27,13 @@
 
 package com.tencent.devops.project.pojo
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
-/**
- * {
-"TypeId": "0",
-"LeaderId": "0",
-"Name": "xxxx",
-"Level": "1",
-"Enabled": "true",
-"SecretaryId": "0",
-"TypeName": "20 系统",
-"VicePresidentId": "0",
-"ParentId": "0",
-"ExProperties": "",
-"ExchangeGroupName": " ",
-"ID": "0"
-}
- */
-data class DeptInfo(
-    @ApiModelProperty(name = "TypeId")
-    @JsonProperty("TypeId")
-    val typeId: String,
-    @ApiModelProperty(name = "LeaderId")
-    @JsonProperty("LeaderId")
-    val leaderId: String,
-    @ApiModelProperty(name = "Name")
-    @JsonProperty("Name")
+data class BkDeptInfo(
+    @ApiModelProperty(name = "类型")
+    val type: String,
+    @ApiModelProperty(name = "名称")
     val name: String,
-    @ApiModelProperty(name = "Level")
-    @JsonProperty("Level")
-    val level: String,
-    @ApiModelProperty(name = "Enabled")
-    @JsonProperty("Enabled")
-    val enabled: String,
-    @ApiModelProperty(name = "ParentId")
-    @JsonProperty("ParentId")
-    val parentId: String,
-    @ApiModelProperty(name = "ID")
-    @JsonProperty("ID")
+    @ApiModelProperty(name = "部门ID")
     val id: String
 )
