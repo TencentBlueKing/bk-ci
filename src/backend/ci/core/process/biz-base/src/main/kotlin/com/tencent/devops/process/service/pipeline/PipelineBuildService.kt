@@ -210,7 +210,7 @@ class PipelineBuildService(
                     concurrencyGroup = context.concurrencyGroup,
                     concurrencyCancelInProgress = setting.concurrencyCancelInProgress,
                     maxConRunningQueueSize = setting.maxConRunningQueueSize,
-                    retry = (pipelineParamMap[PIPELINE_RETRY_COUNT]?.value?.toString()?.toInt() ?: 0) > 0
+                    retry = pipelineParamMap[PIPELINE_RETRY_COUNT] != null
                 )
             )
             if (interceptResult.isNotOk()) {
