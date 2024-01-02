@@ -58,8 +58,8 @@ class UserProjectWorkspaceImageResourceImpl @Autowired constructor(
         return Result(projectImageManageService.deleteProjectImage(userId, projectId, imageId))
     }
 
-    override fun getVmStandardImages(userId: String): Result<List<StandardVmImage>> {
-        logger.info("UserImageManageResourceImpl|getProjectImageList|userId|$userId")
+    override fun getVmStandardImages(userId: String, projectId: String): Result<List<StandardVmImage>> {
+        logger.info("UserImageManageResourceImpl|getProjectImageList|userId|$userId|projectId|$projectId")
         return Result(projectImageManageService.getVmStandardImages())
     }
 }
