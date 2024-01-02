@@ -55,6 +55,7 @@ import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferAspe
 import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferAspectWrapper
 import com.tencent.devops.process.yaml.modelTransfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
+import com.tencent.devops.process.yaml.modelTransfer.schema.YamlSchemaCheck
 import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
@@ -77,7 +78,8 @@ class PipelineTransferYamlService @Autowired constructor(
     private val elementTransfer: ElementTransfer,
     private val pipelineSettingVersionService: PipelineSettingVersionService,
     private val pipelineInfoDao: PipelineInfoDao,
-    private val yamlIndexService: YamlIndexService
+    private val yamlIndexService: YamlIndexService,
+    private val yamlSchemaCheck: YamlSchemaCheck
 ) {
 
     companion object {
@@ -132,6 +134,7 @@ class PipelineTransferYamlService @Autowired constructor(
 
                 TransferActionType.FULL_YAML2MODEL -> {
                     watcher.start("step_1|FULL_YAML2MODEL start")
+                    yamlSchemaCheck.check(data.oldYaml)
                     val pipelineInfo = pipelineId?.let {
                         pipelineInfoDao.convert(
                             t = pipelineInfoDao.getPipelineInfo(
