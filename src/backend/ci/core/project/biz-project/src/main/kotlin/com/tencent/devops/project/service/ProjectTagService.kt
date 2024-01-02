@@ -46,7 +46,7 @@ import com.tencent.devops.project.ProjectInfoResponse
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectTagDao
 import com.tencent.devops.project.pojo.BkDeptInfo
-import com.tencent.devops.project.pojo.TofDeptInfo
+import com.tencent.devops.project.pojo.DeptInfo
 import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
@@ -455,7 +455,7 @@ class ProjectTagService @Autowired constructor(
             }
             val projectInfo = getProjectInfoResponse(
                 projectData = projectData,
-                tofDeptInfos = parentDeptInfos
+                deptInfos = parentDeptInfos
             )
             dataList.add(projectInfo)
         }
@@ -466,7 +466,7 @@ class ProjectTagService @Autowired constructor(
 
     private fun getProjectInfoResponse(
         projectData: TProjectRecord,
-        tofDeptInfos: List<TofDeptInfo>
+        deptInfos: List<DeptInfo>
     ): ProjectInfoResponse {
         val otherRouterTagMap = projectData.otherRouterTags?.let {
             JsonUtil.to<Map<String, String>>(projectData.otherRouterTags.toString())
@@ -511,7 +511,7 @@ class ProjectTagService @Autowired constructor(
             pipelineLimit = projectData.pipelineLimit,
             properties = projectProperties,
             productId = projectData.productId,
-            deptInfos = tofDeptInfos.map {
+            deptInfos = deptInfos.map {
                 BkDeptInfo(
                     type = OrganizationType.getOrganizationTypeName(it.typeId.toInt()),
                     name = it.name,

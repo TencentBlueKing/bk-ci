@@ -43,7 +43,7 @@ import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_ORG_FAIL
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_PAR_DEPARTMENT_FAIL
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_SUB_DEPARTMENT_FAIL
 import com.tencent.devops.project.pojo.BkDeptInfo
-import com.tencent.devops.project.pojo.TofDeptInfo
+import com.tencent.devops.project.pojo.DeptInfo
 import com.tencent.devops.project.pojo.OrganizationInfo
 import com.tencent.devops.project.pojo.StaffInfo
 import com.tencent.devops.project.pojo.enums.OrganizationType
@@ -170,7 +170,7 @@ class TOFService @Autowired constructor(
     fun getDeptInfo(
         userId: String? = null,
         id: Int
-    ): TofDeptInfo {
+    ): DeptInfo {
         try {
             val path = "get_dept_info"
             val startTime = System.currentTimeMillis()
@@ -215,7 +215,7 @@ class TOFService @Autowired constructor(
                 errorMessage = "call tof success"
             )
             val deptInfoResp = response.data
-            return TofDeptInfo(
+            return DeptInfo(
                 deptInfoResp.TypeId,
                 deptInfoResp.LeaderId,
                 deptInfoResp.Name,
@@ -380,7 +380,7 @@ class TOFService @Autowired constructor(
         return getStaffInfo(null, userId, "")
     }
 
-    fun getParentDeptInfo(groupId: String, level: Int): List<TofDeptInfo> {
+    fun getParentDeptInfo(groupId: String, level: Int): List<DeptInfo> {
         try {
             val path = "get_parent_dept_infos"
             val startTime = System.currentTimeMillis()
@@ -391,7 +391,7 @@ class TOFService @Autowired constructor(
                     messageCode = QUERY_ORG_FAIL
                 )
             )
-            val response: Response<List<TofDeptInfo>> = objectMapper.readValue(responseContent)
+            val response: Response<List<DeptInfo>> = objectMapper.readValue(responseContent)
             if (response.data == null) {
                 logger.warn("Fail to get the parent dept info of |$groupId|$level|$responseContent")
                 uploadTofStatus(
@@ -578,20 +578,20 @@ class TOFService @Autowired constructor(
             groupId = groupId,
             groupName = groupName,
             // 该字段只返回部门及部门以上的层级，若不包含部门，将直接置空
-            deptInfos = filterDeptInfos(tofDeptInfos = deptInfos)
+            deptInfos = filterDeptInfos(deptInfos = deptInfos)
         )
     }
 
-    private fun filterDeptInfos(tofDeptInfos: List<TofDeptInfo>): List<BkDeptInfo> {
-        val isContainsDept = tofDeptInfos.firstOrNull { OrganizationType.isDept(it.typeId.toInt()) } != null
+    private fun filterDeptInfos(deptInfos: List<DeptInfo>): List<BkDeptInfo> {
+        val isContainsDept = deptInfos.firstOrNull { OrganizationType.isDept(it.typeId.toInt()) } != null
         // 是否包含部门，若不包含部门，直接置空。
         val index = if (!isContainsDept) {
             -1
         } else {
-            tofDeptInfos.indexOfFirst { it.typeId.toInt() == OrganizationType.dept.typeId }
+            deptInfos.indexOfFirst { it.typeId.toInt() == OrganizationType.dept.typeId }
         }
-        val filterTofDeptInfos = if (index == -1) listOf(
-            TofDeptInfo(
+        val filterDeptInfos = if (index == -1) listOf(
+            DeptInfo(
                 typeId = "0",
                 leaderId = "0",
                 name = "腾讯公司",
@@ -600,8 +600,8 @@ class TOFService @Autowired constructor(
                 parentId = "-1",
                 id = "0"
             )
-        ) else tofDeptInfos.take(index + 1)
-        return filterTofDeptInfos.map {
+        ) else deptInfos.take(index + 1)
+        return filterDeptInfos.map {
             BkDeptInfo(
                 type = OrganizationType.getOrganizationTypeName(it.typeId.toInt()),
                 name = it.name,

@@ -27,7 +27,7 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.devops.project.pojo.TofDeptInfo
+import com.tencent.devops.project.pojo.DeptInfo
 import com.tencent.devops.project.pojo.OrgInfo
 import com.tencent.devops.project.pojo.OrganizationInfo
 import com.tencent.devops.project.pojo.StaffInfo
@@ -36,8 +36,8 @@ import org.springframework.stereotype.Service
 
 @Service
 class SampleProjectOrganizationServiceImpl : ProjectOrganizationService {
-    override fun getDeptInfo(userId: String?, id: Int): TofDeptInfo {
-        return TofDeptInfo(
+    override fun getDeptInfo(userId: String?, id: Int): DeptInfo {
+        return DeptInfo(
             typeId = "0",
             leaderId = "0",
             name = "mock Dept",
@@ -58,10 +58,10 @@ class SampleProjectOrganizationServiceImpl : ProjectOrganizationService {
         return mock
     }
 
-    override fun getParentDeptInfos(deptId: String, level: Int): List<TofDeptInfo> {
-        val mock = mutableListOf<TofDeptInfo>()
+    override fun getParentDeptInfos(deptId: String, level: Int): List<DeptInfo> {
+        val mock = mutableListOf<DeptInfo>()
         mock.add(
-            TofDeptInfo(
+            DeptInfo(
                 typeId = "0",
                 leaderId = "0",
                 name = "mock Dept",

@@ -27,7 +27,7 @@
 
 package com.tencent.devops.project.service.impl
 
-import com.tencent.devops.project.pojo.TofDeptInfo
+import com.tencent.devops.project.pojo.DeptInfo
 import com.tencent.devops.project.pojo.OrgInfo
 import com.tencent.devops.project.pojo.OrganizationInfo
 import com.tencent.devops.project.pojo.StaffInfo
@@ -41,7 +41,7 @@ import org.springframework.stereotype.Service
 class ProjectOrganizationServiceImpl @Autowired constructor(private val tofService: TOFService) :
     ProjectOrganizationService {
 
-    override fun getDeptInfo(userId: String?, id: Int): TofDeptInfo {
+    override fun getDeptInfo(userId: String?, id: Int): DeptInfo {
         return tofService.getDeptInfo(userId ?: "", id)
     }
 
@@ -53,7 +53,7 @@ class ProjectOrganizationServiceImpl @Autowired constructor(private val tofServi
         return tofService.getOrganizationInfo(userId, type, id)
     }
 
-    override fun getParentDeptInfos(deptId: String, level: Int): List<TofDeptInfo> {
+    override fun getParentDeptInfos(deptId: String, level: Int): List<DeptInfo> {
         return tofService.getParentDeptInfo(deptId, level)
     }
 

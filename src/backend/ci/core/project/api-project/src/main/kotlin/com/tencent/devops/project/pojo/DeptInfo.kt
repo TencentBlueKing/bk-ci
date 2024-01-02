@@ -46,7 +46,7 @@ import io.swagger.annotations.ApiModelProperty
 "ID": "0"
 }
  */
-data class TofDeptInfo(
+data class DeptInfo(
     @ApiModelProperty(name = "TypeId")
     @JsonProperty("TypeId")
     val typeId: String,

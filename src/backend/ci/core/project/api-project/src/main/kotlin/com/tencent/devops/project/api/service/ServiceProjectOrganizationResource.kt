@@ -29,7 +29,7 @@ package com.tencent.devops.project.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.project.pojo.TofDeptInfo
+import com.tencent.devops.project.pojo.DeptInfo
 import com.tencent.devops.project.pojo.OrganizationInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.StaffInfo
@@ -60,7 +60,7 @@ interface ServiceProjectOrganizationResource {
         @ApiParam("机构ID")
         @PathParam("id")
         id: Int
-    ): Result<TofDeptInfo>
+    ): Result<DeptInfo>
 
     @GET
     @Path("/types/{type}/ids/{id}")
@@ -85,7 +85,7 @@ interface ServiceProjectOrganizationResource {
         @ApiParam("向上查询的层级数")
         @PathParam("level")
         level: Int
-    ): Result<List<TofDeptInfo>>
+    ): Result<List<DeptInfo>>
 
     @ApiOperation("获取部门员工信息")
     @GET
