@@ -26,14 +26,15 @@ object PipelineTransferAspectLoader {
     }
 
     fun initByDefaultTriggerOn(
-        defaultRepo: String,
+        defaultRepo: () -> String,
         aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
     ): LinkedList<IPipelineTransferAspect> {
+        val repoName = lazy { defaultRepo() }
         aspects.add(
             object : IPipelineTransferAspectTrigger {
                 override fun before(jp: PipelineTransferJoinPoint): Any? {
                     if (jp.yamlTriggerOn() != null && jp.yamlTriggerOn()!!.repoName == null) {
-                        jp.yamlTriggerOn()!!.repoName = defaultRepo
+                        jp.yamlTriggerOn()!!.repoName = repoName.value
                     }
                     return null
                 }
@@ -43,7 +44,7 @@ object PipelineTransferAspectLoader {
             object : IPipelineTransferAspectElement {
                 override fun before(jp: PipelineTransferJoinPoint): Any? {
                     if (jp.yamlStep() != null && jp.yamlStep()!!.checkout == "self") {
-                        jp.yamlStep()!!.checkout = defaultRepo
+                        jp.yamlStep()!!.checkout = repoName.value
                     }
                     return null
                 }
@@ -57,7 +58,7 @@ object PipelineTransferAspectLoader {
                         (jp.yaml() as PreTemplateScriptBuildYamlV3).triggerOn is PreTriggerOnV3
                     ) {
                         val triggerOn = (jp.yaml() as PreTemplateScriptBuildYamlV3).triggerOn as PreTriggerOnV3
-                        if (triggerOn.repoName == defaultRepo) {
+                        if (triggerOn.repoName == repoName.value) {
                             triggerOn.repoName = null
                             triggerOn.type = null
                         }
