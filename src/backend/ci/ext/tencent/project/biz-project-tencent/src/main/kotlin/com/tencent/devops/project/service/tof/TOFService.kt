@@ -153,7 +153,7 @@ class TOFService @Autowired constructor(
         }
         return childDeptInfos.map {
             val leaf = if (type == OrganizationType.dept) {
-                it.TypeId != OrganizationType.dept.typeId
+                it.TypeId == OrganizationType.dept.typeId
             } else {
                 null
             }
