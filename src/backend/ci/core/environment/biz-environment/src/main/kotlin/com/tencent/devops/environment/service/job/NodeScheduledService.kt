@@ -44,7 +44,7 @@ class NodeScheduledService @Autowired constructor(
      * 每小时执行一次。
      * 条件：NODE_TYPE为cmdb的，查询该节点的agent安装状态以及版本，并对比差异更新
      */
-    @Scheduled(cron = "0 43 17 * * 1-5")
+    @Scheduled(cron = "0 57 17 * * 1-5")
     fun scheduledUpdateAgent() {
         taskWithRedisLock(SCHEDULED_UPDATE_AGENT_TIMEOUT_LOCK_KEY, ::updateAgent)
     }
@@ -89,8 +89,8 @@ class NodeScheduledService @Autowired constructor(
                 val ipToExistAgentVersion = existAgentVersionList.associateBy { it.ip }
                 val newAgentVersionList = queryAgentStatusService.getAgentVersions(existAgentVersionList)
                 if (logger.isDebugEnabled) logger.debug("[updateAgent]newAgentVersionList:$newAgentVersionList.")
-                // 判断newAgentVersionList 和 existAgentVersionList 是否一致，不一致则更新对应数据库表
-                val agentUpdateList = newAgentVersionList?.filter {
+                // 判断 newAgentVersionList 和 existAgentVersionList 是否一致，不一致则更新对应数据库表
+                val agentUpdateList = newAgentVersionList?.filterNot {
                     it.installedTag == ipToExistAgentVersion[it.ip]?.installedTag &&
                         it.version == ipToExistAgentVersion[it.ip]?.version &&
                         it.status == ipToExistAgentVersion[it.ip]?.status
