@@ -48,7 +48,7 @@ class MigratePermissionHandoverService constructor(
     fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO) {
         val handoverFrom = permissionHandoverDTO.handoverFrom
         val handoverToList = permissionHandoverDTO.handoverToList
-        val resourceType = permissionHandoverDTO.resourceType
+        val resourceType = permissionHandoverDTO.resourceType!!
         permissionHandoverDTO.projectList.forEach { projectCode ->
             if (permissionHandoverDTO.managerPermission) {
                 val projectManagerGroupId = authResourceGroupDao.get(
@@ -71,7 +71,7 @@ class MigratePermissionHandoverService constructor(
             val limit = 100
             do {
                 val resourceList = authResourceService.listByCreator(
-                    resourceType = permissionHandoverDTO.resourceType,
+                    resourceType = resourceType,
                     projectCode = projectCode,
                     creator = handoverFrom,
                     offset = offset,
