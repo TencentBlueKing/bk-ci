@@ -75,6 +75,9 @@ class CmdbNodeService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(CmdbNodeService::class.java)
         const val DEFAULT_CLOUD_AREA_ID = 0L
         const val FIELD_BK_SVR_ID = "svr_id"
+        const val AGENT_ABNORMAL_NODE_STATUS = 0
+        const val AGENT_NORMAL_NODE_STATUS = 1
+        const val AGENT_NOT_INSTALLED_TAG = false
     }
 
     fun getUserCmdbNodesNew(
@@ -163,7 +166,14 @@ class CmdbNodeService @Autowired constructor(
                 projectId = projectId,
                 nodeIp = cmdbNode.ip,
                 nodeName = cmdbNode.name,
-                nodeStatus = NodeStatus.NORMAL.name,
+                nodeStatus = if (AGENT_NOT_INSTALLED_TAG == ipToAgentVersionMap?.get(cmdbNode.ip)?.installedTag)
+                    NodeStatus.NOT_INSTALLED.name
+                else if (AGENT_ABNORMAL_NODE_STATUS == ipToAgentVersionMap?.get(cmdbNode.ip)?.status)
+                    NodeStatus.AGENT_ABNORMAL.name
+                else if (AGENT_NORMAL_NODE_STATUS == ipToAgentVersionMap?.get(cmdbNode.ip)?.status)
+                    NodeStatus.NORMAL.name
+                else
+                    "",
                 nodeType = NodeType.CMDB.name,
                 createdUser = userId,
                 osName = cmdbNode.osName,
