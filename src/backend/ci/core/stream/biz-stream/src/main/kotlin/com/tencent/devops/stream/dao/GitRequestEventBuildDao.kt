@@ -34,6 +34,8 @@ import com.tencent.devops.model.stream.tables.TGitRequestEvent
 import com.tencent.devops.model.stream.tables.TGitRequestEventBuild
 import com.tencent.devops.model.stream.tables.records.TGitRequestEventBuildRecord
 import com.tencent.devops.stream.pojo.BranchBuilds
+import java.sql.Timestamp
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -42,8 +44,6 @@ import org.jooq.Result
 import org.jooq.SelectConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.sql.Timestamp
-import java.time.LocalDateTime
 
 @Suppress("ComplexCondition", "ComplexMethod")
 @Repository
@@ -791,10 +791,13 @@ class GitRequestEventBuildDao {
     ): Int {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val dsl = dslContext.select(DSL.countDistinct(GIT_PROJECT_ID)).from(this)
-                .where(CREATE_TIME.ge(Timestamp(startTime).toLocalDateTime()))
-                .and(CREATE_TIME.le(Timestamp(endTime).toLocalDateTime()))
+                .where(
+                    CREATE_TIME.between(
+                        Timestamp(startTime).toLocalDateTime(), Timestamp(endTime).toLocalDateTime()
+                    )
+                )
                 .and(BUILD_ID.isNotNull)
-                .and(PARSED_YAML.like("%v2.0%"))
+                .and(VERSION.eq("v2.0"))
             return dsl.fetchOne(0, Int::class.java)!!
         }
     }

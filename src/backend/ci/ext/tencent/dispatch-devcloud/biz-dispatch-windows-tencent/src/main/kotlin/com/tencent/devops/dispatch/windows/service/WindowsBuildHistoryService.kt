@@ -41,33 +41,35 @@ class WindowsBuildHistoryService @Autowired constructor(
         createInfo: DevCloudWindowsCreateInfo,
         resourceType: String = ""
     ) {
-        val rec = TBuildHistoryRecord()
-        rec.projectId = dispatchMessage.projectId
-        rec.pipelineId = dispatchMessage.pipelineId
-        rec.buildId = dispatchMessage.buildId
-        rec.vmSeqId = dispatchMessage.vmSeqId
-        rec.vmIp = createInfo.ip
-        rec.startTime = LocalDateTime.now()
-        rec.status = WindowsJobStatus.Running.name
-        rec.resourceType = resourceType
-        rec.taskGuid = createInfo.taskGuid
+        with(dispatchMessage.event) {
+            val rec = TBuildHistoryRecord()
+            rec.projectId = projectId
+            rec.pipelineId = pipelineId
+            rec.buildId = buildId
+            rec.vmSeqId = vmSeqId
+            rec.vmIp = createInfo.ip
+            rec.startTime = LocalDateTime.now()
+            rec.status = WindowsJobStatus.Running.name
+            rec.resourceType = resourceType
+            rec.taskGuid = createInfo.taskGuid
 
-        dslContext.transactionResult { configuration ->
-            val context = DSL.using(configuration)
-            val resultBuildHistory = windowsBuildHistoryDao.saveBuildHistory(context, rec)
-            if (resultBuildHistory > 0) {
-                val buildHistoryRecord = windowsBuildHistoryDao.getByBuildIdAndVmSeqId(
-                    dslContext = context,
-                    buildId = dispatchMessage.buildId,
-                    vmSeqId = dispatchMessage.vmSeqId
-                )
-                logger.info(
-                    "[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] save " +
-                        "buildHistoryId: ${buildHistoryRecord.id}, vmIp: $createInfo.ip"
-                )
-            } else {
-                logger.error("[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] fail to save buildTask.")
-                throw RuntimeException("Insert into build history table failed.")
+            dslContext.transactionResult { configuration ->
+                val context = DSL.using(configuration)
+                val resultBuildHistory = windowsBuildHistoryDao.saveBuildHistory(context, rec)
+                if (resultBuildHistory > 0) {
+                    val buildHistoryRecord = windowsBuildHistoryDao.getByBuildIdAndVmSeqId(
+                        dslContext = context,
+                        buildId = buildId,
+                        vmSeqId = vmSeqId
+                    )
+                    logger.info(
+                        "[$buildId]|[$vmSeqId] save " +
+                                "buildHistoryId: ${buildHistoryRecord.id}, vmIp: $createInfo.ip"
+                    )
+                } else {
+                    logger.error("[$buildId]|[$vmSeqId] fail to save buildTask.")
+                    throw RuntimeException("Insert into build history table failed.")
+                }
             }
         }
     }

@@ -164,6 +164,33 @@
     {
       "operation": "upsert_action",
       "data": {
+        "id": "project_manage-archived-pipeline",
+        "name": "管理已归档流水线",
+        "name_en": "Manage Archived Pipeline",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
         "id": "pipeline_list",
         "name": "流水线列表",
         "name_en": "Pipeline List",
@@ -428,6 +455,40 @@
         "id": "pipeline_manage",
         "name": "流水线权限管理",
         "name_en": "Pipeline Manage",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "pipeline",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_instance",
+                "ignore_iam_path": true
+              },
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_group_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "pipeline_list",
+          "pipeline_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_archive",
+        "name": "归档流水线",
+        "name_en": "Pipeline Archive",
         "auth_type": "rbac",
         "type": "edit",
         "related_resource_types": [

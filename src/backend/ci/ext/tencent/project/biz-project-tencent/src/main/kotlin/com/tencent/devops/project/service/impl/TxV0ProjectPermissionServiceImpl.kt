@@ -100,7 +100,8 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
             MessageUtil.getMessageByLocale(
                 messageCode = CALL_PEM_FAIL,
                 language = I18nUtil.getLanguage(userId)
-            ))
+            )
+        )
         val result = objectMapper.readValue<Result<AuthProjectForCreateResult>>(responseContent)
         if (result.isNotOk()) {
             logger.warn("Fail to create the project of response $responseContent")
@@ -108,7 +109,8 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
                 MessageUtil.getMessageByLocale(
                     messageCode = CALL_PEM_FAIL,
                     language = I18nUtil.getLanguage(userId)
-                ) + ": ${result.message}")
+                ) + ": ${result.message}"
+            )
         }
         val authProjectForCreateResult = result.data
         return if (authProjectForCreateResult != null) {
@@ -215,7 +217,11 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
 
     override fun isShowUserManageIcon(): Boolean = false
 
-    override fun filterProjects(userId: String, permission: AuthPermission): List<String>? = null
+    override fun filterProjects(
+        userId: String,
+        permission: AuthPermission,
+        resourceType: String?
+    ): List<String>? = null
 
     companion object {
         val logger = LoggerFactory.getLogger(TxV0ProjectPermissionServiceImpl::class.java)
