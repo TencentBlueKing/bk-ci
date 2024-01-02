@@ -219,7 +219,7 @@ class RbacPermissionMigrateService constructor(
                         resourceType = AuthResourceType.PROJECT.value,
                         resourceCode = it.englishName
                     ).relationId
-                    val isRegisterMonitorPermission = authMigrationDao.get(
+                    val isRegisterMonitorPermission = authMonitorSpaceDao.get(
                         dslContext = dslContext,
                         projectCode = it.englishName
                     ) != null
