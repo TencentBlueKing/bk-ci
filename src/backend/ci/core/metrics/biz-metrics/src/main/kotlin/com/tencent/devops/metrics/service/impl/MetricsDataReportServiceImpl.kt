@@ -212,8 +212,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             if (buildEndPipelineMetricsData.channelCode == ChannelCode.BS.name) {
                 projectBuildSummaryService.saveProjectBuildCount(
                     projectId = projectId,
-                    trigger = buildEndPipelineMetricsData.trigger,
-                    startTime = buildEndPipelineMetricsData.startTime
+                    trigger = buildEndPipelineMetricsData.trigger
                 )
             }
             logger.info("[$projectId|$pipelineId|$buildId]|end metricsDataReport")
