@@ -154,7 +154,7 @@ class StreamUserMessageService @Autowired constructor(
             )!!
         }
 
-        val requestIds = messageRecords.map { it.messageId.toInt() }.toSet()
+        val requestIds = messageRecords.map { it.messageId.toLong() }.toSet()
         val eventMap = getRequestMap(userId, gitProjectId, requestIds)
         val resultMap = mutableMapOf<String, MutableList<UserMessage>>()
         messageRecords.forEach { message ->
@@ -241,10 +241,11 @@ class StreamUserMessageService @Autowired constructor(
         }
     }
 
+    @Suppress("ComplexMethod")
     private fun getRequestMap(
         userId: String,
         gitProjectId: Long?,
-        requestIds: Set<Int>
+        requestIds: Set<Long>
     ): Map<Long, List<RequestMessageContent>> {
         val eventList = gitRequestEventDao.getRequestsById(
             dslContext = dslContext,

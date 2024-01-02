@@ -71,7 +71,10 @@ interface ServiceJobQuotaBusinessResource {
         containerId: String,
         @ApiParam(value = "containerHashId", required = false)
         @QueryParam("containerHashId")
-        containerHashId: String?
+        containerHashId: String?,
+        @ApiParam(value = "channelCode", required = false)
+        @QueryParam("channelCode")
+        channelCode: String? = ""
     ): Result<Boolean>
 
     @ApiOperation("上报一个JOB结束")
