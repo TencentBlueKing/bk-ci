@@ -31,6 +31,7 @@ import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.StandardVmImage
 import com.tencent.devops.remotedev.api.user.UserProjectWorkspaceImageResource
 import com.tencent.devops.remotedev.pojo.image.ProjectImage
 import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
@@ -55,5 +56,10 @@ class UserProjectWorkspaceImageResourceImpl @Autowired constructor(
     @AuditEntry(actionId = ActionId.IMAGE_DELETE)
     override fun deleteProjectImage(userId: String, projectId: String, imageId: String): Result<Boolean> {
         return Result(projectImageManageService.deleteProjectImage(userId, projectId, imageId))
+    }
+
+    override fun getVmStandardImages(userId: String): Result<List<StandardVmImage>> {
+        logger.info("UserImageManageResourceImpl|getProjectImageList|userId|$userId")
+        return Result(projectImageManageService.getVmStandardImages())
     }
 }

@@ -37,6 +37,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResource
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.FetchWinPoolData
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmRespData
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.StandardVmImage
 import com.tencent.devops.dispatch.kubernetes.startcloud.service.StartCloudInterfaceService
 import com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
@@ -93,5 +94,9 @@ class StartCloudServiceResourceImpl @Autowired constructor(
 
     override fun getTaskInfoByUid(uid: String): Result<TaskStatus?> {
         return Result(startCloudInterfaceService.getTaskInfoByUid(uid))
+    }
+
+    override fun getVmStandardImages(): Result<List<StandardVmImage>?> {
+        return Result(workspaceStartCloudClient.getVmStandardImages())
     }
 }

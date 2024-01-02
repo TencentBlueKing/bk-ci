@@ -34,6 +34,9 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.StandardVmImage
 import com.tencent.devops.remotedev.dao.ImageManageDao
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.pojo.image.ImageStatus
@@ -45,6 +48,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class ImageManageService @Autowired constructor(
+    private val client: Client,
     private val dslContext: DSLContext,
     private val imageManageDao: ImageManageDao,
     private val windowsResourceZoneDao: WindowsResourceZoneDao
@@ -101,5 +105,13 @@ class ImageManageService @Autowired constructor(
         logger.info("$userId delete projectImage: $imageId")
         imageManageDao.updateWorkspaceImageStatus(projectId, imageId, ImageStatus.DELETED, dslContext)
         return true
+    }
+
+    fun getVmStandardImages(): List<StandardVmImage> {
+        return kotlin.runCatching {
+            client.get(ServiceStartCloudResource::class).getVmStandardImages().data
+        }.onFailure {
+            logger.warn("Error get vm stanadard image list: ${it.message}")
+        }.getOrNull() ?: emptyList()
     }
 }
