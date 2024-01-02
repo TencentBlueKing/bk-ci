@@ -207,7 +207,17 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         checkUserId(userId)
         checkProjectId(projectId)
         checkNodeId(nodeHashId)
-        return Result(thirdPartyAgentService.listAgentBuilds(userId, projectId, nodeHashId, page, pageSize))
+        return Result(
+            thirdPartyAgentService.listAgentBuilds(
+                userId = userId,
+                projectId = projectId,
+                nodeHashId = nodeHashId,
+                status = null,
+                pipelineId = null,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 
     override fun listAgentActions(

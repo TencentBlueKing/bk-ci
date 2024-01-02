@@ -44,7 +44,8 @@ object ProjectUtils {
         tProjectRecord: TProjectRecord,
         managePermission: Boolean? = null,
         showUserManageIcon: Boolean? = null,
-        viewPermission: Boolean? = null
+        viewPermission: Boolean? = null,
+        pipelineTemplateInstallPerm: Boolean? = null
     ): ProjectVO {
         return ProjectVO(
             /* 已经投产旧插件的使用字段兼容 */
@@ -112,7 +113,8 @@ object ProjectUtils {
             showUserManageIcon = showUserManageIcon,
             channelCode = tProjectRecord.channel,
             productId = tProjectRecord.productId,
-            canView = viewPermission
+            canView = viewPermission,
+            pipelineTemplateInstallPerm = pipelineTemplateInstallPerm
         )
     }
 

@@ -27,6 +27,7 @@
 package com.tencent.devops.store.dao.image
 
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TImageAgentType
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_AGENT_TYPE
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
@@ -43,6 +44,7 @@ class ImageAgentTypeDao {
             tImageAgentType.AGENT_TYPE.`as`(KEY_IMAGE_AGENT_TYPE)
         ).from(tImageAgentType)
             .where(tImageAgentType.IMAGE_CODE.eq(imageCode))
+            .skipCheck()
             .fetch()
     }
 
