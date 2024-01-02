@@ -31,9 +31,9 @@ import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.StandardVmImage
 import com.tencent.devops.remotedev.api.user.UserProjectWorkspaceImageResource
 import com.tencent.devops.remotedev.pojo.image.ProjectImage
+import com.tencent.devops.remotedev.pojo.image.StandardVmImage
 import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

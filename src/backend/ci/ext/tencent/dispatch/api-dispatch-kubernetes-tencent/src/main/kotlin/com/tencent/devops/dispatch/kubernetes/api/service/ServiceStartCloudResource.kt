@@ -36,8 +36,8 @@ import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResource
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.FetchWinPoolData
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmRespData
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.StandardVmImage
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
+import com.tencent.devops.remotedev.pojo.image.StandardVmImage
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

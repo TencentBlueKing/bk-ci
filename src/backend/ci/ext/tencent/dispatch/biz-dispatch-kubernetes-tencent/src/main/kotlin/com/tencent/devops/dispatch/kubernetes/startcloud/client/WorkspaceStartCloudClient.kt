@@ -10,12 +10,12 @@ import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentStatusRsp
+import com.tencent.devops.remotedev.pojo.image.ListVmImagesResp
+import com.tencent.devops.remotedev.pojo.image.StandardVmImage
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ListVmImagesResp
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmResp
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmRespData
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.StandardVmImage
 import com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.CgsQueryReq
 import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentCreate

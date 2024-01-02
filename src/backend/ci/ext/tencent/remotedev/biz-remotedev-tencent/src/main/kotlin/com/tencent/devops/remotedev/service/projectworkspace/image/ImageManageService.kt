@@ -36,7 +36,7 @@ import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.StandardVmImage
+import com.tencent.devops.remotedev.pojo.image.StandardVmImage
 import com.tencent.devops.remotedev.dao.ImageManageDao
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.pojo.image.ImageStatus

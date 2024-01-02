@@ -30,7 +30,7 @@ package com.tencent.devops.remotedev.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.StandardVmImage
+import com.tencent.devops.remotedev.pojo.image.StandardVmImage
 import com.tencent.devops.remotedev.pojo.image.ProjectImage
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation

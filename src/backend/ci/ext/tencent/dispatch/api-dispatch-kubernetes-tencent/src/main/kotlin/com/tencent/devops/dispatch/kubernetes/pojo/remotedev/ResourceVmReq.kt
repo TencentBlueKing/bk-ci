@@ -34,18 +34,3 @@ data class ResourceVmRespDataMachineResource(
     val free: Int?,
     val machineType: String
 )
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class ListVmImagesResp(
-    val result: Boolean,
-    val code: Int,
-    val message: String?,
-    val data: List<StandardVmImage>?
-)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class StandardVmImage(
-    val updateAt: String?,
-    val cosFile: String?,
-    val sourceType: String?,
-    val isStandard: Boolean
-)
