@@ -214,6 +214,7 @@ object AtomUtils {
                     errorCode = TEMPLATE_PLUGIN_NOT_ALLOWED_USE,
                     params = arrayOf(
                         it.atomName,
+                        it.version,
                         AtomStatusEnum.valueOf(atomStatus).getI18n(I18nUtil.getLanguage(userId))
                     )
                 )
