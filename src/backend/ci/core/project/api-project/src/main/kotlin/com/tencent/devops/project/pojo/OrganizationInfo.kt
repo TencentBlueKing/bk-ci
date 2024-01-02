@@ -37,7 +37,9 @@ data class OrganizationInfo(
     @ApiModelProperty(name = "组织类型")
     val type: String? = null,
     @ApiModelProperty(name = "是否有叶子节点")
-    val leaf: Boolean? = null
+    val leaf: Boolean? = null,
+    @ApiModelProperty(name = "组织父ID")
+    val parentId: String? = null
 ) {
     override fun toString(): String {
         return "$id $name"

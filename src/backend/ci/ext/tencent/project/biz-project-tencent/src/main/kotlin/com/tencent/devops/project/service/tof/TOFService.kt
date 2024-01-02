@@ -161,7 +161,8 @@ class TOFService @Autowired constructor(
                 id = it.ID,
                 name = it.Name,
                 type = OrganizationType.getOrganizationTypeName(it.TypeId),
-                leaf = leaf
+                leaf = leaf,
+                parentId = it.ParentId
             )
         }
     }
@@ -589,7 +590,17 @@ class TOFService @Autowired constructor(
         } else {
             tofDeptInfos.indexOfFirst { it.typeId.toInt() == OrganizationType.dept.typeId }
         }
-        val filterTofDeptInfos = if (index == -1) emptyList() else tofDeptInfos.take(index + 1)
+        val filterTofDeptInfos = if (index == -1) listOf(
+            TofDeptInfo(
+                typeId = "0",
+                leaderId = "0",
+                name = "腾讯公司",
+                level = "",
+                enabled = "true",
+                parentId = "-1",
+                id = "0"
+            )
+        ) else tofDeptInfos.take(index + 1)
         return filterTofDeptInfos.map {
             BkDeptInfo(
                 type = OrganizationType.getOrganizationTypeName(it.typeId.toInt()),
