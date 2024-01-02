@@ -57,14 +57,12 @@ class QueryAgentStatusService @Autowired constructor(
     }
 
     fun getAgentVersions(
-        userId: String,
-        projectId: String,
         ipAndHostIdList: List<AgentVersion>
     ): List<AgentVersion>? {
         val hostIdList = ipAndHostIdList.mapNotNull { it.bkHostId }
         val ipList = ipAndHostIdList.mapNotNull { it.ip }
         val hostIdToAgentVersionMap = ipAndHostIdList.associateBy { it.bkHostId }
-        val nodemanRes = getAgentVersionsFromNodeman(userId, projectId, hostIdList, ipList)
+        val nodemanRes = getAgentVersionsFromNodeman(hostIdList, ipList)
         if (logger.isDebugEnabled) logger.debug("[getAgentVersions]nodemanRes:$nodemanRes")
         val total = nodemanRes.data?.total ?: 0
         val installedHostIdList = if (total > 0) {
@@ -78,7 +76,7 @@ class QueryAgentStatusService @Autowired constructor(
                 if (logger.isDebugEnabled) logger.debug("[getAgentVersions]installedHostIdList is null or empty.")
                 emptyList()
             } else {
-                val jobRes = getAgentVersionsFromJob(userId, projectId, installedHostIdList)
+                val jobRes = getAgentVersionsFromJob(installedHostIdList)
                 if (logger.isDebugEnabled) logger.debug("[getAgentVersions]jobRes:$jobRes")
                 jobRes.data?.agentInfoList?.map {
                     AgentVersion(
@@ -113,8 +111,6 @@ class QueryAgentStatusService @Autowired constructor(
     }
 
     private fun getAgentVersionsFromNodeman(
-        userId: String,
-        projectId: String,
         hostIdList: List<Long>,
         ipList: List<String>
     ): AgentResult<QueryAgentStatusFromNodemanResult> {
@@ -132,17 +128,15 @@ class QueryAgentStatusService @Autowired constructor(
             onlyIp = DEFAULT_ONLY_IP,
             runningCount = DEFAULT_RUNNING_COUNT
         )
-        return jobService.queryAgentStatusFromNodeman(userId, projectId, getAgentVersionsFromNodemanReq)
+        return jobService.queryAgentStatusFromNodeman(getAgentVersionsFromNodemanReq)
     }
 
     private fun getAgentVersionsFromJob(
-        userId: String,
-        projectId: String,
         hostIdList: List<Long>
     ): JobResult<QueryAgentStatusFromJobResult> {
         val queryAgentStatusRequest = QueryAgentStatusFromJobReq(
             hostIdList = hostIdList
         )
-        return jobService.queryAgentStatusFromJob(userId, projectId, queryAgentStatusRequest)
+        return jobService.queryAgentStatusFromJob(queryAgentStatusRequest)
     }
 }

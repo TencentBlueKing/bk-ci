@@ -156,7 +156,7 @@ class CmdbNodeService @Autowired constructor(
         val ipAndHostIdList = queryCCIpToCCInfoMap.values.map {
             AgentVersion(ip = it.bkHostInnerip, bkHostId = it.bkHostId)
         }
-        val agentVersionList = queryAgentStatusService.getAgentVersions(userId, projectId, ipAndHostIdList)
+        val agentVersionList = queryAgentStatusService.getAgentVersions(ipAndHostIdList)
         val ipToAgentVersionMap = agentVersionList?.associateBy { it.ip }
         if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]ipToAgentVersionMap:$ipToAgentVersionMap")
         val toAddNodeList = toAddIpList.map {

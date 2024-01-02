@@ -85,6 +85,19 @@ class NodeDao {
         }
     }
 
+    fun getCmdbNodes(
+        dslContext: DSLContext,
+        offset: Int,
+        limit: Int
+    ): Result<TNodeRecord> {
+        with(TNode.T_NODE) {
+            return dslContext.selectFrom(this)
+                .where(NODE_TYPE.eq(NodeType.CMDB.name))
+                .limit(limit).offset(offset)
+                .fetch()
+        }
+    }
+
     fun countDisplayNameEmptyNodes(dslContext: DSLContext): Int {
         with(TNode.T_NODE) {
             return dslContext.selectCount()
@@ -112,13 +125,6 @@ class NodeDao {
                 .where(NODE_ID.`in`(nodeIdList))
                 .fetch()
         }
-    }
-
-    fun batchUpdateDisplayNameByNodeId(dslContext: DSLContext, nodeRecords: List<TNodeRecord>) {
-        if (nodeRecords.isEmpty()) {
-            return
-        }
-        dslContext.batchUpdate(nodeRecords).execute()
     }
 
     fun updateNodeNotInCCByIp(dslContext: DSLContext, notInCCIpList: List<String>) {
@@ -568,6 +574,13 @@ class NodeDao {
                 .where(NODE_ID.eq(id))
                 .execute()
         }
+    }
+
+    fun batchUpdateNodeRecords(dslContext: DSLContext, nodeRecords: List<TNodeRecord>) {
+        if (nodeRecords.isEmpty()) {
+            return
+        }
+        dslContext.batchUpdate(nodeRecords).execute()
     }
 
     fun batchAddNode(dslContext: DSLContext, nodes: List<CreateNodeModel>) {

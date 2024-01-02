@@ -850,8 +850,6 @@ class JobService @Autowired constructor(
     }
 
     fun queryAgentStatusFromJob(
-        userId: String,
-        projectId: String,
         queryAgentStatusFromJobReq: QueryAgentStatusFromJobReq
     ): JobResult<QueryAgentStatusFromJobResult> {
         ApigwJobCloudApi.setThreadLocal(::queryAgentStatusFromJob.name)
@@ -883,8 +881,6 @@ class JobService @Autowired constructor(
     }
 
     fun queryAgentStatusFromNodeman(
-        userId: String,
-        projectId: String,
         queryAgentStatusFromNodemanReq: QueryAgentStatusFromNodemanReq
     ): AgentResult<QueryAgentStatusFromNodemanResult> {
         AgentApi.setThreadLocal("queryAgentStatusFromNodeman")

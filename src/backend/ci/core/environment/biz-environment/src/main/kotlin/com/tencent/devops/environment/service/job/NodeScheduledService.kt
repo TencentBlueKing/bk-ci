@@ -4,10 +4,13 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.pojo.enums.NodeStatus
+import com.tencent.devops.environment.pojo.job.AgentVersion
 import com.tencent.devops.environment.pojo.job.DisplayNameInfo
 import com.tencent.devops.environment.pojo.job.ccres.CCInfo
 import com.tencent.devops.environment.service.job.QueryFromCCService.Companion.FIELD_BK_HOST_ID
 import com.tencent.devops.environment.service.job.QueryFromCCService.Companion.FIELD_BK_HOST_INNERIP
+import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,14 +23,30 @@ class NodeScheduledService @Autowired constructor(
     private val dslContext: DSLContext,
     private val nodeDao: NodeDao,
     private val queryFromCCService: QueryFromCCService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val queryAgentStatusService: QueryAgentStatusService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(NodeScheduledService::class.java)
         private const val SCHEDULED_CHECK_NODE_IN_CC_TIMEOUT_LOCK_KEY = "scheduled_check_node_in_cc_timeout_lock"
         private const val SCHEDULED_WRITE_DISPLAY_NAME_TIMEOUT_LOCK_KEY = "scheduled_write_display_name_timeout_lock"
+        private const val SCHEDULED_UPDATE_AGENT_TIMEOUT_LOCK_KEY = "scheduled_update_agent_timeout_lock"
         private const val EXPIRATION_TIME_OF_THE_LOCK = 200L
-        private const val DEFAULT_PAGE_SIZE = 100
+        private const val DEFAULT_PAGE_SIZE = 1000
+        private const val AGENT_NOT_INSTALLED_TAG = false
+        private const val AGENT_ABNORMAL_NODE_STATUS = 0
+        private const val AGENT_NORMAL_NODE_STATUS = 1
+    }
+
+    /**
+     * 定时任务：agent状态/版本 轮询 + 差量更新
+     * 分组执行，每次遍历1000条记录
+     * 每小时执行一次。
+     * 条件：NODE_TYPE为cmdb的，查询该节点的agent安装状态以及版本，并对比差异更新
+     */
+    @Scheduled(cron = "0 40 17 * * 1-5")
+    fun scheduledUpdateAgent() {
+        taskWithRedisLock(SCHEDULED_UPDATE_AGENT_TIMEOUT_LOCK_KEY, ::updateAgent)
     }
 
     /**
@@ -48,6 +67,64 @@ class NodeScheduledService @Autowired constructor(
     @Scheduled(cron = "0 0 10 * * 1-5")
     fun scheduledCheckNodeInCC() {
         taskWithRedisLock(SCHEDULED_CHECK_NODE_IN_CC_TIMEOUT_LOCK_KEY, ::checkNodeInCC)
+    }
+
+    private fun updateAgent() {
+        val countCmdbNodes = nodeDao.countCmdbNodes(dslContext)
+        if (logger.isDebugEnabled) logger.debug("[updateAgent]countCmdbNodes:$countCmdbNodes.")
+        if (0 < countCmdbNodes) {
+            val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countCmdbNodes.toLong())
+            for (page in 1..totalPages) {
+                val cmdbNodesRecords = nodeDao.getCmdbNodes(dslContext, page - 1, DEFAULT_PAGE_SIZE)
+                val existAgentVersionList = cmdbNodesRecords.map {
+                    AgentVersion(
+                        ip = it.nodeIp,
+                        bkHostId = it.hostId,
+                        installedTag = NodeStatus.NOT_INSTALLED.name != it.nodeStatus,
+                        version = it.agentVersion,
+                        status = if (it.agentStatus) 1 else 0
+                    )
+                }
+                if (logger.isDebugEnabled) logger.debug("[updateAgent]existAgentVersionList:$existAgentVersionList.")
+                val ipToExistAgentVersion = existAgentVersionList.associateBy { it.ip }
+                val newAgentVersionList = queryAgentStatusService.getAgentVersions(existAgentVersionList)
+                if (logger.isDebugEnabled) logger.debug("[updateAgent]newAgentVersionList:$newAgentVersionList.")
+                // 判断newAgentVersionList 和 existAgentVersionList 是否一致，不一致则更新对应数据库表
+                val agentUpdateList = newAgentVersionList?.filter {
+                    it.installedTag == ipToExistAgentVersion[it.ip]?.installedTag &&
+                        it.version == ipToExistAgentVersion[it.ip]?.version &&
+                        it.status == ipToExistAgentVersion[it.ip]?.status
+                }
+                if (logger.isDebugEnabled) logger.debug("[updateAgent]agentUpdateList:$agentUpdateList.")
+                if (!agentUpdateList.isNullOrEmpty()) {
+                    batchUpdateAgent(cmdbNodesRecords, agentUpdateList)
+                }
+            }
+        } else {
+            if (logger.isDebugEnabled) logger.debug("[updateAgent] There is no cmdb node.")
+        }
+    }
+
+    private fun batchUpdateAgent(cmdbNodesRecords: List<TNodeRecord>, agentUpdateList: List<AgentVersion>) {
+        val ipToAgentUpdateList = agentUpdateList.associateBy { it.ip }
+        val agentUpdateIpList = agentUpdateList.mapNotNull { it.ip }
+        val agentUpdateHostIdList = agentUpdateList.mapNotNull { it.bkHostId }
+        val agentUpdateRecords = cmdbNodesRecords.filter {
+            agentUpdateIpList.contains(it.nodeIp) || agentUpdateHostIdList.contains(it.hostId)
+        }.map {
+            it.nodeStatus =
+                if (AGENT_NOT_INSTALLED_TAG == ipToAgentUpdateList[it.nodeIp]?.installedTag)
+                    NodeStatus.NOT_INSTALLED.name
+                else if (AGENT_ABNORMAL_NODE_STATUS == ipToAgentUpdateList[it.nodeIp]?.status)
+                    NodeStatus.AGENT_ABNORMAL.name
+                else if (AGENT_NORMAL_NODE_STATUS == ipToAgentUpdateList[it.nodeIp]?.status)
+                    NodeStatus.NORMAL.name
+                else null
+            it.agentStatus = AGENT_NORMAL_NODE_STATUS == ipToAgentUpdateList[it.nodeIp]?.status
+            it
+        }
+        if (logger.isDebugEnabled) logger.debug("[updateAgent]agentUpdateRecords:$agentUpdateRecords.")
+        nodeDao.batchUpdateNodeRecords(dslContext, agentUpdateRecords)
     }
 
     private fun writeDisplayName() {
@@ -74,7 +151,7 @@ class NodeScheduledService @Autowired constructor(
                     it.displayName = nodeIdToRecordMap[it.nodeId]?.displayName
                     it.lastModifyTime = LocalDateTime.now()
                 }
-                nodeDao.batchUpdateDisplayNameByNodeId(dslContext, nodeRecords)
+                nodeDao.batchUpdateNodeRecords(dslContext, nodeRecords)
             }
         } else {
             if (logger.isDebugEnabled) logger.debug("[writeDisplayName] There is no node with empty DisplayName.")
