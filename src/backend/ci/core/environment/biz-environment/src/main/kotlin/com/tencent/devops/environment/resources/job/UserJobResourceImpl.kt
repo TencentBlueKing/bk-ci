@@ -111,7 +111,7 @@ class UserJobResourceImpl @Autowired constructor(
         queryAgentStatusFromJobReq: QueryAgentStatusFromJobReq
     ): JobResult<QueryAgentStatusFromJobResult> {
         checkParamBlank(userId, projectId)
-        return jobService.queryAgentStatusFromJob(userId, projectId, queryAgentStatusFromJobReq)
+        return jobService.queryAgentStatusFromJob(queryAgentStatusFromJobReq)
     }
 
     override fun queryAgentStatusFromNodeman(
@@ -120,7 +120,7 @@ class UserJobResourceImpl @Autowired constructor(
         queryAgentStatusFromNodemanReq: QueryAgentStatusFromNodemanReq
     ): AgentResult<QueryAgentStatusFromNodemanResult> {
         checkParamBlank(userId, projectId)
-        return jobService.queryAgentStatusFromNodeman(userId, projectId, queryAgentStatusFromNodemanReq)
+        return jobService.queryAgentStatusFromNodeman(queryAgentStatusFromNodemanReq)
     }
 
     override fun queryAgentTaskLog(
