@@ -848,6 +848,7 @@ class PipelineRepositoryService constructor(
         var realBaseVersion = baseVersion
         var operationLogType = OperationLogType.NORMAL_SAVE_OPERATION
         var operationLogParams = versionName
+        var branchAction: BranchVersionAction? = null
 
         try {
             lock.lock()
@@ -905,24 +906,26 @@ class PipelineRepositoryService constructor(
                     VersionStatus.BRANCH -> {
                         // 查询同名分支的最新active版本，存在则更新，否则新增一个版本
                         branchName?.let { versionName = branchName }
-                        val latestBranchVersion = pipelineResourceVersionDao.getVersionResource(
+                        val activeBranchVersion = pipelineResourceVersionDao.getVersionResource(
                             dslContext = transactionContext,
                             projectId = projectId,
                             pipelineId = pipelineId,
                             branchName = branchName
                         )
-                        if (latestBranchVersion != null &&
-                            latestBranchVersion.branchAction != BranchVersionAction.INACTIVE) {
+                        if (activeBranchVersion != null) {
                             // 更新
                             operationLogType = OperationLogType.UPDATE_BRANCH_VERSION
-                            operationLogParams = latestBranchVersion.versionName ?: latestBranchVersion.version.toString()
-                            version = latestBranchVersion.version
+                            operationLogParams = activeBranchVersion.versionName ?: activeBranchVersion.version.toString()
+                            branchAction = BranchVersionAction.ACTIVE
+                            version = activeBranchVersion.version
                         } else {
+                            // 创建
                             val latestVersion = pipelineResourceVersionDao.getVersionResource(
                                 dslContext = transactionContext,
                                 projectId = projectId,
                                 pipelineId = pipelineId
                             )
+                            branchAction = BranchVersionAction.ACTIVE
                             operationLogType = OperationLogType.CREATE_BRANCH_VERSION
                             operationLogParams = versionName
                             version = (latestVersion?.version ?: 0) + 1
@@ -1012,7 +1015,7 @@ class PipelineRepositoryService constructor(
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion,
                     versionStatus = versionStatus,
-                    branchAction = null,
+                    branchAction = branchAction,
                     description = description,
                     baseVersion = realBaseVersion ?: (version - 1)
                 )
