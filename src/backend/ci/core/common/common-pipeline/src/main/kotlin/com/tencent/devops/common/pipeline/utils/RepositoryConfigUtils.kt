@@ -184,7 +184,7 @@ object RepositoryConfigUtils {
                     repositoryName = EnvUtils.parseEnv(element.repositoryName, variables),
                     repositoryType = element.repositoryType ?: RepositoryType.ID
                 )
-                Triple(ScmType.GITHUB, CodeEventType.PULL_REQUEST, repositoryConfig)
+                Triple(ScmType.GITHUB, element.eventType, repositoryConfig)
             }
 
             is CodeTGitWebHookTriggerElement -> {
