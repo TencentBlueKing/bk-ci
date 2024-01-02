@@ -570,7 +570,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         codeVersions.forEach {
             val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, it.atomCode)
             val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, it.version)
-            logger.info("atomRunInfoJson: $atomRunInfoJson || $it")
             if (!atomRunInfoJson.isNullOrBlank()) {
                 try {
                     val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
@@ -605,7 +604,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 )
             }
         }
-        logger.info("atomRunInfos: $atomRunInfos")
         return Result(atomRunInfos)
     }
 
