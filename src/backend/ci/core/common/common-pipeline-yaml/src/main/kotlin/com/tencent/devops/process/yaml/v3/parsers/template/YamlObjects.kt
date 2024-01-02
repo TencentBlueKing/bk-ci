@@ -341,7 +341,7 @@ object YamlObjects {
     fun getNoticeV3(fromPath: TemplatePath, notice: Map<String, Any?>): PacNotices {
         return PacNotices(
             type = if (notice["receivers"] == null) {
-                emptyList()
+                emptyList<String>()
             } else {
                 transValue(fromPath, "type", notice["type"])
             },

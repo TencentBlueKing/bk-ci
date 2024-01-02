@@ -191,7 +191,7 @@ class PipelineTransferYamlService @Autowired constructor(
             CommonMessageCode.ELEMENT_NOT_SUPPORT_TRANSFER,
             arrayOf("${data.getClassType()}(${data.name})")
         )
-        return TransferMapper.toYaml(yml)
+        return TransferMapper.toYaml(listOf(yml))
     }
 
     fun yamlTaskTransfer(

@@ -497,7 +497,11 @@ class ElementTransfer @Autowired(required = false) constructor(
                         this.remove(CheckoutAtomParam::repositoryHashId.name)
                         this.remove(CheckoutAtomParam::repositoryName.name)
                         this.remove(CheckoutAtomParam::repositoryUrl.name)
-                        this["type"] = repositoryType?.name ?: CheckoutAtomParam.CheckoutRepositoryType.URL.name
+                        val type = repositoryType?.name
+                            ?.nullIfDefault(CheckoutAtomParam.CheckoutRepositoryType.NAME.name)
+                        if (type != null) {
+                            this["type"] = type
+                        }
                     }.ifEmpty { null },
                     checkout = checkout
                 )

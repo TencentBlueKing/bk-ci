@@ -38,7 +38,7 @@ import io.swagger.annotations.ApiModelProperty
 data class PreTriggerOnV3(
     @JsonProperty("repo-name")
     @ApiModelProperty(name = "repo-name")
-    val repoName: String? = null,
+    var repoName: String? = null,
     var type: String? = null,
     override val push: Any? = null,
     override val tag: Any? = null,

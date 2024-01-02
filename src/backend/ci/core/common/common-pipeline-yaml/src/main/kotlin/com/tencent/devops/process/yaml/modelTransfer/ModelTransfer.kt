@@ -130,6 +130,7 @@ class ModelTransfer @Autowired constructor(
     fun yaml2Model(
         yamlInput: YamlTransferInput
     ): Model {
+        yamlInput.aspectWrapper.setYaml4Yaml(yamlInput.yaml, PipelineTransferAspectWrapper.AspectType.BEFORE)
         val stageList = mutableListOf<Stage>()
         val model = Model(
             name = yamlInput.yaml.name ?: yamlInput.pipelineInfo?.pipelineName ?: "",
@@ -174,10 +175,12 @@ class ModelTransfer @Autowired constructor(
             )
         }
         checkExtends(yamlInput.yaml.templateFilter().extends, model)
+        yamlInput.aspectWrapper.setModel4Model(model, PipelineTransferAspectWrapper.AspectType.AFTER)
         return model
     }
 
     fun model2yaml(modelInput: ModelTransferInput): IPreTemplateScriptBuildYaml {
+        modelInput.aspectWrapper.setModel4Model(modelInput.model, PipelineTransferAspectWrapper.AspectType.BEFORE)
         val label = prepareYamlLabels(modelInput.userId, modelInput.setting).ifEmpty { null }
         val yaml = when (modelInput.version) {
             YamlVersion.Version.V2_0 -> PreTemplateScriptBuildYaml(
@@ -250,6 +253,7 @@ class ModelTransfer @Autowired constructor(
         yaml.concurrency = makeConcurrency(modelInput.setting)
         yaml.recommendedVersion = variableTransfer.makeRecommendedVersion(modelInput.model)
         yaml.disablePipeline = (modelInput.setting.runLockType == PipelineRunLockType.LOCK).nullIfDefault(false)
+        modelInput.aspectWrapper.setYaml4Yaml(yaml, PipelineTransferAspectWrapper.AspectType.AFTER)
         return yaml
     }
 

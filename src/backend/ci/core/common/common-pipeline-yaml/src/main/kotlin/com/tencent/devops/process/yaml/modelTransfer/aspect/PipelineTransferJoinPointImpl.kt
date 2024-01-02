@@ -1,9 +1,11 @@
 package com.tencent.devops.process.yaml.modelTransfer.aspect
 
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
@@ -15,13 +17,15 @@ data class PipelineTransferJoinPointImpl(
     var modelStage: Stage? = null,
     var modelJob: Container? = null,
     var modelElement: Element? = null,
+    var model: Model? = null,
     var yamlStage: YamlV3Stage? = null,
     var yamlPreStage: PreStage? = null,
     var yamlJob: YamlV3Job? = null,
     var yamlPreJob: PreJob? = null,
     var yamlStep: YamlV3Step? = null,
     var yamlPreStep: PreStep? = null,
-    var yamlTriggerOn: TriggerOn? = null
+    var yamlTriggerOn: TriggerOn? = null,
+    var yaml: IPreTemplateScriptBuildYaml? = null
 ) : PipelineTransferJoinPoint {
 
     override fun modelStage(): Stage? = modelStage
@@ -29,6 +33,8 @@ data class PipelineTransferJoinPointImpl(
     override fun modelJob(): Container? = modelJob
 
     override fun modelElement(): Element? = modelElement
+
+    override fun model(): Model? = model
 
     override fun yamlStage(): YamlV3Stage? = yamlStage
 
@@ -43,4 +49,6 @@ data class PipelineTransferJoinPointImpl(
     override fun yamlPreStep(): PreStep? = yamlPreStep
 
     override fun yamlTriggerOn(): TriggerOn? = yamlTriggerOn
+
+    override fun yaml(): IPreTemplateScriptBuildYaml? = yaml
 }

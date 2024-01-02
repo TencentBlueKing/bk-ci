@@ -83,14 +83,14 @@ class TransferCreatorImpl @Autowired constructor() : TransferCreator {
                 inputMap[CheckoutAtomParam::repositoryType.name] = CheckoutAtomParam.CheckoutRepositoryType.ID
             }
 
-            CheckoutAtomParam.CheckoutRepositoryType.NAME.name -> {
+            CheckoutAtomParam.CheckoutRepositoryType.URL.name -> {
                 inputMap[CheckoutAtomParam::repositoryName.name] = step.checkout!!
-                inputMap[CheckoutAtomParam::repositoryType.name] = CheckoutAtomParam.CheckoutRepositoryType.NAME
+                inputMap[CheckoutAtomParam::repositoryType.name] = CheckoutAtomParam.CheckoutRepositoryType.URL
             }
 
             else -> {
                 inputMap[CheckoutAtomParam::repositoryUrl.name] = step.checkout!!
-                inputMap[CheckoutAtomParam::repositoryType.name] = CheckoutAtomParam.CheckoutRepositoryType.URL
+                inputMap[CheckoutAtomParam::repositoryType.name] = CheckoutAtomParam.CheckoutRepositoryType.NAME
             }
         }
 

@@ -1,9 +1,11 @@
 package com.tencent.devops.process.yaml.modelTransfer.aspect
 
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
@@ -18,6 +20,7 @@ class PipelineTransferAspectWrapper {
     private val aspectElement = LinkedList<IPipelineTransferAspectElement>()
     private val aspectJob = LinkedList<IPipelineTransferAspectJob>()
     private val aspectStage = LinkedList<IPipelineTransferAspectStage>()
+    private val aspectModel = LinkedList<IPipelineTransferAspectModel>()
 
     private val pipelineTransferJoinPoint = PipelineTransferJoinPointImpl()
     private var clzName: String? = null
@@ -29,6 +32,7 @@ class PipelineTransferAspectWrapper {
                 is IPipelineTransferAspectElement -> aspectElement.add(it)
                 is IPipelineTransferAspectJob -> aspectJob.add(it)
                 is IPipelineTransferAspectStage -> aspectStage.add(it)
+                is IPipelineTransferAspectModel -> aspectModel.add(it)
             }
         }
     }
@@ -78,6 +82,19 @@ class PipelineTransferAspectWrapper {
     }
 
     /*
+       * AspectType.BEFORE: model -> yaml before Model
+       * AspectType.AFTER: yaml -> model after Model
+       */
+    fun setModel4Model(model: Model?, aspectType: AspectType) {
+        pipelineTransferJoinPoint.model = model
+        clzName = IPipelineTransferAspectModel::class.jvmName
+        when (aspectType) {
+            AspectType.BEFORE -> aspectBefore()
+            AspectType.AFTER -> aspectAfter()
+        }
+    }
+
+    /*
        * AspectType.BEFORE: yaml -> moel before stage
        * AspectType.AFTER: model -> yaml after stage
        */
@@ -113,6 +130,19 @@ class PipelineTransferAspectWrapper {
         pipelineTransferJoinPoint.yamlStep = yamlStep
         pipelineTransferJoinPoint.yamlPreStep = yamlPreStep
         clzName = IPipelineTransferAspectElement::class.jvmName
+        when (aspectType) {
+            AspectType.BEFORE -> aspectBefore()
+            AspectType.AFTER -> aspectAfter()
+        }
+    }
+
+    /*
+       * AspectType.BEFORE: yaml -> moel before Yaml
+       * AspectType.AFTER: model -> yaml after Yaml
+       */
+    fun setYaml4Yaml(yaml: IPreTemplateScriptBuildYaml? = null, aspectType: AspectType) {
+        pipelineTransferJoinPoint.yaml = yaml
+        clzName = IPipelineTransferAspectModel::class.jvmName
         when (aspectType) {
             AspectType.BEFORE -> aspectBefore()
             AspectType.AFTER -> aspectAfter()
@@ -157,6 +187,7 @@ class PipelineTransferAspectWrapper {
         IPipelineTransferAspectElement::class.jvmName -> aspectElement
         IPipelineTransferAspectJob::class.jvmName -> aspectJob
         IPipelineTransferAspectStage::class.jvmName -> aspectStage
+        IPipelineTransferAspectModel::class.jvmName -> aspectModel
         else -> null
     }
 }
