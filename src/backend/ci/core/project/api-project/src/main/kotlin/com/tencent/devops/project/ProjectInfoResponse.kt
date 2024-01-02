@@ -28,7 +28,7 @@
 package com.tencent.devops.project
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.project.pojo.DeptInfo
+import com.tencent.devops.project.pojo.BkDeptInfo
 import com.tencent.devops.project.pojo.ProjectProperties
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -135,5 +135,5 @@ data class ProjectInfoResponse(
     @ApiModelProperty("产品运营ID")
     val productId: Int? = null,
     @ApiModelProperty("部门及以上层级")
-    val deptInfos: List<DeptInfo>? = emptyList()
+    val deptInfos: List<BkDeptInfo>? = emptyList()
 )
