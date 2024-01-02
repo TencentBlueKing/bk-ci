@@ -791,10 +791,13 @@ class GitRequestEventBuildDao {
     ): Int {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val dsl = dslContext.select(DSL.countDistinct(GIT_PROJECT_ID)).from(this)
-                .where(CREATE_TIME.ge(Timestamp(startTime).toLocalDateTime()))
-                .and(CREATE_TIME.le(Timestamp(endTime).toLocalDateTime()))
+                .where(
+                    CREATE_TIME.between(
+                        Timestamp(startTime).toLocalDateTime(), Timestamp(endTime).toLocalDateTime()
+                    )
+                )
                 .and(BUILD_ID.isNotNull)
-                .and(PARSED_YAML.like("%v2.0%"))
+                .and(VERSION.eq("v2.0"))
             return dsl.fetchOne(0, Int::class.java)!!
         }
     }
