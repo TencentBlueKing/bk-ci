@@ -190,14 +190,14 @@ object ProjectUtils {
 
     private fun getFinalOrganizationId(
         projectOrganizationInfo: ProjectOrganizationInfo?,
-        OrganizationIdInDb: Long
+        OrganizationIdInDb: Long?
     ): String? {
         return (if (projectOrganizationInfo != null) projectOrganizationInfo.deptId else OrganizationIdInDb)?.toString()
     }
 
     private fun getFinalOrganizationName(
         projectOrganizationInfo: ProjectOrganizationInfo?,
-        OrganizationNameInDb: String
+        OrganizationNameInDb: String?
     ): String {
         return (if (projectOrganizationInfo != null) projectOrganizationInfo.deptName else OrganizationNameInDb) ?: ""
     }
