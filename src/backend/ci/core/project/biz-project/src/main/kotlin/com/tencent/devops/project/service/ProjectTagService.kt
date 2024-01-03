@@ -60,7 +60,7 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-@Suppress("UNUSED")
+@Suppress("UNUSED", "LongParameterList")
 @Service
 class ProjectTagService @Autowired constructor(
     val dslContext: DSLContext,
@@ -69,7 +69,8 @@ class ProjectTagService @Autowired constructor(
     val projectDao: ProjectDao,
     val objectMapper: ObjectMapper,
     val projectOrganizationService: ProjectOrganizationService,
-    val bkTag: BkTag
+    val bkTag: BkTag,
+    val projectService: ProjectService
 ) {
 
     private val executePool = Executors.newFixedThreadPool(1)
@@ -444,19 +445,7 @@ class ProjectTagService @Autowired constructor(
 
         for (i in projectInfos.indices) {
             val projectData = projectInfos[i]
-            val deptId = projectData.centerId ?: projectData.deptId ?: projectData.businessLineId ?: projectData.bgId
-            val parentDeptInfos = if (deptId != null) {
-                projectOrganizationService.getParentDeptInfos(
-                    deptId = deptId.toString(),
-                    level = 10
-                )
-            } else {
-                emptyList()
-            }
-            val projectInfo = getProjectInfoResponse(
-                projectData = projectData,
-                deptInfos = parentDeptInfos
-            )
+            val projectInfo = getProjectInfoResponse(projectData)
             dataList.add(projectInfo)
         }
         dataObj["projectList"] = dataList
@@ -465,60 +454,56 @@ class ProjectTagService @Autowired constructor(
     }
 
     private fun getProjectInfoResponse(
-        projectData: TProjectRecord,
-        deptInfos: List<DeptInfo>
+        projectData: TProjectRecord
     ): ProjectInfoResponse {
         val otherRouterTagMap = projectData.otherRouterTags?.let {
             JsonUtil.to<Map<String, String>>(projectData.otherRouterTags.toString())
         } ?: emptyMap()
 
+        val fixProjectOrganization = projectService.fixProjectOrganization(projectData)
+
         val projectProperties = projectData.properties?.let {
             JsonUtil.toOrNull(projectData.properties.toString(), ProjectProperties::class.java)
         } ?: ProjectProperties(pipelineAsCodeSettings = PipelineAsCodeSettings(enable = false))
-        return ProjectInfoResponse(
-            projectId = projectData.projectId,
-            projectName = projectData.projectName,
-            projectEnglishName = projectData.englishName,
-            creatorBgName = projectData.creatorBgName,
-            creatorDeptName = projectData.creatorDeptName,
-            creatorCenterName = projectData.creatorCenterName,
-            bgId = projectData.bgId,
-            bgName = projectData.bgName,
-            businessLineId = projectData.businessLineId,
-            businessLineName = projectData.businessLineName,
-            deptId = projectData.deptId,
-            deptName = projectData.deptName,
-            centerId = projectData.centerId,
-            centerName = projectData.centerName,
-            projectType = projectData.projectType,
-            approver = projectData.approver,
-            approvalTime = projectData.approvalTime?.timestampmilli(),
-            approvalStatus = projectData.approvalStatus,
-            secrecyFlag = projectData.isSecrecy,
-            creator = projectData.creator,
-            createdAtTime = projectData.createdAt.timestampmilli(),
-            ccAppId = projectData.ccAppId,
-            useBk = projectData.useBk,
-            offlinedFlag = projectData.isOfflined,
-            kind = projectData.kind,
-            enabled = projectData.enabled ?: true,
-            grayFlag = projectData.routerTag == grayTag,
-            codeCCGrayFlag = otherRouterTagMap[SystemEnums.CODECC.name] == grayTag,
-            repoGrayFlag = otherRouterTagMap[SystemEnums.REPO.name] == grayTag,
-            hybridCCAppId = projectData.hybridCcAppId,
-            enableExternal = projectData.enableExternal,
-            enableIdc = projectData.enableIdc,
-            pipelineLimit = projectData.pipelineLimit,
-            properties = projectProperties,
-            productId = projectData.productId,
-            deptInfos = deptInfos.map {
-                BkDeptInfo(
-                    type = OrganizationType.getOrganizationTypeName(it.typeId.toInt()),
-                    name = it.name,
-                    id = it.id
-                )
-            }
-        )
+        return with(projectData) {
+            ProjectInfoResponse(
+                projectId = projectId,
+                projectName = projectName,
+                projectEnglishName = englishName,
+                creatorBgName = creatorBgName,
+                creatorDeptName = creatorDeptName,
+                creatorCenterName = creatorCenterName,
+                bgId = fixProjectOrganization.bgId,
+                bgName = fixProjectOrganization.bgName,
+                businessLineId = fixProjectOrganization.businessLineId,
+                businessLineName = fixProjectOrganization.businessLineName,
+                deptId = fixProjectOrganization.deptId,
+                deptName = fixProjectOrganization.deptName,
+                centerId = fixProjectOrganization.centerId,
+                centerName = fixProjectOrganization.centerName,
+                projectType = projectType,
+                approver = approver,
+                approvalTime = approvalTime?.timestampmilli(),
+                approvalStatus = approvalStatus,
+                secrecyFlag = isSecrecy,
+                creator = creator,
+                createdAtTime = createdAt.timestampmilli(),
+                ccAppId = ccAppId,
+                useBk = useBk,
+                offlinedFlag = isOfflined,
+                kind = kind,
+                enabled = enabled ?: true,
+                grayFlag = routerTag == grayTag,
+                codeCCGrayFlag = otherRouterTagMap[SystemEnums.CODECC.name] == grayTag,
+                repoGrayFlag = otherRouterTagMap[SystemEnums.REPO.name] == grayTag,
+                hybridCCAppId = hybridCcAppId,
+                enableExternal = enableExternal,
+                enableIdc = enableIdc,
+                pipelineLimit = pipelineLimit,
+                properties = projectProperties,
+                productId = productId
+            )
+        }
     }
 
     companion object {
