@@ -34,6 +34,7 @@ import com.tencent.devops.model.metrics.tables.TProjectUserDaily
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Repository
 class ProjectBuildSummaryDao {
@@ -54,8 +55,7 @@ class ProjectBuildSummaryDao {
         dslContext: DSLContext,
         projectId: String,
         productId: Int,
-        trigger: String,
-        theDate: LocalDate
+        trigger: String
     ) {
         val triggerField = TRIGGER_FIELD_MAP[trigger] ?: return
         with(TProjectBuildSummaryDaily.T_PROJECT_BUILD_SUMMARY_DAILY) {
@@ -64,7 +64,8 @@ class ProjectBuildSummaryDao {
                 .set(PRODUCT_ID, productId)
                 .set(BUILD_COUNT, BUILD_COUNT + 1)
                 .set(triggerField, triggerField + 1)
-                .set(THE_DATE, theDate)
+                .set(THE_DATE, LocalDate.now())
+                .set(CREATE_TIME, LocalDateTime.now())
                 .onDuplicateKeyUpdate()
                 .set(BUILD_COUNT, BUILD_COUNT + 1)
                 .set(triggerField, triggerField + 1)
@@ -82,11 +83,13 @@ class ProjectBuildSummaryDao {
                 this,
                 PROJECT_ID,
                 USER_ID,
-                THE_DATE
+                THE_DATE,
+                CREATE_TIME
             ).values(
                 projectId,
                 userId,
-                LocalDate.now()
+                LocalDate.now(),
+                LocalDateTime.now()
             ).onDuplicateKeyIgnore()
                 .execute()
         }
@@ -103,6 +106,7 @@ class ProjectBuildSummaryDao {
                 .set(PROJECT_ID, projectId)
                 .set(PRODUCT_ID, productId)
                 .set(THE_DATE, theDate)
+                .set(CREATE_TIME, LocalDateTime.now())
                 .set(USER_COUNT, USER_COUNT + 1)
                 .onDuplicateKeyUpdate()
                 .set(USER_COUNT, USER_COUNT + 1)

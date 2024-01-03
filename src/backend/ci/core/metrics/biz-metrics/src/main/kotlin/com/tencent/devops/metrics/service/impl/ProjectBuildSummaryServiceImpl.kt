@@ -28,7 +28,6 @@
 
 package com.tencent.devops.metrics.service.impl
 
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.metrics.dao.ProjectBuildSummaryDao
@@ -54,15 +53,11 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
 
     override fun saveProjectBuildCount(
         projectId: String,
-        trigger: String?,
-        startTime: String?
+        trigger: String?
     ) {
         if (trigger.isNullOrEmpty()) {
             return
         }
-        val theDate = startTime?.let {
-            DateTimeUtil.stringToLocalDateTime(it, DateTimeUtil.YYYY_MM_DD_HH_MM_SS).toLocalDate()
-        } ?: LocalDate.now()
         val lock = RedisLock(redisOperation, projectBuildKey(projectId), 120)
         lock.use {
             lock.lock()
@@ -71,8 +66,7 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 productId = productId,
-                trigger = trigger,
-                theDate = theDate
+                trigger = trigger
             )
         }
     }
