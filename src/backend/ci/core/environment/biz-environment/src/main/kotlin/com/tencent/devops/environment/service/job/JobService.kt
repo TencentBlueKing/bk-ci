@@ -538,7 +538,11 @@ class JobService @Autowired constructor(
                                 scriptParam = jobCloudScriptStepInfo.scriptParam,
                                 scriptTimeout = jobCloudScriptStepInfo.scriptTimeout,
                                 account = jobCloudScriptStepInfo.account.let { jobCloudAccount ->
-                                    Account(id = jobCloudAccount.id, name = jobCloudAccount.name)
+                                    Account(
+                                        id = jobCloudAccount.id,
+                                        name = jobCloudAccount.name,
+                                        alias = jobCloudAccount.alias
+                                    )
                                 },
                                 server = jobCloudScriptStepInfo.server.let { jobCloudVariableServer ->
                                     VariableServer(
@@ -585,7 +589,11 @@ class JobService @Autowired constructor(
                                         )
                                     },
                                     account = jobCloudFileSource.account.let { jobCloudAccount ->
-                                        Account(id = jobCloudAccount.id, name = jobCloudAccount.name)
+                                        Account(
+                                            id = jobCloudAccount.id,
+                                            name = jobCloudAccount.name,
+                                            alias = jobCloudAccount.alias
+                                        )
                                     },
                                     fileSourceId = jobCloudFileSource.fileSourceId,
                                     fileSourceCode = jobCloudFileSource.fileSourceCode
@@ -595,7 +603,11 @@ class JobService @Autowired constructor(
                                 FileDestination(
                                     path = jobCloudFileDestination.path,
                                     account = jobCloudFileDestination.account.let { jobCloudAccount ->
-                                        Account(id = jobCloudAccount.id, name = jobCloudAccount.name)
+                                        Account(
+                                            id = jobCloudAccount.id,
+                                            name = jobCloudAccount.name,
+                                            alias = jobCloudAccount.alias
+                                        )
                                     },
                                     server = jobCloudFileDestination.server.let { jobCloudVariableServer ->
                                         VariableServer(
