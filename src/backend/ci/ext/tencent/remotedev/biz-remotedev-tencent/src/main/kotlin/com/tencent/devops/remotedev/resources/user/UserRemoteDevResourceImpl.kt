@@ -135,29 +135,15 @@ class UserRemoteDevResourceImpl @Autowired constructor(
 
     override fun allWindowsQuota(
         userId: String,
-        projectId: String,
         searchCustom: Boolean?
     ): Result<Map<String, Map<String, Int>>> {
         if (searchCustom == true) {
-            // 通过特殊机型配置判断当前项目是否可以使用特殊机型，没有配置配额的就无法使用特殊机型
-            val allSpecSize = windowsResourceConfigService.getAllType(true, true).map { it.size }.toSet()
-            val allowSpecSize = windowsResourceConfigService.fetchSpec(
-                projectId = projectId,
-                machineType = null,
-                page = 1,
-                pageSize = 1000
-            ).records.map { it.size }.toSet()
-
             val res = mutableMapOf<String, MutableMap<String, Int>>()
             client.get(ServiceStartCloudResource::class).getResourceVm(ResourceVmReq(null, null)).data
                 ?.forEach { resource ->
                     val key = resource.zoneId.replace(Regex("\\d+"), "")
                     val map = res.getOrPut(key) { mutableMapOf() }
-                    resource.machineResources?.forEach resF@{ mas ->
-                        if ((mas.machineType in allSpecSize) && (mas.machineType.trim() !in allowSpecSize)) {
-                            map[mas.machineType] = 0
-                            return@resF
-                        }
+                    resource.machineResources?.forEach { mas ->
                         map[mas.machineType] = (map[mas.machineType] ?: 0) + (mas.free ?: 0)
                     }
                 }

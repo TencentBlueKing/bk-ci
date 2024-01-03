@@ -152,8 +152,6 @@ interface UserRemoteDevResource {
     fun allWindowsQuota(
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @HeaderParam(AUTH_HEADER_PROJECT_ID)
-        projectId: String,
         @QueryParam("searchCustom")
         searchCustom: Boolean?
     ): Result<Map<String, Map<String, Int>>>
