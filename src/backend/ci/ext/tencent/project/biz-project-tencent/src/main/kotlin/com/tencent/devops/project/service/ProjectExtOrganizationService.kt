@@ -5,7 +5,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.enums.OrganizationType
@@ -20,19 +20,24 @@ class ProjectExtOrganizationService constructor(
     val client: Client,
     val tokenService: ClientTokenService,
     val tofService: TOFService,
-    val projectService: ProjectService,
     val projectDao: ProjectDao,
     val dslContext: DSLContext
 ) {
-    @Suppress("MaxLineLength")
     fun fixProjectOrganization(englishName: String) {
-        projectService.getByEnglishName(englishName) ?: return
+        projectDao.getByEnglishName(dslContext, englishName)?.also { tProjectRecord ->
+            if (!fixOrganizationByManager(englishName = englishName)) {
+                fixOrganizationByNormal(tProjectRecord = tProjectRecord)
+            }
+        }
+    }
 
+    @Suppress("MaxLineLength")
+    private fun fixOrganizationByManager(englishName: String): Boolean {
         val managers = client.get(ServiceProjectAuthResource::class).getProjectUsers(
             token = tokenService.getSystemToken(),
             projectCode = englishName,
             group = BkAuthGroup.MANAGER
-        ).data ?: return
+        ).data ?: return false
 
         val deptInfos = managers.map { tofService.getUserDeptDetail(it) }
         val deptIds = deptInfos.map { it.deptId }
@@ -70,6 +75,16 @@ class ProjectExtOrganizationService constructor(
                 )
             )
         }
+        return isManagerDepartmentSame
+    }
+
+    private fun fixOrganizationByNormal(tProjectRecord: TProjectRecord) {
+        val rightProjectOrganization = getRightProjectOrganization(tProjectRecord)
+        projectDao.updateOrganizationByEnglishName(
+            dslContext = dslContext,
+            englishName = tProjectRecord.englishName,
+            projectOrganizationInfo = rightProjectOrganization
+        )
     }
 
     fun fixProjectOrganization(englishNames: List<String>): Boolean {
@@ -101,6 +116,84 @@ class ProjectExtOrganizationService constructor(
         return true
     }
 
+    fun getRightProjectOrganization(
+        tProjectRecord: TProjectRecord
+    ): ProjectOrganizationInfo {
+        val centerId = tProjectRecord.centerId
+        val centerName = tProjectRecord.centerName
+        val deptId = tProjectRecord.deptId
+
+        return with(tProjectRecord) {
+            when {
+                centerId != 0L && centerName.isNotBlank() && OrganizationType.isCenter(
+                    tofService.getDeptInfo(id = centerId.toInt()).typeId.toInt()
+                ) -> {
+                    ProjectOrganizationInfo(
+                        bgId = bgId,
+                        bgName = bgName,
+                        businessLineId = businessLineId,
+                        businessLineName = businessLineName,
+                        centerId = centerId,
+                        centerName = centerName,
+                        deptId = deptId,
+                        deptName = deptName
+                    )
+                }
+                centerId != 0L && centerName.isNotBlank() -> {
+                    ProjectOrganizationInfo(
+                        bgId = bgId,
+                        bgName = bgName,
+                        businessLineId = deptId,
+                        businessLineName = deptName,
+                        centerId = null,
+                        centerName = null,
+                        deptId = centerId,
+                        deptName = centerName
+                    )
+                }
+                OrganizationType.isBelowTheDept(
+                    tofService.getDeptInfo(id = deptId.toInt()).typeId.toInt()
+                ) -> {
+                    ProjectOrganizationInfo(
+                        bgId = bgId,
+                        bgName = bgName,
+                        businessLineId = null,
+                        businessLineName = null,
+                        centerId = deptId,
+                        centerName = deptName,
+                        deptId = null,
+                        deptName = null
+                    )
+                }
+                OrganizationType.isDept(
+                    tofService.getDeptInfo(id = deptId.toInt()).typeId.toInt()
+                ) -> {
+                    ProjectOrganizationInfo(
+                        bgId = bgId,
+                        bgName = bgName,
+                        businessLineId = null,
+                        businessLineName = null,
+                        centerId = null,
+                        centerName = null,
+                        deptId = deptId,
+                        deptName = deptName
+                    )
+                }
+                else -> {
+                    ProjectOrganizationInfo(
+                        bgId = bgId,
+                        bgName = bgName,
+                        businessLineId = deptId,
+                        businessLineName = deptName,
+                        centerId = null,
+                        centerName = null,
+                        deptId = null,
+                        deptName = null
+                    )
+                }
+            }
+        }
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectExtOrganizationService::class.java)
