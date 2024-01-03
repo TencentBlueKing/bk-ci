@@ -60,6 +60,7 @@ class DependOnControl @Autowired constructor(
         return buildStatus
     }
 
+    @Suppress("ComplexMethod")
     private fun checkJobStatusByDepRel(
         container: PipelineBuildContainer,
         dependRel: Map<String, String>,
