@@ -176,6 +176,7 @@ class PipelineResourceVersionDao {
             // 如果传入分支名称则一定是取最新的分支版本
             branchName?.let {
                 query.and(STATUS.eq(VersionStatus.BRANCH.name))
+                    .and(BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name))
                     .and(VERSION_NAME.eq(branchName))
             }
             if (version != null) {

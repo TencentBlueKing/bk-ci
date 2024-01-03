@@ -1,5 +1,7 @@
 package com.tencent.devops.process.yaml.modelTransfer.aspect
 
+import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3
+import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import java.util.LinkedList
 import java.util.concurrent.ConcurrentHashMap
 
@@ -24,16 +26,43 @@ object PipelineTransferAspectLoader {
     }
 
     fun initByDefaultTriggerOn(
-        defaultRepo: String,
+        defaultRepo: () -> String,
         aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
     ): LinkedList<IPipelineTransferAspect> {
+        val repoName = lazy { defaultRepo() }
         aspects.add(
             object : IPipelineTransferAspectTrigger {
                 override fun before(jp: PipelineTransferJoinPoint): Any? {
                     if (jp.yamlTriggerOn() != null && jp.yamlTriggerOn()!!.repoName == null) {
-                        jp.yamlTriggerOn()!!.repoName = defaultRepo
+                        jp.yamlTriggerOn()!!.repoName = repoName.value
                     }
                     return null
+                }
+            }
+        )
+        aspects.add(
+            object : IPipelineTransferAspectElement {
+                override fun before(jp: PipelineTransferJoinPoint): Any? {
+                    if (jp.yamlStep() != null && jp.yamlStep()!!.checkout == "self") {
+                        jp.yamlStep()!!.checkout = repoName.value
+                    }
+                    return null
+                }
+            }
+        )
+        aspects.add(
+            // 一个触发器时，如果为默认仓库则忽略repoName和type
+            object : IPipelineTransferAspectModel {
+                override fun after(jp: PipelineTransferJoinPoint) {
+                    if (jp.yaml() is PreTemplateScriptBuildYamlV3 &&
+                        (jp.yaml() as PreTemplateScriptBuildYamlV3).triggerOn is PreTriggerOnV3
+                    ) {
+                        val triggerOn = (jp.yaml() as PreTemplateScriptBuildYamlV3).triggerOn as PreTriggerOnV3
+                        if (triggerOn.repoName == repoName.value) {
+                            triggerOn.repoName = null
+                            triggerOn.type = null
+                        }
+                    }
                 }
             }
         )

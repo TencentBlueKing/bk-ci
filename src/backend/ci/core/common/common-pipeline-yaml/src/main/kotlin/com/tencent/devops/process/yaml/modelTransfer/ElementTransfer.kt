@@ -483,6 +483,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                     CheckoutAtomParam.CheckoutRepositoryType.ID -> repositoryHashId
                     CheckoutAtomParam.CheckoutRepositoryType.NAME -> repositoryName
                     CheckoutAtomParam.CheckoutRepositoryType.URL -> repositoryUrl
+                    CheckoutAtomParam.CheckoutRepositoryType.SELF -> "self"
                     else -> null
                 } ?: "self"
                 // todo 等待checkout插件新增self参数
@@ -497,7 +498,11 @@ class ElementTransfer @Autowired(required = false) constructor(
                         this.remove(CheckoutAtomParam::repositoryHashId.name)
                         this.remove(CheckoutAtomParam::repositoryName.name)
                         this.remove(CheckoutAtomParam::repositoryUrl.name)
-                        this["type"] = repositoryType?.name ?: CheckoutAtomParam.CheckoutRepositoryType.URL.name
+                        val type = repositoryType?.name
+                            ?.nullIfDefault(CheckoutAtomParam.CheckoutRepositoryType.NAME.name)
+                        if (type != null) {
+                            this["type"] = type
+                        }
                     }.ifEmpty { null },
                     checkout = checkout
                 )
