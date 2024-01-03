@@ -11,7 +11,7 @@
                 </bk-button>
                 <span v-bk-tooltips="notAllowPatchDeleteTips">
                     <bk-button
-                        :disabled="!isSelected && isPacGroup"
+                        :disabled="!isSelected || isPacGroup"
                         @click="toggleDeleteConfirm"
                     >
                         {{$t('patchDelete')}}
