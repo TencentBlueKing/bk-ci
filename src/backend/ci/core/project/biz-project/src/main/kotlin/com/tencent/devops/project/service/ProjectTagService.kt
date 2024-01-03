@@ -445,19 +445,7 @@ class ProjectTagService @Autowired constructor(
 
         for (i in projectInfos.indices) {
             val projectData = projectInfos[i]
-            val deptId = projectData.centerId ?: projectData.deptId ?: projectData.businessLineId ?: projectData.bgId
-            val parentDeptInfos = if (deptId != null) {
-                projectOrganizationService.getParentDeptInfos(
-                    deptId = deptId.toString(),
-                    level = 10
-                )
-            } else {
-                emptyList()
-            }
-            val projectInfo = getProjectInfoResponse(
-                projectData = projectData,
-                deptInfos = parentDeptInfos
-            )
+            val projectInfo = getProjectInfoResponse(projectData)
             dataList.add(projectInfo)
         }
         dataObj["projectList"] = dataList
