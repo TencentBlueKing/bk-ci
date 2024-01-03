@@ -587,7 +587,8 @@ class JobService @Autowired constructor(
                                     account = jobCloudFileSource.account.let { jobCloudAccount ->
                                         Account(id = jobCloudAccount.id, name = jobCloudAccount.name)
                                     },
-                                    fileSourceId = jobCloudFileSource.fileSourceId
+                                    fileSourceId = jobCloudFileSource.fileSourceId,
+                                    fileSourceCode = jobCloudFileSource.fileSourceCode
                                 )
                             },
                             fileDestination = jobCloudFileStepInfo.fileDestination.let { jobCloudFileDestination ->

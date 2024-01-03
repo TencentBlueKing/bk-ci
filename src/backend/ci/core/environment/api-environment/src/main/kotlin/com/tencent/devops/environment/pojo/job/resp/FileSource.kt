@@ -12,5 +12,7 @@ data class FileSource(
     @ApiModelProperty(value = "执行账号")
     val account: Account,
     @ApiModelProperty(value = "第三方文件源ID")
-    val fileSourceId: Long?
+    val fileSourceId: Long?,
+    @ApiModelProperty(value = "第三方文件源code")
+    val fileSourceCode: String?
 )

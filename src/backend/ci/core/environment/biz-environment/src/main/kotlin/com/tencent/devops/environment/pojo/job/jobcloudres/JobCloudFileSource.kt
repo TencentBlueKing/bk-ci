@@ -16,5 +16,8 @@ data class JobCloudFileSource(
     val account: JobCloudAccount,
     @ApiModelProperty(value = "第三方文件源ID")
     @JsonProperty("file_source_id")
-    val fileSourceId: Long?
+    val fileSourceId: Long?,
+    @ApiModelProperty(value = "第三方文件源code")
+    @JsonProperty("file_source_code")
+    val fileSourceCode: String?
 )
