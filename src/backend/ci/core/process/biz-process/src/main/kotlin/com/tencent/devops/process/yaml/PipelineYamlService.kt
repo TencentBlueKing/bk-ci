@@ -143,9 +143,8 @@ class PipelineYamlService(
                 userId = userId
             )
             if (needDeleteVersion) {
-                pipelineYamlVersionDao.delete(
+                pipelineYamlVersionDao.deleteByBlobId(
                     dslContext = transactionContext,
-                    userId = userId,
                     projectId = projectId,
                     repoHashId = repoHashId,
                     filePath = filePath,
@@ -300,14 +299,23 @@ class PipelineYamlService(
     ) {
         val deleteTime = DateTimeUtil.toDateTime(LocalDateTime.now(), "yyMMddHHmmSS")
         val deleteFilePath = "$filePath[$deleteTime]"
-        pipelineYamlInfoDao.delete(
-            dslContext = dslContext,
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            filePath = filePath,
-            deleteFilePath = deleteFilePath.coerceAtMaxLength(MAX_FILE_PATH_LENGTH)
-        )
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            pipelineYamlInfoDao.delete(
+                dslContext = transactionContext,
+                userId = userId,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = filePath,
+                deleteFilePath = deleteFilePath.coerceAtMaxLength(MAX_FILE_PATH_LENGTH)
+            )
+            pipelineYamlVersionDao.deleteAll(
+                dslContext = transactionContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = filePath
+            )
+        }
     }
 
     fun savePipelineYamlView(

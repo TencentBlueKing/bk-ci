@@ -192,9 +192,9 @@ class TGitApiService @Autowired constructor(
             ).data
         }?.let {
             TGitMrChangeInfo(
-                files = it.files.map { f ->
+                files = it.files?.map { f ->
                     TGitChangeFileInfo(f)
-                }
+                } ?: emptyList()
             )
         }
     }

@@ -155,7 +155,7 @@ class TGitMrActionGit(
             }
             yamlPathFiles.addAll(targetBranchFiles)
             // 如果分支已经合入默认分支,则需要将源分支产生的分支版本删除
-            if (event.object_attributes.source_branch == data.context.defaultBranch) {
+            if (event.object_attributes.target_branch == data.context.defaultBranch) {
                 val sourceBranchFiles = pipelineYamlService.getAllBranchFilePath(
                     projectId = data.setting.projectId,
                     repoHashId = data.setting.repoHashId,

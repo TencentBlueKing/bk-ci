@@ -123,23 +123,34 @@ class PipelineYamlVersionDao {
         }
     }
 
-    fun delete(
+    fun deleteAll(
         dslContext: DSLContext,
-        userId: String,
+        projectId: String,
+        repoHashId: String,
+        filePath: String
+    ) {
+        with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPO_HASH_ID.eq(repoHashId))
+                .and(FILE_PATH.eq(filePath))
+                .execute()
+        }
+    }
+
+    fun deleteByBlobId(
+        dslContext: DSLContext,
         projectId: String,
         repoHashId: String,
         filePath: String,
         blobId: String
     ) {
         with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
-            dslContext.update(this)
-                .set(BLOB_ID, "-$blobId")
-                .set(MODIFIER, userId)
-                .set(UPDATE_TIME, LocalDateTime.now())
+            dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(FILE_PATH.eq(filePath))
-                .execute()
+                .and(BLOB_ID.eq(blobId))
         }
     }
 
