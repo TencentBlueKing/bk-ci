@@ -237,6 +237,7 @@ class NodeDao {
         with(TNode.T_NODE) {
             return dslContext.select(HOST_ID).from(this)
                 .where(HOST_ID.isNotNull)
+                .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .limit(limit).offset(offset)
                 .fetch()
         }

@@ -61,7 +61,8 @@ class NodeScheduledService @Autowired constructor(
 
     /**
      * 后台定时轮询机器状态，看机器是否在CC中（T_NODE表中host_id字段：为空 - 不在，不为空 - 在）
-     * 遍历T_NODE表中host_id不为空的记录，用host_id 调用find_host_biz_relations接口，看能否得到对应记录：能-不操作，不能-对应记录host_id置为null
+     * 遍历T_NODE表中 host_id不为空 且 NODE_TYPE为"部署"的记录。部署：CMDB("CMDB")，UNKNOWN("未知")，OTHER("其他")
+     * 用host_id 调用find_host_biz_relations接口，看能否得到对应记录：能-不操作，不能-对应记录host_id置为null
      * cron：每天上午10点执行。
      */
     @Scheduled(cron = "0 0 10 * * 1-5")
@@ -173,7 +174,7 @@ class NodeScheduledService @Autowired constructor(
             for (pageHostIdNotNull in 1..totalPagesHostIdNotNull) {
                 val nodeRecords = nodeDao.getNodesWhoseHostIdNotNullLimit(
                     dslContext, pageHostIdNotNull - 1, DEFAULT_PAGE_SIZE
-                ) // T_NODE表中host_id不为空的记录
+                ) // T_NODE表中host_id不为空 且 NODE_TYPE为"部署" 的记录
                 val hostIdList = nodeRecords.map { it.value1() } // 要判断在不在cc中的 所有host_id
                 val nodeCCList =
                     if (hostIdList.isNotEmpty()) queryFromCCService.queryCCFindHostBizRelations(hostIdList).data
