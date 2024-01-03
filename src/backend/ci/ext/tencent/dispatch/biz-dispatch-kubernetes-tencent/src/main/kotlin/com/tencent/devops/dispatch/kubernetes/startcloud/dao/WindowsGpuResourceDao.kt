@@ -32,6 +32,7 @@ import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmRespDataMachineResource
 import com.tencent.devops.model.dispatch.kubernetes.tables.TDispatchWorkspace
 import com.tencent.devops.model.dispatch.kubernetes.tables.TWindowsGpuPool
 import com.tencent.devops.model.dispatch.kubernetes.tables.TWindowsVmResource
@@ -175,7 +176,7 @@ class WindowsGpuResourceDao {
     // 插入Vm资源数据
     fun insertVmResource(
         dslContext: DSLContext,
-        resourceList: List<EnvironmentResourceData>
+        resourceList: List<ResourceVmRespDataMachineResource>
     ) {
         if (resourceList.isEmpty()) {
             return
@@ -191,21 +192,11 @@ class WindowsGpuResourceDao {
                         USED,
                         FREE
                     ).values(
-                        it.cgsId,
                         it.zoneId,
-                        it.cgsIp,
                         it.machineType,
-                        it.status,
-                        JsonUtil.getObjectMapper().writeValueAsString(it.userInstanceList),
-                        ByteUtils.bool2Byte(it.locked ?: false),
-                        it.projectId ?: "",
-                        it.disk,
-                        it.hdisk,
-                        ByteUtils.bool2Byte(it.imageStandard ?: false),
-                        it.node ?: "",
-                        it.image ?: "",
-                        it.cpu ?: "",
-                        it.mem ?: ""
+                        it.cap ?: 0,
+                        it.used ?: 0,
+                        it.free ?: 0
                     )
                 }
             }
