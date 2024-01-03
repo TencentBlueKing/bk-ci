@@ -40,7 +40,6 @@
                     <h3 v-if="installArr.length" class="search-title">{{ $t('newlist.installed') }}（{{installArr.length}}）</h3>
                     <atom-card v-for="atom in installArr"
                         :key="atom.atomCode"
-                        :disabled="atom.disabled"
                         :atom="atom"
                         :container="container"
                         :element-index="elementIndex"
@@ -56,7 +55,6 @@
                     <h3 v-if="uninstallArr.length" class="search-title gap-border">{{ $t('editPage.notInstall') }}（{{uninstallArr.length}}）</h3>
                     <atom-card v-for="atom in uninstallArr"
                         :key="atom.atomCode"
-                        :disabled="atom.disabled"
                         :atom="atom"
                         :container="container"
                         :element-index="elementIndex"
@@ -79,9 +77,9 @@
 </template>
 
 <script>
-    import { mapGetters, mapActions, mapState } from 'vuex'
-    import atomCard from './atomCard'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     import EmptyTips from '../common/empty'
+    import atomCard from './atomCard'
 
     const RD_STORE_CODE = 'rdStore'
 

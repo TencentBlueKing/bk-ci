@@ -4,11 +4,33 @@
             {{ $t("pipelinesHistory") }}
         </pipeline-bread-crumb>
         <aside class="pipeline-history-right-aside">
-            <router-link :to="editRouteName">
-                <bk-button>{{ $t("edit") }}</bk-button>
-            </router-link>
-            <bk-button theme="primary" @click="goExecPreview">
+            <bk-button
+                v-perm="{
+                    permissionData: {
+                        projectId: projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    }
+                }"
+                @click="$router.push(editRouteName)"
+            >
+                {{ $t("edit") }}
+            </bk-button>
+            <bk-button
+                theme="primary"
+                v-perm="{
+                    permissionData: {
+                        projectId: projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: pipelineId,
+                        action: RESOURCE_ACTION.EXECUTE
+                    }
+                }"
+                @click="goExecPreview"
+            >
                 {{ $t("exec") }}
+
             </bk-button>
             <more-actions />
         </aside>
@@ -16,6 +38,9 @@
 </template>
 
 <script>
+    import {
+        RESOURCE_ACTION
+    } from '@/utils/permission'
     import MoreActions from './MoreActions.vue'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
 
@@ -24,7 +49,18 @@
             PipelineBreadCrumb,
             MoreActions
         },
+        data () {
+            return {
+                RESOURCE_ACTION
+            }
+        },
         computed: {
+            projectId () {
+                return this.$route.params.projectId
+            },
+            pipelineId () {
+                return this.$route.params.pipelineId
+            },
             editRouteName () {
                 return {
                     name: 'pipelinesEdit',

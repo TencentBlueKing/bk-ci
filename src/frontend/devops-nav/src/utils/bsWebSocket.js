@@ -1,5 +1,5 @@
-import SockJS from 'sockjs-client'
 import cookie from 'js-cookie'
+import SockJS from 'sockjs-client'
 const Stomp = require('stompjs/lib/stomp.js').Stomp
 
 function uuid () {
@@ -20,6 +20,7 @@ class BlueShieldWebSocket {
         this.userName = window.userInfo && window.userInfo.username ? window.userInfo.username : 'bkDevops'
         this.uuid = uuid()
         this.stompClient = {}
+        this.notifyInstance = null
         
         this.connect()
         this.closePageDisConnect()
@@ -33,17 +34,23 @@ class BlueShieldWebSocket {
         this.stompClient.debug = null
         this.isConnecting = true
         this.stompClient.connect({}, () => {
+            console.log('websocket connected', this.connectCallBack)
+            if (this.notifyInstance && typeof this.notifyInstance.close === 'function') {
+                this.notifyInstance.close()
+            }
             this.isConnecting = false
             this.stompClient.subscribe(`/topic/bk/notify/${this.uuid}`, (res) => {
                 this.handleMessage(res)
             })
             this.connectErrTime = 1
+            this.changeRoute(window.devops.$router.currentRoute)
             if (this.connectCallBack.length) {
                 this.connectCallBack.forEach(callBack => callBack())
                 this.connectCallBack = []
             }
         }, (err) => {
             if (this.connectErrTime <= 8) {
+                console.log('websocket connection retrying')
                 this.connectErrTime++
                 const time = Math.random() * 60000
                 setTimeout(() => this.connect(), time)
@@ -52,6 +59,54 @@ class BlueShieldWebSocket {
                 window.devops.$bkMessage({ message: err.message || 'websocket connection failed, please try again later', theme: 'error' })
             }
         })
+        
+        socket.onclose = (err) => {
+            try {
+                console.log(err, socket, this.stompClient)
+                const vm = window.devops
+                const currentRoute = vm.$router.currentRoute
+                const h = vm.$createElement
+                if (this.detectHasWebsocket(currentRoute)) {
+                    if (currentRoute.path.indexOf('executeDetail') > -1) {
+                        this.notifyInstance = vm.$bkNotify({
+                            title: vm.$t('websocketNotice'),
+                            limit: 1,
+                            message: h('p', {}, [
+                                vm.$t('websocketInterupt'),
+                                h('br'),
+                                h('bk-button', {
+                                    props: {
+                                        text: true
+                                    },
+                                    on: {
+                                        click: () => {
+                                            this.notifyInstance.close()
+                                            this.connectCallBack.push(() => {
+                                                this.handleMessage({
+                                                    body: JSON.stringify({
+                                                        webSocketType: 'IFRAME',
+                                                        page: currentRoute.path,
+                                                        message: JSON.stringify('WEBSOCKET_RECONNECT')
+                                                    })
+                                                })
+                                            })
+                                            this.connect()
+                                        }
+                                    }
+                                }, vm.$t('reconnect'))
+                            ]),
+                            theme: 'error',
+                            delay: 0
+                        })
+                    } else {
+                        console.log('other page close reconnect')
+                        this.connect()
+                    }
+                }
+            } catch (error) {
+                console.error(error)
+            }
+        }
     }
 
     handleMessage (res) {
@@ -95,11 +150,19 @@ class BlueShieldWebSocket {
         vm.$bkNotify(notify)
     }
 
+    detectHasWebsocket (router) {
+        try {
+            const meta = router.meta || {}
+            const path = router.path
+            const pathRegs = meta.webSocket || []
+            return pathRegs.some((reg) => reg && new RegExp(reg).test(path))
+        } catch (error) {
+            return false
+        }
+    }
+
     changeRoute (router) {
-        const meta = router.meta || {}
-        const path = router.path
-        const pathRegs = meta.webSocket || []
-        const hasWebSocket = pathRegs.some((reg) => reg && new RegExp(reg).test(path))
+        const hasWebSocket = this.detectHasWebsocket(router)
         const currentPage = window.currentPage || {}
         const showProjectList = currentPage.show_project_list || false
         const projectId = cookie.get(X_DEVOPS_PROJECT_ID)

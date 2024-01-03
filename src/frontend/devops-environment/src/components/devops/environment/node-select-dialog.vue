@@ -52,7 +52,7 @@
                     <bk-table-column label="IP" prop="ip"></bk-table-column>
                     <bk-table-column :label="$t('environment.nodeInfo.displayName')" prop="displayName" width="160">
                     </bk-table-column>
-                    <bk-table-column :label="$t('environment.nodeInfo.cpuName')" prop="name"></bk-table-column>
+                    <bk-table-column :label="$t('environment.nodeInfo.hostName')" prop="name"></bk-table-column>
                     <bk-table-column :label="`${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}`"
                         prop="createdUser" width="200">
                         <template slot-scope="{ row }">
@@ -286,11 +286,11 @@
             },
             renderHeader () {
                 return <bk-checkbox
-          true-value={true}
-          false-value={false}
-          v-model={this.isAllSelected}
-          onChange={this.allSelectChange}
-        ></bk-checkbox>
+                        true-value={true}
+                        false-value={false}
+                        v-model={this.isAllSelected}
+                        onChange={this.allSelectChange}
+                        />
             },
             allSelectChange () {
                 this.toggleAllSelect(!this.isAllSelected)

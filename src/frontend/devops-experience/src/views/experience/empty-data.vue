@@ -3,7 +3,20 @@
         <p class="title">{{ emptyInfo.title }}</p>
         <p class="intro-prompt">{{ emptyInfo.desc }}</p>
         <div class="create-node-row">
-            <bk-button type="primary" class="create-node-btn" @click="toCreateFn">新增</bk-button>
+            <span
+                v-perm="{
+                    tooltips: '没有权限',
+                    permissionData: emptyInfo.permissionData
+                }"
+            >
+                <bk-button
+                    type="primary"
+                    class="create-node-btn"
+                    @click="toCreateFn"
+                >
+                    新增
+                </bk-button>
+            </span>
         </div>
     </div>
 </template>

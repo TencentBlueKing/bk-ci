@@ -19,12 +19,24 @@
             },
             handleBlur (e) {
                 this.handleInput(e, true)
+            },
+            handleFocus (e) {
+                this.$emit('focus', e)
             }
         },
         render (h) {
-            const { value, disabled, handleInput, name, handleBlur, type } = this
+            const { value, disabled, handleInput, name, handleBlur, handleFocus, type } = this
             return (
-                <textarea onBlur={handleBlur} type={type} onInput={handleInput} class='bk-form-textarea' name={name} disabled={disabled} value={value} />
+                <textarea
+                    onBlur={handleBlur}
+                    type={type}
+                    onInput={handleInput}
+                    onFocus={handleFocus}
+                    class='bk-form-textarea'
+                    name={name}
+                    disabled={disabled}
+                    value={value}
+                />
             )
         }
     }
