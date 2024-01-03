@@ -44,7 +44,7 @@ class NodeScheduledService @Autowired constructor(
      * 每小时执行一次。
      * 条件：NODE_TYPE为cmdb的，查询该节点的agent安装状态以及版本，并对比差异更新
      */
-    @Scheduled(cron = "0 12 20 * * 1-5")
+    @Scheduled(cron = "0 36 10 * * 1-5")
     fun scheduledUpdateAgent() {
         taskWithRedisLock(SCHEDULED_UPDATE_AGENT_TIMEOUT_LOCK_KEY, ::updateAgent)
     }
@@ -123,7 +123,7 @@ class NodeScheduledService @Autowired constructor(
             it.agentStatus = AGENT_NORMAL_NODE_STATUS == ipToAgentUpdateList[it.nodeIp]?.status
             if (logger.isDebugEnabled)
                 logger.debug(
-                    "ip:${it.nodeIp}, agentStatus:${ipToAgentUpdateList[it.nodeIp]?.status}," +
+                    "[batchUpdateAgent]ip:${it.nodeIp}, agentStatus:${ipToAgentUpdateList[it.nodeIp]?.status}," +
                         "${AGENT_NORMAL_NODE_STATUS == ipToAgentUpdateList[it.nodeIp]?.status}"
                 )
             it.agentVersion = ipToAgentUpdateList[it.nodeIp]?.version
