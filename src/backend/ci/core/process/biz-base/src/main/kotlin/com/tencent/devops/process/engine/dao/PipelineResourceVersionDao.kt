@@ -257,6 +257,7 @@ class PipelineResourceVersionDao {
         with(T_PIPELINE_RESOURCE_VERSION) {
             val query = dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .and(BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name))
             creator?.let { query.and(CREATOR.eq(creator)) }
             description?.let { query.and(DESCRIPTION.like("%$description%")) }
             versionName?.let {
@@ -297,6 +298,7 @@ class PipelineResourceVersionDao {
             return dslContext.selectDistinct(CREATOR)
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .and(BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name))
                 .limit(limit).offset(offset)
                 .fetch().map { it.component1() }
         }
@@ -313,6 +315,7 @@ class PipelineResourceVersionDao {
             val query = dslContext.select(DSL.count(PIPELINE_ID))
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .and(BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name))
             creator?.let { query.and(CREATOR.eq(creator)) }
             description?.let { query.and(DESCRIPTION.like("%$description%")) }
             return query.fetchOne(0, Int::class.java)!!
@@ -328,6 +331,7 @@ class PipelineResourceVersionDao {
             val query = dslContext.selectDistinct(CREATOR)
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .and(BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name))
             return query.fetchCount()
         }
     }
