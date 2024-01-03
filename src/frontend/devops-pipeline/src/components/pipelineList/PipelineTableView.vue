@@ -681,11 +681,6 @@
         flex-direction: column;
     }
     .pipeline-list-table {
-        .cell {
-            position: relative;
-            display: -webkit-box !important;
-            -webkit-line-clamp: 1;
-        }
         td {
             position: inherit;
         }
