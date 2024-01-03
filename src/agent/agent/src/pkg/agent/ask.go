@@ -74,7 +74,7 @@ func genAskEnable() api.AskEnable {
 		Build:       checkBuildType(),
 		Upgrade:     checkUpgrade(),
 		DockerDebug: checkDockerDebug(),
-		Pipeline:    checkPipeline(),
+		Pipeline:    config.GAgentConfig.EnablePipeline,
 	}
 }
 
@@ -106,13 +106,6 @@ func checkUpgrade() bool {
 
 func checkDockerDebug() bool {
 	if systemutil.IsLinux() && config.GAgentConfig.EnableDockerBuild {
-		return true
-	}
-	return false
-}
-
-func checkPipeline() bool {
-	if config.GAgentConfig.EnablePipeline {
 		return true
 	}
 	return false
