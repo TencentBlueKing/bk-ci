@@ -151,6 +151,7 @@ class PipelineYamlVersionDao {
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(FILE_PATH.eq(filePath))
                 .and(BLOB_ID.eq(blobId))
+                .execute()
         }
     }
 

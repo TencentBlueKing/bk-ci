@@ -342,22 +342,23 @@ class PipelineYamlRepositoryService @Autowired constructor(
         projectId: String,
         action: BaseAction
     ) {
-        // 如果是默认分支删除yaml,不做任何处理
-        if (action.data.context.defaultBranch == action.data.eventCommon.branch) {
-            return
-        }
         val yamlFile = action.data.context.yamlFile!!
         val filePath = yamlFile.yamlPath
         val repoHashId = action.data.setting.repoHashId
         val userId = action.data.getUserId()
+        val defaultBranch = action.data.context.defaultBranch
         logger.info("deleteYamlPipeline|$userId|$projectId|$repoHashId|yamlFile:$yamlFile")
         try {
+            if (yamlFile.ref.isNullOrBlank()) {
+                return
+            }
             val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath
             )
-            if (pipelineYamlInfo != null && !yamlFile.ref.isNullOrBlank()) {
+            // 非默认分支删除yaml,需要将分支版本置为无效
+            if (pipelineYamlInfo != null && yamlFile.ref != defaultBranch) {
                 pipelineInfoFacadeService.updateBranchVersion(
                     userId = userId,
                     projectId = projectId,
@@ -366,14 +367,12 @@ class PipelineYamlRepositoryService @Autowired constructor(
                     branchVersionAction = BranchVersionAction.INACTIVE
                 )
             }
-            if (!yamlFile.ref.isNullOrBlank()) {
-                pipelineYamlService.deleteBranchFile(
-                    projectId = projectId,
-                    repoHashId = repoHashId,
-                    branch = yamlFile.ref,
-                    filePath = filePath
-                )
-            }
+            pipelineYamlService.deleteBranchFile(
+                projectId = projectId,
+                repoHashId = repoHashId,
+                branch = yamlFile.ref,
+                filePath = filePath
+            )
         } catch (ignored: Exception) {
             logger.error("Failed to delete pipeline yaml|$projectId|${action.format()}", ignored)
             throw ignored
