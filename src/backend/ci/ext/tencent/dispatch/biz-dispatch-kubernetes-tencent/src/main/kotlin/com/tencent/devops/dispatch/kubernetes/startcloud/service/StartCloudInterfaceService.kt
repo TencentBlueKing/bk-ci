@@ -155,8 +155,14 @@ class StartCloudInterfaceService @Autowired constructor(
         logger.debug("syncStartCloudResourceList|resourceList|{}", resList)
         windowsGpuResourceDao.deleteAllResource(dslContext)
         windowsGpuResourceDao.createOrUpdateResource(dslContext, resList)
+
         // 同步 gpu空闲资源数据
-        getAllVmResource()
+        kotlin.runCatching {
+            getAllVmResource()
+        }.onFailure {
+            logger.warn("get all vm resource failed.|${it.message}")
+        }
+
         return resList
     }
 
@@ -233,11 +239,10 @@ class StartCloudInterfaceService @Autowired constructor(
         val resList = mutableListOf<ResourceVmRespDataMachineResource>()
         val cgs = workspaceStartCloudClient.getResourceVm(ResourceVmReq(null, null))
         cgs?.forEach { resource ->
-            val zoneId = resource.zoneId
             resource.machineResources?.forEach { mas ->
                 resList.add(
                     ResourceVmRespDataMachineResource(
-                        zoneId = mas.zoneId,
+                        zoneId = resource.zoneId,
                         machineType = mas.machineType,
                         cap = mas.cap ?: 0,
                         used = mas.used ?: 0,
