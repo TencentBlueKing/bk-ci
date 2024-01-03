@@ -30,27 +30,19 @@ package com.tencent.devops.project.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_CODECC_REDIS_KEY
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.model.project.tables.records.TProjectRecord
-import com.tencent.devops.project.ProjectInfoResponse
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectTagDao
-import com.tencent.devops.project.pojo.BkDeptInfo
-import com.tencent.devops.project.pojo.DeptInfo
 import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
-import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
-import com.tencent.devops.project.pojo.enums.OrganizationType
 import com.tencent.devops.project.pojo.enums.SystemEnums
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -60,7 +52,7 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-@Suppress("UNUSED", "LongParameterList")
+@Suppress("ALL")
 @Service
 class ProjectTagService @Autowired constructor(
     val dslContext: DSLContext,
@@ -68,9 +60,7 @@ class ProjectTagService @Autowired constructor(
     val redisOperation: RedisOperation,
     val projectDao: ProjectDao,
     val objectMapper: ObjectMapper,
-    val projectOrganizationService: ProjectOrganizationService,
-    val bkTag: BkTag,
-    val projectService: ProjectService
+    val bkTag: BkTag
 ) {
 
     private val executePool = Executors.newFixedThreadPool(1)
@@ -374,135 +364,6 @@ class ProjectTagService @Autowired constructor(
 
         if (!routerTagList!!.contains(routerTag)) {
             throw ParamBlankException("routerTag error:system unknown routerTag")
-        }
-    }
-
-    @Suppress("LongParameterList")
-    fun getProjectListByFlag(
-        projectName: String?,
-        englishName: String?,
-        projectType: Int?,
-        isSecrecy: Boolean?,
-        creator: String?,
-        approver: String?,
-        approvalStatus: Int?,
-        offset: Int,
-        limit: Int,
-        grayFlag: Boolean,
-        codeCCGrayFlag: Boolean,
-        repoGrayFlag: Boolean,
-        remoteDevFlag: Boolean,
-        productId: Int?
-    ): com.tencent.devops.project.pojo.Result<Map<String, Any?>?> {
-        val dataObj = mutableMapOf<String, Any?>()
-
-        val routerTag = if (grayFlag) grayTag else null
-
-        val otherRouterTagMaps = mutableMapOf<String, String>()
-        if (codeCCGrayFlag && grayTag != null) {
-            otherRouterTagMaps[SystemEnums.CODECC.name] = grayTag
-        }
-        if (repoGrayFlag && grayTag != null) {
-            otherRouterTagMaps[SystemEnums.REPO.name] = grayTag
-        }
-
-        val propertiesMaps = mutableMapOf<String, String>()
-        if (remoteDevFlag) {
-            propertiesMaps["remotedev"] = "true"
-        }
-
-        val projectInfos = projectDao.getProjectList(
-            dslContext = dslContext,
-            projectName = projectName,
-            englishName = englishName,
-            projectType = projectType,
-            isSecrecy = isSecrecy,
-            creator = creator,
-            approver = approver,
-            approvalStatus = approvalStatus,
-            offset = offset,
-            limit = limit,
-            routerTag = routerTag,
-            otherRouterTagMaps = otherRouterTagMaps,
-            remoteDevFlag = remoteDevFlag,
-            productId = productId
-        )
-        val totalCount = projectDao.getProjectCount(
-            dslContext = dslContext,
-            projectName = projectName,
-            englishName = englishName,
-            projectType = projectType,
-            isSecrecy = isSecrecy,
-            creator = creator,
-            approver = approver,
-            approvalStatus = approvalStatus,
-            routerTag = routerTag,
-            otherRouterTagMaps = otherRouterTagMaps,
-            remoteDevFlag = remoteDevFlag,
-            productId = productId
-        )
-        val dataList = mutableListOf<ProjectInfoResponse>()
-
-        for (i in projectInfos.indices) {
-            val projectData = projectInfos[i]
-            val projectInfo = getProjectInfoResponse(projectData)
-            dataList.add(projectInfo)
-        }
-        dataObj["projectList"] = dataList
-        dataObj["count"] = totalCount
-        return com.tencent.devops.project.pojo.Result(dataObj)
-    }
-
-    private fun getProjectInfoResponse(
-        projectData: TProjectRecord
-    ): ProjectInfoResponse {
-        val otherRouterTagMap = projectData.otherRouterTags?.let {
-            JsonUtil.to<Map<String, String>>(projectData.otherRouterTags.toString())
-        } ?: emptyMap()
-
-        val fixProjectOrganization = projectService.fixProjectOrganization(projectData)
-
-        val projectProperties = projectData.properties?.let {
-            JsonUtil.toOrNull(projectData.properties.toString(), ProjectProperties::class.java)
-        } ?: ProjectProperties(pipelineAsCodeSettings = PipelineAsCodeSettings(enable = false))
-        return with(projectData) {
-            ProjectInfoResponse(
-                projectId = projectId,
-                projectName = projectName,
-                projectEnglishName = englishName,
-                creatorBgName = creatorBgName,
-                creatorDeptName = creatorDeptName,
-                creatorCenterName = creatorCenterName,
-                bgId = fixProjectOrganization.bgId,
-                bgName = fixProjectOrganization.bgName,
-                businessLineId = fixProjectOrganization.businessLineId,
-                businessLineName = fixProjectOrganization.businessLineName,
-                deptId = fixProjectOrganization.deptId,
-                deptName = fixProjectOrganization.deptName,
-                centerId = fixProjectOrganization.centerId,
-                centerName = fixProjectOrganization.centerName,
-                projectType = projectType,
-                approver = approver,
-                approvalTime = approvalTime?.timestampmilli(),
-                approvalStatus = approvalStatus,
-                secrecyFlag = isSecrecy,
-                creator = creator,
-                createdAtTime = createdAt.timestampmilli(),
-                ccAppId = ccAppId,
-                useBk = useBk,
-                offlinedFlag = isOfflined,
-                kind = kind,
-                enabled = enabled ?: true,
-                grayFlag = routerTag == grayTag,
-                codeCCGrayFlag = otherRouterTagMap[SystemEnums.CODECC.name] == grayTag,
-                repoGrayFlag = otherRouterTagMap[SystemEnums.REPO.name] == grayTag,
-                hybridCCAppId = hybridCcAppId,
-                enableExternal = enableExternal,
-                enableIdc = enableIdc,
-                pipelineLimit = pipelineLimit,
-                properties = projectProperties,
-                productId = productId
-            )
         }
     }
 
