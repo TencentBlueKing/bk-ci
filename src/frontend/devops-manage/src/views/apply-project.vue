@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n';
+import ManageHeader from '@/components/manage-header.vue';
+import ProjectForm from '@/components/project-form.vue';
+import http from '@/http/api';
+import { InfoBox, Message } from 'bkui-vue';
 import {
   ref,
 } from 'vue';
-import http from '@/http/api';
-import { Message, InfoBox } from 'bkui-vue';
-import ManageHeader from '@/components/manage-header.vue';
-import ProjectForm from '@/components/project-form.vue';
+import { useI18n } from 'vue-i18n';
 import {
   useRouter,
 } from 'vue-router';
@@ -69,7 +69,7 @@ const handleConfirm = () => {
       onConfirm: confirmFn,
       onClosed: () => true,
     });
-  })
+  });
 };
 const initProjectForm = (value) => {
   projectForm.value = value;

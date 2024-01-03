@@ -1,27 +1,27 @@
 <script setup lang="ts">
+import http from '@/http/api';
+import {
+  RESOURCE_ACTION,
+  RESOURCE_TYPE,
+  handleProjectManageNoPermission,
+} from '@/utils/permission.js';
+import {
+  onMounted,
+} from '@vue/runtime-core';
+import {
+  InfoBox,
+  Message,
+  Popover,
+} from 'bkui-vue';
 import {
   ref,
   watch,
 } from 'vue';
 import { useI18n } from 'vue-i18n';
-import http from '@/http/api';
 import {
   useRoute,
   useRouter,
 } from 'vue-router';
-import {
-  Message,
-  InfoBox,
-  Popover
-} from 'bkui-vue';
-import {
-  onMounted
-} from '@vue/runtime-core';
-import {
-  handleProjectManageNoPermission,
-  RESOURCE_ACTION,
-  RESOURCE_TYPE,
-} from '@/utils/permission.js'
 
 const { t } = useI18n();
 const router = useRouter();
@@ -31,16 +31,16 @@ const projectData = ref<any>({});
 const projectDiffData = ref<any>({});
 const isLoading = ref(false);
 const userName = ref('');
-const hasPermission = ref(true)
+const hasPermission = ref(true);
 const showException = ref(false);
 const operationalList = ref([]);
 const exceptionObj = ref({
   type: '',
   title: '',
   description: '',
-  showBtn: false
-})
-const projectList = window.parent?.vuexStore.state.projectList || [];
+  showBtn: false,
+});
+const projectList: any[] = [];
 const fetchProjectData = async () => {
   isLoading.value = true;
   await http
@@ -48,7 +48,10 @@ const fetchProjectData = async () => {
       englishName: projectCode,
     })
     .then((res) => {
-      projectData.value = res;
+      projectData.value = {
+        ...res,
+        deptInfo: generateDeptName(res, false),
+      };
 
       // 审批状态下项目 -> 获取审批详情数据
       if ([1, 3, 4].includes(projectData.value.approvalStatus)) {
@@ -56,9 +59,9 @@ const fetchProjectData = async () => {
       }
     })
     .catch((err) => {
-      showException.value = true
+      showException.value = true;
       if (err.code === 403) {
-        hasPermission.value = false
+        hasPermission.value = false;
         exceptionObj.value.showBtn = true;
         exceptionObj.value.type = '403';
         exceptionObj.value.title = t('无项目权限');
@@ -78,9 +81,19 @@ const fetchProjectData = async () => {
   isLoading.value = false;
 };
 
+const generateDeptName = (dept, after = false) => {
+  console.log(dept, after);
+  const deptName = [
+    dept[after ? 'afterBgName' : 'bgName'] ?? dept.bgName,
+    dept[after ? 'afterBusinessLineName' : 'businessLineName'],
+    dept[after ? 'afterDeptName' : 'deptName'],
+  ].filter(i => i).join(' - ');
+  return `${deptName} ${(after ? dept.afterCenterName : dept.centerName) ?? ''}`.trim();
+};
+
 const fetchApprovalInfo = () => {
-  http.requestApprovalInfo(projectCode as string).then(res => {
-    projectData.value = { ...projectData.value, ...res }
+  http.requestApprovalInfo(projectCode as string).then((res) => {
+    projectData.value = { ...projectData.value, ...res };
   });
 };
 
@@ -111,31 +124,32 @@ const fieldMap = [
   },
   {
     current: 'projectType',
-    after: 'afterProjectType'
+    after: 'afterProjectType',
   },
   {
     current: 'productId',
-    after: 'afterProductId'
+    after: 'afterProductId',
   },
   {
     current: 'centerName',
     after: 'afterCenterName',
   },
-  
-]
+
+];
 const fetchDiffProjectData = () => {
   http.requestDiffProjectData({
     englishName: projectCode,
   }).then((res) => {
     projectDiffData.value = res;
-    
-    fieldMap.forEach(field => {
+    projectDiffData.value.afterDeptInfo = generateDeptName(res, true);
+
+    fieldMap.forEach((field) => {
       if (projectData.value[field.current] !== projectDiffData.value[field.after]) {
         projectData.value[field.after] = projectDiffData.value[field.after];
       }
     });
     if (projectData.value?.subjectScopes.length !== projectDiffData.value?.afterSubjectScopes.length) {
-      projectData.value['afterSubjectScopes'] = projectDiffData.value.afterSubjectScopes
+      projectData.value.afterSubjectScopes = projectDiffData.value.afterSubjectScopes;
     } else {
       const subjectScopesIdMap = projectData.value.subjectScopes.map((i: any) => i.id);
       let isChange = false;
@@ -143,13 +157,13 @@ const fetchDiffProjectData = () => {
         isChange = projectDiffData.value.afterSubjectScopes.some((scopes: any) => scopes.id !== id);
       });
       if (isChange) {
-        projectData.value['afterSubjectScopes'] = projectDiffData.value.afterSubjectScopes
+        projectData.value.afterSubjectScopes = projectDiffData.value.afterSubjectScopes;
       }
     }
   });
 };
 const getUserInfo = () => {
-  http.getUser().then(res => {
+  http.getUser().then((res) => {
     userName.value = res.username;
   });
 };
@@ -160,7 +174,7 @@ const handleEdit = () => {
 };
 
 const handleToApprovalDetails = (applyId: any) => {
-  window.open(`/console/permission/my-apply/${applyId}`, '_blank')
+  window.open(`/console/permission/my-apply/${applyId}`, '_blank');
 };
 
 const fetchOperationalList = async () => {
@@ -176,12 +190,10 @@ const fetchOperationalList = async () => {
   });
 };
 
-const getOperational = (id) => {
-  return operationalList.value.find(i => String(i.ProductId) === String(id))
-}
+const getOperational = id => operationalList.value.find(i => String(i.ProductId) === String(id));
 
 /**
- * 取消更新项目 
+ * 取消更新项目
  */
 const handleCancelUpdate = () => {
   const onConfirm = async () => {
@@ -217,7 +229,7 @@ const handleEnabledProject = () => {
       projectId: englishName,
       enable: !enabled,
     })
-    .then(res => {
+    .then((res) => {
       if (res) {
         const message = enabled ? t('停用项目成功') : t('启用项目成功');
         Message({
@@ -233,9 +245,9 @@ const handleEnabledProject = () => {
           action: RESOURCE_ACTION.ENABLE,
           projectId: projectCode,
           resourceCode: projectCode,
-        })
+        });
       }
-    })
+    });
 };
 
 /**
@@ -251,7 +263,7 @@ const handleCancelCreation = () => {
         theme: 'success',
         message: t('取消创建成功'),
       });
-      window.parent.location.href = `${location.origin}/console/pm`
+      window.parent.location.href = `${location.origin}/console/pm`;
     }
   };
   InfoBox({
@@ -265,16 +277,16 @@ const handleCancelCreation = () => {
 };
 
 const handleNoPermission = () => {
-  const project = projectList.find(project => project.projectCode === projectCode)
+  const project = projectList.find(project => project.projectCode === projectCode);
   const params = {
     projectId: projectCode,
     resourceCode: projectCode,
-    action: RESOURCE_ACTION.VIEW
-  }
+    action: RESOURCE_ACTION.VIEW,
+  };
   if (!project) {
-    delete params.action
+    delete params.action;
   }
-  handleProjectManageNoPermission(params)
+  handleProjectManageNoPermission(params);
 };
 
 const statusDisabledTips = {
@@ -308,8 +320,8 @@ const tipsStatusMap = {
   },
   7: {
     type: 'error',
-    message: t('创建项目申请单已撤回')
-  }
+    message: t('创建项目申请单已撤回'),
+  },
 };
 
 const projectTypeNameMap = {
@@ -319,7 +331,7 @@ const projectTypeNameMap = {
   3: t('页游'),
   4: t('平台产品'),
   5: t('支撑产品'),
-}
+};
 watch(() => projectData.value.approvalStatus, (status) => {
   if (status === 4) fetchDiffProjectData();
 }, {
@@ -399,14 +411,19 @@ onMounted(async () => {
                   </div>
                 </bk-form-item>
                 <bk-form-item :label="t('项目所属组织')" property="bg">
-                  <span>{{ projectData.bgName }} - {{ projectData.deptName }} {{ projectData.centerName ? '-' : '' }} {{ projectData.centerName }}</span>
-                  <div class="diff-content" v-if="projectData.afterBgName || projectData.afterDeptName || projectData.afterCenterName">
+                  <span>
+                    {{projectData.deptInfo}}
+                  </span>
+                  <div
+                    class="diff-content"
+                    v-if="projectDiffData.afterDeptInfo && projectDiffData.afterDeptInfo !== projectData.deptInfo"
+                  >
                     <p class="update-title">
                       {{ t('本次更新：') }}
                     </p>
-                  <span>
-                    {{ projectData.afterBgName || projectData.bgName }} - {{ projectData.afterDeptName || projectData.afterDeptName }} {{ projectData.afterCenterName ? '-' : '' }} {{ projectData.afterCenterName }}
-                  </span>
+                    <span>
+                      {{ projectDiffData.afterDeptInfo }}
+                    </span>
                   </div>
                 </bk-form-item>
                 <bk-form-item :label="t('项目性质')" property="authSecrecy">
@@ -489,7 +506,7 @@ onMounted(async () => {
                       {{ t('撤销更新') }}
                     </bk-button>
                   </Popover>
-                  
+
                   <bk-button
                     v-if="[1, 3].includes(projectData.approvalStatus)"
                     class="btn"
