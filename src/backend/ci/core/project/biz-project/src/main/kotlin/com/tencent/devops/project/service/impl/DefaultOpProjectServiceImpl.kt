@@ -43,6 +43,7 @@ import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
+import com.tencent.devops.project.service.ProjectService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
@@ -55,13 +56,15 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
     private val projectDao: ProjectDao,
     private val projectLabelRelDao: ProjectLabelRelDao,
     private val projectDispatcher: ProjectDispatcher,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val projectService: ProjectService
 ) : AbsOpProjectServiceImpl(
     dslContext = dslContext,
     projectDao = projectDao,
     projectLabelRelDao = projectLabelRelDao,
     redisOperation = redisOperation,
-    projectDispatcher = projectDispatcher
+    projectDispatcher = projectDispatcher,
+    projectService = projectService
 ) {
 
     override fun updateProjectFromOp(
