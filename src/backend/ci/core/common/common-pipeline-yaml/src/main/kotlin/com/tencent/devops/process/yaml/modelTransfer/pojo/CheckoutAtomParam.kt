@@ -221,7 +221,8 @@ data class CheckoutAtomParam(
     enum class CheckoutRepositoryType {
         ID,
         NAME,
-        URL
+        URL,
+        SELF
     }
 
     @JsonIgnore

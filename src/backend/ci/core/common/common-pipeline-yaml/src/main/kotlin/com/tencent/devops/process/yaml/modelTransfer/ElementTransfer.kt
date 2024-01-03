@@ -483,6 +483,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                     CheckoutAtomParam.CheckoutRepositoryType.ID -> repositoryHashId
                     CheckoutAtomParam.CheckoutRepositoryType.NAME -> repositoryName
                     CheckoutAtomParam.CheckoutRepositoryType.URL -> repositoryUrl
+                    CheckoutAtomParam.CheckoutRepositoryType.SELF -> "self"
                     else -> null
                 } ?: "self"
                 // todo 等待checkout插件新增self参数
