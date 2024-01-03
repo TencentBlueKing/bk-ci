@@ -33,6 +33,9 @@ import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmRespData
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmRespDataMachineResource
 import com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.startcloud.dao.WindowsGpuResourceDao
@@ -53,7 +56,8 @@ class StartCloudInterfaceService @Autowired constructor(
     private val dslContext: DSLContext,
     private val workspaceClient: WorkspaceStartCloudClient,
     private val windowsGpuResourceDao: WindowsGpuResourceDao,
-    private val workspaceRedisUtils: WorkspaceRedisUtils
+    private val workspaceRedisUtils: WorkspaceRedisUtils,
+    private val workspaceStartCloudClient: WorkspaceStartCloudClient
 ) {
     @Value("\${startCloud.appName}")
     val appName: String = "IEG_BKCI"
@@ -221,5 +225,36 @@ class StartCloudInterfaceService @Autowired constructor(
             zoneList = zoneList,
             machineTypeList = machineTypeList
         )
+    }
+
+    // 获取vm空闲资源
+    fun getResourceVm(data: ResourceVmReq): List<ResourceVmRespData> {
+        val resList = mutableListOf<ResourceVmRespDataMachineResource>()
+        val cgs = workspaceStartCloudClient.getResourceVm(data)
+        cgs.forEach {
+            resList.add(
+                EnvironmentResourceData(
+                    cgsId = it.cgsData.cgsId,
+                    cgsIp = it.cgsData.cgsIp,
+                    zoneId = it.cgsData.zoneId,
+                    machineType = it.cgsData.machineType,
+                    status = it.cgsData.status,
+                    userInstanceList = it.cgsData.userInstanceList,
+                    locked = it.basic?.needLock,
+                    projectId = it.basic?.projectId ?: "",
+                    disk = it.pvcs?.firstOrNull { pvc -> pvc.pvcClass == "ssd" }?.pvcSize,
+                    hdisk = it.pvcs?.firstOrNull { pvc -> pvc.pvcClass == "hdd" }?.pvcSize,
+                    imageStandard = it.basic?.imageStandard,
+                    node = it.basic?.node,
+                    image = it.basic?.image,
+                    cpu = it.basic?.cpuCores.toString(),
+                    mem = it.basic?.memoryLimit
+                )
+            )
+        }
+        logger.debug("syncStartCloudResourceList|resourceList|{}", resList)
+        windowsGpuResourceDao.deleteVmResource(dslContext)
+        windowsGpuResourceDao.insertVmResource(dslContext, resList)
+        return cgs
     }
 }

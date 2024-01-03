@@ -69,5 +69,16 @@ CREATE TABLE IF NOT EXISTS T_WINDOWS_GPU_POOL
     UNIQUE KEY `uni_1` (`ZONE_ID`,`CGS_IP`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='START云桌面的资源列表';
 
+-- ----------------------------
+-- Table structure for T_WINDOWS_VM_POOL
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_WINDOWS_VM_RESOURCE` (
+    `ZONE_ID` varchar(32)  default '' not null comment '区域ID，SZ3，NJ1等',
+    `MACHINE_TYPE`  varchar(32)  default '' not null comment '机型',
+    `CAP` INT NOT NULL default 0 COMMENT '容量',
+    `USED` INT NOT NULL default 0 COMMENT '已使用量',
+    `FREE` INT NOT NULL default 0 COMMENT '空闲量',
+    PRIMARY KEY (`ZONE_ID`, `MACHINE_TYPE`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='windows虚拟机gpu卡资源使用情况';
 
 SET FOREIGN_KEY_CHECKS = 1;
