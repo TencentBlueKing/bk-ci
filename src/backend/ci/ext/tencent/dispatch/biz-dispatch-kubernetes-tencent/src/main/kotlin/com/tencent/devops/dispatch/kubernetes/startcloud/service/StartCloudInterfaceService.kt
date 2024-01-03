@@ -257,6 +257,5 @@ class StartCloudInterfaceService @Autowired constructor(
             windowsGpuResourceDao.deleteVmResource(dslContext)
             windowsGpuResourceDao.insertVmResource(dslContext, resList)
         }
-
     }
 }
