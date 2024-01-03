@@ -17,6 +17,7 @@ import com.tencent.devops.process.yaml.modelTransfer.PipelineTransferException
 import com.tencent.devops.process.yaml.modelTransfer.TransferMapper
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
+import java.io.FileNotFoundException
 import java.nio.charset.Charset
 import java.util.concurrent.TimeUnit
 import java.util.function.Supplier
@@ -70,12 +71,16 @@ class YamlSchemaCheck @Autowired constructor(
     private val schemaMap = mutableMapOf<String, JsonSchema>()
 
     fun check(originYaml: String) {
-        checkYamlSchema(originYaml, null, true)
+        check(originYaml, null, true)
     }
 
     // 给来自前端的接口用，直接扔出去就好
     fun check(originYaml: String, templateType: TemplateType?, isCiFile: Boolean) {
-        checkYamlSchema(originYaml, templateType, isCiFile)
+        try {
+            checkYamlSchema(originYaml, templateType, isCiFile)
+        } catch (ignore: FileNotFoundException) {
+            logger.warn("schema file not find. ${ignore.message}")
+        }
     }
 
     private fun checkYamlSchema(originYaml: String, templateType: TemplateType? = null, isCiFile: Boolean) {
@@ -149,14 +154,15 @@ class YamlSchemaCheck @Autowired constructor(
     }
 
     private fun getSchemaFromGit(file: String, version: YamlVersion.Version): JsonSchema {
-        if (schemaMap[file] != null) {
-            return schemaMap[file]!!
+        val path = "schema/${version.name}/$file.json"
+        if (schemaMap[path] != null) {
+            return schemaMap[path]!!
         }
         val schema = schemaFactory.getSchema(
-            ClassPathResource("schema/${version.name}/$file.json").inputStream.readBytes()
+            ClassPathResource(path).inputStream.readBytes()
                 .toString(Charset.defaultCharset())
         )
-        schemaMap[file] = schema
+        schemaMap[path] = schema
         return schema
     }
 
