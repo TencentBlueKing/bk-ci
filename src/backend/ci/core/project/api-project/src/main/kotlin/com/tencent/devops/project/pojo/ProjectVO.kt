@@ -77,9 +77,9 @@ data class ProjectVO(
     @ApiModelProperty("部门名称")
     val deptName: String?,
     @ApiModelProperty("业务线ID")
-    val businessLineId: String? = null,
+    val businessLineId: String?,
     @ApiModelProperty("业务线名称")
-    val businessLineName: String? = "",
+    val businessLineName: String?,
     @ApiModelProperty("描述")
     val description: String?,
     @ApiModelProperty("英文缩写")

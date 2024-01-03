@@ -49,6 +49,7 @@ object ProjectUtils {
         pipelineTemplateInstallPerm: Boolean? = null,
         projectOrganizationInfo: ProjectOrganizationInfo? = null
     ): ProjectVO {
+        val isUseFixedOrganization = projectOrganizationInfo != null
         return with(tProjectRecord) {
             ProjectVO(
                 /* 已经投产旧插件的使用字段兼容 */
@@ -70,20 +71,20 @@ object ProjectUtils {
                     DateTimeUtil.toDateTime(approvalTime, "yyyy-MM-dd'T'HH:mm:ssZ")
                 },
                 approver = approver ?: "",
-                bgId = getFinalOrganizationId(projectOrganizationInfo, bgId),
-                bgName = getFinalOrganizationName(projectOrganizationInfo, bgName),
+                bgId = (if (isUseFixedOrganization) projectOrganizationInfo?.bgId else bgId)?.toString(),
+                bgName = (if (isUseFixedOrganization) projectOrganizationInfo?.bgName else bgName),
                 ccAppId = ccAppId ?: 0,
                 ccAppName = ccAppName ?: "",
-                centerId = getFinalOrganizationId(projectOrganizationInfo, centerId),
-                centerName = getFinalOrganizationName(projectOrganizationInfo, centerName),
+                centerId = (if (isUseFixedOrganization) projectOrganizationInfo?.centerId else centerId)?.toString(),
+                centerName = (if (isUseFixedOrganization) projectOrganizationInfo?.centerName else centerName),
                 createdAt = DateTimeUtil.toDateTime(createdAt, "yyyy-MM-dd"),
                 creator = creator ?: "",
                 dataId = dataId ?: 0,
                 deployType = deployType ?: "",
-                deptId = getFinalOrganizationId(projectOrganizationInfo, deptId),
-                deptName = getFinalOrganizationName(projectOrganizationInfo, deptName),
-                businessLineId = getFinalOrganizationId(projectOrganizationInfo, businessLineId),
-                businessLineName = getFinalOrganizationName(projectOrganizationInfo, businessLineName),
+                deptId = (if (isUseFixedOrganization) projectOrganizationInfo?.deptId else deptId)?.toString(),
+                deptName = (if (isUseFixedOrganization) projectOrganizationInfo?.deptName else deptName),
+                businessLineId = (if (isUseFixedOrganization) projectOrganizationInfo?.businessLineId else businessLineId)?.toString(),
+                businessLineName = (if (isUseFixedOrganization) projectOrganizationInfo?.businessLineName else businessLineName),
                 description = description ?: "",
                 englishName = englishName ?: "",
                 extra = extra ?: "",
@@ -129,6 +130,7 @@ object ProjectUtils {
         projectApprovalInfo: ProjectApprovalInfo?,
         projectOrganizationInfo: ProjectOrganizationInfo? = null
     ): ProjectDiffVO {
+        val isUseFixedOrganization = projectOrganizationInfo != null
         val subjectScopes = tProjectRecord.subjectScopes?.let {
             JsonUtil.to(it, object : TypeReference<ArrayList<SubjectScopeInfo>>() {})
         }
@@ -146,24 +148,24 @@ object ProjectUtils {
                     DateTimeUtil.toDateTime(approvalTime, "yyyy-MM-dd'T'HH:mm:ssZ")
                 },
                 approver = approver ?: "",
-                bgId = getFinalOrganizationId(projectOrganizationInfo, bgId),
+                bgId = (if (isUseFixedOrganization) projectOrganizationInfo?.bgId else bgId)?.toString(),
                 afterBgId = projectApprovalInfo?.bgId ?: bgId?.toString(),
-                bgName = getFinalOrganizationName(projectOrganizationInfo, bgName),
-                afterBgName = projectApprovalInfo?.bgName ?: bgName ?: "",
-                businessLineId = getFinalOrganizationId(projectOrganizationInfo, businessLineId),
+                bgName = (if (isUseFixedOrganization) projectOrganizationInfo?.bgName else bgName),
+                afterBgName = projectApprovalInfo?.bgName ?: bgName,
+                businessLineId = (if (isUseFixedOrganization) projectOrganizationInfo?.businessLineId else businessLineId)?.toString(),
                 afterBusinessLineId = projectApprovalInfo?.businessLineId ?: businessLineId,
-                businessLineName = getFinalOrganizationName(projectOrganizationInfo, businessLineName),
+                businessLineName = (if (isUseFixedOrganization) projectOrganizationInfo?.businessLineName else businessLineName),
                 afterBusinessLineName = projectApprovalInfo?.businessLineName ?: businessLineName,
-                centerId = getFinalOrganizationId(projectOrganizationInfo, centerId),
+                centerId = (if (isUseFixedOrganization) projectOrganizationInfo?.centerId else centerId)?.toString(),
                 afterCenterId = projectApprovalInfo?.centerId ?: centerId?.toString(),
-                centerName = getFinalOrganizationName(projectOrganizationInfo, centerName),
-                afterCenterName = projectApprovalInfo?.centerName ?: centerName ?: "",
+                centerName = (if (isUseFixedOrganization) projectOrganizationInfo?.centerName else centerName),
+                afterCenterName = projectApprovalInfo?.centerName ?: centerName,
                 createdAt = DateTimeUtil.toDateTime(createdAt, "yyyy-MM-dd"),
                 creator = creator ?: "",
-                deptId = getFinalOrganizationId(projectOrganizationInfo, deptId),
+                deptId = (if (isUseFixedOrganization) projectOrganizationInfo?.deptId else deptId)?.toString(),
                 afterDeptId = projectApprovalInfo?.deptId ?: deptId?.toString(),
-                deptName = getFinalOrganizationName(projectOrganizationInfo, deptName),
-                afterDeptName = projectApprovalInfo?.deptName ?: deptName ?: "",
+                deptName = (if (isUseFixedOrganization) projectOrganizationInfo?.deptName else deptName),
+                afterDeptName = projectApprovalInfo?.deptName ?: deptName,
                 description = description ?: "",
                 afterDescription = projectApprovalInfo?.description ?: description ?: "",
                 englishName = englishName ?: "",
@@ -186,19 +188,5 @@ object ProjectUtils {
                 afterProductId = projectApprovalInfo?.productId
             )
         }
-    }
-
-    private fun getFinalOrganizationId(
-        projectOrganizationInfo: ProjectOrganizationInfo?,
-        OrganizationIdInDb: Long?
-    ): String? {
-        return (if (projectOrganizationInfo != null) projectOrganizationInfo.deptId else OrganizationIdInDb)?.toString()
-    }
-
-    private fun getFinalOrganizationName(
-        projectOrganizationInfo: ProjectOrganizationInfo?,
-        OrganizationNameInDb: String?
-    ): String {
-        return (if (projectOrganizationInfo != null) projectOrganizationInfo.deptName else OrganizationNameInDb) ?: ""
     }
 }
