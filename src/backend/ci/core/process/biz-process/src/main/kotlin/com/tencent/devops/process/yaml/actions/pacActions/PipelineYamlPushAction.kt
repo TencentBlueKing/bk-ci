@@ -35,17 +35,22 @@ import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.actions.data.ActionData
 import com.tencent.devops.process.yaml.actions.data.ActionMetaData
 import com.tencent.devops.process.yaml.actions.data.EventCommonData
+import com.tencent.devops.process.yaml.actions.data.EventCommonDataCommit
 import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlPushActionEvent
 import com.tencent.devops.process.yaml.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.yaml.git.pojo.PacGitCred
+import com.tencent.devops.process.yaml.git.pojo.PacGitPushResult
 import com.tencent.devops.process.yaml.git.pojo.tgit.TGitCred
 import com.tencent.devops.process.yaml.git.service.PacGitApiService
+import com.tencent.devops.process.yaml.git.service.TGitApiService
 import com.tencent.devops.process.yaml.pojo.CheckType
 import com.tencent.devops.process.yaml.pojo.YamlContent
 import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 
-class PipelineYamlPushAction : BaseAction {
+class PipelineYamlPushAction(
+    private val apiService: TGitApiService
+) : BaseAction {
 
     override val metaData: ActionMetaData = ActionMetaData(StreamObjectKind.UPLOAD)
 
@@ -66,10 +71,22 @@ class PipelineYamlPushAction : BaseAction {
             gitProjectId = gitProjectId,
             retry = ApiRequestRetryInfo(true)
         )!!.defaultBranch!!
+        val latestCommit = apiService.getGitCommitInfo(
+            cred = this.getGitCred(),
+            gitProjectId = gitProjectId.toString(),
+            sha = defaultBranch,
+            retry = ApiRequestRetryInfo(retry = true)
+        )
         this.data.eventCommon = EventCommonData(
             gitProjectId = gitProjectId,
             userId = event.userId,
             branch = defaultBranch,
+            commit = EventCommonDataCommit(
+                commitId = latestCommit?.commitId ?: "0",
+                commitMsg = latestCommit?.commitMsg,
+                commitTimeStamp = GitActionCommon.getCommitTimeStamp(latestCommit?.commitDate),
+                commitAuthorName = latestCommit?.commitAuthor
+            ),
             projectName = data.setting.projectName,
             scmType = event.scmType
         )
@@ -122,7 +139,7 @@ class PipelineYamlPushAction : BaseAction {
         content: String,
         commitMessage: String,
         targetAction: CodeTargetAction
-    ): YamlPathListEntry {
+    ): PacGitPushResult {
         return api.pushYamlFile(
             cred = this.getGitCred(),
             gitProjectId = getGitProjectIdOrName(),

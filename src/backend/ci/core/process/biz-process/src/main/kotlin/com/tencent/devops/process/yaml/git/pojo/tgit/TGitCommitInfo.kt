@@ -25,41 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.actions.data
+package com.tencent.devops.process.yaml.git.pojo.tgit
 
-import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.process.yaml.git.pojo.PacGitCommitInfo
+import com.tencent.devops.scm.pojo.GitCommit
 
-/**
- * 需要根据各事件源的event去拿的通用数据，随event改变可能会不同
- * @param gitProjectId Git平台项目唯一标识
- * @param scmType 当前事件 git平台唯一标识
- * @param branch 当前event的触发branch
- * @param userId 当前event的触发人
- * @param projectName Git平台项目全称: namespace/name
- * @param eventType 当前事件类型 仅在github需要
- * @param sourceGitProjectId mr触发时的源Git库
- */
-data class EventCommonData(
-    val gitProjectId: String,
-    val scmType: ScmType?,
-    val branch: String,
-    val commit: EventCommonDataCommit,
-    val userId: String,
-    val projectName: String?,
-    val eventType: String? = null,
-    val sourceGitProjectId: String? = null
-)
+data class TGitCommitInfo(
+    override val commitId: String,
+    override val commitDate: String,
+    override val commitAuthor: String,
+    override val commitMsg: String,
+    val title: String,
+    val shortId: String,
+    val authorName: String
+) : PacGitCommitInfo {
+    constructor(c: GitCommit) : this(
+        commitId = c.id,
+        commitDate = c.committed_date,
+        commitAuthor = c.author_email,
+        commitMsg = c.message,
+        title = c.title,
+        shortId = c.short_id,
+        authorName = c.author_name
+    )
 
-/**
- * 公共数据的commit数据
- * @param commitId commit唯一标识
- * @param commitMsg commit提交信息
- * @param commitAuthorName commit提交作者
- * @param commitTimeStamp commit提交时间点
- */
-data class EventCommonDataCommit(
-    val commitId: String,
-    val commitMsg: String?,
-    val commitAuthorName: String?,
-    val commitTimeStamp: String?
-)
+    fun toGitCommit(): GitCommit = GitCommit(
+        id = commitId,
+        short_id = shortId,
+        message = commitMsg,
+        author_name = authorName,
+        author_email = commitAuthor,
+        title = title,
+        committed_date = commitDate
+    )
+}

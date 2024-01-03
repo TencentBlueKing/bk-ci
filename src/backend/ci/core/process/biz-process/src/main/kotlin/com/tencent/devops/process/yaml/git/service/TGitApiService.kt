@@ -34,17 +34,19 @@ import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.yaml.git.pojo.ApiRequestRetryInfo
+import com.tencent.devops.process.yaml.git.pojo.PacGitCommitInfo
 import com.tencent.devops.process.yaml.git.pojo.PacGitCred
+import com.tencent.devops.process.yaml.git.pojo.PacGitPushResult
 import com.tencent.devops.process.yaml.git.pojo.tgit.TGitChangeFileInfo
+import com.tencent.devops.process.yaml.git.pojo.tgit.TGitCommitInfo
 import com.tencent.devops.process.yaml.git.pojo.tgit.TGitCred
 import com.tencent.devops.process.yaml.git.pojo.tgit.TGitFileInfo
 import com.tencent.devops.process.yaml.git.pojo.tgit.TGitMrChangeInfo
 import com.tencent.devops.process.yaml.git.pojo.tgit.TGitMrInfo
 import com.tencent.devops.process.yaml.git.pojo.tgit.TGitProjectInfo
+import com.tencent.devops.process.yaml.git.pojo.tgit.TGitPushResult
 import com.tencent.devops.process.yaml.git.pojo.tgit.TGitTreeFileInfo
 import com.tencent.devops.process.yaml.git.service.PacApiUtil.doRetryFun
-import com.tencent.devops.process.yaml.pojo.CheckType
-import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
@@ -101,6 +103,26 @@ class TGitApiService @Autowired constructor(
         }
     }
 
+    override fun getGitCommitInfo(
+        cred: PacGitCred,
+        gitProjectId: String,
+        sha: String,
+        retry: ApiRequestRetryInfo
+    ): PacGitCommitInfo? {
+        return doRetryFun(
+            logger = logger,
+            retry = retry,
+            log = "$gitProjectId get commit info $sha fail",
+            errorCode = ProcessMessageCode.ERROR_GET_COMMIT_INFO_ERROR
+        ) {
+            client.get(ServiceGitResource::class).getRepoRecentCommitInfo(
+                repoName = gitProjectId,
+                sha = sha,
+                token = cred.toToken(),
+                tokenType = cred.toTokenType()
+            ).data
+        }?.let { TGitCommitInfo(it) }
+    }
 
     override fun getMrInfo(
         cred: PacGitCred,
@@ -270,7 +292,7 @@ class TGitApiService @Autowired constructor(
         commitMessage: String,
         targetAction: CodeTargetAction,
         pipelineId: String
-    ): YamlPathListEntry {
+    ): PacGitPushResult {
         val token = cred.toToken()
         val branchName = if (targetAction == CodeTargetAction.COMMIT_TO_MASTER) {
             defaultBranch
@@ -332,26 +354,30 @@ class TGitApiService @Autowired constructor(
                 tokenType = cred.toTokenType()
             )
         }
-        val yamlFile = getFileInfo(
-            cred = cred,
-            gitProjectId = gitProjectId,
-            fileName = filePath,
-            ref = branchName,
-            retry = ApiRequestRetryInfo(true)
-        )!!.let {
-            YamlPathListEntry(
-                yamlPath = filePath,
-                checkType = CheckType.NO_NEED_CHECK,
-                ref = branchName,
-                blobId = it.blobId
-            )
-        }
         if (targetAction == CodeTargetAction.PUSH_BRANCH_AND_REQUEST_MERGE ||
             targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE
         ) {
             createYamlMergeRequest(fileExists, pipelineId, token, cred, gitProjectId, branchName, defaultBranch)
         }
-        return yamlFile
+        val fileInfo = getFileInfo(
+            cred = cred,
+            gitProjectId = gitProjectId,
+            fileName = filePath,
+            ref = branchName,
+            retry = ApiRequestRetryInfo(true)
+        )
+        val commitInfo = getGitCommitInfo(
+            cred = cred,
+            gitProjectId = gitProjectId,
+            sha = branchName,
+            retry = ApiRequestRetryInfo(true)
+        )
+        return TGitPushResult(
+            filePath = filePath,
+            branch = branchName,
+            blobId = fileInfo!!.blobId,
+            lastCommitId = commitInfo!!.commitId
+        )
     }
 
     private fun createYamlMergeRequest(

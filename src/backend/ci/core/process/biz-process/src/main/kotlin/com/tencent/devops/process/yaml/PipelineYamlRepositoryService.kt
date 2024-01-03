@@ -49,6 +49,7 @@ import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.yaml.actions.BaseAction
 import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.common.Constansts
+import com.tencent.devops.process.yaml.git.pojo.PacGitPushResult
 import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferAspectLoader
 import com.tencent.devops.process.yaml.pojo.PipelineYamlTriggerLock
 import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
@@ -146,18 +147,34 @@ class PipelineYamlRepositoryService @Autowired constructor(
         action: BaseAction,
         yamlFile: YamlPathListEntry
     ) {
-        pipelineYamlService.getPipelineYamlVersion(
+        val pipelineYamlVersion = pipelineYamlService.getPipelineYamlVersion(
             projectId = projectId,
             repoHashId = action.data.setting.repoHashId,
             filePath = yamlFile.yamlPath,
             blobId = yamlFile.blobId!!
-        ) ?: run {
+        )
+        val defaultBranch = action.data.context.defaultBranch
+        val branch = action.data.eventCommon.branch
+        // yaml版本不存在
+        if (pipelineYamlVersion == null) {
             updateYamlPipeline(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 action = action,
-                yamlFile = yamlFile
+                yamlFile = yamlFile,
+                needDeleteVersion = false
             )
+        } else {
+            // 默认分支推送，并且版本的创建分支不是从默认分支,说明分支合入主干,需要将分支版本转换成稳定版本
+            if (branch == defaultBranch && pipelineYamlVersion.ref != defaultBranch) {
+                updateYamlPipeline(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    action = action,
+                    yamlFile = yamlFile,
+                    needDeleteVersion = true
+                )
+            }
         }
     }
 
@@ -192,6 +209,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             filePath = yamlFile.yamlPath,
             directory = directory,
             blobId = yamlFile.blobId!!,
+            commitId = action.data.eventCommon.commit.commitId,
             ref = branch,
             pipelineId = pipelineId,
             version = version,
@@ -268,11 +286,15 @@ class PipelineYamlRepositoryService @Autowired constructor(
         )
     }
 
+    /**
+     * @param needDeleteVersion 是否需要删除旧的version
+     */
     private fun updateYamlPipeline(
         projectId: String,
         pipelineId: String,
         action: BaseAction,
-        yamlFile: YamlPathListEntry
+        yamlFile: YamlPathListEntry,
+        needDeleteVersion: Boolean
     ) {
         logger.info("update yaml pipeline|$projectId|$yamlFile")
         val yamlContent = action.getYamlContent(yamlFile.yamlPath)
@@ -297,12 +319,14 @@ class PipelineYamlRepositoryService @Autowired constructor(
             repoHashId = repoHashId,
             filePath = yamlFile.yamlPath,
             blobId = yamlFile.blobId!!,
+            commitId = action.data.eventCommon.commit.commitId,
             ref = branch,
             pipelineId = deployPipelineResult.pipelineId,
             version = deployPipelineResult.version,
             versionName = deployPipelineResult.versionName!!,
             userId = action.data.getUserId(),
-            webhooks = webhooks
+            webhooks = webhooks,
+            needDeleteVersion = needDeleteVersion
         )
     }
 
@@ -366,10 +390,10 @@ class PipelineYamlRepositoryService @Autowired constructor(
         version: Int,
         versionName: String,
         action: BaseAction,
-        yamlFile: YamlPathListEntry
+        gitPushResult: PacGitPushResult
     ) {
         val repoHashId = action.data.setting.repoHashId
-        val filePath = yamlFile.yamlPath
+        val filePath = gitPushResult.filePath
 
         val webhooks =
             getWebhooks(
@@ -393,7 +417,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 versionName = versionName,
                 repoHashId = repoHashId,
                 filePath = filePath,
-                yamlFile = yamlFile,
+                gitPushResult = gitPushResult,
                 gitProjectName = action.data.setting.projectName,
                 webhooks = webhooks
             )
@@ -408,17 +432,20 @@ class PipelineYamlRepositoryService @Autowired constructor(
         versionName: String,
         repoHashId: String,
         filePath: String,
-        yamlFile: YamlPathListEntry,
+        gitPushResult: PacGitPushResult,
         gitProjectName: String,
         webhooks: List<PipelineWebhookVersion>
     ) {
+        val blobId = gitPushResult.blobId
+        val branch = gitPushResult.branch
+        val commitId = gitPushResult.lastCommitId
         val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
             projectId = projectId,
             repoHashId = repoHashId,
             filePath = filePath
         )
         if (pipelineYamlInfo == null) {
-            val directory = GitActionCommon.getCiDirectory(yamlFile.yamlPath)
+            val directory = GitActionCommon.getCiDirectory(filePath)
             pipelineYamlService.save(
                 projectId = projectId,
                 repoHashId = repoHashId,
@@ -426,8 +453,9 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 directory = directory,
                 pipelineId = pipelineId,
                 userId = userId,
-                blobId = yamlFile.blobId!!,
-                ref = yamlFile.ref!!,
+                blobId = blobId,
+                commitId = commitId,
+                ref = branch,
                 version = version,
                 versionName = versionName,
                 webhooks = webhooks
@@ -444,21 +472,23 @@ class PipelineYamlRepositoryService @Autowired constructor(
             val pipelineYamlVersion = pipelineYamlService.getPipelineYamlVersion(
                 projectId = projectId,
                 repoHashId = repoHashId,
-                filePath = yamlFile.yamlPath,
-                blobId = yamlFile.blobId!!
+                filePath = filePath,
+                blobId = blobId
             )
             if (pipelineYamlVersion == null) {
                 pipelineYamlService.update(
                     projectId = projectId,
                     repoHashId = repoHashId,
-                    filePath = yamlFile.yamlPath,
-                    blobId = yamlFile.blobId,
-                    ref = yamlFile.ref!!,
+                    filePath = filePath,
+                    blobId = blobId,
+                    commitId = commitId,
+                    ref = branch,
                     pipelineId = pipelineId,
                     version = version,
                     versionName = versionName,
                     userId = userId,
-                    webhooks = webhooks
+                    webhooks = webhooks,
+                    needDeleteVersion = false
                 )
             }
         }

@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.engine.dao.PipelineWebhookVersionDao
 import com.tencent.devops.process.engine.dao.PipelineYamlBranchFileDao
+import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
 import com.tencent.devops.process.engine.dao.PipelineYamlViewDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlInfo
@@ -75,6 +75,7 @@ class PipelineYamlService(
         pipelineId: String,
         userId: String,
         blobId: String,
+        commitId: String,
         ref: String,
         version: Int,
         versionName: String,
@@ -97,6 +98,7 @@ class PipelineYamlService(
                 repoHashId = repoHashId,
                 filePath = filePath,
                 blobId = blobId,
+                commitId = commitId,
                 ref = ref,
                 pipelineId = pipelineId,
                 version = version,
@@ -124,10 +126,12 @@ class PipelineYamlService(
         pipelineId: String,
         userId: String,
         blobId: String,
+        commitId: String,
         ref: String,
         version: Int,
         versionName: String,
-        webhooks: List<PipelineWebhookVersion>
+        webhooks: List<PipelineWebhookVersion>,
+        needDeleteVersion: Boolean
     ) {
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -138,12 +142,23 @@ class PipelineYamlService(
                 filePath = filePath,
                 userId = userId
             )
+            if (needDeleteVersion) {
+                pipelineYamlVersionDao.delete(
+                    dslContext = transactionContext,
+                    userId = userId,
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    filePath = filePath,
+                    blobId = blobId
+                )
+            }
             pipelineYamlVersionDao.save(
                 dslContext = transactionContext,
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath,
                 blobId = blobId,
+                commitId = commitId,
                 ref = ref,
                 pipelineId = pipelineId,
                 version = version,
@@ -194,26 +209,13 @@ class PipelineYamlService(
 
     fun getPipelineYamlVo(
         projectId: String,
-        pipelineId: String
-    ): PipelineYamlVo? {
-        val pipelineInfo = pipelineYamlInfoDao.get(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId
-        ) ?: run {
-            logger.info("pipeline yaml info not found|$projectId|$pipelineId")
-            return null
-        }
-        with(pipelineInfo) {
-            return pipelineYamlVo(projectId, pipelineId, repoHashId, filePath)
-        }
-    }
-
-    fun getPipelineYamlVo(
-        projectId: String,
         pipelineId: String,
         version: Int
     ): PipelineYamlVo? {
+        pipelineYamlInfoDao.get(dslContext = dslContext, projectId = projectId, pipelineId = pipelineId) ?: run {
+            logger.info("pipeline yaml not found|$projectId|$pipelineId")
+            return null
+        }
         val pipelineYamlVersion = pipelineYamlVersionDao.getByPipelineId(
             dslContext = dslContext,
             projectId = projectId,
@@ -223,38 +225,35 @@ class PipelineYamlService(
             logger.info("pipeline yaml version not found|$projectId|$pipelineId|$version")
             return null
         }
-        with(pipelineYamlVersion) {
-            return pipelineYamlVo(projectId, pipelineId, repoHashId, filePath)
-        }
+        return pipelineYamlVo(pipelineYamlVersion = pipelineYamlVersion)
     }
 
     private fun pipelineYamlVo(
-        projectId: String,
-        pipelineId: String,
-        repoHashId: String,
-        filePath: String
+        pipelineYamlVersion: PipelineYamlVersion
     ): PipelineYamlVo? {
-        val repository = client.get(ServiceRepositoryResource::class).get(
-            projectId = projectId, repositoryId = repoHashId, repositoryType = RepositoryType.ID
-        ).data ?: run {
-            logger.info("pipeline yaml version repo not found|$projectId|$pipelineId|$repoHashId")
-            return null
-        }
-        return when (repository) {
-            is CodeGitRepository -> {
-                val homePage =
-                    repository.url.replace("git@", "https://").removeSuffix(".git")
-                PipelineYamlVo(
-                    repoHashId = repoHashId,
-                    scmType = ScmType.CODE_GIT,
-                    pathWithNamespace = repository.projectName,
-                    webUrl = homePage,
-                    filePath = filePath,
-                    fileUrl = "$homePage/blob/master/$filePath"
-                )
+        with(pipelineYamlVersion) {
+            val repository = client.get(ServiceRepositoryResource::class).get(
+                projectId = projectId, repositoryId = repoHashId, repositoryType = RepositoryType.ID
+            ).data ?: run {
+                logger.info("pipeline yaml version repo not found|$projectId|$pipelineId|$repoHashId")
+                return null
             }
+            return when (repository) {
+                is CodeGitRepository -> {
+                    val homePage =
+                        repository.url.replace("git@", "https://").removeSuffix(".git")
+                    PipelineYamlVo(
+                        repoHashId = repoHashId,
+                        scmType = ScmType.CODE_GIT,
+                        pathWithNamespace = repository.projectName,
+                        webUrl = homePage,
+                        filePath = filePath,
+                        fileUrl = "$homePage/blob/$commitId/$filePath"
+                    )
+                }
 
-            else -> null
+                else -> null
+            }
         }
     }
 

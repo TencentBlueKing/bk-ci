@@ -29,13 +29,14 @@ package com.tencent.devops.process.yaml.git.service
 
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.process.yaml.git.pojo.ApiRequestRetryInfo
+import com.tencent.devops.process.yaml.git.pojo.PacGitCommitInfo
 import com.tencent.devops.process.yaml.git.pojo.PacGitCred
 import com.tencent.devops.process.yaml.git.pojo.PacGitFileInfo
 import com.tencent.devops.process.yaml.git.pojo.PacGitMrChangeInfo
 import com.tencent.devops.process.yaml.git.pojo.PacGitMrInfo
 import com.tencent.devops.process.yaml.git.pojo.PacGitProjectInfo
+import com.tencent.devops.process.yaml.git.pojo.PacGitPushResult
 import com.tencent.devops.process.yaml.git.pojo.PacGitTreeFileInfo
-import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
 
 /**
  * PAC 需要用到的各平台的标准接口
@@ -62,6 +63,18 @@ interface PacGitApiService {
         gitProjectId: String,
         retry: ApiRequestRetryInfo
     ): PacGitProjectInfo?
+
+    /**
+     * 获取pac需要的git commit相关信息
+     * @param sha 获取commit的信息，例如：hash值、分支名或tag
+     * @param gitProjectId 使用关联event事件的 git project id
+     */
+    fun getGitCommitInfo(
+        cred: PacGitCred,
+        gitProjectId: String,
+        sha: String,
+        retry: ApiRequestRetryInfo
+    ): PacGitCommitInfo?
 
     /**
      * 获取合并请求信息
@@ -137,5 +150,5 @@ interface PacGitApiService {
         commitMessage: String,
         targetAction: CodeTargetAction,
         pipelineId: String
-    ): YamlPathListEntry
+    ): PacGitPushResult
 }

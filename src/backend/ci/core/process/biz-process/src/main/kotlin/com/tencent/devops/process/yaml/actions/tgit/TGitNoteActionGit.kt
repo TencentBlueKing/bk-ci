@@ -35,6 +35,7 @@ import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.actions.GitBaseAction
 import com.tencent.devops.process.yaml.actions.data.ActionMetaData
 import com.tencent.devops.process.yaml.actions.data.EventCommonData
+import com.tencent.devops.process.yaml.actions.data.EventCommonDataCommit
 import com.tencent.devops.process.yaml.actions.data.PacRepoSetting
 import com.tencent.devops.process.yaml.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.yaml.git.service.TGitApiService
@@ -89,10 +90,22 @@ class TGitNoteActionGit @Autowired constructor(
             gitProjectId = gitProjectId.toString(),
             retry = ApiRequestRetryInfo(true)
         )!!.defaultBranch!!
+        val latestCommit = apiService.getGitCommitInfo(
+            cred = this.getGitCred(),
+            gitProjectId = gitProjectId.toString(),
+            sha = defaultBranch,
+            retry = ApiRequestRetryInfo(retry = true)
+        )
         this.data.eventCommon = EventCommonData(
             gitProjectId = event.objectAttributes.projectId.toString(),
             scmType = ScmType.CODE_GIT,
             branch = defaultBranch,
+            commit = EventCommonDataCommit(
+                commitId = latestCommit?.commitId ?: "0",
+                commitMsg = event.objectAttributes.note,
+                commitTimeStamp = GitActionCommon.getCommitTimeStamp(latestCommit?.commitDate),
+                commitAuthorName = latestCommit?.commitAuthor
+            ),
             userId = event.user.username,
             projectName = GitUtils.getProjectName(event.repository.homepage)
         )

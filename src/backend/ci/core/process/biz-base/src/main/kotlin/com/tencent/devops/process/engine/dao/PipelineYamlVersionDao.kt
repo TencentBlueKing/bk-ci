@@ -47,6 +47,7 @@ class PipelineYamlVersionDao {
         repoHashId: String,
         filePath: String,
         blobId: String,
+        commitId: String,
         ref: String?,
         pipelineId: String,
         version: Int,
@@ -61,6 +62,7 @@ class PipelineYamlVersionDao {
                 REPO_HASH_ID,
                 FILE_PATH,
                 BLOB_ID,
+                COMMIT_ID,
                 REF,
                 PIPELINE_ID,
                 VERSION,
@@ -74,6 +76,7 @@ class PipelineYamlVersionDao {
                 repoHashId,
                 filePath,
                 blobId,
+                commitId,
                 ref,
                 pipelineId,
                 version,
@@ -122,12 +125,17 @@ class PipelineYamlVersionDao {
 
     fun delete(
         dslContext: DSLContext,
+        userId: String,
         projectId: String,
         repoHashId: String,
-        filePath: String
+        filePath: String,
+        blobId: String
     ) {
         with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
-            dslContext.deleteFrom(this)
+            dslContext.update(this)
+                .set(BLOB_ID, "-$blobId")
+                .set(MODIFIER, userId)
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(FILE_PATH.eq(filePath))
@@ -142,6 +150,7 @@ class PipelineYamlVersionDao {
                 repoHashId = repoHashId,
                 filePath = filePath,
                 blobId = blobId,
+                commitId = commitId,
                 ref = ref,
                 pipelineId = pipelineId,
                 version = version,

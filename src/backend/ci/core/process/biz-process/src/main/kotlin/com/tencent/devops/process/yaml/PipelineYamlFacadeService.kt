@@ -300,7 +300,7 @@ class PipelineYamlFacadeService @Autowired constructor(
             scmType = scmType
         )
         val action = eventActionFactory.loadYamlPushEvent(setting = setting, event = event)
-        val yamlFile = action.pushYamlFile(
+        val gitPushResult = action.pushYamlFile(
             pipelineId = pipelineId,
             filePath = filePath,
             content = content,
@@ -314,13 +314,13 @@ class PipelineYamlFacadeService @Autowired constructor(
             version = version,
             versionName = versionName,
             action = action,
-            yamlFile = yamlFile
+            gitPushResult = gitPushResult
         )
         return PushPipelineResult(
             projectId = projectId,
             repoHashId = repoHashId,
-            filePath = yamlFile.yamlPath,
-            branch = yamlFile.ref!!
+            filePath = gitPushResult.filePath,
+            branch = gitPushResult.branch
         )
     }
 }

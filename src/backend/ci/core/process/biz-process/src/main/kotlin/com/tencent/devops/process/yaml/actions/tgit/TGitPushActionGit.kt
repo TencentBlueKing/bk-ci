@@ -27,12 +27,15 @@
 
 package com.tencent.devops.process.yaml.actions.tgit
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
 import com.tencent.devops.process.yaml.actions.BaseAction
 import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.actions.GitBaseAction
 import com.tencent.devops.process.yaml.actions.data.ActionMetaData
 import com.tencent.devops.process.yaml.actions.data.EventCommonData
+import com.tencent.devops.process.yaml.actions.data.EventCommonDataCommit
 import com.tencent.devops.process.yaml.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.yaml.git.service.TGitApiService
 import com.tencent.devops.process.yaml.pojo.CheckType
@@ -64,14 +67,37 @@ class TGitPushActionGit(
 
     private fun initCommonData(): GitBaseAction {
         val event = event()
+        val lastCommit = getLatestCommit(event)
         this.data.eventCommon = EventCommonData(
             gitProjectId = event.project_id.toString(),
             scmType = ScmType.CODE_GIT,
             branch = event.ref.removePrefix("refs/heads/"),
+            commit = EventCommonDataCommit(
+                commitId = event.after,
+                commitMsg = lastCommit?.message,
+                commitTimeStamp = GitActionCommon.getCommitTimeStamp(lastCommit?.timestamp),
+                commitAuthorName = lastCommit?.author?.name
+            ),
             userId = event.user_name,
             projectName = GitUtils.getProjectName(event.repository.homepage)
         )
         return this
+    }
+
+    private fun getLatestCommit(
+        event: GitPushEvent
+    ): GitCommit? {
+        if (event.isDeleteEvent()) {
+            return null
+        }
+        val commitId = event.after
+        val commits = event.commits
+        commits?.forEach {
+            if (it.id == commitId) {
+                return it
+            }
+        }
+        return null
     }
 
     override fun initCacheData() {

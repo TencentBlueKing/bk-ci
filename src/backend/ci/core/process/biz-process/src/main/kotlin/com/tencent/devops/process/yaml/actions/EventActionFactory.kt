@@ -158,7 +158,7 @@ class EventActionFactory @Autowired constructor(
         setting: PacRepoSetting,
         event: PipelineYamlEnableActionEvent
     ): PipelineYamlEnableAction {
-        val pipelineYamlEnableAction = PipelineYamlEnableAction()
+        val pipelineYamlEnableAction = PipelineYamlEnableAction(apiService = tGitApiService)
         pipelineYamlEnableAction.data = ActionData(event, PacTriggerContext())
         pipelineYamlEnableAction.api = when (event.scmType) {
             ScmType.CODE_GIT -> tGitApiService
@@ -173,7 +173,7 @@ class EventActionFactory @Autowired constructor(
         setting: PacRepoSetting,
         event: PipelineYamlPushActionEvent
     ): PipelineYamlPushAction {
-        val pipelineYamlPushAction = PipelineYamlPushAction()
+        val pipelineYamlPushAction = PipelineYamlPushAction(apiService = tGitApiService)
         pipelineYamlPushAction.data = ActionData(event, PacTriggerContext())
         pipelineYamlPushAction.api = when (event.scmType) {
             ScmType.CODE_GIT -> tGitApiService
@@ -191,7 +191,7 @@ class EventActionFactory @Autowired constructor(
         actionSetting: PacRepoSetting
     ): BaseAction? {
         val event = objectMapper.readValue<PipelineYamlEnableActionEvent>(eventStr)
-        val pipelineYamlEnableAction = PipelineYamlEnableAction()
+        val pipelineYamlEnableAction = PipelineYamlEnableAction(apiService = tGitApiService)
 
         pipelineYamlEnableAction.api = when (event.scmType) {
             ScmType.CODE_GIT -> tGitApiService

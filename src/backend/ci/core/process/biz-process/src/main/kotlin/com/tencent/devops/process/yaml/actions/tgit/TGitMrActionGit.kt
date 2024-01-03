@@ -42,6 +42,7 @@ import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.actions.GitBaseAction
 import com.tencent.devops.process.yaml.actions.data.ActionMetaData
 import com.tencent.devops.process.yaml.actions.data.EventCommonData
+import com.tencent.devops.process.yaml.actions.data.EventCommonDataCommit
 import com.tencent.devops.process.yaml.exception.YamlTriggerException
 import com.tencent.devops.process.yaml.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.yaml.git.pojo.tgit.TGitCred
@@ -92,6 +93,12 @@ class TGitMrActionGit(
             } else {
                 event.object_attributes.source_branch
             },
+            commit = EventCommonDataCommit(
+                commitId = event.object_attributes.last_commit.id,
+                commitMsg = event.object_attributes.last_commit.message,
+                commitAuthorName = event.object_attributes.last_commit.author.name,
+                commitTimeStamp = GitActionCommon.getCommitTimeStamp(event.object_attributes.last_commit.timestamp)
+            ),
             userId = event.user.username,
             projectName = GitUtils.getProjectName(event.object_attributes.target.http_url)
         )

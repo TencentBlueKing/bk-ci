@@ -301,6 +301,7 @@ object ProcessMessageCode {
     const val YAML_VIEW_CANNOT_DELETE = "2101196" // 由开启 PAC 模式自动创建，不支持手动修改和删除
     const val YAML_VIEW_CANNOT_UPDATE = "2101197" // 由开启 PAC 模式自动创建，不支持手动添加/移除流水线
     const val YAML_VIEW_CANNOT_BULK_REMOVE = "2101198" // 由开启 PAC 模式自动创建，删除流水线请前往代码库操作
+    const val ERROR_GET_COMMIT_INFO_ERROR = "2101199" // 获取commit信息失败
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
