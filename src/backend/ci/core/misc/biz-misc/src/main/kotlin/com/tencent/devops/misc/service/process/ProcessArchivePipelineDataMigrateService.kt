@@ -267,6 +267,13 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
         pipelineId: String,
         migrationLock: MigrationLock
     ) {
+        // 把流水线加入正在迁移流水线集合中
+        redisOperation.addSetValue(
+            key = MiscUtils.getMigratingPipelinesRedisKey(SystemModuleEnum.PROCESS.name),
+            item = pipelineId
+        )
+        // 锁定流水线,不允许用户发起新构建等操作
+        redisOperation.addSetValue(BkApiUtil.getApiAccessLimitPipelinesKey(), pipelineId)
         // 重试迁移需删除迁移库的数据以保证迁移接口的幂等性
         if (archiveDbShardingRoutingRule != null) {
             val deleteMigrationDataParam = DeleteMigrationDataParam(
@@ -280,13 +287,6 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
             )
             processMigrationDataDeleteService.deleteProcessData(deleteMigrationDataParam)
         }
-        // 把流水线加入正在迁移流水线集合中
-        redisOperation.addSetValue(
-            key = MiscUtils.getMigratingPipelinesRedisKey(SystemModuleEnum.PROCESS.name),
-            item = pipelineId
-        )
-        // 锁定流水线,不允许用户发起新构建等操作
-        redisOperation.addSetValue(BkApiUtil.getApiAccessLimitPipelinesKey(), pipelineId)
     }
 
     private fun sendMigrateProcessDataSuccessMsg(projectId: String, pipelineId: String, userId: String) {

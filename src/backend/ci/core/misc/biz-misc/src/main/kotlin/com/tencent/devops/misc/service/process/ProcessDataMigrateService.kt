@@ -214,6 +214,11 @@ class ProcessDataMigrateService @Autowired constructor(
             throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
         }
         val migrationLock = MigrationLock(redisOperation, projectId)
+        // 把项目加入正在迁移项目集合中
+        redisOperation.addSetValue(
+            key = MiscUtils.getMigratingProjectsRedisKey(SystemModuleEnum.PROCESS.name),
+            item = projectId
+        )
         // 重试迁移需删除迁移库的数据以保证迁移接口的幂等性
         val deleteMigrationDataParam = DeleteMigrationDataParam(
             dslContext = migratingShardingDslContext,
@@ -237,11 +242,6 @@ class ProcessDataMigrateService @Autowired constructor(
         val semaphore = Semaphore(threadNum)
         // 根据流水线数量创建计数器
         val doneSignal = CountDownLatch(pipelineNum)
-        // 把项目加入正在迁移项目集合中
-        redisOperation.addSetValue(
-            key = MiscUtils.getMigratingProjectsRedisKey(SystemModuleEnum.PROCESS.name),
-            item = projectId
-        )
         var minPipelineInfoId = processDao.getMinPipelineInfoIdByProjectId(dslContext, projectId)
         do {
             val pipelineIdList = processDao.getPipelineIdListByProjectId(
