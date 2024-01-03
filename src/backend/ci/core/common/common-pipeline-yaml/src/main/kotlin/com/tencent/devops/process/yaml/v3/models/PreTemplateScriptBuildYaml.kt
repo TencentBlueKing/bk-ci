@@ -162,7 +162,8 @@ data class PreTemplateScriptBuildYaml(
     }
 
     override fun formatTriggerOn(default: ScmType): List<Pair<TriggerType, TriggerOn>> {
-        return listOf(TriggerType.parse(default) to ScriptYmlUtils.formatTriggerOn(triggerOn))
+        val format = ScriptYmlUtils.formatTriggerOn(triggerOn)
+        return listOf(TriggerType.BASE to format, TriggerType.parse(default) to format)
     }
 
     override fun formatStages(): List<Stage> {
