@@ -32,7 +32,7 @@ class NodeScheduledService @Autowired constructor(
         private const val SCHEDULED_WRITE_DISPLAY_NAME_TIMEOUT_LOCK_KEY = "scheduled_write_display_name_timeout_lock"
         private const val SCHEDULED_UPDATE_AGENT_TIMEOUT_LOCK_KEY = "scheduled_update_agent_timeout_lock"
         private const val EXPIRATION_TIME_OF_THE_LOCK = 200L
-        private const val DEFAULT_PAGE_SIZE = 1000
+        private const val DEFAULT_PAGE_SIZE = 100
         private const val AGENT_NOT_INSTALLED_TAG = false
         private const val AGENT_ABNORMAL_NODE_STATUS = 0
         private const val AGENT_NORMAL_NODE_STATUS = 1
@@ -44,7 +44,7 @@ class NodeScheduledService @Autowired constructor(
      * 每小时执行一次。
      * 条件：NODE_TYPE为cmdb的，查询该节点的agent安装状态以及版本，并对比差异更新
      */
-    @Scheduled(cron = "0 12 11 * * 1-5")
+    @Scheduled(cron = "0 25 11 * * 1-5")
     fun scheduledUpdateAgent() {
         taskWithRedisLock(SCHEDULED_UPDATE_AGENT_TIMEOUT_LOCK_KEY, ::updateAgent)
     }
@@ -129,7 +129,7 @@ class NodeScheduledService @Autowired constructor(
             it.agentVersion = ipToAgentUpdateList[it.nodeIp]?.version
             it
         }
-        if (logger.isDebugEnabled) logger.debug("[updateAgent]agentUpdateRecords:$agentUpdateRecords.")
+        if (logger.isDebugEnabled) logger.debug("[batchUpdateAgent]agentUpdateRecords:$agentUpdateRecords.")
         nodeDao.batchUpdateNodeRecords(dslContext, agentUpdateRecords)
     }
 
