@@ -125,7 +125,7 @@ class ProjectExtOrganizationService constructor(
 
         return with(tProjectRecord) {
             when {
-                centerId != 0L && centerName.isNotBlank() && OrganizationType.isCenter(
+                centerId != 0L && centerName.isNotBlank() && OrganizationType.isBelowTheDept(
                     tofService.getDeptInfo(id = centerId.toInt()).typeId.toInt()
                 ) -> {
                     ProjectOrganizationInfo(
