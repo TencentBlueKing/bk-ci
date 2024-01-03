@@ -58,6 +58,7 @@ class RemoteDevUpdateListener @Autowired constructor(
     private val rebuildWorkspaceHandler: RebuildWorkspaceHandler
 ) : Listener<RemoteDevUpdateEvent> {
 
+    @Suppress("ComplexMethod")
     override fun execute(event: RemoteDevUpdateEvent) {
         logger.info("A message is received from dispatch k8s $event")
         kotlin.runCatching {

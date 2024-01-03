@@ -236,7 +236,12 @@ class RebuildWorkspaceHandler @Autowired constructor(
 
             // 重写IOA注册表
             if (workspace.workspaceSystemType.needSafeInitialization()) {
-                deliverControl.safeInitialization(workspace.projectId, event.userId, event.workspaceName, event.autoAssign)
+                deliverControl.safeInitialization(
+                    projectId = workspace.projectId,
+                    userId = event.userId,
+                    workspaceName = event.workspaceName,
+                    autoAssign = event.autoAssign
+                )
             }
         } else {
             // 启动失败,记录为EXCEPTION
