@@ -13,6 +13,17 @@
       "description" : "pipeline 名称，缺省则设置为 YAML 文件相对于代码仓库根目录的路径",
       "type" : "string"
     },
+    "desc" : {
+      "description" : "流水线描述",
+      "type" : "string"
+    },
+    "label" : {
+      "description" : "可以给当前 pipeline 设置一个或多个标签",
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
     "on" : {
       "description" : "代码仓库push时触发，简写为 push:array 在指定的分支上提交时触发执行",
       "oneOf" : [ {
@@ -1340,69 +1351,6 @@
         }
       }
     },
-    "notices" : {
-      "description" : "流水线执行完成通知，可以使用variables 上下文更替其中内容，详见：#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-notices",
-      "type" : "array",
-      "items" : {
-        "type" : "object",
-        "additionalProperties" : false,
-        "required" : [ "type" ],
-        "properties" : {
-          "type" : {
-            "description" : "指定发送通知的类型",
-            "type" : "array",
-            "items" : {
-              "description" : "发送通知的类型，支持 email：邮件，wework-message：企业微信TIPS消息通知，由【Stream消息通知】统一通知，wework-chat：企业微信群消息",
-              "enum" : [ "email", "wework-message", "wework-chat", "sms" ]
-            }
-          },
-          "receivers" : {
-            "description" : "消息接收人，当 type=email | wework-message 时可以指定，缺省为流水线触发人",
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          },
-          "groups" : {
-            "description" : "通知组，比如管理员、开发人员、运维人员、产品人员、质量管理员、测试人员、CI管理员、插件开发者等",
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          },
-          "content" : {
-            "description" : "消息内容，缺省时使用系统内置消息模板",
-            "type" : "string"
-          },
-          "chat-id" : {
-            "description" : "企业微信会话ID，当 type=wework-chat 时可以指定，将服务号“CI-Notice”加到群里，@CI-Notice 会话ID，即可获得",
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          },
-          "notify-markdown" : {
-            "description" : "通知内容是否以markdown的格式发送",
-            "type" : "boolean"
-          },
-          "notify-detail-url" : {
-            "description" : "是否通知内容附加流水线链接",
-            "type" : "boolean"
-          },
-          "if" : {
-            "description" : "条件执行当前步骤，支持如下条件，FAILURE，当失败时执行，SUCCESS，当成功时执行，CANCELED，当取消时执行，缺省等同于 ALWAYS，总是执行，不支持自定义变量",
-            "enum" : [ "FAILURE", "SUCCESS", "CANCELED", "CANCELLED", "ALWAYS" ]
-          }
-        }
-      }
-    },
-    "label" : {
-      "description" : "可以给当前 pipeline 设置一个或多个标签",
-      "type" : "array",
-      "items" : {
-        "type" : "string"
-      }
-    },
     "finally" : {
       "description" : "当流水线执行结束时进行的一组操作，由一个或多个 job 组成，支持 job、step模板",
       "type" : "object",
@@ -1607,6 +1555,62 @@
         } ]
       }
     },
+    "notices" : {
+      "description" : "流水线执行完成通知，可以使用variables 上下文更替其中内容，详见：#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-notices",
+      "type" : "array",
+      "items" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "required" : [ "type" ],
+        "properties" : {
+          "type" : {
+            "description" : "指定发送通知的类型",
+            "type" : "array",
+            "items" : {
+              "description" : "发送通知的类型，支持 email：邮件，wework-message：企业微信TIPS消息通知，由【Stream消息通知】统一通知，wework-chat：企业微信群消息",
+              "enum" : [ "email", "wework-message", "wework-chat", "sms" ]
+            }
+          },
+          "receivers" : {
+            "description" : "消息接收人，当 type=email | wework-message 时可以指定，缺省为流水线触发人",
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "groups" : {
+            "description" : "通知组，比如管理员、开发人员、运维人员、产品人员、质量管理员、测试人员、CI管理员、插件开发者等",
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "content" : {
+            "description" : "消息内容，缺省时使用系统内置消息模板",
+            "type" : "string"
+          },
+          "chat-id" : {
+            "description" : "企业微信会话ID，当 type=wework-chat 时可以指定，将服务号“CI-Notice”加到群里，@CI-Notice 会话ID，即可获得",
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "notify-markdown" : {
+            "description" : "通知内容是否以markdown的格式发送",
+            "type" : "boolean"
+          },
+          "notify-detail-url" : {
+            "description" : "是否通知内容附加流水线链接",
+            "type" : "boolean"
+          },
+          "if" : {
+            "description" : "条件执行当前步骤，支持如下条件，FAILURE，当失败时执行，SUCCESS，当成功时执行，CANCELED，当取消时执行，缺省等同于 ALWAYS，总是执行，不支持自定义变量",
+            "enum" : [ "FAILURE", "SUCCESS", "CANCELED", "CANCELLED", "ALWAYS" ]
+          }
+        }
+      }
+    },
     "concurrency" : {
       "description" : "配置了 concurrency 时， 若有相同 group 的流水线正在执行，则新来的触发排队等待，任何之前排队的触发将被取消",
       "type" : "object",
@@ -1632,6 +1636,10 @@
           "maximum" : 1440
         }
       }
+    },
+    "disable-pipeline" : {
+      "description" : "是否禁用流水线",
+      "type" : "boolean"
     },
     "recommended-version" : {
       "description" : "推荐版本号,启用后,build-no 根据 initial-value 和 strategy 自增",
