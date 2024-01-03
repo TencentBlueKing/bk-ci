@@ -191,12 +191,12 @@ data class BkMonitorResp(
 data class EnableBkRepoData(
     val projectName: String,
     val projectCode: String,
-    val bgId: String,
-    val bgName: String,
-    val centerId: String,
-    val centerName: String,
-    val deptId: String,
-    val deptName: String,
+    val bgId: String?,
+    val bgName: String?,
+    val centerId: String?,
+    val centerName: String?,
+    val deptId: String?,
+    val deptName: String?,
     val englishName: String,
-    val productId: Int
+    val productId: Int?
 )

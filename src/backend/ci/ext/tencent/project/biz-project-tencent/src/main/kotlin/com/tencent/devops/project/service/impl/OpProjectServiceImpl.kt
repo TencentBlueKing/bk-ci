@@ -177,7 +177,7 @@ class OpProjectServiceImpl @Autowired constructor(
                     deptId = projectInfoRequest.deptId.toString(),
                     deptName = projectInfoRequest.deptName,
                     englishName = dbProjectRecord.englishName,
-                    productId = dbProjectRecord.productId
+                    productId = projectInfoRequest.productId ?: dbProjectRecord.productId
                 )
             )
         }
