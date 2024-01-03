@@ -335,7 +335,8 @@ class RbacPermissionMigrateService constructor(
     }
 
     override fun handoverAllPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
-        val resourceTypeList = cacheService.listResourceTypes().filterNot { it.resourceType == AuthResourceType.PROJECT.value }
+        val resourceTypeList = cacheService.listResourceTypes()
+            .filterNot { it.resourceType == AuthResourceType.PROJECT.value }
         resourceTypeList.forEach {
             handoverPermissions(
                 permissionHandoverDTO.copy(
