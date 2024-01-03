@@ -357,7 +357,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun show(userId: String, englishName: String, accessToken: String?): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
-        val projectInfo = ProjectUtils.packagingBean(record)
+        val rightProjectOrganization = fixProjectOrganization(tProjectRecord = record)
+        val projectInfo = ProjectUtils.packagingBean(
+            tProjectRecord = record,
+            projectOrganizationInfo = rightProjectOrganization
+        )
         val approvalStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
         if (approvalStatus.isCreatePending() && record.creator != userId) {
             throw ErrorCodeException(
@@ -403,7 +407,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     override fun diff(userId: String, englishName: String, accessToken: String?): ProjectDiffVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
         val projectApprovalInfo = projectApprovalService.get(englishName)
-        return ProjectUtils.packagingBean(record, projectApprovalInfo)
+        val rightProjectOrganization = fixProjectOrganization(tProjectRecord = record)
+        return ProjectUtils.packagingBean(
+            tProjectRecord = record,
+            projectApprovalInfo = projectApprovalInfo,
+            projectOrganizationInfo = rightProjectOrganization
+        )
     }
 
     override fun getByEnglishName(englishName: String): ProjectVO? {
