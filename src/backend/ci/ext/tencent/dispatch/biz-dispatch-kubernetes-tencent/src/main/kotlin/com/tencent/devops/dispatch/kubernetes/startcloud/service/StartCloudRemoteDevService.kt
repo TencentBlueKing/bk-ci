@@ -284,7 +284,11 @@ class StartCloudRemoteDevService @Autowired constructor(
     ): DispatchBuildTaskStatus {
         logger.info("StartCloud remoteDevService waitTaskFinish|userId|$userId|taskId|$taskId")
         val startTime = System.currentTimeMillis()
-        val timeout = if (type == UpdateEventType.CREATE || type == UpdateEventType.REBUILD) START_CREATE_TIMEOUT else START_OTHER_TIMEOUT
+        val timeout = if (type == UpdateEventType.CREATE || type == UpdateEventType.REBUILD) {
+            START_CREATE_TIMEOUT
+        } else {
+            START_OTHER_TIMEOUT
+        }
         loop@ while (true) {
             if (System.currentTimeMillis() - startTime > timeout) {
                 logger.error("Wait task: $taskId finish timeout($timeout)")
