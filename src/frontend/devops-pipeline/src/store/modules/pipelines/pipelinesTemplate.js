@@ -39,7 +39,7 @@ const mutations = {
 
 const actions = {
     requestInstallTemplate (_, params) {
-        return ajax.post(`${STORE_API_URL_PREFIX}/user/market/template/install`, params).then(response => {
+        return ajax.post(`${STORE_API_URL_PREFIX}/user/market/template/install/new`, params).then(response => {
             return response.data
         })
     },
@@ -117,6 +117,15 @@ const actions = {
         return ajax.delete(`${prefix}/templates/projects/${projectId}/templates/${templateId}/deletetemplate?versionName=${versionName}`).then(response => {
             return response.data
         })
+    },
+    enableTemplatePermissionManage (_, projectId) {
+        return ajax.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/enableTemplatePermissionManage`)
+    },
+    getTemplateHasViewPermission (_, { projectId, templateId }) {
+        return ajax.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}/hasPipelineTemplatePermission?permission=VIEW`)
+    },
+    getTemplateHasCreatePermission (_, { projectId, templateId }) {
+        return ajax.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}/hasPipelineTemplatePermission?permission=CREATE`)
     }
 }
 
