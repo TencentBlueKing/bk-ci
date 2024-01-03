@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.pojo
 
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -37,18 +38,14 @@ data class JobQuotaProject(
     val projectId: String,
     @ApiModelProperty("构建机类型", required = true)
     val vmType: JobQuotaVmType,
+    @ApiModelProperty("构建来源，默认BS", required = true)
+    val channelCode: String = ChannelCode.BS.name,
     @ApiModelProperty("项目最大并发JOB数， 默认50", required = false)
     val runningJobMax: Int,
     @ApiModelProperty("项目单JOB最大执行时间，默认8小时", required = false)
     val runningTimeJobMax: Int,
     @ApiModelProperty("项目所有JOB最大执行时间，默认40小时/月", required = false)
     val runningTimeProjectMax: Int,
-//    @ApiModelProperty("工蜂CI最大并发JOB数量，默认10个", required = false)
-//    val runningJobMaxGitCi: Int,
-//    @ApiModelProperty("工蜂CI单JOB最大执行时间，默认8小时", required = false)
-//    val runningTimeJobMaxGitCi: Int,
-//    @ApiModelProperty("工蜂CI所有JOB单项目最大执行时间，默认40小时/月", required = false)
-//    val runningTimeJobMaxProjectGitCi: Int,
     @ApiModelProperty("创建时间", required = false)
     val createdTime: Long?,
     @ApiModelProperty("修改时间", required = false)

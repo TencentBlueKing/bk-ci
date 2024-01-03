@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <included>
-    <property name="pattern" value="%d{&quot;yyyy.MM.dd HH:mm:ss,SSS&quot;}|%X{bizId}|%mdc{trace_id}| [%12.12t] %-5level %-40.40logger{40} %L %msg%n%throwable"/>
-
+    <property name="pattern"
+              value="%d{&quot;yyyy.MM.dd HH:mm:ss,SSS&quot;}|%X{bizId}|%mdc{trace_id}| [%12.12t] %-5level %-40.40logger{40} %L %msg%n%throwable"/>
+    <property name="AUDIT_EVENT_LOG_PATTERN" value="%m%n"/>
     <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>${pattern}</pattern>
@@ -12,9 +13,9 @@
         <file>${service.log.dir}/service.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>${service.log.dir}/service.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
-            <maxHistory>30</maxHistory>
+            <maxHistory>3</maxHistory>
             <maxFileSize>1GB</maxFileSize>
-            <totalSizeCap>10GB</totalSizeCap>
+            <totalSizeCap>3GB</totalSizeCap>
         </rollingPolicy>
         <encoder>
             <pattern>${pattern}</pattern>
@@ -33,9 +34,9 @@
         <file>${service.log.dir}/service-error.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>${service.log.dir}/service-error.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
-            <maxHistory>30</maxHistory>
+            <maxHistory>3</maxHistory>
             <maxFileSize>1GB</maxFileSize>
-            <totalSizeCap>10GB</totalSizeCap>
+            <totalSizeCap>3GB</totalSizeCap>
         </rollingPolicy>
         <encoder>
             <pattern>${pattern}</pattern>
@@ -52,6 +53,21 @@
         <discardingThreshold>0</discardingThreshold>
         <neverBlock>false</neverBlock>
         <includeCallerData>true</includeCallerData>
+    </appender>
+
+    <!-- 审计事件日志 -->
+    <appender name="audit-event-appender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${service.log.dir}/audit_event.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${service.log.dir}/audit_event.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>1GB</maxFileSize>
+            <maxHistory>3</maxHistory>
+            <totalSizeCap>5GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${AUDIT_EVENT_LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
     </appender>
 
 </included>

@@ -12,6 +12,7 @@ import com.tencent.devops.process.api.service.ServiceReportResource
 import com.tencent.devops.common.archive.pojo.ReportListDTO
 import com.tencent.devops.common.archive.pojo.TaskReport
 import org.springframework.stereotype.Service
+import java.text.Collator
 
 @Service
 class PipelineOutputServiceImpl(
@@ -61,6 +62,8 @@ class PipelineOutputServiceImpl(
         pipelineOutputList.addAll(artifacts.map { PipelineOutput.convertFromFileInfo(it) })
         pipelineOutputList.addAll(reports.map { PipelineOutput.convertFromTaskReport(it) })
 
-        return pipelineOutputList.sortedByDescending { it.createTime }
+        return pipelineOutputList.sortedWith { o1, o2 ->
+            Collator.getInstance().compare(o1.name, o2.name)
+        }
     }
 }

@@ -33,11 +33,11 @@ import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.BuildJobType
 import com.tencent.devops.model.dispatch.tables.TDispatchThirdpartyAgentBuild
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
+import java.time.LocalDateTime
 import org.jooq.DSLContext
+import org.jooq.JSON
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
-import org.jooq.JSON
 
 @Repository
 @Suppress("ALL")
@@ -94,7 +94,8 @@ class ThirdPartyAgentBuildDao {
                     .set(AGENT_IP, agentIp)
                     .set(NODE_ID, nodeId)
                     .set(
-                        DOCKER_INFO, if (dockerInfo == null) {
+                        DOCKER_INFO,
+                        if (dockerInfo == null) {
                             null
                         } else {
                             JSON.json(JsonUtil.toJson(dockerInfo, formatted = false))
@@ -256,22 +257,41 @@ class ThirdPartyAgentBuildDao {
     fun listAgentBuilds(
         dslContext: DSLContext,
         agentId: String,
+        status: String?,
+        pipelineId: String?,
         offset: Int,
         limit: Int
     ): List<TDispatchThirdpartyAgentBuildRecord> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             return dslContext.selectFrom(this)
                 .where(AGENT_ID.eq(agentId))
+                .let {
+                    if (status != null) it.and(STATUS.eq(PipelineTaskStatus.parse(status).status)) else it
+                }
+                .let {
+                    if (pipelineId != null) it.and(PIPELINE_ID.eq(pipelineId)) else it
+                }
                 .orderBy(CREATED_TIME.desc())
                 .limit(offset, limit)
                 .fetch()
         }
     }
 
-    fun countAgentBuilds(dslContext: DSLContext, agentId: String): Long {
+    fun countAgentBuilds(
+        dslContext: DSLContext,
+        agentId: String,
+        status: String?,
+        pipelineId: String?
+    ): Long {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             return dslContext.selectCount().from(this)
                 .where(AGENT_ID.eq(agentId))
+                .let {
+                    if (status != null) it.and(STATUS.eq(PipelineTaskStatus.parse(status).status)) else it
+                }
+                .let {
+                    if (pipelineId != null) it.and(PIPELINE_ID.eq(pipelineId)) else it
+                }
                 .fetchOne(0, Long::class.java)!!
         }
     }

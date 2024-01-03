@@ -41,7 +41,8 @@ enum class AtomStatusEnum(val status: Int) {
     UNDERCARRIAGING(9), // 下架中
     UNDERCARRIAGED(10), // 已下架
     CODECCING(11), // 代码检查中
-    CODECC_FAIL(12); // 代码检查失败
+    CODECC_FAIL(12), // 代码检查失败
+    TESTED(13); // 测试结束(仅分支测试使用)
 
     companion object {
 

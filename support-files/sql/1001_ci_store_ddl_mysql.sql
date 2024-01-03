@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS `T_ATOM` (
   `SUMMARY` varchar(256) DEFAULT NULL COMMENT '简介',
   `DESCRIPTION` text COMMENT '描述',
   `CATEGROY` tinyint(4) NOT NULL DEFAULT '1' COMMENT '类别',
-  `VERSION` varchar(20) NOT NULL COMMENT '版本号',
+  `VERSION` varchar(30) NOT NULL COMMENT '版本号',
   `LOGO_URL` varchar(256) DEFAULT NULL COMMENT 'LOGO URL地址',
   `ICON` text COMMENT '插件图标',
   `DEFAULT_FLAG` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否为默认原子',
@@ -84,6 +84,8 @@ CREATE TABLE IF NOT EXISTS `T_ATOM` (
   `PRIVATE_REASON` varchar(256) DEFAULT NULL COMMENT '插件代码库不开源原因',
   `DELETE_FLAG` bit(1) DEFAULT b'0' COMMENT '是否删除',
   `BRANCH` VARCHAR(128) DEFAULT 'master' COMMENT '代码库分支',
+  `BRANCH_TEST_FLAG` bit(1) DEFAULT b'0' COMMENT '是否是分支测试版本',
+  `LATEST_TEST_FLAG` bit(1) DEFAULT b'0' COMMENT '是否为最新测试版本原子， TRUE：最新 FALSE：非最新',
   PRIMARY KEY (`ID`),
   UNIQUE KEY `uni_inx_tpca_code_version` (`ATOM_CODE`,`VERSION`),
   KEY `inx_tpca_service_code` (`SERVICE_SCOPE`(255)),
@@ -732,9 +734,7 @@ CREATE TABLE IF NOT EXISTS `T_STORE_APPROVE`
     `UPDATE_TIME` datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
     `TOKEN` varchar(64) DEFAULT NULL,
     PRIMARY KEY (`ID`),
-    KEY `inx_tsa_applicant` (`APPLICANT`),
-    KEY `inx_tsa_type` (`TYPE`),
-    KEY `inx_tsa_status` (`STATUS`)
+    KEY `inx_tsa_store_code` (`STORE_CODE`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT='审核表';
 

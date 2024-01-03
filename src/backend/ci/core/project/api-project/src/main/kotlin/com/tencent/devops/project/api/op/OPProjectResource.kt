@@ -129,6 +129,12 @@ interface OPProjectResource {
         @ApiParam(value = "是否仓库灰度 true：是 false：否", required = true)
         @QueryParam(value = "is_repo_gray")
         repoGrayFlag: Boolean = false,
+        @ApiParam(value = "是否是云研发项目 true：是 false：否", required = true)
+        @QueryParam(value = "is_remotedev")
+        remoteDevFlag: Boolean = false,
+        @ApiParam(value = "运营产品ID", required = true)
+        @QueryParam(value = "product_id")
+        productId: Int?,
         @Context request: HttpServletRequest
     ): Result<Map<String, Any?>?>
 
@@ -181,5 +187,28 @@ interface OPProjectResource {
         projectCode: String,
         @ApiParam(value = "项目其他配置", required = true)
         properties: ProjectProperties
+    ): Result<Boolean>
+
+    @PUT
+    @Path("/enable")
+    @ApiOperation("启用或停用项目")
+    fun enable(
+        @ApiParam("待变更的新状态", required = true)
+        @QueryParam("enabled")
+        enabled: Boolean,
+        @ApiParam("项目ID列表", required = true)
+        englishNames: List<String>
+    ): Result<Boolean>
+
+    @PUT
+    @Path("{projectId}/updateProjectProductId")
+    @ApiOperation("修改项目关联产品")
+    fun updateProjectProductId(
+        @ApiParam(value = "项目code", required = true)
+        @PathParam("projectId")
+        projectCode: String,
+        @ApiParam("产品名称", required = true)
+        @QueryParam("productName")
+        productName: String
     ): Result<Boolean>
 }

@@ -101,6 +101,8 @@ class OPProjectResourceImpl @Autowired constructor(
         grayFlag: Boolean,
         codeCCGrayFlag: Boolean,
         repoGrayFlag: Boolean,
+        remoteDevFlag: Boolean,
+        productId: Int?,
         request: HttpServletRequest
     ): Result<Map<String, Any?>?> {
         return projectTagService.getProjectListByFlag(
@@ -115,7 +117,9 @@ class OPProjectResourceImpl @Autowired constructor(
             limit = limit,
             grayFlag = grayFlag,
             codeCCGrayFlag = codeCCGrayFlag,
-            repoGrayFlag = repoGrayFlag
+            repoGrayFlag = repoGrayFlag,
+            remoteDevFlag = remoteDevFlag,
+            productId = productId
         )
     }
 
@@ -133,5 +137,30 @@ class OPProjectResourceImpl @Autowired constructor(
         properties: ProjectProperties
     ): Result<Boolean> {
         return Result(opProjectService.updateProjectProperties(userId, projectCode, properties))
+    }
+
+    override fun enable(
+        enabled: Boolean,
+        englishNames: List<String>
+    ): Result<Boolean> {
+        englishNames.forEach {
+            projectService.updateUsableStatus(
+                englishName = it,
+                enabled = enabled,
+                checkPermission = false
+            )
+        }
+        return Result(true)
+    }
+
+    override fun updateProjectProductId(
+        projectCode: String,
+        productName: String
+    ): Result<Boolean> {
+        projectService.updateProjectProductId(
+            englishName = projectCode,
+            productName = productName
+        )
+        return Result(true)
     }
 }

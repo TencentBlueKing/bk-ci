@@ -666,7 +666,7 @@ export default {
     // 第一次拉取日志
 
     getInitLog ({ commit }, { projectId, pipelineId, buildId, tag, jobId, currentExe, subTag, debug }) {
-        return request.get(`/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}`, {
+        return request.get(`${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}`, {
             params: {
                 tag,
                 jobId,
@@ -679,7 +679,7 @@ export default {
 
     // 后续拉取日志
     getAfterLog ({ commit }, { projectId, pipelineId, buildId, tag, jobId, currentExe, lineNo, subTag, debug }) {
-        return request.get(`/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after`, {
+        return request.get(`${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after`, {
             params: {
                 start: lineNo,
                 executeCount: currentExe,
@@ -696,7 +696,7 @@ export default {
     },
 
     getLogStatus ({ commit }, { projectId, pipelineId, buildId, tag, jobId, executeCount }) {
-        return request.get(`/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/mode`, { params: { tag, jobId, executeCount } })
+        return request.get(`${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/mode`, { params: { tag, jobId, executeCount } })
     },
 
     getDownloadLogFromArtifactory ({ commit }, { projectId, pipelineId, buildId, tag, executeCount }) {

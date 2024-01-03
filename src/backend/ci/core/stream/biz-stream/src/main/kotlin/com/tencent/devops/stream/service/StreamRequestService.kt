@@ -97,7 +97,7 @@ class StreamRequestService @Autowired constructor(
         )
         val requestList = gitRequestEventDao.getRequestsById(
             dslContext = dslContext,
-            requestIds = messageData?.map { it.messageId.toInt() }?.toSet() ?: emptySet(),
+            requestIds = messageData?.map { it.messageId.toLong() }?.toSet() ?: emptySet(),
             hasEvent = false
         )
         if (requestList.isEmpty() || count == 0) {

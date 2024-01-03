@@ -27,6 +27,7 @@
 
 package com.tencent.devops.auth.api.service
 
+import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GIT_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
@@ -107,7 +108,10 @@ interface ServiceProjectAuthResource {
         userId: String,
         @PathParam("action")
         @ApiParam("项目资源类型action", required = true)
-        action: String
+        action: String,
+        @QueryParam("resourceType")
+        @ApiParam("资源类型", required = true)
+        resourceType: String? = null
     ): Result<List<String>>
 
     @GET
@@ -216,4 +220,16 @@ interface ServiceProjectAuthResource {
         @ApiParam("项目Id", required = true)
         projectId: String
     ): Result<List<BKAuthProjectRolesResources>>
+
+    @GET
+    @Path("/{projectCode}/getProjectPermissionInfo")
+    @ApiOperation("获取项目权限信息")
+    fun getProjectPermissionInfo(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
+        @PathParam("projectCode")
+        @ApiParam("项目Code", required = true)
+        projectCode: String
+    ): Result<ProjectPermissionInfoVO>
 }
