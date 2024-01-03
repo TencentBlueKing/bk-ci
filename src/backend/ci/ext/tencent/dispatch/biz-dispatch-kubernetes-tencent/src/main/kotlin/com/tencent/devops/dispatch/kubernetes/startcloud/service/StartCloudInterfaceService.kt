@@ -153,9 +153,10 @@ class StartCloudInterfaceService @Autowired constructor(
             )
         }
         logger.debug("syncStartCloudResourceList|resourceList|{}", resList)
-        windowsGpuResourceDao.deleteAllResource(dslContext)
-        windowsGpuResourceDao.createOrUpdateResource(dslContext, resList)
-
+        if (resList.isNotEmpty()) {
+            windowsGpuResourceDao.deleteAllResource(dslContext)
+            windowsGpuResourceDao.createOrUpdateResource(dslContext, resList)
+        }
         // 同步 gpu空闲资源数据
         kotlin.runCatching {
             getAllVmResource()
