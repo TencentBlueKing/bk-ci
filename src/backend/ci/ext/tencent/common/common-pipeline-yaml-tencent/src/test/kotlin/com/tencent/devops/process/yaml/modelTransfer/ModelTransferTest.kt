@@ -389,7 +389,8 @@ internal class ModelTransferTest : BkCiAbstractTest() {
             "yaml-model-004-v3",
             "yaml-model-003-v3-template",
             "yaml-model-002-v3",
-            "yaml-model-001-v3"
+            "yaml-model-001-v3",
+            "yaml-model-001-v2"
         ]
     )
     fun yaml2model(value: String) {
