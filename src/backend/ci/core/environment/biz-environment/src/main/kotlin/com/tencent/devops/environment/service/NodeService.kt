@@ -112,7 +112,9 @@ class NodeService @Autowired constructor(
         }
 
         // 判断节点在CC中的业务，为蓝盾对应的公共业务：find_host_biz_relations接口查询出所属业务，看返回值中的data数组中对象的bk_biz_id是否等于蓝盾测试机业务。
-        val hostIdList = existNodeList.map { it.hostId }
+        val hostIdList = existNodeList.filterNot {
+            it.nodeType == NodeType.THIRDPARTY.name || it.nodeType == NodeType.DEVCLOUD.name
+        }.map { it.hostId }
         val hostIdQueryCCRes = queryFromCCService.queryCCFindHostBizRelations(hostIdList)
         val hostIdQueryCCList = hostIdQueryCCRes.data // 所有cc中返回的节点记录
         if (logger.isDebugEnabled) logger.debug("[deleteNodes]hostIdQueryCCList:$hostIdQueryCCList")
