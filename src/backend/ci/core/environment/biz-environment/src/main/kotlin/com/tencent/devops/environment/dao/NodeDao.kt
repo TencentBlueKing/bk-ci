@@ -76,6 +76,15 @@ class NodeDao {
         }
     }
 
+    fun getCmdbNodesByNodeIdList(dslContext: DSLContext, nodeIdList: List<Long>): Result<TNodeRecord> {
+        with(TNode.T_NODE) {
+            return dslContext.selectFrom(this)
+                .where(NODE_TYPE.eq(NodeType.CMDB.name))
+                .and(NODE_ID.`in`(nodeIdList))
+                .fetch()
+        }
+    }
+
     fun countCmdbNodes(dslContext: DSLContext): Int {
         with(TNode.T_NODE) {
             return dslContext.selectCount()

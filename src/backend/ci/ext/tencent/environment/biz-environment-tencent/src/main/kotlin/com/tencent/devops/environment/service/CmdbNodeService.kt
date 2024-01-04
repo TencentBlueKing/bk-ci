@@ -44,6 +44,7 @@ import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.job.AddCmdbNodesRes
 import com.tencent.devops.environment.pojo.job.AgentVersion
 import com.tencent.devops.environment.pojo.job.NodeAgent
+import com.tencent.devops.environment.pojo.job.ReImportCmdbNodeInfo
 import com.tencent.devops.environment.pojo.job.ccres.CCInfo
 import com.tencent.devops.environment.pojo.job.ccres.CCResp
 import com.tencent.devops.environment.pojo.job.ccres.QueryCCListHostWithoutBizData
@@ -119,27 +120,52 @@ class CmdbNodeService @Autowired constructor(
         )
     }
 
+    fun reImportCmdbNodes(
+        userId: String,
+        projectId: String,
+        reImportCmdbNodeInfoList: List<ReImportCmdbNodeInfo>
+    ): AddCmdbNodesRes {
+        // 验证User是节点的主备负责人
+        val nodeIpList = reImportCmdbNodeInfoList.map { it.nodeIp }
+        val cmdbIpToNodeMap = checkUserOperator(userId, nodeIpList)
+
+        // 将该节点添加到CC中
+        val queryCCIpToCCInfoMap = addNodeToCC(cmdbIpToNodeMap)
+
+        // update对应db记录的 NODE_STATUS 为 NORMAL，并写入 HOST_ID 和 CLOUD_AREA_ID
+        val nodeIdList = reImportCmdbNodeInfoList.map { it.nodeId }
+        val nodeIdToCCInfoMap = mutableMapOf<Long, CCInfo?>()
+        reImportCmdbNodeInfoList.forEach {
+            nodeIdToCCInfoMap[it.nodeId] = queryCCIpToCCInfoMap[it.nodeIp]
+        }
+        val nodeRecords = nodeDao.getCmdbNodesByNodeIdList(dslContext, nodeIdList)
+        val updateNodeRecords = nodeRecords.map {
+            it.nodeStatus = NodeStatus.NORMAL.name
+            it.hostId = nodeIdToCCInfoMap[it.nodeId]?.bkHostId
+            it.cloudAreaId = nodeIdToCCInfoMap[it.nodeId]?.bkCloudId?.toLong()
+            it
+        }
+        nodeDao.batchUpdateNodeRecords(dslContext, updateNodeRecords)
+        return AddCmdbNodesRes(
+            nodeStatus = true,
+            nodesAgentList = updateNodeRecords.map {
+                NodeAgent(
+                    nodeIp = it.nodeIp,
+                    nodesAgentStatus = if (it.agentStatus) 1 else 0,
+                    nodesAgentVersion = it.agentVersion
+                )
+            },
+            agentAbnormalNodesCount = updateNodeRecords.filterNot { it.agentStatus }.size,
+            agentNotInstallNodesCount = 0
+        )
+    }
+
     fun addCmdbNodes(userId: String, projectId: String, nodeIps: List<String>): AddCmdbNodesRes {
         // 验证 CMDB 节点IP和责任人
-        val cmdbNodeList = esbAgentClient.getCmdbNodeByIps(userId, nodeIps).nodes // 查出所有ip对应记录
-        val cmdbIpToNodeMap = cmdbNodeList.associateBy { it.ip } // ip - 记录 映射
-        val invalidIps = nodeIps.filter { // 权限校验
-            if (!cmdbIpToNodeMap.containsKey(it)) true
-            else {
-                val isOperator = cmdbIpToNodeMap[it]!!.operator == userId
-                val isBakOpertor = cmdbIpToNodeMap[it]!!.bakOperator.split(";").contains(userId)
-                !isOperator && !isBakOpertor
-            }
-        }
-        if (invalidIps.isNotEmpty()) {
-            throw ErrorCodeException(
-                errorCode = EnvironmentMessageCode.ERROR_NODE_IP_ILLEGAL_USER,
-                params = arrayOf(invalidIps.joinToString(","))
-            )
-        }
+        val cmdbIpToNodeMap = checkUserOperator(userId, nodeIps)
         // 只添加不存在的节点
-        val existNodeList = nodeDao.listServerAndDevCloudNodes(dslContext, projectId) // 已存在 节点db记录
-        val existIpList = existNodeList.map { it.nodeIp }.toSet() // 已存在 节点ip
+        val existIpList = nodeDao.listServerAndDevCloudNodes(dslContext, projectId) // 已存在 节点db记录
+            .map { it.nodeIp }.toSet() // 已存在 节点ip
         val toAddIpList = nodeIps.filterNot { existIpList.contains(it) }.filterNot { it.isEmpty() } // 要添加的 节点ip
         val toAddIpToCmdbNodeMap = cmdbIpToNodeMap.filter { toAddIpList.contains(it.key) } // 要添加的 节点ip - cmdb记录映射
         ImportServerNodeUtils.checkImportCount(
@@ -210,6 +236,34 @@ class CmdbNodeService @Autowired constructor(
             agentNotInstallNodesCount = 0
         )
     }
+
+    /**
+     * 用CMDB节点IP，验证用户是该机器的责任人（主备负责人）
+     */
+    private fun checkUserOperator(userId: String, nodeIps: List<String>): Map<String, RawCmdbNode> {
+        val cmdbIpToNodeMap = esbAgentClient.getCmdbNodeByIps(userId, nodeIps).nodes // 所有ip对应记录
+            .associateBy { it.ip } // ip - 记录 映射
+        val invalidIps = nodeIps.filter { // 权限校验
+            if (!cmdbIpToNodeMap.containsKey(it)) true
+            else {
+                val isOperator = cmdbIpToNodeMap[it]!!.operator == userId
+                val isBakOpertor = cmdbIpToNodeMap[it]!!.bakOperator.split(";").contains(userId)
+                !isOperator && !isBakOpertor
+            }
+        }
+        if (invalidIps.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_IP_ILLEGAL_USER,
+                params = arrayOf(invalidIps.joinToString(","))
+            )
+        }
+        return cmdbIpToNodeMap
+    }
+
+    /**
+     * 将节点添加到CC中
+     * 返回值：无论在不在CC中的节点信息 CCInfo
+     */
 
     private fun addNodeToCC(toAddIpToCmdbNodeMap: Map<String, RawCmdbNode>): Map<String?, CCInfo> {
         val serverIdToCmdbNodeMap = toAddIpToCmdbNodeMap.values.associateBy { it.serverId.toLong() }

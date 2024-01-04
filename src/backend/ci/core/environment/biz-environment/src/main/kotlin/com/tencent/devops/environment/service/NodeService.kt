@@ -254,6 +254,14 @@ class NodeService @Autowired constructor(
                     it.nodeType == NodeType.DEVCLOUD.name
                 ) {
                     it.nodeStatus
+                } else if ((it.nodeType == NodeType.CMDB.name ||
+                        it.nodeType == NodeType.UNKNOWN.name ||
+                        it.nodeType == NodeType.OTHER.name) &&
+                    (it.nodeStatus == NodeStatus.NOT_IN_CC.name ||
+                        it.nodeStatus == NodeStatus.NOT_IN_CMDB.name ||
+                        it.nodeStatus == NodeStatus.NOT_INSTALLED.name)
+                ) {
+                    it.nodeStatus
                 } else {
                     if (getAgentStatus(it)) {
                         NodeStatus.NORMAL.name
