@@ -90,7 +90,7 @@
                 return this.nodeDetails.os === 'WINDOWS' ? this.nodeDetails.agentUrl : this.nodeDetails.agentScript
             },
             jumpDashboardUrl () {
-                return `https://bkm.woa.com/?bizId=${this.bizId}&var-server=${this.nodeDetails.ip}#/grafana/d/bT8qy3NVa` - 4219865
+                return `https://bkm.woa.com/?bizId=${this.bizId}&var-server=${this.nodeDetails.ip}#/grafana/d/bT8qy3NVa`
             }
         },
         watch: {
