@@ -24,11 +24,11 @@
                         target="_blank"
                         :href="info.fileUrl"
                     >
-                        {{info.filePath}}
+                        <span class="pac-info-row-link-text-span">
+                            {{info.filePath}}
+                        </span>
+                        <logo class="pac-info-row-link-text-icon" size="16" name="tiaozhuan" />
                     </bk-link>
-                    <bk-button text theme="primary">
-                        <logo size="16" name="tiaozhuan" />
-                    </bk-button>
                 </p>
             </div>
         </section>
@@ -97,15 +97,35 @@
         display: grid;
         grid-gap: 6px;
         &-row {
-            display: grid;
+            display: flex;
             align-items: center;
             grid-auto-flow: column;
             grid-gap: 8px;
             grid-template-columns: min-content 1fr;
             color: #979BA5;
+            overflow: hidden;
+            > {
+                flex-shrink: 0;
+            }
             &-link {
-                color: green;
-                @include ellipsis();
+                flex: 1;
+                display: flex;
+                overflow: hidden;
+                cursor: pointer;
+                justify-content: flex-start;
+                .bk-link-text {
+                    width: 100%;
+                    display: flex;
+                    align-items: center;
+                    grid-gap: 8px;
+                    .pac-info-row-link-text-span {
+                        @include ellipsis();
+                    }
+                    .pac-info-row-link-text-icon {
+                        flex-shrink: 0;
+                        color: #3A84FF;
+                    }
+                }
             }
         }
 

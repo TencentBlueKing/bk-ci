@@ -438,7 +438,7 @@
                     this.releasing = true
                     this.setSaveStatus(true)
                     await this.$refs?.releaseForm?.validate?.()
-                    const { fileUrl, webUrl, pathWithNamespace, repoHashId, scmType, filePath, ...rest } = this.releaseParams
+                    const { fileUrl, webUrl, pathWithNamespace, repoHashId, scmType, filePath, targetAction, ...rest } = this.releaseParams
                     const { data: { version, versionName } } = await this.releaseDraftPipeline({
                         projectId,
                         pipelineId,
@@ -446,6 +446,12 @@
                         params: {
                             ...rest,
                             staticViews: this.groupValue.staticViews,
+                            ...(rest.enablePac
+                                ? {
+                                    targetAction
+                                }
+                                : {}
+                            ),
                             yamlInfo: rest.enablePac
                                 ? {
                                     scmType,
@@ -465,7 +471,8 @@
                     })
 
                     const tipsI18nKey = this.releaseParams.enablePac ? 'pacPipelineReleaseTips' : 'releaseTips'
-                    const tipsArrayLength = this.releaseParams.enablePac ? 4 : 2
+                    const tipsArrayLength = this.releaseParams.enablePac ? 3 : 2
+                    const isPacMR = this.releaseParams.enablePac && this.releaseParams.targetAction === 'CHECKOUT_BRANCH_AND_REQUEST_MERGE'
                     const h = this.$createElement
                     const instance = this.$bkInfo({
                         type: 'success',
@@ -473,15 +480,37 @@
                         width: 600,
                         showFooter: false,
                         subHeader: h('div', {}, [
+                            h('h3', {
+                                style: {
+                                    margin: '0 0 12px 0',
+                                    fontWeight: 'normal',
+                                    fontSize: '14px',
+                                    textAlign: 'left'
+                                },
+                                domProps: {
+                                    innerHTML: this.$t(isPacMR ? 'pacMRRelaseSuc' : 'relaseSucTips', [`V${version} (${versionName})`])
+                                }
+                            }),
                             h('p', {
                                 attrs: {
                                     class: 'pipeline-release-suc-tips'
                                 }
-                            }, Array.from({ length: tipsArrayLength }).map((_, index) => h('span', {
-                                domProps: {
-                                    innerHTML: this.$t(`${tipsI18nKey}${index}`)
+                            }, Array.from({ length: tipsArrayLength }).map((_, index) => {
+                                if (index === 1 && this.releaseParams.enablePac) {
+                                    return h('ul', {}, [
+                                        h('span', {}, this.$t(`${tipsI18nKey}${index}`)),
+                                        Array(3).fill(0).map((_, i) =>
+                                            h('li', {
+                                                style: {
+                                                    marginLeft: '32px',
+                                                    listStyle: 'disc'
+                                                }
+                                            }, this.$t(`${tipsI18nKey}${index}-${i}`))
+                                        )
+                                    ])
                                 }
-                            }))),
+                                return h('span', {}, this.$t(`${tipsI18nKey}${index}`))
+                            })),
                             h('footer', {
                                 style: {
                                     display: 'flex',
@@ -490,7 +519,7 @@
                                     justifyContent: 'center'
                                 }
                             }, [
-                                this.releaseParams.enablePac
+                                this.releaseParams.enablePac && isPacMR
                                     ? h('bk-button', {
                                         props: {
                                             theme: 'primary'
@@ -498,18 +527,29 @@
                                         on: {
                                             click: () => {
                                                 this.$bkInfo.close(instance.id)
-                                                this.$router.push({
-                                                    name: 'pipelinesHistory',
-                                                    params: {
-                                                        projectId,
-                                                        pipelineId,
-                                                        type: 'pipeline'
-                                                    }
-                                                })
+                                                window.open('git.woa.com', '_blank')
                                             }
                                         }
-                                    }, this.$t('查看流水线'))
+                                    }, this.$t('处理合并请求'))
                                     : null,
+                                h('bk-button', {
+                                    props: {
+                                        theme: 'primary'
+                                    },
+                                    on: {
+                                        click: () => {
+                                            this.$bkInfo.close(instance.id)
+                                            this.$router.push({
+                                                name: 'pipelinesHistory',
+                                                params: {
+                                                    projectId,
+                                                    pipelineId,
+                                                    type: 'pipeline'
+                                                }
+                                            })
+                                        }
+                                    }
+                                }, this.$t('查看流水线')),
                                 h('bk-button', {
                                     on: {
                                         click: () => {

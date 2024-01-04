@@ -14,6 +14,8 @@
             render-directive="if"
             v-model="showVersionDiffDialog"
             header-position="left"
+            :draggable="false"
+            ext-cls="diff-version-dialog"
             width="90%"
             :title="$t('diff')"
         >
@@ -97,6 +99,7 @@
                 return this.pipelineVersionList.find(item => item.version === this.latestVersion)?.versionName ?? '--'
             }
         },
+
         methods: {
             ...mapActions('atom', [
                 'fetchPipelineByVersion'
@@ -161,4 +164,14 @@
 
 <style lang="scss">
     @import "@/scss/select-dark-theme.scss";
+    .diff-version-dialog.bk-dialog-wrapper {
+        transition: none;
+        .bk-dialog {
+            transition: all .3s;
+            margin: 0;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    }
 </style>

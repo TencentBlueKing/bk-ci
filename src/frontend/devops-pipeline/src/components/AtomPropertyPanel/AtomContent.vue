@@ -641,7 +641,6 @@
         }
     }
     .atom-form-footer {
-        margin-top: 10px;
         button {
             margin-right: 6px;
         }

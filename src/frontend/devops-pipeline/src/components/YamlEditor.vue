@@ -149,7 +149,7 @@
                     const doc = YAML.parse(this.value)
                     const jobs = Object.values(doc.stages[stageIndex].jobs)
 
-                    jobs[containerIndex].steps[elementIndex] = YAML.parse(text)
+                    jobs[containerIndex].steps[elementIndex] = text
                     const result = YAML.stringify(doc)
                     this.emitChange(result)
                 } catch (error) {

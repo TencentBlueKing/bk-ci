@@ -8,6 +8,7 @@
                 <bk-spin v-if="isLoading" size="mini"></bk-spin>
                 <template v-else>
                     <i v-if="isActiveDraft" class="devops-icon icon-draft" />
+                    <logo v-else-if="isActiveBranchVersion" name="branch" size="14" />
                     <i v-else class="devops-icon icon-check-circle" />
                     <span v-if="isActiveDraft">{{ $t('editPage.draftVersion', [draftBaseVersionName]) }}</span>
                     <span v-else>
@@ -40,6 +41,7 @@
                     >
                         <p>
                             <i v-if="item.isDraft" class="devops-icon icon-draft" style="font-size: 14px" />
+                            <logo v-else-if="item.isBranchVersion" name="branch" size="14" />
                             <i v-else class="devops-icon icon-check-circle" />
                             <span class="pipeline-version-name">
                                 {{ item.displayName }}
@@ -75,10 +77,12 @@
     import { mapState, mapActions } from 'vuex'
     import { convertTime } from '@/utils/util'
     import VersionHistorySideSlider from './VersionHistorySideSlider'
+    import Logo from '@/components/Logo'
     export default {
         name: 'versionSideslider',
         emit: ['input', 'update:value', 'change'],
         components: {
+            Logo,
             VersionHistorySideSlider
         },
         props: {
@@ -126,6 +130,9 @@
             },
             isActiveDraft () {
                 return this.activeVersion?.isDraft ?? false
+            },
+            isActiveBranchVersion () {
+                return this.activeVersion?.isBranchVersion ?? false
             },
             draftBaseVersionName () {
                 return this.getDraftBaseVersionName(this.activeVersion?.baseVersion)
@@ -175,6 +182,7 @@
                             ...item,
                             displayName: isDraft ? this.$t('draft') : displayName,
                             description: isDraft ? this.$t('baseOn', [this.getDraftBaseVersionName(item.baseVersion)]) : (item.description || '--'),
+                            isBranchVersion: item.status === 'BRANCH',
                             isDraft,
                             isRelease: item.status === 'RELEASED'
                         }
