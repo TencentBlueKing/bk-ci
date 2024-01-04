@@ -15,6 +15,18 @@
                 >
                     {{$t('pipeline')}}
                 </bk-breadcrumb-item>
+                <template v-if="routeName === 'PipelineListAuth'">
+                    <bk-breadcrumb-item
+                        class="pipeline-breadcrumb-item"
+                    >
+                        {{$t('pipelineGroup')}}
+                    </bk-breadcrumb-item>
+                    <bk-breadcrumb-item
+                        class="pipeline-breadcrumb-item"
+                    >
+                        {{groupName}}
+                    </bk-breadcrumb-item>
+                </template>
                 <!-- <bk-breadcrumb-item
                     v-if="$route.meta.breadcrumbs"
                     class="pipeline-breadcrumb-item"
@@ -57,7 +69,6 @@
                     </li>
 
                 </ul>
-
             </bk-dropdown-menu>
         </pipeline-header>
         <router-view></router-view>
@@ -94,6 +105,9 @@
             },
             routeName () {
                 return this.$route.name
+            },
+            groupName () {
+                return this.$route.params.groupName
             },
             dropTitle () {
                 return this.dropdownMenus.find(menu => menu.routeName === this.routeName)?.label ?? 'more'

@@ -19,8 +19,11 @@
                     <span>{{ $t('template.instantiationFailMsg') }}：</span>
                     <ul class="fail-list">
                         <li class="item-row" v-for="(row, index) in failList" :key="index">
-                            <div class="pipeline-item">{{ row }}：
-                                <span class="error-message">{{ failMessage[row] }}</span>
+                            <div class="pipeline-item">
+                                <div class="name" v-bk-overflow-tips>
+                                    {{ row }}
+                                </div>：
+                                <div class="error-message">{{ failMessage[row] }}</div>
                             </div>
                         </li>
                     </ul>
@@ -81,6 +84,15 @@
             padding: 30px 20px;
             min-height: 360px;
         }
+        .pipeline-item {
+            display: flex;
+            .name {
+                text-wrap: nowrap;
+                max-width: 300px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+        }
         .icon-close {
             position: absolute;
             right: 0px;
@@ -96,6 +108,7 @@
         }
         .fail-list {
             padding-left: 20px;
+            margin-top: 10px;
         }
         .item-row {
             list-style: outside;

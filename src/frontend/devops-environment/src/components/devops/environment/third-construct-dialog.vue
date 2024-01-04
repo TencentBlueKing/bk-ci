@@ -164,8 +164,8 @@
         }
 
         .command-line {
+            flex: 1;
             padding-right: 24px;
-            width: 490px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;

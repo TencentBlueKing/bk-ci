@@ -278,8 +278,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             version = version,
             atomDefaultFlag = atomDefaultFlag,
             atomStatusList = atomStatusList
-        ) ?: return I18nUtil.generateResponseDataObject(
-            messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+        ) ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
             params = arrayOf("[project($projectCode)-plugin($atomCode)]")
         )
         val tAtom = TAtom.T_ATOM

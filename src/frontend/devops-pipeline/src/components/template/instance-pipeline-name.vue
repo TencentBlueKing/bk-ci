@@ -21,7 +21,7 @@
                         v-focus="isFocus()"
                         v-validate="{
                             required: true,
-                            max: 40
+                            max: 128
                         }"
                         :class="{ 'is-danger': errors.has('pipelineName') }">
                     <div :class="errors.has('pipelineName') ? 'error-tips' : 'normal-tips'">{{ errors.first("pipelineName") }}</div>

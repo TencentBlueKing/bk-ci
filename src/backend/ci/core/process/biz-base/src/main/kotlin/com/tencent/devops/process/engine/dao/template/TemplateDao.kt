@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.model.process.tables.TTemplate
 import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.FAIL_TO_LIST_TEMPLATE_PARAMS
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_ID
@@ -447,6 +448,11 @@ class TemplateDao {
         limit: Int?,
         queryModelFlag: Boolean = true
     ): Result<out Record>? {
+        if (projectId == null && templateIdList == null && limit == null)
+            throw ErrorCodeException(
+                defaultMessage = "list pipeline templates params error",
+                errorCode = FAIL_TO_LIST_TEMPLATE_PARAMS
+            )
         val tTemplate = TTemplate.T_TEMPLATE
 
         val conditions = mutableListOf<Condition>()

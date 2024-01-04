@@ -44,6 +44,7 @@ object WebhookI18nConstants {
     const val TGIT_NOTE_EVENT_DESC = "bkTgitNoteEventDesc"
     const val TGIT_REVIEW_APPROVED_EVENT_DESC = "bkTgitReviewApprovedEventDesc"
     const val TGIT_REVIEW_APPROVING_EVENT_DESC = "bkTgitReviewApprovingEventDesc"
+    const val TGIT_REVIEW_CLOSED_EVENT_DESC = "bkTgitReviewClosedEventDesc"
     const val TGIT_REVIEW_CHANGE_DENIED_EVENT_DESC = "bkTgitReviewChangeDeniedEventDesc"
     const val TGIT_REVIEW_CHANGE_REQUIRED_EVENT_DESC = "bkTgitReviewChangeRequiredEventDesc"
     const val TGIT_REVIEW_CREATED_EVENT_DESC = "bkTgitReviewCreatedEventDesc"
