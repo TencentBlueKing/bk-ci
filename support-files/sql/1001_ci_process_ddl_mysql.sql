@@ -1216,7 +1216,6 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_VERSION`
     `COMMIT_ID`       varchar(64)  NOT NULL DEFAULT '' COMMENT '文件commitId',
     `PIPELINE_ID`   varchar(64)  NOT NULL DEFAULT '' COMMENT '流水线ID',
     `VERSION`       int(11) COMMENT '流水线版本',
-    `VERSION_NAME`  varchar(64)           DEFAULT '' COMMENT '流水线版本名',
     `CREATOR`       varchar(64)  NOT NULL COMMENT '创建人',
     `MODIFIER`      varchar(64)  NOT NULL COMMENT '修改人',
     `CREATE_TIME`   timestamp             default CURRENT_TIMESTAMP not null comment '创建时间',
