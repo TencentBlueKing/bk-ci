@@ -94,16 +94,16 @@ class JobStatisticsScheduler @Autowired constructor(
                 keyValue = keyValue,
                 jobMetricsDataList = jobMetricsDataList
             )
-
-            println("Fetch job metrics data from Redis, current count: ${jobMetricsDataList.size}")
         }
+
+        logger.info("Fetch job metrics data from Redis, current count: ${jobMetricsDataList.size}")
 
         return jobMetricsDataList
     }
 
     private fun pushJobStatisticsToDB(jobMetricsDataList: MutableList<DispatchJobMetricsData>) {
         jobMetricsDataList.chunked(100).forEach {
-            println("Start push jobStatistics, size: ${it.size}")
+            logger.info("Start push jobStatistics, size: ${it.size}")
             measureEventDispatcher.dispatch(
                 DispatchJobMetricsEvent(
                     projectId = "",
@@ -112,7 +112,7 @@ class JobStatisticsScheduler @Autowired constructor(
                     jobMetricsList = it
                 )
             )
-            println("Job statistics successfully pushed to DB.")
+            logger.info("Job statistics successfully pushed to DB.")
         }
     }
 

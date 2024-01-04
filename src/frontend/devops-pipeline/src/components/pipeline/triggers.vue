@@ -122,15 +122,14 @@
                     }
                 } catch (err) {
                     this.disabled = false
-                    this.handleError(err, [{
-                        actionId: this.$permissionActionMap.execute,
-                        resourceId: this.$permissionResourceMap.pipeline,
-                        instanceId: [{
-                            id: this.pipelineId,
-                            name: this.pipelineId
-                        }],
-                        projectId: this.projectId
-                    }], this.getPermUrlByRole(this.projectId, this.pipeline, this.roleMap.executor))
+                    this.handleError(
+                        err,
+                        {
+                            projectId: this.projectId,
+                            resourceCode: this.pipelineId,
+                            action: this.$permissionResourceAction.EXECUTE
+                        }
+                    )
                 }
             },
             /**

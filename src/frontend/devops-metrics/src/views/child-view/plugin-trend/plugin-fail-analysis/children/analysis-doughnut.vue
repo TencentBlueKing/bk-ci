@@ -48,7 +48,7 @@ onMounted(getData);
     class="analysis-doughnut overview-card mt20"
     :loading="isLoading"
   >
-    <h3 class="g-card-title">{{ t('State by error code') }}</h3>
+    <h3 class="g-card-title">{{ t('Statistics of error code') }}</h3>
     <doughnut :data="errorData"></doughnut>
   </bk-loading>
 </template>
