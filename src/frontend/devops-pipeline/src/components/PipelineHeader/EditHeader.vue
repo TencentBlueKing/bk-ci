@@ -90,6 +90,7 @@
                 'pipelineYaml',
                 'pipelineInfo'
             ]),
+
             ...mapState('pipelines', ['executeStatus', 'isManage']),
             ...mapGetters({
                 isCurPipelineLocked: 'atom/isCurPipelineLocked',
@@ -97,7 +98,7 @@
                 checkPipelineInvalid: 'atom/checkPipelineInvalid'
             }),
             canDebug () {
-                return (this.pipelineInfo?.canDebug ?? false) && !this.saveStatus
+                return (this.pipelineInfo?.canDebug ?? false) && !this.saveStatus && !this.isCurPipelineLocked
             },
             RESOURCE_ACTION () {
                 return RESOURCE_ACTION

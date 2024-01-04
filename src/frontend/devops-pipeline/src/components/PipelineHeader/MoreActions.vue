@@ -4,7 +4,7 @@
             <div slot="dropdown-trigger" class="more-operation-entry">
                 <i class="entry-circle" v-for="i in [1, 2, 3]" :key="i" />
             </div>
-            <div :key="curPipelineId" class="more-operation-dropmenu" slot="dropdown-content">
+            <div v-if="curPipelineId" :key="curPipelineId" class="more-operation-dropmenu" slot="dropdown-content">
                 <ul v-for="(parent, index) in actionConfMenus" :key="index">
                     <template v-for="(action, aIndex) in parent">
                         <li
@@ -102,12 +102,12 @@
                 return this.pipelineInfo?.pipelineName ?? ''
             },
             curPipelineId () {
-                return this.curPipeline?.pipelineId
+                return this.pipelineInfo?.pipelineId
             },
             actionConfMenus () {
                 const { projectId } = this.$route.params
                 const pipeline = {
-                    ...this.pipelineInfo,
+                    ...(this.pipelineInfo ?? {}),
                     projectId
                 }
                 return [
