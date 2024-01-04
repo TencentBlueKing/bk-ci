@@ -2230,6 +2230,7 @@ class PipelineBuildFacadeService(
         buildId: String,
         vmSeqId: String,
         nodeHashId: String?,
+        executeCount: Int?,
         simpleResult: SimpleResult
     ) {
         var msg = simpleResult.message
@@ -2281,6 +2282,11 @@ class PipelineBuildFacadeService(
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectCode, buildId)
         if (buildInfo == null || buildInfo.status.isFinish()) {
             logger.warn("[$buildId]|workerBuildFinish|The build status is ${buildInfo?.status}")
+            return
+        }
+
+        if (executeCount != null && buildInfo.executeCount != null && executeCount != buildInfo.executeCount) {
+            logger.warn("[$buildId]|workerBuildFinish|executeCount ne [$executeCount != ${buildInfo.executeCount}]")
             return
         }
 

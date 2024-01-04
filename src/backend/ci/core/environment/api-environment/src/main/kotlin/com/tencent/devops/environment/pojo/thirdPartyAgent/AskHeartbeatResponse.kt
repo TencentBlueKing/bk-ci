@@ -25,43 +25,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.enums
+package com.tencent.devops.environment.pojo.thirdPartyAgent
 
-import com.tencent.devops.common.api.exception.InvalidParamException
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-enum class AgentStatus(val status: Int) {
-    UN_IMPORT(0), // 未导入，用户刚刚在界面上面生成链接
-    UN_IMPORT_OK(1), // 未导入但是agent状态正常（这个时候还是不能用来当构建机）
-    IMPORT_OK(2), // 用户已经在界面导入并且agent工作正常（构建机只有在这个状态才能正常工作）
-    IMPORT_EXCEPTION(3), // agent异常
-    DELETE(4);
-
-    override fun toString() = status.toString()
-
-    companion object {
-        fun fromStatus(status: Int): AgentStatus {
-            values().forEach {
-                if (status == it.status) {
-                    return it
-                }
-            }
-            throw InvalidParamException("Unknown agent status($status)")
-        }
-
-        fun isDelete(status: AgentStatus) =
-            status == DELETE
-
-        fun isUnImport(status: AgentStatus) = status == UN_IMPORT
-
-        fun isImportException(status: AgentStatus) = status == IMPORT_EXCEPTION
-
-        fun fromString(status: String): AgentStatus {
-            values().forEach {
-                if (status == it.name) {
-                    return it
-                }
-            }
-            throw InvalidParamException("Unknown agent status($status)")
-        }
-    }
+@Suppress("ALL")
+@ApiModel("Agent心跳上报模型")
+data class AskHeartbeatResponse(
+    @ApiModelProperty("主版本")
+    val masterVersion: String,
+    @ApiModelProperty("从属版本")
+    val slaveVersion: String,
+    @ApiModelProperty("构建机状态")
+    val agentStatus: String,
+    @ApiModelProperty("通道数量")
+    val parallelTaskCount: Int,
+    @ApiModelProperty("环境变量")
+    val envs: Map<String, String>,
+    @ApiModelProperty("网关地址")
+    val gateway: String? = "",
+    @ApiModelProperty("文件网关路径")
+    val fileGateway: String? = "",
+    @ApiModelProperty("Agent的一些属性配置")
+    val props: Map<String, Any>,
+    @ApiModelProperty("docker最大任务数量")
+    val dockerParallelTaskCount: Int,
+    @ApiModelProperty("用户国际化语言")
+    val language: String
+) {
+    constructor(resp: HeartbeatResponse) : this(
+        masterVersion = resp.masterVersion,
+        slaveVersion = resp.slaveVersion,
+        agentStatus = resp.AgentStatus,
+        parallelTaskCount = resp.ParallelTaskCount,
+        envs = resp.envs,
+        gateway = resp.gateway,
+        fileGateway = resp.fileGateway,
+        props = resp.props,
+        dockerParallelTaskCount = resp.dockerParallelTaskCount,
+        language = resp.language
+    )
 }

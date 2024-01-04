@@ -1,3 +1,6 @@
+//go:build !out
+// +build !out
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -25,43 +28,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.enums
+package httputil
 
-import com.tencent.devops.common.api.exception.InvalidParamException
-
-enum class AgentStatus(val status: Int) {
-    UN_IMPORT(0), // 未导入，用户刚刚在界面上面生成链接
-    UN_IMPORT_OK(1), // 未导入但是agent状态正常（这个时候还是不能用来当构建机）
-    IMPORT_OK(2), // 用户已经在界面导入并且agent工作正常（构建机只有在这个状态才能正常工作）
-    IMPORT_EXCEPTION(3), // agent异常
-    DELETE(4);
-
-    override fun toString() = status.toString()
-
-    companion object {
-        fun fromStatus(status: Int): AgentStatus {
-            values().forEach {
-                if (status == it.status) {
-                    return it
-                }
-            }
-            throw InvalidParamException("Unknown agent status($status)")
-        }
-
-        fun isDelete(status: AgentStatus) =
-            status == DELETE
-
-        fun isUnImport(status: AgentStatus) = status == UN_IMPORT
-
-        fun isImportException(status: AgentStatus) = status == IMPORT_EXCEPTION
-
-        fun fromString(status: String): AgentStatus {
-            values().forEach {
-                if (status == it.name) {
-                    return it
-                }
-            }
-            throw InvalidParamException("Unknown agent status($status)")
-        }
-    }
+func checkHttpStatusErr(status int, body []byte) {
+	// 检查 http 请求报错并添加至 exitcode，方便代码调试使用
 }
