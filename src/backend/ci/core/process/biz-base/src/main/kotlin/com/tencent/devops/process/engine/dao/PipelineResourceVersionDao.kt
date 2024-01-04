@@ -233,6 +233,24 @@ class PipelineResourceVersionDao {
         }
     }
 
+    fun clearActiveBranchVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): Int? {
+        return with(T_PIPELINE_RESOURCE_VERSION) {
+            dslContext.update(this)
+                .set(BRANCH_ACTION, BranchVersionAction.INACTIVE.name)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .and(STATUS.eq(VersionStatus.BRANCH.name))
+                .and(
+                    BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
+                        .or(BRANCH_ACTION.isNull)
+                )
+                .execute()
+        }
+    }
+
     fun deleteEarlyVersion(
         dslContext: DSLContext,
         projectId: String,

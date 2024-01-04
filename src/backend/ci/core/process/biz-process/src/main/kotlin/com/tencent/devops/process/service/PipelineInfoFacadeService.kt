@@ -1306,7 +1306,12 @@ class PipelineInfoFacadeService @Autowired constructor(
                 channelCode = channelCode ?: ChannelCode.BS
             )
             modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, null, param)
-
+            watcher.start("s_c_yaml_del")
+            val setting = pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId)
+            if (setting.pipelineAsCodeSettings?.enable == true) {
+                // 检查yaml是否已经在默认分支删除
+//                yamlFacadeService.deleteBeforeCheck(userId, projectId, pipelineId)
+            }
             watcher.start("s_r_pipeline_del")
             val deletePipelineResult = pipelineRepositoryService.deletePipeline(
                 projectId = projectId,
