@@ -87,7 +87,10 @@ interface ApigwLogResourceV3 {
         jobId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?
+        executeCount: Int?,
+        @ApiParam("是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<QueryLogs>
 
     @ApiOperation("获取更多日志", tags = ["v3_app_log_more", "v3_user_log_more"])
@@ -135,7 +138,10 @@ interface ApigwLogResourceV3 {
         jobId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?
+        executeCount: Int?,
+        @ApiParam("是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<QueryLogs>
 
     @ApiOperation("获取某行后的日志", tags = ["v3_user_log_after", "v3_app_log_after"])
@@ -174,7 +180,10 @@ interface ApigwLogResourceV3 {
         jobId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?
+        executeCount: Int?,
+        @ApiParam("是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<QueryLogs>
 
     @ApiOperation(
@@ -211,7 +220,10 @@ interface ApigwLogResourceV3 {
         jobId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?
+        executeCount: Int?,
+        @ApiParam("是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Response
 
     @ApiOperation("获取插件的的日志状态", tags = ["v3_app_log_mode", "v3_user_log_mode"])
@@ -241,7 +253,10 @@ interface ApigwLogResourceV3 {
         tag: String,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?
+        executeCount: Int?,
+        @ApiParam("是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<QueryLogStatus>
 
     @ApiOperation("获取当前构建的最大行号", tags = ["v3_app_log_line_num", "v3_user_log_line_num"])
@@ -259,6 +274,9 @@ interface ApigwLogResourceV3 {
         pipelineId: String,
         @ApiParam("构建ID (b-开头)", required = true)
         @PathParam("buildId")
-        buildId: String
+        buildId: String,
+        @ApiParam("是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<QueryLogLineNum>
 }

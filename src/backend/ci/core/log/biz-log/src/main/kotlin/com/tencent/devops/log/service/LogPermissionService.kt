@@ -28,12 +28,22 @@
 package com.tencent.devops.log.service
 
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 
 interface LogPermissionService {
+
+    fun verifyUserLogPermission(
+        projectCode: String,
+        userId: String,
+        permission: AuthPermission?,
+        authResourceType: AuthResourceType? = AuthResourceType.PIPELINE_DEFAULT
+    ): Boolean
+
     fun verifyUserLogPermission(
         projectCode: String,
         pipelineId: String,
         userId: String,
-        permission: AuthPermission?
+        permission: AuthPermission?,
+        authResourceType: AuthResourceType? = AuthResourceType.PIPELINE_DEFAULT
     ): Boolean
 }

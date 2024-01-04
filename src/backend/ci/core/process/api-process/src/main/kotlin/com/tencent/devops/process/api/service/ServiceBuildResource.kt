@@ -395,7 +395,10 @@ interface ServiceBuildResource {
         executeCount: Int?,
         @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        @ApiParam("是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<ModelRecord>
 
     @ApiOperation("获取流水线构建历史")
@@ -486,7 +489,10 @@ interface ServiceBuildResource {
         buildMsg: String? = null,
         @ApiParam("触发人", required = false)
         @QueryParam("startUser")
-        startUser: List<String>? = null
+        startUser: List<String>? = null,
+        @ApiParam("是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @ApiOperation("获取构建详情")
