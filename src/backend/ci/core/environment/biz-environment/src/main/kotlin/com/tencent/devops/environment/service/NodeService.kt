@@ -114,30 +114,32 @@ class NodeService @Autowired constructor(
         // 判断节点在CC中的业务，为蓝盾对应的公共业务：find_host_biz_relations接口查询出所属业务，看返回值中的data数组中对象的bk_biz_id是否等于蓝盾测试机业务。
         val hostIdList = existNodeList.filterNot {
             it.nodeType == NodeType.THIRDPARTY.name || it.nodeType == NodeType.DEVCLOUD.name
-        }.map { it.hostId }
-        val hostIdQueryCCRes = queryFromCCService.queryCCFindHostBizRelations(hostIdList)
-        val hostIdQueryCCList = hostIdQueryCCRes.data // 所有cc中返回的节点记录
-        if (logger.isDebugEnabled) logger.debug("[deleteNodes]hostIdQueryCCList:$hostIdQueryCCList")
+        }.mapNotNull { it.hostId }
+        if (hostIdList.isNotEmpty()) {
+            val hostIdQueryCCRes = queryFromCCService.queryCCFindHostBizRelations(hostIdList)
+            val hostIdQueryCCList = hostIdQueryCCRes.data // 所有cc中返回的节点记录
+            if (logger.isDebugEnabled) logger.debug("[deleteNodes]hostIdQueryCCList:$hostIdQueryCCList")
 
-        // 条件1. 这个业务的bizid等于蓝盾测试机
-        val queryCCEqualBizList = hostIdQueryCCList?.filter { bkBizScopeId == it.bkBizId.toString() } // cc返回记录中，biz是蓝盾测试机的
-        if (logger.isDebugEnabled) logger.debug("[deleteNodes]queryCCEqualBizList:$queryCCEqualBizList")
-        val queryCCEqualBizHostIdList = queryCCEqualBizList?.map { Host(it.bkHostId.toLong()) } ?: listOf()
+            // 条件1. 这个业务的bizid等于蓝盾测试机
+            val queryCCEqualBizList = hostIdQueryCCList?.filter { bkBizScopeId == it.bkBizId.toString() } // cc返回记录中，biz是蓝盾测试机的
+            if (logger.isDebugEnabled) logger.debug("[deleteNodes]queryCCEqualBizList:$queryCCEqualBizList")
+            val queryCCEqualBizHostIdList = queryCCEqualBizList?.map { Host(it.bkHostId.toLong()) } ?: listOf()
 
-        // 条件2. 判断节点在蓝盾中的项目，没在其他项目下：用host_id去T_NODE中查记录，只有等于当前项目id的一个项目。
-        val nodeRecordByHostId = nodeDao.getNodesFromHostListByBkHostId(
-            dslContext, queryCCEqualBizHostIdList
-        )
-        if (logger.isDebugEnabled) logger.debug("[deleteNodes]nodeRecordByHostId:$nodeRecordByHostId")
-        val hostIdToNodeMap = nodeRecordByHostId.groupBy({ it.hostId }, { it })
-        if (logger.isDebugEnabled) logger.debug("[deleteNodes]hostIdToNodeMap:$hostIdToNodeMap")
-        val deleteHostIdMap = hostIdToNodeMap.filter { (key, value) ->
-            BIZ_SIZE == value.size // key -> host_id, value -> host_id对应T_NODE表记录
-        } // 只有一个项目
-        if (logger.isDebugEnabled) logger.debug("[deleteNodes]deleteHostIdMap:$deleteHostIdMap")
+            // 条件2. 判断节点在蓝盾中的项目，没在其他项目下：用host_id去T_NODE中查记录，只有等于当前项目id的一个项目。
+            val nodeRecordByHostId = nodeDao.getNodesFromHostListByBkHostId(
+                dslContext, queryCCEqualBizHostIdList
+            )
+            if (logger.isDebugEnabled) logger.debug("[deleteNodes]nodeRecordByHostId:$nodeRecordByHostId")
+            val hostIdToNodeMap = nodeRecordByHostId.groupBy({ it.hostId }, { it })
+            if (logger.isDebugEnabled) logger.debug("[deleteNodes]hostIdToNodeMap:$hostIdToNodeMap")
+            val deleteHostIdMap = hostIdToNodeMap.filter { (key, value) ->
+                BIZ_SIZE == value.size // key -> host_id, value -> host_id对应T_NODE表记录
+            } // 只有一个项目
+            if (logger.isDebugEnabled) logger.debug("[deleteNodes]deleteHostIdMap:$deleteHostIdMap")
 
-        // 满足以上2个条件，将其从CC蓝盾业务下移出：调用cc的delete接口，将机器从CC中移除。
-        queryFromCCService.deleteHostFromCiBiz(deleteHostIdMap.keys)
+            // 满足以上2个条件，将其从CC蓝盾业务下移出：调用cc的delete接口，将机器从CC中移除。
+            queryFromCCService.deleteHostFromCiBiz(deleteHostIdMap.keys)
+        }
 
         NodeActionFactory.load(NodeActionFactory.Action.DELETE)?.action(existNodeList)
 
