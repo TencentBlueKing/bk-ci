@@ -102,18 +102,19 @@ class DispatchBuildService @Autowired constructor(
     private val buildPoolSize = 100000 // 单个流水线可同时执行的任务数量
 
     fun preStartUp(dispatchMessage: DispatchMessage): Boolean {
-        val dockerRoutingType = DockerRoutingType.valueOf(dispatchMessage.dockerRoutingType!!)
+        val event = dispatchMessage.event
+        val dockerRoutingType = DockerRoutingType.valueOf(event.dockerRoutingType!!)
         logsPrinter.printLogs(
             dispatchMessage = dispatchMessage,
-            message = containerServiceFactory.load(dispatchMessage.projectId).getLog().readyStartLog
+            message = containerServiceFactory.load(event.projectId).getLog().readyStartLog
         )
 
         val buildBuilderPoolNo = builderPoolNoDao.getBaseBuildLastPoolNo(
             dslContext = dslContext,
             dispatchType = dockerRoutingType.name,
-            buildId = dispatchMessage.buildId,
-            vmSeqId = dispatchMessage.vmSeqId,
-            executeCount = dispatchMessage.executeCount ?: 1
+            buildId = event.buildId,
+            vmSeqId = event.vmSeqId,
+            executeCount = event.executeCount ?: 1
         )
         logger.info("buildBuilderPoolNo: $buildBuilderPoolNo")
 
@@ -121,14 +122,15 @@ class DispatchBuildService @Autowired constructor(
     }
 
     fun startUp(dispatchMessage: DispatchMessage) {
-        val dockerRoutingType = dockerRoutingSdkService.getDockerRoutingType(dispatchMessage.projectId)
-        val dispatchBuild = containerServiceFactory.load(dispatchMessage.projectId)
+        val event = dispatchMessage.event
+        val dockerRoutingType = dockerRoutingSdkService.getDockerRoutingType(event.projectId)
+        val dispatchBuild = containerServiceFactory.load(event.projectId)
         threadLocalCpu.set(dispatchBuild.cpu)
         threadLocalMemory.set(dispatchBuild.memory)
         threadLocalDisk.set(dispatchBuild.disk)
 
         try {
-            val containerPool = dispatchMessage.getContainerPool()
+            val containerPool = getContainerPool(dispatchMessage)
             logsPrinter.printLogs(dispatchMessage, "start image：${containerPool.container}")
             // 读取并选择配置
             if (!containerPool.performanceConfigId.isNullOrBlank() && containerPool.performanceConfigId != "0") {
@@ -141,33 +143,34 @@ class DispatchBuildService @Autowired constructor(
                 }
             }
 
-            val (lastIdleBuilder, poolNo, containerChanged) = dispatchMessage.getIdleBuilder(dockerRoutingType)
+            val (lastIdleBuilder, poolNo, containerChanged) = getIdleBuilder(dockerRoutingType, dispatchMessage)
 
             // 记录构建历史
-            dispatchMessage.recordBuildHisAndGatewayCheck(dockerRoutingType, poolNo, lastIdleBuilder)
+            recordBuildHisAndGatewayCheck(dockerRoutingType, poolNo, lastIdleBuilder, dispatchMessage)
 
             // 用户第一次构建，或者用户更换了镜像，或者容器配置有变更，则重新创建容器。否则，使用已有容器，start起来即可
             if (null == lastIdleBuilder || containerChanged) {
                 logger.info(
-                    "buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} create new " +
+                    "buildId: ${event.buildId} vmSeqId: ${event.vmSeqId} create new " +
                         "builder, poolNo: $poolNo"
                 )
-                dispatchMessage.createAndStartNewBuilder(
+                createAndStartNewBuilder(
                     dockerRoutingType = dockerRoutingType,
                     containerPool = containerPool,
                     poolNo = poolNo,
-                    projectId = dispatchMessage.projectId
+                    projectId = event.projectId,
+                    dispatchMessage = dispatchMessage
                 )
             } else {
                 logger.info(
-                    "buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} start idle " +
+                    "buildId: ${event.buildId} vmSeqId: ${event.vmSeqId} start idle " +
                         "builder, builderName: $lastIdleBuilder"
                 )
-                dispatchMessage.startBuilder(dockerRoutingType, lastIdleBuilder, poolNo, dispatchMessage.projectId)
+                startBuilder(dockerRoutingType, lastIdleBuilder, poolNo, event.projectId, dispatchMessage)
             }
         } catch (e: BuildFailureException) {
             logger.error(
-                "buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} create builder " +
+                "buildId: ${event.buildId} vmSeqId: ${event.vmSeqId} create builder " +
                     "failed. msg:${e.message}. \n${dispatchBuild.helpUrl}"
             )
             throw BuildFailureException(
@@ -178,7 +181,7 @@ class DispatchBuildService @Autowired constructor(
             )
         } catch (e: Exception) {
             logger.error(
-                "buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} create builder " +
+                "buildId: ${event.buildId} vmSeqId: ${event.vmSeqId} create builder " +
                     "failed, msg:${e.message}"
             )
             if (e.message.equals("timeout")) {
@@ -201,8 +204,8 @@ class DispatchBuildService @Autowired constructor(
         }
     }
 
-    private fun DispatchMessage.getContainerPool(): Pool {
-        val containerPool = objectMapper.readValue<Pool>(dispatchMessage)
+    private fun getContainerPool(dispatchMessage: DispatchMessage): Pool {
+        val containerPool = objectMapper.readValue<Pool>(dispatchMessage.event.dispatchType.value)
 
         if (containerPool.third != null && !containerPool.third) {
             val containerPoolFixed = if (containerPool.container!!.startsWith(registryHost!!)) {
@@ -226,92 +229,24 @@ class DispatchBuildService @Autowired constructor(
     }
 
     @Suppress("ALL")
-    private fun DispatchMessage.getIdleBuilder(dockerRoutingType: DockerRoutingType): Triple<String?, Int, Boolean> {
-        val lock = PipelineBuilderLock(dockerRoutingType, redisOperation, pipelineId, vmSeqId)
-        try {
-            lock.lock()
-            for (i in 1..buildPoolSize) {
-                logger.info("poolNo is $i")
-                val builderInfo = dispatchKubernetesBuildDao.get(dslContext, dockerRoutingType.name, pipelineId, vmSeqId, i)
-                if (null == builderInfo) {
-                    dispatchKubernetesBuildDao.createOrUpdate(
+    private fun getIdleBuilder(
+        dockerRoutingType: DockerRoutingType,
+        dispatchMessage: DispatchMessage
+    ): Triple<String?, Int, Boolean> {
+        with(dispatchMessage.event) {
+            val lock = PipelineBuilderLock(dockerRoutingType, redisOperation, pipelineId, vmSeqId)
+            try {
+                lock.lock()
+                for (i in 1..buildPoolSize) {
+                    logger.info("poolNo is $i")
+                    val builderInfo = dispatchKubernetesBuildDao.get(
                         dslContext = dslContext,
                         dispatchType = dockerRoutingType.name,
                         pipelineId = pipelineId,
                         vmSeqId = vmSeqId,
-                        poolNo = i,
-                        projectId = projectId,
-                        builderName = "",
-                        image = dispatchMessage,
-                        status = DispatchBuilderStatus.BUSY.status,
-                        userId = userId,
-                        cpu = threadLocalCpu.get(),
-                        memory = threadLocalMemory.get(),
-                        disk = threadLocalDisk.get()
+                        poolNo = i
                     )
-                    return Triple(null, i, true)
-                }
-
-                if (builderInfo.status == DispatchBuilderStatus.BUSY.status) {
-                    continue
-                }
-
-                if (builderInfo.containerName.isEmpty()) {
-                    dispatchKubernetesBuildDao.createOrUpdate(
-                        dslContext = dslContext,
-                        dispatchType = dockerRoutingType.name,
-                        pipelineId = pipelineId,
-                        vmSeqId = vmSeqId,
-                        poolNo = i,
-                        projectId = projectId,
-                        builderName = "",
-                        image = dispatchMessage,
-                        status = DispatchBuilderStatus.BUSY.status,
-                        userId = userId,
-                        cpu = threadLocalCpu.get(),
-                        memory = threadLocalMemory.get(),
-                        disk = threadLocalDisk.get()
-                    )
-                    return Triple(null, i, true)
-                }
-
-                val detailResponse = containerServiceFactory.load(projectId).getBuilderStatus(
-                    buildId = buildId,
-                    vmSeqId = vmSeqId,
-                    userId = userId,
-                    builderName = builderInfo.containerName
-                )
-
-                if (detailResponse.isOk()) {
-                    if (detailResponse.data!! == DispatchBuildBuilderStatus.READY_START) {
-                        var containerChanged = false
-                        // 查看构建性能配置是否变更
-                        if (threadLocalCpu.get() != builderInfo.cpu ||
-                            threadLocalDisk.get() != builderInfo.disk ||
-                            threadLocalMemory.get() != builderInfo.memory
-                        ) {
-                            containerChanged = true
-                            logger.info("buildId: $buildId, vmSeqId: $vmSeqId performanceConfig changed.")
-                        }
-
-                        // 镜像是否变更
-                        if (checkImageChanged(builderInfo.containerImage)) {
-                            containerChanged = true
-                        }
-
-                        dispatchKubernetesBuildDao.updateStatus(
-                            dslContext = dslContext,
-                            dispatchType = dockerRoutingType.name,
-                            pipelineId = pipelineId,
-                            vmSeqId = vmSeqId,
-                            poolNo = i,
-                            status = DispatchBuilderStatus.BUSY.status
-                        )
-                        return Triple(builderInfo.containerName, i, containerChanged)
-                    }
-                    if (detailResponse.data!! == DispatchBuildBuilderStatus.HAS_EXCEPTION) {
-                        clearExceptionBuilder(dockerRoutingType, builderInfo.containerName, projectId)
-                        dispatchKubernetesBuildDao.delete(dslContext, dockerRoutingType.name, pipelineId, vmSeqId, i)
+                    if (null == builderInfo) {
                         dispatchKubernetesBuildDao.createOrUpdate(
                             dslContext = dslContext,
                             dispatchType = dockerRoutingType.name,
@@ -320,7 +255,7 @@ class DispatchBuildService @Autowired constructor(
                             poolNo = i,
                             projectId = projectId,
                             builderName = "",
-                            image = dispatchMessage,
+                            image = dispatchType.value,
                             status = DispatchBuilderStatus.BUSY.status,
                             userId = userId,
                             cpu = threadLocalCpu.get(),
@@ -329,29 +264,120 @@ class DispatchBuildService @Autowired constructor(
                         )
                         return Triple(null, i, true)
                     }
-                }
-                // continue to find idle builder
-            }
 
-            throw BuildFailureException(
-                ErrorCodeEnum.BASE_NO_IDLE_VM_ERROR.errorType,
-                ErrorCodeEnum.BASE_NO_IDLE_VM_ERROR.errorCode,
-                ErrorCodeEnum.BASE_NO_IDLE_VM_ERROR.getErrorMessage(),
-                ErrorCodeEnum.BASE_NO_IDLE_VM_ERROR.getErrorMessage()
-            )
-        } finally {
-            lock.unlock()
+                    if (builderInfo.status == DispatchBuilderStatus.BUSY.status) {
+                        continue
+                    }
+
+                    if (builderInfo.containerName.isEmpty()) {
+                        dispatchKubernetesBuildDao.createOrUpdate(
+                            dslContext = dslContext,
+                            dispatchType = dockerRoutingType.name,
+                            pipelineId = pipelineId,
+                            vmSeqId = vmSeqId,
+                            poolNo = i,
+                            projectId = projectId,
+                            builderName = "",
+                            image = dispatchType.value,
+                            status = DispatchBuilderStatus.BUSY.status,
+                            userId = userId,
+                            cpu = threadLocalCpu.get(),
+                            memory = threadLocalMemory.get(),
+                            disk = threadLocalDisk.get()
+                        )
+                        return Triple(null, i, true)
+                    }
+
+                    val detailResponse = containerServiceFactory.load(projectId).getBuilderStatus(
+                        buildId = buildId,
+                        vmSeqId = vmSeqId,
+                        userId = userId,
+                        builderName = builderInfo.containerName
+                    )
+
+                    if (detailResponse.isOk()) {
+                        if (detailResponse.data!! == DispatchBuildBuilderStatus.READY_START) {
+                            var containerChanged = false
+                            // 查看构建性能配置是否变更
+                            if (threadLocalCpu.get() != builderInfo.cpu ||
+                                threadLocalDisk.get() != builderInfo.disk ||
+                                threadLocalMemory.get() != builderInfo.memory
+                            ) {
+                                containerChanged = true
+                                logger.info("buildId: $buildId, vmSeqId: $vmSeqId performanceConfig changed.")
+                            }
+
+                            // 镜像是否变更
+                            if (checkImageChanged(builderInfo.containerImage, dispatchMessage)) {
+                                containerChanged = true
+                            }
+
+                            dispatchKubernetesBuildDao.updateStatus(
+                                dslContext = dslContext,
+                                dispatchType = dockerRoutingType.name,
+                                pipelineId = pipelineId,
+                                vmSeqId = vmSeqId,
+                                poolNo = i,
+                                status = DispatchBuilderStatus.BUSY.status
+                            )
+                            return Triple(builderInfo.containerName, i, containerChanged)
+                        }
+                        if (detailResponse.data!! == DispatchBuildBuilderStatus.HAS_EXCEPTION) {
+                            clearExceptionBuilder(
+                                dockerRoutingType = dockerRoutingType,
+                                builderName = builderInfo.containerName,
+                                projectId = projectId,
+                                dispatchMessage = dispatchMessage
+                            )
+                            dispatchKubernetesBuildDao.delete(
+                                dslContext = dslContext,
+                                dispatchType = dockerRoutingType.name,
+                                pipelineId = pipelineId,
+                                vmSeqId = vmSeqId,
+                                poolNo = i
+                            )
+                            dispatchKubernetesBuildDao.createOrUpdate(
+                                dslContext = dslContext,
+                                dispatchType = dockerRoutingType.name,
+                                pipelineId = pipelineId,
+                                vmSeqId = vmSeqId,
+                                poolNo = i,
+                                projectId = projectId,
+                                builderName = "",
+                                image = dispatchType.value,
+                                status = DispatchBuilderStatus.BUSY.status,
+                                userId = userId,
+                                cpu = threadLocalCpu.get(),
+                                memory = threadLocalMemory.get(),
+                                disk = threadLocalDisk.get()
+                            )
+                            return Triple(null, i, true)
+                        }
+                    }
+                    // continue to find idle builder
+                }
+
+                throw BuildFailureException(
+                    ErrorCodeEnum.BASE_NO_IDLE_VM_ERROR.errorType,
+                    ErrorCodeEnum.BASE_NO_IDLE_VM_ERROR.errorCode,
+                    ErrorCodeEnum.BASE_NO_IDLE_VM_ERROR.getErrorMessage(),
+                    ErrorCodeEnum.BASE_NO_IDLE_VM_ERROR.getErrorMessage()
+                )
+            } finally {
+                lock.unlock()
+            }
         }
     }
 
-    private fun DispatchMessage.createAndStartNewBuilder(
+    private fun createAndStartNewBuilder(
         dockerRoutingType: DockerRoutingType,
         containerPool: Pool,
         poolNo: Int,
-        projectId: String
+        projectId: String,
+        dispatchMessage: DispatchMessage
     ) {
         val (taskId, builderName) = containerServiceFactory.load(projectId).createAndStartBuilder(
-            dispatchMessages = this,
+            dispatchMessages = dispatchMessage,
             containerPool = containerPool,
             poolNo = poolNo,
             cpu = threadLocalCpu.get(),
@@ -359,17 +385,18 @@ class DispatchBuildService @Autowired constructor(
             disk = threadLocalDisk.get()
         )
 
-        checkStartTask(poolNo, taskId, builderName, dockerRoutingType, projectId)
+        checkStartTask(poolNo, taskId, builderName, dockerRoutingType, projectId, dispatchMessage)
     }
 
-    private fun DispatchMessage.startBuilder(
+    private fun startBuilder(
         dockerRoutingType: DockerRoutingType,
         builderName: String,
         poolNo: Int,
-        projectId: String
+        projectId: String,
+        dispatchMessage: DispatchMessage
     ) {
         val taskId = containerServiceFactory.load(projectId).startBuilder(
-            dispatchMessages = this,
+            dispatchMessages = dispatchMessage,
             builderName = builderName,
             poolNo = poolNo,
             cpu = threadLocalCpu.get(),
@@ -377,7 +404,7 @@ class DispatchBuildService @Autowired constructor(
             disk = threadLocalDisk.get()
         )
 
-        checkStartTask(poolNo, taskId, builderName, dockerRoutingType, projectId)
+        checkStartTask(poolNo, taskId, builderName, dockerRoutingType, projectId, dispatchMessage)
     }
 
     fun buildAndPushImage(
@@ -390,146 +417,155 @@ class DispatchBuildService @Autowired constructor(
             .buildAndPushImage(userId, projectId, buildId, dispatchBuildImageReq)
     }
 
-    private fun DispatchMessage.checkStartTask(
+    private fun checkStartTask(
         poolNo: Int,
         taskId: String,
         builderName: String,
         dockerRoutingType: DockerRoutingType,
-        projectId: String
+        projectId: String,
+        dispatchMessage: DispatchMessage
     ) {
-        val dispatchBuild = containerServiceFactory.load(projectId)
-        logger.info(
-            "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo start builder, " +
-                "taskId:($taskId)"
-        )
-        logsPrinter.printLogs(
-            this,
-            "builderName: $builderName " + MessageUtil.getMessageByLocale(
-            BK_MACHINE_BUILD_COMPLETED_WAITING_FOR_STARTUP,
-            I18nUtil.getDefaultLocaleLanguage()
-        ))
-        builderPoolNoDao.setBaseBuildLastBuilder(
-            dslContext = dslContext,
-            dispatchType = dockerRoutingType.name,
-            buildId = buildId,
-            vmSeqId = vmSeqId,
-            executeCount = executeCount ?: 1,
-            builderName = builderName,
-            poolNo = poolNo
-        )
-
-        val (taskStatus, failedMsg) = dispatchBuild.waitTaskFinish(userId, taskId)
-
-        if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
-            // 启动成功
+        with(dispatchMessage.event) {
+            val dispatchBuild = containerServiceFactory.load(projectId)
             logger.info(
-                "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo " +
-                    "start ${dockerRoutingType.name} vm success, wait for agent startup..."
+                "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo start builder, " +
+                        "taskId:($taskId)"
             )
             logsPrinter.printLogs(
-                this,
-                MessageUtil.getMessageByLocale(
-                    BK_BUILD_MACHINE_START_SUCCESS_WAIT_AGENT_START,
+                dispatchMessage,
+                "builderName: $builderName " + MessageUtil.getMessageByLocale(
+                    BK_MACHINE_BUILD_COMPLETED_WAITING_FOR_STARTUP,
                     I18nUtil.getDefaultLocaleLanguage()
-            ))
-
-            dispatchKubernetesBuildDao.createOrUpdate(
-                dslContext = dslContext,
-                dispatchType = dockerRoutingType.name,
-                pipelineId = pipelineId,
-                vmSeqId = vmSeqId,
-                poolNo = poolNo,
-                projectId = projectId,
-                builderName = builderName,
-                image = this.dispatchMessage,
-                status = DispatchBuilderStatus.BUSY.status,
-                userId = userId,
-                cpu = threadLocalCpu.get(),
-                memory = threadLocalMemory.get(),
-                disk = threadLocalDisk.get()
-            )
-
-            // 更新历史表中builderName
-            dispatchKubernetesBuildHisDao.updateBuilderName(
+                ))
+            builderPoolNoDao.setBaseBuildLastBuilder(
                 dslContext = dslContext,
                 dispatchType = dockerRoutingType.name,
                 buildId = buildId,
                 vmSeqId = vmSeqId,
+                executeCount = executeCount ?: 1,
                 builderName = builderName,
-                executeCount = executeCount ?: 1
+                poolNo = poolNo
             )
-        } else {
-            clearExceptionBuilder(dockerRoutingType, builderName, projectId)
-            // 重置资源池状态
-            dispatchKubernetesBuildDao.updateStatus(
-                dslContext = dslContext,
-                dispatchType = dockerRoutingType.name,
-                pipelineId = pipelineId,
-                vmSeqId = vmSeqId,
-                poolNo = poolNo,
-                status = DispatchBuilderStatus.IDLE.status
-            )
-            dispatchKubernetesBuildHisDao.updateBuilderName(
-                dslContext = dslContext,
-                dispatchType = dockerRoutingType.name,
-                buildId = buildId,
-                vmSeqId = vmSeqId,
-                builderName = builderName,
-                executeCount = executeCount ?: 1
-            )
-            throw BuildFailureException(
-                ErrorCodeEnum.BASE_START_VM_ERROR.errorType,
-                ErrorCodeEnum.BASE_START_VM_ERROR.errorCode,
-                ErrorCodeEnum.BASE_START_VM_ERROR.getErrorMessage(),
-                dispatchBuild.getLog().troubleShooting + MessageUtil.getMessageByLocale(
-                            BK_BUILD_MACHINE_STARTUP_FAILED,
-                            I18nUtil.getLanguage(),
-                            arrayOf(failedMsg ?: "")
+
+            val (taskStatus, failedMsg) = dispatchBuild.waitTaskFinish(userId, taskId)
+
+            if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
+                // 启动成功
+                logger.info(
+                    "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo " +
+                            "start ${dockerRoutingType.name} vm success, wait for agent startup..."
                 )
-            )
+                logsPrinter.printLogs(
+                    dispatchMessage,
+                    MessageUtil.getMessageByLocale(
+                        BK_BUILD_MACHINE_START_SUCCESS_WAIT_AGENT_START,
+                        I18nUtil.getDefaultLocaleLanguage()
+                    ))
+
+                dispatchKubernetesBuildDao.createOrUpdate(
+                    dslContext = dslContext,
+                    dispatchType = dockerRoutingType.name,
+                    pipelineId = pipelineId,
+                    vmSeqId = vmSeqId,
+                    poolNo = poolNo,
+                    projectId = projectId,
+                    builderName = builderName,
+                    image = this.dispatchType.value,
+                    status = DispatchBuilderStatus.BUSY.status,
+                    userId = userId,
+                    cpu = threadLocalCpu.get(),
+                    memory = threadLocalMemory.get(),
+                    disk = threadLocalDisk.get()
+                )
+
+                // 更新历史表中builderName
+                dispatchKubernetesBuildHisDao.updateBuilderName(
+                    dslContext = dslContext,
+                    dispatchType = dockerRoutingType.name,
+                    buildId = buildId,
+                    vmSeqId = vmSeqId,
+                    builderName = builderName,
+                    executeCount = executeCount ?: 1
+                )
+            } else {
+                clearExceptionBuilder(dockerRoutingType, builderName, projectId, dispatchMessage)
+                // 重置资源池状态
+                dispatchKubernetesBuildDao.updateStatus(
+                    dslContext = dslContext,
+                    dispatchType = dockerRoutingType.name,
+                    pipelineId = pipelineId,
+                    vmSeqId = vmSeqId,
+                    poolNo = poolNo,
+                    status = DispatchBuilderStatus.IDLE.status
+                )
+                dispatchKubernetesBuildHisDao.updateBuilderName(
+                    dslContext = dslContext,
+                    dispatchType = dockerRoutingType.name,
+                    buildId = buildId,
+                    vmSeqId = vmSeqId,
+                    builderName = builderName,
+                    executeCount = executeCount ?: 1
+                )
+                throw BuildFailureException(
+                    ErrorCodeEnum.BASE_START_VM_ERROR.errorType,
+                    ErrorCodeEnum.BASE_START_VM_ERROR.errorCode,
+                    ErrorCodeEnum.BASE_START_VM_ERROR.getErrorMessage(),
+                    dispatchBuild.getLog().troubleShooting + MessageUtil.getMessageByLocale(
+                        BK_BUILD_MACHINE_STARTUP_FAILED,
+                        I18nUtil.getLanguage(),
+                        arrayOf(failedMsg ?: "")
+                    )
+                )
+            }
         }
     }
 
-    private fun DispatchMessage.clearExceptionBuilder(
+    private fun clearExceptionBuilder(
         dockerRoutingType: DockerRoutingType,
         builderName: String,
-        projectId: String
+        projectId: String,
+        dispatchMessage: DispatchMessage
     ) {
-        try {
-            // 下发删除，不管成功失败
-            logger.info("[$buildId]|[$vmSeqId] Delete builder, userId: $userId, builderName: $builderName")
-            containerServiceFactory.load(projectId).operateBuilder(
-                buildId = buildId,
-                vmSeqId = vmSeqId,
-                userId = userId,
-                builderName = builderName,
-                param = DispatchBuildOperateBuilderParams(DispatchBuildOperateBuilderType.DELETE, null)
-            )
-        } catch (e: Exception) {
-            logger.error("[$buildId]|[$vmSeqId] delete builder failed", e)
+        with(dispatchMessage.event) {
+            try {
+                // 下发删除，不管成功失败
+                logger.info("[$buildId]|[$vmSeqId] Delete builder, userId: $userId, builderName: $builderName")
+                containerServiceFactory.load(projectId).operateBuilder(
+                    buildId = buildId,
+                    vmSeqId = vmSeqId,
+                    userId = userId,
+                    builderName = builderName,
+                    param = DispatchBuildOperateBuilderParams(DispatchBuildOperateBuilderType.DELETE, null)
+                )
+            } catch (e: Exception) {
+                logger.error("[$buildId]|[$vmSeqId] delete builder failed", e)
+            }
         }
     }
 
-    private fun DispatchMessage.recordBuildHisAndGatewayCheck(
+    private fun recordBuildHisAndGatewayCheck(
         dockerRoutingType: DockerRoutingType,
         poolNo: Int,
-        lastIdleBuilder: String?
+        lastIdleBuilder: String?,
+        dispatchMessage: DispatchMessage
     ) {
-        dispatchKubernetesBuildHisDao.create(
-            dslContext = dslContext,
-            dispatchType = dockerRoutingType.name,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            vmSeqId = vmSeqId,
-            poolNo = poolNo,
-            secretKey = secretKey,
-            builderName = lastIdleBuilder ?: "",
-            cpu = threadLocalCpu.get(),
-            memory = threadLocalMemory.get(),
-            disk = threadLocalDisk.get(),
-            executeCount = executeCount ?: 1
-        )
+        with(dispatchMessage.event) {
+            dispatchKubernetesBuildHisDao.create(
+                dslContext = dslContext,
+                dispatchType = dockerRoutingType.name,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                poolNo = poolNo,
+                secretKey = dispatchMessage.secretKey,
+                builderName = lastIdleBuilder ?: "",
+                cpu = threadLocalCpu.get(),
+                memory = threadLocalMemory.get(),
+                disk = threadLocalDisk.get(),
+                executeCount = executeCount ?: 1
+            )
+        }
     }
 
     fun doShutdown(event: PipelineAgentShutdownEvent) {
@@ -659,36 +695,38 @@ class DispatchBuildService @Autowired constructor(
         }
     }
 
-    private fun DispatchMessage.checkImageChanged(images: String): Boolean {
-        // 镜像是否变更
-        val containerPool: Pool = objectMapper.readValue(dispatchMessage)
+    private fun checkImageChanged(images: String, dispatchMessage: DispatchMessage): Boolean {
+        with(dispatchMessage.event) {
+            // 镜像是否变更
+            val containerPool: Pool = objectMapper.readValue(dispatchType.value)
 
-        val lastContainerPool: Pool? = try {
-            objectMapper.readValue(images)
-        } catch (e: Exception) {
-            null
-        }
+            val lastContainerPool: Pool? = try {
+                objectMapper.readValue(images)
+            } catch (e: Exception) {
+                null
+            }
 
-        // 兼容旧版本，数据库中存储的非pool结构值
-        if (lastContainerPool != null) {
-            if (lastContainerPool.container != containerPool.container ||
-                lastContainerPool.credential != containerPool.credential
-            ) {
-                logger.info(
-                    "buildId: $buildId, vmSeqId: $vmSeqId image changed. old image: $lastContainerPool, " +
-                        "new image: $containerPool"
-                )
-                return true
+            // 兼容旧版本，数据库中存储的非pool结构值
+            if (lastContainerPool != null) {
+                if (lastContainerPool.container != containerPool.container ||
+                    lastContainerPool.credential != containerPool.credential
+                ) {
+                    logger.info(
+                        "buildId: $buildId, vmSeqId: $vmSeqId image changed. old image: $lastContainerPool, " +
+                                "new image: $containerPool"
+                    )
+                    return true
+                }
+            } else {
+                if (containerPool.container != images && dispatchType.value != images) {
+                    logger.info(
+                        "buildId: $buildId, vmSeqId: $vmSeqId image changed. old image: $images, " +
+                                "new image: $dispatchType.value"
+                    )
+                    return true
+                }
             }
-        } else {
-            if (containerPool.container != images && dispatchMessage != images) {
-                logger.info(
-                    "buildId: $buildId, vmSeqId: $vmSeqId image changed. old image: $images, " +
-                        "new image: $dispatchMessage"
-                )
-                return true
-            }
+            return false
         }
-        return false
     }
 }

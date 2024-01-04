@@ -137,15 +137,14 @@ export default {
                     status: 'known_error'
                 })
             } catch (err) {
-                this.handleError(err, [{
-                    actionId: this.$permissionActionMap.execute,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: pipelineId,
-                        name: target.pipelineName
-                    }],
-                    projectId
-                }], this.getPermUrlByRole(projectId, pipelineId, this.roleMap.executor))
+                this.handleError(
+                    err,
+                    {
+                        projectId,
+                        resourceCode: pipelineId,
+                        action: this.$permissionResourceAction.EXECUTE
+                    }
+                )
             } finally {
                 feConfig.buttonAllow.terminatePipeline = true
             }
@@ -185,15 +184,14 @@ export default {
             } catch (err) {
                 this.setExecuteStatus(false)
                 this.$store.commit('pipelines/updateCurAtomPrams', null)
-                this.handleError(err, [{
-                    actionId: this.$permissionActionMap.execute,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: pipelineId,
-                        name: this.curPipeline.pipelineName
-                    }],
-                    projectId
-                }], this.getPermUrlByRole(projectId, pipelineId, this.roleMap.executor))
+                this.handleError(
+                    err,
+                    {
+                        projectId,
+                        resourceCode: pipelineId,
+                        action: this.$permissionResourceAction.EXECUTE
+                    }
+                )
             } finally {
                 message && this.$showTips({
                     message,
@@ -306,15 +304,14 @@ export default {
                     theme = 'error'
                 }
             } catch (err) {
-                this.handleError(err, [{
-                    actionId: this.$permissionActionMap.execute,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: pipelineId,
-                        name: this.curPipeline.pipelineName
-                    }],
-                    projectId
-                }], this.getPermUrlByRole(projectId, pipelineId, this.roleMap.executor))
+                this.handleError(
+                    err,
+                    {
+                        projectId,
+                        resourceCode: pipelineId,
+                        action: this.$permissionResourceAction.EXECUTE
+                    }
+                )
             } finally {
                 message && this.$showTips({
                     message,
@@ -342,15 +339,14 @@ export default {
                     theme = 'error'
                 }
             } catch (err) {
-                this.handleError(err, [{
-                    actionId: this.$permissionActionMap.execute,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: this.curPipeline.pipelineId,
-                        name: this.curPipeline.pipelineName
-                    }],
-                    projectId: this.$route.params.projectId
-                }], this.getPermUrlByRole(this.$route.params.projectId, this.curPipeline.pipelineId, this.roleMap.executor))
+                this.handleError(
+                    err,
+                    {
+                        projectId: this.$route.params.projectId,
+                        resourceCode: this.curPipeline.pipelineId,
+                        action: this.$permissionResourceAction.EXECUTE
+                    }
+                )
             } finally {
                 message && this.$showTips({
                     message,
@@ -427,15 +423,14 @@ export default {
                     data: responses
                 }
             } catch (e) {
-                this.handleError(e, [{
-                    actionId: this.$permissionActionMap.edit,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: pipelineId,
-                        name: this.pipeline.name
-                    }],
-                    projectId
-                }], this.getPermUrlByRole(projectId, pipelineId, this.roleMap.manager))
+                this.handleError(
+                    e,
+                    {
+                        projectId,
+                        resourceCode: pipelineId,
+                        action: this.$permissionResourceAction.EDIT
+                    }
+                )
                 return {
                     code: e.code,
                     message: e.message
@@ -460,15 +455,14 @@ export default {
                     theme: 'success'
                 })
             } catch (e) {
-                this.handleError(e, [{
-                    actionId: this.$permissionActionMap.edit,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: pipelineId,
-                        name: this.pipeline ? this.pipeline.name : ''
-                    }],
-                    projectId
-                }], this.getPermUrlByRole(projectId, pipelineId, this.roleMap.manager))
+                this.handleError(
+                    e,
+                    {
+                        projectId,
+                        resourceCode: pipelineId,
+                        action: this.$permissionResourceAction.EDIT
+                    }
+                )
             }
         },
         updateCurPipelineByKeyValue (key, value) {
@@ -479,34 +473,6 @@ export default {
         },
         changeProject () {
             this.$toggleProjectMenu(true)
-        },
-        async toApplyPermission (role) {
-            const { projectId, pipelineId } = this.$route.params
-            this.tencentPermission(this.getPermUrlByRole(projectId, pipelineId, role))
-            // try {
-            //     const { projectId } = this.$route.params
-            //     const redirectUrl = await this.$ajax.post(`${AUTH_URL_PREFIX}/user/auth/permissionUrl`, [{
-            //         actionId,
-            //         resourceId: this.$permissionResourceMap.pipeline,
-            //         instanceId: [{
-            //             id: projectId,
-            //             type: this.$permissionResourceTypeMap.PROJECT
-            //         }, pipeline]
-            //     }])
-            //     console.log('redirectUrl', redirectUrl)
-            //     window.open(redirectUrl, '_blank')
-            //     this.$bkInfo({
-            //         title: this.$t('permissionRefreshtitle'),
-            //         subTitle: this.$t('permissionRefreshSubtitle'),
-            //         okText: this.$t('permissionRefreshOkText'),
-            //         cancelText: this.$t('close'),
-            //         confirmFn: () => {
-            //             location.reload()
-            //         }
-            //     })
-            // } catch (e) {
-            //     console.error(e)
-            // }
         },
         formatParams (pipeline) {
             const params = pipeline.stages[0].containers[0].params
@@ -519,12 +485,6 @@ export default {
                 newParam: {
                     params: paramList
                 }
-            })
-        },
-        handleError (err) {
-            this.$showTips({
-                message: err.message,
-                theme: 'error'
             })
         }
     }

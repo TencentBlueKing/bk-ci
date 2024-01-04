@@ -747,7 +747,8 @@ class TemplateFacadeService @Autowired constructor(
             storeFlag = storeFlag,
             hasManagerPermission = hasManagerPermission,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            templateIds = null
         )
         logger.info("get templates and count :$templateWithPermission")
         fillResult(
@@ -790,7 +791,8 @@ class TemplateFacadeService @Autowired constructor(
         checkPermission: Boolean = true,
         page: Int?,
         pageSize: Int?,
-        includePublicFlag: Boolean? = null
+        includePublicFlag: Boolean? = null,
+        templateIds: Collection<String>?
     ): TemplateWithPermission {
         val offset = if (null != page && null != pageSize) (page - 1) * pageSize else null
         // 若不开启模板权限或者不检查列表权限的，直接返回列表数据。
@@ -803,7 +805,8 @@ class TemplateFacadeService @Autowired constructor(
                 storeFlag = storeFlag,
                 offset = offset,
                 pageSize = pageSize,
-                hasManagerPermission = hasManagerPermission
+                hasManagerPermission = hasManagerPermission,
+                templateIds = templateIds
             )
         } else {
             logger.info("get templates with permission :$projectId|$userId|$checkPermission")
@@ -836,7 +839,8 @@ class TemplateFacadeService @Autowired constructor(
         storeFlag: Boolean?,
         offset: Int?,
         pageSize: Int?,
-        hasManagerPermission: Boolean?
+        hasManagerPermission: Boolean?,
+        templateIds: Collection<String>?
     ): TemplateWithPermission {
         val tTemplate = TTemplate.T_TEMPLATE
         val templateRecord = templateDao.listTemplate(
@@ -844,7 +848,7 @@ class TemplateFacadeService @Autowired constructor(
             projectId = projectId,
             includePublicFlag = includePublicFlag,
             templateType = templateType,
-            templateIdList = null,
+            templateIdList = templateIds,
             storeFlag = storeFlag,
             offset = offset,
             limit = pageSize,
@@ -1163,7 +1167,8 @@ class TemplateFacadeService @Autowired constructor(
             checkPermission = checkPermission,
             page = page,
             pageSize = pageSize,
-            includePublicFlag = true
+            includePublicFlag = true,
+            templateIds = templateIds
         )
         val templates = templateWithPermission.templatesWithListPermRecords
         val templateCount = templateWithPermission.count
@@ -2367,6 +2372,9 @@ class TemplateFacadeService @Autowired constructor(
             if (stage.name.isNullOrBlank()) stage.name = stage.id
             if (stage.tag == null) stage.tag = defaultTagIds
             stage.containers.forEach { container ->
+                if (container is TriggerContainer) {
+                    container.params = PipelineUtils.cleanOptions(params = container.params)
+                }
                 if (container.containerId.isNullOrBlank()) {
                     container.containerId = container.id
                 }

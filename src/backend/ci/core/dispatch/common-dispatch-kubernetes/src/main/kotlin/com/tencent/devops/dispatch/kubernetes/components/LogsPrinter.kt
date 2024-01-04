@@ -47,7 +47,7 @@ class LogsPrinter @Autowired constructor(
         if (message == null) {
             return
         }
-        with(dispatchMessage) {
+        with(dispatchMessage.event) {
             try {
                 log(
                     buildId = buildId,

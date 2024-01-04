@@ -93,7 +93,7 @@
 
         function setProjectIdCookie() {
             try {
-                var pathProjectId = location.pathname.match(/^\/pipeline\/zhiyan\/([\w\-]+)?/)?.[1]
+                var pathProjectId = location.pathname.match(/^\/pipeline\/(zhiyan|ftp)\/([\w\-]+)?/)?.[2]
                 var cookiePid = getCookie(X_DEVOPS_PROJECT_ID)
                 if (pathProjectId && cookiePid !== pathProjectId) {
                     var subDomains = getSubDomain()
@@ -123,14 +123,18 @@
     <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/devops-utils.js?t="></script>
     <script src="<%= PUBLIC_PATH_PREFIX %><%= htmlWebpackPlugin.options.VENDOR_LIBS%>"></script>
     <script>
+        var X_DEVOPS_PROJECT_ID = "X-DEVOPS-PROJECT-ID";
         var PUBLIC_URL_PREFIX = "<%= PUBLIC_PATH_PREFIX %>";
         var API_URL_PREFIX = "/ms";
         var WEB_URL_PREFIX = "/console";
         var PERM_URL_PREFIX = "__BK_PAAS_PUBLIC_URL__/o/bk_iam_app"; // EE PERM URL PREFIX
         var DOCS_URL_PREFIX = "__BK_CI_DOCS_URL__";
         var IWIKI_DOCS_URL = "__IWIKI_DOCS_URL__";
+        var BADGE_URL_PREFIX = "__BK_CI_BADGE_URL__";
+        var BK_IAM_URL_PREFIX = '__BK_CI_IAM_URL_PREFIX__'
+        var LOCALE_DOMAIN = '__BK_DOMAIN__'
+        var BK_PAAS_PRIVATE_URL = '__BK_PAAS_PRIVATE_URL__'
     </script>
-
 </body>
 
 </html>

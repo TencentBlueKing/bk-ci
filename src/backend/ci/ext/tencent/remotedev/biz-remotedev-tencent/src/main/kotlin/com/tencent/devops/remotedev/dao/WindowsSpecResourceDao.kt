@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TWindowsSpecResource
 import com.tencent.devops.model.remotedev.tables.records.TWindowsSpecResourceRecord
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -53,19 +54,39 @@ class WindowsSpecResourceDao {
     }
 
     fun fetchSpec(
+        projectId: String?,
+        machineType: String?,
         dslContext: DSLContext,
         sqlLimit: SQLLimit
     ): Result<TWindowsSpecResourceRecord> {
+        val conditions = mutableListOf<Condition>()
         with(TWindowsSpecResource.T_WINDOWS_SPEC_RESOURCE) {
-            return dslContext.selectFrom(this).limit(sqlLimit.limit).offset(sqlLimit.offset).fetch()
+            projectId?.let {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            machineType?.let {
+                conditions.add(SIZE.eq(machineType))
+            }
+            return dslContext.selectFrom(this).where(conditions).limit(sqlLimit.limit).offset(sqlLimit.offset).fetch()
         }
     }
 
     fun fetchSpecCount(
+        projectId: String?,
+        machineType: String?,
         dslContext: DSLContext
     ): Long {
         with(TWindowsSpecResource.T_WINDOWS_SPEC_RESOURCE) {
-            return dslContext.selectCount().from(this).skipCheck().fetchOne(0, Long::class.java)!!
+            val conditions = mutableListOf<Condition>()
+            projectId?.let {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            machineType?.let {
+                conditions.add(SIZE.eq(machineType))
+            }
+            return dslContext.selectCount().from(this)
+                .where(conditions)
+                .skipCheck().fetchOne(0, Long::class.java)!!
         }
     }
 }

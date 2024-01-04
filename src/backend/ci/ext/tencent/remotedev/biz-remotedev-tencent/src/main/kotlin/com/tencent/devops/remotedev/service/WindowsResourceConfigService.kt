@@ -175,12 +175,14 @@ class WindowsResourceConfigService @Autowired constructor(
     }
 
     fun fetchSpec(
+        projectId: String?,
+        machineType: String?,
         page: Int?,
         pageSize: Int?
     ): Page<WindowsSpecResInfo> {
         val limit = PageUtil.convertPageSizeToSQLLimit(page ?: 1, pageSize ?: 20)
-        val count = windowsSpecResourceDao.fetchSpecCount(dslContext)
-        val recode = windowsSpecResourceDao.fetchSpec(dslContext, limit).map {
+        val count = windowsSpecResourceDao.fetchSpecCount(projectId, machineType, dslContext)
+        val recode = windowsSpecResourceDao.fetchSpec(projectId, machineType, dslContext, limit).map {
             WindowsSpecResInfo(
                 projectId = it.projectId,
                 size = it.size,
