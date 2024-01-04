@@ -20,7 +20,7 @@
 import { statusAlias } from '@/utils/pipelineStatus'
 import triggerType from '@/utils/triggerType'
 import { convertMStoStringByRule, convertTime, navConfirm } from '@/utils/util'
-import { mapActions, mapGetters, mapMutations } from 'vuex'
+import { mapActions, mapState, mapGetters, mapMutations } from 'vuex'
 
 import {
     ALL_PIPELINE_VIEW_ID,
@@ -30,6 +30,12 @@ import {
     RECENT_USED_VIEW_ID,
     UNCLASSIFIED_PIPELINE_VIEW_ID
 } from '@/store/constants'
+import {
+    TEMPLATE_RESOURCE_ACTION,
+    PROJECT_RESOURCE_ACTION,
+    RESOURCE_ACTION,
+    handleProjectNoPermission
+} from '@/utils/permission'
 
 import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
 
@@ -37,12 +43,16 @@ export default {
     data () {
         return {
             pipelineMap: {},
-            hasTemplatePermission: false
+            hasTemplatePermission: false,
+            hasCreatePermission: false
         }
     },
     computed: {
         ...mapGetters('pipelines', [
             'groupMap'
+        ]),
+        ...mapState('pipelines', [
+            'isManage'
         ]),
         currentGroup () {
             return this.groupMap?.[this.$route.params.viewId]
@@ -50,6 +60,7 @@ export default {
     },
     created () {
         this.checkHasTemplatePermission()
+        this.checkHasCreatePermission()
     },
     methods: {
         ...mapMutations('pipelines', [
@@ -64,7 +75,8 @@ export default {
             'requestToggleCollect',
             'deletePipeline',
             'copyPipeline',
-            'restorePipeline'
+            'restorePipeline',
+            'requestHasCreatePermission'
         ]),
         async checkHasTemplatePermission () {
             this.hasTemplatePermission = await this.requestTemplatePermission(this.$route.params.projectId)
@@ -169,6 +181,10 @@ export default {
             }
             return ''
         },
+        async checkHasCreatePermission () {
+            const res = await this.requestHasCreatePermission(this.$route.params)
+            this.hasCreatePermission = res
+        },
         getPipelineActions (pipeline) {
             const isShowRemovedAction = ![
                 ALL_PIPELINE_VIEW_ID,
@@ -177,20 +193,61 @@ export default {
                 UNCLASSIFIED_PIPELINE_VIEW_ID,
                 RECENT_USED_VIEW_ID
             ].includes(this.$route.params.viewId)
+            const removedActionAuthMap = this.currentGroup?.projected
+                ? {
+                    hasPermission: this.isManage,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId: pipeline.projectId,
+                        resourceType: 'project',
+                        resourceCode: pipeline.projectId,
+                        action: PROJECT_RESOURCE_ACTION.MANAGE
+                    }
+                }
+                : {}
             const isDynamicGroup = this.currentGroup?.viewType === 1
             return [
                 {
                     text: this.$t('addTo'),
                     handler: this.addToHandler
                 },
+                ...(pipeline.templateId
+                    ? [{
+                        text: this.$t('copyAsTemplateInstance'),
+                        handler: () => this.copyAsTemplateInstance(pipeline),
+                        hasPermission: this.hasCreatePermission,
+                        disablePermissionApi: true,
+                        permissionData: {
+                            projectId: pipeline.projectId,
+                            resourceType: 'project',
+                            resourceCode: pipeline.projectId,
+                            action: RESOURCE_ACTION.CREATE
+                        }
+                    }]
+                    : []),
                 {
                     text: this.$t('newlist.copyAs'),
-                    handler: this.copyAs
+                    handler: this.copyAs,
+                    hasPermission: pipeline.permissions.canEdit,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId: pipeline.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: pipeline.pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    }
                 },
                 {
                     text: this.$t('newlist.saveAsTemp'),
-                    disable: !this.hasTemplatePermission,
-                    handler: this.saveAsTempHandler
+                    handler: this.saveAsTempHandler,
+                    hasPermission: this.hasTemplatePermission,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId: pipeline.projectId,
+                        resourceType: 'project',
+                        resourceCode: pipeline.projectId,
+                        action: TEMPLATE_RESOURCE_ACTION.CREATE
+                    }
                 },
                 ...(pipeline.isInstanceTemplate
                     ? [{
@@ -204,12 +261,21 @@ export default {
                         text: this.$t('removeFrom'),
                         disable: isDynamicGroup,
                         tooltips: isDynamicGroup ? this.$t('dynamicGroupRemoveDisableTips') : false,
-                        handler: this.removeHandler
+                        handler: this.removeHandler,
+                        ...removedActionAuthMap
                     }]
                     : []),
                 {
                     text: this.$t('delete'),
-                    handler: this.deleteHandler
+                    handler: this.deleteHandler,
+                    hasPermission: pipeline.permissions.canDelete,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId: pipeline.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: pipeline.pipelineId,
+                        action: RESOURCE_ACTION.DELETE
+                    }
                 }
             ]
         },
@@ -350,15 +416,14 @@ export default {
                 })
                 return true
             } catch (err) {
-                this.handleError(err, [{
-                    actionId: this.$permissionActionMap.delete,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: pipelineId,
-                        name: pipelineName
-                    }],
-                    projectId
-                }])
+                this.handleError(
+                    err,
+                    {
+                        projectId: projectId,
+                        resourceCode: pipelineId,
+                        action: this.$permissionResourceAction.DELETE
+                    }
+                )
             }
         },
         /**
@@ -385,30 +450,20 @@ export default {
                 })
                 return true
             } catch (err) {
-                this.handleError(err, [{
-                    actionId: this.$permissionActionMap.create,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: pipelineId,
-                        name: pipelineName
-                    }]
-                }, {
-                    actionId: this.$permissionActionMap.edit,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: pipelineId,
-                        name: pipelineName
-                    }],
-                    projectId
-                }])
+                this.handleError(
+                    err,
+                    {
+                        projectId: projectId,
+                        resourceCode: projectId,
+                        action: this.$permissionResourceAction.CREATE
+                    }
+                )
             }
         },
         /** *
          * 恢复流水线
          */
         async restore ({ projectId, pipelineId, pipelineName }) {
-            let message = this.$t('restore.restoreSuc')
-            let theme = 'success'
             await navConfirm({
                 content: this.$t('restorePipelineConfirm', [pipelineName])
             })
@@ -417,16 +472,25 @@ export default {
                     projectId,
                     pipelineId
                 })
+                this.$showTips({
+                    message: this.$t('restore.restoreSuc'),
+                    theme: 'success'
+                })
                 return true
             } catch (err) {
-                message = err.message || err
-                theme = 'error'
+                if (err.code === 403) {
+                    handleProjectNoPermission({
+                        projectId: projectId,
+                        resourceCode: projectId,
+                        action: PROJECT_RESOURCE_ACTION.MANAGE
+                    })
+                } else {
+                    this.$showTips({
+                        message: err.message || err,
+                        theme: 'error'
+                    })
+                }
                 return false
-            } finally {
-                this.$showTips({
-                    message,
-                    theme
-                })
             }
         },
         updatePipelineStatus (data, isFirst = false) {
@@ -444,16 +508,10 @@ export default {
                 }
             })
         },
-        applyPermission ({ pipelineName, pipelineId }) {
-            this.setPermissionConfig(
-                this.$permissionResourceMap.pipeline,
-                this.$permissionActionMap.view,
-                [{
-                    id: pipelineId,
-                    name: pipelineName
-                }],
-                this.$route.params.projectId
-            )
+        copyAsTemplateInstance (pipeline) {
+            const pipelineName = (pipeline.pipelineName + '_copy').substring(0, 128)
+            const { templateId, projectId, version } = pipeline
+            window.top.location.href = `${location.origin}/console/pipeline/${projectId}/template/${templateId}/createInstance/${version}/${pipelineName}`
         }
     }
 }

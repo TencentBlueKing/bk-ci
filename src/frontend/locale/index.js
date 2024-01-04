@@ -73,7 +73,8 @@ function setLsLocale (locale) {
         subDomains.forEach(domain => {
             cookies.remove(LS_KEY, { domain, path: '/' })
         })
-        cookies.set(LS_KEY, formateLocale, { domain: subDomains[0] ?? location.hostname, path: '/' })
+        const domain = window.LOCALE_DOMAIN || (subDomains[0] ?? location.hostname)
+        cookies.set(LS_KEY, formateLocale, { domain, path: '/' })
     }
 }
 
@@ -113,7 +114,7 @@ export default (r, initSetLocale = false) => {
     }
 
     async function setLocale (localeLang) {
-        Object.keys(loadedModule).map(mod => {
+        Object.keys(loadedModule).forEach(mod => {
             const [, module] = mod.split('_')
             if (!loadedModule[getLocalModuleId(module, localeLang)]) {
                 dynamicLoadModule(module, localeLang)
@@ -133,10 +134,17 @@ export default (r, initSetLocale = false) => {
 
     async function syncLocaleBackend (localeLang) {
         try {
-            console.log('sync backendLocalEnum', backendLocalEnum[localeLang], localeLang)
-            await axios.put('/ms/project/api/user/locales/update', {
-                language: backendLocalEnum[localeLang]
-            })
+            const bkLocalEnum = {
+                'zh-CN': 'zh-cn', // 简体中文
+                'en-US': 'en' // 英文
+            }
+            console.log('sync backendLocalEnum', backendLocalEnum[localeLang], localeLang, bkLocalEnum[localeLang])
+            await Promise.all([
+                axios.put('/ms/project/api/user/locales/update', {
+                    language: backendLocalEnum[localeLang]
+                }),
+                jsonpLocale(bkLocalEnum[localeLang])
+            ])
         } catch (error) {
             console.error('sync locale to backend error', error)
         }
@@ -178,4 +186,25 @@ function importAll (r) {
         localeList,
         messages
     }
+}
+
+function jsonpLocale (language) {
+    if (!window.BK_PAAS_PRIVATE_URL) return
+    return new Promise((resolve) => {
+        try {
+            const callbackName = `jsonp_callback_${Math.round(100000 * Math.random())}`
+            window[callbackName] = function (data) {
+                delete window[callbackName]
+                document.body.removeChild(script)
+                resolve(data)
+            }
+
+            const script = document.createElement('script')
+            script.src = `${window.BK_PAAS_PRIVATE_URL}/api/c/compapi/v2/usermanage/fe_update_user_language?language=${language}&callback=${callbackName}`
+            document.body.appendChild(script)
+        } catch (e) {
+            console.error('jsonp locale error', e)
+            resolve(false)
+        }
+    })
 }
