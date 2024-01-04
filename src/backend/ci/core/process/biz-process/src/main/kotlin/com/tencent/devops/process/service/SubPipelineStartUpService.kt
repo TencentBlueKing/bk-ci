@@ -304,7 +304,7 @@ class SubPipelineStartUpService @Autowired constructor(
     }
 
     private fun getModel(projectId: String, pipelineId: String, version: Int? = null) =
-        pipelineRepositoryService.getModel(projectId, pipelineId, version)
+        pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, version)?.model
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
@@ -343,7 +343,8 @@ class SubPipelineStartUpService @Autowired constructor(
         }
         existPipelines.add(pipelineId)
         val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId) ?: return
-        val existModel = pipelineRepositoryService.getModel(projectId, pipelineId, pipeline.version) ?: return
+        val existModel = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, pipeline.version)?.model
+            ?: return
 
         val currentExistPipelines = HashSet(existPipelines)
         existModel.stages.forEachIndexed stage@{ index, stage ->

@@ -38,7 +38,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("p4事件触发", description = CodeP4WebHookTriggerElement.classType)
 data class CodeP4WebHookTriggerElement(
     @ApiModelProperty("任务名称", required = true)
-    override val name: String = "TGit变更触发",
+    override val name: String = "P4事件触发",
     @ApiModelProperty("id", required = false)
     override var id: String? = null,
     @ApiModelProperty("状态", required = false)
@@ -92,7 +92,7 @@ data class CodeP4WebHookTriggerData(
 
 data class CodeP4WebHookTriggerInput(
     @ApiModelProperty("仓库ID", required = true)
-    val repositoryHashId: String?,
+    val repositoryHashId: String? = null,
     @ApiModelProperty("新版的git原子的类型")
     val repositoryType: RepositoryType? = null,
     @ApiModelProperty("新版的git代码库名")

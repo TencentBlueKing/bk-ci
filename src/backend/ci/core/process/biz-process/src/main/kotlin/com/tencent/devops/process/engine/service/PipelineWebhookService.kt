@@ -49,7 +49,7 @@ import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineWebhookDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
@@ -73,7 +73,7 @@ class PipelineWebhookService @Autowired constructor(
     private val scmProxyService: ScmProxyService,
     private val dslContext: DSLContext,
     private val pipelineWebhookDao: PipelineWebhookDao,
-    private val pipelineResDao: PipelineResDao,
+    private val pipelineResourceDao: PipelineResourceDao,
     private val objectMapper: ObjectMapper,
     private val client: Client,
     private val pipelinePermissionService: PipelinePermissionService,
@@ -281,7 +281,7 @@ class PipelineWebhookService @Autowired constructor(
 
     fun getModel(projectId: String, pipelineId: String, version: Int? = null): Model? {
         val modelString =
-            pipelineResDao.getVersionModelString(dslContext, projectId, pipelineId, version) ?: return null
+            pipelineResourceDao.getVersionModelString(dslContext, projectId, pipelineId, version) ?: return null
         return try {
             objectMapper.readValue(modelString, Model::class.java)
         } catch (e: Exception) {

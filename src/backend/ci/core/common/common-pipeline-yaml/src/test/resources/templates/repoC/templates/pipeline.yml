@@ -74,7 +74,7 @@ stages:
             timeout-minutes: 480
             continue-on-error: false
             retry-times: 0
-            env:
+#            env:
           #          - template: steps.yml
           #            parameters:
           #              username: STEP

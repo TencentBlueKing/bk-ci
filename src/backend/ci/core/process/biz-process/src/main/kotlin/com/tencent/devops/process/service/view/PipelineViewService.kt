@@ -37,7 +37,6 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
 import com.tencent.devops.process.constant.PipelineViewType
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -525,7 +524,10 @@ class PipelineViewService @Autowired constructor(
 
     fun matchView(
         pipelineView: TPipelineViewRecord,
-        pipelineInfo: TPipelineInfoRecord
+        projectId: String,
+        pipelineId: String,
+        pipelineName: String,
+        creator: String
     ): Boolean {
         val filters = getFilters(
             filterByName = pipelineView.filterByPipeineName,
@@ -534,14 +536,14 @@ class PipelineViewService @Autowired constructor(
         )
         for (filter in filters) {
             val match = if (filter is PipelineViewFilterByName) {
-                StringUtils.containsIgnoreCase(pipelineInfo.pipelineName, filter.pipelineName)
+                StringUtils.containsIgnoreCase(pipelineName, filter.pipelineName)
             } else if (filter is PipelineViewFilterByCreator) {
-                filter.userIds.contains(pipelineInfo.creator)
+                filter.userIds.contains(creator)
             } else if (filter is PipelineViewFilterByLabel) {
                 pipelineGroupService.getViewLabelToPipelinesMap(
                     pipelineView.projectId,
                     filter.labelIds
-                ).values.asSequence().flatten().contains(pipelineInfo.pipelineId)
+                ).values.asSequence().flatten().contains(pipelineId)
             } else if (filter is PipelineViewFilterByPacRepo) {
                 val pipelineIds = pipelineYamlInfoDao.listPipelineIdWithDirectory(
                     dslContext = dslContext,
@@ -549,7 +551,7 @@ class PipelineViewService @Autowired constructor(
                     repoHashId = filter.repoHashId,
                     directory = filter.directory
                 )
-                pipelineIds.contains(pipelineInfo.pipelineId)
+                pipelineIds.contains(pipelineId)
             } else {
                 continue
             }

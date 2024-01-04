@@ -54,7 +54,11 @@ data class TimerTriggerElement(
     @ApiModelProperty("高级定时表达式", required = false)
     val advanceExpression: List<String>? = null,
     @ApiModelProperty("源代码未更新则不触发构建", required = false)
-    val noScm: Boolean? = false
+    val noScm: Boolean? = false,
+    @ApiModelProperty("指定代码库分支", required = false)
+    val branches: List<String>? = null,
+    @ApiModelProperty("指定代码库别名", required = false)
+    val repoName: String? = null
 ) : Element(name, id, status) {
     companion object {
         const val classType = "timerTrigger"

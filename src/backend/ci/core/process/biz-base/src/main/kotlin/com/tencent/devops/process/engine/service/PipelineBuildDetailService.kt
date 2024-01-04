@@ -105,12 +105,10 @@ class PipelineBuildDetailService @Autowired constructor(
 
         val record = buildDetailDao.get(dslContext, projectId, buildId) ?: return null
 
-        val buildInfo = pipelineBuildDao.convert(
-            pipelineBuildDao.getBuildInfo(
-                dslContext = dslContext,
-                projectId = projectId,
-                buildId = buildId
-            )
+        val buildInfo = pipelineBuildDao.getBuildInfo(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId
         ) ?: return null
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, buildInfo.pipelineId) ?: return null

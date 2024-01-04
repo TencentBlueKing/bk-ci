@@ -28,21 +28,25 @@
 package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.engine.control.lock.PipelineVersionLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
-import com.tencent.devops.process.engine.dao.PipelineResVersionDao
+import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
+import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("LongParameterList", "ReturnCount")
 class PipelineRepositoryVersionService(
     private val dslContext: DSLContext,
-    private val pipelineResVersionDao: PipelineResVersionDao,
+    private val pipelineResourceVersionDao: PipelineResourceVersionDao,
     private val pipelineSettingVersionDao: PipelineSettingVersionDao,
     private val pipelineBuildDao: PipelineBuildDao,
     private val redisOperation: RedisOperation
@@ -52,7 +56,7 @@ class PipelineRepositoryVersionService(
         PipelineVersionLock(redisOperation, pipelineId, resourceVersion).use { versionLock ->
             versionLock.lock()
             // 查询流水线版本记录
-            val pipelineVersionInfo = pipelineResVersionDao.getPipelineVersionSimple(
+            val pipelineVersionInfo = pipelineResourceVersionDao.getPipelineVersionSimple(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -61,7 +65,7 @@ class PipelineRepositoryVersionService(
             val referFlag = pipelineVersionInfo?.referFlag ?: true
             val referCount = pipelineVersionInfo?.referCount?.let { self -> self + 1 }
             // 兼容老数据缺少关联构建记录的情况，全量统计关联数据数量
-                ?: pipelineBuildDao.countBuildNumByVersion(
+                ?: pipelineBuildDao.countTotalBuildNumByVersion(
                     dslContext = dslContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -69,7 +73,7 @@ class PipelineRepositoryVersionService(
                 )
 
             // 更新流水线版本关联构建记录信息
-            pipelineResVersionDao.updatePipelineVersionReferInfo(
+            pipelineResourceVersionDao.updatePipelineVersionReferInfo(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -85,7 +89,7 @@ class PipelineRepositoryVersionService(
         val pipelineVersionLock = PipelineVersionLock(redisOperation, pipelineId, version)
         try {
             pipelineVersionLock.lock()
-            val count = pipelineBuildDao.countBuildNumByVersion(
+            val count = pipelineBuildDao.countTotalBuildNumByVersion(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -98,7 +102,7 @@ class PipelineRepositoryVersionService(
             }
             dslContext.transaction { t ->
                 val transactionContext = DSL.using(t)
-                pipelineResVersionDao.deleteByVer(transactionContext, projectId, pipelineId, version)
+                pipelineResourceVersionDao.deleteByVer(transactionContext, projectId, pipelineId, version)
                 pipelineSettingVersionDao.deleteByVer(transactionContext, projectId, pipelineId, version)
             }
         } finally {
@@ -106,37 +110,167 @@ class PipelineRepositoryVersionService(
         }
     }
 
+    fun getPipelineVersionWithInfo(
+        pipelineInfo: PipelineInfo?,
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): PipelineVersionWithInfo? {
+        if (pipelineInfo == null) {
+            return null
+        }
+        val resource = pipelineResourceVersionDao.getVersionResource(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            includeDraft = true
+        ) ?: return null
+        return PipelineVersionWithInfo(
+            createTime = pipelineInfo.createTime,
+            updateTime = resource.updateTime?.timestampmilli(),
+            creator = pipelineInfo.creator,
+            canElementSkip = pipelineInfo.canElementSkip,
+            canManualStartup = pipelineInfo.canManualStartup,
+            channelCode = pipelineInfo.channelCode,
+            id = pipelineInfo.id,
+            lastModifyUser = pipelineInfo.lastModifyUser,
+            pipelineDesc = pipelineInfo.pipelineDesc,
+            pipelineId = pipelineInfo.pipelineId,
+            pipelineName = pipelineInfo.pipelineName,
+            projectId = pipelineInfo.projectId,
+            taskCount = pipelineInfo.taskCount,
+            templateId = pipelineInfo.templateId,
+            version = resource.version,
+            versionName = resource.versionName ?: "init",
+            pipelineVersion = resource.pipelineVersion,
+            triggerVersion = resource.triggerVersion,
+            settingVersion = resource.settingVersion,
+            status = resource.status,
+            debugBuildId = resource.debugBuildId,
+            baseVersion = resource.baseVersion
+        )
+    }
+
+    fun getPipelineVersionSimple(
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): PipelineVersionSimple? {
+        return pipelineResourceVersionDao.getPipelineVersionSimple(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version
+        )
+    }
+
     fun listPipelineVersion(
         pipelineInfo: PipelineInfo?,
         projectId: String,
         pipelineId: String,
         offset: Int,
+        limit: Int,
+        excludeVersion: Int?,
+        versionName: String?,
+        creator: String?,
+        description: String?
+    ): Pair<Int, MutableList<PipelineVersionWithInfo>> {
+        if (pipelineInfo == null) {
+            return Pair(0, mutableListOf())
+        }
+
+        val count = pipelineResourceVersionDao.count(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            creator = creator,
+            description = description
+        )
+        val result = pipelineResourceVersionDao.listPipelineVersion(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            creator = creator,
+            description = description,
+            versionName = versionName,
+            excludeVersion = excludeVersion,
+            offset = offset,
+            limit = limit
+        )
+        val list = mutableListOf<PipelineVersionWithInfo>()
+
+        result.forEach {
+            list.add(
+                PipelineVersionWithInfo(
+                    createTime = pipelineInfo.createTime,
+                    updateTime = it.updateTime,
+                    creator = pipelineInfo.creator,
+                    canElementSkip = pipelineInfo.canElementSkip,
+                    canManualStartup = pipelineInfo.canManualStartup,
+                    channelCode = pipelineInfo.channelCode,
+                    id = pipelineInfo.id,
+                    lastModifyUser = pipelineInfo.lastModifyUser,
+                    pipelineDesc = pipelineInfo.pipelineDesc,
+                    pipelineId = pipelineInfo.pipelineId,
+                    pipelineName = pipelineInfo.pipelineName,
+                    projectId = pipelineInfo.projectId,
+                    taskCount = pipelineInfo.taskCount,
+                    templateId = pipelineInfo.templateId,
+                    version = it.version,
+                    versionName = it.versionName,
+                    pipelineVersion = it.pipelineVersion,
+                    triggerVersion = it.triggerVersion,
+                    settingVersion = it.settingVersion,
+                    status = it.status,
+                    debugBuildId = it.debugBuildId,
+                    baseVersion = it.baseVersion,
+                    description = it.description
+                )
+            )
+        }
+        return count to list
+    }
+
+    fun getVersionCreatorInPage(
+        pipelineInfo: PipelineInfo?,
+        projectId: String,
+        pipelineId: String,
+        offset: Int,
         limit: Int
-    ): Pair<Int, List<PipelineInfo>> {
+    ): Pair<Int, List<String>> {
         if (pipelineInfo == null) {
             return Pair(0, emptyList())
         }
 
-        val count = pipelineResVersionDao.count(dslContext, projectId, pipelineId)
-        val result = pipelineResVersionDao.listPipelineVersion(
+        val count = pipelineResourceVersionDao.countVersionCreator(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+        val result = pipelineResourceVersionDao.getVersionCreatorInPage(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             offset = offset,
             limit = limit
         )
-        val list = mutableListOf<PipelineInfo>()
+        return count to result
+    }
 
-        result.forEach {
-            list.add(
-                pipelineInfo.copy(
-                    createTime = it.createTime,
-                    creator = it.creator,
-                    version = it.version,
-                    versionName = it.versionName
-                )
-            )
-        }
-        return count to list
+    fun saveDebugBuildInfo(
+        transactionContext: DSLContext?,
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        buildId: String
+    ): Boolean {
+        return pipelineResourceVersionDao.updateDebugBuildId(
+            dslContext = transactionContext ?: dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            debugBuildId = buildId
+        )
     }
 }

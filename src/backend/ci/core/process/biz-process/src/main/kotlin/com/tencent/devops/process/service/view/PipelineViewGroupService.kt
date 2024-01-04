@@ -62,15 +62,15 @@ import com.tencent.devops.process.pojo.classify.PipelineViewPreview
 import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.service.view.lock.PipelineViewGroupLock
 import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
-import java.text.Collator
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.text.Collator
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @Service
 @SuppressWarnings("LoopWithTooManyJumpStatements", "LongParameterList", "TooManyFunctions", "ReturnCount")
@@ -287,7 +287,12 @@ class PipelineViewGroupService @Autowired constructor(
                 val dynamicProjectViews =
                     pipelineViewDao.list(dslContext, pipelineInfo.projectId, PipelineViewType.DYNAMIC)
                 val matchViewIds = dynamicProjectViews.asSequence()
-                    .filter { pipelineViewService.matchView(it, pipelineInfo) }
+                    .filter {
+                        pipelineViewService.matchView(
+                            pipelineView = it, projectId = pipelineInfo.projectId, creator = pipelineInfo.creator,
+                            pipelineId = pipelineInfo.pipelineId, pipelineName = pipelineInfo.pipelineName
+                        )
+                    }
                     .map { it.id }
                     .toSet()
                 matchViewIds.forEach {
@@ -303,23 +308,32 @@ class PipelineViewGroupService @Autowired constructor(
         }
     }
 
-    fun updateGroupAfterPipelineUpdate(projectId: String, pipelineId: String, userId: String) {
+    fun updateGroupAfterPipelineUpdate(
+        projectId: String,
+        pipelineId: String,
+        pipelineName: String,
+        creator: String,
+        userId: String
+    ) {
         PipelineViewGroupLock(redisOperation, projectId).lockAround {
             logger.info("updateGroupAfterPipelineUpdate, projectId:$projectId, pipelineId:$pipelineId , userId:$userId")
-            val pipelineInfo = pipelineInfoDao.getPipelineId(dslContext, projectId, pipelineId)!!
             // 所有的动态项目组
-            val dynamicProjectViews = pipelineViewDao.list(dslContext, pipelineInfo.projectId, PipelineViewType.DYNAMIC)
+            val dynamicProjectViews = pipelineViewDao.list(dslContext, projectId, PipelineViewType.DYNAMIC)
             val dynamicProjectViewIds = dynamicProjectViews.asSequence()
                 .map { it.id }
                 .toSet()
             // 命中的动态项目组
             val matchViewIds = dynamicProjectViews.asSequence()
-                .filter { pipelineViewService.matchView(it, pipelineInfo) }
-                .map { it.id }
+                .filter {
+                    pipelineViewService.matchView(
+                        pipelineView = it, projectId = it.projectId, creator = creator,
+                        pipelineId = pipelineId, pipelineName = pipelineName
+                    )
+                }.map { it.id }
                 .toSet()
             // 已有的动态项目组
             val baseViewGroups =
-                pipelineViewGroupDao.listByPipelineId(dslContext, pipelineInfo.projectId, pipelineInfo.pipelineId)
+                pipelineViewGroupDao.listByPipelineId(dslContext, projectId, pipelineId)
                     .filter { dynamicProjectViewIds.contains(it.viewId) }
                     .toSet()
             val baseViewIds = baseViewGroups.map { it.viewId }.toSet()
@@ -380,7 +394,13 @@ class PipelineViewGroupService @Autowired constructor(
         }
         return PipelineViewGroupLock(redisOperation, projectId).lockAround {
             val pipelineIds = allPipelineInfos(projectId, false)
-                .filter { pipelineViewService.matchView(view, it) }
+                .filter {
+                    pipelineViewService.matchView(
+                        pipelineView = view, projectId = it.projectId,
+                        pipelineId = it.pipelineId, pipelineName = it.pipelineName,
+                        creator = it.creator
+                    )
+                }
                 .map { it.pipelineId }
             pipelineIds.forEach {
                 pipelineViewGroupDao.create(
@@ -450,7 +470,13 @@ class PipelineViewGroupService @Autowired constructor(
                 .writerFor(object : TypeReference<List<PipelineViewFilter>>() {})
                 .writeValueAsString(pipelineView.filters)
             allPipelineInfoMap.values
-                .filter { it.delete == false && pipelineViewService.matchView(previewCondition, it) }
+                .filter {
+                    it.delete == false && pipelineViewService.matchView(
+                        pipelineView = previewCondition, projectId = it.projectId,
+                        pipelineId = it.pipelineId, pipelineName = it.pipelineName,
+                        creator = it.creator
+                    )
+                }
                 .map { it.pipelineId }
         } else {
             pipelineView.pipelineIds?.filter { allPipelineInfoMap.containsKey(it) } ?: emptyList()
@@ -694,9 +720,19 @@ class PipelineViewGroupService @Autowired constructor(
         return summaries
     }
 
-    fun listViewByPipelineId(userId: String, projectId: String, pipelineId: String): List<PipelineNewViewSummary> {
+    fun listViewByPipelineId(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        viewType: Int? = null
+    ): List<PipelineNewViewSummary> {
         val viewGroupRecords = pipelineViewGroupDao.listByPipelineId(dslContext, projectId, pipelineId)
-        val viewRecords = pipelineViewDao.list(dslContext, projectId, viewGroupRecords.map { it.viewId }.toSet())
+        val viewRecords = pipelineViewDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            viewIds = viewGroupRecords.map { it.viewId }.toSet(),
+            viewType = viewType
+        )
         return viewRecords.filter { it.isProject || it.createUser == userId }.map {
             PipelineNewViewSummary(
                 id = HashUtil.encodeLongId(it.id),

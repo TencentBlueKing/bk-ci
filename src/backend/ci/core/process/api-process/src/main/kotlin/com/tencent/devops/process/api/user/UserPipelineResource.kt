@@ -36,6 +36,7 @@ import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
 import com.tencent.devops.process.pojo.Permission
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCollation
@@ -51,14 +52,15 @@ import com.tencent.devops.process.pojo.classify.PipelineViewAndPipelines
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.pipeline.BatchDeletePipeline
 import com.tencent.devops.process.pojo.pipeline.PipelineCount
-import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
-import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
+import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -190,7 +192,7 @@ interface UserPipelineResource {
     @PUT
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/")
     @Path("/{projectId}/{pipelineId}/")
-    fun edit(
+    fun editPipeline(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -241,6 +243,24 @@ interface UserPipelineResource {
         setting: PipelineSetting
     ): Result<Boolean>
 
+    @ApiOperation("启用/禁用流水线（修改流水线的并发设置）")
+    @POST
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/lock")
+    fun lockPipeline(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam(value = "开启true/锁定false", required = true)
+        @QueryParam("enable")
+        enable: Boolean
+    ): Result<Boolean>
+
     @ApiOperation("获取流水线编排")
     @GET
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/")
@@ -254,7 +274,10 @@ interface UserPipelineResource {
         projectId: String,
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @QueryParam("draft")
+        @DefaultValue("false")
+        includeDraft: Boolean? = false
     ): Result<Model>
 
     @ApiOperation("获取流水线编排版本")
@@ -570,7 +593,7 @@ interface UserPipelineResource {
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<PipelineViewPipelinePage<PipelineInfo>>
+    ): Result<Page<PipelineVersionWithInfo>>
 
     @ApiOperation("校验matrix yaml格式")
     @POST

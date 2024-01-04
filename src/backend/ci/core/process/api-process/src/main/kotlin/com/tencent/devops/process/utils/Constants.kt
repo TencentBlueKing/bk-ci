@@ -214,11 +214,6 @@ const val PIPELINE_TIME_END = "BK_CI_BUILD_END_TIME" // "pipeline.time.end"
 const val PIPELINE_BUILD_MSG = "BK_CI_BUILD_MSG"
 
 /**
- * 流水线设置-CONCURRENCY GROUP 并发组-默认值
- */
-const val PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT = "\${{ci.pipeline_id}}"
-
-/**
  * 保存流水线编排的最大个数
  */
 const val PIPELINE_RES_NUM_MIN = 50

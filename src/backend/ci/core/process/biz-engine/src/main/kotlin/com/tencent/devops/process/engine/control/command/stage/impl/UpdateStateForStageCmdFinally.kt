@@ -94,7 +94,7 @@ class UpdateStateForStageCmdFinally(
         if (commandContext.buildStatus == BuildStatus.STAGE_SUCCESS) {
             if (event.source != BS_STAGE_CANCELED_END_SOURCE && event.source != BS_CANCEL_BUILD_SOURCE) {
                 // 不是 stage cancel 或取消构建，则进行暂停逻辑
-                pipelineStageService.pauseStage(stage)
+                pipelineStageService.pauseStage(stage, commandContext.debug)
             } else {
                 nextOrFinish(event, stage, commandContext, false)
                 sendStageEndCallBack(stage, event)

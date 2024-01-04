@@ -40,7 +40,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL
 import com.tencent.devops.process.constant.ProcessMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.process.dao.PipelineSettingDao
-import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
@@ -63,7 +63,14 @@ class OpPipelineSettingResourceImpl @Autowired constructor(
 
     @AuditEntry(actionId = ActionId.PIPELINE_EDIT)
     override fun updateSetting(userId: String, setting: PipelineSetting): Result<String> {
-        return Result(pipelineSettingFacadeService.saveSetting(userId = userId, setting = setting))
+        return Result(
+            pipelineSettingFacadeService.saveSetting(
+                userId = userId,
+                projectId = setting.projectId,
+                pipelineId = setting.pipelineId,
+                setting = setting
+            ).pipelineId
+        )
     }
 
     override fun getSetting(userId: String, projectId: String, pipelineId: String): Result<PipelineSetting> {

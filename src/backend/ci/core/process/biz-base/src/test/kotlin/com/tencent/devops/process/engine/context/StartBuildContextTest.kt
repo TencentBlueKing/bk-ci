@@ -119,7 +119,8 @@ class StartBuildContextTest : TestBase() {
             realStartParamKeys = emptyList(),
             pipelineParamMap = pipelineParamMap,
             currentBuildNo = null,
-            triggerReviewers = null
+            triggerReviewers = null,
+            debug = true
         )
     }
 

@@ -29,5 +29,15 @@ package com.tencent.devops.common.pipeline.enums
 
 enum class DependOnType {
     ID,
-    NAME
+    NAME;
+
+    companion object {
+        fun parse(type: String?): DependOnType {
+            if (type == null) return ID
+            values().forEach {
+                if (it.name == type) return it
+            }
+            return ID
+        }
+    }
 }

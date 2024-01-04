@@ -392,6 +392,7 @@ class PipelineAtomService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        version: Int?,
         checkPermission: Boolean = true
     ): Result<Map<String, AtomProp>?> {
         if (checkPermission) {
@@ -413,7 +414,7 @@ class PipelineAtomService @Autowired constructor(
                 )
             )
         }
-        val model = pipelineRepositoryService.getModel(projectId, pipelineId)
+        val model = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, version, true)?.model
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS

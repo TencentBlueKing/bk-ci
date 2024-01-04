@@ -98,6 +98,7 @@ class StageControl @Autowired constructor(
                 stageIdLock.lock()
                 watcher.start("execute")
                 execute(watcher = watcher)
+                watcher.start("finish")
             } finally {
                 stageIdLock.unlock()
                 watcher.stop()
@@ -150,7 +151,8 @@ class StageControl @Autowired constructor(
             variables = pipelineContextService.getAllBuildContext(variables), // 传递全量上下文
             pipelineAsCodeEnabled = pipelineAsCodeEnabled,
             executeCount = executeCount,
-            previousStageStatus = addPreviousStageStatus(stage)
+            previousStageStatus = addPreviousStageStatus(stage),
+            debug = buildInfo.debug
         )
         watcher.stop()
 

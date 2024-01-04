@@ -82,5 +82,7 @@ data class PipelineInfo(
     @ApiModelProperty("触发方式", required = false)
     var trigger: String? = null,
     @ApiModelProperty("约束模式下的模板信息", required = false)
-    var templateInfo: TemplateInfo? = null
+    var templateInfo: TemplateInfo? = null,
+    @ApiModelProperty("仅存在草稿", required = false)
+    var onlyDraft: Boolean? = false
 )

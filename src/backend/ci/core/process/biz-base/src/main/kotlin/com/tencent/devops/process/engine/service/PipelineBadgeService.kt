@@ -43,7 +43,7 @@ class PipelineBadgeService @Autowired constructor(
         val buildHistory = pipelineBuildDao.getLatestFinishedBuild(dslContext, projectId, pipelineId)
         val pipelineSvgType = when {
             buildHistory == null -> PipelineSvgType.NEVER
-            buildHistory.status == 0 -> PipelineSvgType.SUCCEEDED
+            buildHistory.status.ordinal == 0 -> PipelineSvgType.SUCCEEDED
             else -> PipelineSvgType.FAILED
         }
         return PipelineSvgType.getSvgContent(pipelineSvgType)

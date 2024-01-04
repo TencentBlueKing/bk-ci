@@ -126,6 +126,7 @@ class ContainerControl @Autowired constructor(
                     projectId = container.projectId
                 )
                 container.execute(watcher, fixEvent)
+                watcher.start("finish")
             } finally {
                 containerIdLock.unlock()
                 watcher.stop()

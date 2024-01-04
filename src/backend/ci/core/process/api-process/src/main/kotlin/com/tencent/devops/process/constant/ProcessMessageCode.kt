@@ -292,6 +292,12 @@ object ProcessMessageCode {
     const val GROUP_LABEL_IS_EXIST = "2101187" // 分组标签({0})已存在/group label ({0}) is already exist
     const val ERROR_NO_PERMISSION_OPERATION_TEMPLATE = "2101189" // 用户没有操作模板的权限
 
+    const val ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID = "2101183" // 流水线版本[{0}]不存在
+    const val ERROR_NO_PIPELINE_DRAFT_EXISTS = "2101184" // 该流水不存在草稿版本
+    const val ERROR_OCCURRED_IN_TRANSFER = "2101185" // 转换时出现报错
+    const val ERROR_PIPELINE_CONSTANTS_BLANK_ERROR = "2101187" // 构建常量的取值为空
+    const val ERROR_VERSION_CANNOT_RUN = "2101188" // 发布的版本未通过调试
+    const val ERROR_PIPELINE_WITH_EMPTY_STAGE = "2101190" // 编辑保存stage不能为空
     const val ERROR_TRIGGER_DETAIL_NOT_FOUND = "2101181" // 触发详情{0}不存在
     const val ERROR_TRIGGER_EVENT_NOT_FOUND = "2101182" // 触发事件{0}不存在
     const val ERROR_TRIGGER_TYPE_REPLAY_NOT_SUPPORT = "2101183" // 触发类型{0}不支持重放
