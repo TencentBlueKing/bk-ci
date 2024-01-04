@@ -193,6 +193,20 @@ class PipelineResourceVersionDao {
         }
     }
 
+    fun getReleaseVersionRecord(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): PipelineResourceVersion? {
+        with(T_PIPELINE_RESOURCE_VERSION) {
+            return dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .and(STATUS.eq(VersionStatus.RELEASED.name).or(STATUS.isNull))
+                .orderBy(VERSION.desc()).limit(1)
+                .fetchAny(mapper)
+        }
+    }
+
     fun getDraftVersionResource(
         dslContext: DSLContext,
         projectId: String,
