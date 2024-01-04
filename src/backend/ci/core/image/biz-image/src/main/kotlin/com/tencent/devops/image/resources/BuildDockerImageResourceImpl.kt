@@ -25,32 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.docker
+package com.tencent.devops.image.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.image.api.BuildDockerImageResource
 import com.tencent.devops.image.pojo.CheckDockerImageRequest
 import com.tencent.devops.image.pojo.CheckDockerImageResponse
-import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
-import com.tencent.devops.worker.common.api.WorkerRestApiSDK
+import com.tencent.devops.image.service.InspectImageService
+import org.springframework.beans.factory.annotation.Autowired
 
-interface DockerSDKApi : WorkerRestApiSDK {
+@RestResource
+class BuildDockerImageResourceImpl @Autowired constructor(
+    private val inspectImageService: InspectImageService
+) : BuildDockerImageResource {
 
-    /**
-     * 更新镜像信息
-     */
-    fun updateImageInfo(
+    override fun checkDockerImage(
         userId: String,
-        projectCode: String,
-        imageCode: String,
-        version: String,
-        imageBaseInfoUpdateRequest: ImageBaseInfoUpdateRequest
-    ): Result<Boolean>
-
-    /**
-     * 检查镜像信息
-     */
-    fun checkDockerImage(
-        userId: String,
-        vararg checkDockerImageRequestList: CheckDockerImageRequest
-    ): Result<List<CheckDockerImageResponse>>
+        checkDockerImageRequestList: List<CheckDockerImageRequest>
+    ): Result<List<CheckDockerImageResponse>> {
+        return Result(inspectImageService.checkDockerImage(userId, checkDockerImageRequestList))
+    }
 }
