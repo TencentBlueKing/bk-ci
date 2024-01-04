@@ -46,10 +46,8 @@ import com.tencent.devops.process.yaml.actions.data.EventCommonData
 import com.tencent.devops.process.yaml.actions.data.PacRepoSetting
 import com.tencent.devops.process.yaml.actions.data.context.PacTriggerContext
 import com.tencent.devops.process.yaml.actions.pacActions.PipelineYamlDeleteAction
-import com.tencent.devops.process.yaml.actions.pacActions.PipelineYamlEnableAction
-import com.tencent.devops.process.yaml.actions.pacActions.PipelineYamlPushAction
-import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlEnableActionEvent
-import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlPushActionEvent
+import com.tencent.devops.process.yaml.actions.pacActions.PipelineYamlManualAction
+import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlManualEvent
 import com.tencent.devops.process.yaml.actions.tgit.TGitIssueActionGit
 import com.tencent.devops.process.yaml.actions.tgit.TGitMrActionGit
 import com.tencent.devops.process.yaml.actions.tgit.TGitNoteActionGit
@@ -154,52 +152,37 @@ class EventActionFactory @Autowired constructor(
         }
     }
 
-    fun loadEnableEvent(
+    fun loadManualEvent(
         setting: PacRepoSetting,
-        event: PipelineYamlEnableActionEvent
-    ): PipelineYamlEnableAction {
-        val pipelineYamlEnableAction = PipelineYamlEnableAction(apiService = tGitApiService)
-        pipelineYamlEnableAction.data = ActionData(event, PacTriggerContext())
-        pipelineYamlEnableAction.api = when (event.scmType) {
+        event: PipelineYamlManualEvent
+    ): PipelineYamlManualAction {
+        val pipelineYamlManualAction = PipelineYamlManualAction()
+        pipelineYamlManualAction.data = ActionData(event, PacTriggerContext())
+        pipelineYamlManualAction.api = when (event.scmType) {
             ScmType.CODE_GIT -> tGitApiService
             else -> TODO("对接其他代码库平台时需要补充")
         }
-        pipelineYamlEnableAction.data.setting = setting
-        pipelineYamlEnableAction.init()
-        return pipelineYamlEnableAction
+        pipelineYamlManualAction.data.setting = setting
+        pipelineYamlManualAction.init()
+        return pipelineYamlManualAction
     }
 
-    fun loadYamlPushEvent(
-        setting: PacRepoSetting,
-        event: PipelineYamlPushActionEvent
-    ): PipelineYamlPushAction {
-        val pipelineYamlPushAction = PipelineYamlPushAction(apiService = tGitApiService)
-        pipelineYamlPushAction.data = ActionData(event, PacTriggerContext())
-        pipelineYamlPushAction.api = when (event.scmType) {
-            ScmType.CODE_GIT -> tGitApiService
-            else -> TODO("对接其他代码库平台时需要补充")
-        }
-        pipelineYamlPushAction.data.setting = setting
-        pipelineYamlPushAction.init()
-        return pipelineYamlPushAction
-    }
-
-    fun loadEnableEvent(
+    fun loadManualEvent(
         eventStr: String,
         actionCommonData: EventCommonData,
         actionContext: PacTriggerContext,
         actionSetting: PacRepoSetting
     ): BaseAction? {
-        val event = objectMapper.readValue<PipelineYamlEnableActionEvent>(eventStr)
-        val pipelineYamlEnableAction = PipelineYamlEnableAction(apiService = tGitApiService)
+        val event = objectMapper.readValue<PipelineYamlManualEvent>(eventStr)
+        val pipelineYamlManualAction = PipelineYamlManualAction()
 
-        pipelineYamlEnableAction.api = when (event.scmType) {
+        pipelineYamlManualAction.api = when (event.scmType) {
             ScmType.CODE_GIT -> tGitApiService
             else -> TODO("对接其他代码库平台时需要补充")
         }
-        pipelineYamlEnableAction.data = ActionData(event, actionContext)
-        pipelineYamlEnableAction.data.eventCommon = actionCommonData
-        pipelineYamlEnableAction.data.setting = actionSetting
-        return pipelineYamlEnableAction
+        pipelineYamlManualAction.data = ActionData(event, actionContext)
+        pipelineYamlManualAction.data.eventCommon = actionCommonData
+        pipelineYamlManualAction.data.setting = actionSetting
+        return pipelineYamlManualAction
     }
 }

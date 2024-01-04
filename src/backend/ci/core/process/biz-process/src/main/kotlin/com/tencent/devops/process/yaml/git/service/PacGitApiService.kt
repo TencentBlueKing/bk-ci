@@ -139,7 +139,6 @@ interface PacGitApiService {
 
     /**
      * 提交yaml文件
-     *
      */
     fun pushYamlFile(
         cred: PacGitCred,
@@ -149,6 +148,7 @@ interface PacGitApiService {
         content: String,
         commitMessage: String,
         targetAction: CodeTargetAction,
-        pipelineId: String
+        pipelineId: String,
+        versionName: String?
     ): PacGitPushResult
 }

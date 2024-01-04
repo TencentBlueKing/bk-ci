@@ -29,6 +29,7 @@
 package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.model.process.tables.TPipelineYamlBranchFile
+import com.tencent.devops.model.process.tables.records.TPipelineYamlBranchFileRecord
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -78,6 +79,23 @@ class PipelineYamlBranchFileDao {
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(BRANCH.eq(branch))
                 .fetch(0, String::class.java)
+        }
+    }
+
+    fun get(
+        dslContext: DSLContext,
+        projectId: String,
+        repoHashId: String,
+        branch: String,
+        filePath: String
+    ): TPipelineYamlBranchFileRecord? {
+        return with(TPipelineYamlBranchFile.T_PIPELINE_YAML_BRANCH_FILE) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPO_HASH_ID.eq(repoHashId))
+                .and(BRANCH.eq(branch))
+                .and(FILE_PATH_MD5.eq(DigestUtils.md5Hex(filePath)))
+                .fetchOne()
         }
     }
 

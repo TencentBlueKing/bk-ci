@@ -69,8 +69,6 @@ class TGitApiService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TGitApiService::class.java)
-        // pac分支前缀
-        private const val PAC_BRANCH_PREFIX = "bk-ci-pipeline-"
     }
 
     /**
@@ -113,7 +111,7 @@ class TGitApiService @Autowired constructor(
             logger = logger,
             retry = retry,
             log = "$gitProjectId get commit info $sha fail",
-            errorCode = ProcessMessageCode.ERROR_GET_COMMIT_INFO_ERROR
+            errorCode = ProcessMessageCode.ERROR_GET_COMMIT_INFO
         ) {
             client.get(ServiceGitResource::class).getRepoRecentCommitInfo(
                 repoName = gitProjectId,
@@ -291,13 +289,14 @@ class TGitApiService @Autowired constructor(
         content: String,
         commitMessage: String,
         targetAction: CodeTargetAction,
-        pipelineId: String
+        pipelineId: String,
+        versionName: String?
     ): PacGitPushResult {
         val token = cred.toToken()
         val branchName = if (targetAction == CodeTargetAction.COMMIT_TO_MASTER) {
             defaultBranch
         } else {
-            "${PAC_BRANCH_PREFIX}${pipelineId}"
+            versionName!!
         }
         // 1. 判断分支是否存在
         val branchExists = client.get(ServiceGitResource::class).getBranch(

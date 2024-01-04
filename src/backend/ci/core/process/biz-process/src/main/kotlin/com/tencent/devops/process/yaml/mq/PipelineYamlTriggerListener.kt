@@ -70,7 +70,7 @@ class PipelineYamlTriggerListener @Autowired constructor(
     private fun enablePac(projectId: String, event: PipelineYamlEnableEvent) {
         logger.info("receive enable pac|$projectId|${event.actionSetting}")
         val action = try {
-            val action = actionFactory.loadEnableEvent(
+            val action = actionFactory.loadManualEvent(
                 eventStr = event.eventStr,
                 actionCommonData = event.actionCommonData,
                 actionContext = event.actionContext,

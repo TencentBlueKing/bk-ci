@@ -51,7 +51,6 @@ class PipelineYamlVersionDao {
         ref: String?,
         pipelineId: String,
         version: Int,
-        versionName: String,
         userId: String
     ) {
         val now = LocalDateTime.now()
@@ -66,7 +65,6 @@ class PipelineYamlVersionDao {
                 REF,
                 PIPELINE_ID,
                 VERSION,
-                VERSION_NAME,
                 CREATOR,
                 MODIFIER,
                 CREATE_TIME,
@@ -80,7 +78,6 @@ class PipelineYamlVersionDao {
                 ref,
                 pipelineId,
                 version,
-                versionName,
                 userId,
                 userId,
                 now,

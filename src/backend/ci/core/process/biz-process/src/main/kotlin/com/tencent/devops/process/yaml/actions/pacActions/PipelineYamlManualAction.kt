@@ -36,26 +36,24 @@ import com.tencent.devops.process.yaml.actions.data.ActionData
 import com.tencent.devops.process.yaml.actions.data.ActionMetaData
 import com.tencent.devops.process.yaml.actions.data.EventCommonData
 import com.tencent.devops.process.yaml.actions.data.EventCommonDataCommit
-import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlPushActionEvent
+import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlManualEvent
 import com.tencent.devops.process.yaml.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.yaml.git.pojo.PacGitCred
 import com.tencent.devops.process.yaml.git.pojo.PacGitPushResult
 import com.tencent.devops.process.yaml.git.pojo.tgit.TGitCred
 import com.tencent.devops.process.yaml.git.service.PacGitApiService
-import com.tencent.devops.process.yaml.git.service.TGitApiService
 import com.tencent.devops.process.yaml.pojo.CheckType
 import com.tencent.devops.process.yaml.pojo.YamlContent
 import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 
-class PipelineYamlPushAction(
-    private val apiService: TGitApiService
-) : BaseAction {
-
-    override val metaData: ActionMetaData = ActionMetaData(StreamObjectKind.UPLOAD)
-
+/**
+ * 用户主动操作的action,如开启pac、发布流水线、删除流水线
+ */
+class PipelineYamlManualAction : BaseAction {
+    override val metaData: ActionMetaData = ActionMetaData(StreamObjectKind.MANUAL)
     override lateinit var data: ActionData
-    fun event() = data.event as PipelineYamlPushActionEvent
+    fun event() = data.event as PipelineYamlManualEvent
 
     override lateinit var api: PacGitApiService
 
@@ -63,7 +61,7 @@ class PipelineYamlPushAction(
         return initCommonData()
     }
 
-    private fun initCommonData(): PipelineYamlPushAction {
+    private fun initCommonData(): PipelineYamlManualAction {
         val event = event()
         val gitProjectId = getGitProjectIdOrName()
         val defaultBranch = api.getGitProjectInfo(
@@ -71,7 +69,7 @@ class PipelineYamlPushAction(
             gitProjectId = gitProjectId,
             retry = ApiRequestRetryInfo(true)
         )!!.defaultBranch!!
-        val latestCommit = apiService.getGitCommitInfo(
+        val latestCommit = api.getGitCommitInfo(
             cred = this.getGitCred(),
             gitProjectId = gitProjectId.toString(),
             sha = defaultBranch,
@@ -138,7 +136,8 @@ class PipelineYamlPushAction(
         filePath: String,
         content: String,
         commitMessage: String,
-        targetAction: CodeTargetAction
+        targetAction: CodeTargetAction,
+        versionName: String?
     ): PacGitPushResult {
         return api.pushYamlFile(
             cred = this.getGitCred(),
@@ -148,7 +147,8 @@ class PipelineYamlPushAction(
             content = content,
             commitMessage = commitMessage,
             targetAction = targetAction,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            versionName = versionName
         )
     }
 }

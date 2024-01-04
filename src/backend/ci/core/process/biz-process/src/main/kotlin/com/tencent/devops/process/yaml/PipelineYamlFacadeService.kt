@@ -29,6 +29,7 @@
 package com.tencent.devops.process.yaml
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -49,8 +50,7 @@ import com.tencent.devops.process.webhook.WebhookEventFactory
 import com.tencent.devops.process.yaml.actions.EventActionFactory
 import com.tencent.devops.process.yaml.actions.data.PacRepoSetting
 import com.tencent.devops.process.yaml.actions.data.YamlTriggerPipeline
-import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlEnableActionEvent
-import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlPushActionEvent
+import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlManualEvent
 import com.tencent.devops.process.yaml.mq.PipelineYamlEnableEvent
 import com.tencent.devops.process.yaml.mq.PipelineYamlTriggerEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
@@ -91,13 +91,13 @@ class PipelineYamlFacadeService @Autowired constructor(
             repositoryType = RepositoryType.ID
         ).data ?: return
         val setting = PacRepoSetting(repository = repository)
-        val event = PipelineYamlEnableActionEvent(
+        val event = PipelineYamlManualEvent(
             userId = userId,
             projectId = projectId,
             repoHashId = repoHashId,
             scmType = scmType
         )
-        val action = eventActionFactory.loadEnableEvent(setting = setting, event = event)
+        val action = eventActionFactory.loadManualEvent(setting = setting, event = event)
 
         val yamlPathList = action.getYamlPathList()
         pipelineYamlSyncService.initPacSyncDetail(
@@ -275,7 +275,7 @@ class PipelineYamlFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         version: Int,
-        versionName: String,
+        versionName: String?,
         repoHashId: String,
         scmType: ScmType,
         filePath: String,
@@ -292,27 +292,33 @@ class PipelineYamlFacadeService @Autowired constructor(
             errorCode = ProcessMessageCode.GIT_NOT_FOUND,
             params = arrayOf(repoHashId)
         )
+        if (targetAction != CodeTargetAction.COMMIT_TO_MASTER && versionName.isNullOrBlank()) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                params = arrayOf("versionName")
+            )
+        }
         val setting = PacRepoSetting(repository = repository)
-        val event = PipelineYamlPushActionEvent(
+        val event = PipelineYamlManualEvent(
             userId = userId,
             projectId = projectId,
             repoHashId = repoHashId,
             scmType = scmType
         )
-        val action = eventActionFactory.loadYamlPushEvent(setting = setting, event = event)
+        val action = eventActionFactory.loadManualEvent(setting = setting, event = event)
         val gitPushResult = action.pushYamlFile(
             pipelineId = pipelineId,
             filePath = filePath,
             content = content,
             commitMessage = commitMessage,
-            targetAction = targetAction
+            targetAction = targetAction,
+            versionName = versionName
         )
         pipelineYamlRepositoryService.releaseYamlPipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             version = version,
-            versionName = versionName,
             action = action,
             gitPushResult = gitPushResult
         )
@@ -322,5 +328,42 @@ class PipelineYamlFacadeService @Autowired constructor(
             filePath = gitPushResult.filePath,
             branch = gitPushResult.branch
         )
+    }
+
+    fun deleteBeforeCheck(
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ) {
+        val pipelineYamlInfo =
+            pipelineYamlService.getPipelineYamlInfo(projectId = projectId, pipelineId = pipelineId) ?: return
+        with(pipelineYamlInfo) {
+            val repository = client.get(ServiceRepositoryResource::class).get(
+                projectId = projectId,
+                repositoryId = repoHashId,
+                repositoryType = RepositoryType.ID
+            ).data ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.GIT_NOT_FOUND,
+                params = arrayOf(repoHashId)
+            )
+            val setting = PacRepoSetting(repository = repository)
+            val event = PipelineYamlManualEvent(
+                userId = userId,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                scmType = repository.getScmType()
+            )
+            val action = eventActionFactory.loadManualEvent(setting = setting, event = event)
+            pipelineYamlService.getBranchFilePath(
+                projectId = projectId,
+                repoHashId = pipelineYamlInfo.repoHashId,
+                branch = action.data.context.defaultBranch!!,
+                filePath = pipelineYamlInfo.filePath
+            )?.let {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_DELETE_YAML_PIPELINE_IN_DEFAULT_BRANCH,
+                )
+            }
+        }
     }
 }

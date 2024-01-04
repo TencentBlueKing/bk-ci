@@ -201,8 +201,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
         )
         val pipelineId = deployPipelineResult.pipelineId
         val version = deployPipelineResult.version
-        val webhooks =
-            getWebhooks(projectId = projectId, pipelineId = pipelineId, version = version, repoHashId = repoHashId)
+        val webhooks = getWebhooks(projectId = projectId, pipelineId = pipelineId, version = version)
         pipelineYamlService.save(
             projectId = projectId,
             repoHashId = repoHashId,
@@ -213,7 +212,6 @@ class PipelineYamlRepositoryService @Autowired constructor(
             ref = branch,
             pipelineId = pipelineId,
             version = version,
-            versionName = deployPipelineResult.versionName!!,
             userId = userId,
             webhooks = webhooks
         )
@@ -312,8 +310,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
         )
         val version = deployPipelineResult.version
         val repoHashId = action.data.setting.repoHashId
-        val webhooks =
-            getWebhooks(projectId = projectId, pipelineId = pipelineId, version = version, repoHashId = repoHashId)
+        val webhooks = getWebhooks(projectId = projectId, pipelineId = pipelineId, version = version)
         pipelineYamlService.update(
             projectId = projectId,
             repoHashId = repoHashId,
@@ -323,7 +320,6 @@ class PipelineYamlRepositoryService @Autowired constructor(
             ref = branch,
             pipelineId = deployPipelineResult.pipelineId,
             version = deployPipelineResult.version,
-            versionName = deployPipelineResult.versionName!!,
             userId = action.data.getUserId(),
             webhooks = webhooks,
             needDeleteVersion = needDeleteVersion
@@ -387,20 +383,13 @@ class PipelineYamlRepositoryService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         version: Int,
-        versionName: String,
         action: BaseAction,
         gitPushResult: PacGitPushResult
     ) {
         val repoHashId = action.data.setting.repoHashId
         val filePath = gitPushResult.filePath
 
-        val webhooks =
-            getWebhooks(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = version,
-            repoHashId = repoHashId
-        )
+        val webhooks = getWebhooks(projectId = projectId, pipelineId = pipelineId, version = version)
         PipelineYamlTriggerLock(
             redisOperation = redisOperation,
             projectId = projectId,
@@ -413,7 +402,6 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = version,
-                versionName = versionName,
                 repoHashId = repoHashId,
                 filePath = filePath,
                 gitPushResult = gitPushResult,
@@ -428,7 +416,6 @@ class PipelineYamlRepositoryService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         version: Int,
-        versionName: String,
         repoHashId: String,
         filePath: String,
         gitPushResult: PacGitPushResult,
@@ -456,7 +443,6 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 commitId = commitId,
                 ref = branch,
                 version = version,
-                versionName = versionName,
                 webhooks = webhooks
             )
             createYamlViewIfAbsent(
@@ -484,7 +470,6 @@ class PipelineYamlRepositoryService @Autowired constructor(
                     ref = branch,
                     pipelineId = pipelineId,
                     version = version,
-                    versionName = versionName,
                     userId = userId,
                     webhooks = webhooks,
                     needDeleteVersion = false
@@ -507,7 +492,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 pipelineId = pipelineYamlInfo.pipelineId,
                 pipelineAsCodeSettings = PipelineAsCodeSettings(enable = false)
             )
-            pipelineYamlService.delete(
+            pipelineYamlService.deleteYamlPipeline(
                 userId = userId,
                 projectId = projectId,
                 repoHashId = repoHashId,
@@ -541,8 +526,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
     private fun getWebhooks(
         projectId: String,
         pipelineId: String,
-        version: Int,
-        repoHashId: String
+        version: Int
     ): List<PipelineWebhookVersion> {
         val model =
             pipelineRepositoryService.getModel(projectId = projectId, pipelineId = pipelineId, version = version)

@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 
 /**
- * pac push文件事件
+ * 用户主动操作的事件
  */
-data class PipelineYamlPushActionEvent(
+data class PipelineYamlManualEvent(
     val userId: String,
     val projectId: String,
     val repoHashId: String,

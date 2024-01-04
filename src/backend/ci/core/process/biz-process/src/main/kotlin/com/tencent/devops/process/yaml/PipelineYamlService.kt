@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.model.process.tables.records.TPipelineYamlBranchFileRecord
 import com.tencent.devops.process.engine.dao.PipelineWebhookVersionDao
 import com.tencent.devops.process.engine.dao.PipelineYamlBranchFileDao
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
@@ -78,7 +79,6 @@ class PipelineYamlService(
         commitId: String,
         ref: String,
         version: Int,
-        versionName: String,
         webhooks: List<PipelineWebhookVersion>
     ) {
         dslContext.transaction { configuration ->
@@ -102,7 +102,6 @@ class PipelineYamlService(
                 ref = ref,
                 pipelineId = pipelineId,
                 version = version,
-                versionName = versionName,
                 userId = userId
             )
             pipelineWebhookVersionDao.batchSave(
@@ -129,7 +128,6 @@ class PipelineYamlService(
         commitId: String,
         ref: String,
         version: Int,
-        versionName: String,
         webhooks: List<PipelineWebhookVersion>,
         needDeleteVersion: Boolean
     ) {
@@ -161,7 +159,6 @@ class PipelineYamlService(
                 ref = ref,
                 pipelineId = pipelineId,
                 version = version,
-                versionName = versionName,
                 userId = userId
             )
             pipelineWebhookVersionDao.batchSave(
@@ -188,6 +185,17 @@ class PipelineYamlService(
             projectId = projectId,
             repoHashId = repoHashId,
             filePath = filePath
+        )
+    }
+
+    fun getPipelineYamlInfo(
+        projectId: String,
+        pipelineId: String
+    ): PipelineYamlInfo? {
+        return pipelineYamlInfoDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
         )
     }
 
@@ -291,7 +299,7 @@ class PipelineYamlService(
         )
     }
 
-    fun delete(
+    fun deleteYamlPipeline(
         userId: String,
         projectId: String,
         repoHashId: String,
@@ -394,7 +402,22 @@ class PipelineYamlService(
             dslContext = dslContext,
             projectId = projectId,
             repoHashId = repoHashId,
+            branch = branch
+        )
+    }
+
+    fun getBranchFilePath(
+        projectId: String,
+        repoHashId: String,
+        branch: String,
+        filePath: String
+    ): TPipelineYamlBranchFileRecord? {
+        return pipelineYamlBranchFileDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            repoHashId = repoHashId,
             branch = branch,
+            filePath = filePath
         )
     }
 }
