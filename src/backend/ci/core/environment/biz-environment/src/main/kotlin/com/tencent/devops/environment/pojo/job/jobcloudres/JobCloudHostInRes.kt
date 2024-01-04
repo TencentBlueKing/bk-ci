@@ -15,5 +15,10 @@ data class JobCloudHostInRes(
     val ipv6: String?,
     @ApiModelProperty(value = "主机ID")
     @JsonProperty("bk_host_id")
-    val bkHostId: Long?
+    val bkHostId: Long?,
+    @ApiModelProperty(value = "Agent ID")
+    @JsonProperty("bk_agent_id")
+    val bkAgentId: String?,
+    @ApiModelProperty(value = "Agent是否正常，取值为：1-正常，0-异常")
+    val alive: Int?
 )
