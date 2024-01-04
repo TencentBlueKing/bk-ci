@@ -87,12 +87,12 @@ class PipelineVersionFacadeService @Autowired constructor(
     private val templateFacadeService: TemplateFacadeService,
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineViewGroupService: PipelineViewGroupService,
-    private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineVersionFacadeService::class.java)
+        private const val PAC_BRANCH_PREFIX = "bk-ci-pipeline-"
     }
 
     fun getPipelineDetailIncludeDraft(
@@ -212,11 +212,19 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineAsCodeSettings = PipelineAsCodeSettings(enabled)
         )
         // TODO #8164 增加同步PAC仓库
-        val pushBranchName = "master"
         val (versionStatus, branchName) = if (
             enabled && request.targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE
         ) {
-            Pair(VersionStatus.BRANCH, pushBranchName)
+            Pair(VersionStatus.BRANCH, "${PAC_BRANCH_PREFIX}${pipelineId}")
+        } else if (enabled && request.targetAction == CodeTargetAction.PUSH_BRANCH_AND_REQUEST_MERGE) {
+            val baseVersion = draftVersion.baseVersion?.let {
+                pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, it)
+            }
+            if (baseVersion == null || baseVersion.status != VersionStatus.BRANCH) throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
+                params = arrayOf(draftVersion.baseVersion?.toString() ?: "")
+            )
+            Pair(VersionStatus.BRANCH, baseVersion.versionName)
         } else {
             Pair(VersionStatus.RELEASED, null)
         }
