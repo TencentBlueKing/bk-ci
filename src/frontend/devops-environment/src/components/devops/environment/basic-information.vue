@@ -42,7 +42,7 @@
             <div class="item-content">
                 <div class="item-label">{{ $t('environment.status') }}</div>
                 <div class="item-value" :class="nodeDetails.status === 'NORMAL' ? 'normal' : 'abnormal'">
-                    {{ nodeDetails.status === 'NORMAL' ? $t('environment.nodeInfo.normal') : (nodeDetails.exitErrorMsg ? $t('environment.nodeInfo.abnormal') + '(' + nodeDetails.exitErrorMsg + ')' : $t('environment.nodeInfo.abnormal')) }}
+                    {{ nodeDetails.status === 'NORMAL' ? $t('environment.nodeInfo.normal') : $t('environment.nodeInfo.abnormal') }}
                 </div>
             </div>
             <div class="item-content">
