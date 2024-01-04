@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.RepoPipelineRefVo
 import com.tencent.devops.repository.pojo.RepoRename
 import com.tencent.devops.repository.pojo.RepoTriggerRefVo
+import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
@@ -44,6 +45,7 @@ import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.repository.pojo.RepositoryPage
 import com.tencent.devops.repository.pojo.commit.CommitResponse
 import com.tencent.devops.repository.pojo.enums.Permission
+import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -220,7 +222,10 @@ interface UserRepositoryResource {
         pageSize: Int?,
         @ApiParam("别名", required = false)
         @QueryParam("aliasName")
-        aliasName: String? = null
+        aliasName: String? = null,
+        @ApiParam("是否开启pac", required = false)
+        @QueryParam("enablePac")
+        enablePac: Boolean? = null
     ): Result<Page<RepositoryInfo>>
 
     @ApiOperation("删除代码库")
@@ -347,4 +352,25 @@ interface UserRepositoryResource {
         @ApiParam("代码库重命名")
         repoRename: RepoRename
     ): Result<Boolean>
+
+    @ApiOperation("根据用户ID判断用户是否已经oauth认证")
+    @GET
+    @Path("/{projectId}/isOauth")
+    fun isOAuth(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("重定向url类型", required = false)
+        @QueryParam("redirectUrlType")
+        redirectUrlType: RedirectUrlTypeEnum? = null,
+        @ApiParam(value = "oauth认证成功后重定向到前端的地址", required = false)
+        @QueryParam("redirectUrl")
+        redirectUrl: String? = null,
+        @ApiParam("仓库类型", required = false)
+        @QueryParam("repositoryType")
+        repositoryType: ScmType
+    ): Result<AuthorizeResult>
 }

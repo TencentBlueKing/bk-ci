@@ -39,6 +39,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.exception.PipelineAlreadyExistException
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
@@ -51,6 +52,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelUpdate
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
@@ -92,6 +94,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
+import java.util.LinkedList
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
@@ -500,6 +503,50 @@ class PipelineInfoFacadeService @Autowired constructor(
             pipelineBean.create(success)
             processJmxApi.execute(ProcessJmxApi.NEW_PIPELINE_CREATE, watcher.totalTimeMillis)
         }
+    }
+
+    fun createYamlPipeline(
+        userId: String,
+        projectId: String,
+        yml: String,
+        branchName: String,
+        isDefaultBranch: Boolean,
+        aspects: LinkedList<IPipelineTransferAspect>? = null
+    ): DeployPipelineResult {
+        // TODO 待补充
+        return DeployPipelineResult(pipelineId = "p-001", pipelineName = "yml-001-pipeline", version = 1)
+    }
+
+    fun updateYamlPipeline(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        yml: String,
+        branchName: String,
+        isDefaultBranch: Boolean,
+        aspects: LinkedList<IPipelineTransferAspect>? = null
+    ): DeployPipelineResult {
+        // TODO 待补充
+        return DeployPipelineResult(pipelineId = "p-001", pipelineName = "yml-001-pipeline", version = 1)
+    }
+
+    fun updateBranchVersion(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        branchName: String,
+        branchVersionAction: BranchVersionAction
+    ) {
+
+    }
+
+    fun updateYamlPipelineSetting(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        pipelineAsCodeSettings: PipelineAsCodeSettings
+    ) {
+
     }
 
     /**

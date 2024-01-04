@@ -24,18 +24,31 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.repository.pojo.auth
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-import org.apache.commons.lang3.StringUtils
+package com.tencent.devops.process.yaml.git.pojo.tgit
 
-@ApiModel("代码库授权信息")
-data class RepoAuthInfo(
-    @ApiModelProperty("授权类型", required = true)
-    val authType: String,
-    @ApiModelProperty("授权凭证ID", required = true)
-    val credentialId: String,
-    @ApiModelProperty("SVN类型", required = false)
-    val svnType: String? = StringUtils.EMPTY
-)
+import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.ChangeFileInfo
+import com.tencent.devops.process.yaml.git.pojo.PacGitChangeFileInfo
+
+data class TGitChangeFileInfo(
+    override val oldPath: String,
+    override val newPath: String,
+    override val renameFile: Boolean,
+    override val deletedFile: Boolean
+) : PacGitChangeFileInfo {
+
+    constructor(c: ChangeFileInfo) : this(
+        oldPath = c.oldPath,
+        newPath = c.newPath,
+        renameFile = c.renameFile,
+        deletedFile = c.deletedFile
+    )
+
+    constructor(c: GitMrChangeInfo.GitMrFile) : this(
+        oldPath = c.oldPath,
+        newPath = c.newPath,
+        renameFile = c.renameFile,
+        deletedFile = c.deletedFile
+    )
+}

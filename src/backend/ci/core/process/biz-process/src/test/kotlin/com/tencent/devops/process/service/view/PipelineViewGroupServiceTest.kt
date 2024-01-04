@@ -21,6 +21,7 @@ import com.tencent.devops.process.dao.label.PipelineViewDao
 import com.tencent.devops.process.dao.label.PipelineViewGroupDao
 import com.tencent.devops.process.dao.label.PipelineViewTopDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.engine.dao.PipelineYamlViewDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
@@ -52,6 +53,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
     private val pipelineViewTopDao: PipelineViewTopDao = mockk()
     private val pipelineInfoDao: PipelineInfoDao = mockk()
     private val clientTokenService: ClientTokenService = mockk()
+    private val pipelineYamlViewDao: PipelineYamlViewDao = mockk()
 
     private val self: PipelineViewGroupService = spyk(
         PipelineViewGroupService(
@@ -64,7 +66,8 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             redisOperation = redisOperation,
             objectMapper = objectMapper,
             client = client,
-            clientTokenService = clientTokenService
+            clientTokenService = clientTokenService,
+            pipelineYamlViewDao = pipelineYamlViewDao
         ),
         recordPrivateCalls = true
     )
@@ -869,12 +872,14 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
         fun test_1() {
             every { pipelineViewDao.list(anyDslContext(), any(), any(), any(), any()) } returns emptyList()
             every { pipelineViewGroupDao.countByViewId(anyDslContext(), any(), any()) } returns emptyMap()
+            every { pipelineYamlViewDao.listViewIds(anyDslContext(), any()) } returns emptyList()
             every {
                 self["sortViews2Summary"](
                     any() as String,
                     any() as String,
                     any() as List<TPipelineViewRecord>,
-                    any() as Map<Long, Int>
+                    any() as Map<Long, Int>,
+                    any() as List<Long>
                 )
             } returns mutableListOf<PipelineNewViewSummary>()
             self.listView("test", "test", false, PipelineViewType.DYNAMIC).let {
@@ -887,12 +892,14 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
         fun test_2() {
             every { pipelineViewDao.list(anyDslContext(), any(), any(), any(), any()) } returns emptyList()
             every { pipelineViewGroupDao.countByViewId(anyDslContext(), any(), any()) } returns emptyMap()
+            every { pipelineYamlViewDao.listViewIds(anyDslContext(), any()) } returns emptyList()
             every {
                 self["sortViews2Summary"](
                     any() as String,
                     any() as String,
                     any() as List<TPipelineViewRecord>,
-                    any() as Map<Long, Int>
+                    any() as Map<Long, Int>,
+                    any() as List<Long>
                 )
             } returns mutableListOf<PipelineNewViewSummary>()
             every { self["getClassifiedPipelineIds"](any() as String) } returns emptyList<String>()
@@ -922,7 +929,12 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
 
             every { pipelineViewTopDao.list(anyDslContext(), any(), any()) } returns listOf(pvt)
             self.invokePrivate<MutableList<PipelineNewViewSummary>>(
-                "sortViews2Summary", "test", "test", listOf(pvCopy1, pvCopy2), emptyMap<Long, Int>()
+                "sortViews2Summary",
+                "test",
+                "test",
+                listOf(pvCopy1, pvCopy2),
+                emptyMap<Long, Int>(),
+                emptyList<Long>()
             ).let {
                 Assertions.assertEquals(it!!.size, 2)
                 Assertions.assertEquals(it[0].name, pvCopy2.name)
