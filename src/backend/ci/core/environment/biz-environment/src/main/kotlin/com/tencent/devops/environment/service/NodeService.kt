@@ -259,7 +259,8 @@ class NodeService @Autowired constructor(
                         it.nodeType == NodeType.OTHER.name) &&
                     (it.nodeStatus == NodeStatus.NOT_IN_CC.name ||
                         it.nodeStatus == NodeStatus.NOT_IN_CMDB.name ||
-                        it.nodeStatus == NodeStatus.NOT_INSTALLED.name)
+                        it.nodeStatus == NodeStatus.NOT_INSTALLED.name ||
+                        it.nodeStatus == NodeStatus.AGENT_ABNORMAL.name)
                 ) {
                     it.nodeStatus
                 } else {
