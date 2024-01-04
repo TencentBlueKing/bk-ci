@@ -46,5 +46,7 @@ data class IamGroupMemberInfoVo(
     @ApiModelProperty("过期时间戳")
     val expiredAt: Long,
     @ApiModelProperty("过期时间展示")
-    val expiredDisplay: String
+    val expiredDisplay: String,
+    @ApiModelProperty("是否直接加入")
+    val directAdded: Boolean? = null
 )

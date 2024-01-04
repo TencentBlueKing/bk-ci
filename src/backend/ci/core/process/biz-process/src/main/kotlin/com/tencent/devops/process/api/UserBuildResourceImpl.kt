@@ -79,13 +79,22 @@ class UserBuildResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        buildId: String
+        buildId: String,
+        archiveFlag: Boolean?
     ): Result<List<BuildParameters>> {
         checkParam(userId, projectId, pipelineId)
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(pipelineBuildFacadeService.getBuildParameters(userId, projectId, pipelineId, buildId))
+        return Result(
+            pipelineBuildFacadeService.getBuildParameters(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                archiveFlag = archiveFlag
+            )
+        )
     }
 
     @AuditEntry(actionId = ActionId.PIPELINE_EXECUTE)
@@ -278,7 +287,8 @@ class UserBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        executeCount: Int?
+        executeCount: Int?,
+        archiveFlag: Boolean?
     ): Result<ModelRecord> {
         checkParam(userId, projectId, pipelineId)
         if (buildId.isBlank()) {
@@ -291,7 +301,8 @@ class UserBuildResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId,
                 executeCount = executeCount,
-                channelCode = ChannelCode.BS
+                channelCode = ChannelCode.BS,
+                archiveFlag = archiveFlag
             )
         )
     }
@@ -417,7 +428,8 @@ class UserBuildResourceImpl @Autowired constructor(
         remark: String?,
         buildNoStart: Int?,
         buildNoEnd: Int?,
-        buildMsg: String?
+        buildMsg: String?,
+        archiveFlag: Boolean?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkParam(userId, projectId, pipelineId)
         val result = pipelineBuildFacadeService.getHistoryBuild(
@@ -444,9 +456,12 @@ class UserBuildResourceImpl @Autowired constructor(
             remark = remark,
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd,
-            buildMsg = buildMsg
+            buildMsg = buildMsg,
+            archiveFlag = archiveFlag
         )
-        pipelineRecentUseService.record(userId, projectId, pipelineId)
+        if (archiveFlag != true) {
+            pipelineRecentUseService.record(userId, projectId, pipelineId)
+        }
         return Result(result)
     }
 

@@ -136,16 +136,16 @@ import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
 import com.tencent.devops.store.utils.StoreUtils
-import java.time.LocalDateTime
-import java.util.Calendar
-import java.util.concurrent.Callable
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import java.time.LocalDateTime
+import java.util.Calendar
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
 @Suppress("ALL")
 abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomService {
@@ -969,6 +969,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             // 只有处于构建中的插件才允许改构建结束后的构建状态
             if (AtomStatusEnum.BUILDING.status.toByte() == atomRecord.atomStatus) {
                 marketAtomDao.setAtomStatusById(dslContext, atomRecord.id, atomStatus.status.toByte(), userId, msg)
+
                 // 通过websocket推送状态变更消息
                 storeWebsocketService.sendWebsocketMessage(userId, atomRecord.id)
             }

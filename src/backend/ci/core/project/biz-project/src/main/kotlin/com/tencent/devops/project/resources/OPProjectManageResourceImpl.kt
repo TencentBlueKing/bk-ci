@@ -36,11 +36,19 @@ import org.springframework.beans.factory.annotation.Autowired
 class OPProjectManageResourceImpl @Autowired constructor(
     private val projectManageService: ProjectManageService
 ) : OPProjectManageResource {
-    override fun lockProjectPipelineBuildPermission(userId: String, projectId: String): Result<Boolean> {
-        return Result(projectManageService.lockProjectPipelineBuildPermission(userId, projectId))
+    override fun lockProjectPipelineBuildPermission(
+        userId: String,
+        projectId: String,
+        pipelineId: String?
+    ): Result<Boolean> {
+        return Result(projectManageService.lockProjectPipelineBuildPermission(userId, projectId, pipelineId))
     }
 
-    override fun unlockProjectPipelineBuildPermission(userId: String, projectId: String): Result<Boolean> {
-        return Result(projectManageService.unlockProjectPipelineBuildPermission(userId, projectId))
+    override fun unlockProjectPipelineBuildPermission(
+        userId: String,
+        projectId: String,
+        pipelineId: String?
+    ): Result<Boolean> {
+        return Result(projectManageService.unlockProjectPipelineBuildPermission(userId, projectId, pipelineId))
     }
 }

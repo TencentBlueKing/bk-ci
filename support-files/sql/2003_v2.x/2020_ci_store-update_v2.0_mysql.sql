@@ -12,6 +12,46 @@ BEGIN
     SET AUTOCOMMIT = 0;
     SELECT DATABASE() INTO db;
 
+    IF NOT EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_STORE_BUILD_INFO'
+                     AND INDEX_NAME = 'INX_TSBI_TYPE_ENABLE') THEN
+    ALTER TABLE `T_STORE_BUILD_INFO` ADD INDEX `INX_TSBI_TYPE_ENABLE` (`STORE_TYPE`, `ENABLE`);
+    END IF;
+
+    IF EXISTS(SELECT 1
+                 FROM information_schema.statistics
+                 WHERE TABLE_SCHEMA = db
+                   AND TABLE_NAME = 'T_LABEL'
+                   AND INDEX_NAME = 'uni_inx_name_type') THEN
+    ALTER TABLE `T_LABEL` DROP INDEX `uni_inx_name_type`;
+    END IF;
+
+    IF EXISTS(SELECT 1
+                 FROM information_schema.statistics
+                 WHERE TABLE_SCHEMA = db
+                   AND TABLE_NAME = 'T_LABEL'
+                   AND INDEX_NAME = 'uni_inx_code_type') THEN
+    ALTER TABLE `T_LABEL` DROP INDEX `uni_inx_code_type`;
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_LABEL'
+                     AND INDEX_NAME = 'UNI_INX_TL_TYPE_NAME') THEN
+    ALTER TABLE `T_LABEL` ADD UNIQUE INDEX `UNI_INX_TL_TYPE_NAME` (`TYPE`, `LABEL_NAME`);
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_LABEL'
+                     AND INDEX_NAME = 'UNI_INX_TL_TYPE_CODE') THEN
+    ALTER TABLE `T_LABEL` ADD UNIQUE INDEX `UNI_INX_TL_TYPE_CODE` (`TYPE`, `LABEL_CODE`);
+    END IF;
+
     IF EXISTS(SELECT 1
                 FROM information_schema.COLUMNS
                 WHERE TABLE_SCHEMA = db

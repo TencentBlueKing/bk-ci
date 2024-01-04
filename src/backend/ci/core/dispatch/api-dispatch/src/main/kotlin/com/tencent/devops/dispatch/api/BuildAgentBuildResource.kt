@@ -34,6 +34,8 @@ import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.agent.UpgradeItem
 import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyAskInfo
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyAskResp
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyDockerDebugDoneInfo
@@ -200,4 +202,21 @@ interface BuildAgentBuildResource {
         @QueryParam("debugId")
         debugId: Long
     ): Result<String?>
+
+    @ApiOperation("第三方构建机请求")
+    @POST
+    @Path("/ask")
+    fun thirdPartyAgentAsk(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam("Agent ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
+        agentId: String,
+        @ApiParam("秘钥", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
+        secretKey: String,
+        @ApiParam("ask信息", required = true)
+        data: ThirdPartyAskInfo
+    ): AgentResult<ThirdPartyAskResp>
 }

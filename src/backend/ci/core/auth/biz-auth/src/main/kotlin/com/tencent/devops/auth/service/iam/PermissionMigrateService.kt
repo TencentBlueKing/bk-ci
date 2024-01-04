@@ -78,6 +78,11 @@ interface PermissionMigrateService {
     fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean
 
     /**
+     * 权限交接--全量
+     */
+    fun handoverAllPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean
+
+    /**
      * 权限交接
      */
     fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean
