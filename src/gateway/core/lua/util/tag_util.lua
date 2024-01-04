@@ -29,8 +29,13 @@ function _M:get_tag(ns_config)
     local tag = nil
 
     -- 根据header强制路由tag
-    if ngx.var.http_x_gateway_tag ~= nil then
-        tag = ngx.var.http_x_gateway_tag
+    local x_gateway_tag = ngx.var.http_x_gateway_tag
+    if x_gateway_tag == nil then
+        x_gateway_tag = ngx.var["arg_x-gateway-tag"]
+    end
+
+    if x_gateway_tag ~= nil then
+        tag = x_gateway_tag
         if not string.find(tag, '^kubernetes-') and self:switch_kubernetes(devops_project, tag) then
             tag = "kubernetes-" .. tag
         end
