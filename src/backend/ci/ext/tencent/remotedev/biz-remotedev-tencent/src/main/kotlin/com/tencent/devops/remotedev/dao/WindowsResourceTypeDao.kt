@@ -181,7 +181,8 @@ class WindowsResourceTypeDao {
                     hdisk = hdisk,
                     sdisk = sdisk,
                     weight = weight,
-                    description = description
+                    description = description,
+                    specModel = specModel
                 )
             }
         }
