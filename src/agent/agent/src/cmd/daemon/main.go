@@ -192,6 +192,9 @@ func launch(agentPath string, isDebug bool) (*os.Process, error) {
 	}
 
 	if err = cmd.Start(); err != nil {
+		if stdErr != nil {
+			stdErr.Close()
+		}
 		return nil, fmt.Errorf("start agent failed: %v", err)
 	}
 
@@ -207,6 +210,7 @@ func launch(agentPath string, isDebug bool) (*os.Process, error) {
 			if errstd != nil {
 				return
 			}
+			defer stdErr.Close()
 			out, err := io.ReadAll(stdErr)
 			if err != nil {
 				logs.Error("read agent stderr out error", err)
