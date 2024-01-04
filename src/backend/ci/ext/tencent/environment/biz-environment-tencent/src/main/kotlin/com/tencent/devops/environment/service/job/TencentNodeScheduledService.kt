@@ -38,7 +38,7 @@ class TencentNodeScheduledService @Autowired constructor(
     /**
      * 定时任务：执行一次就行。
      * 分组执行，每次遍历100条记录。
-     * 将不在CC中的节点，添加到CC中，并返回host_id，将host_id写入表中，并将 云区域id 设为0
+     * 将不在CC中的 类型为CMDB 的节点，添加到CC中，并返回host_id，将host_id写入表中，并将 云区域id 设为0
      */
     @Scheduled(cron = "0 2 11 * * 1-5")
     fun scheduledAddNodeToCC() {
