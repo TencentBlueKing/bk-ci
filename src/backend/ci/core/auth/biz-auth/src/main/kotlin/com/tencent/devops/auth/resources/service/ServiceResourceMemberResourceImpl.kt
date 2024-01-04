@@ -57,7 +57,7 @@ class ServiceResourceMemberResourceImpl constructor(
     ): Result<Boolean> {
         val isProjectManager = permissionProjectService.checkProjectManager(
             userId = userId,
-            projectCode = projectCode,
+            projectCode = projectCode
         )
         if (!isProjectManager) {
             throw ErrorCodeException(

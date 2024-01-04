@@ -467,7 +467,7 @@ class RbacAuthConfiguration {
         dslContext: DSLContext,
         authMigrationDao: AuthMigrationDao,
         authMonitorSpaceDao: AuthMonitorSpaceDao,
-        cacheService: RbacCacheService,
+        cacheService: RbacCacheService
     ) = RbacPermissionMigrateService(
         client = client,
         migrateResourceService = migrateResourceService,
