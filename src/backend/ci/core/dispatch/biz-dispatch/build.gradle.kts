@@ -39,6 +39,7 @@ dependencies {
     api(project(":core:common:common-redis"))
     api(project(":core:common:common-db-base"))
     api(project(":core:common:common-auth:common-auth-api"))
+    api(project(":core:common:common-dispatch-sdk"))
     api(project(":core:common:common-kafka"))
     api("org.json:json")
     api("org.apache.commons:commons-exec")

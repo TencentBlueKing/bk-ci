@@ -74,18 +74,18 @@ class ImageCategoryRelDao {
         dslContext: DSLContext,
         imageId: String
     ): Result<Record7<String, String, String, String, Byte, LocalDateTime, LocalDateTime>>? {
-        val a = TCategory.T_CATEGORY.`as`("a")
-        val b = TImageCategoryRel.T_IMAGE_CATEGORY_REL.`as`("b")
+        val tCategory = TCategory.T_CATEGORY
+        val tImageCategoryRel = TImageCategoryRel.T_IMAGE_CATEGORY_REL
         return dslContext.select(
-            a.ID.`as`(KEY_CATEGORY_ID),
-            a.CATEGORY_CODE.`as`(KEY_CATEGORY_CODE),
-            a.CATEGORY_NAME.`as`(KEY_CATEGORY_NAME),
-            a.ICON_URL.`as`(KEY_CATEGORY_ICON_URL),
-            a.TYPE.`as`(KEY_CATEGORY_TYPE),
-            a.CREATE_TIME.`as`(KEY_CREATE_TIME),
-            a.UPDATE_TIME.`as`(KEY_UPDATE_TIME)
-        ).from(a).join(b).on(a.ID.eq(b.CATEGORY_ID))
-            .where(b.IMAGE_ID.eq(imageId))
+            tCategory.ID.`as`(KEY_CATEGORY_ID),
+            tCategory.CATEGORY_CODE.`as`(KEY_CATEGORY_CODE),
+            tCategory.CATEGORY_NAME.`as`(KEY_CATEGORY_NAME),
+            tCategory.ICON_URL.`as`(KEY_CATEGORY_ICON_URL),
+            tCategory.TYPE.`as`(KEY_CATEGORY_TYPE),
+            tCategory.CREATE_TIME.`as`(KEY_CREATE_TIME),
+            tCategory.UPDATE_TIME.`as`(KEY_UPDATE_TIME)
+        ).from(tCategory).join(tImageCategoryRel).on(tCategory.ID.eq(tImageCategoryRel.CATEGORY_ID))
+            .where(tImageCategoryRel.IMAGE_ID.eq(imageId))
             .fetch()
     }
 

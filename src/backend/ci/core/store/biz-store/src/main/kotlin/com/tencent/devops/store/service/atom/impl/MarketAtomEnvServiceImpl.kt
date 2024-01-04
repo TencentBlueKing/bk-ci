@@ -65,11 +65,11 @@ import com.tencent.devops.store.service.atom.MarketAtomEnvService
 import com.tencent.devops.store.service.common.StoreI18nMessageService
 import com.tencent.devops.store.utils.StoreUtils
 import com.tencent.devops.store.utils.VersionUtils
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 /**
  * 插件执行环境逻辑类
@@ -278,8 +278,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             version = version,
             atomDefaultFlag = atomDefaultFlag,
             atomStatusList = atomStatusList
-        ) ?: return I18nUtil.generateResponseDataObject(
-            messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+        ) ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
             params = arrayOf("[project($projectCode)-plugin($atomCode)]")
         )
         val tAtom = TAtom.T_ATOM

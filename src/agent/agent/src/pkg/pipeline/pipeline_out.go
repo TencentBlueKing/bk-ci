@@ -30,6 +30,6 @@
 
 package pipeline
 
-func Start() {
+func RunPipeline(pipelineData map[string]interface{}) {
 	// 为外部出包使用
 }

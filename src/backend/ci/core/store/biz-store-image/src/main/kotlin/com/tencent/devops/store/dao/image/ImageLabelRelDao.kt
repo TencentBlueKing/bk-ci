@@ -61,18 +61,18 @@ class ImageLabelRelDao {
         dslContext: DSLContext,
         imageId: String
     ): Result<Record6<String, String, String, Byte, LocalDateTime, LocalDateTime>>? {
-        val a = TLabel.T_LABEL.`as`("a")
-        val b = TImageLabelRel.T_IMAGE_LABEL_REL.`as`("b")
+        val tLabel = TLabel.T_LABEL
+        val tImageLabelRel = TImageLabelRel.T_IMAGE_LABEL_REL
         return dslContext.select(
-            a.ID.`as`(KEY_LABEL_ID),
-            a.LABEL_CODE.`as`(KEY_LABEL_CODE),
-            a.LABEL_NAME.`as`(KEY_LABEL_NAME),
-            a.TYPE.`as`(KEY_LABEL_TYPE),
-            a.CREATE_TIME.`as`(KEY_CREATE_TIME),
-            a.UPDATE_TIME.`as`(KEY_UPDATE_TIME)
-        ).from(a).join(b).on(a.ID.eq(b.LABEL_ID))
-            .where(b.IMAGE_ID.eq(imageId))
-            .orderBy(a.LABEL_NAME.asc())
+            tLabel.ID.`as`(KEY_LABEL_ID),
+            tLabel.LABEL_CODE.`as`(KEY_LABEL_CODE),
+            tLabel.LABEL_NAME.`as`(KEY_LABEL_NAME),
+            tLabel.TYPE.`as`(KEY_LABEL_TYPE),
+            tLabel.CREATE_TIME.`as`(KEY_CREATE_TIME),
+            tLabel.UPDATE_TIME.`as`(KEY_UPDATE_TIME)
+        ).from(tLabel).join(tImageLabelRel).on(tLabel.ID.eq(tImageLabelRel.LABEL_ID))
+            .where(tImageLabelRel.IMAGE_ID.eq(imageId))
+            .orderBy(tLabel.LABEL_NAME.asc())
             .fetch()
     }
 

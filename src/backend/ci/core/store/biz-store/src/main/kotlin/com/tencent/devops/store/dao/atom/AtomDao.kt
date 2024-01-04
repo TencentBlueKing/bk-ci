@@ -87,8 +87,6 @@ import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.utils.VersionUtils
-import java.net.URLDecoder
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
@@ -99,6 +97,8 @@ import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.net.URLDecoder
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -392,7 +392,9 @@ class AtomDao : AtomBaseDao() {
                 baseStep.where(conditions).orderBy(CREATE_TIME.desc())
             }
 
-            return baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            return baseStep.limit((page - 1) * pageSize, pageSize)
+                .skipCheck() // ATOM 表量小以及 OP 接口频率可忽略索引问题
+                .fetch()
         }
     }
 
@@ -418,7 +420,9 @@ class AtomDao : AtomBaseDao() {
                 classifyId = classifyId,
                 atomStatus = atomStatus
             )
-            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Long::class.java)!!
+            return dslContext.selectCount().from(this).where(conditions)
+                .skipCheck() // ATOM 表量小以及 OP 接口频率可忽略索引问题
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -456,7 +460,8 @@ class AtomDao : AtomBaseDao() {
         with(TAtom.T_ATOM) {
             return dslContext.select(
                 VERSION.`as`(KEY_VERSION),
-                ATOM_STATUS.`as`(KEY_ATOM_STATUS)
+                ATOM_STATUS.`as`(KEY_ATOM_STATUS),
+                BRANCH_TEST_FLAG.`as`(KEY_BRANCH_TEST_FLAG)
             ).from(this)
                 .where(
                     generateGetPipelineAtomCondition(

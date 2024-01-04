@@ -47,14 +47,6 @@ BEGIN
     IF NOT EXISTS(SELECT 1
                       FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db
-                        AND TABLE_NAME = 'T_PIPELINE_VIEW_LABEL'
-                        AND COLUMN_NAME = 'PROJECT_ID') THEN
-        ALTER TABLE T_PIPELINE_VIEW_LABEL ADD COLUMN `PROJECT_ID` varchar(64) COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT '项目ID';
-    END IF;
-
-    IF NOT EXISTS(SELECT 1
-                      FROM information_schema.COLUMNS
-                      WHERE TABLE_SCHEMA = db
                         AND TABLE_NAME = 'T_PIPELINE_PAUSE_VALUE'
                         AND COLUMN_NAME = 'PROJECT_ID') THEN
         ALTER TABLE T_PIPELINE_PAUSE_VALUE ADD COLUMN `PROJECT_ID` varchar(64) COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT '项目ID';

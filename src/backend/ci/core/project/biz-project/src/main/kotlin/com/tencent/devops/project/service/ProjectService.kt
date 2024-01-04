@@ -182,7 +182,12 @@ interface ProjectService {
 
     fun list(userId: String): List<ProjectVO>
 
-    fun list(projectCodes: Set<String>): List<ProjectVO>
+    fun list(projectCodes: Set<String>, enabled: Boolean?): List<ProjectVO>
+
+    fun listByOpen(
+        token: String,
+        projectCodes: Set<String>
+    ): List<ProjectVO>
 
     fun listOnlyByProjectCode(projectCodes: Set<String>): List<ProjectVO>
 
@@ -239,7 +244,7 @@ interface ProjectService {
 
     fun getProjectByName(projectName: String): ProjectVO?
 
-    fun updateProjectProperties(userId: String, projectCode: String, properties: ProjectProperties): Boolean
+    fun updateProjectProperties(userId: String? = null, projectCode: String, properties: ProjectProperties): Boolean
 
     fun cancelCreateProject(userId: String, projectId: String): Boolean
 

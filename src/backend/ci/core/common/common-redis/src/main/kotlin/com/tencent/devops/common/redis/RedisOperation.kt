@@ -263,6 +263,16 @@ class RedisOperation(
         return masterRedisTemplate.opsForHash<String, String>().entries(getFinalKey(key, isDistinguishCluster))
     }
 
+    fun hscan(
+        key: String,
+        pattern: String = "*",
+        count: Long = 1000L,
+        isDistinguishCluster: Boolean? = false
+    ): Cursor<MutableMap.MutableEntry<String, String>> {
+        val options = ScanOptions.scanOptions().match(pattern).count(count).build()
+        return masterRedisTemplate.opsForHash<String, String>().scan(getFinalKey(key, isDistinguishCluster), options)
+    }
+
     fun sadd(key: String, vararg values: String, isDistinguishCluster: Boolean? = false): Long? {
         // 双写
         writeSlaveIfNeed {
