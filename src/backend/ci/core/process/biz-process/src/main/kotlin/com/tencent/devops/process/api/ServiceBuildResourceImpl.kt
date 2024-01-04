@@ -635,6 +635,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         buildId: String,
         vmSeqId: String,
         nodeHashId: String?,
+        executeCount: Int?,
         simpleResult: SimpleResult
     ): Result<Boolean> {
         pipelineBuildFacadeService.workerBuildFinish(
@@ -643,6 +644,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
             buildId = buildId,
             vmSeqId = vmSeqId,
             nodeHashId = nodeHashId,
+            executeCount = executeCount,
             simpleResult = simpleResult
         )
         return Result(true)

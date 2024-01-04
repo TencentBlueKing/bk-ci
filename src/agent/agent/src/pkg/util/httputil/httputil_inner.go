@@ -1,3 +1,6 @@
+//go:build !out
+// +build !out
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -25,43 +28,47 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.enums
+package httputil
 
-import com.tencent.devops.common.api.exception.InvalidParamException
+import (
+	"encoding/json"
+	"strings"
 
-enum class AgentStatus(val status: Int) {
-    UN_IMPORT(0), // 未导入，用户刚刚在界面上面生成链接
-    UN_IMPORT_OK(1), // 未导入但是agent状态正常（这个时候还是不能用来当构建机）
-    IMPORT_OK(2), // 用户已经在界面导入并且agent工作正常（构建机只有在这个状态才能正常工作）
-    IMPORT_EXCEPTION(3), // agent异常
-    DELETE(4);
+	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
-    override fun toString() = status.toString()
+	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
+)
 
-    companion object {
-        fun fromStatus(status: Int): AgentStatus {
-            values().forEach {
-                if (status == it.status) {
-                    return it
-                }
-            }
-            throw InvalidParamException("Unknown agent status($status)")
-        }
+const IOA_ERROR exitcode.ExitErrorEnum = "THIRD_AGENT_EXIT_IOA_ERROR"
 
-        fun isDelete(status: AgentStatus) =
-            status == DELETE
+func checkHttpStatusErr(status int, body []byte) {
+	if status >= 200 && status < 300 {
+		return
+	}
+	switch status {
+	case 502:
+		// 检查是不是 IOA 报错
+		data := &iOAResp{}
+		err := json.Unmarshal(body, &data)
+		if err != nil {
+			logs.Errorf("checkHttpStatusErr Unmarshal err %d|%s|%s", status, body, err.Error())
+			return
+		}
+		if (data.Code >= 103000 && data.Code <= 103018) ||
+			(data.Code == 500028) ||
+			(data.Code >= 190001 && data.Code <= 190003) ||
+			(data.Code >= 180001 && data.Code <= 180006) {
+			exitcode.AddExitError(IOA_ERROR, data.Desc+"|"+strings.Join(data.Contents, ","))
+		} else {
+			logs.Errorf("checkHttpStatusErr %d|%s|unknow", status, body)
+		}
+	default:
+		logs.Warnf("checkHttpStatusErr %d|%s|unknow", status, body)
+	}
+}
 
-        fun isUnImport(status: AgentStatus) = status == UN_IMPORT
-
-        fun isImportException(status: AgentStatus) = status == IMPORT_EXCEPTION
-
-        fun fromString(status: String): AgentStatus {
-            values().forEach {
-                if (status == it.name) {
-                    return it
-                }
-            }
-            throw InvalidParamException("Unknown agent status($status)")
-        }
-    }
+type iOAResp struct {
+	Code     int      `json:"code"`
+	Desc     string   `json:"desc"`
+	Contents []string `json:"Contents"`
 }
