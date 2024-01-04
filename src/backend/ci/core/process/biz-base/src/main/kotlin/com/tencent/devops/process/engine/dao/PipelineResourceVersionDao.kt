@@ -176,6 +176,10 @@ class PipelineResourceVersionDao {
             // 如果传入分支名称则一定是取最新的分支版本
             branchName?.let {
                 query.and(STATUS.eq(VersionStatus.BRANCH.name))
+                    .and(
+                        BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
+                            .or(BRANCH_ACTION.isNull)
+                    )
                     .and(VERSION_NAME.eq(branchName))
             }
             if (version != null) {
@@ -186,6 +190,20 @@ class PipelineResourceVersionDao {
                 query.orderBy(VERSION.desc()).limit(1)
             }
             return query.fetchAny(mapper)
+        }
+    }
+
+    fun getReleaseVersionRecord(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): PipelineResourceVersion? {
+        with(T_PIPELINE_RESOURCE_VERSION) {
+            return dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .and(STATUS.eq(VersionStatus.RELEASED.name).or(STATUS.isNull))
+                .orderBy(VERSION.desc()).limit(1)
+                .fetchAny(mapper)
         }
     }
 
@@ -256,6 +274,10 @@ class PipelineResourceVersionDao {
         with(T_PIPELINE_RESOURCE_VERSION) {
             val query = dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .and(
+                    BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
+                        .or(BRANCH_ACTION.isNull)
+                )
             creator?.let { query.and(CREATOR.eq(creator)) }
             description?.let { query.and(DESCRIPTION.like("%$description%")) }
             versionName?.let {
@@ -296,6 +318,10 @@ class PipelineResourceVersionDao {
             return dslContext.selectDistinct(CREATOR)
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .and(
+                    BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
+                        .or(BRANCH_ACTION.isNull)
+                )
                 .limit(limit).offset(offset)
                 .fetch().map { it.component1() }
         }
@@ -312,6 +338,10 @@ class PipelineResourceVersionDao {
             val query = dslContext.select(DSL.count(PIPELINE_ID))
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .and(
+                    BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
+                        .or(BRANCH_ACTION.isNull)
+                )
             creator?.let { query.and(CREATOR.eq(creator)) }
             description?.let { query.and(DESCRIPTION.like("%$description%")) }
             return query.fetchOne(0, Int::class.java)!!
@@ -327,6 +357,10 @@ class PipelineResourceVersionDao {
             val query = dslContext.selectDistinct(CREATOR)
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .and(
+                    BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
+                        .or(BRANCH_ACTION.isNull)
+                )
             return query.fetchCount()
         }
     }

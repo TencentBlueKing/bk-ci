@@ -162,7 +162,7 @@ data class RunsOn(
     @JsonProperty("node-name")
     var nodeName: String? = null,
     @JsonIgnore
-    val poolType: String? = JobRunsOnPoolType.ENV_NAME.name,
+    val poolType: String? = null,
     val container: Any? = null,
     @ApiModelProperty(name = "agent-selector")
     @JsonProperty("agent-selector")
@@ -173,7 +173,11 @@ data class RunsOn(
     @JsonProperty("queue-timeout-minutes")
     var queueTimeoutMinutes: Int? = null,
     var needs: Map<String, String>? = null
-)
+) {
+    fun checkLinux() = poolName == "docker" || (
+        poolName == null && nodeName == null
+        )
+}
 
 enum class JobRunsOnType(val type: String) {
     DOCKER("docker"),

@@ -153,7 +153,7 @@ object TransferMapper {
     }
 
     private fun eventsComposer(events: List<Event>) = Composer(
-        CustomParser(events), Resolver(), loader
+        CustomParser(events), resolver, loader
     )
 
     private val constructor = SafeConstructor(loader)

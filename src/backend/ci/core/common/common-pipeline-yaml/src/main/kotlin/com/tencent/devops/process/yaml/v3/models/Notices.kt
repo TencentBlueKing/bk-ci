@@ -110,7 +110,7 @@ data class PacNotices(
     @ApiModelProperty(name = "if")
     @JsonProperty("if")
     val ifField: String?,
-    val type: List<String>,
+    val type: Any,
     val receivers: List<String>?,
     val groups: List<String>?,
     val content: String?,
@@ -155,16 +155,19 @@ data class PacNotices(
         }
     }
 
-    override fun toSubscription() = Subscription(
-        types = type.map { toPipelineSubscriptionType(it) }.toSet(),
-        groups = groups?.toSet() ?: emptySet(),
-        users = receivers?.joinToString(",") ?: "",
-        wechatGroupFlag = type.contains(NotifyType.RTX_GROUP.yamlText),
-        wechatGroup = chatId?.joinToString(",") ?: "",
-        wechatGroupMarkdownFlag = notifyMarkdown == ContentFormat.MARKDOWN.name,
-        detailFlag = notifyDetail ?: false,
-        content = content ?: ""
-    )
+    override fun toSubscription(): Subscription {
+        val parseType = parseType()
+        return Subscription(
+            types = parseType.map { toPipelineSubscriptionType(it) }.toSet(),
+            groups = groups?.toSet() ?: emptySet(),
+            users = receivers?.joinToString(",") ?: "",
+            wechatGroupFlag = parseType.contains(NotifyType.RTX_GROUP.yamlText),
+            wechatGroup = chatId?.joinToString(",") ?: "",
+            wechatGroupMarkdownFlag = notifyMarkdown == ContentFormat.MARKDOWN.name,
+            detailFlag = notifyDetail ?: false,
+            content = content ?: ""
+        )
+    }
 
     override fun checkNotifyForSuccess(): Boolean {
         return ifField == null || ifField == IfType.SUCCESS.name || ifField == IfType.ALWAYS.name
@@ -172,6 +175,12 @@ data class PacNotices(
 
     override fun checkNotifyForFail(): Boolean {
         return ifField == null || ifField == IfType.FAILURE.name || ifField == IfType.ALWAYS.name
+    }
+
+    private fun parseType(): List<String> = when(type) {
+        is String -> listOf(type)
+        is List<*> -> type.map { it.toString() }
+        else -> emptyList()
     }
 }
 

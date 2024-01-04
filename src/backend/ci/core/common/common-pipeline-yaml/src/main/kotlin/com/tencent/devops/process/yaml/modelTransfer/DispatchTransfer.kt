@@ -77,6 +77,7 @@ class DispatchTransfer @Autowired(required = false) constructor(
         dispatcherWindows(job)?.let { return Pair(it, VMBaseOS.WINDOWS) }
         // macos构建机
         dispatcherMacos(job)?.let { return Pair(it, VMBaseOS.MACOS) }
+        println(job)
         // 转换失败
         throw PipelineTransferException(
             CommonMessageCode.DISPATCH_NOT_SUPPORT_TRANSFER,
@@ -114,7 +115,7 @@ class DispatchTransfer @Autowired(required = false) constructor(
         buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
     ): DispatchType? {
         // 公共docker构建机
-        if (job.runsOn.poolName == "docker") {
+        if (job.runsOn.checkLinux()) {
             val info = if (job.runsOn.container != null) {
                 StreamDispatchUtils.parseRunsOnContainer(
                     job = job,

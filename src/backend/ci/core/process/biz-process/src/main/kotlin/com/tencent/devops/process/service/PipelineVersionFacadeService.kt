@@ -194,7 +194,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_DRAFT_EXISTS
         )
-        val draftSetting = draftVersion.settingVersion?.let {
+        val originSetting = draftVersion.settingVersion?.let {
             pipelineSettingFacadeService.userGetSetting(
                 userId = userId,
                 projectId = projectId,
@@ -206,9 +206,16 @@ class PipelineVersionFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )
+        val enabled = originSetting.pipelineAsCodeSettings?.enable == true || request.enablePac
+        val targetSettings = originSetting.copy(
+            desc = request.description ?: "",
+            pipelineAsCodeSettings = PipelineAsCodeSettings(enabled)
+        )
         // TODO #8164 增加同步PAC仓库
         val pushBranchName = "master"
-        val (versionStatus, branchName) = if (request.targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE) {
+        val (versionStatus, branchName) = if (
+            enabled && request.targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE
+        ) {
             Pair(VersionStatus.BRANCH, pushBranchName)
         } else {
             Pair(VersionStatus.RELEASED, null)
@@ -220,9 +227,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             updateVersion = false,
             versionStatus = versionStatus,
-            setting = draftSetting.copy(
-                desc = request.description ?: ""
-            )
+            setting = targetSettings
         )
         val result = pipelineRepositoryService.deployPipeline(
             model = model,

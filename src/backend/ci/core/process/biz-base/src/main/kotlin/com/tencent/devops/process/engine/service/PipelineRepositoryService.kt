@@ -848,34 +848,15 @@ class PipelineRepositoryService constructor(
         var realBaseVersion = baseVersion
         var operationLogType = OperationLogType.NORMAL_SAVE_OPERATION
         var operationLogParams = versionName
+        var branchAction: BranchVersionAction? = null
 
         try {
             lock.lock()
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
-                // 如果不是草稿保存，最新版本永远是新增逻辑
-                watcher.start("getOriginModel")
-                val releaseVersion = pipelineResourceDao.getReleaseVersionRecord(
-                    transactionContext, projectId, pipelineId
-                )
-                var pipelineVersion = releaseVersion?.pipelineVersion ?: 1
-                var triggerVersion = releaseVersion?.triggerVersion ?: 1
-                val settingVersion = setting?.version ?: releaseVersion?.settingVersion ?: 1
-                releaseVersion?.let {
-                    val originModel = try {
-                        objectMapper.readValue(it.model, Model::class.java)
-                    } catch (ignored: Exception) {
-                        logger.error("parse process($pipelineId) model fail", ignored)
-                        null
-                    } ?: return@let
-                    pipelineVersion = PipelineVersionUtils.getPipelineVersion(
-                        pipelineVersion, originModel, model
-                    )
-                    triggerVersion = PipelineVersionUtils.getTriggerVersion(
-                        triggerVersion, originModel, model
-                    )
-                }
-
+                var pipelineVersion = 1
+                var triggerVersion = 1
+                var settingVersion = setting?.version ?: 1
                 watcher.start("updatePipelineInfo")
                 // 旧逻辑 bak —— 写入INFO表后进行了version的自动+1
                 // 新逻辑 #8161
@@ -905,24 +886,26 @@ class PipelineRepositoryService constructor(
                     VersionStatus.BRANCH -> {
                         // 查询同名分支的最新active版本，存在则更新，否则新增一个版本
                         branchName?.let { versionName = branchName }
-                        val latestBranchVersion = pipelineResourceVersionDao.getVersionResource(
+                        val activeBranchVersion = pipelineResourceVersionDao.getVersionResource(
                             dslContext = transactionContext,
                             projectId = projectId,
                             pipelineId = pipelineId,
                             branchName = branchName
                         )
-                        if (latestBranchVersion != null &&
-                            latestBranchVersion.branchAction != BranchVersionAction.INACTIVE) {
+                        if (activeBranchVersion != null) {
                             // 更新
                             operationLogType = OperationLogType.UPDATE_BRANCH_VERSION
-                            operationLogParams = latestBranchVersion.versionName ?: latestBranchVersion.version.toString()
-                            version = latestBranchVersion.version
+                            operationLogParams = activeBranchVersion.versionName ?: activeBranchVersion.version.toString()
+                            branchAction = BranchVersionAction.ACTIVE
+                            version = activeBranchVersion.version
                         } else {
+                            // 创建
                             val latestVersion = pipelineResourceVersionDao.getVersionResource(
                                 dslContext = transactionContext,
                                 projectId = projectId,
                                 pipelineId = pipelineId
                             )
+                            branchAction = BranchVersionAction.ACTIVE
                             operationLogType = OperationLogType.CREATE_BRANCH_VERSION
                             operationLogParams = versionName
                             version = (latestVersion?.version ?: 0) + 1
@@ -930,11 +913,26 @@ class PipelineRepositoryService constructor(
                     }
                     // 3 正式版本保存 —— 寻找当前草稿，存在草稿版本则报错，不存在则直接取最新VERSION+1，同时更新INFO、RESOURCE表
                     else -> {
+                        watcher.start("getOriginModel")
                         val draftVersion = pipelineResourceVersionDao.getDraftVersionResource(
                             dslContext = transactionContext,
                             projectId = projectId,
                             pipelineId = pipelineId
                         )
+                        val releaseVersion = pipelineResourceVersionDao.getReleaseVersionRecord(
+                            transactionContext, projectId, pipelineId
+                        )
+                        pipelineVersion = releaseVersion?.pipelineVersion ?: 1
+                        triggerVersion = releaseVersion?.triggerVersion ?: 1
+                        settingVersion = releaseVersion?.settingVersion ?: 1
+                        releaseVersion?.let {
+                            pipelineVersion = PipelineVersionUtils.getPipelineVersion(
+                                pipelineVersion, it.model, model
+                            )
+                            triggerVersion = PipelineVersionUtils.getTriggerVersion(
+                                triggerVersion, it.model, model
+                            )
+                        }
                         operationLogType = OperationLogType.RELEASE_MASTER_VERSION
                         val newVersionName = PipelineVersionUtils.getVersionName(
                             pipelineVersion, triggerVersion, settingVersion
@@ -1012,7 +1010,7 @@ class PipelineRepositoryService constructor(
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion,
                     versionStatus = versionStatus,
-                    branchAction = null,
+                    branchAction = branchAction,
                     description = description,
                     baseVersion = realBaseVersion ?: (version - 1)
                 )

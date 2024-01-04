@@ -31,23 +31,14 @@ class MergeYamlTest {
     @ValueSource(
         strings = [
             "base-1",
-            "base-2"
+            "base-2",
+            "base-3"
         ]
     )
     fun base(value: String) {
         val new = getStrFromResource(yamlPath("$value/new.yml"))
         val old = getStrFromResource(yamlPath("$value/old.yml"))
         val out = getStrFromResource(yamlPath("$value/out.yml"))
-
-        val m = TransferMapper.mergeYaml(old, new)
-        Assertions.assertEquals(m, out)
-    }
-
-    @Test
-    fun base2() {
-        val new = getStrFromResource(yamlPath("base-2/new.yml"))
-        val old = getStrFromResource(yamlPath("base-2/old.yml"))
-        val out = getStrFromResource(yamlPath("base-2/out.yml"))
 
         val m = TransferMapper.mergeYaml(old, new)
         Assertions.assertEquals(m, out)

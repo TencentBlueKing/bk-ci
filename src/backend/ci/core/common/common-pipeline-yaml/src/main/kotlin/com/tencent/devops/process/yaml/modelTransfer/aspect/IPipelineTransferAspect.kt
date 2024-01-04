@@ -1,9 +1,11 @@
 package com.tencent.devops.process.yaml.modelTransfer.aspect
 
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
@@ -22,10 +24,13 @@ interface IPipelineTransferAspectElement : IPipelineTransferAspect
 interface IPipelineTransferAspectJob : IPipelineTransferAspect
 interface IPipelineTransferAspectStage : IPipelineTransferAspect
 
+interface IPipelineTransferAspectModel : IPipelineTransferAspect
+
 interface PipelineTransferJoinPoint {
     fun modelStage(): Stage?
     fun modelJob(): Container?
     fun modelElement(): Element?
+    fun model(): Model?
     fun yamlStage(): YamlV3Stage?
     fun yamlPreStage(): PreStage?
     fun yamlJob(): YamlV3Job?
@@ -33,4 +38,5 @@ interface PipelineTransferJoinPoint {
     fun yamlStep(): YamlV3Step?
     fun yamlPreStep(): PreStep?
     fun yamlTriggerOn(): TriggerOn?
+    fun yaml(): IPreTemplateScriptBuildYaml?
 }
