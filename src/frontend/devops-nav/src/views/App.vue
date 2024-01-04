@@ -12,16 +12,15 @@
             </div>
         </div>
         <router-view />
-        <Announcement-dialog />
+        <AnnouncementDialog />
     </div>
 </template>
 
 <script lang="ts">
     import Vue from 'vue'
     import { Component, Watch } from 'vue-property-decorator'
-    import { State, Action } from 'vuex-class'
+    import { Action, State } from 'vuex-class'
     import AnnouncementDialog from '../components/AnnouncementDialog/index.vue'
-    import { mapDocumnetTitle } from '@/utils/constants'
     
     @Component({
         components: {
@@ -36,6 +35,7 @@
         @Action setAnnouncement
 
         @Watch('fetchError')
+
         handleFetchError (e) {
             if (e.status === 503) {
                 this.$router.replace('/maintaining')
@@ -46,13 +46,7 @@
             })
         }
 
-        getDocumentTitle (model) {
-            return this.$t(mapDocumnetTitle(model)) as string
-        }
-
         async created () {
-            const model = location.href.split('/')[4]
-            document.title = this.getDocumentTitle(model)
             const announce = await this.getAnnouncement()
             if (announce && announce.id) {
                 this.setAnnouncement(announce)

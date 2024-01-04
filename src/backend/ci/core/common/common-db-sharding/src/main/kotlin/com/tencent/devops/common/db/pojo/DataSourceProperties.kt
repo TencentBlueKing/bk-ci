@@ -38,5 +38,8 @@ data class DataSourceProperties(
     val bindingTableGroupConfigs: List<BindingTableGroupConfig>? = null, // 绑定表规则配置
     val migratingDataSourceConfigs: List<DataSourceConfig>? = null, // 迁移数据源配置
     val migratingTableRuleConfigs: List<TableRuleConfig>? = null, // 迁移数据库表规则配置
-    val migratingBindingTableGroupConfigs: List<BindingTableGroupConfig>? = null // 迁移绑定表规则配置
+    val migratingBindingTableGroupConfigs: List<BindingTableGroupConfig>? = null, // 迁移绑定表规则配置
+    val archiveDataSourceConfigs: List<DataSourceConfig>? = null, // 归档数据源配置
+    val archiveTableRuleConfigs: List<TableRuleConfig>? = null, // 归档数据库表规则配置
+    val archiveBindingTableGroupConfigs: List<BindingTableGroupConfig>? = null // 归档绑定表规则配置
 )

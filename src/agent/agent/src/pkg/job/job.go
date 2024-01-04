@@ -31,3 +31,13 @@ func getUnixWorkerStartScriptFile(projectId, buildId, vmSeqId string) string {
 	return fmt.Sprintf("%s/%s_%s_%s_%s%s",
 		systemutil.GetWorkDir(), startScriptFilePrefix, projectId, buildId, vmSeqId, startScriptFileSuffix)
 }
+
+// 校验当前是否有正在跑的任务
+func CheckRunningJob() bool {
+	if GBuildManager.GetPreInstancesCount() > 0 ||
+		GBuildManager.GetInstanceCount() > 0 ||
+		GBuildDockerManager.GetInstanceCount() > 0 {
+		return true
+	}
+	return false
+}

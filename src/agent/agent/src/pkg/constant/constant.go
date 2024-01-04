@@ -30,8 +30,9 @@
 
 package constant
 
-// 用来放一些内外部不一样的常量
+// 用来放一些常量，可能内外部不一致
 
 const (
-	DockerDataDir = "/data/landun/workspace"
+	DockerDataDir    = "/data/landun/workspace"
+	DAEMON_EXIT_CODE = 88
 )

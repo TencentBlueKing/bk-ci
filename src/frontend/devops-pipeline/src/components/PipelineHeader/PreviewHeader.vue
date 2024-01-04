@@ -6,7 +6,18 @@
             </span>
         </pipeline-bread-crumb>
         <aside class="pipeline-preview-right-aside">
-            <bk-button :disabled="executeStatus" @click="goEdit">
+            <bk-button
+                :disabled="executeStatus"
+                v-perm="{
+                    permissionData: {
+                        projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    }
+                }"
+                @click="goEdit"
+            >
                 {{ $t("cancel") }}
             </bk-button>
             <bk-button
@@ -14,6 +25,14 @@
                 :disabled="executeStatus"
                 :loading="executeStatus"
                 @click="handleClick"
+                v-perm="{
+                    permissionData: {
+                        projectId: projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: pipelineId,
+                        action: RESOURCE_ACTION.EXECUTE
+                    }
+                }"
             >
                 {{ $t("exec") }}
             </bk-button>
@@ -23,14 +42,28 @@
 
 <script>
     import { bus } from '@/utils/bus'
+    import {
+        RESOURCE_ACTION
+    } from '@/utils/permission'
     import { mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
     export default {
         components: {
             PipelineBreadCrumb
         },
+        data () {
+            return {
+                RESOURCE_ACTION
+            }
+        },
         computed: {
-            ...mapState('atom', ['executeStatus', 'execDetail'])
+            ...mapState('atom', ['executeStatus', 'execDetail']),
+            projectId () {
+                return this.$route.params.projectId
+            },
+            pipelineId () {
+                return this.$route.params.pipelineId
+            }
         },
         methods: {
             handleClick () {

@@ -43,6 +43,7 @@ import com.tencent.devops.auth.service.AuthAuthorizationScopesService
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.service.AuthResourceNameConverter
 import com.tencent.devops.auth.service.AuthResourceService
+import com.tencent.devops.auth.service.AuthProjectUserMetricsService
 import com.tencent.devops.auth.service.ItsmService
 import com.tencent.devops.auth.service.PermissionGradeManagerService
 import com.tencent.devops.auth.service.PermissionGroupPoliciesService
@@ -66,14 +67,16 @@ class RbacServiceConfiguration {
         authActionDao: AuthActionDao,
         iamV2PolicyService: PolicyService,
         iamConfiguration: IamConfiguration,
-        authResourceGroupConfigDao: AuthResourceGroupConfigDao
+        authResourceGroupConfigDao: AuthResourceGroupConfigDao,
+        authProjectUserMetricsService: AuthProjectUserMetricsService
     ) = RbacCacheService(
         dslContext = dslContext,
         authResourceTypeDao = authResourceTypeDao,
         authActionDao = authActionDao,
         policyService = iamV2PolicyService,
         iamConfiguration = iamConfiguration,
-        authResourceGroupConfigDao = authResourceGroupConfigDao
+        authResourceGroupConfigDao = authResourceGroupConfigDao,
+        authUserDailyService = authProjectUserMetricsService
     )
 
     @Bean

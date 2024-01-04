@@ -28,6 +28,7 @@
                 :value="dynamicGroup"
                 :loading="isMatching"
                 :placeholder="$t('pipelineDynamicMatchPlaceholder')"
+                
             >
                 <bk-option
                     v-for="group in dynamicPipelineGroups"
@@ -43,6 +44,9 @@
                 multiple
                 v-model="staticViews"
                 @change="emitChange"
+                :popover-options="{
+                    appendTo: 'parent'
+                }"
             >
                 <bk-option-group
                     v-for="(group, index) in visibleStaticGroups"
@@ -57,14 +61,13 @@
             </bk-select>
         </bk-form-item>
     </bk-form>
-
 </template>
 
 <script>
-    import { mapActions, mapGetters, mapState } from 'vuex'
-    import piplineActionMixin from '@/mixins/pipeline-action-mixin'
-    import PipelineLabelSelector from '@/components/PipelineActionDialog/PipelineLabelSelector'
     import Logo from '@/components/Logo'
+    import PipelineLabelSelector from '@/components/PipelineActionDialog/PipelineLabelSelector'
+    import piplineActionMixin from '@/mixins/pipeline-action-mixin'
+    import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
         components: {

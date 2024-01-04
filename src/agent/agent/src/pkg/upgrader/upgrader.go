@@ -164,16 +164,15 @@ func UninstallAgent() error {
 }
 
 func checkUpgradeFileChange(fileName string) (change bool, err error) {
-
 	oldMd5, err := fileutil.GetFileMd5(systemutil.GetWorkDir() + "/" + fileName)
 	if err != nil {
-		logs.Error(fmt.Sprintf("[agentUpgrade]|check %s md5 failed", fileName), err)
+		logs.Error(fmt.Sprintf("agentUpgrade|check %s md5 failed", fileName), err)
 		return false, errors.New("check old md5 failed")
 	}
 
 	newMd5, err := fileutil.GetFileMd5(systemutil.GetUpgradeDir() + "/" + fileName)
 	if err != nil {
-		logs.Error(fmt.Sprintf("[agentUpgrade]|check %s md5 failed", fileName), err)
+		logs.Error(fmt.Sprintf("agentUpgrade|check %s md5 failed", fileName), err)
 		return false, errors.New("check new md5 failed")
 	}
 

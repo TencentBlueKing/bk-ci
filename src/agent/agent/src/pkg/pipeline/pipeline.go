@@ -35,7 +35,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/pkg/errors"
 
@@ -47,42 +46,8 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
 
-func Start() {
-	defer func() {
-		if err := recover(); err != nil {
-			logs.Error("agent pipeline panic: ", err)
-		}
-	}()
-
-	time.Sleep(10 * time.Second)
-	for {
-		runPipeline()
-		time.Sleep(30 * time.Second)
-	}
-}
-
-func runPipeline() {
+func RunPipeline(pipelineData map[string]interface{}) {
 	logs.Info("start run pipeline")
-
-	result, err := api.GetAgentPipeline()
-	if err != nil {
-		logs.Error("get pipeline failed: ", err.Error())
-		return
-	}
-	if result.IsNotOk() {
-		logs.Error("get pipeline failed, message: ", result.Message)
-		return
-	}
-	if result.Data == nil {
-		logs.Info("no pipeline to run, skip")
-		return
-	}
-
-	pipelineData, ok := result.Data.(map[string]interface{})
-	if !ok {
-		logs.Error("parse pipeline failed, invalid pipeline")
-		return
-	}
 
 	if pipelineData["type"] != COMMAND {
 		logs.Warn("not support pipeline: type: ", pipelineData["type"])

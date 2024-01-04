@@ -91,6 +91,7 @@ import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
 
 @Service
 @Suppress("ALL")
@@ -117,7 +118,7 @@ class CreateControl @Autowired constructor(
     private val bkccService: BKCCService,
     private val windowsSpecResourceDao: WindowsSpecResourceDao
 ) {
-
+    private val executor = Executors.newCachedThreadPool()
     companion object {
         private val logger = LoggerFactory.getLogger(CreateControl::class.java)
         private const val BLANK_TEMPLATE_YAML_NAME = "BLANK"
@@ -201,21 +202,29 @@ class CreateControl @Autowired constructor(
             )
         }
         // 检查是否有特殊机型的配额限制
-        val specQuota = windowsSpecResourceDao.fetchQuota(
-            dslContext = dslContext,
-            projectId = projectInfo.englishName,
-            size = workspaceCreate.windowsType.trim()
-        )
-        if (specQuota != null) {
-            val count = workspaceWindowsDao.fetchUsedSizeCount(
+        val allSpecSize = windowsResourceConfigService.getAllType(true, true).map { it.size }.toSet()
+        if (workspaceCreate.windowsType.trim() in allSpecSize) {
+            val specQuota = windowsSpecResourceDao.fetchQuota(
                 dslContext = dslContext,
-                workspaceNames = workspaceNames,
+                projectId = projectInfo.englishName,
                 size = workspaceCreate.windowsType.trim()
             )
-            if (count >= specQuota) {
+            if (specQuota != null) {
+                val count = workspaceWindowsDao.fetchUsedSizeCount(
+                    dslContext = dslContext,
+                    workspaceNames = workspaceNames,
+                    size = workspaceCreate.windowsType.trim()
+                )
+                if (count >= specQuota) {
+                    throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.PROJECT_DESKTOP_SPEC_RESOURCES_INSUFFICIENT.errorCode,
+                        params = arrayOf(workspaceCreate.windowsType.trim(), specQuota.toString(), count.toString())
+                    )
+                }
+            } else {
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.PROJECT_DESKTOP_SPEC_RESOURCES_INSUFFICIENT.errorCode,
-                    params = arrayOf(workspaceCreate.windowsType.trim(), specQuota.toString(), count.toString())
+                    params = arrayOf(workspaceCreate.windowsType.trim(), "0", "0")
                 )
             }
         }
@@ -496,8 +505,12 @@ class CreateControl @Autowired constructor(
                     ips = setOf(ip),
                     props = workspaceCommon.genWorkspaceCCInfo(ws.projectId)
                 )
-            }
 
+                // 创建成功后做异步设置
+                executor.execute {
+                    workspaceCommon.makeDiskMount(ip, event.userId)
+                }
+            }
             if (!ws.workspaceSystemType.afterCreateNeedWs(ws.ownerType)) {
                 // 直接return 不做websocket
                 return

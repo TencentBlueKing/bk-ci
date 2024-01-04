@@ -51,9 +51,52 @@
                     <div class="instance-pipeline">
                         <label class="conf-title">{{ $t('template.newPipelineName') }}</label>
                         <div class="pipeline-name-box">
-                            <div :class="{ 'pipeline-item': true, 'active-item': entry.selected, 'unselect-hover': !entry.selected }"
-                                v-for="(entry, index) in pipelineNameList" :key="index" @click="lastCilckPipeline(index)">{{ entry.pipelineName }}
-                                <i class="delete-btn" v-if="!hashVal" @click="deletePipelineName(index)"></i>
+                            <div :class="{
+                                     'pipeline-item': !entry.isEditing,
+                                     'active-item': entry.selected && !entry.isEditing,
+                                     'unselect-hover': !entry.selected,
+                                     'edit-item': entry.isEditing
+                                 }"
+                                v-for="(entry, index) in pipelineNameList" :key="index" @click="lastClickPipeline(index)">
+                                <div v-show="entry.isEditing">
+                                    <bk-input
+                                        ref="pipelineNameInput"
+                                        class="pipeline-name-input"
+                                        v-model="displayName"
+                                        :maxlength="128"
+                                        :placeholder="$t('pipelineNameInputTips')"
+                                    />
+                                    <div class="edit-tools">
+                                        <i
+                                            class="devops-icon icon-check-1 group-card-edit-icon mr10"
+                                            @click="handelSavePipelineName(index)"
+                                            v-bk-tooltips="$t('save')"
+                                        />
+                                        <i
+                                            class="devops-icon icon-close group-card-edit-icon"
+                                            @click="handelCancelSave(index)"
+                                            v-bk-tooltips="$t('cancel')"
+                                        />
+                                    </div>
+                                </div>
+                                <div v-show="!entry.isEditing">
+                                    <div class="pipeline-name" v-bk-overflow-tips>
+                                        {{ entry.pipelineName }}
+                                    </div>
+                                    <bk-icon
+                                        class="edit-btn"
+                                        type="edit"
+                                        size="12"
+                                        @click="handleChangePipelineName(index)"
+                                        v-bk-tooltips="$t('rename')"
+                                    />
+                                    <i
+                                        class="delete-btn"
+                                        v-if="!hashVal"
+                                        @click="deletePipelineName(index)"
+                                        v-bk-tooltips="$t('delete')"
+                                    />
+                                </div>
                             </div>
                             <div class="pipeline-item add-item" @click="addPipelineName()" v-if="!hashVal">
                                 <i class="plus-icon"></i>
@@ -193,7 +236,8 @@
                 buildParams: {},
                 paramValues: {},
                 templateParamValues: {},
-                showUpdateDialog: false
+                showUpdateDialog: false,
+                displayName: ''
             }
         },
         computed: {
@@ -212,6 +256,12 @@
             curVersionId () {
                 return this.$route.params.curVersionId
             },
+            pipelineName () {
+                return this.$route.params.pipelineName
+            },
+            type () {
+                return this.$route.params.type
+            },
             hashVal () {
                 if (this.$route.hash) {
                     const hashVal = this.$route.hash.substr(1, this.$route.hash.length)
@@ -222,6 +272,7 @@
             }
         },
         async mounted () {
+            console.log(this.$route.params)
             this.requestTemplateDatail(this.curVersionId)
             this.handlePipeLineName()
             if (this.hashVal) {
@@ -229,6 +280,9 @@
             }
             if (this.$route.query.useTemplateSettings === 'true') {
                 this.isTemplateSetting = true
+            }
+            if (this.curVersionId) {
+                this.instanceVersion = this.curVersionId
             }
         },
         methods: {
@@ -372,6 +426,9 @@
                 if (this.hashVal && newVal) this.requestPipelineParams(this.hashVal, newVal)
             },
             addPipelineName () {
+                this.pipelineNameList.forEach(pipeline => {
+                    this.$set(pipeline, 'isEditing', false)
+                })
                 if (!this.instanceVersion) {
                     this.$showTips({
                         message: this.$t('template.templateVersionErrTips'),
@@ -400,7 +457,7 @@
                     }
                 })
             },
-            lastCilckPipeline (key) {
+            lastClickPipeline (key) {
                 this.pipelineNameList.forEach((item, index) => {
                     item.selected = index === key
                     if (index === key) {
@@ -410,6 +467,24 @@
             },
             deletePipelineName (key) {
                 this.pipelineNameList.splice(key, 1)
+            },
+
+            async handleChangePipelineName (index) {
+                this.pipelineNameList.forEach((pipeline, i) => {
+                    if (i === index) {
+                        this.displayName = pipeline.pipelineName
+                        this.$set(pipeline, 'isEditing', true)
+                    } else {
+                        this.$set(pipeline, 'isEditing', false)
+                    }
+                })
+            },
+            handelSavePipelineName (index) {
+                this.$set(this.pipelineNameList[index], 'isEditing', false)
+                this.$set(this.pipelineNameList[index], 'pipelineName', this.displayName)
+            },
+            handelCancelSave (index) {
+                this.$set(this.pipelineNameList[index], 'isEditing', false)
             },
             comfireHandler (data) {
                 const tmpParam = [].concat(this.deepCopy(this.paramList))
@@ -502,6 +577,7 @@
                                     })
                                     this.toInstanceManage()
                                 } else if (failCount) {
+                                    console.log(res, '11111111')
                                     this.successList = res.successPipelines || []
                                     this.failList = res.failurePipelines || []
                                     this.failMessage = res.failureMessages || []
@@ -623,6 +699,30 @@
                 .pipeline-name-box {
                     margin-top: 12px;
                 }
+                .edit-item {
+                    position: relative;
+                    float: left;
+                    margin-bottom: 12px;
+                    margin-right: 20px;
+                }
+                .edit-tools {
+                    position: absolute;
+                    top: 13px;
+                    right: 20px;
+                    font-size: 10px;
+                }
+                .group-card-edit-icon {
+                    cursor: pointer;
+                }
+                .pipeline-name-input {
+                    width: 200px;
+                    margin-right: 10px;
+                    input {
+                        height: 36px;
+                        line-height: 36px;
+                        padding-right: 60px !important;
+                    }
+                }
                 .pipeline-item {
                     float: left;
                     position: relative;
@@ -630,21 +730,33 @@
                     line-height: 36px;
                     margin-bottom: 12px;
                     margin-right: 20px;
-                    padding: 0 32px 0 18px;
+                    padding: 0 50px 0 18px;
                     background-color: #fff;
                     border: 1px solid #c3cdd7;
                     // color: #fff;
                     font-size: 14px;
                     cursor: pointer;
+                    max-width: 200px;
+                }
+                .pipeline-name {
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                }
+                .edit-btn {
+                    position: absolute;
+                    top: 12px;
+                    right: 30px;
+                    cursor: pointer;
                 }
                 .delete-btn {
                     display: inline-block;
-                    width: 10px;
-                    height: 10px;
+                    width: 14px;
+                    height: 14px;
                     overflow: hidden;
                     position: absolute;
-                    top: 14px;
-                    right: 15px;
+                    top: 12px;
+                    right: 10px;
                     cursor: pointer;
                 }
                 .delete-btn::before,

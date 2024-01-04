@@ -334,4 +334,10 @@
             margin-right: 0;
         }
     }
+    ::v-deep .bk-dialog-tool {
+        display: none;
+    }
+    ::v-deep .bk-dialog-body {
+        padding: 0 !important;
+    }
 </style>
