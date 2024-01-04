@@ -120,9 +120,12 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         return Result(userId)
     }
 
-    override fun getAllWindowsResourceConfig(userId: String, withUnavailable: Boolean?): Result<List<WindowsResourceTypeConfig>> {
+    override fun getAllWindowsResourceConfig(
+        userId: String,
+        withUnavailable: Boolean?
+    ): Result<List<WindowsResourceTypeConfig>> {
         logger.info("getAllWindowsResourceConfig|$userId|withUnavailable|$withUnavailable")
-        return Result(windowsResourceConfigService.getAllType(withUnavailable))
+        return Result(windowsResourceConfigService.getAllType(withUnavailable, null))
     }
 
     override fun getAllWindowsResourceZone(userId: String): Result<List<WindowsResourceZoneConfig>> {
@@ -130,7 +133,10 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         return Result(windowsResourceConfigService.getAllZone())
     }
 
-    override fun allWindowsQuota(userId: String, searchCustom: Boolean?): Result<Map<String, Map<String, Int>>> {
+    override fun allWindowsQuota(
+        userId: String,
+        searchCustom: Boolean?
+    ): Result<Map<String, Map<String, Int>>> {
         if (searchCustom == true) {
             val res = mutableMapOf<String, MutableMap<String, Int>>()
             client.get(ServiceStartCloudResource::class).getResourceVm(ResourceVmReq(null, null)).data
