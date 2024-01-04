@@ -219,8 +219,8 @@ class PipelineRuntimeService @Autowired constructor(
         }
     }
 
-    fun getBuildInfo(projectId: String, buildId: String): BuildInfo? {
-        val t = pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId)
+    fun getBuildInfo(projectId: String, buildId: String, queryDslContext: DSLContext? = null): BuildInfo? {
+        val t = pipelineBuildDao.getBuildInfo(queryDslContext ?: dslContext, projectId, buildId)
         return pipelineBuildDao.convert(t)
     }
 
@@ -373,12 +373,13 @@ class PipelineRuntimeService @Autowired constructor(
         buildNoEnd: Int?,
         buildMsg: String?,
         startUser: List<String>?,
-        updateTimeDesc: Boolean? = null
+        updateTimeDesc: Boolean? = null,
+        queryDslContext: DSLContext? = null
     ): List<BuildHistory> {
         val currentTimestamp = System.currentTimeMillis()
         // 限制最大一次拉1000，防止攻击
         val list = pipelineBuildDao.listPipelineBuildInfo(
-            dslContext = dslContext,
+            dslContext = queryDslContext ?: dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             materialAlias = materialAlias,
@@ -1656,9 +1657,13 @@ class PipelineRuntimeService @Autowired constructor(
         }
     }
 
-    fun getBuildParametersFromStartup(projectId: String, buildId: String): List<BuildParameters> {
+    fun getBuildParametersFromStartup(
+        projectId: String,
+        buildId: String,
+        queryDslContext: DSLContext? = null
+    ): List<BuildParameters> {
         return try {
-            val buildParameters = pipelineBuildDao.getBuildParameters(dslContext, projectId, buildId)
+            val buildParameters = pipelineBuildDao.getBuildParameters(queryDslContext ?: dslContext, projectId, buildId)
             return if (buildParameters.isNullOrEmpty()) {
                 emptyList()
             } else {
@@ -1741,10 +1746,11 @@ class PipelineRuntimeService @Autowired constructor(
         buildNoStart: Int? = null,
         buildNoEnd: Int? = null,
         buildMsg: String? = null,
-        startUser: List<String>? = null
+        startUser: List<String>? = null,
+        queryDslContext: DSLContext? = null
     ): Int {
         return pipelineBuildDao.count(
-            dslContext = dslContext,
+            dslContext = queryDslContext ?: dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             materialAlias = materialAlias,

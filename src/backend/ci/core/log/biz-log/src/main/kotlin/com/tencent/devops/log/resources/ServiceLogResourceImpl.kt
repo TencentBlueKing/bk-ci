@@ -62,7 +62,8 @@ class ServiceLogResourceImpl @Autowired constructor(
         containerHashId: String?,
         executeCount: Int?,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        archiveFlag: Boolean?
     ): Result<QueryLogs> {
         return buildLogQueryService.getInitLogs(
             userId = userId,
@@ -75,7 +76,8 @@ class ServiceLogResourceImpl @Autowired constructor(
             containerHashId = containerHashId,
             executeCount = executeCount,
             jobId = jobId,
-            stepId = stepId
+            stepId = stepId,
+            archiveFlag = archiveFlag
         )
     }
 
@@ -94,7 +96,8 @@ class ServiceLogResourceImpl @Autowired constructor(
         containerHashId: String?,
         executeCount: Int?,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        archiveFlag: Boolean?
     ): Result<QueryLogs> {
         return buildLogQueryService.getMoreLogs(
             userId = userId,
@@ -111,7 +114,8 @@ class ServiceLogResourceImpl @Autowired constructor(
             containerHashId = containerHashId,
             executeCount = executeCount,
             jobId = jobId,
-            stepId = stepId
+            stepId = stepId,
+            archiveFlag = archiveFlag
         )
     }
 
@@ -127,7 +131,8 @@ class ServiceLogResourceImpl @Autowired constructor(
         containerHashId: String?,
         executeCount: Int?,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        archiveFlag: Boolean?
     ): Result<QueryLogs> {
         return buildLogQueryService.getAfterLogs(
             userId = userId,
@@ -141,7 +146,8 @@ class ServiceLogResourceImpl @Autowired constructor(
             containerHashId = containerHashId,
             executeCount = executeCount,
             jobId = jobId,
-            stepId = stepId
+            stepId = stepId,
+            archiveFlag = archiveFlag
         )
     }
 
@@ -154,7 +160,8 @@ class ServiceLogResourceImpl @Autowired constructor(
         containerHashId: String?,
         executeCount: Int?,
         jobId: String?,
-        stepId: String?
+        stepId: String?,
+        archiveFlag: Boolean?
     ): Response {
         return buildLogQueryService.downloadLogs(
             userId = userId,
@@ -166,7 +173,8 @@ class ServiceLogResourceImpl @Autowired constructor(
             executeCount = executeCount,
             fileName = null,
             jobId = jobId,
-            stepId = stepId
+            stepId = stepId,
+            archiveFlag = archiveFlag
         )
     }
 
@@ -177,7 +185,8 @@ class ServiceLogResourceImpl @Autowired constructor(
         buildId: String,
         tag: String?,
         executeCount: Int?,
-        stepId: String?
+        stepId: String?,
+        archiveFlag: Boolean?
     ): Result<QueryLogStatus> {
         return buildLogQueryService.getLogMode(
             userId = userId,
@@ -186,7 +195,8 @@ class ServiceLogResourceImpl @Autowired constructor(
             buildId = buildId,
             tag = tag,
             executeCount = executeCount,
-            stepId = stepId
+            stepId = stepId,
+            archiveFlag = archiveFlag
         )
     }
 
@@ -194,13 +204,15 @@ class ServiceLogResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        buildId: String
+        buildId: String,
+        archiveFlag: Boolean?
     ): Result<QueryLogLineNum> {
         return buildLogQueryService.getLastLineNum(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            buildId = buildId
+            buildId = buildId,
+            archiveFlag = archiveFlag
         )
     }
 }

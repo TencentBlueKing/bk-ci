@@ -15,7 +15,7 @@
                 <bk-input
                     v-model="renamePipelineModel.name"
                     :placeholder="$t('pipelineNameInputTips')"
-                    :maxlength="40"
+                    :maxlength="128"
                 />
             </bk-form-item>
         </bk-form>
@@ -74,19 +74,14 @@
                     this.$emit('done', this.renamePipelineModel.name)
                     this.handleClose()
                 } catch (err) {
-                    this.handleError(err, [
+                    this.handleError(
+                        err,
                         {
-                            actionId: this.$permissionActionMap.edit,
-                            resourceId: this.$permissionResourceMap.pipeline,
-                            instanceId: [
-                                {
-                                    id: this.pipelineId,
-                                    name: this.pipelineName
-                                }
-                            ],
-                            projectId: this.projectId
+                            projectId: this.projectId,
+                            resourceCode: this.pipelineId,
+                            action: this.$permissionResourceAction.EDIT
                         }
-                    ])
+                    )
                 } finally {
                     message
                         && this.$showTips({

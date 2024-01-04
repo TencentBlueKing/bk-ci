@@ -380,9 +380,7 @@ class AuthResourceDao {
         dslContext: DSLContext,
         resourceType: String,
         projectCode: String?,
-        creator: String,
-        offset: Int,
-        limit: Int
+        creator: String
     ): Result<TAuthResourceRecord> {
         with(TAuthResource.T_AUTH_RESOURCE) {
             return dslContext.selectFrom(this)
@@ -391,8 +389,6 @@ class AuthResourceDao {
                 .and(RESOURCE_TYPE.eq(resourceType))
                 .and(CREATE_USER.eq(creator))
                 .orderBy(CREATE_TIME)
-                .limit(limit)
-                .offset(offset)
                 .fetch()
         }
     }

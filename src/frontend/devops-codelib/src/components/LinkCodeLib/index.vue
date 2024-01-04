@@ -1,5 +1,5 @@
 <template>
-    <bk-dropdown-menu :class="{ 'devops-button-dropdown': true, 'disabled': disabled }">
+    <bk-dropdown-menu class="devops-button-dropdown">
         <bk-button :disabled="disabled" theme="primary" slot="dropdown-trigger">
             <i class="devops-icon icon-plus"></i>
             <span>{{ $t('codelib.linkCodelib') }}</span>
@@ -20,10 +20,6 @@
             createCodelib: {
                 type: Function,
                 required: true
-            },
-            disabled: {
-                type: Boolean,
-                default: false
             }
         },
         computed: {

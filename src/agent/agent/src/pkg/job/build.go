@@ -42,8 +42,8 @@ import (
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/httputil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
@@ -69,12 +69,6 @@ func AgentStartup() (agentStatus string, err error) {
 	return parseAgentStatusResult(result, err)
 }
 
-// getAgentStatus 获取构建机状态
-func getAgentStatus() (agentStatus string, err error) {
-	result, err := api.GetAgentStatus()
-	return parseAgentStatusResult(result, err)
-}
-
 // parseAgentStatusResult 解析状态信息
 func parseAgentStatusResult(result *httputil.DevopsResult, resultErr error) (agentStatus string, err error) {
 	if resultErr != nil {
@@ -94,95 +88,61 @@ func parseAgentStatusResult(result *httputil.DevopsResult, resultErr error) (age
 	return agentStatus, nil
 }
 
-// DoPollAndBuild 获取构建，如果达到最大并发或者是处于升级中，则不执行
-func DoPollAndBuild() {
-	for {
-		time.Sleep(buildIntervalInSeconds * time.Second)
-		agentStatus, err := getAgentStatus()
-		if err != nil {
-			logs.Warn("get agent status err: ", err.Error())
-			continue
-		}
-		if agentStatus != config.AgentStatusImportOk {
-			logs.Error("agent is not ready for build, agent status: " + agentStatus)
-			continue
-		}
+// DoBuild 获取构建，如果达到最大并发或者是处于升级中，则不执行
+func DoBuild(buildInfo *api.ThirdPartyBuildInfo) {
+	if buildInfo == nil {
+		logs.Warn("buildinfo is nil")
+		return
+	}
 
-		dockerCanRun, normalCanRun := checkParallelTaskCount()
-		if !dockerCanRun && !normalCanRun {
-			continue
-		}
+	// 在执行任务先获取锁，防止与其他操作产生干扰
+	BuildTotalManager.Lock.Lock()
 
-		// 在接取任务先获取锁，防止与其他操作产生干扰
-		BuildTotalManager.Lock.Lock()
+	// 拿到锁后再判断一次当前是否可以执行任务，防止出现并发问题
+	dockerCanRun, normalCanRun := CheckParallelTaskCount()
 
-		// 根据可以执行的类型接取任务防止出现其他类型任务的干扰
-		var buildInfo *api.ThirdPartyBuildInfo
-		if dockerCanRun && normalCanRun {
-			logs.Info("all job can run")
-			buildInfo, err = getBuild(api.AllBuildType)
-		} else if normalCanRun {
-			logs.Info("binary job can run")
-			buildInfo, err = getBuild(api.BinaryBuildType)
-		} else {
-			logs.Info("docker job can run")
-			buildInfo, err = getBuild(api.DockerBuildType)
-		}
-
-		if err != nil {
-			logs.Error("get build failed, retry, err", err.Error())
-			BuildTotalManager.Lock.Unlock()
-			continue
-		}
-
-		if buildInfo == nil {
-			logs.Info("no build to run, skip")
-			BuildTotalManager.Lock.Unlock()
-			continue
-		}
-
-		logs.Info("build info ", buildInfo, " dockerCanRun ", dockerCanRun)
+	if buildInfo.DockerBuildInfo != nil && dockerCanRun {
+		// 接取job任务之后才可以解除总任务锁解锁
+		GBuildDockerManager.AddBuild(buildInfo.BuildId, &api.ThirdPartyDockerTaskInfo{
+			ProjectId: buildInfo.ProjectId,
+			BuildId:   buildInfo.BuildId,
+			VmSeqId:   buildInfo.VmSeqId,
+		})
+		BuildTotalManager.Lock.Unlock()
 
 		// 接取任务后判断国际化是否需要切换语言
 		i18n.CheckLocalizer()
 
-		if buildInfo.DockerBuildInfo != nil && dockerCanRun {
-			// 接取job任务之后才可以解除总任务锁解锁
-			GBuildDockerManager.AddBuild(buildInfo.BuildId, &api.ThirdPartyDockerTaskInfo{
-				ProjectId: buildInfo.ProjectId,
-				BuildId:   buildInfo.BuildId,
-				VmSeqId:   buildInfo.VmSeqId,
-			})
-			BuildTotalManager.Lock.Unlock()
+		runDockerBuild(buildInfo)
+		return
+	}
 
-			runDockerBuild(buildInfo)
-			continue
-		}
-
-		if !normalCanRun {
-			BuildTotalManager.Lock.Unlock()
-			continue
-		}
-
-		// 接取任务之后解锁
-		GBuildManager.AddPreInstance(buildInfo.BuildId)
+	if !normalCanRun {
 		BuildTotalManager.Lock.Unlock()
+		return
+	}
 
-		err = runBuild(buildInfo)
-		if err != nil {
-			logs.Error("start build failed: ", err.Error())
-		}
+	// 接取任务之后解锁
+	GBuildManager.AddPreInstance(buildInfo.BuildId)
+	BuildTotalManager.Lock.Unlock()
+
+	// 接取任务后判断国际化是否需要切换语言
+	i18n.CheckLocalizer()
+
+	err := runBuild(buildInfo)
+	if err != nil {
+		logs.Error("start build failed: ", err.Error())
 	}
 }
 
 // checkParallelTaskCount 检查当前运行的最大任务数
-func checkParallelTaskCount() (dockerCanRun bool, normalCanRun bool) {
+func CheckParallelTaskCount() (dockerCanRun bool, normalCanRun bool) {
 	// 检查docker任务
 	dockerInstanceCount := GBuildDockerManager.GetInstanceCount()
-	if config.GAgentConfig.DockerParallelTaskCount != 0 && dockerInstanceCount >= config.GAgentConfig.DockerParallelTaskCount {
-		logs.Info(fmt.Sprintf("DOCKER_JOB|parallel docker task count exceed , wait job done, "+
-			"maxJob config: %d, instance count: %d",
-			config.GAgentConfig.DockerParallelTaskCount, dockerInstanceCount))
+	if !systemutil.IsLinux() {
+		dockerCanRun = false
+	} else if config.GAgentConfig.DockerParallelTaskCount != 0 &&
+		dockerInstanceCount >= config.GAgentConfig.DockerParallelTaskCount {
 		dockerCanRun = false
 	} else {
 		dockerCanRun = true
@@ -191,41 +151,12 @@ func checkParallelTaskCount() (dockerCanRun bool, normalCanRun bool) {
 	// 检查普通任务
 	instanceCount := GBuildManager.GetInstanceCount()
 	if config.GAgentConfig.ParallelTaskCount != 0 && instanceCount >= config.GAgentConfig.ParallelTaskCount {
-		logs.Info(fmt.Sprintf("parallel task count exceed , wait job done, "+
-			"ParallelTaskCount config: %d, instance count: %d",
-			config.GAgentConfig.ParallelTaskCount, instanceCount))
 		normalCanRun = false
 	} else {
 		normalCanRun = true
 	}
 
 	return dockerCanRun, normalCanRun
-}
-
-// getBuild 从服务器认领要构建的信息
-func getBuild(buildType api.BuildJobType) (*api.ThirdPartyBuildInfo, error) {
-	logs.Info("get build")
-	result, err := api.GetBuild(buildType)
-	if err != nil {
-		return nil, err
-	}
-
-	if result.IsNotOk() {
-		logs.Error("get build info failed, message", result.Message)
-		return nil, errors.New("get build info failed")
-	}
-
-	if result.Data == nil {
-		return nil, nil
-	}
-
-	buildInfo := new(api.ThirdPartyBuildInfo)
-	err = util.ParseJsonToData(result.Data, buildInfo)
-	if err != nil {
-		return nil, err
-	}
-
-	return buildInfo, nil
 }
 
 // runBuild 启动构建
@@ -242,7 +173,6 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 		upgradeWorkerFile := systemutil.GetUpgradeDir() + "/" + config.WorkAgentFile
 
 		if fileutil.Exists(upgradeWorkerFile) {
-
 			_, err := fileutil.CopyFile(upgradeWorkerFile, agentJarPath, true)
 			upgradeWorkerFileVersion := config.DetectWorkerVersion()
 			if err != nil || !strings.HasPrefix(upgradeWorkerFileVersion, "v") {
@@ -259,6 +189,9 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 			errorMsg := i18n.Localize("ExecutableFileMissing", map[string]interface{}{"filename": agentJarPath, "dir": workDir})
 			logs.Error(errorMsg)
 			workerBuildFinish(buildInfo.ToFinish(false, errorMsg, api.LoseRunFileErrorEnum))
+
+			// 丢失 worker 添加退出码
+			exitcode.AddExitError(exitcode.ExitNotWorker, errorMsg)
 		}
 	}
 
@@ -375,7 +308,7 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo, tmpDir strin
 	}
 	scriptContent := strings.Join(lines, "\n")
 
-	err := os.WriteFile(scriptFile, []byte(scriptContent), os.ModePerm)
+	err := exitcode.WriteFileWithCheck(scriptFile, []byte(scriptContent), os.ModePerm)
 	defer func() {
 		_ = systemutil.Chmod(scriptFile, os.ModePerm)
 		_ = systemutil.Chmod(prepareScriptFile, os.ModePerm)
@@ -384,7 +317,7 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo, tmpDir strin
 		return "", err
 	} else {
 		prepareScriptContent := strings.Join(getShellLines(scriptFile), "\n")
-		err := os.WriteFile(prepareScriptFile, []byte(prepareScriptContent), os.ModePerm)
+		err := exitcode.WriteFileWithCheck(prepareScriptFile, []byte(prepareScriptContent), os.ModePerm)
 		if err != nil {
 			return "", err
 		} else {

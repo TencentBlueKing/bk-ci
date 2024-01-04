@@ -37,13 +37,21 @@ import org.springframework.stereotype.Service
 class ProjectManageServiceImpl @Autowired constructor(
     private val redisOperation: RedisOperation
 ) : ProjectManageService {
-    override fun lockProjectPipelineBuildPermission(userId: String, projectId: String): Boolean {
-        redisOperation.addSetValue(BkApiUtil.getApiAccessLimitProjectsKey(), projectId)
+    override fun lockProjectPipelineBuildPermission(userId: String, projectId: String, pipelineId: String?): Boolean {
+        if (pipelineId.isNullOrBlank()) {
+            redisOperation.addSetValue(BkApiUtil.getApiAccessLimitProjectsKey(), projectId)
+        } else {
+            redisOperation.addSetValue(BkApiUtil.getApiAccessLimitPipelinesKey(), pipelineId)
+        }
         return true
     }
 
-    override fun unlockProjectPipelineBuildPermission(userId: String, projectId: String): Boolean {
-        redisOperation.removeSetMember(BkApiUtil.getApiAccessLimitProjectsKey(), projectId)
+    override fun unlockProjectPipelineBuildPermission(userId: String, projectId: String, pipelineId: String?): Boolean {
+        if (pipelineId.isNullOrBlank()) {
+            redisOperation.removeSetMember(BkApiUtil.getApiAccessLimitProjectsKey(), projectId)
+        } else {
+            redisOperation.removeSetMember(BkApiUtil.getApiAccessLimitPipelinesKey(), pipelineId)
+        }
         return true
     }
 }

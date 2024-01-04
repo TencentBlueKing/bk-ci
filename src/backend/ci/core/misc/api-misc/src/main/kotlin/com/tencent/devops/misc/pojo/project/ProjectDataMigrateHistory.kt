@@ -37,6 +37,8 @@ data class ProjectDataMigrateHistory(
     val id: String,
     @ApiModelProperty("项目Id", required = true)
     val projectId: String,
+    @ApiModelProperty("流水线Id", required = false)
+    val pipelineId: String? = null,
     @ApiModelProperty("模块标识", required = true)
     val moduleCode: SystemModuleEnum,
     @ApiModelProperty("被迁移集群名称", required = true)
