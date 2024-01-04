@@ -135,6 +135,8 @@ func watch() {
 		stdErr, errstd := cmd.StderrPipe()
 		if errstd != nil {
 			logs.Error("get agent stderr pipe error", errstd)
+		} else {
+			defer stdErr.Close()
 		}
 
 		logs.Info("start devops agent")

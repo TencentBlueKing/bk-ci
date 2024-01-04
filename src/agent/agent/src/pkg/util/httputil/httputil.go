@@ -132,9 +132,9 @@ func (r *HttpClient) Body(body interface{}, ignoreDupLog bool) *HttpClient {
 	r.body = bytes.NewReader(data)
 
 	if ignoreDupLog {
-		logs.Info(fmt.Sprintf("url:[%s]|body repeat as before skip", r.url))
+		logs.Info(fmt.Sprintf("%s|body repeat as before skip", r.url))
 	} else {
-		logs.Info(fmt.Sprintf("url:[%s]|request body: %s", r.url, string(data)))
+		logs.Info(fmt.Sprintf("%s|request body: %s", r.url, string(data)))
 	}
 	return r
 }
@@ -148,7 +148,7 @@ func (r *HttpClient) Execute(ignoreDupLogResp *IgnoreDupLogResp) *HttpResult {
 	result := new(HttpResult)
 	defer func() {
 		if err := recover(); err != nil {
-			logs.Error(fmt.Sprintf("url:[%s]|http request err: ", r.url), err)
+			logs.Error(fmt.Sprintf("%s|http request err: ", r.url), err)
 			result.Error = errors.New("http request err")
 		}
 	}()
@@ -187,9 +187,9 @@ func (r *HttpClient) Execute(ignoreDupLogResp *IgnoreDupLogResp) *HttpResult {
 	result.Status = resp.StatusCode
 	if ignoreDupLogResp != nil && resp.StatusCode == ignoreDupLogResp.Status && string(body) == ignoreDupLogResp.Resp {
 		result.IgnoreDupLog = true
-		logs.Info(fmt.Sprintf("url:[%s]|resp repeat as before skip", r.url))
+		logs.Info(fmt.Sprintf("%s|resp repeat as before skip", r.url))
 	} else {
-		logs.Info(fmt.Sprintf("url:[%s]|http status: %s, http respBody: %s", r.url, resp.Status, string(body)))
+		logs.Info(fmt.Sprintf("%s|http status: %s, http respBody: %s", r.url, resp.Status, string(body)))
 	}
 
 	// 检查 http 错误异常
