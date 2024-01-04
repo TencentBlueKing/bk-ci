@@ -62,7 +62,7 @@ class TXDispatchTransfer @Autowired(required = false) constructor(
         buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
     ): DispatchType? {
         // 公共docker构建机
-        if (job.runsOn.poolName == "docker") {
+        if (job.runsOn.checkLinux()) {
             return TXPoolType.DockerOnDevCloud.toDispatchType(
                 makeContainerPool(
                     BuildType.DEVCLOUD,
