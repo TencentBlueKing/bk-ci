@@ -127,7 +127,7 @@
                 "流水线管理": "Pipeline Management",
                 "流水线模板管理": "Pipeline Template Management",
                 "流水线组管理": "Pipeline Group Management",
-                "通过用户组[x]获得权限，若需续期请联系项目管理员续期用户组": "Obtained permissions through user group [{0}], if you need to renew, please contact the project administrator to renew the user group",
-                "通过用户组[x]获得权限，若需退出先联系项目管理员退出用户组": "Obtained permissions through user group [{0}], if you need to exit, please contact the project administrator to exit the user group first"
+                "通过用户组获得权限，若需续期请联系项目管理员续期用户组": "Obtained permissions through user group, if you need to renew, please contact the project administrator to renew the user group",
+                "通过用户组获得权限，若需退出先联系项目管理员退出用户组": "Obtained permissions through user group, if you need to exit, please contact the project administrator to exit the user group first"
         }
 }

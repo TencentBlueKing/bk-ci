@@ -40,7 +40,7 @@
           >{{ t('申请加入') }}</bk-button>
           <span
             v-bk-tooltips="{
-              content: t('通过用户组[x]获得权限，若需续期请联系项目管理员续期用户组', []),
+              content: t('通过用户组获得权限，若需续期请联系项目管理员续期用户组'),
               disabled: row.directAdded
             }"
           >
@@ -55,7 +55,7 @@
           </span>
           <span
             v-bk-tooltips="{
-              content: t('通过用户组[x]获得权限，若需退出先联系项目管理员退出用户组', []),
+              content: t('通过用户组获得权限，若需退出先联系项目管理员退出用户组'),
               disabled: row.directAdded
             }"
           >
