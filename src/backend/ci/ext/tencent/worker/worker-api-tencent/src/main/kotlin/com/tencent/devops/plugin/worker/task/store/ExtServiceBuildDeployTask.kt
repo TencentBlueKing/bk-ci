@@ -27,22 +27,20 @@
 
 package com.tencent.devops.plugin.worker.task.store
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.pipeline.element.store.ExtServiceBuildDeployElement
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
 import com.tencent.devops.dispatch.pojo.DeployApp
-import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.utils.BK_DOCKER_TARGE_IMAGE_NAME
+import com.tencent.devops.process.utils.BK_DOCKER_TARGE_IMAGE_TAG
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.dto.UpdateExtServiceEnvInfoDTO
@@ -55,11 +53,8 @@ import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
 import io.fabric8.kubernetes.client.internal.readiness.Readiness
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.Request
-import okhttp3.RequestBody
-import org.slf4j.LoggerFactory
 import java.io.File
+import org.slf4j.LoggerFactory
 
 @TaskClassType(classTypes = [ExtServiceBuildDeployElement.classType])
 class ExtServiceBuildDeployTask : ITask() {
@@ -83,8 +78,15 @@ class ExtServiceBuildDeployTask : ITask() {
             errorType = ErrorType.USER,
             errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
-        val extServiceImageInfo = buildVariableMap["extServiceImageInfo"] ?: throw TaskExecuteException(
-            errorMsg = "param [extServiceImageInfo] is empty",
+        val bkDockerTargetImageName =
+            buildVariables.variables[BK_DOCKER_TARGE_IMAGE_NAME] ?: throw TaskExecuteException(
+            errorMsg = "param [BK_DOCKER_TARGE_IMAGE_NAME] is empty",
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
+        )
+
+        val imageTag = buildVariables.variables[BK_DOCKER_TARGE_IMAGE_TAG] ?: throw TaskExecuteException(
+            errorMsg = "param [BK_DOCKER_TARGE_IMAGE_TAG] is empty",
             errorType = ErrorType.USER,
             errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
@@ -94,11 +96,6 @@ class ExtServiceBuildDeployTask : ITask() {
             errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
         val taskParams = buildTask.params ?: mapOf()
-        val packageName = taskParams["packageName"] ?: throw TaskExecuteException(
-            errorMsg = "param [packageName] is empty",
-            errorType = ErrorType.USER,
-            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
-        )
         val filePath = taskParams["filePath"] ?: throw TaskExecuteException(
             errorMsg = "param [filePath] is empty",
             errorType = ErrorType.USER,
@@ -141,61 +138,7 @@ class ExtServiceBuildDeployTask : ITask() {
             )
         }
         // 开始构建扩展服务的镜像并把镜像推送到新仓库
-        val extServiceImageInfoMap = JsonUtil.toMap(extServiceImageInfo)
-        val repoAddr = extServiceImageInfoMap["repoAddr"] as String
-        val imageName = extServiceImageInfoMap["imageName"] as String
-        val imageTag = extServiceImageInfoMap["imageTag"] as String
-        val username = extServiceImageInfoMap["username"] as String
-        val password = extServiceImageInfoMap["password"] as String
-        val dockerBuildParam = DockerBuildParam(
-            repoAddr = repoAddr,
-            imageName = imageName,
-            imageTag = imageTag,
-            userName = username,
-            password = password,
-            args = listOf("packageName=$packageName", "filePath=$filePath"),
-            poolNo = System.getenv("pool_no")
-        )
-        val dockerHostIp = System.getenv("docker_host_ip")
-        val projectId = buildVariables.projectId
-        val pipelineId = buildVariables.pipelineId
-        val vmSeqId = buildVariables.vmSeqId
-        val dockerBuildAndPushImagePath =
-            "/api/dockernew/build/$projectId/$pipelineId/$vmSeqId/$buildId?elementId=${buildTask.elementId}&syncFlag=true"
-        val dockerBuildAndPushImageBody = RequestBody.create(
-            "application/json; charset=utf-8".toMediaTypeOrNull(),
-            JsonUtil.toJson(dockerBuildParam)
-        )
-        val dockerBuildAndPushImageUrl = "http://$dockerHostIp$dockerBuildAndPushImagePath"
-        val request = Request.Builder()
-            .url(dockerBuildAndPushImageUrl)
-            .post(dockerBuildAndPushImageBody)
-            .build()
-        val response = OkhttpUtils.doLongHttp(request)
-        val responseContent = response.body?.string()
-        if (!response.isSuccessful) {
-            logger.warn("Fail to request($request) with code ${response.code} , message ${response.message} and response ($responseContent)")
-            LoggerService.addErrorLine(response.message)
-            throw TaskExecuteException(
-                errorMsg = "dockerBuildAndPushImage fail: message ${response.message} and response ($responseContent)",
-                errorType = ErrorType.USER,
-                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
-            )
-        }
-        val dockerBuildAndPushImageResult =
-            JsonUtil.to(responseContent!!, object : TypeReference<Result<Boolean>>() {
-            })
-        LoggerService.addNormalLine("dockerBuildAndPushImageResult: $dockerBuildAndPushImageResult")
-        val pushFlag = dockerBuildAndPushImageResult.data
-        if (dockerBuildAndPushImageResult.isNotOk() || (pushFlag != null && !pushFlag)) {
-            LoggerService.addErrorLine(JsonUtil.toJson(dockerBuildAndPushImageResult))
-            throw TaskExecuteException(
-                errorMsg = "dockerBuildAndPushImage fail",
-                errorType = ErrorType.USER,
-                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
-            )
-        }
-        LoggerService.addNormalLine("dockerBuildAndPushImage success")
+
         val dockerfile = File(workspace, "Dockerfile")
         if (!dockerfile.exists()) {
             throw TaskExecuteException(
@@ -204,12 +147,13 @@ class ExtServiceBuildDeployTask : ITask() {
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )
         }
+        LoggerService.addNormalLine("ExtServiceBuildDeployTask imagePath:$bkDockerTargetImageName:$imageTag")
         val updateExtServiceEnvInfo = UpdateExtServiceEnvInfoDTO(
             userId = userId,
             pkgPath = destPath,
             pkgShaContent = ShaUtils.sha1(file.readBytes()),
             dockerFileContent = dockerfile.readText(),
-            imagePath = "$repoAddr/$imageName:$imageTag"
+            imagePath = "$bkDockerTargetImageName:$imageTag"
         )
         val updateExtServiceEnvInfoResult = ExtServiceResourceApi().updateExtServiceEnv(
             buildVariables.projectId,

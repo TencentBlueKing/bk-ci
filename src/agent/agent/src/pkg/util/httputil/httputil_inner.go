@@ -30,6 +30,45 @@
 
 package httputil
 
+import (
+	"encoding/json"
+	"strings"
+
+	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+
+	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
+)
+
+const IOA_ERROR exitcode.ExitErrorEnum = "THIRD_AGENT_EXIT_IOA_ERROR"
+
 func checkHttpStatusErr(status int, body []byte) {
-	// 检查 http 请求报错并添加至 exitcode，方便代码调试使用
+	if status >= 200 && status < 300 {
+		return
+	}
+	switch status {
+	case 502:
+		// 检查是不是 IOA 报错
+		data := &iOAResp{}
+		err := json.Unmarshal(body, &data)
+		if err != nil {
+			logs.Errorf("checkHttpStatusErr Unmarshal err %d|%s|%s", status, body, err.Error())
+			return
+		}
+		if (data.Code >= 103000 && data.Code <= 103018) ||
+			(data.Code == 500028) ||
+			(data.Code >= 190001 && data.Code <= 190003) ||
+			(data.Code >= 180001 && data.Code <= 180006) {
+			exitcode.AddExitError(IOA_ERROR, data.Desc+"|"+strings.Join(data.Contents, ","))
+		} else {
+			logs.Errorf("checkHttpStatusErr %d|%s|unknow", status, body)
+		}
+	default:
+		logs.Warnf("checkHttpStatusErr %d|%s|unknow", status, body)
+	}
+}
+
+type iOAResp struct {
+	Code     int      `json:"code"`
+	Desc     string   `json:"desc"`
+	Contents []string `json:"Contents"`
 }
