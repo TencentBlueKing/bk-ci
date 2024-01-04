@@ -227,7 +227,7 @@ class DataSourceConfig {
             datasourceUsername = datasourceUsername,
             datasourcePassword = datasourcePassword,
             datasourceInitSql = datasourceInitSql,
-            datasouceLeakDetectionThreshold = datasouceLeakDetectionThreshold
+            datasourceLeakDetectionThreshold = datasouceLeakDetectionThreshold
         )
     }
 
