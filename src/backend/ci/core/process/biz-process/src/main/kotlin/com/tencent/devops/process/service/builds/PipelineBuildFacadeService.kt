@@ -44,6 +44,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildPropertyType
@@ -51,6 +52,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -192,7 +194,8 @@ class PipelineBuildFacadeService(
         projectId: String,
         pipelineId: String,
         channelCode: ChannelCode,
-        checkPermission: Boolean = true
+        checkPermission: Boolean = true,
+        version: Int? = null
     ): BuildManualStartupInfo {
 
         if (checkPermission) { // 不用校验查看权限，只校验执行权限
@@ -211,15 +214,13 @@ class PipelineBuildFacadeService(
                 )
             )
         }
-
         pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                 params = arrayOf(pipelineId)
             )
-
-        val model = getModel(projectId, pipelineId)
+        val (model, debug) = getModelAndBuildLevel(projectId, pipelineId, version)
 
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
 
@@ -236,35 +237,38 @@ class PipelineBuildFacadeService(
                 }
             }
         }
+        if (debug) canManualStartup = true
 
-        // 当使用最近一次参数进行构建的时候，获取并替换container.params中的defaultValue值
-        if (useLatestParameters) {
-            // 获取最后一次的构建id
-            val lastTimeBuildInfo = pipelineRuntimeService.getLastTimeBuild(projectId, pipelineId)
-            if (lastTimeBuildInfo?.buildParameters?.isNotEmpty() == true) {
-                val latestParamsMap = lastTimeBuildInfo.buildParameters!!.associate { it.key to it.value }
-                triggerContainer.params.forEach { param ->
-                    val realValue = latestParamsMap[param.id]
-                    if (realValue != null) {
-                        // 有上一次的构建参数的时候才设置成默认值，否者依然使用默认值。
-                        // 当值是boolean类型的时候，需要转为boolean类型
-                        if (param.defaultValue is Boolean) {
-                            param.defaultValue = realValue.toString().toBoolean()
-                        } else {
-                            param.defaultValue = realValue
-                        }
-                    }
-                }
+        // 获取最后一次的构建id
+        val lastTimeInfo = pipelineRuntimeService.getLastTimeBuild(projectId, pipelineId, debug)
+        if (lastTimeInfo?.buildParameters?.isNotEmpty() == true) {
+            val latestParamsMap = lastTimeInfo.buildParameters!!.associate { it.key to it.value }
+            triggerContainer.params.forEach { param ->
+                val realValue = latestParamsMap[param.id]
+                // 有上一次的构建参数的时候才设置成默认值，否者依然使用默认值。
+                // 当值是boolean类型的时候，需要转为boolean类型
+                param.value = if (param.defaultValue is Boolean) {
+                    realValue?.toString()?.toBoolean()
+                } else {
+                    realValue
+                } ?: param.defaultValue
+            }
+        } else {
+            triggerContainer.params.forEach { param ->
+                // 如果没有上次构建的记录则直接使用默认值
+                param.value = param.defaultValue
             }
         }
 
         // #2902 默认增加构建信息
-        val params = mutableListOf(
+        val params = mutableListOf<BuildFormProperty>()
+        if (!debug) params.add(
             BuildFormProperty(
                 id = PIPELINE_BUILD_MSG,
                 required = true,
                 type = BuildFormPropertyType.STRING,
                 defaultValue = "",
+                value = "",
                 options = null,
                 desc = I18nUtil.getCodeLanMessage(
                     messageCode = ProcessMessageCode.BUILD_MSG_DESC,
@@ -304,7 +308,8 @@ class PipelineBuildFacadeService(
             canManualStartup = canManualStartup,
             canElementSkip = canElementSkip,
             properties = params,
-            buildNo = currentBuildNo
+            buildNo = currentBuildNo,
+            useLatestParameters = useLatestParameters
         )
     }
 
@@ -340,7 +345,7 @@ class PipelineBuildFacadeService(
             permission = AuthPermission.VIEW
         )
         val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
-        return pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId, queryDslContext)
+        return pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId, null, queryDslContext)
     }
 
     fun retry(
@@ -567,7 +572,8 @@ class PipelineBuildFacadeService(
         startByMessage: String? = null,
         buildNo: Int? = null,
         frequencyLimit: Boolean = true,
-        triggerReviewers: List<String>? = null
+        triggerReviewers: List<String>? = null,
+        version: Int? = null
     ): BuildId {
         logger.info("[$pipelineId] Manual build start with buildNo[$buildNo] and vars: $values")
         if (checkPermission) {
@@ -589,7 +595,6 @@ class PipelineBuildFacadeService(
                 )
             )
         }
-
         val readyToBuildPipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -598,7 +603,7 @@ class PipelineBuildFacadeService(
             )
         val startEpoch = System.currentTimeMillis()
         try {
-            val model = getModel(projectId, pipelineId)
+            val (model, debug) = getModelAndBuildLevel(projectId, pipelineId, version)
 
             /**
              * 验证流水线参数构建启动参数
@@ -630,7 +635,9 @@ class PipelineBuildFacadeService(
             }
 
             if (buildNo != null) {
-                pipelineRuntimeService.updateBuildNo(projectId, pipelineId, buildNo)
+                pipelineRuntimeService.updateBuildNo(
+                    projectId, pipelineId, buildNo, version != null
+                )
                 logger.info("[$pipelineId] buildNo was changed to [$buildNo]")
             }
 
@@ -647,11 +654,44 @@ class PipelineBuildFacadeService(
                 frequencyLimit = frequencyLimit,
                 buildNo = buildNo,
                 startValues = values,
-                triggerReviewers = triggerReviewers
+                triggerReviewers = triggerReviewers,
+                signPipelineVersion = version,
+                debug = debug
             )
         } finally {
             logger.info("[$pipelineId]|$userId|It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline")
         }
+    }
+
+    private fun getModelAndBuildLevel(projectId: String, pipelineId: String, version: Int?): Pair<Model, Boolean> {
+        val defaultVersion = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+        if (version == null) {
+            if (defaultVersion?.status == null || defaultVersion.status != VersionStatus.RELEASED) {
+                throw ErrorCodeException(
+                    statusCode = Response.Status.BAD_REQUEST.statusCode,
+                    errorCode = ProcessMessageCode.ERROR_VERSION_CANNOT_RUN
+                )
+            }
+            return Pair(defaultVersion.model, false)
+        }
+
+        if (defaultVersion != null && defaultVersion.version == version) {
+            return Pair(defaultVersion.model, false)
+        }
+        val targetResource = pipelineRepositoryService.getDraftVersionResource(
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+        if (targetResource != null && targetResource.version == version) {
+            return Pair(targetResource.model, true)
+        }
+        throw ErrorCodeException(
+            statusCode = Response.Status.BAD_REQUEST.statusCode,
+            errorCode = ProcessMessageCode.ERROR_VERSION_CANNOT_RUN
+        )
     }
 
     /**
@@ -688,7 +728,7 @@ class PipelineBuildFacadeService(
         val startEpoch = System.currentTimeMillis()
         try {
 
-            val model = getModel(projectId = projectId, pipelineId = pipelineId, version = pipeline.version)
+            val model = getPipelineResourceVersion(projectId, pipelineId, pipeline.version).model
 
             /**
              * 验证流水线参数构建启动参数
@@ -744,7 +784,7 @@ class PipelineBuildFacadeService(
         val startEpoch = System.currentTimeMillis()
         try {
 
-            val model = getModel(projectId, pipelineId, readyToBuildPipelineInfo.version)
+            val model = getPipelineResourceVersion(projectId, pipelineId, readyToBuildPipelineInfo.version).model
 
             /**
              * 验证流水线参数构建启动参数
@@ -1089,13 +1129,15 @@ class PipelineBuildFacadeService(
                     pipelineName = pipelineInfo.pipelineName,
                     buildNum = buildInfo.buildNum,
                     buildStage = buildStage,
-                    reviewRequest = reviewRequest
+                    reviewRequest = reviewRequest,
+                    debug = buildInfo.debug
                 )
             } else {
                 pipelineStageService.stageManualStart(
                     userId = userId,
                     buildStage = buildStage,
-                    reviewRequest = reviewRequest
+                    reviewRequest = reviewRequest,
+                    debug = buildInfo.debug
                 )
             }
             if (!success) throw ErrorCodeException(
@@ -1346,7 +1388,8 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         buildNo: Int,
         channelCode: ChannelCode,
-        checkPermission: Boolean = true
+        checkPermission: Boolean = true,
+        debugVersion: Int?
     ): ModelDetail {
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
@@ -1359,7 +1402,7 @@ class PipelineBuildFacadeService(
                 arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_DETAIL))
             )
         )
-        val buildId = pipelineRuntimeService.getBuildIdByBuildNum(projectId, pipelineId, buildNo)
+        val buildId = pipelineRuntimeService.getBuildIdByBuildNum(projectId, pipelineId, buildNo, debugVersion)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
@@ -1376,7 +1419,8 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         buildNum: Int,
         channelCode: ChannelCode,
-        checkPermission: Boolean = true
+        checkPermission: Boolean = true,
+        debugVersion: Int?
     ): ModelRecord {
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
@@ -1389,7 +1433,7 @@ class PipelineBuildFacadeService(
                 arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_DETAIL))
             )
         )
-        val buildId = pipelineRuntimeService.getBuildIdByBuildNum(projectId, pipelineId, buildNum)
+        val buildId = pipelineRuntimeService.getBuildIdByBuildNum(projectId, pipelineId, buildNum, debugVersion)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
@@ -1608,7 +1652,7 @@ class PipelineBuildFacadeService(
             status = listOf(BuildStatus.QUEUE, BuildStatus.QUEUE_CACHE)
         ).indexOfFirst { it.second == buildHistory.id } + 1
     } else {
-        pipelineRuntimeService.getPipelineBuildHistoryCount(
+        pipelineRuntimeService.getTotalBuildHistoryCount(
             projectId = projectId,
             pipelineId = pipelineId,
             status = listOf(BuildStatus.QUEUE, BuildStatus.QUEUE_CACHE),
@@ -1719,10 +1763,11 @@ class PipelineBuildFacadeService(
         projectId: String,
         pipelineId: String?,
         buildStatus: Set<BuildStatus>?,
-        checkPermission: Boolean
+        checkPermission: Boolean,
+        debugVersion: Int?
     ): List<String> {
         return pipelineRuntimeService.getBuilds(
-            projectId, pipelineId, buildStatus
+            projectId, pipelineId, buildStatus, debugVersion
         )
     }
 
@@ -1734,7 +1779,8 @@ class PipelineBuildFacadeService(
         pageSize: Int?,
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
-        updateTimeDesc: Boolean? = null
+        updateTimeDesc: Boolean? = null,
+        debugVersion: Int? = null
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 50
@@ -1766,7 +1812,9 @@ class PipelineBuildFacadeService(
                 )
             }
 
-            val newTotalCount = pipelineRuntimeService.getPipelineBuildHistoryCount(projectId, pipelineId)
+            val newTotalCount = pipelineRuntimeService.getPipelineBuildHistoryCount(
+                projectId = projectId, pipelineId = pipelineId, debugVersion = debugVersion
+            )
             val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -1829,7 +1877,8 @@ class PipelineBuildFacadeService(
         checkPermission: Boolean = true,
         startUser: List<String>? = null,
         updateTimeDesc: Boolean? = null,
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        debugVersion: Int?
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 50
@@ -1887,7 +1936,8 @@ class PipelineBuildFacadeService(
                 buildNoEnd = buildNoEnd,
                 buildMsg = buildMsg,
                 startUser = startUser,
-                queryDslContext = queryDslContext
+                queryDslContext = queryDslContext,
+                debugVersion = debugVersion
             )
 
             val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
@@ -1916,7 +1966,8 @@ class PipelineBuildFacadeService(
                 buildMsg = buildMsg,
                 startUser = startUser,
                 updateTimeDesc = updateTimeDesc,
-                queryDslContext = queryDslContext
+                queryDslContext = queryDslContext,
+                debugVersion = debugVersion
             )
             val buildHistories = mutableListOf<BuildHistory>()
             buildHistories.addAll(newHistoryBuilds)
@@ -1994,26 +2045,11 @@ class PipelineBuildFacadeService(
         return StartType.getStartTypeMap(I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
     }
 
-    fun getHistoryConditionRepo(userId: String, projectId: String, pipelineId: String): List<String> {
-        pipelinePermissionService.validPipelinePermission(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            permission = AuthPermission.VIEW,
-            message = MessageUtil.getMessageByLocale(
-                ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
-                I18nUtil.getLanguage(userId),
-                arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_BUILD_HISTORY))
-            )
-        )
-        return pipelineRuntimeService.getHistoryConditionRepo(projectId, pipelineId)
-    }
-
-    fun getHistoryConditionBranch(
+    fun getHistoryConditionRepo(
         userId: String,
         projectId: String,
         pipelineId: String,
-        alias: List<String>?
+        debugVersion: Int?
     ): List<String> {
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
@@ -2026,7 +2062,28 @@ class PipelineBuildFacadeService(
                 arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_BUILD_HISTORY))
             )
         )
-        return pipelineRuntimeService.getHistoryConditionBranch(projectId, pipelineId, alias)
+        return pipelineRuntimeService.getHistoryConditionRepo(projectId, pipelineId, debugVersion)
+    }
+
+    fun getHistoryConditionBranch(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        alias: List<String>?,
+        debugVersion: Int?
+    ): List<String> {
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.VIEW,
+            message = MessageUtil.getMessageByLocale(
+                ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                I18nUtil.getLanguage(userId),
+                arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_BUILD_HISTORY))
+            )
+        )
+        return pipelineRuntimeService.getHistoryConditionBranch(projectId, pipelineId, alias, debugVersion)
     }
 
     fun serviceBuildBasicInfo(projectId: String, buildId: String): BuildBasicInfo {
@@ -2093,8 +2150,8 @@ class PipelineBuildFacadeService(
         return buildHistory
     }
 
-    fun getModel(projectId: String, pipelineId: String, version: Int? = null) =
-        pipelineRepositoryService.getModel(projectId, pipelineId, version) ?: throw ErrorCodeException(
+    fun getPipelineResourceVersion(projectId: String, pipelineId: String, version: Int? = null) =
+        pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, version) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )

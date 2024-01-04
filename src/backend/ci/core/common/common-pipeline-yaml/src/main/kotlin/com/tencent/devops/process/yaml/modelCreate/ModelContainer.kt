@@ -48,13 +48,14 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.modelCreate.inner.InnerModelCreator
+import com.tencent.devops.process.yaml.modelTransfer.TransferCacheService
 import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
-import com.tencent.devops.process.yaml.utils.StreamDispatchUtils
 import com.tencent.devops.process.yaml.v2.models.IfType
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.process.yaml.v2.models.job.Mutex
+import com.tencent.devops.process.yaml.v2.utils.StreamDispatchUtils
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import javax.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
@@ -65,7 +66,8 @@ class ModelContainer @Autowired(required = false) constructor(
     val client: Client,
     val objectMapper: ObjectMapper,
     @Autowired(required = false)
-    val inner: InnerModelCreator?
+    val inner: InnerModelCreator?,
+    val transferCache: TransferCacheService
 ) {
 
     fun addVmBuildContainer(

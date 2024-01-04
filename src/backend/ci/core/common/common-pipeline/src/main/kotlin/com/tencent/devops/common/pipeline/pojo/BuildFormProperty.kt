@@ -36,12 +36,18 @@ import io.swagger.annotations.ApiModelProperty
 data class BuildFormProperty(
     @ApiModelProperty("元素ID-标识符", required = true)
     var id: String,
+    @ApiModelProperty("元素名称", required = true)
+    var name: String? = null,
     @ApiModelProperty("是否必须", required = true)
     var required: Boolean,
+    @ApiModelProperty("是否为常量", required = true)
+    var constant: Boolean? = false,
     @ApiModelProperty("元素类型", required = true)
     val type: BuildFormPropertyType,
     @ApiModelProperty("默认值", required = true)
     var defaultValue: Any,
+    @ApiModelProperty("上次构建的取值", required = true)
+    var value: Any? = null,
     @ApiModelProperty("下拉框列表", required = false)
     var options: List<BuildFormValue>?,
     @ApiModelProperty("描述", required = false)
@@ -80,5 +86,9 @@ data class BuildFormProperty(
     @ApiModelProperty("替换搜索url中的搜素关键字", required = false)
     var replaceKey: String? = null,
     @ApiModelProperty("是否只读", required = false)
-    val readOnly: Boolean? = false
+    var readOnly: Boolean? = false,
+    @ApiModelProperty("参数值是否必填", required = false)
+    val valueNotEmpty: Boolean? = false,
+    @ApiModelProperty("页面所需内容，后台仅保存，不做处理", required = false)
+    val payload: Any? = null
 )

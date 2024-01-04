@@ -62,8 +62,8 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
 import com.tencent.devops.process.pojo.code.WebhookInfo
-import com.tencent.devops.process.pojo.setting.PipelineRunLockType
-import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.DependOnUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
@@ -126,7 +126,8 @@ data class StartBuildContext(
     // 注意：该字段是在pipelineRuntimeService.startBuild 才赋值
     var buildNoType: BuildNoType? = null,
     // 注意：该字段在 PipelineContainerService.setUpTriggerContainer 中可能会被修改
-    var currentBuildNo: Int? = null
+    var currentBuildNo: Int? = null,
+    val debug: Boolean
 ) {
     val watcher: Watcher = Watcher("startBuild-$buildId")
 
@@ -227,6 +228,7 @@ data class StartBuildContext(
             pipelineId: String,
             buildId: String,
             resourceVersion: Int,
+            debug: Boolean,
             pipelineSetting: PipelineSetting? = null,
             realStartParamKeys: List<String>,
             pipelineParamMap: MutableMap<String, BuildParameters>,
@@ -277,22 +279,25 @@ data class StartBuildContext(
                 webhookInfo = getWebhookInfo(params),
                 buildMsg = params[PIPELINE_BUILD_MSG]?.coerceAtMaxLength(MAX_LENGTH),
                 buildParameters = genOriginStartParamsList(realStartParamKeys, pipelineParamMap),
-                // 优化并发组逻辑，只在GROUP_LOCK时才保存进history表
-                concurrencyGroup = pipelineSetting?.takeIf { it.runLockType == PipelineRunLockType.GROUP_LOCK }
-                    ?.concurrencyGroup?.let {
-                        val webhookParam = webHookStartParam.values.associate { p -> p.key to p.value.toString() }
-                        val tConcurrencyGroup = EnvUtils.parseEnv(
-                            it, PipelineVarUtil.fillContextVarMap(webhookParam.plus(params))
-                        )
-                        logger.info("[$pipelineId]|[$buildId]|ConcurrencyGroup=$tConcurrencyGroup")
-                        tConcurrencyGroup
-                    },
+                // 优化并发组逻辑，只在正式执行且GROUP_LOCK时才保存进history表
+                concurrencyGroup = if (!debug) {
+                    pipelineSetting?.takeIf { it.runLockType == PipelineRunLockType.GROUP_LOCK }
+                        ?.concurrencyGroup?.let {
+                            val webhookParam = webHookStartParam.values.associate { p -> p.key to p.value.toString() }
+                            val tConcurrencyGroup = EnvUtils.parseEnv(
+                                it, PipelineVarUtil.fillContextVarMap(webhookParam.plus(params))
+                            )
+                            logger.info("[$pipelineId]|[$buildId]|ConcurrencyGroup=$tConcurrencyGroup")
+                            tConcurrencyGroup
+                        }
+                } else null,
                 triggerReviewers = triggerReviewers,
                 startBuildStatus =
                 if (triggerReviewers.isNullOrEmpty()) BuildStatus.QUEUE else BuildStatus.TRIGGER_REVIEWING,
                 needUpdateStage = false,
                 pipelineSetting = pipelineSetting,
-                pipelineParamMap = pipelineParamMap
+                pipelineParamMap = pipelineParamMap,
+                debug = debug
             )
         }
 
@@ -350,7 +355,8 @@ data class StartBuildContext(
             executeCount: Int,
             firstTaskId: String,
             startType: StartType,
-            startBuildStatus: BuildStatus
+            startBuildStatus: BuildStatus,
+            debug: Boolean
         ): StartBuildContext = StartBuildContext(
             now = LocalDateTime.now(),
             projectId = projectId,
@@ -379,8 +385,8 @@ data class StartBuildContext(
             pipelineParamMap = mutableMapOf(),
             buildParameters = mutableListOf(),
             concurrencyGroup = null,
-            pipelineSetting = null
-
+            pipelineSetting = null,
+            debug = debug
         )
 
         private const val CONTEXT_PREFIX = "variables."

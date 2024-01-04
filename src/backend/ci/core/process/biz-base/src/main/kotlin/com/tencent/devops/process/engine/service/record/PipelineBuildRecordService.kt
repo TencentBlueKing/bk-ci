@@ -61,8 +61,8 @@ import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateBuildTimeCost
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
-import com.tencent.devops.process.engine.dao.PipelineResDao
-import com.tencent.devops.process.engine.dao.PipelineResVersionDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
@@ -107,9 +107,9 @@ class PipelineBuildRecordService @Autowired constructor(
     private val recordContainerDao: BuildRecordContainerDao,
     private val recordTaskDao: BuildRecordTaskDao,
     recordModelService: PipelineRecordModelService,
-    pipelineResDao: PipelineResDao,
+    pipelineResourceDao: PipelineResourceDao,
     pipelineBuildDao: PipelineBuildDao,
-    pipelineResVersionDao: PipelineResVersionDao,
+    pipelineResourceVersionDao: PipelineResourceVersionDao,
     pipelineElementService: PipelineElementService,
     redisOperation: RedisOperation,
     stageTagService: StageTagService,
@@ -121,9 +121,9 @@ class PipelineBuildRecordService @Autowired constructor(
     pipelineEventDispatcher = pipelineEventDispatcher,
     redisOperation = redisOperation,
     recordModelService = recordModelService,
-    pipelineResDao = pipelineResDao,
+    pipelineResourceDao = pipelineResourceDao,
     pipelineBuildDao = pipelineBuildDao,
-    pipelineResVersionDao = pipelineResVersionDao,
+    pipelineResourceVersionDao = pipelineResourceVersionDao,
     pipelineElementService = pipelineElementService
 ) {
 
@@ -231,9 +231,12 @@ class PipelineBuildRecordService @Autowired constructor(
         }
         watcher.start("fixModel")
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-        val buildNo = triggerContainer.buildNo
-        if (buildNo != null) {
-            buildNo.buildNo = buildSummaryRecord?.buildNo ?: buildNo.buildNo
+        triggerContainer.buildNo?.let {
+            it.buildNo = if (buildInfo.debug) {
+                buildSummaryRecord?.debugBuildNo
+            } else {
+                buildSummaryRecord?.buildNo
+            } ?: it.buildNo
         }
         val params = triggerContainer.params
         val newParams = ArrayList<BuildFormProperty>(params.size)
@@ -345,7 +348,11 @@ class PipelineBuildRecordService @Autowired constructor(
             cancelUserId = buildRecordModel?.cancelUser,
             curVersion = buildInfo.version,
             latestVersion = pipelineInfo.version,
-            latestBuildNum = buildSummaryRecord?.buildNum ?: -1,
+            latestBuildNum = if (buildInfo.debug) {
+                buildSummaryRecord?.debugBuildNum
+            } else {
+                buildSummaryRecord?.buildNum
+            } ?: -1,
             lastModifyUser = pipelineInfo.lastModifyUser,
             executeTime = buildInfo.executeTime, // 只为兼容接口，该字段不准确
             errorInfoList = buildRecordModel?.errorInfoList,
@@ -360,6 +367,7 @@ class PipelineBuildRecordService @Autowired constructor(
             ),
             material = buildInfo.material,
             remark = buildInfo.remark,
+            debug = buildInfo.debug,
             webhookInfo = buildInfo.webhookInfo,
             templateInfo = pipelineInfo.templateInfo,
             recordList = recordList

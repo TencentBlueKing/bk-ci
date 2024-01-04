@@ -27,7 +27,9 @@
 package com.tencent.devops.store.api.image.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.image.response.ImageDetail
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -84,6 +86,21 @@ interface ServiceStoreImageResource {
         @QueryParam("buildId")
         buildId: String?
     ): Result<ImageRepoInfo>
+
+    @ApiOperation("根据镜像代码获取镜像信息")
+    @GET
+    @Path("/imageCodes/{imageCode}")
+    fun getImagesByCodeAndVersion(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("镜像代码", required = true)
+        @PathParam("imageCode")
+        imageCode: String,
+        @ApiParam("版本号", required = false)
+        @QueryParam("version")
+        version: String?
+    ): Result<ImageDetail>
 
     @ApiOperation("获取所有的自研公共镜像")
     @GET

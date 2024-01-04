@@ -124,7 +124,8 @@ class PipelineBuildService(
         startValues: Map<String, String>? = null,
         handlePostFlag: Boolean = true,
         webHookStartParam: MutableMap<String, BuildParameters> = mutableMapOf(),
-        triggerReviewers: List<String>? = null
+        triggerReviewers: List<String>? = null,
+        debug: Boolean? = false
     ): BuildId {
 
         var acquire = false
@@ -136,6 +137,11 @@ class PipelineBuildService(
                 params = arrayOf(projectVO.englishName)
             )
         }
+        // 运行时检查stage数量不为1
+        if (model.stages.size <= 1) throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_WITH_EMPTY_STAGE,
+            params = arrayOf()
+        )
 
         val setting = pipelineRepositoryService.getSetting(pipeline.projectId, pipeline.pipelineId)
         val bucketSize = setting!!.maxConRunningQueueSize
@@ -194,7 +200,8 @@ class PipelineBuildService(
                 pipelineParamMap = pipelineParamMap,
                 webHookStartParam = webHookStartParam,
                 // 解析出定义的流水线变量
-                realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id }
+                realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id },
+                debug = debug ?: false
             )
 
             val interceptResult = pipelineInterceptorChain.filter(
@@ -236,7 +243,8 @@ class PipelineBuildService(
         pipeline: PipelineInfo,
         projectVO: ProjectVO?,
         channelCode: ChannelCode,
-        isMobile: Boolean
+        isMobile: Boolean,
+        debug: Boolean? = false
     ) {
         val userName = when (startType) {
             StartType.PIPELINE -> pipelineParamMap[PIPELINE_START_PIPELINE_USER_ID]?.value
@@ -281,7 +289,7 @@ class PipelineBuildService(
 //        }
 //        pipelineParamMap.putAll(originStartContexts.associateBy { it.key })
 
-        pipelineParamMap[PIPELINE_BUILD_MSG] = BuildParameters(
+        if (debug != true) pipelineParamMap[PIPELINE_BUILD_MSG] = BuildParameters(
             key = PIPELINE_BUILD_MSG,
             value = BuildMsgUtils.getBuildMsg(
                 buildMsg = startValues?.get(PIPELINE_BUILD_MSG)

@@ -58,7 +58,7 @@ data class TriggerContainer(
     @ApiModelProperty("模板参数构建", required = false)
     val templateParams: List<BuildFormProperty>? = null,
     @ApiModelProperty("构建版本号", required = false)
-    val buildNo: BuildNo? = null,
+    var buildNo: BuildNo? = null,
     @ApiModelProperty(
         "是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储",
         required = false,
@@ -80,7 +80,10 @@ data class TriggerContainer(
     @ApiModelProperty("是否为构建矩阵", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var matrixGroupFlag: Boolean? = false,
     @ApiModelProperty("各项耗时", required = true)
-    override var timeCost: BuildRecordTimeCost? = null
+    override var timeCost: BuildRecordTimeCost? = null,
+    override var template: String? = null,
+    override var ref: String? = null,
+    override var variables: Map<String, String>? = null
 ) : Container {
     companion object {
         const val classType = "trigger"

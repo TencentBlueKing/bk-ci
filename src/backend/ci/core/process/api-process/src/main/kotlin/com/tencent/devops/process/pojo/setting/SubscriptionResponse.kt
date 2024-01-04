@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.pojo.setting
 
-import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 

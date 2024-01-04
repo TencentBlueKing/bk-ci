@@ -39,13 +39,13 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("SVN仓库代码提交触发", description = CodeSVNWebHookTriggerElement.classType)
 data class CodeSVNWebHookTriggerElement(
     @ApiModelProperty("任务名称", required = true)
-    override val name: String = "SVN变更触发",
+    override val name: String = "SVN事件触发",
     @ApiModelProperty("id", required = false)
     override var id: String? = null,
     @ApiModelProperty("状态", required = false)
     override var status: String? = null,
     @ApiModelProperty("仓库ID", required = true)
-    val repositoryHashId: String?,
+    val repositoryHashId: String? = null,
     @ApiModelProperty("路径过滤类型", required = true)
     val pathFilterType: PathFilterType? = PathFilterType.NamePrefixFilter,
     @ApiModelProperty("相对路径", required = true)

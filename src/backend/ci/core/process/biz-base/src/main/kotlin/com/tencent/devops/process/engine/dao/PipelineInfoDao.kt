@@ -47,7 +47,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 
-@Suppress("TooManyFunctions", "LongParameterList")
+@Suppress("TooManyFunctions", "LongParameterList", "LargeClass")
 @Repository
 class PipelineInfoDao {
 
@@ -63,7 +63,8 @@ class PipelineInfoDao {
         manualStartup: Boolean,
         canElementSkip: Boolean,
         taskCount: Int,
-        id: Long? = null
+        id: Long? = null,
+        onlyDraft: Boolean? = false
     ): Int {
         val count = with(T_PIPELINE_INFO) {
             dslContext.insertInto(
@@ -81,7 +82,8 @@ class PipelineInfoDao {
                 MANUAL_STARTUP,
                 ELEMENT_SKIP,
                 TASK_COUNT,
-                ID
+                ID,
+                ONLY_DRAFT
             )
                 .values(
                     pipelineId,
@@ -95,7 +97,8 @@ class PipelineInfoDao {
                     if (manualStartup) 1 else 0,
                     if (canElementSkip) 1 else 0,
                     taskCount,
-                    id
+                    id,
+                    onlyDraft
                 )
                 .execute()
         }
@@ -109,23 +112,21 @@ class PipelineInfoDao {
         projectId: String,
         pipelineId: String,
         userId: String?,
-        updateVersion: Boolean = true,
+        version: Int? = null,
         pipelineName: String? = null,
         pipelineDesc: String? = null,
         manualStartup: Boolean? = null,
         canElementSkip: Boolean? = null,
         taskCount: Int = 0,
         latestVersion: Int = 0,
-        updateLastModifyUser: Boolean? = true
-    ): Int {
-        val count = with(T_PIPELINE_INFO) {
-
+        updateLastModifyUser: Boolean? = true,
+        onlyDraft: Boolean? = null
+    ): Boolean {
+        return with(T_PIPELINE_INFO) {
             val update = dslContext.update(this)
-
-            if (updateVersion) { // 刷新版本号，每次递增1
-                update.set(VERSION, VERSION + 1)
+            version?.let {
+                update.set(VERSION, version)
             }
-
             if (!pipelineName.isNullOrBlank()) {
                 update.set(PIPELINE_NAME, pipelineName)
             }
@@ -150,26 +151,29 @@ class PipelineInfoDao {
             if (userId != null && updateLastModifyUser == true) {
                 update.set(LAST_MODIFY_USER, userId)
             }
+            onlyDraft?.let {
+                update.set(ONLY_DRAFT, onlyDraft)
+            }
             update.set(UPDATE_TIME, LocalDateTime.now())
                 .where(conditions)
-                .execute()
+                .execute() == 1
         }
-        if (count < 1) {
-            logger.warn("Update the pipeline $pipelineId with the latest version($latestVersion) failed")
-            // 版本号为0则为更新失败, 异常在业务层抛出, 只有pipelineId和version不符合的情况会走这里, 统一成一个异常应该問題ありません
-            return 0
-        }
-        val version = with(T_PIPELINE_INFO) {
-            dslContext.select(VERSION)
-                .from(this)
-                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
-                .fetchOne(0, Int::class.java)!!
-        }
-        logger.info(
-            "Update the pipeline $pipelineId add new version($version) old version($latestVersion) " +
-                "and result=${count == 1}"
-        )
-        return version
+//        if (count < 1) {
+//            logger.warn("Update the pipeline $pipelineId with the latest version($latestVersion) failed")
+//            // 版本号为0则为更新失败, 异常在业务层抛出, 只有pipelineId和version不符合的情况会走这里, 统一成一个异常应该問題ありません
+//            return 0
+//        }
+//        val version = with(T_PIPELINE_INFO) {
+//            dslContext.select(VERSION)
+//                .from(this)
+//                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+//                .fetchOne(0, Int::class.java)!!
+//        }
+//        logger.info(
+//            "Update the pipeline $pipelineId add new version($version) old version($latestVersion) " +
+//                "and result=${count == 1}"
+//        )
+//        return version
     }
 
     fun countByPipelineIds(
@@ -613,7 +617,8 @@ class PipelineInfoDao {
                     canManualStartup = manualStartup == 1,
                     canElementSkip = elementSkip == 1,
                     taskCount = taskCount,
-                    id = id
+                    id = id,
+                    onlyDraft = onlyDraft
                 )
             }
         } else {

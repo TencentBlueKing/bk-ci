@@ -220,7 +220,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: return false
 
-        val model = pipelineRepositoryService.getModel(projectId, pipelineId)
+        val model = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)?.model
         if (model == null) {
             logger.warn("[$pipelineId]| Fail to get the model")
             return false
@@ -494,8 +494,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
             ?: throw IllegalArgumentException("Pipeline($pipelineId) not found")
         checkPermission(pipelineInfo.lastModifyUser, projectId = projectId, pipelineId = pipelineId)
 
-        val model =
-            pipelineRepositoryService.getModel(projectId = projectId, pipelineId = pipelineId, version = version)
+        val model = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)?.model
         if (model == null) {
             logger.warn("[$pipelineId]| Fail to get the model")
             return ""
