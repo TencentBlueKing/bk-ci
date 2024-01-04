@@ -42,7 +42,11 @@ import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.pipeline.type.pcg.PCGDispatchType
+import com.tencent.devops.common.pipeline.type.windows.WindowsDispatchType
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.yaml.v3.models.job.Container2
+import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
+import com.tencent.devops.process.yaml.v3.models.job.RunsOn
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -63,9 +67,10 @@ enum class PoolType {
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(
                         messageCode = DANG
-                ) + "If pool.type=$this, container" + I18nUtil.getCodeLanMessage(
+                    ) + "If pool.type=$this, container" + I18nUtil.getCodeLanMessage(
                         messageCode = PARAMETER_IS_EMPTY
-                    ))
+                    )
+                )
             }
         }
     },
@@ -73,6 +78,58 @@ enum class PoolType {
     DockerOnDevCloud {
         override fun transfer(pool: Pool): DispatchType {
             return PublicDevCloudDispathcType(
+                image = pool.container ?: pool.image?.imageCode,
+                performanceConfigId = pool.performanceConfigId ?: "0",
+                imageType = pool.image?.imageType ?: ImageType.THIRD,
+                credentialId = pool.credential?.credentialId,
+                imageVersion = pool.image?.imageVersion,
+                imageCode = pool.image?.imageCode
+            )
+        }
+
+        override fun validatePool(pool: Pool) {
+            if (null == pool.container && pool.image == null) {
+                logger.error("validatePool, {}, container is null", this)
+                throw OperationException(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = DANG
+                    ) + "If pool.type=$this, container" + I18nUtil.getCodeLanMessage(
+                        messageCode = PARAMETER_IS_EMPTY
+                    )
+                )
+            }
+        }
+
+        override fun transfer(dispatcher: DispatchType): RunsOn? {
+            if (dispatcher is PublicDevCloudDispathcType) {
+                return RunsOn(
+                    selfHosted = null,
+                    poolName = JobRunsOnType.DOCKER.type,
+                    poolType = null,
+                    container = when (dispatcher.imageType) {
+                        ImageType.BKSTORE -> Container2(
+                            imageCode = dispatcher.value,
+                            imageVersion = dispatcher.imageVersion,
+                            credentials = dispatcher.credentialId?.ifBlank { null }
+                        )
+
+                        ImageType.THIRD -> Container2(
+                            image = dispatcher.value,
+                            credentials = dispatcher.credentialId?.ifBlank { null }
+                        )
+
+                        else -> null
+                    },
+                    hwSpec = dispatcher.performanceConfigId
+                )
+            }
+            return null
+        }
+    },
+
+    DockerOnBcs {
+        override fun transfer(pool: Pool): DispatchType {
+            return PublicBcsDispatchType(
                 pool.container!!,
                 "0",
                 imageType = ImageType.THIRD,
@@ -94,28 +151,6 @@ enum class PoolType {
         }
     },
 
-    DockerOnBcs {
-        override fun transfer(pool: Pool): DispatchType {
-            return PublicBcsDispatchType(
-                pool.container!!,
-                "0",
-                imageType = ImageType.THIRD,
-                credentialId = pool.credential?.credentialId
-            )
-        }
-
-        override fun validatePool(pool: Pool) {
-            if (null == pool.container) {
-                logger.error("validatePool, {}, container is null", this)
-                throw OperationException(I18nUtil.getCodeLanMessage(
-                    messageCode = DANG
-                ) + "If pool.type=$this, container" + I18nUtil.getCodeLanMessage(
-                    messageCode = PARAMETER_IS_EMPTY
-                ))
-            }
-        }
-    },
-
     DockerOnPcg {
         override fun transfer(pool: Pool): DispatchType {
             return PCGDispatchType(
@@ -126,11 +161,13 @@ enum class PoolType {
         override fun validatePool(pool: Pool) {
             if (null == pool.container) {
                 logger.error("validatePool, {}, container is null", this)
-                throw OperationException(I18nUtil.getCodeLanMessage(
-                    messageCode = DANG
-                ) + "If pool.type=$this, container" + I18nUtil.getCodeLanMessage(
-                    messageCode = PARAMETER_IS_EMPTY
-                ))
+                throw OperationException(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = DANG
+                    ) + "If pool.type=$this, container" + I18nUtil.getCodeLanMessage(
+                        messageCode = PARAMETER_IS_EMPTY
+                    )
+                )
             }
         }
     },
@@ -152,7 +189,8 @@ enum class PoolType {
                         messageCode = DANG
                     ) + "If pool.type=$this, macOS" + I18nUtil.getCodeLanMessage(
                         messageCode = PARAMETER_IS_EMPTY
-                    ))
+                    )
+                )
             }
             if (null == pool.macOS.systemVersion) {
                 logger.error("validatePool, pool.type:{}, macOS.systemVersion is null", this)
@@ -161,7 +199,8 @@ enum class PoolType {
                         messageCode = DANG
                     ) + "If pool.type=$this, macOS.systemVersion" + I18nUtil.getCodeLanMessage(
                         messageCode = PARAMETER_IS_EMPTY
-                    ))
+                    )
+                )
             }
             if (null == pool.macOS.xcodeVersion) {
                 logger.error("validatePool, pool.type:{} , macOS.xcodeVersion is null", this)
@@ -170,8 +209,21 @@ enum class PoolType {
                         messageCode = DANG
                     ) + "If pool.type=$this, macOS.xcodeVersion" + I18nUtil.getCodeLanMessage(
                         messageCode = PARAMETER_IS_EMPTY
-                    ))
+                    )
+                )
             }
+        }
+
+        override fun transfer(dispatcher: DispatchType): RunsOn? {
+            if (dispatcher is MacOSDispatchType) {
+                return RunsOn(
+                    selfHosted = null,
+                    poolName = "macos-${dispatcher.systemVersion}",
+                    xcode = dispatcher.xcodeVersion,
+                    poolType = null
+                )
+            }
+            return null
         }
     },
 
@@ -238,8 +290,42 @@ enum class PoolType {
                         messageCode = DANG
                     ) + "If pool.type=$this, agentName/agentId/envId/envName" + I18nUtil.getCodeLanMessage(
                         messageCode = PARAMETER_CANNOT_EMPTY_ALL
-                    ))
+                    )
+                )
             }
+        }
+    },
+
+    WindowsOnDevcloud {
+        override fun transfer(pool: Pool): DispatchType {
+            return WindowsDispatchType(
+                env = pool.container,
+                systemVersion = pool.container
+            )
+        }
+
+        override fun validatePool(pool: Pool) {
+            if (pool.container == null) {
+                logger.error("validatePool, pool.type:{} , pool.container is null", this)
+                throw OperationException(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = DANG
+                    ) + "If pool.type=$this, pool.container" + I18nUtil.getCodeLanMessage(
+                        messageCode = PARAMETER_IS_EMPTY
+                    )
+                )
+            }
+        }
+
+        override fun transfer(dispatcher: DispatchType): RunsOn? {
+            if (dispatcher is WindowsDispatchType) {
+                return RunsOn(
+                    selfHosted = null,
+                    poolName = dispatcher.env ?: "",
+                    poolType = null
+                )
+            }
+            return null
         }
     }
 
@@ -258,6 +344,15 @@ enum class PoolType {
     fun toDispatchType(pool: Pool): DispatchType {
         this.validatePool(pool)
         return this.transfer(pool)
+    }
+
+    /**
+     * 转换runsOn
+     */
+    protected open fun transfer(dispatcher: DispatchType): RunsOn? = null
+
+    fun toRunsOn(dispatcher: DispatchType): RunsOn? {
+        return this.transfer(dispatcher)
     }
 
     protected val logger: Logger = LoggerFactory.getLogger(PoolType::class.java)

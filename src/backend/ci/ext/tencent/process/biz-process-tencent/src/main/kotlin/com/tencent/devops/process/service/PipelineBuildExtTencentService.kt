@@ -172,6 +172,7 @@ class PipelineBuildExtTencentService @Autowired constructor(
             )
         // 保存流水线信息
         val pipelineId = pipelineInfoFacadeService.createPipeline(userId, projectId, instanceModel, ChannelCode.AM)
+            .pipelineId
         logger.info("createPipeline result is:$pipelineId")
         return pipelineBuildFacadeService.buildManualStartup(
             userId = userId,

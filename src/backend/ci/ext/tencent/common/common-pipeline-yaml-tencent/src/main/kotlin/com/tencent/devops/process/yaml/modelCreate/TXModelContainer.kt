@@ -40,6 +40,7 @@ import com.tencent.devops.process.yaml.modelCreate.pojo.PreCIDispatchInfo
 import com.tencent.devops.process.yaml.modelCreate.pojo.RdsDispatchInfo
 import com.tencent.devops.process.yaml.modelCreate.pojo.enums.DispatchBizType
 import com.tencent.devops.process.yaml.modelCreate.utils.TXStreamDispatchUtils
+import com.tencent.devops.process.yaml.modelTransfer.TransferCacheService
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.job.Job
 import org.springframework.beans.factory.annotation.Autowired
@@ -52,9 +53,10 @@ class TXModelContainer @Autowired(required = false) constructor(
     client: Client,
     objectMapper: ObjectMapper,
     @Autowired(required = false)
-    inner: TXInnerModelCreator?
+    inner: TXInnerModelCreator?,
+    transferCache: TransferCacheService
 ) : ModelContainer(
-    client, objectMapper, inner
+    client, objectMapper, inner, transferCache
 ) {
     override fun addVmBuildContainer(
         job: Job,

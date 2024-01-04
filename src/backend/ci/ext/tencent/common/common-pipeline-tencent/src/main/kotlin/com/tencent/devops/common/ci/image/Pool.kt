@@ -30,14 +30,15 @@ package com.tencent.devops.common.ci.image
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
+import com.tencent.devops.process.yaml.v3.models.image.PoolImage
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Pool(
-    val container: String?,
-    val credential: Credential?,
-    val macOS: MacOS?,
-    val third: Boolean?,
+    val container: String? = null,
+    val credential: Credential? = null,
+    val macOS: MacOS? = null,
+    val third: Boolean? = null,
     val performanceConfigId: String? = "0",
     val env: Map<String, String>? = mapOf(),
     val type: PoolType? = null,
@@ -49,7 +50,8 @@ data class Pool(
     val os: VMBaseOS? = null,
     val workspace: String? = null,
     val buildType: BuildType? = BuildType.DEVCLOUD,
-    val persistence: Boolean? = false
+    val persistence: Boolean? = false,
+    val image: PoolImage? = null
 )
 
 enum class BuildType {

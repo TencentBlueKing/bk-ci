@@ -28,8 +28,8 @@
 package com.tencent.devops.process.api.app
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -47,6 +47,12 @@ class AppPipelineSettingResourceImpl @Autowired constructor(
         pipelineId: String,
         setting: PipelineSetting
     ): Result<String> {
-        return Result(pipelineSettingFacadeService.saveSetting(userId, setting, false))
+        return Result(
+            pipelineSettingFacadeService.saveSetting(userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            setting = setting,
+            checkPermission = false).pipelineId
+        )
     }
 }

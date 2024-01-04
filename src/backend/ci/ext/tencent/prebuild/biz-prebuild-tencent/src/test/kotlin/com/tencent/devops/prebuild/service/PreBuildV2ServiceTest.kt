@@ -74,7 +74,7 @@ class PreBuildV2ServiceTest : ServiceBaseTest() {
         // 流水线修改远程调用
         Mockito.`when`(
             client.get(ServicePipelineResource::class)
-                .edit(anyString(), anyString(), PIPELINE_ID, any()!!, ChannelCode.BS)
+                .editPipeline(anyString(), anyString(), PIPELINE_ID, any()!!, ChannelCode.BS)
         ).thenReturn(Result(true))
 
         // 启动流水线远程调用

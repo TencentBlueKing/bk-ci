@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkService
@@ -56,6 +57,7 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextT
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextTextText
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextView
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextViewLink
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.user.UserBuildResource
 import com.tencent.devops.process.api.user.UserPipelineResource
 import com.tencent.devops.process.pojo.BuildId
@@ -458,10 +460,11 @@ class WechatWorkCallbackService @Autowired constructor(
         // 执行流水线的信息，获取启动参数
         try {
             // 正常获取到执行权限的时候
-            manualStartupInfo = client.get(UserBuildResource::class).manualStartupInfo(
-                userName,
-                projectCode,
-                pipelineId
+            manualStartupInfo = client.get(ServiceBuildResource::class).manualStartupInfo(
+                userId = userName,
+                projectId = projectCode,
+                pipelineId = pipelineId,
+                channelCode = ChannelCode.BS
             )
             // 判断是否能够启动
             // 判断是否能够启动

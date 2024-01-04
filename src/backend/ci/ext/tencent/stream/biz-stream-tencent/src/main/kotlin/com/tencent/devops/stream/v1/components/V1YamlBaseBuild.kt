@@ -230,7 +230,7 @@ abstract class V1YamlBaseBuild<T> @Autowired constructor(
         val triggerLock = V1GitCITriggerLock(redisOperation, gitProjectConf.gitProjectId, pipelineId)
         try {
             triggerLock.lock()
-            processClient.edit(event.userId, gitProjectConf.projectCode!!, pipelineId, model, channelCode)
+            processClient.editPipeline(event.userId, gitProjectConf.projectCode!!, pipelineId, model, channelCode)
             return client.get(ServiceBuildResource::class).manualStartup(
                 userId = event.userId,
                 projectId = gitProjectConf.projectCode!!,

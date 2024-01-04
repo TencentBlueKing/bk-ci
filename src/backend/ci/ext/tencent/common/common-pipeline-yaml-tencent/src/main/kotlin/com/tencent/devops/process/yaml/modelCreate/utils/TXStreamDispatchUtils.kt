@@ -55,7 +55,7 @@ import com.tencent.devops.common.pipeline.type.windows.WindowsDispatchType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.modelCreate.pojo.enums.DispatchBizType
-import com.tencent.devops.process.yaml.utils.StreamDispatchUtils
+import com.tencent.devops.process.yaml.v2.utils.StreamDispatchUtils
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.job.Container
 import com.tencent.devops.process.yaml.v2.models.job.Container2
@@ -268,11 +268,13 @@ object TXStreamDispatchUtils {
                 else -> GitCIDispatchType(defaultImage)
             }
         } else {
-            throw CustomException(Response.Status.NOT_FOUND,
+            throw CustomException(
+                Response.Status.NOT_FOUND,
                 MessageUtil.getMessageByLocale(
                     messageCode = PUBLIC_BUILD_RESOURCE_POOL_NOT_EXIST,
                     language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                ))
+                )
+            )
         }
     }
 

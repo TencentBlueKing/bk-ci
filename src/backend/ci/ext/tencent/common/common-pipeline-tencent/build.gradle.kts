@@ -36,4 +36,5 @@ dependencies {
     api("org.yaml:snakeyaml")
     api("com.github.fge:json-schema-validator")
     api(project(":core:common:common-webhook:api-common-webhook"))
+    api(project(":core:common:common-pipeline-yaml"))
 }

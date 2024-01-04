@@ -55,6 +55,9 @@ import com.tencent.devops.process.yaml.modelCreate.inner.ExtraParam
 import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.tencent.devops.process.yaml.modelCreate.inner.PipelineInfo
 import com.tencent.devops.process.yaml.modelCreate.inner.PreCIData
+import com.tencent.devops.process.yaml.pojo.TemplatePath
+import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYaml
+import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYamlI
 import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
@@ -136,7 +139,7 @@ class PreBuildV2Service @Autowired constructor(
                 nowRepo = null,
                 repo = null,
                 resourcePoolMapExt = null
-            ).replace()
+            ).replace() as PreScriptBuildYaml
         )
 
         // 若流水线不存在，则创建空流水线，服务于红线质量

@@ -138,7 +138,10 @@ interface AppPipelineResource {
         channelCode: ChannelCode?,
         @ApiParam("分支", required = false)
         @QueryParam("materialBranch")
-        materialBranch: List<String>?
+        materialBranch: List<String>?,
+        @ApiParam("指定草稿版本（为调试构建）", required = false)
+        @QueryParam("version")
+        debugVersion: Int?
     ): Result<Page<AppPipelineHistory>>
 
     @ApiOperation("获取流水线构建中的查询条件-分支")
@@ -156,7 +159,10 @@ interface AppPipelineResource {
         pipelineId: String,
         @ApiParam("仓库", required = false)
         @QueryParam("alias")
-        alias: List<String>?
+        alias: List<String>?,
+        @ApiParam("指定草稿版本（为调试构建）", required = false)
+        @QueryParam("version")
+        debugVersion: Int?
     ): Result<List<String>>
 
     @ApiOperation("获取流水线构建中的查询条件-状态")
@@ -186,7 +192,10 @@ interface AppPipelineResource {
         projectId: String,
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @ApiParam("指定草稿版本（为调试构建）", required = false)
+        @QueryParam("version")
+        debugVersion: Int?
     ): Result<List<String>>
 
     @ApiOperation("列出用户某项目下的流水线的所有收藏")
