@@ -91,6 +91,7 @@ import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
 
 @Service
 @Suppress("ALL")
@@ -117,7 +118,7 @@ class CreateControl @Autowired constructor(
     private val bkccService: BKCCService,
     private val windowsSpecResourceDao: WindowsSpecResourceDao
 ) {
-
+    private val executor = Executors.newCachedThreadPool()
     companion object {
         private val logger = LoggerFactory.getLogger(CreateControl::class.java)
         private const val BLANK_TEMPLATE_YAML_NAME = "BLANK"
@@ -504,8 +505,12 @@ class CreateControl @Autowired constructor(
                     ips = setOf(ip),
                     props = workspaceCommon.genWorkspaceCCInfo(ws.projectId)
                 )
-            }
 
+                // 创建成功后做异步设置
+                executor.execute {
+                    workspaceCommon.makeDiskMount(ip, event.userId)
+                }
+            }
             if (!ws.workspaceSystemType.afterCreateNeedWs(ws.ownerType)) {
                 // 直接return 不做websocket
                 return
