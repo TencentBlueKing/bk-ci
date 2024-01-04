@@ -20,5 +20,7 @@ data class RepositoryGitCheck(
     @ApiModelProperty("内容")
     val context: String,
     @ApiModelProperty("来源类型")
-    val source: ExecuteSource
+    val source: ExecuteSource,
+    @ApiModelProperty("目标分支")
+    val targetBranch: String? = ""
 )

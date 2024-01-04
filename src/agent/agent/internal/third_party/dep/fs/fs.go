@@ -34,7 +34,6 @@ package fs
 import (
 	"github.com/pkg/errors"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -130,7 +129,7 @@ func CopyDir(src, dst string) error {
 		return errors.Wrapf(err, "cannot mkdir %s", dst)
 	}
 
-	entries, err := ioutil.ReadDir(src)
+	entries, err := os.ReadDir(src)
 	if err != nil {
 		return errors.Wrapf(err, "cannot read directory %s", dst)
 	}

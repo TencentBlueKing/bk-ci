@@ -4,21 +4,6 @@ SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------
--- Table structure for T_BUILD_STARTUP_PARAM
--- ----------------------------
-
-CREATE TABLE IF NOT EXISTS `T_BUILD_STARTUP_PARAM` (
-  `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `BUILD_ID` varchar(64) NOT NULL COMMENT '构建ID',
-  `PARAM` mediumtext NOT NULL COMMENT '参数',
-  `PROJECT_ID` varchar(64) DEFAULT NULL COMMENT '项目ID',
-  `PIPELINE_ID` varchar(64) DEFAULT NULL COMMENT '流水线ID',
-  PRIMARY KEY (`ID`),
-  UNIQUE KEY `BUILD_ID` (`BUILD_ID`),
-  KEY `IDX_DEL` (`PROJECT_ID`,`PIPELINE_ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线启动变量表';
-
--- ----------------------------
 -- Table structure for T_PIPELINE_BUILD_CONTAINER
 -- ----------------------------
 
@@ -217,33 +202,6 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_VAR` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线变量表';
 
 -- ----------------------------
--- Table structure for T_PIPELINE_CONTAINER_MONITOR
--- ----------------------------
-
-CREATE TABLE IF NOT EXISTS `T_PIPELINE_CONTAINER_MONITOR` (
-  `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `OS_TYPE` varchar(32) NOT NULL COMMENT '系统类型',
-  `BUILD_TYPE` varchar(32) NOT NULL COMMENT '构建类型',
-  `MAX_STARTUP_TIME` bigint(20) NOT NULL COMMENT '最长启动时间',
-  `MAX_EXECUTE_TIME` bigint(20) NOT NULL COMMENT '最长执行时间',
-  `USERS` varchar(1024) NOT NULL COMMENT '用户列表',
-  PRIMARY KEY (`ID`),
-  UNIQUE KEY `OS_TYPE` (`OS_TYPE`,`BUILD_TYPE`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
-
--- ----------------------------
--- Table structure for T_PIPELINE_FAILURE_NOTIFY_USER
--- ----------------------------
-
-CREATE TABLE IF NOT EXISTS `T_PIPELINE_FAILURE_NOTIFY_USER` (
-  `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `USER_ID` varchar(32) DEFAULT '' COMMENT '用户ID',
-  `NOTIFY_TYPES` varchar(32) DEFAULT '' COMMENT '通知类型',
-  PRIMARY KEY (`ID`),
-  UNIQUE KEY `USER_ID` (`USER_ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
-
--- ----------------------------
 -- Table structure for T_PIPELINE_FAVOR
 -- ----------------------------
 
@@ -374,16 +332,6 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_MODEL_TASK` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='流水线模型task任务表';
 
 -- ----------------------------
--- Table structure for T_PIPELINE_MUTEX_GROUP
--- ----------------------------
-
-CREATE TABLE IF NOT EXISTS `T_PIPELINE_MUTEX_GROUP` (
-  `PROJECT_ID` varchar(64) NOT NULL COMMENT '项目ID',
-  `GROUP_NAME` varchar(127) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT '用户组名称',
-  PRIMARY KEY (`PROJECT_ID`,`GROUP_NAME`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线互斥表';
-
--- ----------------------------
 -- Table structure for T_PIPELINE_REMOTE_AUTH
 -- ----------------------------
 
@@ -453,30 +401,6 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_SETTING` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线基础配置表';
 
 -- ----------------------------
--- Table structure for T_PIPELINE_TEMPLATE
--- ----------------------------
-
-CREATE TABLE IF NOT EXISTS `T_PIPELINE_TEMPLATE` (
-  `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `TYPE` varchar(32) NOT NULL DEFAULT 'FREEDOM' COMMENT '类型',
-  `CATEGORY` varchar(128) DEFAULT NULL COMMENT '应用范畴',
-  `TEMPLATE_NAME` varchar(64) NOT NULL COMMENT '模板名称',
-  `ICON` varchar(32) NOT NULL DEFAULT '' COMMENT '模板图标',
-  `LOGO_URL` varchar(512) DEFAULT NULL COMMENT 'LOGO URL地址',
-  `PROJECT_CODE` varchar(32) DEFAULT NULL COMMENT '用户组所属项目',
-  `SRC_TEMPLATE_ID` varchar(32) DEFAULT NULL COMMENT '源模版ID',
-  `AUTHOR` varchar(64) NOT NULL DEFAULT '' COMMENT '作者',
-  `ATOMNUM` int(11) NOT NULL COMMENT '插件数量',
-  `PUBLIC_FLAG` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否为公共镜像',
-  `TEMPLATE` mediumtext COMMENT '模板',
-  `CREATOR` varchar(32) NOT NULL COMMENT '创建者',
-  `CREATE_TIME` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  PRIMARY KEY (`ID`),
-  KEY `SRC_TEMPLATE_ID` (`SRC_TEMPLATE_ID`),
-  KEY `PROJECT_CODE` (`PROJECT_CODE`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线模板表';
-
--- ----------------------------
 -- Table structure for T_PIPELINE_TIMER
 -- ----------------------------
 
@@ -491,6 +415,10 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_TIMER` (
   UNIQUE KEY `IDX_PIPELINE_ID` (`PIPELINE_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
 
+-- ----------------------------
+-- Table structure for T_PIPELINE_TRIGGER_REVIEW
+-- ----------------------------
+
 CREATE TABLE IF NOT EXISTS `T_PIPELINE_TRIGGER_REVIEW` (
   `BUILD_ID` varchar(34) NOT NULL DEFAULT '' COMMENT '构建ID',
   `PROJECT_ID` varchar(64) NOT NULL COMMENT '项目ID',
@@ -502,21 +430,6 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_TRIGGER_REVIEW` (
   PRIMARY KEY (`BUILD_ID`),
   KEY `PROJECT_BUILD` (`PROJECT_ID`,`PIPELINE_ID`,`BUILD_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线触发审核信息';
-
--- ----------------------------
--- Table structure for T_PIPELINE_USER
--- ----------------------------
-
-CREATE TABLE IF NOT EXISTS `T_PIPELINE_USER` (
-  `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `PIPELINE_ID` varchar(34) NOT NULL COMMENT '流水线ID',
-  `CREATE_TIME` datetime NOT NULL COMMENT '创建时间',
-  `UPDATE_TIME` datetime NOT NULL COMMENT '更新时间',
-  `CREATE_USER` varchar(64) NOT NULL COMMENT '创建者',
-  `UPDATE_USER` varchar(64) NOT NULL COMMENT '修改人',
-  PRIMARY KEY (`ID`),
-  UNIQUE KEY `PIPELINE_ID` (`PIPELINE_ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
 
 -- ----------------------------
 -- Table structure for T_PIPELINE_VIEW
@@ -537,7 +450,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_VIEW` (
   `VIEW_TYPE` int NOT NULL DEFAULT '1' COMMENT '1:动态流水线组 , 2:静态流水线组',
   PRIMARY KEY (`ID`),
   KEY `IDX_PROJECT_ID` (`PROJECT_ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线视图';
 
 -- ----------------------------
 -- Table structure for T_PIPELINE_VIEW_GROUP
@@ -569,33 +482,6 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_VIEW_TOP` (
   PRIMARY KEY (`ID`),
   UNIQUE KEY `UNI_PROJECT_CREATOR_VIEW` (`PROJECT_ID`, `CREATOR` , `VIEW_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线组置顶表';
-
--- ----------------------------
--- Table structure for T_PIPELINE_VIEW_LABEL
--- ----------------------------
-
-CREATE TABLE IF NOT EXISTS `T_PIPELINE_VIEW_LABEL` (
-  `PROJECT_ID` varchar(64) COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT '项目ID',
-  `VIEW_ID` bigint(20) NOT NULL COMMENT '视图ID',
-  `LABEL_ID` bigint(20) NOT NULL COMMENT '标签ID',
-  `CREATE_TIME` datetime NOT NULL COMMENT '创建时间',
-  PRIMARY KEY (`VIEW_ID`,`LABEL_ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
-
--- ----------------------------
--- Table structure for T_PIPELINE_VIEW_PROJECT
--- ----------------------------
-
-CREATE TABLE IF NOT EXISTS `T_PIPELINE_VIEW_PROJECT` (
-  `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `VIEW_ID` bigint(20) NOT NULL COMMENT '视图ID',
-  `PROJECT_ID` varchar(32) NOT NULL COMMENT '项目ID',
-  `CREATE_TIME` datetime NOT NULL COMMENT '创建时间',
-  `UPDATE_TIME` datetime NOT NULL COMMENT '更新时间',
-  `CREATE_USER` varchar(64) NOT NULL COMMENT '创建者',
-  PRIMARY KEY (`ID`),
-  UNIQUE KEY `PROJECT_ID` (`PROJECT_ID`,`CREATE_USER`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
 
 -- ----------------------------
 -- Table structure for T_PIPELINE_VIEW_USER_LAST_VIEW
@@ -1188,7 +1074,8 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_TRIGGER_DETAIL`
     `REASON_DETAIL`  text                 DEFAULT NULL COMMENT '原因详情',
     `CREATE_TIME`    timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY (`DETAIL_ID`, `CREATE_TIME`),
-    INDEX IDX_PROJECT_ID_EVENT_ID (`PROJECT_ID`, `EVENT_ID`, `PIPELINE_NAME`)
+    INDEX IDX_PROJECT_ID_EVENT_ID (`PROJECT_ID`, `EVENT_ID`, `PIPELINE_NAME`),
+    INDEX `IDX_PROJECT_PIPELINE_ID` (`PROJECT_ID`, `PIPELINE_ID`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='流水线触发事件明细表';
 
 CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_INFO`

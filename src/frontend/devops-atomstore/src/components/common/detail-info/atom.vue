@@ -5,7 +5,7 @@
             :detail="detail"
             :is-big="true"
         />
-        <hgroup class="detail-info-group">
+        <hgroup class="store-item-detail detail-info-group">
             <h3 class="title-with-img">
                 <span
                     :class="{ 'not-recommend': detail.recommendFlag === false }"
@@ -53,30 +53,34 @@
                     <span class="ml3">{{ getShowNum(detail.recentExecuteNum) }}</span>
                 </section>
             </h3>
-            <h5 class="detail-info">
-                <span> {{ $t('store.发布者：') }} </span><span>{{detail.publisher || '-'}}</span>
-            </h5>
-            <h5 class="detail-info">
-                <span> {{ $t('store.版本：') }} </span><span>{{detail.version || '-'}}</span>
-            </h5>
-            <h5 class="detail-info">
-                <span> {{ $t('store.Job类型：') }} </span>
-                <span>
-                    {{detail.jobType|atomJobType}}
-                    <template v-if="detail.os && detail.os.length">
-                        (<i v-for="item in getJobList(detail.os)" :class="[item.icon, 'devops-icon']" :key="item" :title="item.name"></i>)
-                    </template>
-                </span>
-            </h5>
-            <h5 class="detail-info">
-                <span> {{ $t('store.分类：') }} </span><span>{{detail.classifyName || '-'}}</span>
-            </h5>
+            <div class="detail-info-row atom-detail-info-row">
+                <h5 class="detail-info">
+                    <span> {{ $t('store.发布者：') }} </span><span>{{detail.publisher || '-'}}</span>
+                </h5>
+                <h5 class="detail-info">
+                    <span> {{ $t('store.版本：') }} </span><span>{{detail.version || '-'}}</span>
+                </h5>
+                <h5 class="detail-info">
+                    <span> {{ $t('store.适用Job类型：') }} </span>
+                    <span>
+                        {{detail.jobType|atomJobType}}
+                        <template v-if="detail.os && detail.os.length">
+                            (<i v-for="item in getJobList(detail.os)" :class="[item.icon, 'devops-icon']" :key="item" :title="item.name"></i>)
+                        </template>
+                    </span>
+                </h5>
+                <h5 class="detail-info">
+                    <span> {{ $t('store.分类：') }} </span><span>{{detail.classifyName || '-'}}</span>
+                </h5>
+            </div>
             <h5 class="detail-info detail-label">
                 <span> {{ $t('store.功能标签：') }} </span>
-                <span v-for="(label, index) in detail.labelList" :key="index" class="info-label">{{label.labelName}}</span>
-                <span v-if="!detail.labelList || detail.labelList.length <= 0 ">-</span>
+                <p>
+                    <bk-tag v-for="(label, index) in detail.labelList" :key="index">{{label.labelName}}</bk-tag>
+                    <span v-if="!detail.labelList || detail.labelList.length <= 0 ">--</span>
+                </p>
             </h5>
-            <h5 class="detail-info detail-maxwidth" :title="detail.summary">
+            <h5 class="detail-info detail-label" :title="detail.summary">
                 <span> {{ $t('store.简介：') }} </span><span>{{detail.summary || '-'}}</span>
             </h5>
         </hgroup>
@@ -134,11 +138,11 @@
 </template>
 
 <script>
-    import commentRate from '../comment-rate'
+    import api from '@/api'
     import formTips from '@/components/common/formTips/index'
     import HonerImg from '../../honer-img.vue'
     import HonerTag from '../../honer-tag.vue'
-    import api from '@/api'
+    import commentRate from '../comment-rate'
 
     export default {
         components: {
@@ -325,6 +329,7 @@
 
 <style lang="scss" scoped>
     @import '@/assets/scss/conf.scss';
+    @import '@/assets/scss/mixins/ellipsis';
 
     .detail-title {
         display: flex;
@@ -338,6 +343,7 @@
         .detail-pic {
             width: 130px;
             height: 130px;
+            flex-shrink: 0;
         }
         .atom-icon {
             height: 160px;
@@ -364,183 +370,14 @@
             transform: scale(.97)
         }
     }
-    .detail-info-group {
-        flex: 1;
-        margin: 0 32px;
-        max-width: calc(100% - 314px);
-        .canvas-contain {
-            height: 20px;
-            width: 64px;
-            margin: 0 12px;
-            padding: 2px 2px 0;
-            background: #F9F9F9;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            &:after {
-                content: '';
-                position: absolute;
-                right: -12px;
-                top: 0;
-                width: 1px;
-                height: 100%;
-                background: #eff1f5;
-            }
-            .chart-empty {
-                color: #e2e2e2;
-            }
-            ::v-deep div[data-bkcharts-tooltips] {
-                min-width: 140px;
-            }
-            &:last-child:after {
-                display: none;
-            }
-        }
-        h3 {
-            font-size: 22px;
-            line-height: 29px;
-            color: $fontBlack;
-        }
-        .score-group {
-            position: relative;
-            .score-real {
-                position: absolute;
-                overflow: hidden;
-                left: 0;
-                top: 0;
-                display: flex;
-                .yellow {
-                    min-width: 14px;
-                }
-            }
-        }
-        .ml4 {
-            margin-left: 4px;
-        }
-        .rate-num {
-            margin-left: 6px;
-            color: $fontWeightColor;
-        }
-        .detail-info {
-            float: left;
-            display: flex;
-            padding-top: 7px;
-            width: 25%;
-            font-size: 14px;
-            font-weight: normal;
-            line-height: 20px;
-            color: $fontBlack;
-            span:nth-child(1) {
-                color: $fontWeightColor;
-                display: inline-block;
-                width: 90px;
-                padding-right: 10px;
-                text-align: right;
-            }
-            span:nth-child(2) {
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                display: inline-block;
-                width: calc(100% - 90px);
-            }
-        }
-        .title-with-img {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-            .not-recommend {
-                text-decoration: line-through;
-            }
-            >h5 {
-                margin-left: 12px;
-                line-height: 14px;
-                padding: 2px 5px;
-                cursor: pointer;
-                background: rgba(21, 146, 255, 0.08);
-                color: #1592ff;
-                span {
-                    font-weight: normal;
-                    font-size: 12px;
-                    line-height: 14px;
-                }
-            }
-            >span {
-                font-size: 20px;
-                color: $fontLightGray;
-                line-height: 20px;
-                font-weight: normal;
-            }
-            h5.nomal-title {
-                cursor: auto;
-                background: none;
-                color: #333C48;
-            }
-            .num-wraper {
-                height: 22px;
-                background: #F5F7FA;
-                padding: 0 8px;
-                margin-right: 8px;
-                display: flex;
-                align-items: center;
-                font-weight: normal;
-                font-size: 14px;
-                line-height: 18px;
-            }
-            .ml16 {
-                margin-left: 16px;
-            }
-            .ml6 {
-                margin-left: 6px;
-            }
-            .ml3 {
-                margin-left: 3px;
-            }
-            .hot-icon {
-                height: 18px;
-                width: 18px;
-            }
-        }
-        .detail-info.detail-label {
-            width: 994px;
-            padding-left: 90px;
-            display: inline-block;
-            position: relative;
-            span {
-                overflow: inherit;
-                margin-bottom: 7px;
-            }
-            span:first-child {
-                position: absolute;
-                left: 0;
-            }
-            span.info-label {
-                display: inline-block;
-                width: auto;
-                height: 19px;
-                padding: 0 7px;
-                border: 1px solid $laberColor;
-                border-radius: 20px;
-                margin-right: 8px;
-                line-height: 17px;
-                text-align: center;
-                font-size: 12px;
-                color: $laberColor;
-                background-color: $laberBackColor;
-            }
-        }
-        .detail-maxwidth {
-            max-width: 100%;
-            width: auto;
-            padding-top: 0;
-        }
-    }
     .click-area {
         display: flex;
+        justify-content: center;
         align-items: center;
+        flex-direction: column;
+        line-height: 30px;
         color: #63656E;
-        margin-top: 16px;
+        margin-top: 10px;
         .click-button {
             display: flex;
             align-items: center;
@@ -550,6 +387,9 @@
                 cursor: auto;
                 background: none;
                 color: #9e9e9e;
+            }
+            &:hover {
+                color: #3c96ff;
             }
         }
         .mr4 {

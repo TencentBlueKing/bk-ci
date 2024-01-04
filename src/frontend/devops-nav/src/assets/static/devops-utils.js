@@ -38,6 +38,7 @@ const devopsUtil = {};
     const LEAVE_CANCEL_ORDER = 'leaveCancelOrder'
     const SHOW_TIPS = 'showTips'
     const BACK_HOME = 'backHome'
+    const UPDATE_TAB_TITLE = 'updateTabTitle'
 
     function init () {
         if (win.addEventListener) {
@@ -94,6 +95,16 @@ const devopsUtil = {};
 
         triggerEvent('change::$' + prop, {
             [prop]: val
+        })
+    }
+
+    /**
+     * 更新父窗口Tab标题
+     */
+    exports[UPDATE_TAB_TITLE] = function (title) {
+        communicateOuter({
+            action: UPDATE_TAB_TITLE,
+            params: title
         })
     }
     

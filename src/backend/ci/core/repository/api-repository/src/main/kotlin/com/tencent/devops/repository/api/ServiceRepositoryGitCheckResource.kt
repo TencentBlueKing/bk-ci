@@ -33,6 +33,9 @@ interface ServiceRepositoryGitCheckResource {
         @ApiParam("context", required = true)
         @QueryParam("context")
         context: String,
+        @ApiParam("targetBranch", required = false)
+        @QueryParam("targetBranch")
+        targetBranch: String?,
         @ApiParam("repositoryConfig", required = true)
         repositoryConfig: RepositoryConfig
     ): Result<RepositoryGitCheck?>

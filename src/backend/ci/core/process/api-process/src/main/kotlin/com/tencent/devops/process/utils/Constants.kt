@@ -50,6 +50,8 @@ const val PIPELINE_BUILD_LAST_UPDATE = "BK_CI_BUILD_LAST_UPDATE" // "pipeline.bu
 const val PIPELINE_BUILD_SVN_REVISION = "BK_CI_BUILD_SVN_REVISION" // "pipeline.build.svn.revision"
 const val PIPELINE_BUILD_NUM_ALIAS = "BK_CI_BUILD_NUM_ALIAS"
 const val PIPELINE_BUILD_URL = "BK_CI_BUILD_URL"
+// 禁用定时触发器参数,当流水线配置这个参数，并且值为true,则禁用定时触发器
+const val PIPELINE_TIMER_DISABLE = "BK_CI_TIMER_DISABLE"
 
 const val GIT_MR_NUMBER = "BK_CI_GIT_MR_NUMBER" // git_mr_number
 const val GITHUB_PR_NUMBER = "BK_CI_GITHUB_PR_NUMBER" // github_pr_number
@@ -102,6 +104,8 @@ const val MINORVERSION = "BK_CI_MINOR_VERSION" // MinorVersion
 const val FIXVERSION = "BK_CI_FIX_VERSION" // FixVersion
 const val BUILD_NO = "BK_CI_BUILD_NO" // "BuildNo"
 const val BUILD_STATUS = "BK_CI_BUILD_STATUS" // "BuildStatus"
+const val BK_DOCKER_TARGE_IMAGE_TAG = "BK_DOCKER_TARGE_IMAGE_TAG"
+const val BK_DOCKER_TARGE_IMAGE_NAME = "BK_DOCKER_TARGE_IMAGE_NAME"
 
 const val JOB_RETRY_TASK_ID = "job.retry_task_id"
 
