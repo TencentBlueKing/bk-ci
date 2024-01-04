@@ -24,18 +24,45 @@
                     :disabled="loading || isCurPipelineLocked || !canManualStartup"
                     :icon="loading ? 'loading' : ''"
                     outline
+                    v-perm="{
+                        permissionData: {
+                            projectId: $route.params.projectId,
+                            resourceType: 'pipeline',
+                            resourceCode: $route.params.pipelineId,
+                            action: RESOURCE_ACTION.EXECUTE
+                        }
+                    }"
                     @click="handleClick"
                 >
                     {{ $t("history.reBuild") }}
                 </bk-button>
                 <span class="exec-deatils-operate-divider"></span>
             </template>
-            <router-link :to="editRouteName">
-                <bk-button>{{ $t("edit") }}</bk-button>
-            </router-link>
+            <bk-button
+                v-perm="{
+                    permissionData: {
+                        projectId: $route.params.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: $route.params.pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    }
+                }"
+                key="edit"
+                @click="goEdit"
+            >
+                {{ $t("edit") }}
+            </bk-button>
             <bk-button
                 theme="primary"
                 :loading="executeStatus"
+                v-perm="{
+                    permissionData: {
+                        projectId: $route.params.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: $route.params.pipelineId,
+                        action: RESOURCE_ACTION.EXECUTE
+                    }
+                }"
                 @click="goExecPreview"
             >
                 {{ $t(isDebugExec ? "debug" : "exec") }}
@@ -49,6 +76,9 @@
 </template>
 
 <script>
+    import {
+        RESOURCE_ACTION
+    } from '@/utils/permission'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import BuildNumSwitcher from './BuildNumSwitcher'
     import ReleaseButton from './ReleaseButton'
@@ -71,6 +101,9 @@
                 isCurPipelineLocked: 'atom/isCurPipelineLocked'
             }),
             ...mapState('pipelines', ['executeStatus']),
+            RESOURCE_ACTION () {
+                return RESOURCE_ACTION
+            },
             isRunning () {
                 return ['RUNNING', 'QUEUE'].indexOf(this.execDetail?.status) > -1
             },
@@ -89,12 +122,6 @@
             },
             isDebugExec () {
                 return this.execDetail?.debug ?? false
-            },
-            editRouteName () {
-                return {
-                    name: 'pipelinesEdit',
-                    params: this.$route.params
-                }
             }
         },
         watch: {
@@ -120,19 +147,11 @@
                         await this.retry(this.execDetail?.id)
                     }
                 } catch (err) {
-                    this.handleError(err, [
-                        {
-                            actionId: this.$permissionActionMap.execute,
-                            resourceId: this.$permissionResourceMap.pipeline,
-                            instanceId: [
-                                {
-                                    id: this.$route.params.pipelineId,
-                                    name: this.pipelineInfo.pipelineName
-                                }
-                            ],
-                            projectId: this.$route.params.projectId
-                        }
-                    ])
+                    this.handleError(err, {
+                        projectId: this.$route.params.projectId,
+                        resourceCode: this.$route.params.pipelineId,
+                        action: this.$permissionResourceAction.EXECUTE
+                    })
                     this.loading = false
                 }
             },
@@ -194,6 +213,11 @@
                         ...this.$route.params,
                         version: this.pipelineInfo?.version
                     }
+                })
+            },
+            goEdit () {
+                this.$router.push({
+                    name: 'pipelinesEdit'
                 })
             }
         }

@@ -37,10 +37,14 @@
                                 v-if="output.isApp"
                                 :output="output"
                             />
-                            <i
+                            <artifact-download-button
                                 v-if="output.downloadable"
-                                class="devops-icon icon-download"
-                                @click.stop="downloadArtifact(output)"
+                                :output="output"
+                                download-icon
+                                :has-permission="hasPermission"
+                                :path="output.fullPath"
+                                :name="output.name"
+                                :artifactory-type="output.artifactoryType"
                             />
                             <i
                                 v-if="output.isReportOutput"
@@ -76,6 +80,14 @@
                         </span>
                         <bk-tag theme="info">{{ $t(activeOutputDetail.artifactoryTypeTxt) }}</bk-tag>
                         <p class="pipeline-exec-output-actions">
+                            <artifact-download-button
+                                v-if="activeOutput.downloadable"
+                                :output="activeOutput"
+                                :has-permission="hasPermission"
+                                :path="activeOutput.fullPath"
+                                :name="activeOutput.name"
+                                :artifactory-type="activeOutput.artifactoryType"
+                            />
                             <bk-button
                                 text
                                 theme="primary"
@@ -165,6 +177,7 @@
 </template>
 
 <script>
+    import ArtifactDownloadButton from '@/components/ArtifactDownloadButton'
     import Logo from '@/components/Logo'
     import CopyToCustomRepoDialog from '@/components/Outputs/CopyToCustomRepoDialog'
     import IframeReport from '@/components/Outputs/IframeReport'
@@ -182,8 +195,9 @@
             IframeReport,
             ExtMenu,
             CopyToCustomRepoDialog,
-            OutputQrcode
             // ArtifactsList
+            OutputQrcode,
+            ArtifactDownloadButton
         },
         props: {
             currentTab: {
@@ -259,35 +273,24 @@
                 return this.activeOutput?.reportType === 'INTERNAL'
             },
             btns () {
-                const defaultBtns = [
+                return [
                     {
                         text: this.$t('details.goRepo'),
                         handler: () => {
+                            const urlPrefix = `${WEB_URL_PREFIX}/repo/${this.$route.params.projectId}`
                             const pos = this.activeOutput.fullPath.lastIndexOf('/')
                             const fileName = this.activeOutput.fullPath.substring(0, pos)
                             const repoName = repoTypeNameMap[this.activeOutput.artifactoryType]
-                            window.open(
-                                `${WEB_URL_PREFIX}/repo/${
-                                    this.$route.params.projectId
-                                }/generic?repoName=${repoName}&path=${encodeURIComponent(
-                                    `${fileName}/default`
-                                )}`,
-                                '_blank'
-                            )
+                            let url = `${urlPrefix}/generic?repoName=${repoName}&path=${encodeURIComponent(fileName)}/default`
+
+                            if (this.activeOutput.isImageOutput) {
+                                const imageVerion = this.activeOutput.fullName.slice(this.activeOutput.fullName.lastIndexOf(':') + 1)
+                                url = `${urlPrefix}/docker/package?repoName=${repoName}&packageKey=${encodeURIComponent(`docker://${this.activeOutput.name}`)}&version=${imageVerion}`
+                            }
+                            window.open(url, '_blank')
                         }
                     }
                 ]
-                if (this.hasPermission && this.activeOutput.type === 'ARTIFACT') {
-                    switch (true) {
-                        case this.activeOutput.artifactoryType !== 'IMAGE':
-                            defaultBtns.unshift({
-                                text: this.$t('download'),
-                                handler: () => window.open(this.activeOutputDetail.url, '_blank')
-                            })
-                            break
-                    }
-                }
-                return defaultBtns
             },
             artifactMoreActions () {
                 return [
@@ -486,9 +489,7 @@
             ...mapActions('common', [
                 'requestFileInfo',
                 'requestOutputs',
-                'requestExecPipPermission',
-                'requestExternalUrl',
-                'requestDownloadUrl'
+                'requestExecPipPermission'
             ]),
 
             async init () {
@@ -518,6 +519,7 @@
                     }
                     this.outputs = records.map((item) => {
                         const isReportOutput = item.artifactoryType === 'REPORT'
+                        const isImageOutput = item.artifactoryType === 'IMAGE'
                         const icon = isReportOutput ? 'order' : item.folder ? 'folder' : extForFile(item.name)
                         const id = isReportOutput ? (item.createTime + item.indexFileUrl) : item.fullPath
                         const type = this.isArtifact(item.artifactoryType) ? 'ARTIFACT' : ''
@@ -528,7 +530,8 @@
                             icon,
                             isReportOutput,
                             isApp: ['ipafile', 'apkfile'].includes(icon),
-                            downloadable: hasPermission && this.isArtifact(item.artifactoryType) && item.artifactoryType !== 'IMAGE'
+                            downloadable: hasPermission && this.isArtifact(item.artifactoryType) && !isImageOutput,
+                            isImageOutput
                         }
                     })
                     console.log(this.outputs)
@@ -622,7 +625,7 @@
             },
 
             async showDetail (output) {
-                const { projectId } = this.$route.params
+                const { projectId, pipelineId } = this.$route.params
                 try {
                     this.isLoading = true
                     const params = {
@@ -643,14 +646,11 @@
                     }
                     this.isLoading = false
                 } catch (err) {
-                    this.handleError(err, [
-                        {
-                            actionId: this.$permissionActionMap.view,
-                            resourceId: this.$permissionResourceMap.artifactory,
-                            instanceId: [],
-                            projectId: projectId
-                        }
-                    ])
+                    this.handleError(err, {
+                        projectId,
+                        resourceCode: pipelineId,
+                        action: this.$permissionResourceAction.EXECUTE
+                    })
                 }
             },
             getFolderSize (payload) {
@@ -686,19 +686,6 @@
             },
             isThirdReport (reportType) {
                 return ['THIRDPARTY'].includes(reportType)
-            },
-            async downloadArtifact (output) {
-                try {
-                    const res = await this.requestDownloadUrl({
-                        projectId: this.$route.params.projectId,
-                        artifactoryType: output.artifactoryType,
-                        path: output.fullPath
-                    })
-
-                    window.open(res.url2, '_blank')
-                } catch (error) {
-                    console.error(error)
-                }
             },
             fullScreenViewReport (output) {
                 this.setActiveOutput(output)

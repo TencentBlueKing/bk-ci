@@ -8,10 +8,9 @@
                     :placeholder="$t('pipelineNameInputTips')"
                     name="pipelineName"
                     :value="pipelineSetting.pipelineName"
-                    v-validate.initial="'required|max:40'"
-                    max-length="40"
-                    :handle-change="handleBaseInfoChange"
-                />
+                    v-validate.initial="'required|max:128'"
+                    max-length="128"
+                    :handle-change="handleBaseInfoChange" />
             </bk-form-item>
 
             <bk-form-item :required="false">

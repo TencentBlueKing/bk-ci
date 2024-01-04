@@ -4,16 +4,20 @@
             <div slot="dropdown-trigger" class="more-operation-entry">
                 <i class="entry-circle" v-for="i in [1, 2, 3]" :key="i" />
             </div>
-            <div class="more-operation-dropmenu" slot="dropdown-content">
+            <div :key="curPipelineId" class="more-operation-dropmenu" slot="dropdown-content">
                 <ul v-for="(parent, index) in actionConfMenus" :key="index">
-                    <li
-                        v-for="action in parent"
-                        v-if="!action.hidden"
-                        :key="action.label"
-                        @click="action.handler"
-                    >
-                        {{ $t(action.label) }}
-                    </li>
+                    <template v-for="(action, aIndex) in parent">
+                        <li
+                            v-if="!action.hidden"
+                            :key="aIndex"
+                            v-perm="{
+                                permissionData: action.permissionData
+                            }"
+                            @click="action.handler"
+                        >
+                            {{ $t(action.label) }}
+                        </li>
+                    </template>
                 </ul>
             </div>
         </bk-dropdown-menu>
@@ -52,14 +56,17 @@
 <script>
     import exportDialog from '@/components/ExportDialog'
     import CopyPipelineDialog from '@/components/PipelineActionDialog/CopyPipelineDialog'
+    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
+    import { mapActions, mapState, mapGetters } from 'vuex'
+    import DisableDialog from '@/components/PipelineActionDialog/DisableDialog'
     import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
-    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
+    import {
+        TEMPLATE_RESOURCE_ACTION,
+        RESOURCE_ACTION
+    } from '@/utils/permission'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
-    import { mapActions, mapState, mapGetters } from 'vuex'
-    import DisableDialog from '@/components/PipelineActionDialog/DisableDialog'
-
     export default {
         components: {
             ImportPipelinePopup,
@@ -94,10 +101,14 @@
             pipelineName () {
                 return this.pipelineInfo?.pipelineName ?? ''
             },
+            curPipelineId () {
+                return this.curPipeline?.pipelineId
+            },
             actionConfMenus () {
+                const { projectId } = this.$route.params
                 const pipeline = {
                     ...this.pipelineInfo,
-                    projectId: this.$route.params.projectId
+                    projectId
                 }
                 return [
                     [
@@ -109,22 +120,64 @@
                     [
                         {
                             label: 'newlist.exportPipelineJson',
-                            handler: this.exportPipeline
+                            handler: this.exportPipeline,
+                            permissionData: {
+                                projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: pipeline.pipelineId,
+                                action: RESOURCE_ACTION.EDIT
+                            }
                         },
                         {
                             label: 'newlist.importModifyPipelineJson',
                             handler: this.importModifyPipeline,
-                            hidden: this.isTemplatePipeline
+                            hidden: this.isTemplatePipeline,
+                            permissionData: {
+                                projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: pipeline.pipelineId,
+                                action: RESOURCE_ACTION.EDIT
+                            }
+                        },
+                        {
+                            ...(pipeline.templateId
+                                ? {
+                                    label: 'copyAsTemplateInstance',
+                                    handler: () => this.copyAsTemplateInstance(pipeline),
+                                    permissionData: {
+                                        projectId,
+                                        resourceType: 'project',
+                                        resourceCode: projectId,
+                                        action: RESOURCE_ACTION.CREATE
+                                    }
+                                }
+                                : {
+
+                                })
+
                         },
                         {
                             label: 'newlist.copyAs',
-                            handler: () => this.copyAs(pipeline)
+                            handler: () => this.copyAs(pipeline),
+                            permissionData: {
+                                projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: pipeline.pipelineId,
+                                action: RESOURCE_ACTION.EDIT
+                            }
                         },
                         {
                             label: 'newlist.saveAsTemp',
-                            handler: () => this.saveAsTempHandler(pipeline)
+                            handler: () => this.saveAsTempHandler(pipeline),
+                            permissionData: {
+                                projectId,
+                                resourceType: 'project',
+                                resourceCode: projectId,
+                                action: TEMPLATE_RESOURCE_ACTION.CREATE
+                            }
                         },
                         {
+                            id: 'jumpToTemp',
                             label: 'newlist.jumpToTemp',
                             handler: () => this.jumpToTemplate(pipeline),
                             hidden: !this.isTemplatePipeline
@@ -137,7 +190,13 @@
                         },
                         {
                             label: 'delete',
-                            handler: () => this.deleteHandler(pipeline)
+                            handler: () => this.deleteHandler(pipeline),
+                            permissionData: {
+                                projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: pipeline.pipelineId,
+                                action: RESOURCE_ACTION.DELETE
+                            }
                         }
                     ]
                 ]
@@ -186,6 +245,11 @@
                         theme
                     })
                 }
+            },
+            copyAsTemplateInstance (pipeline) {
+                const pipelineName = (pipeline.pipelineName + '_copy').substring(0, 128)
+                const { templateId, projectId, templateVersion } = pipeline
+                window.top.location.href = `${location.origin}/console/pipeline/${projectId}/template/${templateId}/createInstance/${templateVersion}/${pipelineName}`
             }
         }
     }
@@ -236,6 +300,7 @@
       font-size: 12px;
       line-height: 32px;
       text-align: left;
+      white-space: nowrap;
       padding: 0 12px;
       cursor: pointer;
       &:hover {

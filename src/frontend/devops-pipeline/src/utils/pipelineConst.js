@@ -56,7 +56,7 @@ export const BUILD_HISTORY_TABLE_DEFAULT_COLUMNS = [
     'startType',
     'startTime',
     'endTime',
-    'totalTime',
+    'executeTime',
     'artifactList',
     'pipelineVersion',
     'remark',
@@ -123,7 +123,8 @@ export const repoTypeMap = {
 }
 export const repoTypeNameMap = {
     CUSTOM_DIR: 'custom',
-    PIPELINE: 'pipeline'
+    PIPELINE: 'pipeline',
+    IMAGE: 'image'
 }
 export const fileExtIconMap = {
     txt: ['.json', '.txt', '.md'],

@@ -120,19 +120,11 @@
                         }
                     })
                 } catch (e) {
-                    this.handleError(e, [
-                        {
-                            actionId: this.$permissionActionMap.edit,
-                            resourceId: this.$permissionResourceMap.pipeline,
-                            instanceId: [
-                                {
-                                    id: this.pipeline.pipelineId,
-                                    name: this.pipeline.name
-                                }
-                            ],
-                            projectId: this.$route.params.projectId
-                        }
-                    ])
+                    this.handleError(e, {
+                        projectId: this.$route.params.projectId,
+                        resourceCode: this.pipeline.pipelineId,
+                        action: this.$permissionResourceAction.EDIT
+                    })
                 } finally {
                     this.setSaveStatus(false)
                 }

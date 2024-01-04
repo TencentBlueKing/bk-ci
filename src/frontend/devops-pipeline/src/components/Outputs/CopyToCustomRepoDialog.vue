@@ -36,8 +36,8 @@
     </bk-dialog>
 </template>
 <script>
-    import { mapActions } from 'vuex'
     import Logo from '@/components/Logo'
+    import { mapActions } from 'vuex'
 
     export default {
         components: {

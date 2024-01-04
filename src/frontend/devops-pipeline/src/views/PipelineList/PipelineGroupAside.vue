@@ -1,9 +1,5 @@
 <template>
-    <aside
-        :class="{
-            'pipeline-group-aside': true,
-            'expended': isOpen
-        }"
+    <aside class="pipeline-group-aside"
     >
         <div class="pipeline-group-aside-main">
             <header class="pipeline-group-aside-header">
@@ -34,6 +30,13 @@
                         <span class="pipeline-group-header-name">{{block.title}}</span>
                         <span v-bk-tooltips="block.tooltips">
                             <bk-button
+                                v-perm="block.isCheckPermission ?
+                                    {
+                                        hasPermission: block.hasPermission,
+                                        disablePermissionApi: block.disablePermissionApi,
+                                        permissionData: block.permissionData
+                                    }
+                                    : {}"
                                 text
                                 theme="primary"
                                 class="add-pipeline-group-btn"
@@ -65,7 +68,7 @@
                                 @enter="submitRename(item)"
                                 v-model.trim="newViewName"
                             />
-                            <span v-else class="pipeline-group-item-name">
+                            <span v-else class="pipeline-group-item-name" v-bk-overflow-tips>
                                 {{item.name}}
                             </span>
                             <span
@@ -89,9 +92,8 @@
                 </template>
             </article>
         </div>
-        <footer v-show="isOpen" :class="['recycle-pipeline-group-footer', {
-            active: $route.params.viewId === DELETED_VIEW_ID,
-            'expended': isOpen
+        <footer :class="['recycle-pipeline-group-footer', {
+            active: $route.params.viewId === DELETED_VIEW_ID
         }]" @click="goRecycleBin">
             <logo class="pipeline-group-item-icon" name="delete" size="16"></logo>
             <span>{{$t('restore.recycleBin')}}</span>
@@ -106,9 +108,9 @@
             :loading="isAdding"
             @cancel="closeAddPipelineGroupDialog"
         >
-            <bk-form ref="newPipelineGroupForm" v-bkloading="{ isLoading: isAdding }" form-type="vertical" :model="newPipelineGroup">
+            <bk-form ref="newPipelineGroupForm" :label-width="200" v-bkloading="{ isLoading: isAdding }" form-type="vertical" :model="newPipelineGroup">
                 <bk-form-item property="name" :rules="groupNameRules" :label="$t('pipelineGroupName')">
-                    <bk-input v-model.trim="newPipelineGroup.name" />
+                    <bk-input v-model.trim="newPipelineGroup.name" :placeholder="$t('groupNamePlaceholder')" />
                 </bk-form-item>
                 <bk-form-item required property="projected" :label="$t('visibleRange')">
                     <bk-radio-group class="pipeline-group-visible-range-group" v-model="newPipelineGroup.projected">
@@ -136,14 +138,6 @@
                 </bk-button>
             </footer>
         </bk-dialog>
-        <div class="toggle-button" @click="handleToggle">
-            <i :class="{
-                'devops-icon': true,
-                'icon-angle-right': true,
-                'toggle-arrow': true,
-                'open': isOpen
-            }" />
-        </div>
     </aside>
 </template>
 
@@ -152,27 +146,21 @@
     import {
         DELETED_VIEW_ID,
         UNCLASSIFIED_PIPELINE_VIEW_ID,
-        CACHE_PIPELINE_GROUP_NAV_STATUS,
-        PIPELINE_ASIDE_PANEL_TOGGLE
+        CACHE_PIPELINE_GROUP_NAV_STATUS
     } from '@/store/constants'
     import { cacheViewId } from '@/utils/util'
     import Logo from '@/components/Logo'
     import ExtMenu from '@/components/pipelineList/extMenu'
-
+    import {
+        PROJECT_RESOURCE_ACTION
+    } from '@/utils/permission'
     export default {
         components: {
             Logo,
             ExtMenu
         },
         data () {
-            let isOpen = localStorage.getItem(PIPELINE_ASIDE_PANEL_TOGGLE)
-            if (!isOpen) {
-                isOpen = true
-            } else {
-                isOpen = JSON.parse(isOpen)
-            }
             return {
-                isOpen,
                 DELETED_VIEW_ID,
                 isLoading: false,
                 isPatchOperate: false,
@@ -233,7 +221,8 @@
                         icon: view.icon ?? 'pipelineGroup',
                         name: view.i18nKey ? this.$t(view.i18nKey) : view.name,
                         actions: this.pipelineGroupActions(view)
-                    }))
+                    })),
+                    isCheckPermission: false
                 }, {
                     title: `${this.$t('projectViewList')}(${this.pipelineGroupDict.projectViewList.length - 1})`,
                     id: 'projectViewList',
@@ -246,7 +235,16 @@
                         ...view,
                         icon: view.id === UNCLASSIFIED_PIPELINE_VIEW_ID ? 'unGroup' : 'pipelineGroup',
                         actions: this.pipelineGroupActions(view)
-                    }))
+                    })),
+                    isCheckPermission: true,
+                    hasPermission: this.isManage,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId: this.$route.params.projectId,
+                        resourceType: 'project',
+                        resourceCode: this.$route.params.projectId,
+                        action: PROJECT_RESOURCE_ACTION.MANAGE
+                    }
                 }]
             },
             projectedGroupDisableTips () {
@@ -314,17 +312,33 @@
                             }
                         ]
                         : []),
-                    // {
-                    //     text: this.$t('pipelineGroupAuth'),
-                    //     handler: () => {
-                    //         this.$router.push({
-                    //             name: 'pipelineListAuth',
-                    //             params: {
-                    //                 viewId: group.id
-                    //             }
-                    //         })
-                    //     }
-                    // },
+                    ...(
+                        group.projected
+                            ? [
+                                {
+                                    text: this.$t('pipelineGroupAuth'),
+                                    handler: () => {
+                                        this.$router.push({
+                                            name: 'PipelineListAuth',
+                                            params: {
+                                                id: group.id,
+                                                groupName: group.name
+                                            }
+                                        })
+                                    },
+                                    hasPermission: this.isManage,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: this.$route.params.projectId,
+                                        resourceType: 'project',
+                                        resourceCode: this.$route.params.projectId,
+                                        action: PROJECT_RESOURCE_ACTION.MANAGE
+                                    }
+                                }
+                            ]
+                            : []
+                    ),
+
                     {
                         text: this.$t(group.top ? 'unStickyTop' : 'stickyTop'),
                         disabled: this.isSticking,
@@ -503,10 +517,6 @@
                         theme
                     })
                 }
-            },
-            handleToggle () {
-                this.isOpen = !this.isOpen
-                localStorage.setItem(PIPELINE_ASIDE_PANEL_TOGGLE, JSON.stringify(this.isOpen))
             }
         }
     }
@@ -526,9 +536,8 @@
         padding: 0;
         border-right: 1px solid #DCDEE5;
         transition: width 0.2s linear;
-        &.expended {
-            width: 280px;
-        }
+        width: 100%;
+        height: 100%;
         .pipeline-group-item-icon {
             display: inline-flex;
             margin-right: 10px;
@@ -593,7 +602,7 @@
             padding: 0 0 0 32px;
             cursor: pointer;
             font-size: 14px;
-            width: 0;
+            width: 100%;
             flex-shrink: 0;
             &.expended {
                 width: 100%;
@@ -677,33 +686,6 @@
                 }
             }
 
-        }
-        .toggle-button {
-            position: absolute;
-            top: 50%;
-            right: -15px;
-            display: flex;
-            width: 14px;
-            height: 64px;
-            font-size: 14px;
-            color: #fff;
-            cursor: pointer;
-            background: #dcdee5;
-            border-top-right-radius: 6px;
-            border-bottom-right-radius: 6px;
-            transform: translateY(-50%);
-            align-items: center;
-            justify-content: center;
-
-            &:hover {
-                background: #c4c6cc;
-            }
-
-            .toggle-arrow {
-                &.open {
-                    transform: rotateZ(-180deg);
-                }
-            }
         }
     }
 

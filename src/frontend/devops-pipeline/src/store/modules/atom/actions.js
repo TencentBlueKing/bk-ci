@@ -292,7 +292,9 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    setPipeline: actionCreator(SET_PIPELINE),
+    setPipeline: ({ commit }, payload = null) => {
+        commit(SET_PIPELINE, payload)
+    },
     setPipelineWithoutTrigger: actionCreator(SET_PIPELINE_WITHOUT_TRIGGER),
     setPipelineYaml: actionCreator(SET_PIPELINE_YAML),
     updatePipelineSetting: PipelineEditActionCreator(UPDATE_PIPELINE_SETTING_MUNTATION),

@@ -13,6 +13,7 @@
     import { mapActions, mapGetters, mapState } from 'vuex'
     import BreadCrumb from '@/components/BreadCrumb'
     import BreadCrumbItem from '@/components/BreadCrumb/BreadCrumbItem'
+    import { RESOURCE_ACTION, handlePipelineNoPermission } from '@/utils/permission'
     import { debounce } from '@/utils/util'
 
     export default {
@@ -80,6 +81,15 @@
                 }]
             }
         },
+        watch: {
+            'curPipeline.pipelineName': {
+                handler (val) {
+                    const title = val ? `${val} | ${this.$t('pipeline')}` : this.$t('documentTitlePipeline')
+                    this.$updateTabTitle?.(title)
+                },
+                immediate: true
+            }
+        },
         created () {
             this.fetchPipelineList()
         },
@@ -128,30 +138,41 @@
                 this.$store.commit('pipelines/updatePipelineList', list)
             },
             async doSelectPipeline (pipelineId, cur) {
-                const { $route } = this
-                await this.requestPipelineSummary({
-                    pipelineId,
-                    projectId: $route.params.projectId
-                })
-                // 清空搜索
-                this.searchPipelineList({
-                    projectId: $route.params.projectId
-                }).then((list) => {
-                    this.setBreadCrumbPipelineList(list, {
+                try {
+                    const { $route } = this
+                    await this.requestPipelineSummary({
                         pipelineId,
-                        pipelineName: cur.pipelineName
+                        projectId: $route.params.projectId
                     })
-                })
-                const name = $route.params.buildNo ? 'pipelinesHistory' : $route.name
 
-                this.$router.push({
-                    name,
-                    params: {
-                        ...this.$route.params,
-                        projectId: $route.params.projectId,
-                        pipelineId
+                    // 清空搜索
+                    this.searchPipelineList({
+                        projectId: $route.params.projectId
+                    }).then((list) => {
+                        this.setBreadCrumbPipelineList(list, {
+                            pipelineId,
+                            pipelineName: cur.pipelineName
+                        })
+                    })
+                    const name = $route.params.buildNo ? 'pipelinesHistory' : $route.name
+
+                    this.$router.push({
+                        name,
+                        params: {
+                            ...$route.params,
+                            projectId: $route.params.projectId,
+                            pipelineId
+                        }
+                    })
+                } catch (error) {
+                    if (error.code === 403) {
+                        handlePipelineNoPermission({
+                            projectId: this.$route.params.projectId,
+                            resourceCode: pipelineId,
+                            action: RESOURCE_ACTION.VIEW
+                        })
                     }
-                })
+                }
             },
             async handleSearchPipeline (value) {
                 if (this.pipelineListSearching) return

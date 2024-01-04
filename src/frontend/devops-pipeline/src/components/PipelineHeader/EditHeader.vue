@@ -11,12 +11,29 @@
                 outline
                 theme="primary"
                 @click="saveDraft"
+                v-perm="{
+                    permissionData: {
+                        projectId: $route.params.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: $route.params.pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    }
+                }"
             >
                 {{ $t("saveDraft") }}
             </bk-button>
             <bk-button
                 :disabled="!canDebug"
                 :loading="executeStatus"
+                :title="canManualStartup ? '' : $t('newlist.cannotManual')"
+                v-perm="{
+                    permissionData: {
+                        projectId: $route.params.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: $route.params.pipelineId,
+                        action: RESOURCE_ACTION.EXECUTE
+                    }
+                }"
                 @click="exec(true)"
             >
                 <span class="debug-pipeline-draft-btn">
@@ -43,8 +60,12 @@
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
     import ReleaseButton from './ReleaseButton'
     import ModeSwitch from '@/components/ModeSwitch'
-    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
+    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
+    import {
+        handlePipelineNoPermission,
+        RESOURCE_ACTION
+    } from '@/utils/permission'
 
     export default {
         components: {
@@ -77,6 +98,12 @@
             }),
             canDebug () {
                 return (this.pipelineInfo?.canDebug ?? false) && !this.saveStatus
+            },
+            RESOURCE_ACTION () {
+                return RESOURCE_ACTION
+            },
+            btnDisabled () {
+                return this.saveStatus || this.executeStatus
             },
             canRelease () {
                 return (this.pipelineInfo?.canRelease ?? false) && !this.saveStatus
@@ -187,19 +214,12 @@
                         message: this.$t('editPage.saveDraftSuccess', [pipelineSetting.pipelineName])
                     })
                 } catch (e) {
-                    this.handleError(e, [
-                        {
-                            actionId: this.$permissionActionMap.edit,
-                            resourceId: this.$permissionResourceMap.pipeline,
-                            instanceId: [
-                                {
-                                    id: this.pipeline.pipelineId,
-                                    name: this.pipeline.name
-                                }
-                            ],
-                            projectId: this.$route.params.projectId
-                        }
-                    ])
+                    const { projectId, pipelineId } = this.$route.params
+                    handlePipelineNoPermission({
+                        projectId,
+                        resourceCode: pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    })
                     return {
                         code: e.code,
                         message: e.message

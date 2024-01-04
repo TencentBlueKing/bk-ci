@@ -40,11 +40,15 @@
 <script>
     import MiniMap from '@/components/MiniMap'
     import { navConfirm } from '@/utils/util'
-    import { PipelineEditTab, BaseSettingTab, TriggerTab, NotifyTab, ShowVariable } from '@/components/PipelineEditTabs/'
+    import { AuthorityTab, PipelineEditTab, BaseSettingTab, TriggerTab, NotifyTab, ShowVariable } from '@/components/PipelineEditTabs/'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import { mapActions, mapState, mapGetters } from 'vuex'
     import YamlPipelineEditor from './YamlPipelineEditor'
     import emptyTips from '@/components/devops/emptyTips'
+    import {
+        RESOURCE_ACTION,
+        handlePipelineNoPermission
+    } from '@/utils/permission'
 
     export default {
         components: {
@@ -55,7 +59,8 @@
             NotifyTab,
             ShowVariable,
             MiniMap,
-            YamlPipelineEditor
+            YamlPipelineEditor,
+            AuthorityTab
         },
         mixins: [pipelineOperateMixin],
         data () {
@@ -65,6 +70,7 @@
                 leaving: false,
                 confirmMsg: this.$t('editPage.confirmMsg'),
                 confirmTitle: this.$t('editPage.confirmTitle'),
+                cancelText: this.$t('cancel'),
                 noPermissionTipsConfig: {
                     title: this.$t('noPermission'),
                     desc: this.$t('history.noPermissionTips'),
@@ -79,9 +85,10 @@
                             theme: 'success',
                             size: 'normal',
                             handler: () => {
-                                this.toApplyPermission(this.$permissionActionMap.edit, {
-                                    id: this.pipelineId,
-                                    name: this.pipelineId
+                                handlePipelineNoPermission({
+                                    projectId: this.$route.params.projectId,
+                                    resourceCode: this.pipelineId,
+                                    action: RESOURCE_ACTION.EDIT
                                 })
                             },
                             text: this.$t('applyPermission')
@@ -155,6 +162,13 @@
                                 }
                             }
                         },
+                        ...(this.isDraftEdit
+                            ? []
+                            : [{
+                                name: 'auth',
+                                label: this.$t('settings.auth'),
+                                component: 'AuthorityTab'
+                            }]),
                         {
                             name: 'baseSetting',
                             label: this.$t('editPage.baseSetting'),
@@ -279,7 +293,7 @@
                 if (!this.leaving) {
                     if (this.isEditing) {
                         this.leaving = true
-                        navConfirm({ content: this.confirmMsg, type: 'warning' })
+                        navConfirm({ content: this.confirmMsg, type: 'warning', cancelText: this.cancelText })
                             .then((result) => {
                                 next(result)
                                 this.leaving = false

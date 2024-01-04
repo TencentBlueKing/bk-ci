@@ -565,19 +565,11 @@
                     if (e.state === 'error') {
                         e.message = e.content
                     }
-                    this.handleError(e, [
-                        {
-                            actionId: this.$permissionActionMap.edit,
-                            resourceId: this.$permissionResourceMap.pipeline,
-                            instanceId: [
-                                {
-                                    id: pipelineId,
-                                    name: this.pipelineName
-                                }
-                            ],
-                            projectId
-                        }
-                    ])
+                    this.handleError(e, {
+                        projectId,
+                        resourceCode: pipelineId,
+                        action: this.$permissionResourceAction.EDIT
+                    })
                     return {
                         code: e.code,
                         message: e.message

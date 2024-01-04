@@ -85,6 +85,16 @@
                                 text
                                 size="small"
                                 theme="primary"
+                                v-perm="{
+                                    hasPermission: temp.installed || temp.hasPermission,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: $route.params.projectId,
+                                        resourceType: 'pipeline_template',
+                                        resourceCode: $route.params.projectId,
+                                        action: TEMPLATE_RESOURCE_ACTION.CREATE
+                                    }
+                                }"
                                 @click.stop="handleTemp(temp, tIndex)"
                             >
                                 {{$t(temp.btnText)}}
@@ -185,6 +195,7 @@
     import PipelineTemplatePreview from '@/components/PipelineTemplatePreview'
     import { getCacheViewId } from '@/utils/util'
     import { templateTypeEnum } from '@/utils/pipelineConst'
+    import { TEMPLATE_RESOURCE_ACTION } from '@/utils/permission'
 
     export default {
         components: {
@@ -195,6 +206,7 @@
         },
         data () {
             return {
+                TEMPLATE_RESOURCE_ACTION,
                 activePanel: 'projected',
                 isDisabled: false,
                 activeTempIndex: 0,
@@ -422,7 +434,6 @@
                 }
             },
             previewTemp (temp, index) {
-                console.log(temp, index)
                 this.isShowPreview = true
                 this.activeTempIndex = index
                 this.previewSettingType = ''
@@ -490,12 +501,11 @@
                         })
                     }
                 } catch (e) {
-                    this.handleError(e, [{
-                        actionId: this.$permissionActionMap.create,
-                        resourceId: this.$permissionResourceMap.pipeline,
-                        instanceId: [],
-                        projectId: this.$route.params.projectId
-                    }])
+                    this.handleError(e, {
+                        projectId: this.$route.params.projectId,
+                        resourceCode: this.$route.params.projectId,
+                        action: this.$permissionResourceAction.CREATE
+                    })
                 } finally {
                     this.isDisabled = false
                 }

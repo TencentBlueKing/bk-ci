@@ -81,11 +81,11 @@
                         children: this.repoList
                     },
                     {
-                        name: 'commitid',
+                        name: 'Commit ID',
                         id: 'materialCommitId'
                     },
                     {
-                        name: 'commitMessage',
+                        name: 'Commit Message',
                         id: 'materialCommitMessage'
                     },
                     {

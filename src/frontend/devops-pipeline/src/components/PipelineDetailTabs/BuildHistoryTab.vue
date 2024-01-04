@@ -9,7 +9,10 @@
     import BuildHistoryTable from '@/components/BuildHistoryTable/'
     import emptyTips from '@/components/devops/emptyTips'
     import { mapGetters, mapActions, mapState } from 'vuex'
-    import { AUTH_URL_PREFIX } from '@/store/constants'
+    import {
+        handlePipelineNoPermission,
+        RESOURCE_ACTION
+    } from '@/utils/permission'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import webSocketMessage from '@/utils/webSocketMessage'
 
@@ -150,29 +153,10 @@
             },
             async toApplyPermission () {
                 try {
-                    const { projectId } = this.$route.params
-                    const redirectUrl = await this.$ajax.post(`${AUTH_URL_PREFIX}/user/auth/permissionUrl`, [{
-                        actionId: this.$permissionActionMap.view,
-                        resourceId: this.$permissionResourceMap.pipeline,
-                        instanceId: [{
-                            id: projectId,
-                            type: this.$permissionResourceTypeMap.PROJECT
-                        }, {
-                            id: this.pipelineId,
-                            name: this.pipelineId,
-                            type: this.$permissionResourceTypeMap.PIPELINE_DEFAULT
-                        }]
-                    }])
-                    console.log('redirectUrl', redirectUrl)
-                    window.open(redirectUrl, '_blank')
-                    this.$bkInfo({
-                        title: this.$t('permissionRefreshtitle'),
-                        subTitle: this.$t('permissionRefreshSubtitle'),
-                        okText: this.$t('permissionRefreshOkText'),
-                        cancelText: this.$t('close'),
-                        confirmFn: () => {
-                            location.reload()
-                        }
+                    handlePipelineNoPermission({
+                        projectId: this.projectId,
+                        resourceCode: this.pipelineId,
+                        action: RESOURCE_ACTION.VIEW
                     })
                 } catch (e) {
                     console.error(e)
