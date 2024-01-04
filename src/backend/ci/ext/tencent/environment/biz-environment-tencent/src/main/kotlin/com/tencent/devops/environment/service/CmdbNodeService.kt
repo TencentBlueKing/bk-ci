@@ -120,6 +120,10 @@ class CmdbNodeService @Autowired constructor(
         )
     }
 
+    /**
+     * 重新导入
+     * 将不在CC中的机器导入CC，直接update原来的记录
+     */
     fun reImportCmdbNodes(
         userId: String,
         projectId: String,
@@ -160,6 +164,9 @@ class CmdbNodeService @Autowired constructor(
         )
     }
 
+    /**
+     * IDC测试机导入
+     */
     fun addCmdbNodes(userId: String, projectId: String, nodeIps: List<String>): AddCmdbNodesRes {
         // 验证 CMDB 节点IP和责任人
         val cmdbIpToNodeMap = checkUserOperator(userId, nodeIps)
@@ -264,7 +271,6 @@ class CmdbNodeService @Autowired constructor(
      * 将节点添加到CC中
      * 返回值：无论在不在CC中的节点信息 CCInfo
      */
-
     private fun addNodeToCC(toAddIpToCmdbNodeMap: Map<String, RawCmdbNode>): Map<String?, CCInfo> {
         val serverIdToCmdbNodeMap = toAddIpToCmdbNodeMap.values.associateBy { it.serverId.toLong() }
         // 通过svrId查询节点是否在CC中
