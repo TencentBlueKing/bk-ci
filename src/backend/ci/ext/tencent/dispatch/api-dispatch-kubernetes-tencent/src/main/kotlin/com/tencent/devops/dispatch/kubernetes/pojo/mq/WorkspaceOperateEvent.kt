@@ -47,6 +47,7 @@ data class WorkspaceOperateEvent(
     val bkTicket: String? = null,
     val cgsId: String? = null,
     val imageId: String? = null,
+    val imageCosFile: String? = null,
     val mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD,
     override val workspaceName: String,
     override val delayMills: Int = 0,

@@ -125,6 +125,10 @@ class WorkspaceListener @Autowired constructor(
                     remoteDevService.makeWorkspaceImageWithBackEvent(event, backEvent)
                 }
 
+                UpdateEventType.REBUILD -> {
+                    backEvent.status = remoteDevService.rebuildWorkspace(event)
+                }
+
                 else -> {
                 }
             }

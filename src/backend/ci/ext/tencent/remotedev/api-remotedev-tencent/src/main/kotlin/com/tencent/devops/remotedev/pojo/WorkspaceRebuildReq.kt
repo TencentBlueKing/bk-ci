@@ -1,4 +1,4 @@
-/*
+ /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
@@ -27,17 +27,11 @@
 
 package com.tencent.devops.remotedev.pojo
 
-enum class WebSocketActionType {
-    WORKSPACE_CREATE, // 创建workspace
-    WORKSPACE_START, // 启动workspace
-    WORKSPACE_STOP, // 停止workspace
-    WORKSPACE_RESTART, // 重启workspace
-    WORKSPACE_REBUILD, // 重装workspace
-    WORKSPACE_SLEEP, // 休眠workspace
-    WORKSPACE_DELETE, // 销毁workspace
-    WORKSPACE_NEED_RENEWAL, // 需要续期workspace
-    WORKSPACE_MAKE_IMAGE, // 根据当前工作空间制作镜像
-    WORKSPACE_DETAIL, // workspace 信息
-    WORKSPACE_NOTIFY, // workspace 通知
-    WORKSPACE_ASSIGN; // 分配workspace
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("重装工作空间系统接口请求")
+data class WorkspaceRebuildReq(
+    @ApiModelProperty("工作空间镜像地址")
+    val imageCosFile: String
+)
