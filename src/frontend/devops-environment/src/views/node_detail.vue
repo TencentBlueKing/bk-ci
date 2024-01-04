@@ -36,7 +36,7 @@
             </ul>
             <div class="metric-monitor" v-if="isEnableDashboard">
                 <i class="devops-icon icon-tiaozhuan jump-icon"></i>
-                <a :href="jumpDashboardUrl">{{ $t('environment.查看更多指标监控') }}</a>
+                <a :href="jumpDashboardUrl" target="_blank">{{ $t('environment.查看更多指标监控') }}</a>
             </div>
             <node-overview-chart></node-overview-chart>
             <node-detail-tab></node-detail-tab>
@@ -90,7 +90,7 @@
                 return this.nodeDetails.os === 'WINDOWS' ? this.nodeDetails.agentUrl : this.nodeDetails.agentScript
             },
             jumpDashboardUrl () {
-                return `https://bkm.woa.com/?bizId=${this.bizId}#/grafana/d/bT8qy3NVa`
+                return `https://bkm.woa.com/?bizId=${this.bizId}&var-server=${this.nodeDetails.ip}#/grafana/d/bT8qy3NVa` - 4219865
             }
         },
         watch: {
