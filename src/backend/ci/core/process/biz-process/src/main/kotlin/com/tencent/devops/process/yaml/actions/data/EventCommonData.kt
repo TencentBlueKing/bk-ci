@@ -43,8 +43,23 @@ data class EventCommonData(
     val gitProjectId: String,
     val scmType: ScmType?,
     val branch: String,
+    val commit: EventCommonDataCommit,
     val userId: String,
     val projectName: String?,
     val eventType: String? = null,
     val sourceGitProjectId: String? = null
+)
+
+/**
+ * 公共数据的commit数据
+ * @param commitId commit唯一标识
+ * @param commitMsg commit提交信息
+ * @param commitAuthorName commit提交作者
+ * @param commitTimeStamp commit提交时间点
+ */
+data class EventCommonDataCommit(
+    val commitId: String,
+    val commitMsg: String?,
+    val commitAuthorName: String?,
+    val commitTimeStamp: String?
 )

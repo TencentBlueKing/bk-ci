@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.yaml.actions.data.context
 
-import com.tencent.devops.process.yaml.actions.data.PacTriggerPipeline
+import com.tencent.devops.process.yaml.actions.data.YamlTriggerPipeline
 import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -44,7 +44,7 @@ import com.tencent.devops.scm.pojo.GitMrReviewInfo
 data class PacTriggerContext(
     var hookRequestId: Long? = null,
     var eventId: Long? = null,
-    var pipeline: PacTriggerPipeline? = null,
+    var pipeline: YamlTriggerPipeline? = null,
     var yamlFile: YamlPathListEntry? = null,
     // 默认分支
     var defaultBranch: String? = null,

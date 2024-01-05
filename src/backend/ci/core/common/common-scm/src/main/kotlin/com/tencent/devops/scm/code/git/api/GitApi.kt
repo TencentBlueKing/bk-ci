@@ -698,7 +698,8 @@ open class GitApi {
     ): List<GitMrInfo> {
         val queryParams =
             "source_branch=$sourceBranch&target_branch=$targetBranch&state=$state&page=$page&per_page=$perPage"
-        val url = "projects/${urlEncode(projectName)}/merge_requests/?"
+        val url = "projects/${urlEncode(projectName)}/merge_requests"
+        logger.info("list mr for project($projectName): url($url)")
         val request = get(host, token, url, queryParams)
         return JsonUtil.getObjectMapper().readValue<List<GitMrInfo>>(
             getBody(getMessageByLocale(CommonMessageCode.OPERATION_LIST_MR), request)

@@ -26,30 +26,40 @@
  *
  */
 
-package com.tencent.devops.process.yaml.exception.hanlder
+package com.tencent.devops.process.api
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.pojo.I18Variable
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
-import com.tencent.devops.process.yaml.exception.YamlTriggerException
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.api.user.UserPipelineYamlResource
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlSyncInfo
+import com.tencent.devops.process.yaml.PipelineYamlService
+import com.tencent.devops.process.yaml.PipelineYamlSyncService
 
-object YamlTriggerExceptionUtil {
+@RestResource
+class UserPipelineYamlResourceImpl(
+    private val pipelineYamlSyncService: PipelineYamlSyncService,
+    private val pipelineYamlService: PipelineYamlService
+) : UserPipelineYamlResource {
 
-    fun getReason(exception: Exception): Pair<String, String> {
-        return when (exception) {
-            is YamlTriggerException -> Pair(
-                PipelineTriggerStatus.FAILED.name,
-                I18Variable(code = exception.errorCode, params = exception.params?.toList()).toJsonStr()
+    override fun countYamlPipeline(userId: String, projectId: String, repoHashId: String): Result<Long> {
+        return Result(
+            pipelineYamlService.countPipelineYaml(
+                projectId = projectId,
+                repoHashId = repoHashId
             )
-            is ErrorCodeException -> Pair(
-                PipelineTriggerStatus.FAILED.name,
-                I18Variable(code = exception.errorCode, params = exception.params?.toList()).toJsonStr()
+        )
+    }
+
+    override fun listSyncFailedYaml(
+        userId: String,
+        projectId: String,
+        repoHashId: String
+    ): Result<List<PipelineYamlSyncInfo>> {
+        return Result(
+            pipelineYamlSyncService.listSyncFailedYaml(
+                projectId = projectId,
+                repoHashId = repoHashId
             )
-            else -> Pair(
-                PipelineTriggerReason.UNKNOWN_ERROR.name,
-                exception.message ?: PipelineTriggerReason.UNKNOWN_ERROR.detail
-            )
-        }
+        )
     }
 }

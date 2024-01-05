@@ -26,20 +26,19 @@
  *
  */
 
-package com.tencent.devops.repository.pojo
+package com.tencent.devops.process.pojo.pipeline
 
-import com.tencent.devops.repository.pojo.enums.RepoYamlSyncStatusEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("pac同步文件信息")
-data class RepoYamlSyncInfo(
-    @ApiModelProperty("文件路径", required = true)
+@ApiModel("推送流水线结果")
+data class PushPipelineResult(
+    @ApiModelProperty("项目ID")
+    val projectId: String,
+    @ApiModelProperty("代码库ID")
+    val repoHashId: String,
+    @ApiModelProperty("ci文件路径")
     val filePath: String,
-    @ApiModelProperty("同步状态", required = true)
-    val syncStatus: RepoYamlSyncStatusEnum = RepoYamlSyncStatusEnum.SYNC,
-    @ApiModelProperty("原因", required = false)
-    var reason: String? = null,
-    @ApiModelProperty("原因详情", required = false)
-    var reasonDetail: String? = null,
+    @ApiModelProperty("分支名")
+    val branch: String
 )

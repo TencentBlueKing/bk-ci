@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceRepositoryPacResource
-import com.tencent.devops.repository.pojo.RepoYamlSyncInfo
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.service.RepositoryPacService
 import org.springframework.beans.factory.annotation.Autowired
@@ -42,28 +41,15 @@ class ServiceRepositoryPacResourceImpl @Autowired constructor(
     private val repositoryPacService: RepositoryPacService
 ) : ServiceRepositoryPacResource {
 
-    override fun initPacSyncDetail(
+    override fun updateYamlSyncStatus(
         projectId: String,
-        repositoryHashId: String,
-        syncFileInfoList: List<RepoYamlSyncInfo>
-    ): Result<Boolean> {
-        repositoryPacService.initYamlSync(
-            projectId = projectId,
-            repositoryHashId = repositoryHashId,
-            syncFileInfoList = syncFileInfoList
-        )
-        return Result(true)
-    }
-
-    override fun updatePacSyncStatus(
-        projectId: String,
-        repositoryHashId: String,
-        syncFileInfo: RepoYamlSyncInfo
+        repoHashId: String,
+        syncStatus: String
     ): Result<Boolean> {
         repositoryPacService.updateYamlSyncStatus(
             projectId = projectId,
-            repositoryHashId = repositoryHashId,
-            syncFileInfo = syncFileInfo
+            repoHashId = repoHashId,
+            syncStatus = syncStatus
         )
         return Result(true)
     }

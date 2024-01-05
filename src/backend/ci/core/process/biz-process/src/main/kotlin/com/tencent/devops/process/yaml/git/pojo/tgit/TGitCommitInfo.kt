@@ -23,33 +23,39 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.process.yaml.exception.hanlder
+package com.tencent.devops.process.yaml.git.pojo.tgit
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.pojo.I18Variable
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
-import com.tencent.devops.process.yaml.exception.YamlTriggerException
+import com.tencent.devops.process.yaml.git.pojo.PacGitCommitInfo
+import com.tencent.devops.scm.pojo.GitCommit
 
-object YamlTriggerExceptionUtil {
+data class TGitCommitInfo(
+    override val commitId: String,
+    override val commitDate: String,
+    override val commitAuthor: String,
+    override val commitMsg: String,
+    val title: String,
+    val shortId: String,
+    val authorName: String
+) : PacGitCommitInfo {
+    constructor(c: GitCommit) : this(
+        commitId = c.id,
+        commitDate = c.committed_date,
+        commitAuthor = c.author_email,
+        commitMsg = c.message,
+        title = c.title,
+        shortId = c.short_id,
+        authorName = c.author_name
+    )
 
-    fun getReason(exception: Exception): Pair<String, String> {
-        return when (exception) {
-            is YamlTriggerException -> Pair(
-                PipelineTriggerStatus.FAILED.name,
-                I18Variable(code = exception.errorCode, params = exception.params?.toList()).toJsonStr()
-            )
-            is ErrorCodeException -> Pair(
-                PipelineTriggerStatus.FAILED.name,
-                I18Variable(code = exception.errorCode, params = exception.params?.toList()).toJsonStr()
-            )
-            else -> Pair(
-                PipelineTriggerReason.UNKNOWN_ERROR.name,
-                exception.message ?: PipelineTriggerReason.UNKNOWN_ERROR.detail
-            )
-        }
-    }
+    fun toGitCommit(): GitCommit = GitCommit(
+        id = commitId,
+        short_id = shortId,
+        message = commitMsg,
+        author_name = authorName,
+        author_email = commitAuthor,
+        title = title,
+        committed_date = commitDate
+    )
 }

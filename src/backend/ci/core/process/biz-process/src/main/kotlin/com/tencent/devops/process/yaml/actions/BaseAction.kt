@@ -65,6 +65,4 @@ interface BaseAction {
      * 获取本次触发变更的文件列表
      */
     fun getChangeSet(): Set<String>?
-
-    fun getDeleteYamlFiles(): Set<String>?
 }

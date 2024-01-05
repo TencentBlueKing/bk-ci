@@ -26,43 +26,28 @@
  *
  */
 
-package com.tencent.devops.process.api.service
+package com.tencent.devops.process.webhook
 
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
-import com.tencent.devops.process.yaml.PipelineYamlService
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.permission.PipelinePermissionService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@RestResource
-class ServicePipelinePacResourceImpl @Autowired constructor(
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService,
-    private val pipelineYamlService: PipelineYamlService
-) : ServicePipelinePacResource {
-    override fun enable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.enablePac(
+@Service
+class PipelineBuildPermissionService @Autowired constructor(
+    private val pipelinePermissionService: PipelinePermissionService
+) {
+    fun checkPermission(userId: String, projectId: String, pipelineId: String) {
+        pipelinePermissionService.validPipelinePermission(
             userId = userId,
             projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-    }
-
-    override fun disable(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        pipelineYamlFacadeService.disablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-    }
-
-    override fun countYamlPipeline(userId: String, projectId: String, repoHashId: String): Result<Long> {
-        return Result(
-            pipelineYamlService.countPipelineYaml(
-                projectId = projectId,
-                repoHashId = repoHashId
+            pipelineId = pipelineId,
+            permission = AuthPermission.EXECUTE,
+            message = I18nUtil.getCodeLanMessage(
+                messageCode = ProcessMessageCode.USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT,
+                params = arrayOf(userId, projectId, AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId)))
             )
         )
     }

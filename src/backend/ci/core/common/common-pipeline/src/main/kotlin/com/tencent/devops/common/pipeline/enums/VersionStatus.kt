@@ -23,33 +23,18 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.process.yaml.exception.hanlder
+package com.tencent.devops.common.pipeline.enums
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.pojo.I18Variable
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
-import com.tencent.devops.process.yaml.exception.YamlTriggerException
+enum class VersionStatus(val statusName: String) {
+    RELEASED("已发布版本"),
+    COMMITTING("草稿版本"),
+    BRANCH("分支版本");
+}
 
-object YamlTriggerExceptionUtil {
-
-    fun getReason(exception: Exception): Pair<String, String> {
-        return when (exception) {
-            is YamlTriggerException -> Pair(
-                PipelineTriggerStatus.FAILED.name,
-                I18Variable(code = exception.errorCode, params = exception.params?.toList()).toJsonStr()
-            )
-            is ErrorCodeException -> Pair(
-                PipelineTriggerStatus.FAILED.name,
-                I18Variable(code = exception.errorCode, params = exception.params?.toList()).toJsonStr()
-            )
-            else -> Pair(
-                PipelineTriggerReason.UNKNOWN_ERROR.name,
-                exception.message ?: PipelineTriggerReason.UNKNOWN_ERROR.detail
-            )
-        }
-    }
+enum class BranchVersionAction(val statusName: String) {
+    ACTIVE("活跃分支（可以被代码推送直接更新）"),
+    INACTIVE("不活跃分支（已被发布或已被删除）"),
+    CONFLICT("有冲突分支（落后于主干无法直接合入）");
 }

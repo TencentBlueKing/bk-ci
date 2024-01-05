@@ -26,30 +26,21 @@
  *
  */
 
-package com.tencent.devops.process.yaml.exception.hanlder
+package com.tencent.devops.process.pojo.code
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.pojo.I18Variable
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
-import com.tencent.devops.process.yaml.exception.YamlTriggerException
+import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.pojo.BuildId
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-object YamlTriggerExceptionUtil {
-
-    fun getReason(exception: Exception): Pair<String, String> {
-        return when (exception) {
-            is YamlTriggerException -> Pair(
-                PipelineTriggerStatus.FAILED.name,
-                I18Variable(code = exception.errorCode, params = exception.params?.toList()).toJsonStr()
-            )
-            is ErrorCodeException -> Pair(
-                PipelineTriggerStatus.FAILED.name,
-                I18Variable(code = exception.errorCode, params = exception.params?.toList()).toJsonStr()
-            )
-            else -> Pair(
-                PipelineTriggerReason.UNKNOWN_ERROR.name,
-                exception.message ?: PipelineTriggerReason.UNKNOWN_ERROR.detail
-            )
-        }
-    }
-}
+@ApiModel("webhook触发结果")
+data class WebhookBuildResult(
+    @ApiModelProperty("触发结果")
+    val result: Boolean,
+    @ApiModelProperty("流水线信息")
+    val pipelineInfo: PipelineInfo? = null,
+    @ApiModelProperty("触发buildId")
+    val buildId: BuildId? = null,
+    @ApiModelProperty("触发失败原因")
+    val failedReason: String? = null
+)

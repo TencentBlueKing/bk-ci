@@ -26,66 +26,28 @@
  *
  */
 
-package com.tencent.devops.process.api.service
+package com.tencent.devops.process.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlSyncInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_PAC"], description = "服务-pac资源")
-@Path("/service/pipeline/pac/")
+@Api(tags = ["USER_PIPELINE_YAML"], description = "用户-流水线yaml")
+@Path("/user/pipeline/yaml")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServicePipelinePacResource {
-
-    @ApiOperation("开启PAC")
-    @POST
-    @Path("/{projectId}/{repoHashId}/enable")
-    fun enable(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("代码库hashId", required = true)
-        @PathParam("repoHashId")
-        repoHashId: String,
-        @ApiParam("代码库类型", required = true)
-        @QueryParam("scmType")
-        scmType: ScmType
-    )
-
-    @ApiOperation("关闭PAC")
-    @POST
-    @Path("/{projectId}/{repoHashId}/disable")
-    fun disable(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("代码库hashId", required = true)
-        @PathParam("repoHashId")
-        repoHashId: String,
-        @ApiParam("代码库类型", required = true)
-        @QueryParam("scmType")
-        scmType: ScmType
-    )
+interface UserPipelineYamlResource {
 
     @ApiOperation("获取开启pac的流水线数量")
     @GET
@@ -101,4 +63,19 @@ interface ServicePipelinePacResource {
         @PathParam("repoHashId")
         repoHashId: String
     ): Result<Long>
+
+    @ApiOperation("获取同步失败yaml详情")
+    @GET
+    @Path("/{projectId}/{repoHashId}/listSyncFailedYaml")
+    fun listSyncFailedYaml(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("代码库哈希ID", required = true)
+        @PathParam("repoHashId")
+        repoHashId: String
+    ): Result<List<PipelineYamlSyncInfo>>
 }

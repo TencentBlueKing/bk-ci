@@ -49,6 +49,7 @@ import com.tencent.devops.process.dao.label.PipelineViewDao
 import com.tencent.devops.process.dao.label.PipelineViewGroupDao
 import com.tencent.devops.process.dao.label.PipelineViewTopDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.engine.dao.PipelineYamlViewDao
 import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
@@ -83,7 +84,8 @@ class PipelineViewGroupService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper,
     private val client: Client,
-    private val clientTokenService: ClientTokenService
+    private val clientTokenService: ClientTokenService,
+    private val pipelineYamlViewDao: PipelineYamlViewDao
 ) {
     private val allPipelineInfoCache = Caffeine.newBuilder()
         .maximumSize(10)
@@ -147,6 +149,11 @@ class PipelineViewGroupService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND,
             params = arrayOf(viewIdEncode)
         )
+        pipelineYamlViewDao.getByViewId(dslContext = dslContext, projectId = projectId, viewId = viewId)?.let {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.YAML_VIEW_CANNOT_UPDATE
+            )
+        }
         // 校验
         checkPermission(userId, projectId, pipelineView.projected, oldView.createUser)
         if (pipelineView.projected != oldView.isProject) {
@@ -216,13 +223,21 @@ class PipelineViewGroupService @Autowired constructor(
     fun deleteViewGroup(
         projectId: String,
         userId: String,
-        viewIdEncode: String
+        viewIdEncode: String,
+        checkPac: Boolean = true
     ): Boolean {
         val viewId = HashUtil.decodeIdToLong(viewIdEncode)
         val oldView = pipelineViewDao.get(dslContext, projectId, viewId) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND,
             params = arrayOf(viewIdEncode)
         )
+        if (checkPac) {
+            pipelineYamlViewDao.getByViewId(dslContext = dslContext, projectId = projectId, viewId = viewId)?.let {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.YAML_VIEW_CANNOT_DELETE
+                )
+            }
+        }
         checkPermission(userId, projectId, oldView.isProject, oldView.createUser)
         var result = false
         dslContext.transaction { t ->
@@ -636,6 +651,11 @@ class PipelineViewGroupService @Autowired constructor(
                 defaultMessage = "user:$userId has no permission to edit view group, project:$projectId"
             )
         }
+        pipelineYamlViewDao.getByViewId(dslContext = dslContext, projectId = projectId, viewId = viewId)?.let {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.YAML_VIEW_CANNOT_BULK_REMOVE
+            )
+        }
         pipelineViewGroupDao.batchRemove(dslContext, projectId, viewId, bulkRemove.pipelineIds)
         return true
     }
@@ -647,10 +667,11 @@ class PipelineViewGroupService @Autowired constructor(
     fun listView(userId: String, projectId: String, projected: Boolean?, viewType: Int?): List<PipelineNewViewSummary> {
         val views = pipelineViewDao.list(dslContext, userId, projectId, projected, viewType)
         val countByViewId = pipelineViewGroupDao.countByViewId(dslContext, projectId, views.map { it.id })
+        val yamlViews = pipelineYamlViewDao.listViewIds(dslContext, projectId)
         // 确保数据都初始化一下
         views.filter { it.viewType == PipelineViewType.DYNAMIC }
             .forEach { initDynamicViewGroup(it, userId, dslContext) }
-        val summaries = sortViews2Summary(projectId, userId, views, countByViewId)
+        val summaries = sortViews2Summary(projectId, userId, views, countByViewId, yamlViews)
         if (projected != false) {
             val classifiedPipelineIds = getClassifiedPipelineIds(projectId)
             val unclassifiedCount =
@@ -695,7 +716,8 @@ class PipelineViewGroupService @Autowired constructor(
         projectId: String,
         userId: String,
         views: List<TPipelineViewRecord>,
-        countByViewId: Map<Long, Int>
+        countByViewId: Map<Long, Int>,
+        yamlViews: List<Long>
     ): MutableList<PipelineNewViewSummary> {
         var score = 1
         val viewScoreMap = pipelineViewTopDao.list(dslContext, projectId, userId).associate { it.viewId to score++ }
@@ -715,7 +737,8 @@ class PipelineViewGroupService @Autowired constructor(
                 creator = it.createUser,
                 top = viewScoreMap.containsKey(it.id),
                 viewType = it.viewType,
-                pipelineCount = countByViewId[it.id] ?: 0
+                pipelineCount = countByViewId[it.id] ?: 0,
+                pac = yamlViews.contains(it.id)
             )
         }.toMutableList()
     }

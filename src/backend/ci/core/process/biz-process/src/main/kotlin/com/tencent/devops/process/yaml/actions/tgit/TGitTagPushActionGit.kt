@@ -28,12 +28,14 @@
 package com.tencent.devops.process.yaml.actions.tgit
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.process.yaml.actions.BaseAction
 import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.actions.GitBaseAction
 import com.tencent.devops.process.yaml.actions.data.ActionMetaData
 import com.tencent.devops.process.yaml.actions.data.EventCommonData
+import com.tencent.devops.process.yaml.actions.data.EventCommonDataCommit
 import com.tencent.devops.process.yaml.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.yaml.git.service.TGitApiService
 import com.tencent.devops.process.yaml.pojo.CheckType
@@ -64,14 +66,38 @@ class TGitTagPushActionGit(
 
     private fun initCommonData(): GitBaseAction {
         val event = event()
+        val lastCommit = getLatestCommit(event)
         this.data.eventCommon = EventCommonData(
             gitProjectId = event.project_id.toString(),
             scmType = ScmType.CODE_GIT,
             branch = event.ref.removePrefix("refs/tags/"),
+            commit = EventCommonDataCommit(
+                commitId = event.after,
+                commitMsg = lastCommit?.message,
+                commitTimeStamp = GitActionCommon.getCommitTimeStamp(lastCommit?.timestamp),
+                commitAuthorName = lastCommit?.author?.name
+            ),
             userId = event.user_name,
             projectName = GitUtils.getProjectName(event.repository.homepage)
         )
         return this
+    }
+
+    private fun getLatestCommit(
+        event: GitTagPushEvent
+    ): GitCommit? {
+        var commit = if (event.commits.isNullOrEmpty()) {
+            null
+        } else {
+            event.commits!!.first()
+        }
+
+        // 2022/7/1   外面的message不为空，为附录tag，取外面的
+        if (event.message != null) {
+            commit = commit?.copy(message = event.message!!)
+        }
+
+        return commit
     }
 
     override fun getYamlPathList(): List<YamlPathListEntry> {

@@ -34,6 +34,4 @@ abstract class TGitActionGit(
     }
 
     override fun getChangeSet(): Set<String>? = null
-
-    override fun getDeleteYamlFiles(): Set<String>? = null
 }

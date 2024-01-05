@@ -28,61 +28,57 @@
 
 package com.tencent.devops.process.engine.dao
 
-import com.tencent.devops.model.process.tables.TPipelineYamlVersion
-import com.tencent.devops.model.process.tables.records.TPipelineYamlVersionRecord
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
+import com.tencent.devops.model.process.tables.TPipelineYamlBranchFile
+import com.tencent.devops.model.process.tables.records.TPipelineYamlBranchFileRecord
+import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-/**
- * 流水线与代码库yml文件关联表
- */
 @Repository
-class PipelineYamlVersionDao {
+class PipelineYamlBranchFileDao {
 
     fun save(
         dslContext: DSLContext,
         projectId: String,
         repoHashId: String,
-        filePath: String,
-        blobId: String,
-        commitId: String,
-        ref: String?,
-        pipelineId: String,
-        version: Int,
-        userId: String
+        branch: String,
+        filePath: String
     ) {
         val now = LocalDateTime.now()
-        with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
+        with(TPipelineYamlBranchFile.T_PIPELINE_YAML_BRANCH_FILE) {
             dslContext.insertInto(
                 this,
                 PROJECT_ID,
                 REPO_HASH_ID,
+                BRANCH,
                 FILE_PATH,
-                BLOB_ID,
-                COMMIT_ID,
-                REF,
-                PIPELINE_ID,
-                VERSION,
-                CREATOR,
-                MODIFIER,
-                CREATE_TIME,
-                UPDATE_TIME
+                FILE_PATH_MD5,
+                CREATE_TIME
             ).values(
                 projectId,
                 repoHashId,
+                branch,
                 filePath,
-                blobId,
-                commitId,
-                ref,
-                pipelineId,
-                version,
-                userId,
-                userId,
-                now,
+                DigestUtils.md5Hex(filePath),
                 now
-            ).execute()
+            ).onDuplicateKeyIgnore()
+                .execute()
+        }
+    }
+
+    fun getAllFilePath(
+        dslContext: DSLContext,
+        projectId: String,
+        repoHashId: String,
+        branch: String
+    ): List<String> {
+        return with(TPipelineYamlBranchFile.T_PIPELINE_YAML_BRANCH_FILE) {
+            dslContext.select(FILE_PATH).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPO_HASH_ID.eq(repoHashId))
+                .and(BRANCH.eq(branch))
+                .fetch(0, String::class.java)
         }
     }
 
@@ -90,80 +86,33 @@ class PipelineYamlVersionDao {
         dslContext: DSLContext,
         projectId: String,
         repoHashId: String,
-        filePath: String,
-        blobId: String
-    ): PipelineYamlVersion? {
-        with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
-            val record = dslContext.selectFrom(this)
+        branch: String,
+        filePath: String
+    ): TPipelineYamlBranchFileRecord? {
+        return with(TPipelineYamlBranchFile.T_PIPELINE_YAML_BRANCH_FILE) {
+            dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
-                .and(FILE_PATH.eq(filePath))
-                .and(BLOB_ID.eq(blobId))
+                .and(BRANCH.eq(branch))
+                .and(FILE_PATH_MD5.eq(DigestUtils.md5Hex(filePath)))
                 .fetchOne()
-            return record?.let { convert(it) }
         }
     }
 
-    fun getByPipelineId(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        version: Int
-    ): PipelineYamlVersion? {
-        with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
-            val record = dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-                .and(VERSION.eq(version))
-                .fetchAny()
-            return record?.let { convert(it) }
-        }
-    }
-
-    fun deleteAll(
+    fun deleteFile(
         dslContext: DSLContext,
         projectId: String,
         repoHashId: String,
+        branch: String,
         filePath: String
     ) {
-        with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
+        with(TPipelineYamlBranchFile.T_PIPELINE_YAML_BRANCH_FILE) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
-                .and(FILE_PATH.eq(filePath))
+                .and(BRANCH.eq(branch))
+                .and(FILE_PATH_MD5.eq(DigestUtils.md5Hex(filePath)))
                 .execute()
-        }
-    }
-
-    fun deleteByBlobId(
-        dslContext: DSLContext,
-        projectId: String,
-        repoHashId: String,
-        filePath: String,
-        blobId: String
-    ) {
-        with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
-            dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(REPO_HASH_ID.eq(repoHashId))
-                .and(FILE_PATH.eq(filePath))
-                .and(BLOB_ID.eq(blobId))
-                .execute()
-        }
-    }
-
-    fun convert(record: TPipelineYamlVersionRecord): PipelineYamlVersion {
-        return with(record) {
-            PipelineYamlVersion(
-                projectId = projectId,
-                repoHashId = repoHashId,
-                filePath = filePath,
-                blobId = blobId,
-                commitId = commitId,
-                ref = ref,
-                pipelineId = pipelineId,
-                version = version
-            )
         }
     }
 }

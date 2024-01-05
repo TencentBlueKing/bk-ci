@@ -26,21 +26,19 @@
  *
  */
 
-package com.tencent.devops.process.yaml.actions.data
+package com.tencent.devops.process.pojo.pipeline
 
-/**
- * pac触发时需要的流水线数据
- * @param projectId 项目ID
- * @param repoHashId 代码库hash id
- * @param filePath 流水线对应的yaml路径
- * @param pipelineId 流水线ID
- * @param userId 触发者
- */
-data class PacTriggerPipeline(
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("yaml流水线组")
+data class PipelineYamlView(
+    @ApiModelProperty("项目ID")
     val projectId: String,
+    @ApiModelProperty("代码库ID")
     val repoHashId: String,
-    val filePath: String,
-    val pipelineId: String,
-    val userId: String,
-    val delete: Boolean
+    @ApiModelProperty("ci文件路径")
+    val directory: String,
+    @ApiModelProperty("流水线组ID")
+    val viewId: Long
 )

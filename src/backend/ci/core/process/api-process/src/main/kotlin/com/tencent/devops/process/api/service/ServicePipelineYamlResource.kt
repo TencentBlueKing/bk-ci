@@ -23,22 +23,19 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
 package com.tencent.devops.process.api.service
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.webhook.pojo.code.github.GithubWebhook
-import com.tencent.devops.process.pojo.BuildId
-import com.tencent.devops.process.pojo.code.WebhookCommit
-import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -47,54 +44,45 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_SCM"], description = "服务-SCM")
-@Path("/service/scm")
+@Api(tags = ["SERVICE_PAC"], description = "服务-pac资源")
+@Path("/service/pipeline/yaml/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceScmWebhookResource {
+interface ServicePipelineYamlResource {
 
-    @ApiOperation("Github仓库提交")
+    @ApiOperation("开启PAC")
     @POST
-    @Path("/github/commit")
-    fun webHookCodeGithubCommit(
-        webhook: GithubWebhook
-    ): Result<Boolean>
-
-    @ApiOperation("Webhook代码库提交")
-    @POST
-    @Path("/webhook/commit")
-    fun webhookCommit(
-        @ApiParam("项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String,
-        webhookCommit: WebhookCommit
-    ): Result<String>
-
-    @ApiOperation("Webhook代码库提交")
-    @POST
-    @Path("/webhook/commit/new")
-    fun webhookCommitNew(
-        @ApiParam("项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String,
-        webhookCommit: WebhookCommit
-    ): Result<BuildId?>
-
-    @ApiOperation("获取流水线的webhook列表")
-    @GET
-    @Path("/{projectId}/{pipelineId}")
-    fun listScmWebhook(
+    @Path("/{projectId}/{repoHashId}/enable")
+    fun enable(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("页码", required = false)
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页大小", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<List<PipelineWebhook>>
+        @ApiParam("代码库hashId", required = true)
+        @PathParam("repoHashId")
+        repoHashId: String,
+        @ApiParam("代码库类型", required = true)
+        @QueryParam("scmType")
+        scmType: ScmType
+    ): Result<Boolean>
+
+    @ApiOperation("关闭PAC")
+    @POST
+    @Path("/{projectId}/{repoHashId}/disable")
+    fun disable(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("代码库hashId", required = true)
+        @PathParam("repoHashId")
+        repoHashId: String,
+        @ApiParam("代码库类型", required = true)
+        @QueryParam("scmType")
+        scmType: ScmType
+    ): Result<Boolean>
 }

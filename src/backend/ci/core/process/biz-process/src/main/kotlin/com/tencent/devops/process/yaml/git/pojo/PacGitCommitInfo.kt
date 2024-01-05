@@ -23,20 +23,20 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.process.yaml.actions.pacActions.data
-
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
+package com.tencent.devops.process.yaml.git.pojo
 
 /**
- * pac push文件事件
+ * pac需要的Git的commit信息
  */
-data class PipelineYamlPushActionEvent(
-    val userId: String,
-    val projectId: String,
-    val repoHashId: String,
-    val scmType: ScmType
-) : CodeWebhookEvent
+interface PacGitCommitInfo {
+    // commit id
+    val commitId: String
+    // commit 提交时间
+    val commitDate: String
+    // commit 提交作者
+    val commitAuthor: String
+    // commit 提交信息
+    val commitMsg: String
+}

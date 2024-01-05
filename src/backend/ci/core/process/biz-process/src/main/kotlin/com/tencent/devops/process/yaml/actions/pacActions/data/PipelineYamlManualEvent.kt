@@ -26,30 +26,17 @@
  *
  */
 
-package com.tencent.devops.process.yaml.exception.hanlder
+package com.tencent.devops.process.yaml.actions.pacActions.data
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.pojo.I18Variable
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
-import com.tencent.devops.process.yaml.exception.YamlTriggerException
+import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 
-object YamlTriggerExceptionUtil {
-
-    fun getReason(exception: Exception): Pair<String, String> {
-        return when (exception) {
-            is YamlTriggerException -> Pair(
-                PipelineTriggerStatus.FAILED.name,
-                I18Variable(code = exception.errorCode, params = exception.params?.toList()).toJsonStr()
-            )
-            is ErrorCodeException -> Pair(
-                PipelineTriggerStatus.FAILED.name,
-                I18Variable(code = exception.errorCode, params = exception.params?.toList()).toJsonStr()
-            )
-            else -> Pair(
-                PipelineTriggerReason.UNKNOWN_ERROR.name,
-                exception.message ?: PipelineTriggerReason.UNKNOWN_ERROR.detail
-            )
-        }
-    }
-}
+/**
+ * 用户主动操作的事件
+ */
+data class PipelineYamlManualEvent(
+    val userId: String,
+    val projectId: String,
+    val repoHashId: String,
+    val scmType: ScmType
+) : CodeWebhookEvent

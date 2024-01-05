@@ -29,14 +29,17 @@
 package com.tencent.devops.process.yaml.actions.pacActions
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.process.yaml.actions.BaseAction
 import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.actions.data.ActionData
 import com.tencent.devops.process.yaml.actions.data.ActionMetaData
 import com.tencent.devops.process.yaml.actions.data.EventCommonData
-import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlEnableActionEvent
+import com.tencent.devops.process.yaml.actions.data.EventCommonDataCommit
+import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlManualEvent
 import com.tencent.devops.process.yaml.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.yaml.git.pojo.PacGitCred
+import com.tencent.devops.process.yaml.git.pojo.PacGitPushResult
 import com.tencent.devops.process.yaml.git.pojo.tgit.TGitCred
 import com.tencent.devops.process.yaml.git.service.PacGitApiService
 import com.tencent.devops.process.yaml.pojo.CheckType
@@ -44,11 +47,13 @@ import com.tencent.devops.process.yaml.pojo.YamlContent
 import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 
-class PipelineYamlEnableAction : BaseAction {
-    override val metaData: ActionMetaData = ActionMetaData(StreamObjectKind.ENABLE)
-
+/**
+ * 用户主动操作的action,如开启pac、发布流水线、删除流水线
+ */
+class PipelineYamlManualAction : BaseAction {
+    override val metaData: ActionMetaData = ActionMetaData(StreamObjectKind.MANUAL)
     override lateinit var data: ActionData
-    fun event() = data.event as PipelineYamlEnableActionEvent
+    fun event() = data.event as PipelineYamlManualEvent
 
     override lateinit var api: PacGitApiService
 
@@ -56,7 +61,7 @@ class PipelineYamlEnableAction : BaseAction {
         return initCommonData()
     }
 
-    private fun initCommonData(): PipelineYamlEnableAction {
+    private fun initCommonData(): PipelineYamlManualAction {
         val event = event()
         val gitProjectId = getGitProjectIdOrName()
         val defaultBranch = api.getGitProjectInfo(
@@ -64,10 +69,22 @@ class PipelineYamlEnableAction : BaseAction {
             gitProjectId = gitProjectId,
             retry = ApiRequestRetryInfo(true)
         )!!.defaultBranch!!
+        val latestCommit = api.getGitCommitInfo(
+            cred = this.getGitCred(),
+            gitProjectId = gitProjectId.toString(),
+            sha = defaultBranch,
+            retry = ApiRequestRetryInfo(retry = true)
+        )
         this.data.eventCommon = EventCommonData(
             gitProjectId = gitProjectId,
             userId = event.userId,
             branch = defaultBranch,
+            commit = EventCommonDataCommit(
+                commitId = latestCommit?.commitId ?: "0",
+                commitMsg = latestCommit?.commitMsg,
+                commitTimeStamp = GitActionCommon.getCommitTimeStamp(latestCommit?.commitDate),
+                commitAuthorName = latestCommit?.commitAuthor
+            ),
             projectName = data.setting.projectName,
             scmType = event.scmType
         )
@@ -114,5 +131,24 @@ class PipelineYamlEnableAction : BaseAction {
 
     override fun getChangeSet(): Set<String>? = null
 
-    override fun getDeleteYamlFiles(): Set<String>? = null
+    fun pushYamlFile(
+        pipelineId: String,
+        filePath: String,
+        content: String,
+        commitMessage: String,
+        targetAction: CodeTargetAction,
+        versionName: String?
+    ): PacGitPushResult {
+        return api.pushYamlFile(
+            cred = this.getGitCred(),
+            gitProjectId = getGitProjectIdOrName(),
+            defaultBranch = data.eventCommon.branch,
+            filePath = filePath,
+            content = content,
+            commitMessage = commitMessage,
+            targetAction = targetAction,
+            pipelineId = pipelineId,
+            versionName = versionName
+        )
+    }
 }

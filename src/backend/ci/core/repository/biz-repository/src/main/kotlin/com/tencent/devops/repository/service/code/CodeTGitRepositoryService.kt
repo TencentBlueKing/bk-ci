@@ -48,6 +48,7 @@ import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.scm.IScmOauthService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.repository.service.tgit.TGitOAuthService
+import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -335,11 +336,11 @@ class CodeTGitRepositoryService @Autowired constructor(
         retry: Boolean
     ) = Unit
 
-    override fun checkCiDirExists(
+    override fun getGitFileTree(
         projectId: String,
         userId: String,
         repository: TRepositoryRecord
-    ) = false
+    ) = emptyList<GitFileInfo>()
 
     override fun getPacRepository(externalId: String): TRepositoryRecord? = null
 

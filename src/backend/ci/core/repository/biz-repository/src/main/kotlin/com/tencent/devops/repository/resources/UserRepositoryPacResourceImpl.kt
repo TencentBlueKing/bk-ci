@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.UserRepositoryPacResource
-import com.tencent.devops.repository.pojo.RepoYamlSyncInfo
 import com.tencent.devops.repository.service.RepositoryPacService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -71,16 +70,6 @@ class UserRepositoryPacResourceImpl @Autowired constructor(
             repositoryPacService.getYamlSyncStatus(
                 projectId = projectId,
                 repositoryHashId = repositoryHashId
-            )
-        )
-    }
-
-    override fun countYamlPipeline(userId: String, projectId: String, repoHashId: String): Result<Long> {
-        return Result(
-            repositoryPacService.countPipelineYaml(
-                userId = userId,
-                projectId = projectId,
-                repoHashId = repoHashId
             )
         )
     }
@@ -122,13 +111,10 @@ class UserRepositoryPacResourceImpl @Autowired constructor(
         )
     }
 
-    override fun listYamlSync(
-        userId: String,
-        projectId: String,
-        repositoryHashId: String
-    ): Result<List<RepoYamlSyncInfo>> {
+    override fun getCiSubDir(userId: String, projectId: String, repositoryHashId: String): Result<List<String>> {
         return Result(
-            repositoryPacService.listYamlSync(
+            repositoryPacService.getCiSubDir(
+                userId = userId,
                 projectId = projectId,
                 repositoryHashId = repositoryHashId
             )

@@ -32,6 +32,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.webhook.pojo.code.github.GithubWebhook
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.process.engine.service.PipelineWebhookService
+import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.code.WebhookCommit
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
@@ -54,7 +55,15 @@ class ServiceScmWebhookResourceImpl @Autowired constructor(
     }
 
     override fun webhookCommit(projectId: String, webhookCommit: WebhookCommit): Result<String> {
-        return Result(pipelineBuildWebhookService.webhookCommitTriggerPipelineBuild(projectId, webhookCommit))
+        return Result(
+            pipelineBuildWebhookService.webhookCommitTriggerPipelineBuild(projectId, webhookCommit)?.id ?: ""
+        )
+    }
+
+    override fun webhookCommitNew(projectId: String, webhookCommit: WebhookCommit): Result<BuildId?> {
+        return Result(
+            pipelineBuildWebhookService.webhookCommitTriggerPipelineBuild(projectId, webhookCommit)
+        )
     }
 
     override fun listScmWebhook(

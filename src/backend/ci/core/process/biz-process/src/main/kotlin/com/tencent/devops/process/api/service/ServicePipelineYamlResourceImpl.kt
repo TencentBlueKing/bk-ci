@@ -26,30 +26,45 @@
  *
  */
 
-package com.tencent.devops.process.yaml.exception.hanlder
+package com.tencent.devops.process.api.service
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.pojo.I18Variable
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
-import com.tencent.devops.process.yaml.exception.YamlTriggerException
+import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.yaml.PipelineYamlFacadeService
+import org.springframework.beans.factory.annotation.Autowired
 
-object YamlTriggerExceptionUtil {
+@RestResource
+class ServicePipelineYamlResourceImpl @Autowired constructor(
+    private val pipelineYamlFacadeService: PipelineYamlFacadeService
+) : ServicePipelineYamlResource {
+    override fun enable(
+        userId: String,
+        projectId: String,
+        repoHashId: String,
+        scmType: ScmType
+    ): Result<Boolean> {
+        pipelineYamlFacadeService.enablePac(
+            userId = userId,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            scmType = scmType
+        )
+        return Result(true)
+    }
 
-    fun getReason(exception: Exception): Pair<String, String> {
-        return when (exception) {
-            is YamlTriggerException -> Pair(
-                PipelineTriggerStatus.FAILED.name,
-                I18Variable(code = exception.errorCode, params = exception.params?.toList()).toJsonStr()
-            )
-            is ErrorCodeException -> Pair(
-                PipelineTriggerStatus.FAILED.name,
-                I18Variable(code = exception.errorCode, params = exception.params?.toList()).toJsonStr()
-            )
-            else -> Pair(
-                PipelineTriggerReason.UNKNOWN_ERROR.name,
-                exception.message ?: PipelineTriggerReason.UNKNOWN_ERROR.detail
-            )
-        }
+    override fun disable(
+        userId: String,
+        projectId: String,
+        repoHashId: String,
+        scmType: ScmType
+    ): Result<Boolean> {
+        pipelineYamlFacadeService.disablePac(
+            userId = userId,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            scmType = scmType
+        )
+        return Result(true)
     }
 }

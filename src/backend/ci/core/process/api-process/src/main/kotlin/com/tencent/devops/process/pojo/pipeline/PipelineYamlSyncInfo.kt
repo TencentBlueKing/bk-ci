@@ -26,30 +26,20 @@
  *
  */
 
-package com.tencent.devops.process.yaml.exception.hanlder
+package com.tencent.devops.process.pojo.pipeline
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.pojo.I18Variable
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
-import com.tencent.devops.process.yaml.exception.YamlTriggerException
+import com.tencent.devops.repository.pojo.enums.RepoYamlSyncStatusEnum
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-object YamlTriggerExceptionUtil {
-
-    fun getReason(exception: Exception): Pair<String, String> {
-        return when (exception) {
-            is YamlTriggerException -> Pair(
-                PipelineTriggerStatus.FAILED.name,
-                I18Variable(code = exception.errorCode, params = exception.params?.toList()).toJsonStr()
-            )
-            is ErrorCodeException -> Pair(
-                PipelineTriggerStatus.FAILED.name,
-                I18Variable(code = exception.errorCode, params = exception.params?.toList()).toJsonStr()
-            )
-            else -> Pair(
-                PipelineTriggerReason.UNKNOWN_ERROR.name,
-                exception.message ?: PipelineTriggerReason.UNKNOWN_ERROR.detail
-            )
-        }
-    }
-}
+@ApiModel("pac同步文件信息")
+data class PipelineYamlSyncInfo(
+    @ApiModelProperty("文件路径", required = true)
+    val filePath: String,
+    @ApiModelProperty("同步状态", required = true)
+    val syncStatus: RepoYamlSyncStatusEnum = RepoYamlSyncStatusEnum.SYNC,
+    @ApiModelProperty("原因", required = false)
+    var reason: String? = null,
+    @ApiModelProperty("原因详情", required = false)
+    var reasonDetail: String? = null,
+)

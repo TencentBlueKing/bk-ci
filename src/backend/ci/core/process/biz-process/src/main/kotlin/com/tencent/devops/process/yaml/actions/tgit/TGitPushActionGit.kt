@@ -27,12 +27,15 @@
 
 package com.tencent.devops.process.yaml.actions.tgit
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
 import com.tencent.devops.process.yaml.actions.BaseAction
 import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.actions.GitBaseAction
 import com.tencent.devops.process.yaml.actions.data.ActionMetaData
 import com.tencent.devops.process.yaml.actions.data.EventCommonData
+import com.tencent.devops.process.yaml.actions.data.EventCommonDataCommit
 import com.tencent.devops.process.yaml.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.yaml.git.service.TGitApiService
 import com.tencent.devops.process.yaml.pojo.CheckType
@@ -64,14 +67,37 @@ class TGitPushActionGit(
 
     private fun initCommonData(): GitBaseAction {
         val event = event()
+        val lastCommit = getLatestCommit(event)
         this.data.eventCommon = EventCommonData(
             gitProjectId = event.project_id.toString(),
             scmType = ScmType.CODE_GIT,
             branch = event.ref.removePrefix("refs/heads/"),
+            commit = EventCommonDataCommit(
+                commitId = event.after,
+                commitMsg = lastCommit?.message,
+                commitTimeStamp = GitActionCommon.getCommitTimeStamp(lastCommit?.timestamp),
+                commitAuthorName = lastCommit?.author?.name
+            ),
             userId = event.user_name,
             projectName = GitUtils.getProjectName(event.repository.homepage)
         )
         return this
+    }
+
+    private fun getLatestCommit(
+        event: GitPushEvent
+    ): GitCommit? {
+        if (event.isDeleteEvent()) {
+            return null
+        }
+        val commitId = event.after
+        val commits = event.commits
+        commits?.forEach {
+            if (it.id == commitId) {
+                return it
+            }
+        }
+        return null
     }
 
     override fun initCacheData() {
@@ -100,21 +126,11 @@ class TGitPushActionGit(
                 ref = this.data.eventCommon.branch, blobId = blobId
             )
         }.toMutableList()
-        if (!data.context.deleteCiSet.isNullOrEmpty()) {
-            // 获取默认文件文件列表
-            val defaultBranchYamlList = if (data.eventCommon.branch != data.context.defaultBranch) {
-                GitActionCommon.getYamlPathList(
-                    action = this,
-                    gitProjectId = this.getGitProjectIdOrName(),
-                    ref = data.context.defaultBranch
-                ).map { it.first }
-            } else {
-                emptyList()
-            }
-            // yaml在默认分支不存在，文件删除直接删除流水线
-            val deleteYamlPathList = data.context.deleteCiSet?.filter {
-                !defaultBranchYamlList.contains(it)
-            }?.map {
+        // 非默认分支删除流水线,需要删除分支版本
+        if (!data.context.deleteCiSet.isNullOrEmpty() &&
+            data.eventCommon.branch != data.context.defaultBranch
+        ) {
+            val deleteYamlPathList = data.context.deleteCiSet?.map {
                 YamlPathListEntry(
                     yamlPath = it,
                     checkType = CheckType.NEED_DELETE,

@@ -30,7 +30,6 @@ package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.repository.pojo.RepoYamlSyncInfo
 import com.tencent.devops.repository.pojo.Repository
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -49,33 +48,19 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceRepositoryPacResource {
-
-    @ApiOperation("保存pac同步详情")
-    @POST
-    @Path("/{projectId}/{repositoryHashId}/initPacSyncDetail")
-    fun initPacSyncDetail(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("代码库哈希ID", required = true)
-        @PathParam("repositoryHashId")
-        repositoryHashId: String,
-        @ApiParam("文件同步详情", required = true)
-        syncFileInfoList: List<RepoYamlSyncInfo>
-    ): Result<Boolean>
-
     @ApiOperation("更新pac同步状态")
     @POST
-    @Path("/{projectId}/{repositoryHashId}/updatePacSyncStatus")
-    fun updatePacSyncStatus(
+    @Path("/{projectId}/{repoHashId}/updatePacSyncStatus")
+    fun updateYamlSyncStatus(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("代码库哈希ID", required = true)
-        @PathParam("repositoryHashId")
-        repositoryHashId: String,
-        @ApiParam("文件同步详情", required = true)
-        syncFileInfo: RepoYamlSyncInfo
+        @PathParam("repoHashId")
+        repoHashId: String,
+        @ApiParam("同步状态", required = true)
+        @QueryParam("syncStatus")
+        syncStatus: String
     ): Result<Boolean>
 
     @ApiOperation("根据第三方代码库平台ID获取代码库")

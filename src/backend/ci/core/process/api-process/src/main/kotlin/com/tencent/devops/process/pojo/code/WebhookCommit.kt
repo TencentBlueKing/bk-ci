@@ -36,7 +36,6 @@ data class WebhookCommit(
     val pipelineId: String,
     var version: Int?,
     val params: Map<String, Any>,
-
     val repositoryConfig: RepositoryConfig,
     val repoName: String,
     val commitId: String,
