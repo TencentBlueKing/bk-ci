@@ -25,19 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo.element.trigger
+package com.tencent.devops.common.pipeline.pojo
 
-import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
-import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.ElementProp
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-abstract class WebHookTriggerElement(
-    override val name: String = "webhook base class",
-    override var id: String? = null,
-    override var status: String? = null
-) : Element(name, id, status) {
-
-    open fun triggerCondition(): List<ElementProp> = emptyList()
-
-    open fun getTriggerParameter(): Map<String, List<BuildEnvParameters>> = mapOf()
-}
+@ApiModel("构建-变量描述")
+data class BuildEnvParameters(
+    @ApiModelProperty("名称")
+    val name: String,
+    @ApiModelProperty("描述")
+    val desc: String,
+    @ApiModelProperty("路径")
+    val path: String? = null
+)

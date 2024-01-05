@@ -35,7 +35,7 @@ import com.tencent.devops.store.dao.container.ContainerAppsDao
 import com.tencent.devops.store.dao.container.ContainerAppsEnvDao
 import com.tencent.devops.store.dao.container.ContainerAppsVersionDao
 import com.tencent.devops.store.pojo.app.BuildEnv
-import com.tencent.devops.store.pojo.app.BuildEnvParameters
+import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
 import com.tencent.devops.store.pojo.app.ContainerApp
 import com.tencent.devops.store.pojo.app.ContainerAppCreate
 import com.tencent.devops.store.pojo.app.ContainerAppEnvCreate
