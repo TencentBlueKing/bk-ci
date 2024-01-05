@@ -132,7 +132,7 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
                         payload = null,
                         eventType = null,
                         inputs = ManualTriggerService.parseInputs(openapiInput),
-                        subPipelineTriggerId = subPipelineTriggerId?.toString() ?: ""
+                        subPipelineTriggerId = subPipelineTriggerId?.toString()
                     )
                 )
             )
