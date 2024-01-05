@@ -75,12 +75,14 @@ class ProjectExtOrganizationService constructor(
 
     private fun fixOrganizationByNormal(tProjectRecord: TProjectRecord) {
         val rightProjectOrganization = getRightProjectOrganization(tProjectRecord)
-        logger.info("fix organization by normal: ${tProjectRecord.englishName}|$rightProjectOrganization")
-        projectDao.updateOrganizationByEnglishName(
-            dslContext = dslContext,
-            englishName = tProjectRecord.englishName,
-            projectOrganizationInfo = rightProjectOrganization
-        )
+        if (rightProjectOrganization.needFix) {
+            logger.info("fix organization by normal: ${tProjectRecord.englishName}|$rightProjectOrganization")
+            projectDao.updateOrganizationByEnglishName(
+                dslContext = dslContext,
+                englishName = tProjectRecord.englishName,
+                projectOrganizationInfo = rightProjectOrganization
+            )
+        }
     }
 
     fun fixProjectOrganization(englishNames: List<String>): Boolean {
@@ -132,7 +134,8 @@ class ProjectExtOrganizationService constructor(
                         centerId = centerId,
                         centerName = centerName,
                         deptId = deptId,
-                        deptName = deptName
+                        deptName = deptName,
+                        needFix = false
                     )
                 }
                 centerId != 0L && !centerName.isNullOrBlank() -> {
