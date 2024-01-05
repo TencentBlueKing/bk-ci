@@ -56,8 +56,8 @@ class TencentNodeScheduledService @Autowired constructor(
     }
 
     /**
-     * 后台定时轮询机器状态，看机器在不在公司cmdb中（cloud_area_id 字段：-1 - 不在，0 - 在）
-     * 只轮询T_NODE表中 NODE_TYPE=="CMDB"的记录，用ip 调用get_query_info接口，看能否得到对应记录：能-不操作，不能-对应记录的cloud_area_id置为-1
+     * 后台定时轮询机器状态，看机器在不在公司cmdb中
+     * 只轮询T_NODE表中 NODE_TYPE=="CMDB"的记录，用ip 调用get_query_info接口，看能否得到对应记录：能-不操作，不能-对应节点的 NODE_STATUS字段 改成 NOT_IN_CMDB
      * cron：每天上午9点执行。
      */
     @Scheduled(cron = "0 0 9 * * ?")
