@@ -51,5 +51,5 @@ data class TriggerBuildReq(
     @ApiModelProperty("手动触发输入参数")
     val inputs: Map<String, String>? = null,
     @ApiModelProperty("是否为子流水线触发")
-    val checkPipelineTrigger: Boolean = false
+    val subPipelineTriggerId: String = ""
 )

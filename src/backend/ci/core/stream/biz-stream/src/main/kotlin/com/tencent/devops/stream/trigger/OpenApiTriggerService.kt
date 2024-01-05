@@ -134,7 +134,7 @@ class OpenApiTriggerService @Autowired constructor(
                 status = Response.Status.BAD_REQUEST,
                 message = "can not load action"
             ),
-            triggerBuildReq.checkPipelineTrigger
+            triggerBuildReq.subPipelineTriggerId
         )
 
         // 仅支持当前仓库下的 event
@@ -217,7 +217,7 @@ class OpenApiTriggerService @Autowired constructor(
                     triggerBuildReq = triggerBuildReq
                 )
             ),
-            triggerBuildReq.checkPipelineTrigger
+            triggerBuildReq.subPipelineTriggerId
         )
         val request = action.buildRequestEvent("")?.copy(objectKind = StreamGitObjectKind.OBJECT_KIND_OPENAPI)
             ?: throw CustomException(
