@@ -10,6 +10,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwAuthProjectResourceV4
+import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -49,6 +50,23 @@ class ApigwAuthProjectResourceV4Impl @Autowired constructor(
             resourceType = resourceType.value,
             resourceCode = resourceCode,
             group = group
+        )
+    }
+
+    override fun batchAddResourceGroupMembers(
+        appCode: String?,
+        apigwType: String?,
+        userId: String?,
+        projectId: String,
+        createInfo: ProjectCreateUserInfo
+    ): Result<Boolean> {
+        logger.info("createProjectUser v4 |$appCode|$userId|$projectId|$createInfo")
+        return client.get(ServiceResourceMemberResource::class).batchAddResourceGroupMembers(
+            token = tokenService.getSystemToken(),
+            userId = createInfo.createUserId,
+            projectCode = projectId,
+            groupId = createInfo.groupId!!.toInt(),
+            members = createInfo.userIds!!
         )
     }
 }

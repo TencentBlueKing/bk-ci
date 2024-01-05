@@ -67,24 +67,26 @@ class TxShardingRoutingRuleServiceImpl(
      * 获取可用数据源名称
      * @param clusterName db集群名称
      * @param moduleCode 模块代码
+     * @param ruleType 规则类型
      * @param dataSourceNames 数据源名称集合
      * @return 可用数据源名称
      */
     override fun getValidDataSourceName(
         clusterName: String,
         moduleCode: SystemModuleEnum,
+        ruleType: ShardingRuleTypeEnum,
         dataSourceNames: List<String>
     ): String {
         val dbBuildNumRedisKey = ShardingUtil.getShardingRoutingRuleKey(
             clusterName = clusterName,
             moduleCode = moduleCode.name,
-            ruleType = ShardingRuleTypeEnum.DB.name,
+            ruleType = ruleType.name,
             routingName = PROCESS_SHARDING_DB_BUILD_NUM_REDIS_KEY
         )
         val dbBuildProjectNumRedisKey = ShardingUtil.getShardingRoutingRuleKey(
             clusterName = clusterName,
             moduleCode = moduleCode.name,
-            ruleType = ShardingRuleTypeEnum.DB.name,
+            ruleType = ruleType.name,
             routingName = PROCESS_SHARDING_DB_BUILD_PROJECT_NUM_REDIS_KEY
         )
         if (!redisOperation.hasKey(dbBuildNumRedisKey) || !redisOperation.hasKey(dbBuildProjectNumRedisKey)) {
@@ -111,11 +113,13 @@ class TxShardingRoutingRuleServiceImpl(
 
     /**
      * 获取可用数据库表名称
+     * @param ruleType 规则类型
      * @param dataSourceName 数据源名称
      * @param tableShardingConfig 分表配置
      * @return 可用数据库表名称
      */
     override fun getValidTableName(
+        ruleType: ShardingRuleTypeEnum,
         dataSourceName: String,
         tableShardingConfig: TableShardingConfig
     ): String {
@@ -125,14 +129,14 @@ class TxShardingRoutingRuleServiceImpl(
         val tableBuildNumRedisKey = ShardingUtil.getShardingRoutingRuleKey(
             clusterName = clusterName,
             moduleCode = moduleCode.name,
-            ruleType = ShardingRuleTypeEnum.TABLE.name,
+            ruleType = ruleType.name,
             routingName = "$dataSourceName:$PROCESS_SHARDING_TABLE_BUILD_NUM_REDIS_KEY",
             tableName = tableName
         )
         val tableBuildProjectNumRedisKey = ShardingUtil.getShardingRoutingRuleKey(
             clusterName = clusterName,
             moduleCode = moduleCode.name,
-            ruleType = ShardingRuleTypeEnum.DB.name,
+            ruleType = ruleType.name,
             routingName = "$dataSourceName:$PROCESS_SHARDING_TABLE_BUILD_PROJECT_NUM_REDIS_KEY",
             tableName = tableName
         )

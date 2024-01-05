@@ -17,18 +17,18 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import ajax from '@/utils/request'
-import Vue from 'vue'
 import {
-    PROCESS_API_URL_PREFIX,
-    MY_PIPELINE_VIEW_ID,
+    ALL_PIPELINE_VIEW_ID,
     COLLECT_VIEW_ID,
     COLLECT_VIEW_ID_NAME,
-    ALL_PIPELINE_VIEW_ID,
     DELETED_VIEW_ID,
-    UNCLASSIFIED_PIPELINE_VIEW_ID,
-    RECENT_USED_VIEW_ID
+    MY_PIPELINE_VIEW_ID,
+    PROCESS_API_URL_PREFIX,
+    RECENT_USED_VIEW_ID,
+    UNCLASSIFIED_PIPELINE_VIEW_ID
 } from '@/store/constants'
+import ajax from '@/utils/request'
+import Vue from 'vue'
 
 const prefix = `/${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects`
 const groupPrefix = `/${PROCESS_API_URL_PREFIX}/user/pipelineGroups`
@@ -323,7 +323,7 @@ const actions = {
     /**
      * 删除标签分组
     */
-    deleteGroup ({ commit, state, dispatch }, { projectId, groupId }) {
+    deleteLabelGroup ({ commit, state, dispatch }, { projectId, groupId }) {
         // return {groupId}
         return ajax.delete(`${groupPrefix}/groups?projectId=${projectId}&groupId=${groupId}`).then(response => {
             return response.data

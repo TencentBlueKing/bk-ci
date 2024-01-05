@@ -39,6 +39,7 @@ import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OP_PROJECT_MANAGE"], description = "OP-项目-管理")
@@ -47,7 +48,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface OPProjectManageResource {
 
-    @ApiOperation("锁定项目流水线构建权限")
+    @ApiOperation("锁定项目下流水线构建权限")
     @PUT
     @Path("/{projectId}/pipeline/build/lock")
     fun lockProjectPipelineBuildPermission(
@@ -56,10 +57,13 @@ interface OPProjectManageResource {
         userId: String,
         @ApiParam(value = "项目ID", required = true)
         @PathParam("projectId")
-        projectId: String
+        projectId: String,
+        @ApiParam(value = "流水线ID", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String? = null
     ): Result<Boolean>
 
-    @ApiOperation("解锁项目流水线构建权限")
+    @ApiOperation("解锁项目下流水线构建权限")
     @PUT
     @Path("/{projectId}/pipeline/build/unlock")
     fun unlockProjectPipelineBuildPermission(
@@ -68,6 +72,9 @@ interface OPProjectManageResource {
         userId: String,
         @ApiParam(value = "项目ID", required = true)
         @PathParam("projectId")
-        projectId: String
+        projectId: String,
+        @ApiParam(value = "流水线ID", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String? = null
     ): Result<Boolean>
 }

@@ -16,4 +16,12 @@ interface PermissionResourceMemberService {
         resourceType: String,
         resourceCode: String
     ): List<BkAuthGroupAndUserList>
+
+    fun batchAddResourceGroupMembers(
+        userId: String,
+        projectCode: String,
+        iamGroupId: Int,
+        expiredTime: Long,
+        members: List<String>
+    ): Boolean
 }

@@ -70,6 +70,16 @@ func (b *buildDockerManager) GetInstanceCount() int {
 	return i
 }
 
+func (b *buildDockerManager) GetInstanceStr() string {
+	var sb strings.Builder
+	b.instances.Range(func(_, value interface{}) bool {
+		v := *value.(*api.ThirdPartyDockerTaskInfo)
+		sb.WriteString(fmt.Sprintf("%s[%s],", v.BuildId, v.VmSeqId))
+		return true
+	})
+	return sb.String()
+}
+
 func (b *buildDockerManager) GetInstances() []api.ThirdPartyDockerTaskInfo {
 	result := make([]api.ThirdPartyDockerTaskInfo, 0)
 	b.instances.Range(func(_, value interface{}) bool {
@@ -98,11 +108,6 @@ const (
 )
 
 func runDockerBuild(buildInfo *api.ThirdPartyBuildInfo) {
-	if !systemutil.IsLinux() {
-		GBuildDockerManager.RemoveBuild(buildInfo.BuildId)
-		dockerBuildFinish(buildInfo.ToFinish(false, i18n.Localize("DockerOnlySupportLinux", nil), api.DockerOsErrorEnum))
-		return
-	}
 	// 第一次使用docker构建机后，则直接开启docker构建机相关逻辑
 	if !config.GAgentConfig.EnableDockerBuild {
 		config.GAgentConfig.EnableDockerBuild = true
@@ -132,7 +137,7 @@ func runDockerBuild(buildInfo *api.ThirdPartyBuildInfo) {
 		return
 	}
 
-	go doDockerJob(buildInfo)
+	doDockerJob(buildInfo)
 }
 
 const longLogTag = "toolong"

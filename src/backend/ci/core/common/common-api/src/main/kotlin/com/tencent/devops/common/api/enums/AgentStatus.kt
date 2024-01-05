@@ -54,5 +54,14 @@ enum class AgentStatus(val status: Int) {
         fun isUnImport(status: AgentStatus) = status == UN_IMPORT
 
         fun isImportException(status: AgentStatus) = status == IMPORT_EXCEPTION
+
+        fun fromString(status: String): AgentStatus {
+            values().forEach {
+                if (status == it.name) {
+                    return it
+                }
+            }
+            throw InvalidParamException("Unknown agent status($status)")
+        }
     }
 }

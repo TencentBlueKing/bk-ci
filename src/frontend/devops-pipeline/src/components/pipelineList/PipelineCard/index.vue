@@ -6,14 +6,22 @@
                     <router-link
                         class="pipeline-cell-link"
                         :to="pipeline.historyRoute"
+                        v-bk-overflow-tips
                     >
                         {{pipeline.pipelineName}}
                     </router-link>
+                    <logo
+                        class="ml5 template-mode-icon"
+                        v-if="pipeline.templateId"
+                        name="template-mode"
+                        size="12"
+                        v-bk-tooltips="$t('pipelineConstraintModeTips')"
+                    />
                 </h3>
                 <p class="bk-pipeline-card-summary">
                     <span>
                         <logo size="16" name="record" />
-                        {{pipeline.buildCount}}次
+                        {{pipeline.buildCount}}{{ $t('runs') }}
                     </span>
                     <span v-if="pipeline.viewNames" class="pipeline-group-names-span">
                         <logo size="16" name="pipeline-group" />
@@ -25,6 +33,16 @@
             </aside>
             <aside class="bk-pipeline-card-header-right-aside">
                 <span
+                    v-perm="{
+                        hasPermission: pipeline.permissions.canExecute,
+                        disablePermissionApi: true,
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: 'pipeline',
+                            resourceCode: pipeline.pipelineId,
+                            action: RESOURCE_ACTION.EXECUTE
+                        }
+                    }"
                     :class="{
                         'bk-pipeline-card-trigger-btn': true,
                         'disabled': pipeline.disabled
@@ -107,9 +125,9 @@
                 {{$t('removeFromGroup')}}
             </bk-button>
         </div>
-        <div v-else-if="!pipeline.hasPermission && !pipeline.delete" class="pipeline-card-apply-mask">
+        <div v-else-if="!pipeline.permissions.canView && !pipeline.delete" class="pipeline-card-apply-mask">
             <bk-button outline theme="primary" @click="applyPermission(pipeline)">
-                {{$t('applyPermission')}}
+                {{$t('apply')}}
             </bk-button>
         </div>
     </div>
@@ -117,10 +135,14 @@
 
 <script>
     import Logo from '@/components/Logo'
+    import { statusColorMap } from '@/utils/pipelineStatus'
     import PipelineStatusIcon from '@/components/PipelineStatusIcon'
     import ExtMenu from '@/components/pipelineList/extMenu'
+    import {
+        handlePipelineNoPermission,
+        RESOURCE_ACTION
+    } from '@/utils/permission'
     import { RECENT_USED_VIEW_ID } from '@/store/constants'
-    import { statusColorMap } from '@/utils/pipelineStatus'
 
     export default {
         components: {
@@ -144,10 +166,11 @@
             collectPipeline: {
                 type: Function,
                 default: () => () => ({})
-            },
-            applyPermission: {
-                type: Function,
-                default: () => () => ({})
+            }
+        },
+        data () {
+            return {
+                RESOURCE_ACTION
             }
         },
         computed: {
@@ -165,12 +188,22 @@
             },
             isRecentView () {
                 return this.$route.params.viewId === RECENT_USED_VIEW_ID
+            },
+            projectId () {
+                return this.$route.params.projectId
             }
         },
         methods: {
             exec () {
                 if (this.pipeline.disabled) return
                 this.execPipeline(this.pipeline)
+            },
+            applyPermission (pipeline) {
+                handlePipelineNoPermission({
+                    projectId: this.projectId,
+                    resourceCode: pipeline.pipelineId,
+                    action: RESOURCE_ACTION.VIEW
+                })
             }
         }
     }
@@ -206,7 +239,19 @@
                     color: $primaryColor;
                     margin: 0;
                     font-weight: normal;
+                    align-items: center;
                     @include ellipsis();
+                    width: 100%;
+                    display: inline-flex;
+                    white-space: nowrap;
+                    overflow: hidden;
+                }
+                .pipeline-cell-link {
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                .template-mode-icon {
+                    flex-shrink: 0;
                 }
                 .bk-pipeline-card-summary {
                     display: flex;

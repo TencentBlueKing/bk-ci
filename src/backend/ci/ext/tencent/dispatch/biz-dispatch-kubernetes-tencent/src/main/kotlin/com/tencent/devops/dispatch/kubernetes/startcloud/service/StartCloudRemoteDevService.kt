@@ -201,6 +201,20 @@ class StartCloudRemoteDevService @Autowired constructor(
         return resp.taskUid
     }
 
+    override fun rebuildWorkspace(userId: String, workspaceName: String, imageCosFile: String): String {
+        val resp = workspaceClient.operateWorkspace(
+            userId = userId,
+            action = EnvironmentAction.REBUILD,
+            workspaceName = workspaceName,
+            environmentOperate = EnvironmentOperate(
+                uid = getEnvironmentUid(workspaceName),
+                image = imageCosFile
+            )
+        )
+
+        return resp.taskUid
+    }
+
     override fun deleteWorkspace(userId: String, workspaceName: String): String {
         val resp = workspaceClient.operateWorkspace(
             userId = userId,
@@ -290,7 +304,11 @@ class StartCloudRemoteDevService @Autowired constructor(
     ): DispatchBuildTaskStatus {
         logger.info("StartCloud remoteDevService waitTaskFinish|userId|$userId|taskId|$taskId")
         val startTime = System.currentTimeMillis()
-        val timeout = if (type == UpdateEventType.CREATE) START_CREATE_TIMEOUT else START_OTHER_TIMEOUT
+        val timeout = if (type == UpdateEventType.CREATE || type == UpdateEventType.REBUILD) {
+            START_CREATE_TIMEOUT
+        } else {
+            START_OTHER_TIMEOUT
+        }
         loop@ while (true) {
             if (System.currentTimeMillis() - startTime > timeout) {
                 logger.error("Wait task: $taskId finish timeout($timeout)")
