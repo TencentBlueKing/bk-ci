@@ -61,8 +61,8 @@ class WindowsBuildListener @Autowired constructor(
 
     override fun onStartup(dispatchMessage: DispatchMessage) {
         logger.info("Windows Dispatch on start up - ($dispatchMessage)")
-        val projectId = dispatchMessage.projectId
-        val creator = dispatchMessage.userId
+        val projectId = dispatchMessage.event.projectId
+        val creator = dispatchMessage.event.userId
 
         val isGitProject = projectId.startsWith("git_")
         logger.info("Project is or not git project:$isGitProject")
@@ -74,11 +74,11 @@ class WindowsBuildListener @Autowired constructor(
             "BKDEVOPS"
         }
         val devCloudWindowsInfo = devCloudWindowsService.getWindowsMachine(
-            os = dispatchMessage.dispatchType?.value,
+            os = dispatchMessage.event.dispatchType.value,
             projectId = projectId,
-            pipelineId = dispatchMessage.pipelineId,
-            buildId = dispatchMessage.buildId,
-            vmSeqId = dispatchMessage.vmSeqId,
+            pipelineId = dispatchMessage.event.pipelineId,
+            buildId = dispatchMessage.event.buildId,
+            vmSeqId = dispatchMessage.event.vmSeqId,
             creator = creator,
             env = generateEnvs(dispatchMessage)
         )
@@ -93,11 +93,11 @@ class WindowsBuildListener @Autowired constructor(
             try {
                 logRed(
                     buildLogPrinter,
-                    dispatchMessage.buildId,
-                    dispatchMessage.containerHashId,
-                    dispatchMessage.vmSeqId,
+                    dispatchMessage.event.buildId,
+                    dispatchMessage.event.containerHashId,
+                    dispatchMessage.event.vmSeqId,
                     I18nUtil.getCodeLanMessage(BK_NO_FREE_WINDOWS_BUILD_RESOURCE),
-                    dispatchMessage.executeCount
+                    dispatchMessage.event.executeCount
                 )
                 retry(sleepTimeInMS = 20000, retryTimes = 3)
             } catch (e: BuildFailureException) {
@@ -121,24 +121,24 @@ class WindowsBuildListener @Autowired constructor(
         }
         log(
             buildLogPrinter = buildLogPrinter,
-            buildId = dispatchMessage.buildId,
-            containerHashId = dispatchMessage.containerHashId,
-            vmSeqId = dispatchMessage.vmSeqId,
+            buildId = dispatchMessage.event.buildId,
+            containerHashId = dispatchMessage.event.containerHashId,
+            vmSeqId = dispatchMessage.event.vmSeqId,
             message = "Windows resource type：$resourceType",
-            executeCount = dispatchMessage.executeCount
+            executeCount = dispatchMessage.event.executeCount
         )
         log(
             buildLogPrinter = buildLogPrinter,
-            buildId = dispatchMessage.buildId,
-            containerHashId = dispatchMessage.containerHashId,
-            vmSeqId = dispatchMessage.vmSeqId,
+            buildId = dispatchMessage.event.buildId,
+            containerHashId = dispatchMessage.event.containerHashId,
+            vmSeqId = dispatchMessage.event.vmSeqId,
             message = "Windows build machine IP：${devCloudWindowsInfo?.ip}",
-            executeCount = dispatchMessage.executeCount
+            executeCount = dispatchMessage.event.executeCount
         )
 
         logger.info(
-            "[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}" +
-                "|${dispatchMessage.buildId}] Success to start vm(${devCloudWindowsInfo?.ip})"
+            "[${dispatchMessage.event.projectId}|${dispatchMessage.event.pipelineId}" +
+                "|${dispatchMessage.event.buildId}] Success to start vm(${devCloudWindowsInfo?.ip})"
         )
     }
 
@@ -248,7 +248,7 @@ class WindowsBuildListener @Autowired constructor(
             }
             envs.putAll(
                 mapOf(
-                    ENV_KEY_PROJECT_ID to projectId,
+                    ENV_KEY_PROJECT_ID to event.projectId,
                     ENV_KEY_AGENT_ID to id,
                     ENV_KEY_AGENT_SECRET_KEY to secretKey,
                     ENV_KEY_GATEWAY to gateway,

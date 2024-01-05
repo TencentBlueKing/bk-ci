@@ -1,60 +1,142 @@
 <template>
-    <div class="codelib-content" v-bkloading="{ isLoading, title: $t('codelib.laodingTitle') }">
-        <template v-if="hasCodelibs || isSearch">
-            <link-code-lib v-if="codelibs.hasCreatePermission" :create-codelib="createCodelib" :is-blue-king="isBlueKing"></link-code-lib>
-            <bk-button theme="primary" v-else @click.stop="goCreatePermission">
-                <i class="devops-icon icon-plus"></i>
-                <span>{{ $t('codelib.linkCodelib') }}</span>
-            </bk-button>
-            <bk-input :placeholder="$t('codelib.aliasNamePlaceholder')"
-                class="codelib-search"
-                :clearable="true"
-                right-icon="icon-search"
-                v-model="aliasName"
-                @enter="query"
-                @change="clearAliasName"
-            >
-            </bk-input>
-            <code-lib-table v-bind="codelibs" :switch-page="switchPage" @handleSortChange="handleSortChange"></code-lib-table>
+    <div class="codelib-content">
+        <template v-if="hasCodelibs || aliasName.length || isLoading">
+            <div id="codelib-list-content">
+                <layout :flod.sync="isListFlod" @on-flod="handleLayoutFlod">
+                    <template>
+                        <section class="header-content">
+                            <link-code-lib
+                                v-perm="{
+                                    hasPermission: codelibs && codelibs.hasCreatePermission,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: RESOURCE_TYPE,
+                                        resourceCode: projectId,
+                                        action: RESOURCE_ACTION.CREATE
+                                    }
+                                }"
+                                :create-codelib="createCodelib"
+                                :is-blue-king="isBlueKing"
+                            >
+                            </link-code-lib>
+                            <bk-input :placeholder="$t('codelib.aliasNamePlaceholder')"
+                                :class="{
+                                    'codelib-search': true,
+                                    'is-fold-search': isListFlod
+                                }"
+                                :clearable="true"
+                                right-icon="icon-search"
+                                v-model="aliasName"
+                                @enter="handleEnterSearch"
+                                @change="clearAliasName"
+                            >
+                            </bk-input>
+                        </section>
+                        <code-lib-table
+                            v-bkloading="{ isLoading }"
+                            :limit="limit"
+                            v-bind="codelibs"
+                            :default-pagesize="defaultPagesize"
+                            :cur-repo.sync="curRepo"
+                            :switch-page="switchPage"
+                            :alias-name.sync="aliasName"
+                            :cur-repo-id.sync="curRepoId"
+                            :is-list-flod.sync="isListFlod"
+                            :refresh-codelib-list="refreshCodelibList"
+                            @updateFlod="handleUpdateFlod"
+                            @handleSortChange="handleSortChange"
+                        >
+                        </code-lib-table>
+                    </template>
+                    <template slot="flod">
+                        <code-lib-detail
+                            :cur-repo="curRepo"
+                            :cur-repo-id.sync="curRepoId"
+                            :codelib-list="codelibList"
+                            :refresh-codelib-list="refreshCodelibList"
+                            :switch-page="switchPage"
+                            @updateList="handleUpdateRepoList"
+                        />
+                    </template>
+                </layout>
+            </div>
         </template>
-        <empty-tips v-else-if="codelibs && codelibs.hasCreatePermission" :title="$t('codelib.codelib')" :desc="$t('codelib.codelibDesc')">
-            <template v-for="typeLabel in codelibTypes" theme="primary">
-                <bk-button v-if="!isExtendTx || typeLabel !== 'Gitlab' || isBlueKing" :key="typeLabel" @click="createCodelib(typeLabel)">
-                    {{ $t('codelib.linkCodelibLabel', [typeLabel]) }}
-                </bk-button>
-            </template>
+        <empty-tips
+            v-else-if="codelibs && codelibs.hasCreatePermission"
+            :title="$t('codelib.codelib')"
+            :desc="$t('codelib.codelibDesc')"
+        >
+            <bk-button
+                v-for="typeLabel in codelibTypes"
+                :key="typeLabel"
+                @click="createCodelib(typeLabel)"
+            >
+                {{ $t('codelib.linkCodelibLabel', [typeLabel]) }}
+            </bk-button>
         </empty-tips>
-        <empty-tips v-else :title="$t('codelib.noCodelibPermission')" :desc="$t('codelib.noPermissionDesc')">
-            <bk-button theme="primary" @click="switchProject">{{ $t('codelib.switchProject') }}</bk-button>
-            <bk-button theme="success" @click="toApplyPermission">{{ $t('codelib.applyPermission') }}</bk-button>
+        <empty-tips
+            v-else
+            :title="$t('codelib.noCodelibPermission')"
+            :desc="$t('codelib.noPermissionDesc')"
+        >
+            <bk-button
+                theme="primary"
+                @click="switchProject"
+            >
+                {{ $t('codelib.switchProject') }}
+            </bk-button>
+            <bk-button
+                theme="success"
+                @click="toApplyPermission"
+            >
+                {{ $t('codelib.applyPermission') }}
+            </bk-button>
         </empty-tips>
-        <code-lib-dialog :refresh-codelib-list="refreshCodelibList" @powersValidate="powerValidate"></code-lib-dialog>
+        <code-lib-dialog
+            :refresh-codelib-list="refreshCodelibList"
+            @updateRepoId="handleUpdateRepo"
+        ></code-lib-dialog>
     </div>
 </template>
 
 <script>
     import { mapActions, mapState } from 'vuex'
+    import CodeLibDetail from '../components/CodeLibDetail'
     import CodeLibDialog from '../components/CodeLibDialog'
     import CodeLibTable from '../components/CodeLibTable'
     import LinkCodeLib from '../components/LinkCodeLib'
+    import layout from '../components/layout'
     import {
+        CODE_REPOSITORY_CACHE,
+        CODE_REPOSITORY_SEARCH_VAL,
         codelibTypes,
         getCodelibConfig,
         isGit,
+        isGitLab,
         isGithub,
-        isGitLab, isP4, isTGit
+        isP4,
+        isSvn,
+        isTGit
     } from '../config/'
+    import { getOffset } from '../utils/'
+    import { RESOURCE_ACTION, RESOURCE_TYPE } from '../utils/permission'
+
     export default {
         name: 'codelib-list',
 
         components: {
             LinkCodeLib,
             CodeLibTable,
-            CodeLibDialog
+            CodeLibDialog,
+            CodeLibDetail,
+            layout
         },
-
+       
         data () {
             return {
+                RESOURCE_ACTION,
+                RESOURCE_TYPE,
                 isLoading: !this.codelibs,
                 isSearch: false,
                 defaultPagesize: 10,
@@ -63,7 +145,10 @@
                 aliasName: '',
                 projectList: [],
                 sortBy: '',
-                sortType: ''
+                sortType: '',
+                isListFlod: false,
+                curRepoId: '',
+                curRepo: {}
             }
         },
 
@@ -82,10 +167,6 @@
                 }
                 return typeList
             },
-            hasCodelibs () {
-                const { codelibs } = this
-                return codelibs && codelibs.records && codelibs.records.length > 0
-            },
             isBlueKing () {
                 const projectId = this.$route.params.projectId
                 const filterArr = this.projectList.find(item => {
@@ -95,29 +176,54 @@
                     )
                 })
                 return filterArr
+            },
+            hasCodelibs () {
+                const { codelibs } = this
+                return codelibs && codelibs.records && codelibs.records.length > 0
+            },
+            codelibList () {
+                return this.codelibs && this.codelibs.records
+            },
+            userId () {
+                return this.$route.query.userId || ''
             }
         },
 
         watch: {
             codelibs: function () {
                 this.isLoading = false
+                this.curRepo = (this.codelibs && this.codelibs.records.find(codelib => codelib.repositoryHashId === this.curRepoId)) || this.curRepo
             },
             projectId (projectId) {
-                this.isSearch = false
+                this.isListFlod = false
                 this.refreshCodelibList(projectId)
+            },
+            curRepoId (id) {
+                this.curRepo = (this.codelibs && this.codelibs.records.find(codelib => codelib.repositoryHashId === id)) || this.curRepo
             }
         },
 
-        async created () {
+        async mounted () {
+            const { sortType, sortBy } = this.$route.query
+            this.sortType = sortType ?? localStorage.getItem('codelibSortType') ?? ''
+            this.sortBy = sortBy ?? localStorage.getItem('codelibSortBy') ?? ''
+            this.init()
             this.projectList = this.$store.state.projectList
+            if (this.userId) {
+                this.aliasName = JSON.parse(localStorage.getItem(CODE_REPOSITORY_SEARCH_VAL)) || ''
+            }
+
             this.refreshCodelibList()
             if (
                 this.$route.hash.includes('popupGit')
                 || this.$route.hash.includes('popupGithub')
+                || this.$route.hash.includes('popupTGit')
             ) {
                 const type = this.$route.hash.includes('popupGithub')
                     ? 'github'
-                    : 'git'
+                    : this.$route.hash.includes('popupGit')
+                        ? 'git'
+                        : 'tgit'
                 this.createCodelib(type, true)
                 this.checkOAuth({ projectId: this.projectId, type })
             }
@@ -134,22 +240,52 @@
                 'checkOAuth'
             ]),
 
+            init () {
+                const query = this.$route.query
+                const cache = JSON.parse(localStorage.getItem(CODE_REPOSITORY_CACHE))
+                const { top } = getOffset(document.getElementById('codelib-list-content'))
+                const windowHeight = window.innerHeight
+                const tableHeadHeight = 42
+                const paginationHeight = 63
+                const windownOffsetBottom = 20
+                const listTotalHeight = windowHeight - top - tableHeadHeight - paginationHeight - windownOffsetBottom - 74
+                const tableRowHeight = 42
+
+                const isCacheProject = this.projectId === (cache && cache.projectId)
+                this.aliasName = query.searchName || ''
+                const id = isCacheProject ? query.id || (cache && cache.id) : ''
+                const scmType = isCacheProject ? query.scmType || (cache && cache.scmType) : ''
+                const page = isCacheProject ? (cache && cache.page) : 1
+                const limit = isCacheProject ? (cache && cache.limit) : Math.floor(listTotalHeight / tableRowHeight)
+                this.startPage = page
+                this.defaultPagesize = Number(limit)
+                if (id) {
+                    this.isListFlod = true
+                    this.curRepoId = id
+                    this.$router.push({
+                        query: {
+                            ...this.$route.query,
+                            scmType,
+                            id,
+                            page,
+                            limit
+                        }
+                    })
+                }
+            },
+
             clearAliasName () {
-                if (this.aliasName === '') this.refreshCodelibList()
+                if (this.aliasName === '') {
+                    this.refreshCodelibList()
+                    localStorage.removeItem(CODE_REPOSITORY_SEARCH_VAL)
+                }
             },
 
             switchPage (page, pageSize) {
                 const { projectId } = this
                 this.refreshCodelibList(projectId, page, pageSize)
             },
-
-            query () {
-                const { projectId, startPage, defaultPagesize, aliasName } = this
-                this.isSearch = true
-                this.refreshCodelibList(projectId, startPage, defaultPagesize, aliasName)
-            },
-
-            refreshCodelibList (
+            async refreshCodelibList (
                 projectId = this.projectId,
                 page = this.startPage,
                 pageSize = this.defaultPagesize,
@@ -157,9 +293,15 @@
                 sortBy = this.sortBy,
                 sortType = this.sortType
             ) {
-                this.isLoading = true
-                aliasName = encodeURIComponent(aliasName)
-                this.requestList({
+                if (!this.userId) this.isLoading = true
+                this.$router.push({
+                    query: {
+                        ...this.$route.query,
+                        sortBy,
+                        sortType
+                    }
+                })
+                await this.requestList({
                     projectId,
                     aliasName,
                     page,
@@ -167,6 +309,17 @@
                     sortBy,
                     sortType
                 })
+            },
+
+            handleEnterSearch (val) {
+                localStorage.setItem(CODE_REPOSITORY_SEARCH_VAL, JSON.stringify(val.trim()))
+                this.$router.push({
+                    query: {
+                        ...this.$route.query,
+                        searchName: val.trim()
+                    }
+                })
+                this.refreshCodelibList(this.projectId, 1)
             },
 
             async createCodelib (typeLabel, isEdit) {
@@ -186,7 +339,7 @@
                     Object.assign(CodelibDialog, { authType: 'HTTPS' })
                     if (isEdit) Object.assign(CodelibDialog, { repositoryHashId: this.$route.hash.split('-')[1] })
                 }
-                if (isGitLab(typeName)) {
+                if (isGitLab(typeName) || isSvn(typeName)) {
                     Object.assign(CodelibDialog, { authType: 'SSH' })
                 }
                 if (isP4(typeName)) {
@@ -195,37 +348,52 @@
                 this.toggleCodelibDialog(CodelibDialog)
             },
 
-            powerValidate (url) {
-                window.open(url, '_self')
-            },
-
             switchProject () {
                 this.iframeUtil.toggleProjectMenu(true)
             },
 
-            async toApplyPermission () {
-                this.tencentPermission(`/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=code&role_creator=repertory`)
-            },
-
-            goCreatePermission () {
-                this.$showAskPermissionDialog({
-                    noPermissionList: [{
-                        actionId: this.$permissionActionMap.create,
-                        resourceId: this.$permissionResourceMap.code,
-                        instanceId: [],
-                        projectId: this.projectId
-                    }],
-                    applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${
-                        this.projectId
-                    }&service_code=code&role_creator=repertory`
+            applyPermission () {
+                this.handleNoPermission({
+                    projectId: this.projectId,
+                    resourceType: RESOURCE_TYPE,
+                    resourceCode: this.projectId,
+                    action: RESOURCE_ACTION.CREATE
                 })
             },
-
             handleSortChange (payload) {
                 const { sortBy, sortType } = payload
                 this.sortBy = sortBy
                 this.sortType = sortType
                 this.refreshCodelibList()
+                if (sortBy && sortType) {
+                    localStorage.setItem('codelibSortType', sortType)
+                    localStorage.setItem('codelibSortBy', sortBy)
+                } else {
+                    localStorage.removeItem('codelibSortType')
+                    localStorage.removeItem('codelibSortBy')
+                }
+                this.$router.push({
+                    query: {
+                        ...this.$route.query,
+                        sortBy,
+                        sortType
+                    }
+                })
+            },
+
+            handleUpdateFlod (payload) {
+                this.isListFlod = payload
+            },
+
+            handleUpdateRepo (id) {
+                this.startPage = 1
+                this.curRepoId = id
+            },
+
+            handleUpdateRepoList () {
+                const page = this.$route.query.page
+                const limit = this.$route.query.limit
+                this.refreshCodelibList(this.projectId, page, limit)
             }
         }
     }
@@ -235,11 +403,16 @@
 .codelib-content {
     min-height: 100%;
     padding: 20px 30px 0;
+    background-color: #F5F7FA;
     .codelib-search {
-        position: absolute;
-        top: 20px;
-        left: 180px;
+        width: 480px;
+    }
+    .is-fold-search {
         width: 240px;
     }
+}
+.header-content {
+    display: flex;
+    justify-content: space-between;
 }
 </style>

@@ -34,7 +34,8 @@ enum class AuthResourceType(val value: String) {
     CODE_REPERTORY("repertory"), // code代码仓库
 
     PIPELINE_DEFAULT("pipeline"), // 流水线默认类型
-    PIPELINE_GROUP("pipeline_group"), // 流水线默认类型
+    PIPELINE_GROUP("pipeline_group"), // 流水线组类型
+    PIPELINE_TEMPLATE("pipeline_template"), // 流水线模板类型
 
     ARTIFACTORY_CUSTOM_DIR("custom_dir"), // 版本仓库自定义目录
 

@@ -28,6 +28,7 @@
 package com.tencent.devops.store.dao
 
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TExtensionServiceItemRel
 import com.tencent.devops.model.store.tables.records.TExtensionServiceItemRelRecord
 import com.tencent.devops.store.pojo.ExtServiceItemRelCreateInfo
@@ -143,7 +144,11 @@ class ExtServiceItemRelDao {
 
     fun getBkService(dslContext: DSLContext): Result<out Record> {
         return with(TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL) {
-            dslContext.select(BK_SERVICE_ID.`as`("bkServiceId")).from(this).groupBy(BK_SERVICE_ID).fetch()
+            dslContext.select(BK_SERVICE_ID.`as`("bkServiceId"))
+                .from(this)
+                .groupBy(BK_SERVICE_ID)
+                .skipCheck()
+                .fetch()
         }
     }
 }

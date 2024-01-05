@@ -96,7 +96,7 @@ class BSAuthTokenApi @Autowired constructor(
             envName = bkAuthProperties.envName!!,
             appCode = appCode,
             appSecret = appSecret,
-            idProvider = bkAuthProperties.idProvider!!,
+            idProvider = v0IdProvider,
             grantType = bkAuthProperties.grantType!!
         )
         val content = objectMapper.writeValueAsString(bkAuthTokenRequest)
@@ -153,19 +153,6 @@ class BSAuthTokenApi @Autowired constructor(
 
     private fun getAppCodeAndSecret(serviceCode: AuthServiceCode): Pair<String, String> {
         return serviceCode.id() to secretMap[serviceCode.id()]!!
-//        val secret = when (serviceCode as BkAuthServiceCode) {
-//            BkAuthServiceCode.BCS -> bkAuthProperties.bcsSecret
-//            BkAuthServiceCode.CODE -> bkAuthProperties.codeSecret
-//            BkAuthServiceCode.PIPELINE -> bkAuthProperties.pipelineSecret
-//            BkAuthServiceCode.ARTIFACTORY -> bkAuthProperties.artifactorySecret
-//            BkAuthServiceCode.TICKET -> bkAuthProperties.ticketSecret
-//            BkAuthServiceCode.ENVIRONMENT -> bkAuthProperties.environmentSecret
-//            BkAuthServiceCode.EXPERIENCE -> bkAuthProperties.experienceSecret
-//            BkAuthServiceCode.VS -> bkAuthProperties.vsSecret
-//            BkAuthServiceCode.QUALITY -> bkAuthProperties.qualitySecret
-//            BkAuthServiceCode.WETEST -> bkAuthProperties.wetestSecret
-//        }
-//        return Pair(serviceCode.value, secret!!)
     }
 
     companion object {
@@ -173,5 +160,6 @@ class BSAuthTokenApi @Autowired constructor(
         private const val SleepMills = 100L
         private const val AccessTokenExpiredInSecond: Long = 3600 * 3
         private const val expiredTimeInSeconds: Long = 10
+        private const val v0IdProvider = "client"
     }
 }

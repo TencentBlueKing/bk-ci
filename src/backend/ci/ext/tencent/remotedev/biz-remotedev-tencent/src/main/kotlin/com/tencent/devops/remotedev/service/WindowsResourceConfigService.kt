@@ -27,10 +27,14 @@
 
 package com.tencent.devops.remotedev.service
 
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.remotedev.dao.WindowsResourceTypeDao
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
+import com.tencent.devops.remotedev.dao.WindowsSpecResourceDao
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
+import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -40,7 +44,8 @@ import org.springframework.stereotype.Service
 class WindowsResourceConfigService @Autowired constructor(
     private val dslContext: DSLContext,
     private val windowsResourceTypeDao: WindowsResourceTypeDao,
-    private val windowsResourceZoneDao: WindowsResourceZoneDao
+    private val windowsResourceZoneDao: WindowsResourceZoneDao,
+    private val windowsSpecResourceDao: WindowsSpecResourceDao
 ) {
 
     companion object {
@@ -52,9 +57,9 @@ class WindowsResourceConfigService @Autowired constructor(
         return windowsResourceZoneDao.fetchAll(dslContext, true)
     }
 
-    fun getAllType(withUnavailable: Boolean?): List<WindowsResourceTypeConfig> {
+    fun getAllType(withUnavailable: Boolean?, onlySpecModel: Boolean?): List<WindowsResourceTypeConfig> {
         logger.info("get all windows resource type")
-        return windowsResourceTypeDao.fetchAll(dslContext, withUnavailable ?: false)
+        return windowsResourceTypeDao.fetchAll(dslContext, withUnavailable ?: false, onlySpecModel)
     }
 
     fun getTypeConfig(
@@ -149,5 +154,46 @@ class WindowsResourceConfigService @Autowired constructor(
         )
 
         return true
+    }
+
+    fun createOrUpdateSpec(
+        data: WindowsSpecResInfo
+    ): Boolean {
+        return windowsSpecResourceDao.createOrUpdateSpecRes(
+            dslContext = dslContext,
+            projectId = data.projectId,
+            size = data.size,
+            quota = data.quota
+        )
+    }
+
+    fun deleteSpec(
+        projectId: String,
+        size: String
+    ): Boolean {
+        return windowsSpecResourceDao.delete(dslContext = dslContext, projectId = projectId, size = size)
+    }
+
+    fun fetchSpec(
+        projectId: String?,
+        machineType: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Page<WindowsSpecResInfo> {
+        val limit = PageUtil.convertPageSizeToSQLLimit(page ?: 1, pageSize ?: 20)
+        val count = windowsSpecResourceDao.fetchSpecCount(projectId, machineType, dslContext)
+        val recode = windowsSpecResourceDao.fetchSpec(projectId, machineType, dslContext, limit).map {
+            WindowsSpecResInfo(
+                projectId = it.projectId,
+                size = it.size,
+                quota = it.quota
+            )
+        }
+        return Page(
+            page = page ?: 1,
+            pageSize = pageSize ?: 20,
+            count = count,
+            records = recode
+        )
     }
 }

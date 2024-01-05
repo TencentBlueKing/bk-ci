@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.image
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Page
@@ -43,8 +44,8 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TImageRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.USER_IMAGE_VERSION_NOT_EXIST
 import com.tencent.devops.store.dao.common.CategoryDao
 import com.tencent.devops.store.dao.common.ClassifyDao
@@ -326,7 +327,6 @@ abstract class ImageService @Autowired constructor() {
         classifyList?.forEach {
             classifyMap[it.id] = it.classifyCode
         }
-
         images.forEach {
             val imageCode = it[KEY_IMAGE_CODE] as String
             val visibleList = imageVisibleData?.get(imageCode)
@@ -1129,13 +1129,13 @@ abstract class ImageService @Autowired constructor() {
         var tmpVersionPrefix = ""
         versionRecords?.forEach {
             // 通用处理
-            val imageVersion = it["version"] as String
+            val imageVersion = it[KEY_VERSION] as String
             val index = imageVersion.indexOf(".")
             val versionPrefix = imageVersion.substring(0, index + 1)
             var versionName = imageVersion
             var latestVersionName = "${versionPrefix}latest"
-            val imageStatus = it["imageStatus"] as Byte
-            val imageTag = it["imageTag"] as String
+            val imageStatus = it[KEY_IMAGE_STATUS] as Byte
+            val imageTag = it[KEY_IMAGE_TAG] as String
             val imageVersionStatusList = listOf(
                 ImageStatusEnum.TESTING.status.toByte(),
                 ImageStatusEnum.UNDERCARRIAGING.status.toByte(),
@@ -1156,7 +1156,7 @@ abstract class ImageService @Autowired constructor() {
                 versionList.add(VersionInfo(latestVersionName, "$versionPrefix*")) // 添加大版本号的通用最新模式（如1.*）
                 tmpVersionPrefix = versionPrefix
             }
-            versionList.add(VersionInfo(versionName + "(Tag: $imageTag)", imageVersion)) // 添加具体的版本号
+            versionList.add(VersionInfo("$versionName(Tag: $imageTag)", imageVersion)) // 添加具体的版本号
         }
         return versionList
     }

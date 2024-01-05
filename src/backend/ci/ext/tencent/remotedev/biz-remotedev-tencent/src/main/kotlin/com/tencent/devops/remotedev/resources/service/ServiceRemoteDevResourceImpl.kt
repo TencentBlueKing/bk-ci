@@ -2,22 +2,35 @@ package com.tencent.devops.remotedev.resources.service
 
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
+import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
+import com.tencent.devops.remotedev.resources.op.OpProjectWorkspaceResourceImpl
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
+import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import org.slf4j.LoggerFactory
 import java.net.URLDecoder
+import java.util.concurrent.Executors
 
 @RestResource
 @Suppress("ALL")
@@ -27,8 +40,17 @@ class ServiceRemoteDevResourceImpl(
     private val desktopWorkspaceService: DesktopWorkspaceService,
     private val createControl: CreateControl,
     private val workspaceCommon: WorkspaceCommon,
-    private val windowsResourceConfigService: WindowsResourceConfigService
+    private val windowsResourceConfigService: WindowsResourceConfigService,
+    private val notifyControl: NotifyControl,
+    private val client: Client,
+    private val redisOperation: RedisOperation
 ) : ServiceRemoteDevResource {
+    private val executor = Executors.newCachedThreadPool()
+    companion object {
+        private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
+        private const val PIPELINE_CONFIG_INFO = "remotedev:assignWorkspace.pipelineinfo"
+    }
+
     override fun validateUserTicket(userId: String, isOffshore: Boolean, ticket: String): Result<Boolean> {
         return Result(
             permissionService.checkAndGetUser1Password(URLDecoder.decode(ticket, "UTF-8")).userId == userId
@@ -72,6 +94,14 @@ class ServiceRemoteDevResourceImpl(
     ): Result<Boolean> {
         workspaceCommon.syncStartCloudResourceList()
         val cgsData = workspaceCommon.getCgsData(data.cgsIds, data.ips) ?: return Result(false)
+        // 增加可以分配的配额
+        if (!data.ips.isNullOrEmpty() || !data.cgsIds.isNullOrEmpty()) {
+            client.get(ServiceTxProjectResource::class).updateRemotedev(
+                userId = operator,
+                projectCode = data.projectId,
+                addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0)
+            )
+        }
         cgsData.forEach { cgs ->
             if (cgs.status != Constansts.CGS_AVAIABLE_STATUS) return@forEach
             // 先校验该cgsId是否已被申领分配并运行中
@@ -105,6 +135,52 @@ class ServiceRemoteDevResourceImpl(
             )
             Thread.sleep(500)
         }
+        // 启动流水线完成剩下的分配工作
+        if (data.repoId.isNullOrBlank() || data.localDriver.isNullOrBlank()) {
+            return Result(true)
+        }
+        executor.execute {
+            try {
+                val infoS = redisOperation.get(PIPELINE_CONFIG_INFO) ?: return@execute
+                val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
+
+                val cgsIps = data.cgsIds?.map {
+                    val hostIdSub = it.split(".")
+                    hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+                }?.toSet()
+                val resIps = mutableSetOf<String>()
+                resIps.addAll(cgsIps ?: emptySet())
+                resIps.addAll(data.ips ?: emptySet())
+
+                val newParam = mutableMapOf<String, String>()
+                info.buildParam.forEach { (k, v) ->
+                    when (v) {
+                        "job_ip_list" -> newParam[k] = resIps.joinToString(separator = " ")
+                        "repoId" -> newParam[k] = data.repoId ?: ""
+                        "localDriver" -> newParam[k] = data.localDriver ?: ""
+                        else -> newParam[k] = v
+                    }
+                }
+                client.get(ServiceBuildResource::class).manualStartupNew(
+                    userId = info.userId ?: operator,
+                    projectId = info.projectId,
+                    pipelineId = info.pipelineId,
+                    values = newParam,
+                    channelCode = ChannelCode.BS,
+                    buildNo = null,
+                    startType = StartType.SERVICE
+                )
+            } catch (e: Exception) {
+                logger.warn("execute assignWorkspace pipeline error", e)
+            }
+        }
+        return Result(true)
+    }
+
+    override fun notifyWorkspaceInfo(notifyData: WorkspaceNotifyData): Result<Boolean> {
+        notifyControl.notifyWorkspaceInfo(
+            notifyData = notifyData
+        )
         return Result(true)
     }
 }

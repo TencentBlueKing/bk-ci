@@ -232,6 +232,10 @@ class DevCloudRemoteDevService @Autowired constructor(
         TODO("Not yet implemented")
     }
 
+    override fun rebuildWorkspace(userId: String, workspaceName: String, imageCosFile: String): String {
+        TODO("Not yet implemented")
+    }
+
     override fun deleteWorkspace(userId: String, workspaceName: String): String {
         val environmentUid = getEnvironmentUid(workspaceName)
         val resp = workspaceDevCloudClient.operatorWorkspace(

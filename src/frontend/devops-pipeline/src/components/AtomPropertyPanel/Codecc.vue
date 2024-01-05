@@ -556,17 +556,14 @@
                             })
                         }
                     } catch (e) {
-                        if (e.code === 403) { // 没有权限编辑
-                            this.setPermissionConfig(this.$permissionResourceMap.pipeline, this.$permissionActionMap.edit, [{
-                                id: this.pipeline.pipelineId,
-                                name: this.pipeline.name
-                            }], params.projectId, this.getPermUrlByRole(params.projectId, this.pipeline.pipelineId, this.roleMap.manager))
-                        } else {
-                            this.$showTips({
-                                message: e.message,
-                                theme: 'error'
-                            })
-                        }
+                        this.handleError(
+                            e,
+                            {
+                                projectId: params.projectId,
+                                resourceCode: this.pipeline.pipelineId,
+                                action: this.$permissionResourceAction.EDIT
+                            }
+                        )
                     }
                 } else if (this.elementId && !this.taskId) {
                     this.isLoading = true
@@ -663,17 +660,14 @@
                         tab.close()
                     }
                 } catch (e) {
-                    if (e.code === 403) { // 没有权限编辑
-                        this.setPermissionConfig(this.$permissionResourceMap.pipeline, this.$permissionActionMap.edit, [{
-                            id: this.pipeline.pipelineId,
-                            name: this.pipeline.name
-                        }], params.projectId, this.getPermUrlByRole(params.projectId, this.pipeline.pipelineId, this.roleMap.manager))
-                    } else {
-                        this.$showTips({
-                            message: e.message,
-                            theme: 'error'
-                        })
-                    }
+                    this.handleError(
+                        e,
+                        {
+                            projectId: params.projectId,
+                            resourceCode: this.pipeline.pipelineId,
+                            action: this.$permissionResourceAction.EDIT
+                        }
+                    )
                     tab.close()
                 } finally {
                     this.btnDisabled = false

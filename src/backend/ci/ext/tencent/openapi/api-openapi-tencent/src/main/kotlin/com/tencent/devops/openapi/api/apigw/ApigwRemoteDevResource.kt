@@ -7,6 +7,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VAL
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
+import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import io.swagger.annotations.Api
@@ -132,5 +133,34 @@ interface ApigwRemoteDevResource {
         owner: String?,
         @ApiParam(value = "分配数据，必填", required = true)
         data: OpProjectWorkspaceAssignData
+    ): Result<Boolean>
+
+    @ApiOperation("指定项目获取云桌面信息", tags = ["v4_app_list_workspaces_with_projectId"])
+    @GET
+    @Path("/{projectId}/workspaces")
+    fun listWorkspacesWithProjectId(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam("项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<List<WeSecProjectWorkspace>>
+
+    @ApiOperation("用来通知蓝盾客户端消息", tags = ["v4_app_workspace_notify"])
+    @POST
+    @Path("/workspace/notify")
+    fun notifyWorkspaceInfo(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "通知信息", required = true)
+        notifyData: WorkspaceNotifyData
     ): Result<Boolean>
 }

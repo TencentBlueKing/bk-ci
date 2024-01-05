@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.dao.ideatom
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TIdeAtom
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -52,6 +53,8 @@ class MarketIdeAtomClassifyDao {
             atomNum,
             b.CREATE_TIME.`as`("createTime"),
             b.UPDATE_TIME.`as`("updateTime")
-        ).from(b).where(b.TYPE.eq(StoreTypeEnum.IDE_ATOM.type.toByte())).orderBy(b.WEIGHT.desc()).fetch()
+        ).from(b).where(b.TYPE.eq(StoreTypeEnum.IDE_ATOM.type.toByte())).orderBy(b.WEIGHT.desc())
+            .skipCheck()
+            .fetch()
     }
 }

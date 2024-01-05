@@ -27,9 +27,11 @@
 
 package com.tencent.devops.common.web.filter
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.constant.API_PERMISSION
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_PIPELINE_ID
 import com.tencent.devops.common.api.constant.KEY_PROJECT_ID
 import com.tencent.devops.common.api.enums.RequestChannelTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -46,6 +48,7 @@ import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.ContainerRequestFilter
 import javax.ws.rs.container.ResourceInfo
 import javax.ws.rs.core.Context
+import javax.ws.rs.core.UriInfo
 import javax.ws.rs.ext.Provider
 
 @Provider
@@ -57,6 +60,9 @@ class RequestProjectPermissionFilter(
         private val logger = LoggerFactory.getLogger(RequestProjectPermissionFilter::class.java)
     }
 
+    @Value("\${api.pipeline.permission.switch:false}")
+    private val apiPipelinePermissionSwitch: Boolean = false
+
     @Value("\${api.project.permission.switch:false}")
     private val apiProjectPermissionSwitch: Boolean = false
 
@@ -64,8 +70,8 @@ class RequestProjectPermissionFilter(
     private var resourceInfo: ResourceInfo? = null
 
     override fun filter(requestContext: ContainerRequestContext) {
-        // 判断项目的api权限校验开关是否打开
-        if (!apiProjectPermissionSwitch || resourceInfo == null) {
+        // 判断流水线或者项目的api权限校验开关是否打开
+        if ((!apiPipelinePermissionSwitch && !apiProjectPermissionSwitch) || resourceInfo == null) {
             return
         }
         // 判断接口是否标注了免权限校验的注解
@@ -84,11 +90,22 @@ class RequestProjectPermissionFilter(
             return
         }
         val uriInfo = requestContext.uriInfo
+        // 校验流水线API接口访问权限
+        validatePipelineApiAccessPermission(requestContext, uriInfo, url)
+        // 校验项目API接口访问权限
+        validateProjectApiAccessPermission(requestContext, uriInfo, url)
+    }
+
+    private fun validateProjectApiAccessPermission(
+        requestContext: ContainerRequestContext,
+        uriInfo: UriInfo,
+        url: String
+    ) {
         val projectId =
             (requestContext.getHeaderString(AUTH_HEADER_PROJECT_ID) ?: uriInfo.pathParameters.getFirst(KEY_PROJECT_ID)
             ?: uriInfo.queryParameters.getFirst(KEY_PROJECT_ID))?.toString()
         // 判断项目是否在限制接口访问的列表中
-        if (!projectId.isNullOrBlank() && redisOperation.isMember(
+        if (apiProjectPermissionSwitch && !projectId.isNullOrBlank() && redisOperation.isMember(
                 key = BkApiUtil.getApiAccessLimitProjectsKey(),
                 item = projectId
             )
@@ -97,6 +114,28 @@ class RequestProjectPermissionFilter(
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.ERROR_PROJECT_API_ACCESS_NO_PERMISSION,
                 params = arrayOf(projectId, url)
+            )
+        }
+    }
+
+    private fun validatePipelineApiAccessPermission(
+        requestContext: ContainerRequestContext,
+        uriInfo: UriInfo,
+        url: String
+    ) {
+        val pipelineId =
+            (requestContext.getHeaderString(AUTH_HEADER_PIPELINE_ID) ?: uriInfo.pathParameters.getFirst(KEY_PIPELINE_ID)
+            ?: uriInfo.queryParameters.getFirst(KEY_PIPELINE_ID))?.toString()
+        // 判断流水线是否在限制接口访问的列表中
+        if (apiPipelinePermissionSwitch && !pipelineId.isNullOrBlank() && redisOperation.isMember(
+                key = BkApiUtil.getApiAccessLimitPipelinesKey(),
+                item = pipelineId
+            )
+        ) {
+            logger.info("Pipeline[$pipelineId] does not have access permission for interface[$url]")
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_PIPELINE_API_ACCESS_NO_PERMISSION,
+                params = arrayOf(pipelineId, url)
             )
         }
     }

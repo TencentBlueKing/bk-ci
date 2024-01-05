@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -51,6 +50,7 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.service.ProjectPaasCCService
+import com.tencent.devops.project.service.remotedev.EnableBkRepoData
 import com.tencent.devops.project.service.remotedev.ProjectRemoteDevService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -59,6 +59,7 @@ import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import org.springframework.util.CollectionUtils
 
+@Suppress("LongParameterList")
 @Service
 class OpProjectServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
@@ -69,7 +70,6 @@ class OpProjectServiceImpl @Autowired constructor(
     private val projectDispatcher: ProjectDispatcher,
     private val paasCCService: ProjectPaasCCService,
     private val bkAuthProjectApi: AuthProjectApi,
-    private val bsAuthTokenApi: AuthTokenApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val projectRemoteDevService: ProjectRemoteDevService
 ) : AbsOpProjectServiceImpl(
@@ -164,7 +164,22 @@ class OpProjectServiceImpl @Autowired constructor(
 
         // 更新云研发项目时相关操作
         if (projectInfoRequest.properties?.remotedev == true) {
-            projectRemoteDevService.enableRemoteDev(userId, dbProjectRecord.englishName, dbProjectRecord.projectName)
+            projectRemoteDevService.enableRemoteDev(
+                userId = userId,
+                projectCode = dbProjectRecord.englishName,
+                enableRepoData = EnableBkRepoData(
+                    projectName = projectInfoRequest.projectName,
+                    projectCode = dbProjectRecord.englishName,
+                    bgId = projectInfoRequest.bgId.toString(),
+                    bgName = projectInfoRequest.bgName,
+                    centerId = projectInfoRequest.centerId.toString(),
+                    centerName = projectInfoRequest.centerName,
+                    deptId = projectInfoRequest.deptId.toString(),
+                    deptName = projectInfoRequest.deptName,
+                    englishName = dbProjectRecord.englishName,
+                    productId = projectInfoRequest.productId ?: dbProjectRecord.productId
+                )
+            )
         }
 
         return if (!flag) {
@@ -189,8 +204,7 @@ class OpProjectServiceImpl @Autowired constructor(
             throw OperationException(I18nUtil.getCodeLanMessage(messageCode = PROJECT_NOT_EXIST))
         }
         var isSyn = false
-        val accessToken = bsAuthTokenApi.getAccessToken(pipelineAuthServiceCode)
-        val paasProjectInfo = paasCCService.getPaasCCProjectInfo(projectCode, accessToken)
+        val paasProjectInfo = paasCCService.getPaasCCProjectInfo(projectCode, "")
         if (paasProjectInfo == null) {
             logger.info("synProject projectCode:$projectCode, paasCC is not exist. start Syn")
             if (isRefresh!!) {

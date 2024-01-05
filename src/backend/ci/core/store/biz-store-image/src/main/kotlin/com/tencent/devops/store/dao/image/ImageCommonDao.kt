@@ -106,7 +106,7 @@ class ImageCommonDao : AbstractStoreCommonDao() {
         ).from(ti)
             .join(tspr).on(ti.IMAGE_CODE.eq(tspr.STORE_CODE))
             .join(tspir).on(ti.IMAGE_CODE.eq(tspir.STORE_CODE).and(tspr.STORE_TYPE.eq(tspir.STORE_TYPE)))
-            .where(tspr.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+            .where(tspr.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
             .and(ti.LATEST_FLAG.eq(true))
             .and(tspr.TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
             .and(ti.IMAGE_CODE.`in`(storeCodeList))

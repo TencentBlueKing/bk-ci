@@ -32,8 +32,10 @@ import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmRespDataMachineResource
 import com.tencent.devops.model.dispatch.kubernetes.tables.TDispatchWorkspace
 import com.tencent.devops.model.dispatch.kubernetes.tables.TWindowsGpuPool
+import com.tencent.devops.model.dispatch.kubernetes.tables.TWindowsVmResource
 import com.tencent.devops.model.dispatch.kubernetes.tables.records.TDispatchWorkspaceRecord
 import com.tencent.devops.model.dispatch.kubernetes.tables.records.TWindowsGpuPoolRecord
 import org.jooq.Condition
@@ -69,7 +71,9 @@ class WindowsGpuResourceDao {
                     HDISK,
                     IMAGESTANDARD,
                     NODE,
-                    IMAGE
+                    IMAGE,
+                    CPU,
+                    MEMORY
                 ).values(
                     it.cgsId,
                     it.zoneId,
@@ -83,7 +87,9 @@ class WindowsGpuResourceDao {
                     it.hdisk,
                     ByteUtils.bool2Byte(it.imageStandard ?: false),
                     it.node ?: "",
-                    it.image ?: ""
+                    it.image ?: "",
+                    it.cpu ?: "",
+                    it.mem ?: ""
                 ).onDuplicateKeyUpdate()
                     .set(STATUS, it.status)
             }
@@ -154,5 +160,46 @@ class WindowsGpuResourceDao {
                 .skipCheck()
                 .fetch()
         }
+    }
+
+    // 删除vm库存资源信息
+    fun deleteVmResource(
+        dslContext: DSLContext
+    ) {
+        return with(TWindowsVmResource.T_WINDOWS_VM_RESOURCE) {
+            dslContext.delete(this)
+                .where(MACHINE_TYPE.isNotNull)
+                .execute()
+        }
+    }
+
+    // 插入Vm资源数据
+    fun insertVmResource(
+        dslContext: DSLContext,
+        resourceList: List<ResourceVmRespDataMachineResource>
+    ) {
+        if (resourceList.isEmpty()) {
+            return
+        }
+        dslContext.batch(
+            resourceList.map {
+                with(TWindowsVmResource.T_WINDOWS_VM_RESOURCE) {
+                    dslContext.insertInto(
+                        this,
+                        ZONE_ID,
+                        MACHINE_TYPE,
+                        CAP,
+                        USED,
+                        FREE
+                    ).values(
+                        it.zoneId,
+                        it.machineType,
+                        it.cap ?: 0,
+                        it.used ?: 0,
+                        it.free ?: 0
+                    )
+                }
+            }
+        ).execute()
     }
 }

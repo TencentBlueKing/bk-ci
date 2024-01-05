@@ -54,12 +54,13 @@ import com.tencent.devops.stream.pojo.openapi.GitCIBasicSetting
 import com.tencent.devops.stream.pojo.openapi.GitCIUpdateSetting
 import com.tencent.devops.stream.pojo.openapi.GitUserValidateRequest
 import com.tencent.devops.stream.pojo.openapi.GitUserValidateResult
+import com.tencent.devops.stream.service.StreamGitTokenService
 import com.tencent.devops.stream.service.StreamScmService
 import com.tencent.devops.stream.service.TXStreamBasicSettingService
 import com.tencent.devops.stream.util.GitCommonUtils
-import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.core.Response
 
 @RestResource
 class ServiceGitBasicSettingResourceImpl @Autowired constructor(
@@ -68,7 +69,8 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
     private val streamScmService: StreamScmService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val client: Client,
-    private val gitConfig: StreamGitConfig
+    private val gitConfig: StreamGitConfig,
+    private val streamGitTokenService: StreamGitTokenService
 ) : ServiceGitBasicSettingResource {
 
     companion object {
@@ -142,7 +144,7 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
         }
         // 直接请求新的token，如果不是合法的项目在获取时直接报错
         val token = try {
-            streamScmService.getToken(projectName).accessToken
+            streamGitTokenService.getTokenByNameWithNameSpace(projectName)
         } catch (t: Throwable) {
             return Result(
                 status = Response.Status.BAD_REQUEST.statusCode,

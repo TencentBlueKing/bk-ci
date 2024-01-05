@@ -1,10 +1,12 @@
 package com.tencent.devops.remotedev.resources.op
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpWindowsConfigResource
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
+import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -14,7 +16,7 @@ class OpWindowsConfigResourceImpl @Autowired constructor(
 ) : OpWindowsConfigResource {
 
     override fun getWindowsResourceList(userId: String): Result<List<WindowsResourceTypeConfig>> {
-        return Result(windowsResourceConfigService.getAllType(false))
+        return Result(windowsResourceConfigService.getAllType(true, null))
     }
 
     override fun addWindowsResource(userId: String, windowsResourceConfig: WindowsResourceTypeConfig): Result<Boolean> {
@@ -51,5 +53,23 @@ class OpWindowsConfigResourceImpl @Autowired constructor(
 
     override fun deleteWindowsZone(userId: String, id: Long): Result<Boolean> {
         return Result(windowsResourceConfigService.deleteWindowsResourceZone(id))
+    }
+
+    override fun createOrUpdateSpec(userId: String, data: WindowsSpecResInfo): Result<Boolean> {
+        return Result(windowsResourceConfigService.createOrUpdateSpec(data))
+    }
+
+    override fun deleteSpec(userId: String, projectId: String, size: String): Result<Boolean> {
+        return Result(windowsResourceConfigService.deleteSpec(projectId, size))
+    }
+
+    override fun fetchSpec(
+        userId: String,
+        projectId: String?,
+        machineType: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<WindowsSpecResInfo>> {
+        return Result(windowsResourceConfigService.fetchSpec(projectId, machineType, page, pageSize))
     }
 }

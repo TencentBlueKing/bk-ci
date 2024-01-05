@@ -67,7 +67,7 @@
                                         <span>{{props.row.elementDetail}}</span>
                                     </template>
                                 </bk-table-column>
-                                <bk-table-column :label="$t('quality.可选操作')" prop="availableOperation">
+                                <bk-table-column :label="$t('quality.已支持操作')" prop="availableOperation">
                                     <template slot-scope="props">
                                         <span>{{getOperation(props.row.availableOperation)}}</span>
                                     </template>
@@ -91,7 +91,20 @@
                                     <template slot-scope="props">
                                         <div class="handler-btn">
                                             <span v-if="row.key === 'scriptIndicators'" @click="editMeta(props.row.hashId)">{{$t('quality.编辑指标')}}</span>
-                                            <span @click="toCreateRule(props.row.hashId)">{{$t('quality.创建规则')}}</span>
+                                            <span
+                                                v-perm="{
+                                                    hasPermission: hasCreatePermission,
+                                                    disablePermissionApi: true,
+                                                    permissionData: {
+                                                        projectId: projectId,
+                                                        resourceType: RULE_RESOURCE_TYPE,
+                                                        resourceCode: projectId,
+                                                        action: RULE_RESOURCE_ACTION.CREATE
+                                                    }
+                                                }"
+                                            >
+                                                <span @click="toCreateRule(props.row.hashId)">{{$t('quality.创建规则')}}</span>
+                                            </span>
                                         </div>
                                     </template>
                                 </bk-table-column>
@@ -105,10 +118,13 @@
 </template>
 
 <script>
+    import { RULE_RESOURCE_ACTION, RULE_RESOURCE_TYPE } from '@/utils/permission.js'
 
     export default {
         data () {
             return {
+                RULE_RESOURCE_ACTION,
+                RULE_RESOURCE_TYPE,
                 showContent: false,
                 currentTab: 'all',
                 searchName: '',
@@ -132,7 +148,8 @@
                 loading: {
                     isLoading: false,
                     title: ''
-                }
+                },
+                hasCreatePermission: false
             }
         },
         computed: {
@@ -151,6 +168,7 @@
             }
         },
         created () {
+            this.requestHasCreatePermission()
             this.requestList()
         },
         methods: {
@@ -248,6 +266,12 @@
                         indicator: id
                     }
                 })
+            },
+
+            async requestHasCreatePermission () {
+                this.hasCreatePermission = await this.$store.dispatch('quality/requestPermission', {
+                    projectId: this.projectId
+                })
             }
         }
     }
@@ -278,9 +302,8 @@
             justify-content: space-between;
             .item-tab {
                 float: left;
-                width: 124px;
                 margin-right: -1px;
-                padding: 12px 0;
+                padding: 12px 20px;
                 border: 1px solid #DDE4EB;
                 background-color: #FFF;
                 color: #737987;

@@ -105,17 +105,40 @@ class StartCloudRemoteDevService @Autowired constructor(
         // 生产创建start资源的订单号
         val orderId = appName + "_" + event.projectId + "_${UUIDUtil.generate().takeLast(16)}"
 
-        val resource = workspaceClient.getResourceList().filter {
-            it.status == 11 && it.zoneId.replace(Regex("\\d+"), "") == event.devFile.zoneId &&
-                it.machineType == event.devFile.machineType
-        }.randomOrNull() ?: throw BuildFailureException(
-            ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
-            ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
-            ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-            " ${event.devFile.zoneId}地区${event.devFile.machineType}型云桌面资源不足"
-        )
+        val resourceInZoneId = workspaceClient.getResourceList().asSequence().filter {
+            it.zoneId.replace(Regex("\\d+"), "") == event.devFile.zoneId
+        }
+        val resourceInType = resourceInZoneId.filter {
+            it.machineType == event.devFile.machineType
+        }
 
-        logger.info("get random resource to running|$resource")
+        val zoneId: String
+        val machineType: String
+        if (!event.devFile.imageCosFile.isNullOrBlank()) {
+            val random = resourceInType.toList().randomOrNull() ?: throw BuildFailureException(
+                ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                " ${event.devFile.zoneId}地区${event.devFile.machineType}型云桌面资源不足"
+            )
+            logger.info("get random resource to running|$random")
+            zoneId = random.zoneId
+            machineType = random.machineType
+        } else {
+            val resourceInAvailable = resourceInType.filter {
+                it.status == 11
+            }
+
+            val random = resourceInAvailable.toList().randomOrNull() ?: throw BuildFailureException(
+                ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                " ${event.devFile.zoneId}地区${event.devFile.machineType}型云桌面资源不足"
+            )
+            logger.info("get random resource to running|$random")
+            zoneId = random.zoneId
+            machineType = random.machineType
+        }
 
         val res = workspaceClient.createWorkspace(
             userId,
@@ -124,8 +147,8 @@ class StartCloudRemoteDevService @Autowired constructor(
                     userId = userId,
                     appName = appName,
                     pipelineId = orderId,
-                    zoneId = resource.zoneId,
-                    machineType = resource.machineType,
+                    zoneId = zoneId,
+                    machineType = machineType,
                     cgsId = event.devFile.cgsId,
                     projectId = event.projectId,
                     image = event.devFile.imageCosFile
@@ -172,6 +195,20 @@ class StartCloudRemoteDevService @Autowired constructor(
             workspaceName = workspaceName,
             environmentOperate = EnvironmentOperate(
                 uid = getEnvironmentUid(workspaceName)
+            )
+        )
+
+        return resp.taskUid
+    }
+
+    override fun rebuildWorkspace(userId: String, workspaceName: String, imageCosFile: String): String {
+        val resp = workspaceClient.operateWorkspace(
+            userId = userId,
+            action = EnvironmentAction.REBUILD,
+            workspaceName = workspaceName,
+            environmentOperate = EnvironmentOperate(
+                uid = getEnvironmentUid(workspaceName),
+                image = imageCosFile
             )
         )
 
@@ -267,7 +304,11 @@ class StartCloudRemoteDevService @Autowired constructor(
     ): DispatchBuildTaskStatus {
         logger.info("StartCloud remoteDevService waitTaskFinish|userId|$userId|taskId|$taskId")
         val startTime = System.currentTimeMillis()
-        val timeout = if (type == UpdateEventType.CREATE) START_CREATE_TIMEOUT else START_OTHER_TIMEOUT
+        val timeout = if (type == UpdateEventType.CREATE || type == UpdateEventType.REBUILD) {
+            START_CREATE_TIMEOUT
+        } else {
+            START_OTHER_TIMEOUT
+        }
         loop@ while (true) {
             if (System.currentTimeMillis() - startTime > timeout) {
                 logger.error("Wait task: $taskId finish timeout($timeout)")

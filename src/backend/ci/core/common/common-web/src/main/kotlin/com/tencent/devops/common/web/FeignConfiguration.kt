@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SERVICE_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GATEWAY_TAG
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.REFERER
 import com.tencent.devops.common.api.constant.API_PERMISSION
 import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
 import com.tencent.devops.common.api.constant.REQUEST_IP
@@ -100,6 +101,7 @@ class FeignConfiguration @Autowired constructor(
             val permissionFlag = BkApiUtil.getPermissionFlag()
             if (permissionFlag != null) {
                 requestTemplate.header(API_PERMISSION, permissionFlag.toString())
+                BkApiUtil.removePermissionFlag()
             }
 
             // 设置服务名称
@@ -133,6 +135,11 @@ class FeignConfiguration @Autowired constructor(
             val requestIp = request.getHeader(REQUEST_IP)
             if (!requestIp.isNullOrBlank()) {
                 requestTemplate.header(REQUEST_IP, requestIp)
+            }
+            // 设置请求来源
+            val referer = request.getHeader(REFERER)
+            if (!referer.isNullOrBlank()) {
+                requestTemplate.header(REFERER, referer)
             }
             val cookies = request.cookies
             if (cookies != null && cookies.isNotEmpty()) {

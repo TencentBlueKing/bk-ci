@@ -43,6 +43,7 @@ import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.api.util.timestamp
@@ -183,6 +184,9 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             logger.warn("[$agentHashId]|[$nodeHashId]|[${agentRecord.projectId}]|influx query error: ", e)
             AgentHostInfo(nCpus = "0", memTotal = "0", diskTotal = "0")
         }
+
+        val props = getAgentProperties(agentRecord)
+
         val tpad = ThirdPartyAgentDetail(
             agentId = HashUtil.encodeLongId(agentRecord.id),
             nodeId = nodeHashId,
@@ -209,7 +213,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             memTotal = agentHostInfo.memTotal,
             diskTotal = agentHostInfo.diskTotal,
             currentAgentVersion = agentPropsScope.getAgentVersion(),
-            currentWorkerVersion = agentPropsScope.getWorkerVersion()
+            currentWorkerVersion = agentPropsScope.getWorkerVersion(),
+            exitErrorMsg = if (props?.exitError != null) {
+                "${trans(props.exitError.errorEnum, userId)}|${props.exitError.message}"
+            } else {
+                null
+            }
         )
 
         if (needHeartbeatInfo) {
@@ -224,6 +233,22 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         }
 
         return tpad
+    }
+
+    private fun trans(enum: String, userId: String): String {
+        return MessageUtil.getMessageByLocale(enum, I18nUtil.getLanguage(userId))
+    }
+
+    private fun getAgentProperties(agentRecord: TEnvironmentThirdpartyAgentRecord): AgentProps? {
+        if (agentRecord.agentProps.isNullOrBlank()) {
+            return null
+        }
+
+        return try {
+            JsonUtil.to(agentRecord.agentProps, AgentProps::class.java)
+        } catch (e: Exception) {
+            null
+        }
     }
 
     fun saveAgentEnv(userId: String, projectId: String, nodeHashId: String, envs: List<EnvVar>) {
@@ -292,13 +317,26 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     }
 
     fun listAgentBuilds(
-        user: String,
+        userId: String,
         projectId: String,
         nodeHashId: String,
+        status: String?,
+        pipelineId: String?,
         page: Int?,
         pageSize: Int?
     ): Page<AgentBuildDetail> {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
+        if (!environmentPermissionService.checkNodePermission(
+                userId = userId,
+                projectId = projectId,
+                nodeId = nodeId,
+                permission = AuthPermission.VIEW
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = ERROR_NODE_NO_VIEW_PERMISSSION
+            )
+        }
         val agentRecord = thirdPartyAgentDao.getAgentByNodeId(
             dslContext = dslContext,
             nodeId = nodeId,
@@ -311,6 +349,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         val agentHashId = HashUtil.encodeLongId(agentRecord.id)
         val agentBuildPage = client.get(ServiceAgentResource::class).listAgentBuild(
             agentId = agentHashId,
+            status = status,
+            pipelineId = pipelineId,
             page = page,
             pageSize = pageSize
         )
@@ -497,7 +537,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             return emptyList()
         }
 
-        logger.debug("Get the user can use node ids $canUseNodeIds")
+        logger.debug("Get the user can use node ids {}", canUseNodeIds)
 
         val agentInfo = ArrayList<ThirdPartyAgentInfo>()
 
@@ -1065,7 +1105,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             val context = DSL.using(configuration)
             val agentRecord = getAgentRecord(
                 context = context,
-                projectId = projectId,
                 agentId = agentHashId,
                 secretKey = secretKey
             )
@@ -1125,7 +1164,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                         arch = newHeartbeatInfo.props!!.arch,
                         jdkVersion = newHeartbeatInfo.props!!.jdkVersion ?: listOf(),
                         userProps = oldUserProps,
-                        dockerInitFileInfo = newHeartbeatInfo.props?.dockerInitFileInfo
+                        dockerInitFileInfo = newHeartbeatInfo.props?.dockerInitFileInfo,
+                        exitError = newHeartbeatInfo.errorExitData
                     ),
                     false
                 )
@@ -1254,7 +1294,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         }
         return dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
-            val agentRecord = getAgentRecord(context, projectId, agentId, secretKey)
+            val agentRecord = getAgentRecord(context, agentId, secretKey)
 
             if (agentRecord == null) {
                 logger.warn("The agent($agentId) is not exist")
@@ -1366,7 +1406,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
 
     private fun getAgentRecord(
         context: DSLContext,
-        projectId: String,
         agentId: String,
         secretKey: String
     ): TEnvironmentThirdpartyAgentRecord? {
