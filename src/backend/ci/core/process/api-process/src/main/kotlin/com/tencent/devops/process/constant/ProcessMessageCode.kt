@@ -305,20 +305,20 @@ object ProcessMessageCode {
     const val ERROR_WEBHOOK_REQUEST_NOT_FOUND = "2101185" // webhook {0} 不存在
 
     const val ERROR_GET_GIT_PROJECT_INFO = "2101186" // 获取git项目信息失败
-    const val ERROR_GET_GIT_MERGE_INFO = "2101187" // 获取mr信息失败
-    const val ERROR_GET_GIT_MERGE_REVIEW = "2101188" // 获取mr view信息失败
-    const val ERROR_GET_GIT_MERGE_CHANGE = "2101189" // 获取mr change信息失败
-    const val ERROR_GET_GIT_FILE_TREE = "2101190" // 获取git文件树失败
-    const val ERROR_GET_YAML_CONTENT = "2101191" // 获取yaml文件内容失败
-    const val ERROR_GET_GIT_FILE_INFO = "2101192" // 获取文件信息失败
-    const val ERROR_CI_YAML_NEED_MERGE_OR_REBASE = "2101193" //
-    const val ERROR_DEVNET_TIMEOUT = "2101194" //
-    const val UNKNOWN_ERROR = "2101195"
-    const val YAML_VIEW_CANNOT_DELETE = "2101196" // 由开启 PAC 模式自动创建，不支持手动修改和删除
-    const val YAML_VIEW_CANNOT_UPDATE = "2101197" // 由开启 PAC 模式自动创建，不支持手动添加/移除流水线
-    const val YAML_VIEW_CANNOT_BULK_REMOVE = "2101198" // 由开启 PAC 模式自动创建，删除流水线请前往代码库操作
-    const val ERROR_GET_COMMIT_INFO = "2101199" // 获取commit信息失败
-    const val ERROR_DELETE_YAML_PIPELINE_IN_DEFAULT_BRANCH = "2101200" // 已开启PAC模式,不能删除默认分支yaml关联的流水线
+    const val ERROR_GET_GIT_MERGE_INFO = "2101192" // 获取mr信息失败
+    const val ERROR_GET_GIT_MERGE_REVIEW = "2101193" // 获取mr view信息失败
+    const val ERROR_GET_GIT_MERGE_CHANGE = "2101194" // 获取mr change信息失败
+    const val ERROR_GET_GIT_FILE_TREE = "2101195" // 获取git文件树失败
+    const val ERROR_GET_YAML_CONTENT = "2101196" // 获取yaml文件内容失败
+    const val ERROR_GET_GIT_FILE_INFO = "2101197" // 获取文件信息失败
+    const val ERROR_CI_YAML_NEED_MERGE_OR_REBASE = "2101198" //
+    const val ERROR_DEVNET_TIMEOUT = "2101199" //
+    const val UNKNOWN_ERROR = "2101200"
+    const val YAML_VIEW_CANNOT_DELETE = "2101201" // 由开启 PAC 模式自动创建，不支持手动修改和删除
+    const val YAML_VIEW_CANNOT_UPDATE = "2101202" // 由开启 PAC 模式自动创建，不支持手动添加/移除流水线
+    const val YAML_VIEW_CANNOT_BULK_REMOVE = "2101203" // 由开启 PAC 模式自动创建，删除流水线请前往代码库操作
+    const val ERROR_GET_COMMIT_INFO = "2101204" // 获取commit信息失败
+    const val ERROR_DELETE_YAML_PIPELINE_IN_DEFAULT_BRANCH = "2101205" // 已开启PAC模式,不能删除默认分支yaml关联的流水线
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
