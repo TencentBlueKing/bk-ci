@@ -140,7 +140,7 @@
                             </div>
                             <div class="table-node-item node-item-status">
                                 <!-- 已从 CMDB 、蓝鲸CC 移除 -->
-                                <template v-if="removedStatus.includes(props.row.nodeStatus)">
+                                <template v-if="removedStatus.includes(props.row.nodeStatus) && !['DEVCLOUD', 'THIRDPARTY'].includes(props.row.nodeType)">
                                     <i class="bk-icon node-removed-icon icon-close error"></i>
                                     <span class="node-removed-message">
                                         {{ removedMessage[props.row.nodeStatus] }}
@@ -181,7 +181,7 @@
                                         <div class="rotate rotate8"></div>
                                     </div>
                                     <!-- 状态值 -->
-                                    <span class="node-status">{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}</span>
+                                    <span class="node-status">{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}({{ props.row.agentVersion }})</span>
                                 </template>
                             </div>
                         </template>
@@ -281,11 +281,6 @@
                     </template>
                 </bk-table>
             </template>
-
-            <!-- <empty-node v-if="!nodeList.length && !searchValue.length"
-                :to-import-node="toImportNode"
-                :empty-info="emptyInfo"
-            ></empty-node> -->
         </section>
 
         <!-- 导入CMDB -->

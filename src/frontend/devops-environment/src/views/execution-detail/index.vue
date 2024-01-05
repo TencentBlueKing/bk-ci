@@ -70,7 +70,7 @@
                                 <div
                                     class="action-btn detail-btn"
                                     @click="handleShowDetail"
-                                    v-bk-tooltips.bottom="$t('environment.全局变量')"
+                                    v-bk-tooltips.bottom="$t('environment.步骤内容')"
                                 >
                                     <icon name="detail-line" size="14" />
                                 </div>
@@ -224,8 +224,13 @@
                             result: getAgentStatus(i.status)
                         }
                     })
+                } else {
+                    this.activeHostId = 0
+                    this.activeIp = ''
+                    this.activeBkCloudId = 0
+                    this.activeIpStatus = ''
+                    return []
                 }
-                return []
             },
             resultType () {
                 if (this.stepResultGroupList.length) {

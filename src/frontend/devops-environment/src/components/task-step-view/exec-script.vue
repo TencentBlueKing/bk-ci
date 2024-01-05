@@ -3,9 +3,6 @@
         v-bkloading="{ isLoading }"
         class="exec-script-view"
         :class="{ loading: isLoading }">
-        <!-- <detail-item :label="$t('environment.脚本来源：')">
-            {{ stepInfo.scriptSource || '--' }}
-        </detail-item> -->
         <detail-item
             :label="$t('environment.脚本内容：')"
             layout="vertical">
@@ -16,15 +13,12 @@
                 :value="stepInfo.scriptContent" />
         </detail-item>
         <div>
-            <!-- <detail-item :label="$t('environment.脚本参数：')">
+            <detail-item :label="$t('environment.脚本参数：')">
                 {{ stepInfo.scriptParam || '--' }}
-            </detail-item> -->
+            </detail-item>
             <detail-item :label="$t('environment.超时时长：')">
                 {{ stepInfo.scriptTimeout }}（s）
             </detail-item>
-            <!-- <detail-item :label="$t('environment.错误处理：')">
-                {{ stepInfo.ignoreErrorText || '--' }}
-            </detail-item> -->
             <detail-item :label="$t('environment.执行账号：')">
                 {{ stepInfo.account.name }}
             </detail-item>

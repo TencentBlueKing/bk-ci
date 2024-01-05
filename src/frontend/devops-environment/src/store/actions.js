@@ -167,7 +167,7 @@ const actions = {
      * 导入CMDB节点
      */
     importCmdbNode ({ commit }, { projectId, params }) {
-        return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/addCmdbNodes`, params).then(response => {
+        return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/reImportCmdbNodes`, params).then(response => {
             return response
         })
     },

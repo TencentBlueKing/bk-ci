@@ -9,7 +9,16 @@
                 <span class="strong">{{ hostList.length }}</span>{{ $t('environment.台主机') }}
             </template>
             <template v-else>
-                123
+                <div class="agent-text">
+                    <div v-if="normalHostList.length">
+                        {{ $t('environment.正常') }}:
+                        <span class="success number">{{ normalHostList.length }}</span>
+                    </div>
+                    <div v-if="abnormalHostList.length">
+                        {{ $t('environment.异常') }}:
+                        <span class="error number">{{ abnormalHostList.length }}</span>
+                    </div>
+                </div>
             </template>
         </div>
         <bk-dialog
@@ -32,12 +41,25 @@
                     :header-border="false"
                     :max-height="500"
                 >
-                    <bk-table-column :label="$t('environment.主机ID')" prop="source"></bk-table-column>
-                    <bk-table-column label="Agent ID" prop="agentId"></bk-table-column>
-                    <bk-table-column label="IPv4" prop="ipv4"></bk-table-column>
-                    <bk-table-column label="IPv6" prop="ipv4"></bk-table-column>
-                    <bk-table-column :label="$t('environment.管控区域')" prop="source"></bk-table-column>
-                    <bk-table-column :label="$t('environment.Agent 状态')" prop="source"></bk-table-column>
+                    <bk-table-column :label="$t('environment.主机ID')" prop="bkHostId"></bk-table-column>
+                    <bk-table-column label="Agent ID" prop="bkAgentId"></bk-table-column>
+                    <bk-table-column label="IPv4" prop="ip">
+                        <template slot-scope="{ row }">
+                            {{ row.ip || '--' }}
+                        </template>
+                    </bk-table-column>
+                    <bk-table-column label="IPv6" prop="ipv6">
+                        <template slot-scope="{ row }">
+                            {{ row.ipv6 || '--' }}
+                        </template>
+                    </bk-table-column>
+                    <bk-table-column :label="$t('environment.管控区域')" prop="bkCloudName"></bk-table-column>
+                    <bk-table-column :label="$t('environment.Agent 状态')" prop="alive">
+                        <template slot-scope="{ row }">
+                            <StatusIcon :status="row.alive ? 'success' : 'error'" />
+                            {{ row.alive ? $t('environment.正常') : $t('environment.异常') }}
+                        </template>
+                    </bk-table-column>
                 </bk-table>
             </div>
             <template #footer>
@@ -49,7 +71,11 @@
     </div>
 </template>
 <script>
+    import StatusIcon from '@/components/status-icon.vue'
     export default {
+        components: {
+            StatusIcon
+        },
         props: {
             data: {
                 type: Object,
@@ -72,7 +98,14 @@
             },
             hostList () {
                 return this.data.server.hostList || []
+            },
+            normalHostList () {
+                return this.hostList.filter(i => i.alive)
+            },
+            abnormalHostList () {
+                return this.hostList.filter(i => !i.alive)
             }
+
         },
         methods: {
             handlerView () {
@@ -114,6 +147,18 @@
     padding: 5px;
     margin-left: -6px;
     cursor: pointer;
+    .agent-text {
+        .success {
+            color: #3fc06d;
+        }
+        .error {
+            color: #ea3636;
+        }
+        .number {
+            font-weight: 700;
+            padding: 0 4px;
+        }
+    }
 }
 
 .execute-history-step-view-server-detail-dialog {

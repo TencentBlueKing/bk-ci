@@ -5,14 +5,11 @@
         <detail-item :label="$t('environment.超时时长：')">
             {{ stepInfo.timeout }} (s)
         </detail-item>
-        <!-- <detail-item :label="$t('environment.错误处理：')">
-            {{ stepInfo.ignoreErrorText }}
-        </detail-item> -->
         <detail-item :label="$t('environment.上传限速：')">
-            {{ stepInfo.sourceSpeedLimit < 1 ? $t('environment.否') : `${stepInfo.sourceSpeedLimit} (MB/s)` }}
+            {{ stepInfo.sourceSpeedLimit ? `${stepInfo.sourceSpeedLimit} (MB/s)` : $t('environment.否')}}
         </detail-item>
         <detail-item :label="$t('environment.下载限速：')">
-            {{ stepInfo.destinationSpeedLimit < 1 ? $t('environment.否') : `${stepInfo.destinationSpeedLimit} (MB/s)` }}
+            {{ stepInfo.destinationSpeedLimit ? `${stepInfo.destinationSpeedLimit} (MB/s)` : $t('environment.否') }}
         </detail-item>
         <detail-item
             :label="$t('environment.文件来源：')"
