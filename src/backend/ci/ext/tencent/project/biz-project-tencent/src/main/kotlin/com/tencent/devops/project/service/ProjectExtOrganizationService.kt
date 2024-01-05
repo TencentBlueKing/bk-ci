@@ -45,12 +45,8 @@ class ProjectExtOrganizationService constructor(
         val isManagerDepartmentSame = deptIds.distinct().size == 1
         val isManagerCenterSame = centerIds.distinct().size == 1
 
-        logger.info(
-            "Determine whether project managers have the same organization: $englishName | " +
-                "$isManagerDepartmentSame|$isManagerCenterSame"
-        )
-
         if (isManagerDepartmentSame) {
+            logger.info("fix organization by manager: $englishName|$isManagerDepartmentSame|$isManagerCenterSame")
             val deptId = deptIds.first()
             val deptName = deptInfos.first().deptName
             val parentDeptInfos = tofService.getParentDeptInfo(groupId = deptId, level = 10)
@@ -59,7 +55,6 @@ class ProjectExtOrganizationService constructor(
             val businessLineInfo = parentDeptInfos.firstOrNull { it.typeId.toInt() == OrganizationType.businessLine.typeId }
             val centerId = if (isManagerCenterSame) centerIds.first() else null
             val centerName = if (isManagerCenterSame) deptInfos.first().centerName else null
-
             projectDao.updateOrganizationByEnglishName(
                 dslContext = dslContext,
                 englishName = englishName,
@@ -80,6 +75,7 @@ class ProjectExtOrganizationService constructor(
 
     private fun fixOrganizationByNormal(tProjectRecord: TProjectRecord) {
         val rightProjectOrganization = getRightProjectOrganization(tProjectRecord)
+        logger.info("fix organization by normal: ${tProjectRecord.englishName}|$rightProjectOrganization")
         projectDao.updateOrganizationByEnglishName(
             dslContext = dslContext,
             englishName = tProjectRecord.englishName,
