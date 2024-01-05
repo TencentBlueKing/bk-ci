@@ -77,7 +77,7 @@ class PipelineYamlBuildService @Autowired constructor(
             repoHashId = repoHashId,
             eventType = matcher.getEventType().name
         ) ?: return
-        pipelineBuildWebhookService.webhookTriggerPipelineBuild(
+        pipelineBuildWebhookService.exactMatchPipelineWebhookBuild(
             projectId = projectId,
             pipelineId = pipelineYamlVersion.pipelineId,
             version = pipelineYamlVersion.version,
