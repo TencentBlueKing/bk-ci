@@ -681,11 +681,6 @@
         flex-direction: column;
     }
     .pipeline-list-table {
-        .cell {
-            position: relative;
-            display: -webkit-box !important;
-            -webkit-line-clamp: 1;
-        }
         td {
             position: inherit;
         }
@@ -698,9 +693,6 @@
         }
         ::-webkit-scrollbar {
             background-color: white;
-        }
-        ::-webkit-scrollbar-thumb {
-            background-color: #DCDEE5 !important;
         }
         .pipeline-name-warpper {
             width: 100%;

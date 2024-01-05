@@ -61,7 +61,8 @@ class PermissionGroupPoliciesService(
         groupCode: String,
         iamResourceCode: String,
         resourceName: String,
-        iamGroupId: Int
+        iamGroupId: Int,
+        registerMonitorPermission: Boolean = true
     ) {
         var authorizationScopes = authAuthorizationScopesService.generateBkciAuthorizationScopes(
             authorizationScopesStr = authorizationScopesStr,
@@ -70,7 +71,7 @@ class PermissionGroupPoliciesService(
             iamResourceCode = iamResourceCode,
             resourceName = resourceName
         )
-        if (resourceType == AuthResourceType.PROJECT.value) {
+        if (resourceType == AuthResourceType.PROJECT.value && registerMonitorPermission) {
             // 若为项目下的组授权，默认要加上监控平台用户组的权限资源
             val monitorAuthorizationScopes = authAuthorizationScopesService.generateMonitorAuthorizationScopes(
                 projectName = projectName,

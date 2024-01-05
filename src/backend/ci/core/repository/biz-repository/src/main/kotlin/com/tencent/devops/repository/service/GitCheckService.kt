@@ -17,9 +17,12 @@ class GitCheckService @Autowired constructor(
         pipelineId: String,
         repositoryConfig: RepositoryConfig,
         commitId: String,
+        targetBranch: String?,
         context: String
     ): RepositoryGitCheck? {
-        val result = gitCheckDao.getOrNull(dslContext, pipelineId, repositoryConfig, commitId, context) ?: return null
+        val result = gitCheckDao.getOrNull(
+            dslContext, pipelineId, repositoryConfig, commitId, context, targetBranch
+        ) ?: return null
         return RepositoryGitCheck(
             gitCheckId = result.id,
             pipelineId = result.pipelineId,
@@ -28,7 +31,8 @@ class GitCheckService @Autowired constructor(
             repositoryName = result.repoName,
             commitId = result.commitId,
             context = result.context,
-            source = ExecuteSource.valueOf(result.source)
+            source = ExecuteSource.valueOf(result.source),
+            targetBranch = result.targetBranch
         )
     }
 

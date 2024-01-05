@@ -872,7 +872,7 @@
     "provided": "提供",
     "selected": "已选",
     "select": "选择",
-    "envUseTips": "编译环境下可用，请切换到对应Job类型后重试",
+    "envUseTips": "{0}编译环境下可用，请切换到对应Job类型后重试",
     "noEnvUseTips": "该插件在无编译环境下可用，请切换到对应Job类型后重试",
     "installSuc": "安装成功",
     "loadingData": "获取数据中",
