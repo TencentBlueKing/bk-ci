@@ -62,16 +62,18 @@ class PipelineRecordModelService @Autowired constructor(
      * @return 构建变量模型map集合
      */
     fun generateFieldRecordModelMap(
-        mergeBuildRecordParam: MergeBuildRecordParam
+        mergeBuildRecordParam: MergeBuildRecordParam,
+        queryDslContext: DSLContext? = null
     ): Map<String, Any> {
         val projectId = mergeBuildRecordParam.projectId
         val pipelineId = mergeBuildRecordParam.pipelineId
         val buildId = mergeBuildRecordParam.buildId
         val executeCount = mergeBuildRecordParam.executeCount
         val recordModelMap = mergeBuildRecordParam.recordModelMap
+        val finalDSLContext = queryDslContext ?: dslContext
         // 获取stage级别变量数据
         val buildRecordStages = buildRecordStageDao.getLatestRecords(
-            dslContext = dslContext,
+            dslContext = finalDSLContext,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -79,14 +81,14 @@ class PipelineRecordModelService @Autowired constructor(
         )
         // 获取job级别变量数据
         val buildNormalRecordContainers = buildRecordContainerDao.getLatestNormalRecords(
-            dslContext = dslContext,
+            dslContext = finalDSLContext,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             executeCount = executeCount
         )
         val buildMatrixRecordContainers = buildRecordContainerDao.getLatestMatrixRecords(
-            dslContext = dslContext,
+            dslContext = finalDSLContext,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -97,7 +99,7 @@ class PipelineRecordModelService @Autowired constructor(
         // 获取task级别变量数据
         val matrixContainerIds = buildMatrixRecordContainers.map { it.containerId }
         val buildNormalRecordTasks = buildRecordTaskDao.getLatestNormalRecords(
-            dslContext = dslContext,
+            dslContext = finalDSLContext,
             projectId = projectId,
             buildId = buildId,
             executeCount = executeCount,
@@ -105,7 +107,7 @@ class PipelineRecordModelService @Autowired constructor(
         )
         val buildRecordTasks = if (matrixContainerIds.isNotEmpty()) {
             val buildMatrixRecordTasks = buildRecordTaskDao.getLatestMatrixRecords(
-                dslContext = dslContext,
+                dslContext = finalDSLContext,
                 projectId = projectId,
                 buildId = buildId,
                 executeCount = executeCount,

@@ -172,7 +172,7 @@ class ImageFeatureDao {
         conditions.add(tImageFeature.PUBLIC_FLAG.eq(true))
         // 非调试
         conditions.add(tStoreProjectRel.STORE_CODE.notIn(debugImageCodes))
-        if (imageStatusSet != null && imageStatusSet.isNotEmpty()) {
+        if (!imageStatusSet.isNullOrEmpty()) {
             conditions.add(tImage.IMAGE_STATUS.`in`(imageStatusSet.map { it.status.toByte() }))
         }
         val baseQuery =

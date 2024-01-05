@@ -32,16 +32,18 @@ interface ProjectManageService {
     /**
      * 锁定项目流水线构建权限
      * @param userId 用户ID
-     * @param projectId 国际化语言信息
+     * @param projectId 项目ID
+     * @param pipelineId 流水线ID
      * @return 布尔值
      */
-    fun lockProjectPipelineBuildPermission(userId: String, projectId: String): Boolean
+    fun lockProjectPipelineBuildPermission(userId: String, projectId: String, pipelineId: String? = null): Boolean
 
     /**
      * 解锁项目流水线构建权限
      * @param userId 用户ID
-     * @param projectId 国际化语言信息
+     * @param projectId 项目ID
+     * @param pipelineId 流水线ID
      * @return 布尔值
      */
-    fun unlockProjectPipelineBuildPermission(userId: String, projectId: String): Boolean
+    fun unlockProjectPipelineBuildPermission(userId: String, projectId: String, pipelineId: String? = null): Boolean
 }

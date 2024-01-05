@@ -304,23 +304,46 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
                 )
             } else {
                 // 生成数据库表的分片规则
-                val dbShardingRoutingRule = getShardingRoutingRuleByName(
+                generateTableShardingRoutingRule(
                     moduleCode = moduleCode,
-                    ruleType = ShardingRuleTypeEnum.DB,
-                    routingName = routingName
+                    ruleType = ruleType,
+                    routingName = routingName,
+                    routingRule = routingRule,
+                    tableName = tableName
                 )
-                dbShardingRoutingRule?.let {
-                    ShardingRoutingRule(
-                        clusterName = clusterName,
-                        moduleCode = moduleCode,
-                        dataSourceName = it.dataSourceName,
-                        tableName = tableName,
-                        type = ruleType,
-                        routingName = routingName,
-                        routingRule = routingRule
-                    )
-                }
             }
+        }
+    }
+
+    private fun generateTableShardingRoutingRule(
+        moduleCode: SystemModuleEnum,
+        ruleType: ShardingRuleTypeEnum,
+        routingName: String,
+        routingRule: String,
+        tableName: String?
+    ): ShardingRoutingRule? {
+        val dbRuleType = if (ruleType == ShardingRuleTypeEnum.ARCHIVE_TABLE) {
+            ShardingRuleTypeEnum.ARCHIVE_DB
+        } else {
+            ShardingRuleTypeEnum.DB
+        }
+        val dbShardingRoutingRule = getShardingRoutingRuleByName(
+            moduleCode = moduleCode,
+            ruleType = dbRuleType,
+            routingName = routingName
+        )
+        return if (dbShardingRoutingRule != null) {
+            ShardingRoutingRule(
+                clusterName = CommonUtils.getDbClusterName(),
+                moduleCode = moduleCode,
+                dataSourceName = dbShardingRoutingRule.dataSourceName,
+                tableName = tableName,
+                type = ruleType,
+                routingName = routingName,
+                routingRule = routingRule
+            )
+        } else {
+            null
         }
     }
 }
