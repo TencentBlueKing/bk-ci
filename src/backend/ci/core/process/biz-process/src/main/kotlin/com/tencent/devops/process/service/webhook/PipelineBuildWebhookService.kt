@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.service.webhook
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -52,7 +51,6 @@ import com.tencent.devops.process.engine.service.PipelineWebHookQueueService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.engine.service.WebhookBuildParameterService
 import com.tencent.devops.process.engine.service.code.GitWebhookUnlockDispatcher
-import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.code.WebhookBuildResult
 import com.tencent.devops.process.pojo.code.WebhookCommit
@@ -67,47 +65,28 @@ import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
+import com.tencent.devops.process.webhook.PipelineBuildPermissionService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.slf4j.LoggerFactory
-import org.springframework.context.ApplicationContext
-import org.springframework.context.ApplicationContextAware
+import org.springframework.beans.factory.annotation.Autowired
 import java.time.LocalDate
 
 @Suppress("ALL")
-abstract class PipelineBuildWebhookService : ApplicationContextAware {
-
-    override fun setApplicationContext(applicationContext: ApplicationContext) {
-        objectMapper = applicationContext.getBean(ObjectMapper::class.java)
-        client = applicationContext.getBean(Client::class.java)
-        pipelineWebhookService = applicationContext.getBean(PipelineWebhookService::class.java)
-        pipelineRepositoryService = applicationContext.getBean(PipelineRepositoryService::class.java)
-        pipelineBuildService = applicationContext.getBean(PipelineBuildService::class.java)
-        scmWebhookMatcherBuilder = applicationContext.getBean(ScmWebhookMatcherBuilder::class.java)
-        gitWebhookUnlockDispatcher = applicationContext.getBean(GitWebhookUnlockDispatcher::class.java)
-        pipelineWebHookQueueService = applicationContext.getBean(PipelineWebHookQueueService::class.java)
-        buildLogPrinter = applicationContext.getBean(BuildLogPrinter::class.java)
-        pipelinebuildWebhookService = applicationContext.getBean(PipelineBuildWebhookService::class.java)
-        pipelineBuildCommitService = applicationContext.getBean(PipelineBuildCommitService::class.java)
-        webhookBuildParameterService = applicationContext.getBean(WebhookBuildParameterService::class.java)
-        pipelineTriggerEventService = applicationContext.getBean(PipelineTriggerEventService::class.java)
-        measureEventDispatcher = applicationContext.getBean(MeasureEventDispatcher::class.java)
-    }
-
+class PipelineBuildWebhookService @Autowired constructor(
+    private val client: Client,
+    private val pipelineWebhookService: PipelineWebhookService,
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineBuildService: PipelineBuildService,
+    private val gitWebhookUnlockDispatcher: GitWebhookUnlockDispatcher,
+    private val pipelineWebHookQueueService: PipelineWebHookQueueService,
+    private val buildLogPrinter: BuildLogPrinter,
+    private val pipelineBuildCommitService: PipelineBuildCommitService,
+    private val webhookBuildParameterService: WebhookBuildParameterService,
+    private val pipelineTriggerEventService: PipelineTriggerEventService,
+    private val measureEventDispatcher: MeasureEventDispatcher,
+    private val pipelineBuildPermissionService: PipelineBuildPermissionService
+) {
     companion object {
-        lateinit var objectMapper: ObjectMapper
-        lateinit var client: Client
-        lateinit var pipelineWebhookService: PipelineWebhookService
-        lateinit var pipelineRepositoryService: PipelineRepositoryService
-        lateinit var pipelineBuildService: PipelineBuildService
-        lateinit var scmWebhookMatcherBuilder: ScmWebhookMatcherBuilder
-        lateinit var gitWebhookUnlockDispatcher: GitWebhookUnlockDispatcher
-        lateinit var pipelineWebHookQueueService: PipelineWebHookQueueService
-        lateinit var buildLogPrinter: BuildLogPrinter
-        lateinit var pipelinebuildWebhookService: PipelineBuildWebhookService // 给AOP调用
-        lateinit var pipelineBuildCommitService: PipelineBuildCommitService
-        lateinit var webhookBuildParameterService: WebhookBuildParameterService
-        lateinit var pipelineTriggerEventService: PipelineTriggerEventService
-        lateinit var measureEventDispatcher: MeasureEventDispatcher
         private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
     }
 
@@ -210,7 +189,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         }
     }
 
-    open fun webhookTriggerPipelineBuild(
+    private fun webhookTriggerPipelineBuild(
         projectId: String,
         pipelineId: String,
         matcher: ScmWebhookMatcher,
@@ -314,7 +293,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                 } catch (ignore: Exception) {
                     logger.warn("$pipelineId|webhook trigger|(${element.name})|repo(${matcher.getRepoName()})", ignore)
                 }
-                return false
+                return true
             } else {
                 logger.info(
                     "$pipelineId|webhook trigger match unsuccess|(${element.name})|repo(${matcher.getRepoName()})"
@@ -562,5 +541,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         }
     }
 
-    abstract fun checkPermission(userId: String, projectId: String, pipelineId: String)
+    private fun checkPermission(userId: String, projectId: String, pipelineId: String) {
+        pipelineBuildPermissionService.checkPermission(userId = userId, projectId = projectId, pipelineId = pipelineId)
+    }
 }
