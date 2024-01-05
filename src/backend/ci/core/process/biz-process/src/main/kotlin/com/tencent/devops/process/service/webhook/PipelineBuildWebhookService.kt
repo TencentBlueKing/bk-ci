@@ -69,9 +69,11 @@ import com.tencent.devops.process.webhook.PipelineBuildPermissionService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 import java.time.LocalDate
 
 @Suppress("ALL")
+@Service
 class PipelineBuildWebhookService @Autowired constructor(
     private val client: Client,
     private val pipelineWebhookService: PipelineWebhookService,
