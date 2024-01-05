@@ -21,4 +21,6 @@ data class ProjectOrganizationInfo(
     val deptId: Long?,
     @ApiModelProperty("部门名称")
     val deptName: String?,
+    @ApiModelProperty("是否需要更正组织")
+    val needFix: Boolean = true
 )
