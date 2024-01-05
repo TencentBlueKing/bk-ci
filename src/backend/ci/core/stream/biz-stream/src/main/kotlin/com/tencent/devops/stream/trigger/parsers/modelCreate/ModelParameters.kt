@@ -138,7 +138,7 @@ object ModelParameters {
             startParams = startParams
         )
 
-        if (action is StreamOpenApiAction && action.subPipelineTriggerId.isNotBlank()) {
+        if (action is StreamOpenApiAction && action.subPipelineTriggerId != null) {
             startParams[STREAM_SUB_PIPELINE_TRACE_ID] = action.subPipelineTriggerId
         }
 
