@@ -219,6 +219,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
         @DisplayName("获取不到View")
         fun test_1() {
             every { pipelineViewDao.get(anyDslContext(), any(), any()) } returns null
+            every { pipelineYamlViewDao.getByViewId(anyDslContext(), any(), any()) } returns null
 
             try {
                 self.updateViewGroup("test", "test", "test", pipelineViewForm)
@@ -238,6 +239,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             val pvCopy = pv.copy()
             pvCopy.isProject = false
             every { pipelineViewDao.get(anyDslContext(), any(), any()) } returns pvCopy
+            every { pipelineYamlViewDao.getByViewId(anyDslContext(), any(), any()) } returns null
             try {
                 self.updateViewGroup("test", "test", "test", pipelineViewFormCopy)
             } catch (e: Throwable) {
@@ -259,6 +261,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             every { pipelineViewService.updateView(any(), any(), any(), any(), anyDslContext()) } returns true
             justRun { pipelineViewGroupDao.remove(anyDslContext(), any(), any()) }
             every { self["firstInitMark"](any() as String, any() as Long) } returns "test"
+            every { pipelineYamlViewDao.getByViewId(anyDslContext(), any(), any()) } returns null
             justRun {
                 self["initViewGroup"](
                     anyDslContext(),
@@ -324,6 +327,8 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
         @DisplayName("获取不到view")
         fun test_1() {
             every { pipelineViewDao.get(anyDslContext(), any(), any()) } returns null
+            every { pipelineYamlViewDao.getByViewId(anyDslContext(), any(), any()) } returns null
+
             try {
                 self.deleteViewGroup("test", "test", "test")
             } catch (e: Throwable) {
@@ -341,6 +346,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             every { pipelineViewDao.get(anyDslContext(), any(), any()) } returns pv
             every { pipelineViewService.deleteView(any(), any(), any()) } returns true
             justRun { pipelineViewGroupDao.remove(anyDslContext(), any(), any()) }
+            every { pipelineYamlViewDao.getByViewId(anyDslContext(), any(), any()) } returns null
             Assertions.assertTrue(self.deleteViewGroup("test", "test", "test"))
         }
     }
@@ -777,6 +783,8 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
         @DisplayName("view 为空")
         fun test_1() {
             every { pipelineViewDao.get(anyDslContext(), any(), any()) } returns null
+            every { pipelineYamlViewDao.getByViewId(anyDslContext(), any(), any()) } returns null
+
             self.bulkRemove("test", "test", br).let {
                 Assertions.assertEquals(it, false)
             }
@@ -790,6 +798,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             pvCopy.isProject = false
             pvCopy.createUser = "other"
             every { pipelineViewDao.get(anyDslContext(), any(), any()) } returns pvCopy
+            every { pipelineYamlViewDao.getByViewId(anyDslContext(), any(), any()) } returns null
             try {
                 self.bulkRemove("true", "test", br)
             } catch (e: Exception) {
@@ -809,6 +818,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             pvCopy.isProject = true
             pvCopy.createUser = "other"
             every { pipelineViewDao.get(anyDslContext(), any(), any()) } returns pvCopy
+            every { pipelineYamlViewDao.getByViewId(anyDslContext(), any(), any()) } returns null
             try {
                 self.bulkRemove("false", "test", br)
             } catch (e: Exception) {
@@ -829,6 +839,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             pvCopy.createUser = "other"
             every { pipelineViewDao.get(anyDslContext(), any(), any()) } returns pvCopy
             every { pipelineViewGroupDao.batchRemove(anyDslContext(), any(), any(), any()) } returns Unit
+            every { pipelineYamlViewDao.getByViewId(anyDslContext(), any(), any()) } returns null
             self.bulkRemove("true", "test", br).let {
                 Assertions.assertEquals(it, true)
             }
