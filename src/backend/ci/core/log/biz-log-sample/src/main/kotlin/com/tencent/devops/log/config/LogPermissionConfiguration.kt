@@ -31,7 +31,6 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.service.LogPermissionService
 import com.tencent.devops.log.service.impl.BluekingLogPermissionService
 import com.tencent.devops.log.service.impl.RbacLogPermissionService
@@ -70,12 +69,10 @@ class LogPermissionConfiguration {
     fun bkV3LogPermissionService(
         authPermissionApi: AuthPermissionApi,
         pipelineAuthServiceCode: PipelineAuthServiceCode,
-        client: Client,
-        redisOperation: RedisOperation
+        client: Client
     ): LogPermissionService = V3LogPermissionService(
         authPermissionApi = authPermissionApi,
         pipelineAuthServiceCode = pipelineAuthServiceCode,
-        redisOperation = redisOperation,
         client = client
     )
 

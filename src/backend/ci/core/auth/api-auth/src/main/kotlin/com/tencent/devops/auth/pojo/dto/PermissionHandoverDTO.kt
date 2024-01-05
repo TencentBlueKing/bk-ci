@@ -12,7 +12,7 @@ data class PermissionHandoverDTO(
     @ApiModelProperty("授予用户")
     val handoverToList: List<String>,
     @ApiModelProperty("资源类型")
-    val resourceType: String,
+    val resourceType: String?,
     @ApiModelProperty("是否交接管理员权限")
     val managerPermission: Boolean
 )

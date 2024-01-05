@@ -46,5 +46,7 @@ enum class WorkspaceAction {
     RESTARTING,
     MAKE_IMAGE,
     NOTIFY,
-    ASSIGN
+    ASSIGN,
+    REBUILD,
+    REBUILDING
 }

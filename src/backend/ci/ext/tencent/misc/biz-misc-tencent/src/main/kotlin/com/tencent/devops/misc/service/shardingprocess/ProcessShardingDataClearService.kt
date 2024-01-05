@@ -98,7 +98,6 @@ abstract class ProcessShardingDataClearService {
             getDSLContext()?.transaction { t ->
                 val context = DSL.using(t)
                 processShardingDataClearDao.deletePipelineBuildSummaryByPipelineId(context, projectId, pipelineId)
-                processShardingDataClearDao.deletePipelineFailureBuildByPipelineId(context, pipelineId)
                 processShardingDataClearDao.deletePipelineModelTaskByPipelineId(context, projectId, pipelineId)
                 processShardingDataClearDao.deletePipelineResourceByPipelineId(context, pipelineId)
                 processShardingDataClearDao.deletePipelineResourceVersionByPipelineId(context, pipelineId)

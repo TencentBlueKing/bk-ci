@@ -16,7 +16,7 @@ class OpWindowsConfigResourceImpl @Autowired constructor(
 ) : OpWindowsConfigResource {
 
     override fun getWindowsResourceList(userId: String): Result<List<WindowsResourceTypeConfig>> {
-        return Result(windowsResourceConfigService.getAllType(true))
+        return Result(windowsResourceConfigService.getAllType(true, null))
     }
 
     override fun addWindowsResource(userId: String, windowsResourceConfig: WindowsResourceTypeConfig): Result<Boolean> {
@@ -63,7 +63,13 @@ class OpWindowsConfigResourceImpl @Autowired constructor(
         return Result(windowsResourceConfigService.deleteSpec(projectId, size))
     }
 
-    override fun fetchSpec(userId: String, page: Int?, pageSize: Int?): Result<Page<WindowsSpecResInfo>> {
-        return Result(windowsResourceConfigService.fetchSpec(page, pageSize))
+    override fun fetchSpec(
+        userId: String,
+        projectId: String?,
+        machineType: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<WindowsSpecResInfo>> {
+        return Result(windowsResourceConfigService.fetchSpec(projectId, machineType, page, pageSize))
     }
 }

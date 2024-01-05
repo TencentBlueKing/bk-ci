@@ -34,5 +34,6 @@ data class DispatchJobMetricsData(
     val jobType: String,
     val channelCode: String,
     val maxJobConcurrency: Int,
-    val sumJobCost: Int
+    val sumJobCost: Int,
+    val id: Long = 0L
 )

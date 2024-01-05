@@ -33,6 +33,8 @@ import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmRespDataMachineResource
 import com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.startcloud.dao.WindowsGpuResourceDao
@@ -53,7 +55,8 @@ class StartCloudInterfaceService @Autowired constructor(
     private val dslContext: DSLContext,
     private val workspaceClient: WorkspaceStartCloudClient,
     private val windowsGpuResourceDao: WindowsGpuResourceDao,
-    private val workspaceRedisUtils: WorkspaceRedisUtils
+    private val workspaceRedisUtils: WorkspaceRedisUtils,
+    private val workspaceStartCloudClient: WorkspaceStartCloudClient
 ) {
     @Value("\${startCloud.appName}")
     val appName: String = "IEG_BKCI"
@@ -150,8 +153,17 @@ class StartCloudInterfaceService @Autowired constructor(
             )
         }
         logger.debug("syncStartCloudResourceList|resourceList|{}", resList)
-        windowsGpuResourceDao.deleteAllResource(dslContext)
-        windowsGpuResourceDao.createOrUpdateResource(dslContext, resList)
+        if (resList.isNotEmpty()) {
+            windowsGpuResourceDao.deleteAllResource(dslContext)
+            windowsGpuResourceDao.createOrUpdateResource(dslContext, resList)
+        }
+        // 同步 gpu空闲资源数据
+        kotlin.runCatching {
+            getAllVmResource()
+        }.onFailure {
+            logger.warn("get all vm resource failed.|${it.message}")
+        }
+
         return resList
     }
 
@@ -221,5 +233,29 @@ class StartCloudInterfaceService @Autowired constructor(
             zoneList = zoneList,
             machineTypeList = machineTypeList
         )
+    }
+
+    // 获取vm空闲资源
+    fun getAllVmResource() {
+        val resList = mutableListOf<ResourceVmRespDataMachineResource>()
+        val cgs = workspaceStartCloudClient.getResourceVm(ResourceVmReq(null, null))
+        cgs?.forEach { resource ->
+            resource.machineResources?.forEach { mas ->
+                resList.add(
+                    ResourceVmRespDataMachineResource(
+                        zoneId = resource.zoneId,
+                        machineType = mas.machineType,
+                        cap = mas.cap ?: 0,
+                        used = mas.used ?: 0,
+                        free = mas.free ?: 0
+                    )
+                )
+            }
+        }
+        logger.debug("get all vm resource|resourceList|{}", resList)
+        if (resList.isNotEmpty()) {
+            windowsGpuResourceDao.deleteVmResource(dslContext)
+            windowsGpuResourceDao.insertVmResource(dslContext, resList)
+        }
     }
 }

@@ -66,6 +66,10 @@ class SamplePermissionMigrateService : PermissionMigrateService {
         return true
     }
 
+    override fun handoverAllPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
+        return true
+    }
+
     override fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
         return true
     }

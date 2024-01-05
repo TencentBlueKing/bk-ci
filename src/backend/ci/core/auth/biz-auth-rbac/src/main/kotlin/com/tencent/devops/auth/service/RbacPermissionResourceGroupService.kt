@@ -193,7 +193,8 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                     createdTime = createTime,
                     status = status,
                     expiredAt = expiredAt,
-                    expiredDisplay = expiredDisplay
+                    expiredDisplay = expiredDisplay,
+                    directAdded = result.directAdded.toBoolean()
                 )
             } else {
                 val status = GroupMemberStatus.NOT_JOINED.name
