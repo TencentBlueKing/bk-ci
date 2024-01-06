@@ -27,13 +27,11 @@
 
 package com.tencent.devops.process.service.webhook
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.pojo.measure.ProjectUserDailyEvent
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispatcher
+import com.tencent.devops.common.event.pojo.measure.ProjectUserDailyEvent
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -42,11 +40,9 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_START_WEBHOOK_USER_ID
-import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
-import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.common.webhook.util.EventCacheUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
@@ -55,7 +51,8 @@ import com.tencent.devops.process.engine.service.PipelineWebHookQueueService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.engine.service.WebhookBuildParameterService
 import com.tencent.devops.process.engine.service.code.GitWebhookUnlockDispatcher
-import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder
+import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.process.pojo.code.WebhookBuildResult
 import com.tencent.devops.process.pojo.code.WebhookCommit
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailBuilder
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
@@ -68,48 +65,30 @@ import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
+import com.tencent.devops.process.webhook.PipelineBuildPermissionService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
-import com.tencent.devops.repository.pojo.Repository
 import org.slf4j.LoggerFactory
-import org.springframework.context.ApplicationContext
-import org.springframework.context.ApplicationContextAware
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 import java.time.LocalDate
 
 @Suppress("ALL")
-abstract class PipelineBuildWebhookService : ApplicationContextAware {
-
-    override fun setApplicationContext(applicationContext: ApplicationContext) {
-        objectMapper = applicationContext.getBean(ObjectMapper::class.java)
-        client = applicationContext.getBean(Client::class.java)
-        pipelineWebhookService = applicationContext.getBean(PipelineWebhookService::class.java)
-        pipelineRepositoryService = applicationContext.getBean(PipelineRepositoryService::class.java)
-        pipelineBuildService = applicationContext.getBean(PipelineBuildService::class.java)
-        scmWebhookMatcherBuilder = applicationContext.getBean(ScmWebhookMatcherBuilder::class.java)
-        gitWebhookUnlockDispatcher = applicationContext.getBean(GitWebhookUnlockDispatcher::class.java)
-        pipelineWebHookQueueService = applicationContext.getBean(PipelineWebHookQueueService::class.java)
-        buildLogPrinter = applicationContext.getBean(BuildLogPrinter::class.java)
-        pipelinebuildWebhookService = applicationContext.getBean(PipelineBuildWebhookService::class.java)
-        pipelineBuildCommitService = applicationContext.getBean(PipelineBuildCommitService::class.java)
-        webhookBuildParameterService = applicationContext.getBean(WebhookBuildParameterService::class.java)
-        pipelineTriggerEventService = applicationContext.getBean(PipelineTriggerEventService::class.java)
-        measureEventDispatcher = applicationContext.getBean(MeasureEventDispatcher::class.java)
-    }
-
+@Service
+class PipelineBuildWebhookService @Autowired constructor(
+    private val client: Client,
+    private val pipelineWebhookService: PipelineWebhookService,
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineBuildService: PipelineBuildService,
+    private val gitWebhookUnlockDispatcher: GitWebhookUnlockDispatcher,
+    private val pipelineWebHookQueueService: PipelineWebHookQueueService,
+    private val buildLogPrinter: BuildLogPrinter,
+    private val pipelineBuildCommitService: PipelineBuildCommitService,
+    private val webhookBuildParameterService: WebhookBuildParameterService,
+    private val pipelineTriggerEventService: PipelineTriggerEventService,
+    private val measureEventDispatcher: MeasureEventDispatcher,
+    private val pipelineBuildPermissionService: PipelineBuildPermissionService
+) {
     companion object {
-        lateinit var objectMapper: ObjectMapper
-        lateinit var client: Client
-        lateinit var pipelineWebhookService: PipelineWebhookService
-        lateinit var pipelineRepositoryService: PipelineRepositoryService
-        lateinit var pipelineBuildService: PipelineBuildService
-        lateinit var scmWebhookMatcherBuilder: ScmWebhookMatcherBuilder
-        lateinit var gitWebhookUnlockDispatcher: GitWebhookUnlockDispatcher
-        lateinit var pipelineWebHookQueueService: PipelineWebHookQueueService
-        lateinit var buildLogPrinter: BuildLogPrinter
-        lateinit var pipelinebuildWebhookService: PipelineBuildWebhookService // 给AOP调用
-        lateinit var pipelineBuildCommitService: PipelineBuildCommitService
-        lateinit var webhookBuildParameterService: WebhookBuildParameterService
-        lateinit var pipelineTriggerEventService: PipelineTriggerEventService
-        lateinit var measureEventDispatcher: MeasureEventDispatcher
         private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
     }
 
@@ -192,6 +171,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
             }
             triggerEvent.eventId = eventId
             builder.eventId(eventId)
+            builder.detailId(pipelineTriggerEventService.getDetailId())
             val triggerDetail = builder.build()
             pipelineTriggerEventService.saveEvent(
                 triggerEvent = triggerEvent,
@@ -211,7 +191,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         }
     }
 
-    open fun webhookTriggerPipelineBuild(
+    private fun webhookTriggerPipelineBuild(
         projectId: String,
         pipelineId: String,
         matcher: ScmWebhookMatcher,
@@ -315,7 +295,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                 } catch (ignore: Exception) {
                     logger.warn("$pipelineId|webhook trigger|(${element.name})|repo(${matcher.getRepoName()})", ignore)
                 }
-                return false
+                return true
             } else {
                 logger.info(
                     "$pipelineId|webhook trigger match unsuccess|(${element.name})|repo(${matcher.getRepoName()})"
@@ -342,6 +322,8 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
     }
 
     /**
+     * 精确匹配webhook触发
+     *
      * @param projectId 项目ID
      * @param pipelineId 流水线ID
      * @param version 流水线版本
@@ -350,7 +332,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
      * @param matcher 匹配器
      * @param eventId 事件ID
      */
-    fun webhookTriggerPipelineBuild(
+    fun exactMatchPipelineWebhookBuild(
         projectId: String,
         pipelineId: String,
         version: Int?,
@@ -358,15 +340,15 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         repoHashId: String,
         matcher: ScmWebhookMatcher,
         eventId: Long
-    ): Pair<Boolean, String?> {
+    ): WebhookBuildResult {
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId = projectId, pipelineId = pipelineId)
-            ?: return Pair(false, "pipeline is not found")
+            ?: return WebhookBuildResult(result = false, failedReason = "pipeline is not found")
 
         val model =
             pipelineRepositoryService.getModel(projectId = projectId, pipelineId = pipelineId, version = version)
         if (model == null) {
             logger.warn("[$pipelineId]| Fail to get the model")
-            return Pair(false, "pipeline model is not found")
+            return WebhookBuildResult(result = false, failedReason = "pipeline model is not found")
         }
         val repository = try {
             client.get(ServiceRepositoryResource::class).get(
@@ -379,7 +361,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         }
         if (repository == null) {
             logger.warn("repository does not exist|$projectId|$repoHashId")
-            return Pair(false, "repository is not found")
+            return WebhookBuildResult(result = false, failedReason = "repository is not found")
         }
         val userId = pipelineInfo.lastModifyUser
         val variables = mutableMapOf<String, String>()
@@ -389,7 +371,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
             variables[param.id] = param.defaultValue.toString()
         }
         val triggerElementMap =
-            container.elements.filterIsInstance(WebHookTriggerElement::class.java)
+            container.elements.filterIsInstance<WebHookTriggerElement>()
                 .filter { it.isElementEnable() }
                 .associateBy { it.id }
         val reasonDetailList = mutableListOf<PipelineTriggerReasonDetail>()
@@ -404,20 +386,46 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
             }
             val matchResult = matcher.isMatch(projectId, pipelineId, repository, webHookParams)
             if (matchResult.isMatch) {
-                webhookBuild(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    version = version,
-                    variables = variables,
-                    element = triggerElement,
-                    repository = repository,
-                    matcher = matcher,
-                    webHookParams = webHookParams,
-                    matchResult = matchResult,
-                    repositoryConfig = repositoryConfig
-                )
-                return Pair(true, null)
+                try {
+                    val params = WebhookStartParamsRegistrar.getService(triggerElement).getStartParams(
+                        projectId = projectId,
+                        element = triggerElement,
+                        repo = repository,
+                        matcher = matcher,
+                        variables = variables,
+                        params = webHookParams,
+                        matchResult = matchResult
+                    )
+                    val webhookCommit = WebhookCommit(
+                        userId = userId,
+                        pipelineId = pipelineId,
+                        version = version,
+                        params = params,
+                        repositoryConfig = repositoryConfig,
+                        repoName = matcher.getRepoName(),
+                        commitId = matcher.getRevision(),
+                        block = webHookParams.block,
+                        eventType = matcher.getEventType(),
+                        codeType = matcher.getCodeType()
+                    )
+                    val buildId = client.getGateway(ServiceScmWebhookResource::class)
+                        .webhookCommitNew(projectId, webhookCommit).data
+                    logger.info(
+                        "$pipelineId|${buildId?.id}|webhook trigger|(${triggerElement.name}|" +
+                                "repo(${matcher.getRepoName()})"
+                    )
+                    return WebhookBuildResult(result = true, pipelineInfo = pipelineInfo, buildId = buildId)
+                } catch (ignore: Exception) {
+                    logger.warn(
+                        "$pipelineId|webhook trigger|(${triggerElement.name})|repo(${matcher.getRepoName()})",
+                        ignore
+                    )
+                    return WebhookBuildResult(
+                        result = false,
+                        pipelineInfo = pipelineInfo,
+                        failedReason = ignore.message
+                    )
+                }
             } else {
                 logger.info("webhook trigger match unSuccess|$projectId|$pipelineId|$taskId)")
                 reasonDetailList.add(
@@ -430,49 +438,11 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                 )
             }
         }
-        return Pair(false, JsonUtil.toJson(reasonDetailList))
-    }
-
-    private fun webhookBuild(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        version: Int?,
-        variables: MutableMap<String, String>,
-        element: WebHookTriggerElement,
-        repository: Repository,
-        matcher: ScmWebhookMatcher,
-        webHookParams: WebHookParams,
-        matchResult: WebhookMatchResult,
-        repositoryConfig: RepositoryConfig
-    ) {
-        try {
-            val webhookCommit = WebhookCommit(
-                userId = userId,
-                pipelineId = pipelineId,
-                version = version,
-                params = WebhookStartParamsRegistrar.getService(element).getStartParams(
-                    projectId = projectId,
-                    element = element,
-                    repo = repository,
-                    matcher = matcher,
-                    variables = variables,
-                    params = webHookParams,
-                    matchResult = matchResult
-                ),
-                repositoryConfig = repositoryConfig,
-                repoName = matcher.getRepoName(),
-                commitId = matcher.getRevision(),
-                block = webHookParams.block,
-                eventType = matcher.getEventType(),
-                codeType = matcher.getCodeType()
-            )
-            val buildId =
-                client.getGateway(ServiceScmWebhookResource::class).webhookCommit(projectId, webhookCommit).data
-            logger.info("$pipelineId|$buildId|webhook trigger|(${element.name}|repo(${matcher.getRepoName()})")
-        } catch (ignore: Exception) {
-            logger.warn("$pipelineId|webhook trigger|(${element.name})|repo(${matcher.getRepoName()})", ignore)
-        }
+        return WebhookBuildResult(
+            result = false,
+            pipelineInfo = pipelineInfo,
+            failedReason = JsonUtil.toJson(reasonDetailList)
+        )
     }
 
     /**
@@ -482,7 +452,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
      * @param webhookCommit webhook事件信息
      *
      */
-    fun webhookCommitTriggerPipelineBuild(projectId: String, webhookCommit: WebhookCommit): String {
+    fun webhookCommitTriggerPipelineBuild(projectId: String, webhookCommit: WebhookCommit): BuildId? {
         val userId = webhookCommit.userId
         val pipelineId = webhookCommit.pipelineId
         val version = webhookCommit.version
@@ -497,7 +467,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         val model = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)?.model
         if (model == null) {
             logger.warn("[$pipelineId]| Fail to get the model")
-            return ""
+            return null
         }
 
         // 兼容从旧v1版本下发过来的请求携带旧的变量命名
@@ -527,16 +497,16 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                 model = model,
                 signPipelineVersion = version ?: pipelineInfo.version,
                 frequencyLimit = false
-            ).id
+            )
             pipelineWebHookQueueService.onWebHookTrigger(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                buildId = buildId,
+                buildId = buildId.id,
                 variables = webhookCommit.params
             )
             // #2958 webhook触发在触发原子上输出变量
             buildLogPrinter.addLines(
-                buildId = buildId,
+                buildId = buildId.id,
                 logMessages = pipelineParamMap.map {
                     LogMessage(
                         message = "${it.key}=${it.value.value}",
@@ -545,11 +515,11 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                     )
                 }
             )
-            if (buildId.isNotBlank()) {
+            if (buildId.id.isNotBlank()) {
                 webhookBuildParameterService.save(
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    buildId = buildId,
+                    buildId = buildId.id,
                     buildParameters = pipelineParamMap.values.toList()
                 )
                 // 上报项目用户度量
@@ -566,11 +536,13 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
             return buildId
         } catch (ignore: Exception) {
             logger.warn("[$pipelineId]| webhook trigger fail to start repo($repoName): ${ignore.message}", ignore)
-            return ""
+            return null
         } finally {
             logger.info("$pipelineId|WEBHOOK_TRIGGER|repo=$repoName|time=${System.currentTimeMillis() - startEpoch}")
         }
     }
 
-    abstract fun checkPermission(userId: String, projectId: String, pipelineId: String)
+    private fun checkPermission(userId: String, projectId: String, pipelineId: String) {
+        pipelineBuildPermissionService.checkPermission(userId = userId, projectId = projectId, pipelineId = pipelineId)
+    }
 }

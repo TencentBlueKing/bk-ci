@@ -23,23 +23,24 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
 package com.tencent.devops.process.pojo.code
 
-import com.tencent.devops.common.api.enums.RepositoryConfig
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.pojo.BuildId
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-data class WebhookCommit(
-    val userId: String,
-    val pipelineId: String,
-    var version: Int?,
-    val params: Map<String, Any>,
-    val repositoryConfig: RepositoryConfig,
-    val repoName: String,
-    val commitId: String,
-    val block: Boolean,
-    val eventType: CodeEventType,
-    val codeType: CodeType
+@ApiModel("webhook触发结果")
+data class WebhookBuildResult(
+    @ApiModelProperty("触发结果")
+    val result: Boolean,
+    @ApiModelProperty("流水线信息")
+    val pipelineInfo: PipelineInfo? = null,
+    @ApiModelProperty("触发buildId")
+    val buildId: BuildId? = null,
+    @ApiModelProperty("触发失败原因")
+    val failedReason: String? = null
 )

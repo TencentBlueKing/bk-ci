@@ -42,6 +42,7 @@ import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.REMOTE_START
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TIMING_START_EVENT_DESC
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.process.pojo.code.WebhookBuildResult
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailBuilder
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
@@ -86,6 +87,22 @@ class PipelineTriggerEventAspect(
             throw e
         } finally {
             saveTriggerEvent(pjp = pjp, result = result, exception = exception)
+        }
+    }
+
+    @Around("execution(* com.tencent.devops.process.service.webhook." +
+            "PipelineBuildWebhookService.exactMatchPipelineWebhookBuild(..))")
+    fun aroundPipelineWebhookBuild(pjp: ProceedingJoinPoint): Any? {
+        var result: Any? = null
+        var exception: Throwable? = null
+        try {
+            result = pjp.proceed()
+            return result
+        } catch (e: Throwable) {
+            exception = e
+            throw e
+        } finally {
+            saveWebhookTriggerEvent(pjp = pjp, result = result, exception = exception)
         }
     }
 
@@ -142,7 +159,8 @@ class PipelineTriggerEventAspect(
                 pipeline = pipeline,
                 eventId = triggerEvent.eventId!!,
                 result = result,
-                exception = exception
+                exception = exception,
+                failedReason = null
             )
             triggerEventService.saveEvent(
                 triggerEvent = triggerEvent,
@@ -151,6 +169,46 @@ class PipelineTriggerEventAspect(
         } catch (ignored: Throwable) {
             // 为了不影响业务,保存事件异常不抛出
             logger.warn("Failed to save trigger event", ignored)
+        }
+    }
+
+    private fun saveWebhookTriggerEvent(pjp: ProceedingJoinPoint, result: Any?, exception: Throwable?) {
+        try {
+            // 参数value
+            val parameterValue = pjp.args
+            // 参数key
+            val parameterNames = (pjp.signature as MethodSignature).parameterNames
+            var pipelineInfo: PipelineInfo? = null
+            var buildId: BuildId? = null
+            var eventId: Long? = null
+            var failedReason: String? = null
+            for (index in parameterValue.indices) {
+                when (parameterNames[index]) {
+                    "eventId" -> eventId = parameterValue[index] as Long
+                    else -> Unit
+                }
+            }
+            if (result != null) {
+                val webhookBuildResult = result as WebhookBuildResult
+                buildId = webhookBuildResult.buildId
+                pipelineInfo = webhookBuildResult.pipelineInfo
+                failedReason = webhookBuildResult.failedReason
+            }
+            if (pipelineInfo == null || eventId == null) {
+                return
+            }
+
+            val triggerDetail = buildTriggerDetail(
+                pipeline = pipelineInfo,
+                eventId = eventId,
+                result = buildId,
+                exception = exception,
+                failedReason = failedReason
+            )
+            triggerEventService.saveTriggerDetail(triggerDetail)
+        } catch (ignored: Throwable) {
+            // 为了不影响业务,保存事件异常不抛出
+            logger.warn("Failed to save webhook trigger event", ignored)
         }
     }
 
@@ -275,13 +333,15 @@ class PipelineTriggerEventAspect(
         pipeline: PipelineInfo,
         eventId: Long,
         result: Any?,
-        exception: Throwable?
+        exception: Throwable?,
+        failedReason: String?
     ): PipelineTriggerDetail {
         val triggerDetailBuilder = PipelineTriggerDetailBuilder()
         triggerDetailBuilder.eventId(eventId)
         triggerDetailBuilder.projectId(pipeline.projectId)
         triggerDetailBuilder.pipelineId(pipelineId = pipeline.pipelineId)
         triggerDetailBuilder.pipelineName(pipeline.pipelineName)
+        triggerDetailBuilder.detailId(triggerEventService.getDetailId())
 
         when {
             result != null -> {
@@ -289,6 +349,12 @@ class PipelineTriggerEventAspect(
                 triggerDetailBuilder.status(PipelineTriggerStatus.SUCCEED.name)
                 triggerDetailBuilder.buildId(buildId.id)
                 triggerDetailBuilder.buildNum(buildId.num?.toString() ?: "")
+            }
+
+            failedReason != null -> {
+                triggerDetailBuilder.status(PipelineTriggerStatus.FAILED.name)
+                triggerDetailBuilder.reason(PipelineTriggerReason.TRIGGER_FAILED.name)
+                triggerDetailBuilder.reasonDetail(failedReason)
             }
 
             exception != null -> {
