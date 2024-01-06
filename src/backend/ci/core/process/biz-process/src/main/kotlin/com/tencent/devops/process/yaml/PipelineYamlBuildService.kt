@@ -56,35 +56,44 @@ class PipelineYamlBuildService @Autowired constructor(
         action: BaseAction,
         scmType: ScmType
     ) {
-        val yamlFile = action.data.context.yamlFile!!
-        val repoHashId = action.data.setting.repoHashId
-        val pipelineYamlVersion = pipelineYamlVersionDao.get(
-            dslContext = dslContext,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            filePath = yamlFile.yamlPath,
-            blobId = yamlFile.blobId!!
-        ) ?: run {
-            logger.info("pac yaml build not found pipeline version|$projectId|$repoHashId|$yamlFile")
-            return
+        try {
+            val yamlFile = action.data.context.yamlFile!!
+            val repoHashId = action.data.setting.repoHashId
+            val pipelineYamlVersion = pipelineYamlVersionDao.get(
+                dslContext = dslContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = yamlFile.yamlPath,
+                blobId = yamlFile.blobId!!
+            ) ?: run {
+                logger.info("pac yaml build not found pipeline version|$projectId|$repoHashId|$yamlFile")
+                return
+            }
+            val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = action.data.event)
+            val taskIds = pipelineWebhookVersionDao.getTaskIds(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineYamlVersion.pipelineId,
+                version = pipelineYamlVersion.version,
+                repoHashId = repoHashId,
+                eventType = matcher.getEventType().name
+            ) ?: return
+            logger.info(
+                "pipeline yaml build|$projectId|$repoHashId|" +
+                        "${pipelineYamlVersion.pipelineId}|${pipelineYamlVersion.version}"
+            )
+            pipelineBuildWebhookService.exactMatchPipelineWebhookBuild(
+                projectId = projectId,
+                pipelineId = pipelineYamlVersion.pipelineId,
+                version = pipelineYamlVersion.version,
+                taskIds = taskIds,
+                repoHashId = repoHashId,
+                matcher = matcher,
+                eventId = action.data.context.eventId!!
+            )
+        } catch (ignored: Throwable) {
+            logger.warn("Failed to build pipeline yaml|$projectId|${action.format()}", ignored)
+            throw ignored
         }
-        val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = action.data.event)
-        val taskIds = pipelineWebhookVersionDao.getTaskIds(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineYamlVersion.pipelineId,
-            version = pipelineYamlVersion.version,
-            repoHashId = repoHashId,
-            eventType = matcher.getEventType().name
-        ) ?: return
-        pipelineBuildWebhookService.exactMatchPipelineWebhookBuild(
-            projectId = projectId,
-            pipelineId = pipelineYamlVersion.pipelineId,
-            version = pipelineYamlVersion.version,
-            taskIds = taskIds,
-            repoHashId = repoHashId,
-            matcher = matcher,
-            eventId = action.data.context.eventId!!
-        )
     }
 }

@@ -104,7 +104,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 }
             }
         } catch (ignored: Exception) {
-            logger.error(
+            logger.warn(
                 "Failed to deploy pipeline yaml|$projectId|${action.data.setting.repoHashId}|yamlFile:${yamlFile}",
                 ignored
             )
@@ -370,7 +370,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 filePath = filePath
             )
         } catch (ignored: Exception) {
-            logger.error("Failed to delete pipeline yaml|$projectId|${action.format()}", ignored)
+            logger.warn("Failed to delete pipeline yaml|$projectId|${action.format()}", ignored)
             throw ignored
         }
     }
