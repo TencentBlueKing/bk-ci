@@ -27,7 +27,9 @@
 
 package com.tencent.devops.common.webhook.service.code.filter
 
+import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import org.slf4j.LoggerFactory
 
 class EventTypeFilter(
@@ -48,7 +50,7 @@ class EventTypeFilter(
         return when (eventType) {
             null -> true
             CodeEventType.MERGE_REQUEST, CodeEventType.MERGE_REQUEST_ACCEPT ->
-                isAllowedByMrAction()
+                isAllowedByMrAction(response = response)
             else ->
                 isAllowedByEventType()
         }
@@ -58,7 +60,7 @@ class EventTypeFilter(
         return eventType == triggerOnEventType
     }
 
-    private fun isAllowedByMrAction(): Boolean {
+    private fun isAllowedByMrAction(response: WebhookFilterResponse): Boolean {
         if (triggerOnEventType != CodeEventType.MERGE_REQUEST ||
             isMrAndMergeAction() ||
             isMrAcceptNotMergeAction()
@@ -66,6 +68,9 @@ class EventTypeFilter(
             logger.warn(
                 "$pipelineId|Git mr web hook not match with triggerOnEventType($triggerOnEventType) or action($action)"
             )
+            response.failedReason = I18Variable(
+                code = WebhookI18nConstants.SOURCE_BRANCH_NOT_MATCH
+            ).toJsonStr()
             return false
         }
         return true

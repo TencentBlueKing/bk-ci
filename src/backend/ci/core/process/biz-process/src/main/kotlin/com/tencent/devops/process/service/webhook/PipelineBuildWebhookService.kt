@@ -433,7 +433,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                         elementId = triggerElement.id,
                         elementName = triggerElement.name,
                         elementAtomCode = triggerElement.getAtomCode(),
-                        reasonMsg = matchResult.reason!!
+                        reasonMsg = matchResult.reason ?: "match failed"
                     )
                 )
             }

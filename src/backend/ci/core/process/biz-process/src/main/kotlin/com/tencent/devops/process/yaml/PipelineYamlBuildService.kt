@@ -59,6 +59,14 @@ class PipelineYamlBuildService @Autowired constructor(
         try {
             val yamlFile = action.data.context.yamlFile!!
             val repoHashId = action.data.setting.repoHashId
+
+            val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = action.data.event)
+            val preMatch = matcher.preMatch()
+            if (!preMatch.isMatch) {
+                logger.info("webhook trigger pre match|${preMatch.reason}")
+                return
+            }
+
             val pipelineYamlVersion = pipelineYamlVersionDao.get(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -69,7 +77,6 @@ class PipelineYamlBuildService @Autowired constructor(
                 logger.info("pac yaml build not found pipeline version|$projectId|$repoHashId|$yamlFile")
                 return
             }
-            val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = action.data.event)
             val taskIds = pipelineWebhookVersionDao.getTaskIds(
                 dslContext = dslContext,
                 projectId = projectId,
