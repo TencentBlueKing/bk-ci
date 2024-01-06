@@ -344,8 +344,9 @@ class PipelineBuildWebhookService @Autowired constructor(
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId = projectId, pipelineId = pipelineId)
             ?: return WebhookBuildResult(result = false, failedReason = "pipeline is not found")
 
-        val model =
-            pipelineRepositoryService.getModel(projectId = projectId, pipelineId = pipelineId, version = version)
+        val model = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId, pipelineId = pipelineId, version = version
+        )?.model
         if (model == null) {
             logger.warn("[$pipelineId]| Fail to get the model")
             return WebhookBuildResult(result = false, failedReason = "pipeline model is not found")
