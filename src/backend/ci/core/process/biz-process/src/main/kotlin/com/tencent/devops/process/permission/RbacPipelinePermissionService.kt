@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.permission
 
+import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -41,6 +42,7 @@ import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList")
 class RbacPipelinePermissionService constructor(
@@ -53,19 +55,28 @@ class RbacPipelinePermissionService constructor(
     val authResourceApi: AuthResourceApi
 ) : PipelinePermissionService {
 
+    private val pipelinePermissionCache = CacheBuilder.newBuilder()
+        .maximumSize(50000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<String, Boolean>()
+
     override fun checkPipelinePermission(
         userId: String,
         projectId: String,
         permission: AuthPermission,
         authResourceType: AuthResourceType?
     ): Boolean {
-        return authPermissionApi.validateUserResourcePermission(
-            user = userId,
-            serviceCode = pipelineAuthServiceCode,
-            resourceType = authResourceType ?: resourceType,
-            permission = permission,
-            projectCode = projectId
-        )
+        val resourceType = authResourceType ?: resourceType
+        val cacheKey = "${userId}_${projectId}_${resourceType}_${permission.value}"
+        return cache(cacheKey) {
+            authPermissionApi.validateUserResourcePermission(
+                user = userId,
+                serviceCode = pipelineAuthServiceCode,
+                resourceType = resourceType,
+                permission = permission,
+                projectCode = projectId
+            )
+        }
     }
 
     override fun checkPipelinePermission(
@@ -78,18 +89,22 @@ class RbacPipelinePermissionService constructor(
         logger.info("[rbac] check pipeline permission|$userId|$projectId|$pipelineId|$permission|$authResourceType")
         val startEpoch = System.currentTimeMillis()
         try {
-            val pipelineInstance = pipeline2AuthResource(projectId, pipelineId, authResourceType)
-            return authPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = pipelineAuthServiceCode,
-                projectCode = projectId,
-                permission = permission,
-                resource = pipelineInstance
-            )
+            val resourceType = authResourceType?.value ?: resourceType.value
+            val cacheKey = "${userId}_${projectId}_${pipelineId}_${resourceType}_${permission.value}"
+            return cache(cacheKey) {
+                val pipelineInstance = pipeline2AuthResource(projectId, pipelineId, authResourceType)
+                authPermissionApi.validateUserResourcePermission(
+                    user = userId,
+                    serviceCode = pipelineAuthServiceCode,
+                    projectCode = projectId,
+                    permission = permission,
+                    resource = pipelineInstance
+                )
+            }
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to check pipeline permission|" +
-                    "$userId|$projectId|$pipelineId|$permission|$authResourceType"
+                        "$userId|$projectId|$pipelineId|$permission|$authResourceType"
             )
         }
     }
@@ -292,7 +307,23 @@ class RbacPipelinePermissionService constructor(
     }
 
     override fun checkProjectManager(userId: String, projectId: String): Boolean {
-        return authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)
+        val cacheKey = "${userId}_${projectId}_project_manager"
+        return cache(cacheKey) {
+            authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)
+        }
+    }
+
+    private fun cache(cacheKey: String, request: () -> Boolean): Boolean {
+        val cacheResult = pipelinePermissionCache.getIfPresent(cacheKey)
+        return if (cacheResult == null) {
+            val requestResult = request.invoke()
+            if (requestResult) {
+                pipelinePermissionCache.put(cacheKey, true)
+            }
+            requestResult
+        } else {
+            cacheResult
+        }
     }
 
     companion object {
