@@ -77,7 +77,10 @@ class PipelineYamlBuildService @Autowired constructor(
                 version = pipelineYamlVersion.version,
                 repoHashId = repoHashId,
                 eventType = matcher.getEventType().name
-            ) ?: return
+            )
+            if (taskIds.isNullOrEmpty()) {
+                return
+            }
             logger.info(
                 "pipeline yaml build|$projectId|$repoHashId|" +
                         "${pipelineYamlVersion.pipelineId}|${pipelineYamlVersion.version}"

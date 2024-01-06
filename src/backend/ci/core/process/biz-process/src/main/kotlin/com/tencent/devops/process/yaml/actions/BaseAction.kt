@@ -7,7 +7,6 @@ import com.tencent.devops.process.yaml.git.service.PacGitApiService
 import com.tencent.devops.process.yaml.pojo.YamlContent
 import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
 
-
 /**
  * 所有action的父类，只提供抽象方法
  */

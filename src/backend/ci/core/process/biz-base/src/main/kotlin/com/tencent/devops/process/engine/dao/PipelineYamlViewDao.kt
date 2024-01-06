@@ -92,7 +92,7 @@ class PipelineYamlViewDao {
 
     fun listViewIds(
         dslContext: DSLContext,
-        projectId: String,
+        projectId: String
     ): List<Long> {
         with(TPipelineYamlView.T_PIPELINE_YAML_VIEW) {
             return dslContext.select(VIEW_ID).from(this)

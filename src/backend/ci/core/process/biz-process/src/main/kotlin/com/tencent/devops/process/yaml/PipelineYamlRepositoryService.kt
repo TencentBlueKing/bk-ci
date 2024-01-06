@@ -79,7 +79,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
         val triggerPipeline = action.data.context.pipeline
         val yamlFile = action.data.context.yamlFile!!
         val filePath = yamlFile.yamlPath
-        logger.info("syncYamlPipeline|$projectId|pipeline:${triggerPipeline}|yamlFile:${yamlFile}")
+        logger.info("syncYamlPipeline|$projectId|pipeline:$triggerPipeline|yamlFile:$yamlFile")
         try {
             PipelineYamlTriggerLock(
                 redisOperation = redisOperation,
@@ -105,7 +105,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             }
         } catch (ignored: Exception) {
             logger.warn(
-                "Failed to deploy pipeline yaml|$projectId|${action.data.setting.repoHashId}|yamlFile:${yamlFile}",
+                "Failed to deploy pipeline yaml|$projectId|${action.data.setting.repoHashId}|yamlFile:$yamlFile",
                 ignored
             )
             throw ignored
@@ -124,7 +124,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
         pipelineYamlService.getPipelineYamlInfo(
             projectId = projectId,
             repoHashId = action.data.setting.repoHashId,
-            filePath = yamlFile.yamlPath,
+            filePath = yamlFile.yamlPath
         )?.let {
             updatePipelineIfAbsent(
                 projectId = projectId,

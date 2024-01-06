@@ -132,7 +132,6 @@ class PipelineTriggerEventService @Autowired constructor(
         )
     }
 
-
     fun listPipelineTriggerEvent(
         userId: String,
         projectId: String,

@@ -31,13 +31,16 @@ package com.tencent.devops.process.yaml.git.pojo
 /**
  * pac yaml文件发布结果
  */
-interface PacGitPushResult{
+interface PacGitPushResult {
     // ci文件路径
     val filePath: String
+
     // 分支名
     val branch: String
+
     // 文件blob_id
     val blobId: String
+
     // commitId
     val lastCommitId: String
 }
