@@ -33,7 +33,6 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.TRepository
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.constant.RepositoryMessageCode.GIT_NOT_FOUND
-import com.tencent.devops.repository.pojo.enums.RepoYamlSyncStatusEnum
 import com.tencent.devops.repository.pojo.enums.RepositorySortEnum
 import com.tencent.devops.repository.pojo.enums.RepositorySortTypeEnum
 import org.jooq.Condition

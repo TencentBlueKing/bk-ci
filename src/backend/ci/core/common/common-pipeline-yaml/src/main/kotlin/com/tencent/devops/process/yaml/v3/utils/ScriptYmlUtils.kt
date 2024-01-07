@@ -57,10 +57,8 @@ import com.tencent.devops.process.yaml.v3.enums.StreamMrEventAction
 import com.tencent.devops.process.yaml.v3.enums.TemplateType
 import com.tencent.devops.process.yaml.v3.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v3.models.PreRepositoryHook
-import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYaml
 import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYamlI
 import com.tencent.devops.process.yaml.v3.models.RepositoryHook
-import com.tencent.devops.process.yaml.v3.models.ScriptBuildYaml
 import com.tencent.devops.process.yaml.v3.models.YamlTransferData
 import com.tencent.devops.process.yaml.v3.models.YmlName
 import com.tencent.devops.process.yaml.v3.models.YmlVersion
@@ -79,7 +77,6 @@ import com.tencent.devops.process.yaml.v3.models.on.IssueRule
 import com.tencent.devops.process.yaml.v3.models.on.ManualRule
 import com.tencent.devops.process.yaml.v3.models.on.MrRule
 import com.tencent.devops.process.yaml.v3.models.on.NoteRule
-import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.on.PushRule
 import com.tencent.devops.process.yaml.v3.models.on.ReviewRule

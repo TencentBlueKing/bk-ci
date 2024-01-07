@@ -51,7 +51,7 @@ data class GitListMergeRequest(
     val perPage: Int = 10
 )
 
-enum class MergeRequestState(val value: String){
+enum class MergeRequestState(val value: String) {
     MERGED("merged"),
     OPENED("opened"),
     REOPENED("reopened"),

@@ -114,7 +114,7 @@ class EventActionFactory @Autowired constructor(
             }
             is GitTagPushEvent -> {
                 val tGitTagPushAction = TGitTagPushActionGit(
-                    apiService = tGitApiService,
+                    apiService = tGitApiService
                 )
                 tGitTagPushAction
             }

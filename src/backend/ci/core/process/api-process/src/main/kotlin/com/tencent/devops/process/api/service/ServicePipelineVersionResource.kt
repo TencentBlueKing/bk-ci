@@ -33,12 +33,12 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.PipelineModelWithYaml
 import com.tencent.devops.common.pipeline.PipelineModelWithYamlRequest
-import com.tencent.devops.common.pipeline.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.pojo.PipelineDetail
+import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import io.swagger.annotations.Api

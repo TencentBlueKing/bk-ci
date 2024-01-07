@@ -28,7 +28,6 @@
 
 package com.tencent.devops.process.webhook
 
-import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
 import com.tencent.devops.common.pipeline.pojo.BuildParameterGroup
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
@@ -102,22 +101,6 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_REVIEW_TYPE
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_SHA
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_SHA_SHORT
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAG_FROM
-import com.tencent.devops.process.utils.BUILD_NO
-import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
-import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
-import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
-import com.tencent.devops.process.utils.PIPELINE_CREATE_USER
-import com.tencent.devops.process.utils.PIPELINE_ID
-import com.tencent.devops.process.utils.PIPELINE_NAME
-import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
-import com.tencent.devops.process.utils.PIPELINE_START_MOBILE
-import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
-import com.tencent.devops.process.utils.PIPELINE_START_TYPE
-import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
-import com.tencent.devops.process.utils.PIPELINE_UPDATE_USER
-import com.tencent.devops.process.utils.PIPELINE_VERSION
-import com.tencent.devops.process.utils.PROJECT_NAME
-import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 
 @SuppressWarnings("TooManyFunctions")
 object TriggerBuildParamUtils {

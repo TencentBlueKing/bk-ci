@@ -41,5 +41,5 @@ data class PipelineYamlSyncInfo(
     @ApiModelProperty("原因", required = false)
     var reason: String? = null,
     @ApiModelProperty("原因详情", required = false)
-    var reasonDetail: String? = null,
+    var reasonDetail: String? = null
 )

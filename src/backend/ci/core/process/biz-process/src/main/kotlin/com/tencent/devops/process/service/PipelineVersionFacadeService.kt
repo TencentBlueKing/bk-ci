@@ -215,7 +215,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         val (versionStatus, branchName) = if (
             enabled && request.targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE
         ) {
-            Pair(VersionStatus.BRANCH, "${PAC_BRANCH_PREFIX}${pipelineId}")
+            Pair(VersionStatus.BRANCH, "${PAC_BRANCH_PREFIX}$pipelineId")
         } else if (enabled && request.targetAction == CodeTargetAction.PUSH_BRANCH_AND_REQUEST_MERGE) {
             val baseVersion = draftVersion.baseVersion?.let {
                 pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, it)

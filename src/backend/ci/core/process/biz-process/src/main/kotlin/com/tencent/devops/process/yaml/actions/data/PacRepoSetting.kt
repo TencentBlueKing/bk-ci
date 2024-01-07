@@ -51,7 +51,7 @@ data class PacRepoSetting(
     val credentialId: String?,
     val aliasName: String
 ) {
-    constructor(repository: Repository): this(
+    constructor(repository: Repository) : this(
         projectId = repository.projectId!!,
         repoHashId = repository.repoHashId!!,
         enableUser = repository.userName,
