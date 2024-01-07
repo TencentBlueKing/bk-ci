@@ -25,9 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo
+package com.tencent.devops.process.pojo
 
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import io.swagger.annotations.ApiModelProperty
 
 data class PipelineVersionReleaseRequest(
@@ -38,5 +39,7 @@ data class PipelineVersionReleaseRequest(
     @ApiModelProperty("模板版本号（为空时默认最新）", required = false)
     var targetAction: CodeTargetAction?,
     @ApiModelProperty("静态流水线组", required = false)
-    var staticViews: List<String> = emptyList()
+    var staticViews: List<String> = emptyList(),
+    @ApiModelProperty("流水线YAML信息", required = false)
+    val yamlInfo: PipelineYamlVo?
 )

@@ -1248,7 +1248,8 @@ class PipelineRepositoryService constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        version: Int
+        version: Int,
+        ignoreBase: Boolean? = false
     ): PipelineResourceVersion {
         var resultVersion: PipelineResourceVersion? = null
         dslContext.transaction { configuration ->
@@ -1315,7 +1316,7 @@ class PipelineRepositoryService constructor(
                 version = newVersion.version,
                 versionName = versionName,
                 model = newVersion.model,
-                baseVersion = targetVersion.version,
+                baseVersion = targetVersion.version.takeIf { ignoreBase != true },
                 yaml = newVersion.yaml,
                 pipelineVersion = newVersion.pipelineVersion,
                 triggerVersion = triggerVersion,
@@ -1813,10 +1814,11 @@ class PipelineRepositoryService constructor(
         projectId: String,
         pipelineId: String,
         branchName: String?,
-        branchVersionAction: BranchVersionAction
+        branchVersionAction: BranchVersionAction,
+        transactionContext: DSLContext? = null
     ) {
         pipelineResourceVersionDao.updateBranchVersion(
-            dslContext = dslContext,
+            dslContext = transactionContext ?: dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             branchName = branchName,

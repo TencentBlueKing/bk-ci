@@ -30,6 +30,7 @@ package com.tencent.devops.process.pojo
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -78,5 +79,7 @@ data class PipelineDetail(
     @ApiModelProperty("仅存在草稿", required = false)
     var onlyDraft: Boolean? = false,
     @ApiModelProperty("PAC配置", required = false)
-    val pipelineAsCodeSettings: PipelineAsCodeSettings?
+    val pipelineAsCodeSettings: PipelineAsCodeSettings?,
+    @ApiModelProperty("流水线YAML信息", required = false)
+    val yamlInfo: PipelineYamlVo?
 )
