@@ -1568,6 +1568,7 @@ class TemplateFacadeService @Autowired constructor(
                         defaultStageTagId = defaultStageTagId
                     )
                 instanceModel.templateId = templateId
+                // TODO #9145 创建流水线实例时的yaml覆盖逻辑
                 val pipelineId = pipelineInfoFacadeService.createPipeline(
                     userId = userId,
                     projectId = projectId,
