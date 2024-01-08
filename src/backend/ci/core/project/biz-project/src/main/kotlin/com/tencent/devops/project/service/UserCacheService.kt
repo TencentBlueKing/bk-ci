@@ -60,7 +60,7 @@ class UserCacheService @Autowired constructor(
                 bgId = (userRecord["BG_ID"] as Int).toString(),
                 deptName = userRecord["DEPT_NAME"] as String,
                 deptId = (userRecord["DEPT_ID"] as Int).toString(),
-                centerName =  userRecord["CENTER_NAME"] as String,
+                centerName = userRecord["CENTER_NAME"] as String,
                 centerId = (userRecord["CENTER_ID"] as Int).toString(),
                 groupId = (userRecord["GROYP_ID"] as Int).toString(),
                 groupName = userRecord["GROUP_NAME"] as String
