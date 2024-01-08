@@ -75,6 +75,58 @@ BEGIN
         ADD COLUMN `PRODUCT_NAME` VARCHAR(64) DEFAULT NULL comment '运营产品名称';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_DATA_SOURCE'
+                    AND COLUMN_NAME = 'TYPE') THEN
+    ALTER TABLE `T_DATA_SOURCE`
+       ADD COLUMN `TYPE` varchar(32) NOT NULL DEFAULT 'DB' COMMENT '数据库类型，DB:普通数据库，ARCHIVE_DB:归档数据库';
+    END IF;
+
+    IF EXISTS(SELECT 1
+                 FROM information_schema.statistics
+                 WHERE TABLE_SCHEMA = db
+                   AND TABLE_NAME = 'T_DATA_SOURCE'
+                   AND INDEX_NAME = 'uni_inx_tds_module_name') THEN
+    ALTER TABLE `T_DATA_SOURCE` DROP INDEX `uni_inx_tds_module_name`;
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_DATA_SOURCE'
+                     AND INDEX_NAME = 'UNI_INX_TDS_CLUSTER_MODULE_TYPE_NAME') THEN
+    ALTER TABLE `T_DATA_SOURCE`
+      ADD UNIQUE INDEX `UNI_INX_TDS_CLUSTER_MODULE_TYPE_NAME` (`CLUSTER_NAME`,`MODULE_CODE`,`TYPE`, `DATA_SOURCE_NAME`);
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PROJECT_DATA_MIGRATE_HISTORY'
+                    AND COLUMN_NAME = 'PIPELINE_ID') THEN
+    ALTER TABLE `T_PROJECT_DATA_MIGRATE_HISTORY`
+      ADD COLUMN `PIPELINE_ID` varchar(34) DEFAULT NULL COMMENT '流水线ID';
+    END IF;
+
+    IF EXISTS(SELECT 1
+                 FROM information_schema.statistics
+                 WHERE TABLE_SCHEMA = db
+                   AND TABLE_NAME = 'T_PROJECT_DATA_MIGRATE_HISTORY'
+                   AND INDEX_NAME = 'INX_TPDMH_PROJECT_MODULE_TAG_NAME') THEN
+    ALTER TABLE `T_PROJECT_DATA_MIGRATE_HISTORY` DROP INDEX `INX_TPDMH_PROJECT_MODULE_TAG_NAME`;
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_PROJECT_DATA_MIGRATE_HISTORY'
+                     AND INDEX_NAME = 'INX_TPDMH_MODULE_PROJECT_PIPELINE_NAME') THEN
+    ALTER TABLE `T_PROJECT_DATA_MIGRATE_HISTORY`
+      ADD UNIQUE INDEX `INX_TPDMH_MODULE_PROJECT_PIPELINE_NAME` (`MODULE_CODE`,`PROJECT_ID`,`PIPELINE_ID`, `TARGET_CLUSTER_NAME`, `TARGET_DATA_SOURCE_NAME`);
+    END IF;
+
 
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS

@@ -32,7 +32,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"go/format"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -77,7 +76,7 @@ func main() {
 	g.Printf("func init(){\n")
 
 	// 读取用户配置的国际化文件
-	files, err := ioutil.ReadDir(i18nFileDir)
+	files, err := os.ReadDir(i18nFileDir)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "read i18ndir error %s \n", err.Error())
 		exit()

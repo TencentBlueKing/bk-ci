@@ -31,6 +31,7 @@ import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistory
 import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistoryQueryParam
 import com.tencent.devops.model.project.tables.TProjectDataMigrateHistory
 import com.tencent.devops.model.project.tables.records.TProjectDataMigrateHistoryRecord
+import com.tencent.devops.process.utils.PIPELINE_ID
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -45,6 +46,7 @@ class ProjectDataMigrateHistoryDao {
                 this,
                 ID,
                 PROJECT_ID,
+                PIPELINE_ID,
                 MODULE_CODE,
                 SOURCE_CLUSTER_NAME,
                 SOURCE_DATA_SOURCE_NAME,
@@ -57,6 +59,7 @@ class ProjectDataMigrateHistoryDao {
                 .values(
                     projectDataMigrateHistory.id,
                     projectDataMigrateHistory.projectId,
+                    projectDataMigrateHistory.pipelineId,
                     projectDataMigrateHistory.moduleCode.name,
                     projectDataMigrateHistory.sourceClusterName,
                     projectDataMigrateHistory.sourceDataSourceName,
@@ -80,6 +83,12 @@ class ProjectDataMigrateHistoryDao {
         with(TProjectDataMigrateHistory.T_PROJECT_DATA_MIGRATE_HISTORY) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(queryParam.projectId))
+            val pipelineId = queryParam.pipelineId
+            if (pipelineId.isNullOrBlank()) {
+                conditions.add(PIPELINE_ID.isNull)
+            } else {
+                conditions.add(PIPELINE_ID.eq(pipelineId))
+            }
             conditions.add(MODULE_CODE.eq(queryParam.moduleCode.name))
             conditions.add(TARGET_CLUSTER_NAME.eq(queryParam.targetClusterName))
             conditions.add(TARGET_DATA_SOURCE_NAME.eq(queryParam.targetDataSourceName))

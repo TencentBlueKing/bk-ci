@@ -157,14 +157,18 @@ open class BaseBuildRecordService(
         buildId: String,
         fixedExecuteCount: Int,
         buildRecordModel: BuildRecordModel,
-        executeCount: Int?
+        executeCount: Int?,
+        queryDslContext: DSLContext? = null
     ): Model? {
         val watcher = Watcher(id = "getRecordModel#$buildId")
         watcher.start("getVersionModelString")
         val resourceStr = pipelineResVersionDao.getVersionModelString(
-            dslContext = dslContext, projectId = projectId, pipelineId = pipelineId, version = version
+            dslContext = queryDslContext ?: dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version
         ) ?: pipelineResDao.getVersionModelString(
-            dslContext = dslContext,
+            dslContext = queryDslContext ?: dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             version = version
@@ -181,7 +185,8 @@ open class BaseBuildRecordService(
                 model = fullModel,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                handlePostFlag = false
+                handlePostFlag = false,
+                queryDslContext = queryDslContext
             )
             val baseModelMap = JsonUtil.toMutableMap(bean = fullModel, skipEmpty = false)
             val mergeBuildRecordParam = MergeBuildRecordParam(
@@ -193,7 +198,7 @@ open class BaseBuildRecordService(
                 pipelineBaseModelMap = baseModelMap
             )
             watcher.start("generateFieldRecordModelMap")
-            recordMap = recordModelService.generateFieldRecordModelMap(mergeBuildRecordParam)
+            recordMap = recordModelService.generateFieldRecordModelMap(mergeBuildRecordParam, queryDslContext)
             watcher.start("generatePipelineBuildModel")
             ModelUtils.generatePipelineBuildModel(
                 baseModelMap = baseModelMap,

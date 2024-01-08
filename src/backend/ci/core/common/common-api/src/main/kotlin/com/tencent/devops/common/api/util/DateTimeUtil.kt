@@ -70,6 +70,8 @@ object DateTimeUtil {
 
     const val YYYYMMDD = "yyyyMMdd"
 
+    const val YYYYMMDDHHMMSS = "yyyyMMddHHmmss"
+
     const val ONE_THOUSAND_MS = 1000L
 
     /**
