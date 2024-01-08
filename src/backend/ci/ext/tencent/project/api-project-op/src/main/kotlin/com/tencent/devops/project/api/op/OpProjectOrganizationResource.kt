@@ -29,6 +29,7 @@ package com.tencent.devops.project.api.op
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.project.pojo.OrganizationInfo
+import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.enums.OrganizationType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -57,6 +58,17 @@ interface OpProjectOrganizationResource {
         @PathParam("id")
         id: Int
     ): Result<List<OrganizationInfo>>
+
+    @POST
+    @Path("/{englishName}/updateProjectOrganization")
+    @ApiOperation("修改组织架构")
+    fun updateProjectOrganization(
+        @PathParam("englishName")
+        @ApiParam("项目ID", required = true)
+        englishName: String,
+        @ApiParam("项目组织", required = true)
+        organization: ProjectOrganizationInfo
+    ): Result<Boolean>
 
     @POST
     @Path("/fixProjectOrganization")

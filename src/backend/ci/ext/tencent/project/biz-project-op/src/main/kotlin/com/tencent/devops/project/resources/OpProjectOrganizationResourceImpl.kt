@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.op.OpProjectOrganizationResource
 import com.tencent.devops.project.pojo.OrganizationInfo
+import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.enums.OrganizationType
 import com.tencent.devops.project.service.ProjectExtOrganizationService
 import com.tencent.devops.project.service.tof.TOFService
@@ -51,6 +52,18 @@ class OpProjectOrganizationResourceImpl @Autowired constructor(
             tofService.getOrganizationInfo(
                 type = type,
                 id = id
+            )
+        )
+    }
+
+    override fun updateProjectOrganization(
+        englishName: String,
+        organization: ProjectOrganizationInfo
+    ): Result<Boolean> {
+        return Result(
+            projectExtOrganizationService.updateProjectOrganization(
+                englishName = englishName,
+                organization = organization
             )
         )
     }
