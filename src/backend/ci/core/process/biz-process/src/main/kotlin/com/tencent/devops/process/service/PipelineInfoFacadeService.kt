@@ -570,7 +570,6 @@ class PipelineInfoFacadeService @Autowired constructor(
         } else {
             VersionStatus.BRANCH
         }
-        // TODO #8161 流水线名称管理：如果yaml文件没有定义name，需要用文件名作为流水线名称
         val newResource = transferModelAndSetting(
             userId = userId,
             projectId = projectId,
@@ -579,10 +578,11 @@ class PipelineInfoFacadeService @Autowired constructor(
             branchName = branchName,
             aspects = aspects
         )
+        val pipelineName = newResource.model.name.ifBlank { yamlFileName }
         val result = createPipeline(
             userId = userId,
             projectId = projectId,
-            model = newResource.model,
+            model = newResource.model.copy(name = pipelineName),
             channelCode = ChannelCode.BS,
             yaml = yaml,
             versionStatus = versionStatus,
@@ -597,6 +597,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = result.pipelineId,
             setting = newResource.setting.copy(
+                pipelineName = pipelineName,
                 pipelineAsCodeSettings = pipelineAsCodeSettings
             ),
             versionStatus = versionStatus,
@@ -621,7 +622,14 @@ class PipelineInfoFacadeService @Autowired constructor(
         } else {
             VersionStatus.BRANCH
         }
-        val newResource = transferModelAndSetting(userId, projectId, yaml, isDefaultBranch, branchName, aspects)
+        val newResource = transferModelAndSetting(
+            userId = userId,
+            projectId = projectId,
+            yaml = yaml,
+            isDefaultBranch = isDefaultBranch,
+            branchName = branchName,
+            aspects = aspects
+        )
         newResource.setting.projectId = projectId
         newResource.setting.pipelineId = pipelineId
         // 通过PAC模式创建或保存的流水线均打开PAC
@@ -1335,6 +1343,12 @@ class PipelineInfoFacadeService @Autowired constructor(
             if (setting.pipelineAsCodeSettings?.enable == true) {
                 // 检查yaml是否已经在默认分支删除
                 yamlFacadeService.deleteBeforeCheck(userId, projectId, pipelineId)
+                pipelineSettingFacadeService.saveSetting(
+                    userId, projectId, pipelineId,
+                    setting.copy(
+                        pipelineAsCodeSettings = PipelineAsCodeSettings(false)
+                    )
+                )
             }
             watcher.start("s_r_pipeline_del")
             val deletePipelineResult = pipelineRepositoryService.deletePipeline(
