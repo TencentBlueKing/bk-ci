@@ -699,6 +699,7 @@ class WorkspaceCommon @Autowired constructor(
     // 云桌面删除成功后往kafka发送消息
     fun sendCgsInfo2Kafka(workspaceKafkaInfo: WorkspaceKafkaInfo) {
         if (buildCommitsTopic.isNullOrBlank()) return
+        logger.debug("sendCgsInfo2Kafka|workspaceKafkaInfo|{}", workspaceKafkaInfo)
         kotlin.runCatching {
             kafkaClient.send(
                 buildCommitsTopic!!, JsonUtil.toJson(
@@ -706,7 +707,7 @@ class WorkspaceCommon @Autowired constructor(
             )
             )
         }.onFailure {
-            logger.warn("send cgs info 2 kafka fail ${it.message}")
+            logger.warn("send cgs info 2 kafka fail")
         }
     }
 }
