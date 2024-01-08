@@ -28,7 +28,6 @@
 package com.tencent.devops.project
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.project.pojo.BkDeptInfo
 import com.tencent.devops.project.pojo.ProjectProperties
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
