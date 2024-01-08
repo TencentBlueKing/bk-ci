@@ -27,11 +27,13 @@
 
 package com.tencent.devops.quality.service.permission
 
+import com.tencent.bk.sdk.iam.util.AuthCacheUtil
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.utils.AuthCacheKeyUtil
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
@@ -50,16 +52,25 @@ class RbacQualityPermissionServiceImpl(
         authPermission: AuthPermission,
         message: String
     ) {
+        val cacheKey = AuthCacheKeyUtil.getCacheKey(
+            userId = userId,
+            resourceType = AuthResourceType.QUALITY_GROUP_NEW.value,
+            action = buildQualityGroupAction(authPermission),
+            projectCode = projectId,
+            resourceCode = HashUtil.encodeLongId(groupId),
+        )
         val permissionCheck =
-            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-                token = tokenService.getSystemToken()!!,
-                userId = userId,
-                projectCode = projectId,
-                resourceCode = HashUtil.encodeLongId(groupId),
-                action = RbacAuthUtils.buildAction(authPermission, AuthResourceType.QUALITY_GROUP_NEW),
-                relationResourceType = null,
-                resourceType = AuthResourceType.QUALITY_GROUP_NEW.value
-            ).data ?: false
+            AuthCacheUtil.cachePermission(cacheKey) {
+                client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+                    token = tokenService.getSystemToken()!!,
+                    userId = userId,
+                    projectCode = projectId,
+                    resourceCode = HashUtil.encodeLongId(groupId),
+                    action = buildQualityGroupAction(authPermission),
+                    relationResourceType = null,
+                    resourceType = AuthResourceType.QUALITY_GROUP_NEW.value
+                ).data ?: false
+            }
         if (!permissionCheck) {
             throw PermissionForbiddenException(message)
         }
@@ -70,13 +81,22 @@ class RbacQualityPermissionServiceImpl(
         projectId: String,
         authPermission: AuthPermission
     ): Boolean {
-        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            token = tokenService.getSystemToken()!!,
+        val cacheKey = AuthCacheKeyUtil.getCacheKey(
             userId = userId,
+            resourceType = AuthResourceType.QUALITY_GROUP_NEW.value,
+            action = buildQualityGroupAction(authPermission),
             projectCode = projectId,
-            action = RbacAuthUtils.buildAction(authPermission, AuthResourceType.QUALITY_GROUP_NEW),
-            resourceCode = AuthResourceType.QUALITY_GROUP_NEW.value
-        ).data ?: false
+            resourceCode = projectId,
+        )
+        return AuthCacheUtil.cachePermission(cacheKey) {
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+                token = tokenService.getSystemToken()!!,
+                userId = userId,
+                projectCode = projectId,
+                action = buildQualityGroupAction(authPermission),
+                resourceCode = AuthResourceType.QUALITY_GROUP_NEW.value
+            ).data ?: false
+        }
     }
 
     override fun validateGroupPermission(
@@ -158,13 +178,22 @@ class RbacQualityPermissionServiceImpl(
     }
 
     override fun validateRulePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
-        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            token = tokenService.getSystemToken()!!,
+        val cacheKey = AuthCacheKeyUtil.getCacheKey(
             userId = userId,
+            resourceType = AuthResourceType.QUALITY_RULE.value,
+            action = buildQualityRuleAction(authPermission),
             projectCode = projectId,
-            action = RbacAuthUtils.buildAction(authPermission, AuthResourceType.QUALITY_RULE),
-            resourceCode = AuthResourceType.QUALITY_RULE.value
-        ).data ?: false
+            resourceCode = projectId,
+        )
+        return AuthCacheUtil.cachePermission(cacheKey) {
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+                token = tokenService.getSystemToken()!!,
+                userId = userId,
+                projectCode = projectId,
+                action = buildQualityRuleAction(authPermission),
+                resourceCode = AuthResourceType.QUALITY_RULE.value
+            ).data ?: false
+        }
     }
 
     override fun validateRulePermission(
@@ -185,15 +214,24 @@ class RbacQualityPermissionServiceImpl(
         authPermission: AuthPermission,
         message: String
     ) {
-        val checkPermission = client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken()!!,
+        val cacheKey = AuthCacheKeyUtil.getCacheKey(
             userId = userId,
+            resourceType = AuthResourceType.QUALITY_RULE.value,
+            action = buildQualityRuleAction(authPermission),
             projectCode = projectId,
             resourceCode = HashUtil.encodeLongId(ruleId),
-            action = RbacAuthUtils.buildAction(authPermission, AuthResourceType.QUALITY_RULE),
-            resourceType = AuthResourceType.QUALITY_RULE.value,
-            relationResourceType = null
-        ).data ?: false
+        )
+        val checkPermission = AuthCacheUtil.cachePermission(cacheKey) {
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+                token = tokenService.getSystemToken()!!,
+                userId = userId,
+                projectCode = projectId,
+                resourceCode = HashUtil.encodeLongId(ruleId),
+                action = buildQualityRuleAction(authPermission),
+                resourceType = AuthResourceType.QUALITY_RULE.value,
+                relationResourceType = null
+            ).data ?: false
+        }
         if (!checkPermission) {
             throw PermissionForbiddenException(message)
         }
@@ -260,5 +298,13 @@ class RbacQualityPermissionServiceImpl(
             projectCode = projectId,
             resourceType = AuthResourceType.QUALITY_RULE.value
         ).data?.map { HashUtil.decodeIdToLong(it) }?.distinct() ?: emptyList()
+    }
+
+    private fun buildQualityGroupAction(authPermission: AuthPermission): String {
+        return RbacAuthUtils.buildAction(authPermission, AuthResourceType.QUALITY_GROUP_NEW)
+    }
+
+    private fun buildQualityRuleAction(authPermission: AuthPermission): String {
+        return RbacAuthUtils.buildAction(authPermission, AuthResourceType.QUALITY_RULE)
     }
 }

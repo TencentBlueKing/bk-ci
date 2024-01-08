@@ -27,11 +27,13 @@
 
 package com.tencent.devops.repository.service.permission
 
+import com.tencent.bk.sdk.iam.util.AuthCacheUtil
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.utils.AuthCacheKeyUtil
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
@@ -98,15 +100,25 @@ class RbacRepositoryPermissionService(
         } else {
             Pair(projectId, AuthResourceType.PROJECT.value)
         }
-        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken()!!,
+        val action = RbacAuthUtils.buildAction(authPermission, AuthResourceType.CODE_REPERTORY)
+        val cacheKey = AuthCacheKeyUtil.getCacheKey(
             userId = userId,
-            projectCode = projectId,
             resourceType = resourceType,
-            relationResourceType = null,
-            action = RbacAuthUtils.buildAction(authPermission, AuthResourceType.CODE_REPERTORY),
-            resourceCode = resourceCode
-        ).data ?: false
+            action = action,
+            projectCode = projectId,
+            resourceCode = resourceCode,
+        )
+        return AuthCacheUtil.cachePermission(cacheKey) {
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+                token = tokenService.getSystemToken()!!,
+                userId = userId,
+                projectCode = projectId,
+                resourceType = resourceType,
+                relationResourceType = null,
+                action = action,
+                resourceCode = resourceCode
+            ).data ?: false
+        }
     }
 
     override fun createResource(
