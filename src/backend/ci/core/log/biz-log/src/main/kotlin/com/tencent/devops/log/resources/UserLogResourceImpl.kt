@@ -69,7 +69,8 @@ class UserLogResourceImpl @Autowired constructor(
         tag: String?,
         subTag: String?,
         jobId: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        archiveFlag: Boolean?
     ): Result<QueryLogs> {
         val initLogs = buildLogQueryService.getInitLogs(
             userId = userId,
@@ -81,7 +82,8 @@ class UserLogResourceImpl @Autowired constructor(
             tag = tag,
             subTag = subTag,
             jobId = jobId,
-            executeCount = executeCount
+            executeCount = executeCount,
+            archiveFlag = archiveFlag
         )
         recordListLogCount(initLogs.data?.logs?.size ?: 0)
         return initLogs
@@ -101,7 +103,8 @@ class UserLogResourceImpl @Autowired constructor(
         tag: String?,
         subTag: String?,
         jobId: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        archiveFlag: Boolean?
     ): Result<QueryLogs> {
         return buildLogQueryService.getMoreLogs(
             userId = userId,
@@ -117,7 +120,8 @@ class UserLogResourceImpl @Autowired constructor(
             tag = tag,
             subTag = subTag,
             jobId = jobId,
-            executeCount = executeCount
+            executeCount = executeCount,
+            archiveFlag = archiveFlag
         )
     }
 
@@ -133,7 +137,8 @@ class UserLogResourceImpl @Autowired constructor(
         tag: String?,
         subTag: String?,
         jobId: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        archiveFlag: Boolean?
     ): Result<QueryLogs> {
         val afterLogs = buildLogQueryService.getAfterLogs(
             userId = userId,
@@ -146,7 +151,8 @@ class UserLogResourceImpl @Autowired constructor(
             tag = tag,
             subTag = subTag,
             jobId = jobId,
-            executeCount = executeCount
+            executeCount = executeCount,
+            archiveFlag = archiveFlag
         )
         recordListLogCount(afterLogs.data?.logs?.size ?: 0)
 
@@ -162,7 +168,8 @@ class UserLogResourceImpl @Autowired constructor(
         subTag: String?,
         jobId: String?,
         executeCount: Int?,
-        fileName: String?
+        fileName: String?,
+        archiveFlag: Boolean?
     ): Response {
         return buildLogQueryService.downloadLogs(
             userId = userId,
@@ -173,7 +180,8 @@ class UserLogResourceImpl @Autowired constructor(
             subTag = subTag ?: "",
             jobId = jobId,
             executeCount = executeCount,
-            fileName = fileName
+            fileName = fileName,
+            archiveFlag = archiveFlag
         )
     }
 
@@ -183,7 +191,8 @@ class UserLogResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         tag: String,
-        executeCount: Int?
+        executeCount: Int?,
+        archiveFlag: Boolean?
     ): Result<QueryLogStatus> {
         return buildLogQueryService.getLogMode(
             userId = userId,
@@ -191,7 +200,8 @@ class UserLogResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             tag = tag,
-            executeCount = executeCount
+            executeCount = executeCount,
+            archiveFlag = archiveFlag
         )
     }
 

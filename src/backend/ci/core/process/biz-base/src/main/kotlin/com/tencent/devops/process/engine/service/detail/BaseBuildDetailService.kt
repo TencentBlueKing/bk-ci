@@ -70,8 +70,8 @@ open class BaseBuildDetailService constructor(
         const val TRIGGER_STAGE = "stage-1"
     }
 
-    fun getBuildModel(projectId: String, buildId: String): Model? {
-        val record = buildDetailDao.get(dslContext, projectId, buildId) ?: return null
+    fun getBuildModel(projectId: String, buildId: String, queryDslContext: DSLContext? = null): Model? {
+        val record = buildDetailDao.get(queryDslContext ?: dslContext, projectId, buildId) ?: return null
         return JsonUtil.to(record.model, Model::class.java)
     }
 
