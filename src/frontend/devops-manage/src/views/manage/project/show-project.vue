@@ -151,12 +151,9 @@ const fetchDiffProjectData = () => {
     if (projectData.value?.subjectScopes.length !== projectDiffData.value?.afterSubjectScopes.length) {
       projectData.value.afterSubjectScopes = projectDiffData.value.afterSubjectScopes;
     } else {
-      const subjectScopesIdMap = projectData.value.subjectScopes.map((i: any) => i.id);
-      let isChange = false;
-      subjectScopesIdMap.forEach((id: any) => {
-        isChange = projectDiffData.value.afterSubjectScopes.some((scopes: any) => scopes.id !== id);
-      });
-      if (isChange) {
+      const subjectScopesIdMap = projectData.value.subjectScopes.map((i: any) => i.id).join('');
+      const afterSubjectScopesIdMap = projectDiffData.value.afterSubjectScopes.map((i: any) => i.id).join('');
+      if (afterSubjectScopesIdMap !== subjectScopesIdMap) {
         projectData.value.afterSubjectScopes = projectDiffData.value.afterSubjectScopes;
       }
     }
