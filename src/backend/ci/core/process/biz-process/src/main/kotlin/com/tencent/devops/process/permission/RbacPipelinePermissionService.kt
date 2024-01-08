@@ -67,7 +67,7 @@ class RbacPipelinePermissionService constructor(
         authResourceType: AuthResourceType?
     ): Boolean {
         val resourceType = authResourceType ?: resourceType
-        val cacheKey = "${userId}_${projectId}_${resourceType}_${permission.value}"
+        val cacheKey = "${userId}_${projectId}_${resourceType.value}_${permission.value}"
         return cache(cacheKey) {
             authPermissionApi.validateUserResourcePermission(
                 user = userId,
