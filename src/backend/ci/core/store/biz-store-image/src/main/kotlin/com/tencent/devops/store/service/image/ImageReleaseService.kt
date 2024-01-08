@@ -686,7 +686,8 @@ abstract class ImageReleaseService {
                 version = version,
                 imageType = imageSourceType,
                 registryUser = userName,
-                registryPwd = password
+                registryPwd = password,
+                registryHost = imageRecord.imageRepoUrl
             )
             val checkImageInitPipelineResp = client.get(ServicePipelineInitResource::class)
                 .initCheckImagePipeline(userId, projectCode!!, checkImageInitPipelineReq).data
@@ -714,6 +715,7 @@ abstract class ImageReleaseService {
             imageSourceType?.let { startParams["imageType"] = it }
             userName?.let { startParams["registryUser"] = it }
             password?.let { startParams["registryPwd"] = it }
+            imageRecord.imageRepoUrl?.let { startParams["registryHost"] = it }
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
                 userId = userId,
                 projectId = projectCode!!,

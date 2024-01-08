@@ -16,7 +16,7 @@
                     </p>
                 </h5>
             </section>
-            <span class="init-img"></span>
+            <span :class="isZH ? 'init-img' : 'init-img-en'"></span>
         </main>
     </article>
 </template>
@@ -45,6 +45,7 @@
         },
 
         created () {
+            this.isZH = ['zh-CN', 'zh', 'zh_cn'].includes(document.documentElement.lang)
             this.getRecommendList()
         },
 
@@ -103,7 +104,15 @@
                 flex: 38.1;
                 background: #fff;
                 background-image: url('../../assets/img/task-init.png');
-                background-size: auto;
+                background-size: contain;
+                background-repeat: no-repeat;
+                background-position: center;
+            }
+            .init-img-en {
+                flex: 38.1;
+                background: #fff;
+                background-image: url('../../assets/img/task-init-en.png');
+                background-size: contain;
                 background-repeat: no-repeat;
                 background-position: center;
             }

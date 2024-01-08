@@ -63,7 +63,8 @@ const routes = [
                     title: 'createEnvrionment',
                     logo: 'environment',
                     header: 'environmentManage',
-                    to: 'envList'
+                    to: 'envList',
+                    activeName: 'envList'
                 }
             },
             {

@@ -33,8 +33,8 @@ import com.tencent.devops.common.api.util.DateTimeUtil.YYYY_MM_DD
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.measure.BuildEndPipelineMetricsData
 import com.tencent.devops.common.event.pojo.measure.BuildEndTaskMetricsData
-import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.metrics.dao.DispatchJobMetricsDao
@@ -212,8 +212,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             if (buildEndPipelineMetricsData.channelCode == ChannelCode.BS.name) {
                 projectBuildSummaryService.saveProjectBuildCount(
                     projectId = projectId,
-                    trigger = buildEndPipelineMetricsData.trigger,
-                    startTime = buildEndPipelineMetricsData.startTime
+                    trigger = buildEndPipelineMetricsData.trigger
                 )
             }
             logger.info("[$projectId|$pipelineId|$buildId]|end metricsDataReport")
@@ -225,7 +224,20 @@ class MetricsDataReportServiceImpl @Autowired constructor(
     }
 
     override fun saveDispatchJobMetrics(dispatchJobMetricsDataList: List<DispatchJobMetricsData>): Boolean {
-        dispatchJobMetricsDao.batchSaveDispatchJobMetrics(dslContext, dispatchJobMetricsDataList)
+        // 批量插入时获取批量的自增ID
+        val idList = client.get(ServiceAllocIdResource::class)
+            .batchGenerateSegmentId("T_DISPATCH_JOB_DAILY_METRICS", (dispatchJobMetricsDataList.size))
+            .data?.toMutableList()
+        if (idList == null || idList.size != dispatchJobMetricsDataList.size) {
+            logger.error("SaveDispatchJobMetrics fail to get idList. " +
+                    "${idList?.size ?: 0}|${dispatchJobMetricsDataList.size}")
+            return false
+        }
+
+        val newDispatchJobMetricsDataList = dispatchJobMetricsDataList.map {
+            it.copy(id = idList.removeAt(0) ?: 0)
+        }
+        dispatchJobMetricsDao.batchSaveDispatchJobMetrics(dslContext, newDispatchJobMetricsDataList)
         return true
     }
 

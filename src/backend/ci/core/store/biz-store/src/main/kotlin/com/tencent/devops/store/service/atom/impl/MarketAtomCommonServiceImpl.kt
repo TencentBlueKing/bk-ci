@@ -85,12 +85,12 @@ import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.utils.BkInitProjectCacheUtil
 import com.tencent.devops.store.utils.StoreUtils
 import com.tencent.devops.store.utils.VersionUtils
-import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -568,7 +568,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             initProjectCode = initProjectCode,
             jobType = if (jobType == null) null else JobTypeEnum.valueOf(jobType),
             buildLessRunFlag = atom.buildLessRunFlag,
-            inputTypeInfos = generateInputTypeInfos(atom.props)
+            inputTypeInfos = generateInputTypeInfos(atom.props),
+            atomStatus = atom.atomStatus
         )
         // 更新插件当前版本号的缓存信息
         redisOperation.hset(

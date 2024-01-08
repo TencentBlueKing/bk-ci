@@ -41,6 +41,7 @@ import com.tencent.devops.environment.pojo.BkMetadataResp
 import com.tencent.devops.environment.pojo.BkMonitorRequestBody
 import com.tencent.devops.environment.pojo.BkMonitorRequestBodyQueryConfigs
 import com.tencent.devops.environment.pojo.BkMonitorResp
+import com.tencent.devops.environment.pojo.BkMonitorRespData
 import com.tencent.devops.environment.pojo.BkMonitorRespDataSeries
 import com.tencent.devops.environment.utils.NumberUtils
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -178,9 +179,9 @@ class BkMonitorMetricsService @Autowired constructor(
 //            else -> return emptyMap()
 //        }
         val readPromql = "abs(avg(rate($dataTableName:io:rkb_s{agentId=\"$agentHashId\"," +
-            "projectId=\"$projectId\"}[$groupByTime])) by ($tag))"
+                "projectId=\"$projectId\"}[$groupByTime])) by ($tag))"
         val writePromql = "abs(avg(rate($dataTableName:io:wkb_s{agentId=\"$agentHashId\"," +
-            "projectId=\"$projectId\"}[$groupByTime])) by ($tag))"
+                "projectId=\"$projectId\"}[$groupByTime])) by ($tag))"
 
         val readData = searchMetrics(projectId, readPromql, timeRange)
         val writeData = searchMetrics(projectId, writePromql, timeRange)
@@ -208,9 +209,9 @@ class BkMonitorMetricsService @Autowired constructor(
             OS.WINDOWS -> "instance"
         }
         val readPromql = "abs(avg(rate($dataTableName:net:speed_recv{agentId=\"$agentHashId\"," +
-            "projectId=\"$projectId\"}[$groupByTime])) by ($tag))"
+                "projectId=\"$projectId\"}[$groupByTime])) by ($tag))"
         val sendPromql = "abs(avg(rate($dataTableName:net:speed_sent{agentId=\"$agentHashId\"," +
-            "projectId=\"$projectId\"}[$groupByTime])) by ($tag))"
+                "projectId=\"$projectId\"}[$groupByTime])) by ($tag))"
 
         val readData = searchMetrics(projectId, readPromql, timeRange)
         val sendData = searchMetrics(projectId, sendPromql, timeRange)
@@ -328,7 +329,7 @@ class BkMonitorMetricsService @Autowired constructor(
             downSampleRange = "2s"
         )
 
-        val data = requestBkMonitor(body).data?.series
+        val data = requestBkMonitor(body)?.series
 
         logger.info("searchMetrics $promql cost ${System.currentTimeMillis() - startTime}ms")
 
@@ -394,7 +395,16 @@ class BkMonitorMetricsService @Autowired constructor(
         }
     }
 
-    private fun requestBkMonitor(body: Any): BkMonitorResp {
+    private fun requestBkMonitor(body: Any): BkMonitorRespData? {
+        return try {
+            doRequestBkMonitor(body)
+        } catch (e: Exception) {
+            logger.warn("requestBkMonitor error", e)
+            null
+        }
+    }
+
+    private fun doRequestBkMonitor(body: Any): BkMonitorRespData? {
         val url = "$bkMonitorGateway/time_series/unify_query"
         val headerStr = objectMapper.writeValueAsString(
             mapOf("bk_app_code" to bkMonitorAppCode, "bk_app_secret" to bkMonitorAppSecret)
@@ -421,7 +431,7 @@ class BkMonitorMetricsService @Autowired constructor(
                 throw RemoteServiceException("request failed, response:(${resp.message})")
             }
             logger.debug("request response：${objectMapper.writeValueAsString(resp.data)}")
-            return resp
+            return resp.data
         }
     }
 }

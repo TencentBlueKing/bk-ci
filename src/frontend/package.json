@@ -53,15 +53,24 @@
       "devops-vs",
       "bk-pipeline",
       "devops-stream",
-      "devops-metrics"
+      "devops-metrics",
+      "devops-manage",
+      "devops-permission",
+      "bk-permission"
     ],
     "nohoist": [
+      "bk-permission",
+      "bk-permission/**",
       "bkui-pipeline",
       "bkui-pipeline/**",
       "devops-stream",
       "devops-stream/**",
       "devops-metrics",
-      "devops-metrics/**"
+      "devops-metrics/**",
+      "devops-manage",
+      "devops-manage/**",
+      "devops-permission",
+      "devops-permission/**"
     ]
   },
   "dependencies": {
@@ -69,6 +78,7 @@
     "babel-plugin-istanbul": "6.1.1",
     "core-js": "3.26.0",
     "css-loader": "6.0.0",
+    "cross-env": "^7.0.3",
     "eslint": "^7.3.1",
     "eslint-plugin-vue": "6.2.2",
     "glob-parent": "5.1.2",
@@ -79,6 +89,7 @@
     "gulp-svgmin": "^4.1.0",
     "uuid": "^8.3.2",
     "vue-eslint-parser": "^9.0.2",
-    "vue-loader": "15.9.8"
+    "vue-loader": "15.9.8",
+    "copy-webpack-plugin": "9.0.1"
   }
 }

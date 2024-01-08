@@ -80,7 +80,6 @@ import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.image.request.ImageStatusInfoUpdateRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
-import com.tencent.devops.store.service.image.SupportService
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -88,10 +87,8 @@ import org.jooq.Record1
 import org.jooq.Record18
 import org.jooq.Result
 import org.jooq.UpdateSetFirstStep
-import org.jooq.conf.ParamType
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.groupConcat
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
@@ -99,9 +96,7 @@ import java.time.LocalDateTime
 
 @Repository
 @Suppress("ALL")
-class MarketImageDao @Autowired constructor(
-    private val supportService: SupportService
-) {
+class MarketImageDao @Autowired constructor() {
     /**
      * 镜像市场搜索结果 总数
      * 参与Join的表：TImage,TImageLabelRel,TImageLabelRel结果临时表
@@ -126,18 +121,18 @@ class MarketImageDao @Autowired constructor(
         val baseStep = dslContext.select(DSL.countDistinct(tImage.ID)).from(tImage)
 
         // 根据功能标签筛选
-        if (labelCodeList != null && labelCodeList.isNotEmpty()) {
-            val c = TLabel.T_LABEL.`as`("c")
-            val labelIdList = dslContext.select(c.ID)
-                .from(c)
-                .where(c.LABEL_CODE.`in`(labelCodeList)).and(c.TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
+        if (!labelCodeList.isNullOrEmpty()) {
+            val tLabel = TLabel.T_LABEL
+            val labelIdList = dslContext.select(tLabel.ID)
+                .from(tLabel)
+                .where(tLabel.LABEL_CODE.`in`(labelCodeList)).and(tLabel.TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
                 .fetch().map { it["ID"] as String }
-            val ttlr = TImageLabelRel.T_IMAGE_LABEL_REL.`as`("tilr")
+            val ttlr = TImageLabelRel.T_IMAGE_LABEL_REL
             baseStep.leftJoin(ttlr).on(tImage.ID.eq(ttlr.IMAGE_ID))
             conditions.add(ttlr.LABEL_ID.`in`(labelIdList))
         }
         if (score != null) {
-            val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL.`as`("tas")
+            val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
             val t = dslContext.select(
                 tas.STORE_CODE,
                 tas.DOWNLOADS.`as`(MarketImageSortTypeEnum.DOWNLOAD_COUNT.name),
@@ -167,8 +162,8 @@ class MarketImageDao @Autowired constructor(
         rdType: ImageRDTypeEnum?,
         dslContext: DSLContext
     ): Triple<TImage, TImageFeature, MutableList<Condition>> {
-        val tImage = TImage.T_IMAGE.`as`("tImage")
-        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
+        val tImage = TImage.T_IMAGE
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE
 
         val conditions = mutableListOf<Condition>()
         // 隐含条件
@@ -180,11 +175,14 @@ class MarketImageDao @Autowired constructor(
         if (imageSourceType != null) {
             conditions.add(tImage.IMAGE_SOURCE_TYPE.eq(imageSourceType.type))
         }
-        if (null != classifyCodeList && classifyCodeList.isNotEmpty()) {
-            val a = TClassify.T_CLASSIFY.`as`("a")
-            val classifyId = dslContext.select(a.ID)
-                .from(a)
-                .where(a.CLASSIFY_CODE.`in`(classifyCodeList).and(a.TYPE.eq(StoreTypeEnum.IMAGE.type.toByte())))
+        if (!classifyCodeList.isNullOrEmpty()) {
+            val tClassify = TClassify.T_CLASSIFY
+            val classifyId = dslContext.select(tClassify.ID)
+                .from(tClassify)
+                .where(
+                    tClassify.CLASSIFY_CODE.`in`(classifyCodeList)
+                        .and(tClassify.TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
+                )
                 .fetchOne(0, String::class.java)
             conditions.add(tImage.CLASSIFY_ID.eq(classifyId))
         }
@@ -258,29 +256,30 @@ class MarketImageDao @Autowired constructor(
         ).from(tImage).leftJoin(tImageFeature).on(tImage.IMAGE_CODE.eq(tImageFeature.IMAGE_CODE))
 
         // 根据功能标签筛选
-        if (labelCodeList != null && labelCodeList.isNotEmpty()) {
-            val c = TLabel.T_LABEL.`as`("c")
-            val labelIdList = dslContext.select(c.ID)
-                .from(c)
-                .where(c.LABEL_CODE.`in`(labelCodeList)).and(c.TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
+        if (!labelCodeList.isNullOrEmpty()) {
+            val tLabel = TLabel.T_LABEL
+            val labelIdList = dslContext.select(tLabel.ID)
+                .from(tLabel)
+                .where(tLabel.LABEL_CODE.`in`(labelCodeList)).and(tLabel.TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
                 .fetch().map { it["ID"] as String }
-            val tilr = TImageLabelRel.T_IMAGE_LABEL_REL.`as`("tilr")
+            val tilr = TImageLabelRel.T_IMAGE_LABEL_REL
             baseStep.leftJoin(tilr).on(tImage.ID.eq(tilr.IMAGE_ID))
             conditions.add(tilr.LABEL_ID.`in`(labelIdList))
         }
         // 根据范畴标签筛选
-        if (categoryCodeList != null && categoryCodeList.isNotEmpty()) {
-            val c = TCategory.T_CATEGORY.`as`("c")
-            val categoryIdList = dslContext.select(c.ID)
-                .from(c)
-                .where(c.CATEGORY_CODE.`in`(categoryCodeList)).and(c.TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
+        if (!categoryCodeList.isNullOrEmpty()) {
+            val tCategory = TCategory.T_CATEGORY
+            val categoryIdList = dslContext.select(tCategory.ID)
+                .from(tCategory)
+                .where(tCategory.CATEGORY_CODE.`in`(categoryCodeList))
+                .and(tCategory.TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
                 .fetch().map { it["ID"] as String }
-            val ticr = TImageCategoryRel.T_IMAGE_CATEGORY_REL.`as`("ticr")
+            val ticr = TImageCategoryRel.T_IMAGE_CATEGORY_REL
             baseStep.leftJoin(ticr).on(tImage.ID.eq(ticr.IMAGE_ID))
             conditions.add(ticr.CATEGORY_ID.`in`(categoryIdList))
         }
         if (score != null) {
-            val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL.`as`("tas")
+            val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
             val t = dslContext.select(
                 tas.STORE_CODE,
                 tas.DOWNLOADS.`as`(MarketImageSortTypeEnum.DOWNLOAD_COUNT.name),
@@ -293,7 +292,7 @@ class MarketImageDao @Autowired constructor(
         if (null != sortType) {
             // 按下载量排序
             if (sortType == MarketImageSortTypeEnum.DOWNLOAD_COUNT && score == null) {
-                val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL.`as`("tas")
+                val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
                 val t =
                     dslContext.select(tas.STORE_CODE, tas.DOWNLOADS.`as`(MarketImageSortTypeEnum.DOWNLOAD_COUNT.name))
                         // 增加type为镜像的条件
@@ -331,7 +330,6 @@ class MarketImageDao @Autowired constructor(
         } else {
             baseStep
         }
-        logger.info(finalStep.getSQL(ParamType.INLINED))
         return finalStep.fetch()
     }
 
@@ -365,29 +363,30 @@ class MarketImageDao @Autowired constructor(
         ).from(tImage).leftJoin(tImageFeature).on(tImage.IMAGE_CODE.eq(tImageFeature.IMAGE_CODE))
 
         // 根据功能标签筛选
-        if (labelCodeList != null && labelCodeList.isNotEmpty()) {
-            val c = TLabel.T_LABEL.`as`("c")
-            val labelIdList = dslContext.select(c.ID)
-                .from(c)
-                .where(c.LABEL_CODE.`in`(labelCodeList)).and(c.TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
+        if (!labelCodeList.isNullOrEmpty()) {
+            val tLabel = TLabel.T_LABEL
+            val labelIdList = dslContext.select(tLabel.ID)
+                .from(tLabel)
+                .where(tLabel.LABEL_CODE.`in`(labelCodeList)).and(tLabel.TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
                 .fetch().map { it["ID"] as String }
-            val tilr = TImageLabelRel.T_IMAGE_LABEL_REL.`as`("tilr")
+            val tilr = TImageLabelRel.T_IMAGE_LABEL_REL
             baseStep.leftJoin(tilr).on(tImage.ID.eq(tilr.IMAGE_ID))
             conditions.add(tilr.LABEL_ID.`in`(labelIdList))
         }
         // 根据范畴标签筛选
-        if (categoryCodeList != null && categoryCodeList.isNotEmpty()) {
-            val c = TCategory.T_CATEGORY.`as`("c")
-            val categoryIdList = dslContext.select(c.ID)
-                .from(c)
-                .where(c.CATEGORY_CODE.`in`(categoryCodeList)).and(c.TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
+        if (!categoryCodeList.isNullOrEmpty()) {
+            val tCategory = TCategory.T_CATEGORY
+            val categoryIdList = dslContext.select(tCategory.ID)
+                .from(tCategory)
+                .where(tCategory.CATEGORY_CODE.`in`(categoryCodeList))
+                .and(tCategory.TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
                 .fetch().map { it["ID"] as String }
-            val ticr = TImageCategoryRel.T_IMAGE_CATEGORY_REL.`as`("ticr")
+            val ticr = TImageCategoryRel.T_IMAGE_CATEGORY_REL
             baseStep.leftJoin(ticr).on(tImage.ID.eq(ticr.IMAGE_ID))
             conditions.add(ticr.CATEGORY_ID.`in`(categoryIdList))
         }
         if (score != null) {
-            val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL.`as`("tas")
+            val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
             val t = dslContext.select(
                 tas.STORE_CODE,
                 tas.DOWNLOADS.`as`(MarketImageSortTypeEnum.DOWNLOAD_COUNT.name),
@@ -397,7 +396,6 @@ class MarketImageDao @Autowired constructor(
             conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java)!!.ge(BigDecimal.valueOf(score.toLong())))
         }
         baseStep.where(conditions)
-        logger.info(baseStep.getSQL(ParamType.INLINED))
         return baseStep.fetchOne(0, Int::class.java)!!
     }
 
@@ -457,10 +455,10 @@ class MarketImageDao @Autowired constructor(
         imageSize: String,
         marketImageUpdateRequest: MarketImageUpdateRequest
     ) {
-        val a = TClassify.T_CLASSIFY.`as`("a")
-        val classifyId = dslContext.select(a.ID).from(a)
-            .where(a.CLASSIFY_CODE.eq(marketImageUpdateRequest.classifyCode)
-                .and(a.TYPE.eq(StoreTypeEnum.IMAGE.type.toByte())))
+        val tClassify = TClassify.T_CLASSIFY
+        val classifyId = dslContext.select(tClassify.ID).from(tClassify)
+            .where(tClassify.CLASSIFY_CODE.eq(marketImageUpdateRequest.classifyCode)
+                .and(tClassify.TYPE.eq(StoreTypeEnum.IMAGE.type.toByte())))
             .fetchOne(0, String::class.java)
             ?: throw ClassifyNotExistException("classifyCode=${marketImageUpdateRequest.classifyCode}")
         with(TImage.T_IMAGE) {
@@ -869,9 +867,9 @@ class MarketImageDao @Autowired constructor(
         categoryCode: String?,
         rdType: ImageRDTypeEnum?
     ): MutableList<Condition> {
-        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
-        val tCategory = TCategory.T_CATEGORY.`as`("tCategory")
-        val tImage = TImage.T_IMAGE.`as`("tImage")
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE
+        val tCategory = TCategory.T_CATEGORY
+        val tImage = TImage.T_IMAGE
         val conditions = mutableListOf<Condition>()
         if (inImageCodes != null) {
             conditions.add(tImage.IMAGE_CODE.`in`(inImageCodes))
@@ -912,7 +910,7 @@ class MarketImageDao @Autowired constructor(
         offset: Int? = 0,
         limit: Int? = -1
     ): Result<Record>? {
-        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE
         val extraConditions = mutableListOf<Condition>()
         extraConditions.add(tImageFeature.IMAGE_CODE.`in`(visibleImageCodes.subtract(installedImageCodes)))
         return listJobMarketImagesWithExtraConditions(
@@ -945,7 +943,7 @@ class MarketImageDao @Autowired constructor(
         installedImageCodes: List<String>,
         visibleImageCodes: List<String>
     ): Int {
-        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE
         val extraConditions = mutableListOf<Condition>()
         extraConditions.add(tImageFeature.IMAGE_CODE.`in`(visibleImageCodes.subtract(installedImageCodes)))
         return countJobMarketImagesWithExtraConditions(
@@ -977,7 +975,7 @@ class MarketImageDao @Autowired constructor(
         offset: Int? = 0,
         limit: Int? = -1
     ): Result<Record>? {
-        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE
         val extraConditions = mutableListOf<Condition>()
         extraConditions.add(tImageFeature.IMAGE_CODE.`in`(installedImageCodes))
         return listJobMarketImagesWithExtraConditions(
@@ -1009,7 +1007,7 @@ class MarketImageDao @Autowired constructor(
         rdType: ImageRDTypeEnum?,
         installedImageCodes: List<String>
     ): Int {
-        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE
         val extraConditions = mutableListOf<Condition>()
         extraConditions.add(tImageFeature.IMAGE_CODE.`in`(installedImageCodes))
         return countJobMarketImagesWithExtraConditions(
@@ -1041,7 +1039,7 @@ class MarketImageDao @Autowired constructor(
         offset: Int? = 0,
         limit: Int? = -1
     ): Result<Record>? {
-        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE
         val extraConditions = mutableListOf<Condition>()
         extraConditions.add(tImageFeature.IMAGE_CODE.notIn(visibleImageCodes))
         return listJobMarketImagesWithExtraConditions(
@@ -1075,7 +1073,7 @@ class MarketImageDao @Autowired constructor(
         offset: Int? = 0,
         limit: Int? = -1
     ): Int {
-        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE
         val extraConditions = mutableListOf<Condition>()
         extraConditions.add(tImageFeature.IMAGE_CODE.notIn(visibleImageCodes))
         return countJobMarketImagesWithExtraConditions(
@@ -1108,11 +1106,11 @@ class MarketImageDao @Autowired constructor(
     ): Result<Record>? {
         val validOffset = if (offset == null || offset < 0) 0 else offset
         val validLimit = if (limit == null || limit <= 0) null else limit
-        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
-        val tImageAgentType = TImageAgentType.T_IMAGE_AGENT_TYPE.`as`("tImageAgentType")
-        val tCategory = TCategory.T_CATEGORY.`as`("tCategory")
-        val tImageCategoryRel = TImageCategoryRel.T_IMAGE_CATEGORY_REL.`as`("tImageCategoryRel")
-        val tImage = TImage.T_IMAGE.`as`("tImage")
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE
+        val tImageAgentType = TImageAgentType.T_IMAGE_AGENT_TYPE
+        val tCategory = TCategory.T_CATEGORY
+        val tImageCategoryRel = TImageCategoryRel.T_IMAGE_CATEGORY_REL
+        val tImage = TImage.T_IMAGE
         val conditions = genBaseConditions(
             dslContext = dslContext,
             inImageCodes = inImageCodes,
@@ -1166,7 +1164,6 @@ class MarketImageDao @Autowired constructor(
         } else {
             baseQuery.offset(validOffset)
         }
-        logger.info(finalQuery.getSQL(ParamType.INLINED))
         return finalQuery.fetch()
     }
 
@@ -1183,11 +1180,11 @@ class MarketImageDao @Autowired constructor(
         categoryCode: String?,
         rdType: ImageRDTypeEnum?
     ): Int {
-        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
-        val tImageAgentType = TImageAgentType.T_IMAGE_AGENT_TYPE.`as`("tImageAgentType")
-        val tCategory = TCategory.T_CATEGORY.`as`("tCategory")
-        val tImageCategoryRel = TImageCategoryRel.T_IMAGE_CATEGORY_REL.`as`("tImageCategoryRel")
-        val tImage = TImage.T_IMAGE.`as`("tImage")
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE
+        val tImageAgentType = TImageAgentType.T_IMAGE_AGENT_TYPE
+        val tCategory = TCategory.T_CATEGORY
+        val tImageCategoryRel = TImageCategoryRel.T_IMAGE_CATEGORY_REL
+        val tImage = TImage.T_IMAGE
         val conditions = genBaseConditions(
             dslContext = dslContext,
             inImageCodes = inImageCodes,
@@ -1212,7 +1209,6 @@ class MarketImageDao @Autowired constructor(
             .leftJoin(tCategory).on(tImageCategoryRel.IMAGE_ID.eq(tCategory.ID))
             .leftJoin(tImageAgentType).on(tImage.IMAGE_CODE.eq(tImageAgentType.IMAGE_CODE))
             .where(conditions)
-        logger.info(baseQuery.getSQL(ParamType.INLINED))
         return baseQuery.fetchOne(0, Int::class.java)!!
     }
 
@@ -1231,11 +1227,11 @@ class MarketImageDao @Autowired constructor(
     ): Result<Record>? {
         val validOffset = if (offset == null || offset < 0) 0 else offset
         val validLimit = if (limit == null || limit <= 0) null else limit
-        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
-        val tImageAgentType = TImageAgentType.T_IMAGE_AGENT_TYPE.`as`("tImageAgentType")
-        val tCategory = TCategory.T_CATEGORY.`as`("tCategory")
-        val tImageCategoryRel = TImageCategoryRel.T_IMAGE_CATEGORY_REL.`as`("tImageCategoryRel")
-        val tImage = TImage.T_IMAGE.`as`("tImage")
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE
+        val tImageAgentType = TImageAgentType.T_IMAGE_AGENT_TYPE
+        val tCategory = TCategory.T_CATEGORY
+        val tImageCategoryRel = TImageCategoryRel.T_IMAGE_CATEGORY_REL
+        val tImage = TImage.T_IMAGE
         val baseConditions = genBaseConditions(
             dslContext = dslContext,
             inImageCodes = inImageCodes,
@@ -1246,7 +1242,7 @@ class MarketImageDao @Autowired constructor(
             categoryCode = categoryCode,
             rdType = rdType
         )
-        val conditions = if (extraConditions != null && extraConditions.isNotEmpty()) {
+        val conditions = if (!extraConditions.isNullOrEmpty()) {
             baseConditions.plus(extraConditions)
         } else {
             baseConditions
@@ -1257,7 +1253,7 @@ class MarketImageDao @Autowired constructor(
             DSL.max(tImage.CREATE_TIME).`as`(KEY_CREATE_TIME)
         ).from(tImage).where(
             tImage.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte())
-        ).groupBy(tImage.IMAGE_CODE).asTable("latestReleasedImage")
+        ).groupBy(tImage.IMAGE_CODE)
         val baseQuery = dslContext.select(
             tImage.ID.`as`(KEY_IMAGE_ID),
             tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
@@ -1299,7 +1295,6 @@ class MarketImageDao @Autowired constructor(
         } else {
             baseQuery.offset(validOffset)
         }
-        logger.info(finalQuery.getSQL(ParamType.INLINED))
         return finalQuery.fetch()
     }
 
@@ -1314,12 +1309,12 @@ class MarketImageDao @Autowired constructor(
         rdType: ImageRDTypeEnum?,
         extraConditions: List<Condition>?
     ): Int {
-        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
-        val tImageAgentType = TImageAgentType.T_IMAGE_AGENT_TYPE.`as`("tImageAgentType")
-        val tClassify = TClassify.T_CLASSIFY.`as`("tClassify")
-        val tCategory = TCategory.T_CATEGORY.`as`("tCategory")
-        val tImageCategoryRel = TImageCategoryRel.T_IMAGE_CATEGORY_REL.`as`("tImageCategoryRel")
-        val tImage = TImage.T_IMAGE.`as`("tImage")
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE
+        val tImageAgentType = TImageAgentType.T_IMAGE_AGENT_TYPE
+        val tClassify = TClassify.T_CLASSIFY
+        val tCategory = TCategory.T_CATEGORY
+        val tImageCategoryRel = TImageCategoryRel.T_IMAGE_CATEGORY_REL
+        val tImage = TImage.T_IMAGE
         val baseConditions = genBaseConditions(
             dslContext = dslContext,
             inImageCodes = inImageCodes,
@@ -1330,7 +1325,7 @@ class MarketImageDao @Autowired constructor(
             categoryCode = categoryCode,
             rdType = rdType
         )
-        val conditions = if (extraConditions != null && extraConditions.isNotEmpty()) {
+        val conditions = if (!extraConditions.isNullOrEmpty()) {
             baseConditions.plus(extraConditions)
         } else {
             baseConditions
@@ -1341,7 +1336,7 @@ class MarketImageDao @Autowired constructor(
             DSL.max(tImage.CREATE_TIME).`as`(KEY_CREATE_TIME)
         ).from(tImage).where(
             tImage.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte())
-        ).groupBy(tImage.IMAGE_CODE).asTable("latestReleasedImage")
+        ).groupBy(tImage.IMAGE_CODE)
         val baseQuery = dslContext.select(
             DSL.countDistinct(tImage.IMAGE_CODE)
         ).from(tImage).join(tImageFeature).on(tImage.IMAGE_CODE.eq(tImageFeature.IMAGE_CODE))
@@ -1355,7 +1350,6 @@ class MarketImageDao @Autowired constructor(
                 )
             )
             .where(conditions)
-        logger.info(baseQuery.getSQL(ParamType.INLINED))
         return baseQuery.fetchOne(0, Int::class.java)!!
     }
 
@@ -1366,9 +1360,8 @@ class MarketImageDao @Autowired constructor(
         dslContext: DSLContext,
         projectCode: String
     ): List<String> {
-        logger.info("Input:projectCode:$projectCode")
         // 已安装的
-        val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("tStoreProjectRel")
+        val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
         val installedImageCodes = dslContext.select(tStoreProjectRel.STORE_CODE).from(tStoreProjectRel)
             .where(tStoreProjectRel.PROJECT_CODE.eq(projectCode))
             .and(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
@@ -1380,10 +1373,9 @@ class MarketImageDao @Autowired constructor(
                     )
                 )
             )
-            .fetch()?.map {
+            .fetch().map {
                 it.value1()
-            } ?: emptyList()
-        logger.info("Output:installedImageCodes:$installedImageCodes")
+            }
         return installedImageCodes
     }
 
@@ -1395,11 +1387,10 @@ class MarketImageDao @Autowired constructor(
         projectCode: String,
         userDeptList: List<Int>
     ): List<String> {
-        logger.info("Input:userDeptList:$userDeptList")
         // 可安装的
-        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
-        val tStoreDeptRel = TStoreDeptRel.T_STORE_DEPT_REL.`as`("tStoreDeptRel")
-        val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("tStoreProjectRel")
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE
+        val tStoreDeptRel = TStoreDeptRel.T_STORE_DEPT_REL
+        val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
         val visibleImageCodes = dslContext.select(tImageFeature.IMAGE_CODE).from(tImageFeature)
             .leftJoin(tStoreDeptRel).on(tImageFeature.IMAGE_CODE.eq(tStoreDeptRel.STORE_CODE))
             // 审核通过
@@ -1421,10 +1412,9 @@ class MarketImageDao @Autowired constructor(
                     .and(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
                     .and(tStoreProjectRel.TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
             )
-            .fetch()?.map {
+            .fetch().map {
                 it.value1()
-            } ?: emptyList()
-        logger.info("Output:visibleImageCodes:$visibleImageCodes")
+            }
         return visibleImageCodes
     }
 
@@ -1432,7 +1422,7 @@ class MarketImageDao @Autowired constructor(
         dslContext: DSLContext,
         projectTestImageCodes: Collection<String>
     ): Result<Record1<String>>? {
-        val tImage = TImage.T_IMAGE.`as`("tImage")
+        val tImage = TImage.T_IMAGE
         with(tImage) {
             return dslContext.selectDistinct(
                 IMAGE_CODE
@@ -1443,6 +1433,4 @@ class MarketImageDao @Autowired constructor(
                 .fetch()
         }
     }
-
-    private val logger = LoggerFactory.getLogger(MarketImageDao::class.java)
 }

@@ -127,17 +127,14 @@
                             })
                         }
                     } catch (e) {
-                        if (e.code === 403) { // 没有权限编辑
-                            this.setPermissionConfig([{
-                                id: this.pipelineId,
-                                name: this.pipeline.name
-                            }])
-                        } else {
-                            this.$showTips({
-                                message: e.message,
-                                theme: 'error'
-                            })
-                        }
+                        this.handleError(
+                            e,
+                            {
+                                projectId: this.projectId,
+                                resourceCode: this.pipelineId,
+                                action: this.$permissionResourceAction.EDIT
+                            }
+                        )
                     }
                 } else if (this.elementId && !this.taskId) {
                     const h = this.$createElement
@@ -227,17 +224,14 @@
                         tab.close()
                     }
                 } catch (e) {
-                    if (e.code === 403) { // 没有权限编辑
-                        this.setPermissionConfig([{
-                            id: this.pipelineId,
-                            name: this.pipeline.name
-                        }])
-                    } else {
-                        this.$showTips({
-                            message: e.message,
-                            theme: 'error'
-                        })
-                    }
+                    this.handleError(
+                        e,
+                        {
+                            projectId: this.projectId,
+                            resourceCode: this.pipelineId,
+                            action: this.$permissionResourceAction.EDIT
+                        }
+                    )
                     tab.close()
                 } finally {
                     this.btnDisabled = false

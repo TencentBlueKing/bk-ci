@@ -176,6 +176,12 @@ interface OpWindowsConfigResource {
         @ApiParam(value = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam("项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String?,
+        @ApiParam("机型", required = false)
+        @QueryParam("machineType")
+        machineType: String?,
         @ApiParam("第几页", required = true)
         @QueryParam("page")
         page: Int?,

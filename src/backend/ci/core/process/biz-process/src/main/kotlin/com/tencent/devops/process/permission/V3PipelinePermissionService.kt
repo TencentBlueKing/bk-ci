@@ -65,12 +65,19 @@ class V3PipelinePermissionService constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        authResourceType: AuthResourceType?
     ): Boolean {
         if (isProjectOwner(projectId, userId)) {
             return true
         }
-        return super.checkPipelinePermission(userId, projectId, pipelineId, permission)
+        return super.checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission,
+            authResourceType = authResourceType
+        )
     }
 
     override fun isProjectUser(userId: String, projectId: String, group: BkAuthGroup?): Boolean {
@@ -80,7 +87,12 @@ class V3PipelinePermissionService constructor(
         return super.isProjectUser(userId, projectId, group)
     }
 
-    override fun checkPipelinePermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
+    override fun checkPipelinePermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission,
+        authResourceType: AuthResourceType?
+    ): Boolean {
         logger.info("checkPipelinePermission only check action project[$projectId]")
         if (isProjectOwner(projectId, userId)) {
             logger.info("project owner checkPipelinePermission success |$projectId|$userId")
@@ -89,10 +101,10 @@ class V3PipelinePermissionService constructor(
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = pipelineAuthServiceCode,
-            resourceType = AuthResourceType.PIPELINE_DEFAULT,
+            resourceType = authResourceType ?: AuthResourceType.PIPELINE_DEFAULT,
             projectCode = projectId,
             resourceCode = projectId,
-            permission = AuthPermission.CREATE,
+            permission = permission,
             relationResourceType = AuthResourceType.PROJECT
         )
     }

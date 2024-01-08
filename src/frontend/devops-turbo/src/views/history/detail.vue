@@ -10,7 +10,7 @@
             <section class="g-turbo-box hisory-detail-data" v-bkloading="{ isloading }">
                 <header class="detail-header">
                     <span class="header-title">
-                        【{{ detail.executeCount }}】
+                        【#{{ detail.executeCount }}】
                         <span class="header-name">{{ detail.pipelineName || detail.clientIp }}</span>
                         <task-status :status="detail.status" :show-name="false"></task-status>
                     </span>

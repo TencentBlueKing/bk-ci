@@ -12,7 +12,19 @@
                 >
                     <template v-if="curTab === 'experienceGroup'">
                         <div v-if="showContent && experienceList.length" class="table-operate-bar">
-                            <bk-button theme="primary" @click="toCreateGroup">新增</bk-button>
+                            <span
+                                v-perm="{
+                                    tooltips: '没有权限',
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: EXPERIENCE_GROUP_RESOURCE_TYPE,
+                                        resourceCode: projectId,
+                                        action: EXPERIENCE_GROUP_RESOURCE_ACTION.CREATE
+                                    }
+                                }"
+                            >
+                                <bk-button theme="primary" @click="toCreateGroup">新增</bk-button>
+                            </span>
                         </div>
                         <bk-table
                             v-if="showContent && experienceList.length"
@@ -63,8 +75,41 @@
                             <bk-table-column label="操作" prop="creator">
                                 <template slot-scope="props">
                                     <div class="handler-group">
-                                        <span class="handler-btn edit-btn" @click="toEditGroup(props.row)">编辑</span>
-                                        <span class="handler-btn delete-btn" @click="toDeleteGruop(props.row)">删除</span>
+                                        <bk-button
+                                            class="mr5"
+                                            v-perm="{
+                                                hasPermission: props.row.permissions.canEdit,
+                                                disablePermissionApi: true,
+                                                tooltips: '没有权限',
+                                                permissionData: {
+                                                    projectId: projectId,
+                                                    resourceType: EXPERIENCE_GROUP_RESOURCE_TYPE,
+                                                    resourceCode: props.row.groupHashId,
+                                                    action: EXPERIENCE_GROUP_RESOURCE_ACTION.EDIT
+                                                }
+                                            }"
+                                            text
+                                            @click="toEditGroup(props.row)"
+                                        >
+                                            编辑
+                                        </bk-button>
+                                        <bk-button
+                                            text
+                                            v-perm="{
+                                                hasPermission: props.row.permissions.canDelete,
+                                                disablePermissionApi: true,
+                                                tooltips: '没有权限',
+                                                permissionData: {
+                                                    projectId: projectId,
+                                                    resourceType: EXPERIENCE_GROUP_RESOURCE_TYPE,
+                                                    resourceCode: props.row.groupHashId,
+                                                    action: EXPERIENCE_GROUP_RESOURCE_ACTION.DELETE
+                                                }
+                                            }"
+                                            @click="toDeleteGruop(props.row)"
+                                        >
+                                            删除
+                                        </bk-button>
                                     </div>
                                 </template>
                             </bk-table-column>
@@ -91,6 +136,7 @@
 </template>
 
 <script>
+    import { EXPERIENCE_GROUP_RESOURCE_ACTION, EXPERIENCE_GROUP_RESOURCE_TYPE } from '@/utils/permission'
     import { getQueryString } from '@/utils/util'
     import experienceGroup from './create_group'
     import emptyData from './empty-data'
@@ -101,7 +147,10 @@
             experienceGroup
         },
         data () {
+            const { projectId } = this.$route.params
             return {
+                EXPERIENCE_GROUP_RESOURCE_ACTION,
+                EXPERIENCE_GROUP_RESOURCE_TYPE,
                 curTab: 'experienceGroup',
                 experienceList: [],
                 showContent: false,
@@ -125,7 +174,13 @@
                 },
                 emptyInfo: {
                     title: '暂无体验组',
-                    desc: '您可以新增一个体验组'
+                    desc: '您可以新增一个体验组',
+                    permissionData: {
+                        projectId: projectId,
+                        resourceType: EXPERIENCE_GROUP_RESOURCE_TYPE,
+                        resourceCode: projectId,
+                        action: EXPERIENCE_GROUP_RESOURCE_ACTION.CREATE
+                    }
                 },
                 urlParams: getQueryString('groupId') || '',
                 pagination: {
@@ -267,19 +322,6 @@
                     } finally {
                         this.groupSideslider.isLoading = false
                     }
-                } else {
-                    this.$showAskPermissionDialog({
-                        noPermissionList: [{
-                            actionId: this.$permissionActionMap.edit,
-                            resourceId: this.$permissionResourceMap.experienceGroup,
-                            instanceId: [{
-                                id: row.groupHashId,
-                                name: row.name
-                            }],
-                            projectId: this.projectId
-                        }],
-                        applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=experience&role_manager=group:${row.groupHashId}`
-                    })
                 }
             },
             toDeleteGruop (row) {
@@ -310,19 +352,6 @@
                                 this.requestList()
                             }
                         }
-                    })
-                } else {
-                    this.$showAskPermissionDialog({
-                        noPermissionList: [{
-                            actionId: this.$permissionActionMap.delete,
-                            resourceId: this.$permissionResourceMap.experienceGroup,
-                            instanceId: [{
-                                id: row.groupHashId,
-                                name: row.name
-                            }],
-                            projectId: this.projectId
-                        }],
-                        applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=experience&role_manager=group:${row.groupHashId}`
                     })
                 }
             }

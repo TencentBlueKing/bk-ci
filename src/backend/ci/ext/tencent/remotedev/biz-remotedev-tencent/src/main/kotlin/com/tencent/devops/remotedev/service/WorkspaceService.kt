@@ -386,7 +386,7 @@ class WorkspaceService @Autowired constructor(
             }
         }
 
-        val allConfig = windowsResourceConfigService.getAllType(true).associateBy { it.id!! }
+        val allConfig = windowsResourceConfigService.getAllType(true, null).associateBy { it.id!! }
         val zoneConfig = windowsResourceConfigService.getAllZone().associateBy { it.zoneShortName }
         val taiUserCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = taiUsers)
             .mapValues { "${it.value.first}@${it.value.second}" }
@@ -625,7 +625,7 @@ class WorkspaceService @Autowired constructor(
             dslContext,
             userIds = taiUsers.filter { UserUtil.isTaiUser(it) }.toSet()
         ).mapValues { "${it.value.first}@${it.value.second}" }
-        val allConfig = windowsResourceConfigService.getAllType(true).associateBy { it.id!! }
+        val allConfig = windowsResourceConfigService.getAllType(true, null).associateBy { it.id!! }
         val zoneConfig = windowsResourceConfigService.getAllZone().associateBy { it.zoneShortName }
 
         val allWindows = workspaceWindowsDao.batchFetchWorkspaceWindowsInfo(

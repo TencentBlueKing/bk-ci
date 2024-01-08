@@ -50,12 +50,6 @@ const (
 func main() {
 	rand.Seed(time.Now().UnixNano())
 
-	defer func() {
-		if err := recover(); err != nil {
-			logs.Error("agent main panic: ", err)
-		}
-	}()
-
 	isDebug := false
 	if len(os.Args) == 2 {
 		switch os.Args[1] {

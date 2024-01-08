@@ -31,6 +31,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
@@ -64,6 +65,16 @@ func (b *buildManager) GetInstanceCount() int {
 	return i
 }
 
+func (b *buildManager) GetInstanceStr() string {
+	var sb strings.Builder
+	b.instances.Range(func(_, value interface{}) bool {
+		v := *value.(*api.ThirdPartyBuildInfo)
+		sb.WriteString(fmt.Sprintf("%s[%s],", v.BuildId, v.VmSeqId))
+		return true
+	})
+	return sb.String()
+}
+
 func (b *buildManager) GetInstances() []api.ThirdPartyBuildInfo {
 	result := make([]api.ThirdPartyBuildInfo, 0)
 	b.instances.Range(func(_, value interface{}) bool {
@@ -84,7 +95,7 @@ func (b *buildManager) AddBuild(processId int, buildInfo *api.ThirdPartyBuildInf
 	errorMsgFile := getWorkerErrorMsgFile(buildInfo.BuildId, buildInfo.VmSeqId)
 	_ = fileutil.WriteString(errorMsgFile, i18n.Localize("BuilderProcessWasKilled", nil))
 	_ = systemutil.Chmod(errorMsgFile, os.ModePerm)
-	go b.waitProcessDone(processId)
+	b.waitProcessDone(processId)
 }
 
 func (b *buildManager) waitProcessDone(processId int) {
@@ -136,6 +147,16 @@ func (b *buildManager) GetPreInstancesCount() int {
 		return true
 	})
 	return i
+}
+
+func (b *buildManager) GetPreInstancesStr() string {
+	var sb strings.Builder
+	b.preInstances.Range(func(k, _ interface{}) bool {
+		sb.WriteString(k.(string))
+		sb.WriteString(",")
+		return true
+	})
+	return sb.String()
 }
 
 func (b *buildManager) AddPreInstance(buildId string) {

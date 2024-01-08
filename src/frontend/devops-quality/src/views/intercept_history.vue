@@ -392,7 +392,7 @@
                 }
             }
             .search-button {
-                padding-top: 25px;
+                padding-top: 22px;
                 width: 70px;
             }
             .intercept-history-table {

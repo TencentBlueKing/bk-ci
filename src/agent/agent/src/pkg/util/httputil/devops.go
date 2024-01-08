@@ -40,6 +40,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
 )
@@ -218,12 +219,14 @@ func writeToFile(file string, content io.Reader) error {
 func AtomicWriteFile(filename string, reader io.Reader, mode os.FileMode) error {
 	tempFile, err := os.CreateTemp(filepath.Split(filename))
 	if err != nil {
+		exitcode.CheckOsIoError(filename, err)
 		return err
 	}
 	tempName := tempFile.Name()
 
 	if _, err := io.Copy(tempFile, reader); err != nil {
 		tempFile.Close() // return value is ignored as we are already on error path
+		exitcode.CheckOsIoError(filename, err)
 		return err
 	}
 

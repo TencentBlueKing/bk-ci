@@ -169,6 +169,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 .authorization_scopes(authorizationScopes)
                 .subject_scopes(subjectScopes)
                 .sync_perm(true)
+                .syncSubjectTemplate(true)
                 .groupName(manageGroupConfig.groupName)
                 .build()
             val gradeManagerId = iamV2ManagerService.createManagerV2(createManagerDTO)
@@ -200,6 +201,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 .authorizationScopes(authorizationScopes)
                 .subjectScopes(subjectScopes)
                 .syncPerm(true)
+                .syncSubjectTemplate(true)
                 .groupName(manageGroupConfig.groupName)
                 .applicant(userId)
                 .reason(
@@ -423,6 +425,7 @@ class PermissionGradeManagerService @Autowired constructor(
             val managerRoleGroupDTO = ManagerRoleGroupDTO.builder()
                 .groups(listOf(managerRoleGroup))
                 .createAttributes(false)
+                .syncSubjectTemplate(true)
                 .build()
             val iamGroupId = iamV2ManagerService.batchCreateRoleGroupV2(gradeManagerId, managerRoleGroupDTO)
             authResourceGroupDao.create(

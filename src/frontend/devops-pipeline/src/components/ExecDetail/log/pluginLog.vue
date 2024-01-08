@@ -17,9 +17,13 @@
 </template>
 
 <script>
-    import { mapActions, mapState } from 'vuex'
+    import {
+        RESOURCE_ACTION,
+        handlePipelineNoPermission
+    } from '@/utils/permission'
     import { hashID } from '@/utils/util.js'
-    import { bkLogSearch, bkLog } from '@blueking/log'
+    import { bkLog, bkLogSearch } from '@blueking/log'
+    import { mapActions, mapState } from 'vuex'
 
     export default {
         components: {
@@ -187,8 +191,15 @@
                         }
                     })
                     .catch((err) => {
+                        if (err.status === 403) {
+                            handlePipelineNoPermission({
+                                projectId: this.$route.params.projectId,
+                                resourceCode: this.$route.params.pipelineId,
+                                action: RESOURCE_ACTION.EXECUTE
+                            })
+                        }
                         this.$bkMessage({ theme: 'error', message: err.message || err })
-                        if (scroll) scroll.handleApiErr(err.message)
+                        this.handleApiErr(err.message)
                     })
             },
 
