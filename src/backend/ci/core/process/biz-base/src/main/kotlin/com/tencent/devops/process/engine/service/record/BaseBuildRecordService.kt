@@ -158,16 +158,25 @@ open class BaseBuildRecordService(
         fixedExecuteCount: Int,
         buildRecordModel: BuildRecordModel,
         executeCount: Int?,
-        queryDslContext: DSLContext? = null
+        queryDslContext: DSLContext? = null,
+        debug: Boolean? = false
     ): Model? {
         val watcher = Watcher(id = "getRecordModel#$buildId")
         watcher.start("getVersionModelString")
-        val resourceStr = pipelineResourceVersionDao.getVersionModelString(
-            dslContext = queryDslContext ?: dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = version
-        ) ?: pipelineResourceDao.getVersionModelString(
+        val resourceStr = if (debug == true) {
+            pipelineBuildDao.getDebugResourceStr(
+                dslContext = queryDslContext ?: dslContext,
+                projectId = projectId,
+                buildId = buildId
+            )
+        } else {
+            pipelineResourceVersionDao.getVersionModelString(
+                dslContext = queryDslContext ?: dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version
+            )
+        } ?: pipelineResourceDao.getVersionModelString(
             dslContext = queryDslContext ?: dslContext,
             projectId = projectId,
             pipelineId = pipelineId,

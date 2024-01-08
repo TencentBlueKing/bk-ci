@@ -51,6 +51,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
@@ -89,7 +90,8 @@ class PipelineVersionFacadeService @Autowired constructor(
     private val templateFacadeService: TemplateFacadeService,
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineViewGroupService: PipelineViewGroupService,
-    private val pipelineBuildSummaryDao: PipelineBuildSummaryDao
+    private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
+    private val pipelineBuildDao: PipelineBuildDao
 ) {
 
     companion object {
@@ -306,8 +308,9 @@ class PipelineVersionFacadeService @Autowired constructor(
             creator = userId,
             pipelineName = savedSetting.pipelineName
         )
-        // #8164 发布后的流水将调试信息清空为0，重新计数
+        // #8164 发布后的流水将调试信息清空为0，重新计数，同时删除所有该版本的调试记录
         pipelineBuildSummaryDao.resetDebugInfo(dslContext, projectId, pipelineId)
+        pipelineBuildDao.clearDebugHistory(dslContext, projectId, pipelineId, version)
         return DeployPipelineResult(
             pipelineId = pipelineId,
             pipelineName = draftVersion.model.name,

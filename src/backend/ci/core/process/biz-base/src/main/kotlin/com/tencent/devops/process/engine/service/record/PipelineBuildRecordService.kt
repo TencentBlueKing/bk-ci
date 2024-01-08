@@ -193,7 +193,8 @@ class PipelineBuildRecordService @Autowired constructor(
                 fixedExecuteCount = fixedExecuteCount,
                 buildRecordModel = buildRecordModel,
                 executeCount = executeCount,
-                queryDslContext = queryDslContext
+                queryDslContext = queryDslContext,
+                debug = buildInfo.debug
             )
             if (record == null) fixedExecuteCount = buildInfo.executeCount!!
             record
