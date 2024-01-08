@@ -1,26 +1,26 @@
 <script setup lang="ts">
 import http from '@/http/api';
 import {
-  RESOURCE_ACTION,
-  RESOURCE_TYPE,
-  handleProjectManageNoPermission,
+RESOURCE_ACTION,
+RESOURCE_TYPE,
+handleProjectManageNoPermission,
 } from '@/utils/permission.js';
 import {
-  onMounted,
+onMounted,
 } from '@vue/runtime-core';
 import {
-  InfoBox,
-  Message,
-  Popover,
+InfoBox,
+Message,
+Popover,
 } from 'bkui-vue';
 import {
-  ref,
-  watch,
+ref,
+watch,
 } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
-  useRoute,
-  useRouter,
+useRoute,
+useRouter,
 } from 'vue-router';
 
 const { t } = useI18n();
@@ -206,6 +206,7 @@ const handleCancelUpdate = () => {
         message: t('取消更新成功'),
       });
       fetchProjectData();
+      projectDiffData.value = {};
     }
   };
 
