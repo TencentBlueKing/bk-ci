@@ -129,7 +129,7 @@
             features () {
                 return [
                     { name: this.$t('store.蓝鲸官方'), key: 'rdType', value: 'SELF_DEVELOPED' },
-                    { name: this.$t('store.质量红线指标'), key: 'qualityFlag', value: true, hidden: this.filterData.pipeType !== 'atom' },
+                    { name: this.$t('store.质量红线服务'), key: 'qualityFlag', value: true, hidden: this.filterData.pipeType !== 'atom' },
                     { name: this.$t('store.推荐使用'), key: 'recommendFlag', value: true }
                 ]
             },
@@ -394,6 +394,7 @@
 
     .store-main {
         overflow-y: scroll;
+        height: calc(100% - 52px);
     }
 
     .home-main {

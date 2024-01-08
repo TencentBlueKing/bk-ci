@@ -37,8 +37,7 @@ interface ProjectBuildSummaryService {
      */
     fun saveProjectBuildCount(
         projectId: String,
-        trigger: String?,
-        startTime: String?
+        trigger: String?
     )
 
     /**
