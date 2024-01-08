@@ -254,7 +254,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 params = arrayOf(projectCode),
                 defaultMessage = "the resource not exists, projectCode:$projectCode"
             )
-        logger.info("modify grade manager:${projectApprovalInfo}")
+        logger.info("modify grade manager:$projectApprovalInfo")
         val name = IamGroupUtils.buildGradeManagerName(
             projectName = projectName
         )

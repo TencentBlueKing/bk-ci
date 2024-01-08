@@ -27,7 +27,6 @@
 
 package com.tencent.devops.project.pojo
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.project.pojo.enums.ProjectTipsStatus
 import io.swagger.annotations.ApiModel

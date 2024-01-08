@@ -213,7 +213,7 @@ class SimpleProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun fixProjectOrganization(tProjectRecord: TProjectRecord,): ProjectOrganizationInfo {
+    override fun fixProjectOrganization(tProjectRecord: TProjectRecord): ProjectOrganizationInfo {
         return with(tProjectRecord) {
             ProjectOrganizationInfo(
                 bgId = bgId,
