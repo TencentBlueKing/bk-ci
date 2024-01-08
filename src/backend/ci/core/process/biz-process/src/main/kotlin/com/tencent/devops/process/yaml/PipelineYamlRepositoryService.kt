@@ -192,7 +192,8 @@ class PipelineYamlRepositoryService @Autowired constructor(
         val deployPipelineResult = pipelineInfoFacadeService.createYamlPipeline(
             userId = action.data.setting.enableUser,
             projectId = projectId,
-            yml = yamlContent.content,
+            yaml = yamlContent.content,
+            yamlPath = yamlFile.yamlPath,
             branchName = branch,
             isDefaultBranch = branch == action.data.context.defaultBranch,
             aspects = PipelineTransferAspectLoader.initByDefaultTriggerOn(defaultRepo = {
@@ -301,7 +302,8 @@ class PipelineYamlRepositoryService @Autowired constructor(
             userId = action.data.setting.enableUser,
             projectId = projectId,
             pipelineId = pipelineId,
-            yml = yamlContent.content,
+            yaml = yamlContent.content,
+            yamlPath = yamlFile.yamlPath,
             branchName = branch,
             isDefaultBranch = branch == action.data.context.defaultBranch,
             aspects = PipelineTransferAspectLoader.initByDefaultTriggerOn(defaultRepo = {

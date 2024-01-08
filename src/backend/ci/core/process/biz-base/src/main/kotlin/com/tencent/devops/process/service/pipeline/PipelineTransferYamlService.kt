@@ -152,7 +152,6 @@ class PipelineTransferYamlService @Autowired constructor(
                             templateId = null
                         )
                     }
-                    // TODO #8161 增加获取yaml信息调用
                     val defaultAspects = PipelineTransferAspectLoader.initByDefaultTriggerOn(
                         {
                             getRepoAliasName(projectId = projectId, pipelineId)

@@ -101,6 +101,7 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
+import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.util.NotifyTemplateUtils
@@ -155,7 +156,8 @@ class PipelineRepositoryService constructor(
     private val client: Client,
     private val objectMapper: ObjectMapper,
     private val transferService: PipelineTransferYamlService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val pipelineYamlInfoDao: PipelineYamlInfoDao
 ) {
 
     companion object {
@@ -1401,6 +1403,7 @@ class PipelineRepositoryService constructor(
                 }
 
                 pipelineModelTaskDao.deletePipelineTasks(transactionContext, projectId, pipelineId)
+                pipelineYamlInfoDao.deleteByPipelineId(transactionContext, projectId, pipelineId)
 
                 pipelineEventDispatcher.dispatch(
                     PipelineDeleteEvent(
