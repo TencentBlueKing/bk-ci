@@ -145,7 +145,7 @@ class TGitMrActionGit(
         // 已经merged的直接返回目标分支的文件列表即可
         if (event.isMrMergeEvent()) {
             val yamlPathFiles = mutableListOf<YamlPathListEntry>()
-            val targetBranchFiles =  targetBranchYamlPathList.map { (name, blobId) ->
+            val targetBranchFiles = targetBranchYamlPathList.map { (name, blobId) ->
                 YamlPathListEntry(
                     name,
                     CheckType.NO_NEED_CHECK,
@@ -349,7 +349,7 @@ class TGitMrActionGit(
             cred = getGitCred(),
             // 获取mr信息的project Id和事件强关联，不一定是流水线所处库
             gitProjectId = data.eventCommon.gitProjectId,
-            mrId =event().object_attributes.id.toString(),
+            mrId = event().object_attributes.id.toString(),
             retry = ApiRequestRetryInfo(true)
         )?.files?.forEach {
             if (it.deletedFile) {

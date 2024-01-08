@@ -185,7 +185,7 @@ class PipelineYamlInfoDao {
     fun countYamlPipeline(
         dslContext: DSLContext,
         projectId: String,
-        repoHashId: String,
+        repoHashId: String
     ): Long {
         return with(TPipelineYamlInfo.T_PIPELINE_YAML_INFO) {
             dslContext.selectCount().from(this)

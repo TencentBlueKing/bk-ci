@@ -25,17 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.app
+package com.tencent.devops.process.pojo
 
-import io.swagger.annotations.ApiModel
+import com.tencent.devops.common.pipeline.enums.CodeTargetAction
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("构建-common-环境变量")
-data class BuildEnvParameters(
-    @ApiModelProperty("名称")
-    val name: String,
-    @ApiModelProperty("描述")
-    val desc: String,
-    @ApiModelProperty("路径")
-    val path: String? = null
+data class PipelineVersionReleaseRequest(
+    @ApiModelProperty("是否本次开启PAC", required = true)
+    var enablePac: Boolean,
+    @ApiModelProperty("版本描述", required = false)
+    var description: String? = null,
+    @ApiModelProperty("模板版本号（为空时默认最新）", required = false)
+    var targetAction: CodeTargetAction?,
+    @ApiModelProperty("静态流水线组", required = false)
+    var staticViews: List<String> = emptyList(),
+    @ApiModelProperty("流水线YAML信息", required = false)
+    val yamlInfo: PipelineYamlVo?
 )

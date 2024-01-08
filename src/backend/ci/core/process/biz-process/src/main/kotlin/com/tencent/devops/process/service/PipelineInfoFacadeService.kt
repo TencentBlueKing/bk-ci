@@ -96,6 +96,7 @@ import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.modelTransfer.aspect.IPipelineTransferAspect
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -568,6 +569,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         } else {
             VersionStatus.BRANCH
         }
+        // TODO #8161 流水线名称管理：如果yaml文件没有定义name，需要用文件名作为流水线名称
         val newResource = transferModelAndSetting(
             userId = userId,
             projectId = projectId,
@@ -653,9 +655,25 @@ class PipelineInfoFacadeService @Autowired constructor(
         branchName: String,
         branchVersionAction: BranchVersionAction
     ) {
-        pipelineRepositoryService.updatePipelineBranchVersion(
-            projectId, pipelineId, branchName, branchVersionAction
-        )
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
+                projectId = projectId, pipelineId = pipelineId, queryDslContext = transactionContext
+            )
+            if (pipelineInfo?.onlyDraft == true) {
+                pipelineRepositoryService.rollbackDraftFromVersion(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    version = pipelineInfo.version,
+                    ignoreBase = true
+                )
+            } else {
+                pipelineRepositoryService.updatePipelineBranchVersion(
+                    projectId, pipelineId, branchName, branchVersionAction, transactionContext
+                )
+            }
+        }
     }
 
     fun updateYamlPipelineSetting(
@@ -1315,6 +1333,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             if (setting.pipelineAsCodeSettings?.enable == true) {
                 // 检查yaml是否已经在默认分支删除
                 yamlFacadeService.deleteBeforeCheck(userId, projectId, pipelineId)
+                // TODO #8161 关联了yaml的流水需要做额外解绑
             }
             watcher.start("s_r_pipeline_del")
             val deletePipelineResult = pipelineRepositoryService.deletePipeline(

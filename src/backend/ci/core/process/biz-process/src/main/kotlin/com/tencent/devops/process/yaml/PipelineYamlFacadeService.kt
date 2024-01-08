@@ -361,7 +361,7 @@ class PipelineYamlFacadeService @Autowired constructor(
                 filePath = pipelineYamlInfo.filePath
             )?.let {
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_DELETE_YAML_PIPELINE_IN_DEFAULT_BRANCH,
+                    errorCode = ProcessMessageCode.ERROR_DELETE_YAML_PIPELINE_IN_DEFAULT_BRANCH
                 )
             }
         }

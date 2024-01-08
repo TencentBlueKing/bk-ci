@@ -25,26 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo.element.trigger
+package com.tencent.devops.common.pipeline.pojo
 
-import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.ElementProp
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-abstract class WebHookTriggerElement(
-    override val name: String = "webhook base class",
-    override var id: String? = null,
-    override var status: String? = null
-) : Element(name, id, status) {
-
-    open fun triggerCondition(): List<ElementProp> = emptyList()
-
-//    open fun getTriggerParameter(): Map<String, List<BuildEnvParameters>> = mapOf()
-}
-
-fun WebHookTriggerElement.joinToString(list: List<String>?): String {
-    return if (list.isNullOrEmpty()) {
-        ""
-    } else {
-        list.joinToString(",")
-    }
-}
+@ApiModel("构建-变量描述")
+data class BuildParameterGroup(
+    @ApiModelProperty("名称(国际化)")
+    val name: String,
+    @ApiModelProperty("描述")
+    val params: List<BuildEnvParameters>
+)

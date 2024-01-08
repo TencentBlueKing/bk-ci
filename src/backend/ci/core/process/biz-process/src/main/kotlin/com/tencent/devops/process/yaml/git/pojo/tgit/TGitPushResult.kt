@@ -42,4 +42,4 @@ data class TGitPushResult(
     override val blobId: String,
     @ApiModelProperty("分支最后提交id")
     override val lastCommitId: String
-): PacGitPushResult
+) : PacGitPushResult

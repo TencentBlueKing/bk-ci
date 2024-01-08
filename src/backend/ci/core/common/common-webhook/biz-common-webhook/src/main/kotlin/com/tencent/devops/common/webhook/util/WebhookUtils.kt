@@ -49,6 +49,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_LABELS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MILESTONE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MILESTONE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_NUMBER
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_REVIEWERS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
@@ -221,6 +222,7 @@ object WebhookUtils {
         startParams[BK_REPO_GIT_WEBHOOK_MR_TITLE] = mrInfo?.title ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE] = mrInfo?.assignee?.username ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE] = mrInfo?.milestone?.title ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_ID] = mrInfo?.milestone?.id ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE] = mrInfo?.milestone?.dueDate ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_LABELS] = mrInfo?.labels?.joinToString(",") ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_BASE_COMMIT] = mrInfo?.baseCommit ?: ""
@@ -277,6 +279,7 @@ object WebhookUtils {
         startParams[BK_REPO_GIT_WEBHOOK_MR_REVIEWERS] =
             pullRequest.requestedReviewers.joinToString(",") { it.login } ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE] = pullRequest.milestone?.title ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_ID] = pullRequest.milestone?.id ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE] = pullRequest.milestone?.dueOn ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_LABELS] = pullRequest.labels.joinToString(",") ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_BASE_COMMIT] = pullRequest.base.sha ?: ""

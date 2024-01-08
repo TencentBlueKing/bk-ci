@@ -31,8 +31,10 @@ import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -127,7 +129,8 @@ data class StartBuildContext(
     var buildNoType: BuildNoType? = null,
     // 注意：该字段在 PipelineContainerService.setUpTriggerContainer 中可能会被修改
     var currentBuildNo: Int? = null,
-    val debug: Boolean
+    val debug: Boolean,
+    val debugModel: Model?
 ) {
     val watcher: Watcher = Watcher("startBuild-$buildId")
 
@@ -228,9 +231,9 @@ data class StartBuildContext(
             pipelineId: String,
             buildId: String,
             resourceVersion: Int,
+            model: Model,
             debug: Boolean,
             pipelineSetting: PipelineSetting? = null,
-            realStartParamKeys: List<String>,
             pipelineParamMap: MutableMap<String, BuildParameters>,
             webHookStartParam: MutableMap<String, BuildParameters> = mutableMapOf(),
             triggerReviewers: List<String>? = null,
@@ -238,7 +241,8 @@ data class StartBuildContext(
         ): StartBuildContext {
 
             val params: Map<String, String> = pipelineParamMap.values.associate { it.key to it.value.toString() }
-
+            // 解析出定义的流水线变量
+            val realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id }
             val retryStartTaskId = params[PIPELINE_RETRY_START_TASK_ID]
 
             val (actionType, executeCount, isStageRetry) = if (params[PIPELINE_RETRY_COUNT] != null) {
@@ -297,7 +301,8 @@ data class StartBuildContext(
                 needUpdateStage = false,
                 pipelineSetting = pipelineSetting,
                 pipelineParamMap = pipelineParamMap,
-                debug = debug
+                debug = debug,
+                debugModel = model
             )
         }
 
@@ -386,7 +391,8 @@ data class StartBuildContext(
             buildParameters = mutableListOf(),
             concurrencyGroup = null,
             pipelineSetting = null,
-            debug = debug
+            debug = debug,
+            debugModel = null
         )
 
         private const val CONTEXT_PREFIX = "variables."

@@ -23,20 +23,24 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.pipeline.pojo
+package com.tencent.devops.process.pojo.code
 
-import com.tencent.devops.common.pipeline.enums.CodeTargetAction
+import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.pojo.BuildId
+import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-data class PipelineVersionReleaseRequest(
-    @ApiModelProperty("是否本次开启PAC", required = true)
-    var enablePac: Boolean,
-    @ApiModelProperty("版本描述", required = false)
-    var description: String? = null,
-    @ApiModelProperty("模板版本号（为空时默认最新）", required = false)
-    var targetAction: CodeTargetAction?,
-    @ApiModelProperty("静态流水线组", required = false)
-    var staticViews: List<String> = emptyList()
+@ApiModel("webhook触发结果")
+data class WebhookBuildResult(
+    @ApiModelProperty("触发结果")
+    val result: Boolean,
+    @ApiModelProperty("流水线信息")
+    val pipelineInfo: PipelineInfo? = null,
+    @ApiModelProperty("触发buildId")
+    val buildId: BuildId? = null,
+    @ApiModelProperty("触发失败原因")
+    val failedReason: String? = null
 )

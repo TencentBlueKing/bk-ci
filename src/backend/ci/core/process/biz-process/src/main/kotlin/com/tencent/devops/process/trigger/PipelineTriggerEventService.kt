@@ -105,7 +105,6 @@ class PipelineTriggerEventService @Autowired constructor(
         triggerEvent: PipelineTriggerEvent,
         triggerDetail: PipelineTriggerDetail
     ) {
-        triggerDetail.detailId = getDetailId()
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             pipelineTriggerEventDao.save(
@@ -132,7 +131,6 @@ class PipelineTriggerEventService @Autowired constructor(
             triggerDetail = triggerDetail
         )
     }
-
 
     fun listPipelineTriggerEvent(
         userId: String,

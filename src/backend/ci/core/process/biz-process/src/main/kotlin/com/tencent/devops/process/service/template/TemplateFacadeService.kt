@@ -1139,7 +1139,7 @@ class TemplateFacadeService @Autowired constructor(
             val type = record[tTemplate.TYPE]
             val srcTemplateId = record[tTemplate.SRC_TEMPLATE_ID]
             val templateId = record[tTemplate.ID]
- val setting = settings[templateId]
+            val setting = settings[templateId]
             val key = if (type == TemplateType.CONSTRAINT.name) srcTemplateId else templateId
             val optionalTemplateInfo = generateOptionalTemplate(
                 setting = setting,

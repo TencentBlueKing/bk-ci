@@ -34,13 +34,15 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.process.pojo.BuildFormRepositoryValue
 import com.tencent.devops.repository.pojo.enums.Permission
-import com.tencent.devops.store.pojo.app.BuildEnvParameters
+import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
+import com.tencent.devops.common.pipeline.pojo.BuildParameterGroup
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -62,6 +64,26 @@ interface UserBuildParametersResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<BuildEnvParameters>>
+
+    @ApiOperation("获取构建的公共参数新接口(ci.xxx)")
+    @POST
+    @Path("/common")
+    fun getCommonParams(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<BuildParameterGroup>>
+
+    @ApiOperation("获取构建的触发器参数")
+    @POST
+    @Path("/trigger")
+    fun getTriggerParams(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "需要请求的触发器插件标识", required = true)
+        atomCodeList: List<String?>
+    ): Result<List<BuildParameterGroup>>
 
     @ApiOperation("构建表单查询代码库别名列表")
     @GET

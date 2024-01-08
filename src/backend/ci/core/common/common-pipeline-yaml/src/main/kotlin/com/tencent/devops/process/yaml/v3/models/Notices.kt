@@ -177,7 +177,7 @@ data class PacNotices(
         return ifField == null || ifField == IfType.FAILURE.name || ifField == IfType.ALWAYS.name
     }
 
-    private fun parseType(): List<String> = when(type) {
+    private fun parseType(): List<String> = when (type) {
         is String -> listOf(type)
         is List<*> -> type.map { it.toString() }
         else -> emptyList()

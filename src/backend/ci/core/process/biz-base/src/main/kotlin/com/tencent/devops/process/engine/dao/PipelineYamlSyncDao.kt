@@ -94,7 +94,7 @@ class PipelineYamlSyncDao {
     fun delete(
         dslContext: DSLContext,
         projectId: String,
-        repoHashId: String,
+        repoHashId: String
     ) {
         with(TPipelineYamlSync.T_PIPELINE_YAML_SYNC) {
             dslContext.deleteFrom(this)

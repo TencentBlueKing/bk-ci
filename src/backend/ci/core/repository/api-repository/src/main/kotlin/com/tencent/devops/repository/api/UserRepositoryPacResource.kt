@@ -63,7 +63,7 @@ interface UserRepositoryPacResource {
         repoUrl: String,
         @ApiParam("仓库类型", required = false)
         @QueryParam("repositoryType")
-        repositoryType: ScmType,
+        repositoryType: ScmType
     ): Result<String?>
 
     @ApiOperation("开启pac")

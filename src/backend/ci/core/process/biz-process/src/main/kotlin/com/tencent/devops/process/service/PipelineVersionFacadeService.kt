@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.pojo.Page
@@ -43,7 +44,6 @@ import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
-import com.tencent.devops.common.pipeline.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
@@ -51,12 +51,13 @@ import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRepositoryVersionService
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.PipelineDetail
+import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
@@ -66,6 +67,7 @@ import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.template.service.TemplateService
+import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.modelTransfer.PipelineTransferException
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -83,11 +85,13 @@ class PipelineVersionFacadeService @Autowired constructor(
     private val transferService: PipelineTransferYamlService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val repositoryVersionService: PipelineRepositoryVersionService,
+    private val pipelineYamlFacadeService: PipelineYamlFacadeService,
     private val pipelineRecentUseService: PipelineRecentUseService,
     private val templateFacadeService: TemplateFacadeService,
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineViewGroupService: PipelineViewGroupService,
-    private val pipelineBuildSummaryDao: PipelineBuildSummaryDao
+    private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
+    private val pipelineBuildDao: PipelineBuildDao
 ) {
 
     companion object {
@@ -121,10 +125,9 @@ class PipelineVersionFacadeService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
             params = arrayOf(pipelineId)
         )
-        // TODO #8161 增加分支名称的保存
-        var baseVersionBranch: String? = "master"
         val canRelease = draftVersion != null
         var baseVersionStatus = VersionStatus.RELEASED
+        var baseVersionBranch: String? = null
         draftVersion?.let { draft ->
             val baseVersion = draft.baseVersion?.let { base ->
                 pipelineRepositoryService.getPipelineResourceVersion(
@@ -134,18 +137,17 @@ class PipelineVersionFacadeService @Autowired constructor(
                 )
             }
             baseVersion?.status?.let { baseVersionStatus = it }
-//            baseVersionBranch = baseVersion.ref
-//            draft.debugBuildId?.let {
-//                canRelease = pipelineRuntimeService.getBuildInfo(projectId, it)?.status?.isSuccess() == true
-//            }
+            baseVersion?.versionName?.let { baseVersionBranch = it }
         }
-        val setting = pipelineSettingFacadeService.userGetSetting(
+        val releaseSetting = pipelineSettingFacadeService.userGetSetting(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            version = releaseVersion?.settingVersion ?: releaseVersion?.version ?: 0,
             detailInfo = detailInfo
         )
+        val yamlInfo = if (releaseSetting.pipelineAsCodeSettings?.enable == true && releaseVersion != null) {
+            pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, releaseVersion.version)
+        } else null
         val version = draftVersion?.version ?: releaseVersion!!.version
         val versionName = draftVersion?.versionName ?: releaseVersion!!.versionName
         pipelineRecentUseService.record(userId, projectId, pipelineId)
@@ -170,7 +172,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             releaseVersionName = releaseVersion?.versionName,
             baseVersionStatus = baseVersionStatus,
             baseVersionBranch = baseVersionBranch,
-            pipelineAsCodeSettings = setting.pipelineAsCodeSettings ?: PipelineAsCodeSettings()
+            pipelineAsCodeSettings = releaseSetting.pipelineAsCodeSettings ?: PipelineAsCodeSettings(),
+            yamlInfo = yamlInfo
         )
     }
 
@@ -211,11 +214,10 @@ class PipelineVersionFacadeService @Autowired constructor(
             desc = request.description ?: "",
             pipelineAsCodeSettings = PipelineAsCodeSettings(enabled)
         )
-        // TODO #8164 增加同步PAC仓库
         val (versionStatus, branchName) = if (
             enabled && request.targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE
         ) {
-            Pair(VersionStatus.BRANCH, "${PAC_BRANCH_PREFIX}${pipelineId}")
+            Pair(VersionStatus.BRANCH, "${PAC_BRANCH_PREFIX}$pipelineId")
         } else if (enabled && request.targetAction == CodeTargetAction.PUSH_BRANCH_AND_REQUEST_MERGE) {
             val baseVersion = draftVersion.baseVersion?.let {
                 pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, it)
@@ -227,6 +229,40 @@ class PipelineVersionFacadeService @Autowired constructor(
             Pair(VersionStatus.BRANCH, baseVersion.versionName)
         } else {
             Pair(VersionStatus.RELEASED, null)
+        }
+        if (enabled) {
+            if (request.yamlInfo == null) throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
+                params = arrayOf(PipelineVersionReleaseRequest::yamlInfo.name)
+            )
+            val yamlInfo = request.yamlInfo ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
+                params = arrayOf(PipelineVersionReleaseRequest::yamlInfo.name)
+            )
+            // 对前端的YAML信息进行校验
+            val filePath = if (yamlInfo.filePath.endsWith(".yaml") || yamlInfo.filePath.endsWith(".yml")) {
+                yamlInfo.filePath
+            } else {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_YAML_FILENAME,
+                    params = arrayOf(yamlInfo.filePath)
+                )
+            }
+            val targetAction = request.targetAction ?: CodeTargetAction.PUSH_BRANCH_AND_REQUEST_MERGE
+            // #8161 如果调用代码库同步失败则有报错或提示
+            pipelineYamlFacadeService.pushYamlFile(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = draftVersion.version,
+                versionName = branchName,
+                content = draftVersion.yaml ?: "",
+                commitMessage = request.description ?: "update",
+                repoHashId = yamlInfo.repoHashId,
+                scmType = yamlInfo.scmType,
+                filePath = filePath,
+                targetAction = targetAction
+            )
         }
         val model = draftVersion.model.copy(staticViews = request.staticViews)
         val savedSetting = pipelineSettingFacadeService.saveSetting(
@@ -272,8 +308,9 @@ class PipelineVersionFacadeService @Autowired constructor(
             creator = userId,
             pipelineName = savedSetting.pipelineName
         )
-        // #8164 发布后的流水将调试信息清空为0，重新计数
+        // #8164 发布后的流水将调试信息清空为0，重新计数，同时删除所有该版本的调试记录
         pipelineBuildSummaryDao.resetDebugInfo(dslContext, projectId, pipelineId)
+        pipelineBuildDao.clearDebugHistory(dslContext, projectId, pipelineId, version)
         return DeployPipelineResult(
             pipelineId = pipelineId,
             pipelineName = draftVersion.model.name,
