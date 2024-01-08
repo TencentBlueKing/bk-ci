@@ -118,11 +118,12 @@ class ProjectExtOrganizationService constructor(
         englishName: String,
         organization: ProjectOrganizationInfo
     ): Boolean {
-        return projectDao.updateOrganizationByEnglishName(
+        projectDao.updateOrganizationByEnglishName(
             dslContext = dslContext,
             englishName = englishName,
             projectOrganizationInfo = organization
         )
+        return true
     }
 
     fun getRightProjectOrganization(
