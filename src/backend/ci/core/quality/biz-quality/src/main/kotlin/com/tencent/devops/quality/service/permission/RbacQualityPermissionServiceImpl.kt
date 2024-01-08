@@ -83,7 +83,7 @@ class RbacQualityPermissionServiceImpl(
     ): Boolean {
         val cacheKey = AuthCacheKeyUtil.getCacheKey(
             userId = userId,
-            resourceType = AuthResourceType.QUALITY_GROUP_NEW.value,
+            resourceType = AuthResourceType.PROJECT.value,
             action = buildQualityGroupAction(authPermission),
             projectCode = projectId,
             resourceCode = projectId
@@ -94,7 +94,7 @@ class RbacQualityPermissionServiceImpl(
                 userId = userId,
                 projectCode = projectId,
                 action = buildQualityGroupAction(authPermission),
-                resourceCode = AuthResourceType.QUALITY_GROUP_NEW.value
+                resourceCode = AuthResourceType.PROJECT.value
             ).data ?: false
         }
     }
@@ -180,7 +180,7 @@ class RbacQualityPermissionServiceImpl(
     override fun validateRulePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
         val cacheKey = AuthCacheKeyUtil.getCacheKey(
             userId = userId,
-            resourceType = AuthResourceType.QUALITY_RULE.value,
+            resourceType = AuthResourceType.PROJECT.value,
             action = buildQualityRuleAction(authPermission),
             projectCode = projectId,
             resourceCode = projectId
@@ -191,7 +191,7 @@ class RbacQualityPermissionServiceImpl(
                 userId = userId,
                 projectCode = projectId,
                 action = buildQualityRuleAction(authPermission),
-                resourceCode = AuthResourceType.QUALITY_RULE.value
+                resourceCode = AuthResourceType.PROJECT.value
             ).data ?: false
         }
     }

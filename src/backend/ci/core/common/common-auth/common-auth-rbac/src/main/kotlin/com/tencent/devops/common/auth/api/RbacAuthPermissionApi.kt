@@ -122,7 +122,7 @@ class RbacAuthPermissionApi(
                 token = tokenService.getSystemToken()!!,
                 userId = user,
                 projectCode = projectCode,
-                action = RbacAuthUtils.buildAction(authResourceType = resourceType, authPermission = permission),
+                action = action,
                 resource = resource
             ).data!!
         }
