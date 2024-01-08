@@ -86,7 +86,7 @@
                                 trigger: 'blur'
                             },
                             {
-                                max: 40,
+                                max: 128,
                                 message: this.$t('pipelineNameInputTips'),
                                 trigger: 'change'
                             }

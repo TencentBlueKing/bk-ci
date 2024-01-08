@@ -8,19 +8,63 @@
         </pipeline-bread-crumb>
         <aside class="pipeline-detail-right-aside">
             <bk-button
+                v-if="isRunning"
                 :disabled="loading"
                 :icon="loading ? 'loading' : ''"
                 outline
-                :theme="isRunning ? 'warning' : 'default'"
+                theme="warning"
+                key="cancel"
                 @click="handleClick"
             >
-                {{ isRunning ? $t("cancel") : $t("history.reBuild") }}
+                {{ $t("cancel") }}
+            </bk-button>
+            <bk-button
+                v-else
+                :disabled="loading"
+                :icon="loading ? 'loading' : ''"
+                outline
+                theme="default"
+                key="reBuild"
+                v-perm="{
+                    permissionData: {
+                        projectId: $route.params.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: $route.params.pipelineId,
+                        action: RESOURCE_ACTION.EXECUTE
+                    }
+                }"
+                @click="handleClick"
+            >
+                {{ $t("history.reBuild") }}
             </bk-button>
             <span class="exec-deatils-operate-divider"></span>
-            <router-link :to="editRouteName">
-                <bk-button>{{ $t("edit") }}</bk-button>
-            </router-link>
-            <bk-button theme="primary" @click="goExecPreview">
+            <bk-button
+                v-perm="{
+                    permissionData: {
+                        projectId: $route.params.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: $route.params.pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    }
+                }"
+                key="edit"
+                @click="goEdit"
+            >
+                {{ $t("edit") }}
+            </bk-button>
+            <bk-button
+                theme="primary"
+                v-perm="{
+                    permissionData: {
+                        projectId: $route.params.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: $route.params.pipelineId,
+                        action: RESOURCE_ACTION.EXECUTE
+                    }
+                }"
+                key="exec"
+                @click="goExecPreview"
+            >
                 {{ $t("exec") }}
             </bk-button>
             <more-actions />
@@ -29,6 +73,9 @@
 </template>
 
 <script>
+    import {
+        RESOURCE_ACTION
+    } from '@/utils/permission'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import BuildNumSwitcher from './BuildNumSwitcher'
     import MoreActions from './MoreActions.vue'
@@ -50,6 +97,9 @@
             ...mapGetters({
                 curPipeline: 'pipelines/getCurPipeline'
             }),
+            RESOURCE_ACTION () {
+                return RESOURCE_ACTION
+            },
             isRunning () {
                 return ['RUNNING', 'QUEUE'].indexOf(this.execDetail?.status) > -1
             },
@@ -57,12 +107,6 @@
                 return {
                     latestBuildNum: this.execDetail?.latestBuildNum ?? 1,
                     currentBuildNum: this.execDetail?.buildNum ?? 1
-                }
-            },
-            editRouteName () {
-                return {
-                    name: 'pipelinesEdit',
-                    params: this.$route.params
                 }
             }
         },
@@ -89,19 +133,11 @@
                         await this.retry(this.execDetail?.id)
                     }
                 } catch (err) {
-                    this.handleError(err, [
-                        {
-                            actionId: this.$permissionActionMap.execute,
-                            resourceId: this.$permissionResourceMap.pipeline,
-                            instanceId: [
-                                {
-                                    id: this.$route.params.pipelineId,
-                                    name: this.curPipeline.pipelineName
-                                }
-                            ],
-                            projectId: this.$route.params.projectId
-                        }
-                    ])
+                    this.handleError(err, {
+                        projectId: this.$route.params.projectId,
+                        resourceCode: this.$route.params.pipelineId,
+                        action: this.$permissionResourceAction.EXECUTE
+                    })
                     this.loading = false
                 }
             },
@@ -156,6 +192,11 @@
             goExecPreview () {
                 this.$router.push({
                     name: 'pipelinesPreview'
+                })
+            },
+            goEdit () {
+                this.$router.push({
+                    name: 'pipelinesEdit'
                 })
             }
         }
