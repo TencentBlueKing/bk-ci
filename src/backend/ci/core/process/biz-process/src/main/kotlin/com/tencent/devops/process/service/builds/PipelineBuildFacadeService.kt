@@ -677,10 +677,6 @@ class PipelineBuildFacadeService(
             }
             return Pair(defaultVersion.model, false)
         }
-
-        if (defaultVersion != null && defaultVersion.version == version) {
-            return Pair(defaultVersion.model, false)
-        }
         val targetResource = pipelineRepositoryService.getDraftVersionResource(
             projectId = projectId,
             pipelineId = pipelineId
