@@ -512,7 +512,14 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         codeEventType: CodeEventType?
     ): Repository {
         checkRepoID(repositoryConfig)
-        val repo = getRepo(projectId, repositoryConfig) as? CodeTGitRepository
+        val repository = getRepo(projectId, repositoryConfig)
+        // 兼容旧数据，社区版工蜂拆分后，存量流水线仍会使用TGIT触发器关联社区版工蜂，此处需做兼容处理
+        if ((repository as? CodeTGitCeRepository) != null) return addTGitCeWebhook(
+            projectId,
+            repositoryConfig,
+            codeEventType
+        )
+        val repo = repository as? CodeTGitRepository
             ?: throw ErrorCodeException(defaultMessage = "TGit", errorCode = ProcessMessageCode.TGIT_INVALID)
 
         if (repo.authType == RepoAuthType.OAUTH) {
