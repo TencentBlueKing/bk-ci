@@ -623,8 +623,11 @@ class WorkspaceCommon @Autowired constructor(
     private fun checkUserNeedUnShare(ws: List<WorkspaceShared>, assignType: WorkspaceShared.AssignType): Boolean {
         var res = false
         ws.forEach {
-            if (it.type != assignType) return false
-            else res = true
+            if (it.type != assignType) {
+                return false
+            } else {
+                res = true
+            }
         }
         return res
     }
@@ -636,8 +639,8 @@ class WorkspaceCommon @Autowired constructor(
     }
 
     /*
-    * 工作空间进入不使用状态，对数据进行统计和闭合处理
-    * */
+     * 工作空间进入不使用状态，对数据进行统计和闭合处理
+     * */
     fun statisticalData(
         workspace: WorkspaceRecord,
         operator: String
@@ -702,7 +705,8 @@ class WorkspaceCommon @Autowired constructor(
         logger.info("sendCgsInfo2Kafka|workspaceKafkaInfo|{}", workspaceKafkaInfo)
         kotlin.runCatching {
             kafkaClient.send(
-                buildCommitsTopic!!, JsonUtil.toJson(
+                buildCommitsTopic!!,
+                    JsonUtil.toJson(
                 workspaceKafkaInfo
             )
             )
