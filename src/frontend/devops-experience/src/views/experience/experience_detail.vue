@@ -30,7 +30,11 @@
     import { DownloadData, BaseMessage } from '@/components/ExperienceDetailTabs'
     import { convertTime } from '@/utils/util'
     import { mapActions, mapState } from 'vuex'
-
+    import {
+        EXPERIENCE_TASK_RESOURCE_TYPE,
+        EXPERIENCE_TASK_RESOURCE_ACTION
+    } from '@/utils/permission'
+    
     export default {
         components: {
             DownloadData,
@@ -165,14 +169,16 @@
                         expired: res.expired,
                         online: res.online
                     })
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
+                } catch (e) {
+                    this.handleError(
+                        e,
+                        {
+                            projectId: this.projectId,
+                            resourceType: EXPERIENCE_TASK_RESOURCE_TYPE,
+                            resourceCode: this.experienceHashId,
+                            action: EXPERIENCE_TASK_RESOURCE_ACTION.VIEW
+                        }
+                    )
                 }
             },
             async requestStatistics () {

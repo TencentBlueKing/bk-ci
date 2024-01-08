@@ -123,3 +123,9 @@
         }
     }
 </script>
+
+<style lang="scss">
+    .drop-upload {
+        padding-right: 5px !important;
+    }
+</style>

@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.ApigwPipelineResource
+import com.tencent.devops.openapi.utils.ApigwParamUtil
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
@@ -141,8 +142,8 @@ class ApigwPipelineResourceImpl @Autowired constructor(private val client: Clien
         return client.get(ServicePipelineResource::class).list(
             userId = userId,
             projectId = projectId,
-            page = page,
-            pageSize = pageSize,
+            page = page ?: 1,
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
             channelCode = ChannelCode.BS,
             checkPermission = true
         )

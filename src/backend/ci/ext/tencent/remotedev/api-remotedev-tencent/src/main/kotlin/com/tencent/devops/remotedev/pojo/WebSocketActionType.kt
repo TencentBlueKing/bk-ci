@@ -32,10 +32,12 @@ enum class WebSocketActionType {
     WORKSPACE_START, // 启动workspace
     WORKSPACE_STOP, // 停止workspace
     WORKSPACE_RESTART, // 重启workspace
+    WORKSPACE_REBUILD, // 重装workspace
     WORKSPACE_SLEEP, // 休眠workspace
     WORKSPACE_DELETE, // 销毁workspace
     WORKSPACE_NEED_RENEWAL, // 需要续期workspace
     WORKSPACE_MAKE_IMAGE, // 根据当前工作空间制作镜像
     WORKSPACE_DETAIL, // workspace 信息
-    WORKSPACE_NOTIFY; // workspace 通知
+    WORKSPACE_NOTIFY, // workspace 通知
+    WORKSPACE_ASSIGN; // 分配workspace
 }

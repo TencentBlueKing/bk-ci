@@ -45,14 +45,14 @@
 </template>
 
 <script>
-    import { mapGetters, mapActions } from 'vuex'
     import Pipeline from '@/components/Pipeline'
-    import { bus } from '@/utils/bus'
-    import { getParamsValuesMap } from '@/utils/util'
-    import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
+    import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
+    import { bus } from '@/utils/bus'
     import { allVersionKeyList } from '@/utils/pipelineConst'
+    import { getParamsValuesMap } from '@/utils/util'
+    import { mapActions, mapGetters } from 'vuex'
 
     export default {
         components: {
@@ -188,15 +188,14 @@
                         throw new Error(this.$t('newlist.withoutManualAtom'))
                     }
                 } catch (err) {
-                    this.handleError(err, [{
-                        actionId: this.$permissionActionMap.execute,
-                        resourceId: this.$permissionResourceMap.pipeline,
-                        instanceId: [{
-                            id: this.pipelineId,
-                            name: this.pipelineId
-                        }],
-                        projectId: this.projectId
-                    }], this.getPermUrlByRole(this.projectId, this.pipelineId, this.roleMap.executor))
+                    this.handleError(
+                        err,
+                        {
+                            projectId: this.projectId,
+                            resourceCode: this.pipelineId,
+                            action: this.$permissionResourceAction.EXECUTE
+                        }
+                    )
                 } finally {
                     this.isLoading = false
                 }

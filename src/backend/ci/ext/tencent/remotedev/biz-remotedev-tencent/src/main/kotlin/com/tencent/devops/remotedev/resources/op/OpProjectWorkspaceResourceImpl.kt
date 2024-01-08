@@ -25,6 +25,7 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
+import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
 import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminData
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
@@ -79,7 +80,25 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                 addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0)
             )
         }
+        // 判断是不是特殊机型，如果是特殊机型增加特殊机型份额
+        val allSpecSize = windowsResourceConfigService.getAllType(true, true).map { it.size }.toSet()
+        val allowSpecSize = windowsResourceConfigService.fetchSpec(
+            projectId = data.projectId,
+            machineType = null,
+            page = 1,
+            pageSize = 1000
+        ).records.associate { it.size to it.quota }
         cgsData.forEach { cgs ->
+            // 判断是不是特殊机型，如果是特殊机型增加特殊机型份额
+            if (cgs.machineType in allSpecSize) {
+                windowsResourceConfigService.createOrUpdateSpec(
+                    WindowsSpecResInfo(
+                        projectId = data.projectId,
+                        size = cgs.machineType.trim(),
+                        quota = ((allowSpecSize[cgs.machineType.trim()] ?: 0) + 1)
+                    )
+                )
+            }
             if (cgs.status != Constansts.CGS_AVAIABLE_STATUS) return@forEach
             // 先校验该cgsId是否已被申领分配并运行中
             if (workspaceCommon.checkCgsRunning(cgs.cgsId)) return@forEach

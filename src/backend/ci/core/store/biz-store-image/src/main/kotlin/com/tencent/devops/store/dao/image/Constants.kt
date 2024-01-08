@@ -60,4 +60,5 @@ object Constants {
     // ImageAgentType表
     const val KEY_IMAGE_AGENT_TYPE = "imageAgentType"
     const val KEY_IMAGE_AGENT_TYPE_SCOPE = "imageAgentTypeScope"
+    const val KEY_IMAGE_TYPE = "imageType"
 }

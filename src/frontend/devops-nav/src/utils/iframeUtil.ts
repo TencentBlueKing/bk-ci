@@ -1,5 +1,5 @@
 import eventBus from './eventBus'
-import { toggleAsidePanel, toggleDialog, goToPage } from './util'
+import { goToPage, toggleAsidePanel, toggleDialog } from './util'
 
 interface UrlParam {
     url: string
@@ -25,6 +25,12 @@ function iframeUtil (router: any) {
             action,
             params
         }, '*')
+    }
+    
+    utilMap.updateTabTitle = function (title: string): void {
+        if (title) {
+            document.title = title
+        }
     }
 
     utilMap.hookTrigger = function (hook) {
@@ -73,10 +79,6 @@ function iframeUtil (router: any) {
         } else {
             router.replace(pathname)
         }
-    }
-
-    utilMap.showAskPermissionDialog = function (params) {
-        eventBus.$showAskPermissionDialog(params)
     }
 
     utilMap.toggleLoginDialog = function () {
@@ -139,13 +141,14 @@ function iframeUtil (router: any) {
         send(target, 'leaveCancelOrder', '')
     }
 
-    utilMap.leaveConfirm = function ({ title, content = '离开后，新编辑的数据将丢失', type, subHeader, theme }):void {
+    utilMap.leaveConfirm = function ({ title, content = '离开后，新编辑的数据将丢失', type, subHeader, theme, cancelText }):void {
         const iframeBox: any = document.getElementById('iframe-box')
         eventBus.$bkInfo({
             type: type || theme,
             theme: theme || type,
             title,
             subTitle: content,
+            cancelText,
             subHeader: subHeader ? eventBus.$createElement('p', {}, subHeader) : null,
             confirmFn: () => {
                 utilMap.leaveConfirmOrder(iframeBox.contentWindow)

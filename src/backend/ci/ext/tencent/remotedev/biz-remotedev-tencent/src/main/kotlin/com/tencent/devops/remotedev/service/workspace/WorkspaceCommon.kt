@@ -35,6 +35,8 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.trace.TraceTag
@@ -48,6 +50,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResource
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.FetchWinPoolData
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -74,6 +77,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.WhiteListService
@@ -122,6 +126,9 @@ class WorkspaceCommon @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceCommon::class.java)
         private const val DEFAULT_WAIT_TIME = 60
+        private const val REPOID = "lsync"
+        private const val LOCALDRIVER = "L"
+        private const val PIPELINE_CONFIG_INFO = "remotedev:assignWorkspace.pipelineinfo"
     }
 
     @Value("\${notice.wework:#{null}}")
@@ -316,12 +323,7 @@ class WorkspaceCommon @Autowired constructor(
         }
         logger.info("fixUnexpectedStatus|$workspaceName|$status|$workspaceInfo")
         when {
-            workspaceInfo.status == EnvStatusEnum.stopped -> {
-                sleepControl.doStopWS(true, userId, workspaceName)
-                return WorkspaceStatus.SLEEP
-            }
-
-            workspaceInfo.status == EnvStatusEnum.readyToRun -> {
+            workspaceInfo.status == EnvStatusEnum.readyToRun || workspaceInfo.status == EnvStatusEnum.stopped -> {
                 sleepControl.doStopWS(true, userId, workspaceName)
                 return WorkspaceStatus.STOPPED
             }
@@ -712,6 +714,36 @@ class WorkspaceCommon @Autowired constructor(
             )
         }.onFailure {
             logger.warn("send cgs info 2 kafka fail")
+        }
+    }
+
+    // 创建实例成功后做异步设置，包含L盘挂载
+    fun makeDiskMount(ip: String, user: String) {
+        try {
+            val infoS = redisOperation.get(PIPELINE_CONFIG_INFO) ?: return
+            val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
+            val resIps = mutableSetOf<String>()
+            resIps.add(ip)
+            val newParam = mutableMapOf<String, String>()
+            info.buildParam.forEach { (k, v) ->
+                when (v) {
+                    "job_ip_list" -> newParam[k] = resIps.joinToString(separator = " ")
+                    "repoId" -> newParam[k] = REPOID ?: ""
+                    "localDriver" -> newParam[k] = LOCALDRIVER ?: ""
+                    else -> newParam[k] = v
+                }
+            }
+            client.get(ServiceBuildResource::class).manualStartupNew(
+                userId = info.userId ?: user,
+                projectId = info.projectId,
+                pipelineId = info.pipelineId,
+                values = newParam,
+                channelCode = ChannelCode.BS,
+                buildNo = null,
+                startType = StartType.SERVICE
+            )
+        } catch (e: Exception) {
+            logger.warn("execute make disk mount pipeline error", e)
         }
     }
 }

@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.store.pojo.template.InstallTemplateReq
+import com.tencent.devops.store.pojo.template.InstallTemplateResp
 import com.tencent.devops.store.pojo.template.MarketTemplateMain
 import com.tencent.devops.store.pojo.template.MarketTemplateResp
 import com.tencent.devops.store.pojo.template.MyTemplateItem
@@ -99,7 +100,7 @@ interface MarketTemplateService {
         userId: String,
         channelCode: ChannelCode,
         installTemplateReq: InstallTemplateReq
-    ): Result<Boolean>
+    ): Result<InstallTemplateResp>
 
     /**
      * 校验用户、模板和插件的可见范围

@@ -29,6 +29,7 @@ package com.tencent.devops.process.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.process.pojo.BuildFormRepositoryValue
@@ -115,4 +116,49 @@ interface UserBuildParametersResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<BuildFormRepositoryValue>>
+
+    @ApiOperation("构建表单查询流水线列表")
+    @GET
+    @Path("/{projectId}/subPipeline")
+    fun listPermissionPipeline(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("对应权限", required = true, defaultValue = "")
+        @QueryParam("permission")
+        permission: com.tencent.devops.process.pojo.Permission,
+        @ApiParam("排除流水线ID", required = false, defaultValue = "")
+        @QueryParam("excludePipelineId")
+        excludePipelineId: String?,
+        @ApiParam("流水线名称", required = false)
+        @QueryParam("pipelineName")
+        pipelineName: String? = null,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<List<BuildFormValue>>
+
+    @ApiOperation("构建表单查询git分支")
+    @GET
+    @Path("/{projectId}/{repositoryId}/gitRefs")
+    fun listGitRefs(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("repo hash id", required = true)
+        @PathParam("repositoryId")
+        repositoryId: String,
+        @ApiParam("代码库请求类型", required = false)
+        @QueryParam("repositoryType")
+        repositoryType: RepositoryType?,
+        @ApiParam("搜索条件", required = false)
+        @QueryParam("search")
+        search: String?
+    ): Result<List<BuildFormValue>>
 }

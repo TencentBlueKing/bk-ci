@@ -67,7 +67,8 @@ class PipelineTemplateService @Autowired constructor(
                 templateModel = if (!StringUtils.isEmpty(templateRecord.template)) JsonUtil.to(
                     templateRecord.template,
                     Model::class.java
-                ) else null
+                ) else null,
+                templateVersion = templateRecord.version
             )
         )
     }

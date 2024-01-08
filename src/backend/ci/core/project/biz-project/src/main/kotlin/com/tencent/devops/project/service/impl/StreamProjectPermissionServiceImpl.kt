@@ -106,5 +106,9 @@ class StreamProjectPermissionServiceImpl @Autowired constructor(
 
     override fun isShowUserManageIcon(): Boolean = false
 
-    override fun filterProjects(userId: String, permission: AuthPermission): List<String>? = null
+    override fun filterProjects(
+        userId: String,
+        permission: AuthPermission,
+        resourceType: String?
+    ): List<String>? = null
 }

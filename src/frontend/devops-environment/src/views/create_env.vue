@@ -72,7 +72,7 @@
                             <div class="node-table-message">
                                 <div class="table-node-head">
                                     <div class="table-node-item node-item-ip">IP</div>
-                                    <div class="table-node-item node-item-name">{{ $t('environment.nodeInfo.cpuName') }}</div>
+                                    <div class="table-node-item node-item-name">{{ $t('environment.nodeInfo.hostName') }}</div>
                                     <div class="table-node-item node-item-type">{{ $t('environment.nodeInfo.nodeType') }}</div>
                                     <div class="table-node-item node-item-status">{{ $t('environment.nodeInfo.nodeStatus') }}</div>
                                 </div>
@@ -119,6 +119,7 @@
 
 <script>
     import emptyTips from '@/components/devops/emptyTips'
+    import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '../utils/permission'
 
     import nodeSelect from '@/components/devops/environment/node-select-dialog'
     export default {
@@ -205,7 +206,7 @@
                         {
                             type: 'success',
                             size: 'normal',
-                            handler: this.goToApplyPerm,
+                            handler: this.applyPermission,
                             text: this.$t('environment.applyPermission')
                         }
                     ]
@@ -265,8 +266,13 @@
             changeProject () {
                 this.iframeUtil.toggleProjectMenu(true)
             },
-            goToApplyPerm () {
-                this.tencentPermission(`/backend/api/perm/apply/subsystem/?client_id=environment&project_code=${this.projectId}&service_code=environment&role_creator=environment`)
+            applyPermission () {
+                this.handleNoPermission({
+                    projectId: this.projectId,
+                    resourceType: ENV_RESOURCE_TYPE,
+                    resourceCode: this.projectId,
+                    action: ENV_RESOURCE_ACTION.CREATE
+                })
             },
             /**
              * 弹窗全选联动

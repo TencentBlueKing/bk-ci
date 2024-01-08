@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.dao.common
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TBusinessConfig
 import com.tencent.devops.model.store.tables.records.TBusinessConfigRecord
 import com.tencent.devops.store.pojo.common.BusinessConfigRequest
@@ -112,16 +113,8 @@ class BusinessConfigDao {
                 .where(BUSINESS.eq(business))
                 .and(FEATURE.eq(feature))
                 .and(BUSINESS_VALUE.eq(businessValue))
+                .skipCheck()
                 .fetchOne()
-        }
-    }
-
-    fun getConfigsByFeature(dslContext: DSLContext, business: String, feature: String): Result<TBusinessConfigRecord>? {
-        with(TBusinessConfig.T_BUSINESS_CONFIG) {
-            return dslContext.selectFrom(this)
-                .where(BUSINESS.eq(business))
-                .and(FEATURE.eq(feature))
-                .fetch()
         }
     }
 
@@ -134,6 +127,7 @@ class BusinessConfigDao {
             return dslContext.selectFrom(this)
                 .where(BUSINESS.eq(business))
                 .and(BUSINESS_VALUE.eq(businessValue))
+                .skipCheck()
                 .fetch()
         }
     }
@@ -167,6 +161,7 @@ class BusinessConfigDao {
                 .where(BUSINESS.eq(business))
                 .and(FEATURE.eq(feature))
                 .and(CONFIG_VALUE.eq(configValue))
+                .skipCheck()
                 .fetch()
         }
     }
@@ -175,6 +170,7 @@ class BusinessConfigDao {
         with(TBusinessConfig.T_BUSINESS_CONFIG) {
             return dslContext.selectFrom(this)
                 .where(ID.eq(id))
+                .skipCheck()
                 .fetchOne()
         }
     }
@@ -182,6 +178,7 @@ class BusinessConfigDao {
     fun listAll(dslContext: DSLContext): Result<TBusinessConfigRecord>? {
         with(TBusinessConfig.T_BUSINESS_CONFIG) {
             return dslContext.selectFrom(this)
+                .skipCheck()
                 .fetch()
         }
     }

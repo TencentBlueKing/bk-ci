@@ -42,7 +42,12 @@ class BuildProjectResourceImpl @Autowired constructor(
     private val projectTxInfoService: ProjectTxInfoService
 ) : BuildProjectResource {
     override fun listByProjectCode(projectCode: String): Result<List<ProjectVO>> {
-        return Result(projectService.list(setOf(projectCode)))
+        return Result(
+            projectService.list(
+                projectCodes = setOf(projectCode),
+                enabled = true
+            )
+        )
     }
 
     override fun getProjectOrganizations(projectCode: String): Result<ProjectOrganization?> {

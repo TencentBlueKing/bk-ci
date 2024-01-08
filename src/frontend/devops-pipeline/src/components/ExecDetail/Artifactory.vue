@@ -52,9 +52,9 @@
             <bk-table-column :label="$t('operate')" width="150">
                 <template slot-scope="props">
                     <artifact-download-button
+                        :output="props.row"
                         :has-permission="hasPermission"
-                        :path="props.row.path"
-                        :name="props.row.name"
+                        v-bind="props.row"
                         :artifactory-type="props.row.artifactoryType"
                     />
                 </template>
@@ -123,21 +123,26 @@
                 Promise.all([
                     this.$store.dispatch('common/requestPartFile', postData),
                     this.$store.dispatch('common/requestExecPipPermission', permissionData)
-                ]).then(([res, permission]) => {
-                    this.artifactories = res.records.map(item => ({
-                        ...item,
-                        icon: item.folder ? 'folder' : extForFile(item.name)
-                    })) || []
-                    this.hasPermission = permission
-                    if (this.artifactories.length <= 0) {
-                        this.$emit('hidden')
-                    }
-                }).catch((err) => {
-                    this.$bkMessage({ theme: 'error', message: err.message || err })
-                }).finally(() => {
-                    this.isLoading = false
-                    this.$emit('complete')
-                })
+                ])
+                    .then(([res, permission]) => {
+                        this.artifactories
+                            = res.records.map((item) => ({
+                                ...item,
+                                icon: item.folder ? 'folder' : extForFile(item.name),
+                                size: item.folder ? this.sizeFormatter(this.getFolderSize(item)) : this.sizeFormatter(item.size)
+                            })) || []
+                        this.hasPermission = permission
+                        if (this.artifactories.length <= 0) {
+                            this.$emit('hidden')
+                        }
+                    })
+                    .catch((err) => {
+                        this.$bkMessage({ theme: 'error', message: err.message || err })
+                    })
+                    .finally(() => {
+                        this.isLoading = false
+                        this.$emit('complete')
+                    })
             },
 
             repoTypeFormatter (row, column, cellValue, index) {

@@ -61,7 +61,7 @@ class ManualPreScriptBuildYaml(
     override var resources: Resources?,
     override var notices: List<GitNotices>?,
     override var finally: Map<String, PreJob>? = null,
-    override val concurrency: Concurrency? = null
+    override var concurrency: Concurrency? = null
 ) : PreScriptBuildYamlI {
     constructor(pre: PreScriptBuildYaml, inputs: Map<String, String>?) : this(
         version = pre.version,

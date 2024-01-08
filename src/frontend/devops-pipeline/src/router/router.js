@@ -19,6 +19,7 @@
 
 import zyPipelineRoute from './zhiyan'
 import ftpPipelineRoute from './ftp'
+import tapdPipelineRoute from './tapd'
 
 const pipelines = () => import(/* webpackChunkName: "pipelines" */'../views')
 
@@ -26,6 +27,7 @@ const pipelinesNewList = () => import(/* webpackChunkName: "pipelinesNewList" */
 const PipelineManageList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/PipelineManageList')
 const PatchManageList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/PatchManageList')
 const AddPipeline = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/AddPipeline')
+const PipelineListAuth = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/Auth')
 
 const pipelineListEntry = () => import(/* webpackChunkName: "pipelineListEntry" */'../views/PipelineList')
 const pipelinesGroup = () => import(/* webpackChunkName: "pipelinesGroup" */'../views/list/group')
@@ -37,6 +39,7 @@ const templateEdit = () => import(/* webpackChunkName: "pipelinesTemplate" */'..
 const templateSetting = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/setting.vue')
 const templateInstance = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/instance.vue')
 const templateInstanceCreate = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/instance_create.vue')
+const templatePermission = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/permission.vue')
 
 const atomManage = () => import(/* webpackChunkName: "atomManage" */'../views/list/atomManage.vue')
 
@@ -109,6 +112,11 @@ const routes = [
                         component: AddPipeline
                     },
                     {
+                        path: 'listAuth/:id/:groupName',
+                        name: 'PipelineListAuth',
+                        component: PipelineListAuth
+                    },
+                    {
                         path: ':viewId',
                         component: pipelinesNewList,
                         children: [
@@ -152,6 +160,11 @@ const routes = [
                         path: 'createInstance/:curVersionId/:pipelineName?',
                         name: 'createInstance',
                         component: templateInstanceCreate
+                    },
+                    {
+                        path: 'permission',
+                        name: 'templatePermission',
+                        component: templatePermission
                     }
                 ]
             },
@@ -292,6 +305,11 @@ const routes = [
         path: '/pipeline/ftp/:projectId',
         component: pipelines,
         children: ftpPipelineRoute
+    },
+    {
+        path: '/pipeline/tapd/:projectId',
+        component: pipelines,
+        children: tapdPipelineRoute
     }
 ]
 

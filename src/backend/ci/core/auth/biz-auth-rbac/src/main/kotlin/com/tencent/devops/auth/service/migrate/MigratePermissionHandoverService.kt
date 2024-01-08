@@ -28,14 +28,13 @@
 
 package com.tencent.devops.auth.service.migrate
 
-import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
-import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
+import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
 import org.jboss.logging.Logger
 import org.jooq.DSLContext
 
@@ -49,7 +48,7 @@ class MigratePermissionHandoverService constructor(
     fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO) {
         val handoverFrom = permissionHandoverDTO.handoverFrom
         val handoverToList = permissionHandoverDTO.handoverToList
-        val resourceType = permissionHandoverDTO.resourceType
+        val resourceType = permissionHandoverDTO.resourceType!!
         permissionHandoverDTO.projectList.forEach { projectCode ->
             if (permissionHandoverDTO.managerPermission) {
                 val projectManagerGroupId = authResourceGroupDao.get(
@@ -68,95 +67,41 @@ class MigratePermissionHandoverService constructor(
                     )
                 }
             }
-            var offset = 0
-            val limit = 100
-            do {
-                val resourceList = authResourceService.listByCreator(
-                    resourceType = permissionHandoverDTO.resourceType,
-                    projectCode = projectCode,
-                    creator = handoverFrom,
-                    offset = offset,
-                    limit = limit
-                )
-                resourceList.forEach { resource ->
-                    val resourceCode = resource.resourceCode
-                    val handoverTo = handoverToList.random()
-                    logger.info("handover resource permissions :$projectCode|$resourceCode|$handoverFrom|$handoverTo")
-                    authResourceService.updateCreator(
-                        projectCode = projectCode,
-                        resourceType = resourceType,
-                        resourceCode = resourceCode,
-                        creator = handoverTo
-                    )
-                    val resourceManagerGroup = authResourceGroupDao.get(
-                        dslContext = dslContext,
-                        projectCode = projectCode,
-                        resourceType = resourceType,
-                        resourceCode = resourceCode,
-                        groupCode = DefaultGroupType.MANAGER.value
-                    )
-                    groupService.addGroupMember(
-                        userId = handoverTo,
-                        memberType = USER_TYPE,
-                        expiredAt = GROUP_EXPIRED_TIME,
-                        groupId = resourceManagerGroup!!.relationId.toInt()
-                    )
-                    v2ManagerService.deleteRoleGroupMemberV2(
-                        resourceManagerGroup.relationId.toInt(),
-                        USER_TYPE,
-                        handoverFrom
-                    )
-                }
-            } while (resourceList.size == limit)
-        }
-    }
-
-    fun fitSecToRbacAuth(
-        projectCode: String,
-        projectCreator: String,
-        resourceType: String
-    ) {
-        var offset = 0
-        val limit = 100
-        do {
             val resourceList = authResourceService.listByCreator(
                 resourceType = resourceType,
                 projectCode = projectCode,
-                creator = projectCreator,
-                offset = offset,
-                limit = limit
+                creator = handoverFrom
             )
-            logger.info("fitSecToRbacAuth:$projectCode|$resourceList")
-            resourceList.forEach foreach@{ resource ->
+            resourceList.forEach { resource ->
+                val resourceCode = resource.resourceCode
+                val handoverTo = handoverToList.random()
+                logger.info("handover resource permissions :$projectCode|$resourceCode|$handoverFrom|$handoverTo")
+                authResourceService.updateCreator(
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    creator = handoverTo
+                )
                 val resourceManagerGroup = authResourceGroupDao.get(
                     dslContext = dslContext,
                     projectCode = projectCode,
                     resourceType = resourceType,
-                    resourceCode = resource.resourceCode,
+                    resourceCode = resourceCode,
                     groupCode = DefaultGroupType.MANAGER.value
-                ) ?: return@foreach
-                val groupId = resourceManagerGroup.relationId.toInt()
-                val roleGroupMember = v2ManagerService.getRoleGroupMemberV2(
-                    groupId,
-                    V2PageInfoDTO().apply {
-                        page = 1
-                        pageSize = 10
-                    }
                 )
-                if (roleGroupMember.count == 1 && roleGroupMember.results.first().id == projectCreator) {
-                    logger.info(
-                        "delete resource manager group:$projectCode|${resource.resourceCode}|" +
-                            resourceManagerGroup.groupName
-                    )
-                    v2ManagerService.deleteRoleGroupV2(groupId)
-                    authResourceGroupDao.deleteByIds(
-                        dslContext = dslContext,
-                        ids = listOf(resourceManagerGroup.id)
-                    )
-                }
+                groupService.addGroupMember(
+                    userId = handoverTo,
+                    memberType = USER_TYPE,
+                    expiredAt = GROUP_EXPIRED_TIME,
+                    groupId = resourceManagerGroup!!.relationId.toInt()
+                )
+                v2ManagerService.deleteRoleGroupMemberV2(
+                    resourceManagerGroup.relationId.toInt(),
+                    USER_TYPE,
+                    handoverFrom
+                )
             }
-            offset += limit
-        } while (resourceList.size == limit)
+        }
     }
 
     companion object {

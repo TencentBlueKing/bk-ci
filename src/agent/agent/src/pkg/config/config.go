@@ -46,10 +46,11 @@ import (
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
+	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
-	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
 )
 
 const (
@@ -73,6 +74,7 @@ const (
 	keyEnableDockerBuild   = "devops.docker.enable"
 	KeyLanguage            = "devops.language"
 	KeyImageDebugPortRange = "devops.imagedebug.portrange"
+	KeyEnablePipeline      = "devops.pipeline.enable"
 )
 
 // AgentConfig Agent 配置
@@ -97,6 +99,7 @@ type AgentConfig struct {
 	EnableDockerBuild       bool
 	Language                string
 	ImageDebugPortRange     string
+	EnablePipeline          bool
 }
 
 // AgentEnv Agent 环境配置
@@ -197,13 +200,22 @@ func DetectWorkerVersionByDir(workDir string) string {
 		workDir, nil)
 
 	if err != nil {
-		logs.Warn("detect worker version failed: ", err.Error())
-		logs.Warn("output: ", string(output))
+		logs.Errorf("detect worker version failed: %s, output: %s", err.Error(), string(output))
+		exitcode.CheckSignalWorkerError(err)
 		GAgentEnv.SlaveVersion = ""
 		return ""
 	}
 
-	return parseWorkerVersion(string(output))
+	detectVersion := parseWorkerVersion(string(output))
+
+	// 更新下 worker 的版本信息
+	if detectVersion == "" {
+		logs.Warn("parseWorkerVersion null")
+	} else {
+		GAgentEnv.SlaveVersion = detectVersion
+	}
+
+	return detectVersion
 }
 
 // parseWorkerVersion 解析worker版本
@@ -402,49 +414,73 @@ func LoadAgentConfig() error {
 
 	imageDebugPortRange := conf.Section("").Key(KeyImageDebugPortRange).MustString(DEFAULT_IMAGE_DEBUG_PORT_RANGE)
 
-	GAgentConfig.LogsKeepHours = logsKeepHours
+	enablePipeline := conf.Section("").Key(KeyEnablePipeline).MustBool(false)
 
-	GAgentConfig.BatchInstallKey = strings.TrimSpace(conf.Section("").Key(KeyBatchInstall).String())
+	// -----------
 
 	GAgentConfig.Gateway = landunGateway
 	systemutil.DevopsGateway = landunGateway
 	logs.Info("Gateway: ", GAgentConfig.Gateway)
+
 	GAgentConfig.FileGateway = landunFileGateway
 	logs.Info("FileGateway: ", GAgentConfig.FileGateway)
+
 	GAgentConfig.BuildType = BuildTypeAgent
 	logs.Info("BuildType: ", GAgentConfig.BuildType)
+
 	GAgentConfig.ProjectId = projectId
 	logs.Info("ProjectId: ", GAgentConfig.ProjectId)
+
 	GAgentConfig.AgentId = agentId
 	logs.Info("AgentId: ", GAgentConfig.AgentId)
+
 	GAgentConfig.SecretKey = secretKey
 	logs.Info("SecretKey: ", GAgentConfig.SecretKey)
+
 	GAgentConfig.EnvType = envType
 	logs.Info("EnvType: ", GAgentConfig.EnvType)
+
 	GAgentConfig.ParallelTaskCount = parallelTaskCount
 	logs.Info("ParallelTaskCount: ", GAgentConfig.ParallelTaskCount)
+
 	GAgentConfig.SlaveUser = slaveUser
 	logs.Info("SlaveUser: ", GAgentConfig.SlaveUser)
+
 	GAgentConfig.CollectorOn = collectorOn
 	logs.Info("CollectorOn: ", GAgentConfig.CollectorOn)
+
 	GAgentConfig.TimeoutSec = timeout
 	logs.Info("TimeoutSec: ", GAgentConfig.TimeoutSec)
+
 	GAgentConfig.DetectShell = detectShell
 	logs.Info("DetectShell: ", GAgentConfig.DetectShell)
+
 	GAgentConfig.IgnoreLocalIps = ignoreLocalIps
 	logs.Info("IgnoreLocalIps: ", GAgentConfig.IgnoreLocalIps)
+
+	GAgentConfig.BatchInstallKey = strings.TrimSpace(conf.Section("").Key(KeyBatchInstall).String())
 	logs.Info("BatchInstallKey: ", GAgentConfig.BatchInstallKey)
+
+	GAgentConfig.LogsKeepHours = logsKeepHours
 	logs.Info("logsKeepHours: ", GAgentConfig.LogsKeepHours)
+
 	GAgentConfig.JdkDirPath = jdkDirPath
 	logs.Info("jdkDirPath: ", GAgentConfig.JdkDirPath)
+
 	GAgentConfig.DockerParallelTaskCount = dockerParallelTaskCount
 	logs.Info("DockerParallelTaskCount: ", GAgentConfig.DockerParallelTaskCount)
+
 	GAgentConfig.EnableDockerBuild = enableDocker
 	logs.Info("EnableDockerBuild: ", GAgentConfig.EnableDockerBuild)
+
 	GAgentConfig.Language = language
 	logs.Info("Language:", GAgentConfig.Language)
+
 	GAgentConfig.ImageDebugPortRange = imageDebugPortRange
 	logs.Info("ImageDebugPortRange: ", GAgentConfig.ImageDebugPortRange)
+
+	GAgentConfig.EnablePipeline = enablePipeline
+	logs.Info("EnablePipeline: ", GAgentConfig.EnablePipeline)
 	// 初始化 GAgentConfig 写入一次配置, 往文件中写入一次程序中新添加的 key
 	return GAgentConfig.SaveConfig()
 }
@@ -479,8 +515,9 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(keyEnableDockerBuild + "=" + strconv.FormatBool(GAgentConfig.EnableDockerBuild) + "\n")
 	content.WriteString(KeyLanguage + "=" + GAgentConfig.Language + "\n")
 	content.WriteString(KeyImageDebugPortRange + "=" + GAgentConfig.ImageDebugPortRange + "\n")
+	content.WriteString(KeyEnablePipeline + "=" + strconv.FormatBool(GAgentConfig.EnablePipeline) + "\n")
 
-	err := os.WriteFile(filePath, []byte(content.String()), 0666)
+	err := exitcode.WriteFileWithCheck(filePath, []byte(content.String()), 0666)
 	if err != nil {
 		logs.Error("write config failed:", err.Error())
 		return errors.New("write config failed")

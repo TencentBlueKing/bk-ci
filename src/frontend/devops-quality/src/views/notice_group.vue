@@ -12,8 +12,22 @@
             }">
 
             <div class="group-content">
-                <bk-button theme="primary" class="create-group-btn" v-if="showContent && noticeGroupList.length"
-                    @click="toCreateGroup">{{$t('quality.新增')}}</bk-button>
+                <bk-button
+                    v-perm="{
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: QUALITY_GROUP_RESOURCE_TYPE,
+                            resourceCode: projectId,
+                            action: QUALITY_GROUP_RESOURCE_ACTION.CREATE
+                        }
+                    }"
+                    theme="primary"
+                    class="create-group-btn"
+                    v-if="showContent && noticeGroupList.length"
+                    @click="toCreateGroup"
+                >
+                    {{$t('quality.新增通知组')}}
+                </bk-button>
                 <div class="table-container" v-if="showContent && noticeGroupList.length">
                     <bk-table
                         size="small"
@@ -49,8 +63,39 @@
                         </bk-table-column>
                         <bk-table-column :label="$t('quality.操作')" width="150">
                             <template slot-scope="props">
-                                <span class="handler-btn edit-btn" @click="toEditGroup(props.row)">{{$t('quality.编辑')}}</span>
-                                <span class="handler-btn delete-btn" @click="toDeleteGruop(props.row)">{{$t('quality.删除')}}</span>
+                                <bk-button
+                                    v-perm="{
+                                        hasPermission: props.row.permissions.canEdit,
+                                        disablePermissionApi: true,
+                                        permissionData: {
+                                            projectId: projectId,
+                                            resourceType: QUALITY_GROUP_RESOURCE_TYPE,
+                                            resourceCode: props.row.groupHashId,
+                                            action: QUALITY_GROUP_RESOURCE_ACTION.EDIT
+                                        }
+                                    }"
+                                    class="mr5"
+                                    text
+                                    @click="toEditGroup(props.row)"
+                                >
+                                    {{$t('quality.编辑')}}
+                                </bk-button>
+                                <bk-button
+                                    v-perm="{
+                                        hasPermission: props.row.permissions.canEdit,
+                                        disablePermissionApi: true,
+                                        permissionData: {
+                                            projectId: projectId,
+                                            resourceType: QUALITY_GROUP_RESOURCE_TYPE,
+                                            resourceCode: props.row.groupHashId,
+                                            action: QUALITY_GROUP_RESOURCE_ACTION.DELETE
+                                        }
+                                    }"
+                                    text
+                                    @click="toDeleteGruop(props.row)"
+                                >
+                                    {{$t('quality.删除')}}
+                                </bk-button>
                             </template>
                         </bk-table-column>
                     </bk-table>
@@ -76,6 +121,7 @@
 
 <script>
     import createGroup from '@/components/devops/create_group'
+    import { QUALITY_GROUP_RESOURCE_ACTION, QUALITY_GROUP_RESOURCE_TYPE } from '@/utils/permission.js'
     import { getQueryString } from '@/utils/util'
     import { mapGetters } from 'vuex'
     import emptyData from './empty_data'
@@ -86,7 +132,10 @@
             createGroup
         },
         data () {
+            const { projectId } = this.$route.params
             return {
+                QUALITY_GROUP_RESOURCE_ACTION,
+                QUALITY_GROUP_RESOURCE_TYPE,
                 noticeGroupList: [],
                 showContent: false,
                 loading: {
@@ -114,8 +163,15 @@
                     nameError: false
                 },
                 emptyInfo: {
+                    permissionData: {
+                        projectId: projectId,
+                        resourceType: QUALITY_GROUP_RESOURCE_TYPE,
+                        resourceCode: projectId,
+                        action: QUALITY_GROUP_RESOURCE_ACTION.CREATE
+                    },
                     title: this.$t('quality.暂无通知组'),
-                    desc: this.$t('quality.您可以新增一个通知组')
+                    desc: this.$t('quality.您可以新增一个通知组'),
+                    btnText: this.$t('quality.新增通知组')
                 },
                 urlParams: getQueryString('groupId') || ''
             }
@@ -302,19 +358,6 @@
                     } finally {
                         this.dialogLoading.isLoading = false
                     }
-                } else {
-                    this.$showAskPermissionDialog({
-                        noPermissionList: [{
-                            actionId: this.$permissionActionMap.edit,
-                            resourceId: this.$permissionResourceMap.notifyGroup,
-                            instanceId: [{
-                                id: row.groupHashId,
-                                name: row.name
-                            }],
-                            projectId: this.projectId
-                        }],
-                        applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_manager=group:${row.groupHashId}`
-                    })
                 }
             },
             toDeleteGruop (row) {
@@ -346,19 +389,6 @@
                                 this.requestList()
                             }
                         }
-                    })
-                } else {
-                    this.$showAskPermissionDialog({
-                        noPermissionList: [{
-                            actionId: this.$permissionActionMap.delete,
-                            resourceId: this.$permissionResourceMap.notifyGroup,
-                            instanceId: [{
-                                id: row.groupHashId,
-                                name: row.name
-                            }],
-                            projectId: this.projectId
-                        }],
-                        applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_manager=group:${row.groupHashId}`
                     })
                 }
             }

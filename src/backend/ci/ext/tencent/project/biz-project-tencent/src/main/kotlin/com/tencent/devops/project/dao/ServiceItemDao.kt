@@ -29,6 +29,7 @@ package com.tencent.devops.project.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.project.tables.TServiceItem
 import com.tencent.devops.model.project.tables.records.TServiceItemRecord
 import com.tencent.devops.project.api.pojo.enums.ServiceItemStatusEnum
@@ -37,8 +38,8 @@ import com.tencent.devops.project.pojo.ItemQueryInfo
 import com.tencent.devops.project.pojo.ItemUpdateInfo
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import org.springframework.util.StringUtils
 import java.time.LocalDateTime
 
 @Repository
@@ -170,14 +171,14 @@ class ServiceItemDao {
             if (itemQueryInfo.page != null && itemQueryInfo.pageSize != null) {
                 whereStep.limit((itemQueryInfo.page - 1) * itemQueryInfo.pageSize, itemQueryInfo.pageSize).fetch()
             } else {
-                whereStep.orderBy(UPDATE_TIME.desc()).fetch()
+                whereStep.orderBy(UPDATE_TIME.desc()).skipCheck().fetch()
             }
         }
     }
 
     fun queryCount(dslContext: DSLContext, itemQueryInfo: ItemQueryInfo): Int? {
         return with(TServiceItem.T_SERVICE_ITEM) {
-            val whereStep = dslContext.select(this.ID.countDistinct()).from(this)
+            val whereStep = dslContext.select(DSL.countDistinct(this.ID)).from(this)
             if (itemQueryInfo.itemName != null) {
                 whereStep.where(ITEM_NAME.like("%${itemQueryInfo.itemName}%"))
             }
@@ -190,7 +191,7 @@ class ServiceItemDao {
                 whereStep.where(ITEM_STATUS.`in`(itemStatusList))
             }
 
-            whereStep.fetchOne(0, Int::class.java)
+            whereStep.skipCheck().fetchOne(0, Int::class.java)
         }
     }
 
@@ -210,7 +211,7 @@ class ServiceItemDao {
         return with(TServiceItem.T_SERVICE_ITEM) {
             dslContext.selectFrom(this).where(
                 ID.eq(itemId)
-            ).fetchOne()
+            ).skipCheck().fetchOne()
         }
     }
 
@@ -218,7 +219,7 @@ class ServiceItemDao {
         return with(TServiceItem.T_SERVICE_ITEM) {
             dslContext.selectFrom(this).where(
                 ITEM_CODE.eq(itemCode).and(ITEM_STATUS.eq(ServiceItemStatusEnum.ENABLE.name))
-            ).fetchOne()
+            ).skipCheck().fetchOne()
         }
     }
 
@@ -226,23 +227,13 @@ class ServiceItemDao {
         return with(TServiceItem.T_SERVICE_ITEM) {
             dslContext.selectFrom(this).where(
                 HTML_PATH.eq(htmlPath).and(ITEM_STATUS.eq(ServiceItemStatusEnum.ENABLE.name))
-            ).fetchOne()
-        }
-    }
-
-    fun getItemParent(dslContext: DSLContext): Result<TServiceItemRecord?> {
-        return with(TServiceItem.T_SERVICE_ITEM) {
-            dslContext.selectFrom(this).where(
-                PARENT_ID.isNotNull
-            ).fetch()
+            ).skipCheck().fetchOne()
         }
     }
 
     fun getItemByIds(dslContext: DSLContext, itemIds: Set<String>): Result<TServiceItemRecord?> {
         return with(TServiceItem.T_SERVICE_ITEM) {
-            dslContext.selectFrom(this).where(
-                ID.`in`(itemIds)
-            ).fetch()
+            dslContext.selectFrom(this).where(ID.`in`(itemIds)).skipCheck().fetch()
         }
     }
 
@@ -250,7 +241,7 @@ class ServiceItemDao {
         return with(TServiceItem.T_SERVICE_ITEM) {
             dslContext.selectFrom(this).where(
                 ITEM_CODE.`in`(itemCodes).and(ITEM_STATUS.eq(ServiceItemStatusEnum.ENABLE.name))
-            ).fetch()
+            ).skipCheck().fetch()
         }
     }
 
@@ -260,14 +251,13 @@ class ServiceItemDao {
             if (itemStatusList != null) {
                 baseStep.where(ITEM_STATUS.`in`(itemStatusList))
             }
-            baseStep.orderBy(CREATE_TIME.desc())
-                .fetch()
+            baseStep.orderBy(CREATE_TIME.desc()).skipCheck().fetch()
         }
     }
 
     @Suppress("UNCHECKED_CAST")
     fun convertString(str: String?): Map<String, Any> {
-        return if (!StringUtils.isEmpty(str)) {
+        return if (!str.isNullOrBlank()) {
             JsonUtil.getObjectMapper().readValue(str, Map::class.java) as Map<String, Any>
         } else {
             mapOf()

@@ -121,16 +121,21 @@
                 </template>
             </bk-table>
         </main>
-        
         <bk-sideslider
-            class="create-atom-slider g-slide-radio"
+            :class="{
+                'g-slide-radio': true,
+                'create-atom-slider': true,
+                'create-atom-slider-en': !isZH
+            }"
             :is-show.sync="createAtomsideConfig.show"
             :title="createAtomsideConfig.title"
             :quick-close="createAtomsideConfig.quickClose"
             :width="createAtomsideConfig.width"
             :before-close="cancelCreateAtom">
             <template slot="content">
-                <form class="bk-form create-atom-form" v-if="hasOauth"
+                <form
+                    v-if="hasOauth"
+                    class="bk-form create-atom-form"
                     v-bkloading="{
                         isLoading: createAtomsideConfig.isLoading
                     }">
@@ -209,14 +214,8 @@
                                         :name="item.projectName"
                                     >
                                     </bk-option>
-                                    <div
-                                        slot="extension"
-                                        style="cursor: pointer;"
-                                    >
-                                        <a
-                                            :href="itemUrl"
-                                            target="_blank"
-                                        >
+                                    <div slot="extension" style="cursor: pointer;">
+                                        <a :href="itemUrl" target="_blank">
                                             <i class="devops-icon icon-plus-circle" />
                                             {{ itemText }}
                                         </a>
@@ -317,9 +316,15 @@
                                     class="error-tips"
                                 > {{ $t('store.不开源原因不能为空') }} </p>
                             </div>
+                            <bk-popover class="info-circle-icon" placement="right" max-width="400">
+                                <i class="devops-icon icon-info-circle"></i>
+                                <template slot="content">
+                                    <p> {{ $t('store.debugProjectTips') }} </p>
+                                </template>
+                            </bk-popover>
                         </div>
                         <div class="bk-form-item is-required">
-                            <label class="bk-label"> {{ $t('store.自定义前端') }} </label>
+                            <label class="bk-label"> {{ $t('store.自定义前端UI') }} </label>
                             <div class="bk-form-content atom-item-content">
                                 <bk-radio-group v-model="createAtomForm.frontendType" @change="handleChangeForm">
                                     <bk-radio
@@ -334,7 +339,7 @@
                         <form-tips
                             :tips-content="createTips"
                             class="atom-tip"
-                        ></form-tips>
+                        />
                     </template>
                     <div class="form-footer">
                         <button
@@ -627,7 +632,8 @@
                 },
                 showConvention: false,
                 agreeWithConvention: false,
-                conventionSecond: 5
+                conventionSecond: 5,
+                isZH: true
             }
         },
 
@@ -671,6 +677,7 @@
         },
 
         created () {
+            this.isZH = ['zh-CN', 'zh', 'zh_cn'].includes(document.documentElement.lang)
             this.getLanguage()
             this.checkIsOAuth()
             this.requestList()
@@ -757,7 +764,7 @@
             },
             getLanguage () {
                 this.$store.dispatch('store/getDevelopLanguage').then((res) => {
-                    this.languageList = (res || []).map(({ language }) => ({ name: language, language }))
+                    this.languageList = res || []
                 }).catch((err) => this.$bkMessage({ message: err.message || err, theme: 'error' }))
             },
 
@@ -1081,6 +1088,26 @@
         display: flex;
         align-items: center;
         padding-left: 8px;
+    }
+    .create-atom-slider {
+        .bk-form-item{
+            .bk-label {
+                width: 120px;
+            }
+            .bk-form-content {
+                margin-left: 120px;
+            }
+        }
+    }
+    ::v-deep .create-atom-slider-en {
+        .bk-form-item{
+            .bk-label {
+                width: 160px;
+            }
+            .bk-form-content {
+                margin-left: 160px;
+            }
+        }
     }
     ::v-deep .atom-dialog-wrapper {
         .bk-form-item{

@@ -73,7 +73,10 @@ interface OpJobQuotaSystemResource {
     fun get(
         @ApiParam(value = "构建机类型", required = false)
         @PathParam("jobQuotaVmType")
-        jobQuotaVmType: JobQuotaVmType
+        jobQuotaVmType: JobQuotaVmType,
+        @ApiParam(value = "构建来源", required = false)
+        @QueryParam("channelCode")
+        channelCode: String? = "BS"
     ): Result<List<JobQuotaSystem>>
 
     @ApiOperation("添加系统默认JOB配额信息")
@@ -90,7 +93,10 @@ interface OpJobQuotaSystemResource {
     fun delete(
         @ApiParam(value = "构建机类型", required = true)
         @PathParam("jobQuotaVmType")
-        jobQuotaVmType: JobQuotaVmType
+        jobQuotaVmType: JobQuotaVmType,
+        @ApiParam(value = "构建来源", required = false)
+        @QueryParam("channelCode")
+        channelCode: String? = "BS"
     ): Result<Boolean>
 
     @ApiOperation("更新系统的JOB配额信息")
