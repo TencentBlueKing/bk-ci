@@ -82,7 +82,7 @@ class RbacCredentialPermissionService constructor(
             resourceType = AuthResourceType.PROJECT.value,
             action = buildCredentialAction(authPermission),
             projectCode = projectId,
-            resourceCode = projectId,
+            resourceCode = projectId
         )
         return AuthCacheUtil.cachePermission(cacheKey) {
             client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
@@ -108,7 +108,7 @@ class RbacCredentialPermissionService constructor(
             resourceType = AuthResourceType.TICKET_CREDENTIAL.value,
             action = buildCredentialAction(authPermission),
             projectCode = projectId,
-            resourceCode = resourceCode,
+            resourceCode = resourceCode
         )
         return AuthCacheUtil.cachePermission(cacheKey) {
             client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(

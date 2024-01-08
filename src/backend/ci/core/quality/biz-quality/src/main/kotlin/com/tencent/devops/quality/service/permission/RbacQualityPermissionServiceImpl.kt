@@ -57,7 +57,7 @@ class RbacQualityPermissionServiceImpl(
             resourceType = AuthResourceType.QUALITY_GROUP_NEW.value,
             action = buildQualityGroupAction(authPermission),
             projectCode = projectId,
-            resourceCode = HashUtil.encodeLongId(groupId),
+            resourceCode = HashUtil.encodeLongId(groupId)
         )
         val permissionCheck =
             AuthCacheUtil.cachePermission(cacheKey) {
@@ -86,7 +86,7 @@ class RbacQualityPermissionServiceImpl(
             resourceType = AuthResourceType.QUALITY_GROUP_NEW.value,
             action = buildQualityGroupAction(authPermission),
             projectCode = projectId,
-            resourceCode = projectId,
+            resourceCode = projectId
         )
         return AuthCacheUtil.cachePermission(cacheKey) {
             client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
@@ -183,7 +183,7 @@ class RbacQualityPermissionServiceImpl(
             resourceType = AuthResourceType.QUALITY_RULE.value,
             action = buildQualityRuleAction(authPermission),
             projectCode = projectId,
-            resourceCode = projectId,
+            resourceCode = projectId
         )
         return AuthCacheUtil.cachePermission(cacheKey) {
             client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
@@ -219,7 +219,7 @@ class RbacQualityPermissionServiceImpl(
             resourceType = AuthResourceType.QUALITY_RULE.value,
             action = buildQualityRuleAction(authPermission),
             projectCode = projectId,
-            resourceCode = HashUtil.encodeLongId(ruleId),
+            resourceCode = HashUtil.encodeLongId(ruleId)
         )
         val checkPermission = AuthCacheUtil.cachePermission(cacheKey) {
             client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(

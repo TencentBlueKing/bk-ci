@@ -37,6 +37,6 @@ object AuthCacheKeyUtil {
         projectCode: String,
         resourceCode: String
     ): String {
-        return "${userId}_${resourceType}_${action}_${projectCode}_${resourceCode}"
+        return "${userId}_${resourceType}_${action}_${projectCode}_$resourceCode"
     }
 }

@@ -106,7 +106,7 @@ class RbacRepositoryPermissionService(
             resourceType = resourceType,
             action = action,
             projectCode = projectId,
-            resourceCode = resourceCode,
+            resourceCode = resourceCode
         )
         return AuthCacheUtil.cachePermission(cacheKey) {
             client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(

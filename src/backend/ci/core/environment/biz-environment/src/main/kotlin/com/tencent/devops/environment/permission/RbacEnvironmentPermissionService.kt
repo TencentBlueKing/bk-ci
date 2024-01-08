@@ -97,7 +97,7 @@ class RbacEnvironmentPermissionService(
             resourceType = envResourceType,
             action = buildEnvAction(permission),
             projectCode = projectId,
-            resourceCode = HashUtil.encodeLongId(envId),
+            resourceCode = HashUtil.encodeLongId(envId)
         )
         return AuthCacheUtil.cachePermission(cacheKey) {
             client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
@@ -122,7 +122,7 @@ class RbacEnvironmentPermissionService(
             resourceType = AuthResourceType.PROJECT.value,
             action = buildEnvAction(permission),
             projectCode = projectId,
-            resourceCode = projectId,
+            resourceCode = projectId
         )
         return AuthCacheUtil.cachePermission(cacheKey) {
             client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
@@ -213,7 +213,7 @@ class RbacEnvironmentPermissionService(
             resourceType = nodeResourceType,
             action = buildNodeAction(permission),
             projectCode = projectId,
-            resourceCode = HashUtil.encodeLongId(nodeId),
+            resourceCode = HashUtil.encodeLongId(nodeId)
         )
         return AuthCacheUtil.cachePermission(cacheKey) {
             client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
@@ -234,7 +234,7 @@ class RbacEnvironmentPermissionService(
             resourceType = AuthResourceType.PROJECT.value,
             action = buildNodeAction(permission),
             projectCode = projectId,
-            resourceCode = projectId,
+            resourceCode = projectId
         )
         return AuthCacheUtil.cachePermission(cacheKey) {
             client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(

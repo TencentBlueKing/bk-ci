@@ -58,7 +58,7 @@ class RbacAuthPermissionApi(
             resourceType = rbacResourceType,
             action = action,
             projectCode = projectCode,
-            resourceCode = projectCode,
+            resourceCode = projectCode
         )
         return AuthCacheUtil.cachePermission(cacheKey) {
             client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
@@ -86,7 +86,7 @@ class RbacAuthPermissionApi(
             resourceType = resourceType.value,
             action = action,
             projectCode = projectCode,
-            resourceCode = resourceCode,
+            resourceCode = resourceCode
         )
         return AuthCacheUtil.cachePermission(cacheKey) {
             client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
@@ -115,7 +115,7 @@ class RbacAuthPermissionApi(
             resourceType = resourceType.value,
             action = action,
             projectCode = projectCode,
-            resourceCode = resource.resourceCode,
+            resourceCode = resource.resourceCode
         )
         return AuthCacheUtil.cachePermission(cacheKey) {
             client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByInstance(

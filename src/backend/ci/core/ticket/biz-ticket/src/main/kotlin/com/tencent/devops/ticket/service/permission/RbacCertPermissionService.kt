@@ -71,7 +71,7 @@ class RbacCertPermissionService constructor(
             resourceType = AuthResourceType.TICKET_CERT.value,
             action = buildCertAction(authPermission),
             projectCode = projectId,
-            resourceCode = resourceCode,
+            resourceCode = resourceCode
         )
         val checkResult = AuthCacheUtil.cachePermission(cacheKey) {
             client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
@@ -99,7 +99,7 @@ class RbacCertPermissionService constructor(
             resourceType = AuthResourceType.PROJECT.value,
             action = buildCertAction(authPermission),
             projectCode = projectId,
-            resourceCode = projectId,
+            resourceCode = projectId
         )
         return AuthCacheUtil.cachePermission(cacheKey) {
             client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
@@ -125,7 +125,7 @@ class RbacCertPermissionService constructor(
             resourceType = AuthResourceType.PROJECT.value,
             action = buildCertAction(authPermission),
             projectCode = projectId,
-            resourceCode = resourceCode,
+            resourceCode = resourceCode
         )
         return AuthCacheUtil.cachePermission(cacheKey) {
             client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
