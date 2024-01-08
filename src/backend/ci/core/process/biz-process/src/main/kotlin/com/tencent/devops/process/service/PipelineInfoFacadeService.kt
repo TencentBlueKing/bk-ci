@@ -559,7 +559,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         yaml: String,
-        yamlPath: String,
+        yamlFileName: String,
         branchName: String,
         isDefaultBranch: Boolean,
         aspects: LinkedList<IPipelineTransferAspect>? = null
@@ -610,7 +610,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         yaml: String,
-        yamlPath: String,
+        yamlFileName: String,
         branchName: String,
         isDefaultBranch: Boolean,
         aspects: LinkedList<IPipelineTransferAspect>? = null

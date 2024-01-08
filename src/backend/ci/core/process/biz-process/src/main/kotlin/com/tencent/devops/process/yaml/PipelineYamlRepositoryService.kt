@@ -193,7 +193,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             userId = action.data.setting.enableUser,
             projectId = projectId,
             yaml = yamlContent.content,
-            yamlPath = yamlFile.yamlPath,
+            yamlFileName = yamlFile.yamlPath.removePrefix(".ci/"),
             branchName = branch,
             isDefaultBranch = branch == action.data.context.defaultBranch,
             aspects = PipelineTransferAspectLoader.initByDefaultTriggerOn(defaultRepo = {
@@ -303,7 +303,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             yaml = yamlContent.content,
-            yamlPath = yamlFile.yamlPath,
+            yamlFileName = yamlFile.yamlPath.removePrefix(".ci/"),
             branchName = branch,
             isDefaultBranch = branch == action.data.context.defaultBranch,
             aspects = PipelineTransferAspectLoader.initByDefaultTriggerOn(defaultRepo = {
