@@ -25,16 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.modelCreate.pojo
+package com.tencent.devops.process.yaml.creator.inner
 
-import com.tencent.devops.common.pipeline.matrix.DispatchInfo
-import com.tencent.devops.process.yaml.v2.models.Resources
-import com.tencent.devops.process.yaml.v2.models.job.Job
+import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.process.yaml.transfer.inner.TransferCreatorImpl
+import org.springframework.context.annotation.Primary
+import org.springframework.stereotype.Component
 
-data class RdsDispatchInfo(
-    override val name: String,
-    val job: Job,
-    val projectCode: String,
-    var defaultImage: String,
-    val resources: Resources? = null
-) : DispatchInfo(name)
+@Primary
+@Component
+class TXTransferCreatorImpl : TransferCreatorImpl() {
+    override fun defaultLinuxDispatchType(): BuildType = BuildType.PUBLIC_DEVCLOUD
+}

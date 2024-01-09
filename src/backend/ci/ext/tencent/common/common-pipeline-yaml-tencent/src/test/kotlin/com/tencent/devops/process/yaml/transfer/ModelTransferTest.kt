@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.modelTransfer
+package com.tencent.devops.process.yaml.transfer
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -45,15 +45,15 @@ import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineLabel
-import com.tencent.devops.process.yaml.modelTransfer.aspect.IPipelineTransferAspect
-import com.tencent.devops.process.yaml.modelTransfer.aspect.IPipelineTransferAspectTrigger
-import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferAspectLoader
-import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferAspectWrapper
-import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferJoinPoint
-import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreator
-import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreatorImpl
-import com.tencent.devops.process.yaml.modelTransfer.pojo.ModelTransferInput
-import com.tencent.devops.process.yaml.modelTransfer.pojo.YamlTransferInput
+import com.tencent.devops.process.yaml.transfer.aspect.IPipelineTransferAspect
+import com.tencent.devops.process.yaml.transfer.aspect.IPipelineTransferAspectTrigger
+import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectLoader
+import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectWrapper
+import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferJoinPoint
+import com.tencent.devops.process.yaml.transfer.inner.TransferCreator
+import com.tencent.devops.process.yaml.transfer.inner.TransferCreatorImpl
+import com.tencent.devops.process.yaml.transfer.pojo.ModelTransferInput
+import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml

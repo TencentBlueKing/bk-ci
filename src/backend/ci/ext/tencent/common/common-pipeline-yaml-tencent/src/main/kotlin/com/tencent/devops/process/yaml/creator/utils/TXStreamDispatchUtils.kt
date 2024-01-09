@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.modelCreate.utils
+package com.tencent.devops.process.yaml.creator.utils
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -54,7 +54,7 @@ import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.pipeline.type.windows.WindowsDispatchType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
-import com.tencent.devops.process.yaml.modelCreate.pojo.enums.DispatchBizType
+import com.tencent.devops.process.yaml.creator.pojo.enums.DispatchBizType
 import com.tencent.devops.process.yaml.v2.utils.StreamDispatchUtils
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.job.Container

@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.modelCreate
+package com.tencent.devops.process.yaml.creator
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.JsonUtil
@@ -35,12 +35,12 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.matrix.MatrixConfig.Companion.MATRIX_CONTEXT_KEY_PREFIX
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
-import com.tencent.devops.process.yaml.modelCreate.inner.TXInnerModelCreator
-import com.tencent.devops.process.yaml.modelCreate.pojo.PreCIDispatchInfo
-import com.tencent.devops.process.yaml.modelCreate.pojo.RdsDispatchInfo
-import com.tencent.devops.process.yaml.modelCreate.pojo.enums.DispatchBizType
-import com.tencent.devops.process.yaml.modelCreate.utils.TXStreamDispatchUtils
-import com.tencent.devops.process.yaml.modelTransfer.TransferCacheService
+import com.tencent.devops.process.yaml.creator.inner.TXInnerModelCreator
+import com.tencent.devops.process.yaml.creator.pojo.PreCIDispatchInfo
+import com.tencent.devops.process.yaml.creator.pojo.RdsDispatchInfo
+import com.tencent.devops.process.yaml.creator.pojo.enums.DispatchBizType
+import com.tencent.devops.process.yaml.creator.utils.TXStreamDispatchUtils
+import com.tencent.devops.process.yaml.transfer.TransferCacheService
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.job.Job
 import org.springframework.beans.factory.annotation.Autowired

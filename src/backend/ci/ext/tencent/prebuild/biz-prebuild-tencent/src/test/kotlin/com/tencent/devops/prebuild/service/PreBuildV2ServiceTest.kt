@@ -14,7 +14,7 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineId
-import com.tencent.devops.process.yaml.modelCreate.ModelCreate
+import com.tencent.devops.process.yaml.creator.ModelCreate
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import io.mockk.verify
 import org.jooq.DSLContext
