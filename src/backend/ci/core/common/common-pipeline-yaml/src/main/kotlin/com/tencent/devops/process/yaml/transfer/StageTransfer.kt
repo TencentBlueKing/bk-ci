@@ -81,6 +81,7 @@ import org.springframework.stereotype.Component
 import com.tencent.devops.process.yaml.v3.models.stage.Stage as StreamV3Stage
 
 @Component
+@Suppress("ComplexMethod")
 class StageTransfer @Autowired(required = false) constructor(
     val client: Client,
     val objectMapper: ObjectMapper,

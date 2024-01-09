@@ -25,19 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v2.stageCheck
+package com.tencent.devops.process.yaml.v2.check
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class StageReviews(
-    val flows: List<Flow>?,
-    val variables: Map<String, ReviewVariable>?,
-    val description: String?
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class Flow(
-    val name: String,
-    val reviewers: List<String>
+data class StageCheck(
+    val reviews: StageReviews?,
+    val gates: List<Gate>?,
+    @JsonProperty("timeout-hours")
+    val timeoutHours: Int?
 )

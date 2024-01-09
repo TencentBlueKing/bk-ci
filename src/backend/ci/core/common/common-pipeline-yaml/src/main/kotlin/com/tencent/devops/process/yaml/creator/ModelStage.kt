@@ -50,8 +50,8 @@ import com.tencent.devops.process.yaml.utils.ModelCreateUtil
 import com.tencent.devops.process.yaml.utils.PathMatchUtils
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.job.JobRunsOnType
-import com.tencent.devops.process.yaml.v2.stageCheck.ReviewVariable
-import com.tencent.devops.process.yaml.v2.stageCheck.StageCheck
+import com.tencent.devops.process.yaml.v2.check.ReviewVariable
+import com.tencent.devops.process.yaml.v2.check.StageCheck
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
