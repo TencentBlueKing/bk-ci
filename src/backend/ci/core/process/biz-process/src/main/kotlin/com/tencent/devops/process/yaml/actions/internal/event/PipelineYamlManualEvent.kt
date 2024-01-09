@@ -26,7 +26,7 @@
  *
  */
 
-package com.tencent.devops.process.yaml.actions.pacActions.data
+package com.tencent.devops.process.yaml.actions.internal.event
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent

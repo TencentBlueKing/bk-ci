@@ -26,7 +26,7 @@
  *
  */
 
-package com.tencent.devops.process.yaml.actions.pacActions
+package com.tencent.devops.process.yaml.actions.internal
 
 import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.process.yaml.actions.BaseAction

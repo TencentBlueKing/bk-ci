@@ -50,7 +50,7 @@ import com.tencent.devops.process.webhook.WebhookEventFactory
 import com.tencent.devops.process.yaml.actions.EventActionFactory
 import com.tencent.devops.process.yaml.actions.data.PacRepoSetting
 import com.tencent.devops.process.yaml.actions.data.YamlTriggerPipeline
-import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlManualEvent
+import com.tencent.devops.process.yaml.actions.internal.event.PipelineYamlManualEvent
 import com.tencent.devops.process.yaml.mq.PipelineYamlEnableEvent
 import com.tencent.devops.process.yaml.mq.PipelineYamlTriggerEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind

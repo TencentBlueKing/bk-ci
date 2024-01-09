@@ -45,9 +45,9 @@ import com.tencent.devops.process.yaml.actions.data.ActionData
 import com.tencent.devops.process.yaml.actions.data.EventCommonData
 import com.tencent.devops.process.yaml.actions.data.PacRepoSetting
 import com.tencent.devops.process.yaml.actions.data.context.PacTriggerContext
-import com.tencent.devops.process.yaml.actions.pacActions.PipelineYamlDeleteAction
-import com.tencent.devops.process.yaml.actions.pacActions.PipelineYamlManualAction
-import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlManualEvent
+import com.tencent.devops.process.yaml.actions.internal.PipelineYamlDeleteAction
+import com.tencent.devops.process.yaml.actions.internal.PipelineYamlManualAction
+import com.tencent.devops.process.yaml.actions.internal.event.PipelineYamlManualEvent
 import com.tencent.devops.process.yaml.actions.tgit.TGitIssueActionGit
 import com.tencent.devops.process.yaml.actions.tgit.TGitMrActionGit
 import com.tencent.devops.process.yaml.actions.tgit.TGitNoteActionGit

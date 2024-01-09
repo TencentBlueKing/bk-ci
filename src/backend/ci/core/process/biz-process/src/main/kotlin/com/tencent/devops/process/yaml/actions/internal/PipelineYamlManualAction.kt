@@ -26,7 +26,7 @@
  *
  */
 
-package com.tencent.devops.process.yaml.actions.pacActions
+package com.tencent.devops.process.yaml.actions.internal
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
@@ -36,7 +36,7 @@ import com.tencent.devops.process.yaml.actions.data.ActionData
 import com.tencent.devops.process.yaml.actions.data.ActionMetaData
 import com.tencent.devops.process.yaml.actions.data.EventCommonData
 import com.tencent.devops.process.yaml.actions.data.EventCommonDataCommit
-import com.tencent.devops.process.yaml.actions.pacActions.data.PipelineYamlManualEvent
+import com.tencent.devops.process.yaml.actions.internal.event.PipelineYamlManualEvent
 import com.tencent.devops.process.yaml.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.yaml.git.pojo.PacGitCred
 import com.tencent.devops.process.yaml.git.pojo.PacGitPushResult
