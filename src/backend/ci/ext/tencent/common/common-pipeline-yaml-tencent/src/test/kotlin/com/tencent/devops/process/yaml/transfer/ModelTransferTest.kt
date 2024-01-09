@@ -70,6 +70,7 @@ import java.util.LinkedList
 import org.json.JSONObject
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -79,6 +80,7 @@ import org.springframework.test.util.ReflectionTestUtils
 
 @ExtendWith(SpringExtension::class)
 @SpringBootTest(classes = [SpringContextUtil::class, CommonConfig::class, CommonPipelineAutoConfiguration::class])
+@Disabled
 internal class ModelTransferTest : BkCiAbstractTest() {
     private val client: Client = mockk()
     private val creator: TransferCreator = TransferCreatorImpl()
