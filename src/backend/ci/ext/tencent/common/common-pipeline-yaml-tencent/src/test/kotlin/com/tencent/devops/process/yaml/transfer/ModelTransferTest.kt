@@ -122,7 +122,6 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         transferCache = transferCache
     )
 
-
     private val pipelineInfo = PipelineInfo(
         projectId = "",
         pipelineId = "",

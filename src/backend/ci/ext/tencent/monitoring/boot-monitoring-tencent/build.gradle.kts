@@ -28,4 +28,3 @@
 dependencies {
     api(project(":ext:tencent:monitoring:biz-monitoring-tencent"))
 }
-

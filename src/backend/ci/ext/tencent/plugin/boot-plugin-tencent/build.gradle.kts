@@ -30,5 +30,3 @@ dependencies {
     api(project(":ext:tencent:plugin:biz-plugin-tencent"))
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
 }
-
-
