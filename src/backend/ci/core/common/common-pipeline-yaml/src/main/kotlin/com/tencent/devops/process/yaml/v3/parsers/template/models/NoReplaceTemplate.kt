@@ -29,6 +29,7 @@ package com.tencent.devops.process.yaml.v3.parsers.template.models
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.process.yaml.v3.models.Extends
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
@@ -40,6 +41,7 @@ data class NoReplaceTemplate(
     var version: String?,
     var name: String?,
     var label: List<String>? = null,
+    @JsonProperty("on")
     var triggerOn: PreTriggerOn?,
     var extends: Extends?,
     var resources: Resources?

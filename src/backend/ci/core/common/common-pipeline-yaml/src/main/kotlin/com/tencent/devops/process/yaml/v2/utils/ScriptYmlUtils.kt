@@ -224,8 +224,8 @@ object ScriptYmlUtils {
             val startString = line.trim().replace("\\s".toRegex(), "")
             if (startString.startsWith("if:") || startString.startsWith("-if:")) {
                 val ifPrefix = line.substring(0 until line.indexOfFirst { it == ':' } + 1)
-                val condition = line.substring(line.indexOfFirst { it == '"' } + 1 until line.length).trimEnd()
-                    .removeSuffix("\"")
+                val condition = line.removePrefix(ifPrefix).trim()
+                    .removeSurrounding("\"")
 
                 // 去掉花括号
                 val baldExpress = condition.replace("\${{", "").replace("}}", "").trim()
