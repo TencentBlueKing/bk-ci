@@ -45,6 +45,7 @@ import com.tencent.devops.remotedev.service.WatermarkService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
+import com.tencent.devops.remotedev.service.tuxiaochao.TxcService
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.glassfish.jersey.server.ChunkedOutput
 import org.slf4j.LoggerFactory
@@ -63,7 +64,8 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     private val workspaceCommon: WorkspaceCommon,
     private val permissionService: PermissionService,
     private val expertSupportService: ExpertSupportService,
-    private val client: Client
+    private val client: Client,
+    private val txcService: TxcService
 ) : UserRemoteDevResource {
 
     companion object {
@@ -172,5 +174,15 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         } else {
             Result(message, res)
         }
+    }
+
+    override fun getTxcToken(userId: String, openId: String, nickName: String, avatar: String): Result<String> {
+        return Result(
+            txcService.getTxcToken(
+                openId = openId,
+                nickName = nickName,
+                avatar = avatar
+            )
+        )
     }
 }
