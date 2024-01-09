@@ -50,7 +50,7 @@ import com.tencent.devops.process.yaml.actions.BaseAction
 import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.common.Constansts
 import com.tencent.devops.process.yaml.git.pojo.PacGitPushResult
-import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferAspectLoader
+import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectLoader
 import com.tencent.devops.process.yaml.pojo.PipelineYamlTriggerLock
 import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
 import org.slf4j.LoggerFactory
@@ -104,7 +104,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 }
             }
         } catch (ignored: Exception) {
-            logger.error(
+            logger.warn(
                 "Failed to deploy pipeline yaml|$projectId|${action.data.setting.repoHashId}|yamlFile:$yamlFile",
                 ignored
             )
@@ -192,7 +192,8 @@ class PipelineYamlRepositoryService @Autowired constructor(
         val deployPipelineResult = pipelineInfoFacadeService.createYamlPipeline(
             userId = action.data.setting.enableUser,
             projectId = projectId,
-            yml = yamlContent.content,
+            yaml = yamlContent.content,
+            yamlFileName = yamlFile.yamlPath.removePrefix(".ci/"),
             branchName = branch,
             isDefaultBranch = branch == action.data.context.defaultBranch,
             aspects = PipelineTransferAspectLoader.initByDefaultTriggerOn(defaultRepo = {
@@ -301,7 +302,8 @@ class PipelineYamlRepositoryService @Autowired constructor(
             userId = action.data.setting.enableUser,
             projectId = projectId,
             pipelineId = pipelineId,
-            yml = yamlContent.content,
+            yaml = yamlContent.content,
+            yamlFileName = yamlFile.yamlPath.removePrefix(".ci/"),
             branchName = branch,
             isDefaultBranch = branch == action.data.context.defaultBranch,
             aspects = PipelineTransferAspectLoader.initByDefaultTriggerOn(defaultRepo = {
@@ -370,7 +372,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 filePath = filePath
             )
         } catch (ignored: Exception) {
-            logger.error("Failed to delete pipeline yaml|$projectId|${action.format()}", ignored)
+            logger.warn("Failed to delete pipeline yaml|$projectId|${action.format()}", ignored)
             throw ignored
         }
     }

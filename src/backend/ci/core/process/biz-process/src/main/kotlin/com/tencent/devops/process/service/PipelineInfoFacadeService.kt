@@ -93,7 +93,7 @@ import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
-import com.tencent.devops.process.yaml.modelTransfer.aspect.IPipelineTransferAspect
+import com.tencent.devops.process.yaml.transfer.aspect.IPipelineTransferAspect
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -558,7 +558,8 @@ class PipelineInfoFacadeService @Autowired constructor(
     fun createYamlPipeline(
         userId: String,
         projectId: String,
-        yml: String,
+        yaml: String,
+        yamlFileName: String,
         branchName: String,
         isDefaultBranch: Boolean,
         aspects: LinkedList<IPipelineTransferAspect>? = null
@@ -569,21 +570,21 @@ class PipelineInfoFacadeService @Autowired constructor(
         } else {
             VersionStatus.BRANCH
         }
-        // TODO #8161 流水线名称管理：如果yaml文件没有定义name，需要用文件名作为流水线名称
         val newResource = transferModelAndSetting(
             userId = userId,
             projectId = projectId,
-            yml = yml,
+            yaml = yaml,
             isDefaultBranch = isDefaultBranch,
             branchName = branchName,
             aspects = aspects
         )
+        val pipelineName = newResource.model.name.ifBlank { yamlFileName }
         val result = createPipeline(
             userId = userId,
             projectId = projectId,
-            model = newResource.model,
+            model = newResource.model.copy(name = pipelineName),
             channelCode = ChannelCode.BS,
-            yaml = yml,
+            yaml = yaml,
             versionStatus = versionStatus,
             branchName = branchName,
             pipelineAsCodeSettings = pipelineAsCodeSettings
@@ -596,6 +597,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = result.pipelineId,
             setting = newResource.setting.copy(
+                pipelineName = pipelineName,
                 pipelineAsCodeSettings = pipelineAsCodeSettings
             ),
             versionStatus = versionStatus,
@@ -608,7 +610,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        yml: String,
+        yaml: String,
+        yamlFileName: String,
         branchName: String,
         isDefaultBranch: Boolean,
         aspects: LinkedList<IPipelineTransferAspect>? = null
@@ -619,7 +622,14 @@ class PipelineInfoFacadeService @Autowired constructor(
         } else {
             VersionStatus.BRANCH
         }
-        val newResource = transferModelAndSetting(userId, projectId, yml, isDefaultBranch, branchName, aspects)
+        val newResource = transferModelAndSetting(
+            userId = userId,
+            projectId = projectId,
+            yaml = yaml,
+            isDefaultBranch = isDefaultBranch,
+            branchName = branchName,
+            aspects = aspects
+        )
         newResource.setting.projectId = projectId
         newResource.setting.pipelineId = pipelineId
         // 通过PAC模式创建或保存的流水线均打开PAC
@@ -640,7 +650,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             model = newResource.model,
             channelCode = ChannelCode.BS,
-            yaml = yml,
+            yaml = yaml,
             savedSetting = savedSetting,
             versionStatus = versionStatus,
             branchName = branchName,
@@ -705,7 +715,7 @@ class PipelineInfoFacadeService @Autowired constructor(
     private fun transferModelAndSetting(
         userId: String,
         projectId: String,
-        yml: String,
+        yaml: String,
         isDefaultBranch: Boolean,
         branchName: String,
         aspects: LinkedList<IPipelineTransferAspect>? = null
@@ -716,11 +726,11 @@ class PipelineInfoFacadeService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = null,
                 actionType = TransferActionType.FULL_YAML2MODEL,
-                data = TransferBody(oldYaml = yml),
+                data = TransferBody(oldYaml = yaml),
                 aspects = aspects
             )
             if (result.modelAndSetting == null) {
-                logger.warn("TRANSFER_YAML|$projectId|$userId|$isDefaultBranch|yml=\n$yml")
+                logger.warn("TRANSFER_YAML|$projectId|$userId|$isDefaultBranch|yml=\n$yaml")
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
                 )
@@ -728,7 +738,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             result.modelAndSetting!!
         } catch (ignore: Throwable) {
             if (ignore is ErrorCodeException) throw ignore
-            logger.warn("TRANSFER_YAML|$projectId|$userId|$branchName|$isDefaultBranch|yml=\n$yml", ignore)
+            logger.warn("TRANSFER_YAML|$projectId|$userId|$branchName|$isDefaultBranch|yml=\n$yaml", ignore)
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_OCCURRED_IN_TRANSFER
             )
@@ -1333,7 +1343,12 @@ class PipelineInfoFacadeService @Autowired constructor(
             if (setting.pipelineAsCodeSettings?.enable == true) {
                 // 检查yaml是否已经在默认分支删除
                 yamlFacadeService.deleteBeforeCheck(userId, projectId, pipelineId)
-                // TODO #8161 关联了yaml的流水需要做额外解绑
+                pipelineSettingFacadeService.saveSetting(
+                    userId, projectId, pipelineId,
+                    setting.copy(
+                        pipelineAsCodeSettings = PipelineAsCodeSettings(false)
+                    )
+                )
             }
             watcher.start("s_r_pipeline_del")
             val deletePipelineResult = pipelineRepositoryService.deletePipeline(

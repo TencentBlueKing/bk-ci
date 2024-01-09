@@ -182,6 +182,19 @@ class PipelineYamlInfoDao {
         }
     }
 
+    fun deleteByPipelineId(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ) {
+        with(TPipelineYamlInfo.T_PIPELINE_YAML_INFO) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .execute()
+        }
+    }
+
     fun countYamlPipeline(
         dslContext: DSLContext,
         projectId: String,
