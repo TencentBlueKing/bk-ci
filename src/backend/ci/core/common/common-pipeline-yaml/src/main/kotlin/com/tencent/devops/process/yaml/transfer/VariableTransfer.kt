@@ -49,6 +49,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
+@Suppress("ComplexMethod")
 class VariableTransfer @Autowired constructor() {
 
     companion object {

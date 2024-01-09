@@ -48,7 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-@Suppress("NestedBlockDepth")
+@Suppress("NestedBlockDepth", "ComplexMethod")
 class YamlIndexService @Autowired constructor(
     val dispatchTransfer: DispatchTransfer,
     val elementTransfer: ElementTransfer

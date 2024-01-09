@@ -88,10 +88,10 @@ import com.tencent.devops.process.yaml.v3.models.stage.Stage
 import com.tencent.devops.process.yaml.v3.models.stage.StageLabel
 import com.tencent.devops.process.yaml.v3.models.step.Step
 import com.tencent.devops.process.yaml.v3.parameter.ParametersType
-import com.tencent.devops.process.yaml.v3.stageCheck.Flow
-import com.tencent.devops.process.yaml.v3.stageCheck.PreStageCheck
-import com.tencent.devops.process.yaml.v3.stageCheck.StageCheck
-import com.tencent.devops.process.yaml.v3.stageCheck.StageReviews
+import com.tencent.devops.process.yaml.v3.check.Flow
+import com.tencent.devops.process.yaml.v3.check.PreStageCheck
+import com.tencent.devops.process.yaml.v3.check.StageCheck
+import com.tencent.devops.process.yaml.v3.check.StageReviews
 import java.io.BufferedReader
 import java.io.StringReader
 import java.util.Random
@@ -99,7 +99,7 @@ import java.util.regex.Pattern
 import org.apache.commons.text.StringEscapeUtils
 import org.slf4j.LoggerFactory
 
-@Suppress("MaximumLineLength", "ComplexCondition")
+@Suppress("MaximumLineLength", "ComplexCondition", "ComplexMethod")
 object ScriptYmlUtils {
 
     private val logger = LoggerFactory.getLogger(ScriptYmlUtils::class.java)

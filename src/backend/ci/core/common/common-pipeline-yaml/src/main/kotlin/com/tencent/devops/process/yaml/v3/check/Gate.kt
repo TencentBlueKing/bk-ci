@@ -25,19 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v2.stageCheck
+package com.tencent.devops.process.yaml.v3.check
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.process.yaml.v3.models.GateNotices
+import com.tencent.devops.process.yaml.v3.models.gate.ContinueOnFail
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class StageReviews(
-    val flows: List<Flow>?,
-    val variables: Map<String, ReviewVariable>?,
-    val description: String?
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class Flow(
+data class Gate(
     val name: String,
-    val reviewers: List<String>
+    val rule: List<String>,
+    @JsonProperty("notify-on-fail")
+    val notifyOnFail: List<GateNotices>,
+    @JsonProperty("continue-on-fail")
+    val continueOnFail: ContinueOnFail?
 )

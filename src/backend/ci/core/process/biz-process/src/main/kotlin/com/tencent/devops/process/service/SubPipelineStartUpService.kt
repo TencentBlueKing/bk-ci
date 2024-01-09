@@ -343,8 +343,9 @@ class SubPipelineStartUpService @Autowired constructor(
         }
         existPipelines.add(pipelineId)
         val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId) ?: return
-        val existModel = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, pipeline.version)?.model
-            ?: return
+        val existModel = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId, pipelineId, pipeline.version
+        )?.model ?: return
 
         val currentExistPipelines = HashSet(existPipelines)
         existModel.stages.forEachIndexed stage@{ index, stage ->

@@ -23,20 +23,28 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.process.yaml.actions.pacActions.data
+package com.tencent.devops.process.yaml.v3.check
 
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- * 用户主动操作的事件
- */
-data class PipelineYamlManualEvent(
-    val userId: String,
-    val projectId: String,
-    val repoHashId: String,
-    val scmType: ScmType
-) : CodeWebhookEvent
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class PreStageReviews(
+    val flows: List<PreFlow>?,
+    val variables: Map<String, ReviewVariable>?,
+    val description: String?,
+    @JsonProperty("content-format")
+    val contentFormat: String?,
+    @JsonProperty("notify-type")
+    val notifyType: List<String>?,
+    @JsonProperty("chat-id")
+    val notifyGroups: List<String>?
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class PreFlow(
+    val name: String,
+    val reviewers: Any
+)

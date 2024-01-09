@@ -25,11 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v2.stageCheck
+package com.tencent.devops.process.yaml.v3.check
 
-import com.tencent.devops.process.yaml.v2.parameter.Parameters
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
-data class GateTemplate(
-    val gates: List<Gate>,
-    val parameters: List<Parameters>?
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class ReviewVariable(
+    val label: String?,
+    val type: String,
+    val default: Any?,
+    val values: Any?,
+    val description: String?
 )

@@ -425,6 +425,15 @@ BEGIN
         ADD COLUMN `ONLY_DRAFT` bit(1) DEFAULT b'0' COMMENT '是否存在草稿版本';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_TEMPLATE'
+                    AND COLUMN_NAME = 'DESC') THEN
+    ALTER TABLE `T_TEMPLATE`
+        ADD COLUMN `DESC` varchar(1024) DEFAULT NULL COMMENT '描述';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

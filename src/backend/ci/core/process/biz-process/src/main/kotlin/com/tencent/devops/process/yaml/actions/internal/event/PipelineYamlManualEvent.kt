@@ -23,21 +23,20 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.process.yaml.v3.stageCheck
+package com.tencent.devops.process.yaml.actions.internal.event
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.process.yaml.v3.models.GateNotices
-import com.tencent.devops.process.yaml.v3.models.gate.ContinueOnFail
+import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class Gate(
-    val name: String,
-    val rule: List<String>,
-    @JsonProperty("notify-on-fail")
-    val notifyOnFail: List<GateNotices>,
-    @JsonProperty("continue-on-fail")
-    val continueOnFail: ContinueOnFail?
-)
+/**
+ * 用户主动操作的事件
+ */
+data class PipelineYamlManualEvent(
+    val userId: String,
+    val projectId: String,
+    val repoHashId: String,
+    val scmType: ScmType
+) : CodeWebhookEvent
