@@ -1167,19 +1167,19 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_TRIGGER_DETAIL`
 
 CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_INFO`
 (
-    `PROJECT_ID`     varchar(64)  NOT NULL COMMENT '蓝盾项目ID',
-    `REPO_HASH_ID`   varchar(64) NOT NULL COMMENT '代码库HASH ID',
-    `FILE_PATH`      varchar(512) NOT NULL DEFAULT '' COMMENT '文件路径',
-    `PIPELINE_ID`    varchar(64)  NOT NULL DEFAULT '' COMMENT '流水线ID',
+    `PROJECT_ID`   varchar(64)                            NOT NULL COMMENT '蓝盾项目ID',
+    `REPO_HASH_ID` varchar(64)                            NOT NULL COMMENT '代码库HASH ID',
+    `FILE_PATH`    varchar(512)                           NOT NULL DEFAULT '' COMMENT '文件路径',
+    `DIRECTORY`    varchar(512) default '.ci'             not null comment 'yaml文件目录',
+    `PIPELINE_ID`  varchar(64)                            NOT NULL DEFAULT '' COMMENT '流水线ID',
     `DELETE`       bit(1)       DEFAULT b'0' COMMENT '是否删除',
-    `CREATOR`        varchar(64) NOT NULL COMMENT '创建人',
-    `MODIFIER`        varchar(64) NOT NULL COMMENT '修改人',
-    `CREATE_TIME`    timestamp             default CURRENT_TIMESTAMP not null comment '创建时间',
-    `UPDATE_TIME`   timestamp             default CURRENT_TIMESTAMP not null comment '修改时间',
+    `CREATOR`      varchar(64)                            NOT NULL COMMENT '创建人',
+    `MODIFIER`     varchar(64)                            NOT NULL COMMENT '修改人',
+    `CREATE_TIME`  timestamp    default CURRENT_TIMESTAMP not null comment '创建时间',
+    `UPDATE_TIME`  timestamp    default CURRENT_TIMESTAMP not null comment '修改时间',
     PRIMARY KEY (`PROJECT_ID`, `REPO_HASH_ID`, `FILE_PATH`),
-    UNIQUE UQE_PIPELINE(`PROJECT_ID`, `PIPELINE_ID`)
+    UNIQUE UQE_PIPELINE (`PROJECT_ID`, `PIPELINE_ID`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '流水线yaml信息表';
-
 
 CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_VERSION`
 (
@@ -1188,6 +1188,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_VERSION`
     `FILE_PATH`     varchar(512) NOT NULL DEFAULT '' COMMENT '文件路径',
     `BLOB_ID`       varchar(64)  NOT NULL DEFAULT '' COMMENT '文件blob_id',
     `COMMIT_ID`       varchar(64)  NOT NULL DEFAULT '' COMMENT '文件commitId',
+    `REF`   varchar(512)  NULL DEFAULT '' COMMENT '来源分支/tag',
     `PIPELINE_ID`   varchar(64)  NOT NULL DEFAULT '' COMMENT '流水线ID',
     `VERSION`       int(11) COMMENT '流水线版本',
     `CREATOR`       varchar(64)  NOT NULL COMMENT '创建人',
@@ -1244,5 +1245,21 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_OPERATION_LOG` (
   PRIMARY KEY (`ID`),
   KEY `PROJECT_PIPELINE_IDX` (`PROJECT_ID`,`PIPELINE_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线资源版本表';
+
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_WEBHOOK_VERSION`
+(
+    `PROJECT_ID`         varchar(32)  not null comment '项目ID',
+    `PIPELINE_ID`        varchar(34)  not null comment '流水线ID',
+    `VERSION`            int(11) COMMENT '流水线版本',
+    `TASK_ID`            varchar(34)  not null comment '插件ID',
+    `TASK_PARAMS`        mediumtext   NOT NULL COMMENT '插件参数',
+    `TASK_REPO_HASH_ID`  varchar(45)  null comment '插件配置的hashId',
+    `TASK_REPO_NAME`     varchar(128) null comment '插件配置的代码库别名',
+    `TASK_REPO_TYPE`     varchar(32)  null comment '插件配置的代码库类型,ID|NAME',
+    `REPOSITORY_TYPE`    varchar(64)  not null comment '代码库类型',
+    `REPOSITORY_HASH_ID` varchar(64)  not null comment '代码库hashId',
+    `EVENT_TYPE`         varchar(32)  not null comment '事件类型',
+    UNIQUE UNI_PROJECT_PIPELINE_TASK (`PROJECT_ID`, `PIPELINE_ID`, `VERSION`, `TASK_ID`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '流水线webhook版本';
 
 SET FOREIGN_KEY_CHECKS = 1;
