@@ -449,7 +449,15 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             every { pipelineViewGroupDao.listByPipelineId(anyDslContext(), any(), any()) } returns listOf(pvg)
             justRun { pipelineViewGroupDao.create(anyDslContext(), any(), any(), any(), any()) }
             justRun { pipelineViewGroupDao.remove(anyDslContext(), any(), any(), any()) }
-            Assertions.assertDoesNotThrow { self.updateGroupAfterPipelineUpdate("test", "p-test", "test", "user00", "user00") }
+            Assertions.assertDoesNotThrow {
+                self.updateGroupAfterPipelineUpdate(
+                    projectId = "test",
+                    pipelineId = "p-test",
+                    pipelineName = "test",
+                    creator = "user00",
+                    userId = "user00"
+                )
+            }
         }
     }
 

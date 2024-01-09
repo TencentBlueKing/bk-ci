@@ -50,7 +50,7 @@ import com.tencent.devops.process.yaml.actions.BaseAction
 import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.common.Constansts
 import com.tencent.devops.process.yaml.git.pojo.PacGitPushResult
-import com.tencent.devops.process.yaml.modelTransfer.aspect.PipelineTransferAspectLoader
+import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectLoader
 import com.tencent.devops.process.yaml.pojo.PipelineYamlTriggerLock
 import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
 import org.slf4j.LoggerFactory

@@ -897,7 +897,8 @@ class PipelineRepositoryService constructor(
                         if (activeBranchVersion != null) {
                             // 更新
                             operationLogType = OperationLogType.UPDATE_BRANCH_VERSION
-                            operationLogParams = activeBranchVersion.versionName ?: activeBranchVersion.version.toString()
+                            operationLogParams = activeBranchVersion.versionName
+                                ?: activeBranchVersion.version.toString()
                             branchAction = BranchVersionAction.ACTIVE
                             version = activeBranchVersion.version
                         } else {
