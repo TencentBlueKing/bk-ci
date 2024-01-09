@@ -1,4 +1,3 @@
----
 version: v2.0
 name: POST_MASTER
 label: []
@@ -140,7 +139,7 @@ stages:
         no_scan_path: go
         focuser: ""
         qywxg_id: ""
-        only_vul_notify: 1
+        only_vul_notify: "1"
       runAdditionalOptions: {}
   - id: job_7mD
     name: 腾讯代码规范分析
@@ -192,20 +191,20 @@ stages:
           GOLANG_RULE:
           - standard_go
         C_CPP_RULE: []
-        rtxReceiverType: 0
+        rtxReceiverType: "0"
         rtxReceiverList: []
         botWebhookUrl: ""
-        botRemindRange: 1
-        botRemindSeverity: 7
+        botRemindRange: "1"
+        botRemindSeverity: "7"
         botRemaindTools: []
-        emailReceiverType: 0
+        emailReceiverType: "0"
         emailReceiverList: []
         emailCCReceiverList: []
-        instantReportStatus: 2
+        instantReportStatus: "2"
         reportDate: []
         reportTime: ""
         reportTools: []
-        toolScanType: 1
+        toolScanType: "1"
         mrCommentEnable: true
         newDefectJudgeFromDate: ""
         transferAuthorList: []
@@ -350,7 +349,7 @@ stages:
       with:
         case_stability_mode: 1
         git_url: "${{ BK_CI_GIT_REPO_URL }}"
-        is_stable: 1
+        is_stable: "1"
         lang_type: go
         pipeline_id: "${{ BK_CI_PIPELINE_ID }}"
         pipeline_name: "${{ BK_CI_PIPELINE_NAME }}"
@@ -374,7 +373,7 @@ stages:
         commit_id: ""
         git_url: ""
         is_static_scan: true
-        test_type: 0
+        test_type: "0"
         unit_namespace: ""
       runAdditionalOptions: {}
     - name: 同源后台质量红线
@@ -387,7 +386,7 @@ stages:
         is_use_apiTest: "${{ is_use_apiTest }}"
         is_use_report: "${{ is_use_report }}"
         is_use_unitTest: "${{ is_use_unitTest }}"
-        poll_time: 5
+        poll_time: "5"
         test_type: unitest
       runAdditionalOptions: {}
 - name: 编译

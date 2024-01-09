@@ -1,4 +1,3 @@
----
 version: v2.0
 name: log_download代码质量扫描
 label: []
@@ -39,7 +38,7 @@ stages:
       with:
         beAutoLang: false
         checkerSetType: normal
-        toolScanType: 1
+        toolScanType: "1"
         languages:
         - C_CPP
         tools: ""

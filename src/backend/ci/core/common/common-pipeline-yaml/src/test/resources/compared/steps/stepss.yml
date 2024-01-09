@@ -1,4 +1,3 @@
----
 version: v2.0
 name: ""
 label: []
@@ -68,20 +67,20 @@ stages:
           GOLANG_RULE:
           - standard_go
         C_CPP_RULE: []
-        rtxReceiverType: 0
+        rtxReceiverType: "0"
         rtxReceiverList: []
         botWebhookUrl: ""
-        botRemindRange: 1
-        botRemindSeverity: 7
+        botRemindRange: "1"
+        botRemindSeverity: "7"
         botRemaindTools: []
-        emailReceiverType: 0
+        emailReceiverType: "0"
         emailReceiverList: []
         emailCCReceiverList: []
-        instantReportStatus: 2
+        instantReportStatus: "2"
         reportDate: []
         reportTime: ""
         reportTools: []
-        toolScanType: 1
+        toolScanType: "1"
         mrCommentEnable: true
         newDefectJudgeFromDate: ""
         transferAuthorList: []
@@ -123,20 +122,20 @@ stages:
           GOLANG_RULE:
           - standard_go
         C_CPP_RULE: []
-        rtxReceiverType: 0
+        rtxReceiverType: "0"
         rtxReceiverList: []
         botWebhookUrl: ""
-        botRemindRange: 1
-        botRemindSeverity: 7
+        botRemindRange: "1"
+        botRemindSeverity: "7"
         botRemaindTools: []
-        emailReceiverType: 0
+        emailReceiverType: "0"
         emailReceiverList: []
         emailCCReceiverList: []
-        instantReportStatus: 2
+        instantReportStatus: "2"
         reportDate: []
         reportTime: ""
         reportTools: []
-        toolScanType: 1
+        toolScanType: "1"
         mrCommentEnable: true
         newDefectJudgeFromDate: ""
         transferAuthorList: []
@@ -178,20 +177,20 @@ stages:
           GOLANG_RULE:
           - standard_go
         C_CPP_RULE: []
-        rtxReceiverType: 0
+        rtxReceiverType: "0"
         rtxReceiverList: []
         botWebhookUrl: ""
-        botRemindRange: 1
-        botRemindSeverity: 7
+        botRemindRange: "1"
+        botRemindSeverity: "7"
         botRemaindTools: []
-        emailReceiverType: 0
+        emailReceiverType: "0"
         emailReceiverList: []
         emailCCReceiverList: []
-        instantReportStatus: 2
+        instantReportStatus: "2"
         reportDate: []
         reportTime: ""
         reportTools: []
-        toolScanType: 1
+        toolScanType: "1"
         mrCommentEnable: true
         newDefectJudgeFromDate: ""
         transferAuthorList: []
@@ -233,20 +232,20 @@ stages:
           GOLANG_RULE:
           - standard_go
         C_CPP_RULE: []
-        rtxReceiverType: 0
+        rtxReceiverType: "0"
         rtxReceiverList: []
         botWebhookUrl: ""
-        botRemindRange: 1
-        botRemindSeverity: 7
+        botRemindRange: "1"
+        botRemindSeverity: "7"
         botRemaindTools: []
-        emailReceiverType: 0
+        emailReceiverType: "0"
         emailReceiverList: []
         emailCCReceiverList: []
-        instantReportStatus: 2
+        instantReportStatus: "2"
         reportDate: []
         reportTime: ""
         reportTools: []
-        toolScanType: 1
+        toolScanType: "1"
         mrCommentEnable: true
         newDefectJudgeFromDate: ""
         transferAuthorList: []
@@ -288,20 +287,20 @@ stages:
           GOLANG_RULE:
           - standard_go
         C_CPP_RULE: []
-        rtxReceiverType: 0
+        rtxReceiverType: "0"
         rtxReceiverList: []
         botWebhookUrl: ""
-        botRemindRange: 1
-        botRemindSeverity: 7
+        botRemindRange: "1"
+        botRemindSeverity: "7"
         botRemaindTools: []
-        emailReceiverType: 0
+        emailReceiverType: "0"
         emailReceiverList: []
         emailCCReceiverList: []
-        instantReportStatus: 2
+        instantReportStatus: "2"
         reportDate: []
         reportTime: ""
         reportTools: []
-        toolScanType: 1
+        toolScanType: "1"
         mrCommentEnable: true
         newDefectJudgeFromDate: ""
         transferAuthorList: []
@@ -343,20 +342,20 @@ stages:
           GOLANG_RULE:
           - standard_go
         C_CPP_RULE: []
-        rtxReceiverType: 0
+        rtxReceiverType: "0"
         rtxReceiverList: []
         botWebhookUrl: ""
-        botRemindRange: 1
-        botRemindSeverity: 7
+        botRemindRange: "1"
+        botRemindSeverity: "7"
         botRemaindTools: []
-        emailReceiverType: 0
+        emailReceiverType: "0"
         emailReceiverList: []
         emailCCReceiverList: []
-        instantReportStatus: 2
+        instantReportStatus: "2"
         reportDate: []
         reportTime: ""
         reportTools: []
-        toolScanType: 1
+        toolScanType: "1"
         mrCommentEnable: true
         newDefectJudgeFromDate: ""
         transferAuthorList: []
@@ -398,20 +397,20 @@ stages:
           GOLANG_RULE:
           - standard_go
         C_CPP_RULE: []
-        rtxReceiverType: 0
+        rtxReceiverType: "0"
         rtxReceiverList: []
         botWebhookUrl: ""
-        botRemindRange: 1
-        botRemindSeverity: 7
+        botRemindRange: "1"
+        botRemindSeverity: "7"
         botRemaindTools: []
-        emailReceiverType: 0
+        emailReceiverType: "0"
         emailReceiverList: []
         emailCCReceiverList: []
-        instantReportStatus: 2
+        instantReportStatus: "2"
         reportDate: []
         reportTime: ""
         reportTools: []
-        toolScanType: 1
+        toolScanType: "1"
         mrCommentEnable: true
         newDefectJudgeFromDate: ""
         transferAuthorList: []

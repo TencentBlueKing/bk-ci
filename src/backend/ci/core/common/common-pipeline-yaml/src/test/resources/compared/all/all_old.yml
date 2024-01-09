@@ -1,4 +1,3 @@
----
 version: v2.0
 name: ""
 label: []
@@ -41,7 +40,7 @@ stages:
       with:
         beAutoLang: false
         checkerSetType: normal
-        toolScanType: 1
+        toolScanType: "1"
         languages:
         - C_CPP
         tools: "${{ parameters.tools }}"
@@ -90,7 +89,7 @@ stages:
       pool-name: docker
     services: []
     steps:
-    - run: 123
+    - run: "123"
       runAdditionalOptions: {}
     env:
       output_content: "all-job-1 [基本语法] 执行完成"

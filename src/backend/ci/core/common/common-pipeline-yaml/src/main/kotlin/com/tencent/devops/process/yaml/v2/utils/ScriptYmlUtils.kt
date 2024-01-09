@@ -50,6 +50,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.yaml.transfer.TransferMapper
 import com.tencent.devops.process.yaml.v2.enums.StreamMrEventAction
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
@@ -116,9 +117,9 @@ object ScriptYmlUtils {
     @Throws(JsonProcessingException::class)
     fun formatYaml(yamlStr: String): String {
         // replace custom tag
-        val yamlNormal = formatYamlCustom(yamlStr)
+//        val yamlNormal = formatYamlCustom(yamlStr)
         // replace anchor tag
-        return YamlUtil.loadYamlRetryOnAccident(yamlNormal)
+        return TransferMapper.formatYaml(yamlStr)
     }
 
     fun parseVersion(yamlStr: String?): YmlVersion? {

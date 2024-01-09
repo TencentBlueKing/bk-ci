@@ -1,4 +1,3 @@
----
 version: v2.0
 name: ""
 label: []
@@ -43,12 +42,12 @@ stages:
     - serviceId: mysql1
       image: mysql:8.0
       with:
-        password: 123456
+        password: "123456"
     if: world == world
     steps:
     - name: root_step_1
       id: root_step_1
-      if: if world == world
+      if: world == world
       uses: UploadArtifactory@1.*
       with:
         path: test.txt
@@ -254,7 +253,7 @@ notices:
   content: "this is a email notice,content is hello."
   ccs:
   - user3
-  if: if SUCCESS
+  if: SUCCESS
 - type: wework-message
   receivers:
   - user1
@@ -274,15 +273,15 @@ notices:
   ccs:
   - ruotiantang
   - "${{ci.actor}}"
-  if: if FAILURE
+  if: FAILURE
 - type: wework-message
   receivers:
   - "${{ci.actor}}"
   content: "${{ variables.EVENT }}触发 STREAM-TEST环境-全部语法测试(模板) 测试失败"
-  if: if FAILURE
+  if: FAILURE
 - type: wework-chat
   content: "${{ variables.EVENT }}触发 STREAM-TEST环境-全部语法测试(模板) 测试失败"
-  if: if FAILURE
+  if: FAILURE
   chat-id:
   - "${{ci.actor}}"
 finally: []
