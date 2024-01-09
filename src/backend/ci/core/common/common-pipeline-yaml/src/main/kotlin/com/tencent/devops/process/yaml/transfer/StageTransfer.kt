@@ -69,11 +69,11 @@ import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
 import com.tencent.devops.process.yaml.v3.models.stage.StageLabel
-import com.tencent.devops.process.yaml.v3.stageCheck.PreFlow
-import com.tencent.devops.process.yaml.v3.stageCheck.PreStageCheck
-import com.tencent.devops.process.yaml.v3.stageCheck.PreStageReviews
-import com.tencent.devops.process.yaml.v3.stageCheck.ReviewVariable
-import com.tencent.devops.process.yaml.v3.stageCheck.StageCheck
+import com.tencent.devops.process.yaml.v3.check.PreFlow
+import com.tencent.devops.process.yaml.v3.check.PreStageCheck
+import com.tencent.devops.process.yaml.v3.check.PreStageReviews
+import com.tencent.devops.process.yaml.v3.check.ReviewVariable
+import com.tencent.devops.process.yaml.v3.check.StageCheck
 import com.tencent.devops.process.yaml.v3.utils.ScriptYmlUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

@@ -25,15 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v3.stageCheck
+package com.tencent.devops.process.yaml.v3.check
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.tencent.devops.process.yaml.v3.enums.ContentFormat
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class ReviewVariable(
-    val label: String?,
-    val type: String,
-    val default: Any?,
-    val values: Any?,
-    val description: String?
+data class StageReviews(
+    val flows: List<Flow>?,
+    val variables: Map<String, ReviewVariable>?,
+    val description: String?,
+    val contentFormat: ContentFormat,
+    val notifyType: List<String>?,
+    val notifyGroups: List<String>?
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class Flow(
+    val name: String,
+    val reviewers: List<String>
 )

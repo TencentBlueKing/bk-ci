@@ -29,7 +29,7 @@ package com.tencent.devops.process.yaml.v3.models.stage
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
-import com.tencent.devops.process.yaml.v3.stageCheck.PreStageCheck
+import com.tencent.devops.process.yaml.v3.check.PreStageCheck
 import io.swagger.annotations.ApiModelProperty
 
 interface IPreStage

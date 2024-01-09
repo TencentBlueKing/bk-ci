@@ -25,11 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v3.stageCheck
+package com.tencent.devops.process.yaml.v3.check
 
-import com.tencent.devops.process.yaml.v3.parameter.Parameters
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.process.yaml.v3.models.Template
 
-data class GateTemplate(
-    val gates: List<Gate>,
-    val parameters: List<Parameters>?
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class PreTemplateStageCheck(
+    val reviews: PreStageReviews?,
+    val gates: List<Template>?,
+    @JsonProperty("timeout-hours")
+    val timeoutHours: Int?
 )
