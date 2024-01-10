@@ -414,7 +414,7 @@ class CreateControl @Autowired constructor(
             afterCreateWorkspace(event, ws)
         }.onFailure {
             logger.error("create workspace ${event.workspaceName} error ${it.message}", it)
-            workspaceCreateFail(ws)
+            workspaceCreateFail(ws, event)
         }
     }
 
@@ -508,7 +508,7 @@ class CreateControl @Autowired constructor(
             // 创建失败
             // websocket 通知失败
             logger.warn("create workspace ${event.workspaceName} failed")
-            workspaceCreateFail(ws)
+            workspaceCreateFail(ws, event)
         }
 
         workspaceCommon.dispatchWebsocketPushEvent(
@@ -655,12 +655,17 @@ class CreateControl @Autowired constructor(
         return true
     }
 
-    private fun workspaceCreateFail(ws: WorkspaceRecord) {
+    private fun workspaceCreateFail(
+        ws: WorkspaceRecord, event: RemoteDevUpdateEvent
+    ) {
         if (ws.ownerType == WorkspaceOwnerType.PROJECT) {
+            val imageId = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, ws.workspaceName)?.imageId ?: ""
+            val envId = event.environmentUid ?: ""
             workspaceCommon.updateStatus2DeliveringFailed(
                 workspace = ws,
                 action = WorkspaceAction.CREATE,
-                notifyTemplateCode = "WINDOWS_GPU_CREATE_FAILED"
+                notifyTemplateCode = "WINDOWS_GPU_CREATE_FAILED",
+                noticeParams = mapOf("imageId" to imageId, "envId" to envId)
             )
         } else {
             workspaceDao.deleteWorkspace(ws.workspaceName, dslContext)
@@ -711,7 +716,7 @@ class CreateControl @Autowired constructor(
         if (yaml.isBlank()) {
             logger.warn(
                 "create workspace get devfile blank,return." +
-                    "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
+                        "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
             )
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
@@ -915,9 +920,9 @@ class CreateControl @Autowired constructor(
     private fun startCloudResourceCountCheck(type: String, zone: String) =
         workspaceCommon.syncStartCloudResourceList().count {
             it.status == 11 &&
-                it.machineType == type &&
-                it.zoneId.replace(Regex("\\d+"), "") == zone &&
-                it.locked != true
+                    it.machineType == type &&
+                    it.zoneId.replace(Regex("\\d+"), "") == zone &&
+                    it.locked != true
         }
 
     private fun doPreparing(workspace: Workspace) {
@@ -945,7 +950,7 @@ class CreateControl @Autowired constructor(
             userId
         }
         return subUserId.replace(Regex("[@_]"), "-") +
-            "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
+                "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
     }
 
     // 判断用户定义的镜像是否在默认镜像白名单列表中

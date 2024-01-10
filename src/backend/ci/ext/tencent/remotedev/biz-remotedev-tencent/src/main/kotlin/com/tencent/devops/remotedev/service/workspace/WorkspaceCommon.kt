@@ -657,7 +657,8 @@ class WorkspaceCommon @Autowired constructor(
     fun updateStatus2DeliveringFailed(
         workspace: WorkspaceRecord,
         action: WorkspaceAction,
-        notifyTemplateCode: String
+        notifyTemplateCode: String,
+        noticeParams: Map<String, String> = emptyMap()
     ) {
         updateStatusAndCreateHistory(
             workspace = workspace,
@@ -673,7 +674,7 @@ class WorkspaceCommon @Autowired constructor(
                     WorkspaceRecord::projectId.name to workspace.projectId,
                     WorkspaceRecord::createUserId.name to workspace.createUserId,
                     NotifyUtils.WEWORK_GROUP_KEY to weworkId!!
-                ),
+                ).plus(noticeParams),
                 notifyType = mutableSetOf(NotifyType.WEWORK_GROUP.name),
                 markdownContent = false
             )
