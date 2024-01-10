@@ -7,12 +7,12 @@ import com.tencent.devops.process.pojo.PipelineExportContext
 import com.tencent.devops.process.pojo.PipelineExportInfo
 import com.tencent.devops.process.pojo.PipelineExportV2YamlConflictMapBaseItem
 import com.tencent.devops.process.pojo.PipelineExportV2YamlConflictMapItem
+import com.tencent.devops.process.yaml.v2.check.PreFlow
+import com.tencent.devops.process.yaml.v2.check.PreStageCheck
+import com.tencent.devops.process.yaml.v2.check.PreStageReviews
+import com.tencent.devops.process.yaml.v2.check.ReviewVariable
 import com.tencent.devops.process.yaml.v2.models.job.PreJob
 import com.tencent.devops.process.yaml.v2.models.stage.PreStage
-import com.tencent.devops.process.yaml.v2.stageCheck.PreFlow
-import com.tencent.devops.process.yaml.v2.stageCheck.PreStageCheck
-import com.tencent.devops.process.yaml.v2.stageCheck.PreStageReviews
-import com.tencent.devops.process.yaml.v2.stageCheck.ReviewVariable
 
 object ExportStage {
 
