@@ -81,6 +81,7 @@ import org.springframework.test.util.ReflectionTestUtils
 @ExtendWith(SpringExtension::class)
 @SpringBootTest(classes = [SpringContextUtil::class, CommonConfig::class, CommonPipelineAutoConfiguration::class])
 @Disabled
+@Suppress("MaxLineLength")
 internal class ModelTransferTest : BkCiAbstractTest() {
     private val client: Client = mockk()
     private val creator: TransferCreator = TransferCreatorImpl()
