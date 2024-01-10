@@ -27,9 +27,12 @@
 
 package com.tencent.devops.misc.service.project
 
+import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.misc.dao.project.ProjectDataMigrateHistoryDao
 import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistory
 import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistoryQueryParam
+import com.tencent.devops.misc.utils.MiscUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -37,6 +40,7 @@ import org.springframework.stereotype.Service
 @Service
 class ProjectDataMigrateHistoryService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation,
     private val projectDataMigrateHistoryDao: ProjectDataMigrateHistoryDao
 ) {
 
@@ -52,11 +56,29 @@ class ProjectDataMigrateHistoryService @Autowired constructor(
     }
 
     /**
-     * 判断项目的数据是否最近一次一次是否成功迁移至迁移库
+     * 判断项目或者流水线的数据是否能迁移
      * @param queryParam 查询参数
      * @return 布尔值
      */
-    fun isProjectDataMigrated(queryParam: ProjectDataMigrateHistoryQueryParam): Boolean {
-        return projectDataMigrateHistoryDao.getLatestProjectDataMigrateHistory(dslContext, queryParam) != null
+    fun isDataCanMigrate(queryParam: ProjectDataMigrateHistoryQueryParam): Boolean {
+        val projectId = queryParam.projectId
+        val pipelineId = queryParam.pipelineId
+        // 判读项目或者流水线的数据是否能迁移
+        val migratingFlag = if (pipelineId.isNullOrBlank()) {
+            redisOperation.isMember(
+                key = MiscUtils.getMigratingProjectsRedisKey(SystemModuleEnum.PROCESS.name),
+                item = projectId
+            )
+        } else {
+            redisOperation.isMember(
+                key = MiscUtils.getMigratingPipelinesRedisKey(SystemModuleEnum.PROCESS.name),
+                item = pipelineId
+            )
+        }
+        // 判断项目或者流水线的数据是否能迁移
+        return !migratingFlag || projectDataMigrateHistoryDao.getLatestProjectDataMigrateHistory(
+            dslContext = dslContext,
+            queryParam = queryParam
+        ) == null
     }
 }

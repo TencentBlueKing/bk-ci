@@ -37,7 +37,6 @@ import com.tencent.devops.common.api.constant.KEY_SUMMARY
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.KEY_WEIGHT
 import com.tencent.devops.common.api.constant.NAME
-import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.SystemModuleEnum
@@ -70,16 +69,19 @@ import com.tencent.devops.store.dao.common.StoreErrorCodeInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
+import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureRequest
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
+import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
+import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
 import com.tencent.devops.store.pojo.common.KEY_ATOM_STATUS
 import com.tencent.devops.store.pojo.common.KEY_ATOM_TYPE
@@ -126,14 +128,14 @@ import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.utils.StoreUtils
 import com.tencent.devops.store.utils.VersionUtils
-import java.math.BigDecimal
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 import org.apache.commons.collections4.ListUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.math.BigDecimal
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 /**
  * 插件业务逻辑类
@@ -558,6 +560,97 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         return atomResult
     }
 
+    /**
+     * 根据插件代码和版本号集合批量获取插件信息
+     */
+    override fun getAtomInfos(
+        codeVersions: Set<AtomCodeVersionReqItem>
+    ): Result<List<AtomRunInfo>> {
+        val atomRunInfos = mutableListOf<AtomRunInfo>()
+        codeVersions.forEach {
+            val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, it.atomCode)
+            val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, it.version)
+            if (!atomRunInfoJson.isNullOrBlank()) {
+                try {
+                    val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
+                    if (atomRunInfo.atomStatus != null && atomRunInfo.version == it.version) {
+                        atomRunInfos.add(atomRunInfo)
+                    } else {
+                        atomRunInfos.add(
+                            setCache(
+                                atomRunInfoKey = atomRunInfoKey,
+                                version = it.version,
+                                atomCode = it.atomCode
+                            )
+                        )
+                    }
+                } catch (e: Exception) {
+                    atomRunInfos.add(
+                        setCache(
+                            atomRunInfoKey = atomRunInfoKey,
+                            version = it.version,
+                            atomCode = it.atomCode
+                        )
+                    )
+                    logger.error("atomRunInfoJson convert error: $it", e)
+                }
+            } else {
+                atomRunInfos.add(
+                    setCache(
+                        atomRunInfoKey = atomRunInfoKey,
+                        version = it.version,
+                        atomCode = it.atomCode
+                    )
+                )
+            }
+        }
+        return Result(atomRunInfos)
+    }
+
+    fun setCache(
+        atomRunInfoKey: String,
+        version: String,
+        atomCode: String
+    ): AtomRunInfo {
+        val atomRunInfoFromDb = getAtomRunInfo(
+            atomCode = atomCode,
+            version = version,
+            dslContext = dslContext
+        )
+        // 将db中的环境信息写入缓存
+        redisOperation.hset(atomRunInfoKey, version, JsonUtil.toJson(atomRunInfoFromDb))
+        return atomRunInfoFromDb
+    }
+
+    fun getAtomRunInfo(
+        atomCode: String,
+        version: String,
+        dslContext: DSLContext
+    ): AtomRunInfo {
+        val tAtomRecord = atomDao.getPipelineAtom(
+            dslContext = dslContext,
+            atomCode = atomCode,
+            version = version
+        ) ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf("$atomCode:$version")
+        )
+        val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+            dslContext = dslContext,
+            storeCode = atomCode,
+            storeType = StoreTypeEnum.ATOM.type.toByte()
+        ) ?: ""
+        return AtomRunInfo(
+            atomCode = atomCode,
+            atomName = tAtomRecord.name,
+            version = version,
+            initProjectCode = initProjectCode,
+            jobType = if (tAtomRecord.jobType == null) null else JobTypeEnum.valueOf(tAtomRecord.jobType),
+            buildLessRunFlag = tAtomRecord.buildLessRunFlag,
+            inputTypeInfos = marketAtomCommonService.generateInputTypeInfos(tAtomRecord.props),
+            atomStatus = tAtomRecord.atomStatus
+        )
+    }
     /**
      * 根据项目代码、插件代码和版本号获取插件信息
      */

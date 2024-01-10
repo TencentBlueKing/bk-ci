@@ -63,7 +63,9 @@ data class NewHeartbeatInfo(
     @ApiModelProperty("docker构建信息列表")
     var dockerTaskList: List<ThirdPartyDockerBuildInfo>?,
     @ApiModelProperty("忙碌运行docker中任务数量")
-    var dockerBusyTaskSize: Int = 0
+    var dockerBusyTaskSize: Int = 0,
+    @ApiModelProperty("Agent退出的错误信息")
+    val errorExitData: AgentErrorExitData?
 ) {
     companion object {
         fun dummyHeartbeat(projectId: String, agentId: Long): NewHeartbeatInfo {
@@ -81,7 +83,8 @@ data class NewHeartbeatInfo(
                 projectId = projectId,
                 heartbeatTime = System.currentTimeMillis(),
                 dockerParallelTaskCount = 0,
-                dockerTaskList = listOf()
+                dockerTaskList = listOf(),
+                errorExitData = null
             )
         }
     }

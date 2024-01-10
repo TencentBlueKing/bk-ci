@@ -382,6 +382,37 @@ class RemoteDevService @Autowired constructor(
         }
     }
 
+    fun rebuildWorkspace(event: WorkspaceOperateEvent): Boolean {
+        val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
+            .rebuildWorkspace(event.userId, event.workspaceName, event.imageCosFile ?: "")
+        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
+            .waitTaskFinish(event.userId, taskId, event.type)
+
+        if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
+            dispatchWorkspaceOpHisDao.update(
+                dslContext, taskId, EnvironmentActionStatus.SUCCEEDED
+            )
+            // 更新db状态
+            dispatchWorkspaceDao.updateWorkspaceStatus(
+                workspaceName = event.workspaceName,
+                status = EnvStatusEnum.running,
+                dslContext = dslContext
+            )
+
+            return true
+        } else {
+            dispatchWorkspaceOpHisDao.update(
+                dslContext, taskId, EnvironmentActionStatus.FAILED
+            )
+            throw BuildFailureException(
+                ErrorCodeEnum.BASE_STOP_VM_ERROR.errorType,
+                ErrorCodeEnum.BASE_STOP_VM_ERROR.errorCode,
+                ErrorCodeEnum.BASE_STOP_VM_ERROR.getErrorMessage(),
+                "errorMessage:$failedMsg"
+            )
+        }
+    }
+
     fun deleteWorkspace(event: WorkspaceOperateEvent): Boolean {
         val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .deleteWorkspace(event.userId, event.workspaceName)

@@ -14,5 +14,6 @@ enum class ErrorCodeEnum(
     ENVIRONMENT_STATUS_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2122009, "获取环境状态接口异常"),
     LIST_CGS_ERROR(ErrorType.THIRD_PARTY, 2122010, "获取listcgs接口异常"),
     RESOURCE_VM_ERROR(ErrorType.THIRD_PARTY, 2122011, "获取机器资源接口异常"),
-    CLOUD_DESKTOP_EXIST(ErrorType.THIRD_PARTY, 2122019, "用户名下已存在该云桌面")
+    CLOUD_DESKTOP_EXIST(ErrorType.THIRD_PARTY, 2122019, "用户名下已存在该云桌面"),
+    LIST_IMAGE_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2122012, "获取标准镜像接口异常")
 }

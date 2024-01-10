@@ -25,19 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.lock
+package com.tencent.devops.process.strategy.factory
 
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.process.strategy.bus.IUserPipelinePermissionCheckStrategy
+import com.tencent.devops.process.strategy.bus.impl.UserArchivedPipelinePermissionCheckStrategy
+import com.tencent.devops.process.strategy.bus.impl.UserNormalPipelinePermissionCheckStrategy
 
-class ProjectMigrationLock(redisOperation: RedisOperation, projectId: String) :
-    RedisLock(
-        redisOperation = redisOperation,
-        lockKey = "lock:project:$projectId:migration",
-        expiredTimeInSeconds = 1800L
-    ) {
-    override fun decorateKey(key: String): String {
-        // key无需加上集群信息前缀来区分
-        return key
+object UserPipelinePermissionCheckStrategyFactory {
+
+    private const val ARCHIVED_STRATEGY = "archivedStrategy"
+
+    private const val NORMAL_STRATEGY = "normalStrategy"
+
+    private val strategyMap = HashMap<String, IUserPipelinePermissionCheckStrategy>()
+
+    init {
+        // 初始化策略
+        strategyMap[ARCHIVED_STRATEGY] =
+            SpringContextUtil.getBean(UserArchivedPipelinePermissionCheckStrategy::class.java)
+        strategyMap[NORMAL_STRATEGY] =
+            SpringContextUtil.getBean(UserNormalPipelinePermissionCheckStrategy::class.java)
+    }
+
+    fun createUserPipelinePermissionCheckStrategy(
+        archiveFlag: Boolean? = null
+    ): IUserPipelinePermissionCheckStrategy {
+        val key = if (archiveFlag == true) {
+            ARCHIVED_STRATEGY
+        } else {
+            NORMAL_STRATEGY
+        }
+        return strategyMap[key] ?: throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
     }
 }

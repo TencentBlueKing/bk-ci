@@ -92,7 +92,8 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         pipelineId: String,
         page: Int?,
         pageSize: Int?,
-        updateTimeDesc: Boolean?
+        updateTimeDesc: Boolean?,
+        archiveFlag: Boolean?
     ): Result<BuildHistoryPage<BuildHistory>> {
         logger.info("OPENAPI_BUILD_V3|$userId|get history build|$projectId|$pipelineId|$page|$pageSize|$updateTimeDesc")
         return client.get(ServiceBuildResource::class).getHistoryBuild(
@@ -122,7 +123,8 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             buildNoStart = null,
             buildNoEnd = null,
             buildMsg = null,
-            startUser = null
+            startUser = null,
+            archiveFlag = archiveFlag
         )
     }
 

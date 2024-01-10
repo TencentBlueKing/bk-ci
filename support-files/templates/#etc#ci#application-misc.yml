@@ -37,6 +37,11 @@ spring:
            url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27
            username: __BK_CI_MYSQL_USER__
            password: __BK_CI_MYSQL_PASSWORD__
+      archiveDataSourceConfigs:
+         - index: 0
+           url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_archive_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+           username: __BK_CI_MYSQL_USER__
+           password: __BK_CI_MYSQL_PASSWORD__
 
 influxdb:
   server: __BK_CI_INFLUXDB_ADDR__
@@ -64,4 +69,9 @@ build:
 sharding:
   databaseShardingStrategy:
     algorithmClassName: "com.tencent.devops.misc.sharding.BkProcessDatabaseShardingAlgorithm"
-    shardingField: PROJECT_ID
+    archiveAlgorithmClassName: "com.tencent.devops.misc.sharding.BkProcessArchiveDatabaseShardingAlgorithm"
+  tableShardingStrategy:
+    archiveAlgorithmClassName: "com.tencent.devops.misc.sharding.BkProcessArchiveTableShardingAlgorithm"
+  archiveFlag: Y
+  defaultFlag: N
+  shardingField: PROJECT_ID

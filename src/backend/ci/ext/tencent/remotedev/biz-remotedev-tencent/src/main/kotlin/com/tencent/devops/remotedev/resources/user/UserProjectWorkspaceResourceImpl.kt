@@ -36,6 +36,7 @@ import com.tencent.devops.remotedev.api.user.UserProjectWorkspaceResource
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
 import com.tencent.devops.remotedev.pojo.windows.ComputerStatusResp
@@ -47,6 +48,7 @@ import com.tencent.devops.remotedev.service.StartWorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceXlsxExportService
 import com.tencent.devops.remotedev.service.projectworkspace.MakeWorkspaceImageHandler
+import com.tencent.devops.remotedev.service.projectworkspace.RebuildWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.RestartWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.StartWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.StopWorkspaceHandler
@@ -67,6 +69,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     private val startWorkspaceHandler: StartWorkspaceHandler,
     private val stopWorkspaceHandler: StopWorkspaceHandler,
     private val restartWorkspaceHandler: RestartWorkspaceHandler,
+    private val rebuildWorkspaceHandler: RebuildWorkspaceHandler,
     private val makeWorkspaceImageHandler: MakeWorkspaceImageHandler,
     private val startWorkspaceService: StartWorkspaceService,
     private val bkBaseService: BKBaseService,
@@ -181,5 +184,15 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
 
     override fun exportWorkspaceList(userId: String, projectId: String, page: Int?, pageSize: Int?): Response {
         return xlsxExportService.exportProjectWorkspaceListWeb(userId, projectId, page, pageSize)
+    }
+
+    override fun reBuildWorkspace(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        rebuildReq: WorkspaceRebuildReq
+    ): Result<Boolean> {
+        rebuildWorkspaceHandler.rebuildWorkspace(userId, projectId, workspaceName, rebuildReq)
+        return Result(true)
     }
 }
