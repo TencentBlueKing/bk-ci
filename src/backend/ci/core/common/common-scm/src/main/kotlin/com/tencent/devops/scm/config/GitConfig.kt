@@ -131,7 +131,4 @@ class GitConfig {
 
     @Value("\${scm.external.tGit.hookSecret:}")
     val tGitHookSecret: String = ""
-
-    @Value("\${scm.external.tGit.ceHostName:}")
-    val tGitCeHostName: String = ""
 }

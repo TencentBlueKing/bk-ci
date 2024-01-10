@@ -569,7 +569,7 @@ class OPRepositoryService @Autowired constructor(
             logger.info("repoSize:$repoSize")
             repoRecords.forEach {
                 val (domain, repoName) = GitUtils.getDomainAndRepoName(it.url)
-                if (gitConfig.tGitCeHostName == domain) {
+                if (TGIT_CE_HOST == domain) {
                     // 根据ID更新仓库类型
                     repositoryDao.updateScmTypes(
                         dslContext = dslContext,
@@ -587,5 +587,6 @@ class OPRepositoryService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(OPRepositoryService::class.java)
+        const val TGIT_CE_HOST = "git.code.tencent.com"
     }
 }
