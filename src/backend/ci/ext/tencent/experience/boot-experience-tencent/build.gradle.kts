@@ -28,5 +28,3 @@
 dependencies {
     api(project(":ext:tencent:experience:biz-experience-tencent"))
 }
-
-

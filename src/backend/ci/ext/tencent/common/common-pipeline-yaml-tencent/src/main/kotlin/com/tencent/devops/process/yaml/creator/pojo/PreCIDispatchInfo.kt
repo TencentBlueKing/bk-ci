@@ -1,4 +1,4 @@
-package com.tencent.devops.process.yaml.modelCreate.pojo
+package com.tencent.devops.process.yaml.creator.pojo
 
 import com.tencent.devops.common.pipeline.matrix.DispatchInfo
 import com.tencent.devops.process.yaml.v2.models.Resources

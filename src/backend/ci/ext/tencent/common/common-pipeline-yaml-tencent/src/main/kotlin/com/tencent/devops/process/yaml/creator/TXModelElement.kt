@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.modelCreate
+package com.tencent.devops.process.yaml.creator
 
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_CREATE_SERVICE
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
@@ -33,7 +33,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.yaml.modelCreate.inner.TXInnerModelCreator
+import com.tencent.devops.process.yaml.creator.inner.TXInnerModelCreator
 import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import org.springframework.beans.factory.annotation.Autowired

@@ -25,10 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.modelCreate.pojo.enums
+package com.tencent.devops.process.yaml.creator
 
-enum class DispatchBizType {
-    STREAM,
-    PRECI,
-    RDS
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.process.yaml.creator.inner.ModelCreateEvent
+import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
+import org.springframework.stereotype.Component
+
+@Primary
+@Component
+class TXModelCreate @Autowired constructor(
+    client: Client,
+    modelStage: ModelStage
+) : ModelCreate(
+    client, modelStage
+) {
+    override fun createPipelineModel(
+        modelName: String,
+        event: ModelCreateEvent,
+        yaml: ScriptBuildYaml,
+        pipelineParams: List<BuildFormProperty>,
+        asCodeSettings: PipelineAsCodeSettings?
+    ): PipelineModelAndSetting {
+        // 预安装插件市场的插件
+        modelStage.inner?.preInstallMarketAtom(client, event)
+
+        return super.createPipelineModel(modelName, event, yaml, pipelineParams, asCodeSettings)
+    }
 }

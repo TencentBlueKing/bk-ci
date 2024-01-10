@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.modelTransfer
+package com.tencent.devops.process.yaml.transfer
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.JsonUtil
@@ -38,7 +38,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
-import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreator
+import com.tencent.devops.process.yaml.transfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.v3.models.image.PoolImage
 import com.tencent.devops.process.yaml.v3.models.image.PoolType
 import com.tencent.devops.process.yaml.v3.models.job.Container

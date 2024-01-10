@@ -45,8 +45,8 @@ import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineBuildTemplateAcrossInfoService
 import com.tencent.devops.process.util.CommonCredentialUtils
-import com.tencent.devops.process.yaml.modelCreate.pojo.enums.DispatchBizType
-import com.tencent.devops.process.yaml.modelCreate.utils.TXStreamDispatchUtils
+import com.tencent.devops.process.yaml.creator.pojo.enums.DispatchBizType
+import com.tencent.devops.process.yaml.creator.utils.TXStreamDispatchUtils
 import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory

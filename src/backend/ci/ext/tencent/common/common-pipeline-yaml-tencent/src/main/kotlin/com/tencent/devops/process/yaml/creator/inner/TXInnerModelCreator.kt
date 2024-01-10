@@ -25,15 +25,46 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.modelCreate.inner
+package com.tencent.devops.process.yaml.creator.inner
 
-import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.process.yaml.modelTransfer.inner.TransferCreatorImpl
-import org.springframework.context.annotation.Primary
-import org.springframework.stereotype.Component
+import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
+import com.tencent.devops.common.pipeline.matrix.DispatchInfo
+import com.tencent.devops.process.yaml.v2.models.Resources
+import com.tencent.devops.process.yaml.v2.models.job.Job
 
-@Primary
-@Component
-class TXTransferCreatorImpl : TransferCreatorImpl() {
-    override fun defaultLinuxDispatchType(): BuildType = BuildType.PUBLIC_DEVCLOUD
+/**
+ * ModelCreate的内部类，用来放一些不同使用者的不同方法和参数
+ */
+interface TXInnerModelCreator : InnerModelCreator {
+
+    /**
+     * 获取job的service的devcloud输入
+     * @param image 镜像信息 mysql:5.1
+     * @param imageName 镜像名称 mysql
+     * @param imageTag 镜像版本 5.1
+     * @param params 镜像参数
+     */
+    @Throws(RuntimeException::class)
+    fun getServiceJobDevCloudInput(
+        image: String,
+        imageName: String,
+        imageTag: String,
+        params: String
+    ): ServiceJobDevCloudInput?
+
+    /**
+     * 获取不同业务场景下的dispatch信息
+     * @param name 名称
+     * @param job job信息
+     * @param projectCode 项目ID
+     * @param defaultImage 默认镜像
+     * @param resources 资源信息
+     */
+    fun getDispatchInfo(
+        name: String,
+        job: Job,
+        projectCode: String,
+        defaultImage: String,
+        resources: Resources? = null
+    ): DispatchInfo
 }
