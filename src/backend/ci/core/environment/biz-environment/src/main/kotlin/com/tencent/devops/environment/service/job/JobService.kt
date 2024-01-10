@@ -551,8 +551,9 @@ class JobService @Autowired constructor(
                                         variable = jobCloudVariableServer.variable,
                                         hostList = jobCloudVariableServer.jobCloudHostList?.map {
                                             HostIpv6(
-                                                bkHostId = it.bkHostId, bkCloudId = it.bkCloudId, ip = it.ip,
-                                                ipv6 = it.ipv6, bkAgentId = it.bkAgentId, alive = it.alive
+                                                ip = it.ip, ipv6 = it.ipv6, bkHostId = it.bkHostId,
+                                                bkCloudId = it.bkCloudId, bkCloudName = it.bkCloudName,
+                                                bkAgentId = it.bkAgentId, alive = it.alive
                                             )
                                         },
                                         topoNodeList = jobCloudVariableServer.jobCloudTopoNodeList?.map {
@@ -578,8 +579,9 @@ class JobService @Autowired constructor(
                                             variable = jobCloudVariableServer?.variable,
                                             hostList = jobCloudVariableServer?.jobCloudHostList?.map {
                                                 HostIpv6(
-                                                    bkHostId = it.bkHostId, bkCloudId = it.bkCloudId, ip = it.ip,
-                                                    ipv6 = it.ipv6, bkAgentId = it.bkAgentId, alive = it.alive
+                                                    ip = it.ip, ipv6 = it.ipv6, bkHostId = it.bkHostId,
+                                                    bkCloudId = it.bkCloudId, bkCloudName = it.bkCloudName,
+                                                    bkAgentId = it.bkAgentId, alive = it.alive
                                                 )
                                             },
                                             topoNodeList = jobCloudVariableServer?.jobCloudTopoNodeList?.map {
@@ -616,8 +618,9 @@ class JobService @Autowired constructor(
                                             variable = jobCloudVariableServer.variable,
                                             hostList = jobCloudVariableServer.jobCloudHostList?.map {
                                                 HostIpv6(
-                                                    bkHostId = it.bkHostId, bkCloudId = it.bkCloudId, ip = it.ip,
-                                                    ipv6 = it.ipv6, bkAgentId = it.bkAgentId, alive = it.alive
+                                                    ip = it.ip, ipv6 = it.ipv6, bkHostId = it.bkHostId,
+                                                    bkCloudId = it.bkCloudId, bkCloudName = it.bkCloudName,
+                                                    bkAgentId = it.bkAgentId, alive = it.alive
                                                 )
                                             },
                                             topoNodeList = jobCloudVariableServer.jobCloudTopoNodeList?.map {

@@ -7,6 +7,8 @@ data class HostIpv6(
     val bkHostId: Long,
     @ApiModelProperty(value = "管控区域ID")
     val bkCloudId: Long?,
+    @ApiModelProperty(value = "管控区域名称")
+    val bkCloudName: String?,
     @ApiModelProperty(value = "IP")
     val ip: String?,
     @ApiModelProperty(value = "Ipv6地址")

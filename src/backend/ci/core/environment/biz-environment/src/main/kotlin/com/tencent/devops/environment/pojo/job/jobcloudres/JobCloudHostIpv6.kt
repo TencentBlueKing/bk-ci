@@ -10,6 +10,9 @@ data class JobCloudHostIpv6(
     @ApiModelProperty(value = "管控区域ID")
     @JsonProperty("bk_cloud_id")
     val bkCloudId: Long?,
+    @ApiModelProperty(value = "管控区域名称")
+    @JsonProperty("bk_cloud_name")
+    val bkCloudName: String?,
     @ApiModelProperty(value = "IP")
     val ip: String?,
     @ApiModelProperty(value = "Ipv6地址")
