@@ -37,7 +37,7 @@
                                 <ul class="search-key" ref="searchKey">
                                     <li class="key-node" v-for="(entry, index) in searchKeyList" :key="index">
                                         <span>{{ entry }}</span>
-                                        <i class="devops-icon icon-close" @click="deleteKey(index)"></i>
+                                        <i v-if="!reImportIp" class="devops-icon icon-close" @click="deleteKey(index)"></i>
                                     </li>
                                     <li class="input-item">
                                         <input type="text" class="search-input" ref="searchInput"
@@ -50,7 +50,7 @@
                                 </ul>
                             </div>
                             <div class="actions">
-                                <i class="devops-icon icon-close" @click="deleteAllKey" v-if="searchKeyList.length"></i>
+                                <i class="devops-icon icon-close" @click="deleteAllKey" v-if="searchKeyList.length && !reImportIp"></i>
                                 <i class="devops-icon icon-search" @click="searchNode"></i>
                             </div>
                             <div class="ip-searcher-footer" v-if="isSearchFooter">
@@ -212,11 +212,15 @@
                 if (!val) {
                     this.inputValue = ''
                     this.operator = 'operator'
+                    this.importText = this.$t('environment.import')
                     this.selectHandlercConf.allNodeSelected = false
                     this.searchKeyList.splice(0, this.searchKeyList.length)
                 } else {
                     this.pagingConfig.curPage = 1
-                    await this.selectedKey(this.reImportIp || '')
+                    if (this.reImportIp) {
+                        this.importText = this.$t('environment.reImport')
+                        await this.selectedKey(this.reImportIp || '')
+                    }
                     await this.requestAllList()
                     await this.getDate(this.pagingConfig.curPage)
                 }
@@ -237,14 +241,15 @@
 
                     this.rowList.splice(0, this.rowList.length)
                     res.records && res.records.forEach(item => {
+                        item.nodeId = this.nodeList.find(node => node.nodeType === 'CMDB' && node.ip === item.ip)?.nodeId
                         this.rowList.push({
                             ...item,
-                            isChecked: !!this.nodeList.some(node => node.nodeType === 'CMDB' && node.ip === item.ip && node.nodeStatus !== 'NOT_IN_CC'),
+                            isChecked: !!this.nodeList.some(node => node.nodeType === 'CMDB' && node.ip === item.ip),
                             isDisplay: true,
-                            isEixtEnvNode: this.nodeList.some(node => node.nodeType === 'CMDB' && node.ip === item.ip && node.nodeStatus !== 'NOT_IN_CC')
+                            isEixtEnvNode: this.nodeList.some(node => (node.nodeType === 'CMDB' && node.ip === item.ip && node.nodeStatus !== 'NOT_IN_CC') || (node.nodeStatus === 'NOT_IN_CC' && !this.reImportIp))
                         })
                     })
-
+                    this.toggleNodeSelect()
                     this.selectHandlercConf.curTotalCount = res.count
                     this.pageCountConfig.totalCount = res.count
                 } catch (err) {
@@ -287,6 +292,7 @@
                 this.isSearchFooter = false
             },
             focusSearch () {
+                if (this.reImportIp) return
                 if (!this.isSearchFooter) {
                     this.isSearchFooter = true
                 }
@@ -373,14 +379,21 @@
             },
             async confirmFn () {
                 const selectNodeId = []
-                this.rowList.map(node => node.isChecked && !node.isEixtEnvNode && selectNodeId.push(node.ip))
+                if (this.reImportIp) {
+                    this.rowList.map(node => node.isChecked && !node.isEixtEnvNode && selectNodeId.push({
+                        nodeIp: node.ip,
+                        nodeId: node.nodeId
+                    }))
+                } else {
+                    this.rowList.map(node => node.isChecked && !node.isEixtEnvNode && selectNodeId.push(node.ip))
+                }
                 let theme, message, agentAbnormalNodesCount, agentNotInstallNodesCount
 
                 this.loading.isLoading = true
                 this.importText = `${this.$t('environment.nodeInfo.importing')}...`
-
                 try {
-                    const res = await this.$store.dispatch('environment/importCmdbNode', {
+                    const fn = this.reImportIp ? 'environment/reImportCmdbNode' : 'environment/importCmdbNode'
+                    const res = await this.$store.dispatch(fn, {
                         projectId: this.projectId,
                         params: selectNodeId
                     })

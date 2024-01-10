@@ -210,13 +210,21 @@
                                             </bk-button>
                                         </span>
                                         <!-- CC中不存在 - 重新导入 -->
-                                        <bk-button
-                                            v-if="['NOT_IN_CC'].includes(props.row.nodeStatus) && (userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator)"
-                                            text
-                                            @click="handleReImport(props.row.ip)"
-                                            class="mr5">
-                                            {{ $t('environment.reImport') }}
-                                        </bk-button>
+                                        <span
+                                            v-bk-tooltips="{
+                                                content: $t('environment.你不是主机负责人，请联系主机负责人重新导入使用'),
+                                                disabled: userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator
+                                            }"
+                                        >
+                                            <bk-button
+                                                v-if="['NOT_IN_CC'].includes(props.row.nodeStatus) && (userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator)"
+                                                text
+                                                :disabled="!(userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator)"
+                                                @click="handleReImport(props.row.ip)"
+                                                class="mr5">
+                                                {{ $t('environment.reImport') }}
+                                            </bk-button>
+                                        </span>
                                         <!-- 重装Agent -->
                                         <bk-button
                                             v-if="props.row.nodeStatus === 'ABNORMAL'"
