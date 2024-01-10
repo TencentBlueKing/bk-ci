@@ -320,6 +320,16 @@ BEGIN
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_RESOURCE_VERSION'
+                    AND COLUMN_NAME = 'SETTING_VERSION') THEN
+    ALTER TABLE `T_PIPELINE_RESOURCE_VERSION`
+        ADD COLUMN `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP COMMENT '创建时间';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_PIPELINE_SETTING_VERSION'
                     AND COLUMN_NAME = 'NAME') THEN
     ALTER TABLE `T_PIPELINE_SETTING_VERSION`
