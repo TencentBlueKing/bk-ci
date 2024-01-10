@@ -23,24 +23,27 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.project.pojo
+package com.tencent.devops.image.resources
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.image.api.BuildDockerImageResource
+import com.tencent.devops.image.pojo.CheckDockerImageRequest
+import com.tencent.devops.image.pojo.CheckDockerImageResponse
+import com.tencent.devops.image.service.InspectImageService
+import org.springframework.beans.factory.annotation.Autowired
 
-@ApiModel
-data class ProjectCreateUserInfo(
-    @ApiModelProperty("操作人")
-    val createUserId: String,
-    @ApiModelProperty("待分配的角色名称")
-    val roleName: String?,
-    @ApiModelProperty("角色Id")
-    val roleId: Int?,
-    @ApiModelProperty("组ID")
-    val groupId: Int?,
-    @ApiModelProperty("目标用户")
-    val userIds: List<String>? = emptyList()
-)
+@RestResource
+class BuildDockerImageResourceImpl @Autowired constructor(
+    private val inspectImageService: InspectImageService
+) : BuildDockerImageResource {
+
+    override fun checkDockerImage(
+        userId: String,
+        checkDockerImageRequestList: List<CheckDockerImageRequest>
+    ): Result<List<CheckDockerImageResponse>> {
+        return Result(inspectImageService.checkDockerImage(userId, checkDockerImageRequestList))
+    }
+}

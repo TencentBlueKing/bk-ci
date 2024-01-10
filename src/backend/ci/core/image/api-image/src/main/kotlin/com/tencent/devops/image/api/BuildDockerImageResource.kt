@@ -23,24 +23,38 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.project.pojo
+package com.tencent.devops.image.api
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.image.pojo.CheckDockerImageRequest
+import com.tencent.devops.image.pojo.CheckDockerImageResponse
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@ApiModel
-data class ProjectCreateUserInfo(
-    @ApiModelProperty("操作人")
-    val createUserId: String,
-    @ApiModelProperty("待分配的角色名称")
-    val roleName: String?,
-    @ApiModelProperty("角色Id")
-    val roleId: Int?,
-    @ApiModelProperty("组ID")
-    val groupId: Int?,
-    @ApiModelProperty("目标用户")
-    val userIds: List<String>? = emptyList()
-)
+@Api(tags = ["BUILD_DOCKER_IMAGE"], description = "镜像-镜像服务")
+@Path("/build/docker-image")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildDockerImageResource {
+
+    @ApiOperation("检查镜像信息")
+    @POST
+    @Path("/checkDockerImage")
+    fun checkDockerImage(
+        @ApiParam("用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "镜像repo", required = true)
+        checkDockerImageRequestList: List<CheckDockerImageRequest>
+    ): Result<List<CheckDockerImageResponse>>
+}
