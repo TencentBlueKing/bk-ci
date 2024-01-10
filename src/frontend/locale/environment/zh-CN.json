@@ -227,7 +227,7 @@
         "currentImporter": "当前导入人：",
         "currentOperator": "当前主机责任人：",
         "contactOperator": "请联系主机负责人",
-        "prohibited": "责任人已变更，禁止使用",
+        "prohibited": "负责人已变更，禁止使用",
         "destoryNode": "确定销毁该节点",
         "installGseAgent": "安装GseAgent",
         "theApplyNodes": "这是你本次申请的节点",
@@ -264,7 +264,8 @@
         "BUILD_IMAGE_SUCCESS": "制作镜像成功",
         "BUILD_IMAGE_FAILED": "制作镜像失败",
         "UNKNOWN": "未知",
-        "NOT_INSTALLED": "未安装"
+        "NOT_INSTALLED": "未安装",
+        "AGENT_ABNORMAL": "Agent异常"
     },
     "newPool": "创建",
     "nodeSearchTips": "IP/别名/创建人/最近修改人",
@@ -391,5 +392,8 @@
     "服务器文件-服务器列表": "服务器文件-服务器列表",
     "主机ID": "主机ID",
     "正常": "正常",
-    "异常": "异常"
+    "异常": "异常",
+    "重新授权": "重新授权",
+    "主机负责人已变更，请联系主机负责人重新授权使用": "主机负责人已变更，请联系主机负责人重新授权使用",
+    "确认授权节点X在流水线中进行远程脚本执行或构件分发吗": "确认授权节点 [{0}] 在流水线中进行远程脚本执行或构件分发吗？"
 }

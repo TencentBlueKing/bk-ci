@@ -133,36 +133,24 @@
                     </bk-table-column>
                     <bk-table-column v-if="allRenderColumnMap.nodeStatus" :label="`${$t('environment.status')}(${$t('environment.version')})`" prop="nodeStatus" min-width="150" show-overflow-tooltip>
                         <template slot-scope="props">
-                            <div class="table-node-item node-item-status"
-                                v-if="props.row.nodeStatus === 'BUILDING_IMAGE' && props.row.nodeType === 'DEVCLOUD'">
-                                <span class="node-status-icon normal-stutus-icon"></span>
-                                <span class="node-status">{{ $t('environment.nodeInfo.normal') }}</span>
-                            </div>
                             <div class="table-node-item node-item-status">
+                                <!-- 责任人已变更 -->
+                                <template
+                                    v-if="((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && props.row.createdUser !== props.row.bakOperator)
+                                        || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator.split(';').indexOf(props.row.createdUser) === -1))"
+                                >
+                                    <span class="prompt-operator">
+                                        <i class="devops-icon icon-exclamation-circle"></i>
+                                        {{ $t('environment.nodeInfo.prohibited') }}
+                                    </span>
+                                </template>
                                 <!-- 已从 CMDB 、蓝鲸CC 移除 -->
-                                <template v-if="removedStatus.includes(props.row.nodeStatus) && !['DEVCLOUD', 'THIRDPARTY'].includes(props.row.nodeType)">
+                                <template v-else-if="removedStatus.includes(props.row.nodeStatus) && deploymentNodes.includes(props.row.nodeType)">
                                     <i class="bk-icon node-removed-icon icon-close error"></i>
                                     <span class="node-removed-message">
                                         {{ removedMessage[props.row.nodeStatus] }}
                                     </span>
                                 </template>
-                                <!-- 责任人已变更 -->
-                                <!-- <template v-else-if="(props.row.nodeType === 'CC' || props.row.nodeType === 'CMDB') && ((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && props.row.createdUser !== props.row.bakOperator)
-                                    || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator.split(';').indexOf(props.row.createdUser) === -1))">
-                                    <div class="edit-operator" v-if="userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator">
-                                        <i class="devops-icon icon-exclamation-circle"></i><span @click="changeCreatedUser(props.row.nodeHashId)">{{ $t('environment.nodeInfo.operatorModfied') }}</span>
-                                    </div>
-                                    <div class="prompt-operator" v-else>
-                                        <bk-popover placement="top">
-                                            <span><i class="devops-icon icon-exclamation-circle"></i>{{ $t('environment.nodeInfo.prohibited') }}</span>
-                                            <template slot="content">
-                                                <p>{{ $t('environment.nodeInfo.currentImporter') }}<span>{{ props.row.createdUser }}</span></p>
-                                                <p>{{ $t('environment.nodeInfo.currentOperator') }}<span>{{ props.row.operator }}</span><span v-if="props.row.nodeType === 'CC'">/{{ props.row.bakOperator }}</span></p>
-                                                <p>{{ $t('environment.nodeInfo.contactOperator') }}</p>
-                                            </template>
-                                        </bk-popover>
-                                    </div>
-                                </template> -->
                                 <template v-else>
                                     <!-- 状态icon -->
                                     <StatusIcon v-if="successStatus.includes(props.row.nodeStatus)" status="success" />
@@ -193,11 +181,6 @@
                     </bk-table-column>
                     <bk-table-column v-if="allRenderColumnMap.createdUser" :label="$t('environment.nodeInfo.importer')" prop="createdUser" min-width="80" show-overflow-tooltip></bk-table-column>
                     <bk-table-column v-if="allRenderColumnMap.lastModifyBy" :label="$t('environment.nodeInfo.lastModifyBy')" prop="lastModifyUser" min-width="80" show-overflow-tooltip></bk-table-column>
-                    <!-- <bk-table-column :label="`${$t('environment.create')}/${$t('environment.nodeInfo.importTime')}`" prop="createTime" min-width="80">
-                        <template slot-scope="props">
-                            {{ props.row.createTime || '-' }}
-                        </template>
-                    </bk-table-column> -->
                     <bk-table-column v-if="allRenderColumnMap.lastModifyTime" :label="$t('environment.nodeInfo.lastModifyTime')" prop="lastModifyTime" min-width="80" show-overflow-tooltip>
                         <template slot-scope="props">
                             {{ props.row.lastModifyTime || '-' }}
@@ -206,28 +189,68 @@
                     <bk-table-column :label="$t('environment.operation')" width="180">
                         <template slot-scope="props">
                             <template v-if="props.row.canUse">
+                                <!-- 用途为部署的节点-操作按钮 -->
                                 <div class="table-node-item">
-                                    <span
-                                        v-if="['NOT_IN_CC'].includes(props.row.nodeStatus)"
-                                        @click="handleReImport"
-                                        class="node-handle delete-node-text">
-                                        {{ $t('environment.reImport') }}
-                                    </span>
-                                    <!-- <span
-                                        class="node-handle delete-node-text"
-                                        @click="handleInstallAgent"
-                                    >
-                                        {{ $t('environment.reinstallAgent') }}
-                                    </span> -->
-                                    <span
-                                        v-if="['CC','CMDB','THIRDPARTY'].includes(props.row.nodeType) && props.row.nodeStatus === 'ABNORMAL'"
-                                        class="node-handle delete-node-text"
-                                        @click="installAgent(props.row)"
-                                    >
-                                        {{ $t('environment.installAgent') }}
-                                    </span>
-                                    <span
+                                    <template v-if="deploymentNodes.includes(props.row.nodeType)">
+                                        <span
+                                            v-bk-tooltips="{
+                                                content: $t('environment.主机负责人已变更，请联系主机负责人重新授权使用'),
+                                                disabled: userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator
+                                            }"
+                                        >
+                                            <bk-button
+                                                v-if="((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && props.row.createdUser !== props.row.bakOperator)
+                                                    || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator.split(';').indexOf(props.row.createdUser) === -1))"
+                                                class="mr5"
+                                                :disabled="!(userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator)"
+                                                text
+                                                @click="changeCreatedUser(props.row)"
+                                            >
+                                                {{ $t('environment.重新授权') }}
+                                            </bk-button>
+                                        </span>
+                                        <!-- CC中不存在 - 重新导入 -->
+                                        <bk-button
+                                            v-if="['NOT_IN_CC'].includes(props.row.nodeStatus) && (userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator)"
+                                            text
+                                            @click="handleReImport(props.row.ip)"
+                                            class="mr5">
+                                            {{ $t('environment.reImport') }}
+                                        </bk-button>
+                                        <!-- 重装Agent -->
+                                        <bk-button
+                                            v-if="props.row.nodeStatus === 'ABNORMAL'"
+                                            text
+                                            class="mr5"
+                                            @click="handleInstallAgent"
+                                        >
+                                            {{ $t('environment.reinstallAgent') }}
+                                        </bk-button>
+                                        <!-- 未安装Agent -->
+                                        <bk-button
+                                            v-if="props.row.nodeStatus === 'NOT_INSTALLED'"
+                                            text
+                                            class="mr5"
+                                            @click="installAgent(props.row)"
+                                        >
+                                            {{ $t('environment.installAgent') }}
+                                        </bk-button>
+                                    </template>
+                                    <!-- 用途为构建的节点-操作按钮 -->
+                                    <template v-else>
+                                        <!-- Agent异常 - 重装Agent -->
+                                        <bk-button
+                                            v-if="props.row.nodeStatus === 'ABNORMAL'"
+                                            text
+                                            class="mr5"
+                                            @click="installAgent(props.row)"
+                                        >
+                                            {{ $t('environment.installAgent') }}
+                                        </bk-button>
+                                    </template>
+                                    <bk-button
                                         v-if="!['TSTACK'].includes(props.row.nodeType)"
+                                        text
                                         v-perm="{
                                             hasPermission: props.row.canDelete,
                                             disablePermissionApi: true,
@@ -238,11 +261,11 @@
                                                 action: NODE_RESOURCE_ACTION.DELETE
                                             }
                                         }"
-                                        class="node-handle delete-node-text"
+                                        class="mr5"
                                         @click.stop="confirmDelete(props.row, index)"
                                     >
                                         {{ $t('environment.delete') }}
-                                    </span>
+                                    </bk-button>
                                     <span id="moreHandler" class="node-handle more-handle"
                                         v-if="props.row.canUse && props.row.nodeType === 'DEVCLOUD'">
                                         <bk-popover
@@ -284,7 +307,9 @@
         </section>
 
         <!-- 导入CMDB -->
-        <config-manage-node :node-select-conf="cmdbNodeSelectConf"
+        <config-manage-node
+            :re-import-ip="reImportIp"
+            :node-select-conf="cmdbNodeSelectConf"
             @confirm-fn="confirmCmdbFn"
             @cancel-fn="cancelCmdbFn"
         ></config-manage-node>
@@ -458,7 +483,10 @@
                     count: 0,
                     limit: 15
                 },
-                requestParams: {}
+                requestParams: {},
+                buildNodes: ['DEVCLOUD', 'THIRDPARTY'], // Build 构建用途的节点 - 第三方构建机类型
+                deploymentNodes: ['CC', 'CMDB', 'UNKNOWN', 'OTHER'], // deployment 部署用途的节点
+                reImportIp: ''
             }
         },
         computed: {
@@ -501,6 +529,7 @@
                 return {
                     DEVCLOUD: this.$t('environment.构建'),
                     THIRDPARTY: this.$t('environment.构建'),
+                    CC: this.$t('environment.部署'),
                     CMDB: this.$t('environment.部署'),
                     UNKNOWN: this.$t('environment.部署'),
                     OTHER: this.$t('environment.部署')
@@ -738,17 +767,17 @@
             /**
              * 构建机信息
              */
-            async changeCreatedUser (id) {
+            async changeCreatedUser (row) {
                 this.$bkInfo({
-                    title: this.$t('environment.nodeInfo.modifyImporter'),
-                    subTitle: this.$t('environment.nodeInfo.modifyOperatorTips'),
+                    title: this.$t('environment.重新授权'),
+                    subTitle: this.$t('environment.确认授权节点X在流水线中进行远程脚本执行或构件分发吗', [row.displayName]),
                     confirmFn: async () => {
                         let message, theme
 
                         try {
                             await this.$store.dispatch('environment/changeCreatedUser', {
                                 projectId: this.projectId,
-                                nodeHashId: id
+                                nodeHashId: row.nodeHashId
                             })
 
                             message = this.$t('environment.successfullyModified')
@@ -856,7 +885,7 @@
                         this.constructImportForm.location = isTarget && isTarget.zoneName
                     }
 
-                    if (node && ['DEVCLOUD', 'THIRDPARTY'].includes(node.nodeType)) { // 如果是第三方构建机类型则获取构建机详情以获得安装命令或下载链接
+                    if (node && this.buildNodes.includes(node.nodeType)) { // 如果是第三方构建机类型则获取构建机详情以获得安装命令或下载链接
                         this.getVmBuildDetail(node.nodeHashId)
                     } else {
                         this.requestDevCommand()
@@ -937,12 +966,12 @@
                 }
             },
             installAgent (node) {
-                if (['DEVCLOUD', 'THIRDPARTY'].includes(node.nodeType)) {
+                if (this.buildNodes.includes(node.nodeType)) {
                     this.nodeIp = node.ip
                     this.isAgent = true
                     this.constructToolConf.importText = this.$t('environment.confirm')
                     this.switchConstruct(node)
-                } else if (['CC', 'CMDB'].includes(node.nodeType)) {
+                } else if (this.deploymentNodes.includes(node.nodeType)) {
                     const url = `${IWIKI_DOCS_URL}/x/WtMrAg`
                     window.open(url, '_blank')
                 }
@@ -1142,6 +1171,7 @@
                 this.requestList()
             },
             cancelCmdbFn () {
+                this.reImportIp = ''
                 this.cmdbNodeSelectConf.isShow = false
             },
             handleSettingChange ({ fields, size }) {
@@ -1164,7 +1194,8 @@
             handleInstallAgent () {
                 this.$refs.installAgent.isShow = true
             },
-            handleReImport () {
+            handleReImport (ip) {
+                this.reImportIp = ip
                 this.toImportNode('cmdb')
             },
             clearFilter () {
@@ -1193,7 +1224,7 @@
             color: #ffbf00;
 
             .devops-icon {
-                margin-right: 6px;
+                margin-right: 4px;
             }
         }
 

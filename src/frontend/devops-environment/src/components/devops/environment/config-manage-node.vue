@@ -148,7 +148,8 @@
                     data: [],
                     onChange: () => {}
                 }
-            }
+            },
+            reImportIp: String
         },
         data () {
             return {
@@ -215,6 +216,7 @@
                     this.searchKeyList.splice(0, this.searchKeyList.length)
                 } else {
                     this.pagingConfig.curPage = 1
+                    await this.selectedKey(this.reImportIp || '')
                     await this.requestAllList()
                     await this.getDate(this.pagingConfig.curPage)
                 }

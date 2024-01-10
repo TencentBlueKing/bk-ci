@@ -269,7 +269,8 @@
         "TSTACK": "DevCloud",
         "OTHER": "Other",
         "UNKNOWN": "Unknown",
-        "NOT_INSTALLED": "Not installed"
+        "NOT_INSTALLED": "Not installed",
+        "AGENT_ABNORMAL": "Agent Abnormal"
     },
     "newPool": "New Pool",
     "nodeSearchTips": "IP / Alias / Creator / Last Modifier",
@@ -396,5 +397,8 @@
     "服务器文件-服务器列表": "Remote file - hosts",
     "主机ID": "Hose ID",
     "正常": "OK",
-    "异常": "Abnormal"
+    "异常": "Abnormal",
+    "重新授权": "Reauthorize",
+    "主机负责人已变更，请联系主机负责人重新授权使用": "主机负责人已变更，请联系主机负责人重新授权使用",
+    "确认授权节点X在流水线中进行远程脚本执行或构件分发吗": "确认授权节点 [{0}] 在流水线中进行远程脚本执行或构件分发吗？"
 }
