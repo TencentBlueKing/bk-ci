@@ -1,7 +1,7 @@
 <template>
     <div class="pipeline-detail-entry">
         <aside class="pipeline-detail-entry-aside">
-            <ul v-for="(item, index) in asideNav" :key="index">
+            <ul v-for="item in asideNav" :key="item.name">
                 <li class="nav-item-title">
                     {{ item.title }}
                     <span class="nav-item-link" v-if="item.link" @click="item.link.handler">
@@ -10,17 +10,22 @@
                     </span>
                 </li>
                 <ul class="nav-child-list" v-for="(child, cIndex) in item.children" :key="cIndex">
-                    <li @click="switchType(child)" :class="['nav-child-title', {
-                        active: child.active
-                    }]">{{ child.title }}</li>
+                    <li
+                        @click="switchType(child)"
+                        :class="[
+                            'nav-child-title',
+                            {
+                                active: child.active
+                            }
+                        ]"
+                    >
+                        {{ child.title }}
+                    </li>
                 </ul>
             </ul>
         </aside>
         <main class="pipeline-detail-entry-main">
-            <component
-                :is="activeChild.component"
-                v-bind="activeChild.bindData"
-            />
+            <component :is="activeChild.component" />
         </main>
     </div>
 </template>
@@ -32,23 +37,18 @@
         BuildHistoryTab,
         TriggerEvent,
         PipelineConfig,
-        PermissionConfig,
         ChangeLog
     } from '@/components/PipelineDetailTabs'
-    import Artifactory from '@/components/Outputs'
+    import { AuthorityTab } from '@/components/PipelineEditTabs/'
+
     export default {
         components: {
             BuildHistoryTab,
             TriggerEvent,
-            Artifactory,
             PipelineConfig,
-            PermissionConfig,
+            AuthorityTab,
             ChangeLog,
             Logo
-        },
-
-        props: {
-            execHandler: Function
         },
         computed: {
             ...mapState('atom', ['pipelineInfo']),
@@ -59,75 +59,85 @@
                 return this.getNavComponent(this.activeMenuItem)
             },
             asideNav () {
-                return [{
-                    title: this.$t('executeInfo'),
-                    children: [{
-                        title: this.$t('pipelinesHistory'),
-                        name: 'history'
-                    }, {
-                        title: this.$t('triggerEvent'),
-                        name: 'triggerEvent'
-                    }, {
-                        title: this.$t('details.outputs'),
-                        name: 'artifactory'
-                    }].map(child => ({
-                        ...child,
-                        active: this.activeMenuItem === child.name
-                    }))
-                }, {
-                    title: this.$t('pipelineConf'),
-                    children: [{
-                        title: this.$t('pipelineModel'),
-                        name: 'pipeline'
-                    }, {
-                        title: this.$t('triggerConf'),
-                        name: 'trigger'
-                    }, {
-                        title: this.$t('notifyConf'),
-                        name: 'notice'
-                    }, {
-                        title: this.$t('baseConf'),
-                        name: 'setting'
-                    }].map(child => ({
-                        ...child,
-                        active: this.activeMenuItem === child.name
-                    }))
-                }, {
-                    title: this.$t('more'),
-                    children: [{
-                        title: this.$t('authSetting'),
-                        name: 'permission'
-                    }, {
-                        title: this.$t('operationLog'),
-                        name: 'changeLog'
-                    }].map(child => ({
-                        ...child,
-                        active: this.activeMenuItem === child.name
-                    }))
-                }]
+                return [
+                    {
+                        title: this.$t('executeInfo'),
+                        children: [
+                            {
+                                title: this.$t('pipelinesHistory'),
+                                name: 'history'
+                            },
+                            {
+                                title: this.$t('triggerEvent'),
+                                name: 'triggerEvent'
+                            }
+                            // , {
+                            //     title: this.$t('details.outputs'),
+                            //     name: 'artifactory'
+                            // }
+                        ].map((child) => ({
+                            ...child,
+                            active: this.activeMenuItem === child.name
+                        }))
+                    },
+                    {
+                        title: this.$t('pipelineConf'),
+                        children: [
+                            {
+                                title: this.$t('pipelineModel'),
+                                name: 'pipeline'
+                            },
+                            {
+                                title: this.$t('triggerConf'),
+                                name: 'trigger'
+                            },
+                            {
+                                title: this.$t('notifyConf'),
+                                name: 'notice'
+                            },
+                            {
+                                title: this.$t('baseConf'),
+                                name: 'setting'
+                            }
+                        ].map((child) => ({
+                            ...child,
+                            active: this.activeMenuItem === child.name
+                        }))
+                    },
+                    {
+                        title: this.$t('more'),
+                        children: [
+                            {
+                                title: this.$t('authSetting'),
+                                name: 'permission'
+                            },
+                            {
+                                title: this.$t('operationLog'),
+                                name: 'changeLog'
+                            }
+                        ].map((child) => ({
+                            ...child,
+                            active: this.activeMenuItem === child.name
+                        }))
+                    }
+                ]
             }
         },
         beforeDestroy () {
             this.resetHistoryFilterCondition()
         },
         methods: {
-            ...mapActions('pipelines', [
-                'resetHistoryFilterCondition'
-            ]),
+            ...mapActions('pipelines', ['resetHistoryFilterCondition']),
             getNavComponent (type) {
                 switch (type) {
-                    case 'history':
-                        return {
-                            component: 'BuildHistoryTab'
-                        }
                     case 'triggerEvent':
                         return {
                             component: 'TriggerEvent'
                         }
-                    case 'artifactory':
-                        return {
-                            component: 'Artifactory'
-                        }
+                    // case 'artifactory':
+                    //     return {
+                    //         component: 'Artifactory'
+                    //     }
                     case 'pipeline':
                     case 'trigger':
                     case 'notice':
@@ -137,7 +147,7 @@
                         }
                     case 'permission':
                         return {
-                            component: 'PermissionConfig'
+                            component: 'AuthorityTab'
                         }
                     case 'versionHistory':
                         return {
@@ -146,6 +156,10 @@
                     case 'changeLog':
                         return {
                             component: 'ChangeLog'
+                        }
+                    default:
+                        return {
+                            component: 'BuildHistoryTab'
                         }
                 }
             },
@@ -163,73 +177,73 @@
 </script>
 
 <style lang="scss">
-    @import './../../scss/conf';
+@import "./../../scss/conf";
 
-    .pipeline-detail-entry.biz-content {
-        margin: 24px;
-        height: 100%;
-        overflow: hidden;
+.pipeline-detail-entry.biz-content {
+  margin: 24px;
+  height: 100%;
+  overflow: hidden;
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-columns: 220px 1fr;
+  box-shadow: 0 2px 2px 0 #00000026;
+  background: #f6f7fa;
+  .pipeline-detail-entry-aside {
+    background: #fafbfd;
+    border-right: 1px solid #dcdee5;
+    padding: 4px 0;
+    height: 100%;
+    overflow: auto;
+    overflow: overlay;
+
+    .nav-item-title {
+      padding: 0 16px 0 22px;
+      color: #c4c6cc;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      .nav-item-link {
+        color: #3a84ff;
+        cursor: pointer;
         display: grid;
+        align-items: center;
+        grid-gap: 4px;
         grid-auto-flow: column;
-        grid-template-columns: 220px 1fr;
-        box-shadow: 0 2px 2px 0 #00000026;
-        background: #f6f7fa;
-        .pipeline-detail-entry-aside {
-            background: #FAFBFD;
-            border-right: 1px solid #DCDEE5;
-            padding: 4px 0;
-            height: 100%;
-            overflow: auto;
-            overflow: overlay;
-
-            .nav-item-title {
-                padding: 0 16px 0 22px;
-                color: #C4C6CC;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                font-size: 12px;
-                .nav-item-link {
-                    color: #3A84FF;
-                    cursor: pointer;
-                    display: grid;
-                    align-items: center;
-                    grid-gap: 4px;
-                    grid-auto-flow: column;
-                    &:hover {
-                        color: #699df4;
-                    }
-                }
-            }
-            .nav-item-title,
-            .nav-child-title {
-                line-height: 40px;
-            }
-            .nav-child-list {
-                margin-bottom: 8px;
-            }
-            .nav-child-title {
-                position: relative;
-                padding-left: 32px;
-                cursor: pointer;
-                font-size: 14px;
-                &:hover,
-                &.active {
-                    background: #E1ECFF;
-                    &:after {
-                        content: '';
-                        position: absolute;
-                        width: 2.75px;
-                        height: 40px;
-                        background: #3A84FF;
-                        right: 0;
-                    }
-                }
-            }
+        &:hover {
+          color: #699df4;
         }
-        .pipeline-detail-entry-main {
-            background: #fff;
-            overflow: hidden;
-        }
+      }
     }
+    .nav-item-title,
+    .nav-child-title {
+      line-height: 40px;
+    }
+    .nav-child-list {
+      margin-bottom: 8px;
+    }
+    .nav-child-title {
+      position: relative;
+      padding-left: 32px;
+      cursor: pointer;
+      font-size: 14px;
+      &:hover,
+      &.active {
+        background: #e1ecff;
+        &:after {
+          content: "";
+          position: absolute;
+          width: 2.75px;
+          height: 40px;
+          background: #3a84ff;
+          right: 0;
+        }
+      }
+    }
+  }
+  .pipeline-detail-entry-main {
+    background: #fff;
+    overflow: hidden;
+  }
+}
 </style>

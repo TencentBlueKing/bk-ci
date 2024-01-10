@@ -1,7 +1,7 @@
 <template>
     <div class="pipeline-config-wrapper" v-bkloading="{ isLoading }">
         <header class="pipeline-config-header">
-            <mode-switch />
+            <mode-switch read-only />
             <VersionSideslider
                 v-model="activePipelineVersion"
                 ref="versionSideslider"
@@ -14,7 +14,7 @@
                 :draft-version-name="draftVersionName"
             >
                 <i class="devops-icon icon-rollback" />
-                {{$t('rollback')}}
+                {{ $t("rollback") }}
             </RollbackEntry>
             <VersionDiffEntry
                 v-if="!isCurrentVersion"
@@ -23,12 +23,14 @@
                 :current-yaml="pipelineYaml"
             >
                 <i class="devops-icon icon-diff" />
-                {{$t('diff')}}
+                {{ $t("diff") }}
             </VersionDiffEntry>
         </header>
         <bk-alert
             v-if="isActiveDraft"
-            :title="$t('draftInfoTips', [activePipelineVersionModel.creator, draftLastUpdateTime])"
+            :title="
+                $t('draftInfoTips', [activePipelineVersionModel.creator, draftLastUpdateTime])
+            "
         />
 
         <section class="pipeline-model-content">
@@ -47,7 +49,6 @@
                 :is="dynamicComponentConf.is"
             />
         </section>
-
     </div>
 </template>
 
@@ -108,7 +109,10 @@
                 return this.pipelineInfo?.releaseVersionName
             },
             canRollBack () {
-                return this.activePipelineVersion !== this.pipelineInfo?.releaseVersion && !this.pipelineInfo?.canDebug
+                return (
+                    this.activePipelineVersion !== this.pipelineInfo?.releaseVersion
+                    && !this.pipelineInfo?.canDebug
+                )
             },
             isCurrentVersion () {
                 return this.activePipelineVersion === this.pipelineInfo?.releaseVersion
@@ -126,7 +130,8 @@
                 switch (this.pipelineType) {
                     case 'pipeline':
                         return {
-                            is: PipelineModel
+                            is: PipelineModel,
+                            props: {}
                         }
                     case 'trigger':
                         return {
@@ -184,15 +189,15 @@
             }
         },
         mounted () {
-            window.__bk_zIndex_manager.zIndex = 2020
+            window.__bk_zIndex_manager.zIndex = 2015
         },
         beforeDestroy () {
-            this.$refs.editor?.destroy()
-            this.setPipelineYaml('')
-            this.setPipeline(null)
-            this.setPipelineWithoutTrigger(null)
-            this.setPipelineSetting(null)
-            window.__bk_zIndex_manager.zIndex = 2000
+    this.$refs.editor?.destroy()
+    this.setPipelineYaml('')
+    this.setPipeline(null)
+    this.setPipelineWithoutTrigger(null)
+    this.setPipelineSetting(null)
+    window.__bk_zIndex_manager.zIndex = 2000
         },
         methods: {
             ...mapActions('atom', [
@@ -202,9 +207,7 @@
                 'setPipelineSetting',
                 'setPipelineWithoutTrigger'
             ]),
-            ...mapActions('pipelines', [
-                'rollbackPipelineVersion'
-            ]),
+            ...mapActions('pipelines', ['rollbackPipelineVersion']),
             async init () {
                 try {
                     if (this.activePipelineVersion) {
@@ -241,35 +244,35 @@
 </script>
 
 <style lang="scss">
-    .pipeline-config-wrapper {
-        padding: 24px;
-        display: flex;
-        height: 100%;
-        flex-direction: column;
-        overflow: hidden;
-        position: static !important;
-        grid-gap: 16px;
-        .pipeline-config-header {
-            display: flex;
-            align-items: center;
-            flex-shrink: 0;
-            grid-gap: 16px;
-            .text-link {
-                display: flex;
-                align-items: center;
-                font-size: 14px;
-                grid-gap: 8px;
+.pipeline-config-wrapper {
+  padding: 24px;
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  overflow: hidden;
+  position: static !important;
+  grid-gap: 16px;
+  .pipeline-config-header {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    grid-gap: 16px;
+    .text-link {
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      grid-gap: 8px;
 
-                cursor: pointer;
-            }
-        }
-        .pipeline-model-content {
-            flex: 1;
-            overflow: hidden;
-        }
-        .pipeine-config-content-box {
-            height: 100%;
-            overflow: auto;
-        }
+      cursor: pointer;
     }
+  }
+  .pipeline-model-content {
+    flex: 1;
+    overflow: hidden;
+  }
+  .pipeine-config-content-box {
+    height: 100%;
+    overflow: auto;
+  }
+}
 </style>

@@ -4,7 +4,12 @@
             <div slot="dropdown-trigger" class="more-operation-entry">
                 <i class="entry-circle" v-for="i in [1, 2, 3]" :key="i" />
             </div>
-            <div v-if="curPipelineId" :key="curPipelineId" class="more-operation-dropmenu" slot="dropdown-content">
+            <div
+                v-if="curPipelineId"
+                :key="curPipelineId"
+                class="more-operation-dropmenu"
+                slot="dropdown-content"
+            >
                 <ul v-for="(parent, index) in actionConfMenus" :key="index">
                     <template v-for="(action, aIndex) in parent">
                         <li
@@ -41,7 +46,6 @@
             :is-show="pipelineActionState.isConfirmShow"
             :pipeline-list="pipelineActionState.activePipelineList"
             @close="closeRemoveConfirmDialog"
-            @done="goHome"
         />
         <export-dialog :is-show.sync="showExportDialog"></export-dialog>
         <DisableDialog
@@ -62,10 +66,7 @@
     import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
-    import {
-        TEMPLATE_RESOURCE_ACTION,
-        RESOURCE_ACTION
-    } from '@/utils/permission'
+    import { TEMPLATE_RESOURCE_ACTION, RESOURCE_ACTION } from '@/utils/permission'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
     export default {
         components: {
@@ -86,15 +87,9 @@
             }
         },
         computed: {
-            ...mapState('atom', [
-                'pipelineInfo'
-            ]),
-            ...mapState('pipelines', [
-                'pipelineActionState'
-            ]),
-            ...mapGetters('atom', [
-                'pacEnabled'
-            ]),
+            ...mapState('atom', ['pipelineInfo']),
+            ...mapState('pipelines', ['pipelineActionState']),
+            ...mapGetters('atom', ['pacEnabled']),
             isTemplatePipeline () {
                 return this.pipelineInfo?.instanceFromTemplate ?? false
             },
@@ -139,9 +134,9 @@
                                 action: RESOURCE_ACTION.EDIT
                             }
                         },
-                        {
-                            ...(pipeline.templateId
-                                ? {
+                        ...(pipeline.templateId
+                            ? [
+                                {
                                     label: 'copyAsTemplateInstance',
                                     handler: () => this.copyAsTemplateInstance(pipeline),
                                     permissionData: {
@@ -151,11 +146,8 @@
                                         action: RESOURCE_ACTION.CREATE
                                     }
                                 }
-                                : {
-
-                                })
-
-                        },
+                            ]
+                            : []),
                         {
                             label: 'newlist.copyAs',
                             handler: () => this.copyAs(pipeline),

@@ -1381,5 +1381,7 @@
   "copy": "复制",
   "templateName": "模板",
   "templateVersion": "模版版本",
-  "documentTitlePipeline": "流水线 | 持续集成平台-蓝盾 | 腾讯蓝鲸智云"
+  "documentTitlePipeline": "流水线 | 持续集成平台-蓝盾 | 腾讯蓝鲸智云",
+  "saveBeforeSwitch": "请先保存流水线，否则所有修改将丢失",
+  "tips": "提示"
 }

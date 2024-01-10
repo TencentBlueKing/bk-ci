@@ -21,9 +21,7 @@
             }
         },
         computed: {
-            ...mapState('atom', [
-                'pipelineInfo'
-            ]),
+            ...mapState('atom', ['pipelineInfo']),
             projectCode () {
                 return this.$route.params.projectId
             },
@@ -31,7 +29,7 @@
                 return this.$route.params.pipelineId
             },
             pipelineName () {
-                return this.pipelineInfo.pipelineName
+                return this.pipelineInfo?.pipelineName ?? ''
             }
         }
     }

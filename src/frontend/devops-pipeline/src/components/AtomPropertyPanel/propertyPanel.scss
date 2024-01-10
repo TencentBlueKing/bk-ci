@@ -29,9 +29,19 @@
     z-index: 2005 !important;
     .bk-sideslider-wrapper {
         right: 480px;
-        height: calc(100vh - 50px);
     }
 
+}
+
+.bkdevops-pipeline-edit-wrapper {
+    .bkci-property-panel {
+        top: 48px;
+        height: calc(100vh - 48px);
+        .bk-sideslider-wrapper {
+            border-top: 1px solid #DCDEE5;
+            top: 0;
+        }
+    }
 }
 
 .pipeline-config-wrapper {

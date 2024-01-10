@@ -5,7 +5,8 @@
             :show-lock="true"
             :title="noPermissionTipsConfig.title"
             :desc="noPermissionTipsConfig.desc"
-            :btns="noPermissionTipsConfig.btns">
+            :btns="noPermissionTipsConfig.btns"
+        >
         </empty-tips>
         <YamlPipelineEditor v-else-if="isCodeMode" />
         <template v-else>
@@ -14,9 +15,12 @@
                 <span
                     v-for="panel in panels"
                     :key="panel.name"
-                    :class="['choose-type-switcher-tab', {
-                        active: currentTab === panel.name
-                    }]"
+                    :class="[
+                        'choose-type-switcher-tab',
+                        {
+                            active: currentTab === panel.name
+                        }
+                    ]"
                     @click="switchTab(panel)"
                 >
                     {{ panel.label }}
@@ -40,15 +44,19 @@
 <script>
     import MiniMap from '@/components/MiniMap'
     import { navConfirm } from '@/utils/util'
-    import { AuthorityTab, PipelineEditTab, BaseSettingTab, TriggerTab, NotifyTab, ShowVariable } from '@/components/PipelineEditTabs/'
+    import {
+        AuthorityTab,
+        PipelineEditTab,
+        BaseSettingTab,
+        TriggerTab,
+        NotifyTab,
+        ShowVariable
+    } from '@/components/PipelineEditTabs/'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import { mapActions, mapState, mapGetters } from 'vuex'
     import YamlPipelineEditor from './YamlPipelineEditor'
     import emptyTips from '@/components/devops/emptyTips'
-    import {
-        RESOURCE_ACTION,
-        handlePipelineNoPermission
-    } from '@/utils/permission'
+    import { RESOURCE_ACTION, handlePipelineNoPermission } from '@/utils/permission'
 
     export default {
         components: {
@@ -98,9 +106,7 @@
             }
         },
         computed: {
-            ...mapState([
-                'fetchError'
-            ]),
+            ...mapState(['fetchError']),
             ...mapState('atom', [
                 'pipeline',
                 'pipelineWithoutTrigger',
@@ -122,65 +128,69 @@
                 return this.$route.params.tab || 'pipeline'
             },
             curPanel () {
-                return this.panels.find(panel => panel.name === this.currentTab)
+                return this.panels.find((panel) => panel.name === this.currentTab)
             },
             panels () {
-                return [{
-                            name: 'pipeline',
-                            label: this.$t('pipeline'),
-                            component: 'PipelineEditTab',
-                            bindData: {
-                                pipeline: this.pipelineWithoutTrigger,
-                                isLoading: !this.pipelineWithoutTrigger
+                return [
+                    {
+                        name: 'pipeline',
+                        label: this.$t('pipeline'),
+                        component: 'PipelineEditTab',
+                        bindData: {
+                            pipeline: this.pipelineWithoutTrigger,
+                            isLoading: !this.pipelineWithoutTrigger
+                        }
+                    },
+                    {
+                        name: 'trigger',
+                        label: this.$t('settings.trigger'),
+                        component: 'TriggerTab',
+                        bindData: {
+                            editable: !this.pipeline?.instanceFromTemplate,
+                            pipeline: this.pipeline
+                        }
+                    },
+                    {
+                        name: 'notify',
+                        label: this.$t('settings.notify'),
+                        component: 'NotifyTab',
+                        bindData: {
+                            failSubscriptionList: this.getPipelineSubscriptions('fail'),
+                            successSubscriptionList: this.getPipelineSubscriptions('success'),
+                            updateSubscription: (name, value) => {
+                                this.setPipelineEditing(true)
+                                console.log(name, value)
+                                this.updatePipelineSetting({
+                                    setting: this.pipelineSetting,
+                                    param: {
+                                        [name]: value
+                                    }
+                                })
                             }
-                        },
-                        {
-                            name: 'trigger',
-                            label: this.$t('settings.trigger'),
-                            component: 'TriggerTab',
-                            bindData: {
-                                editable: !this.pipeline?.instanceFromTemplate,
-                                pipeline: this.pipeline
-                            }
-                        },
-                        {
-                            name: 'notify',
-                            label: this.$t('settings.notify'),
-                            component: 'NotifyTab',
-                            bindData: {
-                                failSubscriptionList: this.getPipelineSubscriptions('fail'),
-                                successSubscriptionList: this.getPipelineSubscriptions('success'),
-                                updateSubscription: (name, value) => {
-                                    this.setPipelineEditing(true)
-                                    console.log(name, value)
-                                    this.updatePipelineSetting({
-                                        setting: this.pipelineSetting,
-                                        param: {
-                                            [name]: value
-                                        }
-                                    })
-                                }
-                            }
-                        },
-                        ...(this.isDraftEdit
-                            ? []
-                            : [{
+                        }
+                    },
+                    ...(this.isDraftEdit
+                        ? []
+                        : [
+                            {
                                 name: 'auth',
                                 label: this.$t('settings.auth'),
                                 component: 'AuthorityTab'
-                            }]),
-                        {
-                            name: 'baseSetting',
-                            label: this.$t('editPage.baseSetting'),
-                            component: 'BaseSettingTab',
-                            bindData: {
-                                pipelineSetting: this.pipelineSetting,
-                                updatePipelineSetting: (...args) => {
-                                    this.setPipelineEditing(true)
-                                    this.updatePipelineSetting(...args)
-                                }
                             }
-                        }]
+                        ]),
+                    {
+                        name: 'baseSetting',
+                        label: this.$t('editPage.baseSetting'),
+                        component: 'BaseSettingTab',
+                        bindData: {
+                            pipelineSetting: this.pipelineSetting,
+                            updatePipelineSetting: (...args) => {
+                                this.setPipelineEditing(true)
+                                this.updatePipelineSetting(...args)
+                            }
+                        }
+                    }
+                ]
             }
         },
         watch: {
@@ -232,7 +242,7 @@
         },
         mounted () {
             // HACK： 修复弹窗z-index问题
-            window.__bk_zIndex_manager.zIndex = 2020
+            window.__bk_zIndex_manager.zIndex = 2015
             if (!this.editfromImport) {
                 this.init()
             }
@@ -293,7 +303,11 @@
                 if (!this.leaving) {
                     if (this.isEditing) {
                         this.leaving = true
-                        navConfirm({ content: this.confirmMsg, type: 'warning', cancelText: this.cancelText })
+                        navConfirm({
+                            content: this.confirmMsg,
+                            type: 'warning',
+                            cancelText: this.cancelText
+                        })
                             .then((result) => {
                                 next(result)
                                 this.leaving = false
@@ -341,116 +355,117 @@
 </script>
 
 <style lang="scss">
-    @import "@/scss/conf";
-    .new-ui-form {
-        .ui-inner-label, .bk-label {
-            font-size: 12px;
-            line-height: 20px;
-            min-height: 20px;
-            margin-bottom: 4px;
-        }
-        .ui-inner-label {
-            display: flex;
-            align-items: center;
-        }
-        .bk-form-tip, .bk-form-help {
-            margin-bottom: 0;
-            line-height: 18px;
-        }
-        i.icon-question-circle-shape {
-            color: #979BA5;
-            font-size: 14px;
-        }
-    }
-    .new-ui-form.bk-form-vertical .bk-form-item+.bk-form-item {
-        margin-top: 24px;
-    }
-    .bkdevops-pipeline-edit-wrapper {
-        /* display: flex; */
-        .choose-type-switcher {
-            background: #f0f1f5;
-            height: 42px;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            margin: 24px 24px 0;
-            /* margin: 0 24px;
+@import "@/scss/conf";
+.new-ui-form {
+  .ui-inner-label,
+  .bk-label {
+    font-size: 12px;
+    line-height: 20px;
+    min-height: 20px;
+    margin-bottom: 4px;
+  }
+  .ui-inner-label {
+    display: flex;
+    align-items: center;
+  }
+  .bk-form-tip,
+  .bk-form-help {
+    margin-bottom: 0;
+    line-height: 18px;
+  }
+  i.icon-question-circle-shape {
+    color: #979ba5;
+    font-size: 14px;
+  }
+}
+.new-ui-form.bk-form-vertical .bk-form-item + .bk-form-item {
+  margin-top: 24px;
+}
+.bkdevops-pipeline-edit-wrapper {
+  /* display: flex; */
+  .choose-type-switcher {
+    background: #f0f1f5;
+    height: 42px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    margin: 24px 24px 0;
+    /* margin: 0 24px;
             position: sticky;
             top: 56px;
             z-index: 8; */
 
-            .choose-type-switcher-tab {
-                padding: 0 18px;
-                height: 42px;
-                font-size: 14px;
-                display: flex;
-                align-items: center;
-                position: relative;
-                cursor: pointer;
-                &:hover {
-                    color: $primaryColor;
-                }
-                &:not(:first-child)::before {
-                    position: absolute;
-                    content: '';
-                    width: 1px;
-                    height: 16px;
-                    background-color: #C4C6CC;
-                    top: 13px;
-                    left: 0;
-                }
+    .choose-type-switcher-tab {
+      padding: 0 18px;
+      height: 42px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      position: relative;
+      cursor: pointer;
+      &:hover {
+        color: $primaryColor;
+      }
+      &:not(:first-child)::before {
+        position: absolute;
+        content: "";
+        width: 1px;
+        height: 16px;
+        background-color: #c4c6cc;
+        top: 13px;
+        left: 0;
+      }
 
-                &:last-child::after {
-                    position: absolute;
-                    content: '';
-                    width: 1px;
-                    height: 16px;
-                    background-color: #C4C6CC;
-                    top: 13px;
-                    right: 0;
-                }
+      &:last-child::after {
+        position: absolute;
+        content: "";
+        width: 1px;
+        height: 16px;
+        background-color: #c4c6cc;
+        top: 13px;
+        right: 0;
+      }
 
-                &.active {
-                    background-color: white;
-                    border-radius: 4px 4px 0 0;
+      &.active {
+        background-color: white;
+        border-radius: 4px 4px 0 0;
 
-                    &::before,
-                    &::after {
-                        background-color: white;
-                    }
-                }
-                &.active + ::before {
-                    display: none;
-                }
-            }
+        &::before,
+        &::after {
+          background-color: white;
         }
-
-        .edit-content-area {
-            position: relative;
-            background: white;
-            height: calc(100vh - 114px);
-            margin: 0 24px;
-            padding: 24px 24px 40px;
-            overflow-y: auto;
-            flex: 1;
-            box-shadow: 0 2px 2px 0 #00000026;
-
-        }
-        .choose-type-container {
-            margin: 26px 24px 20px;
-        }
-        .bk-tab-section {
-            padding: 0 25px 20px;
-        }
-        .bkdevops-pipeline-edit-tab {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            overflow: hidden;
-            .bk-tab-content {
-                overflow: auto;
-            }
-        }
+      }
+      &.active + ::before {
+        display: none;
+      }
     }
+  }
+
+  .edit-content-area {
+    position: relative;
+    background: white;
+    height: calc(100vh - 114px);
+    margin: 0 24px;
+    padding: 24px 24px 40px;
+    overflow-y: auto;
+    flex: 1;
+    box-shadow: 0 2px 2px 0 #00000026;
+  }
+  .choose-type-container {
+    margin: 26px 24px 20px;
+  }
+  .bk-tab-section {
+    padding: 0 25px 20px;
+  }
+  .bkdevops-pipeline-edit-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    overflow: hidden;
+    .bk-tab-content {
+      overflow: auto;
+    }
+  }
+}
 </style>

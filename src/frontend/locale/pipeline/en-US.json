@@ -1375,5 +1375,7 @@
   "copy": "Copy",
   "templateName": "Template",
   "templateVersion": "Template Version",
-  "documentTitlePipeline": "Pipeline | BK-CI | Tencent BlueKing"
+  "documentTitlePipeline": "Pipeline | BK-CI | Tencent BlueKing",
+  "saveBeforeSwitch": "Please save the pipeline before switching, otherwise all changes will be lost.",
+  "tips": "Tips"
 }

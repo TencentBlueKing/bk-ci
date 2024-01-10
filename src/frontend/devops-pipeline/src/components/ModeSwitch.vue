@@ -14,7 +14,7 @@
 </template>
 
 <script>
-    import { mapState, mapActions } from 'vuex'
+    import { mapState, mapActions, mapGetters } from 'vuex'
     import { CODE_MODE } from '@/utils/pipelineConst'
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     export default {
@@ -24,7 +24,11 @@
                 type: [Boolean, null],
                 default: null
             },
-            yamlInvalidMsg: String
+            yamlInvalidMsg: String,
+            readOnly: {
+                type: Boolean,
+                default: false
+            }
         },
         data () {
             return {
@@ -32,23 +36,26 @@
             }
         },
         computed: {
-            ...mapState([
-                'pipelineMode',
-                'modeList'
-            ]),
+            ...mapState(['pipelineMode', 'modeList']),
             ...mapState('atom', [
                 'pipeline',
                 'pipelineWithoutTrigger',
                 'pipelineSetting',
                 'pipelineYaml'
             ]),
+            ...mapGetters({
+                isEditing: 'atom/isEditing'
+            }),
             pipelineModes () {
-                return this.modeList.map(mode => ({
+                return this.modeList.map((mode) => ({
                     label: this.$t(`details.${mode}`),
                     disabled: true,
                     id: mode,
                     cls: this.pipelineMode === mode ? 'is-selected' : ''
                 }))
+            },
+            canSwitch () {
+                return !(!this.readOnly && this.isEditing)
             }
         },
 
@@ -95,6 +102,15 @@
                 if (this.isSwitching) {
                     return
                 }
+                if (!this.canSwitch) {
+                    this.$bkInfo({
+                        type: 'warning',
+                        title: this.$t('tips'),
+                        subTitle: this.$t('saveBeforeSwitch'),
+                        showFooter: false
+                    })
+                    return
+                }
                 if (mode === CODE_MODE) {
                     this.isSwitching = true
                     const { yamlSupported, yamlInvalidMsg } = await this.detectYamlSupport()
@@ -103,16 +119,20 @@
                             type: 'error',
                             width: 500,
                             title: this.$t('invalidCodeMode'),
-                            subHeader: this.$createElement('pre', {
-                                style: {
-                                    padding: '16px',
-                                    background: '#f5f5f5',
-                                    textAlign: 'left',
-                                    lineHeight: '24px',
-                                    whiteSpace: 'pre-wrap',
-                                    wordBreak: 'break-all'
-                                }
-                            }, yamlInvalidMsg),
+                            subHeader: this.$createElement(
+                                'pre',
+                                {
+                                    style: {
+                                        padding: '16px',
+                                        background: '#f5f5f5',
+                                        textAlign: 'left',
+                                        lineHeight: '24px',
+                                        whiteSpace: 'pre-wrap',
+                                        wordBreak: 'break-all'
+                                    }
+                                },
+                                yamlInvalidMsg
+                            ),
                             showFooter: false
                         })
                         this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
