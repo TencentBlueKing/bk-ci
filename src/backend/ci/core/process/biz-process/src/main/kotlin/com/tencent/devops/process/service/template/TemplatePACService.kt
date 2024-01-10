@@ -17,8 +17,8 @@ import com.tencent.devops.common.pipeline.pojo.transfer.TransferMark
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
-import com.tencent.devops.process.yaml.modelTransfer.PipelineTransferException
-import com.tencent.devops.process.yaml.modelTransfer.TransferMapper
+import com.tencent.devops.process.yaml.transfer.PipelineTransferException
+import com.tencent.devops.process.yaml.transfer.TransferMapper
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

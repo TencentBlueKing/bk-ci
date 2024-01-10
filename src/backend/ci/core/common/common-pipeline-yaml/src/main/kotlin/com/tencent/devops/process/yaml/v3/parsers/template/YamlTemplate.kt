@@ -55,10 +55,10 @@ import com.tencent.devops.process.yaml.v3.models.stage.PreStage
 import com.tencent.devops.process.yaml.v3.parsers.template.models.GetTemplateParam
 import com.tencent.devops.process.yaml.v3.parsers.template.models.NoReplaceTemplate
 import com.tencent.devops.process.yaml.v3.parsers.template.models.TemplateDeepTreeNode
-import com.tencent.devops.process.yaml.v3.stageCheck.Gate
-import com.tencent.devops.process.yaml.v3.stageCheck.GateTemplate
-import com.tencent.devops.process.yaml.v3.stageCheck.PreStageCheck
-import com.tencent.devops.process.yaml.v3.stageCheck.PreTemplateStageCheck
+import com.tencent.devops.process.yaml.v3.check.Gate
+import com.tencent.devops.process.yaml.v3.check.GateTemplate
+import com.tencent.devops.process.yaml.v3.check.PreStageCheck
+import com.tencent.devops.process.yaml.v3.check.PreTemplateStageCheck
 
 @Suppress("ALL")
 class YamlTemplate<T>(
