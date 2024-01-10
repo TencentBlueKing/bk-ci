@@ -116,7 +116,12 @@ class PipelineWebhookUpgradeService(
         if (start < 0) {
             return Result(emptyList())
         }
-        val list = pipelineWebhookDao.getPipelineWebHooksByRepositoryType(dslContext, repositoryType.name, start, limit)
+        val list = pipelineWebhookDao.getPipelineWebHooksByRepositoryType(
+            dslContext = dslContext,
+            repositoryType = repositoryType.name,
+            offset = start,
+            limit = limit
+        )
         val pipelineWebhookList = mutableListOf<PipelineWebhook>()
         list.forEach {
             pipelineWebhookList.add(pipelineWebhookDao.convert(it))
