@@ -22,6 +22,7 @@ export const allVersionKeyList = [
     'BK_CI_MINOR_VERSION',
     'BK_CI_FIX_VERSION'
 ]
+export const semverVersionKeySet = new Set(allVersionKeyList)
 
 export const NAME_FILTER_TYPE = 'filterByName'
 export const CREATOR_FILTER_TYPE = 'filterByCreator'
@@ -153,4 +154,14 @@ export const PIPELINE_SORT_FILED = {
     createTime: 'CREATE_TIME',
     latestBuildStartDate: 'LAST_EXEC_TIME',
     updateTime: 'UPDATE_TIME'
+}
+
+export const UI_MODE = 'MODEL'
+export const CODE_MODE = 'YAML'
+
+export const templateTypeEnum = {
+    CONSTRAIN: 'CONSTRAIN',
+    FREEDOM: 'FREEDOM',
+    PUBLIC: 'PUBLIC',
+    CUSTOMIZE: 'CUSTOMIZE'
 }

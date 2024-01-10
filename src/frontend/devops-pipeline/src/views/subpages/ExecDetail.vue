@@ -4,7 +4,7 @@
         @scroll="handlerScroll"
         v-bkloading="{ isLoading: isLoading || fetchingAtomList }"
     >
-        
+
         <empty-tips
             v-if="hasNoPermission"
             :show-lock="true"
@@ -58,7 +58,7 @@
                 :visible="summaryVisible"
                 :exec-detail="execDetail"
             ></Summary>
-            
+
             <p class="pipeline-exec-gap">
                 <span
                     @click="collapseSummary"
@@ -218,7 +218,6 @@
                 'isShowCompleteLog',
                 'showPanelType',
                 'fetchingAtomList',
-                'pipeline',
                 'showStageReviewPanel'
             ]),
             ...mapGetters('atom', {
@@ -742,11 +741,6 @@
       }
       .item-label {
         color: #c4cdd6;
-      }
-      .icon-retry {
-        font-size: 20px;
-        color: $primaryColor;
-        cursor: pointer;
       }
       .icon-stop-shape {
         font-size: 15px;

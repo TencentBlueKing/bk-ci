@@ -27,7 +27,7 @@
             </bk-button>
         </div>
         <bk-table-column v-if="isPatchView" type="selection" width="60" fixed="left" :selectable="checkSelecteable"></bk-table-column>
-        <bk-table-column v-if="!isPatchView && !isDeleteView" width="20" fixed="left">
+        <bk-table-column v-if="!isPatchView && !isDeleteView" width="30" fixed="left">
             <template slot-scope="{ row }">
                 <bk-button
                     text
@@ -73,6 +73,7 @@
                         size="12"
                         v-bk-tooltips.right="$t('pipelineConstraintModeTips')"
                     />
+                    <bk-tag v-if="props.row.onlyDraft" theme="success" class="draft-tag">{{ $t('draft') }}</bk-tag>
                 </div>
             </template>
         </bk-table-column>
@@ -120,11 +121,11 @@
                 <span slot-scope="props">{{ props.row.latestBuildNum ? `#${props.row.latestBuildNum}` : '--' }}</span>
             </bk-table-column>
             <bk-table-column :width="tableWidthMap.latestBuildStartDate" sortable="custom" :label="$t('lastExecTime')" prop="latestBuildStartDate" />
-            <bk-table-column :width="tableWidthMap.createTime" sortable="custom" :label="$t('restore.createTime')" prop="createTime" :formatter="formatTime" />
+            <bk-table-column :width="tableWidthMap.createTime" sortable="custom" :label="$t('createTime')" prop="createTime" :formatter="formatTime" />
             <bk-table-column :width="tableWidthMap.creator" :label="$t('creator')" prop="creator" />
         </template>
         <template v-else-if="isDeleteView">
-            <bk-table-column :width="tableWidthMap.createTime" key="createTime" :label="$t('restore.createTime')" sortable="custom" prop="createTime" sort :formatter="formatTime" />
+            <bk-table-column :width="tableWidthMap.createTime" key="createTime" :label="$t('createTime')" sortable="custom" prop="createTime" sort :formatter="formatTime" />
             <bk-table-column :width="tableWidthMap.deleteTime" key="updateTime" :label="$t('restore.deleteTime')" sortable="custom" prop="updateTime" :formatter="formatTime" />
             <bk-table-column :width="tableWidthMap.lastModifyUser" key="lastModifyUser" :label="$t('restore.deleter')" prop="lastModifyUser"></bk-table-column>
         </template>
@@ -226,6 +227,19 @@
                     @click="applyPermission(props.row)">
                     {{ $t('apply') }}
                 </bk-button>
+                <router-link
+                    v-else-if="props.row.onlyDraft"
+                    class="text-link"
+                    :to="{
+                        name: 'pipelinesEdit',
+                        params: {
+                            projectId: props.row.projectId,
+                            pipelineId: props.row.pipelineId
+                        }
+                    }"
+                >
+                    {{ $t('edit') }}
+                </router-link>
                 <template
                     v-else-if="props.row.hasPermission && !props.row.delete"
                 >
@@ -598,7 +612,7 @@
 
                 this.visibleTagCountList = this.pipelineList.reduce((acc, pipeline, index) => {
                     if (Array.isArray(pipeline.viewNames)) {
-                        const groupNameBoxWidth = this.$refs[`belongsGroupBox_${index}`].clientWidth * 2
+                        const groupNameBoxWidth = this.$refs[`belongsGroupBox_${index}`]?.clientWidth * 2
                         const groupNameLength = pipeline.viewNames.length
                         const moreTag = this.$refs?.[`groupNameMore_${index}`]?.$el
                         const moreTagWidth = (moreTag?.clientWidth ?? 0) + tagMargin
@@ -673,6 +687,7 @@
         align-items: center;
         justify-content: center;
         background: #EAEBF0;
+        grid-gap: 10px;
         height: 32px;
         grid-gap: 10px;
     }

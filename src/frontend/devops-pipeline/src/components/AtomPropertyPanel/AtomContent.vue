@@ -101,10 +101,12 @@
                     </div>
                 </div>
             </div>
-            <section class="atom-form-footer" v-if="showPanelType === 'PAUSE'">
-                <bk-button @click="changePluginPause(true, 'isExeContinue')" theme="primary" :loading="isExeContinue" :disabled="isExeStop">{{ $t('resume') }}</bk-button>
-                <bk-button @click="changePluginPause(false, 'isExeStop')" :loading="isExeStop" :disabled="isExeContinue">{{ $t('stop') }}</bk-button>
-            </section>
+            <slot name="footer">
+                <section class="atom-form-footer" v-if="showPanelType === 'PAUSE'">
+                    <bk-button @click="changePluginPause(true, 'isExeContinue')" theme="primary" :loading="isExeContinue" :disabled="isExeStop">{{ $t('resume') }}</bk-button>
+                    <bk-button @click="changePluginPause(false, 'isExeStop')" :loading="isExeStop" :disabled="isExeContinue">{{ $t('stop') }}</bk-button>
+                </section>
+            </slot>
         </div>
     </section>
 </template>
@@ -323,7 +325,7 @@
                 return ''
             },
             atomVersion () {
-                return this.element.version || this.getDefaultVersion(this.atomCode)
+                return this.element?.version || this.getDefaultVersion(this.atomCode)
             },
             atom () {
                 const { atomMap, atomCode, element, getDefaultVersion, getAtomModal } = this
@@ -333,7 +335,6 @@
                     atomCode,
                     version
                 })
-                console.log(atomMap, atomModal)
                 switch (true) {
                     case !isObject(atom) && !isObject(atomModal):
                         return null
@@ -465,6 +466,7 @@
                 deep: true,
                 handler: function (errorsItems) {
                     const isError = errorsItems.length > 0
+                    console.log('atom errors', errorsItems, this.errors)
                     this.handleUpdateAtom('isError', isError)
                 }
             }
@@ -490,7 +492,6 @@
                 'requestGlobalEnvs',
                 'updateAtom',
                 'updateAtomType',
-                'fetchAtoms',
                 'fetchAtomModal',
                 'fetchAtomVersionList',
                 'togglePropertyPanel',
@@ -695,7 +696,6 @@
         }
     }
     .atom-form-footer {
-        margin-top: 10px;
         button {
             margin-right: 6px;
         }

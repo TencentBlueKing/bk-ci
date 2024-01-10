@@ -2,82 +2,98 @@
     <portal to="atom-selector-popup">
         <transition name="selector-slide">
             <div v-if="showAtomSelectorPopup" class="atom-selector-popup">
-                <header class="atom-selector-header">
-                    <h3>{{ $t('editPage.chooseAtom') }}<i @click="freshAtomList(searchKey)" class="devops-icon icon-refresh atom-fresh" :class="fetchingAtomList ? &quot;spin-icon&quot; : &quot;&quot;" /></h3>
-                    <bk-input class="atom-search-input" ref="searchStr" :clearable="true" :placeholder="$t('editPage.searchTips')" right-icon="icon-search" :value="searchKey" @input="handleClear" @enter="handleSearch"></bk-input>
-                </header>
-                <bk-tab v-if="!searchKey" class="atom-tab" size="small" ref="tab" :active.sync="classifyCode" type="unborder-card" v-bkloading="{ isLoading: fetchingAtomList }">
-                    <bk-tab-panel
-                        ref="atomListDom"
-                        v-for="classify in classifyCodeList"
-                        :key="classify"
-                        :name="classify"
-                        @scroll.native.passive="scrollLoadMore(classify, $event)"
-                        :label="atomClassifyMap[classify].classifyName"
-                        render-directive="if"
-                        :class="[{ [getClassifyCls(classify)]: true }, 'tab-section']"
-                    >
-                        <atom-card v-for="(atom) in curTabList"
-                            :key="atom.atomCode"
-                            :atom="atom"
-                            :container="container"
-                            :element-index="elementIndex"
-                            :atom-code="atomCode"
-                            :active-atom-code="activeAtomCode"
-                            @close="close"
-                            @click="activeAtom(atom.atomCode)"
-                            :class="{
-                                selected: atom.atomCode === atomCode,
-                                [getAtomClass(atom.atomCode)]: true
-                            }"
-                        ></atom-card>
-                        <div class="empty-atom-list" v-if="curTabList.length <= 0 && !fetchingAtomList">
-                            <empty-tips type="no-result"></empty-tips>
-                        </div>
-                    </bk-tab-panel>
-                </bk-tab>
-                <section v-else class="search-result" ref="searchResult" v-bkloading="{ isLoading: fetchingAtomList }">
-                    <h3 v-if="installArr.length" class="search-title">{{ $t('newlist.installed') }}（{{installArr.length}}）</h3>
-                    <atom-card v-for="atom in installArr"
-                        :key="atom.atomCode"
-                        :atom="atom"
-                        :container="container"
-                        :element-index="elementIndex"
-                        :atom-code="atomCode"
-                        :active-atom-code="activeAtomCode"
-                        @close="close"
-                        @click="activeAtom(atom.atomCode)"
-                        :class="{
-                            selected: atom.atomCode === atomCode
-                        }"
-                    ></atom-card>
+                <div v-if="showAtomYaml" class="preview-atom-yaml-content">
+                    <header>
+                        {{ $t('previewYaml') }}
+                        <i class="devops-icon icon-close" @click="close" />
+                    </header>
+                    <YamlEditor
+                        class="preview-atom-yaml"
+                        :value="atomYaml"
+                        yaml-uri=".task.yml"
+                        read-only
+                    />
+                </div>
+                <temaplte v-else>
+                    <header class="atom-selector-header">
+                        <h3>{{ $t('editPage.chooseAtom') }}<i @click="freshAtomList(searchKey)" class="devops-icon icon-refresh atom-fresh" :class="fetchingAtomList ? &quot;spin-icon&quot; : &quot;&quot;" /></h3>
+                        <bk-input class="atom-search-input" ref="searchStr" :clearable="true" :placeholder="$t('editPage.searchTips')" right-icon="icon-search" :value="searchKey" @input="handleClear" @enter="handleSearch"></bk-input>
+                    </header>
+                    <bk-tab v-if="!searchKey" class="atom-tab" size="small" ref="tab" :active.sync="classifyCode" type="unborder-card" v-bkloading="{ isLoading: fetchingAtomList }">
+                        <bk-tab-panel
+                            ref="atomListDom"
+                            v-for="classify in classifyCodeList"
+                            :key="classify"
+                            :name="classify"
+                            @scroll.native.passive="scrollLoadMore(classify, $event)"
+                            :label="atomClassifyMap[classify].classifyName"
+                            render-directive="if"
+                            :class="[{ [getClassifyCls(classify)]: true }, 'tab-section']"
+                        >
+                            <atom-card v-for="(atom) in curTabList"
+                                :key="atom.atomCode"
+                                :atom="atom"
+                                :container="container"
+                                :element-index="elementIndex"
+                                :atom-code="atomCode"
+                                :active-atom-code="activeAtomCode"
+                                @close="close"
+                                @click="activeAtom(atom.atomCode)"
+                                :class="{
+                                    selected: atom.atomCode === atomCode,
+                                    [getAtomClass(atom.atomCode)]: true
+                                }"
+                            ></atom-card>
+                            <div class="empty-atom-list" v-if="curTabList.length <= 0 && !fetchingAtomList">
+                                <empty-tips type="no-result"></empty-tips>
+                            </div>
 
-                    <h3 v-if="uninstallArr.length" class="search-title gap-border">{{ $t('editPage.notInstall') }}（{{uninstallArr.length}}）</h3>
-                    <atom-card v-for="atom in uninstallArr"
-                        :key="atom.atomCode"
-                        :atom="atom"
-                        :container="container"
-                        :element-index="elementIndex"
-                        :atom-code="atomCode"
-                        :active-atom-code="activeAtomCode"
-                        @installAtomSuccess="installAtomSuccess"
-                        @close="close"
-                        @click="activeAtom(atom.atomCode)"
-                        :class="{
-                            selected: atom.atomCode === atomCode
-                        }"
-                    ></atom-card>
-                    <div class="empty-atom-list" v-if="curTabList.length <= 0 && !fetchingAtomList">
-                        <empty-tips type="no-result"></empty-tips>
-                    </div>
-                </section>
+                            <section v-else class="search-result" ref="searchResult" v-bkloading="{ isLoading: fetchingAtomList }">
+                                <h3 v-if="installArr.length" class="search-title">{{ $t('newlist.installed') }}（{{installArr.length}}）</h3>
+                                <atom-card v-for="atom in installArr"
+                                    :key="atom.atomCode"
+                                    :atom="atom"
+                                    :container="container"
+                                    :element-index="elementIndex"
+                                    :atom-code="atomCode"
+                                    :active-atom-code="activeAtomCode"
+                                    @close="close"
+                                    @click="activeAtom(atom.atomCode)"
+                                    :class="{
+                                        selected: atom.atomCode === atomCode
+                                    }"
+                                ></atom-card>
+
+                                <h3 v-if="uninstallArr.length" class="search-title gap-border">{{ $t('editPage.notInstall') }}（{{uninstallArr.length}}）</h3>
+                                <atom-card v-for="atom in uninstallArr"
+                                    :key="atom.atomCode"
+                                    :atom="atom"
+                                    :container="container"
+                                    :element-index="elementIndex"
+                                    :atom-code="atomCode"
+                                    :active-atom-code="activeAtomCode"
+                                    @installAtomSuccess="installAtomSuccess"
+                                    @close="close"
+                                    @click="activeAtom(atom.atomCode)"
+                                    :class="{
+                                        selected: atom.atomCode === atomCode
+                                    }"
+                                ></atom-card>
+                                <div class="empty-atom-list" v-if="curTabList.length <= 0 && !fetchingAtomList">
+                                    <empty-tips type="no-result"></empty-tips>
+                                </div>
+                            </section>
+                        </bk-tab-panel>
+                    </bk-tab>
+                </temaplte>
             </div>
         </transition>
     </portal>
 </template>
 
 <script>
-    import { mapActions, mapGetters, mapState } from 'vuex'
+    import { mapGetters, mapActions, mapState } from 'vuex'
+    import YamlEditor from '@/components/YamlEditor'
     import EmptyTips from '../common/empty'
     import atomCard from './atomCard'
 
@@ -87,9 +103,12 @@
         name: 'atom-selector',
         components: {
             atomCard,
-            EmptyTips
+            EmptyTips,
+            YamlEditor
         },
         props: {
+            showAtomYaml: Boolean,
+            atomYaml: String,
             container: {
                 type: Object,
                 default: () => ({})
@@ -97,6 +116,9 @@
             element: {
                 type: Object,
                 default: () => ({})
+            },
+            beforeClose: {
+                type: Function
             },
             elementIndex: Number
         },
@@ -178,10 +200,12 @@
                     if (visible) {
                         this.classifyCode = atomMap[atomCode] ? atomMap[atomCode].classifyCode : firstClassify
                         this.activeAtomCode = atomCode
+                        // 收起变量侧栏
+                        this.setShowVariable(false)
                         this.fetchClassify()
                         this.fetchAtomList()
                         setTimeout(() => {
-                            this.$refs.searchStr.focus()
+                            this.$refs.searchStr?.focus?.()
                         }, 0)
                     } else {
                         this.clearSearch()
@@ -223,6 +247,7 @@
             ...mapActions('atom', [
                 'toggleAtomSelectorPopup',
                 'setRequestAtomData',
+                'setShowVariable',
                 'fetchAtoms',
                 'fetchClassify',
                 'setAtomPageOver',
@@ -238,14 +263,14 @@
                     this.timer = setTimeout(async () => {
                         this.isThrottled = false
                         const queryProjectAtomFlag = this.classifyCode !== 'rdStore' // 是否查询项目插件标识
-        
+
                         let jobType // job类型 => 触发器插件无需传jobType
                         if (this.category === 'TRIGGER') {
                             jobType = undefined
                         } else {
                             jobType = ['WINDOWS', 'MACOS', 'LINUX'].includes(this.baseOS) ? 'AGENT' : 'AGENT_LESS'
                         }
-                        
+
                         await this.fetchAtoms({
                             projectCode: this.projectCode,
                             category: this.category,
@@ -300,6 +325,7 @@
                 this.fetchAtomList()
             },
             close () {
+                this.beforeClose?.()
                 this.toggleAtomSelectorPopup(false)
                 this.clearSearch()
             },
@@ -337,13 +363,12 @@
         right: 660px;
         position: absolute;
         width: 600px;
-        height: calc(100% - 20px);
+        height: calc(100% - 48px);
         background: white;
         z-index: 10000;
         border: 1px solid $borderColor;
         border-radius: 5px;
-        top: 0;
-        margin: 10px 0;
+        top: 48px;
         &:before {
             content: '';
             display: block;
@@ -357,6 +382,26 @@
             transform: rotate(45deg);
             right: -6px;
             top: 136px;
+        }
+        .preview-atom-yaml-content {
+            height: 100%;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+
+            > header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-shrink: 0;
+                margin-bottom: 16px;
+                font-size: 14px;
+                color: #313238;
+            }
+            .preview-atom-yaml {
+                flex: 1;
+                overflow: hidden;
+            }
         }
         .not-recommend {
             text-decoration: line-through;

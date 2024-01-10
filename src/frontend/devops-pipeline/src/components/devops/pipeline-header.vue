@@ -63,6 +63,10 @@
             flex: 1;
             align-items: center;
         }
+        .fl {
+            display: flex;
+            align-items: center;
+        }
         &-right {
             display: flex;
             flex: 1;
@@ -76,7 +80,6 @@
         .default-title {
             flex: 1;
             letter-spacing: .5px;
-            font-size: 16px;
             color: #333948;
         }
     }

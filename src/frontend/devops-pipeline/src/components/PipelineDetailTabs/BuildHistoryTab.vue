@@ -1,0 +1,195 @@
+<template>
+    <div class="build-history-tab-content">
+        <empty-tips v-if="hasNoPermission" :show-lock="true" v-bind="emptyTipsConfig"></empty-tips>
+        <build-history-table v-else :show-log="showLog" :is-debug="isDebug" />
+    </div>
+</template>
+
+<script>
+    import BuildHistoryTable from '@/components/BuildHistoryTable/'
+    import emptyTips from '@/components/devops/emptyTips'
+    import { mapGetters, mapActions, mapState } from 'vuex'
+    import {
+        handlePipelineNoPermission,
+        RESOURCE_ACTION
+    } from '@/utils/permission'
+    import pipelineConstMixin from '@/mixins/pipelineConstMixin'
+    import webSocketMessage from '@/utils/webSocketMessage'
+
+    export default {
+        name: 'build-history-tab',
+        components: {
+            BuildHistoryTable,
+            emptyTips
+        },
+
+        mixins: [pipelineConstMixin],
+        props: {
+            isDebug: Boolean
+        },
+        data () {
+            return {
+                hasNoPermission: false,
+                currentBuildNo: '',
+                currentBuildNum: '',
+                currentShowStatus: false
+            }
+        },
+
+        computed: {
+            ...mapGetters({
+                historyPageStatus: 'pipelines/getHistoryPageStatus',
+                isReleasePipeline: 'atom/isReleasePipeline',
+                isCurPipelineLocked: 'atom/isCurPipelineLocked'
+            }),
+            ...mapState('atom', [
+                'isPropertyPanelVisible',
+                'pipelineInfo'
+            ]),
+            ...mapState('pipelines', [
+                'executeStatus'
+            ]),
+            projectId () {
+                return this.$route.params.projectId
+            },
+            pipelineId () {
+                return this.$route.params.pipelineId
+            },
+            queryStr () {
+                return this.historyPageStatus?.queryStr ?? ''
+            },
+            emptyTipsConfig () {
+                const { hasNoPermission } = this
+                const title = hasNoPermission ? this.$t('noPermission') : this.$t('history.noBuildRecords')
+                const desc = hasNoPermission ? this.$t('history.noPermissionTips') : this.$t('history.buildEmptyDesc')
+
+                const btns = hasNoPermission
+                    ? [{
+                        theme: 'primary',
+                        size: 'normal',
+                        handler: this.changeProject,
+                        text: this.$t('changeProject')
+                    }, {
+                        theme: 'success',
+                        size: 'normal',
+                        handler: this.toApplyPermission,
+                        text: this.$t('applyPermission')
+                    }]
+                    : [{
+                        theme: 'primary',
+                        size: 'normal',
+                        disabled: this.executeStatus,
+                        loading: this.executeStatus,
+                        handler: () => {
+                            const params = {
+                                ...this.$route.params,
+                                version: this.pipelineInfo?.version
+                            }
+                            if (this.isReleasePipeline) {
+                                return this.$router.push({
+                                    name: 'pipelinesEdit',
+                                    params
+                                })
+                            }
+                            !this.executeStatus && !this.isCurPipelineLocked && this.$router.push({
+                                name: 'executePreview',
+                                query: {
+                                    ...(this.isDebug ? { debug: '' } : {})
+                                },
+                                params
+
+                            })
+                        },
+                        text: this.$t(this.isReleasePipeline ? 'goEdit' : 'history.startBuildTips')
+                    }]
+                return {
+                    title,
+                    desc,
+                    btns
+                }
+            }
+        },
+        watch: {
+            queryStr (newStr) {
+                let hashParam = ''
+                if (this.$route.hash && /^#b-+/.test(this.$route.hash)) hashParam = this.$route.hash
+                const url = `${this.$route.path}${newStr ? `?${newStr}` : ''}${hashParam}`
+                if (url !== this.$route.fullPath) {
+                    this.$router.push(url)
+                }
+            }
+        },
+
+        async mounted () {
+            if (this.$route.hash) { // 带上buildId时，弹出日志弹窗
+                const isBuildId = /^#b-+/.test(this.$route.hash) // 检查是否是合法的buildId
+                isBuildId && this.showLog(this.$route.hash.slice(1), '', true)
+            }
+            webSocketMessage.installWsMessage(this.refreshBuildHistoryList)
+        },
+
+        updated () {
+            if (!this.isPropertyPanelVisible) {
+                this.currentBuildNo = ''
+                this.currentBuildNum = ''
+                this.currentShowStatus = false
+            }
+        },
+
+        beforeDestroy () {
+            webSocketMessage.unInstallWsMessage()
+        },
+
+        methods: {
+            ...mapActions('pipelines', [
+                'requestExecPipeline'
+            ]),
+            ...mapActions('atom', [
+                'togglePropertyPanel'
+            ]),
+
+            changeProject () {
+                this.$toggleProjectMenu(true)
+            },
+            async toApplyPermission () {
+                try {
+                    handlePipelineNoPermission({
+                        projectId: this.projectId,
+                        resourceCode: this.pipelineId,
+                        action: RESOURCE_ACTION.VIEW
+                    })
+                } catch (e) {
+                    console.error(e)
+                }
+            },
+
+            showLog (buildId, buildNum, status) {
+                this.togglePropertyPanel({
+                    isShow: true
+                })
+
+                this.currentBuildNo = buildId
+                this.currentBuildNum = buildNum
+                this.currentShowStatus = status
+            }
+        }
+    }
+</script>
+
+<style lang="scss">
+    .build-history-tab-content {
+        height: 100%;
+        overflow: hidden;
+        padding: 16px 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        .bk-sideslider-wrapper {
+            top: 0;
+            padding-bottom: 0;
+             .bk-sideslider-content {
+                height: calc(100% - 60px);
+            }
+        }
+    }
+</style>

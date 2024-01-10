@@ -21,20 +21,24 @@
  * @file main store
  */
 
+import request from '@/utils/request'
 import Vue from 'vue'
 import Vuex from 'vuex'
 import ajax from '../utils/ajax'
-import request from '@/utils/request'
-import pipelines from './modules/pipelines/'
-import common from './modules/common/'
 import atom from './modules/atom'
+import common from './modules/common/'
+import pipelines from './modules/pipelines/'
 
+import { CODE_MODE, UI_MODE } from '@/utils/pipelineConst'
+
+import { ARTIFACT_HOOK_CONST, PIPELINE_EXECUTE_DETAIL_HOOK_CONST, PIPELINE_HISTORY_TAB_HOOK_CONST } from '../utils/extensionHooks'
 import {
+    BKUI_LS_PIPELINE_MODE,
     FETCH_ERROR,
     SET_SERVICE_HOOKS,
-    STORE_API_URL_PREFIX
+    STORE_API_URL_PREFIX,
+    UPDATE_PIPELINE_MODE
 } from './constants'
-import { ARTIFACT_HOOK_CONST, PIPELINE_EXECUTE_DETAIL_HOOK_CONST, PIPELINE_HISTORY_TAB_HOOK_CONST } from '../utils/extensionHooks'
 Vue.use(Vuex)
 
 function getHookByHTMLPath (htmlPath) {
@@ -44,6 +48,8 @@ function getHookByHTMLPath (htmlPath) {
     }
 }
 
+const modeList = [UI_MODE, CODE_MODE]
+const initPipelineMode = localStorage.getItem(BKUI_LS_PIPELINE_MODE)
 export default new Vuex.Store({
     // 模块
     modules: {
@@ -61,8 +67,9 @@ export default new Vuex.Store({
         fetchError: null,
 
         cancelTokenMap: {},
-
-        hooks: []
+        hooks: [],
+        modeList,
+        pipelineMode: modeList.includes(initPipelineMode) ? initPipelineMode : UI_MODE
     },
     // 公共 mutations
     mutations: {
@@ -91,6 +98,11 @@ export default new Vuex.Store({
             return Object.assign(state, {
                 fetchError
             })
+        },
+        [UPDATE_PIPELINE_MODE]: (state, mode) => {
+            return Object.assign(state, {
+                pipelineMode: mode
+            })
         }
     },
     // 公共 actions
@@ -112,6 +124,10 @@ export default new Vuex.Store({
                 }
                 commit('updateCurProject', data)
             })
+        },
+        updatePipelineMode ({ commit }, mode) {
+            localStorage.setItem(BKUI_LS_PIPELINE_MODE, mode)
+            commit(UPDATE_PIPELINE_MODE, mode)
         }
     },
     // 公共 getters
@@ -127,6 +143,12 @@ export default new Vuex.Store({
         },
         artifactHooks: getHookByHTMLPath(ARTIFACT_HOOK_CONST),
         extensionTabsHooks: getHookByHTMLPath(PIPELINE_HISTORY_TAB_HOOK_CONST),
-        extensionExecuteDetailTabsHooks: getHookByHTMLPath(PIPELINE_EXECUTE_DETAIL_HOOK_CONST)
+        extensionExecuteDetailTabsHooks: getHookByHTMLPath(PIPELINE_EXECUTE_DETAIL_HOOK_CONST),
+        isUiMode: state => {
+            return state.pipelineMode === UI_MODE
+        },
+        isCodeMode: state => {
+            return state.pipelineMode === CODE_MODE
+        }
     }
 })

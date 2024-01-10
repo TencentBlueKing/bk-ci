@@ -95,7 +95,7 @@
             }
         },
         created () {
-            this.freshList()
+            this.url && this.freshList()
         },
         methods: {
             edit (index) {
@@ -113,6 +113,36 @@
             toggleVisible (open) {
                 open && this.freshList()
             },
+            getResponseData (response, dataPath = 'data.records', defaultVal = []) {
+                try {
+                    switch (true) {
+                        case response.data && response.data.resources && Array.isArray(response.data.resources):
+                            return response.data.resources
+                        case response.data && response.data.record && Array.isArray(response.data.record):
+                            return response.data.record
+                        case Array.isArray(response.data):
+                            return response.data
+                        default: {
+                            const path = dataPath.split('.')
+                            let result = response
+                            let pos = 0
+                            while (path[pos] && result) {
+                                const key = path[pos]
+                                result = result[key]
+                                pos++
+                            }
+                            if (pos === path.length && Object.prototype.toString.call(result) === Object.prototype.toString.call(defaultVal)) {
+                                return result
+                            } else {
+                                throw Error(this.$t('editPage.failToGetData'))
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error(e)
+                    return defaultVal
+                }
+            },
             async freshList () {
                 try {
                     const { url, element } = this
@@ -125,8 +155,10 @@
                     this.isLoading = true
                     const res = await this.$ajax.get(changeUrl)
 
+                    const resData = this.getResponseData(res, this.dataPath)
+
                     // 正常情况
-                    this.list = (res.data.resources || res.data.records || res.data || []).map(item => ({
+                    this.list = (resData || []).map(item => ({
                         ...item,
                         id: item[this.paramId],
                         name: item[this.paramName]

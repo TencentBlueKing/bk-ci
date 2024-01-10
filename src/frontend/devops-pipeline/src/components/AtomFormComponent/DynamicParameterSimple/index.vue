@@ -36,7 +36,7 @@
         components: {
             parameterCom
         },
-        
+
         mixins: [mixins],
 
         props: {

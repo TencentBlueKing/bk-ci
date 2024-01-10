@@ -9,6 +9,8 @@
 </template>
 
 <script>
+    import { SET_PIPELINE_INFO } from '@/store/modules/atom/constants'
+
     export default {
         created () {
             this.$store.dispatch('requestProjectDetail', {
@@ -16,7 +18,11 @@
             })
         },
         beforeDestroy () {
-            this.$store.commit('pipelines/updateCurPipeline', {})
+            this.$store.dispatch('atom/setPipeline', null)
+            this.$store.dispatch('atom/setPipelineWithoutTrigger', null)
+            this.$store.dispatch('atom/setPipelineYaml', '')
+            this.$store.commit('atom/resetPipelineSetting', null)
+            this.$store.commit(`atom/${SET_PIPELINE_INFO}`, null)
             this.$store.commit('pipelines/updatePipelineList', [])
         }
     }
@@ -27,9 +33,7 @@
 .bkdevops-history-subpage {
   min-height: 100%;
   flex-direction: column;
-  .bk-exception {
-    position: absolute;
-  }
+  background: #F5F7FA;
   .pipeline-subpages-header {
     display: flex;
     align-items: center;

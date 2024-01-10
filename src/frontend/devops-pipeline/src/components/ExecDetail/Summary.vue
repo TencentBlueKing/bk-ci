@@ -66,7 +66,7 @@
                             </section>
                         </div>
                     </bk-popover>
-                    
+
                     v.{{ execDetail.curVersion }}
                 </div>
             </div>
@@ -177,7 +177,7 @@
                         }
                     }]
             }
-            
+
         },
         watch: {
             execDetail: function (val) {
@@ -254,7 +254,7 @@
         color: $primaryColor;
     }
   }
-    
+
   &-info {
     display: grid;
     grid-auto-flow: column;
@@ -300,74 +300,11 @@
                 opacity: 0;
               }
             }
+
           }
-          .exec-material-row {
-            // padding: 0 0 8px 0;
-            display: grid;
-            grid-gap: 20px;
-            grid-auto-flow: column;
-            height: 48px;
-            grid-auto-columns: minmax(auto, max-content) 36px;
-            .material-row-info-spans {
-                display: grid;
-                grid-auto-flow: column;
-                grid-gap: 20px;
-                grid-auto-columns: minmax(auto, max-content);
-                > span {
-                    @include ellipsis();
-                    display: inline-flex;
-                    min-width: auto;
-                    align-items: center;
-                    > svg {
-                        flex-shrink: 0;
-                        margin-right: 6px;
-                    }
-                }
+          .visible-material-row {
+            height: 38px;
             }
-            &.visible-material-row {
-              border: 1px solid transparent;
-              padding-bottom: 0px;
-              align-items: center;
-
-            }
-            .exec-more-material {
-                display: inline-flex;
-                align-items: center;
-
-            }
-
-            .mr-source-target {
-                display: grid;
-                align-items: center;
-                grid-auto-flow: column;
-                grid-gap: 6px;
-                .icon-arrows-right {
-                    color: #C4C6CC;
-                    font-weight: 800;
-                }
-                > span {
-                    @include ellipsis();
-                }
-            }
-            .material-span-tooltip-box {
-                flex: 1;
-                overflow: hidden;
-                font-size: 0;
-                > .bk-tooltip-ref {
-                    width: 100%;
-                    .material-span {
-                        width: 100%;
-                        font-size: 12px;
-                    }
-                }
-            }
-            .material-span {
-              @include ellipsis();
-              .bk-link-text {
-                font-size: 12px;
-              }
-            }
-          }
         }
       }
     }

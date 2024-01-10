@@ -70,7 +70,6 @@ export default {
         ]),
         ...mapActions('pipelines', [
             'requestAllPipelinesListByFilter',
-            'requestToggleCollect',
             'requestTemplatePermission',
             'requestRecyclePipelineList',
             'requestToggleCollect',
@@ -127,7 +126,8 @@ export default {
                             name: 'pipelinesHistory',
                             params: {
                                 projectId: item.projectId,
-                                pipelineId: item.pipelineId
+                                pipelineId: item.pipelineId,
+                                type: item.onlyDraft ? 'pipeline' : 'history'
                             }
                         },
                         latestBuildRoute: {
@@ -287,6 +287,7 @@ export default {
                     ...pipeline,
                     isCollect
                 })
+
                 pipeline.hasCollect = !pipeline.hasCollect
                 this.pipelineMap[pipeline.pipelineId].hasCollect = isCollect
                 this.addCollectViewPipelineCount(isCollect ? 1 : -1)
@@ -379,30 +380,6 @@ export default {
             })
         },
         /**
-         *  处理收藏和取消收藏
-         */
-        async togglePipelineCollect (pipelineId, isCollect = false) {
-            let message = isCollect ? this.$t('collectSuc') : this.$t('uncollectSuc')
-            let theme = 'success'
-            try {
-                const { projectId } = this.$route.params
-                await this.requestToggleCollect({
-                    projectId,
-                    pipelineId,
-                    isCollect
-                })
-                return true
-            } catch (err) {
-                message = err.message || err
-                theme = 'error'
-            } finally {
-                this.$showTips({
-                    message,
-                    theme
-                })
-            }
-        },
-        /**
          *  删除流水线
          */
         async delete ({ pipelineId, pipelineName, projectId }) {
@@ -465,9 +442,10 @@ export default {
          * 恢复流水线
          */
         async restore ({ projectId, pipelineId, pipelineName }) {
-            await navConfirm({
+            const res = await navConfirm({
                 content: this.$t('restorePipelineConfirm', [pipelineName])
             })
+            if (!res) return
             try {
                 await this.restorePipeline({
                     projectId,

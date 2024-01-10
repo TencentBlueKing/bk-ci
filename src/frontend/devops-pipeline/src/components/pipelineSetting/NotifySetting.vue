@@ -1,7 +1,7 @@
 <template>
-    <div class="notify-setting-comp" v-if="subscription">
-        <bk-form>
-            <bk-form-item :label="$t('settings.noticeType')">
+    <div class="notify-setting-comp">
+        <bk-form form-type="vertical" :label-width="300" v-if="subscription" class="new-ui-form">
+            <bk-form-item :label="$t('settings.noticeType')" :required="true">
                 <bk-checkbox-group :value="subscription.types" @change="value => updateSubscription('types', value)">
                     <bk-checkbox v-for="item in noticeList" :key="item.id" :value="item.value">
                         {{ item.name }}
@@ -19,13 +19,11 @@
                     </bk-checkbox>
                 </bk-checkbox-group>
             </bk-form-item>
-            <bk-form-item :label="$t('settings.additionUser')">
-                <staff-input :handle-change="handleUsers" name="users" :value="pipelineSettingUser"></staff-input>
+            <bk-form-item :label="$t('settings.noticeContent')" :required="true">
+                <bk-input type="textarea" :value="subscription.content" @change="value => updateSubscription('content', value)" />
             </bk-form-item>
-            <bk-form-item :label="$t('settings.noticeContent')">
-                <textarea name="desc" v-model="subscription.content" class="bk-form-textarea"></textarea>
-            </bk-form-item>
-            <bk-form-item>
+
+            <!-- <bk-form-item>
                 <atom-checkbox style="width: auto"
                     :handle-change="updateSubscription"
                     name="detailFlag"
@@ -43,7 +41,7 @@
                     :handle-change="updateSubscription"
                     :value="subscription.wechatGroupFlag">
                 </atom-checkbox>
-                <group-id-selector style="margin-left: -150px" class="item-groupid" v-if="subscription.wechatGroupFlag"
+                <group-id-selector class="item-groupid"
                     :handle-change="updateSubscription"
                     name="wechatGroup"
                     :value="subscription.wechatGroup"
@@ -59,22 +57,22 @@
                     :handle-change="updateSubscription"
                     :value="subscription.wechatGroupMarkdownFlag">
                 </atom-checkbox>
-            </bk-form-item>
+            </bk-form-item> -->
         </bk-form>
     </div>
 </template>
 
 <script>
-    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
-    import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
-    import StaffInput from '@/components/atomFormField/StaffInput/index.vue'
+    // import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+    // import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
+    // import StaffInput from '@/components/atomFormField/StaffInput/index.vue'
     import { mapActions } from 'vuex'
     export default {
         name: 'notify-setting',
         components: {
-            StaffInput,
-            GroupIdSelector,
-            AtomCheckbox
+            // StaffInput,
+            // GroupIdSelector,
+            // AtomCheckbox
         },
         props: {
             subscription: Object,

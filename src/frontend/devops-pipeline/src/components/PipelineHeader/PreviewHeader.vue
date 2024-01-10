@@ -2,9 +2,15 @@
     <div class="pipeline-preview-header">
         <pipeline-bread-crumb>
             <span class="build-num-switcher-wrapper">
-                {{ $t("details.execPreview") }}
+                {{ title }}
             </span>
         </pipeline-bread-crumb>
+        <bk-steps
+            class="pipeline-execute-step"
+            :cur-step="executeStep"
+            @update:value="setExecuteStep"
+            :steps="executeSteps"
+        />
         <aside class="pipeline-preview-right-aside">
             <bk-button
                 :disabled="executeStatus"
@@ -22,30 +28,45 @@
             </bk-button>
             <bk-button
                 theme="primary"
-                :disabled="executeStatus"
-                :loading="executeStatus"
-                @click="handleClick"
-                v-perm="{
-                    permissionData: {
-                        projectId: projectId,
-                        resourceType: 'pipeline',
-                        resourceCode: pipelineId,
-                        action: RESOURCE_ACTION.EXECUTE
-                    }
-                }"
+                v-if="executeStep === 1"
+                @click="switchExecStep(executeSteps[1])"
             >
-                {{ $t("exec") }}
+                {{ $t("next") }}
             </bk-button>
+            <template v-if="executeStep === 2">
+                <bk-button
+                    :theme="isDebugPipeline ? '' : 'primary'"
+                    @click="switchExecStep(executeSteps[0])"
+                >
+                    {{ $t("prev") }}
+                </bk-button>
+                <bk-button
+                    theme="primary"
+                    :disabled="executeStatus"
+                    :loading="executeStatus"
+                    v-perm="{
+                        permissionData: {
+                            projectId: $route.params.projectId,
+                            resourceType: 'pipeline',
+                            resourceCode: $route.params.pipelineId,
+                            action: RESOURCE_ACTION.EXECUTE
+                        }
+                    }"
+                    @click="handleClick"
+                >
+                    {{ $t(isDebugPipeline ? "debug" : "exec") }}
+                </bk-button>
+            </template>
         </aside>
     </div>
 </template>
 
 <script>
+    import { mapState, mapActions, mapGetters } from 'vuex'
     import { bus } from '@/utils/bus'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
-    import { mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
     export default {
         components: {
@@ -53,24 +74,79 @@
         },
         data () {
             return {
+                paramsValid: true,
                 RESOURCE_ACTION
             }
         },
         computed: {
-            ...mapState('atom', ['executeStatus', 'execDetail']),
+            ...mapState('pipelines', ['executeStep', 'executeStatus']),
+            ...mapGetters({
+                isEditing: 'atom/isEditing',
+                canManualStartup: 'pipelines/canManualStartup'
+            }),
+            title () {
+                return this.$t(`details.${this.isDebugPipeline ? 'debug' : 'exec'}Preview`)
+            },
+            isDebugPipeline () {
+                return Object.prototype.hasOwnProperty.call(this.$route.query, 'debug')
+            },
             projectId () {
                 return this.$route.params.projectId
             },
             pipelineId () {
                 return this.$route.params.pipelineId
+            },
+            executeSteps () {
+                return [
+                    {
+                        title: this.$t('paramFill'),
+                        id: 'params',
+                        icon: 1
+                    },
+                    {
+                        title: this.$t('stepPreview'),
+                        id: 'optional',
+                        icon: 2
+                    }
+                ]
+            }
+        },
+        watch: {
+            pipelineId (pipelineId) {
+                this.$router.push({
+                    name: 'pipelinesHistory',
+                    params: {
+                        projectId: this.projectId,
+                        pipelineId
+                    }
+                })
             }
         },
         methods: {
+            ...mapActions('pipelines', ['setExecuteStep']),
             handleClick () {
                 bus.$emit('start-execute')
             },
             goEdit () {
-                this.$router.back()
+                this.$router.push({
+                    name: 'pipelinesEdit'
+                })
+            },
+            beforeSwitchStep () {
+                return new Promise((resolve, reject) => {
+                    if (this.executeStep === 1) {
+                        bus.$emit('validate-execute-param-form', resolve)
+                    } else {
+                        resolve(true)
+                    }
+                })
+            },
+            async switchExecStep (step) {
+                const result = await this.beforeSwitchStep(step)
+                this.paramsValid = result
+
+                if (!result) return
+                this.setExecuteStep(step.icon)
             }
         }
     }
@@ -88,10 +164,15 @@
     grid-auto-flow: column;
     grid-gap: 6px;
   }
+  .pipeline-execute-step {
+    width: 300px;
+    flex-shrink: 0;
+  }
   .pipeline-preview-right-aside {
     display: grid;
     grid-gap: 10px;
     grid-auto-flow: column;
+    flex-shrink: 0;
   }
 }
 </style>

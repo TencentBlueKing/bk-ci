@@ -32,21 +32,21 @@
 <script>
     import draggable from 'vuedraggable'
     import Stage from './Stage'
-    import { eventBus, hashID, isTriggerContainer } from './util'
+    import { areDeeplyEqual, eventBus, hashID, isTriggerContainer } from './util'
 
     import {
-        CLICK_EVENT_NAME,
-        DELETE_EVENT_NAME,
-        COPY_EVENT_NAME,
-        ATOM_REVIEW_EVENT_NAME,
-        ATOM_QUALITY_CHECK_EVENT_NAME,
+        ADD_STAGE,
+        ATOM_ADD_EVENT_NAME,
         ATOM_CONTINUE_EVENT_NAME,
         ATOM_EXEC_EVENT_NAME,
-        ATOM_ADD_EVENT_NAME,
-        ADD_STAGE,
+        ATOM_QUALITY_CHECK_EVENT_NAME,
+        ATOM_REVIEW_EVENT_NAME,
+        CLICK_EVENT_NAME,
+        COPY_EVENT_NAME,
+        DEBUG_CONTAINER,
+        DELETE_EVENT_NAME,
         STAGE_CHECK,
-        STAGE_RETRY,
-        DEBUG_CONTAINER
+        STAGE_RETRY
     } from './constants'
 
     const customEvents = [
@@ -143,9 +143,7 @@
         computed: {
             computedStages: {
                 get () {
-                    return this.pipeline?.stages?.map((stage) => Object.assign(stage, {
-                        isTrigger: this.checkIsTriggerStage(stage)
-                    })) ?? []
+                    return this.pipeline?.stages ?? []
                 },
                 set (stages) {
                     const data = stages.map((stage, index) => {
@@ -186,11 +184,12 @@
             }
         },
         watch: {
-            'pipeline.stages': {
-                deep: true,
-                handler: function () {
-                    this.$emit('input', this.pipeline)
-                    this.$emit('change', this.pipeline)
+            pipeline: {
+                handler: function (newVal, oldVal) {
+                    if (this.editable && !areDeeplyEqual(newVal, oldVal)) {
+                        this.$emit('input', newVal)
+                        this.$emit('change', newVal)
+                    }
                 }
             },
             'pipeline.name': {

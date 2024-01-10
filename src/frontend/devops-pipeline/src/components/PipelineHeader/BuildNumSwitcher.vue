@@ -27,6 +27,10 @@
             currentBuildNum: {
                 type: Object,
                 required: true
+            },
+            version: {
+                type: [String, Number],
+                required: true
             }
         },
         data () {
@@ -53,7 +57,8 @@
                     this.isLoading = true
                     const response = await this.requestPipelineExecDetailByBuildNum({
                         buildNum: nextBuildNum,
-                        ...this.$route.params
+                        ...this.$route.params,
+                        version: this.version
                     })
                     this.$router.push({
                         name: 'pipelinesDetail',

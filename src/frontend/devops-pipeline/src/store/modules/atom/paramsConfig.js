@@ -36,35 +36,42 @@ function paramType (typeConst) {
 
 export const DEFAULT_PARAM = {
     [STRING]: {
-        id: 'string',
-        defaultValue: 'value',
+        id: '',
+        name: '',
+        defaultValue: '',
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
         desc: '',
         type: STRING,
         typeDesc: 'string',
-        required: true
+        required: true,
+        readOnly: false
     },
     [TEXTAREA]: {
         id: 'textarea',
+        name: 'textarea',
         defaultValue: '',
         desc: '',
         type: TEXTAREA,
         typeDesc: 'textarea',
-        required: true
+        required: true,
+        readOnly: false
     },
     [BOOLEAN]: {
         id: 'bool',
+        name: 'bool',
         defaultValue: true,
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
         desc: '',
         type: BOOLEAN,
         typeDesc: 'bool',
-        required: true
+        required: true,
+        readOnly: false
     },
     [ENUM]: {
-        id: 'enum',
+        id: 'select',
+        name: 'select',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
@@ -72,10 +79,12 @@ export const DEFAULT_PARAM = {
         type: ENUM,
         typeDesc: 'enum',
         options: [],
-        required: true
+        required: true,
+        readOnly: false
     },
     [MULTIPLE]: {
         id: 'multiple',
+        name: 'multiple',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
@@ -83,10 +92,12 @@ export const DEFAULT_PARAM = {
         options: [],
         type: MULTIPLE,
         typeDesc: 'multiple',
-        required: true
+        required: true,
+        readOnly: false
     },
     [SVN_TAG]: {
         id: 'svntag',
+        name: 'svntag',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
@@ -96,10 +107,12 @@ export const DEFAULT_PARAM = {
         options: [],
         type: SVN_TAG,
         typeDesc: 'svntag',
-        required: true
+        required: true,
+        readOnly: false
     },
     [GIT_REF]: {
         id: 'gitref',
+        name: 'gitref',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
@@ -108,10 +121,12 @@ export const DEFAULT_PARAM = {
         options: [],
         type: GIT_REF,
         typeDesc: 'gitref',
-        required: true
+        required: true,
+        readOnly: false
     },
     [CODE_LIB]: {
         id: 'codelib',
+        name: 'codelib',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
@@ -120,10 +135,12 @@ export const DEFAULT_PARAM = {
         options: [],
         type: CODE_LIB,
         typeDesc: 'codelib',
-        required: true
+        required: true,
+        readOnly: false
     },
     [CONTAINER_TYPE]: {
         id: 'buildResource',
+        name: 'buildResource',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
@@ -135,7 +152,8 @@ export const DEFAULT_PARAM = {
         options: [],
         type: CONTAINER_TYPE,
         typeDesc: 'buildResource',
-        required: true
+        required: true,
+        readOnly: false
     },
     [ARTIFACTORY]: {
         id: 'artifactory',
@@ -152,6 +170,7 @@ export const DEFAULT_PARAM = {
     },
     [SUB_PIPELINE]: {
         id: 'subPipeline',
+        name: 'subPipeline',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
@@ -159,17 +178,20 @@ export const DEFAULT_PARAM = {
         options: [],
         type: SUB_PIPELINE,
         typeDesc: 'subPipeline',
-        required: true
+        required: true,
+        readOnly: false
     },
     [CUSTOM_FILE]: {
         id: 'file',
+        name: 'file',
         defaultValue: '',
         defalutValueLabel: 'fileDefaultValueLabel',
         defaultValueLabelTips: 'customFileLabelTips',
         desc: '',
         type: CUSTOM_FILE,
         typeDesc: 'custom_file',
-        required: true
+        required: true,
+        readOnly: false
     }
 }
 
@@ -298,6 +320,10 @@ export const CODE_LIB_TYPE = [
         name: 'GITLAB'
     }
 ]
+
+export function isRemoteType (param) {
+    return param?.payload?.type === 'remote'
+}
 
 export const isStringParam = paramType(STRING)
 export const isTextareaParam = paramType(TEXTAREA)

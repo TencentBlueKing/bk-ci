@@ -1,14 +1,16 @@
 <template>
     <div class="pipeline-edit-header">
         <pipeline-bread-crumb>
-            <version-sideslider />
+            <bk-tag>{{ currentVersionName }}</bk-tag>
         </pipeline-bread-crumb>
+        <mode-switch />
         <aside class="pipeline-edit-right-aside">
             <bk-button
-                :disabled="saveBtnDisabled"
+                :disabled="saveStatus || !isEditing"
                 :loading="saveStatus"
+                outline
                 theme="primary"
-                @click="save"
+                @click="saveDraft"
                 v-perm="{
                     permissionData: {
                         projectId: projectId,
@@ -18,10 +20,12 @@
                     }
                 }"
             >
-                {{ $t("save") }}
+                {{ $t("saveDraft") }}
             </bk-button>
             <bk-button
-                theme="primary"
+                :disabled="!canDebug"
+                :loading="executeStatus"
+                :title="canManualStartup ? '' : $t('newlist.cannotManual')"
                 v-perm="{
                     permissionData: {
                         projectId: projectId,
@@ -30,44 +34,65 @@
                         action: RESOURCE_ACTION.EXECUTE
                     }
                 }"
-                :disabled="btnDisabled || !canManualStartup"
-                :loading="executeStatus"
-                :title="canManualStartup ? '' : $t('newlist.cannotManual')"
-                @click="saveAndExec"
+                @click="exec(true)"
             >
-                {{ isSaveAndRun ? $t("subpage.saveAndExec") : $t("exec") }}
+                <span class="debug-pipeline-draft-btn">
+                    {{ $t("debug") }}
+                    <e>|</e>
+                    <i
+                        :class="['devops-icon icon-txt', {
+                            'icon-txt-disabled': !canDebug
+                        }]"
+                        @click.stop="goDraftDebugRecord"
+                    />
+                </span>
             </bk-button>
-            <more-actions />
+            <!-- <more-actions /> -->
+            <release-button
+                :can-release="canRelease && !isEditing"
+            />
         </aside>
     </div>
 </template>
 
 <script>
-    import VersionSideslider from '@/components/VersionSideslider'
+    import { mapActions, mapGetters, mapState } from 'vuex'
+    import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
+    import ReleaseButton from './ReleaseButton'
+    import ModeSwitch from '@/components/ModeSwitch'
+    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
-    import { HttpError } from '@/utils/util'
-    import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
-    import MoreActions from './MoreActions.vue'
-    import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
+
     export default {
         components: {
             PipelineBreadCrumb,
-            VersionSideslider,
-            MoreActions
+            ReleaseButton,
+            ModeSwitch
         },
         data () {
             return {
-                RESOURCE_ACTION
+                isReleaseSliderShow: false
             }
         },
         computed: {
-            ...mapState('atom', ['pipeline', 'executeStatus', 'saveStatus']),
-            ...mapState('pipelines', ['pipelineSetting']),
+            ...mapState([
+                'pipelineMode'
+            ]),
+            ...mapState('atom', [
+                'pipeline',
+                'saveStatus',
+                'pipelineWithoutTrigger',
+                'pipelineSetting',
+                'pipelineYaml',
+                'pipelineInfo'
+            ]),
+
+            ...mapState('pipelines', ['executeStatus', 'isManage']),
             ...mapGetters({
-                curPipeline: 'pipelines/getCurPipeline',
+                isCurPipelineLocked: 'atom/isCurPipelineLocked',
                 isEditing: 'atom/isEditing',
                 checkPipelineInvalid: 'atom/checkPipelineInvalid'
             }),
@@ -77,44 +102,58 @@
             pipelineId () {
                 return this.$route.params.pipelineId
             },
+            canDebug () {
+                return (this.pipelineInfo?.canDebug ?? false) && !this.saveStatus && !this.isCurPipelineLocked
+            },
+            RESOURCE_ACTION () {
+                return RESOURCE_ACTION
+            },
             btnDisabled () {
                 return this.saveStatus || this.executeStatus
             },
-            saveBtnDisabled () {
-                return (
-                    this.saveStatus
-                    || this.executeStatus
-                    || Object.keys(this.pipelineSetting).length === 0
-                )
-            },
-            isSaveAndRun () {
-                return this.isEditing && !this.saveBtnDisabled
-            },
-            canManualStartup () {
-                return this.curPipeline ? this.curPipeline.canManualStartup : false
-            },
-            pipelineStatus () {
-                return this.canManualStartup ? 'ready' : 'disable'
+            canRelease () {
+                return (this.pipelineInfo?.canRelease ?? false) && !this.saveStatus
             },
             isTemplatePipeline () {
-                return this.curPipeline && this.curPipeline.instanceFromTemplate
+                return this.pipelineInfo?.instanceFromTemplate ?? false
+            },
+            baseVersionName () {
+                return this.pipelineInfo?.baseVersionName ?? '--'
+            },
+            versionName () {
+                return this.pipelineInfo?.versionName ?? '--'
+            },
+            currentVersionName () {
+                if (this.pipelineInfo?.canDebug) {
+                    return this.$t('editPage.draftVersion', [this.baseVersionName ?? '--'])
+                }
+                return this.versionName
+            },
+            pipelineName () {
+                return this.pipelineInfo?.name ?? '--'
+            },
+            currentVersion () {
+                return this.pipelineInfo?.version ?? ''
             }
         },
         methods: {
             ...mapActions('atom', [
                 'setPipelineEditing',
-                'setExecuteStatus',
+                'saveDraftPipeline',
                 'setSaveStatus',
                 'setAuthEditing',
                 'updateContainer'
             ]),
-            ...mapMutations('pipelines', ['updateCurPipelineByKeyValue']),
-            async saveAndExec () {
-                if (this.isSaveAndRun) {
-                    await this.save()
-                }
+            async exec (debug) {
                 this.$router.push({
-                    name: 'pipelinesPreview'
+                    name: 'executePreview',
+                    query: {
+                        ...(debug ? { debug: '' } : {})
+                    },
+                    params: {
+                        ...this.$route.params,
+                        version: this.pipelineInfo?.[debug ? 'version' : 'releaseVersion']
+                    }
                 })
             },
             formatParams (pipeline) {
@@ -132,129 +171,59 @@
                     }
                 })
             },
-            wechatGroupCompletion (setting) {
-                try {
-                    let successWechatGroup = setting.successSubscription.wechatGroup
-                    let failWechatGroup = setting.failSubscription.wechatGroup
-                    if (successWechatGroup && !/\;$/.test(successWechatGroup)) {
-                        successWechatGroup = `${successWechatGroup};`
-                    }
-                    if (failWechatGroup && !/\;$/.test(failWechatGroup)) {
-                        failWechatGroup = `${failWechatGroup};`
-                    }
-                    return {
-                        ...setting,
-                        successSubscription: {
-                            ...setting.successSubscription,
-                            wechatGroup: successWechatGroup
-                        },
-                        failSubscription: {
-                            ...setting.failSubscription,
-                            wechatGroup: failWechatGroup
-                        }
-                    }
-                } catch (e) {
-                    console.warn(e)
-                    return setting
-                }
-            },
 
-            async savePipelineAndSetting () {
-                const { pipelineSetting, checkPipelineInvalid, pipeline } = this
-                const { inValid, message } = checkPipelineInvalid(pipeline.stages, pipelineSetting)
-                const { projectId, pipelineId } = this.$route.params
-                if (inValid) {
-                    throw new Error(message)
-                }
-                // 清除流水线参数渲染过程中添加的key
-                this.formatParams(pipeline)
-                const finalSetting = this.wechatGroupCompletion({
-                    ...pipelineSetting,
-                    projectId: projectId
-                })
-                const body = {
-                    model: {
-                        ...pipeline,
-                        name: finalSetting.pipelineName,
-                        desc: finalSetting.desc
-                    },
-                    setting: finalSetting
-                }
-                if (!pipelineId) {
-                    return this.importPipelineAndSetting(body)
-                }
-
-                // 请求执行构建
-                return this.$ajax.post(
-                    `${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/saveAll`,
-                    body
-                )
-            },
-            getPipelineSetting () {
-                const { pipelineSetting } = this
-                const { projectId } = this.$route.params
-                return this.wechatGroupCompletion({
-                    ...pipelineSetting,
-                    projectId
-                })
-            },
-            saveSetting () {
-                const pipelineSetting = this.getPipelineSetting()
-                const { projectId, pipelineId } = this.$route.params
-                return this.$ajax.post(
-                    `/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/saveSetting`,
-                    pipelineSetting
-                )
-            },
-            async save () {
-                const { pipelineId, projectId } = this.$route.params
+            async saveDraft () {
                 try {
                     this.setSaveStatus(true)
-                    const saveAction = this.isTemplatePipeline
-                        ? this.saveSetting
-                        : this.savePipelineAndSetting
-                    const responses = await saveAction()
-
-                    if (responses.code === 403) {
-                        throw new HttpError(403)
+                    const pipeline = Object.assign({}, this.pipeline, {
+                        stages: [
+                            this.pipeline.stages[0],
+                            ...this.pipelineWithoutTrigger.stages
+                        ]
+                    })
+                    const { pipelineSetting, checkPipelineInvalid, pipelineYaml } = this
+                    const { inValid, message } = checkPipelineInvalid(pipeline.stages, pipelineSetting)
+                    const { projectId, pipelineId } = this.$route.params
+                    if (inValid) {
+                        throw new Error(message)
                     }
+                    // 清除流水线参数渲染过程中添加的key
+                    this.formatParams(pipeline)
 
+                    // 请求执行构建
+                    const { data: { version, versionName } } = await this.saveDraftPipeline({
+                        projectId,
+                        pipelineId,
+                        baseVersion: this.pipelineInfo.baseVersion,
+                        storageType: this.pipelineMode,
+                        modelAndSetting: {
+                            model: {
+                                ...pipeline,
+                                name: pipelineSetting.pipelineName,
+                                desc: pipelineSetting.desc
+                            },
+                            setting: pipelineSetting
+                        },
+                        yaml: pipelineYaml
+                    })
                     this.setPipelineEditing(false)
-                    this.$showTips({
-                        message: this.$t('saveSuc'),
-                        theme: 'success'
+
+                    this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
+                        pipelineName: pipelineSetting.pipelineName,
+                        canDebug: true,
+                        canRelease: true,
+                        version,
+                        versionName
                     })
 
-                    if (
-                        !this.isTemplatePipeline
-                        && this.pipeline.latestVersion
-                        && !isNaN(this.pipeline.latestVersion)
-                    ) {
-                        ++this.pipeline.latestVersion
-                        this.updateCurPipelineByKeyValue({
-                            key: 'pipelineVersion',
-                            value: this.pipeline.latestVersion
-                        })
-                    }
-
-                    if (
-                        this.pipelineSetting
-                        && this.pipelineSetting.pipelineName !== this.curPipeline.pipelineName
-                    ) {
-                        this.updateCurPipelineByKeyValue({
-                            key: 'pipelineName',
-                            value: this.pipelineSetting.pipelineName
-                        })
-                    }
-
-                    return {
-                        code: 0,
-                        data: responses
-                    }
+                    this.$bkMessage({
+                        theme: 'success',
+                        message: this.$t('editPage.saveDraftSuccess', [pipelineSetting.pipelineName])
+                    })
                 } catch (e) {
                     this.handleError(e, {
-                        projectId,
-                        resourceCode: pipelineId,
+                        projectId: this.projectId,
+                        resourceCode: this.pipelineId,
                         action: RESOURCE_ACTION.EDIT
                     })
                     return {
@@ -264,22 +233,60 @@
                 } finally {
                     this.setSaveStatus(false)
                 }
+            },
+
+            saveSetting () {
+                const pipelineSetting = this.getPipelineSetting()
+                const { projectId, pipelineId } = this.$route.params
+                return this.$ajax.post(
+                    `/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/saveSetting`,
+                    pipelineSetting
+                )
+            },
+            goDraftDebugRecord () {
+                if (this.canDebug) {
+                    this.$router.push({
+                        name: 'draftDebugRecord',
+                        params: {
+                            version: this.pipelineInfo?.version
+                        }
+                    })
+                }
             }
         }
     }
 </script>
 
 <style lang="scss">
+@import '@/scss/conf';
 .pipeline-edit-header {
   display: flex;
   width: 100%;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px 0 14px;
+  padding: 0 0 0 14px;
+  align-self: stretch;
+  .debug-pipeline-draft-btn {
+    display: flex;
+    align-items: center;
+    grid-gap: 8px;
+    > e {
+        color: #DCDEE5;
+    }
+    .icon-txt-disabled {
+        cursor: not-allowed;
+    }
+    > i:not(.icon-txt-disabled):hover {
+        color: $primaryColor;
+    }
+  }
   .pipeline-edit-right-aside {
     display: grid;
     grid-gap: 10px;
     grid-auto-flow: column;
+    height: 100%;
+    align-items: center;
   }
 }
-</style>
+
+  </style>

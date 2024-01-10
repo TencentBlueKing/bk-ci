@@ -20,7 +20,8 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
+    import { mapState, mapActions } from 'vuex'
+    import { SET_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import { hashID } from '@/utils/util'
     export default {
         name: 'import-pipeline-popup',
@@ -31,9 +32,17 @@
             title: {
                 type: String
             },
+            pipelineName: {
+                type: String
+            },
             handleImportSuccess: {
                 type: Function
             }
+        },
+        computed: {
+            ...mapState('atom', [
+                'pipelineInfo'
+            ])
         },
         watch: {
             isShow (show) {
@@ -41,13 +50,18 @@
             }
         },
         methods: {
+            ...mapActions([
+                'updatePipelineMode'
+            ]),
             ...mapActions('atom', [
-                'setImportedPipelineJson',
-                'setPipeline'
+                'setEditFrom',
+                'transferModelToYaml',
+                'setPipeline',
+                'setPipelineYaml',
+                'setPipelineSetting',
+                'setPipelineWithoutTrigger'
             ]),
-            ...mapActions('pipelines', [
-                'setPipelineSetting'
-            ]),
+
             handleSelect ({ fileObj, onProgress, onSuccess, onDone }) {
                 const reader = new FileReader()
                 reader.readAsText(fileObj.origin)
@@ -83,32 +97,71 @@
                 reader.addEventListener('progress', onProgress)
             },
 
-            handleSuccess (result) {
-                if (typeof this.handleImportSuccess === 'function') {
-                    this.handleImportSuccess(result)
-                    return
-                }
-                const newPipelineName = `${result.model.name}_${hashID().slice(0, 8)}`
-                this.setImportedPipelineJson(result)
-                this.setPipelineSetting({
-                    ...result.setting,
-                    pipelineName: newPipelineName
-                })
-                this.setPipeline({
-                    ...result.model,
-                    name: newPipelineName
-                })
-                this.$nextTick(() => {
-                    this.$router.push({
-                        name: 'pipelineImportEdit'
+            async handleSuccess (result) {
+                const newPipelineName = this.pipelineName || `${result.model.name}_${hashID().slice(0, 8)}`
+                const res = await this.updatePipeline(result, newPipelineName)
+                this.setEditFrom(true)
+                if (res) {
+                    if (typeof this.handleImportSuccess === 'function') {
+                        this.handleImportSuccess()
+                        return
+                    }
+
+                    this.$nextTick(() => {
+                        this.$router.push({
+                            name: 'pipelineImportEdit',
+                            params: {
+                                tab: 'pipeline'
+                            }
+                        })
                     })
-                })
+                }
             },
             handleUploadError (file) {
                 this.$showTips({
                     message: this.$t('invalidPipelineJson'),
                     theme: 'error'
                 })
+            },
+            async updatePipeline (result, newPipelineName) {
+                const pipeline = {
+                    ...result.model,
+                    name: newPipelineName
+                }
+                try {
+                    await this.transferModelToYaml({
+                        projectId: this.$route.params.projectId,
+                        actionType: 'FULL_MODEL2YAML',
+                        modelAndSetting: {
+                            model: {
+                                ...result.model,
+                                name: newPipelineName
+                            },
+                            setting: {
+                                ...result.setting,
+                                pipelineName: newPipelineName
+                            }
+                        },
+                        oldYaml: ''
+                    })
+                } catch (error) {
+                    console.log(error)
+                }
+
+                this.setPipelineSetting({
+                    ...result.setting,
+                    pipelineName: newPipelineName
+                })
+                this.setPipeline(pipeline)
+                this.setPipelineWithoutTrigger({
+                    ...pipeline,
+                    stages: result.model.stages.slice(1)
+                })
+                this.$store.commit(`atom/${SET_PIPELINE_INFO}`, {
+                    ...(this.pipelineInfo ?? {}),
+                    pipelineName: newPipelineName
+                })
+                return true
             },
             checkJosnValid (json) {
                 try {

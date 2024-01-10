@@ -17,6 +17,7 @@
                         size="12"
                         v-bk-tooltips="$t('pipelineConstraintModeTips')"
                     />
+                    <bk-tag v-if="pipeline.onlyDraft" theme="success" class="draft-tag">{{ $t('draft') }}</bk-tag>
                 </h3>
                 <p class="bk-pipeline-card-summary">
                     <span>
@@ -32,7 +33,18 @@
                 </p>
             </aside>
             <aside class="bk-pipeline-card-header-right-aside">
+                <router-link v-if="pipeline.onlyDraft" class="bk-pipeline-card-trigger-btn" :to="{
+                    name: 'pipelinesEdit',
+                    params: {
+                        projectId: pipeline.projectId,
+                        pipelineId: pipeline.pipelineId
+                    }
+                }"
+                >
+                    <i class="devops-icon icon-edit-line" />
+                </router-link>
                 <span
+                    v-else
                     v-perm="{
                         hasPermission: pipeline.permissions.canExecute,
                         disablePermissionApi: true,
@@ -239,19 +251,13 @@
                     color: $primaryColor;
                     margin: 0;
                     font-weight: normal;
-                    align-items: center;
-                    @include ellipsis();
-                    width: 100%;
-                    display: inline-flex;
-                    white-space: nowrap;
-                    overflow: hidden;
-                }
-                .pipeline-cell-link {
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                }
-                .template-mode-icon {
-                    flex-shrink: 0;
+                    display: flex;
+                    .pipeline-cell-link {
+                        @include ellipsis();
+                    }
+                    .template-mode-icon {
+                        flex-shrink: 0;
+                    }
                 }
                 .bk-pipeline-card-summary {
                     display: flex;
@@ -292,6 +298,9 @@
                     &.disabled {
                         color: #DCDEE5;
                         cursor: not-allowed;
+                    }
+                    .icon-edit-line {
+                        font-size: 20px;
                     }
                     &.bk-pipeline-card-trigger-btn:not(.disabled):hover {
                         color: $primaryColor;

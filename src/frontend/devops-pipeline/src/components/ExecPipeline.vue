@@ -58,11 +58,7 @@
         </div>
         <section class="pipeline-exec-content">
             <header class="pipeline-style-setting-header">
-                <!-- <div class="bk-button-group">
-                    <bk-button v-for="item in pipelineModes" :key="item.id" :class="item.cls">
-                        {{ item.label }}
-                    </bk-button>
-                </div> -->
+                <!-- <mode-switch /> -->
                 <bk-checkbox
                     :true-value="true"
                     :false-value="false"
@@ -278,7 +274,6 @@
                 failedContainer: false,
                 activeTab: 'errors',
                 currentAtom: {},
-                pipelineMode: 'uiMode',
                 showErrors: false,
                 activeErrorAtom: null,
                 afterAsideVisibleDone: null,
@@ -291,9 +286,15 @@
             }
         },
         computed: {
+            ...mapState([
+                'pipelineMode'
+            ]),
             ...mapState('common', ['ruleList', 'templateRuleList']),
-            ...mapState('atom', ['hideSkipExecTask', 'showPanelType', 'isPropertyPanelVisible']),
-
+            ...mapState('atom', [
+                'hideSkipExecTask',
+                'showPanelType',
+                'isPropertyPanelVisible'
+            ]),
             panels () {
                 return [
                     {
@@ -381,21 +382,6 @@
             },
             executeCount () {
                 return this.execDetail?.executeCount ?? 1
-            },
-            pipelineModes () {
-                return [
-                    {
-                        label: this.$t('details.codeMode'),
-                        disabled: true,
-                        id: 'codeMode',
-                        cls: this.pipelineMode === 'codeMode' ? 'is-selected' : ''
-                    },
-                    {
-                        label: this.$t('details.uiMode'),
-                        id: 'uiMode',
-                        cls: this.pipelineMode === 'uiMode' ? 'is-selected' : ''
-                    }
-                ]
             },
             timeSteps () {
                 return [
@@ -556,7 +542,7 @@
                 const scrollViewPort = this.$refs.scrollViewPort
                 if (scrollEle && scrollViewPort) {
                     scrollEle.removeEventListener('scroll', this.handelHerizontalScroll)
-                    parent?.removeEventListener?.('scroll', this.handelVerticalScroll)
+                    parent?.removeEventListener('scroll', this.handelVerticalScroll)
                     scrollViewPort.removeEventListener('scroll', this.handleMiniMapDrag)
                 }
             },
@@ -693,10 +679,8 @@
             },
             async reviewAtom (atom) {
                 // 人工审核
-                if (atom?.computedReviewers?.includes?.(this.userName)) {
-                    this.currentAtom = atom
-                    this.toggleCheckDialog(true)
-                }
+                this.currentAtom = atom
+                this.toggleCheckDialog(true)
             },
             toggleCheckDialog (isShow = false) {
                 this.isShowCheckDialog = isShow
@@ -1032,7 +1016,7 @@
     padding: 16px 24px;
     flex-shrink: 0;
     .hide-skip-pipeline-task {
-      padding: 0 16px 0 24px;
+      padding: 0 16px 0 0;
       position: relative;
       &:after {
         content: "";

@@ -338,7 +338,7 @@
                             ]
                             : []
                     ),
-                    
+
                     {
                         text: this.$t(group.top ? 'unStickyTop' : 'stickyTop'),
                         disabled: this.isSticking,
@@ -593,7 +593,7 @@
                 border-bottom: 1px solid #DCDEE5;
             }
         }
-        
+
         .recycle-pipeline-group-footer {
             display: flex;
             align-items: center;
@@ -603,6 +603,10 @@
             cursor: pointer;
             font-size: 14px;
             width: 100%;
+            flex-shrink: 0;
+            &.expended {
+                width: 100%;
+            }
             &:hover,
             &.active {
                 color: $primaryColor;

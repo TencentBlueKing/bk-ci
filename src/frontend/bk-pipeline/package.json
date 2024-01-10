@@ -38,6 +38,7 @@
     "eslint": "^7.3.1",
     "eslint-config-standard": "^16.0.3",
     "eslint-friendly-formatter": "~4.0.1",
+    "eslint-import-resolver-node": "^0.3.9",
     "eslint-loader": "^2.1.2",
     "eslint-plugin-import": "^2.25.3",
     "eslint-plugin-node": "^11.1.0",
@@ -46,6 +47,7 @@
     "eslint-plugin-vue": "^6.2.2",
     "html-webpack-plugin": "^5.3.2",
     "json5": "2.2.3",
+    "immutable": "^5.0.0-beta.4",
     "mini-css-extract-plugin": "^2.4.2",
     "sass": "^1.42.1",
     "sass-loader": "^12.1.0",
@@ -57,8 +59,8 @@
     "webpack": "^5.58.1"
   },
   "dependencies": {
-    "vue": "2.6.12",
     "bk-magic-vue": "2.4.15-beta.21",
+    "vue": "2.6.12",
     "vuedraggable": "^2.24.3"
   },
   "repository": {

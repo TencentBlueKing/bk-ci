@@ -43,7 +43,20 @@ module.exports = (env, argv) => {
     config.plugins.pop()
     config.plugins = [
         ...config.plugins,
-        new MonacoWebpackPlugin(),
+        new MonacoWebpackPlugin({
+            publicPath: '/pipeline',
+            languages: ['yaml'],
+            customLanguages: [
+                {
+                    label: 'yaml',
+                    entry: 'monaco-yaml',
+                    worker: {
+                        id: 'monaco-yaml/yamlWorker',
+                        entry: 'monaco-yaml/yaml.worker'
+                    }
+                }
+            ]
+        }),
         new webpack.DefinePlugin(constConfig),
         new HtmlWebpackPlugin({
             filename: isProd ? `${dist}/frontend#pipeline#index.html` : `${dist}/index.html`,
@@ -62,7 +75,7 @@ module.exports = (env, argv) => {
             context: __dirname,
             manifest: require('./dist/manifest.json')
         }),
-        
+
         new CopyWebpackPlugin({
             patterns: [{ from: path.join(__dirname, './dist'), to: dist }]
         })
