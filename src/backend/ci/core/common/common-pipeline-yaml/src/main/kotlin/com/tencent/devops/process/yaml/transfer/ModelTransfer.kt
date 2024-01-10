@@ -58,6 +58,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
+@Suppress("ComplexMethod")
 class ModelTransfer @Autowired constructor(
     val client: Client,
     val modelStage: StageTransfer,

@@ -64,6 +64,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
+@Suppress("ComplexMethod")
 class PipelineYamlFacadeService @Autowired constructor(
     private val client: Client,
     private val eventActionFactory: EventActionFactory,
