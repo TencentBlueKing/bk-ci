@@ -63,6 +63,7 @@ import org.springframework.util.AntPathMatcher
 import com.tencent.devops.process.yaml.v2.models.stage.Stage as StreamV2Stage
 
 @Component
+@Suppress("ComplexMethod")
 class ModelStage @Autowired(required = false) constructor(
     val client: Client,
     val objectMapper: ObjectMapper,

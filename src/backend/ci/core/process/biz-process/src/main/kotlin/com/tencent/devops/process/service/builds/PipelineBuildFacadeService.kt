@@ -2147,10 +2147,11 @@ class PipelineBuildFacadeService(
     }
 
     fun getPipelineResourceVersion(projectId: String, pipelineId: String, version: Int? = null) =
-        pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, version) ?: throw ErrorCodeException(
-            statusCode = Response.Status.NOT_FOUND.statusCode,
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
-        )
+        pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, version)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
+            )
 
     private fun buildManualShutdown(
         projectId: String,

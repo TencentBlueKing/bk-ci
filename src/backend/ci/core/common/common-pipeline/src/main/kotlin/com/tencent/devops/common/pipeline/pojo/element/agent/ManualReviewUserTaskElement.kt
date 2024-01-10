@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.utils.TransferUtil
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@Suppress("ComplexMethod")
 @ApiModel("人工审核", description = ManualReviewUserTaskElement.classType)
 data class ManualReviewUserTaskElement(
     @ApiModelProperty("任务名称", required = true)
