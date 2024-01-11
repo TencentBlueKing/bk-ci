@@ -31,6 +31,7 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
@@ -50,13 +51,17 @@ import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
+import com.tencent.devops.remotedev.service.workspace.NotifyControl
+import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WINDOWS_GPU_RESTART_NOTIFY
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import java.util.Date
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -75,7 +80,8 @@ class RestartWorkspaceHandler @Autowired constructor(
     private val dispatcher: RemoteDevDispatcher,
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val workspaceCommon: WorkspaceCommon,
-    private val workspaceOpHistoryDao: WorkspaceOpHistoryDao
+    private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
+    private val notifyControl: NotifyControl
 ) {
 
     companion object {
@@ -221,6 +227,18 @@ class RestartWorkspaceHandler @Autowired constructor(
                         workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
                         WorkspaceStatus.RESTARTING,
                         WorkspaceStatus.RUNNING.name
+                    )
+                )
+                notifyControl.notify4User(
+                    userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).toMutableSet(),
+                    workspaceName = workspace.workspaceName,
+                    notifyTemplateCode = WINDOWS_GPU_RESTART_NOTIFY,
+                    notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.CLIENT_PUSH),
+                    bodyParams = mapOf(
+                        "workspaceName" to workspace.workspaceName,
+                        "cgsId" to (workspace.hostName ?: workspace.workspaceName),
+                        "displayName" to workspace.displayName,
+                        "time" to DateTimeUtil.formatDate(Date())
                     )
                 )
             }

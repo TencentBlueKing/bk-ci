@@ -32,8 +32,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.notify.enums.NotifyType
-import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisOperation
@@ -47,8 +45,6 @@ import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResou
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.FetchWinPoolData
-import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
-import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
@@ -73,6 +69,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
@@ -81,6 +78,7 @@ import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OP_HISTORY_KEY_PREFIX
+import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WINDOWS_GPU_OWNER_CHANGE_NOTIFY
 import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
 import com.tencent.devops.remotedev.websocket.push.WorkspaceWebsocketPush
 import java.time.Duration
@@ -89,7 +87,6 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -117,7 +114,8 @@ class WorkspaceCommon @Autowired constructor(
     private val deleteControl: DeleteControl,
     private val objectMapper: ObjectMapper,
     private val whiteListService: WhiteListService,
-    private val workspaceWindowsDao: WorkspaceWindowsDao
+    private val workspaceWindowsDao: WorkspaceWindowsDao,
+    private val notifyControl: NotifyControl
 ) {
 
     companion object {
@@ -127,9 +125,6 @@ class WorkspaceCommon @Autowired constructor(
         private const val LOCALDRIVER = "L"
         private const val PIPELINE_CONFIG_INFO = "remotedev:assignWorkspace.pipelineinfo"
     }
-
-    @Value("\${notice.wework:#{null}}")
-    private var weworkId: String? = null
 
     // 封装统一分发WS的方法
     fun dispatchWebsocketPushEvent(
@@ -578,6 +573,18 @@ class WorkspaceCommon @Autowired constructor(
             // 没有注册setting就注册
             remoteDevSettingDao.fetchOneSetting(dslContext, it.userId)
             whiteListService.shareWorkspace(operator, it.userId)
+            if (it.type == WorkspaceShared.AssignType.OWNER) {
+                notifyControl.notify4User(
+                    userIds = mutableSetOf(it.userId),
+                    workspaceName = workspaceName,
+                    notifyTemplateCode = WINDOWS_GPU_OWNER_CHANGE_NOTIFY,
+                    notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
+                    bodyParams = mapOf(
+                        "workspaceName" to workspaceName,
+                        "cgsId" to cgsId
+                    )
+                )
+            }
         }
     }
 
@@ -673,24 +680,14 @@ class WorkspaceCommon @Autowired constructor(
             action = action
         )
         // 通知
-        if (!weworkId.isNullOrBlank()) {
-            val request = SendNotifyMessageTemplateRequest(
-                templateCode = notifyTemplateCode,
-                bodyParams = mapOf(
-                    WorkspaceRecord::workspaceName.name to workspace.workspaceName,
-                    WorkspaceRecord::projectId.name to workspace.projectId,
-                    WorkspaceRecord::createUserId.name to workspace.createUserId,
-                    NotifyUtils.WEWORK_GROUP_KEY to weworkId!!
-                ).plus(noticeParams),
-                notifyType = mutableSetOf(NotifyType.WEWORK_GROUP.name),
-                markdownContent = false
-            )
-            kotlin.runCatching {
-                client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
-            }.onFailure {
-                logger.warn("notify WINDOWS_GPU_SAFE_INIT_FAILED fail ${it.message}")
-            }
-        }
+        notifyControl.notify4SystemAdministrator(
+            notifyTemplateCode,
+            mapOf(
+                WorkspaceRecord::workspaceName.name to workspace.workspaceName,
+                WorkspaceRecord::projectId.name to workspace.projectId,
+                WorkspaceRecord::createUserId.name to workspace.createUserId
+            ).plus(noticeParams)
+        )
     }
 
     // 创建实例成功后做异步设置，包含L盘挂载
