@@ -143,10 +143,7 @@
             @cancel="closeSaveAsDialog"
             @done="refresh"
         />
-        <pipeline-template-popup
-            :toggle-popup="toggleTemplatePopup"
-            :is-show.sync="templatePopupShow"
-        />
+
         <import-pipeline-popup
             :is-show.sync="importPipelinePopupShow"
         />
@@ -160,16 +157,15 @@
 <script>
     import CopyPipelineDialog from '@/components/PipelineActionDialog/CopyPipelineDialog'
     import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
-    import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
+    import PipelineSearcher from './PipelineSearcher'
     import PipelineTableView from '@/components/pipelineList/PipelineTableView'
-    import PipelineTemplatePopup from '@/components/pipelineList/PipelineTemplatePopup'
     import PipelinesCardView from '@/components/pipelineList/PipelinesCardView'
+    import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import webSocketMessage from '@/utils/webSocketMessage'
     import AddToGroupDialog from '@/views/PipelineList/AddToGroupDialog'
     import PipelineGroupEditDialog from '@/views/PipelineList/PipelineGroupEditDialog'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
     import { mapActions, mapState } from 'vuex'
-    import PipelineSearcher from './PipelineSearcher'
 
     import Logo from '@/components/Logo'
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
@@ -198,7 +194,6 @@
             PipelinesCardView,
             PipelineTableView,
             PipelineSearcher,
-            PipelineTemplatePopup,
             ImportPipelinePopup,
             PipelineGroupEditDialog
         },
@@ -209,12 +204,15 @@
                 layout: this.getLs('pipelineLayout') || TABLE_LAYOUT,
                 hasCreatePermission: false,
                 filters: restQuery,
-                templatePopupShow: false,
                 importPipelinePopupShow: false,
                 activeGroup: null,
                 newPipelineDropdown: [{
                     text: this.$t('newPipelineFromTemplateLabel'),
-                    action: this.toggleTemplatePopup
+                    action: () => {
+                        this.$router.push({
+                            name: 'createPipeline'
+                        })
+                    }
                 }, {
                     text: this.$t('newPipelineFromJSONLabel'),
                     action: this.toggleImportPipelinePopup
@@ -413,13 +411,6 @@
                 this.hasCreatePermission = res
             },
 
-            toggleTemplatePopup () {
-                if (!this.hasCreatePermission) {
-                    this.toggleCreatePermission()
-                } else {
-                    this.templatePopupShow = !this.templatePopupShow
-                }
-            },
             handleAddToGroup () {
                 if (this.currentGroup) {
                     this.activeGroup = this.currentGroup

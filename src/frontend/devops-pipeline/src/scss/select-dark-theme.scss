@@ -1,0 +1,25 @@
+.dark-theme-select-trigger {
+    border-color: #63656E;
+    width: 360px;
+    color: #C4C6CC;
+    &.is-focus {
+        border-color: #C4C6CC;
+    }
+
+}
+.dark-theme-select-menu {
+    background: #1d1d1d;
+    color: #C4C6CC;
+    .bk-options.bk-options-single .bk-option {
+        &:hover,
+        &.is-selected {
+            background: #242424;
+        }
+    }
+    .bk-options .bk-option {
+        &:hover,
+        &.is-selected {
+            color: white;
+        }
+    }
+}

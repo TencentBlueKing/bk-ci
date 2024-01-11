@@ -1,6 +1,6 @@
 <template>
-    <div class="notify-setting-comp" v-if="subscription">
-        <bk-form>
+    <div class="notify-setting-comp">
+        <bk-form form-type="vertical" :label-width="300" v-if="subscription" class="new-ui-form">
             <bk-form-item :label="$t('settings.noticeType')" :required="true">
                 <bk-checkbox-group :value="subscription.types" @change="value => updateSubscription('types', value)">
                     <bk-checkbox v-for="item in noticeList" :key="item.id" :value="item.value">
@@ -16,8 +16,9 @@
                 </staff-input>
             </bk-form-item>
             <bk-form-item :label="$t('settings.noticeContent')" :required="true">
-                <textarea name="desc" v-model="subscription.content" class="bk-form-textarea"></textarea>
+                <bk-input type="textarea" :value="subscription.content" @change="value => updateSubscription('content', value)" />
             </bk-form-item>
+            
             <!-- <bk-form-item>
                 <atom-checkbox style="width: auto"
                     :handle-change="updateSubscription"
@@ -36,7 +37,7 @@
                     :handle-change="updateSubscription"
                     :value="subscription.wechatGroupFlag">
                 </atom-checkbox>
-                <group-id-selector style="margin-left: -150px" class="item-groupid"
+                <group-id-selector class="item-groupid"
                     :handle-change="updateSubscription"
                     name="wechatGroup"
                     :value="subscription.wechatGroup"

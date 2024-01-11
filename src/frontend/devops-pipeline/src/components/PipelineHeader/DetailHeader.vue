@@ -1,43 +1,43 @@
 <template>
     <div class="pipeline-detail-header">
-        <pipeline-bread-crumb>
+        <pipeline-bread-crumb :show-record-entry="isDebugExec">
             <span class="build-num-switcher-wrapper">
-                {{ $t("pipelinesDetail") }}
+                {{ $t(isDebugExec ? 'draftExecDetail' : 'pipelinesDetail') }}
                 <build-num-switcher v-bind="buildNumConf" />
             </span>
         </pipeline-bread-crumb>
-        <aside class="pipeline-detail-right-aside">
+        <aside :class="['pipeline-detail-right-aside', {
+            'is-debug-exec-detail': isDebugExec
+        }]">
             <bk-button
                 v-if="isRunning"
                 :disabled="loading"
                 :icon="loading ? 'loading' : ''"
                 outline
                 theme="warning"
-                key="cancel"
                 @click="handleClick"
             >
                 {{ $t("cancel") }}
             </bk-button>
-            <bk-button
-                v-else
-                :disabled="loading"
-                :icon="loading ? 'loading' : ''"
-                outline
-                theme="default"
-                key="reBuild"
-                v-perm="{
-                    permissionData: {
-                        projectId: $route.params.projectId,
-                        resourceType: 'pipeline',
-                        resourceCode: $route.params.pipelineId,
-                        action: RESOURCE_ACTION.EXECUTE
-                    }
-                }"
-                @click="handleClick"
-            >
-                {{ $t("history.reBuild") }}
-            </bk-button>
-            <span class="exec-deatils-operate-divider"></span>
+            <template v-else-if="!isDebugExec">
+                <bk-button
+                    :disabled="loading || isCurPipelineLocked || !canManualStartup"
+                    :icon="loading ? 'loading' : ''"
+                    outline
+                    v-perm="{
+                        permissionData: {
+                            projectId: $route.params.projectId,
+                            resourceType: 'pipeline',
+                            resourceCode: $route.params.pipelineId,
+                            action: RESOURCE_ACTION.EXECUTE
+                        }
+                    }"
+                    @click="handleClick"
+                >
+                    {{ $t("history.reBuild") }}
+                </bk-button>
+                <span class="exec-deatils-operate-divider"></span>
+            </template>
             <bk-button
                 v-perm="{
                     permissionData: {
@@ -54,6 +54,7 @@
             </bk-button>
             <bk-button
                 theme="primary"
+                :loading="executeStatus"
                 v-perm="{
                     permissionData: {
                         projectId: $route.params.projectId,
@@ -62,12 +63,14 @@
                         action: RESOURCE_ACTION.EXECUTE
                     }
                 }"
-                key="exec"
                 @click="goExecPreview"
             >
-                {{ $t("exec") }}
+                {{ $t(isDebugExec ? "debug" : "exec") }}
             </bk-button>
-            <more-actions />
+            <release-button
+                v-if="isDebugExec"
+                :can-release="canRelease"
+            />
         </aside>
     </div>
 </template>
@@ -78,14 +81,14 @@
     } from '@/utils/permission'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import BuildNumSwitcher from './BuildNumSwitcher'
-    import MoreActions from './MoreActions.vue'
+    import ReleaseButton from './ReleaseButton'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
 
     export default {
         components: {
             PipelineBreadCrumb,
             BuildNumSwitcher,
-            MoreActions
+            ReleaseButton
         },
         data () {
             return {
@@ -93,21 +96,32 @@
             }
         },
         computed: {
-            ...mapState('atom', ['executeStatus', 'execDetail']),
+            ...mapState('atom', ['execDetail', 'pipelineInfo', 'saveStatus']),
             ...mapGetters({
-                curPipeline: 'pipelines/getCurPipeline'
+                isCurPipelineLocked: 'atom/isCurPipelineLocked'
             }),
+            ...mapState('pipelines', ['executeStatus']),
             RESOURCE_ACTION () {
                 return RESOURCE_ACTION
             },
             isRunning () {
                 return ['RUNNING', 'QUEUE'].indexOf(this.execDetail?.status) > -1
             },
+            canRelease () {
+                return (this.pipelineInfo?.canRelease ?? false) && !this.saveStatus
+            },
+            canManualStartup () {
+                return this.pipelineInfo?.canManualStartup ?? false
+            },
             buildNumConf () {
                 return {
                     latestBuildNum: this.execDetail?.latestBuildNum ?? 1,
-                    currentBuildNum: this.execDetail?.buildNum ?? 1
+                    currentBuildNum: this.execDetail?.buildNum ?? 1,
+                    version: this.pipelineInfo?.version
                 }
+            },
+            isDebugExec () {
+                return this.execDetail?.debug ?? false
             }
         },
         watch: {
@@ -191,7 +205,14 @@
             },
             goExecPreview () {
                 this.$router.push({
-                    name: 'pipelinesPreview'
+                    name: 'executePreview',
+                    query: {
+                        ...(this.isDebugExec ? { debug: '' } : {})
+                    },
+                    params: {
+                        ...this.$route.params,
+                        version: this.pipelineInfo?.version
+                    }
                 })
             },
             goEdit () {
@@ -209,7 +230,8 @@
   width: 100%;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px 0 14px;
+  padding: 0 0 0 14px;
+  height: 100%;
   .exec-deatils-operate-divider {
     display: block;
     margin: 0 6px;
@@ -226,6 +248,11 @@
     display: grid;
     grid-gap: 10px;
     grid-auto-flow: column;
+    height: 100%;
+    align-items:center;
+    &:not(.is-debug-exec-detail) {
+        padding-right: 24px;
+    }
   }
 }
 </style>

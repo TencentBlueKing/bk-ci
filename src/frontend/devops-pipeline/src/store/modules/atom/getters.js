@@ -17,7 +17,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import { buildEnvMap, jobConst } from '@/utils/pipelineConst'
+import { buildEnvMap, jobConst, semverVersionKeySet } from '@/utils/pipelineConst'
 import Vue from 'vue'
 import { getAtomModalKey, isCodePullAtom, isNewAtomTemplate, isNormalContainer, isTriggerContainer, isVmContainer } from './atomUtil'
 import { buildNoRules, defaultBuildNo, platformList } from './constants'
@@ -27,6 +27,44 @@ function isSkip (status) {
 }
 
 export default {
+    isCurPipelineLocked: state => {
+        return state.pipelineInfo?.runLockType === 'LOCK'
+    },
+    isDraftPipeline: state => {
+        return state.pipelineInfo?.baseVersionStatus === 'COMMITTING'
+    },
+    isBranchVersion: state => {
+        return state.pipelineInfo?.baseVersionStatus === 'BRANCH'
+    },
+    isReleasePipeline: state => {
+        return !state.pipelineInfo?.onlyDraft
+    },
+    pacEnabled: state => {
+        return state.pipelineInfo?.pipelineAsCodeSettings?.enable ?? false
+    },
+    yamlInfo: state => {
+        return state.pipelineInfo?.yamlInfo
+    },
+    getPipelineSubscriptions: state => type => {
+        return state.pipelineSetting?.[`${type}SubscriptionList`] ?? []
+    },
+    curPipelineParams: state => {
+        const firstJob = state.pipeline?.stages?.[0]?.containers?.[0]
+        return firstJob?.params?.filter(param => !semverVersionKeySet.has(param.id)) ?? []
+    },
+    curPipelineBuildNoConfig: state => {
+        const firstJob = state.pipeline?.stages?.[0]?.containers?.[0]
+        const semver = firstJob?.params?.filter(param => semverVersionKeySet.has(param.id))
+        return firstJob?.buildNo
+            ? {
+                ...firstJob.buildNo,
+                semver: semver.reduce((acc, cur) => ({
+                    ...acc,
+                    [cur.id]: cur.defaultValue
+                }), {})
+            }
+            : null
+    },
     getAtomCodeListByCategory: state => category => {
         return state.atomCodeList.filter(atomCode => {
             const atom = state.atomMap[atomCode]
@@ -110,7 +148,7 @@ export default {
     },
     getEditingElementPos: state => state.editingElementPos,
     isEditing: state => {
-        return state.pipeline && state.pipeline.editing
+        return state.isPipelineEditing
     },
     checkPipelineInvalid: (state, getters) => (stages, pipelineSetting) => {
         try {
@@ -201,6 +239,7 @@ export default {
                 message: ''
             }
         } catch (e) {
+            console.trace(e)
             return {
                 message: e.message,
                 inValid: true
@@ -240,7 +279,7 @@ export default {
         } catch (_) {
             container = null
         }
-        if (container !== null) {
+        if (container) {
             if (isVmContainer(container['@type']) && !container.buildEnv) {
                 Vue.set(container, 'buildEnv', {})
             }
@@ -313,8 +352,8 @@ export default {
             : []
     },
     getElement: state => (container, index) => {
-        const element = container && Array.isArray(container.elements) ? container.elements[index] : null
-        if (element !== null) {
+        const element = Array.isArray(container?.elements) ? container.elements[index] : null
+        if (element) {
             typeof element.isError === 'undefined' && Vue.set(element, 'isError', false)
         }
         return element
@@ -326,7 +365,7 @@ export default {
         }
     }),
     isVmContainer: state => container => isVmContainer(container['@type']),
-    isTriggerContainer: state => container => isTriggerContainer(container['@type']),
+    isTriggerContainer: state => container => isTriggerContainer(container?.['@type']),
     isCodePullAtom: state => atom => isCodePullAtom(atom['@type']),
     isNormalContainer: state => container => isNormalContainer(container['@type']),
     defaultBuildNo: state => defaultBuildNo,
@@ -339,7 +378,7 @@ export default {
         if (!state.hideSkipExecTask) {
             return state.execDetail
         }
-        console.time('getExecDetail')
+
         const stages = state.execDetail.model?.stages?.filter(stage => !isSkip(stage.status)).map(stage => {
             const containers = stage.containers.filter((container) => !isSkip(container.status)).map(container => {
                 const elements = container.elements.filter(
@@ -370,7 +409,6 @@ export default {
                 containers
             }
         })
-        console.timeEnd('getExecDetail')
         return Object.assign({}, state.execDetail, {
             model: {
                 ...state.execDetail.model,

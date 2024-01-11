@@ -35,6 +35,15 @@ const customeRules = {
             return repeatNum <= 1
         }
     },
+    notInList: {
+        validate: function (value, args) {
+            if (args.indexOf(value) === -1) {
+                return true
+            } else {
+                return false
+            }
+        }
+    },
     // 不同时为空
     atlestNotEmpty: {
         validate: function (value, args) {

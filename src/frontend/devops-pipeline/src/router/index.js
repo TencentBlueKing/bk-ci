@@ -28,7 +28,7 @@ import pipelines from './router'
 
 Vue.use(Router)
 
-const createRouter = (store) => {
+const createRouter = (store, isInIframe) => {
     const router = new Router({
         mode: 'history',
         routes: pipelines

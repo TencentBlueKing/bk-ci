@@ -57,6 +57,7 @@ require('bk-magic-vue/dist/bk-magic-vue.min.css')
 const { i18n, setLocale } = createLocale(
     require.context('@locale/pipeline/', false, /\.json$/)
 )
+const isInIframe = window.self !== window.parent
 
 Vue.use(focus)
 Vue.use(bkMagic)
@@ -113,13 +114,14 @@ Vue.mixin({
     }
 })
 
-if (window.top === window.self) { // 只能以iframe形式嵌入
-    location.href = `${WEB_URL_PREFIX}${location.pathname}`
+if (!isInIframe) {
+    // 只能以iframe形式嵌入
+    location.href = `${WEB_URL_PREFIX}${location.pathname}`;
 }
 
 global.pipelineVue = new Vue({
-    el: '#app',
-    router: createRouter(store),
+    el: "#app",
+    router: createRouter(store, isInIframe),
     i18n,
     store,
     components: {

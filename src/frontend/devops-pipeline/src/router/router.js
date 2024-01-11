@@ -19,6 +19,7 @@
 
 const pipelines = () => import(/* webpackChunkName: "pipelines" */'../views')
 
+const CreatePipeline = () => import(/* webpackChunkName: "pipelines" */'../views/CreatePipeline.vue')
 const pipelinesNewList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/list')
 const PipelineManageList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/PipelineManageList')
 const PatchManageList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/PatchManageList')
@@ -44,7 +45,7 @@ const pipelinesEntry = () => import(/* webpackChunkName: "pipelinesEntry" */'../
 
 // 客户端流水线任务历史 - history
 const HistoryHeader = () => import(/* webpackChunkName: "pipelinesHistory" */'../components/PipelineHeader/HistoryHeader.vue')
-const pipelinesHistory = () => import(/* webpackChunkName: "pipelinesHistory" */'../views/subpages/history.vue')
+const pipelinesHistory = () => import(/* webpackChunkName: "pipelinesHistory" */'../views/subpages/History.vue')
 // 客户端流水线任务详情 - detail
 const pipelinesDetail = () => import(/* webpackChunkName: "pipelinesDetail" */'../views/subpages/ExecDetail.vue')
 const DetailHeader = () => import(/* webpackChunkName: "pipelinesDetail" */'../components/PipelineHeader/DetailHeader.vue')
@@ -53,14 +54,20 @@ const DetailHeader = () => import(/* webpackChunkName: "pipelinesDetail" */'../c
 
 const EditHeader = () => import(/* webpackChunkName: "pipelinesEdit" */'../components/PipelineHeader/EditHeader.vue')
 const pipelinesEdit = () => import(/* webpackChunkName: "pipelinesEdit" */'../views/subpages/edit.vue')
+const DraftDebugRecord = () => import(/* webpackChunkName: "draftDebug" */'../views/subpages/DraftDebugRecord.vue')
+const DraftDebugHeader = () => import(/* webpackChunkName: "draftDebug" */'../components/PipelineHeader/DraftDebugHeader.vue')
+
 // 客户端流水线执行预览 - edit
 const pipelinesPreview = () => import(/* webpackChunkName: "pipelinesPreview" */'../views/subpages/preview.vue')
 const PreviewHeader = () => import(/* webpackChunkName: "pipelinesPreview" */'../components/PipelineHeader/PreviewHeader.vue')
+
 // 插件前端task.json在线调试
 // docker console
 const pipelinesDocker = () => import(/* webpackChunkName: "pipelinesDocker" */'../views/subpages/docker_console.vue')
 const atomDebug = () => import(/* webpackChunkName: "atomDebug" */'../views/atomDebug.vue')
-const ImportPipelineEdit = () => import(/* webpackChunkName: "atomDebug" */'../views/list/ImportPipelineEdit.vue')
+
+// 流水线导入
+const ImportPipelineEdit = () => import(/* webpackChunkName: "importPipeline" */'../views/ImportEdit.vue')
 
 const routes = [
     {
@@ -71,6 +78,20 @@ const routes = [
             name: 'pipelineListEntry'
         },
         children: [
+            {
+                path: 'create',
+                component: CreatePipeline,
+                name: 'createPipeline'
+            },
+            {
+                path: 'import',
+                component: ImportPipelineEdit,
+                children: [{
+                    path: ':tab',
+                    name: 'pipelineImportEdit',
+                    component: pipelinesEdit
+                }]
+            },
             {
                 path: 'list',
                 component: pipelineListEntry,
@@ -173,30 +194,6 @@ const routes = [
                 component: atomDebug
             },
             {
-                path: 'import',
-                component: ImportPipelineEdit,
-                children: [
-                    {
-                        path: '',
-                        redirect: {
-                            name: 'pipelineImportEdit'
-                        }
-                    },
-                    {
-                        // 流水线编辑
-                        path: 'edit/:tab?',
-                        name: 'pipelineImportEdit',
-                        meta: {
-                            icon: 'pipeline',
-                            title: 'pipeline',
-                            header: 'pipeline',
-                            to: 'PipelineManageList'
-                        },
-                        component: pipelinesEdit
-                    }
-                ]
-            },
-            {
                 path: ':pipelineId',
                 component: pipelinesEntry,
                 children: [
@@ -244,7 +241,7 @@ const routes = [
                     },
                     {
                         // 流水线编辑
-                        path: 'edit/:tab?',
+                        path: 'edit/:version?/:tab?',
                         name: 'pipelinesEdit',
                         components: {
                             header: EditHeader,
@@ -259,8 +256,8 @@ const routes = [
                     },
                     {
                         // 流水线执行可选插件
-                        path: 'preview',
-                        name: 'pipelinesPreview',
+                        path: 'preview/:version?',
+                        name: 'executePreview',
                         components: {
                             header: PreviewHeader,
                             default: pipelinesPreview
@@ -270,6 +267,20 @@ const routes = [
                             title: 'pipeline',
                             header: 'pipeline',
                             to: 'PipelineManageList'
+                        }
+                    },
+                    {
+                        path: 'draftDebug/:version',
+                        name: 'draftDebugRecord',
+                        meta: {
+                            icon: 'pipeline',
+                            title: 'pipeline',
+                            header: 'pipeline',
+                            to: 'PipelineManageList'
+                        },
+                        components: {
+                            header: DraftDebugHeader,
+                            default: DraftDebugRecord
                         }
                     }
                 ]
