@@ -6,6 +6,7 @@ import com.tencent.devops.environment.api.job.ServiceJobResource
 import com.tencent.devops.environment.pojo.job.req.CreateAccountReq
 import com.tencent.devops.environment.pojo.job.req.DeleteAccountReq
 import com.tencent.devops.environment.pojo.job.req.FileDistributeReq
+import com.tencent.devops.environment.pojo.job.req.OpOperateReq
 import com.tencent.devops.environment.pojo.job.req.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.req.ScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.req.TaskTerminateReq
@@ -16,6 +17,7 @@ import com.tencent.devops.environment.pojo.job.resp.GetAccountListResult
 import com.tencent.devops.environment.pojo.job.resp.GetStepInstanceDetailResult
 import com.tencent.devops.environment.pojo.job.resp.GetStepInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.resp.JobResult
+import com.tencent.devops.environment.pojo.job.resp.OpOperateResult
 import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.resp.ScriptExecuteResult
@@ -149,5 +151,9 @@ class ApigwJobResourceV4Impl @Autowired constructor(
             userId, projectId, jobInstanceId, stepInstanceId, executeCount,
             batch, maxHostNumPerGroup, keyword, searchIp, status, tag
         )
+    }
+
+    override fun operateOpProject(userId: String, opOperateReq: OpOperateReq): OpOperateResult {
+        return client.get(ServiceJobResource::class).operateOpProject(userId, opOperateReq)
     }
 }
