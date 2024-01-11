@@ -62,6 +62,7 @@ import com.tencent.devops.process.yaml.v3.parameter.Parameters
 import com.tencent.devops.process.yaml.v3.parsers.template.models.TemplateDeepTreeNode
 import com.tencent.devops.process.yaml.v3.utils.StreamEnvUtils
 
+@Suppress("ComplexMethod")
 object YamlObjects {
 
     fun getTriggerOnV3(triggerOn: Map<String, Any>): PreTriggerOnV3 {

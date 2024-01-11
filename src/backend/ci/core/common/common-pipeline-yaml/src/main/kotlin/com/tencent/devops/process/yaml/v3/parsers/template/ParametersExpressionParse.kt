@@ -58,7 +58,10 @@ object ParametersExpressionParse {
         templateParameters.forEachIndexed { index, param ->
             if (param.name.contains(".")) {
                 throw error(
-                    Constants.PARAMETER_FORMAT_ERROR.format(path.toString(), "parameter name ${param.name} not allow contains '.'")
+                    Constants.PARAMETER_FORMAT_ERROR.format(
+                        path.toString(),
+                        "parameter name ${param.name} not allow contains '.'"
+                    )
                 )
             }
 
@@ -147,7 +150,8 @@ object ParametersExpressionParse {
         if (!jsonTree.isArray) {
             throw error(
                 Constants.PARAMETER_FORMAT_ERROR.format(
-                    path.toString(), "array parameter $parameterName value  [$value] json type [${jsonTree.nodeType}] not array."
+                    path.toString(),
+                    "array parameter $parameterName value  [$value] json type [${jsonTree.nodeType}] not array."
                 )
             )
         }
