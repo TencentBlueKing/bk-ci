@@ -28,9 +28,6 @@
 package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.Profile
-import com.tencent.devops.common.service.utils.BkServiceUtil
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.environment.dao.ProjectDao
 import com.tencent.devops.environment.pojo.job.req.OpOperateReq
 import com.tencent.devops.environment.pojo.job.resp.OpOperateResult
