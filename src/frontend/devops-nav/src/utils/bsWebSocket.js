@@ -52,9 +52,8 @@ class BlueShieldWebSocket {
                             })
                         }
                         console.log('other page close reconnect')
-                        
-                        !this.isConnecting && this.stompClientConnect()
                     }
+                    !this.isConnecting && this.stompClientConnect()
                 } else {
                     console.log('websocket close event.code: ', err.code)
                 }
