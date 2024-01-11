@@ -7,6 +7,8 @@ import io.swagger.annotations.ApiModelProperty
 data class HostInRes(
     @ApiModelProperty(value = "云区域ID")
     val bkCloudId: Long?,
+    @ApiModelProperty(value = "管控区域名称")
+    val bkCloudName: String,
     @ApiModelProperty(value = "IP地址")
     val ip: String?,
     @ApiModelProperty(value = "IPv6地址")
