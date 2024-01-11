@@ -515,7 +515,12 @@ onBeforeUnmount(() => {
         </bk-select>
       </div>
     </bk-form-item>
-    <bk-form-item :label="t('项目所属运营产品')" property="productId" :required="true">
+    <bk-form-item
+      :label="t('项目所属运营产品')"
+      property="productId"
+      :required="true"
+      :description="t('公司OBS结算业务的运营产品，1个项目仅支持关联1个运营产品，多个项目可关联到同一运营产品')"
+    >
       <bk-select
         class="product-select"
         v-model="projectData.productId"
