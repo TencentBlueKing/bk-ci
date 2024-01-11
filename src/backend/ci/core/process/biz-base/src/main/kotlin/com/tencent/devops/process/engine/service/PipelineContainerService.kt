@@ -529,7 +529,7 @@ class PipelineContainerService @Autowired constructor(
                         )
                     )
                     needUpdateContainer = true
-                } else if (container.matrixGroupFlag == true && BuildStatus.parse(container.status).isFinish()) {
+                } else if (container.matrixGroupFlag == true) {
                     // 构建矩阵没有对应的重试插件，单独进行重试判断
                     needUpdateContainer = true
                 }
