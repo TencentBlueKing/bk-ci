@@ -15,7 +15,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OPEN_API_BUILD"], description = "OPEN-API-构建资源")
+@Api(tags = ["OPEN_API_BUILD"], description = "OPEN-API-安全")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/security/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
