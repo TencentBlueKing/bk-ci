@@ -33,6 +33,8 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
+import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
@@ -97,14 +99,15 @@ class PipelineSettingVersionService @Autowired constructor(
             getPipelineSettingVersion(projectId, pipelineId, version)?.let { ve ->
                 settingInfo.successSubscriptionList = ve.successSubscriptionList
                 settingInfo.failSubscriptionList = ve.failSubscriptionList
-                settingInfo.labels = ve.labels
+                settingInfo.labels = ve.labels ?: listOf()
                 settingInfo.desc = ve.desc
                 settingInfo.buildNumRule = ve.buildNumRule
                 settingInfo.runLockType = ve.runLockType
                 settingInfo.waitQueueTimeMinute = ve.waitQueueTimeMinute
-                settingInfo.maxQueueSize = ve.maxQueueSize
+                    ?: PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
+                settingInfo.maxQueueSize = ve.maxQueueSize ?: PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
                 settingInfo.concurrencyGroup = ve.concurrencyGroup
-                settingInfo.concurrencyCancelInProgress = ve.concurrencyCancelInProgress
+                settingInfo.concurrencyCancelInProgress = ve.concurrencyCancelInProgress ?: false
                 settingInfo.pipelineAsCodeSettings = ve.pipelineAsCodeSettings
             }
         }
