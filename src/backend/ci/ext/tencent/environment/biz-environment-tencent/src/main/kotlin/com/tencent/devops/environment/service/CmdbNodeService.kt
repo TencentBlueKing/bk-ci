@@ -202,7 +202,7 @@ class CmdbNodeService @Autowired constructor(
                 nodeStatus = if (AGENT_NOT_INSTALLED_TAG == ipToAgentVersionMap?.get(cmdbNode.ip)?.installedTag)
                     NodeStatus.NOT_INSTALLED.name
                 else if (AGENT_ABNORMAL_NODE_STATUS == ipToAgentVersionMap?.get(cmdbNode.ip)?.status)
-                    NodeStatus.AGENT_ABNORMAL.name
+                    NodeStatus.ABNORMAL.name
                 else if (AGENT_NORMAL_NODE_STATUS == ipToAgentVersionMap?.get(cmdbNode.ip)?.status)
                     NodeStatus.NORMAL.name
                 else

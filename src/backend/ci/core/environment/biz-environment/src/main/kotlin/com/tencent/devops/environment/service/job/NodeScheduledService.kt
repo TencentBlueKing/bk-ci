@@ -117,7 +117,7 @@ class NodeScheduledService @Autowired constructor(
                 if (AGENT_NOT_INSTALLED_TAG == ipToAgentUpdateList[it.nodeIp]?.installedTag)
                     NodeStatus.NOT_INSTALLED.name
                 else if (AGENT_ABNORMAL_NODE_STATUS == ipToAgentUpdateList[it.nodeIp]?.status)
-                    NodeStatus.AGENT_ABNORMAL.name
+                    NodeStatus.ABNORMAL.name
                 else if (AGENT_NORMAL_NODE_STATUS == ipToAgentUpdateList[it.nodeIp]?.status)
                     NodeStatus.NORMAL.name
                 else null
