@@ -511,14 +511,14 @@
                     const tipsI18nKey = this.releaseParams.enablePac
                         ? 'pacPipelineReleaseTips'
                         : 'releaseTips'
-                    const tipsArrayLength = this.releaseParams.enablePac ? 3 : 2
+                    const tipsArrayLength = this.releaseParams.enablePac ? 2 : 0
                     const isPacMR
                         = this.releaseParams.enablePac
                             && this.releaseParams.targetAction === 'CHECKOUT_BRANCH_AND_REQUEST_MERGE'
                     const h = this.$createElement
                     const instance = this.$bkInfo({
                         type: 'success',
-                        title: this.$t('releaseSuc'),
+                        title: this.$t(isPacMR ? 'pacMRRelaseTips' : 'releaseSuc'),
                         width: 600,
                         showFooter: false,
                         subHeader: h('div', {}, [
@@ -535,36 +535,38 @@
                                     ])
                                 }
                             }),
-                            h(
-                                'p',
-                                {
-                                    attrs: {
-                                        class: 'pipeline-release-suc-tips'
-                                    }
-                                },
-                                Array.from({ length: tipsArrayLength }).map((_, index) => {
-                                    if (index === 1 && this.releaseParams.enablePac) {
-                                        return h('ul', {}, [
-                                            h('span', {}, this.$t(`${tipsI18nKey}${index}`)),
-                                            Array(3)
-                                                .fill(0)
-                                                .map((_, i) =>
-                                                    h(
-                                                        'li',
-                                                        {
-                                                            style: {
-                                                                marginLeft: '32px',
-                                                                listStyle: 'disc'
-                                                            }
-                                                        },
-                                                        this.$t(`${tipsI18nKey}${index}-${i}`)
+                            ...(tipsArrayLength > 0
+                                ? [h(
+                                    'p',
+                                    {
+                                        attrs: {
+                                            class: 'pipeline-release-suc-tips'
+                                        }
+                                    },
+                                    Array.from({ length: tipsArrayLength }).map((_, index) => {
+                                        if (index === 1 && this.releaseParams.enablePac) {
+                                            return h('ul', {}, [
+                                                h('span', {}, this.$t(`${tipsI18nKey}${index}`)),
+                                                Array(3)
+                                                    .fill(0)
+                                                    .map((_, i) =>
+                                                        h(
+                                                            'li',
+                                                            {
+                                                                style: {
+                                                                    marginLeft: '32px',
+                                                                    listStyle: 'disc'
+                                                                }
+                                                            },
+                                                            this.$t(`${tipsI18nKey}${index}-${i}`)
+                                                        )
                                                     )
-                                                )
-                                        ])
-                                    }
-                                    return h('span', {}, this.$t(`${tipsI18nKey}${index}`))
-                                })
-                            ),
+                                            ])
+                                        }
+                                        return h('span', {}, this.$t(`${tipsI18nKey}${index}`))
+                                    })
+                                )]
+                                : []),
                             h(
                                 'footer',
                                 {
@@ -586,7 +588,7 @@
                                                 on: {
                                                     click: () => {
                                                         this.$bkInfo.close(instance.id)
-                                                        window.open('git.woa.com', '_blank')
+                                                        window.open('https://git.tencent.com', '_blank')
                                                     }
                                                 }
                                             },

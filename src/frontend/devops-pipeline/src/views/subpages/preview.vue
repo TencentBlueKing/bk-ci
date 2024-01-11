@@ -113,6 +113,7 @@
                             action: this.$permissionResourceAction.EXECUTE
                         }
                     )
+                    this.$router.back()
                 } finally {
                     this.isLoading = false
                 }
