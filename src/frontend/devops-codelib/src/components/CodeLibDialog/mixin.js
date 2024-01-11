@@ -236,7 +236,7 @@ export default {
             this.isLoadingTickets = false
         },
         'codelib.url': function (newVal) {
-            // this.handleCheckPacProject(newVal)
+            this.handleCheckPacProject(newVal)
             const { codelib, codelibTypeName } = this
             const { alias, msg } = this.isExtendTx
                 ? extendParsePathAlias(codelibTypeName, newVal, codelib.authType, codelib.svnType)

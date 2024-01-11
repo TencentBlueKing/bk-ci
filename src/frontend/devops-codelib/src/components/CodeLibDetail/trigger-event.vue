@@ -175,7 +175,6 @@
                 this.isInitTime = true
             },
             daterange (newVal, oldVal) {
-                console.log(newVal, 1111111)
                 if (oldVal[0]) this.isInitTime = false
                 this.page = 1
                 this.hasLoadEnd = false
