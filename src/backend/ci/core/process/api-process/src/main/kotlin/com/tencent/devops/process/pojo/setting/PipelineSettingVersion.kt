@@ -45,13 +45,13 @@ data class PipelineSettingVersion(
 
     // 流水线基础配置
     @ApiModelProperty("流水线名称", required = false)
-    var pipelineName: String,
+    var pipelineName: String? = "",
     @ApiModelProperty("版本", required = false)
     var version: Int,
     @ApiModelProperty("描述", required = false)
     val desc: String,
     @ApiModelProperty("标签列表", required = false)
-    var labels: List<String>,
+    var labels: List<String>?,
     @field:BkField(patternStyle = BkStyleEnum.BUILD_NUM_RULE_STYLE, required = false)
     @ApiModelProperty("构建号生成规则", required = false)
     val buildNumRule: String?, // 构建号生成规则
@@ -66,13 +66,13 @@ data class PipelineSettingVersion(
     @ApiModelProperty("Lock 类型", required = false)
     val runLockType: PipelineRunLockType = PipelineRunLockType.SINGLE_LOCK,
     @ApiModelProperty("最大排队时长", required = false)
-    val waitQueueTimeMinute: Int,
+    val waitQueueTimeMinute: Int?,
     @ApiModelProperty("最大排队数量", required = false)
-    val maxQueueSize: Int,
+    val maxQueueSize: Int?,
     @ApiModelProperty("并发时,设定的group", required = false)
     var concurrencyGroup: String?,
     @ApiModelProperty("并发时,是否相同group取消正在执行的流水线", required = false)
-    var concurrencyCancelInProgress: Boolean,
+    var concurrencyCancelInProgress: Boolean?,
     @ApiModelProperty("YAML流水线特殊配置", required = false)
     var pipelineAsCodeSettings: PipelineAsCodeSettings?
 ) {
