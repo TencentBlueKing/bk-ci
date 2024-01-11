@@ -52,6 +52,7 @@ class BlueShieldWebSocket {
                             })
                         }
                         console.log('other page close reconnect')
+                        socket.onclose = null
                         this.connect()
                     }
                 } else {
@@ -83,7 +84,7 @@ class BlueShieldWebSocket {
                 console.log('websocket connection retrying')
                 this.connectErrTime++
                 const time = Math.random() * 60000
-                setTimeout(() => this.stompClientConnect(), time)
+                setTimeout(() => this.connect(), time)
             } else {
                 this.isConnecting = false
                 window.devops.$bkMessage({ message: err.message || 'websocket connection failed, please try again later', theme: 'error' })
