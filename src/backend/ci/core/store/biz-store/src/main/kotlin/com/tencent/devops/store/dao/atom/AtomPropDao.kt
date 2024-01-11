@@ -28,6 +28,7 @@
 package com.tencent.devops.store.dao.atom
 
 import com.tencent.devops.model.store.tables.TAtom
+import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -50,5 +51,26 @@ class AtomPropDao {
                 .where(ATOM_CODE.`in`(atomCodes).and(LATEST_FLAG.eq(true)))
                 .fetch()
         }
+    }
+
+    fun getTestProjectAtomProps(
+        dslContext: DSLContext,
+        atomCodes: Collection<String>
+    ): Result<out Record>? {
+        val t1 = TAtom.T_ATOM
+        val t2 = TAtom.T_ATOM
+        val statusList = listOf(
+            AtomStatusEnum.TESTING.status.toByte(),
+            AtomStatusEnum.AUDITING.status.toByte(),
+            AtomStatusEnum.RELEASED.status.toByte(),
+        )
+        return dslContext.selectFrom(t1)
+            .where(t1.ATOM_CODE.`in`(atomCodes).and(t1.ATOM_STATUS.`in`(statusList)))
+            .andNotExists(
+                dslContext.selectFrom(t2)
+                    .where(t2.ATOM_CODE.eq(t1.ATOM_CODE))
+                    .and(t2.UPDATE_TIME.gt(t1.UPDATE_TIME))
+            )
+            .fetch()
     }
 }

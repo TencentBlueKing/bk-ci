@@ -230,7 +230,7 @@ class RepoPipelineService @Autowired constructor(
             dslContext = dslContext,
             ids = pipelineRefCountMap.keys.toList()
         )
-        val atomProps = getAtomProp(pipelineRefRecords.map { it.atomCode }.toSet())
+        val atomProps = getAtomProp(projectId, pipelineRefRecords.map { it.atomCode }.toSet())
         val triggerRecords = pipelineRefRecords.map {
             RepoTriggerRefVo(
                 projectId = it.projectId,
@@ -272,8 +272,8 @@ class RepoPipelineService @Autowired constructor(
         )
     }
 
-    private fun getAtomProp(atomCodes: Set<String>) = try {
-        client.get(ServiceAtomResource::class).getAtomProps(atomCodes).data
+    private fun getAtomProp(projectId: String, atomCodes: Set<String>) = try {
+        client.get(ServiceAtomResource::class).getAtomProps(projectId, atomCodes).data
     } catch (ignored: Exception) {
         logger.warn("fail to get atom prop|atomCodes[$atomCodes]")
         null

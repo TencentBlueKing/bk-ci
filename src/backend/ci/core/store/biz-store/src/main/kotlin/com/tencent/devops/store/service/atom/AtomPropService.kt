@@ -37,6 +37,7 @@ interface AtomPropService {
      * @return 插件属性集合
      */
     fun getAtomProps(
+        projectCode: String,
         atomCodes: Set<String>
     ): Map<String, AtomProp>?
 }

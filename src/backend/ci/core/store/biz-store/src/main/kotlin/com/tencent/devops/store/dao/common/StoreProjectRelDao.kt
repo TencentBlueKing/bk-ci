@@ -334,6 +334,26 @@ class StoreProjectRelDao {
     }
 
     /**
+     * 获取与当前调试项目关联的组件
+     */
+    fun getTestProjectCodeStoreCodes(
+        dslContext: DSLContext,
+        storeCode: Set<String>,
+        storeType: StoreTypeEnum,
+        projectCode: String
+    ): List<String> {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            return dslContext.select(STORE_CODE)
+                .from(this)
+                .where(STORE_CODE.`in`(storeCode))
+                .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .and(PROJECT_CODE.eq(projectCode))
+                .and(TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
+                .fetchInto(String::class.java)
+        }
+    }
+
+    /**
      * 获取用户的组件设定的调试项目
      */
     fun getUserStoreTestProjectCode(

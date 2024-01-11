@@ -33,19 +33,22 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.util.RegexUtils
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.store.dao.atom.AtomPropDao
+import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.AtomProp
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomPropService
 import com.tencent.devops.store.service.common.action.StoreDecorateFactory
+import java.util.concurrent.TimeUnit
 import org.apache.commons.collections4.ListUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 class AtomPropServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val atomPropDao: AtomPropDao
+    private val atomPropDao: AtomPropDao,
+    private val storeProjectRelDao: StoreProjectRelDao
 ) : AtomPropService {
 
     private val atomPropCache = Caffeine.newBuilder()
@@ -53,7 +56,7 @@ class AtomPropServiceImpl @Autowired constructor(
         .expireAfterWrite(6, TimeUnit.HOURS)
         .build<String, AtomProp>()
 
-    override fun getAtomProps(atomCodes: Set<String>): Map<String, AtomProp>? {
+    override fun getAtomProps(projectCode: String, atomCodes: Set<String>): Map<String, AtomProp>? {
         var atomPropMap: MutableMap<String, AtomProp>? = null
         // 从缓存中查找插件属性信息
         var queryDbAtomCodes: MutableList<String>? = null
@@ -76,13 +79,35 @@ class AtomPropServiceImpl @Autowired constructor(
             // 无需从db查数据则直接返回结果数据
             return atomPropMap
         }
+        val testAtoms = storeProjectRelDao.getTestProjectCodeStoreCodes(
+            dslContext = dslContext,
+            storeCode = atomCodes,
+            storeType = StoreTypeEnum.IMAGE,
+            projectCode = projectCode
+        )
+        if (atomPropMap == null) {
+            atomPropMap = mutableMapOf()
+        }
+        atomPropMap = partition(queryDbAtomCodes!!.subtract(testAtoms.toSet()).toMutableList(), atomPropMap)
+        if (testAtoms.isNotEmpty()) {
+            atomPropMap = partition(testAtoms.toMutableList(), atomPropMap, true)
+        }
+        return atomPropMap
+    }
+
+    fun partition(
+        queryDbAtomCodes: MutableList<String>?,
+        atomPropMap:  MutableMap<String, AtomProp>?,
+        testProjectFlag: Boolean = false
+    ): MutableMap<String, AtomProp>? {
         ListUtils.partition(queryDbAtomCodes!!, 100).forEach { rids ->
-            val atomPropRecords = atomPropDao.getAtomProps(dslContext, rids)
+            val atomPropRecords = if (!testProjectFlag) {
+                atomPropDao.getAtomProps(dslContext, rids)
+            } else {
+                atomPropDao.getTestProjectAtomProps(dslContext, rids)
+            }
             if (atomPropRecords.isNullOrEmpty()) {
                 return@forEach
-            }
-            if (atomPropMap == null) {
-                atomPropMap = mutableMapOf()
             }
             val tAtom = TAtom.T_ATOM
             atomPropRecords.forEach { atomPropRecord ->
