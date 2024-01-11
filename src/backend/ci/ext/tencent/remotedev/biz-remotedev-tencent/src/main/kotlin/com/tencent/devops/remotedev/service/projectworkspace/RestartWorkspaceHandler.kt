@@ -236,6 +236,7 @@ class RestartWorkspaceHandler @Autowired constructor(
                     notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.CLIENT_PUSH),
                     bodyParams = mapOf(
                         "workspaceName" to workspace.workspaceName,
+                        "projectId" to workspace.projectId,
                         "cgsId" to (workspace.hostName ?: workspace.workspaceName),
                         "displayName" to workspace.displayName,
                         "time" to DateTimeUtil.formatDate(Date())

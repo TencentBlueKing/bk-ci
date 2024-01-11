@@ -210,6 +210,7 @@ class NotifyControl @Autowired constructor(
         val request = SendNotifyMessageTemplateRequest(
             templateCode = notifyTemplateCode,
             bodyParams = bodyParams,
+            titleParams = bodyParams,
             notifyType = notifyType.toMutableSet(),
             markdownContent = markdownContent,
             receivers = receivers
