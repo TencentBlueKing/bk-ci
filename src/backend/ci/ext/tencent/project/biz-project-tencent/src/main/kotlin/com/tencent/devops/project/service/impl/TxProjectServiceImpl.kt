@@ -55,6 +55,7 @@ import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
@@ -65,6 +66,7 @@ import com.tencent.devops.project.pojo.ObsOperationalProductResponse
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
+import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
@@ -75,6 +77,7 @@ import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectApprovalService
+import com.tencent.devops.project.service.ProjectExtOrganizationService
 import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.ProjectExtService
 import com.tencent.devops.project.service.ProjectPaasCCService
@@ -92,7 +95,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
 
-@Suppress("ALL")
+@Suppress("ALL", "IMPLICIT_CAST_TO_ANY")
 @Service
 class TxProjectServiceImpl @Autowired constructor(
     private val tofService: TOFService,
@@ -109,6 +112,7 @@ class TxProjectServiceImpl @Autowired constructor(
     private val projectTagService: ProjectTagService,
     private val bkTag: BkTag,
     private val profile: Profile,
+    private val organizationService: ProjectExtOrganizationService,
     authPermissionApi: AuthPermissionApi,
     projectAuthServiceCode: ProjectAuthServiceCode,
     shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
@@ -397,6 +401,9 @@ class TxProjectServiceImpl @Autowired constructor(
         val bgName = projectCreateInfo.bgName.ifEmpty { userDeptDetail.bgName }
         val deptName = projectCreateInfo.deptName.ifEmpty { userDeptDetail.deptName }
         val centerName = projectCreateInfo.centerName.ifEmpty { userDeptDetail.centerName }
+        val businessLineName = projectCreateInfo.businessLineName?.takeIf { it.isNotEmpty() }
+            ?: userDeptDetail.businessLineName
+        val businessLineId = projectCreateInfo.businessLineId ?: userDeptDetail.businessLineId?.toLong()
 
         return projectCreateInfo.copy(
             bgId = bgId,
@@ -404,7 +411,9 @@ class TxProjectServiceImpl @Autowired constructor(
             centerId = centerId,
             centerName = centerName,
             deptId = deptId,
-            deptName = deptName
+            deptName = deptName,
+            businessLineId = businessLineId,
+            businessLineName = businessLineName
         )
     }
 
@@ -559,6 +568,12 @@ class TxProjectServiceImpl @Autowired constructor(
             logger.warn("get obs products fail!${ignore.message}")
             emptyList()
         }
+    }
+
+    override fun fixProjectOrganization(tProjectRecord: TProjectRecord): ProjectOrganizationInfo {
+        return organizationService.getRightProjectOrganization(
+            tProjectRecord = tProjectRecord
+        )
     }
 
     companion object {
