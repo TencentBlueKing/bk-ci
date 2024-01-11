@@ -37,9 +37,6 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
-import com.tencent.devops.common.websocket.enum.NotityLevel
-import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
@@ -59,13 +56,11 @@ import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
-import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
-import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
@@ -79,8 +74,6 @@ import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OP_HISTORY_KEY_PREFIX
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WINDOWS_GPU_OWNER_CHANGE_NOTIFY
-import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
-import com.tencent.devops.remotedev.websocket.push.WorkspaceWebsocketPush
 import java.time.Duration
 import java.time.LocalDateTime
 import org.jooq.DSLContext
@@ -103,7 +96,6 @@ class WorkspaceCommon @Autowired constructor(
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val remoteDevBillingDao: RemoteDevBillingDao,
     private val remoteDevSettingService: RemoteDevSettingService,
-    private val webSocketDispatcher: WebSocketDispatcher,
     private val redisCache: RedisCacheService,
     private val profile: Profile,
     @org.springframework.context.annotation.Lazy
@@ -124,50 +116,6 @@ class WorkspaceCommon @Autowired constructor(
         private const val REPOID = "lsync"
         private const val LOCALDRIVER = "L"
         private const val PIPELINE_CONFIG_INFO = "remotedev:assignWorkspace.pipelineinfo"
-    }
-
-    // 封装统一分发WS的方法
-    fun dispatchWebsocketPushEvent(
-        userId: String,
-        workspaceName: String,
-        workspaceHost: String?,
-        errorMsg: String? = null,
-        type: WebSocketActionType,
-        status: Boolean?,
-        action: WorkspaceAction,
-        systemType: WorkspaceSystemType? = null,
-        workspaceMountType: WorkspaceMountType? = null,
-        ownerType: WorkspaceOwnerType? = null,
-        projectId: String = ""
-    ) {
-        webSocketDispatcher.dispatch(
-            WorkspaceWebsocketPush(
-                type = type,
-                status = status ?: true,
-                anyMessage = WorkspaceResponse(
-                    workspaceHost = workspaceHost ?: "",
-                    workspaceName = workspaceName,
-                    status = action,
-                    errorMsg = errorMsg,
-                    systemType = systemType,
-                    workspaceMountType = workspaceMountType,
-                    ownerType = ownerType
-                ),
-                projectId = projectId,
-                userIds = getWebSocketUsers(userId, workspaceName),
-                redisOperation = redisOperation,
-                page = WorkspacePageBuild.buildPage(workspaceName),
-                notifyPost = NotifyPost(
-                    module = "remotedev",
-                    level = NotityLevel.LOW_LEVEL.getLevel(),
-                    message = "",
-                    dealUrl = null,
-                    code = 200,
-                    webSocketType = "IFRAME",
-                    page = WorkspacePageBuild.buildPage(workspaceName)
-                )
-            )
-        )
     }
 
     fun getOpHistory(key: OpHistoryCopyWriting) =
@@ -480,13 +428,6 @@ class WorkspaceCommon @Autowired constructor(
         }.getOrNull() ?: emptyList()
     }
 
-    private fun getWebSocketUsers(operator: String, workspaceName: String): Set<String> {
-        return if (operator == ADMIN_NAME) {
-            workspaceDao.fetchWorkspaceUser(dslContext, workspaceName).toSet()
-        } else {
-            setOf(operator)
-        }
-    }
 
     fun getWorkspaceDetail(workspaceName: String): WorkSpaceCacheInfo? {
         return try {

@@ -178,7 +178,7 @@ class RestartWorkspaceHandler @Autowired constructor(
                 )
             )
 
-            workspaceCommon.dispatchWebsocketPushEvent(
+            notifyControl.dispatchWebsocketPushEvent(
                 userId = userId,
                 workspaceName = workspaceName,
                 workspaceHost = null,
@@ -266,7 +266,7 @@ class RestartWorkspaceHandler @Autowired constructor(
         }
 
         // 分发到WS
-        workspaceCommon.dispatchWebsocketPushEvent(
+        notifyControl.dispatchWebsocketPushEvent(
             userId = event.userId,
             workspaceName = event.workspaceName,
             workspaceHost = "",

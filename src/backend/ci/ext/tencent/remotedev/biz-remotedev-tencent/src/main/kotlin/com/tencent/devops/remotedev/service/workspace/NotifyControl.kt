@@ -31,6 +31,10 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
+import com.tencent.devops.common.websocket.enum.NotityLevel
+import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
@@ -40,11 +44,15 @@ import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.service.client.TaiClient
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
+import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
+import com.tencent.devops.remotedev.websocket.push.WorkspaceWebsocketPush
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -57,7 +65,8 @@ class NotifyControl @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val workspaceDao: WorkspaceDao,
-    private val workspaceCommon: WorkspaceCommon,
+    private val redisOperation: RedisOperation,
+    private val webSocketDispatcher: WebSocketDispatcher,
     private val taiClient: TaiClient
 ) {
 
@@ -92,7 +101,7 @@ class NotifyControl @Autowired constructor(
 
         // 分发到WS
         workspace.forEach { ws ->
-            workspaceCommon.dispatchWebsocketPushEvent(
+            dispatchWebsocketPushEvent(
                 userId = ADMIN_NAME,
                 workspaceName = ws["NAME"] as String,
                 workspaceHost = null,
@@ -152,7 +161,7 @@ class NotifyControl @Autowired constructor(
             }
             logger.info("notify4User CLIENT_PUSH|$notifyTemplateCode|$userIds|$res")
             userIds.forEach { user ->
-                workspaceCommon.dispatchWebsocketPushEvent(
+                dispatchWebsocketPushEvent(
                     userId = user,
                     workspaceName = workspaceName,
                     workspaceHost = null,
@@ -197,6 +206,58 @@ class NotifyControl @Autowired constructor(
                 notifyType = setOf(NotifyType.WEWORK_GROUP.name),
                 markdownContent = false
             )
+        }
+    }
+
+    // 封装统一分发WS的方法
+    fun dispatchWebsocketPushEvent(
+        userId: String,
+        workspaceName: String,
+        workspaceHost: String?,
+        errorMsg: String? = null,
+        type: WebSocketActionType,
+        status: Boolean?,
+        action: WorkspaceAction,
+        systemType: WorkspaceSystemType? = null,
+        workspaceMountType: WorkspaceMountType? = null,
+        ownerType: WorkspaceOwnerType? = null,
+        projectId: String = ""
+    ) {
+        webSocketDispatcher.dispatch(
+            WorkspaceWebsocketPush(
+                type = type,
+                status = status ?: true,
+                anyMessage = WorkspaceResponse(
+                    workspaceHost = workspaceHost ?: "",
+                    workspaceName = workspaceName,
+                    status = action,
+                    errorMsg = errorMsg,
+                    systemType = systemType,
+                    workspaceMountType = workspaceMountType,
+                    ownerType = ownerType
+                ),
+                projectId = projectId,
+                userIds = getWebSocketUsers(userId, workspaceName),
+                redisOperation = redisOperation,
+                page = WorkspacePageBuild.buildPage(workspaceName),
+                notifyPost = NotifyPost(
+                    module = "remotedev",
+                    level = NotityLevel.LOW_LEVEL.getLevel(),
+                    message = "",
+                    dealUrl = null,
+                    code = 200,
+                    webSocketType = "IFRAME",
+                    page = WorkspacePageBuild.buildPage(workspaceName)
+                )
+            )
+        )
+    }
+
+    private fun getWebSocketUsers(operator: String, workspaceName: String): Set<String> {
+        return if (operator == ADMIN_NAME) {
+            workspaceDao.fetchWorkspaceUser(dslContext, workspaceName).toSet()
+        } else {
+            setOf(operator)
         }
     }
 

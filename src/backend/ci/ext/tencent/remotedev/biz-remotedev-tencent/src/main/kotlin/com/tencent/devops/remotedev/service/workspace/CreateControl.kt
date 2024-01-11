@@ -116,7 +116,8 @@ class CreateControl @Autowired constructor(
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val deliverControl: DeliverControl,
     private val bkccService: BKCCService,
-    private val windowsSpecResourceDao: WindowsSpecResourceDao
+    private val windowsSpecResourceDao: WindowsSpecResourceDao,
+    private val notifyControl: NotifyControl
 ) {
     private val executor = Executors.newCachedThreadPool()
     companion object {
@@ -375,7 +376,7 @@ class CreateControl @Autowired constructor(
         )
 
         // 发送给用户
-        workspaceCommon.dispatchWebsocketPushEvent(
+        notifyControl.dispatchWebsocketPushEvent(
             userId = userId,
             workspaceName = workspace.workspaceName,
             workspaceHost = null,
@@ -524,7 +525,7 @@ class CreateControl @Autowired constructor(
             workspaceCreateFail(ws, event)
         }
 
-        workspaceCommon.dispatchWebsocketPushEvent(
+        notifyControl.dispatchWebsocketPushEvent(
             userId = event.userId,
             workspaceName = event.workspaceName,
             workspaceHost = event.environmentHost,

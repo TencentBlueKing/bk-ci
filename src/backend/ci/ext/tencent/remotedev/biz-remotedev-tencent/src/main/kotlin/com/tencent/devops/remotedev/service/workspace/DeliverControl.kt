@@ -46,7 +46,6 @@ import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
-import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
@@ -77,7 +76,6 @@ class DeliverControl @Autowired constructor(
     private val workspaceDao: WorkspaceDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val sharedDao: WorkspaceSharedDao,
-    private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val workspaceCommon: WorkspaceCommon,
     private val softwareManageService: SoftwareManageService,
     private val notifyControl: NotifyControl
@@ -234,7 +232,7 @@ class DeliverControl @Autowired constructor(
         }
 
         // 分配完机器后通知客户端，刷新列表
-        workspaceCommon.dispatchWebsocketPushEvent(
+        notifyControl.dispatchWebsocketPushEvent(
             userId = Constansts.ADMIN_NAME,
             workspaceName = workspaceName,
             workspaceHost = null,
@@ -340,7 +338,7 @@ class DeliverControl @Autowired constructor(
                             WorkspaceStatus.RUNNING.name
                         )
                     )
-                    workspaceCommon.dispatchWebsocketPushEvent(
+                    notifyControl.dispatchWebsocketPushEvent(
                         userId = workspace.createUserId,
                         workspaceName = workspace.workspaceName,
                         workspaceHost = workspace.hostName,
