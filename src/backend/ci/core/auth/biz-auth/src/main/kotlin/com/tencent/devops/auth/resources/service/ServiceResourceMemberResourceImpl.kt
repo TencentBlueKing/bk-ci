@@ -9,6 +9,7 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import java.util.concurrent.TimeUnit
 
 @RestResource
@@ -52,8 +53,7 @@ class ServiceResourceMemberResourceImpl constructor(
         token: String,
         userId: String,
         projectCode: String,
-        groupId: Int,
-        members: List<String>
+        projectCreateUserInfo: ProjectCreateUserInfo
     ): Result<Boolean> {
         val isProjectManager = permissionProjectService.checkProjectManager(
             userId = userId,
@@ -65,15 +65,22 @@ class ServiceResourceMemberResourceImpl constructor(
                 defaultMessage = "The user($userId) is not the manager of the project($projectCode)!"
             )
         }
-        val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(365L)
-        return Result(
-            permissionResourceMemberService.batchAddResourceGroupMembers(
-                userId = userId,
+        with(projectCreateUserInfo) {
+            val iamGroupId = groupId ?: permissionResourceMemberService.roleCodeToIamGroupId(
                 projectCode = projectCode,
-                iamGroupId = groupId,
-                expiredTime = expiredTime,
-                members = members
+                roleCode = (if (roleName != null) BkAuthGroup.roleNameToRoleId(roleName!!) else roleId!!).toString()
             )
-        )
+            val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(365L)
+            return Result(
+                permissionResourceMemberService.batchAddResourceGroupMembers(
+                    userId = userId,
+                    projectCode = projectCode,
+                    iamGroupId = iamGroupId,
+                    expiredTime = expiredTime,
+                    members = userIds,
+                    departments = deptIds
+                )
+            )
+        }
     }
 }

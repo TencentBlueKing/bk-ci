@@ -27,6 +27,12 @@ class SamplePermissionResourceMemberService : PermissionResourceMemberService {
         projectCode: String,
         iamGroupId: Int,
         expiredTime: Long,
-        members: List<String>
+        members: List<String>?,
+        departments: List<String>?
     ) = true
+
+    override fun roleCodeToIamGroupId(
+        projectCode: String,
+        roleCode: String
+    ): Int = 0
 }

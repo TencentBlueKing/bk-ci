@@ -6,6 +6,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
+import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -69,8 +70,8 @@ interface ServiceResourceMemberResource {
     ): Result<List<BkAuthGroupAndUserList>>
 
     @POST
-    @Path("/{projectCode}/batchAddResourceGroupMembers/{groupId}")
-    @ApiOperation("根据组ID往项目下加人")
+    @Path("/{projectCode}/batchAddResourceGroupMembers/")
+    @ApiOperation("用户组添加成员")
     fun batchAddResourceGroupMembers(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @ApiParam("认证token", required = true)
@@ -81,10 +82,7 @@ interface ServiceResourceMemberResource {
         @PathParam("projectCode")
         @ApiParam("项目Code", required = true)
         projectCode: String,
-        @ApiParam(name = "用户组IO", required = true)
-        @PathParam("groupId")
-        groupId: Int,
-        @ApiParam("添加用户集合", required = true)
-        members: List<String>
+        @ApiParam("用户组添加成员请求体", required = true)
+        projectCreateUserInfo: ProjectCreateUserInfo
     ): Result<Boolean>
 }

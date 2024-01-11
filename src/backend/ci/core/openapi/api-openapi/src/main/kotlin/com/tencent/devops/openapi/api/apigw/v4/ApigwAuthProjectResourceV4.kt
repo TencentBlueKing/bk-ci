@@ -86,7 +86,7 @@ interface ApigwAuthProjectResourceV4 {
 
     @POST
     @Path("/batch_add_resource_group_members")
-    @ApiOperation("根据组ID往项目下加人", tags = ["v4_app_batch_add_resource_group_members"])
+    @ApiOperation("用户组批量添加成员", tags = ["v4_app_batch_add_resource_group_members"])
     fun batchAddResourceGroupMembers(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

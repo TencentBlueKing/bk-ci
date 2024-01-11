@@ -93,7 +93,8 @@ class RbacPermissionResourceMemberService constructor(
         projectCode: String,
         iamGroupId: Int,
         expiredTime: Long,
-        members: List<String>
+        members: List<String>?,
+        departments: List<String>?
     ): Boolean {
         // 校验用户组是否属于该项目
         val managerId = authResourceService.get(
@@ -111,7 +112,8 @@ class RbacPermissionResourceMemberService constructor(
                 defaultMessage = "The group($iamGroupId) does not belong to the project($projectCode)!"
             )
         }
-        val type = ManagerScopesEnum.getType(ManagerScopesEnum.USER)
+        val userType = ManagerScopesEnum.getType(ManagerScopesEnum.USER)
+        val deptType = ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)
         val pageInfoDTO = V2PageInfoDTO().apply {
             pageSize = 1000
             page = 1
@@ -120,12 +122,12 @@ class RbacPermissionResourceMemberService constructor(
             iamGroupId,
             pageInfoDTO
         ).results.filter {
-            it.type == type
+            it.type == userType
         }.associateBy { it.id }
-        val addMembers = mutableListOf<String>()
+        val iamMemberInfos = mutableListOf<ManagerMember>()
         // 预期的过期天数
         val expectExpiredAt = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(VALID_EXPIRED_AT)
-        members.forEach {
+        members?.forEach {
             // 如果用户已经在用户组,并且过期时间超过30天,则不再添加
             if (groupMemberMap.containsKey(it) && groupMemberMap[it]!!.expiredAt > expectExpiredAt) {
                 return@forEach
@@ -138,11 +140,13 @@ class RbacPermissionResourceMemberService constructor(
                 params = arrayOf(it),
                 defaultMessage = "user $it not exist"
             )
-            addMembers.add(it)
+            iamMemberInfos.add(ManagerMember(userType, it))
         }
-        logger.info("batch add project user:$iamGroupId|$expiredTime|$addMembers")
-        if (addMembers.isNotEmpty()) {
-            val iamMemberInfos = addMembers.map { ManagerMember(type, it) }
+        departments?.forEach {
+            iamMemberInfos.add(ManagerMember(deptType, it))
+        }
+        logger.info("batch add project user:$iamGroupId|$expiredTime|$iamMemberInfos")
+        if (iamMemberInfos.isNotEmpty()) {
             val managerMemberGroup =
                 ManagerMemberGroupDTO.builder().members(iamMemberInfos).expiredAt(expiredTime).build()
             iamV2ManagerService.createRoleGroupMemberV2(iamGroupId, managerMemberGroup)
@@ -198,8 +202,36 @@ class RbacPermissionResourceMemberService constructor(
         )
     }
 
+    override fun roleCodeToIamGroupId(
+        projectCode: String,
+        roleCode: String
+    ): Int {
+        return if (roleCode == BkAuthGroup.CI_MANAGER.value) {
+            authResourceGroupDao.getByGroupName(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
+                groupName = BkAuthGroup.CI_MANAGER.groupName
+            )?.relationId
+        } else {
+            authResourceGroupDao.get(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
+                groupCode = roleCode
+            )?.relationId
+        } ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
+            params = arrayOf(roleCode),
+            defaultMessage = "group $roleCode not exist"
+        )
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceMemberService::class.java)
+
         // 有效的过期时间,在30天内就是有效的
         private const val VALID_EXPIRED_AT = 30L
     }

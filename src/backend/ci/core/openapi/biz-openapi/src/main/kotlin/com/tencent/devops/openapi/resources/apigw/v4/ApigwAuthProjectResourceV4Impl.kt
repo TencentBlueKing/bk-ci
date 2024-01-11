@@ -65,8 +65,7 @@ class ApigwAuthProjectResourceV4Impl @Autowired constructor(
             token = tokenService.getSystemToken(),
             userId = createInfo.createUserId,
             projectCode = projectId,
-            groupId = createInfo.groupId!!.toInt(),
-            members = createInfo.userIds!!
+            projectCreateUserInfo = createInfo
         )
     }
 }
