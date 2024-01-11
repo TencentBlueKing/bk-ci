@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.environment.pojo.job.req.CreateAccountReq
 import com.tencent.devops.environment.pojo.job.req.DeleteAccountReq
 import com.tencent.devops.environment.pojo.job.req.FileDistributeReq
+import com.tencent.devops.environment.pojo.job.req.OpOperateReq
 import com.tencent.devops.environment.pojo.job.req.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.req.ScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.req.TaskTerminateReq
@@ -42,6 +43,7 @@ import com.tencent.devops.environment.pojo.job.resp.GetAccountListResult
 import com.tencent.devops.environment.pojo.job.resp.GetStepInstanceDetailResult
 import com.tencent.devops.environment.pojo.job.resp.GetStepInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.resp.JobResult
+import com.tencent.devops.environment.pojo.job.resp.OpOperateResult
 import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.resp.ScriptExecuteResult
@@ -249,4 +251,15 @@ interface ServiceJobResource {
         @QueryParam("tag")
         tag: String?
     ): JobResult<GetStepInstanceStatusResult>
+
+    @ApiOperation("操作项目灰度状态的OP接口")
+    @POST
+    @Path("/operate_op_project")
+    fun operateOpProject(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "op操作请求信息", required = true)
+        opOperateReq: OpOperateReq
+    ): OpOperateResult
 }

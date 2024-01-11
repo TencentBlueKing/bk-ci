@@ -299,6 +299,18 @@ class RedisOperation(
         return masterRedisTemplate.opsForSet().scan(getFinalKey(key, isDistinguishCluster), options)
     }
 
+    fun scard(key: String, isDistinguishCluster: Boolean? = false): Long? {
+        return masterRedisTemplate.opsForSet().size(getFinalKey(key, isDistinguishCluster))
+    }
+
+    fun smembers(key: String, isDistinguishCluster: Boolean? = false): Set<String>? {
+        return masterRedisTemplate.opsForSet().members(getFinalKey(key, isDistinguishCluster))
+    }
+
+    fun sismember(key: String, vararg values: String, isDistinguishCluster: Boolean? = false): Map<Any, Boolean>? {
+        return masterRedisTemplate.opsForSet().isMember(getFinalKey(key, isDistinguishCluster), *values)
+    }
+
     fun zadd(key: String, values: String, score: Double, isDistinguishCluster: Boolean? = false): Boolean? {
         // 双写
         writeSlaveIfNeed {
