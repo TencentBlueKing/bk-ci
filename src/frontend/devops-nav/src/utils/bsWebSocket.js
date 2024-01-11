@@ -21,17 +21,17 @@ class BlueShieldWebSocket {
         this.uuid = uuid()
         this.stompClient = {}
         
-        this.init()
+        this.connect()
         this.closePageDisConnect()
         this.onlineConnect()
         this.offlineDisconnect()
     }
 
-    init () {
+    connect () {
         const socket = new SockJS(`/websocket/ws/user?sessionId=${this.uuid}`)
         this.stompClient = Stomp.over(socket)
         this.stompClient.debug = null
-        
+        this.stompClientConnect()
         socket.onclose = (err) => {
             try {
                 console.log(err, socket, this.stompClient)
@@ -52,8 +52,8 @@ class BlueShieldWebSocket {
                             })
                         }
                         console.log('other page close reconnect')
+                        this.connect()
                     }
-                    !this.isConnecting && this.stompClientConnect()
                 } else {
                     console.log('websocket close event.code: ', err.code)
                 }
@@ -65,6 +65,7 @@ class BlueShieldWebSocket {
 
     stompClientConnect () {
         this.isConnecting = true
+        
         this.stompClient.connect({}, () => {
             console.log('websocket connected', this.connectCallBack)
             this.isConnecting = false
@@ -176,7 +177,7 @@ class BlueShieldWebSocket {
             this.connectCallBack.push(callBack)
         } else {
             this.connectCallBack.push(callBack)
-            this.stompClientConnect()
+            this.connect()
         }
     }
 
@@ -199,7 +200,7 @@ class BlueShieldWebSocket {
 
     onlineConnect () {
         window.addEventListener('online', () => {
-            if (!this.isConnecting) this.stompClientConnect()
+            if (!this.isConnecting) this.connect()
         })
     }
 }
