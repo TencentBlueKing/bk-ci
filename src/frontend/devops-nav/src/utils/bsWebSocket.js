@@ -21,16 +21,50 @@ class BlueShieldWebSocket {
         this.uuid = uuid()
         this.stompClient = {}
         
-        this.connect()
+        this.init()
         this.closePageDisConnect()
         this.onlineConnect()
         this.offlineDisconnect()
     }
 
-    connect () {
+    init () {
         const socket = new SockJS(`/websocket/ws/user?sessionId=${this.uuid}`)
         this.stompClient = Stomp.over(socket)
         this.stompClient.debug = null
+        
+        socket.onclose = (err) => {
+            try {
+                console.log(err, socket, this.stompClient)
+                if (err.code === 1006) { // 异常断开
+                    const vm = window.devops
+                    const currentRoute = vm.$router.currentRoute
+                    if (this.detectHasWebsocket(currentRoute) && !this.isConnecting) {
+                        if (currentRoute.path.indexOf('executeDetail') > -1) {
+                            console.log('executeDetail page close reconnect', currentRoute.path)
+                            this.connectCallBack.push(() => {
+                                this.handleMessage({
+                                    body: JSON.stringify({
+                                        webSocketType: 'IFRAME',
+                                        page: currentRoute.path,
+                                        message: JSON.stringify('WEBSOCKET_RECONNECT')
+                                    })
+                                })
+                            })
+                        }
+                        console.log('other page close reconnect')
+                        
+                        !this.isConnecting && this.stompClientConnect()
+                    }
+                } else {
+                    console.log('websocket close event.code: ', err.code)
+                }
+            } catch (error) {
+                console.error(error)
+            }
+        }
+    }
+
+    stompClientConnect () {
         this.isConnecting = true
         this.stompClient.connect({}, () => {
             console.log('websocket connected', this.connectCallBack)
@@ -49,42 +83,12 @@ class BlueShieldWebSocket {
                 console.log('websocket connection retrying')
                 this.connectErrTime++
                 const time = Math.random() * 60000
-                setTimeout(() => this.connect(), time)
+                setTimeout(() => this.stompClientConnect(), time)
             } else {
                 this.isConnecting = false
                 window.devops.$bkMessage({ message: err.message || 'websocket connection failed, please try again later', theme: 'error' })
             }
         })
-        
-        socket.onclose = (err) => {
-            try {
-                console.log(err, socket, this.stompClient)
-                if (err.code === 1006) {
-                    const vm = window.devops
-                    const currentRoute = vm.$router.currentRoute
-                    if (this.detectHasWebsocket(currentRoute) && !this.isConnecting) {
-                        if (currentRoute.path.indexOf('executeDetail') > -1) {
-                            console.log('executeDetail page close reconnect', currentRoute.path)
-                            this.connectCallBack.push(() => {
-                                this.handleMessage({
-                                    body: JSON.stringify({
-                                        webSocketType: 'IFRAME',
-                                        page: currentRoute.path,
-                                        message: JSON.stringify('WEBSOCKET_RECONNECT')
-                                    })
-                                })
-                            })
-                            this.connect()
-                        } else {
-                            console.log('other page close reconnect')
-                            this.connect()
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error(error)
-            }
-        }
     }
 
     handleMessage (res) {
@@ -173,7 +177,7 @@ class BlueShieldWebSocket {
             this.connectCallBack.push(callBack)
         } else {
             this.connectCallBack.push(callBack)
-            this.connect()
+            this.stompClientConnect()
         }
     }
 
@@ -196,7 +200,7 @@ class BlueShieldWebSocket {
 
     onlineConnect () {
         window.addEventListener('online', () => {
-            if (!this.isConnecting) this.connect()
+            if (!this.isConnecting) this.stompClientConnect()
         })
     }
 }
