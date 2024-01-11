@@ -29,6 +29,7 @@ package com.tencent.devops.scm.utils.code.git
 
 import com.tencent.devops.common.api.constant.CommonMessageCode.CALL_REPO_ERROR
 import com.tencent.devops.common.api.constant.CommonMessageCode.GIT_INVALID_PRIVATE_KEY
+import com.tencent.devops.common.api.constant.CommonMessageCode.GIT_LOGIN_FAIL
 import com.tencent.devops.common.api.constant.CommonMessageCode.GIT_SERCRT_WRONG
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.scm.exception.ScmException
@@ -150,12 +151,14 @@ object GitUtils {
                 sourceRepoInfo.second != targetRepoInfo.second
     }
 
-    fun matchExceptionCode(message: String): String? {
-        return when {
-            Regex("Git repository not found").containsMatchIn(message) -> GIT_SERCRT_WRONG
-            Regex("invalid privatekey").containsMatchIn(message) -> GIT_INVALID_PRIVATE_KEY
-            Regex("connection is closed by foreign host").containsMatchIn(message) -> CALL_REPO_ERROR
-            else -> null
-        }
+    /**
+     * 匹配异常状态码
+     */
+    fun matchExceptionCode(message: String) = when {
+        Regex("Git repository not found").containsMatchIn(message) -> GIT_SERCRT_WRONG
+        Regex("invalid privatekey").containsMatchIn(message) -> GIT_INVALID_PRIVATE_KEY
+        Regex("connection is closed by foreign host").containsMatchIn(message) -> CALL_REPO_ERROR
+        Regex("not authorized").containsMatchIn(message) -> GIT_LOGIN_FAIL
+        else -> null
     }
 }

@@ -53,6 +53,7 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.GitServerError
 import com.tencent.devops.scm.pojo.GitSession
 import com.tencent.devops.scm.pojo.TapdWorkItem
 import io.micrometer.core.instrument.MeterRegistry
@@ -450,19 +451,8 @@ open class GitApi {
 
     private fun handleApiException(operation: String, code: Int, body: String) {
         logger.warn("Fail to call git api because of code $code and message $body")
-        val msg = when (code) {
-            HTTP_400 -> getMessageByLocale(CommonMessageCode.PARAM_ERROR)
-            HTTP_401 -> getMessageByLocale(CommonMessageCode.AUTH_FAIL, arrayOf("Git token"))
-            HTTP_403 -> getMessageByLocale(CommonMessageCode.ACCOUNT_NO_OPERATION_PERMISSIONS, arrayOf(operation))
-            HTTP_404 -> getMessageByLocale(
-                CommonMessageCode.REPO_NOT_EXIST_OR_NO_OPERATION_PERMISSION,
-                arrayOf("GIT", operation)
-            )
-            HTTP_405 -> getMessageByLocale(CommonMessageCode.GIT_INTERFACE_NOT_EXIST, arrayOf("GIT", operation))
-            HTTP_422 -> getMessageByLocale(CommonMessageCode.GIT_CANNOT_OPERATION, arrayOf("GIT", operation))
-            else -> "Git platform $operation fail"
-        }
-        throw GitApiException(code, msg)
+        val apiError = JsonUtil.to(body, GitServerError::class.java)
+        throw GitApiException(code, apiError.message ?: "")
     }
 
     fun listCommits(

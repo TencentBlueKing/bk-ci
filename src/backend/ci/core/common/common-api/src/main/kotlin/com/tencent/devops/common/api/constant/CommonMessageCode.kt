@@ -172,7 +172,8 @@ object CommonMessageCode {
     const val ERROR_YAML_FORMAT_EXCEPTION_ENV_VARIABLE_LENGTH_LIMIT_EXCEEDED = "2100121"
     const val ERROR_PROJECT_API_ACCESS_NO_PERMISSION = "2100122" // 项目[{0}]没有接口[{1}]的访问权限
     const val ERROR_INTERFACE_RETRY_NUM_EXCEEDED = "2100123" // 接口连续重试次数超过{0}次，请稍后再试
-    const val GIT_INVALID_PRIVATE_KEY = "2100124" // 不支持的SSH私钥格式，仅支持rsa格式私钥
+    const val GIT_INVALID_PRIVATE_KEY = "2100131" // 不支持的SSH私钥格式，仅支持rsa格式私钥
+    const val GIT_INVALID_PRIVATE_KEY_OR_PASSWORD = "2100132" // 第三方服务[{0}]操作失败，失败详情：{1}
 
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" // 创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" // 创建失败，异常信息

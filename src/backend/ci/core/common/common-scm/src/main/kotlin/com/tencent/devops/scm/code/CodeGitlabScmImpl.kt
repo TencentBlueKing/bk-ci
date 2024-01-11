@@ -99,8 +99,9 @@ class CodeGitlabScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the gitlab token", ignored)
             throw ScmException(
-                ignored.message ?: I18nUtil.getCodeLanMessage(
-                    messageCode = USER_ACCESS_CHECK_FAIL
+                I18nUtil.getCodeLanMessage(
+                    CommonMessageCode.GIT_INVALID_PRIVATE_KEY_OR_PASSWORD,
+                    params = arrayOf(ScmType.CODE_GITLAB.name, ignored.message ?: "")
                 ),
                 ScmType.CODE_GITLAB.name
             )

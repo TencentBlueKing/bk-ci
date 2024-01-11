@@ -119,8 +119,9 @@ class CodeGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to list all branches", ignored)
             throw ScmException(
-                ignored.message ?: I18nUtil.getCodeLanMessage(
-                    CommonMessageCode.GIT_TOKEN_FAIL
+                I18nUtil.getCodeLanMessage(
+                    CommonMessageCode.GIT_INVALID_PRIVATE_KEY_OR_PASSWORD,
+                    params = arrayOf(ScmType.CODE_GIT.name, ignored.message ?: "")
                 ),
                 ScmType.CODE_GIT.name
             )
@@ -159,8 +160,9 @@ class CodeGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to list all branches", ignored)
             throw ScmException(
-                ignored.message ?: I18nUtil.getCodeLanMessage(
-                    CommonMessageCode.GIT_TOKEN_FAIL
+                I18nUtil.getCodeLanMessage(
+                    CommonMessageCode.GIT_INVALID_PRIVATE_KEY_OR_PASSWORD,
+                    params = arrayOf(ScmType.CODE_GIT.name, ignored.message ?: "")
                 ),
                 ScmType.CODE_GIT.name
             )
@@ -394,5 +396,16 @@ class CodeGitScmImpl constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(CodeGitScmImpl::class.java)
+    }
+}
+
+fun main() {
+    try {
+        val command = Git.lsRemoteRepository()
+        command.setRemote("git@git.woa.com:mingshewhe/webhook_test.git")
+        command.setCredentialsProvider(UsernamePasswordCredentialsProvider("v_hejieehe", "1"))
+        command.call()
+    } catch (ignored: Throwable) {
+        println("Fail to check the username and password of git,$ignored" )
     }
 }
