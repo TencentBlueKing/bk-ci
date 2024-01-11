@@ -35,7 +35,7 @@ data class NodeWithPermission(
     @ApiModelProperty("环境 HashId", required = true)
     val nodeHashId: String,
     @ApiModelProperty("节点 Id", required = true)
-    val nodeId: String,
+    val nodeId: Long,
     @ApiModelProperty("节点名称", required = true)
     val name: String,
     @ApiModelProperty("IP", required = true)
