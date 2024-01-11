@@ -25,34 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.pojo.enums
+package com.tencent.devops.project.pojo
 
-enum class OrganizationType(val typeId: Int) {
-    bg(6),
-    businessLine(8),
-    dept(1),
-    center(7),
-    group(2);
+import io.swagger.annotations.ApiModelProperty
 
-    companion object {
-        fun getOrganizationTypeName(typeId: Int): String {
-            values().forEach {
-                if (typeId == it.typeId) return it.name
-            }
-            return typeId.toString()
-        }
-
-        // 是否为部门以下层级
-        fun isBelowTheDept(typeId: Int): Boolean {
-            return typeId == center.typeId || typeId == group.typeId
-        }
-
-        fun isDept(typeId: Int): Boolean {
-            return typeId == dept.typeId
-        }
-
-        fun isGroup(typeId: Int): Boolean {
-            return typeId == group.typeId
-        }
-    }
-}
+data class BkDeptInfo(
+    @ApiModelProperty(name = "类型")
+    val type: String,
+    @ApiModelProperty(name = "名称")
+    val name: String,
+    @ApiModelProperty(name = "部门ID")
+    val id: String
+)
