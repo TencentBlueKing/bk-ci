@@ -1,7 +1,5 @@
 const webpack = require('webpack')
 const path = require('path')
-const fs = require('fs')
-const webpack = require('webpack')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
 const { VueLoaderPlugin } = require('vue-loader')
