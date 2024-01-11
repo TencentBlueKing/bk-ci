@@ -112,7 +112,7 @@
     "httpExampleTips": "eg: http://svn.sample.com/test_proj or https://svn.sample.com/test_proj",
     "用户名+密码": "Username + Password",
     "同一个代码库可以关联到多个蓝盾项目，但仅支持在一个蓝盾项目下开启 PAC (Pipeline As Code) 模式": "The same repository can be associated with multiple BlueKing projects, but only supports PAC (Pipeline As Code) mode under one BlueKing project.",
-    "PAC 模式下，使用代码库 ci 目录下的 YAML 文件编排流水线，且 YAML 文件变更将自动同步到对应的蓝盾流水线。": "In PAC mode, the YAML file in the ci directory of the repository is used to arrange the pipeline, and YAML file changes will be automatically synchronized to the corresponding Blue Shield pipeline.",
+    "PAC 模式下，使用代码库 ci 目录下的 YAML 文件编排流水线，且 YAML 文件变更将自动同步到对应的蓝盾流水线。": "In PAC mode, the YAML file in the ci directory of the repository is used to arrange the pipeline, and YAML file changes will be automatically synchronized to the corresponding BlueKing pipeline.",
     "查看同步规则": "View sync rules",
     "当前代码库已在【】项目中开启 PAC 模式": "The repository has enabled PAC mode in the project [{0}]",
     "最近修改人": "Last Edited By",
