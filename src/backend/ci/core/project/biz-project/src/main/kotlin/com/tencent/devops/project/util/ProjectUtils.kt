@@ -83,8 +83,10 @@ object ProjectUtils {
                 deployType = deployType ?: "",
                 deptId = (if (isUseFixedOrganization) projectOrganizationInfo?.deptId else deptId)?.toString(),
                 deptName = (if (isUseFixedOrganization) projectOrganizationInfo?.deptName else deptName),
-                businessLineId = (if (isUseFixedOrganization) projectOrganizationInfo?.businessLineId else businessLineId)?.toString(),
-                businessLineName = (if (isUseFixedOrganization) projectOrganizationInfo?.businessLineName else businessLineName),
+                businessLineId = (if (isUseFixedOrganization)
+                    projectOrganizationInfo?.businessLineId else businessLineId)?.toString(),
+                businessLineName = (if (isUseFixedOrganization)
+                    projectOrganizationInfo?.businessLineName else businessLineName),
                 description = description ?: "",
                 englishName = englishName ?: "",
                 extra = extra ?: "",
@@ -152,9 +154,11 @@ object ProjectUtils {
                 afterBgId = projectApprovalInfo?.bgId ?: bgId?.toString(),
                 bgName = (if (isUseFixedOrganization) projectOrganizationInfo?.bgName else bgName),
                 afterBgName = projectApprovalInfo?.bgName ?: bgName,
-                businessLineId = (if (isUseFixedOrganization) projectOrganizationInfo?.businessLineId else businessLineId)?.toString(),
+                businessLineId = (if (isUseFixedOrganization)
+                    projectOrganizationInfo?.businessLineId else businessLineId)?.toString(),
                 afterBusinessLineId = projectApprovalInfo?.businessLineId ?: businessLineId,
-                businessLineName = (if (isUseFixedOrganization) projectOrganizationInfo?.businessLineName else businessLineName),
+                businessLineName = (if (isUseFixedOrganization)
+                    projectOrganizationInfo?.businessLineName else businessLineName),
                 afterBusinessLineName = projectApprovalInfo?.businessLineName ?: businessLineName,
                 centerId = (if (isUseFixedOrganization) projectOrganizationInfo?.centerId else centerId)?.toString(),
                 afterCenterId = projectApprovalInfo?.centerId ?: centerId?.toString(),
