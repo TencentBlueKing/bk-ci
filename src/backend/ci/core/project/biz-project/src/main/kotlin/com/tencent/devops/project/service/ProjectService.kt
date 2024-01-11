@@ -96,13 +96,9 @@ interface ProjectService {
     /**
      * 根据项目ID/英文ID获取项目信息对象---用于OPEN接口
      * @param englishName projectCode 英文ID
-     * @param token token校验
      * @return ProjectVO 如果没有则为null
      */
-    fun getByEnglishNameByOpen(
-        englishName: String,
-        token: String
-    ): ProjectVO?
+    fun getByEnglishNameWithoutPerm(englishName: String): ProjectVO?
 
     /**
      * 根据项目ID/英文ID获取项目信息对象
@@ -185,11 +181,6 @@ interface ProjectService {
     fun list(userId: String): List<ProjectVO>
 
     fun list(projectCodes: Set<String>, enabled: Boolean?): List<ProjectVO>
-
-    fun listByOpen(
-        token: String,
-        projectCodes: Set<String>
-    ): List<ProjectVO>
 
     fun listOnlyByProjectCode(projectCodes: Set<String>): List<ProjectVO>
 
