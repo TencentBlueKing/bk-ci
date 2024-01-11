@@ -28,13 +28,41 @@
 package com.tencent.devops.common.api.factory
 
 import com.tencent.devops.common.api.cache.BkDiskLruFileCache
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import org.slf4j.LoggerFactory
 
 object BkDiskLruFileCacheFactory {
+
+    private val logger = LoggerFactory.getLogger(BkDiskLruFileCacheFactory::class.java)
+    private const val RETRY_NUM = 3
+    private const val RETRY_INTERVAL_TIME = 1000L
 
     fun getDiskLruFileCache(
         cacheDir: String,
         cacheSize: Long
     ): BkDiskLruFileCache {
-        return BkDiskLruFileCache(cacheDir, cacheSize)
+        return createBkDiskLruFileCache(cacheDir, cacheSize, RETRY_NUM)
+    }
+
+    private fun createBkDiskLruFileCache(
+        cacheDir: String,
+        cacheSize: Long,
+        retryNum: Int
+    ): BkDiskLruFileCache {
+        return try {
+            BkDiskLruFileCache(cacheDir, cacheSize)
+        } catch (ignored: Throwable) {
+            logger.warn(
+                "createBkDiskLruFileCache fail, retryNum: $retryNum, Cause of error: ${ignored.message}", ignored
+            )
+            if (retryNum == 0) {
+                // 达到最大重试次数则抛出异常
+                throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
+            }
+            // 创建磁盘缓存对象出现异常则一秒后进行重试
+            Thread.sleep(RETRY_INTERVAL_TIME)
+            createBkDiskLruFileCache(cacheDir, cacheSize, retryNum - 1)
+        }
     }
 }
