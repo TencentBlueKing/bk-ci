@@ -76,12 +76,18 @@ class ProjectExtOrganizationService constructor(
     private fun fixOrganizationByNormal(tProjectRecord: TProjectRecord) {
         val rightProjectOrganization = getRightProjectOrganization(tProjectRecord)
         if (rightProjectOrganization.needFix) {
-            logger.info("fix organization by normal: ${tProjectRecord.englishName}|$rightProjectOrganization")
-            projectDao.updateOrganizationByEnglishName(
-                dslContext = dslContext,
-                englishName = tProjectRecord.englishName,
-                projectOrganizationInfo = rightProjectOrganization
-            )
+            with(tProjectRecord) {
+                logger.info(
+                    "organization information before project changes:$englishName|$bgId|$bgName|$businessLineId|" +
+                        "$businessLineName|$deptId|$deptName|$centerId|$centerName"
+                )
+                logger.info("fix organization by normal: $englishName|$rightProjectOrganization")
+                projectDao.updateOrganizationByEnglishName(
+                    dslContext = dslContext,
+                    englishName = englishName,
+                    projectOrganizationInfo = rightProjectOrganization
+                )
+            }
         }
     }
 
@@ -125,6 +131,22 @@ class ProjectExtOrganizationService constructor(
         )
         return true
     }
+
+    /**
+     * 组织架构修正
+     * 异常情况：原先数据库中存储的bg，部门，中心是以组织架构的层级（1/2/3级）进行存储，存在问题。正确的方式是要以tof获取的组织的type进行存储。
+     * 修复方案：
+     * 1、首先查询数据库项目组织架构信息。
+     * 2、若centerId不为0并且centerName不为空。
+     *    2.1 根据centerId查询tof部门信息接口。
+     *    2.2 若原先数据库中存储的中心字段确实是小组或者中心类型，则不需要修复数据。
+     *    2.3 若原先数据库中存储的中心字段是部门类型，则将原先数据库中部门字段的值挪到业务线字段位置，中心字段的值挪到部门字段位置。
+     * 3、若centerId为0或centerName为空。
+     *    3.1 若原先数据库中存储的部门字段的值是小组或者中心类型，则将原先数据库中部门字段的值挪到中心字段位置。
+     *    3.2 若原先数据库中存储的部门字段值确实是部门类型，则不需要修复数据。
+     *    3.3 若原先数据库中存储的部门字段值是业务线类型，则将原先数据库中部门字段的值挪到业务线字段位置。
+     * 4、其他可能的情况不做处理。
+     */
 
     fun getRightProjectOrganization(
         tProjectRecord: TProjectRecord
@@ -187,10 +209,13 @@ class ProjectExtOrganizationService constructor(
                         centerId = null,
                         centerName = null,
                         deptId = deptId,
-                        deptName = deptName
+                        deptName = deptName,
+                        needFix = false
                     )
                 }
-                else -> {
+                OrganizationType.isBusinessLine(
+                    tofService.getDeptInfo(id = deptId.toInt()).typeId.toInt()
+                ) -> {
                     ProjectOrganizationInfo(
                         bgId = bgId,
                         bgName = bgName,
@@ -200,6 +225,19 @@ class ProjectExtOrganizationService constructor(
                         centerName = null,
                         deptId = null,
                         deptName = null
+                    )
+                }
+                else -> {
+                    ProjectOrganizationInfo(
+                        bgId = bgId,
+                        bgName = bgName,
+                        businessLineId = businessLineId,
+                        businessLineName = businessLineName,
+                        centerId = centerId,
+                        centerName = centerName,
+                        deptId = deptId,
+                        deptName = deptName,
+                        needFix = false
                     )
                 }
             }
