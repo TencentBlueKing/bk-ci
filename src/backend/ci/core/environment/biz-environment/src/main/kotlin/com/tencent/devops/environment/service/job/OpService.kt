@@ -47,9 +47,10 @@ class OpService @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao
 ) {
-
     companion object {
         val logger: Logger = LoggerFactory.getLogger(OpService::class.java)
+
+        const val OP_KEY = "environment:op_project"
 
         const val SUCCESSFUL_CODE = 0
         const val SUCCESSFUL_RESULT = true
@@ -79,8 +80,6 @@ class OpService @Autowired constructor(
         const val KEY_NOT_EXIST_MSG = "No gray projects."
     }
 
-    private val opKey = getOpKey()
-
     fun operateOpProject(userId: String, opOperateReq: OpOperateReq): OpOperateResult {
         return when (opOperateReq.operateFlag) {
             1 -> queryAllGrayProjs()
@@ -104,7 +103,7 @@ class OpService @Autowired constructor(
      * SMEMBERS
      */
     private fun queryAllGrayProjs(): OpOperateResult {
-        val allGrayProjs = redisOperation.smembers(opKey)
+        val allGrayProjs = redisOperation.smembers(OP_KEY)
         return OpOperateResult(
             code = SUCCESSFUL_CODE,
             result = SUCCESSFUL_RESULT,
@@ -122,7 +121,7 @@ class OpService @Autowired constructor(
         return if (!projectCodeList.isNullOrEmpty()) {
             queryProjExist(projectCodeList) ?: run {
                 val projectCodeSet = projectCodeList.toSet()
-                val projsGrayStatus = redisOperation.sismember(opKey, *projectCodeSet.toTypedArray())
+                val projsGrayStatus = redisOperation.sismember(OP_KEY, *projectCodeSet.toTypedArray())
                 OpOperateResult(
                     code = EMPTY_PROJ_CODE,
                     result = EMPTY_PROJ_RESULT,
@@ -151,7 +150,7 @@ class OpService @Autowired constructor(
         return if (!projectCodeList.isNullOrEmpty()) {
             queryProjExist(projectCodeList) ?: run {
                 val projectCodeSet = projectCodeList.toSet()
-                val addProjsNumber = redisOperation.sadd(opKey, *projectCodeSet.toTypedArray())
+                val addProjsNumber = redisOperation.sadd(OP_KEY, *projectCodeSet.toTypedArray())
                 if (null != addProjsNumber && addProjsNumber >= 0) {
                     OpOperateResult(
                         code = SUCCESSFUL_CODE,
@@ -186,7 +185,7 @@ class OpService @Autowired constructor(
         return if (!projectCodeList.isNullOrEmpty()) {
             queryProjExist(projectCodeList) ?: run {
                 val projectCodeSet = projectCodeList.toSet()
-                val removeProjsNumber = redisOperation.sremove(opKey, *projectCodeSet.toTypedArray())
+                val removeProjsNumber = redisOperation.sremove(OP_KEY, *projectCodeSet.toTypedArray())
                 if (null != removeProjsNumber && removeProjsNumber > 0) {
                     OpOperateResult(
                         code = SUCCESSFUL_CODE,
@@ -225,7 +224,7 @@ class OpService @Autowired constructor(
      * delete key
      */
     private fun clearAllGrayProjs(): OpOperateResult {
-        val deleteKeyResult = redisOperation.delete(opKey)
+        val deleteKeyResult = redisOperation.delete(OP_KEY)
         return if (deleteKeyResult) {
             OpOperateResult(
                 code = SUCCESSFUL_CODE,
@@ -248,24 +247,7 @@ class OpService @Autowired constructor(
      * SCARD
      */
     private fun grayProjsTotalNum(): Long {
-        return redisOperation.scard(opKey) ?: 0
-    }
-
-    /**
-     * @return redis中存储op项目的key
-     */
-    private fun getOpKey(): String {
-        val profileName = getProfileName()
-        val serviceName = BkServiceUtil.findServiceName()
-        return "ENV:$profileName:SERVICE:$serviceName:OP_PROJECT"
-    }
-
-    /**
-     * @return 微服务的profile名称
-     */
-    private fun getProfileName(): String {
-        val profile = SpringContextUtil.getBean(Profile::class.java)
-        return profile.getActiveProfiles().joinToString().trim()
+        return redisOperation.scard(OP_KEY) ?: 0
     }
 
     /**
