@@ -23,28 +23,56 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
 package com.tencent.devops.project.resources
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.user.UserProjectOrganizationResource
+import com.tencent.devops.project.api.op.OpProjectOrganizationResource
 import com.tencent.devops.project.pojo.OrganizationInfo
-import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.enums.OrganizationType
+import com.tencent.devops.project.service.ProjectExtOrganizationService
 import com.tencent.devops.project.service.tof.TOFService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserProjectOrganizationResourceImpl @Autowired constructor(
-    private val tofService: TOFService
-) : UserProjectOrganizationResource {
+class OpProjectOrganizationResourceImpl @Autowired constructor(
+    val projectExtOrganizationService: ProjectExtOrganizationService,
+    val tofService: TOFService
+) : OpProjectOrganizationResource {
 
     override fun getOrganizations(
-        userId: String,
         type: OrganizationType,
         id: Int
     ): Result<List<OrganizationInfo>> {
-        return Result(tofService.getOrganizationInfo(userId, type, id))
+        return Result(
+            tofService.getOrganizationInfo(
+                type = type,
+                id = id
+            )
+        )
+    }
+
+    override fun updateProjectOrganization(
+        englishName: String,
+        organization: ProjectOrganizationInfo
+    ): Result<Boolean> {
+        return Result(
+            projectExtOrganizationService.updateProjectOrganization(
+                englishName = englishName,
+                organization = organization
+            )
+        )
+    }
+
+    override fun fixProjectOrganization(englishNames: List<String>): Result<Boolean> {
+        return Result(projectExtOrganizationService.fixProjectOrganization(englishNames = englishNames))
+    }
+
+    override fun fixAllProjectOrganization(channelCode: String): Result<Boolean> {
+        return Result(projectExtOrganizationService.fixAllProjectOrganization(channelCode = channelCode))
     }
 }

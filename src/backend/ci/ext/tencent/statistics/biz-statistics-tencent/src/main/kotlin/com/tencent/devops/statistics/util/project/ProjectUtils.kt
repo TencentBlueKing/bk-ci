@@ -72,6 +72,8 @@ object ProjectUtils {
             deployType = tProjectRecord.deployType ?: "",
             deptId = tProjectRecord.deptId?.toString(),
             deptName = tProjectRecord.deptName ?: "",
+            businessLineId = tProjectRecord.businessLineId?.toString(),
+            businessLineName = tProjectRecord.businessLineName ?: "",
             description = tProjectRecord.description ?: "",
             englishName = tProjectRecord.englishName ?: "",
             extra = tProjectRecord.extra ?: "",

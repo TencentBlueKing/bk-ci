@@ -25,10 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.pojo.enums
+package com.tencent.devops.project.pojo
 
-enum class OrganizationType {
-    bg,
-    dept,
-    center
-}
+import io.swagger.annotations.ApiModelProperty
+
+data class BkDeptInfo(
+    @ApiModelProperty(name = "类型")
+    val type: String,
+    @ApiModelProperty(name = "名称")
+    val name: String,
+    @ApiModelProperty(name = "部门ID")
+    val id: String
+)

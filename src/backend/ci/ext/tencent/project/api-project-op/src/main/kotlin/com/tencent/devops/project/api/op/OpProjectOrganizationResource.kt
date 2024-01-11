@@ -24,35 +24,33 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.project.api.service.user
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+package com.tencent.devops.project.api.op
+
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.project.pojo.OrganizationInfo
-import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.enums.OrganizationType
 import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_PROJECT_ORGANIZATION"], description = "蓝盾项目列表组织架构接口")
-@Path("/user/organizations")
+@Api(tags = ["OP_ORGANIZATION"], description = "项目组织架构")
+@Path("/op/organization")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserProjectOrganizationResource {
-
+interface OpProjectOrganizationResource {
     @GET
     @Path("/types/{type}/ids/{id}")
     fun getOrganizations(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @ApiParam("bg, 部门或者中心")
         @PathParam("type")
         type: OrganizationType,
@@ -60,4 +58,32 @@ interface UserProjectOrganizationResource {
         @PathParam("id")
         id: Int
     ): Result<List<OrganizationInfo>>
+
+    @POST
+    @Path("/{englishName}/updateProjectOrganization")
+    @ApiOperation("修改组织架构")
+    fun updateProjectOrganization(
+        @PathParam("englishName")
+        @ApiParam("项目ID", required = true)
+        englishName: String,
+        @ApiParam("项目组织", required = true)
+        organization: ProjectOrganizationInfo
+    ): Result<Boolean>
+
+    @POST
+    @Path("/fixProjectOrganization")
+    @ApiOperation("修正项目组织架构")
+    fun fixProjectOrganization(
+        @ApiParam("项目ID列表", required = true)
+        englishNames: List<String>
+    ): Result<Boolean>
+
+    @POST
+    @Path("/fixProjectOrganizationByChannel")
+    @ApiOperation("根据渠道修正项目组织架构")
+    fun fixAllProjectOrganization(
+        @ApiParam("渠道", required = true)
+        @QueryParam("channelCode")
+        channelCode: String
+    ): Result<Boolean>
 }

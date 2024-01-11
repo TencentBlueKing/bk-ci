@@ -44,17 +44,26 @@ class UserCacheService @Autowired constructor(
     fun getDetailFromCache(userId: String): UserDeptDetail {
         val userRecord = userDao.get(dslContext, userId)
         return if (userRecord == null) {
-            UserDeptDetail("", "0", "", "0", "", "0", "0", "")
+            UserDeptDetail(
+                bgName = "",
+                bgId = "0",
+                centerName = "",
+                centerId = "0",
+                deptName = "",
+                deptId = "0",
+                groupName = "",
+                groupId = "0"
+            )
         } else {
             UserDeptDetail(
-                userRecord["BG_NAME"] as String,
-                (userRecord["BG_ID"] as Int).toString(),
-                userRecord["DEPT_NAME"] as String,
-                (userRecord["DEPT_ID"] as Int).toString(),
-                userRecord["CENTER_NAME"] as String,
-                (userRecord["CENTER_ID"] as Int).toString(),
-                (userRecord["GROYP_ID"] as Int).toString(),
-                userRecord["GROUP_NAME"] as String
+                bgName = userRecord["BG_NAME"] as String,
+                bgId = (userRecord["BG_ID"] as Int).toString(),
+                deptName = userRecord["DEPT_NAME"] as String,
+                deptId = (userRecord["DEPT_ID"] as Int).toString(),
+                centerName = userRecord["CENTER_NAME"] as String,
+                centerId = (userRecord["CENTER_ID"] as Int).toString(),
+                groupId = (userRecord["GROYP_ID"] as Int).toString(),
+                groupName = userRecord["GROUP_NAME"] as String
             )
         }
     }
