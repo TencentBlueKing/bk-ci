@@ -285,12 +285,12 @@ class ExpertSupportService @Autowired constructor(
             val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
 
             val newParam = mutableMapOf<String, String>()
-            newParam["user"] = userId
             val hostIdSub = cgsId.split(".")
             val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
             info.buildParam.forEach { (k, v) ->
                 when (v) {
                     "ip" -> newParam[k] = ip
+                    "user" -> newParam[k] = userId
                     else -> newParam[k] = v
                 }
             }
