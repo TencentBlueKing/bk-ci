@@ -62,6 +62,7 @@ import com.tencent.devops.process.yaml.v3.parameter.Parameters
 import com.tencent.devops.process.yaml.v3.parsers.template.models.TemplateDeepTreeNode
 import com.tencent.devops.process.yaml.v3.utils.StreamEnvUtils
 
+@Suppress("ComplexMethod")
 object YamlObjects {
 
     fun getTriggerOnV3(triggerOn: Map<String, Any>): PreTriggerOnV3 {
@@ -472,6 +473,7 @@ object YamlObjects {
     }
 }
 
+@Suppress("ComplexMethod")
 fun <T> YamlTemplate<T>.getStage(
     fromPath: TemplatePath,
     stage: Map<String, Any>,
@@ -526,6 +528,7 @@ fun <T> YamlTemplate<T>.getStage(
 }
 
 // 构造对象,因为未保存远程库的template信息，所以在递归回溯时无法通过yaml文件直接生成，故手动构造
+@Suppress("ComplexMethod")
 fun <T> YamlTemplate<T>.getJob(fromPath: TemplatePath, job: Map<String, Any>, deepTree: TemplateDeepTreeNode): PreJob {
     val preJob = PreJob(
         enable = YamlObjects.getNullValue("enable", job)?.toBoolean(),
