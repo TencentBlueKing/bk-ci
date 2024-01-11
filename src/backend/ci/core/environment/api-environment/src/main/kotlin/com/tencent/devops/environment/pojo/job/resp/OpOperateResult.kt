@@ -57,7 +57,7 @@ data class OpOperateResult(
         code: Int,
         result: Boolean,
         msg: String,
-        grayProjNumber: Long, 
+        grayProjNumber: Long,
         projGrayStatus: List<ProjectOpInfo>?
     ) : this(
         code = code, result = result, msg = msg, grayProjNumber = grayProjNumber,
