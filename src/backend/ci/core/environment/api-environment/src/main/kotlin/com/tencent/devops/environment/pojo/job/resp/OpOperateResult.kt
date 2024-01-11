@@ -54,7 +54,11 @@ data class OpOperateResult(
     )
 
     constructor(
-        code: Int, result: Boolean, msg: String, grayProjNumber: Long, projGrayStatus: List<ProjectOpInfo>?
+        code: Int,
+        result: Boolean,
+        msg: String,
+        grayProjNumber: Long, 
+        projGrayStatus: List<ProjectOpInfo>?
     ) : this(
         code = code, result = result, msg = msg, grayProjNumber = grayProjNumber,
         grayProjList = null, projGrayStatus = projGrayStatus
