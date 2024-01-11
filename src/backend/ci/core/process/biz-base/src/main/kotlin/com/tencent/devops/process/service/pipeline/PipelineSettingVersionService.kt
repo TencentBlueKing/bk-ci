@@ -46,6 +46,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("ComplexMethod")
 class PipelineSettingVersionService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
