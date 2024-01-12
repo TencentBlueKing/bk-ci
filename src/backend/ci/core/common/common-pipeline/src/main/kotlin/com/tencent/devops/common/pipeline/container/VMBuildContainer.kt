@@ -38,21 +38,21 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Suppress("ReturnCount")
 @Schema(description = "流水线模型-虚拟机构建容器")
 data class VMBuildContainer(
-    @Schema(description = "构建容器序号id", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "构建容器序号id", required = false, readOnly = true)
     override var id: String? = null,
     @Schema(description = "容器名称", required = true)
     override var name: String = "构建环境",
     @Schema(description = "任务集合", required = true)
     override var elements: List<Element> = listOf(),
-    @Schema(description = "容器状态", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "容器状态", required = false, readOnly = true)
     override var status: String? = null,
-    @Schema(description = "系统运行时间", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "系统运行时间", required = false, readOnly = true)
     @Deprecated("即将被timeCost代替")
     override var startEpoch: Long? = null,
-    @Schema(description = "系统耗时（开机时间）", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "系统耗时（开机时间）", required = false, readOnly = true)
     @Deprecated("即将被timeCost代替")
     override var systemElapsed: Long? = null,
-    @Schema(description = "插件执行耗时", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "插件执行耗时", required = false, readOnly = true)
     @Deprecated("即将被timeCost代替")
     override var elementElapsed: Long? = null,
     @Schema(description = "VM基础操作系统", required = true)
@@ -87,28 +87,28 @@ data class VMBuildContainer(
     @Schema(description =
         "是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储",
         required = false,
-        accessMode = ApiModelProperty.AccessMode.READ_ONLY
+        readOnly = true
     )
     override var canRetry: Boolean? = null,
-    @Schema(description = "是否访问外网", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "是否访问外网", required = false, readOnly = true)
     var enableExternal: Boolean? = false,
-    @Schema(description = "构建容器顺序ID（同id值）", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "构建容器顺序ID（同id值）", required = false, readOnly = true)
     override var containerId: String? = null,
-    @Schema(description = "容器唯一ID", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "容器唯一ID", required = false, readOnly = true)
     override var containerHashId: String? = null,
     @Schema(description = "流程控制选项", required = true)
     var jobControlOption: JobControlOption? = null, // 为了兼容旧数据，所以定义为可空以及var
     @Schema(description = "互斥组", required = false)
     var mutexGroup: MutexGroup? = null, // 为了兼容旧数据，所以定义为可空以及var
-    @Schema(description = "构建环境启动状态", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "构建环境启动状态", required = false, readOnly = true)
     override var startVMStatus: String? = null,
-    @Schema(description = "容器运行次数", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "容器运行次数", required = false, readOnly = true)
     override var executeCount: Int? = null,
     @Schema(description = "用户自定义ID", required = false, hidden = false)
     override val jobId: String? = null,
-    @Schema(description = "是否包含post任务标识", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "是否包含post任务标识", required = false, readOnly = true)
     override var containPostTaskFlag: Boolean? = null,
-    @Schema(description = "是否为构建矩阵", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "是否为构建矩阵", required = false, readOnly = true)
     override var matrixGroupFlag: Boolean? = false,
     @Schema(description = "各项耗时", required = true)
     override var timeCost: BuildRecordTimeCost? = null,
@@ -125,7 +125,7 @@ data class VMBuildContainer(
         const val classType = "vmBuild"
     }
 
-    @Schema(description = "nfs挂载开关", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "nfs挂载开关", required = false, readOnly = true)
     var nfsSwitch: Boolean? = null
         get() {
             return if (null == field) true else field

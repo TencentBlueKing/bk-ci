@@ -49,9 +49,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(description = "")
 data class PipelineSetting(
-    @Schema(description = "项目id", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "项目id", required = false, readOnly = true)
     var projectId: String = "",
-    @Schema(description = "流水线id", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "流水线id", required = false, readOnly = true)
     var pipelineId: String = "",
     @Schema(description = "流水线名称", required = false)
     var pipelineName: String = "",

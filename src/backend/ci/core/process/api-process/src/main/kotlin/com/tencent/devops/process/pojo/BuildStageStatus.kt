@@ -36,16 +36,16 @@ data class BuildStageStatus(
     val stageId: String,
     @Schema(description = "阶段名称", required = true)
     val name: String,
-    @Schema(description = "阶段状态", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "阶段状态", required = false, readOnly = true)
     var status: String? = null,
-    @Schema(description = "阶段标签", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "阶段标签", required = false, readOnly = true)
     var tag: List<String>? = null,
-    @Schema(description = "阶段启动时间", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "阶段启动时间", required = false, readOnly = true)
     var startEpoch: Long? = null,
-    @Schema(description = "容器运行时间", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "容器运行时间", required = false, readOnly = true)
     var elapsed: Long? = null,
     @Schema(description = "各项耗时", required = true)
     var timeCost: BuildRecordTimeCost? = null,
-    @Schema(description = "前端", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "前端", required = false, readOnly = true)
     var showMsg: String? = null
 )

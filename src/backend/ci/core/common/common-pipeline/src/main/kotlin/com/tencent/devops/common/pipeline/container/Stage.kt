@@ -40,14 +40,14 @@ data class Stage(
     var id: String?,
     @Schema(description = "阶段名称", required = true)
     var name: String? = "",
-    @Schema(description = "阶段标签", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "阶段标签", required = false, readOnly = true)
     var tag: List<String>? = null,
-    @Schema(description = "阶段状态", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "阶段状态", required = false, readOnly = true)
     var status: String? = null,
-    @Schema(description = "阶段启动时间", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "阶段启动时间", required = false, readOnly = true)
     @Deprecated("即将被timeCost代替")
     var startEpoch: Long? = null,
-    @Schema(description = "容器运行时间", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "容器运行时间", required = false, readOnly = true)
     @Deprecated("即将被timeCost代替")
     var elapsed: Long? = null,
     @Schema(description = "用户自定义环境变量", required = false)
@@ -64,7 +64,7 @@ data class Stage(
     var checkIn: StagePauseCheck? = null, // stage准入配置
     @Schema(description = "stage准出配置", required = false)
     var checkOut: StagePauseCheck? = null, // stage准出配置
-    @Schema(description = "步骤运行次数", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "步骤运行次数", required = false, readOnly = true)
     var executeCount: Int? = null,
     @Schema(description = "各项耗时", required = true)
     var timeCost: BuildRecordTimeCost? = null
