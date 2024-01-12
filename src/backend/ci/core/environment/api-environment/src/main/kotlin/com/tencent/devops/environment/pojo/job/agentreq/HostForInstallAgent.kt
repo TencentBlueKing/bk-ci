@@ -32,8 +32,6 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("安装agent的请求信息中的 host信息")
 data class HostForInstallAgent(
-    @ApiModelProperty(value = "业务ID", required = true)
-    val bkBizId: Int,
     @ApiModelProperty(value = "管控区域ID", required = true)
     val bkCloudId: Int,
     @ApiModelProperty(value = "主机ID")

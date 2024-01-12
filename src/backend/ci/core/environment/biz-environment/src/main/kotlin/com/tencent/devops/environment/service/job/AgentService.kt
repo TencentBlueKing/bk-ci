@@ -62,12 +62,16 @@ import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskRes
 import com.tencent.devops.environment.pojo.job.agentres.Statistics
 import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service("AgentService")
 data class AgentService @Autowired constructor(
     private val agentApi: AgentApi
 ) {
+    @Value("\${job.bkBizScopeId:#{null}}")
+    val bkBizScopeId: Int = 0
+
     companion object {
         private const val JOB_TYPE_INSTALL_AGENT = "INSTALL_AGENT"
         private const val DEFAULT_INSTALL_AGENT_AP_ID = 1 // 节点管理预发布/正式环境 apId均固定为1
@@ -83,7 +87,7 @@ data class AgentService @Autowired constructor(
             jobType = JOB_TYPE_INSTALL_AGENT,
             hosts = installAgentReq.hosts.map {
                 AgentHostForInstallAgent(
-                    bkBizId = it.bkBizId,
+                    bkBizId = bkBizScopeId,
                     bkCloudId = it.bkCloudId,
                     bkHostId = it.bkHostId,
                     bkAddressing = it.bkAddressing,

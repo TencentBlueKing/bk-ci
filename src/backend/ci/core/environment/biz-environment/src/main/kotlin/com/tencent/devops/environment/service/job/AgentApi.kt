@@ -55,9 +55,6 @@ class AgentApi {
     @Value("\${job.nodemanApiBaseUrl:}")
     private val nodemanApiBaseUrl = ""
 
-    @Value("\${job.jobCloudApiBaseUrl:}")
-    private val jobCloudApiBaseUrl = ""
-
     @Value("\${job.installAgentPath:#{\"/job/install\"}}")
     private val installAgentPath = ""
 
