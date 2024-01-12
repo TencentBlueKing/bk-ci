@@ -82,6 +82,8 @@ data class PipelineVersionWithInfo(
     val description: String? = null,
     @ApiModelProperty("该版本的来源版本（空时一定为主路径）", required = false)
     val baseVersion: Int? = null,
+    @ApiModelProperty("草稿的来源版本名称（只在草稿版本有值）", required = false)
+    val baseVersionName: String? = null,
     @ApiModelProperty("调试构建ID", required = false)
     val debugBuildId: String? = null
 )

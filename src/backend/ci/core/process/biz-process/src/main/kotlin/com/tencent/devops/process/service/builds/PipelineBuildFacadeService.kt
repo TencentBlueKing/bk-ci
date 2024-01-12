@@ -667,15 +667,18 @@ class PipelineBuildFacadeService(
         val defaultVersion = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
+            params = arrayOf(pipelineId)
         )
         if (version == null) {
-            if (defaultVersion?.status == null || defaultVersion.status != VersionStatus.RELEASED) {
-                throw ErrorCodeException(
-                    statusCode = Response.Status.BAD_REQUEST.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_VERSION_CANNOT_RUN
-                )
+            // 正式执行时，当前最新版本可能是草稿，则作为调试执行
+            return if (defaultVersion.status == VersionStatus.COMMITTING) {
+                Pair(defaultVersion.model, true)
+            } else {
+                Pair(defaultVersion.model, false)
             }
-            return Pair(defaultVersion.model, false)
         }
         val targetResource = pipelineRepositoryService.getDraftVersionResource(
             projectId = projectId,
