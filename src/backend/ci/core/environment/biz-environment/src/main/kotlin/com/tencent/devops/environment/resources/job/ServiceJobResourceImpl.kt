@@ -202,55 +202,6 @@ class ServiceJobResourceImpl @Autowired constructor(
         return opService.operateOpProject(userId, opOperateReq)
     }
 
-    override fun installAgent(
-        userId: String,
-        projectId: String,
-        installAgentReq: InstallAgentReq
-    ): AgentResult<InstallAgentResult> {
-        checkParamBlank(userId, projectId)
-        return agentService.installAgent(userId, projectId, installAgentReq)
-    }
-
-    override fun queryAgentTaskStatus(
-        userId: String,
-        projectId: String,
-        jobId: Int,
-        queryAgentTaskStatusReq: QueryAgentTaskStatusReq
-    ): AgentResult<QueryAgentTaskStatusResult> {
-        checkParamBlank(userId, projectId)
-        return agentService.queryAgentTaskStatus(userId, projectId, jobId, queryAgentTaskStatusReq)
-    }
-
-    override fun queryAgentTaskLog(
-        userId: String,
-        projectId: String,
-        jobId: Int,
-        instanceId: Long
-    ): AgentResult<QueryAgentTaskLogResult> {
-        checkParamBlank(userId, projectId)
-        return agentService.queryAgentTaskLog(userId, projectId, jobId, instanceId)
-    }
-
-    override fun terminalAgentInstallTask(
-        userId: String,
-        projectId: String,
-        jobId: Int,
-        terminateAgentInstallTaskReq: TerminateAgentInstallTaskReq
-    ): AgentResult<TerminalAgentInstallTaskResult> {
-        checkParamBlank(userId, projectId)
-        return agentService.terminalAgentInstallTask(userId, projectId, jobId, terminateAgentInstallTaskReq)
-    }
-
-    override fun retryAgentInstallTask(
-        userId: String,
-        projectId: String,
-        jobId: Int,
-        retryAgentInstallTaskReq: RetryAgentInstallTaskReq
-    ): AgentResult<RetryAgentInstallTaskResult> {
-        checkParamBlank(userId, projectId)
-        return agentService.retryAgentInstallTask(userId, projectId, jobId, retryAgentInstallTaskReq)
-    }
-
     private fun checkParamBlank(userId: String, projectId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("userId is blank.")
