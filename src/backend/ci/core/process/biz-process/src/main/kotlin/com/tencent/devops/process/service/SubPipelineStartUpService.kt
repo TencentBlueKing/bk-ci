@@ -428,7 +428,7 @@ class SubPipelineStartUpService @Autowired constructor(
             if (item.type == BuildFormPropertyType.MULTIPLE || item.type == BuildFormPropertyType.ENUM) {
                 val keyList = ArrayList<StartUpInfo>()
                 val valueList = ArrayList<StartUpInfo>()
-                val defaultValue = item.defaultValue.toString()
+                val example = item.defaultValue.toString()
                 for (option in item.options!!) {
                     valueList.add(
                         StartUpInfo(

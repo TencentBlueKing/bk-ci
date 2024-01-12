@@ -30,7 +30,7 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
-import io.swagger.annotations.ApiOperation
+import io.swagger.v3.oas.annotations.Operation
 import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service

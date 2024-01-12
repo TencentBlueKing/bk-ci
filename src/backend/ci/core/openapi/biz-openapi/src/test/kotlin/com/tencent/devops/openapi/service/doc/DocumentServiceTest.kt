@@ -131,7 +131,7 @@ class DocumentServiceTest @Autowired constructor(
             it.isAccessible = true
             res[it.name] = SwaggerDocParameterInfo(
                 markedNullable = nullable[it.name] ?: false,
-                defaultValue = checkDefaultValue(it.call(mock).toString())
+                example = checkDefaultValue(it.call(mock).toString())
             )
         }
         return res

@@ -139,7 +139,7 @@ class ParamFacadeService @Autowired constructor(
         val replaceKey = "{words}"
         return copyFormProperty(
             property = formProperty,
-            options = fixDefaultOptions(options = options, defaultValue = formProperty.defaultValue.toString()),
+            options = fixDefaultOptions(options = options, example = formProperty.defaultValue.toString()),
             searchUrl = searchUrl,
             replaceKey = replaceKey
         )
@@ -206,7 +206,7 @@ class ParamFacadeService @Autowired constructor(
         val replaceKey = "{words}"
         return copyFormProperty(
             property = codelibFormProperty,
-            options = fixDefaultOptions(options = options, defaultValue = codelibFormProperty.defaultValue.toString()),
+            options = fixDefaultOptions(options = options, example = codelibFormProperty.defaultValue.toString()),
             searchUrl = searchUrl,
             replaceKey = replaceKey
         )
@@ -300,7 +300,7 @@ class ParamFacadeService @Autowired constructor(
                 property = subPipelineFormProperty,
                 options = fixDefaultOptions(
                     options = options,
-                    defaultValue = subPipelineFormProperty.defaultValue.toString()
+                    example = subPipelineFormProperty.defaultValue.toString()
                 ),
                 searchUrl = searchUrl,
                 replaceKey = replaceKey
@@ -323,7 +323,7 @@ class ParamFacadeService @Autowired constructor(
             id = property.id,
             required = property.required,
             type = property.type,
-            defaultValue = property.defaultValue,
+            example = property.defaultValue,
             options = options,
             desc = property.desc,
             repoHashId = property.repoHashId,

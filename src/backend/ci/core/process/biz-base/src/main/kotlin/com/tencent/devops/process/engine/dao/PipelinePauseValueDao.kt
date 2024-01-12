@@ -107,7 +107,7 @@ class PipelinePauseValueDao {
                 projectId = t.projectId,
                 buildId = t.buildId,
                 taskId = t.taskId,
-                defaultValue = t.defaultValue,
+                example = t.defaultValue,
                 newValue = t.newValue,
                 executeCount = t.executeCount
             )

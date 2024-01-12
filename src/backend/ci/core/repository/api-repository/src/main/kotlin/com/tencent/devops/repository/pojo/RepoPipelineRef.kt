@@ -29,11 +29,11 @@
 package com.tencent.devops.repository.pojo
 
 import io.swagger.annotations.ApiModelProperty
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Parameter
 
 data class RepoPipelineRef(
     val projectId: String,
-    @ApiParam("流水线ID")
+    @Parameter(description = "流水线ID")
     val pipelineId: String,
     @ApiModelProperty("流水线名称")
     val pipelineName: String,

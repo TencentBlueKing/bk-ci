@@ -1259,7 +1259,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 }
                 val type = paramValueMap["type"]
                 val required = paramValueMap["required"]
-                val defaultValue = paramValueMap["default"]
+                val example = paramValueMap["default"]
                 val multipleMap = paramValueMap["optionsConf"]
                 val multiple = if (null != multipleMap && null != (multipleMap as Map<String, String>)["multiple"]) {
                     "true".equals(multipleMap["multiple"].toString(), true)
@@ -1358,7 +1358,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 val type = paramValueMap["type"]
                 val required = null != paramValueMap["required"] &&
                         "true".equals(paramValueMap["required"].toString(), true)
-                val defaultValue = paramValueMap["default"]
+                val example = paramValueMap["default"]
                 val multipleMap = paramValueMap["optionsConf"]
                 val multiple = if (null != multipleMap && null != (multipleMap as Map<String, String>)["multiple"]) {
                     "true".equals(multipleMap["multiple"].toString(), true)
@@ -1385,7 +1385,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                             selectorTypeName = multipleName,
                             paramValueMap = paramValueMap,
                             requiredName = requiredName,
-                            defaultValue = defaultValue,
+                            example = defaultValue,
                             defaultName = defaultName
                         )
                         sb.append("\r\n")
@@ -1402,7 +1402,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                             selectorTypeName = singleName,
                             paramValueMap = paramValueMap,
                             requiredName = requiredName,
-                            defaultValue = defaultValue,
+                            example = defaultValue,
                             defaultName = defaultName
                         )
                         sb.append("\r\n")

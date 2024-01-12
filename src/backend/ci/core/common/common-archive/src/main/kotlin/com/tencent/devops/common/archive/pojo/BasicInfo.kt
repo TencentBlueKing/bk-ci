@@ -27,10 +27,10 @@
 
 package com.tencent.devops.common.archive.pojo
 
-import io.swagger.annotations.Api
+import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@Api("基础信息")
+@ApiModel("基础信息")
 data class BasicInfo(
     @ApiModelProperty("版本字段")
     val version: String,

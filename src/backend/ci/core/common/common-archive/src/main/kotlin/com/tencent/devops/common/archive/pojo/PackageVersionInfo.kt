@@ -31,10 +31,10 @@
 
 package com.tencent.devops.common.archive.pojo
 
-import io.swagger.annotations.Api
+import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@Api("版本详情返回包装模型")
+@ApiModel("版本详情返回包装模型")
 data class PackageVersionInfo(
     @ApiModelProperty("基础信息")
     val basic: BasicInfo,

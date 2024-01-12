@@ -94,7 +94,7 @@ class PipelineUtilsTest {
             id = id,
             required = true,
             type = BuildFormPropertyType.STRING,
-            defaultValue = "123",
+            example = "123",
             options = null,
             desc = "hello",
             repoHashId = null,
