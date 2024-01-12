@@ -113,7 +113,7 @@
                     name: 'executePreview',
                     params: {
                         ...this.$route.params,
-                        version: this.pipelineInfo?.version
+                        version: this.pipelineInfo?.releaseVersion
                     }
                 })
             }

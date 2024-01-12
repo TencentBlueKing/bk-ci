@@ -122,13 +122,21 @@
                     this.page = res.page
                     this.hasNext = res.count > res.page * pageSize
                     if (res.records.length > 0) {
-                        this.pipelineVersionList.push(...res.records)
+                        this.pipelineVersionList.push(...res.records.map(item => {
+                            return {
+                                ...item,
+                                versionName: item.versionName || this.$t('editPage.draftVersion', [this.generateDisplayName(item.baseVersion, item.baseVersionName)])
+                            }
+                        }))
                     }
                 } catch (error) {
                     console.log(error)
                 } finally {
                     this.bottomLoadingOptions.isLoading = false
                 }
+            },
+            generateDisplayName (version, versionName) {
+                return `V${version} (${versionName})`
             },
             async diffVersion (version) {
                 console.log(version)

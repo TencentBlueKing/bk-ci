@@ -1,25 +1,25 @@
 .dark-theme-select-trigger {
-    border-color: #63656E;
+    border-color: #63656E !important;
     width: 360px;
-    color: #C4C6CC;
+    color: #C4C6CC !important;
     &.is-focus {
-        border-color: #C4C6CC;
+        border-color: #C4C6CC !important;
     }
 
 }
 .dark-theme-select-menu {
-    background: #1d1d1d;
-    color: #C4C6CC;
+    background: #1d1d1d !important;
+    color: #C4C6CC !important;
     .bk-options.bk-options-single .bk-option {
         &:hover,
         &.is-selected {
-            background: #242424;
+            background: #242424 !important;
         }
     }
     .bk-options .bk-option {
         &:hover,
         &.is-selected {
-            color: white;
+            color: white !important;
         }
     }
 }

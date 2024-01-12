@@ -18,7 +18,7 @@
                     :handle-change="handleBuildNoChange"
                 />
             </section>
-            <bk-button v-if="showVersions" @click="editVersions">
+            <bk-button v-if="showVersions" :disabled="disabled" @click="editVersions">
                 {{$t('编辑版本号')}}
             </bk-button>
         </div>

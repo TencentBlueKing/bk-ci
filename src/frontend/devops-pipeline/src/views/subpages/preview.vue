@@ -101,11 +101,15 @@
                         this.setExecuteStep(2)
                     }
                 } catch (err) {
-                    this.handleError(err, {
-                        projectId: this.projectId,
-                        resourceCode: this.pipelineId,
-                        action: this.$permissionResourceAction.EXECUTE
-                    })
+                    this.handleError(
+                        err,
+                        {
+                            projectId: this.projectId,
+                            resourceCode: this.pipelineId,
+                            action: this.$permissionResourceAction.EXECUTE
+                        }
+                    )
+                    this.$router.back()
                 } finally {
                     this.isLoading = false
                 }

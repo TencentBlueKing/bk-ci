@@ -166,7 +166,7 @@
   }
 }
 .variable-version-container {
-  z-index: 2016;
+  z-index: 3000;
   width: 480px;
   position: absolute;
   top: 0;
