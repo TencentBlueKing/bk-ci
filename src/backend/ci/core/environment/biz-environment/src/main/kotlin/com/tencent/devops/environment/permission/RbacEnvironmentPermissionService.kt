@@ -27,10 +27,12 @@
 
 package com.tencent.devops.environment.permission
 
+import com.tencent.bk.sdk.iam.util.AuthCacheUtil
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.utils.AuthCacheKeyUtil
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
@@ -90,15 +92,24 @@ class RbacEnvironmentPermissionService(
         envId: Long,
         permission: AuthPermission
     ): Boolean {
-        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenCheckService.getSystemToken()!!,
+        val cacheKey = AuthCacheKeyUtil.getCacheKey(
             userId = userId,
-            projectCode = projectId,
-            resourceCode = HashUtil.encodeLongId(envId), // 此处之所以要加密,为兼容企业版。已发布的企业版记录的为hashId
             resourceType = envResourceType,
-            relationResourceType = null,
-            action = buildEnvAction(permission)
-        ).data ?: false
+            action = buildEnvAction(permission),
+            projectCode = projectId,
+            resourceCode = HashUtil.encodeLongId(envId)
+        )
+        return AuthCacheUtil.cachePermission(cacheKey) {
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+                token = tokenCheckService.getSystemToken()!!,
+                userId = userId,
+                projectCode = projectId,
+                resourceCode = HashUtil.encodeLongId(envId), // 此处之所以要加密,为兼容企业版。已发布的企业版记录的为hashId
+                resourceType = envResourceType,
+                relationResourceType = null,
+                action = buildEnvAction(permission)
+            ).data ?: false
+        }
     }
 
     override fun checkEnvPermission(
@@ -106,15 +117,24 @@ class RbacEnvironmentPermissionService(
         projectId: String,
         permission: AuthPermission
     ): Boolean {
-        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenCheckService.getSystemToken()!!,
+        val cacheKey = AuthCacheKeyUtil.getCacheKey(
             userId = userId,
-            projectCode = projectId,
-            resourceCode = projectId,
             resourceType = AuthResourceType.PROJECT.value,
-            relationResourceType = null,
-            action = buildEnvAction(permission)
-        ).data ?: false
+            action = buildEnvAction(permission),
+            projectCode = projectId,
+            resourceCode = projectId
+        )
+        return AuthCacheUtil.cachePermission(cacheKey) {
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+                token = tokenCheckService.getSystemToken()!!,
+                userId = userId,
+                projectCode = projectId,
+                resourceCode = projectId,
+                resourceType = AuthResourceType.PROJECT.value,
+                relationResourceType = null,
+                action = buildEnvAction(permission)
+            ).data ?: false
+        }
     }
 
     override fun createEnv(userId: String, projectId: String, envId: Long, envName: String) {
@@ -188,27 +208,45 @@ class RbacEnvironmentPermissionService(
         nodeId: Long,
         permission: AuthPermission
     ): Boolean {
-        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenCheckService.getSystemToken()!!,
+        val cacheKey = AuthCacheKeyUtil.getCacheKey(
             userId = userId,
-            projectCode = projectId,
-            resourceCode = HashUtil.encodeLongId(nodeId), // 此处之所以要加密,为兼容企业版。已发布的企业版记录的为hashId
             resourceType = nodeResourceType,
-            relationResourceType = null,
-            action = buildNodeAction(permission)
-        ).data ?: false
+            action = buildNodeAction(permission),
+            projectCode = projectId,
+            resourceCode = HashUtil.encodeLongId(nodeId)
+        )
+        return AuthCacheUtil.cachePermission(cacheKey) {
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+                token = tokenCheckService.getSystemToken()!!,
+                userId = userId,
+                projectCode = projectId,
+                resourceCode = HashUtil.encodeLongId(nodeId),
+                resourceType = nodeResourceType,
+                relationResourceType = null,
+                action = buildNodeAction(permission)
+            ).data ?: false
+        }
     }
 
     override fun checkNodePermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
-        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenCheckService.getSystemToken()!!,
+        val cacheKey = AuthCacheKeyUtil.getCacheKey(
             userId = userId,
-            projectCode = projectId,
-            resourceCode = projectId,
             resourceType = AuthResourceType.PROJECT.value,
-            relationResourceType = null,
-            action = buildNodeAction(permission)
-        ).data ?: false
+            action = buildNodeAction(permission),
+            projectCode = projectId,
+            resourceCode = projectId
+        )
+        return AuthCacheUtil.cachePermission(cacheKey) {
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+                token = tokenCheckService.getSystemToken()!!,
+                userId = userId,
+                projectCode = projectId,
+                resourceCode = projectId,
+                resourceType = AuthResourceType.PROJECT.value,
+                relationResourceType = null,
+                action = buildNodeAction(permission)
+            ).data ?: false
+        }
     }
 
     override fun createNode(userId: String, projectId: String, nodeId: Long, nodeName: String) {
