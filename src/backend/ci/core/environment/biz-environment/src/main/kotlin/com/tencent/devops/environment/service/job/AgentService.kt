@@ -73,8 +73,9 @@ data class AgentService @Autowired constructor(
     val bkBizScopeId: Int = 0
 
     companion object {
-        private const val JOB_TYPE_INSTALL_AGENT = "INSTALL_AGENT"
+        private const val JOB_TYPE_INSTALL_AGENT = "REINSTALL_AGENT"
         private const val DEFAULT_INSTALL_AGENT_AP_ID = 1 // 节点管理预发布/正式环境 apId均固定为1
+        private const val DEFAULT_INSTALL_AGENT_PORT = "36000"
     }
 
     fun installAgent(
@@ -103,7 +104,7 @@ data class AgentService @Autowired constructor(
                     authType = it.authType,
                     account = it.account,
                     password = it.password,
-                    port = it.port,
+                    port = DEFAULT_INSTALL_AGENT_PORT,
                     key = it.key,
                     isManual = it.isManual,
                     retention = it.retention,

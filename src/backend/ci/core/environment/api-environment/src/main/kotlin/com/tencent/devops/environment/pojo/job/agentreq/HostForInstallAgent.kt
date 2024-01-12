@@ -60,8 +60,6 @@ data class HostForInstallAgent(
     val account: String?,
     @ApiModelProperty(value = "密码")
     val password: String?,
-    @ApiModelProperty(value = "端口")
-    val port: String?,
     @ApiModelProperty(value = "密钥")
     val key: String?,
     @ApiModelProperty(value = "是否手动模式")
