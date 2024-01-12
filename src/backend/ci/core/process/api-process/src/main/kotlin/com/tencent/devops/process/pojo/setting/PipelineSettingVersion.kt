@@ -49,7 +49,7 @@ data class PipelineSettingVersion(
     @ApiModelProperty("版本", required = false)
     var version: Int,
     @ApiModelProperty("描述", required = false)
-    val desc: String,
+    val desc: String?,
     @ApiModelProperty("标签列表", required = false)
     var labels: List<String>?,
     @field:BkField(patternStyle = BkStyleEnum.BUILD_NUM_RULE_STYLE, required = false)
