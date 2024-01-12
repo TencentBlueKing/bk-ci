@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
@@ -201,6 +202,7 @@ class PipelineRepositoryVersionService(
         val list = mutableListOf<PipelineVersionWithInfo>()
 
         result.forEach {
+            val baseVersion = it.baseVersion
             list.add(
                 PipelineVersionWithInfo(
                     createTime = pipelineInfo.createTime,
@@ -224,7 +226,13 @@ class PipelineRepositoryVersionService(
                     settingVersion = it.settingVersion,
                     status = it.status,
                     debugBuildId = it.debugBuildId,
-                    baseVersion = it.baseVersion,
+                    baseVersion = baseVersion,
+                    // 草稿单独获取一下版本名称给前端展示
+                    baseVersionName = if (it.status == VersionStatus.COMMITTING && baseVersion != null) {
+                        pipelineResourceVersionDao.getVersionResource(
+                            dslContext, projectId, pipelineId, baseVersion
+                        )?.versionName
+                    } else null,
                     description = it.description
                 )
             )
