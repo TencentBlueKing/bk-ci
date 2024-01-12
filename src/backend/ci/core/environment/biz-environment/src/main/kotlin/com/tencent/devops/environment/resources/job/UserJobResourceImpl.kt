@@ -24,6 +24,7 @@ import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskRes
 import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceStatusResult
+import com.tencent.devops.environment.service.job.AgentService
 import com.tencent.devops.environment.service.job.JobService
 import com.tencent.devops.environment.service.job.PermissionManageService
 import org.springframework.beans.factory.annotation.Autowired
@@ -31,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserJobResourceImpl @Autowired constructor(
     private val jobService: JobService,
+    private val agentService: AgentService,
     private val permissionManageService: PermissionManageService
 ) : UserJobResource {
     override fun queryJobInstanceStatus(
@@ -92,7 +94,7 @@ class UserJobResourceImpl @Autowired constructor(
         installAgentReq: InstallAgentReq
     ): AgentResult<InstallAgentResult> {
         checkParamBlank(userId, projectId)
-        return jobService.installAgent(userId, projectId, installAgentReq)
+        return agentService.installAgent(userId, projectId, installAgentReq)
     }
 
     override fun queryAgentTaskStatus(
@@ -102,7 +104,7 @@ class UserJobResourceImpl @Autowired constructor(
         queryAgentTaskStatusReq: QueryAgentTaskStatusReq
     ): AgentResult<QueryAgentTaskStatusResult> {
         checkParamBlank(userId, projectId)
-        return jobService.queryAgentTaskStatus(userId, projectId, jobId, queryAgentTaskStatusReq)
+        return agentService.queryAgentTaskStatus(userId, projectId, jobId, queryAgentTaskStatusReq)
     }
 
     override fun queryAgentStatusFromJob(
@@ -120,7 +122,7 @@ class UserJobResourceImpl @Autowired constructor(
         queryAgentStatusFromNodemanReq: QueryAgentStatusFromNodemanReq
     ): AgentResult<QueryAgentStatusFromNodemanResult> {
         checkParamBlank(userId, projectId)
-        return jobService.queryAgentStatusFromNodeman(queryAgentStatusFromNodemanReq)
+        return agentService.queryAgentStatusFromNodeman(queryAgentStatusFromNodemanReq)
     }
 
     override fun queryAgentTaskLog(
@@ -130,7 +132,7 @@ class UserJobResourceImpl @Autowired constructor(
         instanceId: Long
     ): AgentResult<QueryAgentTaskLogResult> {
         checkParamBlank(userId, projectId)
-        return jobService.queryAgentTaskLog(userId, projectId, jobId, instanceId)
+        return agentService.queryAgentTaskLog(userId, projectId, jobId, instanceId)
     }
 
     override fun terminalAgentInstallTask(
@@ -140,7 +142,7 @@ class UserJobResourceImpl @Autowired constructor(
         terminateAgentInstallTaskReq: TerminateAgentInstallTaskReq
     ): AgentResult<TerminalAgentInstallTaskResult> {
         checkParamBlank(userId, projectId)
-        return jobService.terminalAgentInstallTask(userId, projectId, jobId, terminateAgentInstallTaskReq)
+        return agentService.terminalAgentInstallTask(userId, projectId, jobId, terminateAgentInstallTaskReq)
     }
 
     override fun retryAgentInstallTask(
@@ -150,7 +152,7 @@ class UserJobResourceImpl @Autowired constructor(
         retryAgentInstallTaskReq: RetryAgentInstallTaskReq
     ): AgentResult<RetryAgentInstallTaskResult> {
         checkParamBlank(userId, projectId)
-        return jobService.retryAgentInstallTask(userId, projectId, jobId, retryAgentInstallTaskReq)
+        return agentService.retryAgentInstallTask(userId, projectId, jobId, retryAgentInstallTaskReq)
     }
 
     private fun checkParamBlank(userId: String, projectId: String) {
