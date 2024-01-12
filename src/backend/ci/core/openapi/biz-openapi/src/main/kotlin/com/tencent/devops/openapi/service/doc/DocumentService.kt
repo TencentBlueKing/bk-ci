@@ -70,35 +70,22 @@ import com.tencent.devops.openapi.utils.markdown.MarkdownElement
 import com.tencent.devops.openapi.utils.markdown.Table
 import com.tencent.devops.openapi.utils.markdown.TableRow
 import com.tencent.devops.openapi.utils.markdown.Text
-import io.swagger.jaxrs.config.BeanConfig
-import io.swagger.models.ArrayModel
-import io.swagger.models.ComposedModel
-import io.swagger.models.Model
-import io.swagger.models.ModelImpl
-import io.swagger.models.RefModel
-import io.swagger.models.Response
-import io.swagger.models.Swagger
-import io.swagger.models.parameters.AbstractSerializableParameter
-import io.swagger.models.parameters.BodyParameter
-import io.swagger.models.parameters.HeaderParameter
-import io.swagger.models.parameters.Parameter
-import io.swagger.models.parameters.PathParameter
-import io.swagger.models.parameters.QueryParameter
-import io.swagger.models.parameters.RefParameter
-import io.swagger.models.parameters.SerializableParameter
-import io.swagger.models.properties.ArrayProperty
-import io.swagger.models.properties.BooleanProperty
-import io.swagger.models.properties.DoubleProperty
-import io.swagger.models.properties.FloatProperty
-import io.swagger.models.properties.IntegerProperty
-import io.swagger.models.properties.LongProperty
-import io.swagger.models.properties.MapProperty
-import io.swagger.models.properties.ObjectProperty
-import io.swagger.models.properties.PasswordProperty
-import io.swagger.models.properties.Property
-import io.swagger.models.properties.RefProperty
-import io.swagger.models.properties.StringProperty
-import io.swagger.models.properties.UUIDProperty
+import io.swagger.v3.oas.integration.SwaggerConfiguration
+import io.swagger.v3.oas.models.OpenAPI
+import io.swagger.v3.oas.models.info.Info
+import io.swagger.v3.oas.models.media.ArraySchema
+import io.swagger.v3.oas.models.media.BooleanSchema
+import io.swagger.v3.oas.models.media.ComposedSchema
+import io.swagger.v3.oas.models.media.MapSchema
+import io.swagger.v3.oas.models.media.NumberSchema
+import io.swagger.v3.oas.models.media.ObjectSchema
+import io.swagger.v3.oas.models.media.Schema
+import io.swagger.v3.oas.models.media.StringSchema
+import io.swagger.v3.oas.models.parameters.Parameter
+import io.swagger.v3.oas.models.parameters.RequestBody
+import io.swagger.v3.oas.models.responses.ApiResponse
+import io.swagger.v3.oas.models.servers.Server
+import org.apache.commons.lang3.StringUtils
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
@@ -119,7 +106,7 @@ class DocumentService {
 
     private val onLoadTable = mutableMapOf<String, Table>()
 
-    private val definitions = mutableMapOf<String, Model>()
+    private val definitions = mutableMapOf<String, Schema<*>>()
 
     private lateinit var polymorphismMap: Map<String, Map<String, String>>
 
@@ -136,12 +123,13 @@ class DocumentService {
     ): Map<String, SwaggerDocResponse> {
         val response = mutableMapOf<String, SwaggerDocResponse>()
         val swagger = loadSwagger()
-        definitions.putAll(swagger.definitions)
+        definitions.putAll(swagger.components.schemas)
         polymorphismMap = polymorphism
         loadAllDefinitions(parametersInfo)
         swagger.paths.forEach { (path, body) ->
+            body.parameters
             // 遍历并生成每一path 不同 HttpMethod 下的文档
-            body.operationMap.forEach { (httpMethod, operation) ->
+            body.readOperationsMap().forEach { (httpMethod, operation) ->
                 val loadMarkdown = mutableListOf<MarkdownElement>()
                 // 该path 需要组装的model
                 val onLoadModel = mutableListOf<String>()
@@ -166,7 +154,7 @@ class DocumentService {
                                 getI18n(BK_PARAM_ILLUSTRATE),
                                 getI18n(BK_DEFAULT_VALUE)
                             ),
-                            rows = parseParameters(operation.parameters.filterIsInstance<PathParameter>()),
+                            rows = parseParameters(operation.parameters.filterIsInstance<Parameter>()),
                             key = "path_parameter"
                         ).checkLoadModel(onLoadModel)
                     }, path + httpMethod + "path")
@@ -182,7 +170,7 @@ class DocumentService {
                                 getI18n(BK_PARAM_ILLUSTRATE),
                                 getI18n(BK_DEFAULT_VALUE)
                             ),
-                            rows = parseParameters(operation.parameters.filterIsInstance<QueryParameter>()),
+                            rows = parseParameters(operation.parameters.filterIsInstance<Parameter>()),
                             "query_parameter"
                         ).checkLoadModel(onLoadModel)
                     }, path + httpMethod + "query")
@@ -198,7 +186,7 @@ class DocumentService {
                                 getI18n(BK_PARAM_ILLUSTRATE),
                                 getI18n(BK_DEFAULT_VALUE)
                             ),
-                            rows = parseParameters(operation.parameters.filterIsInstance<HeaderParameter>()),
+                            rows = parseParameters(operation.parameters.filterIsInstance<Parameter>()),
                             "header_parameter"
                         ).checkLoadModel(onLoadModel)
                             .setRow(
@@ -223,7 +211,7 @@ class DocumentService {
                                 getI18n(BK_PARAM_ILLUSTRATE),
                                 getI18n(BK_DEFAULT_VALUE)
                             ),
-                            rows = parseParameters(operation.parameters.filterIsInstance<BodyParameter>()),
+                            rows = parseParameters(operation.parameters),
                             "body_parameter"
                         ).checkLoadModel(onLoadModel)
                     }, path + httpMethod + "body")
@@ -241,7 +229,7 @@ class DocumentService {
                 // payload 样例
                 loadMarkdown.addAll(
                     parsePayloadExample(
-                        operation.parameters.filterIsInstance<BodyParameter>()
+                        operation.parameters.filterIsInstance<RequestBody>()
                     )
                 )
                 loadMarkdown.add(
@@ -262,7 +250,7 @@ class DocumentService {
                 loadMarkdown.addAll(
                     parseRequestExampleJson(
                         httpMethod.name,
-                        operation.parameters.filterIsInstance<BodyParameter>()
+                        operation.parameters.filterIsInstance<RequestBody>()
                     )
                 )
                 // 组装返回样例
@@ -359,7 +347,7 @@ class DocumentService {
             }, it).apply {
                 if (it in polymorphismMap) {
                     this.setRow(
-                        (definitions[it] as ModelImpl).discriminator,
+                        (definitions[it] as Schema).discriminator.toString(),
                         "string",
                         getI18n(BK_YES),
                         getI18n(BK_DISCRIMINATOR_ILLUSTRATE, arrayOf("${polymorphismMap[it]?.keys}")),
@@ -373,7 +361,7 @@ class DocumentService {
 
             // 多态类展示
             polymorphismMap[it]?.forEach { (child, value) ->
-                val discriminator = (definitions[it] as ModelImpl).discriminator
+                val discriminator = (definitions[it] as Schema).discriminator.toString()
                 val childModel = cacheOrLoad({ null }, child)
                     .setRow(
                         discriminator,
@@ -401,11 +389,11 @@ class DocumentService {
         return markdownElement
     }
 
-    private fun parseResponseExampleJson(responses: Map<String, Response>): List<MarkdownElement> {
+    private fun parseResponseExampleJson(responses: Map<String, ApiResponse>): List<MarkdownElement> {
         val markdownElement = mutableListOf<MarkdownElement>()
         responses.forEach { (httpStatus, response) ->
             val loadJson = mutableMapOf<String, Any>()
-            loadModelJson(response.responseSchema, loadJson)
+            loadModelJson(response.content.values.first().schema, loadJson)
             markdownElement.add(
                 Text(
                     level = 3,
@@ -420,8 +408,9 @@ class DocumentService {
         return markdownElement
     }
 
-    private fun parsePayloadExample(body: List<BodyParameter>): List<MarkdownElement> {
-        if (body.getOrNull(0)?.examples?.isEmpty() != false) return emptyList()
+    private fun parsePayloadExample(body: List<RequestBody>): List<MarkdownElement> {
+        val examples = body.getOrNull(0)?.content?.values?.first()?.examples
+        if (examples.isNullOrEmpty()) return emptyList()
         val res = mutableListOf<MarkdownElement>()
         res.add(Text(level = 3, body = "Request Payload 举例", key = "Payload_request_sample_title"))
         res.add(
@@ -431,52 +420,54 @@ class DocumentService {
                 key = "Payload_request_sample_explain"
             )
         )
-        body[0].examples.forEach { (texplain, jsonSimple) ->
+        examples.forEach { (texPlain, jsonSimple) ->
             res.add(
                 Text(
                     level = 4,
-                    body = getI18n(BK_PAYLOAD_REQUEST_SAMPLE, arrayOf(texplain)),
-                    key = "Payload_request_sample_title_$texplain"
+                    body = getI18n(BK_PAYLOAD_REQUEST_SAMPLE, arrayOf(texPlain)),
+                    key = "Payload_request_sample_title_$texPlain"
                 )
             )
             val jsonString = try {
-                JsonUtil.toJson(JsonUtil.to(jsonSimple))
+                JsonUtil.toJson(jsonSimple)
             } catch (e: Throwable) {
-                jsonSimple
+                jsonSimple.toString()
             }
-            res.add(Code(language = "Json", body = jsonString, key = "Payload_request_sample_json_$texplain"))
+            res.add(Code(language = "Json", body = jsonString, key = "Payload_request_sample_json_$texPlain"))
         }
         return res
     }
 
-    private fun parseRequestExampleJson(httpMethod: String, body: List<BodyParameter>): List<MarkdownElement> {
+    private fun parseRequestExampleJson(httpMethod: String, body: List<RequestBody>): List<MarkdownElement> {
         if (body.isEmpty()) return emptyList()
-        val schema = body[0].schema
-        val outJson: Any = when (schema) {
-            is ComposedModel -> {
+        val schema = body[0].content.values.first().schema
+        val outJson: Any = if (StringUtils.isNotBlank(schema.`$ref`)) {
+            val loadJson = mutableMapOf<String, Any>()
+            loadModelJson(schema, loadJson)
+            loadJson
+        } else when (schema) {
+            is ComposedSchema -> {
                 val loadJson = mutableMapOf<String, Any>()
                 schema.allOf?.forEach {
                     loadModelJson(it, loadJson)
                 }
                 loadJson
             }
-            is ModelImpl -> {
+
+            is ArraySchema -> {
+                val loadJson = mutableListOf<Any>()
+                loadJson.add(loadPropertyJson(schema.items))
+                loadJson
+            }
+
+            is Schema<*> -> {
                 val loadJson = mutableMapOf<String, Any>()
                 schema.properties?.forEach { (key, property) ->
                     loadJson[key] = loadPropertyJson(property)
                 }
                 loadJson
             }
-            is RefModel -> {
-                val loadJson = mutableMapOf<String, Any>()
-                loadModelJson(schema, loadJson)
-                loadJson
-            }
-            is ArrayModel -> {
-                val loadJson = mutableListOf<Any>()
-                loadJson.add(loadPropertyJson(schema.items))
-                loadJson
-            }
+
             else -> {
                 emptyMap<String, String>()
             }
@@ -501,11 +492,12 @@ class DocumentService {
         return "curl -X ${httpMethod.toUpperCase()} ${getI18n(BK_CURL_PROMPT, arrayOf(queryString))} $headerString"
     }
 
-    private fun parseResponse(responses: Map<String, Response>): List<TableRow> {
+    private fun parseResponse(responses: Map<String, ApiResponse>): List<TableRow> {
         val tableRow = mutableListOf<TableRow>()
         responses.forEach { (httpStatus, response) ->
+            val schema = response.content.values.first().schema
             tableRow.addNoRepeat(
-                TableRow(httpStatus, loadModelType(response.responseSchema), response.description)
+                TableRow(httpStatus, loadModelType(schema), response.description)
             )
         }
         return tableRow
@@ -514,115 +506,110 @@ class DocumentService {
     private fun parseParameters(parameters: List<Parameter>): List<TableRow> {
         val tableRow = mutableListOf<TableRow>()
         parameters.forEach {
-            when (it) {
-                is BodyParameter -> {
-                    tableRow.addNoRepeat(
-                        TableRow(
-                            it.name,
-                            loadModelType(it.schema),
-                            if (it.required) getI18n(BK_YES) else getI18n(BK_NO),
-                            it.description,
-                            ""
-                        )
+            if (StringUtils.isNotBlank(it.`$ref`)) {
+                tableRow.addNoRepeat(
+                    TableRow(
+                        it.name,
+                        Link(it.`$ref`, '#' + it.`$ref`).toString(),
+                        if (it.required) getI18n(BK_YES) else getI18n(BK_NO),
+                        it.description,
+                        ""
                     )
-                }
-                is AbstractSerializableParameter<*> -> {
-                    tableRow.addNoRepeat(
-                        TableRow(
-                            it.name,
-                            loadSerializableParameter(it),
-                            if (it.required) getI18n(BK_YES) else getI18n(BK_NO),
-                            it.description,
-                            it.defaultValue
-                        )
+                )
+            } else {
+                tableRow.addNoRepeat(
+                    TableRow(
+                        it.name,
+                        loadSerializableParameter(it),
+                        if (it.required) getI18n(BK_YES) else getI18n(BK_NO),
+                        it.description,
+                        it.schema.default?.toString() ?: ""
                     )
-                }
-//                is PathParameter -> {}
-//                is QueryParameter -> {}
-                is RefParameter -> {
-                    tableRow.addNoRepeat(
-                        TableRow(
-                            it.name,
-                            Link(it.originalRef, '#' + it.originalRef).toString(),
-                            if (it.required) getI18n(BK_YES) else getI18n(BK_NO),
-                            it.description,
-                            ""
-                        )
-                    )
-                }
-                else -> {}
+                )
             }
         }
         return tableRow
     }
 
-    private fun loadSwagger(): Swagger {
-        val bean = BeanConfig().apply {
-            title = applicationDesc
-            version = applicationVersion
-            resourcePackage = packageName
-            scan = true
-            basePath = "/$service/api"
+    private fun loadSwagger(): OpenAPI {
+        val bean = SwaggerConfiguration().apply {
+            openAPI = OpenAPI()
+                .info(Info().title(applicationDesc).version(applicationVersion))
+                .addServersItem(Server().url("/$service/api"))
+            resourcePackages = setOf(packageName)
         }
-        return bean.swagger
+        return bean.openAPI
     }
 
-    private fun loadSerializableParameter(parameter: SerializableParameter): String {
-        return when (parameter.type) {
-            "string" -> {
-                val enum = parameter.enumValue
+    private fun loadSerializableParameter(parameter: Parameter): String {
+        return when (val schema = parameter.schema) {
+            is StringSchema -> {
+                val enum = schema.enum
                 if (enum.isNullOrEmpty()) {
-                    parameter.type
+                    "String"
                 } else {
                     val str = enum.toEnumString()
                     "ENUM($str)"
                 }
             }
-            "array" -> {
-                "List<" + loadPropertyType(parameter.items) + ">"
+
+            is ArraySchema -> {
+                "List<" + loadPropertyType(schema.items) + ">"
             }
-            "integer" -> {
-                when (parameter.format) {
+
+            is NumberSchema -> {
+                when (schema.format) {
                     "int32" -> "Int"
                     "int64" -> "Long"
                     else -> "integer"
                 }
             }
-            else -> parameter.type
+
+            else -> schema.type
         }
     }
 
     private fun loadModelDefinitions(
-        model: Model,
+        model: Schema<*>,
         tableRow: MutableList<TableRow>
     ) {
+        if (StringUtils.isNotBlank(model.`$ref`)) {
+            tableRow.addAll(
+                cacheOrLoad(
+                    {
+                        val table = mutableListOf<TableRow>()
+                        definitions[model.`$ref`]?.let {
+                            loadModelDefinitions(it, table)
+                        }
+                        Table(
+                            header = TableRow(
+                                getI18n(BK_PARAM_NAME),
+                                getI18n(BK_PARAM_TYPE),
+                                getI18n(BK_HAVE_TO),
+                                getI18n(BK_PARAM_ILLUSTRATE),
+                                getI18n(BK_DEFAULT_VALUE)
+                            ),
+                            rows = table,
+                            key = "model_${model.`$ref`}"
+                        )
+                    }, model.`$ref`
+                ).rows
+            )
+        }
         when (model) {
-            is ComposedModel -> {
+            is ComposedSchema -> {
                 model.allOf?.forEach {
                     loadModelDefinitions(it, tableRow)
                 }
-//
-//                // 初始化多态类
-//                if (model.parent is RefModel && model.child is ModelImpl) {
-//                    val ref = model.parent as RefModel
-//                    val impl = model.child as ModelImpl
-//                    polymorphismMap[ref.originalRef].apply {
-//                        if (this == null) {
-//                            polymorphismMap[ref.originalRef] = mutableListOf(impl.name)
-//                        } else {
-//                            this.addNoRepeat(impl.name)
-//                        }
-//                    }
-//                }
             }
 
-            is ModelImpl -> {
+            else -> {
                 model.properties?.forEach { (key, property) ->
                     tableRow.addNoRepeat(
                         TableRow(
                             key,
                             loadPropertyType(property),
-                            if (property.required) getI18n(BK_YES) else getI18n(BK_NO),
+                            if (!property.nullable) getI18n(BK_YES) else getI18n(BK_NO),
                             loadDescriptionInfo(property),
                             loadPropertyDefault(property)
                         )
@@ -630,34 +617,10 @@ class DocumentService {
                 }
             }
 
-            is RefModel -> {
-                tableRow.addAll(
-                    cacheOrLoad(
-                        {
-                            val table = mutableListOf<TableRow>()
-                            definitions[model.originalRef]?.let {
-                                loadModelDefinitions(it, table)
-                            }
-                            Table(
-                                header = TableRow(
-                                    getI18n(BK_PARAM_NAME),
-                                    getI18n(BK_PARAM_TYPE),
-                                    getI18n(BK_HAVE_TO),
-                                    getI18n(BK_PARAM_ILLUSTRATE),
-                                    getI18n(BK_DEFAULT_VALUE)
-                                ),
-                                rows = table,
-                                key = "model_${model.originalRef}"
-                            )
-                        }, model.originalRef
-                    ).rows
-                )
-            }
-            else -> {}
         }
     }
 
-    private fun loadDescriptionInfo(property: Property?): String {
+    private fun loadDescriptionInfo(property: Schema<*>?): String {
         if (property == null) return ""
         val res = StringBuffer()
         if (property.readOnly == true) {
@@ -667,139 +630,119 @@ class DocumentService {
         return res.toString()
     }
 
-    private fun loadModelType(model: Model?): String {
+    private fun loadModelType(model: Schema<*>?): String {
         if (model == null) return ""
+        if (StringUtils.isNotBlank(model.`$ref`)) {
+            return Link(model.`$ref`, '#' + model.`$ref`).toString()
+        }
         return when (model) {
-//            is ComposedModel -> {}
-            is ModelImpl -> {
-                "Map<String, " + loadPropertyType(model.additionalProperties) + ">"
-            }
-            is RefModel -> {
-                Link(model.originalRef, '#' + model.originalRef).toString()
-            }
-            is ArrayModel -> {
+            is ArraySchema -> {
                 "List<" + loadPropertyType(model.items) + ">"
             }
+
             else -> {
-                "parse error"
+                "Map<String, " + model.additionalProperties + ">"
             }
         }
     }
 
-    private fun loadModelJson(model: Model?, loadJson: MutableMap<String, Any>) {
+    private fun loadModelJson(model: Schema<*>?, loadJson: MutableMap<String, Any>) {
         if (model == null) return
+        if (StringUtils.isNotBlank(model.`$ref`)) {
+            definitions[model.`$ref`]?.let { loadModelJson(it, loadJson) }
+        }
         when (model) {
-            is ComposedModel -> {
+            is ComposedSchema -> {
                 model.allOf?.forEach {
                     loadModelJson(it, loadJson)
                 }
             }
-            is ModelImpl -> {
+
+            else -> {
                 if (model.discriminator != null) {
-                    loadJson[model.discriminator] = "string"
+                    loadJson[model.discriminator.toString()] = "string"
                 }
                 model.properties?.forEach { (key, property) ->
                     loadJson[key] = loadPropertyJson(property)
                 }
             }
-            is RefModel -> {
-                definitions[model.originalRef]?.let { loadModelJson(it, loadJson) }
-            }
-            else -> {}
         }
     }
 
-    private fun loadPropertyJson(property: Property): Any {
+    private fun loadPropertyJson(property: Schema<*>): Any {
+        if (StringUtils.isNotBlank(property.`$ref`)) {
+            val loadJson = mutableMapOf<String, Any>()
+            definitions[property.`$ref`]?.let { loadModelJson(it, loadJson) }
+            return loadJson
+        }
         return when (property) {
-            is RefProperty -> {
-                val loadJson = mutableMapOf<String, Any>()
-                definitions[property.originalRef]?.let { loadModelJson(it, loadJson) }
-                loadJson
-            }
             // swagger无法获取到map的key类型
-            is MapProperty -> {
-                mapOf("string" to loadPropertyJson(property.additionalProperties))
+            is MapSchema -> {
+                mapOf("string" to property.additionalProperties)
             }
-            is ObjectProperty -> {
+
+            is ObjectSchema -> {
                 getI18n(BK_OBJECT_PROPERTY_ILLUSTRATE)
             }
-            is ArrayProperty -> {
+
+            is ArraySchema -> {
                 listOf(loadPropertyJson(property.items))
             }
-            is StringProperty -> {
+
+            is StringSchema -> {
                 if (property.enum == null) {
                     property.type
                 } else {
                     "enum"
                 }
             }
-            is BooleanProperty -> false
-            is IntegerProperty -> 0
-            is LongProperty -> 0L
-            is DoubleProperty -> 0.0
-            is FloatProperty -> 0f
+
+            is BooleanSchema -> false
             else -> {
-                property.type
+                val result = when (property.default) {
+                    is Int -> 0
+                    is Long -> 0L
+                    is Double -> 0.0
+                    is Float -> 0f
+                    else -> property.type
+                }
+                result
             }
         }
     }
 
-    private fun loadPropertyDefault(property: Property?): String? {
-        if (property == null) return null
-        return when (property) {
-            is BooleanProperty -> {
-                property.default?.toString()
-            }
-            is DoubleProperty -> {
-                property.default?.toString()
-            }
-            is FloatProperty -> {
-                property.default?.toString()
-            }
-            is IntegerProperty -> {
-                property.default?.toString()
-            }
-            is LongProperty -> {
-                property.default?.toString()
-            }
-            is StringProperty -> {
-                property.default?.toString()
-            }
-            is PasswordProperty -> {
-                property.default?.toString()
-            }
-            is UUIDProperty -> {
-                property.default?.toString()
-            }
-            else -> {
-                null
-            }
-        }
+    private fun loadPropertyDefault(property: Schema<*>?): String? {
+        if (property == null || property.default == null) return null
+        return property.default.toString()
     }
 
-    private fun loadPropertyType(property: Property?): String {
+    private fun loadPropertyType(property: Schema<*>?): String {
         if (property == null) return ""
+        if (StringUtils.isNotBlank(property.`$ref`)) {
+            return Link(property.`$ref`, '#' + property.`$ref`).toString()
+        }
         return when (property) {
-            is RefProperty -> {
-                Link(property.originalRef, '#' + property.originalRef).toString()
-            }
             // swagger无法获取到map的key类型
-            is MapProperty -> {
-                "Map<String, " + loadPropertyType(property.additionalProperties) + ">"
+            is MapSchema -> {
+                "Map<String, " + property.additionalProperties + ">"
             }
-            is ObjectProperty -> {
+
+            is ObjectSchema -> {
                 "Any"
             }
-            is ArrayProperty -> {
+
+            is ArraySchema -> {
                 "List<" + loadPropertyType(property.items) + ">"
             }
-            is StringProperty -> {
+
+            is StringSchema -> {
                 if (property.enum.isNullOrEmpty()) {
                     property.type
                 } else {
                     "ENUM(" + property.enum.toEnumString() + ")"
                 }
             }
+
             else -> {
                 property.type
             }
