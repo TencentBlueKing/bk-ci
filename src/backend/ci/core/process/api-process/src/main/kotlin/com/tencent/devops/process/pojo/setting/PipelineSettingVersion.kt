@@ -49,7 +49,7 @@ data class PipelineSettingVersion(
     @ApiModelProperty("版本", required = false)
     var version: Int,
     @ApiModelProperty("描述", required = false)
-    val desc: String,
+    val desc: String?,
     @ApiModelProperty("标签列表", required = false)
     var labels: List<String>?,
     @field:BkField(patternStyle = BkStyleEnum.BUILD_NUM_RULE_STYLE, required = false)
@@ -64,7 +64,7 @@ data class PipelineSettingVersion(
 
     // 运行控制、流水线禁用相关配置
     @ApiModelProperty("Lock 类型", required = false)
-    val runLockType: PipelineRunLockType = PipelineRunLockType.SINGLE_LOCK,
+    val runLockType: PipelineRunLockType = PipelineRunLockType.MULTIPLE,
     @ApiModelProperty("最大排队时长", required = false)
     val waitQueueTimeMinute: Int?,
     @ApiModelProperty("最大排队数量", required = false)

@@ -85,19 +85,7 @@ class PipelineResourceDao {
         }
     }
 
-    fun getReleaseVersionRecord(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String
-    ): TPipelineResourceRecord? {
-        return with(T_PIPELINE_RESOURCE) {
-            dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
-                .fetchAny()
-        }
-    }
-
-    fun getLatestVersionResource(
+    fun getReleaseVersionResource(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String
