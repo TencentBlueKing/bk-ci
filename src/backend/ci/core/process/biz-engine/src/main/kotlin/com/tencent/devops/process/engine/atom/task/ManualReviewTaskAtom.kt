@@ -140,21 +140,25 @@ class ManualReviewTaskAtom(
         buildLogPrinter.addYellowLine(
             buildId = task.buildId,
             message = "============${getI18nByLocal(BK_PENDING_APPROVAL)}============",
-            tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            tag = taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
         buildLogPrinter.addLine(
             buildId = task.buildId, message = "${getI18nByLocal(BK_REVIEWERS)}：$reviewUsers",
-            tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            tag = taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
         buildLogPrinter.addLine(
             buildId = task.buildId, message = "${getI18nByLocal(BK_DESCRIPTION)}：$reviewDesc",
-            tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            tag = taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
         buildLogPrinter.addLine(
             buildId = buildId,
             message = getI18nByLocal(BK_PARAMS) +
                 "：${param.params.map { "{key=${it.key}, value=${it.value}}" }}",
-            tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            tag = taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
 
         val pipelineName = runVariables[PIPELINE_NAME] ?: pipelineId
@@ -255,11 +259,13 @@ class ManualReviewTaskAtom(
             ManualReviewAction.PROCESS -> {
                 buildLogPrinter.addLine(
                     buildId = buildId, message = getI18nByLocal(BK_AUDIT_RESULTS_APPROVE),
-                    tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+                    tag = taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+                    jobId = null, stepId = task.stepId
                 )
                 buildLogPrinter.addLine(
                     buildId = buildId, message = "${getI18nByLocal(BK_PARAMS)}：${getParamList(taskParam)}",
-                    tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+                    tag = taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+                    jobId = null, stepId = task.stepId
                 )
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildReviewBroadCastEvent(
@@ -275,7 +281,9 @@ class ManualReviewTaskAtom(
             ManualReviewAction.ABORT -> {
                 buildLogPrinter.addRedLine(
                     buildId = buildId, message = getI18nByLocal(BK_AUDIT_RESULTS_REJECT),
-                    tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+                    tag = taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+                    jobId = null,
+                    stepId = task.stepId
                 )
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildReviewBroadCastEvent(
@@ -351,15 +359,18 @@ class ManualReviewTaskAtom(
         )
         buildLogPrinter.addYellowLine(
             buildId = task.buildId, message = "output(except): $reviewResultParamKey=$manualAction",
-            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            tag = task.taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
         buildLogPrinter.addYellowLine(
             buildId = task.buildId, message = "output(except): $reviewerParamKey=$manualActionUserId",
-            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            tag = task.taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
         buildLogPrinter.addYellowLine(
             buildId = task.buildId, message = "output(except): $suggestParamKey=$suggestContent",
-            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            tag = task.taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
     }
 
@@ -378,15 +389,18 @@ class ManualReviewTaskAtom(
         val suggestContent = taskParam[BS_MANUAL_ACTION_SUGGEST]
         buildLogPrinter.addYellowLine(
             buildId = task.buildId, message = "============${getI18nByLocal(BK_FINAL_APPROVAL)}============",
-            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            tag = task.taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
         buildLogPrinter.addLine(
             buildId = task.buildId, message = "${getI18nByLocal(BK_REVIEWER)}：$manualActionUserId",
-            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            tag = task.taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
         buildLogPrinter.addLine(
             buildId = task.buildId, message = "${getI18nByLocal(BK_REVIEW_COMMENTS)}：$suggestContent",
-            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            tag = task.taskId, containerHashId = task.containerHashId, executeCount = task.executeCount ?: 1,
+            jobId = null, stepId = task.stepId
         )
         return suggestContent
     }

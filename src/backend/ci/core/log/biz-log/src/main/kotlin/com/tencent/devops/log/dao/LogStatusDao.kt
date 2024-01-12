@@ -44,7 +44,7 @@ class LogStatusDao {
         buildId: String,
         tag: String?,
         subTags: String?,
-        jobId: String?,
+        containerHashId: String?,
         executeCount: Int,
         logStorageMode: LogStorageMode,
         finish: Boolean
@@ -55,7 +55,7 @@ class LogStatusDao {
                 .set(TAG, tag)
                 .set(SUB_TAG, subTags)
                 .set(EXECUTE_COUNT, executeCount)
-                .set(JOB_ID, jobId)
+                .set(JOB_ID, containerHashId)
                 .set(FINISHED, finish)
                 .set(MODE, logStorageMode.name)
                 .onDuplicateKeyUpdate()
@@ -103,7 +103,7 @@ class LogStatusDao {
     fun isFinish(
         dslContext: DSLContext,
         buildId: String,
-        jobId: String?,
+        containerHashId: String?,
         tag: String?,
         subTags: String?,
         executeCount: Int?
@@ -112,8 +112,8 @@ class LogStatusDao {
             val select = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
                 .and(EXECUTE_COUNT.eq(executeCount))
-            if (!jobId.isNullOrBlank()) {
-                select.and(JOB_ID.eq(jobId))
+            if (!containerHashId.isNullOrBlank()) {
+                select.and(JOB_ID.eq(containerHashId))
                     .and(TAG.eq(""))
                     .and(SUB_TAG.eq(""))
             } else {
@@ -127,13 +127,14 @@ class LogStatusDao {
     fun getStorageMode(
         dslContext: DSLContext,
         buildId: String,
-        tag: String,
-        executeCount: Int?
+        tag: String?,
+        executeCount: Int?,
+        stepId: String?
     ): TLogStatusRecord? {
         with(TLogStatus.T_LOG_STATUS) {
             return dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
-                .and(TAG.eq(tag))
+                .let { if (tag != null) it.and(TAG.eq(tag)) else it }
                 .and(EXECUTE_COUNT.eq(executeCount ?: 1))
                 .fetchAny()
         }

@@ -34,7 +34,9 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("流水线暂停操作实体类")
 data class BuildTaskPauseInfo(
     @ApiModelProperty("任务ID")
-    val taskId: String,
+    val taskId: String?,
+    @ApiModelProperty("插件ID")
+    val stepId: String?,
     @ApiModelProperty("element信息,若插件内有变量变更需给出变更后的element")
     val element: Element?,
     @ApiModelProperty("是否继续 true:继续构建 false：停止构建")

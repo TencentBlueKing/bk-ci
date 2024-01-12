@@ -52,12 +52,15 @@ class DependOnControl @Autowired constructor(
             buildId = container.buildId,
             message = logBuilder.toString(),
             tag = VMUtils.genStartVMTaskId(container.seq.toString()),
-            jobId = container.containerHashId,
-            executeCount = container.executeCount
+            containerHashId = container.containerHashId,
+            executeCount = container.executeCount,
+            jobId = null,
+            stepId = VMUtils.genStartVMTaskId(container.seq.toString())
         )
         return buildStatus
     }
 
+    @Suppress("ComplexMethod")
     private fun checkJobStatusByDepRel(
         container: PipelineBuildContainer,
         dependRel: Map<String, String>,

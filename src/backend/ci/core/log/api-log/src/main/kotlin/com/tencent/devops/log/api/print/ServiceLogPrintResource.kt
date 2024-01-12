@@ -91,7 +91,7 @@ interface ServiceLogPrintResource {
         subTag: String?,
         @ApiParam("job id或者container的34位id", required = false)
         @QueryParam("jobId")
-        jobId: String?,
+        containerHashId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?

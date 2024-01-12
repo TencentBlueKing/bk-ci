@@ -83,12 +83,18 @@ interface ServiceLogResource {
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
-        @ApiParam("对应jobId", required = false)
-        @QueryParam("jobId")
-        jobId: String?,
+        @ApiParam("对应containerHashId", required = false)
+        @QueryParam("containerHashId")
+        containerHashId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
+        @ApiParam("对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
+        @ApiParam("对应stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?,
         @ApiParam("是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false
@@ -131,12 +137,18 @@ interface ServiceLogResource {
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
-        @ApiParam("对应jobId", required = false)
-        @QueryParam("jobId")
-        jobId: String?,
+        @ApiParam("对应containerHashId", required = false)
+        @QueryParam("containerHashId")
+        containerHashId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
+        @ApiParam("对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
+        @ApiParam("对应stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?,
         @ApiParam("是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false
@@ -170,12 +182,18 @@ interface ServiceLogResource {
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
-        @ApiParam("对应jobId", required = false)
-        @QueryParam("jobId")
-        jobId: String?,
+        @ApiParam("对应containerHashId", required = false)
+        @QueryParam("containerHashId")
+        containerHashId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
+        @ApiParam("对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
+        @ApiParam("对应stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?,
         @ApiParam("是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false
@@ -201,12 +219,18 @@ interface ServiceLogResource {
         @ApiParam("对应element ID", required = false)
         @QueryParam("tag")
         tag: String?,
-        @ApiParam("对应jobId", required = false)
-        @QueryParam("jobId")
-        jobId: String?,
+        @ApiParam("对应containerHashId", required = false)
+        @QueryParam("containerHashId")
+        containerHashId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
+        @ApiParam("对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
+        @ApiParam("对应stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?,
         @ApiParam("是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false
@@ -230,10 +254,13 @@ interface ServiceLogResource {
         buildId: String,
         @ApiParam("对应elementId", required = true)
         @QueryParam("tag")
-        tag: String,
+        tag: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
+        @ApiParam("对应stepId", required = false)
+        @QueryParam("stepId")
+        stepId: String?,
         @ApiParam("是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false

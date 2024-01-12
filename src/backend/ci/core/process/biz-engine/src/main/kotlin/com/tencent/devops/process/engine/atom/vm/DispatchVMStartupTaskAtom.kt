@@ -140,8 +140,10 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 buildId = task.buildId,
                 message = "Fail to execute the task atom: ${e.message}",
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
             logger.warn("Fail to execute the task atom", e)
             atomResponse = AtomResponse(
@@ -155,8 +157,10 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 buildId = task.buildId,
                 message = "Fail to execute the task atom: ${ignored.message}",
                 tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                containerHashId = task.containerHashId,
+                executeCount = task.executeCount ?: 1,
+                jobId = null,
+                stepId = task.stepId
             )
             logger.warn("Fail to execute the task atom", ignored)
             atomResponse = AtomResponse(
@@ -311,8 +315,10 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                             arrayOf(env.key, version)
                         ),
                         tag = task.taskId,
-                        jobId = task.containerHashId,
-                        executeCount = task.executeCount ?: 1
+                        containerHashId = task.containerHashId,
+                        executeCount = task.executeCount ?: 1,
+                        jobId = null,
+                        stepId = task.stepId
                     )
                     return false
                 }
@@ -447,7 +453,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 vmSeqId = task.containerId,
                 containerHashId = task.containerHashId,
                 userId = task.starter,
-                executeCount = task.executeCount
+                executeCount = task.executeCount,
+                stepId = task.stepId
             )
             client.get(ServiceDispatchJobResource::class).monitor(agentStartMonitor = agentMonitor)
         }

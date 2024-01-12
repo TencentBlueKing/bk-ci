@@ -120,7 +120,9 @@ object LoggerService {
      * 当前执行插件的各类构建信息
      */
     var elementId = ""
+    var stepId = ""
     var elementName = ""
+    var containerHashId = ""
     var jobId = ""
     var executeCount = 1
     var buildVariables: BuildVariables? = null
@@ -236,7 +238,7 @@ object LoggerService {
         }
     }
 
-    fun finishTask() = finishLog(elementId, jobId, executeCount)
+    fun finishTask() = finishLog(elementId, containerHashId, executeCount)
 
     fun addNormalLine(message: String) {
         var subTag: String? = null
@@ -251,7 +253,7 @@ object LoggerService {
                 realMessage = list.last()
             }
             if (realMessage.startsWith(LOG_SUBTAG_FINISH_FLAG)) {
-                finishLog(elementId, jobId, executeCount, subTag)
+                finishLog(elementId, containerHashId, executeCount, subTag)
                 realMessage = realMessage.removePrefix(LOG_SUBTAG_FINISH_FLAG)
             }
             realMessage = prefix + realMessage
@@ -271,9 +273,11 @@ object LoggerService {
             timestamp = System.currentTimeMillis(),
             tag = elementId,
             subTag = subTag,
-            jobId = jobId,
+            containerHashId = containerHashId,
             logType = logType,
-            executeCount = executeCount
+            executeCount = executeCount,
+            jobId = jobId,
+            stepId = stepId
         )
         logger.info(logMessage.toString())
 
@@ -334,9 +338,11 @@ object LoggerService {
             message = "##[group]$foldName",
             timestamp = System.currentTimeMillis(),
             tag = elementId,
-            jobId = jobId,
+            containerHashId = containerHashId,
             logType = LogType.LOG,
-            executeCount = executeCount
+            executeCount = executeCount,
+            jobId = jobId,
+            stepId = stepId
         )
         addLog(logMessage)
     }
@@ -346,9 +352,11 @@ object LoggerService {
             message = "##[endgroup]$foldName",
             timestamp = System.currentTimeMillis(),
             tag = elementId,
-            jobId = jobId,
+            containerHashId = containerHashId,
             logType = LogType.LOG,
-            executeCount = executeCount
+            executeCount = executeCount,
+            jobId = jobId,
+            stepId = stepId
         )
         addLog(logMessage)
     }

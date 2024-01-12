@@ -78,23 +78,41 @@ class DispatchService constructor(
     private val commonConfig: CommonConfig
 ) {
 
-    fun log(buildId: String, containerHashId: String?, vmSeqId: String, message: String, executeCount: Int?) {
+    fun log(
+        buildId: String,
+        containerHashId: String?,
+        vmSeqId: String,
+        message: String,
+        executeCount: Int?,
+        jobId: String
+    ) {
         buildLogPrinter.addLine(
-            buildId,
-            message,
-            VMUtils.genStartVMTaskId(vmSeqId),
-            containerHashId,
-            executeCount ?: 1
+            buildId = buildId,
+            message = message,
+            tag = VMUtils.genStartVMTaskId(vmSeqId),
+            containerHashId = containerHashId,
+            executeCount = executeCount ?: 1,
+            jobId = jobId,
+            stepId = VMUtils.genStartVMTaskId(vmSeqId)
         )
     }
 
-    fun logRed(buildId: String, containerHashId: String?, vmSeqId: String, message: String, executeCount: Int?) {
+    fun logRed(
+        buildId: String,
+        containerHashId: String?,
+        vmSeqId: String,
+        message: String,
+        executeCount: Int?,
+        jobId: String?
+    ) {
         buildLogPrinter.addRedLine(
-            buildId,
-            message,
-            VMUtils.genStartVMTaskId(vmSeqId),
-            containerHashId,
-            executeCount ?: 1
+            buildId = buildId,
+            message = message,
+            tag = VMUtils.genStartVMTaskId(vmSeqId),
+            containerHashId = containerHashId,
+            executeCount = executeCount ?: 1,
+            jobId = jobId,
+            stepId = VMUtils.genStartVMTaskId(vmSeqId)
         )
     }
 

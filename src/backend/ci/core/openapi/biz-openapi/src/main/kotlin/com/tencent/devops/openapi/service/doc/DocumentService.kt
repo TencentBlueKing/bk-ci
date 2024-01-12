@@ -409,7 +409,7 @@ class DocumentService {
             markdownElement.add(
                 Text(
                     level = 3,
-                    body = "$httpStatus $BK_RETURNS_THE_SAMPLE",
+                    body = "$httpStatus ${getI18n(BK_RETURNS_THE_SAMPLE)}",
                     key = "${httpStatus}_return_example_title"
                 )
             )

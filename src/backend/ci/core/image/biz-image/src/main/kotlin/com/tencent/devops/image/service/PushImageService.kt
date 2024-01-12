@@ -129,7 +129,9 @@ class PushImageService @Autowired constructor(
                 buildId = pushImageParam.buildId,
                 message = "Target image：$toImageRepo:${pushImageParam.targetImageTag}",
                 tag = pushImageParam.buildId,
-                executeCount = pushImageParam.executeCount ?: 1
+                executeCount = pushImageParam.executeCount ?: 1,
+                jobId = null,
+                stepId = null
             )
             pushImageToRepo(pushImageParam)
             logger.info("[${pushImageParam.buildId}]|Push image success, image name and tag:" +

@@ -113,7 +113,8 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             elementId = elementId,
             params = params,
             channelCode = ChannelCode.BS,
-            checkPermission = ChannelCode.isNeedAuth(channelCode)
+            checkPermission = ChannelCode.isNeedAuth(channelCode),
+            stepId = null
         )
         return Result(true)
     }

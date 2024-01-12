@@ -43,8 +43,12 @@ data class LogMessage(
     val timestamp: Long,
     @ApiModelProperty("标签")
     val tag: String = "",
+    @ApiModelProperty("step Id")
+    val stepId: String = "",
     @ApiModelProperty("job id")
     val jobId: String = "",
+    @ApiModelProperty("container Hash Id")
+    val containerHashId: String = "",
     @ApiModelProperty("日志类型")
     val logType: LogType = LogType.LOG,
     @ApiModelProperty("执行次数")

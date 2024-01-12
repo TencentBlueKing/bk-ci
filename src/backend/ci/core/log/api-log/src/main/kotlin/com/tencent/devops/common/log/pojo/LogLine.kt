@@ -50,6 +50,10 @@ data class LogLine(
     val subTag: String = "",
     @ApiModelProperty("日志jobId", required = true)
     val jobId: String = "",
+    @ApiModelProperty("日志containerHashId", required = true)
+    val containerHashId: String?,
+    @ApiModelProperty("日志stepId", required = true)
+    val stepId: String?,
     @ApiModelProperty("日志执行次数", required = true)
     val executeCount: Int? = 1
 ) {
