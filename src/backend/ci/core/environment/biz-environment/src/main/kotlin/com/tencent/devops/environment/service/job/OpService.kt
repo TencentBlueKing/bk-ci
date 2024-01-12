@@ -119,14 +119,16 @@ class OpService @Autowired constructor(
         return if (!projectCodeList.isNullOrEmpty()) {
             queryProjExist(projectCodeList) ?: run {
                 val projectCodeSet = projectCodeList.toSet()
-                val projsGrayStatus = redisOperation.sismember(OP_KEY, *projectCodeSet.toTypedArray())
+                val projsGrayStatus = projectCodeSet.associateWith {
+                    redisOperation.sismember(OP_KEY, it) ?: false
+                }
                 OpOperateResult(
                     code = SUCCESSFUL_CODE,
                     result = SUCCESSFUL_RESULT,
                     msg = SUCCESSFUL_SISMEMBER_MSG,
                     grayProjNumber = grayProjsTotalNum(),
-                    projGrayStatus = projsGrayStatus?.map {
-                        ProjectOpInfo(englishName = it.key.toString(), projGrayStatus = it.value)
+                    projGrayStatus = projsGrayStatus.map {
+                        ProjectOpInfo(englishName = it.key, projGrayStatus = it.value)
                     }
                 )
             }

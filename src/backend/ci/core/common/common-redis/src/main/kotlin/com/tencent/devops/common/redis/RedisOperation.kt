@@ -307,8 +307,8 @@ class RedisOperation(
         return masterRedisTemplate.opsForSet().members(getFinalKey(key, isDistinguishCluster))
     }
 
-    fun sismember(key: String, vararg values: String, isDistinguishCluster: Boolean? = false): Map<Any, Boolean>? {
-        return masterRedisTemplate.opsForSet().isMember(getFinalKey(key, isDistinguishCluster), *values)
+    fun sismember(key: String, value: String, isDistinguishCluster: Boolean? = false): Boolean? {
+        return masterRedisTemplate.opsForSet().isMember(getFinalKey(key, isDistinguishCluster), value)
     }
 
     fun zadd(key: String, values: String, score: Double, isDistinguishCluster: Boolean? = false): Boolean? {
