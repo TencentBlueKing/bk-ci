@@ -38,9 +38,10 @@ import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v2.pojo.request.RuleUpdateRequest
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleSummaryWithPermission
 import com.tencent.devops.quality.pojo.RuleInterceptHistory
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -170,7 +171,7 @@ interface ApigwQualityResourceV3 {
         @Parameter(description = "规则ID", required = false)
         @QueryParam("ruleHashId")
         ruleHashId: String?,
-        @Parameter(description = "状态", required = false, type = "ENUM(PASS, FAIL)")
+        @Parameter(description = "状态", required = false, schema = Schema(type = "ENUM(PASS, FAIL)"))
         @QueryParam("interceptResult")
         interceptResult: RuleInterceptResult?,
         @Parameter(description = "开始时间", required = false)

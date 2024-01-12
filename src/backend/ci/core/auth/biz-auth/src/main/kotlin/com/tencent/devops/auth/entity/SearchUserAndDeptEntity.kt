@@ -33,21 +33,21 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema
 data class SearchUserAndDeptEntity(
-    @Schema(name = "查找字段, 默认值为 'id'", name = "lookup_field")
+    @Schema(name = "查找字段, 默认值为 'id'", description = "lookup_field")
     @JsonProperty("lookup_field")
     val lookupField: String,
     @Schema(name = "返回值字段")
     val fields: String?,
-    @Schema(name = "精确查找内容列表", name = "exact_lookups")
+    @Schema(name = "精确查找内容列表", description = "exact_lookups")
     @JsonProperty("exact_lookups")
     var exactLookups: Any? = null,
-    @Schema(name = "模糊查找内容列表", name = "fuzzy_lookups")
+    @Schema(name = "模糊查找内容列表", description = "fuzzy_lookups")
     @JsonProperty("fuzzy_lookups")
     var fuzzyLookups: Any? = null,
-    @Schema(name = "用户登录态信息", name = "access_token")
+    @Schema(name = "用户登录态信息", description = "access_token")
     @JsonProperty("access_token")
     val accessToken: String? = null,
-    @Schema(name = "分页大小", name = "page_size")
+    @Schema(name = "分页大小", description = "page_size")
     @JsonProperty("page_size")
     val pageSize: Int? = 200,
     override var bk_app_code: String,

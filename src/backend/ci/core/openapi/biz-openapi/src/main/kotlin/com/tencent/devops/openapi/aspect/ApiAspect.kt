@@ -268,7 +268,7 @@ class ApiAspect(
                 ?.getDeclaredMethod(
                     method.name, *method.parameterTypes
                 )
-                ?.getAnnotation(ApiOperation::class.java)
+                ?.getAnnotation(Operation::class.java)
                 ?.tags
                 ?.first()
                 ?.replace(Regex("app|user"), apiType) ?: methodName

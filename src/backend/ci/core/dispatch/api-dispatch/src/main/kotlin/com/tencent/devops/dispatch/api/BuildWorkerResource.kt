@@ -27,11 +27,11 @@
 
 package com.tencent.devops.dispatch.api
 
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.annotations.ApiResponse
-import io.swagger.annotations.ApiResponses
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -51,7 +51,7 @@ interface BuildWorkerResource {
     @Path("/")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @ApiResponses(
-            ApiResponse(code = 304, message = "本地的构建执行器已是最新，无需下载")
+        ApiResponse(responseCode = "304", description = "本地的构建执行器已是最新，无需下载")
     )
     fun download(
         @Parameter(description = "本地eTag标签", required = false)

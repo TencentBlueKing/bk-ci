@@ -60,7 +60,7 @@ class OpenapiPermissionService(
         method: MethodSignature
     ) {
         if (userId == null) {
-            val tags = method.method.getAnnotation(ApiOperation::class.java)?.tags?.joinToString(separator = "|")
+            val tags = method.method.getAnnotation(Operation::class.java)?.tags?.joinToString(separator = "|")
             logger.warn(
                 "validProjectPermission|user_is_null|" +
                     "$apigwType|$appCode|$projectId|${tags ?: method}"
@@ -85,7 +85,7 @@ class OpenapiPermissionService(
         }.getOrNull() ?: false
 
         if (!hasViewPermission) {
-            val tags = method.method.getAnnotation(ApiOperation::class.java)?.tags?.joinToString(separator = "|")
+            val tags = method.method.getAnnotation(Operation::class.java)?.tags?.joinToString(separator = "|")
             logger.warn(
                 "validProjectManagerPermission|permission_is_false|" +
                     "$apigwType|$appCode|$userId|$projectId|${tags ?: method}"

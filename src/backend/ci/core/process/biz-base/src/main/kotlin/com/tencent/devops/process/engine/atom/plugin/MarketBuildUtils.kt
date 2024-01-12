@@ -95,7 +95,7 @@ object MarketBuildUtils {
 
             val bkAtomHookUrlMethod = inputMap.getOrDefault(
                 key = BK_ATOM_HOOK_URL_METHOD,
-                example = getDefaultHookMethod(atomCode, atomVersion)
+                defaultValue = getDefaultHookMethod(atomCode, atomVersion)
             ) as String
             val bkAtomHookBody = inputMap.getOrDefault(
                 BK_ATOM_HOOK_URL_BODY,

@@ -164,7 +164,7 @@ object ModelParameters {
                     id = keyWithPrefix,
                     required = false,
                     type = BuildFormPropertyType.STRING,
-                    example = ModelCommon.formatVariablesValue(variable.value, startParams) ?: "",
+                    defaultValue = ModelCommon.formatVariablesValue(variable.value, startParams) ?: "",
                     options = null,
                     desc = null,
                     repoHashId = null,

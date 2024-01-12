@@ -30,8 +30,8 @@ package com.tencent.devops.dispatch.api
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.annotations.ApiResponse
-import io.swagger.annotations.ApiResponses
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -50,7 +50,7 @@ interface BuildScriptResource {
     @Path("/")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @ApiResponses(
-        ApiResponse(code = 304, message = "本地插件已是最新，无需下载")
+        ApiResponse(responseCode = "304", description = "本地插件已是最新，无需下载")
     )
     fun download(
         @Parameter(description = "插件标识符", required = true)
