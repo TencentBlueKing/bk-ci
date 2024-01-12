@@ -149,7 +149,7 @@ class CodeGithubRepositoryService @Autowired constructor(
         return GithubRepository(
             aliasName = repository.aliasName,
             url = repository.url,
-            userName = repository.userId,
+            userName = record.userName,
             projectName = record.projectName,
             projectId = repository.projectId,
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),

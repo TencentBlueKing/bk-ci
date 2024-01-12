@@ -40,5 +40,7 @@ data class PushPipelineResult(
     @ApiModelProperty("ci文件路径")
     val filePath: String,
     @ApiModelProperty("分支名")
-    val branch: String
+    val branch: String,
+    @ApiModelProperty("mr url")
+    val mrUrl: String?
 )

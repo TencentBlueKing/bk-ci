@@ -26,24 +26,17 @@
  *
  */
 
-package com.tencent.devops.process.yaml.git.pojo
+package com.tencent.devops.common.auth.utils
 
-/**
- * pac yaml文件发布结果
- */
-interface PacGitPushResult {
-    // ci文件路径
-    val filePath: String
+object AuthCacheKeyUtil {
 
-    // 分支名
-    val branch: String
-
-    // 文件blob_id
-    val blobId: String
-
-    // commitId
-    val lastCommitId: String
-
-    // mr url
-    val mrUrl: String?
+    fun getCacheKey(
+        userId: String,
+        resourceType: String,
+        action: String,
+        projectCode: String,
+        resourceCode: String
+    ): String {
+        return "${userId}_${resourceType}_${action}_${projectCode}_$resourceCode"
+    }
 }
