@@ -31,5 +31,5 @@ import io.swagger.annotations.ApiModelProperty
 
 data class QueryAgentInstallChannelResult(
     @ApiModelProperty(value = "安装通道信息列表")
-    val installChannelList: Any
+    val installChannelList: List<InstallAgentChannel>
 )

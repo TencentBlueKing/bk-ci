@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VAL
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.environment.pojo.job.agentres.AgentAgentResult
-import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentInstallChannelResult
 import okhttp3.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -157,11 +156,7 @@ class AgentApi {
                 var jsonData = ""
                 val operationResult: T? =
                     if (null != agentResp.data) {
-                        jsonData = jacksonObjectMapper().writeValueAsString(
-                            if ("queryAgentInstallChannel" == operationName) {
-                                AgentQueryAgentInstallChannelResult(installChannelList = agentResp.data)
-                            } else agentResp.data
-                        )
+                        jsonData = jacksonObjectMapper().writeValueAsString(agentResp.data)
                         jacksonObjectMapper().readValue(jsonData, classOfT)
                     } else {
                         null

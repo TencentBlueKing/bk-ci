@@ -41,8 +41,8 @@ import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentreq.TerminateAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentAgentResult
+import com.tencent.devops.environment.pojo.job.agentres.AgentInstallAgentChannel
 import com.tencent.devops.environment.pojo.job.agentres.AgentInstallAgentResult
-import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentInstallChannelResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentStatusFromNodemanResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentTaskStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
@@ -52,6 +52,7 @@ import com.tencent.devops.environment.pojo.job.agentres.ExtraData
 import com.tencent.devops.environment.pojo.job.agentres.FilterHostInfo
 import com.tencent.devops.environment.pojo.job.agentres.HostDetail
 import com.tencent.devops.environment.pojo.job.agentres.IdentityInfo
+import com.tencent.devops.environment.pojo.job.agentres.InstallAgentChannel
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
 import com.tencent.devops.environment.pojo.job.agentres.IpFilter
 import com.tencent.devops.environment.pojo.job.agentres.JobResultForFilterHostInfo
@@ -416,9 +417,9 @@ data class AgentService @Autowired constructor(
         withHidden: Boolean
     ): AgentResult<QueryAgentInstallChannelResult> {
         AgentApi.setThreadLocal("queryAgentInstallChannel")
-        val agentQueryAgentInsChannelRes: AgentAgentResult<AgentQueryAgentInstallChannelResult> =
+        val agentQueryAgentInsChannelRes: AgentAgentResult<Array<AgentInstallAgentChannel>> =
             agentApi.executeGetRequest(
-                AgentQueryAgentInstallChannelResult::class.java, -1, withHidden
+                Array<AgentInstallAgentChannel>::class.java, -1, withHidden
             )
         val queryAgentInsChannelRes: AgentResult<QueryAgentInstallChannelResult> = AgentResult(
             code = agentQueryAgentInsChannelRes.code,
@@ -427,7 +428,14 @@ data class AgentService @Autowired constructor(
             errors = agentQueryAgentInsChannelRes.errors,
             data = agentQueryAgentInsChannelRes.data?.let {
                 QueryAgentInstallChannelResult(
-                    installChannelList = it.installChannelList
+                    installChannelList = it.map { installChannel ->
+                        InstallAgentChannel(
+                            id = installChannel.id,
+                            name = installChannel.name,
+                            bkCloudId = installChannel.bkCloudId,
+                            hidden = installChannel.hidden
+                        )
+                    }
                 )
             }
         )
