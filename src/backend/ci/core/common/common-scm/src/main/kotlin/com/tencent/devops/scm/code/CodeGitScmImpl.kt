@@ -398,14 +398,3 @@ class CodeGitScmImpl constructor(
         private val logger = LoggerFactory.getLogger(CodeGitScmImpl::class.java)
     }
 }
-
-fun main() {
-    try {
-        val command = Git.lsRemoteRepository()
-        command.setRemote("git@git.woa.com:mingshewhe/webhook_test.git")
-        command.setCredentialsProvider(UsernamePasswordCredentialsProvider("v_hejieehe", "1"))
-        command.call()
-    } catch (ignored: Throwable) {
-        println("Fail to check the username and password of git,$ignored" )
-    }
-}
