@@ -28,14 +28,14 @@ package com.tencent.devops.monitoring.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "插件执行失败详情统计数据")
+@Schema(name = "插件执行失败详情统计数据")
 data class AtomMonitorFailDetailData(
-    @Schema(description = "系统运行错误执行失败数", required = true)
+    @Schema(name = "系统运行错误执行失败数", required = true)
     val totalSystemFailNum: Int,
-    @Schema(description = "用户配置错误执行失败数", required = true)
+    @Schema(name = "用户配置错误执行失败数", required = true)
     val totalUserFailNum: Int,
-    @Schema(description = "第三方系统接入错误执行失败数", required = true)
+    @Schema(name = "第三方系统接入错误执行失败数", required = true)
     val totalThirdFailNum: Int,
-    @Schema(description = "组件自身原因执行失败数", required = true)
+    @Schema(name = "组件自身原因执行失败数", required = true)
     val totalComponentFailNum: Int
 )

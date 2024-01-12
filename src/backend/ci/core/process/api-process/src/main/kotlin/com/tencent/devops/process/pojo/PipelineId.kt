@@ -29,8 +29,8 @@ package com.tencent.devops.process.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线模型-ID")
+@Schema(name = "流水线模型-ID")
 data class PipelineId(
-    @Schema(description = "流水线ID", required = true)
+    @Schema(name = "流水线ID", required = true)
     val id: String
 )

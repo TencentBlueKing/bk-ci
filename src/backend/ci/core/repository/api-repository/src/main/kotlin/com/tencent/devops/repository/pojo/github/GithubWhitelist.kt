@@ -29,16 +29,16 @@ package com.tencent.devops.repository.pojo.github
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "白名单信息")
+@Schema(name = "白名单信息")
 data class GithubWhitelist(
-    @Schema(description = "ID")
+    @Schema(name = "ID")
     val id: Long = 0,
-    @Schema(description = "项目ID")
+    @Schema(name = "项目ID")
     val projectId: String = "",
-    @Schema(description = "代码库链接")
+    @Schema(name = "代码库链接")
     val url: String = "",
-    @Schema(description = "创建人")
+    @Schema(name = "创建人")
     val creator: String = "",
-    @Schema(description = "创建时间")
+    @Schema(name = "创建时间")
     val createdTime: String = ""
 )

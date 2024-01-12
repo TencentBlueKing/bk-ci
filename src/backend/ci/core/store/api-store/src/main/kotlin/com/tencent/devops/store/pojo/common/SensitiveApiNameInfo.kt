@@ -29,10 +29,10 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "敏感API名称信息")
+@Schema(name = "敏感API名称信息")
 data class SensitiveApiNameInfo(
-    @Schema(description = "敏感API名")
+    @Schema(name = "敏感API名")
     val apiName: String,
-    @Schema(description = "敏感API别名,不同语言SDK中敏感API对应的方法名")
+    @Schema(name = "敏感API别名,不同语言SDK中敏感API对应的方法名")
     val aliasName: String
 )

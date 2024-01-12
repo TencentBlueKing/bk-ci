@@ -30,14 +30,14 @@ package com.tencent.devops.store.pojo.atom
 import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "升级插件包信息")
+@Schema(name = "升级插件包信息")
 data class UpdateAtomPackageInfo(
-    @Schema(description = "插件ID")
+    @Schema(name = "插件ID")
     val atomId: String,
-    @Schema(description = "国际化资源目录路径")
+    @Schema(name = "国际化资源目录路径")
     val i18nDir: String,
-    @Schema(description = "包路径")
+    @Schema(name = "包路径")
     val packagePath: String?,
-    @Schema(description = "插件包资源类型")
+    @Schema(name = "插件包资源类型")
     val atomPackageSourceType: PackageSourceTypeEnum
 )

@@ -30,15 +30,15 @@ package com.tencent.devops.stream.pojo
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "stream 构建详情模型")
+@Schema(name = "stream 构建详情模型")
 data class StreamModelDetail(
-    @Schema(description = "Stream流水线信息", required = true)
+    @Schema(name = "Stream流水线信息", required = true)
     val gitProjectPipeline: StreamGitProjectPipeline?,
-    @Schema(description = "stream Event事件", required = true)
+    @Schema(name = "stream Event事件", required = true)
     val gitRequestEvent: StreamGitRequestEventReq,
-    @Schema(description = "构建详情-构建信息", required = true)
+    @Schema(name = "构建详情-构建信息", required = true)
     val modelDetail: ModelRecord,
-    @Schema(description = "构建历史-备注信息")
+    @Schema(name = "构建历史-备注信息")
     val buildHistoryRemark: String? = null
 ) {
     init {

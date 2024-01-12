@@ -29,19 +29,19 @@ package com.tencent.devops.process.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线-用户信息")
+@Schema(name = "流水线-用户信息")
 data class PipelineUser(
-    @Schema(description = "主键ID", required = true)
+    @Schema(name = "主键ID", required = true)
     val id: Long,
-    @Schema(description = "流水线ID", required = true)
+    @Schema(name = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(description = "创建时间", required = true)
+    @Schema(name = "创建时间", required = true)
     val createTime: Long,
-    @Schema(description = "更新时间", required = true)
+    @Schema(name = "更新时间", required = true)
     val updateTime: Long,
-    @Schema(description = "创建人", required = true)
+    @Schema(name = "创建人", required = true)
     val creator: String,
-    @Schema(description = "修改人", required = true)
+    @Schema(name = "修改人", required = true)
     val modifier: String
 
 )

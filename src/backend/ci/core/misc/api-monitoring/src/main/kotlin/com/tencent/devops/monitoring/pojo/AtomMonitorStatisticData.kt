@@ -28,14 +28,14 @@ package com.tencent.devops.monitoring.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "插件监控统计数据")
+@Schema(name = "插件监控统计数据")
 data class AtomMonitorStatisticData(
-    @Schema(description = "插件标识", required = true)
+    @Schema(name = "插件标识", required = true)
     val atomCode: String,
-    @Schema(description = "执行成功总数量", required = true)
+    @Schema(name = "执行成功总数量", required = true)
     val totalSuccessNum: Int,
-    @Schema(description = "执行失败总数量", required = true)
+    @Schema(name = "执行失败总数量", required = true)
     val totalFailNum: Int,
-    @Schema(description = "执行失败详情", required = true)
+    @Schema(name = "执行失败详情", required = true)
     val totalFailDetail: AtomMonitorFailDetailData
 )

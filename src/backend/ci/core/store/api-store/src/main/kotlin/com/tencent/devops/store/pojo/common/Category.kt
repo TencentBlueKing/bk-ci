@@ -29,23 +29,23 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "范畴信息")
+@Schema(name = "范畴信息")
 data class Category(
-    @Schema(description = "范畴ID", required = true)
+    @Schema(name = "范畴ID", required = true)
     val id: String,
-    @Schema(description = "范畴代码", required = true)
+    @Schema(name = "范畴代码", required = true)
     val categoryCode: String,
-    @Schema(description = "范畴名称", required = true)
+    @Schema(name = "范畴名称", required = true)
     val categoryName: String,
-    @Schema(description = "范畴附加属性配置表", required = true)
+    @Schema(name = "范畴附加属性配置表", required = true)
     val settings: MutableMap<String, String> = HashMap(),
-    @Schema(description = "icon地址", required = false)
+    @Schema(name = "icon地址", required = false)
     val iconUrl: String?,
-    @Schema(description = "类别 ATOM:插件 TEMPLATE:模板 IMAGE:镜像 IDE_ATOM:IDE插件", required = true)
+    @Schema(name = "类别 ATOM:插件 TEMPLATE:模板 IMAGE:镜像 IDE_ATOM:IDE插件", required = true)
     val categoryType: String,
-    @Schema(description = "创建日期")
+    @Schema(name = "创建日期")
     val createTime: Long = 0,
-    @Schema(description = "更新日期")
+    @Schema(name = "更新日期")
     val updateTime: Long = 0
 
 )

@@ -29,8 +29,8 @@ package com.tencent.devops.repository.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "代码库模型-ID")
+@Schema(name = "代码库模型-ID")
 data class RepositoryId(
-    @Schema(description = "代码库哈希ID", required = true)
+    @Schema(name = "代码库哈希ID", required = true)
     val hashId: String
 )

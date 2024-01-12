@@ -30,10 +30,10 @@ package com.tencent.devops.auth.pojo.vo
 import com.tencent.devops.auth.pojo.BkUserInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "用户列表返回")
+@Schema(name = "用户列表返回")
 data class BkUserInfoVo(
-    @Schema(description = "数量")
+    @Schema(name = "数量")
     val count: Int,
-    @Schema(description = "返回的列表内容")
+    @Schema(name = "返回的列表内容")
     val results: List<BkUserInfo>
 )

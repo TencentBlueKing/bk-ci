@@ -29,12 +29,12 @@ package com.tencent.devops.dockerhost.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "DockerRunPortBinding")
+@Schema(name = "DockerRunPortBinding")
 data class DockerRunPortBinding(
-    @Schema(description = "构建机IP", required = true)
+    @Schema(name = "构建机IP", required = true)
     val hostIp: String,
-    @Schema(description = "容器Port", required = true)
+    @Schema(name = "容器Port", required = true)
     val containerPort: Int,
-    @Schema(description = "构建机Port", required = true)
+    @Schema(name = "构建机Port", required = true)
     val hostPort: Int
 )

@@ -31,82 +31,82 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("ALL")
-@Schema(description = "项目信息请求实体")
+@Schema(name = "项目信息请求实体")
 data class OpProjectUpdateInfoRequest(
     @JsonProperty(value = "project_id", required = true)
-    @Schema(description = "项目ID", name = "project_id")
+    @Schema(name = "项目ID", description = "project_id")
     val projectId: String,
-    @Schema(description = "项目名称", name = "project_name")
+    @Schema(name = "项目名称", description = "project_name")
     @JsonProperty(value = "project_name", required = true)
     val projectName: String,
     @JsonProperty(value = "bg_id", required = true)
-    @Schema(description = "项目所属一级机构ID", name = "bg_id")
+    @Schema(name = "项目所属一级机构ID", description = "bg_id")
     val bgId: Long,
     @JsonProperty(value = "bg_name", required = true)
-    @Schema(description = "项目所属一级机构名称", name = "bg_name")
+    @Schema(name = "项目所属一级机构名称", description = "bg_name")
     val bgName: String,
     @JsonProperty(value = "business_line_id", required = true)
-    @Schema(description = "业务线ID")
+    @Schema(name = "业务线ID")
     val businessLineId: Long? = null,
     @JsonProperty(value = "business_line_name", required = true)
-    @Schema(description = "业务线名称")
+    @Schema(name = "业务线名称")
     val businessLineName: String? = "",
     @JsonProperty(value = "dept_id", required = true)
-    @Schema(description = "项目所属二级机构ID", name = "dept_id")
+    @Schema(name = "项目所属二级机构ID", description = "dept_id")
     val deptId: Long,
     @JsonProperty(value = "dept_name", required = true)
-    @Schema(description = "项目所属二级机构名称", name = "dept_name")
+    @Schema(name = "项目所属二级机构名称", description = "dept_name")
     val deptName: String,
     @JsonProperty(value = "center_id", required = true)
-    @Schema(description = "项目所属三级机构ID", name = "center_id")
+    @Schema(name = "项目所属三级机构ID", description = "center_id")
     val centerId: Long,
     @JsonProperty(value = "center_name", required = true)
-    @Schema(description = "项目所属三级机构名称", name = "center_name")
+    @Schema(name = "项目所属三级机构名称", description = "center_name")
     val centerName: String,
     @JsonProperty(value = "project_type", required = true)
-    @Schema(description = "项目类型", name = "project_type")
+    @Schema(name = "项目类型", description = "project_type")
     val projectType: Int,
     @JsonProperty(value = "approver", required = false)
-    @Schema(description = "审批人", name = "approver")
+    @Schema(name = "审批人", description = "approver")
     var approver: String?,
     @JsonProperty(value = "updator", required = true)
-    @Schema(description = "更新人", name = "updator")
+    @Schema(name = "更新人", description = "updator")
     var updator: String,
     @JsonProperty(value = "approval_status", required = true)
-    @Schema(description = "审批状态", name = "approval_status")
+    @Schema(name = "审批状态", description = "approval_status")
     val approvalStatus: Int,
     @JsonProperty(value = "approval_time", required = false)
-    @Schema(description = "审批时间", name = "approval_time")
+    @Schema(name = "审批时间", description = "approval_time")
     var approvalTime: Long?,
     @JsonProperty(value = "is_secrecy", required = true)
-    @Schema(description = "保密性", name = "is_secrecy")
+    @Schema(name = "保密性", description = "is_secrecy")
     val secrecyFlag: Boolean,
     @JsonProperty(value = "cc_app_id", required = false)
-    @Schema(description = "应用ID", name = "cc_app_id")
+    @Schema(name = "应用ID", description = "cc_app_id")
     val ccAppId: Long?,
-    @Schema(description = "名称")
+    @Schema(name = "名称")
     var cc_app_name: String?,
-    @Schema(description = "容器类型， 1 - k8s; 2 - mesos")
+    @Schema(name = "容器类型， 1 - k8s; 2 - mesos")
     val kind: Int?,
     @JsonProperty(value = "enabled")
-    @Schema(description = "启用", name = "enabled")
+    @Schema(name = "启用", description = "enabled")
     val enabled: Boolean,
     @JsonProperty(value = "use_bk", required = true)
-    @Schema(description = "是否用蓝鲸", name = "use_bk")
+    @Schema(name = "是否用蓝鲸", description = "use_bk")
     val useBk: Boolean,
     @JsonProperty(value = "labelIdList", required = false)
-    @Schema(description = "标签id集合", name = "labelIdList")
+    @Schema(name = "标签id集合", description = "labelIdList")
     val labelIdList: List<String>?,
-    @Schema(description = "混合云CC业务ID")
+    @Schema(name = "混合云CC业务ID")
     val hybridCCAppId: Long?,
-    @Schema(description = "支持构建机访问外网")
+    @Schema(name = "支持构建机访问外网")
     val enableExternal: Boolean?,
-    @Schema(description = value = "支持IDC构建机", required = false)
+    @Schema(name = "支持IDC构建机", required = false)
     val enableIdc: Boolean? = false,
-    @Schema(description = value = "流水线数量上限", required = false)
+    @Schema(name = "流水线数量上限", required = false)
     val pipelineLimit: Int? = 500,
-    @Schema(description = "项目相关配置")
+    @Schema(name = "项目相关配置")
     val properties: ProjectProperties? = null,
-    @Schema(description = "运营产品id")
+    @Schema(name = "运营产品id")
     val productId: Int? = null
 )

@@ -28,14 +28,14 @@ package com.tencent.devops.notify.pojo.messageTemplate
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "模板配置信息")
+@Schema(name = "模板配置信息")
 data class WechatMessageTemplate(
-    @Schema(description = "模板ID", required = true)
+    @Schema(name = "模板ID", required = true)
     val id: String,
-    @Schema(description = "标题", required = false)
+    @Schema(name = "标题", required = false)
     var title: String?,
-    @Schema(description = "内容", required = true)
+    @Schema(name = "内容", required = true)
     var body: String,
-    @Schema(description = "发送者", required = true)
+    @Schema(name = "发送者", required = true)
     val sender: String
 )

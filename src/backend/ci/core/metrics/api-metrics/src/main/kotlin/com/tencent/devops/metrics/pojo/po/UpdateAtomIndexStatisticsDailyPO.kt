@@ -30,16 +30,16 @@ package com.tencent.devops.metrics.pojo.po
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(description = "更新插件指标每日统计数据")
+@Schema(name = "更新插件指标每日统计数据")
 data class UpdateAtomIndexStatisticsDailyPO(
-    @Schema(description = "主键ID")
+    @Schema(name = "主键ID")
     val id: Long,
-    @Schema(description = "失败执行次数")
+    @Schema(name = "失败执行次数")
     var failExecuteCount: Int,
-    @Schema(description = "失败合规次数")
+    @Schema(name = "失败合规次数")
     var failComplianceCount: Int,
-    @Schema(description = "修改人")
+    @Schema(name = "修改人")
     val modifier: String,
-    @Schema(description = "更新时间")
+    @Schema(name = "更新时间")
     val updateTime: LocalDateTime
 )

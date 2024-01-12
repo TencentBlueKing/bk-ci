@@ -35,70 +35,70 @@ import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("ReturnCount")
-@Schema(description = "流水线模型-普通任务容器")
+@Schema(name = "流水线模型-普通任务容器")
 data class NormalContainer(
-    @Schema(description = "构建容器序号id", required = false, readOnly = true)
+    @Schema(name = "构建容器序号id", required = false, readOnly = true)
     override var id: String? = null,
-    @Schema(description = "容器名称", required = true)
+    @Schema(name = "容器名称", required = true)
     override var name: String = "",
-    @Schema(description = "任务集合", required = true)
+    @Schema(name = "任务集合", required = true)
     override var elements: List<Element> = listOf(),
-    @Schema(description = "容器状态", required = false, readOnly = true)
+    @Schema(name = "容器状态", required = false, readOnly = true)
     override var status: String? = null,
-    @Schema(description = "系统运行时间", required = false, readOnly = true)
+    @Schema(name = "系统运行时间", required = false, readOnly = true)
     @Deprecated("即将被timeCost代替")
     override var startEpoch: Long? = null,
-    @Schema(description = "系统耗时（开机时间）", required = false, readOnly = true)
+    @Schema(name = "系统耗时（开机时间）", required = false, readOnly = true)
     @Deprecated("即将被timeCost代替")
     override var systemElapsed: Long? = null,
-    @Schema(description = "插件执行耗时", required = false, readOnly = true)
+    @Schema(name = "插件执行耗时", required = false, readOnly = true)
     @Deprecated("即将被timeCost代替")
     override var elementElapsed: Long? = null,
-    @Schema(description = "允许可跳过", required = false)
+    @Schema(name = "允许可跳过", required = false)
     @Deprecated(message = "do not use", replaceWith = ReplaceWith("JobControlOption.runCondition"))
     val enableSkip: Boolean? = false,
-    @Schema(description = "触发条件", required = false)
+    @Schema(name = "触发条件", required = false)
     @Deprecated(message = "do not use", replaceWith = ReplaceWith("@see JobControlOption.customVariables"))
     val conditions: List<NameAndValue>? = null,
-    @Schema(description =
+    @Schema(name =
         "是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储",
         required = false,
         readOnly = true
     )
     override var canRetry: Boolean? = null,
-    @Schema(description = "构建容器顺序ID（同id值）", required = false, readOnly = true)
+    @Schema(name = "构建容器顺序ID（同id值）", required = false, readOnly = true)
     override var containerId: String? = null,
-    @Schema(description = "容器唯一ID", required = false, readOnly = true)
+    @Schema(name = "容器唯一ID", required = false, readOnly = true)
     override var containerHashId: String? = null,
-    @Schema(description = "无构建环境-等待运行环境启动的排队最长时间(分钟)", required = false)
+    @Schema(name = "无构建环境-等待运行环境启动的排队最长时间(分钟)", required = false)
     @Deprecated(message = "do not use")
     val maxQueueMinutes: Int = 60,
-    @Schema(description = "无构建环境-运行最长时间(分钟)", required = false)
+    @Schema(name = "无构建环境-运行最长时间(分钟)", required = false)
     @Deprecated(message = "@see JobControlOption.timeout")
     val maxRunningMinutes: Int = 1440,
-    @Schema(description = "流程控制选项", required = true)
+    @Schema(name = "流程控制选项", required = true)
     var jobControlOption: JobControlOption? = null, // 为了兼容旧数据，所以定义为可空以及var
-    @Schema(description = "互斥组", required = false)
+    @Schema(name = "互斥组", required = false)
     var mutexGroup: MutexGroup? = null, // 为了兼容旧数据，所以定义为可空以及var
-    @Schema(description = "构建环境启动状态", required = false, readOnly = true)
+    @Schema(name = "构建环境启动状态", required = false, readOnly = true)
     override var startVMStatus: String? = null,
-    @Schema(description = "容器运行次数", required = false, readOnly = true)
+    @Schema(name = "容器运行次数", required = false, readOnly = true)
     override var executeCount: Int? = null,
-    @Schema(description = "用户自定义ID", required = false, hidden = false)
+    @Schema(name = "用户自定义ID", required = false, hidden = false)
     override val jobId: String? = null,
-    @Schema(description = "是否包含post任务标识", required = false, readOnly = true)
+    @Schema(name = "是否包含post任务标识", required = false, readOnly = true)
     override var containPostTaskFlag: Boolean? = null,
-    @Schema(description = "是否为构建矩阵", required = false, readOnly = true)
+    @Schema(name = "是否为构建矩阵", required = false, readOnly = true)
     override var matrixGroupFlag: Boolean? = false,
-    @Schema(description = "各项耗时", required = true)
+    @Schema(name = "各项耗时", required = true)
     override var timeCost: BuildRecordTimeCost? = null,
-    @Schema(description = "构建矩阵配置项", required = false)
+    @Schema(name = "构建矩阵配置项", required = false)
     var matrixControlOption: MatrixControlOption? = null,
-    @Schema(description = "所在构建矩阵组的containerHashId（分裂后的子容器特有字段）", required = false)
+    @Schema(name = "所在构建矩阵组的containerHashId（分裂后的子容器特有字段）", required = false)
     var matrixGroupId: String? = null,
-    @Schema(description = "当前矩阵子容器的上下文组合（分裂后的子容器特有字段）", required = false)
+    @Schema(name = "当前矩阵子容器的上下文组合（分裂后的子容器特有字段）", required = false)
     var matrixContext: Map<String, String>? = null,
-    @Schema(description = "分裂后的容器集合（分裂后的父容器特有字段）", required = false)
+    @Schema(name = "分裂后的容器集合（分裂后的父容器特有字段）", required = false)
     var groupContainers: MutableList<NormalContainer>? = null
 ) : Container {
     companion object {

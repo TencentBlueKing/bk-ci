@@ -31,18 +31,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  */
-@Schema(description = "虚拟机主机任务信息")
+@Schema(name = "虚拟机主机任务信息")
 data class Task(
-    @Schema(description = "主机任务 ID", required = true)
+    @Schema(name = "主机任务 ID", required = true)
     val id: Int,
-    @Schema(description = "主机任务名字", required = true)
+    @Schema(name = "主机任务名字", required = true)
     val name: String,
-    @Schema(description = "主机任务 脚本", required = true)
+    @Schema(name = "主机任务 脚本", required = true)
     val script: String,
-    @Schema(description = "主机任务 开始时间", required = true)
+    @Schema(name = "主机任务 开始时间", required = true)
     val beginTime: Long,
-    @Schema(description = "主机任务 结束时间", required = true)
+    @Schema(name = "主机任务 结束时间", required = true)
     val endTime: Long?,
-    @Schema(description = "主机任务 状态", required = true)
+    @Schema(name = "主机任务 状态", required = true)
     val status: Byte
 )

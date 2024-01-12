@@ -30,13 +30,13 @@ package com.tencent.devops.auth.pojo
 import com.fasterxml.jackson.annotation.JsonIgnore
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "数据返回包装模型")
+@Schema(name = "数据返回包装模型")
 data class BkResult<out T>(
-    @Schema(description = "状态码", required = true)
+    @Schema(name = "状态码", required = true)
     val code: Int,
-    @Schema(description = "错误信息", required = false)
+    @Schema(name = "错误信息", required = false)
     val message: String? = null,
-    @Schema(description = "数据", required = false)
+    @Schema(name = "数据", required = false)
     val data: T? = null
 ) {
     constructor(data: T) : this(0, null, data)

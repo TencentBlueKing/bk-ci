@@ -31,26 +31,26 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonInclude(JsonInclude.Include.ALWAYS)
-@Schema(description = "质量红线-(模板/指标集)配置展示信息")
+@Schema(name = "质量红线-(模板/指标集)配置展示信息")
 data class TemplateUpdate(
-    @Schema(description = "模板名称")
+    @Schema(name = "模板名称")
     val name: String?,
-    @Schema(description = "模板类型(指标集, 模板)")
+    @Schema(name = "模板类型(指标集, 模板)")
     val type: String?,
-    @Schema(description = "描述")
+    @Schema(name = "描述")
     val desc: String?,
-    @Schema(description = "可见范围类型(ANY, PART_BY_NAME)")
+    @Schema(name = "可见范围类型(ANY, PART_BY_NAME)")
     val range: String?,
-    @Schema(description = "ANY-项目ID集合, PART_BY_NAME-空集合")
+    @Schema(name = "ANY-项目ID集合, PART_BY_NAME-空集合")
     val rangeIdentification: String?,
-    @Schema(description = "研发环节")
+    @Schema(name = "研发环节")
     val stage: String?,
-    @Schema(description = "原子的ClassType")
+    @Schema(name = "原子的ClassType")
     val elementType: String?,
-    @Schema(description = "原子名称")
+    @Schema(name = "原子名称")
     val elementName: String?,
-    @Schema(description = "红线位置(BEFORE, AFTER)")
+    @Schema(name = "红线位置(BEFORE, AFTER)")
     val controlPointPostion: String?,
-    @Schema(description = "是否可用")
+    @Schema(name = "是否可用")
     val enable: Boolean?
 )

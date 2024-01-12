@@ -29,10 +29,10 @@ package com.tencent.devops.dispatch.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "VM-分页-基本信息")
+@Schema(name = "VM-分页-基本信息")
 data class VMWithPage(
-    @Schema(description = "VM总数", required = true)
+    @Schema(name = "VM总数", required = true)
     val total: Int,
-    @Schema(description = "VM列表", required = true)
+    @Schema(name = "VM列表", required = true)
     val vms: List<VMResponse>
 )

@@ -29,14 +29,14 @@ package com.tencent.devops.environment.pojo.thirdPartyAgent
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "Agent活动（上下线）")
+@Schema(name = "Agent活动（上下线）")
 data class ThirdPartyAgentAction(
-    @Schema(description = "Agent Hash Id", required = true)
+    @Schema(name = "Agent Hash Id", required = true)
     val agentId: String,
-    @Schema(description = "项目ID", required = true)
+    @Schema(name = "项目ID", required = true)
     val projectId: String,
-    @Schema(description = "活动", required = true)
+    @Schema(name = "活动", required = true)
     val action: String,
-    @Schema(description = "活动时间", required = true)
+    @Schema(name = "活动时间", required = true)
     val actionTime: Long
 )

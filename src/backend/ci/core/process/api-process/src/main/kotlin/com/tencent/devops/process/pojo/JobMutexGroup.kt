@@ -29,8 +29,8 @@ package com.tencent.devops.process.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "Job互斥组模型-列表信息")
+@Schema(name = "Job互斥组模型-列表信息")
 data class JobMutexGroup(
-    @Schema(description = "Job互斥组名字", required = true)
+    @Schema(name = "Job互斥组名字", required = true)
     val jobMutexGroupName: String
 )

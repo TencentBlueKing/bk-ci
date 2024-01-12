@@ -33,28 +33,28 @@ import io.swagger.v3.oas.annotations.media.Schema
  * @Date 2019/9/17
  * @Version 1.0
  */
-@Schema(description = "镜像范畴")
+@Schema(name = "镜像范畴")
 data class Category(
 
-    @Schema(description = "范畴ID", required = true)
+    @Schema(name = "范畴ID", required = true)
     val id: String,
 
-    @Schema(description = "范畴代码", required = true)
+    @Schema(name = "范畴代码", required = true)
     val categoryCode: String,
 
-    @Schema(description = "范畴名称", required = true)
+    @Schema(name = "范畴名称", required = true)
     val categoryName: String,
 
-    @Schema(description = "类别 ATOM:插件,TEMPLATE:模板,IMAGE:镜像", required = true)
+    @Schema(name = "类别 ATOM:插件,TEMPLATE:模板,IMAGE:镜像", required = true)
     val categoryType: String,
 
-    @Schema(description = "范畴图标链接", required = true)
+    @Schema(name = "范畴图标链接", required = true)
     val iconUrl: String,
 
-    @Schema(description = "创建时间", required = true)
+    @Schema(name = "创建时间", required = true)
     val createTime: Long,
 
-    @Schema(description = "修改时间", required = true)
+    @Schema(name = "修改时间", required = true)
     val updateTime: Long
 
 )

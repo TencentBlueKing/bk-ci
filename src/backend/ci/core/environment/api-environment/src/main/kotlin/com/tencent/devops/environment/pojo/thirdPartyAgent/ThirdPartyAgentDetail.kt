@@ -30,64 +30,64 @@ package com.tencent.devops.environment.pojo.thirdPartyAgent
 import com.tencent.devops.common.api.pojo.agent.NewHeartbeatInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "第三方构建集详情")
+@Schema(name = "第三方构建集详情")
 data class ThirdPartyAgentDetail(
-    @Schema(description = "Agent Hash ID", required = true)
+    @Schema(name = "Agent Hash ID", required = true)
     val agentId: String,
-    @Schema(description = "Node Hash ID", required = true)
+    @Schema(name = "Node Hash ID", required = true)
     val nodeId: String,
-    @Schema(description = "节点名称", required = true)
+    @Schema(name = "节点名称", required = true)
     val displayName: String,
-    @Schema(description = "项目ID", required = true)
+    @Schema(name = "项目ID", required = true)
     val projectId: String,
-    @Schema(description = "状态", required = true)
+    @Schema(name = "状态", required = true)
     val status: String,
-    @Schema(description = "主机名", required = true)
+    @Schema(name = "主机名", required = true)
     val hostname: String,
-    @Schema(description = "操作系统 | LINUX MACOS WINDOWS", required = true)
+    @Schema(name = "操作系统 | LINUX MACOS WINDOWS", required = true)
     val os: String,
-    @Schema(description = "操作系统", required = true)
+    @Schema(name = "操作系统", required = true)
     val osName: String,
-    @Schema(description = "IP地址", required = true)
+    @Schema(name = "IP地址", required = true)
     val ip: String,
-    @Schema(description = "导入人", required = true)
+    @Schema(name = "导入人", required = true)
     val createdUser: String,
-    @Schema(description = "导入时间", required = true)
+    @Schema(name = "导入时间", required = true)
     val createdTime: String,
-    @Schema(description = "Agent版本", required = true)
+    @Schema(name = "Agent版本", required = true)
     val agentVersion: String,
-    @Schema(description = "Worker版本", required = true)
+    @Schema(name = "Worker版本", required = true)
     val slaveVersion: String,
-    @Schema(description = "agent安装路径", required = true)
+    @Schema(name = "agent安装路径", required = true)
     val agentInstallPath: String,
-    @Schema(description = "最大通道数量", required = true)
+    @Schema(name = "最大通道数量", required = true)
     val maxParallelTaskCount: String,
-    @Schema(description = "通道数量", required = true)
+    @Schema(name = "通道数量", required = true)
     val parallelTaskCount: String,
-    @Schema(description = "docker构建机通道数量", required = true)
+    @Schema(name = "docker构建机通道数量", required = true)
     val dockerParallelTaskCount: String,
-    @Schema(description = "启动用户", required = true)
+    @Schema(name = "启动用户", required = true)
     val startedUser: String,
-    @Schema(description = "agent链接", required = true)
+    @Schema(name = "agent链接", required = true)
     val agentUrl: String,
-    @Schema(description = "agent安装脚本", required = true)
+    @Schema(name = "agent安装脚本", required = true)
     val agentScript: String,
-    @Schema(description = "最新心跳时间", required = true)
+    @Schema(name = "最新心跳时间", required = true)
     val lastHeartbeatTime: String,
-    @Schema(description = "CPU 核数", required = true)
+    @Schema(name = "CPU 核数", required = true)
     val ncpus: String, // nCpus 序列化JSON会变成 ncpus，但JSON反序列化对象时，nCpus字段不认ncpus
-    @Schema(description = "内存", required = true)
+    @Schema(name = "内存", required = true)
     val memTotal: String,
-    @Schema(description = "硬盘空间（最大盘）", required = true)
+    @Schema(name = "硬盘空间（最大盘）", required = true)
     val diskTotal: String,
-    @Schema(description = "是否可以编辑", required = false)
+    @Schema(name = "是否可以编辑", required = false)
     var canEdit: Boolean? = false,
-    @Schema(description = "当前Agent版本", required = false)
+    @Schema(name = "当前Agent版本", required = false)
     val currentAgentVersion: String? = "",
-    @Schema(description = "当前Worker版本", required = false)
+    @Schema(name = "当前Worker版本", required = false)
     val currentWorkerVersion: String? = "",
-    @Schema(description = "心跳信息", required = false)
+    @Schema(name = "心跳信息", required = false)
     var heartbeatInfo: NewHeartbeatInfo? = null,
-    @Schema(description = "错误退出信息", required = false)
+    @Schema(name = "错误退出信息", required = false)
     val exitErrorMsg: String? = null
 )

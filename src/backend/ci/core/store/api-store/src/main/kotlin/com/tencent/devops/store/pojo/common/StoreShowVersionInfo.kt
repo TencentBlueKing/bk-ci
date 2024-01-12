@@ -29,8 +29,8 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "回显版本详情")
+@Schema(name = "回显版本详情")
 data class StoreShowVersionInfo(
-    @Schema(description = "回显版本信息列表", required = true)
+    @Schema(name = "回显版本信息列表", required = true)
     val showVersionList: List<StoreShowVersionItem>
 )

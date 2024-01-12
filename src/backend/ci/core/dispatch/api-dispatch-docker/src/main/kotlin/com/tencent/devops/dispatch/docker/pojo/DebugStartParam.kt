@@ -33,32 +33,32 @@ import io.swagger.v3.oas.annotations.media.Schema
 /**
  * DebugStartParam
  */
-@Schema(description = "启动webConsole调试请求参数")
+@Schema(name = "启动webConsole调试请求参数")
 data class DebugStartParam(
-    @Schema(description = "项目id", required = true)
+    @Schema(name = "项目id", required = true)
     val projectId: String,
-    @Schema(description = "流水线Id", required = true)
+    @Schema(name = "流水线Id", required = true)
     val pipelineId: String,
-    @Schema(description = "vmSeqId", required = true)
+    @Schema(name = "vmSeqId", required = true)
     val vmSeqId: String,
-    @Schema(description = "imageType为BKSTORE时的镜像编码", required = false)
+    @Schema(name = "imageType为BKSTORE时的镜像编码", required = false)
     val imageCode: String? = null,
-    @Schema(description = "imageType为BKSTORE时的镜像版本", required = false)
+    @Schema(name = "imageType为BKSTORE时的镜像版本", required = false)
     val imageVersion: String? = null,
-    @Schema(description = "镜像名称", required = false)
+    @Schema(name = "镜像名称", required = false)
     val imageName: String? = null,
-    @Schema(description = "环境变量", required = true)
+    @Schema(name = "环境变量", required = true)
     val buildEnv: Map<String, String>?,
-    @Schema(description = "镜像类型(BKDEVOPS或THIRD或BKSTORE)", required = false)
+    @Schema(name = "镜像类型(BKDEVOPS或THIRD或BKSTORE)", required = false)
     val imageType: String? = null,
-    @Schema(description = "镜像仓库凭证ID", required = false)
+    @Schema(name = "镜像仓库凭证ID", required = false)
     val credentialId: String? = null,
-    @Schema(description = "启动命令", required = false)
+    @Schema(name = "启动命令", required = false)
     val cmd: String? = "/bin/sh",
-    @Schema(description = "镜像信息", required = false)
+    @Schema(name = "镜像信息", required = false)
     val containerPool: String? = null,
-    @Schema(description = "buildId", required = false)
+    @Schema(name = "buildId", required = false)
     val buildId: String? = null,
-    @Schema(description = "dispatchType", required = false)
+    @Schema(name = "dispatchType", required = false)
     val dispatchType: String = BuildType.DOCKER.name
 )

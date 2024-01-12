@@ -29,10 +29,10 @@ package com.tencent.devops.dispatch.docker.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "docker构建路由模型")
+@Schema(name = "docker构建路由模型")
 data class DockerRoutingVO(
-    @Schema(description = "项目id")
+    @Schema(name = "项目id")
     val projectId: String,
-    @Schema(description = "路由类型")
+    @Schema(name = "路由类型")
     val dockerRoutingType: String
 )

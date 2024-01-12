@@ -29,20 +29,20 @@ package com.tencent.devops.image.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "推送镜像任务返回模型")
+@Schema(name = "推送镜像任务返回模型")
 data class PushImageTask(
-    @Schema(description = "任务id")
+    @Schema(name = "任务id")
     var taskId: String,
-    @Schema(description = "项目id")
+    @Schema(name = "项目id")
     var projectId: String,
-    @Schema(description = "操作者")
+    @Schema(name = "操作者")
     var operator: String,
-    @Schema(description = "创建时间戳")
+    @Schema(name = "创建时间戳")
     var createdTime: Long,
-    @Schema(description = "更新时间戳")
+    @Schema(name = "更新时间戳")
     var updatedTime: Long,
-    @Schema(description = "任务状态")
+    @Schema(name = "任务状态")
     var taskStatus: String,
-    @Schema(description = "任务返回信息")
+    @Schema(name = "任务返回信息")
     var taskMessage: String
 )

@@ -30,19 +30,19 @@ package com.tencent.devops.metrics.pojo.vo
 import io.swagger.v3.oas.annotations.media.Schema
 import kotlin.math.ceil
 
-@Schema(description = "动态列表分页数据包装模型")
+@Schema(name = "动态列表分页数据包装模型")
 data class ListPageVO<out T>(
-    @Schema(description = "总记录行数", required = true)
+    @Schema(name = "总记录行数", required = true)
     val count: Long,
-    @Schema(description = "第几页", required = true)
+    @Schema(name = "第几页", required = true)
     val page: Int,
-    @Schema(description = "每页多少条", required = true)
+    @Schema(name = "每页多少条", required = true)
     val pageSize: Int,
-    @Schema(description = "总共多少页", required = true)
+    @Schema(name = "总共多少页", required = true)
     val totalPages: Int,
-    @Schema(description = "列表头部集合", required = true)
+    @Schema(name = "列表头部集合", required = true)
     val headerInfo: Map<String, String>,
-    @Schema(description = "数据", required = true)
+    @Schema(name = "数据", required = true)
     val records: List<T>
 ) {
     constructor(page: Int = 1, pageSize: Int = 10, count: Long, headerInfo: Map<String, String>, records: List<T>) :

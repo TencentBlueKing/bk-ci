@@ -29,10 +29,10 @@ package com.tencent.devops.metrics.pojo.`do`
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "插件错误码统计信息")
+@Schema(name = "插件错误码统计信息")
 data class AtomErrorCodeStatisticsInfoDO(
-    @Schema(description = "错误码信息")
+    @Schema(name = "错误码信息")
     val errorCodeInfo: ErrorCodeInfoDO,
-    @Schema(description = "错误次数")
+    @Schema(name = "错误次数")
     val errorCount: Long
 )

@@ -30,35 +30,35 @@ package com.tencent.devops.artifactory.pojo
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "版本仓库-文件信息")
+@Schema(name = "版本仓库-文件信息")
 data class FileInfo(
-    @Schema(description = "文件名", required = true)
+    @Schema(name = "文件名", required = true)
     val name: String,
-    @Schema(description = "文件全名", required = true)
+    @Schema(name = "文件全名", required = true)
     val fullName: String,
-    @Schema(description = "文件路径", required = true)
+    @Schema(name = "文件路径", required = true)
     val path: String,
-    @Schema(description = "文件全路径", required = true)
+    @Schema(name = "文件全路径", required = true)
     val fullPath: String,
-    @Schema(description = "文件大小(byte)", required = true)
+    @Schema(name = "文件大小(byte)", required = true)
     val size: Long,
-    @Schema(description = "是否文件夹", required = true)
+    @Schema(name = "是否文件夹", required = true)
     val folder: Boolean,
-    @Schema(description = "更新时间", required = true)
+    @Schema(name = "更新时间", required = true)
     val modifiedTime: Long,
-    @Schema(description = "仓库类型", required = true)
+    @Schema(name = "仓库类型", required = true)
     val artifactoryType: ArtifactoryType,
-    @Schema(description = "元数据", required = true)
+    @Schema(name = "元数据", required = true)
     val properties: List<Property>?,
-    @Schema(description = "app版本", required = true)
+    @Schema(name = "app版本", required = true)
     val appVersion: String? = null,
-    @Schema(description = "下载短链接", required = true)
+    @Schema(name = "下载短链接", required = true)
     val shortUrl: String? = null,
-    @Schema(description = "下载链接", required = false)
+    @Schema(name = "下载链接", required = false)
     var downloadUrl: String? = null,
-    @Schema(description = "MD5", required = false)
+    @Schema(name = "MD5", required = false)
     var md5: String? = null,
-    @Schema(description = "docker registry", required = false)
+    @Schema(name = "docker registry", required = false)
     var registry: String? = null
 ) : Comparable<FileInfo> {
     constructor(

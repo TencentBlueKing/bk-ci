@@ -31,18 +31,18 @@ import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeSource
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "环境信息")
+@Schema(name = "环境信息")
 data class EnvCreateInfo(
-    @Schema(description = "环境名称", required = true)
+    @Schema(name = "环境名称", required = true)
     val name: String,
-    @Schema(description = "环境描述", required = true)
+    @Schema(name = "环境描述", required = true)
     val desc: String,
-    @Schema(description = "环境类型（开发环境{DEV}|测试环境{TEST}|构建环境{BUILD}）", required = true)
+    @Schema(name = "环境类型（开发环境{DEV}|测试环境{TEST}|构建环境{BUILD}）", required = true)
     val envType: EnvType,
-    @Schema(description = "环境变量", required = false)
+    @Schema(name = "环境变量", required = false)
     val envVars: List<EnvVar>?,
-    @Schema(description = "节点来源（已有节点{EXISTING}|快速生成{CREATE}）", required = true)
+    @Schema(name = "节点来源（已有节点{EXISTING}|快速生成{CREATE}）", required = true)
     val source: NodeSource,
-    @Schema(description = "节点 HashId 列表", required = false)
+    @Schema(name = "节点 HashId 列表", required = false)
     val nodeHashIds: List<String>?
 )

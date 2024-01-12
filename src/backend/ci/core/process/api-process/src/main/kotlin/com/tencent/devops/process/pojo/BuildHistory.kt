@@ -33,64 +33,64 @@ import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.process.pojo.code.WebhookInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "历史构建模型")
+@Schema(name = "历史构建模型")
 data class BuildHistory(
-    @Schema(description = "构建ID", required = true)
+    @Schema(name = "构建ID", required = true)
     val id: String,
-    @Schema(description = "启动用户", required = true)
+    @Schema(name = "启动用户", required = true)
     val userId: String,
-    @Schema(description = "触发条件", required = true)
+    @Schema(name = "触发条件", required = true)
     val trigger: String,
-    @Schema(description = "构建号", required = true)
+    @Schema(name = "构建号", required = true)
     val buildNum: Int?,
-    @Schema(description = "编排文件版本号", required = true)
+    @Schema(name = "编排文件版本号", required = true)
     val pipelineVersion: Int,
-    @Schema(description = "流水线的执行开始时间", required = true)
+    @Schema(name = "流水线的执行开始时间", required = true)
     val startTime: Long,
-    @Schema(description = "流水线的执行结束时间", required = true)
+    @Schema(name = "流水线的执行结束时间", required = true)
     val endTime: Long?,
-    @Schema(description = "状态", required = true)
+    @Schema(name = "状态", required = true)
     val status: String,
-    @Schema(description = "各阶段状态", required = true)
+    @Schema(name = "各阶段状态", required = true)
     val stageStatus: List<BuildStageStatus>?,
-    @Schema(description = "服务器当前时间戳", required = true)
+    @Schema(name = "服务器当前时间戳", required = true)
     val currentTimestamp: Long,
-    @Schema(description = "是否是手机启动", required = false)
+    @Schema(name = "是否是手机启动", required = false)
     val isMobileStart: Boolean = false,
-    @Schema(description = "原材料", required = false)
+    @Schema(name = "原材料", required = false)
     val material: List<PipelineBuildMaterial>?,
-    @Schema(description = "排队于（毫秒时间戳）", required = false)
+    @Schema(name = "排队于（毫秒时间戳）", required = false)
     val queueTime: Long?,
-    @Schema(description = "构件列表", required = false)
+    @Schema(name = "构件列表", required = false)
     val artifactList: List<FileInfo>?,
-    @Schema(description = "备注", required = false)
+    @Schema(name = "备注", required = false)
     val remark: String?,
-    @Schema(description = "总耗时(毫秒)", required = false)
+    @Schema(name = "总耗时(毫秒)", required = false)
     val totalTime: Long?,
-    @Schema(description = "运行耗时(毫秒，不包括人工审核时间)", required = false)
+    @Schema(name = "运行耗时(毫秒，不包括人工审核时间)", required = false)
     val executeTime: Long?,
-    @Schema(description = "启动参数", required = false)
+    @Schema(name = "启动参数", required = false)
     val buildParameters: List<BuildParameters>?,
-    @Schema(description = "WebHookType", required = false)
+    @Schema(name = "WebHookType", required = false)
     val webHookType: String?,
-    @Schema(description = "webhookInfo", required = false)
+    @Schema(name = "webhookInfo", required = false)
     val webhookInfo: WebhookInfo?,
-    @Schema(description = "启动类型(新)", required = false)
+    @Schema(name = "启动类型(新)", required = false)
     val startType: String?,
-    @Schema(description = "推荐版本号", required = false)
+    @Schema(name = "推荐版本号", required = false)
     val recommendVersion: String?,
-    @Schema(description = "是否重试", required = false)
+    @Schema(name = "是否重试", required = false)
     val retry: Boolean = false,
-    @Schema(description = "流水线任务执行错误", required = false)
+    @Schema(name = "流水线任务执行错误", required = false)
     var errorInfoList: List<ErrorInfo>?,
-    @Schema(description = "构建信息", required = false)
+    @Schema(name = "构建信息", required = false)
     var buildMsg: String?,
-    @Schema(description = "自定义构建版本号", required = false)
+    @Schema(name = "自定义构建版本号", required = false)
     val buildNumAlias: String? = null,
-    @Schema(description = "流水线编排的最后更新时间", required = false)
+    @Schema(name = "流水线编排的最后更新时间", required = false)
     val updateTime: Long? = null,
-    @Schema(description = "并发时,设定的group", required = false)
+    @Schema(name = "并发时,设定的group", required = false)
     var concurrencyGroup: String? = null,
-    @Schema(description = "构建执行次数（重试次数-1）", required = false)
+    @Schema(name = "构建执行次数（重试次数-1）", required = false)
     val executeCount: Int?
 )

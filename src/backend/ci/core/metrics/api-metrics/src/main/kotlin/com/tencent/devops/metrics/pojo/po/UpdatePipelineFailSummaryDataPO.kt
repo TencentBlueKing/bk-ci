@@ -30,16 +30,16 @@ package com.tencent.devops.metrics.pojo.po
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(description = "更新流水线失败汇总数据")
+@Schema(name = "更新流水线失败汇总数据")
 data class UpdatePipelineFailSummaryDataPO(
-    @Schema(description = "主键ID")
+    @Schema(name = "主键ID")
     val id: Long,
-    @Schema(description = "项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @Schema(description = "错误次数")
+    @Schema(name = "错误次数")
     val errorCount: Int,
-    @Schema(description = "修改人")
+    @Schema(name = "修改人")
     val modifier: String,
-    @Schema(description = "更新时间")
+    @Schema(name = "更新时间")
     val updateTime: LocalDateTime
 )

@@ -31,24 +31,24 @@ package com.tencent.devops.project.pojo
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "项目consul tag修改入参")
+@Schema(name = "项目consul tag修改入参")
 data class ProjectTagUpdateDTO(
     @JsonProperty(value = "routerTag", required = true)
-    @Schema(description = "项目对应的router tags", name = "routerTag")
+    @Schema(name = "项目对应的router tags", description = "routerTag")
     val routerTag: String,
     @JsonProperty(value = "projectCodeList", required = false)
-    @Schema(description = "项目编码集合", name = "projectCodeList")
+    @Schema(name = "项目编码集合", description = "projectCodeList")
     val projectCodeList: List<String>?,
     @JsonProperty(value = "bgId", required = false)
-    @Schema(description = "BgId", name = "bgId")
+    @Schema(name = "BgId", description = "bgId")
     val bgId: Long?,
     @JsonProperty(value = "centerId", required = false)
-    @Schema(description = "centerId", name = "centerId")
+    @Schema(name = "centerId", description = "centerId")
     val centerId: Long?,
     @JsonProperty(value = "deptId", required = false)
-    @Schema(description = "deptId", name = "deptId")
+    @Schema(name = "deptId", description = "deptId")
     val deptId: Long?,
     @JsonProperty(value = "channel", required = false)
-    @Schema(description = "channel", name = "channel")
+    @Schema(name = "channel", description = "channel")
     val channel: String?
 )

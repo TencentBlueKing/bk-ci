@@ -14,11 +14,11 @@ data class PublicBcsDispatchType(
     override var imageType: ImageType? = ImageType.BKDEVOPS,
     override var credentialId: String? = "",
     override var credentialProject: String? = "",
-    @Schema(description = "商店镜像代码")
+    @Schema(name = "商店镜像代码")
     override var imageCode: String? = "",
-    @Schema(description = "商店镜像版本")
+    @Schema(name = "商店镜像版本")
     override var imageVersion: String? = "",
-    @Schema(description = "商店镜像名称")
+    @Schema(name = "商店镜像名称")
     override var imageName: String? = ""
 ) : StoreDispatchType(
     dockerBuildVersion = if (image.isNullOrBlank())

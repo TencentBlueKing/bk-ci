@@ -29,30 +29,30 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "评论信息")
+@Schema(name = "评论信息")
 data class StoreCommentInfo(
-    @Schema(description = "评论ID", required = true)
+    @Schema(name = "评论ID", required = true)
     val commentId: String,
-    @Schema(description = "评论者", required = true)
+    @Schema(name = "评论者", required = true)
     val commenter: String,
-    @Schema(description = "评论内容", required = true)
+    @Schema(name = "评论内容", required = true)
     val commentContent: String,
-    @Schema(description = "评论者组织架构信息", required = true)
+    @Schema(name = "评论者组织架构信息", required = true)
     val commenterDept: String,
-    @Schema(description = "评论者头像url地址", required = false)
+    @Schema(name = "评论者头像url地址", required = false)
     val profileUrl: String,
-    @Schema(description = "点赞个数", required = true)
+    @Schema(name = "点赞个数", required = true)
     val praiseCount: Int,
-    @Schema(description = "点赞用户列表", required = false)
+    @Schema(name = "点赞用户列表", required = false)
     val praiseUsers: List<String>?,
-    @Schema(description = "是否已点赞 true:是，false:否", required = true)
+    @Schema(name = "是否已点赞 true:是，false:否", required = true)
     val praiseFlag: Boolean,
-    @Schema(description = "评分", required = true)
+    @Schema(name = "评分", required = true)
     val score: Int,
-    @Schema(description = "评论回复个数", required = true)
+    @Schema(name = "评论回复个数", required = true)
     val replyCount: Int,
-    @Schema(description = "评论创建时间", required = true)
+    @Schema(name = "评论创建时间", required = true)
     val commentTime: Long,
-    @Schema(description = "评论更新时间", required = true)
+    @Schema(name = "评论更新时间", required = true)
     val updateTime: Long
 )

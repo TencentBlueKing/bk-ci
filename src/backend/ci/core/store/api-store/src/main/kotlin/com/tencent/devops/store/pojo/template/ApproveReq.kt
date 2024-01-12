@@ -30,10 +30,10 @@ package com.tencent.devops.store.pojo.template
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class ApproveReq(
-    @Schema(description = "模版标识")
+    @Schema(name = "模版标识")
     val templateCode: String,
-    @Schema(description = "审核结果：PASS：通过|REJECT：驳回")
+    @Schema(name = "审核结果：PASS：通过|REJECT：驳回")
     val result: String,
-    @Schema(description = "审核结果说明")
+    @Schema(name = "审核结果说明")
     val message: String
 )

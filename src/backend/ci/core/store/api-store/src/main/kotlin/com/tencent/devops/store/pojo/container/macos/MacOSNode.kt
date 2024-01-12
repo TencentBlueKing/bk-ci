@@ -29,10 +29,10 @@ package com.tencent.devops.store.pojo.container.macos
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "macos构建机资源")
+@Schema(name = "macos构建机资源")
 data class MacOSNode(
-    @Schema(description = "macos构建资源名")
+    @Schema(name = "macos构建资源名")
     val id: String,
-    @Schema(description = "macos构建资源名")
+    @Schema(name = "macos构建资源名")
     val name: String
 )

@@ -31,24 +31,24 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonInclude(JsonInclude.Include.ALWAYS)
-@Schema(description = "质量红线-基础数据列表展示信息")
+@Schema(name = "质量红线-基础数据列表展示信息")
 data class QualityMetaData(
-    @Schema(description = "ID")
+    @Schema(name = "ID")
     val id: Long,
-    @Schema(description = "数据ID")
+    @Schema(name = "数据ID")
     val dataId: String?,
-    @Schema(description = "基础数据名称")
+    @Schema(name = "基础数据名称")
     val dataName: String?,
-    @Schema(description = "原子的ClassType")
+    @Schema(name = "原子的ClassType")
     val elementType: String?,
-    @Schema(description = "产出原子")
+    @Schema(name = "产出原子")
     val elementName: String?,
-    @Schema(description = "工具/原子子类")
+    @Schema(name = "工具/原子子类")
     val elementDetail: String?,
-    @Schema(description = "数值类型")
+    @Schema(name = "数值类型")
     val valueType: String?,
-    @Schema(description = "说明")
+    @Schema(name = "说明")
     val desc: String?,
-    @Schema(description = "备注")
+    @Schema(name = "备注")
     var extra: String?
 )

@@ -33,23 +33,23 @@ import io.swagger.v3.oas.annotations.media.Schema
  *
  * Powered By Tencent
  */
-@Schema(description = "日志模型")
+@Schema(name = "日志模型")
 data class LogLine(
-    @Schema(description = "日志行号", required = true)
+    @Schema(name = "日志行号", required = true)
     val lineNo: Long,
-    @Schema(description = "日志时间戳", required = true)
+    @Schema(name = "日志时间戳", required = true)
     val timestamp: Long,
-    @Schema(description = "日志消息体", required = true)
+    @Schema(name = "日志消息体", required = true)
     val message: String,
-    @Schema(description = "日志权重级", required = true)
+    @Schema(name = "日志权重级", required = true)
     val priority: Byte = 0,
-    @Schema(description = "日志tag", required = true)
+    @Schema(name = "日志tag", required = true)
     val tag: String = "",
-    @Schema(description = "日志子tag", required = true)
+    @Schema(name = "日志子tag", required = true)
     val subTag: String = "",
-    @Schema(description = "日志jobId", required = true)
+    @Schema(name = "日志jobId", required = true)
     val jobId: String = "",
-    @Schema(description = "日志执行次数", required = true)
+    @Schema(name = "日志执行次数", required = true)
     val executeCount: Int? = 1
 ) {
     override fun equals(other: Any?): Boolean {

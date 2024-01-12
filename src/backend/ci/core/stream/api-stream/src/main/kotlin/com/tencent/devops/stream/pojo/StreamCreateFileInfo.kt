@@ -32,19 +32,19 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class StreamCreateFileInfo(
     @JsonProperty("file_path")
-    @Schema(description = "file_path")
+    @Schema(name = "file_path")
     val filePath: String,
     @JsonProperty("branch_name")
-    @Schema(description = "branch_name")
+    @Schema(name = "branch_name")
     val branch: String,
     @JsonProperty("encoding")
-    @Schema(description = "encoding")
+    @Schema(name = "encoding")
     val encoding: StreamFileEncoding = StreamFileEncoding.TEXT,
     @JsonProperty("content")
-    @Schema(description = "content")
+    @Schema(name = "content")
     val content: String,
     @JsonProperty("commit_message")
-    @Schema(description = "commit_message")
+    @Schema(name = "commit_message")
     val commitMessage: String
 )
 

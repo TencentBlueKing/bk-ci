@@ -30,56 +30,56 @@ package com.tencent.devops.quality.pojo.po
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(description = "质量红线指标PO")
+@Schema(name = "质量红线指标PO")
 data class QualityIndicatorPO(
-    @Schema(description = "ID")
+    @Schema(name = "ID")
     val id: Long,
-    @Schema(description = "原子的ClassType")
+    @Schema(name = "原子的ClassType")
     val elementType: String?,
-    @Schema(description = "产出原子")
+    @Schema(name = "产出原子")
     var elementName: String?,
-    @Schema(description = "工具/原子子类")
+    @Schema(name = "工具/原子子类")
     val elementDetail: String?,
-    @Schema(description = "指标英文名")
+    @Schema(name = "指标英文名")
     val enName: String?,
-    @Schema(description = "指标中文名")
+    @Schema(name = "指标中文名")
     val cnName: String?,
-    @Schema(description = "指标所包含基础数据")
+    @Schema(name = "指标所包含基础数据")
     val metadataIds: String?,
-    @Schema(description = "默认操作")
+    @Schema(name = "默认操作")
     val defaultOperation: String?,
-    @Schema(description = "可用操作")
+    @Schema(name = "可用操作")
     val operationAvailable: String?,
-    @Schema(description = "默认阈值")
+    @Schema(name = "默认阈值")
     val threshold: String?,
-    @Schema(description = "阈值类型")
+    @Schema(name = "阈值类型")
     val thresholdType: String?,
-    @Schema(description = "描述")
+    @Schema(name = "描述")
     var desc: String?,
-    @Schema(description = "是否可修改")
+    @Schema(name = "是否可修改")
     val indicatorReadOnly: Boolean?,
-    @Schema(description = "阶段")
+    @Schema(name = "阶段")
     val stage: String?,
-    @Schema(description = "可见项目范围")
+    @Schema(name = "可见项目范围")
     val indicatorRange: String?,
-    @Schema(description = "是否启用")
+    @Schema(name = "是否启用")
     val enable: Boolean?,
-    @Schema(description = "指标类型")
+    @Schema(name = "指标类型")
     val type: String?,
-    @Schema(description = "指标标签，用于前端区分控制")
+    @Schema(name = "指标标签，用于前端区分控制")
     val tag: String?,
-    @Schema(description = "创建用户")
+    @Schema(name = "创建用户")
     val createUser: String?,
-    @Schema(description = "更新用户")
+    @Schema(name = "更新用户")
     val updateUser: String?,
-    @Schema(description = "创建时间")
+    @Schema(name = "创建时间")
     val createTime: LocalDateTime?,
-    @Schema(description = "更新时间")
+    @Schema(name = "更新时间")
     val updateTime: LocalDateTime?,
-    @Schema(description = "插件版本号")
+    @Schema(name = "插件版本号")
     val atomVersion: String,
-    @Schema(description = "用户自定义提示日志")
+    @Schema(name = "用户自定义提示日志")
     val logPrompt: String,
-    @Schema(description = "指标权重")
+    @Schema(name = "指标权重")
     val weight: Int? = null
 )

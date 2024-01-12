@@ -29,10 +29,10 @@ package com.tencent.devops.process.pojo.setting
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线task组件公共配置信息")
+@Schema(name = "流水线task组件公共配置信息")
 data class TaskComponentCommonSetting(
-    @Schema(description = "组件类型", required = true)
+    @Schema(name = "组件类型", required = true)
     val componentType: String,
-    @Schema(description = "组件大小最大值（单位：字符）", required = true)
+    @Schema(name = "组件大小最大值（单位：字符）", required = true)
     val maxSize: Int
 )

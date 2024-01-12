@@ -31,28 +31,28 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonInclude(JsonInclude.Include.ALWAYS)
-@Schema(description = "质量红线-(模板/指标集)配置展示信息")
+@Schema(name = "质量红线-(模板/指标集)配置展示信息")
 data class TemplateData(
-    @Schema(description = "ID")
+    @Schema(name = "ID")
     val id: Long,
-    @Schema(description = "模板名称")
+    @Schema(name = "模板名称")
     val name: String?,
-    @Schema(description = "模板类型(指标集, 模板)")
+    @Schema(name = "模板类型(指标集, 模板)")
     val type: String?,
-    @Schema(description = "描述")
+    @Schema(name = "描述")
     val desc: String?,
-    @Schema(description = "研发环节")
+    @Schema(name = "研发环节")
     val stage: String?,
-    @Schema(description = "原子的ClassType")
+    @Schema(name = "原子的ClassType")
     val elementType: String?,
-    @Schema(description = "原子名称")
+    @Schema(name = "原子名称")
     val elementName: String?,
-    @Schema(description = "红线位置(BEFORE, AFTER)")
+    @Schema(name = "红线位置(BEFORE, AFTER)")
     val controlPointPostion: String?,
-    @Schema(description = "是否可用")
+    @Schema(name = "是否可用")
     val enable: Boolean?,
-    @Schema(description = "指标数量")
+    @Schema(name = "指标数量")
     val indicatorNum: Int?,
-    @Schema(description = "指标详情")
+    @Schema(name = "指标详情")
     val indicatorDetail: List<TemplateIndicatorMap>?
 )

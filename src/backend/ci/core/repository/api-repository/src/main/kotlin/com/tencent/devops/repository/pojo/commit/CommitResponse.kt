@@ -29,12 +29,12 @@ package com.tencent.devops.repository.pojo.commit
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "提交返回模型")
+@Schema(name = "提交返回模型")
 data class CommitResponse(
-    @Schema(description = "仓库名称")
+    @Schema(name = "仓库名称")
     val name: String,
-    @Schema(description = "插件ID")
+    @Schema(name = "插件ID")
     val elementId: String,
-    @Schema(description = "记录")
+    @Schema(name = "记录")
     val records: List<CommitData>
 )

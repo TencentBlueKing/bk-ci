@@ -29,10 +29,10 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "评论回复信息请求报文体")
+@Schema(name = "评论回复信息请求报文体")
 data class StoreCommentReplyRequest(
-    @Schema(description = "回复内容", required = true)
+    @Schema(name = "回复内容", required = true)
     val replyContent: String,
-    @Schema(description = "被回复者（如果评论的回复被其它人回复则需要传该字段）", required = true)
+    @Schema(name = "被回复者（如果评论的回复被其它人回复则需要传该字段）", required = true)
     val replyToUser: String
 )

@@ -31,13 +31,13 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDate
 
-@Schema(description = "插件基本趋势信息")
+@Schema(name = "插件基本趋势信息")
 data class AtomBaseTrendInfoDO(
-    @Schema(description = "成功率")
+    @Schema(name = "成功率")
     val successRate: Double? = null,
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @Schema(description = "统计时间")
+    @Schema(name = "统计时间")
     val statisticsTime: LocalDate,
-    @Schema(description = "平均耗时")
+    @Schema(name = "平均耗时")
     val avgCostTime: Double? = null
 )

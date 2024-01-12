@@ -31,46 +31,46 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "stream 部分项目信息附带蓝盾项目信息")
+@Schema(name = "stream 部分项目信息附带蓝盾项目信息")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class StreamGitProjectInfoWithProject(
-    @Schema(description = "项目ID", name = "id")
+    @Schema(name = "项目ID", name = "id")
     @JsonProperty("id")
     val gitProjectId: Long,
-    @Schema(description = "项目名称", name = "name")
+    @Schema(name = "项目名称", name = "name")
     @JsonProperty("name")
     val name: String,
-    @Schema(description = "页面地址", name = "web_url")
+    @Schema(name = "页面地址", name = "web_url")
     @JsonProperty("web_url")
     val homepage: String?,
-    @Schema(description = "HTTP链接", required = true, name = "http_url_to_repo")
+    @Schema(name = "HTTP链接", required = true, name = "http_url_to_repo")
     @JsonProperty("http_url_to_repo")
     val gitHttpUrl: String,
-    @Schema(description = "HTTPS链接", name = "https_url_to_repo")
+    @Schema(name = "HTTPS链接", name = "https_url_to_repo")
     @JsonProperty("https_url_to_repo")
     val gitHttpsUrl: String?,
-    @Schema(description = "gitSshUrl", name = "ssh_url_to_repo")
+    @Schema(name = "gitSshUrl", name = "ssh_url_to_repo")
     @JsonProperty("ssh_url_to_repo")
     val gitSshUrl: String?,
-    @Schema(description = "带有名空间的项目名称", name = "name_with_namespace")
+    @Schema(name = "带有名空间的项目名称", name = "name_with_namespace")
     @JsonProperty("name_with_namespace")
     val nameWithNamespace: String,
-    @Schema(description = "带有名空间的项目路径", name = "path_with_namespace")
+    @Schema(name = "带有名空间的项目路径", name = "path_with_namespace")
     @JsonProperty("path_with_namespace")
     val pathWithNamespace: String?,
-    @Schema(description = "项目的默认分支", name = "default_branch")
+    @Schema(name = "项目的默认分支", name = "default_branch")
     @JsonProperty("default_branch")
     val defaultBranch: String?,
-    @Schema(description = "项目的描述信息", name = "description")
+    @Schema(name = "项目的描述信息", name = "description")
     @JsonProperty("description")
     val description: String?,
-    @Schema(description = "项目的头像信息", name = "avatar_url")
+    @Schema(name = "项目的头像信息", name = "avatar_url")
     @JsonProperty("avatar_url")
     val avatarUrl: String?,
-    @Schema(description = "环境路由", name = "routerTag")
+    @Schema(name = "环境路由", name = "routerTag")
     @JsonProperty("routerTag")
     val routerTag: String?,
-    @Schema(description = "带前缀项目ID", name = "projectCode")
+    @Schema(name = "带前缀项目ID", name = "projectCode")
     @JsonProperty("projectCode")
     val projectCode: String? = null
 )

@@ -30,20 +30,20 @@ package com.tencent.devops.store.pojo.common
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class StoreMediaInfo(
-    @Schema(description = "媒体id")
+    @Schema(name = "媒体id")
     val id: String,
-    @Schema(description = "研发商店类型", required = true)
+    @Schema(name = "研发商店类型", required = true)
     val storeCode: String,
-    @Schema(description = "媒体url", required = true)
+    @Schema(name = "媒体url", required = true)
     val mediaUrl: String,
-    @Schema(description = "媒体类型", required = true)
+    @Schema(name = "媒体类型", required = true)
     val mediaType: String,
-    @Schema(description = "添加用户", required = true)
+    @Schema(name = "添加用户", required = true)
     val create: String,
-    @Schema(description = "修改用户", required = true)
+    @Schema(name = "修改用户", required = true)
     val modifier: String,
-    @Schema(description = "添加时间", required = true)
+    @Schema(name = "添加时间", required = true)
     val createTime: String,
-    @Schema(description = "修改时间", required = true)
+    @Schema(name = "修改时间", required = true)
     val updateTime: String
 )

@@ -32,17 +32,17 @@ import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线错误信息查询条件信息对象")
+@Schema(name = "流水线错误信息查询条件信息对象")
 data class QueryPipelineFailQO(
-    @Schema(description = "项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @Schema(description = "查询条件请求信息")
+    @Schema(name = "查询条件请求信息")
     val baseQueryReq: BaseQueryReqVO,
-    @Schema(description = "错误类型")
+    @Schema(name = "错误类型")
     val errorTypes: List<Int>?,
-    @Schema(description = "页码")
+    @Schema(name = "页码")
     val page: Int = 1,
-    @Schema(description = "页数")
+    @Schema(name = "页数")
     @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
     val pageSize: Int = 10
 )

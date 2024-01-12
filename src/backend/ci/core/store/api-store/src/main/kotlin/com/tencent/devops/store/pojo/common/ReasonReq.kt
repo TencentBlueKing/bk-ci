@@ -29,10 +29,10 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "新增修改原因请求")
+@Schema(name = "新增修改原因请求")
 data class ReasonReq(
-    @Schema(description = "原因", required = true)
+    @Schema(name = "原因", required = true)
     val content: String,
-    @Schema(description = "顺序", required = true)
+    @Schema(name = "顺序", required = true)
     val order: Int
 )

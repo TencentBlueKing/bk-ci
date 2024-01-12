@@ -29,16 +29,16 @@ package com.tencent.devops.project.pojo.enums
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "项目道代码")
+@Schema(name = "项目道代码")
 enum class ProjectChannelCode {
-    @Schema(description = "蓝盾")
+    @Schema(name = "蓝盾")
     BS,
-    @Schema(description = "PREBULD")
+    @Schema(name = "PREBULD")
     PREBUILD,
-    @Schema(description = "CODECC")
+    @Schema(name = "CODECC")
     CODECC,
-    @Schema(description = "GITCI")
+    @Schema(name = "GITCI")
     GITCI,
-    @Schema(description = "自动化集群项目，区分于CODECC项目")
+    @Schema(name = "自动化集群项目，区分于CODECC项目")
     AUTO
 }

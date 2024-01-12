@@ -29,24 +29,24 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "敏感数据返回")
+@Schema(name = "敏感数据返回")
 data class SensitiveConfResp(
-    @Schema(description = "字段ID", required = true)
+    @Schema(name = "字段ID", required = true)
     val fieldId: String,
-    @Schema(description = "字段名称", required = true)
+    @Schema(name = "字段名称", required = true)
     val fieldName: String,
-    @Schema(description = "字段值", required = true)
+    @Schema(name = "字段值", required = true)
     val fieldValue: String,
-    @Schema(description = "字段类型 BACKEND:后端使用，FRONTEND:前端使用，ALL:前后端使用", required = true)
+    @Schema(name = "字段类型 BACKEND:后端使用，FRONTEND:前端使用，ALL:前后端使用", required = true)
     val fieldType: String,
-    @Schema(description = "字段描述", required = false)
+    @Schema(name = "字段描述", required = false)
     val fieldDesc: String?,
-    @Schema(description = "创建人")
+    @Schema(name = "创建人")
     val creator: String,
-    @Schema(description = "修改人")
+    @Schema(name = "修改人")
     val modifier: String,
-    @Schema(description = "创建时间")
+    @Schema(name = "创建时间")
     val createTime: String,
-    @Schema(description = "修改时间")
+    @Schema(name = "修改时间")
     val updateTime: String
 )

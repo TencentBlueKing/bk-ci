@@ -28,12 +28,12 @@ package com.tencent.devops.store.pojo.image.response
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "镜像支持的机器类型详情")
+@Schema(name = "镜像支持的机器类型详情")
 data class ImageAgentTypeInfo(
 
-    @Schema(description = "类型代码", required = true)
+    @Schema(name = "类型代码", required = true)
     val code: String,
 
-    @Schema(description = "类型名称", required = true)
+    @Schema(name = "类型名称", required = true)
     val name: String
 )

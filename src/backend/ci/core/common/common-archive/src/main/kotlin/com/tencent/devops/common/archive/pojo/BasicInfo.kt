@@ -29,32 +29,32 @@ package com.tencent.devops.common.archive.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "基础信息")
+@Schema(name = "基础信息")
 data class BasicInfo(
-    @Schema(description = "版本字段")
+    @Schema(name = "版本字段")
     val version: String,
-    @Schema(description = "完整路径")
+    @Schema(name = "完整路径")
     val fullPath: String,
-    @Schema(description = "文件大小，单位byte")
+    @Schema(name = "文件大小，单位byte")
     val size: Long,
-    @Schema(description = "文件sha256")
+    @Schema(name = "文件sha256")
     val sha256: String,
-    @Schema(description = "文件md5")
+    @Schema(name = "文件md5")
     val md5: String,
-    @Schema(description = "晋级状态标签")
+    @Schema(name = "晋级状态标签")
     val stageTag: List<String>,
-    @Schema(description = "所属项目id")
+    @Schema(name = "所属项目id")
     val projectId: String,
-    @Schema(description = "所属仓库名称")
+    @Schema(name = "所属仓库名称")
     val repoName: String,
-    @Schema(description = "下载次数")
+    @Schema(name = "下载次数")
     val downloadCount: Long,
-    @Schema(description = "创建者")
+    @Schema(name = "创建者")
     val createdBy: String,
-    @Schema(description = "创建时间")
+    @Schema(name = "创建时间")
     val createdDate: String,
-    @Schema(description = "修改者")
+    @Schema(name = "修改者")
     val lastModifiedBy: String,
-    @Schema(description = "修改时间")
+    @Schema(name = "修改时间")
     val lastModifiedDate: String
 )

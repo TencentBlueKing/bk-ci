@@ -29,10 +29,10 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "单项评分信息")
+@Schema(name = "单项评分信息")
 data class ScoreItemInfo(
-    @Schema(description = "分数", required = true)
+    @Schema(name = "分数", required = true)
     val score: Int,
-    @Schema(description = "数量", required = true)
+    @Schema(name = "数量", required = true)
     val num: Int
 )

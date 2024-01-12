@@ -30,14 +30,14 @@ package com.tencent.devops.environment.pojo.thirdPartyAgent
 import com.tencent.devops.common.api.enums.AgentStatus
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "第三方构建机UI查询状态")
+@Schema(name = "第三方构建机UI查询状态")
 data class ThirdPartyAgentStatusWithInfo(
-    @Schema(description = "状态")
+    @Schema(name = "状态")
     val status: AgentStatus,
-    @Schema(description = "主机名")
+    @Schema(name = "主机名")
     val hostname: String,
-    @Schema(description = "IP")
+    @Schema(name = "IP")
     val ip: String,
-    @Schema(description = "操作系统")
+    @Schema(name = "操作系统")
     val os: String
 )

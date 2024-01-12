@@ -30,27 +30,27 @@ package com.tencent.devops.repository.pojo
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "check run 模型")
+@Schema(name = "check run 模型")
 data class GithubCheckRuns(
-    @Schema(description = "名称")
+    @Schema(name = "名称")
     val name: String,
     @JsonProperty("head_sha")
-    @Schema(description = "head sha值", name = "head_sha")
+    @Schema(name = "head sha值", description = "head_sha")
     val headSha: String,
     @JsonProperty("details_url")
-    @Schema(description = "详情链接", name = "details_url")
+    @Schema(name = "详情链接", description = "details_url")
     val detailsUrl: String,
     @JsonProperty("external_id")
-    @Schema(description = "拓展ID", name = "external_id")
+    @Schema(name = "拓展ID", description = "external_id")
     val externalId: String,
-    @Schema(description = "状态")
+    @Schema(name = "状态")
     val status: String,
     @JsonProperty("started_at")
-    @Schema(description = "开始于", name = "started_at")
+    @Schema(name = "开始于", description = "started_at")
     val startedAt: String?,
-    @Schema(description = "结论")
+    @Schema(name = "结论")
     val conclusion: String?,
     @JsonProperty("completed_at")
-    @Schema(description = "完成于", name = "completed_at")
+    @Schema(name = "完成于", description = "completed_at")
     val completedAt: String?
 )

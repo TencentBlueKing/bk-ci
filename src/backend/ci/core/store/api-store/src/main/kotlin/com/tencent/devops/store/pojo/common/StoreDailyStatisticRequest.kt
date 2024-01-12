@@ -32,18 +32,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 import java.util.Date
 
-@Schema(description = "每日统计信息请求报文")
+@Schema(name = "每日统计信息请求报文")
 data class StoreDailyStatisticRequest(
-    @Schema(description = "总下载量")
+    @Schema(name = "总下载量")
     var totalDownloads: Int? = null,
-    @Schema(description = "每日下载量")
+    @Schema(name = "每日下载量")
     var dailyDownloads: Int? = null,
-    @Schema(description = "每日执行成功数")
+    @Schema(name = "每日执行成功数")
     val dailySuccessNum: Int? = null,
-    @Schema(description = "每日执行失败数")
+    @Schema(name = "每日执行失败数")
     val dailyFailNum: Int? = null,
-    @Schema(description = "每日执行失败详情")
+    @Schema(name = "每日执行失败详情")
     val dailyFailDetail: Map<String, Any>? = null,
-    @Schema(description = "统计时间")
+    @Schema(name = "统计时间")
     val statisticsTime: LocalDateTime? = DateTimeUtil.convertDateToFormatLocalDateTime(Date(), "yyyy-MM-dd")
 )

@@ -31,14 +31,14 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "构建模型-流水线手动启动信息")
+@Schema(name = "构建模型-流水线手动启动信息")
 data class BuildManualStartupInfo(
-    @Schema(description = "是否可手工启动", required = true)
+    @Schema(name = "是否可手工启动", required = true)
     val canManualStartup: Boolean,
-    @Schema(description = "是否可跳过插件", required = true)
+    @Schema(name = "是否可跳过插件", required = true)
     val canElementSkip: Boolean,
-    @Schema(description = "启动表单元素列表", required = true)
+    @Schema(name = "启动表单元素列表", required = true)
     val properties: List<BuildFormProperty> = listOf(),
-    @Schema(description = "指定的构建号", required = true)
+    @Schema(name = "指定的构建号", required = true)
     val buildNo: BuildNo?
 )

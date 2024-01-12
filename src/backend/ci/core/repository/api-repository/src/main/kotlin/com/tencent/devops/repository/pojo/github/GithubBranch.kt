@@ -65,42 +65,42 @@ import io.swagger.v3.oas.annotations.media.Schema
  * }
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Schema(description = "分支模型")
+@Schema(name = "分支模型")
 data class GithubBranch(
-    @Schema(description = "名称")
+    @Schema(name = "名称")
     val name: String,
-    @Schema(description = "提交")
+    @Schema(name = "提交")
     val commit: GithubCommit?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Schema(description = "提交模型")
+@Schema(name = "提交模型")
 data class GithubCommit(
-    @Schema(description = "sha值")
+    @Schema(name = "sha值")
     val sha: String,
-    @Schema(description = "节点id", name = "node_id")
+    @Schema(name = "节点id", description = "node_id")
     @JsonProperty("node_id")
     val nodeId: String?,
-    @Schema(description = "提交内容")
+    @Schema(name = "提交内容")
     val commit: GithubCommitData?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Schema(description = "提交内容模型")
+@Schema(name = "提交内容模型")
 data class GithubCommitData(
-    @Schema(description = "提交信息")
+    @Schema(name = "提交信息")
     val message: String,
-    @Schema(description = "提交者信息")
+    @Schema(name = "提交者信息")
     val author: GithubCommitAuthor
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Schema(description = "提交者模型")
+@Schema(name = "提交者模型")
 data class GithubCommitAuthor(
-    @Schema(description = "提交者名称")
+    @Schema(name = "提交者名称")
     val name: String,
-    @Schema(description = "提交时间")
+    @Schema(name = "提交时间")
     val date: String,
-    @Schema(description = "提交者email")
+    @Schema(name = "提交者email")
     val email: String
 )

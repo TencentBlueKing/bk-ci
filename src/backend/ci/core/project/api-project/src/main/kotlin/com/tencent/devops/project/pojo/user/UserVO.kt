@@ -29,19 +29,19 @@ package com.tencent.devops.project.pojo.user
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "用户-信息模型")
+@Schema(name = "用户-信息模型")
 data class UserVO(
-    @Schema(description = "中文名")
+    @Schema(name = "中文名")
 //    @JsonProperty("chinese_name")
     var chineseName: String,
-    @Schema(description = "头像URL")
+    @Schema(name = "头像URL")
 //    @JsonProperty("avatar_url")
     val avatarUrl: String?,
-    @Schema(description = "bkpaas用户ID")
+    @Schema(name = "bkpaas用户ID")
 //    @JsonProperty("bkpaas_user_id")
     val bkpaasUserId: String?,
-    @Schema(description = "用户名")
+    @Schema(name = "用户名")
     var username: String,
-    @Schema(description = "权限")
+    @Schema(name = "权限")
     val permissions: String?
 )

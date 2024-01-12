@@ -29,10 +29,10 @@ package com.tencent.devops.artifactory.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "自定义仓库查询条件")
+@Schema(name = "自定义仓库查询条件")
 data class CustomFileSearchCondition(
-    @Schema(description = "通配符", required = false)
+    @Schema(name = "通配符", required = false)
     val glob: String?,
-    @Schema(description = "元数据", required = true)
+    @Schema(name = "元数据", required = true)
     val properties: Map<String, String>
 )

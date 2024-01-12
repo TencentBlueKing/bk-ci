@@ -32,45 +32,45 @@ import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.web.utils.I18nUtil
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线触发类型")
+@Schema(name = "流水线触发类型")
 enum class PipelineTriggerType {
     // WEB_HOOK 触发
-    @Schema(description = "SVN 代码库")
+    @Schema(name = "SVN 代码库")
     CODE_SVN,
 
-    @Schema(description = "GIT 代码库")
+    @Schema(name = "GIT 代码库")
     CODE_GIT,
 
-    @Schema(description = "Gitlab 代码库")
+    @Schema(name = "Gitlab 代码库")
     CODE_GITLAB,
 
-    @Schema(description = "Github 代码库")
+    @Schema(name = "Github 代码库")
     GITHUB,
 
-    @Schema(description = "TGIT 代码库")
+    @Schema(name = "TGIT 代码库")
     CODE_TGIT,
 
-    @Schema(description = "P4 代码库")
+    @Schema(name = "P4 代码库")
     CODE_P4,
 
     // 手动触发
-    @Schema(description = "手动触发")
+    @Schema(name = "手动触发")
     MANUAL,
 
     // 定时触发
-    @Schema(description = "定时触发")
+    @Schema(name = "定时触发")
     TIME_TRIGGER,
 
     // 服务触发
-    @Schema(description = "服务触发")
+    @Schema(name = "服务触发")
     OPENAPI,
 
     // 流水线触发
-    @Schema(description = "流水线触发")
+    @Schema(name = "流水线触发")
     PIPELINE,
 
     // 远程触发
-    @Schema(description = "远程触发")
+    @Schema(name = "远程触发")
     REMOTE;
 
     companion object {

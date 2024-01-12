@@ -33,29 +33,29 @@ import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import io.swagger.v3.oas.annotations.media.Schema
 import java.net.URLEncoder
 
-@Schema(description = "脚本任务（linux和macOS环境）", description = LinuxScriptElement.classType)
+@Schema(name = "脚本任务（linux和macOS环境）", description = LinuxScriptElement.classType)
 data class LinuxScriptElement(
-    @Schema(description = "任务名称", required = true)
+    @Schema(name = "任务名称", required = true)
     override val name: String = "执行Linux脚本",
-    @Schema(description = "id", required = false)
+    @Schema(name = "id", required = false)
     override var id: String? = null,
-    @Schema(description = "状态", required = false)
+    @Schema(name = "状态", required = false)
     override var status: String? = null,
-    @Schema(description = "用户自定义ID", required = false)
+    @Schema(name = "用户自定义ID", required = false)
     override var stepId: String? = null,
-    @Schema(description = "FAQ url链接", required = false)
+    @Schema(name = "FAQ url链接", required = false)
     val errorFAQUrl: String? = null,
-    @Schema(description = "脚本类型", required = true)
+    @Schema(name = "脚本类型", required = true)
     val scriptType: BuildScriptType,
-    @Schema(description = "脚本内容", required = true)
+    @Schema(name = "脚本内容", required = true)
     val script: String,
-    @Schema(description = "某次执行为非0时（失败）是否继续执行脚本", required = false)
+    @Schema(name = "某次执行为非0时（失败）是否继续执行脚本", required = false)
     val continueNoneZero: Boolean?,
-    @Schema(description = "启用脚本执行失败时归档的文件", required = false)
+    @Schema(name = "启用脚本执行失败时归档的文件", required = false)
     val enableArchiveFile: Boolean? = false,
-    @Schema(description = "脚本执行失败时归档的文件", required = false)
+    @Schema(name = "脚本执行失败时归档的文件", required = false)
     val archiveFile: String? = null,
-    @Schema(description = "附加参数", required = false)
+    @Schema(name = "附加参数", required = false)
     override var additionalOptions: ElementAdditionalOptions? = null
 ) : Element(name, id, status, additionalOptions = additionalOptions) {
 

@@ -31,18 +31,18 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonInclude(JsonInclude.Include.ALWAYS)
-@Schema(description = "质量红线-控制点修改模型")
+@Schema(name = "质量红线-控制点修改模型")
 data class ControlPointUpdate(
-    @Schema(description = "原子的ClassType")
+    @Schema(name = "原子的ClassType")
     val elementType: String?,
-    @Schema(description = "控制点名称(原子名称)")
+    @Schema(name = "控制点名称(原子名称)")
     val name: String?,
-    @Schema(description = "研发阶段")
+    @Schema(name = "研发阶段")
     val stage: String?,
-    @Schema(description = "支持红线位置(准入-BEFORE, 准出-AFTER)")
+    @Schema(name = "支持红线位置(准入-BEFORE, 准出-AFTER)")
     val availablePosition: String?,
-    @Schema(description = "默认红线位置")
+    @Schema(name = "默认红线位置")
     val defaultPosition: String?,
-    @Schema(description = "是否启用")
+    @Schema(name = "是否启用")
     val enable: Boolean?
 )

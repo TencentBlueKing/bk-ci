@@ -29,8 +29,8 @@ package com.tencent.devops.process.pojo.github
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "github url模型")
+@Schema(name = "github url模型")
 data class GithubAppUrl(
-    @Schema(description = "url 地址", required = false)
+    @Schema(name = "url 地址", required = false)
     val url: String
 )

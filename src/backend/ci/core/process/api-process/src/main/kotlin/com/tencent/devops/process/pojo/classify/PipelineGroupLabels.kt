@@ -29,10 +29,10 @@ package com.tencent.devops.process.pojo.classify
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线标签模型")
+@Schema(name = "流水线标签模型")
 data class PipelineGroupLabels(
-    @Schema(description = "流水线名字", required = false)
+    @Schema(name = "流水线名字", required = false)
     val groupName: String,
-    @Schema(description = "标签名字", required = false)
+    @Schema(name = "标签名字", required = false)
     val labelName: MutableList<String/*labelName*/>
 )

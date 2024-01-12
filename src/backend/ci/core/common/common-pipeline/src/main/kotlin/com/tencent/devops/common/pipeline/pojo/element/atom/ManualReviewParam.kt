@@ -32,23 +32,23 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "人工审核-自定义参数")
+@Schema(name = "人工审核-自定义参数")
 data class ManualReviewParam(
-    @Schema(description = "参数名", required = true)
+    @Schema(name = "参数名", required = true)
     var key: String = "",
-    @Schema(description = "参数内容(Any 类型)", required = true, dataType = "string")
+    @Schema(name = "参数内容(Any 类型)", required = true, type = "string")
     var value: Any? = "",
-    @Schema(description = "参数类型", required = false)
+    @Schema(name = "参数类型", required = false)
     val valueType: ManualReviewParamType = ManualReviewParamType.STRING,
-    @Schema(description = "是否必填", required = true)
+    @Schema(name = "是否必填", required = true)
     val required: Boolean = false,
-    @Schema(description = "参数描述", required = false)
+    @Schema(name = "参数描述", required = false)
     val desc: String? = "",
-    @Schema(description = "下拉框列表")
+    @Schema(name = "下拉框列表")
     var options: List<ManualReviewParamPair>? = null,
-    @Schema(description = "中文名称", required = false)
+    @Schema(name = "中文名称", required = false)
     val chineseName: String? = null,
-    @Schema(description = "变量形式的options")
+    @Schema(name = "变量形式的options")
     val variableOption: String? = null
 ) {
     /**

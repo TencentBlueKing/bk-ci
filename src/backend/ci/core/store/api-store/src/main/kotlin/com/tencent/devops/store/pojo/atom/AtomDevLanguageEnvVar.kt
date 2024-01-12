@@ -29,16 +29,16 @@ package com.tencent.devops.store.pojo.atom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "插件开发语言相关的环境变量")
+@Schema(name = "插件开发语言相关的环境变量")
 data class AtomDevLanguageEnvVar(
-    @Schema(description = "环境变量key值", required = true)
+    @Schema(name = "环境变量key值", required = true)
     val envKey: String,
-    @Schema(description = "环境变量value值", required = true)
+    @Schema(name = "环境变量value值", required = true)
     val envValue: String,
-    @Schema(description = "开发语言", required = true)
+    @Schema(name = "开发语言", required = true)
     val language: String,
-    @Schema(description = "适用构建机类型", required = true)
+    @Schema(name = "适用构建机类型", required = true)
     val buildHostType: String,
-    @Schema(description = "适用构建机操作系统", required = true)
+    @Schema(name = "适用构建机操作系统", required = true)
     val buildHostOs: String
 )

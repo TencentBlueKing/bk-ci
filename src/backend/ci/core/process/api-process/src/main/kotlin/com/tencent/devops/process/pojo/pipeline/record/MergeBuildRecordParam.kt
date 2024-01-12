@@ -29,18 +29,18 @@ package com.tencent.devops.process.pojo.pipeline.record
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "合并流水线变量模型参数")
+@Schema(name = "合并流水线变量模型参数")
 data class MergeBuildRecordParam(
-    @Schema(description = "项目ID", required = true)
+    @Schema(name = "项目ID", required = true)
     val projectId: String,
-    @Schema(description = "流水线ID", required = true)
+    @Schema(name = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(description = "构建ID", required = true)
+    @Schema(name = "构建ID", required = true)
     val buildId: String,
-    @Schema(description = "执行次数", required = true)
+    @Schema(name = "执行次数", required = true)
     val executeCount: Int,
-    @Schema(description = "执行变量模型", required = true)
+    @Schema(name = "执行变量模型", required = true)
     var recordModelMap: MutableMap<String, Any>,
-    @Schema(description = "流水线基础模型", required = true)
+    @Schema(name = "流水线基础模型", required = true)
     var pipelineBaseModelMap: MutableMap<String, Any>
 )

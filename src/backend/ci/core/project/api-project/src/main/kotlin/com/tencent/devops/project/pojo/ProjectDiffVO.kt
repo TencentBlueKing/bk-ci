@@ -31,90 +31,90 @@ import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("ALL")
-@Schema(description = "项目-显示模型")
+@Schema(name = "项目-显示模型")
 data class ProjectDiffVO(
-    @Schema(description = "主键ID")
+    @Schema(name = "主键ID")
     val id: Long,
-    @Schema(description = "项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @Schema(description = "项目名称")
+    @Schema(name = "项目名称")
     val projectName: String,
-    @Schema(description = "审批中项目名称")
+    @Schema(name = "审批中项目名称")
     val afterProjectName: String,
-    @Schema(description = "项目代码")
+    @Schema(name = "项目代码")
     val projectCode: String,
-    @Schema(description = "审批状态")
+    @Schema(name = "审批状态")
     val approvalStatus: Int?,
-    @Schema(description = "审批时间")
+    @Schema(name = "审批时间")
     val approvalTime: String?,
-    @Schema(description = "审批人")
+    @Schema(name = "审批人")
     val approver: String?,
-    @Schema(description = "创建时间")
+    @Schema(name = "创建时间")
     val createdAt: String?,
-    @Schema(description = "创建人")
+    @Schema(name = "创建人")
     val creator: String?,
-    @Schema(description = "事业群ID")
+    @Schema(name = "事业群ID")
     val bgId: String?,
-    @Schema(description = "审批中事业群ID")
+    @Schema(name = "审批中事业群ID")
     val afterBgId: String?,
-    @Schema(description = "事业群名字")
+    @Schema(name = "事业群名字")
     val bgName: String?,
-    @Schema(description = "审批中事业群名字")
+    @Schema(name = "审批中事业群名字")
     val afterBgName: String?,
-    @Schema(description = "事业线ID")
+    @Schema(name = "事业线ID")
     val businessLineId: String?,
-    @Schema(description = "审批中事业线ID")
+    @Schema(name = "审批中事业线ID")
     val afterBusinessLineId: Long?,
-    @Schema(description = "事业线名称")
+    @Schema(name = "事业线名称")
     val businessLineName: String?,
-    @Schema(description = "审批中事业线名称")
+    @Schema(name = "审批中事业线名称")
     val afterBusinessLineName: String?,
-    @Schema(description = "中心ID")
+    @Schema(name = "中心ID")
     val centerId: String?,
-    @Schema(description = "审批中中心ID")
+    @Schema(name = "审批中中心ID")
     val afterCenterId: String?,
-    @Schema(description = "中心名称")
+    @Schema(name = "中心名称")
     val centerName: String?,
-    @Schema(description = "审批中中心名称")
+    @Schema(name = "审批中中心名称")
     val afterCenterName: String?,
-    @Schema(description = "部门ID")
+    @Schema(name = "部门ID")
     val deptId: String?,
-    @Schema(description = "审批中部门ID")
+    @Schema(name = "审批中部门ID")
     val afterDeptId: String?,
-    @Schema(description = "部门名称")
+    @Schema(name = "部门名称")
     val deptName: String?,
-    @Schema(description = "审批中部门名称")
+    @Schema(name = "审批中部门名称")
     val afterDeptName: String?,
-    @Schema(description = "描述")
+    @Schema(name = "描述")
     val description: String?,
-    @Schema(description = "审批中描述")
+    @Schema(name = "审批中描述")
     val afterDescription: String?,
-    @Schema(description = "英文缩写")
+    @Schema(name = "英文缩写")
     val englishName: String,
-    @Schema(description = "logo地址")
+    @Schema(name = "logo地址")
     val logoAddr: String?,
-    @Schema(description = "审批中logo地址")
+    @Schema(name = "审批中logo地址")
     val afterLogoAddr: String?,
-    @Schema(description = "评论")
+    @Schema(name = "评论")
     val remark: String?,
-    @Schema(description = "修改时间")
+    @Schema(name = "修改时间")
     val updatedAt: String?,
-    @Schema(description = "修改人")
+    @Schema(name = "修改人")
     val updator: String?,
-    @Schema(description = "项目最大可授权人员范围")
+    @Schema(name = "项目最大可授权人员范围")
     val subjectScopes: List<SubjectScopeInfo>?,
-    @Schema(description = "审批中的项目最大可授权人员范围")
+    @Schema(name = "审批中的项目最大可授权人员范围")
     val afterSubjectScopes: List<SubjectScopeInfo>?,
-    @Schema(description = "项目性质")
+    @Schema(name = "项目性质")
     val authSecrecy: Int?,
-    @Schema(description = "审批中项目性质")
+    @Schema(name = "审批中项目性质")
     val afterAuthSecrecy: Int? = null,
-    @Schema(description = "项目类型")
+    @Schema(name = "项目类型")
     val projectType: Int?,
-    @Schema(description = "审批中项目类型")
+    @Schema(name = "审批中项目类型")
     val afterProjectType: Int?,
-    @Schema(description = "运营产品ID")
+    @Schema(name = "运营产品ID")
     val productId: Int? = null,
-    @Schema(description = "审批中运营产品ID")
+    @Schema(name = "审批中运营产品ID")
     val afterProductId: Int? = null
 )

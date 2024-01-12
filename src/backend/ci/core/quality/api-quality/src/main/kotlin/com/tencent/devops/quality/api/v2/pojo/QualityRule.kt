@@ -32,45 +32,45 @@ import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "红线实体类")
+@Schema(name = "红线实体类")
 data class QualityRule(
-    @Schema(description = "hashId", required = true)
+    @Schema(name = "hashId", required = true)
     val hashId: String,
-    @Schema(description = "红线名字", required = true)
+    @Schema(name = "红线名字", required = true)
     val name: String,
-    @Schema(description = "红线描述", required = true)
+    @Schema(name = "红线描述", required = true)
     val desc: String,
-    @Schema(description = "红线指标列表", required = true)
+    @Schema(name = "红线指标列表", required = true)
     val indicators: List<QualityIndicator>,
-    @Schema(description = "控制点", required = true)
+    @Schema(name = "控制点", required = true)
     val controlPoint: RuleControlPoint,
-    @Schema(description = "流水线范围", required = true)
+    @Schema(name = "流水线范围", required = true)
     val range: List<String>,
-    @Schema(description = "模板范围", required = true)
+    @Schema(name = "模板范围", required = true)
     val templateRange: List<String>,
-    @Schema(description = "操作类型", required = true)
+    @Schema(name = "操作类型", required = true)
     val operation: RuleOperation,
-    @Schema(description = "通知类型", required = false)
+    @Schema(name = "通知类型", required = false)
     val notifyTypeList: List<NotifyType>?,
-    @Schema(description = "通知组名单", required = false)
+    @Schema(name = "通知组名单", required = false)
     val notifyGroupList: List<String>?,
-    @Schema(description = "通知人员名单", required = false)
+    @Schema(name = "通知人员名单", required = false)
     val notifyUserList: List<String>?,
-    @Schema(description = "审核通知人员", required = false)
+    @Schema(name = "审核通知人员", required = false)
     val auditUserList: List<String>?,
-    @Schema(description = "审核超时时间", required = false)
+    @Schema(name = "审核超时时间", required = false)
     val auditTimeoutMinutes: Int?,
-    @Schema(description = "操作类型列表", required = false)
+    @Schema(name = "操作类型列表", required = false)
     val opList: List<RuleOp>? = null,
-    @Schema(description = "红线匹配的id", required = false)
+    @Schema(name = "红线匹配的id", required = false)
     val gatewayId: String?,
-    @Schema(description = "红线把关人", required = false)
+    @Schema(name = "红线把关人", required = false)
     val gateKeepers: List<String>?,
-    @Schema(description = "红线状态", required = false)
+    @Schema(name = "红线状态", required = false)
     val status: RuleInterceptResult?,
-    @Schema(description = "红线所在stage", required = true)
+    @Schema(name = "红线所在stage", required = true)
     val stageId: String,
-    @Schema(description = "红线指定的任务节点名", required = false)
+    @Schema(name = "红线指定的任务节点名", required = false)
     val taskSteps: List<RuleTask>?
 ) {
     data class RuleControlPoint(
@@ -82,24 +82,24 @@ data class QualityRule(
     )
 
     data class RuleOp(
-        @Schema(description = "操作类型", required = true)
+        @Schema(name = "操作类型", required = true)
         val operation: RuleOperation,
-        @Schema(description = "通知类型", required = false)
+        @Schema(name = "通知类型", required = false)
         val notifyTypeList: List<NotifyType>?,
-        @Schema(description = "通知组名单", required = false)
+        @Schema(name = "通知组名单", required = false)
         val notifyGroupList: List<String>?,
-        @Schema(description = "通知人员名单", required = false)
+        @Schema(name = "通知人员名单", required = false)
         val notifyUserList: List<String>?,
-        @Schema(description = "审核通知人员", required = false)
+        @Schema(name = "审核通知人员", required = false)
         val auditUserList: List<String>?,
-        @Schema(description = "审核超时时间", required = false)
+        @Schema(name = "审核超时时间", required = false)
         val auditTimeoutMinutes: Int?
     )
 
     data class RuleTask(
-        @Schema(description = "任务节点名", required = false)
+        @Schema(name = "任务节点名", required = false)
         val taskName: String?,
-        @Schema(description = "指标名", required = false)
+        @Schema(name = "指标名", required = false)
         val indicatorEnName: String?
     )
 }

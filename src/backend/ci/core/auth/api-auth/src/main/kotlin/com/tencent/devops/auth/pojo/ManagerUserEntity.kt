@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema
 data class ManagerUserEntity(
-    @Schema(description = "被授权用户Id")
+    @Schema(name = "被授权用户Id")
     val userId: String,
-    @Schema(description = "管理员策略Id")
+    @Schema(name = "管理员策略Id")
     val managerId: Int,
-    @Schema(description = "授权时间")
+    @Schema(name = "授权时间")
     val startTime: Long,
-    @Schema(description = "过期时间")
+    @Schema(name = "过期时间")
     val timeoutTime: Long,
-    @Schema(description = "创建人")
+    @Schema(name = "创建人")
     val createUser: String
 )

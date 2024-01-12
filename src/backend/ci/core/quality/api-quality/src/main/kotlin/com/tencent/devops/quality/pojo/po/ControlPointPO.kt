@@ -30,36 +30,36 @@ package com.tencent.devops.quality.pojo.po
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(description = "质量红线控制点PO")
+@Schema(name = "质量红线控制点PO")
 data class ControlPointPO(
-    @Schema(description = "ID")
+    @Schema(name = "ID")
     val id: Long,
-    @Schema(description = "原子的ClassType")
+    @Schema(name = "原子的ClassType")
     val elementType: String,
-    @Schema(description = "控制点名称(原子名称)")
+    @Schema(name = "控制点名称(原子名称)")
     var name: String,
-    @Schema(description = "研发阶段")
+    @Schema(name = "研发阶段")
     var stage: String,
-    @Schema(description = "支持红线位置(准入-BEFORE, 准出-AFTER)")
+    @Schema(name = "支持红线位置(准入-BEFORE, 准出-AFTER)")
     val availablePosition: String,
-    @Schema(description = "默认红线位置")
+    @Schema(name = "默认红线位置")
     val defaultPosition: String,
-    @Schema(description = "是否启用")
+    @Schema(name = "是否启用")
     val enable: Boolean,
-    @Schema(description = "创建用户")
+    @Schema(name = "创建用户")
     val createUser: String,
-    @Schema(description = "更新用户")
+    @Schema(name = "更新用户")
     val updateUser: String,
-    @Schema(description = "创建时间")
+    @Schema(name = "创建时间")
     val createTime: LocalDateTime,
-    @Schema(description = "更新时间")
+    @Schema(name = "更新时间")
     val updateTime: LocalDateTime,
-    @Schema(description = "更新时间")
+    @Schema(name = "更新时间")
     val atomVersion: String = "1.0.0",
-    @Schema(description = "更新时间")
+    @Schema(name = "更新时间")
     val testProject: String = "",
-    @Schema(description = "更新时间")
+    @Schema(name = "更新时间")
     val tag: String? = null,
-    @Schema(description = "更新时间")
+    @Schema(name = "更新时间")
     val controlPointHashId: String? = null
 )

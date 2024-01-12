@@ -29,7 +29,7 @@ package com.tencent.devops.quality.api.v2.pojo.enums
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "模板类型")
+@Schema(name = "模板类型")
 enum class TemplateType {
     TEMPLATE, // 模板
     INDICATOR_SET // 指标集

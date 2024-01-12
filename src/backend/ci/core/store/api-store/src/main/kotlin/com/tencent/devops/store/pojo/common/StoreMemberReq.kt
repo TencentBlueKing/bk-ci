@@ -33,15 +33,15 @@ import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "添加成员请求报文")
+@Schema(name = "添加成员请求报文")
 data class StoreMemberReq(
-    @Schema(description = "添加的成员列表")
+    @Schema(name = "添加的成员列表")
     val member: List<String>,
-    @Schema(description = "成员类型")
+    @Schema(name = "成员类型")
     @field:BkField(patternStyle = BkStyleEnum.STORE_MEMBER_TYPE_STYLE)
     val type: StoreMemberTypeEnum,
-    @Schema(description = "store组件标识")
+    @Schema(name = "store组件标识")
     val storeCode: String,
-    @Schema(description = "store组件类型")
+    @Schema(name = "store组件类型")
     val storeType: StoreTypeEnum
 )

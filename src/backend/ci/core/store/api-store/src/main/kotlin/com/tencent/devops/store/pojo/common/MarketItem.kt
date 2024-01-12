@@ -32,64 +32,64 @@ import com.tencent.devops.common.api.enums.I18nSourceEnum
 import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "研发商店组件信息")
+@Schema(name = "研发商店组件信息")
 data class MarketItem(
-    @Schema(description = "ID")
+    @Schema(name = "ID")
     val id: String,
-    @Schema(description = "名称")
+    @Schema(name = "名称")
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val name: String,
-    @Schema(description = "标识")
+    @Schema(name = "标识")
     val code: String,
-    @Schema(description = "版本号")
+    @Schema(name = "版本号")
     val version: String,
-    @Schema(description = "类型")
+    @Schema(name = "类型")
     val type: String,
-    @Schema(description = "研发来源")
+    @Schema(name = "研发来源")
     val rdType: String,
-    @Schema(description = "分类")
+    @Schema(name = "分类")
     val classifyCode: String?,
-    @Schema(description = "所属范畴")
+    @Schema(name = "所属范畴")
     val category: String? = null,
-    @Schema(description = "logo链接")
+    @Schema(name = "logo链接")
     val logoUrl: String?,
-    @Schema(description = "发布者")
+    @Schema(name = "发布者")
     val publisher: String,
-    @Schema(description = "操作系统")
+    @Schema(name = "操作系统")
     val os: List<String>?,
-    @Schema(description = "下载量")
+    @Schema(name = "下载量")
     val downloads: Int?,
-    @Schema(description = "评分")
+    @Schema(name = "评分")
     val score: Double?,
-    @Schema(description = "简介")
+    @Schema(name = "简介")
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val summary: String?,
-    @Schema(description = "是否有权限安装标识")
+    @Schema(name = "是否有权限安装标识")
     val flag: Boolean,
-    @Schema(description = "是否公共标识")
+    @Schema(name = "是否公共标识")
     val publicFlag: Boolean,
-    @Schema(description = "无编译环境插件是否可以在编译环境下执行标识")
+    @Schema(name = "无编译环境插件是否可以在编译环境下执行标识")
     val buildLessRunFlag: Boolean?,
-    @Schema(description = "帮助文档")
+    @Schema(name = "帮助文档")
     val docsLink: String?,
-    @Schema(description = "修改人")
+    @Schema(name = "修改人")
     val modifier: String,
-    @Schema(description = "修改时间")
+    @Schema(name = "修改时间")
     val updateTime: String,
-    @Schema(description = "是否推荐标识 true：推荐，false：不推荐", required = false)
+    @Schema(name = "是否推荐标识 true：推荐，false：不推荐", required = false)
     val recommendFlag: Boolean? = null,
-    @Schema(description = "yaml可用标识 true：是，false：否")
+    @Schema(name = "yaml可用标识 true：是，false：否")
     val yamlFlag: Boolean? = null,
-    @Schema(description = "是否已在该项目安装 true：是，false：否")
+    @Schema(name = "是否已在该项目安装 true：是，false：否")
     val installed: Boolean? = null,
-    @Schema(description = "每日统计信息列表")
+    @Schema(name = "每日统计信息列表")
     val dailyStatisticList: List<StoreDailyStatistic>? = null,
-    @Schema(description = "荣誉信息列表")
+    @Schema(name = "荣誉信息列表")
     val honorInfos: List<HonorInfo>? = null,
-    @Schema(description = "指标信息列表")
+    @Schema(name = "指标信息列表")
     val indexInfos: List<StoreIndexInfo>? = null,
-    @Schema(description = "最近执行次数")
+    @Schema(name = "最近执行次数")
     val recentExecuteNum: Int? = null,
-    @Schema(description = "是否为受欢迎组件")
+    @Schema(name = "是否为受欢迎组件")
     val hotFlag: Boolean? = null
 )

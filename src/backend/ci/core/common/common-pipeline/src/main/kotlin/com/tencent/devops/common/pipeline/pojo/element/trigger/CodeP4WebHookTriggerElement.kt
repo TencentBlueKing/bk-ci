@@ -34,15 +34,15 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.vuexInput
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "p4事件触发", description = CodeP4WebHookTriggerElement.classType)
+@Schema(name = "p4事件触发", description = CodeP4WebHookTriggerElement.classType)
 data class CodeP4WebHookTriggerElement(
-    @Schema(description = "任务名称", required = true)
+    @Schema(name = "任务名称", required = true)
     override val name: String = "TGit变更触发",
-    @Schema(description = "id", required = false)
+    @Schema(name = "id", required = false)
     override var id: String? = null,
-    @Schema(description = "状态", required = false)
+    @Schema(name = "状态", required = false)
     override var status: String? = null,
-    @Schema(description = "数据", required = true)
+    @Schema(name = "数据", required = true)
     val data: CodeP4WebHookTriggerData
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
@@ -90,16 +90,16 @@ data class CodeP4WebHookTriggerData(
 )
 
 data class CodeP4WebHookTriggerInput(
-    @Schema(description = "仓库ID", required = true)
+    @Schema(name = "仓库ID", required = true)
     val repositoryHashId: String?,
-    @Schema(description = "新版的git原子的类型")
+    @Schema(name = "新版的git原子的类型")
     val repositoryType: RepositoryType? = null,
-    @Schema(description = "新版的git代码库名")
+    @Schema(name = "新版的git代码库名")
     val repositoryName: String? = null,
-    @Schema(description = "用于包含的路径", required = false)
+    @Schema(name = "用于包含的路径", required = false)
     val includePaths: String?,
-    @Schema(description = "用于排除的路径", required = false)
+    @Schema(name = "用于排除的路径", required = false)
     val excludePaths: String?,
-    @Schema(description = "事件类型", required = false)
+    @Schema(name = "事件类型", required = false)
     val eventType: CodeEventType?
 )

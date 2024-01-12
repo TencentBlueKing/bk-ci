@@ -30,16 +30,16 @@ package com.tencent.devops.repository.pojo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "代码库模型-基本信息")
+@Schema(name = "代码库模型-基本信息")
 data class UpdateRepositoryInfoRequest(
-    @Schema(description = "用户ID", required = false)
+    @Schema(name = "用户ID", required = false)
     val userId: String? = null,
-    @Schema(description = "仓库名称", required = false)
+    @Schema(name = "仓库名称", required = false)
     val projectName: String? = null,
-    @Schema(description = "凭证ID", required = false)
+    @Schema(name = "凭证ID", required = false)
     val credentialId: String? = null,
-    @Schema(description = "svn认证类型", required = false)
+    @Schema(name = "svn认证类型", required = false)
     val svnType: String? = null,
-    @Schema(description = "git认证类型", required = false)
+    @Schema(name = "git认证类型", required = false)
     val authType: RepoAuthType? = null
 )

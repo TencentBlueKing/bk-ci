@@ -30,24 +30,24 @@ package com.tencent.devops.common.quality.pojo
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "质量红线-规则拦截数")
+@Schema(name = "质量红线-规则拦截数")
 data class QualityRuleIntercept(
-    @Schema(description = "流水线ID", required = true)
+    @Schema(name = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(description = "流水线名称", required = true)
+    @Schema(name = "流水线名称", required = true)
     val pipelineName: String,
-    @Schema(description = "构建ID", required = true)
+    @Schema(name = "构建ID", required = true)
     val buildId: String,
-    @Schema(description = "规则ID", required = true)
+    @Schema(name = "规则ID", required = true)
     val ruleHashId: String,
-    @Schema(description = "规则名称", required = true)
+    @Schema(name = "规则名称", required = true)
     val ruleName: String,
-    @Schema(description = "拦截时间", required = true)
+    @Schema(name = "拦截时间", required = true)
     val interceptTime: Long,
-    @Schema(description = "拦截结果", required = true)
+    @Schema(name = "拦截结果", required = true)
     val result: RuleInterceptResult,
-    @Schema(description = "拦截次数", required = true)
+    @Schema(name = "拦截次数", required = true)
     val checkTimes: Int,
-    @Schema(description = "拦截结果信息列表", required = true)
+    @Schema(name = "拦截结果信息列表", required = true)
     val resultMsg: List<QualityRuleInterceptRecord>
 )

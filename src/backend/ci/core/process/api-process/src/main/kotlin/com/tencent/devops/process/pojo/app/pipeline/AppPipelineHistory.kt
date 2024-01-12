@@ -30,36 +30,36 @@ package com.tencent.devops.process.pojo.app.pipeline
 import com.tencent.devops.common.pipeline.enums.StartType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "手机侧流水线构建历史模型")
+@Schema(name = "手机侧流水线构建历史模型")
 data class AppPipelineHistory(
-    @Schema(description = "项目id", required = false)
+    @Schema(name = "项目id", required = false)
     val projectId: String,
-    @Schema(description = "流水线id", required = false)
+    @Schema(name = "流水线id", required = false)
     val pipelineId: String,
-    @Schema(description = "构建号id", required = false)
+    @Schema(name = "构建号id", required = false)
     val buildId: String,
-    @Schema(description = "用户id", required = false)
+    @Schema(name = "用户id", required = false)
     val userId: String,
-    @Schema(description = "启动构建类型", required = false)
+    @Schema(name = "启动构建类型", required = false)
     val trigger: StartType,
-    @Schema(description = "构建次数", required = false)
+    @Schema(name = "构建次数", required = false)
     val buildNum: Int?,
-    @Schema(description = "启动时间", required = false)
+    @Schema(name = "启动时间", required = false)
     val startTime: Long?,
-    @Schema(description = "结束时间", required = false)
+    @Schema(name = "结束时间", required = false)
     val endTime: Long?,
-    @Schema(description = "状态", required = false)
+    @Schema(name = "状态", required = false)
     val status: String,
-    @Schema(description = "当前服务器时间戳", required = false)
+    @Schema(name = "当前服务器时间戳", required = false)
     val curTimestamp: Long,
-    @Schema(description = "流水线版本", required = false)
+    @Schema(name = "流水线版本", required = false)
     val pipelineVersion: Int,
-    @Schema(description = "文件数量", required = false)
+    @Schema(name = "文件数量", required = false)
     var fileCount: Int = 0,
-    @Schema(description = "所有文件总大小", required = false)
+    @Schema(name = "所有文件总大小", required = false)
     var allFileSize: Long = 0,
-    @Schema(description = "包版本", required = false)
+    @Schema(name = "包版本", required = false)
     val packageVersion: String?,
-    @Schema(description = "是否使用移动端构建", required = false)
+    @Schema(name = "是否使用移动端构建", required = false)
     var isMobileStart: Boolean = false
 )

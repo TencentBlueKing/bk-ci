@@ -29,10 +29,10 @@ package com.tencent.devops.project.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "下拉框-数据模型")
+@Schema(name = "下拉框-数据模型")
 data class SelectDataVO(
-    @Schema(description = "ID")
+    @Schema(name = "ID")
     val id: Int,
-    @Schema(description = "名称")
+    @Schema(name = "名称")
     val name: String
 )

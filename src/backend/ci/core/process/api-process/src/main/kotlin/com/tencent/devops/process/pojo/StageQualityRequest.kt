@@ -29,12 +29,12 @@ package com.tencent.devops.process.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "stage准入准出-质量红线触发")
+@Schema(name = "stage准入准出-质量红线触发")
 data class StageQualityRequest(
-    @Schema(description = "准入准出标识", required = true)
+    @Schema(name = "准入准出标识", required = true)
     val position: String,
-    @Schema(description = "把关是否通过", required = true)
+    @Schema(name = "把关是否通过", required = true)
     val pass: Boolean,
-    @Schema(description = "第几次检查", required = true)
+    @Schema(name = "第几次检查", required = true)
     val checkTimes: Int
 )

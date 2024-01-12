@@ -32,15 +32,15 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema
 data class DeptInfo(
-    @Schema(description = "组织ID")
+    @Schema(name = "组织ID")
     val id: Int,
-    @Schema(description = "组织名称")
+    @Schema(name = "组织名称")
     val name: String,
-    @Schema(description = "父级组织")
+    @Schema(name = "父级组织")
     val parent: Int,
-    @Schema(description = "是否有子级", name = "has_children")
+    @Schema(name = "是否有子级", description = "has_children")
     @JsonProperty("has_children")
     val hasChildren: Boolean,
-    @Schema(description = "是否启用")
+    @Schema(name = "是否启用")
     val enabled: Boolean
 )

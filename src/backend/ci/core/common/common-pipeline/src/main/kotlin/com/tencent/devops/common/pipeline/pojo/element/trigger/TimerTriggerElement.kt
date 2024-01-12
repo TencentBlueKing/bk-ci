@@ -36,23 +36,23 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "定时触发")
+@Schema(name = "定时触发")
 data class TimerTriggerElement(
-    @Schema(description = "任务名称", required = true)
+    @Schema(name = "任务名称", required = true)
     override val name: String = "定时触发",
-    @Schema(description = "id", required = false)
+    @Schema(name = "id", required = false)
     override var id: String? = null,
-    @Schema(description = "状态", required = false)
+    @Schema(name = "状态", required = false)
     override var status: String? = null,
     // express是老的接口数据， 后面要废弃掉
-    @Schema(description = "定时表达式", required = false)
+    @Schema(name = "定时表达式", required = false)
     @Deprecated(message = "@see advanceExpression")
     val expression: String? = null,
-    @Schema(description = "改进后的表达式", required = false)
+    @Schema(name = "改进后的表达式", required = false)
     val newExpression: List<String>? = null,
-    @Schema(description = "高级定时表达式", required = false)
+    @Schema(name = "高级定时表达式", required = false)
     val advanceExpression: List<String>? = null,
-    @Schema(description = "源代码未更新则不触发构建", required = false)
+    @Schema(name = "源代码未更新则不触发构建", required = false)
     val noScm: Boolean? = false
 ) : Element(name, id, status) {
     companion object {

@@ -31,11 +31,11 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDate
 
-@Schema(description = "流水线错误每日统计信息")
+@Schema(name = "流水线错误每日统计信息")
 data class PipelineFailStatisticsInfoDO(
-    @Schema(description = "统计时间")
+    @Schema(name = "统计时间")
     @JsonFormat(pattern = "yyyy-MM-dd")
     val statisticsTime: LocalDate,
-    @Schema(description = "错误次数")
+    @Schema(name = "错误次数")
     val errorCount: Int
 )

@@ -29,12 +29,12 @@ package com.tencent.devops.metrics.pojo.dto
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "编译加速数据上报传输对象")
+@Schema(name = "编译加速数据上报传输对象")
 data class TurboDataReportDTO(
-    @Schema(description = "统计日期")
+    @Schema(name = "统计日期")
     val statisticsTime: String,
-    @Schema(description = "项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @Schema(description = "编译加速节省时间，单位：秒")
+    @Schema(name = "编译加速节省时间，单位：秒")
     val turboSaveTime: Double
 )

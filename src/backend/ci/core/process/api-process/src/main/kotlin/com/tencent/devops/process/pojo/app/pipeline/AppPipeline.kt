@@ -30,39 +30,39 @@ package com.tencent.devops.process.pojo.app.pipeline
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "app流水线信息")
+@Schema(name = "app流水线信息")
 data class AppPipeline(
-    @Schema(description = "项目id", required = false)
+    @Schema(name = "项目id", required = false)
     val projectId: String,
-    @Schema(description = "项目名称", required = false)
+    @Schema(name = "项目名称", required = false)
     var projectName: String,
-    @Schema(description = "流水线id", required = false)
+    @Schema(name = "流水线id", required = false)
     val pipelineId: String,
-    @Schema(description = "流水线名称", required = false)
+    @Schema(name = "流水线名称", required = false)
     var pipelineName: String,
-    @Schema(description = "流水线描述", required = false)
+    @Schema(name = "流水线描述", required = false)
     var pipelineDesc: String,
-    @Schema(description = "最新构建状态", required = false)
+    @Schema(name = "最新构建状态", required = false)
     val latestBuildStatus: BuildStatus?,
-    @Schema(description = "最近一次构建序号", required = false)
+    @Schema(name = "最近一次构建序号", required = false)
     val latestBuildNum: Int?,
-    @Schema(description = "最新构建号id", required = false)
+    @Schema(name = "最新构建号id", required = false)
     val latestBuildId: String?,
-    @Schema(description = "最近构建启动时间", required = false)
+    @Schema(name = "最近构建启动时间", required = false)
     val latestBuildStartTime: Long?,
-    @Schema(description = "最近构建结束时间", required = false)
+    @Schema(name = "最近构建结束时间", required = false)
     val latestBuildEndTime: Long?,
-    @Schema(description = "最近构建用户", required = false)
+    @Schema(name = "最近构建用户", required = false)
     var latestBuildUser: String,
-    @Schema(description = "流水线版本", required = false)
+    @Schema(name = "流水线版本", required = false)
     val pipelineVersion: Int,
-    @Schema(description = "是否可手工启动", required = true)
+    @Schema(name = "是否可手工启动", required = true)
     val canManualStartup: Boolean,
     var hasCollect: Boolean = false,
-    @Schema(description = "部署时间", required = true)
+    @Schema(name = "部署时间", required = true)
     val deploymentTime: Long = 0L,
-    @Schema(description = "流水线创建时间", required = true)
+    @Schema(name = "流水线创建时间", required = true)
     val createTime: Long = 0L,
-    @Schema(description = "项目图标链接", required = false)
+    @Schema(name = "项目图标链接", required = false)
     val logoUrl: String = ""
 )

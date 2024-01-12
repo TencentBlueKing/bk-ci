@@ -30,7 +30,7 @@ package com.tencent.devops.quality.api.v2.pojo
 import com.tencent.devops.quality.api.v2.pojo.response.RangeExistElement
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线模板生效范围")
+@Schema(name = "流水线模板生效范围")
 data class RuleTemplateRange(
     val templateId: String,
     val templateName: String,

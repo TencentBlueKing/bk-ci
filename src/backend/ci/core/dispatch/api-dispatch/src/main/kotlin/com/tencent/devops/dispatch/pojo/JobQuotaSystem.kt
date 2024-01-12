@@ -31,30 +31,30 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "系统默认JOB配额")
+@Schema(name = "系统默认JOB配额")
 data class JobQuotaSystem(
-    @Schema(description = "构建机类型", required = true)
+    @Schema(name = "构建机类型", required = true)
     val vmType: JobQuotaVmType,
-    @Schema(description = "构建来源，默认BS", required = true)
+    @Schema(name = "构建来源，默认BS", required = true)
     val channelCode: String = ChannelCode.BS.name,
-    @Schema(description = "蓝盾系统最大并发JOB数，默认5000", required = false)
+    @Schema(name = "蓝盾系统最大并发JOB数，默认5000", required = false)
     val runningJobMaxSystem: Int,
-    @Schema(description = "单项目默认最大并发JOB数， 默认500", required = false)
+    @Schema(name = "单项目默认最大并发JOB数， 默认500", required = false)
     val runningJobMaxProject: Int,
-    @Schema(description = "系统默认所有单个JOB最大执行时间，默认24小时", required = false)
+    @Schema(name = "系统默认所有单个JOB最大执行时间，默认24小时", required = false)
     val runningTimeJobMax: Int,
-    @Schema(description = "默认单项目所有JOB最大执行时间，默认5000小时/月", required = false)
+    @Schema(name = "默认单项目所有JOB最大执行时间，默认5000小时/月", required = false)
     val runningTimeJobMaxProject: Int,
-    @Schema(description = "项目执行job数量告警阈值，百分比，默认80", required = false)
+    @Schema(name = "项目执行job数量告警阈值，百分比，默认80", required = false)
     val projectRunningJobThreshold: Int,
-    @Schema(description = "项目执行job时间告警阈值，百分比，默认80", required = false)
+    @Schema(name = "项目执行job时间告警阈值，百分比，默认80", required = false)
     val projectRunningTimeThreshold: Int,
-    @Schema(description = "系统执行job数量告警阈值，百分比，默认80", required = false)
+    @Schema(name = "系统执行job数量告警阈值，百分比，默认80", required = false)
     val systemRunningJobThreshold: Int,
-    @Schema(description = "创建时间", required = false)
+    @Schema(name = "创建时间", required = false)
     val createdTime: String,
-    @Schema(description = "修改时间", required = false)
+    @Schema(name = "修改时间", required = false)
     val updatedTime: String,
-    @Schema(description = "操作人", required = false)
+    @Schema(name = "操作人", required = false)
     val operator: String
 )

@@ -29,12 +29,12 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "插件发布进度信息")
+@Schema(name = "插件发布进度信息")
 data class StoreProcessInfo(
-    @Schema(description = "发布进度流程操作权限", required = false)
+    @Schema(name = "发布进度流程操作权限", required = false)
     var opPermission: Boolean? = null,
-    @Schema(description = "store组件流水线构建信息", required = false)
+    @Schema(name = "store组件流水线构建信息", required = false)
     var storeBuildInfo: StoreBuildInfo? = null,
-    @Schema(description = "发布进度信息", required = true)
+    @Schema(name = "发布进度信息", required = true)
     val processInfos: List<ReleaseProcessItem>
 )

@@ -29,12 +29,12 @@ package com.tencent.devops.store.pojo.common.index
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "组件指标要素信息")
+@Schema(name = "组件指标要素信息")
 data class StoreIndexElementInfo(
-    @Schema(description = "指标要素名称", required = true)
+    @Schema(name = "指标要素名称", required = true)
     val elementName: String,
-    @Schema(description = "指标要素值", required = true)
+    @Schema(name = "指标要素值", required = true)
     val elementValue: String,
-    @Schema(description = "备注", required = false)
+    @Schema(name = "备注", required = false)
     val remark: String? = null
 )

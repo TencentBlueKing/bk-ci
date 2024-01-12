@@ -3,13 +3,13 @@ package com.tencent.devops.auth.pojo
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "用户部门详细信息")
+@Schema(name = "用户部门详细信息")
 data class BkUserDeptInfo(
-    @Schema(description = "id")
+    @Schema(name = "id")
     val id: String?,
-    @Schema(description = "部门名称")
+    @Schema(name = "部门名称")
     val name: String?,
-    @Schema(description = "部门详细名称")
+    @Schema(name = "部门详细名称")
     @JsonProperty("full_name")
     val fullName: String?
 )

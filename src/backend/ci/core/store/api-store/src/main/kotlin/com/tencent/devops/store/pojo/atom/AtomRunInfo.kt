@@ -30,22 +30,22 @@ package com.tencent.devops.store.pojo.atom
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "插件运行时信息")
+@Schema(name = "插件运行时信息")
 data class AtomRunInfo(
-    @Schema(description = "插件代码", required = true)
+    @Schema(name = "插件代码", required = true)
     val atomCode: String,
-    @Schema(description = "插件名称", required = true)
+    @Schema(name = "插件名称", required = true)
     var atomName: String,
-    @Schema(description = "插件版本号", required = true)
+    @Schema(name = "插件版本号", required = true)
     val version: String,
-    @Schema(description = "插件状态")
+    @Schema(name = "插件状态")
     val atomStatus: Byte? = null,
-    @Schema(description = "插件初始化项目代码", required = true)
+    @Schema(name = "插件初始化项目代码", required = true)
     val initProjectCode: String,
-    @Schema(description = "Job类型", required = false)
+    @Schema(name = "Job类型", required = false)
     var jobType: JobTypeEnum?,
-    @Schema(description = "无构建环境插件是否可以在有构建环境运行标识", required = false)
+    @Schema(name = "无构建环境插件是否可以在有构建环境运行标识", required = false)
     var buildLessRunFlag: Boolean?,
-    @Schema(description = "输入字段类型信息数据", required = false)
+    @Schema(name = "输入字段类型信息数据", required = false)
     var inputTypeInfos: Map<String, String>?
 )

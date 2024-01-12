@@ -31,23 +31,23 @@ import com.tencent.devops.common.api.enums.ScmType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @SuppressWarnings("ObjectPropertyNaming")
-@Schema(description = "代码库模型-GitHub代码库")
+@Schema(name = "代码库模型-GitHub代码库")
 data class GithubRepository(
-    @Schema(description = "代码库别名", required = true)
+    @Schema(name = "代码库别名", required = true)
     override val aliasName: String,
-    @Schema(description = "URL", required = true)
+    @Schema(name = "URL", required = true)
     override val url: String,
-    @Schema(description = "用户名", required = true)
+    @Schema(name = "用户名", required = true)
     override var userName: String = "",
-    @Schema(description = "github项目名称", example = "Tencent/bkci", required = true)
+    @Schema(name = "github项目名称", example = "Tencent/bkci", required = true)
     override val projectName: String,
-    @Schema(description = "项目id", required = true)
+    @Schema(name = "项目id", required = true)
     override val projectId: String = "",
-    @Schema(description = "仓库hash id", required = false)
+    @Schema(name = "仓库hash id", required = false)
     override val repoHashId: String?,
-    @Schema(description = "Git仓库ID", required = false)
+    @Schema(name = "Git仓库ID", required = false)
     val gitProjectId: Long? = null,
-    @Schema(description = "仓库凭证ID", required = false, hidden = true, allowEmptyValue = true)
+    @Schema(name = "仓库凭证ID", required = false, hidden = true, nullable = true)
     override val credentialId: String = ""
 ) : Repository {
     companion object {

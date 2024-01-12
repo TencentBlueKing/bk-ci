@@ -57,30 +57,30 @@ package com.tencent.devops.auth.pojo
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "Itsm回调单据实体类")
+@Schema(name = "Itsm回调单据实体类")
 data class ItsmCallBackInfo(
-    @Schema(description = "标题")
+    @Schema(name = "标题")
     val title: String,
-    @Schema(description = "当前状态，为FINISHED为正常结束")
+    @Schema(name = "当前状态，为FINISHED为正常结束")
     @JsonProperty("current_status")
     val currentStatus: String,
-    @Schema(description = "itsm单号")
+    @Schema(name = "itsm单号")
     val sn: String,
-    @Schema(description = "单据链接")
+    @Schema(name = "单据链接")
     @JsonProperty("ticket_url")
     val ticketUrl: String,
-    @Schema(description = "单据更新时间")
+    @Schema(name = "单据更新时间")
     @JsonProperty("update_at")
     val updateAt: String,
-    @Schema(description = "单据更新人")
+    @Schema(name = "单据更新人")
     @JsonProperty("updated_by")
     val updatedBy: String,
-    @Schema(description = "单据审批结果True or False")
+    @Schema(name = "单据审批结果True or False")
     @JsonProperty("approve_result")
     val approveResult: String,
-    @Schema(description = "token")
+    @Schema(name = "token")
     val token: String,
-    @Schema(description = "最后一个节点的审批人")
+    @Schema(name = "最后一个节点的审批人")
     @JsonProperty("last_approver")
     val lastApprover: String
 )

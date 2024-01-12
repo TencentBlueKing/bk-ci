@@ -30,14 +30,14 @@ package com.tencent.devops.repository.pojo.github
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "")
+@Schema(name = "")
 data class GithubToken(
-    @Schema(description = "鉴权token", name = "access_token")
+    @Schema(name = "鉴权token", description = "access_token")
     @JsonProperty("access_token")
     val accessToken: String,
     @JsonProperty("token_type")
-    @Schema(description = "token类型", name = "token_type")
+    @Schema(name = "token类型", description = "token_type")
     val tokenType: String,
-    @Schema(description = "范围")
+    @Schema(name = "范围")
     val scope: String
 )

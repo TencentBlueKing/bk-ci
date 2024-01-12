@@ -29,16 +29,16 @@ package com.tencent.devops.process.pojo.setting
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "")
+@Schema(name = "")
 data class PipelineSettingVersion(
-    @Schema(description = "项目id", required = false)
+    @Schema(name = "项目id", required = false)
     val projectId: String = "",
-    @Schema(description = "流水线id", required = false)
+    @Schema(name = "流水线id", required = false)
     val pipelineId: String = "",
-    @Schema(description = "订阅成功", required = false)
+    @Schema(name = "订阅成功", required = false)
     var successSubscription: Subscription = Subscription(),
-    @Schema(description = "订阅失败", required = false)
+    @Schema(name = "订阅失败", required = false)
     var failSubscription: Subscription = Subscription(),
-    @Schema(description = "版本", required = false)
+    @Schema(name = "版本", required = false)
     var version: Int = 0
 )

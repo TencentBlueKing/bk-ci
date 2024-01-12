@@ -31,14 +31,14 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(description = "store组件发布升级新增请求报文体")
+@Schema(name = "store组件发布升级新增请求报文体")
 data class StoreReleaseCreateRequest(
-    @Schema(description = "store组件代码", required = true)
+    @Schema(name = "store组件代码", required = true)
     val storeCode: String,
-    @Schema(description = "store组件类型", required = true)
+    @Schema(name = "store组件类型", required = true)
     val storeType: StoreTypeEnum,
-    @Schema(description = "最近升级人", required = true)
+    @Schema(name = "最近升级人", required = true)
     val latestUpgrader: String,
-    @Schema(description = "最近升级时间", required = true)
+    @Schema(name = "最近升级时间", required = true)
     val latestUpgradeTime: LocalDateTime
 )

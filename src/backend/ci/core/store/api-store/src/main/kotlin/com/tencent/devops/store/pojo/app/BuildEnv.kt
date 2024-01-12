@@ -29,14 +29,14 @@ package com.tencent.devops.store.pojo.app
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线模型-构建机环境变量")
+@Schema(name = "流水线模型-构建机环境变量")
 data class BuildEnv(
-    @Schema(description = "名称")
+    @Schema(name = "名称")
     val name: String,
-    @Schema(description = "版本")
+    @Schema(name = "版本")
     val version: String,
-    @Schema(description = "路径")
+    @Schema(name = "路径")
     val binPath: String,
-    @Schema(description = "Home 变量")
+    @Schema(name = "Home 变量")
     val env: Map<String/*Name*/, String/*Path*/>
 )

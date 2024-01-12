@@ -29,24 +29,24 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "store成员")
+@Schema(name = "store成员")
 data class StoreMemberItem(
-    @Schema(description = "ID")
+    @Schema(name = "ID")
     val id: String,
-    @Schema(description = "成员名称")
+    @Schema(name = "成员名称")
     val userName: String,
-    @Schema(description = "成员类型")
+    @Schema(name = "成员类型")
     val type: String,
-    @Schema(description = "所属调试项目标识")
+    @Schema(name = "所属调试项目标识")
     val projectCode: String,
-    @Schema(description = "所属调试项目名称")
+    @Schema(name = "所属调试项目名称")
     val projectName: String,
-    @Schema(description = "创建人")
+    @Schema(name = "创建人")
     val creator: String,
-    @Schema(description = "修改人")
+    @Schema(name = "修改人")
     val modifier: String,
-    @Schema(description = "创建时间")
+    @Schema(name = "创建时间")
     val createTime: String,
-    @Schema(description = "修改时间")
+    @Schema(name = "修改时间")
     val updateTime: String
 )

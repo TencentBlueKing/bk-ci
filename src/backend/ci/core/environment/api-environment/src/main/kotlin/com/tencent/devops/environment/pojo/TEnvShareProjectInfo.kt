@@ -30,21 +30,21 @@ package com.tencent.devops.environment.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(description = "T_ENV_SHARE_PROJECT POJO")
+@Schema(name = "T_ENV_SHARE_PROJECT POJO")
 data class TEnvShareProjectInfo(
-    @Schema(description = "环境ID")
+    @Schema(name = "环境ID")
     val envId: Long,
-    @Schema(description = "名称")
+    @Schema(name = "名称")
     val envName: String,
-    @Schema(description = "主项目ID")
+    @Schema(name = "主项目ID")
     val mainProjectId: String,
-    @Schema(description = "共享的目标项目ID")
+    @Schema(name = "共享的目标项目ID")
     val sharedProjectId: String?,
-    @Schema(description = "目标项目名称")
+    @Schema(name = "目标项目名称")
     val sharedProjectName: String,
-    @Schema(description = "类型")
+    @Schema(name = "类型")
     val type: String?,
-    @Schema(description = "创建者")
+    @Schema(name = "创建者")
     val creator: String?,
     val createTime: LocalDateTime,
     val updateTime: LocalDateTime

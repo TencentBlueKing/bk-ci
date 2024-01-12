@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema
 data class StrategyInfo(
-    @Schema(description = "策略名称")
+    @Schema(name = "策略名称")
     val name: String?,
-    @Schema(description = "策略内容")
+    @Schema(name = "策略内容")
     val strategy: String
 )

@@ -30,22 +30,22 @@ package com.tencent.devops.ticket.pojo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "凭据-创建时内容")
+@Schema(name = "凭据-创建时内容")
 data class CredentialCreate(
-    @Schema(description = "凭据ID", required = true)
+    @Schema(name = "凭据ID", required = true)
     val credentialId: String,
-    @Schema(description = "凭据名称", required = true)
+    @Schema(name = "凭据名称", required = true)
     val credentialName: String? = null,
-    @Schema(description = "凭据类型", required = true)
+    @Schema(name = "凭据类型", required = true)
     val credentialType: CredentialType,
-    @Schema(description = "凭据描述", required = false)
+    @Schema(name = "凭据描述", required = false)
     val credentialRemark: String? = null,
-    @Schema(description = "凭据内容", required = true)
+    @Schema(name = "凭据内容", required = true)
     val v1: String,
-    @Schema(description = "凭据内容", required = true)
+    @Schema(name = "凭据内容", required = true)
     val v2: String? = null,
-    @Schema(description = "凭据内容", required = true)
+    @Schema(name = "凭据内容", required = true)
     val v3: String? = null,
-    @Schema(description = "凭据内容", required = true)
+    @Schema(name = "凭据内容", required = true)
     val v4: String? = null
 )

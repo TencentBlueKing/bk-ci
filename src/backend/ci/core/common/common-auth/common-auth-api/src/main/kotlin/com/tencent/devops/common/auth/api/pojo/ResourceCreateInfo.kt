@@ -30,14 +30,14 @@ package com.tencent.devops.common.auth.api.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "资源创建信息")
+@Schema(name = "资源创建信息")
 data class ResourceCreateInfo(
-    @Schema(description = "是否需要审批")
+    @Schema(name = "是否需要审批")
     val needApproval: Boolean? = false,
-    @Schema(description = "资源最大授权范围,目前只有rbac需要使用")
+    @Schema(name = "资源最大授权范围,目前只有rbac需要使用")
     val subjectScopes: List<SubjectScopeInfo>,
-    @Schema(description = "资源描述")
+    @Schema(name = "资源描述")
     val description: String? = null,
-    @Schema(description = "是否私有资源")
+    @Schema(name = "是否私有资源")
     val authSecrecy: Boolean = false
 )

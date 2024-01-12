@@ -38,39 +38,39 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
 @Suppress("LongParameterList", "LongMethod")
-@Schema(description = "构建详情记录-插件任务")
+@Schema(name = "构建详情记录-插件任务")
 data class BuildRecordContainer(
-    @Schema(description = "构建ID", required = true)
+    @Schema(name = "构建ID", required = true)
     val buildId: String,
-    @Schema(description = "项目ID", required = true)
+    @Schema(name = "项目ID", required = true)
     val projectId: String,
-    @Schema(description = "流水线ID", required = true)
+    @Schema(name = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(description = "编排版本号", required = true)
+    @Schema(name = "编排版本号", required = true)
     val resourceVersion: Int,
-    @Schema(description = "步骤ID", required = true)
+    @Schema(name = "步骤ID", required = true)
     val stageId: String,
-    @Schema(description = "作业容器ID", required = true)
+    @Schema(name = "作业容器ID", required = true)
     val containerId: String,
-    @Schema(description = "执行次数", required = true)
+    @Schema(name = "执行次数", required = true)
     val executeCount: Int,
-    @Schema(description = "执行变量", required = true)
+    @Schema(name = "执行变量", required = true)
     val containerVar: MutableMap<String, Any>,
-    @Schema(description = "作业容器类型", required = true)
+    @Schema(name = "作业容器类型", required = true)
     val containerType: String,
-    @Schema(description = "构建状态", required = false)
+    @Schema(name = "构建状态", required = false)
     var status: String? = null,
-    @Schema(description = "是否为构建矩阵组", required = false)
+    @Schema(name = "是否为构建矩阵组", required = false)
     val containPostTaskFlag: Boolean? = null,
-    @Schema(description = "是否为构建矩阵组", required = false)
+    @Schema(name = "是否为构建矩阵组", required = false)
     val matrixGroupFlag: Boolean? = null,
-    @Schema(description = "所在矩阵组ID", required = false)
+    @Schema(name = "所在矩阵组ID", required = false)
     val matrixGroupId: String? = null,
-    @Schema(description = "开始时间", required = true)
+    @Schema(name = "开始时间", required = true)
     var startTime: LocalDateTime? = null,
-    @Schema(description = "结束时间", required = true)
+    @Schema(name = "结束时间", required = true)
     var endTime: LocalDateTime? = null,
-    @Schema(description = "业务时间戳集合", required = true)
+    @Schema(name = "业务时间戳集合", required = true)
     var timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
 ) {
     companion object {

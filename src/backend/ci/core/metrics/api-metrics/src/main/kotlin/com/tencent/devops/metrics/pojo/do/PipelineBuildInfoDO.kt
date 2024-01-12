@@ -29,22 +29,22 @@ package com.tencent.devops.metrics.pojo.`do`
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线构建信息")
+@Schema(name = "流水线构建信息")
 data class PipelineBuildInfoDO(
-    @Schema(description = "项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @Schema(description = "流水线ID")
+    @Schema(name = "流水线ID")
     val pipelineId: String,
-    @Schema(description = "流水线名称")
+    @Schema(name = "流水线名称")
     val pipelineName: String,
-    @Schema(description = "渠道代码")
+    @Schema(name = "渠道代码")
     val channelCode: String,
-    @Schema(description = "域名")
+    @Schema(name = "域名")
     val domain: String,
-    @Schema(description = "构建ID")
+    @Schema(name = "构建ID")
     val buildId: String,
-    @Schema(description = "构建序号")
+    @Schema(name = "构建序号")
     val buildNum: Int,
-    @Schema(description = "构建代码库分支")
+    @Schema(name = "构建代码库分支")
     val branch: String?
 )

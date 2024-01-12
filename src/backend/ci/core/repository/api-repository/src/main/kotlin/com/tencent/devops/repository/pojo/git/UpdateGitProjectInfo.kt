@@ -30,45 +30,45 @@ package com.tencent.devops.repository.pojo.git
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "更新git项目信息")
+@Schema(name = "更新git项目信息")
 data class UpdateGitProjectInfo(
-    @Schema(description = "项目名", name = "name")
+    @Schema(name = "项目名", description = "name")
     @JsonProperty("name")
     val name: String? = null,
-    @Schema(description = "项目是否可以被fork", name = "fork_enabled")
+    @Schema(name = "项目是否可以被fork", description = "fork_enabled")
     @JsonProperty("fork_enabled")
     val forkEnabled: Boolean? = null,
-    @Schema(description = "项目描述", name = "description")
+    @Schema(name = "项目描述", description = "description")
     @JsonProperty("description")
     val description: String? = null,
-    @Schema(description = "项目默认分支", name = "default_branch")
+    @Schema(name = "项目默认分支", description = "default_branch")
     @JsonProperty("default_branch")
     val defaultBranch: String? = null,
-    @Schema(description = "文件大小限制，单位:MB", name = "limit_file_size")
+    @Schema(name = "文件大小限制，单位:MB", description = "limit_file_size")
     @JsonProperty("limit_file_size")
     val limitFileSize: Float? = null,
-    @Schema(description = "LFS文件大小限制，单位:MB", name = "limit_lfs_file_size")
+    @Schema(name = "LFS文件大小限制，单位:MB", description = "limit_lfs_file_size")
     @JsonProperty("limit_lfs_file_size")
     val limitLfsFileSize: Float? = null,
-    @Schema(description = "缺陷配置", name = "issues_enabled")
+    @Schema(name = "缺陷配置", description = "issues_enabled")
     @JsonProperty("issues_enabled")
     val issuesEnabled: Boolean? = null,
-    @Schema(description = "合并请求配置", name = "merge_requests_enabled")
+    @Schema(name = "合并请求配置", description = "merge_requests_enabled")
     @JsonProperty("merge_requests_enabled")
     val mergeRequestsEnabled: Boolean? = null,
-    @Schema(description = "维基配置", name = "wiki_enabled")
+    @Schema(name = "维基配置", description = "wiki_enabled")
     @JsonProperty("wiki_enabled")
     val wikiEnabled: Boolean? = null,
-    @Schema(description = "评审配置", name = "review_enabled")
+    @Schema(name = "评审配置", description = "review_enabled")
     @JsonProperty("review_enabled")
     val reviewEnabled: Boolean? = null,
-    @Schema(description = "推送或创建tag规则", name = "tag_name_regex")
+    @Schema(name = "推送或创建tag规则", description = "tag_name_regex")
     @JsonProperty("tag_name_regex")
     val tagNameRegex: String? = null,
-    @Schema(description = "推送或创建tag权限", name = "tag_create_push_level")
+    @Schema(name = "推送或创建tag权限", description = "tag_create_push_level")
     @JsonProperty("tag_create_push_level")
     val tagCreatePushLevel: Int? = null,
-    @Schema(description = "项目可视范围", name = "visibility_level")
+    @Schema(name = "项目可视范围", description = "visibility_level")
     @JsonProperty("visibility_level")
     val visibilityLevel: Int? = null
 )

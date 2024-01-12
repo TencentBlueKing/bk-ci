@@ -35,13 +35,13 @@ import io.swagger.v3.oas.annotations.media.Schema
  *
  * Powered By Tencent
  */
-@Schema(description = "数据返回包装模型")
+@Schema(name = "数据返回包装模型")
 data class Result<out T>(
-    @Schema(description = "状态码", required = true)
+    @Schema(name = "状态码", required = true)
     val status: Int,
-    @Schema(description = "错误信息", required = false)
+    @Schema(name = "错误信息", required = false)
     val message: String? = null,
-    @Schema(description = "数据", required = false)
+    @Schema(name = "数据", required = false)
     @BkFieldI18n
     val data: T? = null
 ) {

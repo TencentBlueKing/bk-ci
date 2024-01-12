@@ -29,10 +29,10 @@ package com.tencent.devops.store.pojo.common.index
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "指标等级信息")
+@Schema(name = "指标等级信息")
 data class StoreIndexLevelInfo(
-    @Schema(description = "等级名称", required = true)
+    @Schema(name = "等级名称", required = true)
     val levelName: String,
-    @Schema(description = "图标URL", required = true)
+    @Schema(name = "图标URL", required = true)
     val iconUrl: String
 )

@@ -29,12 +29,12 @@ package com.tencent.devops.process.pojo.pipeline
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "删除流水线结果")
+@Schema(name = "删除流水线结果")
 data class DeletePipelineResult(
-    @Schema(description = "流水线ID", required = true)
+    @Schema(name = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(description = "流水线名称", required = true)
+    @Schema(name = "流水线名称", required = true)
     val pipelineName: String,
-    @Schema(description = "流水线版本号", required = true)
+    @Schema(name = "流水线版本号", required = true)
     val version: Int
 )

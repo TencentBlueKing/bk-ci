@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "mr绑定的TAPD单")
+@Schema(name = "mr绑定的TAPD单")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class TapdWorkItem(
     val id: Long,

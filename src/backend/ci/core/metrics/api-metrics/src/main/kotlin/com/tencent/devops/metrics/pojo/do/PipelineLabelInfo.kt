@@ -29,10 +29,10 @@ package com.tencent.devops.metrics.pojo.`do`
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线标签信息")
+@Schema(name = "流水线标签信息")
 class PipelineLabelInfo(
-    @Schema(description = "标签ID")
+    @Schema(name = "标签ID")
     val labelId: Long,
-    @Schema(description = "标签名称")
+    @Schema(name = "标签名称")
     val labelName: String
 )

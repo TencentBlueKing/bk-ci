@@ -29,12 +29,12 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "使用store组件流水线数量更新实体对象")
+@Schema(name = "使用store组件流水线数量更新实体对象")
 data class StoreStatisticPipelineNumUpdate(
-    @Schema(description = "插件标识")
+    @Schema(name = "插件标识")
     val storeCode: String,
-    @Schema(description = "数量增长标识")
+    @Schema(name = "数量增长标识")
     val incrementFlag: Boolean? = null,
-    @Schema(description = "更新数量")
+    @Schema(name = "更新数量")
     val num: Int? = null
 )

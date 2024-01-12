@@ -30,18 +30,18 @@ import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.notify.enums.EnumEmailType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "模板配置信息")
+@Schema(name = "模板配置信息")
 data class EmailMessageTemplate(
-    @Schema(description = "模板ID", required = true)
+    @Schema(name = "模板ID", required = true)
     val id: String,
-    @Schema(description = "标题", required = false)
+    @Schema(name = "标题", required = false)
     var title: String?,
-    @Schema(description = "内容", required = true)
+    @Schema(name = "内容", required = true)
     var body: String,
-    @Schema(description = "发送者", required = true)
+    @Schema(name = "发送者", required = true)
     val sender: String,
-    @Schema(description = "邮件格式（邮件方式必填 0:文本 1:html网页）", allowableValues = "0,1", dataType = "int", required = false)
+    @Schema(name = "邮件格式（邮件方式必填 0:文本 1:html网页）", allowableValues = ["0", "1"], type = "int", required = false)
     val bodyFormat: EnumEmailFormat?,
-    @Schema(description = "邮件类型（邮件方式必填 0:外部邮件 1:内部邮件）", allowableValues = "0,1", dataType = "int", required = false)
+    @Schema(name = "邮件类型（邮件方式必填 0:外部邮件 1:内部邮件）", allowableValues = ["0", "1"], type = "int", required = false)
     val emailType: EnumEmailType?
 )

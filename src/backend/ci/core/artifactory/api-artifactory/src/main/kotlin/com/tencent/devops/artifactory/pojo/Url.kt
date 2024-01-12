@@ -29,10 +29,10 @@ package com.tencent.devops.artifactory.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "版本仓库-下载信息")
+@Schema(name = "版本仓库-下载信息")
 data class Url(
-    @Schema(description = "下载链接", required = true)
+    @Schema(name = "下载链接", required = true)
     val url: String,
-    @Schema(description = "下载链接2", required = false)
+    @Schema(name = "下载链接2", required = false)
     val url2: String? = null
 )

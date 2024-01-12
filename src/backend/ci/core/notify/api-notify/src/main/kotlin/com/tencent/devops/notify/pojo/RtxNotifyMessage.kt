@@ -31,20 +31,20 @@ import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "rtx消息类型")
+@Schema(name = "rtx消息类型")
 open class RtxNotifyMessage : BaseMessage() {
 
-    @Schema(description = "通知接收者")
+    @Schema(name = "通知接收者")
     private val receivers: MutableSet<String> = mutableSetOf()
-    @Schema(description = "RTX通知内容")
+    @Schema(name = "RTX通知内容")
     var body: String = ""
-    @Schema(description = "通知发送者")
+    @Schema(name = "通知发送者")
     var sender: String = ""
-    @Schema(description = "RTX通知标题")
+    @Schema(name = "RTX通知标题")
     var title: String = ""
-    @Schema(description = value = "优先级", allowableValues = "-1,0,1", dataType = "int")
+    @Schema(name = "优先级", allowableValues = ["-1", "0", "1"], type = "int")
     var priority: EnumNotifyPriority = EnumNotifyPriority.HIGH
-    @Schema(description = "通知来源", allowableValues = "0,1", dataType = "int")
+    @Schema(name = "通知来源", allowableValues = ["0", "1"], type = "int")
     var source: EnumNotifySource = EnumNotifySource.BUSINESS_LOGIC
 
     fun addReceiver(receiver: String) {
@@ -63,7 +63,7 @@ open class RtxNotifyMessage : BaseMessage() {
         receivers.clear()
     }
 
-    @Schema(description = hidden = true)
+    @Schema(hidden = true)
     @JsonIgnore
     fun isReceiversEmpty(): Boolean {
         if (receivers.size == 0) return true

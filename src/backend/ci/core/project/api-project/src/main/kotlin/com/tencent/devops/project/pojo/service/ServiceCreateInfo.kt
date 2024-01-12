@@ -32,47 +32,47 @@ import io.swagger.v3.oas.annotations.media.Schema
 /**
  *   Date on 2018-12-05.
  */
-@Schema(description = "服务-创建模型")
+@Schema(name = "服务-创建模型")
 data class ServiceCreateInfo(
-    @Schema(description = "服务名称，英文名，不传则从中文名中读取 流水线(Pipeline)")
+    @Schema(name = "服务名称，英文名，不传则从中文名中读取 流水线(Pipeline)")
     var englishName: String?,
-    @Schema(description = "服务名称，中文名, 例如 流水线(Pipeline)", required = true)
+    @Schema(name = "服务名称，中文名, 例如 流水线(Pipeline)", required = true)
     val name: String,
-    @Schema(description = "服务类型ID，1:项目管理 2:开发 3:测试 4:部署 5:运营 6:安全 8:管理工具", required = true)
+    @Schema(name = "服务类型ID，1:项目管理 2:开发 3:测试 4:部署 5:运营 6:安全 8:管理工具", required = true)
     val serviceTypeId: Long,
-    @Schema(description = "是否展示项目列表")
+    @Schema(name = "是否展示项目列表")
     val showProjectList: Boolean = true,
-    @Schema(description = "是否在服务导航条上显示")
+    @Schema(name = "是否在服务导航条上显示")
     val showNav: Boolean = true,
-    @Schema(description = "服务状态 ok=正常(可用) planning=规划中(灰色不可用) new=新上线(可用)")
+    @Schema(name = "服务状态 ok=正常(可用) planning=规划中(灰色不可用) new=新上线(可用)")
     val status: String = "ok",
 
-    @Schema(description = "链接1，例如 /pipeline/")
+    @Schema(name = "链接1，例如 /pipeline/")
     val link: String?,
-    @Schema(description = "链接2与链接1保持一样，例如 /pipeline/")
+    @Schema(name = "链接2与链接1保持一样，例如 /pipeline/")
     val linkNew: String?,
-    @Schema(description = "注入类型：amd/iframe")
+    @Schema(name = "注入类型：amd/iframe")
     val injectType: String?,
-    @Schema(description = "iframeUrl")
+    @Schema(name = "iframeUrl")
     val iframeUrl: String?,
-    @Schema(description = "grayIframeUrl")
+    @Schema(name = "grayIframeUrl")
     val grayIframeUrl: String?,
-    @Schema(description = "cssUrl")
+    @Schema(name = "cssUrl")
     val cssUrl: String?,
-    @Schema(description = "jsUrl")
+    @Schema(name = "jsUrl")
     val jsUrl: String?,
-    @Schema(description = "grayCssUrl")
+    @Schema(name = "grayCssUrl")
     val grayCssUrl: String?,
-    @Schema(description = "grayJsUrl")
+    @Schema(name = "grayJsUrl")
     val grayJsUrl: String?,
-    @Schema(description = "projectIdType")
+    @Schema(name = "projectIdType")
     val projectIdType: String?,
-    @Schema(description = "权重")
+    @Schema(name = "权重")
     val weight: Int,
-    @Schema(description = "logo地址")
+    @Schema(name = "logo地址")
     val logoUrl: String?,
-    @Schema(description = "支持webSocket的页面")
+    @Schema(name = "支持webSocket的页面")
     val webSocket: String?,
-    @Schema(description = "集群类型")
+    @Schema(name = "集群类型")
     val clusterType: String? = ""
 )

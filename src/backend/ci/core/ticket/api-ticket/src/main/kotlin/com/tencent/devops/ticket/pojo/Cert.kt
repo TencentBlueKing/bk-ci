@@ -29,20 +29,20 @@ package com.tencent.devops.ticket.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "证书-证书详细内容")
+@Schema(name = "证书-证书详细内容")
 data class Cert(
-    @Schema(description = "证书ID", required = true)
+    @Schema(name = "证书ID", required = true)
     val certId: String,
-    @Schema(description = "证书类型", required = true)
+    @Schema(name = "证书类型", required = true)
     val certType: String,
-    @Schema(description = "创建者", required = true)
+    @Schema(name = "创建者", required = true)
     val creator: String,
-    @Schema(description = "证书描述", required = true)
+    @Schema(name = "证书描述", required = true)
     val certRemark: String,
-    @Schema(description = "创建时间", required = true)
+    @Schema(name = "创建时间", required = true)
     val createTime: Long,
-    @Schema(description = "过期时间", required = true)
+    @Schema(name = "过期时间", required = true)
     val expireTime: Long,
-    @Schema(description = "凭据ID", required = true)
+    @Schema(name = "凭据ID", required = true)
     val credentialId: String?
 )

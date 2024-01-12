@@ -34,18 +34,18 @@ import io.swagger.v3.oas.annotations.media.Schema
  *
  * Powered By Tencent
  */
-@Schema(description = "TASK信息")
+@Schema(name = "TASK信息")
 data class TaskMessage(
-    @Schema(description = "TASK ID", required = true)
+    @Schema(name = "TASK ID", required = true)
     var taskId: Int,
-    @Schema(description = "TASK VM ID", required = true)
+    @Schema(name = "TASK VM ID", required = true)
     var vmId: Int,
-    @Schema(description = "TASK 执行的脚本", required = true)
+    @Schema(name = "TASK 执行的脚本", required = true)
     var script: String,
-    @Schema(description = "TASK 执行完信息", required = true)
+    @Schema(name = "TASK 执行完信息", required = true)
     var message: String,
-    @Schema(description = "TASK 执行的脚本结果", required = true)
+    @Schema(name = "TASK 执行的脚本结果", required = true)
     var status: TaskPhase,
-    @Schema(description = "TASK 执行的脚本结果", required = true)
+    @Schema(name = "TASK 执行的脚本结果", required = true)
     var retryCount: Int
 )

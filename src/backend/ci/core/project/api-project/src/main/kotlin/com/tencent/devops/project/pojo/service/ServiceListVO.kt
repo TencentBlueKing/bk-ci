@@ -29,12 +29,12 @@ package com.tencent.devops.project.pojo.service
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "服务-列表显示模型")
+@Schema(name = "服务-列表显示模型")
 data class ServiceListVO(
-    @Schema(description = "服务类型标题")
+    @Schema(name = "服务类型标题")
     val title: String,
-    @Schema(description = "服务类型权重")
+    @Schema(name = "服务类型权重")
     val weigHt: Int,
-    @Schema(description = "服务集合")
+    @Schema(name = "服务集合")
     val children: List<ServiceVO>
 )

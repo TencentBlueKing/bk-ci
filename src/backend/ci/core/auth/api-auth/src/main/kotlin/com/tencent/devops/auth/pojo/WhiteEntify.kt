@@ -29,12 +29,12 @@ package com.tencent.devops.auth.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "白名单返回模型")
+@Schema(name = "白名单返回模型")
 data class WhiteEntify(
-    @Schema(description = "id")
+    @Schema(name = "id")
     val id: Int,
-    @Schema(description = "管理员id")
+    @Schema(name = "管理员id")
     val managerId: Int,
-    @Schema(description = "用户名")
+    @Schema(name = "用户名")
     val user: String
 )

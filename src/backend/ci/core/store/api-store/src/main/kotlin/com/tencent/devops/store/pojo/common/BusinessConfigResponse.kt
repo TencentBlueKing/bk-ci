@@ -34,16 +34,16 @@ import io.swagger.v3.oas.annotations.media.Schema
  * @Version 1.0
  */
 data class BusinessConfigResponse(
-    @Schema(description = "ID", required = true)
+    @Schema(name = "ID", required = true)
     val id: Int,
-    @Schema(description = "业务", required = true)
+    @Schema(name = "业务", required = true)
     val business: String,
-    @Schema(description = "业务特性", required = true)
+    @Schema(name = "业务特性", required = true)
     val feature: String,
-    @Schema(description = "业务特性取值", required = true)
+    @Schema(name = "业务特性取值", required = true)
     val businessValue: String,
-    @Schema(description = "配置值", required = true)
+    @Schema(name = "配置值", required = true)
     val configValue: String,
-    @Schema(description = "描述", required = true)
+    @Schema(name = "描述", required = true)
     val description: String?
 )

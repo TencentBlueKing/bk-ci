@@ -30,18 +30,18 @@ package com.tencent.devops.store.pojo.common
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "用户和组件可见范围校验请求报文")
+@Schema(name = "用户和组件可见范围校验请求报文")
 data class UserStoreDeptInfoRequest(
-    @Schema(description = "用户ID", required = true)
+    @Schema(name = "用户ID", required = true)
     val userId: String,
-    @Schema(description = "用户机构ID列表", required = true)
+    @Schema(name = "用户机构ID列表", required = true)
     val userDeptIdList: List<Int>,
-    @Schema(description = "store组件代码", required = true)
+    @Schema(name = "store组件代码", required = true)
     val storeCode: String,
-    @Schema(description = "store组件类型", required = true)
+    @Schema(name = "store组件类型", required = true)
     val storeType: StoreTypeEnum,
-    @Schema(description = "公共组件标识", required = true)
+    @Schema(name = "公共组件标识", required = true)
     val publicFlag: Boolean,
-    @Schema(description = "store组件机构信息列表", required = true)
+    @Schema(name = "store组件机构信息列表", required = true)
     val storeDepInfoList: List<DeptInfo>?
 )

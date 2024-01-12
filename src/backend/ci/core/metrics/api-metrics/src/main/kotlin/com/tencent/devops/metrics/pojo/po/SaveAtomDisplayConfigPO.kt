@@ -30,20 +30,20 @@ package com.tencent.devops.metrics.pojo.po
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(description = "保存项目下展示插件配置")
+@Schema(name = "保存项目下展示插件配置")
 data class SaveAtomDisplayConfigPO(
-    @Schema(description = "主键ID")
+    @Schema(name = "主键ID")
     val id: Long,
-    @Schema(description = "项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @Schema(description = "userId")
+    @Schema(name = "userId")
     val userId: String,
-    @Schema(description = "插件标识")
+    @Schema(name = "插件标识")
     val atomCode: String,
-    @Schema(description = "插件名称")
+    @Schema(name = "插件名称")
     val atomName: String,
-    @Schema(description = "创建时间")
+    @Schema(name = "创建时间")
     val createTime: LocalDateTime,
-    @Schema(description = "更新时间")
+    @Schema(name = "更新时间")
     val updateTime: LocalDateTime
 )

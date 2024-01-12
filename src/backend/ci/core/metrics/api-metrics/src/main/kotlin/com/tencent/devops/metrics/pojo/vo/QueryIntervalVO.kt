@@ -30,10 +30,10 @@ package com.tencent.devops.metrics.pojo.vo
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(description = "查询区间VO")
+@Schema(name = "查询区间VO")
 data class QueryIntervalVO(
-    @Schema(description = "开始时间", required = true)
+    @Schema(name = "开始时间", required = true)
     val startDateTime: LocalDateTime,
-    @Schema(description = "结束时间", required = true)
+    @Schema(name = "结束时间", required = true)
     val endDateTime: LocalDateTime
 )

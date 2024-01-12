@@ -29,12 +29,12 @@ package com.tencent.devops.store.pojo.app
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "容器编译环境信息")
+@Schema(name = "容器编译环境信息")
 data class ContainerAppInfo(
-    @Schema(description = "编译环境基本信息", required = true)
+    @Schema(name = "编译环境基本信息", required = true)
     val containerApp: ContainerApp,
-    @Schema(description = "编译环境变量信息", required = true)
+    @Schema(name = "编译环境变量信息", required = true)
     val containerAppEnvList: List<ContainerAppEnv>,
-    @Schema(description = "编译环境版本信息", required = true)
+    @Schema(name = "编译环境版本信息", required = true)
     val containerAppVersionList: List<ContainerAppVersion>
 )

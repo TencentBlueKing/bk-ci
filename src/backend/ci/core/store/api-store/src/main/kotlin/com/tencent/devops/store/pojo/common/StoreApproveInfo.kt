@@ -29,30 +29,30 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "审核信息")
+@Schema(name = "审核信息")
 data class StoreApproveInfo(
-    @Schema(description = "ID", required = true)
+    @Schema(name = "ID", required = true)
     val approveId: String,
-    @Schema(description = "审批内容", required = true)
+    @Schema(name = "审批内容", required = true)
     val content: String,
-    @Schema(description = "申请人", required = true)
+    @Schema(name = "申请人", required = true)
     val applicant: String,
-    @Schema(description = "审批类型 ATOM_COLLABORATOR_APPLY:申请成为插件协作者", required = true)
+    @Schema(name = "审批类型 ATOM_COLLABORATOR_APPLY:申请成为插件协作者", required = true)
     val approveType: String,
-    @Schema(description = "审批状态 WAIT:待审批，PASS:通过，REFUSE:拒绝", required = true)
+    @Schema(name = "审批状态 WAIT:待审批，PASS:通过，REFUSE:拒绝", required = true)
     val approveStatus: String,
-    @Schema(description = "审批信息", required = false)
+    @Schema(name = "审批信息", required = false)
     val approveMsg: String?,
-    @Schema(description = "store组件代码", required = true)
+    @Schema(name = "store组件代码", required = true)
     val storeCode: String,
-    @Schema(description = "store组件类别 ATOM:插件 TEMPLATE:模板 IMAGE:镜像 IDE_ATOM:IDE插件", required = true)
+    @Schema(name = "store组件类别 ATOM:插件 TEMPLATE:模板 IMAGE:镜像 IDE_ATOM:IDE插件", required = true)
     val storeType: String,
-    @Schema(description = "创建人", required = true)
+    @Schema(name = "创建人", required = true)
     val creator: String,
-    @Schema(description = "修改人", required = true)
+    @Schema(name = "修改人", required = true)
     val modifier: String,
-    @Schema(description = "创建日期", required = true)
+    @Schema(name = "创建日期", required = true)
     val createTime: Long = 0,
-    @Schema(description = "更新日期", required = true)
+    @Schema(name = "更新日期", required = true)
     val updateTime: Long = 0
 )

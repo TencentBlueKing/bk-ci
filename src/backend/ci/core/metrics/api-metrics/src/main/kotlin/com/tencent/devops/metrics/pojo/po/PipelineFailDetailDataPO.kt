@@ -30,38 +30,38 @@ package com.tencent.devops.metrics.pojo.po
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(description = "流水线失败明细持久化对象")
+@Schema(name = "流水线失败明细持久化对象")
 data class PipelineFailDetailDataPO(
-    @Schema(description = "项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @Schema(description = "流水线ID")
+    @Schema(name = "流水线ID")
     val pipelineId: String,
-    @Schema(description = "流水线名称")
+    @Schema(name = "流水线名称")
     val pipelineName: String,
-    @Schema(description = "渠道代码")
+    @Schema(name = "渠道代码")
     val channelCode: String,
-    @Schema(description = "构建ID")
+    @Schema(name = "构建ID")
     val buildId: String,
-    @Schema(description = "构建序号")
+    @Schema(name = "构建序号")
     val buildNum: Int,
-    @Schema(description = "触发代码库地址")
+    @Schema(name = "触发代码库地址")
     val repoUrl: String?,
-    @Schema(description = "构建代码库分支")
+    @Schema(name = "构建代码库分支")
     val branch: String?,
-    @Schema(description = "启动用户")
+    @Schema(name = "启动用户")
     val startUser: String,
-    @Schema(description = "启动时间")
+    @Schema(name = "启动时间")
     val startTime: LocalDateTime,
-    @Schema(description = "结束时间")
+    @Schema(name = "结束时间")
     val endTime: LocalDateTime,
-    @Schema(description = "错误的类型标识")
+    @Schema(name = "错误的类型标识")
     val errorType: Int?,
-    @Schema(description = "错误类型名称")
+    @Schema(name = "错误类型名称")
     val errorTypeName: String?,
-    @Schema(description = "错误的标识码")
+    @Schema(name = "错误的标识码")
     val errorCode: Int?,
-    @Schema(description = "错误描述")
+    @Schema(name = "错误描述")
     val errorMsg: String?,
-    @Schema(description = "统计时间")
+    @Schema(name = "统计时间")
     val statisticsTime: LocalDateTime
 )

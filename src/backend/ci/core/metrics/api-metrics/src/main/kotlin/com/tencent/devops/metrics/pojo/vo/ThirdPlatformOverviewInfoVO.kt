@@ -32,12 +32,12 @@ import com.tencent.devops.metrics.pojo.`do`.QualityInfoDO
 import com.tencent.devops.metrics.pojo.`do`.TurboInfoDO
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "第三方平台度量概览")
+@Schema(name = "第三方平台度量概览")
 data class ThirdPlatformOverviewInfoVO(
-    @Schema(description = "CodeCC度量信息")
+    @Schema(name = "CodeCC度量信息")
     val codeCheckInfo: CodeCheckInfoDO,
-    @Schema(description = "质量红线度量信息")
+    @Schema(name = "质量红线度量信息")
     val qualityInfo: QualityInfoDO,
-    @Schema(description = "编译加速度量信息")
+    @Schema(name = "编译加速度量信息")
     val turboInfo: TurboInfoDO
 )

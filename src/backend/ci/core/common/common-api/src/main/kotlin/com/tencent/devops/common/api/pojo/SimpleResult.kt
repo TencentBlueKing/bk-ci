@@ -29,17 +29,17 @@ package com.tencent.devops.common.api.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "状态")
+@Schema(name = "状态")
 data class SimpleResult(
-    @Schema(description = "是否成功", required = true)
+    @Schema(name = "是否成功", required = true)
     val success: Boolean,
-    @Schema(description = "错误信息", required = false)
+    @Schema(name = "错误信息", required = false)
     val message: String? = null,
-    @Schema(description = "错误码信息", required = false)
+    @Schema(name = "错误码信息", required = false)
     val error: Error? = null
 )
 
-@Schema(description = "第三方构建信息模型-错误信息")
+@Schema(name = "第三方构建信息模型-错误信息")
 data class Error(
     val errorType: String,
     val errorMessage: String,

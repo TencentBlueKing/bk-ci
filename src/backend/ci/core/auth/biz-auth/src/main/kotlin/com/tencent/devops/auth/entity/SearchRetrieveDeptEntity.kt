@@ -32,7 +32,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema
 data class SearchRetrieveDeptEntity(
-    @Schema(description = "部门 ID")
+    @Schema(name = "部门 ID")
     val id: Int,
     override var bk_app_code: String,
     override var bk_app_secret: String,

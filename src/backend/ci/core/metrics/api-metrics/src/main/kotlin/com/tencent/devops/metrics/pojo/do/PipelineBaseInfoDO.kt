@@ -29,14 +29,14 @@ package com.tencent.devops.metrics.pojo.`do`
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线基本信息")
+@Schema(name = "流水线基本信息")
 class PipelineBaseInfoDO(
-    @Schema(description = "流水线ID")
+    @Schema(name = "流水线ID")
     val pipelineId: String,
-    @Schema(description = "流水线名称")
+    @Schema(name = "流水线名称")
     val pipelineName: String,
-    @Schema(description = "构建ID")
+    @Schema(name = "构建ID")
     val buildId: String,
-    @Schema(description = "构建序号")
+    @Schema(name = "构建序号")
     val buildNum: Int
 )

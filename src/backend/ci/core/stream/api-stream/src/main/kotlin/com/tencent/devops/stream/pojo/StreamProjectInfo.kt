@@ -30,50 +30,50 @@ package com.tencent.devops.stream.pojo
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "Git和Stream项目详细信息")
+@Schema(name = "Git和Stream项目详细信息")
 data class StreamProjectCIInfo(
-    @Schema(description = "Git项目ID")
+    @Schema(name = "Git项目ID")
     val id: Long,
-    @Schema(description = "蓝盾项目id")
+    @Schema(name = "蓝盾项目id")
     val projectCode: String?,
-    @Schema(description = "是否为stream 公共项目")
+    @Schema(name = "是否为stream 公共项目")
     val public: Boolean?,
-    @Schema(description = "stream 项目名称")
+    @Schema(name = "stream 项目名称")
     val name: String?,
-    @Schema(description = "stream 项目名称带有路径")
+    @Schema(name = "stream 项目名称带有路径")
     val nameWithNamespace: String?,
-    @Schema(description = "https-git链接")
+    @Schema(name = "https-git链接")
     val httpsUrlToRepo: String?,
-    @Schema(description = "项目网页链接")
+    @Schema(name = "项目网页链接")
     val webUrl: String?,
-    @Schema(description = "项目头像")
+    @Schema(name = "项目头像")
     val avatarUrl: String?,
-    @Schema(description = "项目描述")
+    @Schema(name = "项目描述")
     val description: String?,
-    @Schema(description = "是否开启CI功能")
+    @Schema(name = "是否开启CI功能")
     val enableCI: Boolean?,
-    @Schema(description = "Build pushed branches")
+    @Schema(name = "Build pushed branches")
     val buildPushedBranches: Boolean?,
-    @Schema(description = "Build pushed pull request")
+    @Schema(name = "Build pushed pull request")
     val buildPushedPullRequest: Boolean?,
-    @Schema(description = "是否开启Mr锁定")
+    @Schema(name = "是否开启Mr锁定")
     val enableMrBlock: Boolean?,
-    @Schema(description = "当前授权人")
+    @Schema(name = "当前授权人")
     val authUserId: String?,
-    @Schema(description = "CI相关信息")
+    @Schema(name = "CI相关信息")
     val ciInfo: StreamCIInfo?
 )
 
-@Schema(description = "CI相关信息")
+@Schema(name = "CI相关信息")
 data class StreamCIInfo(
-    @Schema(description = "是否开启STREAM")
+    @Schema(name = "是否开启STREAM")
     val enableCI: Boolean,
-    @Schema(description = "最后一次构建信息")
+    @Schema(name = "最后一次构建信息")
     val lastBuildMessage: String?,
-    @Schema(description = "最后一次构建状态")
+    @Schema(name = "最后一次构建状态")
     val lastBuildStatus: BuildStatus?,
-    @Schema(description = "流水线ID")
+    @Schema(name = "流水线ID")
     val lastBuildPipelineId: String?,
-    @Schema(description = "构建ID")
+    @Schema(name = "构建ID")
     val lastBuildId: String?
 )

@@ -29,14 +29,14 @@ package com.tencent.devops.scm.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "git仓库文件和目录列表")
+@Schema(name = "git仓库文件和目录列表")
 class GitRepositoryDirItem(
-    @Schema(description = "ID", required = true)
+    @Schema(name = "ID", required = true)
     val id: String,
-    @Schema(description = "文件或目录名称", required = true)
+    @Schema(name = "文件或目录名称", required = true)
     val name: String,
-    @Schema(description = "类型", required = true)
+    @Schema(name = "类型", required = true)
     val type: String,
-    @Schema(description = "模式", required = true)
+    @Schema(name = "模式", required = true)
     val mode: String
 )

@@ -29,8 +29,8 @@ package com.tencent.devops.openapi.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class SwaggerDocParameterInfo(
-    @Schema(description = "是否可空")
+    @Schema(name = "是否可空")
     val markedNullable: Boolean,
-    @Schema(description = "默认值")
+    @Schema(name = "默认值")
     val defaultValue: String?
 )

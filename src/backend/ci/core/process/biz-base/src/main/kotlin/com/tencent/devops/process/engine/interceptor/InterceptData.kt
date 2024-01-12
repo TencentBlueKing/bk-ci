@@ -43,16 +43,16 @@ data class InterceptData(
     val model: Model?,
     val startType: StartType,
     val buildId: String,
-    @Schema(description = "Lock 类型", required = false)
+    @Schema(name = "Lock 类型", required = false)
     val runLockType: PipelineRunLockType,
-    @Schema(description = "最大排队时长", required = false)
+    @Schema(name = "最大排队时长", required = false)
     val waitQueueTimeMinute: Int,
-    @Schema(description = "最大排队数量", required = false)
+    @Schema(name = "最大排队数量", required = false)
     val maxQueueSize: Int,
-    @Schema(description = "并发时,设定的group", required = false)
+    @Schema(name = "并发时,设定的group", required = false)
     var concurrencyGroup: String?,
-    @Schema(description = "并发时,是否相同group取消正在执行的流水线", required = false)
+    @Schema(name = "并发时,是否相同group取消正在执行的流水线", required = false)
     val concurrencyCancelInProgress: Boolean = false,
-    @Schema(description = "并发构建数量限制", required = false)
+    @Schema(name = "并发构建数量限制", required = false)
     val maxConRunningQueueSize: Int? // MULTIPLE类型时，并发构建数量限制
 )

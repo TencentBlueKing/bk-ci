@@ -29,20 +29,20 @@ package com.tencent.devops.common.pipeline.pojo.time
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "各项执行耗时时刻")
+@Schema(name = "各项执行耗时时刻")
 data class BuildRecordTimeLine(
-    @Schema(description = "执行耗时时刻，计算结果需成对", required = false)
+    @Schema(name = "执行耗时时刻，计算结果需成对", required = false)
     var executeCostMoments: MutableList<Moment> = mutableListOf(),
-    @Schema(description = "等待耗时时刻，计算结果需成对", required = false)
+    @Schema(name = "等待耗时时刻，计算结果需成对", required = false)
     var waitCostMoments: MutableList<Moment> = mutableListOf(),
-    @Schema(description = "排队耗时（流水线并发和Job互斥）时刻，计算结果需成对", required = false)
+    @Schema(name = "排队耗时（流水线并发和Job互斥）时刻，计算结果需成对", required = false)
     var queueCostMoments: MutableList<Moment> = mutableListOf()
 ) {
-    @Schema(description = "时间戳对")
+    @Schema(name = "时间戳对")
     data class Moment(
-        @Schema(description = "开始时间")
+        @Schema(name = "开始时间")
         val startTime: Long,
-        @Schema(description = "结束时间")
+        @Schema(name = "结束时间")
         val endTime: Long
     )
 }

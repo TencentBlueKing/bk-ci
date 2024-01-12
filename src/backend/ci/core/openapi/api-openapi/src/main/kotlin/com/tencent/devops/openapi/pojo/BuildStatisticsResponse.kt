@@ -28,20 +28,20 @@ package com.tencent.devops.openapi.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线构建统计数据响应消息体")
+@Schema(name = "流水线构建统计数据响应消息体")
 data class BuildStatisticsResponse(
-    @Schema(description = "流水线执行次数")
+    @Schema(name = "流水线执行次数")
     val buildCount: Long,
-    @Schema(description = "流水线成功次数")
+    @Schema(name = "流水线成功次数")
     val successCount: Long,
-    @Schema(description = "流水线失败次数")
+    @Schema(name = "流水线失败次数")
     val failCount: Long,
-    @Schema(description = "流水线排队超时次数")
+    @Schema(name = "流水线排队超时次数")
     val queueTimeoutCount: Long,
-    @Schema(description = "流水线取消次数")
+    @Schema(name = "流水线取消次数")
     val cancelCount: Long,
-    @Schema(description = "流水线成功率")
+    @Schema(name = "流水线成功率")
     val successRate: Float,
-    @Schema(description = "流水线失败率")
+    @Schema(name = "流水线失败率")
     val failRate: Float
 )

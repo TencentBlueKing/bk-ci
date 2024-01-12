@@ -29,16 +29,16 @@ package com.tencent.devops.common.archive.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "")
+@Schema(name = "")
 data class ReportListDTO(
-    @Schema(description = "用户id", required = false)
+    @Schema(name = "用户id", required = false)
     val userId: String,
-    @Schema(description = "项目id", required = false)
+    @Schema(name = "项目id", required = false)
     val projectId: String,
-    @Schema(description = "流水线id", required = false)
+    @Schema(name = "流水线id", required = false)
     val pipelineId: String,
-    @Schema(description = "构建id", required = false)
+    @Schema(name = "构建id", required = false)
     val buildId: String,
-    @Schema(description = "是否有操作权限", required = false)
+    @Schema(name = "是否有操作权限", required = false)
     val needPermission: Boolean
 )

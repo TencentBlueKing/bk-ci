@@ -29,10 +29,10 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "商店组件-版本信息")
+@Schema(name = "商店组件-版本信息")
 data class VersionInfo(
-    @Schema(description = "版本名称", required = true)
+    @Schema(name = "版本名称", required = true)
     val versionName: String,
-    @Schema(description = "版本值", required = true)
+    @Schema(name = "版本值", required = true)
     val versionValue: String
 )

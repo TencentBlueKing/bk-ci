@@ -32,16 +32,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 /**
  * 包版本限制
  */
-@Schema(description = "包版本限制")
+@Schema(name = "包版本限制")
 data class PackageConstraint(
-    @Schema(description = "包唯一key")
+    @Schema(name = "包唯一key")
     val packageKey: String? = null,
-    @Schema(description = "包版本列表")
+    @Schema(name = "包版本列表")
     val versions: List<String>? = null,
-    @Schema(description = "目标包存储版本:将源版本经过分发后存储为指定的目标版本，在源版本只有一个时生效,只针对镜像类型")
+    @Schema(name = "目标包存储版本:将源版本经过分发后存储为指定的目标版本，在源版本只有一个时生效,只针对镜像类型")
     val targetVersions: List<String>? = null,
-    @Schema(description = "包正则匹配规则")
+    @Schema(name = "包正则匹配规则")
     val packageRegex: List<String>? = null,
-    @Schema(description = "包版本正则匹配规则")
+    @Schema(name = "包版本正则匹配规则")
     val versionRegex: List<String>? = null
 )

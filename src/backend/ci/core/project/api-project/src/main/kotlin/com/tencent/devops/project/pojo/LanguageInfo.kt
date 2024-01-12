@@ -27,10 +27,10 @@
 package com.tencent.devops.project.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "语言信息")
+@Schema(name = "语言信息")
 data class LanguageInfo(
-    @Schema(description = "语言")
+    @Schema(name = "语言")
     val language: String,
-    @Schema(description = "语言名称")
+    @Schema(name = "语言名称")
     val name: String
 )

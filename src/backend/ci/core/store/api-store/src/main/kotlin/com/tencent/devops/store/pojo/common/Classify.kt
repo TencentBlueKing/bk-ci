@@ -29,20 +29,20 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "分类信息")
+@Schema(name = "分类信息")
 data class Classify(
-    @Schema(description = "分类ID", required = true)
+    @Schema(name = "分类ID", required = true)
     val id: String,
-    @Schema(description = "分类编码", required = true)
+    @Schema(name = "分类编码", required = true)
     val classifyCode: String,
-    @Schema(description = "分类名称", required = true)
+    @Schema(name = "分类名称", required = true)
     val classifyName: String,
-    @Schema(description = "类别 ATOM:插件 TEMPLATE:模板 IMAGE:镜像 IDE_ATOM:IDE插件", required = true)
+    @Schema(name = "类别 ATOM:插件 TEMPLATE:模板 IMAGE:镜像 IDE_ATOM:IDE插件", required = true)
     val classifyType: String,
-    @Schema(description = "权重（数值越大代表权重越高）", required = false)
+    @Schema(name = "权重（数值越大代表权重越高）", required = false)
     val weight: Int?,
-    @Schema(description = "创建日期")
+    @Schema(name = "创建日期")
     val createTime: Long = 0,
-    @Schema(description = "更新日期")
+    @Schema(name = "更新日期")
     val updateTime: Long = 0
 )

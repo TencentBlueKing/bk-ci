@@ -29,14 +29,14 @@ package com.tencent.devops.repository.pojo.oauth
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "工蜂oauth回调后信息")
+@Schema(name = "工蜂oauth回调后信息")
 data class GitOauthCallback(
-    @Schema(description = "工蜂项目Id")
+    @Schema(name = "工蜂项目Id")
     val gitProjectId: Long?,
-    @Schema(description = "发起oauth认证的用户")
+    @Schema(name = "发起oauth认证的用户")
     val userId: String,
-    @Schema(description = "工蜂返回token真实userId，可能是公共账号")
+    @Schema(name = "工蜂返回token真实userId，可能是公共账号")
     val oauthUserId: String,
-    @Schema(description = "回调后跳转的界面")
+    @Schema(name = "回调后跳转的界面")
     val redirectUrl: String
 )

@@ -32,8 +32,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema
 data class RoleMemberDTO(
-    @Schema(description = "组员类型 user:单用户, dept:组织")
+    @Schema(name = "组员类型 user:单用户, dept:组织")
     val type: ManagerScopesEnum,
-    @Schema(description = "用户Id或组织Id")
+    @Schema(name = "用户Id或组织Id")
     val id: String
 )

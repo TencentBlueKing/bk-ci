@@ -30,14 +30,14 @@ package com.tencent.devops.common.webhook.pojo.code.github
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "Github 基础信息")
+@Schema(name = "Github 基础信息")
 open class GithubBaseInfo(
-    @Schema(description = "ID")
+    @Schema(name = "ID")
     open val id: Long,
-    @Schema(description = "链接[API链接]")
+    @Schema(name = "链接[API链接]")
     open val url: String? = "",
     @JsonProperty("html_url")
-    @Schema(description = "链接[网页链接]")
+    @Schema(name = "链接[网页链接]")
     open val htmlUrl: String? = "",
     @JsonProperty("node_id")
     open val nodeId: String,

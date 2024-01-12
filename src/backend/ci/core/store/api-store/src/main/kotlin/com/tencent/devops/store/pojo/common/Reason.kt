@@ -31,25 +31,25 @@ import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nSourceEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "原因信息")
+@Schema(name = "原因信息")
 data class Reason(
-    @Schema(description = "原因ID", required = true)
+    @Schema(name = "原因ID", required = true)
     val id: String,
-    @Schema(description = "原因类型", required = true)
+    @Schema(name = "原因类型", required = true)
     val type: String,
-    @Schema(description = "原因内容", required = true)
+    @Schema(name = "原因内容", required = true)
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val content: String,
-    @Schema(description = "创建人")
+    @Schema(name = "创建人")
     val creator: String,
-    @Schema(description = "修改人")
+    @Schema(name = "修改人")
     val modifier: String,
-    @Schema(description = "创建时间")
+    @Schema(name = "创建时间")
     val createTime: String,
-    @Schema(description = "修改时间")
+    @Schema(name = "修改时间")
     val updateTime: String,
-    @Schema(description = "是否启用")
+    @Schema(name = "是否启用")
     val enable: Boolean,
-    @Schema(description = "显示顺序")
+    @Schema(name = "显示顺序")
     val order: Int
 )

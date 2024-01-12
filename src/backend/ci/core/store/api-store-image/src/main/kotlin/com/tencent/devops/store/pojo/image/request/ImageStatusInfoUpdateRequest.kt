@@ -30,16 +30,16 @@ import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(description = "镜像状态信息修改请求报文体")
+@Schema(name = "镜像状态信息修改请求报文体")
 data class ImageStatusInfoUpdateRequest(
-    @Schema(description = "镜像状态", required = false)
+    @Schema(name = "镜像状态", required = false)
     val imageStatus: ImageStatusEnum? = null,
-    @Schema(description = "镜像状态描述", required = false)
+    @Schema(name = "镜像状态描述", required = false)
     val imageStatusMsg: String? = null,
-    @Schema(description = "镜像发布时间", required = false)
+    @Schema(name = "镜像发布时间", required = false)
     val pubTime: LocalDateTime? = null,
-    @Schema(description = "镜像tag", required = false)
+    @Schema(name = "镜像tag", required = false)
     val imageTag: String? = null,
-    @Schema(description = "是否为最新版本镜像", required = false)
+    @Schema(name = "是否为最新版本镜像", required = false)
     val latestFlag: Boolean? = null
 )

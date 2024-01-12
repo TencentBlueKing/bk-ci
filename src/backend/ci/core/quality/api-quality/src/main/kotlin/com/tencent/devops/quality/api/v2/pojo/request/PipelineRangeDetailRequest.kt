@@ -29,7 +29,7 @@ package com.tencent.devops.quality.api.v2.pojo.request
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线范围请求")
+@Schema(name = "流水线范围请求")
 data class PipelineRangeDetailRequest(
     val projectId: String,
     val pipelineIds: Set<String>,

@@ -29,13 +29,13 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "审核可见范围请求报文")
+@Schema(name = "审核可见范围请求报文")
 data class VisibleApproveReq(
-    @Schema(description = "审核结果：PASS：通过|REJECT：驳回")
+    @Schema(name = "审核结果：PASS：通过|REJECT：驳回")
     val result: String,
-    @Schema(description = "审核结果说明")
+    @Schema(name = "审核结果说明")
     val message: String,
-    @Schema(description = "机构ID列表")
+    @Schema(name = "机构ID列表")
     val deptIdList: List<Int>
 
 )

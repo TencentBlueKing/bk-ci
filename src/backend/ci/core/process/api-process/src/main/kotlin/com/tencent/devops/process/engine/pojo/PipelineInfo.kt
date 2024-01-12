@@ -32,54 +32,54 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线信息")
+@Schema(name = "流水线信息")
 data class PipelineInfo(
-    @Schema(description = "项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @Schema(description = "流水线DI")
+    @Schema(name = "流水线DI")
     val pipelineId: String,
-    @Schema(description = "模板ID")
+    @Schema(name = "模板ID")
     val templateId: String?,
-    @Schema(description = "流水线名称")
+    @Schema(name = "流水线名称")
     val pipelineName: String,
-    @Schema(description = "流水线描述")
+    @Schema(name = "流水线描述")
     val pipelineDesc: String,
-    @Schema(description = "版本")
+    @Schema(name = "版本")
     var version: Int = 1,
-    @Schema(description = "创建时间")
+    @Schema(name = "创建时间")
     val createTime: Long = 0,
-    @Schema(description = "更新时间")
+    @Schema(name = "更新时间")
     val updateTime: Long = 0,
-    @Schema(description = "创建者")
+    @Schema(name = "创建者")
     val creator: String,
-    @Schema(description = "上一次的更新者")
+    @Schema(name = "上一次的更新者")
     val lastModifyUser: String,
-    @Schema(description = "渠道号")
+    @Schema(name = "渠道号")
     val channelCode: ChannelCode,
-    @Schema(description = "是否能够手动启动")
+    @Schema(name = "是否能够手动启动")
     val canManualStartup: Boolean,
-    @Schema(description = "是否可以跳过")
+    @Schema(name = "是否可以跳过")
     val canElementSkip: Boolean,
-    @Schema(description = "任务数")
+    @Schema(name = "任务数")
     val taskCount: Int,
-    @Schema(description = "版本名称")
+    @Schema(name = "版本名称")
     var versionName: String = "init",
-    @Schema(description = "ID")
+    @Schema(name = "ID")
     val id: Long?,
-    @Schema(description = "流水线组名称列表", required = false)
+    @Schema(name = "流水线组名称列表", required = false)
     var viewNames: List<String>? = null,
-    @Schema(description = "最后构建启动时间", required = false)
+    @Schema(name = "最后构建启动时间", required = false)
     var latestBuildStartTime: Long? = null,
-    @Schema(description = "最后构建结束时间", required = false)
+    @Schema(name = "最后构建结束时间", required = false)
     var latestBuildEndTime: Long? = null,
-    @Schema(description = "最后构建状态", required = false)
+    @Schema(name = "最后构建状态", required = false)
     var latestBuildStatus: BuildStatus? = null,
-    @Schema(description = "最后构建版本号", required = false)
+    @Schema(name = "最后构建版本号", required = false)
     var latestBuildNum: Int? = null,
-    @Schema(description = "最后构建ID", required = false)
+    @Schema(name = "最后构建ID", required = false)
     var latestBuildId: String? = null,
-    @Schema(description = "触发方式", required = false)
+    @Schema(name = "触发方式", required = false)
     var trigger: String? = null,
-    @Schema(description = "约束模式下的模板信息", required = false)
+    @Schema(name = "约束模式下的模板信息", required = false)
     var templateInfo: TemplateInfo? = null
 )

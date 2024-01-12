@@ -30,18 +30,18 @@ package com.tencent.devops.project.pojo
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "数据库分片信息")
+@Schema(name = "数据库分片信息")
 data class DataBasePiecewiseInfo(
-    @Schema(description = "项目ID/项目CODE")
+    @Schema(name = "项目ID/项目CODE")
     val projectId: String,
-    @Schema(description = "集群名称")
+    @Schema(name = "集群名称")
     val clusterName: String,
-    @Schema(description = "微服务模块名称")
+    @Schema(name = "微服务模块名称")
     val moduleCode: SystemModuleEnum,
-    @Schema(description = "数据源名称")
+    @Schema(name = "数据源名称")
     val dataSourceName: String,
-    @Schema(description = "路由规则")
+    @Schema(name = "路由规则")
     val routingRule: String,
-    @Schema(description = "数据源URL")
+    @Schema(name = "数据源URL")
     val dsUrl: String? = null
 )

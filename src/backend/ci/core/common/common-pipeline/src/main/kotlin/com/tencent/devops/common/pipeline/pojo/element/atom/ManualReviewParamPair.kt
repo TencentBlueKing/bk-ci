@@ -29,10 +29,10 @@ package com.tencent.devops.common.pipeline.pojo.element.atom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "人工审核-自定义参数-下拉框列表剑")
+@Schema(name = "人工审核-自定义参数-下拉框列表剑")
 data class ManualReviewParamPair(
-    @Schema(description = "参数名", required = true)
+    @Schema(name = "参数名", required = true)
     val key: String,
-    @Schema(description = "参数内容", required = true)
+    @Schema(name = "参数内容", required = true)
     val value: String
 )

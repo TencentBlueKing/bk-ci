@@ -3,13 +3,13 @@ package com.tencent.devops.notify.tencentcloud.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class EmailSignatureConfig(
-    @Schema(description = "请求体")
+    @Schema(name = "请求体")
     override val payload: String,
-    @Schema(description = "密钥id")
+    @Schema(name = "密钥id")
     override val secretId: String,
-    @Schema(description = "密钥key")
+    @Schema(name = "密钥key")
     override val secretKey: String,
-    @Schema(description = "地域参数，用来标识希望操作哪个地域的数据")
+    @Schema(name = "地域参数，用来标识希望操作哪个地域的数据")
     override val region: String
 ) : TencentCloudSignatureConfig(
     httpRequestMethod = "POST",

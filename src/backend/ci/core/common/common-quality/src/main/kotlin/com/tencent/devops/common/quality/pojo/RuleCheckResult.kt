@@ -29,16 +29,16 @@ package com.tencent.devops.common.quality.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "质量红线-拦截检测结果")
+@Schema(name = "质量红线-拦截检测结果")
 data class RuleCheckResult(
-    @Schema(description = "是否通过", required = true)
+    @Schema(name = "是否通过", required = true)
     val success: Boolean,
-    @Schema(description = "失败后是否结束", required = true)
+    @Schema(name = "失败后是否结束", required = true)
     val failEnd: Boolean,
-    @Schema(description = "审核超时时间", required = true)
+    @Schema(name = "审核超时时间", required = true)
     val auditTimeoutSeconds: Long,
-    @Schema(description = "第几次检查", required = true)
+    @Schema(name = "第几次检查", required = true)
     val checkTimes: Int,
-    @Schema(description = "失败信息", required = true)
+    @Schema(name = "失败信息", required = true)
     val resultList: List<RuleCheckSingleResult>
 )

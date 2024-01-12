@@ -31,51 +31,51 @@ import com.tencent.devops.store.pojo.common.Category
 import com.tencent.devops.store.pojo.common.Label
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "模板详情")
+@Schema(name = "模板详情")
 data class OpTemplateItem(
-    @Schema(description = "模板ID", required = true)
+    @Schema(name = "模板ID", required = true)
     val templateId: String,
-    @Schema(description = "模板代码", required = true)
+    @Schema(name = "模板代码", required = true)
     val templateCode: String,
-    @Schema(description = "模板名称", required = true)
+    @Schema(name = "模板名称", required = true)
     val templateName: String,
-    @Schema(description = "模板logo", required = false)
+    @Schema(name = "模板logo", required = false)
     val logoUrl: String?,
-    @Schema(description = "所属模板分类Id", required = false)
+    @Schema(name = "所属模板分类Id", required = false)
     val classifyId: String?,
-    @Schema(description = "所属模板分类Code", required = false)
+    @Schema(name = "所属模板分类Code", required = false)
     val classifyCode: String?,
-    @Schema(description = "所属模板分类名称", required = false)
+    @Schema(name = "所属模板分类名称", required = false)
     val classifyName: String?,
-    @Schema(description = "简介", required = false)
+    @Schema(name = "简介", required = false)
     val summary: String?,
-    @Schema(description =
+    @Schema(name =
         "模板状态，INIT：初始化|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGED：已下架",
         required = true
     )
     val templateStatus: String,
-    @Schema(description = "模板描述", required = false)
+    @Schema(name = "模板描述", required = false)
     val description: String?,
-    @Schema(description = "版本号", required = false)
+    @Schema(name = "版本号", required = false)
     val version: String?,
-    @Schema(description = "模板类型，FREEDOM：自由模式 CONSTRAINT：约束模式", required = true)
+    @Schema(name = "模板类型，FREEDOM：自由模式 CONSTRAINT：约束模式", required = true)
     val templateType: String,
-    @Schema(description = "范畴列表", required = false)
+    @Schema(name = "范畴列表", required = false)
     val categoryList: List<Category>?,
-    @Schema(description = "标签列表", required = false)
+    @Schema(name = "标签列表", required = false)
     val labelList: List<Label>?,
-    @Schema(description = "是否为最新版本模板 true：最新 false：非最新", required = true)
+    @Schema(name = "是否为最新版本模板 true：最新 false：非最新", required = true)
     val latestFlag: Boolean,
-    @Schema(description = "发布者", required = false)
+    @Schema(name = "发布者", required = false)
     val publisher: String?,
-    @Schema(description = "发布者描述", required = false)
+    @Schema(name = "发布者描述", required = false)
     val pubDescription: String?,
-    @Schema(description = "创建人")
+    @Schema(name = "创建人")
     val creator: String,
-    @Schema(description = "修改人")
+    @Schema(name = "修改人")
     val modifier: String,
-    @Schema(description = "创建时间")
+    @Schema(name = "创建时间")
     val createTime: String,
-    @Schema(description = "修改时间")
+    @Schema(name = "修改时间")
     val updateTime: String
 )

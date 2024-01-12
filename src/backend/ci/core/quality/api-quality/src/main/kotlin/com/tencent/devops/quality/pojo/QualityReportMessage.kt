@@ -28,13 +28,13 @@ package com.tencent.devops.quality.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "红线报告消息类型")
+@Schema(name = "红线报告消息类型")
 data class QualityReportMessage(
 
-    @Schema(description = "项目id")
+    @Schema(name = "项目id")
     var projectId: String = "",
-    @Schema(description = "流水线id")
+    @Schema(name = "流水线id")
     var pipelineId: String = "",
-    @Schema(description = "构建id")
+    @Schema(name = "构建id")
     var buildId: String = ""
 )

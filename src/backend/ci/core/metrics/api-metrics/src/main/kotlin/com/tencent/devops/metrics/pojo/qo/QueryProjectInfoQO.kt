@@ -29,16 +29,16 @@ package com.tencent.devops.metrics.pojo.qo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "获取项目下信息列表信息查询条件对象")
+@Schema(name = "获取项目下信息列表信息查询条件对象")
 data class QueryProjectInfoQO(
-    @Schema(description = "项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @Schema(description = "流水线ID")
+    @Schema(name = "流水线ID")
     val pipelineIds: List<String>?,
-    @Schema(description = "搜索关键字")
+    @Schema(name = "搜索关键字")
     val keyword: String?,
-    @Schema(description = "页码")
+    @Schema(name = "页码")
     val page: Int,
-    @Schema(description = "页数")
+    @Schema(name = "页数")
     val pageSize: Int
 )

@@ -29,20 +29,20 @@ package com.tencent.devops.environment.pojo.thirdPartyAgent
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "第三方接入机-信息")
+@Schema(name = "第三方接入机-信息")
 data class ThirdPartyAgentInfo(
-    @Schema(description = "Agent Hash ID", required = true)
+    @Schema(name = "Agent Hash ID", required = true)
     val agentId: String,
-    @Schema(description = "项目ID", required = true)
+    @Schema(name = "项目ID", required = true)
     val projectId: String,
-    @Schema(description = "状态")
+    @Schema(name = "状态")
     val status: String,
-    @Schema(description = "主机名", required = true)
+    @Schema(name = "主机名", required = true)
     val hostname: String,
-    @Schema(description = "IP地址", required = true)
+    @Schema(name = "IP地址", required = true)
     val ip: String,
-    @Schema(description = "节点名", required = true)
+    @Schema(name = "节点名", required = true)
     val displayName: String,
-    @Schema(description = "详细名称", required = false)
+    @Schema(name = "详细名称", required = false)
     val detailName: String? = null
 )

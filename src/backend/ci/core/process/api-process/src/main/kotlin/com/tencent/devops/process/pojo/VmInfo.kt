@@ -29,10 +29,10 @@ package com.tencent.devops.process.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "Vm信息")
+@Schema(name = "Vm信息")
 data class VmInfo(
-    @Schema(description = "IP", required = false)
+    @Schema(name = "IP", required = false)
     val ip: String?,
-    @Schema(description = "名称", required = true)
+    @Schema(name = "名称", required = true)
     val name: String
 )

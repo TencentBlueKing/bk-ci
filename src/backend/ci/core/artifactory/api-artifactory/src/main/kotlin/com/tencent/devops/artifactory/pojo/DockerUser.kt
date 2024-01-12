@@ -29,14 +29,14 @@ package com.tencent.devops.artifactory.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "镜像仓库-用户密码")@Suppress("ALL")
+@Schema(name = "镜像仓库-用户密码")@Suppress("ALL")
 data class DockerUser(
-    @Schema(description = "用户名", required = true)
+    @Schema(name = "用户名", required = true)
     val user: String,
-    @Schema(description = "密码", required = true)
+    @Schema(name = "密码", required = true)
     val password: String,
-    @Schema(description = "仓库域名", required = true)
+    @Schema(name = "仓库域名", required = true)
     val domain: String? = null,
-    @Schema(description = "仓库端口", required = true)
+    @Schema(name = "仓库端口", required = true)
     val docker_port: String? = null
 )

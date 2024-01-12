@@ -47,25 +47,25 @@ import io.swagger.v3.oas.annotations.media.Schema
 }
  */
 data class DeptInfo(
-    @Schema(description = "TypeId")
+    @Schema(name = "TypeId")
     @JsonProperty("TypeId")
     val typeId: String,
-    @Schema(description = "LeaderId")
+    @Schema(name = "LeaderId")
     @JsonProperty("LeaderId")
     val leaderId: String,
-    @Schema(description = "Name")
+    @Schema(name = "Name")
     @JsonProperty("Name")
     val name: String,
-    @Schema(description = "Level")
+    @Schema(name = "Level")
     @JsonProperty("Level")
     val level: String,
-    @Schema(description = "Enabled")
+    @Schema(name = "Enabled")
     @JsonProperty("Enabled")
     val enabled: String,
-    @Schema(description = "ParentId")
+    @Schema(name = "ParentId")
     @JsonProperty("ParentId")
     val parentId: String,
-    @Schema(description = "ID")
+    @Schema(name = "ID")
     @JsonProperty("ID")
     val id: String
 

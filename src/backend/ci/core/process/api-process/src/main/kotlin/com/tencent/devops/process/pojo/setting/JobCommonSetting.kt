@@ -29,10 +29,10 @@ package com.tencent.devops.process.pojo.setting
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线job公共配置信息")
+@Schema(name = "流水线job公共配置信息")
 data class JobCommonSetting(
-    @Schema(description = "每个job最大task个数", required = true)
+    @Schema(name = "每个job最大task个数", required = true)
     val maxTaskNum: Int,
-    @Schema(description = "task公共配置", required = true)
+    @Schema(name = "task公共配置", required = true)
     val taskCommonSetting: TaskCommonSetting
 )

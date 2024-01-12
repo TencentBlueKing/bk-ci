@@ -29,22 +29,22 @@ package com.tencent.devops.store.pojo.atom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线信息")
+@Schema(name = "流水线信息")
 data class AtomPipeline(
-    @Schema(description = "流水线ID", required = true)
+    @Schema(name = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(description = "流水线名称", required = true)
+    @Schema(name = "流水线名称", required = true)
     var pipelineName: String,
-    @Schema(description = "流水线使用的插件版本")
+    @Schema(name = "流水线使用的插件版本")
     var atomVersion: String,
-    @Schema(description = "项目标识", required = true)
+    @Schema(name = "项目标识", required = true)
     val projectCode: String,
-    @Schema(description = "所属项目")
+    @Schema(name = "所属项目")
     val projectName: String,
-    @Schema(description = "所属BG")
+    @Schema(name = "所属BG")
     val bgName: String,
-    @Schema(description = "所属部门")
+    @Schema(name = "所属部门")
     val deptName: String,
-    @Schema(description = "所属中心")
+    @Schema(name = "所属中心")
     val centerName: String
 )

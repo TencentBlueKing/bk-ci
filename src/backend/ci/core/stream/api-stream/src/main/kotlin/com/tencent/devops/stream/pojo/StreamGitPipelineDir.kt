@@ -29,17 +29,17 @@ package com.tencent.devops.stream.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线文件路径模型")
+@Schema(name = "流水线文件路径模型")
 data class StreamGitPipelineDir(
-    @Schema(description = "当前流水线文件子路径", required = false)
+    @Schema(name = "当前流水线文件子路径", required = false)
     val currentPath: String?,
-    @Schema(description = "所有子路径", required = false)
+    @Schema(name = "所有子路径", required = false)
     var allPath: List<AllPathPair>?
 )
 
 data class AllPathPair(
-    @Schema(description = "子路径", required = true)
+    @Schema(name = "子路径", required = true)
     val path: String,
-    @Schema(description = "文件夹名字", required = true)
+    @Schema(name = "文件夹名字", required = true)
     val name: String
 )

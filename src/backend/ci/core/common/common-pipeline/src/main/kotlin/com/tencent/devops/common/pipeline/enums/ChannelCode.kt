@@ -29,21 +29,21 @@ package com.tencent.devops.common.pipeline.enums
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "渠道代码")
+@Schema(name = "渠道代码")
 enum class ChannelCode {
-    @Schema(description = "蓝鲸持续集成平台")
+    @Schema(name = "蓝鲸持续集成平台")
     BS,
-    @Schema(description = "蓝鲸流水线插件市场")
+    @Schema(name = "蓝鲸流水线插件市场")
     AM,
-    @Schema(description = "蓝鲸代码检查平台")
+    @Schema(name = "蓝鲸代码检查平台")
     CODECC,
-    @Schema(description = "GCloud")
+    @Schema(name = "GCloud")
     GCLOUD,
-    @Schema(description = "工蜂")
+    @Schema(name = "工蜂")
     GIT,
-    @Schema(description = "开源扫描")
+    @Schema(name = "开源扫描")
     GONGFENGSCAN,
-    @Schema(description = "codecc回迁")
+    @Schema(name = "codecc回迁")
     CODECC_EE;
 
     companion object {

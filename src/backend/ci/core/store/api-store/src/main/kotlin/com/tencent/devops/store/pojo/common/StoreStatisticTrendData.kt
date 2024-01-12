@@ -29,12 +29,12 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "统计趋势数据")
+@Schema(name = "统计趋势数据")
 data class StoreStatisticTrendData(
-    @Schema(description = "执行失败总数")
+    @Schema(name = "执行失败总数")
     val totalFailNum: Int,
-    @Schema(description = "执行失败总数详情")
+    @Schema(name = "执行失败总数详情")
     val totalFailDetail: Map<String, Any>?,
-    @Schema(description = "每日统计信息列表")
+    @Schema(name = "每日统计信息列表")
     val dailyStatisticList: List<StoreDailyStatistic>?
 )

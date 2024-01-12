@@ -29,10 +29,10 @@ package com.tencent.devops.artifactory.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "本地目录下文件信息")
+@Schema(name = "本地目录下文件信息")
 data class LocalFileInfo(
-    @Schema(description = "文件所在相对路径列表", required = true)
+    @Schema(name = "文件所在相对路径列表", required = true)
     val relativePath: String,
-    @Schema(description = "是否是静态文件", required = false)
+    @Schema(name = "是否是静态文件", required = false)
     val staticFlag: Boolean = true
 )

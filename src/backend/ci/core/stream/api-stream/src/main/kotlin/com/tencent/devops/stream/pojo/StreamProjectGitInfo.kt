@@ -31,23 +31,23 @@ import com.tencent.devops.common.sdk.github.pojo.GithubRepo
 import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "Git拿到的项目信息")
+@Schema(name = "Git拿到的项目信息")
 data class StreamProjectGitInfo(
-    @Schema(description = "Git项目ID")
+    @Schema(name = "Git项目ID")
     val id: Long,
-    @Schema(description = "是否为stream 公共项目")
+    @Schema(name = "是否为stream 公共项目")
     val public: Boolean?,
-    @Schema(description = "stream 项目名称")
+    @Schema(name = "stream 项目名称")
     val name: String?,
-    @Schema(description = "stream 项目名称带有路径")
+    @Schema(name = "stream 项目名称带有路径")
     val pathWithNamespace: String?,
-    @Schema(description = "https-git链接")
+    @Schema(name = "https-git链接")
     val httpsUrlToRepo: String?,
-    @Schema(description = "项目网页链接")
+    @Schema(name = "项目网页链接")
     val webUrl: String?,
-    @Schema(description = "项目头像")
+    @Schema(name = "项目头像")
     val avatarUrl: String?,
-    @Schema(description = "项目描述")
+    @Schema(name = "项目描述")
     val description: String?
 ) {
     constructor(p: GitCodeProjectInfo) : this(

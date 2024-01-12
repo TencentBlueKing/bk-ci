@@ -31,17 +31,17 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "查询插件错误码信息传输对象")
+@Schema(name = "查询插件错误码信息传输对象")
 data class QueryErrorCodeInfoDTO(
-    @Schema(description = "插件代码")
+    @Schema(name = "插件代码")
     val atomCode: String,
-    @Schema(description = "错误类型")
+    @Schema(name = "错误类型")
     val errorTypes: List<Int>?,
-    @Schema(description = "搜索关键字")
+    @Schema(name = "搜索关键字")
     val keyword: String?,
-    @Schema(description = "页码")
+    @Schema(name = "页码")
     val page: Int = 1,
-    @Schema(description = "页数")
+    @Schema(name = "页数")
     @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
     val pageSize: Int = 10
 )

@@ -29,10 +29,10 @@ package com.tencent.devops.project.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "公司组织数据")
+@Schema(name = "公司组织数据")
 data class OrgInfo(
-    @Schema(description = "组织ID")
+    @Schema(name = "组织ID")
     val orgId: String,
-    @Schema(description = "组织级别")
+    @Schema(name = "组织级别")
     val orgLevel: Int
 )

@@ -31,17 +31,17 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(description = "流水线趋势信息")
+@Schema(name = "流水线趋势信息")
 data class PipelineTrendInfoDO(
-    @Schema(description = "统计时间")
+    @Schema(name = "统计时间")
     @JsonFormat(pattern = "yyyy-MM-dd")
     val statisticsTime: LocalDateTime,
-    @Schema(description = "流水线总执行次数")
+    @Schema(name = "流水线总执行次数")
     val totalExecuteCount: Long,
-    @Schema(description = "流水线执行失败数")
+    @Schema(name = "流水线执行失败数")
     val failedExecuteCount: Long,
-    @Schema(description = "总平均耗时，单位：min")
+    @Schema(name = "总平均耗时，单位：min")
     val totalAvgCostTime: Double,
-    @Schema(description = "失败平均耗时，单位：min")
+    @Schema(name = "失败平均耗时，单位：min")
     val failAvgCostTime: Double
 )

@@ -29,12 +29,12 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "范畴信息请求报文体")
+@Schema(name = "范畴信息请求报文体")
 data class CategoryRequest(
-    @Schema(description = "范畴代码", required = true)
+    @Schema(name = "范畴代码", required = true)
     val categoryCode: String,
-    @Schema(description = "范畴名称", required = true)
+    @Schema(name = "范畴名称", required = true)
     val categoryName: String,
-    @Schema(description = "icon地址", required = false)
+    @Schema(name = "icon地址", required = false)
     val iconUrl: String?
 )

@@ -29,7 +29,7 @@ package com.tencent.devops.quality.api.v2.pojo.enums
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "指标类型")
+@Schema(name = "指标类型")
 enum class IndicatorType {
     SYSTEM, // op定义的指标
     CUSTOM, // 标志是用户创建的指标

@@ -29,7 +29,7 @@ package com.tencent.devops.quality.api.v2.pojo.response
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "质量红线-总览-最近执行历史")
+@Schema(name = "质量红线-总览-最近执行历史")
 class SummaryInterceptItem(
     val pipelineId: String,
     val pipelineName: String,

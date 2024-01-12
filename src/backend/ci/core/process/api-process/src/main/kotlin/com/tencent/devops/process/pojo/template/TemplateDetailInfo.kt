@@ -30,16 +30,16 @@ package com.tencent.devops.process.pojo.template
 import com.tencent.devops.common.pipeline.Model
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "模板详情")
+@Schema(name = "模板详情")
 data class TemplateDetailInfo(
-    @Schema(description = "模板代码", required = true)
+    @Schema(name = "模板代码", required = true)
     val templateCode: String,
-    @Schema(description = "模板名称", required = false)
+    @Schema(name = "模板名称", required = false)
     val templateName: String?,
-    @Schema(description = "模板模型", required = false)
+    @Schema(name = "模板模型", required = false)
     val templateModel: Model?,
-    @Schema(description = "模板版本号", required = true)
+    @Schema(name = "模板版本号", required = true)
     val templateVersion: Long = 0,
-    @Schema(description = "模板版本名称", required = false)
+    @Schema(name = "模板版本名称", required = false)
     val templateVersionName: String = "init"
 )

@@ -30,26 +30,26 @@ package com.tencent.devops.common.quality.pojo
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "质量红线-拦截规则拦截记录")
+@Schema(name = "质量红线-拦截规则拦截记录")
 data class QualityRuleInterceptRecord(
-    @Schema(description = "指标ID", required = true)
+    @Schema(name = "指标ID", required = true)
     val indicatorId: String,
-    @Schema(description = "指标名称", required = true)
+    @Schema(name = "指标名称", required = true)
     val indicatorName: String,
-    @Schema(description = "指标插件类型", required = false)
+    @Schema(name = "指标插件类型", required = false)
     val indicatorType: String?,
-    @Schema(description = "关系", required = true)
+    @Schema(name = "关系", required = true)
     val operation: QualityOperation,
-    @Schema(description = "阈值值大小", required = true)
+    @Schema(name = "阈值值大小", required = true)
     val value: String?,
-    @Schema(description = "实际值", required = true)
+    @Schema(name = "实际值", required = true)
     val actualValue: String?,
-    @Schema(description = "控制点", required = true)
+    @Schema(name = "控制点", required = true)
     val controlPoint: String,
-    @Schema(description = "是否通过", required = true)
+    @Schema(name = "是否通过", required = true)
     val pass: Boolean,
-    @Schema(description = "指标详情", required = true)
+    @Schema(name = "指标详情", required = true)
     val detail: String?,
-    @Schema(description = "指标日志输出详情", required = false)
+    @Schema(name = "指标日志输出详情", required = false)
     var logPrompt: String?
 )

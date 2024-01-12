@@ -31,16 +31,16 @@ import com.tencent.devops.store.pojo.common.enums.IndexExecuteTimeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "新增指标请求报文体")
+@Schema(name = "新增指标请求报文体")
 data class StoreIndexPipelineInitRequest(
-    @Schema(description = "指标代码", required = true)
+    @Schema(name = "指标代码", required = true)
     val indexCode: String,
-    @Schema(description = "指标对应的插件件代码", required = true)
+    @Schema(name = "指标对应的插件件代码", required = true)
     val atomCode: String,
-    @Schema(description = "指标对应的插件版本", required = true)
+    @Schema(name = "指标对应的插件版本", required = true)
     val atomVersion: String = "1.*",
-    @Schema(description = "指标执行时机类型", required = true)
+    @Schema(name = "指标执行时机类型", required = true)
     val executeTimeType: IndexExecuteTimeTypeEnum,
-    @Schema(description = "store组件类型", required = true)
+    @Schema(name = "store组件类型", required = true)
     val storeType: StoreTypeEnum
 )

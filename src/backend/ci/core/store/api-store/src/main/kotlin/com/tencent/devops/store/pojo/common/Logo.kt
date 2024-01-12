@@ -29,24 +29,24 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "logo信息")
+@Schema(name = "logo信息")
 data class Logo(
-    @Schema(description = "logoID", required = true)
+    @Schema(name = "logoID", required = true)
     val id: String,
-    @Schema(description = "logo链接", required = true)
+    @Schema(name = "logo链接", required = true)
     val logoUrl: String,
-    @Schema(description = "类别 ATOM:原子 TEMPLATE:模板 BANNER:banner", required = true)
+    @Schema(name = "类别 ATOM:原子 TEMPLATE:模板 BANNER:banner", required = true)
     val logoType: String,
-    @Schema(description = "展示顺序", required = true)
+    @Schema(name = "展示顺序", required = true)
     val order: Int,
-    @Schema(description = "点击logo后的跳转链接")
+    @Schema(name = "点击logo后的跳转链接")
     val link: String?,
-    @Schema(description = "创建日期")
+    @Schema(name = "创建日期")
     val createTime: String,
-    @Schema(description = "更新日期")
+    @Schema(name = "更新日期")
     val updateTime: String,
-    @Schema(description = "创建人", required = true)
+    @Schema(name = "创建人", required = true)
     val creator: String,
-    @Schema(description = "最近修改人", required = true)
+    @Schema(name = "最近修改人", required = true)
     val modifier: String
 )

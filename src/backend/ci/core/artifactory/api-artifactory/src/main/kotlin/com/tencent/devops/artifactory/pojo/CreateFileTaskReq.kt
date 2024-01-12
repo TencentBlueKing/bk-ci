@@ -30,10 +30,10 @@ package com.tencent.devops.artifactory.pojo
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "创建文件托管任务请求")
+@Schema(name = "创建文件托管任务请求")
 data class CreateFileTaskReq(
-    @Schema(description = "文件类型", required = true)
+    @Schema(name = "文件类型", required = true)
     val fileType: FileTypeEnum,
-    @Schema(description = "文件路径", required = true)
+    @Schema(name = "文件路径", required = true)
     val path: String
 )

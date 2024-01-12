@@ -38,13 +38,13 @@ data class P4ChangeEvent(
     @JsonProperty("event_type")
     val eventType: String,
     val user: String? = null,
-    @Schema(description = "文件变更列表")
+    @Schema(name = "文件变更列表")
     val files: List<String>? = null,
-    @Schema(description = "路径是否区分大小写，默认区分大小写")
+    @Schema(name = "路径是否区分大小写，默认区分大小写")
     val caseSensitive: Boolean? = true,
     // 指定项目触发
     override val projectId: String? = null,
-    @Schema(description = "提交描述", required = false)
+    @Schema(name = "提交描述", required = false)
     var description: String? = DEFAULT_CHANGE_DESCRIPTION
 ) : P4Event(projectId = projectId) {
     companion object {

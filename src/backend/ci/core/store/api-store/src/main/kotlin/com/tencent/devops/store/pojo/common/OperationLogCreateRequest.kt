@@ -29,16 +29,16 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "新增操作日志")
+@Schema(name = "新增操作日志")
 data class OperationLogCreateRequest(
-    @Schema(description = "store组件代码", required = true)
+    @Schema(name = "store组件代码", required = true)
     val storeCode: String,
-    @Schema(description = "store组件类型", required = true)
+    @Schema(name = "store组件类型", required = true)
     val storeType: Byte,
-    @Schema(description = "操作类型", required = true)
+    @Schema(name = "操作类型", required = true)
     val optType: String,
-    @Schema(description = "操作用户", required = true)
+    @Schema(name = "操作用户", required = true)
     val optUser: String,
-    @Schema(description = "操作内容", required = true)
+    @Schema(name = "操作内容", required = true)
     val optDesc: String
 )

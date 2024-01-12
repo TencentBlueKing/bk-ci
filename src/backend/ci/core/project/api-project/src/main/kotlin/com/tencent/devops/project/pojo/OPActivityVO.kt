@@ -29,22 +29,22 @@ package com.tencent.devops.project.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "最新动态-显示模型")
+@Schema(name = "最新动态-显示模型")
 data class OPActivityVO(
-    @Schema(description = "主键ID")
+    @Schema(name = "主键ID")
     val id: Long,
-    @Schema(description = "名称")
+    @Schema(name = "名称")
     val name: String,
-    @Schema(description = "英文名称")
+    @Schema(name = "英文名称")
     val englishName: String,
-    @Schema(description = "链接")
+    @Schema(name = "链接")
     val link: String,
-    @Schema(description = "类型")
+    @Schema(name = "类型")
     val type: String,
-    @Schema(description = "状态")
+    @Schema(name = "状态")
     val status: String,
-    @Schema(description = "创建人")
+    @Schema(name = "创建人")
     val creator: String,
-    @Schema(description = "创建时间")
+    @Schema(name = "创建时间")
     val createTime: String
 )

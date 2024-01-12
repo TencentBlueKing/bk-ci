@@ -29,8 +29,8 @@ package com.tencent.devops.environment.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "显示名称")
+@Schema(name = "显示名称")
 data class DisplayName(
-    @Schema(description = "显示名称", required = true)
+    @Schema(name = "显示名称", required = true)
     val displayName: String
 )

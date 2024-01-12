@@ -29,38 +29,38 @@ package com.tencent.devops.image.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "镜像信息模型")
+@Schema(name = "镜像信息模型")
 data class DockerRepo(
-    @Schema(description = "仓库url")
+    @Schema(name = "仓库url")
     var repoUrl: String? = null,
-    @Schema(description = "仓库")
+    @Schema(name = "仓库")
     var repo: String? = null,
-    @Schema(description = "类型")
+    @Schema(name = "类型")
     var type: String? = null,
-    @Schema(description = "仓库类型")
+    @Schema(name = "仓库类型")
     var repoType: String? = "",
-    @Schema(description = "名称")
+    @Schema(name = "名称")
     var name: String? = null,
-    @Schema(description = "创建者")
+    @Schema(name = "创建者")
     var createdBy: String? = null,
-    @Schema(description = "创建时间")
+    @Schema(name = "创建时间")
     var created: String? = null,
-    @Schema(description = "修改时间")
+    @Schema(name = "修改时间")
     var modified: String? = null,
-    @Schema(description = "修改者")
+    @Schema(name = "修改者")
     var modifiedBy: String? = null,
-    @Schema(description = "镜像路径")
+    @Schema(name = "镜像路径")
     var imagePath: String? = null,
-    @Schema(description = "描述")
+    @Schema(name = "描述")
     var desc: String? = "",
-    @Schema(description = "标签")
+    @Schema(name = "标签")
     var tags: List<DockerTag>? = null,
-    @Schema(description = "标签数量")
+    @Schema(name = "标签数量")
     var tagCount: Int? = null,
-    @Schema(description = "开始索引")
+    @Schema(name = "开始索引")
     var tagStart: Int? = null,
-    @Schema(description = "页大小")
+    @Schema(name = "页大小")
     var tagLimit: Int? = null,
-    @Schema(description = "下载次数")
+    @Schema(name = "下载次数")
     var downloadCount: Int? = null
 )

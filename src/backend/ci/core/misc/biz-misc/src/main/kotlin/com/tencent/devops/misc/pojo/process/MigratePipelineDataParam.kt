@@ -34,7 +34,7 @@ import org.jooq.DSLContext
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Semaphore
 
-@Schema(description = "迁移流水线数据参数")
+@Schema(name = "迁移流水线数据参数")
 data class MigratePipelineDataParam(
     val projectId: String,
     val pipelineId: String,

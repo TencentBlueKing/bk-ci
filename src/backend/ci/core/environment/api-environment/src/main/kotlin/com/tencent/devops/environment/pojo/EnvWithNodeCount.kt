@@ -29,19 +29,19 @@ package com.tencent.devops.environment.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "环境信息-Node数量")
+@Schema(name = "环境信息-Node数量")
 data class EnvWithNodeCount(
-    @Schema(description = "环境 HashId", required = true)
+    @Schema(name = "环境 HashId", required = true)
     val envHashId: String,
-    @Schema(description = "环境名称", required = true)
+    @Schema(name = "环境名称", required = true)
     val name: String,
-    @Schema(description = "正常节点数量", required = true)
+    @Schema(name = "正常节点数量", required = true)
     val normalNodeCount: Int,
-    @Schema(description = "异常节点数量", required = true)
+    @Schema(name = "异常节点数量", required = true)
     val abnormalNodeCount: Int,
-    @Schema(description = "源项目", required = false)
+    @Schema(name = "源项目", required = false)
     val sharedProjectId: String?,
-    @Schema(description = "分享人", required = false)
+    @Schema(name = "分享人", required = false)
     val sharedUserId: String?
 
 )

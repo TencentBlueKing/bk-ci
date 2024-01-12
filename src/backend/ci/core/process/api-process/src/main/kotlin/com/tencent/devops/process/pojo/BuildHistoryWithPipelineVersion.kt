@@ -30,12 +30,12 @@ package com.tencent.devops.process.pojo
 import com.tencent.devops.common.api.model.SQLPage
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "历史构建模型-最新版本号-下载权限")
+@Schema(name = "历史构建模型-最新版本号-下载权限")
 data class BuildHistoryWithPipelineVersion(
-    @Schema(description = "构建历史", required = true)
+    @Schema(name = "构建历史", required = true)
     val history: SQLPage<BuildHistory>,
-    @Schema(description = "是否拥有下载构建的权限", required = true)
+    @Schema(name = "是否拥有下载构建的权限", required = true)
     val hasDownloadPermission: Boolean,
-    @Schema(description = "最新的编排版本号", required = true)
+    @Schema(name = "最新的编排版本号", required = true)
     val pipelineVersion: Int
 )

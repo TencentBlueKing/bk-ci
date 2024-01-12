@@ -31,13 +31,13 @@ package com.tencent.devops.common.api.pojo
 import com.tencent.devops.common.api.util.JsonUtil
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "国际化变量")
+@Schema(name = "国际化变量")
 data class I18Variable(
-    @Schema(description = "国际化变量名")
+    @Schema(name = "国际化变量名")
     val code: String,
-    @Schema(description = "国际化参数")
+    @Schema(name = "国际化参数")
     val params: List<String>,
-    @Schema(description = "默认信息")
+    @Schema(name = "默认信息")
     val defaultMessage: String? = null
 ) {
     fun toJsonStr() = JsonUtil.toJson(this, false)

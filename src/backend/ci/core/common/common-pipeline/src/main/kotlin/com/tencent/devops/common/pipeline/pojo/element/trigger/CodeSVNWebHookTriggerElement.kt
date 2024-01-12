@@ -35,29 +35,29 @@ import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.staffInp
 import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.vuexInput
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "SVN仓库代码提交触发", description = CodeSVNWebHookTriggerElement.classType)
+@Schema(name = "SVN仓库代码提交触发", description = CodeSVNWebHookTriggerElement.classType)
 data class CodeSVNWebHookTriggerElement(
-    @Schema(description = "任务名称", required = true)
+    @Schema(name = "任务名称", required = true)
     override val name: String = "SVN变更触发",
-    @Schema(description = "id", required = false)
+    @Schema(name = "id", required = false)
     override var id: String? = null,
-    @Schema(description = "状态", required = false)
+    @Schema(name = "状态", required = false)
     override var status: String? = null,
-    @Schema(description = "仓库ID", required = true)
+    @Schema(name = "仓库ID", required = true)
     val repositoryHashId: String?,
-    @Schema(description = "路径过滤类型", required = true)
+    @Schema(name = "路径过滤类型", required = true)
     val pathFilterType: PathFilterType? = PathFilterType.NamePrefixFilter,
-    @Schema(description = "相对路径", required = true)
+    @Schema(name = "相对路径", required = true)
     val relativePath: String?,
-    @Schema(description = "排除的路径", required = false)
+    @Schema(name = "排除的路径", required = false)
     val excludePaths: String?,
-    @Schema(description = "用户黑名单", required = false)
+    @Schema(name = "用户黑名单", required = false)
     val excludeUsers: List<String>?,
-    @Schema(description = "用户白名单", required = false)
+    @Schema(name = "用户白名单", required = false)
     val includeUsers: List<String>?,
-    @Schema(description = "新版的svn原子的类型")
+    @Schema(name = "新版的svn原子的类型")
     val repositoryType: RepositoryType? = null,
-    @Schema(description = "新版的svn代码库名")
+    @Schema(name = "新版的svn代码库名")
     val repositoryName: String? = null
 ) : WebHookTriggerElement(name, id, status) {
     companion object {

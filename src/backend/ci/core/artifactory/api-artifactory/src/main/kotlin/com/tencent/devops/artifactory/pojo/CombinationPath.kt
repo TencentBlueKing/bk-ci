@@ -29,10 +29,10 @@ package com.tencent.devops.artifactory.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "版本仓库-组合路径")
+@Schema(name = "版本仓库-组合路径")
 data class CombinationPath(
-    @Schema(description = "原路径列表", required = true)
+    @Schema(name = "原路径列表", required = true)
     val srcPaths: List<String>,
-    @Schema(description = "目标路径", required = true)
+    @Schema(name = "目标路径", required = true)
     val destPath: String
 )

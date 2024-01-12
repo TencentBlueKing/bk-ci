@@ -30,27 +30,27 @@ package com.tencent.devops.environment.pojo.thirdPartyAgent
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("ALL")
-@Schema(description = "Agent心跳上报模型")
+@Schema(name = "Agent心跳上报模型")
 data class AskHeartbeatResponse(
-    @Schema(description = "主版本")
+    @Schema(name = "主版本")
     val masterVersion: String,
-    @Schema(description = "从属版本")
+    @Schema(name = "从属版本")
     val slaveVersion: String,
-    @Schema(description = "构建机状态")
+    @Schema(name = "构建机状态")
     val agentStatus: String,
-    @Schema(description = "通道数量")
+    @Schema(name = "通道数量")
     val parallelTaskCount: Int,
-    @Schema(description = "环境变量")
+    @Schema(name = "环境变量")
     val envs: Map<String, String>,
-    @Schema(description = "网关地址")
+    @Schema(name = "网关地址")
     val gateway: String? = "",
-    @Schema(description = "文件网关路径")
+    @Schema(name = "文件网关路径")
     val fileGateway: String? = "",
-    @Schema(description = "Agent的一些属性配置")
+    @Schema(name = "Agent的一些属性配置")
     val props: Map<String, Any>,
-    @Schema(description = "docker最大任务数量")
+    @Schema(name = "docker最大任务数量")
     val dockerParallelTaskCount: Int,
-    @Schema(description = "用户国际化语言")
+    @Schema(name = "用户国际化语言")
     val language: String
 ) {
     constructor(resp: HeartbeatResponse) : this(

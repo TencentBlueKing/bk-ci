@@ -30,14 +30,14 @@ package com.tencent.devops.process.pojo.pipeline
 import com.tencent.devops.common.api.pojo.ErrorType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "构建模型-ID")
+@Schema(name = "构建模型-ID")
 data class SubPipelineStatus(
-    @Schema(description = "子流水线状态", required = true)
+    @Schema(name = "子流水线状态", required = true)
     val status: String,
-    @Schema(description = "错误类型", required = false)
+    @Schema(name = "错误类型", required = false)
     var errorType: ErrorType? = null,
-    @Schema(description = "错误码", required = false)
+    @Schema(name = "错误码", required = false)
     var errorCode: Int? = null,
-    @Schema(description = "错误信息", required = false)
+    @Schema(name = "错误信息", required = false)
     var errorMsg: String? = null
 )

@@ -30,21 +30,21 @@ package com.tencent.devops.common.notify.pojo.elements
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "发送邮件通知", description = SendEmailNotifyElement.classType)
+@Schema(name = "发送邮件通知", description = SendEmailNotifyElement.classType)
 data class SendEmailNotifyElement(
-    @Schema(description = "任务名称", required = true)
+    @Schema(name = "任务名称", required = true)
     override val name: String = "发送Email通知",
-    @Schema(description = "id", required = false)
+    @Schema(name = "id", required = false)
     override var id: String? = null,
-    @Schema(description = "状态", required = false)
+    @Schema(name = "状态", required = false)
     override var status: String? = null,
-    @Schema(description = "通知接收者", required = true)
+    @Schema(name = "通知接收者", required = true)
     val receivers: Set<String> = setOf(),
-    @Schema(description = "邮件抄送接收者")
+    @Schema(name = "邮件抄送接收者")
     val cc: Set<String> = setOf(),
-    @Schema(description = "Email通知标题", required = true)
+    @Schema(name = "Email通知标题", required = true)
     val title: String = "",
-    @Schema(description = "Email通知内容", required = true)
+    @Schema(name = "Email通知内容", required = true)
     val body: String = ""
 ) : Element(name, id, status) {
     companion object {

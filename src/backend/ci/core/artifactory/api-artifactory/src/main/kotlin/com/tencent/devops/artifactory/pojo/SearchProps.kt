@@ -29,10 +29,10 @@ package com.tencent.devops.artifactory.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "版本仓库-搜索元数据")
+@Schema(name = "版本仓库-搜索元数据")
 data class SearchProps(
-    @Schema(description = "匹配文件列表(支持模糊匹配)", required = true)
+    @Schema(name = "匹配文件列表(支持模糊匹配)", required = true)
     val fileNames: List<String>?,
-    @Schema(description = "元数据列表", required = true)
+    @Schema(name = "元数据列表", required = true)
     val props: Map<String, String>
 )

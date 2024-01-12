@@ -30,20 +30,20 @@ package com.tencent.devops.ticket.pojo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "凭据-凭据内容")
+@Schema(name = "凭据-凭据内容")
 data class CredentialInfo(
-    @Schema(description = "Base64编码的加密公钥", required = true)
+    @Schema(name = "Base64编码的加密公钥", required = true)
     val publicKey: String,
-    @Schema(description = "凭据类型", required = true)
+    @Schema(name = "凭据类型", required = true)
     val credentialType: CredentialType,
-    @Schema(description = "加密后经过Base64编码的凭据", required = true)
+    @Schema(name = "加密后经过Base64编码的凭据", required = true)
     val v1: String,
-    @Schema(description = "加密后经过Base64编码的凭据", required = true)
+    @Schema(name = "加密后经过Base64编码的凭据", required = true)
     val v2: String? = null,
-    @Schema(description = "加密后经过Base64编码的凭据", required = true)
+    @Schema(name = "加密后经过Base64编码的凭据", required = true)
     val v3: String? = null,
-    @Schema(description = "加密后经过Base64编码的凭据", required = true)
+    @Schema(name = "加密后经过Base64编码的凭据", required = true)
     val v4: String? = null,
-    @Schema(description = "当前凭证是否允许跨项目使用")
+    @Schema(name = "当前凭证是否允许跨项目使用")
     val allowAcrossProject: Boolean = false
 )

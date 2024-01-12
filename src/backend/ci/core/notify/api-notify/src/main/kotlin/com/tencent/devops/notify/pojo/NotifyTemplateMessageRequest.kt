@@ -30,16 +30,16 @@ import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "消息通知新增请求报文体")
+@Schema(name = "消息通知新增请求报文体")
 data class NotifyTemplateMessageRequest(
-    @Schema(description = "模板代码", required = true)
+    @Schema(name = "模板代码", required = true)
     val templateCode: String,
-    @Schema(description = "模板名称", required = true)
+    @Schema(name = "模板名称", required = true)
     val templateName: String,
-    @Schema(description = "优先级别（-1:低 0:普通 1:高）", allowableValues = "-1,0,1", dataType = "String", required = true)
+    @Schema(name = "优先级别（-1:低 0:普通 1:高）", allowableValues = ["-1", "0", "1"], type = "String", required = true)
     val priority: EnumNotifyPriority,
-    @Schema(description = "通知来源（0:本地业务 1:操作）", allowableValues = "0,1", dataType = "int", required = true)
+    @Schema(name = "通知来源（0:本地业务 1:操作）", allowableValues = ["0", "1"], type = "int", required = true)
     val source: EnumNotifySource,
-    @Schema(description = "消息模板详细信息集合", required = true)
+    @Schema(name = "消息模板详细信息集合", required = true)
     val msg: List<NotifyTemplateMessage>
 )

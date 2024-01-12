@@ -29,16 +29,16 @@ package com.tencent.devops.process.pojo.pipeline
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线最新构建详情")
+@Schema(name = "流水线最新构建详情")
 data class PipelineLatestBuild(
-    @Schema(description = "ID", required = true)
+    @Schema(name = "ID", required = true)
     val buildId: String,
-    @Schema(description = "启动用户", required = true)
+    @Schema(name = "启动用户", required = true)
     val startUser: String,
-    @Schema(description = "Start time", required = true)
+    @Schema(name = "Start time", required = true)
     val startTime: String,
-    @Schema(description = "End time", required = false)
+    @Schema(name = "End time", required = false)
     val endTime: String?,
-    @Schema(description = "Build status", required = false)
+    @Schema(name = "Build status", required = false)
     val status: String?
 )

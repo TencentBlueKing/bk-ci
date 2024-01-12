@@ -28,17 +28,17 @@ package com.tencent.devops.notify.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "通用消息类型")
+@Schema(name = "通用消息类型")
 data class NotificationResponse<out T> (
     val id: String,
-    @Schema(description = "是否成功")
+    @Schema(name = "是否成功")
     val success: Boolean,
-    @Schema(description = "创建时间")
+    @Schema(name = "创建时间")
     val createdTime: Long?,
-    @Schema(description = "更新时间")
+    @Schema(name = "更新时间")
     val updatedTime: Long?,
-    @Schema(description = "总数")
+    @Schema(name = "总数")
     val contentMD5: String,
-    @Schema(description = "通知数据")
+    @Schema(name = "通知数据")
     val notificationMessage: T
 )

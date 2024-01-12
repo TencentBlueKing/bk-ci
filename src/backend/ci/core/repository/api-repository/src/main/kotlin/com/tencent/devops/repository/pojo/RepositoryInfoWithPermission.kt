@@ -30,36 +30,36 @@ package com.tencent.devops.repository.pojo
 import com.tencent.devops.common.api.enums.ScmType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "代码库模型-基本信息")
+@Schema(name = "代码库模型-基本信息")
 data class RepositoryInfoWithPermission(
-    @Schema(description = "仓库哈希ID", required = true)
+    @Schema(name = "仓库哈希ID", required = true)
     val repositoryHashId: String,
-    @Schema(description = "仓库别名", required = true)
+    @Schema(name = "仓库别名", required = true)
     val aliasName: String,
-    @Schema(description = "URL", required = true)
+    @Schema(name = "URL", required = true)
     val url: String,
-    @Schema(description = "类型", required = true)
+    @Schema(name = "类型", required = true)
     val type: ScmType,
-    @Schema(description = "最后更新时间", required = true)
+    @Schema(name = "最后更新时间", required = true)
     val updatedTime: Long,
-    @Schema(description = "最后更新用户", required = false)
+    @Schema(name = "最后更新用户", required = false)
     val updatedUser: String?,
-    @Schema(description = "创建时间", required = true)
+    @Schema(name = "创建时间", required = true)
     val createTime: Long,
-    @Schema(description = "创建人", required = true)
+    @Schema(name = "创建人", required = true)
     val createUser: String,
-    @Schema(description = "能否被编辑", required = true)
+    @Schema(name = "能否被编辑", required = true)
     val canEdit: Boolean,
-    @Schema(description = "能否被删除", required = true)
+    @Schema(name = "能否被删除", required = true)
     val canDelete: Boolean,
-    @Schema(description = "能否被查看", required = true)
+    @Schema(name = "能否被查看", required = true)
     val canView: Boolean? = null,
-    @Schema(description = "能否被使用", required = true)
+    @Schema(name = "能否被使用", required = true)
     val canUse: Boolean? = null,
-    @Schema(description = "认证类型", required = false)
+    @Schema(name = "认证类型", required = false)
     val authType: String = "",
-    @Schema(description = "svn的protocal类型（http|ssh）", required = false)
+    @Schema(name = "svn的protocal类型（http|ssh）", required = false)
     val svnType: String? = null,
-    @Schema(description = "授权身份", required = true)
+    @Schema(name = "授权身份", required = true)
     val authIdentity: String? = null
 )

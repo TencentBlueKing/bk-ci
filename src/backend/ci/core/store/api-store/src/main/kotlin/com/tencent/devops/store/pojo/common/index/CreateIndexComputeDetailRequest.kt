@@ -32,19 +32,19 @@ import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "新增指标要素请求报文体")
+@Schema(name = "新增指标要素请求报文体")
 data class CreateIndexComputeDetailRequest(
-    @Schema(description = "组件代码", required = true)
+    @Schema(name = "组件代码", required = true)
     val storeCode: String,
-    @Schema(description = "store组件类型", required = true)
+    @Schema(name = "store组件类型", required = true)
     val storeType: StoreTypeEnum,
-    @Schema(description = "图标提示信息", required = true)
+    @Schema(name = "图标提示信息", required = true)
     val iconTips: String,
-    @Schema(description = "等级名称", required = true)
+    @Schema(name = "等级名称", required = true)
     val levelName: String,
-    @Schema(description = "指标代码", required = true)
+    @Schema(name = "指标代码", required = true)
     @BkField(maxLength = 10, patternStyle = BkStyleEnum.CODE_STYLE)
     val indexCode: String,
-    @Schema(description = "指标要素列表", required = true)
+    @Schema(name = "指标要素列表", required = true)
     val elementInfos: List<StoreIndexElementInfo>
 )

@@ -42,21 +42,21 @@ data class PreStep(
     val checkout: String?,
     val name: String?,
     val id: String?,
-    @Schema(description = "if")
+    @Schema(name = "if")
     @JsonProperty("if")
     val ifFiled: String?,
-    @Schema(description = "if-modify")
+    @Schema(name = "if-modify")
     @JsonProperty("if-modify")
     val ifModify: List<String>? = null,
     val uses: String?,
     val with: Map<String, Any?>?,
-    @Schema(description = "timeout-minutes")
+    @Schema(name = "timeout-minutes")
     @JsonProperty("timeout-minutes")
     val timeoutMinutes: Int?,
-    @Schema(description = "continue-on-error")
+    @Schema(name = "continue-on-error")
     @JsonProperty("continue-on-error")
     val continueOnError: Boolean?,
-    @Schema(description = "retry-times")
+    @Schema(name = "retry-times")
     @JsonProperty("retry-times")
     val retryTimes: Int?,
     val env: Map<String, Any?>? = emptyMap(),

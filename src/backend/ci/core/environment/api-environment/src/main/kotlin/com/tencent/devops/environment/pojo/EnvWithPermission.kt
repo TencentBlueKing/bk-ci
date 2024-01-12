@@ -29,34 +29,34 @@ package com.tencent.devops.environment.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "环境信息(权限)")
+@Schema(name = "环境信息(权限)")
 data class EnvWithPermission(
-    @Schema(description = "环境 HashId", required = true)
+    @Schema(name = "环境 HashId", required = true)
     val envHashId: String,
-    @Schema(description = "环境名称", required = true)
+    @Schema(name = "环境名称", required = true)
     val name: String,
-    @Schema(description = "环境描述", required = true)
+    @Schema(name = "环境描述", required = true)
     val desc: String,
-    @Schema(description = "环境类型（开发环境{DEV}|测试环境{TEST}|构建环境{BUILD}）", required = true)
+    @Schema(name = "环境类型（开发环境{DEV}|测试环境{TEST}|构建环境{BUILD}）", required = true)
     val envType: String,
-    @Schema(description = "节点数量", required = false)
+    @Schema(name = "节点数量", required = false)
     val nodeCount: Int?,
-    @Schema(description = "环境变量", required = true)
+    @Schema(name = "环境变量", required = true)
     val envVars: List<EnvVar>?,
-    @Schema(description = "创建人", required = true)
+    @Schema(name = "创建人", required = true)
     val createdUser: String,
-    @Schema(description = "创建时间", required = true)
+    @Schema(name = "创建时间", required = true)
     val createdTime: Long,
-    @Schema(description = "更新人", required = true)
+    @Schema(name = "更新人", required = true)
     val updatedUser: String,
-    @Schema(description = "更新时间", required = true)
+    @Schema(name = "更新时间", required = true)
     val updatedTime: Long,
-    @Schema(description = "是否可以编辑", required = false)
+    @Schema(name = "是否可以编辑", required = false)
     val canEdit: Boolean?,
-    @Schema(description = "是否可以删除", required = false)
+    @Schema(name = "是否可以删除", required = false)
     val canDelete: Boolean?,
-    @Schema(description = "是否可以使用", required = false)
+    @Schema(name = "是否可以使用", required = false)
     val canUse: Boolean?,
-    @Schema(description = "项目名称", required = false)
+    @Schema(name = "项目名称", required = false)
     val projectName: String?
 )

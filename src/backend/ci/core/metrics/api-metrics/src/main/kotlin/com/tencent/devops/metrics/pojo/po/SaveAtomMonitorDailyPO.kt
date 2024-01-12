@@ -30,24 +30,24 @@ package com.tencent.devops.metrics.pojo.po
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(description = "保存插件监控每日统计数据")
+@Schema(name = "保存插件监控每日统计数据")
 data class SaveAtomMonitorDailyPO(
-    @Schema(description = "主键ID")
+    @Schema(name = "主键ID")
     val id: Long,
-    @Schema(description = "插件代码")
+    @Schema(name = "插件代码")
     val atomCode: String,
-    @Schema(description = "执行次数")
+    @Schema(name = "执行次数")
     var executeCount: Long,
-    @Schema(description = "错误类型")
+    @Schema(name = "错误类型")
     val errorType: Int,
-    @Schema(description = "统计时间")
+    @Schema(name = "统计时间")
     val statisticsTime: LocalDateTime,
-    @Schema(description = "创建人")
+    @Schema(name = "创建人")
     val creator: String,
-    @Schema(description = "修改人")
+    @Schema(name = "修改人")
     val modifier: String,
-    @Schema(description = "创建时间")
+    @Schema(name = "创建时间")
     val createTime: LocalDateTime,
-    @Schema(description = "更新时间")
+    @Schema(name = "更新时间")
     val updateTime: LocalDateTime
 )

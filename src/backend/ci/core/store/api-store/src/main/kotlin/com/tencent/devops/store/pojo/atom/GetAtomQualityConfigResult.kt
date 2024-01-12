@@ -29,11 +29,11 @@ package com.tencent.devops.store.pojo.atom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "获取并解析插件配置quality.json的返回数据")
+@Schema(name = "获取并解析插件配置quality.json的返回数据")
 data class GetAtomQualityConfigResult(
-    @Schema(description = "状态码", required = true)
+    @Schema(name = "状态码", required = true)
     val errorCode: String,
-    @Schema(description = "参数", required = true)
+    @Schema(name = "参数", required = true)
     val errorParams: Array<String>
 ) {
     override fun equals(other: Any?): Boolean {

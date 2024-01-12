@@ -30,11 +30,11 @@ package com.tencent.devops.notify.pojo
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "企业微信机器人attachment事件消息")
+@Schema(name = "企业微信机器人attachment事件消息")
 data class WeworkMarkdownAttachment(
-    @Schema(description = "回调id", required = true)
+    @Schema(name = "回调id", required = true)
     @JsonProperty("callback_id")
     val callbackId: String,
-    @Schema(description = "动作集合", required = true)
+    @Schema(name = "动作集合", required = true)
     val actions: List<WeworkMarkdownAction>
 )

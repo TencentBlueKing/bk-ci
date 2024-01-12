@@ -29,10 +29,10 @@ package com.tencent.devops.scm.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "创建git仓库响应体")
+@Schema(name = "创建git仓库响应体")
 class GitRepositoryResp(
-    @Schema(description = "仓库名称", required = true)
+    @Schema(name = "仓库名称", required = true)
     val name: String,
-    @Schema(description = "仓库地址", required = true)
+    @Schema(name = "仓库地址", required = true)
     val repositoryUrl: String
 )

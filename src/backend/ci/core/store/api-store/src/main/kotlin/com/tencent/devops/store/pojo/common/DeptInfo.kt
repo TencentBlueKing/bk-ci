@@ -29,14 +29,14 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "机构信息报文体")
+@Schema(name = "机构信息报文体")
 data class DeptInfo(
-    @Schema(description = "机构ID", required = true)
+    @Schema(name = "机构ID", required = true)
     val deptId: Int,
-    @Schema(description = "机构名称", required = true)
+    @Schema(name = "机构名称", required = true)
     val deptName: String,
-    @Schema(description = "机构审核状态(0：待审核 1：审核通过 2：审核驳回)", required = false)
+    @Schema(name = "机构审核状态(0：待审核 1：审核通过 2：审核驳回)", required = false)
     val status: String? = null,
-    @Schema(description = "批注", required = false)
+    @Schema(name = "批注", required = false)
     val comment: String? = null
 )

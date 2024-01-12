@@ -28,16 +28,16 @@ package com.tencent.devops.store.pojo.image.request
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "镜像市场-镜像特性信息更新请求报文体")
+@Schema(name = "镜像市场-镜像特性信息更新请求报文体")
 data class ImageFeatureUpdateRequest(
-    @Schema(description = "镜像代码", required = true)
+    @Schema(name = "镜像代码", required = true)
     val imageCode: String,
-    @Schema(description = "是否为公共镜像， TRUE：是 FALSE：不是", required = false)
+    @Schema(name = "是否为公共镜像， TRUE：是 FALSE：不是", required = false)
     val publicFlag: Boolean? = null,
-    @Schema(description = "是否推荐标识 true：推荐，false：不推荐", required = false)
+    @Schema(name = "是否推荐标识 true：推荐，false：不推荐", required = false)
     val recommendFlag: Boolean? = null,
-    @Schema(description = "是否官方认证， TRUE：是 FALSE：不是", required = false)
+    @Schema(name = "是否官方认证， TRUE：是 FALSE：不是", required = false)
     val certificationFlag: Boolean? = null,
-    @Schema(description = "删除标识", required = false)
+    @Schema(name = "删除标识", required = false)
     val deleteFlag: Boolean? = null
 )

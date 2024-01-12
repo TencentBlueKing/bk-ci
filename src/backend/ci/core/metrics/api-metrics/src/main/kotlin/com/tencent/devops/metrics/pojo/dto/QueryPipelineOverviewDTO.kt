@@ -30,12 +30,12 @@ package com.tencent.devops.metrics.pojo.dto
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "查询流水线stage趋势信息")
+@Schema(name = "查询流水线stage趋势信息")
 data class QueryPipelineOverviewDTO(
-    @Schema(description = "项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @Schema(description = "userId")
+    @Schema(name = "userId")
     val userId: String,
-    @Schema(description = "查询条件信息")
+    @Schema(name = "查询条件信息")
     val baseQueryReq: BaseQueryReqVO
 )

@@ -31,13 +31,13 @@ import com.tencent.devops.common.api.util.YamlUtil
 import io.swagger.v3.oas.annotations.media.Schema
 import java.util.regex.Pattern
 
-@Schema(description = "matrix流水线编辑校验yaml模型")
+@Schema(name = "matrix流水线编辑校验yaml模型")
 data class MatrixPipelineInfo(
-    @Schema(description = "作为输入值时:额外的参数组合(String)/作为输出值时:校验结果", required = false)
+    @Schema(name = "作为输入值时:额外的参数组合(String)/作为输出值时:校验结果", required = false)
     val include: String?,
-    @Schema(description = "作为输入值时:排除的参数组合(String)/作为输出值时:校验结果", required = false)
+    @Schema(name = "作为输入值时:排除的参数组合(String)/作为输出值时:校验结果", required = false)
     val exclude: String?,
-    @Schema(description = "作为输入值时:分裂策略(String)/作为输出值时:校验结果", required = false)
+    @Schema(name = "作为输入值时:分裂策略(String)/作为输出值时:校验结果", required = false)
     var strategy: String?
 ) {
     fun toMatrixConvert(): Any {

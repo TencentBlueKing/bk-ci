@@ -30,38 +30,38 @@ package com.tencent.devops.process.pojo.template
 import com.tencent.devops.common.pipeline.container.Stage
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "模板列表")
+@Schema(name = "模板列表")
 data class OptionalTemplateList(
-    @Schema(description = "数量", required = false)
+    @Schema(name = "数量", required = false)
     val count: Int,
-    @Schema(description = "页数", required = false)
+    @Schema(name = "页数", required = false)
     val page: Int?,
-    @Schema(description = "每页数量", required = false)
+    @Schema(name = "每页数量", required = false)
     val pageSize: Int?,
-    @Schema(description = "模板列表", required = false)
+    @Schema(name = "模板列表", required = false)
     val templates: Map<String, OptionalTemplate>
 )
 
-@Schema(description = "模板")
+@Schema(name = "模板")
 data class OptionalTemplate(
-    @Schema(description = "模版名称", required = true)
+    @Schema(name = "模版名称", required = true)
     val name: String,
-    @Schema(description = "模版ID", required = true)
+    @Schema(name = "模版ID", required = true)
     val templateId: String,
-    @Schema(description = "项目ID", required = true)
+    @Schema(name = "项目ID", required = true)
     val projectId: String,
-    @Schema(description = "版本ID", required = true)
+    @Schema(name = "版本ID", required = true)
     val version: Long,
-    @Schema(description = "最新版本号", required = true)
+    @Schema(name = "最新版本号", required = true)
     val versionName: String,
-    @Schema(description = "模板类型", required = true)
+    @Schema(name = "模板类型", required = true)
     val templateType: String,
-    @Schema(description = "模板类型描述", required = true)
+    @Schema(name = "模板类型描述", required = true)
     val templateTypeDesc: String,
-    @Schema(description = "应用范畴", required = true)
+    @Schema(name = "应用范畴", required = true)
     val category: List<String?>,
-    @Schema(description = "模版logo", required = true)
+    @Schema(name = "模版logo", required = true)
     val logoUrl: String,
-    @Schema(description = "阶段集合", required = true)
+    @Schema(name = "阶段集合", required = true)
     val stages: List<Stage>
 )

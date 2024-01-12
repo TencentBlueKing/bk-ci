@@ -30,19 +30,19 @@ package com.tencent.devops.common.archive.element
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "拉取自定义仓库构件", description = CustomizeArchiveGetElement.classType)
+@Schema(name = "拉取自定义仓库构件", description = CustomizeArchiveGetElement.classType)
 data class CustomizeArchiveGetElement(
-    @Schema(description = "任务名称", required = true)
+    @Schema(name = "任务名称", required = true)
     override val name: String = "拉取自定义仓库构件",
-    @Schema(description = "id", required = false)
+    @Schema(name = "id", required = false)
     override var id: String? = null,
-    @Schema(description = "状态", required = false)
+    @Schema(name = "状态", required = false)
     override var status: String? = null,
-    @Schema(description = "待下载文件路径（支持正则表达式，多个用逗号隔开）", required = true)
+    @Schema(name = "待下载文件路径（支持正则表达式，多个用逗号隔开）", required = true)
     val downloadPaths: String = "",
-    @Schema(description = "下载到本地的路径（默认为当前工作空间）", required = false)
+    @Schema(name = "下载到本地的路径（默认为当前工作空间）", required = false)
     val destPath: String = "",
-    @Schema(description = "是否找不到文件报404退出", required = false)
+    @Schema(name = "是否找不到文件报404退出", required = false)
     val notFoundContinue: Boolean? = false
 ) : Element(name, id, status) {
 

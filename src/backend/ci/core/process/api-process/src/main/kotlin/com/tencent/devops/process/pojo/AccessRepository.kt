@@ -29,10 +29,10 @@ package com.tencent.devops.process.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "快速接入-代码库")
+@Schema(name = "快速接入-代码库")
 data class AccessRepository(
-    @Schema(description = "项目ID", required = true)
+    @Schema(name = "项目ID", required = true)
     val projectId: String,
-    @Schema(description = "项目名称", required = true)
+    @Schema(name = "项目名称", required = true)
     val projectName: String
 )

@@ -31,46 +31,46 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonInclude(JsonInclude.Include.ALWAYS)
-@Schema(description = "质量红线-指标配置列表信息")
+@Schema(name = "质量红线-指标配置列表信息")
 data class IndicatorData(
-    @Schema(description = "ID")
+    @Schema(name = "ID")
     val id: Long,
-    @Schema(description = "原子的ClassType")
+    @Schema(name = "原子的ClassType")
     val elementType: String?,
-    @Schema(description = "原子名称")
+    @Schema(name = "原子名称")
     val elementName: String?,
-    @Schema(description = "工具/原子子类")
+    @Schema(name = "工具/原子子类")
     val elementDetail: String?,
-    @Schema(description = "指标英文名")
+    @Schema(name = "指标英文名")
     val enName: String?,
-    @Schema(description = "指标中文名")
+    @Schema(name = "指标中文名")
     val cnName: String?,
-    @Schema(description = "指标所包含基础数据")
+    @Schema(name = "指标所包含基础数据")
     val metadataIds: String?,
-    @Schema(description = "指标所包含基础数据")
+    @Schema(name = "指标所包含基础数据")
     val metadataNames: String?,
-    @Schema(description = "默认操作类型")
+    @Schema(name = "默认操作类型")
     val defaultOperation: String?,
-    @Schema(description = "可用操作")
+    @Schema(name = "可用操作")
     val operationAvailable: String?,
-    @Schema(description = "默认阈值")
+    @Schema(name = "默认阈值")
     val threshold: String?,
-    @Schema(description = "阈值类型")
+    @Schema(name = "阈值类型")
     val thresholdType: String?,
-    @Schema(description = "描述")
+    @Schema(name = "描述")
     val desc: String?,
-    @Schema(description = "是否可修改")
+    @Schema(name = "是否可修改")
     val readOnly: Boolean?,
-    @Schema(description = "阶段")
+    @Schema(name = "阶段")
     val stage: String?,
-    @Schema(description = "可见范围类型(ANY, PART_BY_NAME)")
+    @Schema(name = "可见范围类型(ANY, PART_BY_NAME)")
     val range: String?,
-    @Schema(description = "指标类型")
+    @Schema(name = "指标类型")
     val type: String?,
-    @Schema(description = "指标标签，用于前端区分控制")
+    @Schema(name = "指标标签，用于前端区分控制")
     val tag: String?,
-    @Schema(description = "是否启用")
+    @Schema(name = "是否启用")
     val enable: Boolean?,
-    @Schema(description = "指标附加信息")
+    @Schema(name = "指标附加信息")
     val logPrompt: String?
 )

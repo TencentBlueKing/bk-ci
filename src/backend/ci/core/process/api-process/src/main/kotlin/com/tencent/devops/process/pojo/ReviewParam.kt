@@ -31,25 +31,25 @@ import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "人工审核插件-审核信息")
+@Schema(name = "人工审核插件-审核信息")
 data class ReviewParam(
 //    userId: String, projectId: String, pipelineId: String, buildId: String, elementId: String
-//    @Schema(description = "主键ID", required = false)
+//    @Schema(name = "主键ID", required = false)
 //    var id: Long,
-    @Schema(description = "项目Id", required = true)
+    @Schema(name = "项目Id", required = true)
     var projectId: String = "",
-    @Schema(description = "流水线Id", required = true)
+    @Schema(name = "流水线Id", required = true)
     var pipelineId: String = "",
-    @Schema(description = "构建Id", required = true)
+    @Schema(name = "构建Id", required = true)
     var buildId: String = "",
-    @Schema(description = "审核人", required = true)
+    @Schema(name = "审核人", required = true)
     var reviewUsers: MutableList<String> = mutableListOf(),
-    @Schema(description = "审核结果", required = false)
+    @Schema(name = "审核结果", required = false)
     var status: ManualReviewAction? = null,
-    @Schema(description = "描述", required = false)
+    @Schema(name = "描述", required = false)
     var desc: String? = "",
-    @Schema(description = "审核意见", required = false)
+    @Schema(name = "审核意见", required = false)
     var suggest: String? = "",
-    @Schema(description = "参数列表", required = false)
+    @Schema(name = "参数列表", required = false)
     var params: MutableList<ManualReviewParam> = mutableListOf()
 )

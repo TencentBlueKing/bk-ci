@@ -30,30 +30,30 @@ package com.tencent.devops.quality.pojo.po
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(description = "质量红线模板PO")
+@Schema(name = "质量红线模板PO")
 data class QualityRuleTemplatePO(
-    @Schema(description = "ID")
+    @Schema(name = "ID")
     val id: Long,
-    @Schema(description = "模板名称")
+    @Schema(name = "模板名称")
     var name: String?,
-    @Schema(description = "模板类型(指标集, 模板)")
+    @Schema(name = "模板类型(指标集, 模板)")
     val type: String?,
-    @Schema(description = "描述")
+    @Schema(name = "描述")
     var desc: String?,
-    @Schema(description = "研发环节")
+    @Schema(name = "研发环节")
     var stage: String?,
-    @Schema(description = "控制点原子类型")
+    @Schema(name = "控制点原子类型")
     val controlPoint: String?,
-    @Schema(description = "控制点红线位置")
+    @Schema(name = "控制点红线位置")
     val controlPointPosition: String?,
-    @Schema(description = "创建用户")
+    @Schema(name = "创建用户")
     val createUser: String?,
-    @Schema(description = "更新用户")
+    @Schema(name = "更新用户")
     val updateUser: String?,
-    @Schema(description = "创建时间")
+    @Schema(name = "创建时间")
     val createTime: LocalDateTime?,
-    @Schema(description = "更新时间")
+    @Schema(name = "更新时间")
     val updateTime: LocalDateTime?,
-    @Schema(description = "是否可用")
+    @Schema(name = "是否可用")
     val enable: Boolean
 )

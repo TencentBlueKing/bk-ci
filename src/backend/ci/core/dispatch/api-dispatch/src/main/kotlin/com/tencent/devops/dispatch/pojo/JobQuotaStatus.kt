@@ -29,18 +29,18 @@ package com.tencent.devops.dispatch.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "项目的JOB状态")
+@Schema(name = "项目的JOB状态")
 data class JobQuotaStatus(
-    @Schema(description = "项目JOB数量配额", required = true)
+    @Schema(name = "项目JOB数量配额", required = true)
     val jobQuota: Int,
-    @Schema(description = "已运行JOB数量", required = true)
+    @Schema(name = "已运行JOB数量", required = true)
     val runningJobCount: Int,
-    @Schema(description = "JOB告警阈值，百分比0-100", required = true)
+    @Schema(name = "JOB告警阈值，百分比0-100", required = true)
     val jobThreshold: Int,
-    @Schema(description = "项目job时间配额，单位：小时", required = true)
+    @Schema(name = "项目job时间配额，单位：小时", required = true)
     val timeQuota: Long,
-    @Schema(description = "当月已运行JOB时间, 单位：毫秒", required = true)
+    @Schema(name = "当月已运行JOB时间, 单位：毫秒", required = true)
     val runningJobTime: Long,
-    @Schema(description = "时间告警阈值，百分比0-100", required = true)
+    @Schema(name = "时间告警阈值，百分比0-100", required = true)
     val timeThreshold: Int
 )

@@ -31,25 +31,25 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "插件统计信息查询传输对象")
+@Schema(name = "插件统计信息查询传输对象")
 data class QueryAtomStatisticsInfoDTO(
-    @Schema(description = "项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @Schema(description = "流水线ID")
+    @Schema(name = "流水线ID")
     val pipelineIds: List<String>? = null,
-    @Schema(description = "流水线标签")
+    @Schema(name = "流水线标签")
     val pipelineLabelIds: List<Long>? = null,
-    @Schema(description = "开始时间")
+    @Schema(name = "开始时间")
     val startTime: String,
-    @Schema(description = "结束时间")
+    @Schema(name = "结束时间")
     val endTime: String,
-    @Schema(description = "错误类型")
+    @Schema(name = "错误类型")
     val errorTypes: List<Int>? = null,
-    @Schema(description = "插件代码")
+    @Schema(name = "插件代码")
     val atomCodes: List<String>?,
-    @Schema(description = "页码")
+    @Schema(name = "页码")
     val page: Int = 1,
-    @Schema(description = "页数")
+    @Schema(name = "页数")
     @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
     val pageSize: Int = 10
 )

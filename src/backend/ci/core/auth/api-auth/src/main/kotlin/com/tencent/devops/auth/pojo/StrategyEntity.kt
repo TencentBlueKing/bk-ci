@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema
 data class StrategyEntity(
-    @Schema(description = "策略Id")
+    @Schema(name = "策略Id")
     val id: Int,
-    @Schema(description = "策略名称")
+    @Schema(name = "策略名称")
     val name: String,
-    @Schema(description = "策略内容")
+    @Schema(name = "策略内容")
     val strategy: Map<String, List<String>>,
-    @Schema(description = "添加人")
+    @Schema(name = "添加人")
     val createUser: String,
-    @Schema(description = "添加时间")
+    @Schema(name = "添加时间")
     val createTime: String
 )

@@ -2,10 +2,10 @@ package com.tencent.devops.openapi.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "")
+@Schema(name = "")
 data class AppManagerInfo(
-    @Schema(description = "app code")
+    @Schema(name = "app code")
     val appCode: String,
-    @Schema(description = "管理员")
+    @Schema(name = "管理员")
     val managerUser: String
 )

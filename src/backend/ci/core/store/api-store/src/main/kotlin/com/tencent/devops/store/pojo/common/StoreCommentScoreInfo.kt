@@ -29,12 +29,12 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "评论评分信息")
+@Schema(name = "评论评分信息")
 data class StoreCommentScoreInfo(
-    @Schema(description = "平均分", required = true)
+    @Schema(name = "平均分", required = true)
     val avgScore: Double,
-    @Schema(description = "评分总份数", required = true)
+    @Schema(name = "评分总份数", required = true)
     val totalNum: Long,
-    @Schema(description = "单项评分信息列表", required = true)
+    @Schema(name = "单项评分信息列表", required = true)
     val scoreItemList: List<ScoreItemInfo>
 )

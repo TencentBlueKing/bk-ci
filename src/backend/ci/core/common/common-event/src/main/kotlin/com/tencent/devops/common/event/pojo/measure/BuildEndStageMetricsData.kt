@@ -29,16 +29,16 @@ package com.tencent.devops.common.event.pojo.measure
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "构建结束后stage指标数据")
+@Schema(name = "构建结束后stage指标数据")
 data class BuildEndStageMetricsData(
-    @Schema(description = "stageId", required = true)
+    @Schema(name = "stageId", required = true)
     val stageId: String,
-    @Schema(description = "stage标签名称列表", required = false)
+    @Schema(name = "stage标签名称列表", required = false)
     val stageTagNames: List<String>?,
-    @Schema(description = "是否执行成功", required = true)
+    @Schema(name = "是否执行成功", required = true)
     val successFlag: Boolean,
-    @Schema(description = "stage构建耗时", required = true)
+    @Schema(name = "stage构建耗时", required = true)
     val costTime: Long,
-    @Schema(description = "container指标数据列表", required = true)
+    @Schema(name = "container指标数据列表", required = true)
     val containers: List<BuildEndContainerMetricsData>
 )

@@ -29,16 +29,16 @@ package com.tencent.devops.metrics.pojo.`do`
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线汇总信息")
+@Schema(name = "流水线汇总信息")
 data class PipelineSumInfoDO(
-    @Schema(description = "流水线总执行成功率")
+    @Schema(name = "流水线总执行成功率")
     val totalSuccessRate: Double,
-    @Schema(description = "流水线总平均执行耗时")
+    @Schema(name = "流水线总平均执行耗时")
     val totalAvgCostTime: Double,
-    @Schema(description = "流水线成功执行次数")
+    @Schema(name = "流水线成功执行次数")
     val successExecuteCount: Long,
-    @Schema(description = "流水线总执行次数")
+    @Schema(name = "流水线总执行次数")
     val totalExecuteCount: Long,
-    @Schema(description = "流水线总执行耗时")
+    @Schema(name = "流水线总执行耗时")
     val totalCostTime: Long
 )

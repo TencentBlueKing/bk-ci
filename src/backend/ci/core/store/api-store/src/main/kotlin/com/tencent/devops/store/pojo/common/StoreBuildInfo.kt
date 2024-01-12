@@ -29,14 +29,14 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "store组件构建信息")
+@Schema(name = "store组件构建信息")
 data class StoreBuildInfo(
-    @Schema(description = "store组件Id", required = true)
+    @Schema(name = "store组件Id", required = true)
     val storeId: String,
-    @Schema(description = "流水线Id", required = true)
+    @Schema(name = "流水线Id", required = true)
     val pipelineId: String,
-    @Schema(description = "构建Id", required = true)
+    @Schema(name = "构建Id", required = true)
     val buildId: String,
-    @Schema(description = "调试项目标识", required = true)
+    @Schema(name = "调试项目标识", required = true)
     val projectCode: String
 )

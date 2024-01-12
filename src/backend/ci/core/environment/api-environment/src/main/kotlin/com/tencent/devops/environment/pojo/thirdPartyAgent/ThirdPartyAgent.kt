@@ -30,30 +30,30 @@ package com.tencent.devops.environment.pojo.thirdPartyAgent
 import com.tencent.devops.common.api.enums.AgentStatus
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "第三方接入机")
+@Schema(name = "第三方接入机")
 data class ThirdPartyAgent(
-    @Schema(description = "Agent Hash ID", required = true)
+    @Schema(name = "Agent Hash ID", required = true)
     val agentId: String,
-    @Schema(description = "项目ID", required = true)
+    @Schema(name = "项目ID", required = true)
     val projectId: String,
-    @Schema(description = "节点ID", required = false)
+    @Schema(name = "节点ID", required = false)
     val nodeId: String?,
-    @Schema(description = "状态")
+    @Schema(name = "状态")
     val status: AgentStatus,
-    @Schema(description = "主机名", required = true)
+    @Schema(name = "主机名", required = true)
     val hostname: String,
-    @Schema(description = "系统", required = true)
+    @Schema(name = "系统", required = true)
     val os: String,
-    @Schema(description = "IP地址", required = true)
+    @Schema(name = "IP地址", required = true)
     val ip: String,
-    @Schema(description = "Secret KEY", required = true)
+    @Schema(name = "Secret KEY", required = true)
     val secretKey: String,
-    @Schema(description = "创建用户", required = true)
+    @Schema(name = "创建用户", required = true)
     val createUser: String,
-    @Schema(description = "创建时间", required = true)
+    @Schema(name = "创建时间", required = true)
     val createTime: Long,
-    @Schema(description = "并行执行的个数", required = false)
+    @Schema(name = "并行执行的个数", required = false)
     val parallelTaskCount: Int? = 4,
-    @Schema(description = "Docker构建机并行执行的个数", required = false)
+    @Schema(name = "Docker构建机并行执行的个数", required = false)
     val dockerParallelTaskCount: Int? = 4
 )

@@ -30,10 +30,10 @@ package com.tencent.devops.process.pojo.pipeline
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "执行次数记录")
+@Schema(name = "执行次数记录")
 data class BuildRecordInfo(
-    @Schema(description = "触发人", required = true)
+    @Schema(name = "触发人", required = true)
     val startUser: String,
-    @Schema(description = "耗时详情", required = true)
+    @Schema(name = "耗时详情", required = true)
     val timeCost: BuildRecordTimeCost?
 )

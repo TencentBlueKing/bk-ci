@@ -29,22 +29,22 @@ package com.tencent.devops.quality.api.v2.pojo.response
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线模型-质量红线-列表信息")
+@Schema(name = "流水线模型-质量红线-列表信息")
 data class QualityPipeline(
-    @Schema(description = "项目ID", required = true)
+    @Schema(name = "项目ID", required = true)
     val projectId: String,
-    @Schema(description = "流水线ID", required = true)
+    @Schema(name = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(description = "流水线名称", required = true)
+    @Schema(name = "流水线名称", required = true)
     var pipelineName: String,
-    @Schema(description = "流水线描述", required = false)
+    @Schema(name = "流水线描述", required = false)
     var pipelineDesc: String?,
-    @Schema(description = "流水线任务数量", required = true)
+    @Schema(name = "流水线任务数量", required = true)
     val taskCount: Int,
-    @Schema(description = "构建次数", required = true)
+    @Schema(name = "构建次数", required = true)
     val buildCount: Long,
-    @Schema(description = "最后构建启动时间", required = false)
+    @Schema(name = "最后构建启动时间", required = false)
     val latestBuildStartTime: Long?,
-    @Schema(description = "最后构建结束时间", required = false)
+    @Schema(name = "最后构建结束时间", required = false)
     val latestBuildEndTime: Long?
 )

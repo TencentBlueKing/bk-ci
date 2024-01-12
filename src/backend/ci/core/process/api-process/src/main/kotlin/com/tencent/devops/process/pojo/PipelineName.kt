@@ -29,10 +29,10 @@ package com.tencent.devops.process.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线模型-修改NAME")
+@Schema(name = "流水线模型-修改NAME")
 data class PipelineName(
-    @Schema(description = "流水线修改后的名称", required = true)
+    @Schema(name = "流水线修改后的名称", required = true)
     val name: String,
-    @Schema(description = "流水线修改前的名称", required = false)
+    @Schema(name = "流水线修改前的名称", required = false)
     val oldName: String = ""
 )

@@ -30,34 +30,34 @@ package com.tencent.devops.artifactory.pojo
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "版本仓库-文件信息-APP")
+@Schema(name = "版本仓库-文件信息-APP")
 data class AppFileInfo(
-    @Schema(description = "文件名", required = true)
+    @Schema(name = "文件名", required = true)
     val name: String,
-    @Schema(description = "文件全名", required = true)
+    @Schema(name = "文件全名", required = true)
     val fullName: String,
-    @Schema(description = "文件路径", required = true)
+    @Schema(name = "文件路径", required = true)
     val path: String,
-    @Schema(description = "文件全路径", required = true)
+    @Schema(name = "文件全路径", required = true)
     val fullPath: String,
-    @Schema(description = "文件大小(byte)", required = true)
+    @Schema(name = "文件大小(byte)", required = true)
     val size: Long,
-    @Schema(description = "是否文件夹", required = true)
+    @Schema(name = "是否文件夹", required = true)
     val folder: Boolean,
-    @Schema(description = "更新时间", required = true)
+    @Schema(name = "更新时间", required = true)
     var modifiedTime: Long,
-    @Schema(description = "仓库类型", required = true)
+    @Schema(name = "仓库类型", required = true)
     val artifactoryType: ArtifactoryType,
-    @Schema(description = "是否显示", required = true)
+    @Schema(name = "是否显示", required = true)
     val show: Boolean,
-    @Schema(description = "是否可下载", required = true)
+    @Schema(name = "是否可下载", required = true)
     val canDownload: Boolean,
-    @Schema(description = "版本信息", required = true)
+    @Schema(name = "版本信息", required = true)
     val version: String? = null,
-    @Schema(description = "logo链接", required = false)
+    @Schema(name = "logo链接", required = false)
     val logoUrl: String? = null,
-    @Schema(description = "版本体验BundleIdentifier", required = true)
+    @Schema(name = "版本体验BundleIdentifier", required = true)
     val bundleIdentifier: String? = null,
-    @Schema(description = "MD5", required = false)
+    @Schema(name = "MD5", required = false)
     var md5: String? = null
 )

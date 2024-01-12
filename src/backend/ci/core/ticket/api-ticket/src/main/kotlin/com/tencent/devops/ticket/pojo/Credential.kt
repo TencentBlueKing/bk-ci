@@ -30,28 +30,28 @@ package com.tencent.devops.ticket.pojo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "凭据-凭据内容")
+@Schema(name = "凭据-凭据内容")
 data class Credential(
-    @Schema(description = "凭据ID", required = true)
+    @Schema(name = "凭据ID", required = true)
     val credentialId: String,
-    @Schema(description = "凭据名称", required = true)
+    @Schema(name = "凭据名称", required = true)
     val credentialName: String? = null,
-    @Schema(description = "凭据类型", required = true)
+    @Schema(name = "凭据类型", required = true)
     val credentialType: CredentialType,
-    @Schema(description = "凭据描述", required = false)
+    @Schema(name = "凭据描述", required = false)
     val credentialRemark: String? = null,
-    @Schema(description = "最后更新时间", required = true)
+    @Schema(name = "最后更新时间", required = true)
     val updatedTime: Long? = null,
-    @Schema(description = "凭据内容", required = true)
+    @Schema(name = "凭据内容", required = true)
     val v1: String,
-    @Schema(description = "凭据内容", required = true)
+    @Schema(name = "凭据内容", required = true)
     val v2: String? = null,
-    @Schema(description = "凭据内容", required = true)
+    @Schema(name = "凭据内容", required = true)
     val v3: String? = null,
-    @Schema(description = "凭据内容", required = true)
+    @Schema(name = "凭据内容", required = true)
     val v4: String? = null,
-    @Schema(description = "最后更新者", required = true)
+    @Schema(name = "最后更新者", required = true)
     val updateUser: String? = null,
-    @Schema(description = "创建人", required = true)
+    @Schema(name = "创建人", required = true)
     val createUser: String? = null
 )

@@ -26,26 +26,26 @@
  */
 package com.tencent.devops.project.pojo
 import io.swagger.v3.oas.annotations.media.Schema
-@Schema(description = "公告")
+@Schema(name = "公告")
 data class Notice(
-    @Schema(description = "ID")
+    @Schema(name = "ID")
     val id: Long = 0,
-    @Schema(description = "公告标题")
+    @Schema(name = "公告标题")
     val noticeTitle: String = "",
-    @Schema(description = "生效日期")
+    @Schema(name = "生效日期")
     val effectDate: Long = 0,
-    @Schema(description = "失效日期")
+    @Schema(name = "失效日期")
     val invalidDate: Long = 0,
-    @Schema(description = "创建日期")
+    @Schema(name = "创建日期")
     val createDate: Long = 0,
-    @Schema(description = "更新日期")
+    @Schema(name = "更新日期")
     val updateDate: Long = 0,
-    @Schema(description = "公告内容")
+    @Schema(name = "公告内容")
     val noticeContent: String = "",
-    @Schema(description = "跳转地址")
+    @Schema(name = "跳转地址")
     val redirectUrl: String = "",
-    @Schema(description = "公告类型：0 弹框 1跑马灯")
+    @Schema(name = "公告类型：0 弹框 1跑马灯")
     val noticeType: Int = 0,
-    @Schema(description = "公告服务")
+    @Schema(name = "公告服务")
     val noticeService: List<String>? = null
 )

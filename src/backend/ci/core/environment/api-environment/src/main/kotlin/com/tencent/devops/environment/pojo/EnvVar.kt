@@ -29,12 +29,12 @@ package com.tencent.devops.environment.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "环境变量")
+@Schema(name = "环境变量")
 data class EnvVar(
-    @Schema(description = "变量名", required = true)
+    @Schema(name = "变量名", required = true)
     val name: String,
-    @Schema(description = "变量值", required = true)
+    @Schema(name = "变量值", required = true)
     val value: String,
-    @Schema(description = "是否安全变量", required = true)
+    @Schema(name = "是否安全变量", required = true)
     val secure: Boolean
 )

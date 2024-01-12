@@ -29,16 +29,16 @@ package com.tencent.devops.common.pipeline.pojo.element
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "元素基本信息")
+@Schema(name = "元素基本信息")
 data class ElementBaseInfo(
-    @Schema(description = "元素ID", required = true)
+    @Schema(name = "元素ID", required = true)
     val elementId: String,
-    @Schema(description = "元素名称", required = true)
+    @Schema(name = "元素名称", required = true)
     val elementName: String,
-    @Schema(description = "插件代码", required = true)
+    @Schema(name = "插件代码", required = true)
     val atomCode: String,
-    @Schema(description = "插件版本号", required = true)
+    @Schema(name = "插件版本号", required = true)
     val version: String,
-    @Schema(description = "元素在job中的位置")
+    @Schema(name = "元素在job中的位置")
     val elementJobIndex: Int
 )

@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema
 data class GroupDTO(
-    @Schema(description = "用户组编号, 内置用户组编号固定, 自定义组动态生成")
+    @Schema(name = "用户组编号, 内置用户组编号固定, 自定义组动态生成")
     val groupCode: String,
-    @Schema(description = "默认分组类型 true:默认分组, false 非默认分组")
+    @Schema(name = "默认分组类型 true:默认分组, false 非默认分组")
     val groupType: Boolean,
-    @Schema(description = "用户组名称")
+    @Schema(name = "用户组名称")
     val groupName: String,
-    @Schema(description = "用户组别名")
+    @Schema(name = "用户组别名")
     val displayName: String?,
-    @Schema(description = "关联系统Id")
+    @Schema(name = "关联系统Id")
     val relationId: String?
 )

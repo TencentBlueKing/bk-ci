@@ -31,10 +31,10 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonInclude(JsonInclude.Include.ALWAYS)
-@Schema(description = "质量红线-原子名称下拉列表键值对")
+@Schema(name = "质量红线-原子名称下拉列表键值对")
 data class ElementNameData(
-    @Schema(description = "原子的ClassType")
+    @Schema(name = "原子的ClassType")
     val elementType: String?,
-    @Schema(description = "原子中文名称")
+    @Schema(name = "原子中文名称")
     val elementName: String?
 )

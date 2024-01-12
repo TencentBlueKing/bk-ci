@@ -29,15 +29,15 @@ package com.tencent.devops.environment.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "环境信息-Node数量")
+@Schema(name = "环境信息-Node数量")
 data class EnvWithNode(
-    @Schema(description = "环境 Id", required = true)
+    @Schema(name = "环境 Id", required = true)
     val envId: Long,
-    @Schema(description = "环境名称", required = true)
+    @Schema(name = "环境名称", required = true)
     val envName: String,
-    @Schema(description = "源项目", required = false)
+    @Schema(name = "源项目", required = false)
     val sharedProjectId: String?,
-    @Schema(description = "分享人", required = false)
+    @Schema(name = "分享人", required = false)
     val sharedUserId: String?
 
 )

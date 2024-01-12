@@ -29,8 +29,8 @@ package com.tencent.devops.dispatch.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "虚拟机创建类型")
+@Schema(name = "虚拟机创建类型")
 data class VMTypeCreate(
-    @Schema(description = "类型名称", required = true)
+    @Schema(name = "类型名称", required = true)
     val typeName: String
 )

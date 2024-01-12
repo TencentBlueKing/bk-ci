@@ -30,13 +30,13 @@ package com.tencent.devops.process.pojo.classify
 import com.tencent.devops.process.pojo.classify.enums.Condition
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线视图-通过label过滤", description = PipelineViewFilterByLabel.classType)
+@Schema(name = "流水线视图-通过label过滤", description = PipelineViewFilterByLabel.classType)
 data class PipelineViewFilterByLabel(
-    @Schema(description = "条件", required = false)
+    @Schema(name = "条件", required = false)
     val condition: Condition,
-    @Schema(description = "流水线id", required = false)
+    @Schema(name = "流水线id", required = false)
     val groupId: String,
-    @Schema(description = "标签id列表", required = false)
+    @Schema(name = "标签id列表", required = false)
     val labelIds: List<String>
 ) : PipelineViewFilter() {
     companion object {

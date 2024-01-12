@@ -5,50 +5,50 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(description = "发布者信息")
+@Schema(name = "发布者信息")
 data class PublisherInfo(
-    @Schema(description = "ID")
+    @Schema(name = "ID")
     val id: String,
-    @Schema(description = "发布者标识")
+    @Schema(name = "发布者标识")
     val publisherCode: String,
-    @Schema(description = "发布者名称")
+    @Schema(name = "发布者名称")
     val publisherName: String,
-    @Schema(description = "发布者类型")
+    @Schema(name = "发布者类型")
     val publisherType: PublisherType,
-    @Schema(description = "主体负责人")
+    @Schema(name = "主体负责人")
     val owners: String,
-    @Schema(description = "技术支持")
+    @Schema(name = "技术支持")
     val helper: String? = null,
-    @Schema(description = "一级部门ID")
+    @Schema(name = "一级部门ID")
     val firstLevelDeptId: Int,
-    @Schema(description = "一级部门名称")
+    @Schema(name = "一级部门名称")
     val firstLevelDeptName: String,
-    @Schema(description = "二级部门ID")
+    @Schema(name = "二级部门ID")
     val secondLevelDeptId: Int,
-    @Schema(description = "二级部门名称")
+    @Schema(name = "二级部门名称")
     val secondLevelDeptName: String,
-    @Schema(description = "三级部门ID")
+    @Schema(name = "三级部门ID")
     val thirdLevelDeptId: Int,
-    @Schema(description = "三级部门名称")
+    @Schema(name = "三级部门名称")
     val thirdLevelDeptName: String,
-    @Schema(description = "四级部门ID")
+    @Schema(name = "四级部门ID")
     val fourthLevelDeptId: Int? = null,
-    @Schema(description = "四级部门名称")
+    @Schema(name = "四级部门名称")
     val fourthLevelDeptName: String? = null,
-    @Schema(description = "实体组织架构")
+    @Schema(name = "实体组织架构")
     val organizationName: String,
-    @Schema(description = "所属工作组BG")
+    @Schema(name = "所属工作组BG")
     val bgName: String,
-    @Schema(description = "是否认证")
+    @Schema(name = "是否认证")
     val certificationFlag: Boolean,
-    @Schema(description = "组件类型")
+    @Schema(name = "组件类型")
     val storeType: StoreTypeEnum,
-    @Schema(description = "创建人")
+    @Schema(name = "创建人")
     val creator: String,
-    @Schema(description = "最近修改人")
+    @Schema(name = "最近修改人")
     val modifier: String,
-    @Schema(description = "创建时间")
+    @Schema(name = "创建时间")
     val createTime: LocalDateTime,
-    @Schema(description = "更新时间")
+    @Schema(name = "更新时间")
     val updateTime: LocalDateTime
 )

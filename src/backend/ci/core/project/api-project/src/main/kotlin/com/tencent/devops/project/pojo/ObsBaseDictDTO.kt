@@ -2,14 +2,14 @@ package com.tencent.devops.project.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "OBS基礎字典数据")
+@Schema(name = "OBS基礎字典数据")
 data class ObsBaseDictDTO(
-    @Schema(description = "jsonrpc")
+    @Schema(name = "jsonrpc")
     val jsonrpc: String,
-    @Schema(description = "id")
+    @Schema(name = "id")
     val id: String,
-    @Schema(description = "method")
+    @Schema(name = "method")
     val method: String,
-    @Schema(description = "params")
+    @Schema(name = "params")
     val params: Map<String, String>
 )

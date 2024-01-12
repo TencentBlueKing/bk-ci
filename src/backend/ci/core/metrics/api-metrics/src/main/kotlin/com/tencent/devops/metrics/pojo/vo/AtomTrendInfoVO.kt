@@ -30,8 +30,8 @@ package com.tencent.devops.metrics.pojo.vo
 import com.tencent.devops.metrics.pojo.`do`.AtomTrendInfoDO
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "插件趋势信息视图")
+@Schema(name = "插件趋势信息视图")
 data class AtomTrendInfoVO(
-    @Schema(description = "趋势信息列表")
+    @Schema(name = "趋势信息列表")
     val atomTrendInfos: List<AtomTrendInfoDO>
 )

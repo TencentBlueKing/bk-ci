@@ -32,9 +32,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 import javax.validation.Valid
 
 data class PipelineModelAndSetting(
-    @Schema(description = "流水线模型", required = true)
+    @Schema(name = "流水线模型", required = true)
     val model: Model,
-    @Schema(description = "流水线设置", required = false)
+    @Schema(name = "流水线设置", required = false)
     @field:Valid
     val setting: PipelineSetting
 )

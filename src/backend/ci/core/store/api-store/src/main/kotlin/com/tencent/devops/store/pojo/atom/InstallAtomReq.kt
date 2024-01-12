@@ -29,10 +29,10 @@ package com.tencent.devops.store.pojo.atom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "安装插件到项目请求报文")
+@Schema(name = "安装插件到项目请求报文")
 data class InstallAtomReq(
-    @Schema(description = "项目标识", required = true)
+    @Schema(name = "项目标识", required = true)
     val projectCode: ArrayList<String>,
-    @Schema(description = "插件标识", required = true)
+    @Schema(name = "插件标识", required = true)
     val atomCode: String
 )

@@ -30,20 +30,20 @@ package com.tencent.devops.repository.pojo
 import com.tencent.devops.common.api.enums.ScmType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "代码库模型-基本信息")
+@Schema(name = "代码库模型-基本信息")
 data class RepositoryInfo(
-    @Schema(description = "仓库ID", required = false)
+    @Schema(name = "仓库ID", required = false)
     val repositoryId: Long?,
-    @Schema(description = "仓库哈希ID", required = false)
+    @Schema(name = "仓库哈希ID", required = false)
     val repositoryHashId: String?,
-    @Schema(description = "仓库别名", required = true)
+    @Schema(name = "仓库别名", required = true)
     val aliasName: String,
-    @Schema(description = "URL", required = true)
+    @Schema(name = "URL", required = true)
     val url: String,
-    @Schema(description = "类型", required = true)
+    @Schema(name = "类型", required = true)
     val type: ScmType,
-    @Schema(description = "最后更新时间", required = true)
+    @Schema(name = "最后更新时间", required = true)
     val updatedTime: Long,
-    @Schema(description = "创建人", required = false)
+    @Schema(name = "创建人", required = false)
     val createUser: String? = null
 )

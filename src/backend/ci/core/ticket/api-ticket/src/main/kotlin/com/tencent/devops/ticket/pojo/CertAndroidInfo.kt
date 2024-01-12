@@ -29,18 +29,18 @@ package com.tencent.devops.ticket.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "证书-android证书")
+@Schema(name = "证书-android证书")
 data class CertAndroidInfo(
-    @Schema(description = "证书ID", required = true)
+    @Schema(name = "证书ID", required = true)
     val certId: String,
-    @Schema(description = "证书名", required = true)
+    @Schema(name = "证书名", required = true)
     val jksFileName: String,
-    @Schema(description = "p12证书密码", required = false)
+    @Schema(name = "p12证书密码", required = false)
     val credentialId: String,
-    @Schema(description = "别名", required = false)
+    @Schema(name = "别名", required = false)
     val alias: String?,
-    @Schema(description = "别名ID", required = false)
+    @Schema(name = "别名ID", required = false)
     val aliasCredentialId: String,
-    @Schema(description = "备注", required = false)
+    @Schema(name = "备注", required = false)
     val remark: String?
 )

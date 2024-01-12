@@ -29,24 +29,24 @@ package com.tencent.devops.process.pojo.pipeline
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线模型-列表信息")
+@Schema(name = "流水线模型-列表信息")
 data class SimplePipeline(
-    @Schema(description = "项目ID", required = true)
+    @Schema(name = "项目ID", required = true)
     val projectId: String,
-    @Schema(description = "流水线ID", required = true)
+    @Schema(name = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(description = "流水线名称", required = true)
+    @Schema(name = "流水线名称", required = true)
     var pipelineName: String,
-    @Schema(description = "流水线描述", required = false)
+    @Schema(name = "流水线描述", required = false)
     var pipelineDesc: String?,
-    @Schema(description = "流水线任务数量", required = true)
+    @Schema(name = "流水线任务数量", required = true)
     val taskCount: Int,
-    @Schema(description = "是否被删除了", required = false)
+    @Schema(name = "是否被删除了", required = false)
     val isDelete: Boolean,
-    @Schema(description = "是否模板实例化的流水线", required = true)
+    @Schema(name = "是否模板实例化的流水线", required = true)
     val instanceFromTemplate: Boolean,
-    @Schema(description = "自增id", required = true)
+    @Schema(name = "自增id", required = true)
     val id: Long?,
-    @Schema(description = "创建人", required = false)
+    @Schema(name = "创建人", required = false)
     val createUser: String? = null
 )

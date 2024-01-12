@@ -33,7 +33,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 /**
  * DebugResponse
  */
-@Schema(description = "启动webConsole调试返回结构")
+@Schema(name = "启动webConsole调试返回结构")
 data class DebugResponse(
     val websocketUrl: String,
     val containerName: String?,

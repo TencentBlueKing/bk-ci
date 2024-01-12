@@ -29,16 +29,16 @@ package com.tencent.devops.common.pipeline.pojo.element
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "元素post信息")
+@Schema(name = "元素post信息")
 data class ElementPostInfo(
-    @Schema(description = "入口参数")
+    @Schema(name = "入口参数")
     val postEntryParam: String,
-    @Schema(description = "执行条件")
+    @Schema(name = "执行条件")
     val postCondition: String,
-    @Schema(description = "父元素ID")
+    @Schema(name = "父元素ID")
     var parentElementId: String,
-    @Schema(description = "父元素名称")
+    @Schema(name = "父元素名称")
     val parentElementName: String,
-    @Schema(description = "父元素在job中的位置")
+    @Schema(name = "父元素在job中的位置")
     val parentElementJobIndex: Int
 )

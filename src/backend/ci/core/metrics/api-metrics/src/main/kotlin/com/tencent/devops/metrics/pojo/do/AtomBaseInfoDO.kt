@@ -29,10 +29,10 @@ package com.tencent.devops.metrics.pojo.`do`
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "插件基本信息")
+@Schema(name = "插件基本信息")
 data class AtomBaseInfoDO(
-    @Schema(description = "插件标识")
+    @Schema(name = "插件标识")
     val atomCode: String,
-    @Schema(description = "插件名称")
+    @Schema(name = "插件名称")
     val atomName: String
 )

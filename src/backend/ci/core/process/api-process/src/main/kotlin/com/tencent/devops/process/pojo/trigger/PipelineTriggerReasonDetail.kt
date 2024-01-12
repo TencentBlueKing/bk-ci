@@ -30,14 +30,14 @@ package com.tencent.devops.process.pojo.trigger
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线触发原因详情")
+@Schema(name = "流水线触发原因详情")
 data class PipelineTriggerReasonDetail(
-    @Schema(description = "触发插件ID")
+    @Schema(name = "触发插件ID")
     val elementId: String?,
-    @Schema(description = "触发插件Code")
+    @Schema(name = "触发插件Code")
     val elementAtomCode: String,
-    @Schema(description = "触发插件名称")
+    @Schema(name = "触发插件名称")
     val elementName: String,
-    @Schema(description = "触发原因，JSON字符串，便于国际化")
+    @Schema(name = "触发原因，JSON字符串，便于国际化")
     val reasonMsg: String
 )

@@ -30,38 +30,38 @@ package com.tencent.devops.metrics.pojo.po
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(description = "保存流水线概览数据")
+@Schema(name = "保存流水线概览数据")
 data class SavePipelineOverviewDataPO(
-    @Schema(description = "主键ID")
+    @Schema(name = "主键ID")
     val id: Long,
-    @Schema(description = "项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @Schema(description = "流水线ID")
+    @Schema(name = "流水线ID")
     val pipelineId: String,
-    @Schema(description = "流水线名称")
+    @Schema(name = "流水线名称")
     val pipelineName: String,
-    @Schema(description = "渠道代码")
+    @Schema(name = "渠道代码")
     val channelCode: String,
-    @Schema(description = "总平均耗时，单位：毫秒")
+    @Schema(name = "总平均耗时，单位：毫秒")
     val totalAvgCostTime: Long,
-    @Schema(description = "成功平均耗时，单位：毫秒")
+    @Schema(name = "成功平均耗时，单位：毫秒")
     val successAvgCostTime: Long? = null,
-    @Schema(description = "失败平均耗时，单位：毫秒")
+    @Schema(name = "失败平均耗时，单位：毫秒")
     val failAvgCostTime: Long? = null,
-    @Schema(description = "总执行次数")
+    @Schema(name = "总执行次数")
     val totalExecuteCount: Long,
-    @Schema(description = "成功执行次数")
+    @Schema(name = "成功执行次数")
     val successExecuteCount: Long,
-    @Schema(description = "失败执行次数")
+    @Schema(name = "失败执行次数")
     val failExecuteCount: Long,
-    @Schema(description = "统计时间")
+    @Schema(name = "统计时间")
     val statisticsTime: LocalDateTime,
-    @Schema(description = "创建人")
+    @Schema(name = "创建人")
     val creator: String,
-    @Schema(description = "修改人")
+    @Schema(name = "修改人")
     val modifier: String,
-    @Schema(description = "创建时间")
+    @Schema(name = "创建时间")
     val createTime: LocalDateTime,
-    @Schema(description = "更新时间")
+    @Schema(name = "更新时间")
     val updateTime: LocalDateTime
 )

@@ -4,16 +4,16 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.auth.enums.SubjectScopeType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "授权范围")
+@Schema(name = "授权范围")
 data class SubjectScopeInfo(
-    @Schema(description = "ID")
+    @Schema(name = "ID")
     val id: String?,
-    @Schema(description = "name")
+    @Schema(name = "name")
     val name: String,
-    @Schema(description = "类型")
+    @Schema(name = "类型")
     val type: String? = SubjectScopeType.USER.value,
     @JsonProperty("full_name")
     val fullName: String? = "",
-    @Schema(description = "用户名")
+    @Schema(name = "用户名")
     val username: String? = ""
 )

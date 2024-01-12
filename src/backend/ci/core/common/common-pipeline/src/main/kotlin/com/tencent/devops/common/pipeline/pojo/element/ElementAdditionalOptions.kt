@@ -31,43 +31,43 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.common.pipeline.NameAndValue
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "插件级别流程控制模型")
+@Schema(name = "插件级别流程控制模型")
 data class ElementAdditionalOptions(
-    @Schema(description = "是否启用", required = false)
+    @Schema(name = "是否启用", required = false)
     var enable: Boolean = true,
-    @Schema(description = "是否失败时继续", required = false)
+    @Schema(name = "是否失败时继续", required = false)
     var continueWhenFailed: Boolean = false, // 失败时继续  continueWhenFailed = true &&  manualSkip != true（自动继续）
-    @Schema(description = "是否出现跳过按钮（手动继续）", required = false)
+    @Schema(name = "是否出现跳过按钮（手动继续）", required = false)
     val manualSkip: Boolean? = null, // (continueWhenFailed = true && manualSkip = true) 出现跳过按钮（手动继续）
-    @Schema(description = "是否失败时重试", required = false)
+    @Schema(name = "是否失败时重试", required = false)
     var retryWhenFailed: Boolean = false,
-    @Schema(description = "重试计数", required = false)
+    @Schema(name = "重试计数", required = false)
     var retryCount: Int = 0,
-    @Schema(description = "是否允许手动重试", required = false)
+    @Schema(name = "是否允许手动重试", required = false)
     val manualRetry: Boolean = true, // 自动重试一直失败后，界面出现重试按钮, 默认允许手动重试（为了兼容旧数据使用习惯）
-    @Schema(description = "超时分钟", required = false)
+    @Schema(name = "超时分钟", required = false)
     var timeout: Long? = 100, // 超时分钟
-    @Schema(description = "新的执行的超时时间，支持变量(分钟Minutes)，出错则取timeout的值", required = false)
+    @Schema(name = "新的执行的超时时间，支持变量(分钟Minutes)，出错则取timeout的值", required = false)
     var timeoutVar: String? = null, // Job执行的超时时间 分钟Minutes
     @JsonIgnore // 表示是否有修改，比如timeout. 注解 @JsonIgnore 表示本字段不会持久到数据库存储，只做临时的校验字段，不做任何保证
     var change: Boolean = false,
-    @Schema(description = "执行条件", required = false)
+    @Schema(name = "执行条件", required = false)
     var runCondition: RunCondition?,
-    @Schema(description = "是否配置前置暂停", required = false)
+    @Schema(name = "是否配置前置暂停", required = false)
     var pauseBeforeExec: Boolean? = false, // 是否配置前置暂停
-    @Schema(description = "订阅暂停通知用户", required = false)
+    @Schema(name = "订阅暂停通知用户", required = false)
     var subscriptionPauseUser: String? = "", // 订阅暂停通知用户
-    @Schema(description = "", required = false)
+    @Schema(name = "", required = false)
     var otherTask: String? = null,
-    @Schema(description = "自定义变量", required = false)
+    @Schema(name = "自定义变量", required = false)
     val customVariables: List<NameAndValue>? = null,
-    @Schema(description = "自定义条件", required = false)
+    @Schema(name = "自定义条件", required = false)
     var customCondition: String? = "",
-    @Schema(description = "插件post信息", required = false)
+    @Schema(name = "插件post信息", required = false)
     var elementPostInfo: ElementPostInfo? = null,
-    @Schema(description = "是否设置自定义环境变量", required = false)
+    @Schema(name = "是否设置自定义环境变量", required = false)
     val enableCustomEnv: Boolean? = false, // 是否设置自定义环境变量
-    @Schema(description = "自定义环境变量", required = false)
+    @Schema(name = "自定义环境变量", required = false)
     val customEnv: List<NameAndValue>? = null
 )
 

@@ -29,18 +29,18 @@ package com.tencent.devops.store.pojo.container
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线-构建资源信息")
+@Schema(name = "流水线-构建资源信息")
 data class BuildResource(
-    @Schema(description = "构建资源ID", required = true)
+    @Schema(name = "构建资源ID", required = true)
     val id: String,
-    @Schema(description = "构建资源代码", required = true)
+    @Schema(name = "构建资源代码", required = true)
     val buildResourceCode: String,
-    @Schema(description = "构建资源名称", required = true)
+    @Schema(name = "构建资源名称", required = true)
     val buildResourceName: String,
-    @Schema(description = "是否为默认构建资源，TRUE：是 FALSE：否", required = true)
+    @Schema(name = "是否为默认构建资源，TRUE：是 FALSE：否", required = true)
     val defaultFlag: Boolean,
-    @Schema(description = "创建日期")
+    @Schema(name = "创建日期")
     val createTime: Long = 0,
-    @Schema(description = "更新日期")
+    @Schema(name = "更新日期")
     val updateTime: Long = 0
 )

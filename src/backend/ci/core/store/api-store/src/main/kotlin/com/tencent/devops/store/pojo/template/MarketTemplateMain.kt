@@ -30,12 +30,12 @@ package com.tencent.devops.store.pojo.template
 import com.tencent.devops.store.pojo.common.MarketItem
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "模版市场-首页")
+@Schema(name = "模版市场-首页")
 data class MarketTemplateMain(
-    @Schema(description = "key值")
+    @Schema(name = "key值")
     val key: String,
-    @Schema(description = "标签")
+    @Schema(name = "标签")
     val label: String,
-    @Schema(description = "插件列表")
+    @Schema(name = "插件列表")
     val records: List<MarketItem?>
 )

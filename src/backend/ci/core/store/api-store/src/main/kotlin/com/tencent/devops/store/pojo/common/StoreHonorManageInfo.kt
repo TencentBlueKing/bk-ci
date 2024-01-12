@@ -32,28 +32,28 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(description = "组件荣誉管理信息")
+@Schema(name = "组件荣誉管理信息")
 data class StoreHonorManageInfo(
-    @Schema(description = "storeName", required = true)
+    @Schema(name = "storeName", required = true)
     val storeName: String,
-    @Schema(description = "storeCode", required = true)
+    @Schema(name = "storeCode", required = true)
     val storeCode: String,
-    @Schema(description = "ID", required = true)
+    @Schema(name = "ID", required = true)
     val honorId: String,
-    @Schema(description = "荣誉头衔", required = true)
+    @Schema(name = "荣誉头衔", required = true)
     @BkField(maxLength = 4)
     val honorTitle: String,
-    @Schema(description = "荣誉名称", required = true)
+    @Schema(name = "荣誉名称", required = true)
     @BkField(maxLength = 40)
     val honorName: String,
-    @Schema(description = "组件范畴", required = true)
+    @Schema(name = "组件范畴", required = true)
     val storeType: StoreTypeEnum,
-    @Schema(description = "创建者", required = true)
+    @Schema(name = "创建者", required = true)
     val creator: String,
-    @Schema(description = "修改者", required = true)
+    @Schema(name = "修改者", required = true)
     val modifier: String,
-    @Schema(description = "更新时间", required = true)
+    @Schema(name = "更新时间", required = true)
     val updateTime: LocalDateTime,
-    @Schema(description = "创建时间", required = true)
+    @Schema(name = "创建时间", required = true)
     val createTime: LocalDateTime
 )

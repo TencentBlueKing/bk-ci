@@ -30,8 +30,8 @@ package com.tencent.devops.store.pojo.template
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "模版发布进度信息")
+@Schema(name = "模版发布进度信息")
 data class TemplateProcessInfo(
-    @Schema(description = "发布进度信息", required = true)
+    @Schema(name = "发布进度信息", required = true)
     val processInfos: List<ReleaseProcessItem>
 )

@@ -29,15 +29,15 @@ package com.tencent.devops.store.pojo.atom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "获取并解析插件配置task.json的返回数据")
+@Schema(name = "获取并解析插件配置task.json的返回数据")
 data class GetAtomConfigResult(
-    @Schema(description = "状态码", required = true)
+    @Schema(name = "状态码", required = true)
     val errorCode: String,
-    @Schema(description = "错误参数", required = false)
+    @Schema(name = "错误参数", required = false)
     val errorParams: Array<String>,
-    @Schema(description = "插件json文件配置数据", required = false)
+    @Schema(name = "插件json文件配置数据", required = false)
     val taskDataMap: Map<String, Any>,
-    @Schema(description = "环境信息", required = false)
+    @Schema(name = "环境信息", required = false)
     var atomEnvRequests: List<AtomEnvRequest>?
 ) {
     override fun equals(other: Any?): Boolean {

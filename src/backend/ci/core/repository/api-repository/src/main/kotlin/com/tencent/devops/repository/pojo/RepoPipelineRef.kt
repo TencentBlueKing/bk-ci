@@ -35,34 +35,34 @@ data class RepoPipelineRef(
     val projectId: String,
     @Parameter(description = "流水线ID")
     val pipelineId: String,
-    @Schema(description = "流水线名称")
+    @Schema(name = "流水线名称")
     val pipelineName: String,
-    @Schema(description = "代码库Id")
+    @Schema(name = "代码库Id")
     val repositoryId: Long,
-    @Schema(description = "插件ID")
+    @Schema(name = "插件ID")
     val taskId: String,
-    @Schema(description = "插件名")
+    @Schema(name = "插件名")
     val taskName: String,
-    @Schema(description = "插件code")
+    @Schema(name = "插件code")
     val atomCode: String,
-    @Schema(description = "插件版本")
+    @Schema(name = "插件版本")
     val atomVersion: String? = null,
-    @Schema(description = "插件类别")
+    @Schema(name = "插件类别")
     val atomCategory: String,
-    @Schema(description = "插件参数")
+    @Schema(name = "插件参数")
     val taskParams: Map<String, Any>,
-    @Schema(description = "插件配置的代码库类型")
+    @Schema(name = "插件配置的代码库类型")
     val taskRepoType: String,
-    @Schema(description = "插件配置的代码库hashId")
+    @Schema(name = "插件配置的代码库hashId")
     val taskRepoHashId: String?,
-    @Schema(description = "插件配置的代码库别名")
+    @Schema(name = "插件配置的代码库别名")
     val taskRepoRepoName: String?,
-    @Schema(description = "触发类型")
+    @Schema(name = "触发类型")
     val triggerType: String?,
-    @Schema(description = "事件类型")
+    @Schema(name = "事件类型")
     val eventType: String?,
-    @Schema(description = "触发条件")
+    @Schema(name = "触发条件")
     val triggerCondition: String?,
-    @Schema(description = "触发条件md5")
+    @Schema(name = "触发条件md5")
     val triggerConditionMd5: String?
 )

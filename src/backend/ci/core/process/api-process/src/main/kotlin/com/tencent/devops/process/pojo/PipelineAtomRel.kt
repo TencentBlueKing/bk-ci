@@ -29,18 +29,18 @@ package com.tencent.devops.process.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线插件相关信息")
+@Schema(name = "流水线插件相关信息")
 data class PipelineAtomRel(
-    @Schema(description = "流水线链接", required = true)
+    @Schema(name = "流水线链接", required = true)
     val pipelineUrl: String,
-    @Schema(description = "插件版本", required = true)
+    @Schema(name = "插件版本", required = true)
     val atomVersion: String? = null,
-    @Schema(description = "修改人", required = true)
+    @Schema(name = "修改人", required = true)
     val modifier: String,
-    @Schema(description = "修改时间", required = true)
+    @Schema(name = "修改时间", required = true)
     val updateTime: String,
-    @Schema(description = "执行人", required = false)
+    @Schema(name = "执行人", required = false)
     val executor: String?,
-    @Schema(description = "执行时间", required = false)
+    @Schema(name = "执行时间", required = false)
     val executeTime: String?
 )

@@ -32,12 +32,12 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "")
+@Schema(name = "")
 data class TemplateCompareModel(
-    @Schema(description = "构建号", required = false)
+    @Schema(name = "构建号", required = false)
     val buildNo: BuildNo?,
-    @Schema(description = "流水线变量列表", required = false)
+    @Schema(name = "流水线变量列表", required = false)
     val params: List<BuildFormProperty>,
-    @Schema(description = "流水线模型", required = false)
+    @Schema(name = "流水线模型", required = false)
     val model: Model
 )

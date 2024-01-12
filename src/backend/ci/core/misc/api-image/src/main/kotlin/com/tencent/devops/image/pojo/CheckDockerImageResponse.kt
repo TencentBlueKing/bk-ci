@@ -31,36 +31,36 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Schema(description = "检查镜像信息返回模型")
+@Schema(name = "检查镜像信息返回模型")
 data class CheckDockerImageResponse(
-    @Schema(description = "错误代码")
+    @Schema(name = "错误代码")
     val errorCode: Int,
-    @Schema(description = "错误信息")
+    @Schema(name = "错误信息")
     val errorMessage: String? = "",
-    @Schema(description = "架构")
+    @Schema(name = "架构")
     val arch: String? = "",
-    @Schema(description = "作者")
+    @Schema(name = "作者")
     val author: String? = "",
-    @Schema(description = "评论")
+    @Schema(name = "评论")
     val comment: String? = "",
-    @Schema(description = "创建时间")
+    @Schema(name = "创建时间")
     val created: String? = "",
-    @Schema(description = "docker版本")
+    @Schema(name = "docker版本")
     val dockerVersion: String? = "",
-    @Schema(description = "id")
+    @Schema(name = "id")
     val id: String? = "",
-    @Schema(description = "操作系统")
+    @Schema(name = "操作系统")
     val os: String? = "",
-    @Schema(description = "操作系统版本")
+    @Schema(name = "操作系统版本")
     val osVersion: String? = "",
-    @Schema(description = "父容器")
+    @Schema(name = "父容器")
     val parent: String? = "",
-    @Schema(description = "大小")
+    @Schema(name = "大小")
     val size: Long? = 0,
-    @Schema(description = "仓库标签")
+    @Schema(name = "仓库标签")
     val repoTags: List<String>? = null,
-    @Schema(description = "image存储属性")
+    @Schema(name = "image存储属性")
     val repoDigests: List<String>? = null,
-    @Schema(description = "虚拟大小")
+    @Schema(name = "虚拟大小")
     val virtualSize: Long? = 0
 )

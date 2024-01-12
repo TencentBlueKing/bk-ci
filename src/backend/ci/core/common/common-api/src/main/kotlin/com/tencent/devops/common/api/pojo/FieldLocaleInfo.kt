@@ -27,12 +27,12 @@
 package com.tencent.devops.common.api.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "字段国际化信息")
+@Schema(name = "字段国际化信息")
 data class FieldLocaleInfo(
-    @Schema(description = "字段名称")
+    @Schema(name = "字段名称")
     val fieldName: String,
-    @Schema(description = "字段值")
+    @Schema(name = "字段值")
     val fieldValue: String,
-    @Schema(description = "语言信息")
+    @Schema(name = "语言信息")
     val language: String? = null
 )

@@ -29,14 +29,14 @@ package com.tencent.devops.quality.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "质量红线-总览")
+@Schema(name = "质量红线-总览")
 data class CountOverview(
-    @Schema(description = "规则数", required = true)
+    @Schema(name = "规则数", required = true)
     val ruleCount: Int,
-    @Schema(description = "指标数", required = true)
+    @Schema(name = "指标数", required = true)
     val metadataCount: Int,
-    @Schema(description = "拦截数", required = true)
+    @Schema(name = "拦截数", required = true)
     val interceptCount: Int,
-    @Schema(description = "流水线数", required = true)
+    @Schema(name = "流水线数", required = true)
     val pipelineCount: Int
 )

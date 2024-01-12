@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema
 data class ManagerUserDTO(
-    @Schema(description = "管理员策略Id")
+    @Schema(name = "管理员策略Id")
     val managerId: Int,
-    @Schema(description = "用户名，支持用“,”隔开")
+    @Schema(name = "用户名，支持用“,”隔开")
     val userId: String,
-    @Schema(description = "X分钟后超时")
+    @Schema(name = "X分钟后超时")
     val timeout: Int?
 )

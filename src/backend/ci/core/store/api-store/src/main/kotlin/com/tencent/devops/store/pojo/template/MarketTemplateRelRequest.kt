@@ -31,11 +31,11 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "关联模板请求报文体")
+@Schema(name = "关联模板请求报文体")
 data class MarketTemplateRelRequest(
-    @Schema(description = "项目编码", required = true)
+    @Schema(name = "项目编码", required = true)
     val projectCode: String,
-    @Schema(description = "模板名称", required = true)
+    @Schema(name = "模板名称", required = true)
     @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
     val templateName: String
 )

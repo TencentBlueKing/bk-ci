@@ -29,14 +29,14 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "更新研发商店流水线模型请求报文")
+@Schema(name = "更新研发商店流水线模型请求报文")
 data class UpdateStorePipelineModelRequest(
-    @Schema(description = "适用范围(ALL:全部|GRAY:灰度|NO_GRAY:非灰度|SPEC:特别指定)", required = true)
+    @Schema(name = "适用范围(ALL:全部|GRAY:灰度|NO_GRAY:非灰度|SPEC:特别指定)", required = true)
     val scopeType: String,
-    @Schema(description = "组件类型", required = true)
+    @Schema(name = "组件类型", required = true)
     val storeType: String,
-    @Schema(description = "组件代码集合(scopeType为SPEC才需要传)", required = false)
+    @Schema(name = "组件代码集合(scopeType为SPEC才需要传)", required = false)
     val storeCodeList: List<String>? = null,
-    @Schema(description = "流水线模型", required = false)
+    @Schema(name = "流水线模型", required = false)
     val pipelineModel: String? = null
 )

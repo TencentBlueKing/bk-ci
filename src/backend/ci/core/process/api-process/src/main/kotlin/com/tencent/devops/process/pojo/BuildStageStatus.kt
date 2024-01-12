@@ -30,22 +30,22 @@ package com.tencent.devops.process.pojo
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "历史构建阶段状态")
+@Schema(name = "历史构建阶段状态")
 data class BuildStageStatus(
-    @Schema(description = "阶段ID", required = true)
+    @Schema(name = "阶段ID", required = true)
     val stageId: String,
-    @Schema(description = "阶段名称", required = true)
+    @Schema(name = "阶段名称", required = true)
     val name: String,
-    @Schema(description = "阶段状态", required = false, readOnly = true)
+    @Schema(name = "阶段状态", required = false, readOnly = true)
     var status: String? = null,
-    @Schema(description = "阶段标签", required = false, readOnly = true)
+    @Schema(name = "阶段标签", required = false, readOnly = true)
     var tag: List<String>? = null,
-    @Schema(description = "阶段启动时间", required = false, readOnly = true)
+    @Schema(name = "阶段启动时间", required = false, readOnly = true)
     var startEpoch: Long? = null,
-    @Schema(description = "容器运行时间", required = false, readOnly = true)
+    @Schema(name = "容器运行时间", required = false, readOnly = true)
     var elapsed: Long? = null,
-    @Schema(description = "各项耗时", required = true)
+    @Schema(name = "各项耗时", required = true)
     var timeCost: BuildRecordTimeCost? = null,
-    @Schema(description = "前端", required = false, readOnly = true)
+    @Schema(name = "前端", required = false, readOnly = true)
     var showMsg: String? = null
 )

@@ -34,40 +34,40 @@ import io.swagger.v3.oas.annotations.media.Schema
  * @Date 2019/9/17
  * @Version 1.0
  */
-@Schema(description = "我的镜像")
+@Schema(name = "我的镜像")
 data class MyImage(
 
-    @Schema(description = "镜像Id", required = true)
+    @Schema(name = "镜像Id", required = true)
     val imageId: String,
 
-    @Schema(description = "镜像代码", required = true)
+    @Schema(name = "镜像代码", required = true)
     val imageCode: String,
 
-    @Schema(description = "镜像名称", required = true)
+    @Schema(name = "镜像名称", required = true)
     val imageName: String,
 
-    @Schema(description = "镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = true)
+    @Schema(name = "镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = true)
     val imageSourceType: String,
 
-    @Schema(description = "镜像仓库URL", required = false)
+    @Schema(name = "镜像仓库URL", required = false)
     val imageRepoUrl: String,
 
-    @Schema(description = "镜像在仓库中的名称", required = false)
+    @Schema(name = "镜像在仓库中的名称", required = false)
     val imageRepoName: String,
 
-    @Schema(description = "版本号", required = true)
+    @Schema(name = "版本号", required = true)
     val version: String,
 
-    @Schema(description = "镜像tag", required = true)
+    @Schema(name = "镜像tag", required = true)
     val imageTag: String,
 
-    @Schema(description = "镜像大小（MB字符串）", required = true)
+    @Schema(name = "镜像大小（MB字符串）", required = true)
     val imageSize: String,
 
-    @Schema(description = "镜像大小数值（字节）", required = true)
+    @Schema(name = "镜像大小数值（字节）", required = true)
     val imageSizeNum: Long,
 
-    @Schema(description =
+    @Schema(name =
         "镜像状态，INIT：初始化|COMMITTING：提交中|CHECKING：验证中|CHECK_FAIL：验证失败|TESTING：测试中|" +
             "AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|" +
             "UNDERCARRIAGING：下架中|UNDERCARRIAGED：已下架",
@@ -75,27 +75,27 @@ data class MyImage(
     )
     val imageStatus: String,
 
-    @Schema(description = "所属项目代码", required = true)
+    @Schema(name = "所属项目代码", required = true)
     val projectCode: String,
 
-    @Schema(description = "所属项目名称", required = true)
+    @Schema(name = "所属项目名称", required = true)
     val projectName: String,
 
-    @Schema(description = "项目是否被禁用", required = true)
+    @Schema(name = "项目是否被禁用", required = true)
     val projectEnabled: Boolean,
 
-    @Schema(description = "创建人", required = true)
+    @Schema(name = "创建人", required = true)
     val creator: String,
 
-    @Schema(description = "修改人", required = true)
+    @Schema(name = "修改人", required = true)
     val modifier: String,
 
-    @Schema(description = "创建时间", required = true)
+    @Schema(name = "创建时间", required = true)
     val createTime: Long,
 
-    @Schema(description = "修改时间", required = true)
+    @Schema(name = "修改时间", required = true)
     val updateTime: Long,
 
-    @Schema(description = "是否为公共镜像", required = true)
+    @Schema(name = "是否为公共镜像", required = true)
     val publicFlag: Boolean
 )

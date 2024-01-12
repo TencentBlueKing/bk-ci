@@ -29,22 +29,22 @@ package com.tencent.devops.environment.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "CMDB节点信息")
+@Schema(name = "CMDB节点信息")
 data class CmdbNode(
-    @Schema(description = "节点名称", required = true)
+    @Schema(name = "节点名称", required = true)
     val name: String,
-    @Schema(description = "责任人", required = true)
+    @Schema(name = "责任人", required = true)
     val operator: String,
-    @Schema(description = "备份责任人", required = true)
+    @Schema(name = "备份责任人", required = true)
     val bakOperator: String,
-    @Schema(description = "节点IP", required = true)
+    @Schema(name = "节点IP", required = true)
     val ip: String,
-    @Schema(description = "显示IP", required = true)
+    @Schema(name = "显示IP", required = true)
     val displayIp: String,
-    @Schema(description = "Agent状态", required = true)
+    @Schema(name = "Agent状态", required = true)
     val agentStatus: Boolean,
-    @Schema(description = "操作系统", required = true)
+    @Schema(name = "操作系统", required = true)
     val osName: String,
-    @Schema(description = "所属业务")
+    @Schema(name = "所属业务")
     val bizId: Long = -1
 )

@@ -29,18 +29,18 @@ package com.tencent.devops.metrics.pojo.qo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "查询流水线stage趋势信息查询条件信息对象")
+@Schema(name = "查询流水线stage趋势信息查询条件信息对象")
 data class QueryPipelineStageTrendInfoQO(
-    @Schema(description = "项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @Schema(description = "流水线ID")
+    @Schema(name = "流水线ID")
     val pipelineIds: List<String>? = null,
-    @Schema(description = "流水线标签")
+    @Schema(name = "流水线标签")
     val pipelineLabelIds: List<Long>? = null,
-    @Schema(description = "开始时间")
+    @Schema(name = "开始时间")
     var startTime: String,
-    @Schema(description = "结束时间")
+    @Schema(name = "结束时间")
     var endTime: String,
-    @Schema(description = "stage标签")
+    @Schema(name = "stage标签")
     val stageTag: String
 )

@@ -30,20 +30,20 @@ package com.tencent.devops.common.archive.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(description = "自定义报告-报告信息")
+@Schema(name = "自定义报告-报告信息")
 data class TaskReport(
-    @Schema(description = "名称", required = true)
+    @Schema(name = "名称", required = true)
     val name: String,
-    @Schema(description = "首页地址", required = true)
+    @Schema(name = "首页地址", required = true)
     val indexFileUrl: String,
-    @Schema(description = "报告类型", required = true)
+    @Schema(name = "报告类型", required = true)
     val type: String,
-    @Schema(description = "插件名称", required = true)
+    @Schema(name = "插件名称", required = true)
     val atomName: String,
-    @Schema(description = "插件Id", required = true)
+    @Schema(name = "插件Id", required = true)
     val taskId: String,
-    @Schema(description = "插件code", required = true)
+    @Schema(name = "插件code", required = true)
     val atomCode: String,
-    @Schema(description = "创建时间", required = true)
+    @Schema(name = "创建时间", required = true)
     val createTime: LocalDateTime
 )

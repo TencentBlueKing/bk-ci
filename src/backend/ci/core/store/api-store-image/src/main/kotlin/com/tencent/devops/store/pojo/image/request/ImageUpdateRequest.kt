@@ -33,54 +33,54 @@ import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class ImageUpdateRequest(
-    @Schema(description = "镜像名称", required = true)
+    @Schema(name = "镜像名称", required = true)
     val imageName: String,
-    @Schema(description = "所属分类ID", required = true)
+    @Schema(name = "所属分类ID", required = true)
     val classifyId: String,
-    @Schema(description = "功能标签", required = false)
+    @Schema(name = "功能标签", required = false)
     val labelIdList: List<String>?,
-    @Schema(description = "镜像所属范畴ID列表", required = false)
+    @Schema(name = "镜像所属范畴ID列表", required = false)
     val categoryIdList: List<String>?,
-    @Schema(description = "镜像适用的构建机类型", required = true)
+    @Schema(name = "镜像适用的构建机类型", required = true)
     val agentTypeScope: List<ImageAgentTypeEnum>,
-    @Schema(description = "版本号", required = true)
+    @Schema(name = "版本号", required = true)
     val version: String,
-    @Schema(description = "调试项目", required = false)
+    @Schema(name = "调试项目", required = false)
     val projectCode: String?,
-    @Schema(description = "镜像来源", required = true)
+    @Schema(name = "镜像来源", required = true)
     val imageSourceType: ImageType,
-    @Schema(description = "镜像仓库地址", required = false)
+    @Schema(name = "镜像仓库地址", required = false)
     val imageRepoUrl: String?,
-    @Schema(description = "镜像在仓库的名称", required = true)
+    @Schema(name = "镜像在仓库的名称", required = true)
     val imageRepoName: String,
-    @Schema(description = "凭证ID", required = false)
+    @Schema(name = "凭证ID", required = false)
     val ticketId: String?,
-    @Schema(description = "镜像大小", required = false)
+    @Schema(name = "镜像大小", required = false)
     val imageSize: String?,
-    @Schema(description = "镜像TAG", required = true)
+    @Schema(name = "镜像TAG", required = true)
     val imageTag: String,
-    @Schema(description = "dockerFile类型", required = false)
+    @Schema(name = "dockerFile类型", required = false)
     val dockerFileType: String?,
-    @Schema(description = "dockerFile内容", required = false)
+    @Schema(name = "dockerFile内容", required = false)
     val dockerFileContent: String?,
-    @Schema(description = "LOGO url", required = true)
+    @Schema(name = "LOGO url", required = true)
     val logoUrl: String,
-    @Schema(description = "镜像图标（BASE64字符串）", required = false)
+    @Schema(name = "镜像图标（BASE64字符串）", required = false)
     val icon: String?,
-    @Schema(description = "镜像简介）", required = false)
+    @Schema(name = "镜像简介）", required = false)
     val summary: String?,
-    @Schema(description = "镜像描述", required = false)
+    @Schema(name = "镜像描述", required = false)
     val description: String?,
-    @Schema(description = "发布者", required = true)
+    @Schema(name = "发布者", required = true)
     val publisher: String,
-    @Schema(description = "是否公开 true：公开，false：不公开", required = false)
+    @Schema(name = "是否公开 true：公开，false：不公开", required = false)
     val publicFlag: Boolean? = null,
-    @Schema(description = "是否推荐标识 true：推荐，false：不推荐", required = false)
+    @Schema(name = "是否推荐标识 true：推荐，false：不推荐", required = false)
     val recommendFlag: Boolean? = null,
-    @Schema(description = "是否官方认证 true：是，false：否", required = false)
+    @Schema(name = "是否官方认证 true：是，false：否", required = false)
     val certificationFlag: Boolean? = null,
-    @Schema(description = "研发来源 SELF_DEVELOPED：自研 THIRD_PARTY：第三方", required = false)
+    @Schema(name = "研发来源 SELF_DEVELOPED：自研 THIRD_PARTY：第三方", required = false)
     val rdType: ImageRDTypeEnum?,
-    @Schema(description = "权重（数值越大代表权重越高）")
+    @Schema(name = "权重（数值越大代表权重越高）")
     val weight: Int? = null
 )

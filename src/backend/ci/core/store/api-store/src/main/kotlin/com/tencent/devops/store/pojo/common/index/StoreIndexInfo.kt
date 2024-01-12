@@ -29,18 +29,18 @@ package com.tencent.devops.store.pojo.common.index
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "研发商店指标信息")
+@Schema(name = "研发商店指标信息")
 data class StoreIndexInfo(
-    @Schema(description = "指标代码", required = true)
+    @Schema(name = "指标代码", required = true)
     val indexCode: String,
-    @Schema(description = "指标名称", required = true)
+    @Schema(name = "指标名称", required = true)
     val indexName: String,
-    @Schema(description = "图标地址", required = true)
+    @Schema(name = "图标地址", required = true)
     val iconUrl: String,
-    @Schema(description = "指标描述", required = true)
+    @Schema(name = "指标描述", required = true)
     val description: String,
-    @Schema(description = "等级名称", required = true)
+    @Schema(name = "等级名称", required = true)
     val indexLevelName: String,
-    @Schema(description = "指标状态显示", required = true)
+    @Schema(name = "指标状态显示", required = true)
     val hover: String
 )

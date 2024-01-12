@@ -29,16 +29,16 @@ package com.tencent.devops.environment.pojo.thirdPartyAgent
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "第三方构建机启动信息模型")
+@Schema(name = "第三方构建机启动信息模型")
 data class ThirdPartyAgentStartInfo(
-    @Schema(description = "主机名称")
+    @Schema(name = "主机名称")
     val hostname: String,
-    @Schema(description = "主机IP")
+    @Schema(name = "主机IP")
     val hostIp: String,
-    @Schema(description = "操作系统")
+    @Schema(name = "操作系统")
     val detectOS: String,
-    @Schema(description = "版本号")
+    @Schema(name = "版本号")
     val version: String?,
-    @Schema(description = "主版本号")
+    @Schema(name = "主版本号")
     val masterVersion: String?
 )

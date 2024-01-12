@@ -29,8 +29,8 @@ package com.tencent.devops.process.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "远程执行token")
+@Schema(name = "远程执行token")
 data class PipelineRemoteToken(
-    @Schema(description = "token字符串", required = false)
+    @Schema(name = "token字符串", required = false)
     val token: String
 )

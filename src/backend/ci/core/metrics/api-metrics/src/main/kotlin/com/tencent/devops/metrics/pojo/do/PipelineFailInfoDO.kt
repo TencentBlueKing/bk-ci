@@ -29,12 +29,12 @@ package com.tencent.devops.metrics.pojo.`do`
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线错误统计信息")
+@Schema(name = "流水线错误统计信息")
 data class PipelineFailInfoDO(
-    @Schema(description = "错误类型名称")
+    @Schema(name = "错误类型名称")
     val name: String?,
-    @Schema(description = "错误类型标识")
+    @Schema(name = "错误类型标识")
     val errorType: Int,
-    @Schema(description = "错误次数")
+    @Schema(name = "错误次数")
     val errorCount: Long
 )

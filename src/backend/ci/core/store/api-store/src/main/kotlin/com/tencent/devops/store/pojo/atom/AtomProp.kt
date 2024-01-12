@@ -30,12 +30,12 @@ package com.tencent.devops.store.pojo.atom
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class AtomProp(
-    @Schema(description = "插件代码", required = true)
+    @Schema(name = "插件代码", required = true)
     val atomCode: String,
-    @Schema(description = "支持的操作系统", required = true)
+    @Schema(name = "支持的操作系统", required = true)
     val os: List<String>,
-    @Schema(description = "插件logo地址", required = false)
+    @Schema(name = "插件logo地址", required = false)
     val logoUrl: String?,
-    @Schema(description = "无构建环境插件是否可以在有构建环境运行标识", required = false)
+    @Schema(name = "无构建环境插件是否可以在有构建环境运行标识", required = false)
     var buildLessRunFlag: Boolean?
 )

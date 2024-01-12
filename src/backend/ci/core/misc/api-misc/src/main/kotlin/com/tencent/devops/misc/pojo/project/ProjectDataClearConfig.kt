@@ -30,10 +30,10 @@ package com.tencent.devops.misc.pojo.project
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(description = "项目流水线数据清理配置")
+@Schema(name = "项目流水线数据清理配置")
 data class ProjectDataClearConfig(
-    @Schema(description = "流水线最大启动时间", required = true)
+    @Schema(name = "流水线最大启动时间", required = true)
     val maxStartTime: LocalDateTime,
-    @Schema(description = "最大保存数量", required = true)
+    @Schema(name = "最大保存数量", required = true)
     val maxKeepNum: Int
 )

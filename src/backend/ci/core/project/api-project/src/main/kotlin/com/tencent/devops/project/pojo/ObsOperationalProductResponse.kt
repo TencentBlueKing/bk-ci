@@ -2,12 +2,12 @@ package com.tencent.devops.project.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "OBS运营产品")
+@Schema(name = "OBS运营产品")
 data class ObsOperationalProductResponse(
-    @Schema(description = "jsonrpc")
+    @Schema(name = "jsonrpc")
     val jsonrpc: String,
-    @Schema(description = "id")
+    @Schema(name = "id")
     val id: String,
-    @Schema(description = "运营产品")
+    @Schema(name = "运营产品")
     val result: ObsOperationalProductResult
 )

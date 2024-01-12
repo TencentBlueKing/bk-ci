@@ -30,22 +30,22 @@ package com.tencent.devops.store.pojo.atom
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "审核插件请求报文")
+@Schema(name = "审核插件请求报文")
 data class ApproveReq(
-    @Schema(description = "插件标识")
+    @Schema(name = "插件标识")
     val atomCode: String,
-    @Schema(description = "审核结果：PASS：通过|REJECT：驳回")
+    @Schema(name = "审核结果：PASS：通过|REJECT：驳回")
     val result: String,
-    @Schema(description = "审核结果说明")
+    @Schema(name = "审核结果说明")
     val message: String,
-    @Schema(description = "权重（数值越大代表权重越高）")
+    @Schema(name = "权重（数值越大代表权重越高）")
     val weight: Int?,
-    @Schema(description = "插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = true)
+    @Schema(name = "插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = true)
     val atomType: AtomTypeEnum,
-    @Schema(description = "是否为默认插件（默认插件默认所有项目可见）true：默认插件 false：普通插件", required = true)
+    @Schema(name = "是否为默认插件（默认插件默认所有项目可见）true：默认插件 false：普通插件", required = true)
     val defaultFlag: Boolean,
-    @Schema(description = "服务范围", required = true)
+    @Schema(name = "服务范围", required = true)
     val serviceScope: List<String>,
-    @Schema(description = "无构建环境插件是否可以在有构建环境运行标识， TRUE：可以 FALSE：不可以", required = false)
+    @Schema(name = "无构建环境插件是否可以在有构建环境运行标识， TRUE：可以 FALSE：不可以", required = false)
     val buildLessRunFlag: Boolean? = null
 )

@@ -30,23 +30,23 @@ package com.tencent.devops.common.pipeline.pojo.element
 import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "子流水线调用", description = SubPipelineCallElement.classType)
+@Schema(name = "子流水线调用", description = SubPipelineCallElement.classType)
 data class SubPipelineCallElement(
-    @Schema(description = "任务名称", required = true)
+    @Schema(name = "任务名称", required = true)
     override val name: String = "自流水线调用",
-    @Schema(description = "id", required = false)
+    @Schema(name = "id", required = false)
     override var id: String? = null,
-    @Schema(description = "状态", required = false)
+    @Schema(name = "状态", required = false)
     override var status: String? = null,
-    @Schema(description = "子流水线ID", required = true)
+    @Schema(name = "子流水线ID", required = true)
     val subPipelineId: String = "",
-    @Schema(description = "是否异步", required = true)
+    @Schema(name = "是否异步", required = true)
     val asynchronous: Boolean,
-    @Schema(description = "新版的子流水线原子的类型")
+    @Schema(name = "新版的子流水线原子的类型")
     val subPipelineType: SubPipelineType? = SubPipelineType.ID,
-    @Schema(description = "新版的子流水线名")
+    @Schema(name = "新版的子流水线名")
     val subPipelineName: String? = null,
-    @Schema(description = "启动参数", required = false)
+    @Schema(name = "启动参数", required = false)
     val parameters: Map<String, String>?
 ) : Element(name, id, status) {
     companion object {

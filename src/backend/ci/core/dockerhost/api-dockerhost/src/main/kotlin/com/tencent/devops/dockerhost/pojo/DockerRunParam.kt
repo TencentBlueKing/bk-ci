@@ -29,20 +29,20 @@ package com.tencent.devops.dockerhost.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "DockerRun")
+@Schema(name = "DockerRun")
 data class DockerRunParam(
-    @Schema(description = "镜像名称，包括tag", required = true)
+    @Schema(name = "镜像名称，包括tag", required = true)
     val imageName: String,
-    @Schema(description = "镜像仓库用户名", required = true)
+    @Schema(name = "镜像仓库用户名", required = true)
     val registryUser: String?,
-    @Schema(description = "镜像仓库密码", required = true)
+    @Schema(name = "镜像仓库密码", required = true)
     val registryPwd: String?,
-    @Schema(description = "命令行", required = false)
+    @Schema(name = "命令行", required = false)
     val command: List<String>,
-    @Schema(description = "环境变量", required = false)
+    @Schema(name = "环境变量", required = false)
     val env: Map<String, String?>?,
-    @Schema(description = "并发构建池序号", required = false)
+    @Schema(name = "并发构建池序号", required = false)
     val poolNo: String? = "0",
-    @Schema(description = "映射端口列表", required = false)
+    @Schema(name = "映射端口列表", required = false)
     val portList: List<Int>? = emptyList()
 )

@@ -29,10 +29,10 @@ package com.tencent.devops.store.pojo.atom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "插件输出参数")
+@Schema(name = "插件输出参数")
 data class AtomOutput(
-    @Schema(description = "参数名")
+    @Schema(name = "参数名")
     val name: String,
-    @Schema(description = "参数说明")
+    @Schema(name = "参数说明")
     val desc: String?
 )

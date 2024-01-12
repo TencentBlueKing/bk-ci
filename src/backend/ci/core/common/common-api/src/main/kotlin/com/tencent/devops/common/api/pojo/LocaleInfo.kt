@@ -27,8 +27,8 @@
 package com.tencent.devops.common.api.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "语言环境信息")
+@Schema(name = "语言环境信息")
 data class LocaleInfo(
-    @Schema(description = "语言")
+    @Schema(name = "语言")
     val language: String
 )

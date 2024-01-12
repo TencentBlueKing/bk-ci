@@ -29,10 +29,10 @@ package com.tencent.devops.quality.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "质量红线-用户组权限")
+@Schema(name = "质量红线-用户组权限")
 data class GroupPermission(
-    @Schema(description = "是否可编辑", required = true)
+    @Schema(name = "是否可编辑", required = true)
     val canEdit: Boolean,
-    @Schema(description = "是否可删除", required = true)
+    @Schema(name = "是否可删除", required = true)
     val canDelete: Boolean
 )

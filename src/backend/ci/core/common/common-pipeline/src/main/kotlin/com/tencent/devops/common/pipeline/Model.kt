@@ -38,34 +38,34 @@ import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("ALL")
-@Schema(description = "流水线模型-创建信息")
+@Schema(name = "流水线模型-创建信息")
 data class Model(
-    @Schema(description = "名称", required = true)
+    @Schema(name = "名称", required = true)
     var name: String,
-    @Schema(description = "描述", required = false)
+    @Schema(name = "描述", required = false)
     var desc: String?,
-    @Schema(description = "阶段集合", required = true)
+    @Schema(name = "阶段集合", required = true)
     val stages: List<Stage>,
-    @Schema(description = "标签", required = false)
+    @Schema(name = "标签", required = false)
     var labels: List<String> = emptyList(),
-    @Schema(description = "是否从模板中实例化出来的", required = false)
+    @Schema(name = "是否从模板中实例化出来的", required = false)
     val instanceFromTemplate: Boolean? = null,
-    @Schema(description = "创建人", required = false)
+    @Schema(name = "创建人", required = false)
     var pipelineCreator: String? = null,
-    @Schema(description = "当前模板对应的被复制的模板或安装的研发商店的模板对应的ID", required = false)
+    @Schema(name = "当前模板对应的被复制的模板或安装的研发商店的模板对应的ID", required = false)
     var srcTemplateId: String? = null,
-    @Schema(description = "当前模板的ID", required = false)
+    @Schema(name = "当前模板的ID", required = false)
     var templateId: String? = null,
-    @Schema(description = "提示", required = false)
+    @Schema(name = "提示", required = false)
     var tips: String? = null,
-    @Schema(description = "流水线事件回调", required = false)
+    @Schema(name = "流水线事件回调", required = false)
     var events: Map<String, PipelineCallbackEvent>? = emptyMap(),
-    @Schema(description = "静态流水线组", required = false)
+    @Schema(name = "静态流水线组", required = false)
     var staticViews: List<String> = emptyList(),
-    @Schema(description = "各项耗时", required = true)
+    @Schema(name = "各项耗时", required = true)
     var timeCost: BuildRecordTimeCost? = null
 ) {
-    @Schema(description = "提交时流水线最新版本号", required = false)
+    @Schema(name = "提交时流水线最新版本号", required = false)
     var latestVersion: Int = 0
 
     /**

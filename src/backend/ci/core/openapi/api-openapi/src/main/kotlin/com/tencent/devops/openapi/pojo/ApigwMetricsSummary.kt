@@ -30,10 +30,10 @@ import com.tencent.devops.metrics.pojo.vo.PipelineSumInfoVO
 import com.tencent.devops.metrics.pojo.vo.ThirdPlatformOverviewInfoVO
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线构建统计数据响应消息体")
+@Schema(name = "流水线构建统计数据响应消息体")
 data class ApigwMetricsSummary(
-    @Schema(description = "第三方汇总信息")
+    @Schema(name = "第三方汇总信息")
     val overview: ThirdPlatformOverviewInfoVO?,
-    @Schema(description = "流水线汇总信息")
+    @Schema(name = "流水线汇总信息")
     val sumInfo: PipelineSumInfoVO?
 )

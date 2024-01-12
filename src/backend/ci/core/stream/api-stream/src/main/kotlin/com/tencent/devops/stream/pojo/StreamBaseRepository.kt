@@ -30,18 +30,18 @@ package com.tencent.devops.stream.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("UnnecessaryAbstractClass")
-@Schema(description = "stream 项目基类")
+@Schema(name = "stream 项目基类")
 abstract class StreamBaseRepository(
-    @Schema(description = "stream 项目ID")
+    @Schema(name = "stream 项目ID")
     open val gitProjectId: Long?,
-    @Schema(description = "stream 项目名")
+    @Schema(name = "stream 项目名")
     open val name: String?,
-    @Schema(description = "stream 项目url")
+    @Schema(name = "stream 项目url")
     open val url: String?,
-    @Schema(description = "homepage")
+    @Schema(name = "homepage")
     open val homepage: String?,
-    @Schema(description = "gitHttpUrl")
+    @Schema(name = "gitHttpUrl")
     open val gitHttpUrl: String?,
-    @Schema(description = "gitSshUrl")
+    @Schema(name = "gitSshUrl")
     open val gitSshUrl: String?
 )

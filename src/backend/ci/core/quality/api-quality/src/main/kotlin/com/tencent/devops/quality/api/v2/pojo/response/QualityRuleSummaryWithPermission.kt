@@ -31,31 +31,31 @@ import com.tencent.devops.quality.pojo.RulePermission
 import com.tencent.devops.quality.pojo.enum.RuleRange
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "质量红线-规则简要信息v2")
+@Schema(name = "质量红线-规则简要信息v2")
 data class QualityRuleSummaryWithPermission(
-    @Schema(description = "规则HashId", required = true)
+    @Schema(name = "规则HashId", required = true)
     val ruleHashId: String,
-    @Schema(description = "规则名称", required = true)
+    @Schema(name = "规则名称", required = true)
     val name: String,
-    @Schema(description = "控制点", required = true)
+    @Schema(name = "控制点", required = true)
     val controlPoint: RuleSummaryControlPoint,
-    @Schema(description = "指标列表", required = true)
+    @Schema(name = "指标列表", required = true)
     val indicatorList: List<RuleSummaryIndicator>,
-    @Schema(description = "生效范围", required = true)
+    @Schema(name = "生效范围", required = true)
     val range: RuleRange,
-    @Schema(description = "包含模板和流水线的生效范围（新）", required = true)
+    @Schema(name = "包含模板和流水线的生效范围（新）", required = true)
     val rangeSummary: List<RuleRangeSummary>,
-    @Schema(description = "流水线个数", required = true)
+    @Schema(name = "流水线个数", required = true)
     val pipelineCount: Int,
-    @Schema(description = "生效流水线执次数", required = true)
+    @Schema(name = "生效流水线执次数", required = true)
     val pipelineExecuteCount: Int,
-    @Schema(description = "拦截次数", required = true)
+    @Schema(name = "拦截次数", required = true)
     val interceptTimes: Int,
-    @Schema(description = "是否启用", required = true)
+    @Schema(name = "是否启用", required = true)
     val enable: Boolean,
-    @Schema(description = "规则权限", required = true)
+    @Schema(name = "规则权限", required = true)
     val permissions: RulePermission,
-    @Schema(description = "红线ID", required = true)
+    @Schema(name = "红线ID", required = true)
     val gatewayId: String?
 ) {
         data class RuleSummaryControlPoint(

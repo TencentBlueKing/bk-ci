@@ -28,22 +28,22 @@ package com.tencent.devops.openapi.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "api度量数据")
+@Schema(name = "api度量数据")
 data class MetricsApiData(
-    @Schema(description = "接口代码")
+    @Schema(name = "接口代码")
     val api: String,
-    @Schema(description = "请求app code/ user id")
+    @Schema(name = "请求app code/ user id")
     val key: String,
-    @Schema(description = "秒级并发量")
+    @Schema(name = "秒级并发量")
     var secondLevelConcurrency: Int? = null,
-    @Schema(description = "峰值并发量")
+    @Schema(name = "峰值并发量")
     var peakConcurrency: Int? = null,
-    @Schema(description = "5min调用量")
+    @Schema(name = "5min调用量")
     var call5m: Int? = null,
-    @Schema(description = "1h调用量")
+    @Schema(name = "1h调用量")
     var call1h: Int? = null,
-    @Schema(description = "24h调用量")
+    @Schema(name = "24h调用量")
     var call24h: Int? = null,
-    @Schema(description = "7d调用量")
+    @Schema(name = "7d调用量")
     var call7d: Int? = null
 )

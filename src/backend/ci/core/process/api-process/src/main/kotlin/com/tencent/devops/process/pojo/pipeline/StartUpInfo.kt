@@ -29,10 +29,10 @@ package com.tencent.devops.process.pojo.pipeline
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "子流水线参数键值对")
+@Schema(name = "子流水线参数键值对")
 data class StartUpInfo(
-    @Schema(description = "子流水线参数名", required = true)
+    @Schema(name = "子流水线参数名", required = true)
     val id: String,
-    @Schema(description = "子流水线参数值", required = true)
+    @Schema(name = "子流水线参数值", required = true)
     val name: Any
 )

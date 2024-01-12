@@ -31,35 +31,35 @@ import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "规则更新请求")
+@Schema(name = "规则更新请求")
 data class RuleUpdateRequest(
-    @Schema(description = "规则名称", required = true)
+    @Schema(name = "规则名称", required = true)
     val name: String,
-    @Schema(description = "规则描述", required = true)
+    @Schema(name = "规则描述", required = true)
     val desc: String,
-    @Schema(description = "指标类型", required = true)
+    @Schema(name = "指标类型", required = true)
     val indicatorIds: List<CreateRequestIndicator>,
-    @Schema(description = "控制点", required = true)
+    @Schema(name = "控制点", required = true)
     val controlPoint: String,
-    @Schema(description = "控制点位置", required = true)
+    @Schema(name = "控制点位置", required = true)
     val controlPointPosition: String,
-    @Schema(description = "生效的流水线id集合", required = true)
+    @Schema(name = "生效的流水线id集合", required = true)
     val range: List<String>,
-    @Schema(description = "生效的流水线模板id集合", required = true)
+    @Schema(name = "生效的流水线模板id集合", required = true)
     val templateRange: List<String>,
-    @Schema(description = "操作类型", required = true)
+    @Schema(name = "操作类型", required = true)
     val operation: RuleOperation,
-    @Schema(description = "通知类型", required = false)
+    @Schema(name = "通知类型", required = false)
     val notifyTypeList: List<NotifyType>?,
-    @Schema(description = "通知组名单", required = false)
+    @Schema(name = "通知组名单", required = false)
     val notifyGroupList: List<String>?,
-    @Schema(description = "通知人员名单", required = false)
+    @Schema(name = "通知人员名单", required = false)
     val notifyUserList: List<String>?,
-    @Schema(description = "审核通知人员", required = false)
+    @Schema(name = "审核通知人员", required = false)
     val auditUserList: List<String>?,
-    @Schema(description = "审核超时时间", required = false)
+    @Schema(name = "审核超时时间", required = false)
     val auditTimeoutMinutes: Int?,
-    @Schema(description = "红线匹配的id(必填)", required = true)
+    @Schema(name = "红线匹配的id(必填)", required = true)
     val gatewayId: String?
 ) {
     data class CreateRequestIndicator(

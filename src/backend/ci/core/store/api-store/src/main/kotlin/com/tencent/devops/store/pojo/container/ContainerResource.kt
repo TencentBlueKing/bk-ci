@@ -29,8 +29,8 @@ package com.tencent.devops.store.pojo.container
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线-构建容器资源")
+@Schema(name = "流水线-构建容器资源")
 data class ContainerResource(
-    @Schema(description = "列表", required = true)
+    @Schema(name = "列表", required = true)
     val resources: List<Any>?
 )

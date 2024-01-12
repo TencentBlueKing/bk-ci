@@ -30,20 +30,20 @@ import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "wechat微信消息类型")
+@Schema(name = "wechat微信消息类型")
 open class WechatNotifyMessage : BaseMessage() {
 
-    @Schema(description = "通知接收者")
+    @Schema(name = "通知接收者")
     private val receivers: MutableSet<String> = mutableSetOf()
-    @Schema(description = "通知内容")
+    @Schema(name = "通知内容")
     var body: String = ""
-    @Schema(description = "通知发送者")
+    @Schema(name = "通知发送者")
     var sender: String = ""
-    @Schema(description = "优先级", allowableValues = "-1,0,1", dataType = "int")
+    @Schema(name = "优先级", allowableValues = ["-1", "0", "1"], type = "int")
     var priority: EnumNotifyPriority = EnumNotifyPriority.HIGH
-    @Schema(description = "通知来源", allowableValues = "0,1", dataType = "int")
+    @Schema(name = "通知来源", allowableValues = ["0", "1"], type = "int")
     var source: EnumNotifySource = EnumNotifySource.BUSINESS_LOGIC
-    @Schema(description = "是否markdown")
+    @Schema(name = "是否markdown")
     var markdownContent: Boolean = false
 
     fun addReceiver(receiver: String) {
@@ -62,7 +62,7 @@ open class WechatNotifyMessage : BaseMessage() {
         return receivers.toSet()
     }
 
-    @Schema(description = hidden = true)
+    @Schema(hidden = true)
     fun isReceiversEmpty(): Boolean {
         if (receivers.size == 0) return true
         return false

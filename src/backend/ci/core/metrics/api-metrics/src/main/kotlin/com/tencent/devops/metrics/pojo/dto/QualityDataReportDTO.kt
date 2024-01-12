@@ -29,14 +29,14 @@ package com.tencent.devops.metrics.pojo.dto
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "质量红线数据上报传输对象")
+@Schema(name = "质量红线数据上报传输对象")
 data class QualityDataReportDTO(
-    @Schema(description = "统计日期")
+    @Schema(name = "统计日期")
     val statisticsTime: String,
-    @Schema(description = "项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @Schema(description = "使用质量红线的流水线执行被拦截次数")
+    @Schema(name = "使用质量红线的流水线执行被拦截次数")
     val qualityPipelineInterceptionNum: Int,
-    @Schema(description = "使用质量红线的流水线执行总次数")
+    @Schema(name = "使用质量红线的流水线执行总次数")
     val qualityPipelineExecuteNum: Int
 )

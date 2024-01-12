@@ -29,16 +29,16 @@ package com.tencent.devops.artifactory.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "分页数据包装模型")
+@Schema(name = "分页数据包装模型")
 data class FileInfoPage<out T>(
-    @Schema(description = "总记录行数", required = true)
+    @Schema(name = "总记录行数", required = true)
     val count: Long,
-    @Schema(description = "第几页", required = true)
+    @Schema(name = "第几页", required = true)
     val page: Int,
-    @Schema(description = "每页多少条", required = true)
+    @Schema(name = "每页多少条", required = true)
     val pageSize: Int,
-    @Schema(description = "数据", required = true)
+    @Schema(name = "数据", required = true)
     val records: List<T>,
-    @Schema(description = "时间", required = true)
+    @Schema(name = "时间", required = true)
     val timestamp: Long
 )

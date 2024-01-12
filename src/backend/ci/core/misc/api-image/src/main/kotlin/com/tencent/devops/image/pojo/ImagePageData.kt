@@ -29,14 +29,14 @@ package com.tencent.devops.image.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "获取镜像列表返回模型")
+@Schema(name = "获取镜像列表返回模型")
 data class ImagePageData(
-    @Schema(description = "镜像列表")
+    @Schema(name = "镜像列表")
     val imageList: List<DockerRepo>,
-    @Schema(description = "分页start")
+    @Schema(name = "分页start")
     val start: Int,
-    @Schema(description = "分页限制")
+    @Schema(name = "分页限制")
     val limit: Int,
-    @Schema(description = "总共数量")
+    @Schema(name = "总共数量")
     val total: Int
 )

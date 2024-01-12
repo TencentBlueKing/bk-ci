@@ -30,14 +30,14 @@ package com.tencent.devops.quality.pojo
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "质量红线-拦截规则阈值")
+@Schema(name = "质量红线-拦截规则阈值")
 data class RuleThreshold(
-    @Schema(description = "指标ID", required = true)
+    @Schema(name = "指标ID", required = true)
     val metadataId: String,
-    @Schema(description = "指标名称", required = true)
+    @Schema(name = "指标名称", required = true)
     val metadataName: String,
-    @Schema(description = "关系", required = true)
+    @Schema(name = "关系", required = true)
     val operation: QualityOperation,
-    @Schema(description = "阈值值大小", required = true)
+    @Schema(name = "阈值值大小", required = true)
     val value: String
 )

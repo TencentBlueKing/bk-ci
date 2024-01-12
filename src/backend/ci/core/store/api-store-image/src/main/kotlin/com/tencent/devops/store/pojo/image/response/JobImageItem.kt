@@ -29,105 +29,105 @@ package com.tencent.devops.store.pojo.image.response
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "JOB编辑页镜像选项信息")
+@Schema(name = "JOB编辑页镜像选项信息")
 data class JobImageItem(
 
-    @Schema(description = "镜像ID", required = true)
+    @Schema(name = "镜像ID", required = true)
     val id: String,
 
-    @Schema(description = "镜像代码", required = true)
+    @Schema(name = "镜像代码", required = true)
     val code: String,
 
-    @Schema(description = "镜像名称", required = true)
+    @Schema(name = "镜像名称", required = true)
     val name: String,
 
-    @Schema(description = "版本号", required = true)
+    @Schema(name = "版本号", required = true)
     val version: String,
 
-    @Schema(description = "镜像默认版本号", required = true)
+    @Schema(name = "镜像默认版本号", required = true)
     val defaultVersion: String,
 
-    @Schema(description = "镜像状态", required = true)
+    @Schema(name = "镜像状态", required = true)
     val imageStatus: String,
 
-    @Schema(description = "所属分类ID", required = true)
+    @Schema(name = "所属分类ID", required = true)
     val classifyId: String,
 
-    @Schema(description = "所属分类编码", required = true)
+    @Schema(name = "所属分类编码", required = true)
     val classifyCode: String,
 
-    @Schema(description = "所属分类名称", required = true)
+    @Schema(name = "所属分类名称", required = true)
     val classifyName: String,
 
-    @Schema(description = "镜像logo", required = false)
+    @Schema(name = "镜像logo", required = false)
     val logoUrl: String?,
 
-    @Schema(description = "镜像图标", required = false)
+    @Schema(name = "镜像图标", required = false)
     val icon: String?,
 
-    @Schema(description = "镜像简介", required = false)
+    @Schema(name = "镜像简介", required = false)
     val summary: String?,
 
-    @Schema(description = "镜像说明文档链接", required = false)
+    @Schema(name = "镜像说明文档链接", required = false)
     val docsLink: String?,
 
-    @Schema(description = "发布者", required = false)
+    @Schema(name = "发布者", required = false)
     val publisher: String?,
 
-    @Schema(description = "发布时间", required = false)
+    @Schema(name = "发布时间", required = false)
     val pubTime: Long? = null,
 
-    @Schema(description = "创建人", required = true)
+    @Schema(name = "创建人", required = true)
     val creator: String,
 
-    @Schema(description = "创建时间", required = true)
+    @Schema(name = "创建时间", required = true)
     val createTime: Long,
 
-    @Schema(description = "是否为最新版本镜像 true：最新 false：非最新", required = true)
+    @Schema(name = "是否为最新版本镜像 true：最新 false：非最新", required = true)
     val latestFlag: Boolean,
 
-    @Schema(description = "镜像适用的Agent类型", required = true)
+    @Schema(name = "镜像适用的Agent类型", required = true)
     var agentTypeScope: List<String>,
 
-    @Schema(description = "镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = true)
+    @Schema(name = "镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = true)
     val imageSourceType: ImageType,
 
-    @Schema(description = "镜像仓库Url", required = false)
+    @Schema(name = "镜像仓库Url", required = false)
     val imageRepoUrl: String?,
 
-    @Schema(description = "镜像仓库名称", required = true)
+    @Schema(name = "镜像仓库名称", required = true)
     val imageRepoName: String,
 
-    @Schema(description = "镜像tag", required = true)
+    @Schema(name = "镜像tag", required = true)
     val imageTag: String,
 
-    @Schema(description = "镜像大小（MB字符串）", required = true)
+    @Schema(name = "镜像大小（MB字符串）", required = true)
     val imageSize: String,
 
-    @Schema(description = "是否官方认证 true：是 false：否", required = false)
+    @Schema(name = "是否官方认证 true：是 false：否", required = false)
     val certificationFlag: Boolean?,
 
-    @Schema(description = "是否为公共镜像 true：是 false：否", required = false)
+    @Schema(name = "是否为公共镜像 true：是 false：否", required = false)
     val publicFlag: Boolean?,
 
-    @Schema(description = "镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = false)
+    @Schema(name = "镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = false)
     val imageType: String?,
 
-    @Schema(description = "权重（数值越大代表权重越高）", required = false)
+    @Schema(name = "权重（数值越大代表权重越高）", required = false)
     val weight: Int?,
 
-    @Schema(description = "是否推荐标识 true：推荐，false：不推荐", required = false)
+    @Schema(name = "是否推荐标识 true：推荐，false：不推荐", required = false)
     val recommendFlag: Boolean?,
 
-    @Schema(description = "创建人", required = false)
+    @Schema(name = "创建人", required = false)
     val labelNames: String?,
 
-    @Schema(description = "是否可用标识", required = false)
+    @Schema(name = "是否可用标识", required = false)
     val availableFlag: Boolean,
 
-    @Schema(description = "最近修改人", required = true)
+    @Schema(name = "最近修改人", required = true)
     val modifier: String,
 
-    @Schema(description = "最近修改时间", required = true)
+    @Schema(name = "最近修改时间", required = true)
     val updateTime: Long
 )

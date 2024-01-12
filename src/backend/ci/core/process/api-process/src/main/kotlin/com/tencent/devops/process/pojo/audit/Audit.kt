@@ -29,21 +29,21 @@ package com.tencent.devops.process.pojo.audit
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "审计模型-Audit")
+@Schema(name = "审计模型-Audit")
 data class Audit(
-    @Schema(description = "资源类型", required = true)
+    @Schema(name = "资源类型", required = true)
     val resourceType: String,
-    @Schema(description = "资源ID", required = true)
+    @Schema(name = "资源ID", required = true)
     val resourceId: String,
-    @Schema(description = "资源名称", required = true)
+    @Schema(name = "资源名称", required = true)
     val resourceName: String,
-    @Schema(description = "操作人", required = true)
+    @Schema(name = "操作人", required = true)
     val userId: String,
-    @Schema(description = "操作", required = true)
+    @Schema(name = "操作", required = true)
     val action: String,
-    @Schema(description = "操作内容", required = true)
+    @Schema(name = "操作内容", required = true)
     val actionContent: String,
-    @Schema(description = "项目id", required = true)
+    @Schema(name = "项目id", required = true)
     val projectId: String
 ) {
     companion object {

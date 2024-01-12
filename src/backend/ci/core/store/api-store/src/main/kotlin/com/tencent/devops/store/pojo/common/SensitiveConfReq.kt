@@ -31,16 +31,16 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "新增敏感数据请求包体")
+@Schema(name = "新增敏感数据请求包体")
 data class SensitiveConfReq(
-    @Schema(description = "字段名称", required = true)
+    @Schema(name = "字段名称", required = true)
     @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
     val fieldName: String,
-    @Schema(description = "字段值", required = true)
+    @Schema(name = "字段值", required = true)
     val fieldValue: String,
-    @Schema(description = "字段类型 BACKEND:后端使用，FRONTEND:前端使用，ALL:前后端使用", required = true)
+    @Schema(name = "字段类型 BACKEND:后端使用，FRONTEND:前端使用，ALL:前后端使用", required = true)
     @field:BkField(patternStyle = BkStyleEnum.STORE_FIELD_TYPE_STYLE)
     val fieldType: String,
-    @Schema(description = "字段描述", required = false)
+    @Schema(name = "字段描述", required = false)
     val fieldDesc: String?
 )

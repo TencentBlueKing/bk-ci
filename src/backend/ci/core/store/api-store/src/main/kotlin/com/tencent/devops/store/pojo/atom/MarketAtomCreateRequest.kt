@@ -34,30 +34,30 @@ import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "插件市场工作台-新增插件请求报文体")
+@Schema(name = "插件市场工作台-新增插件请求报文体")
 data class MarketAtomCreateRequest(
-    @Schema(description = "项目编码", required = true)
+    @Schema(name = "项目编码", required = true)
     var projectCode: String,
-    @Schema(description = "插件代码", required = true)
+    @Schema(name = "插件代码", required = true)
     @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
     var atomCode: String,
-    @Schema(description = "插件名称", required = true)
+    @Schema(name = "插件名称", required = true)
     @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
     var name: String,
-    @Schema(description = "开发语言", required = true)
+    @Schema(name = "开发语言", required = true)
     @field:BkField(patternStyle = BkStyleEnum.LANGUAGE_STYLE)
     var language: String,
-    @Schema(description = "认证方式", required = false)
+    @Schema(name = "认证方式", required = false)
     @field:BkField(patternStyle = BkStyleEnum.AUTH_STYLE, required = false)
     val authType: String? = null,
-    @Schema(description = value = "项目可视范围", required = false)
+    @Schema(name = "项目可视范围", required = false)
     @field:BkField(patternStyle = BkStyleEnum.VISIBILITY_LEVEL_STYLE, required = false)
     val visibilityLevel: VisibilityLevelEnum? = VisibilityLevelEnum.LOGIN_PUBLIC,
-    @Schema(description = value = "插件代码库不开源原因", required = false)
+    @Schema(name = "插件代码库不开源原因", required = false)
     @field:BkField(patternStyle = BkStyleEnum.NOTE_STYLE, required = false)
     val privateReason: String? = null,
-    @Schema(description = value = "前端UI渲染方式", required = true)
+    @Schema(name = "前端UI渲染方式", required = true)
     val frontendType: FrontendTypeEnum = FrontendTypeEnum.NORMAL,
-    @Schema(description = value = "插件包发布方式", required = false)
+    @Schema(name = "插件包发布方式", required = false)
     val packageSourceType: PackageSourceTypeEnum? = null
 )

@@ -29,18 +29,18 @@ package com.tencent.devops.common.pipeline.event
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "项目的流水线回调配置")
+@Schema(name = "项目的流水线回调配置")
 data class ProjectPipelineCallBack(
-    @Schema(description = "流水线id", required = false)
+    @Schema(name = "流水线id", required = false)
     val id: Long? = null,
-    @Schema(description = "项目id", required = false)
+    @Schema(name = "项目id", required = false)
     val projectId: String,
-    @Schema(description = "回调url地址", required = false)
+    @Schema(name = "回调url地址", required = false)
     val callBackUrl: String,
-    @Schema(description = "事件", required = false)
+    @Schema(name = "事件", required = false)
     val events: String,
-    @Schema(description = "密钥", required = false)
+    @Schema(name = "密钥", required = false)
     val secretToken: String?,
-    @Schema(description = "回调是否启用", required = false)
+    @Schema(name = "回调是否启用", required = false)
     val enable: Boolean? = true
 )

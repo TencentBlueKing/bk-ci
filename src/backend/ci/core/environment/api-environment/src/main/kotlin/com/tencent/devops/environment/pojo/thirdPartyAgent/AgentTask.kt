@@ -29,8 +29,8 @@ package com.tencent.devops.environment.pojo.thirdPartyAgent
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "Agent任务")
+@Schema(name = "Agent任务")
 data class AgentTask(
-    @Schema(description = "Task状态", required = true)
+    @Schema(name = "Task状态", required = true)
     val status: String
 )

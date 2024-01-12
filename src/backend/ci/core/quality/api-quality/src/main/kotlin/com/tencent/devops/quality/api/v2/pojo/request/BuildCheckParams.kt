@@ -29,7 +29,7 @@ package com.tencent.devops.quality.api.v2.pojo.request
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "构建检查参数")
+@Schema(name = "构建检查参数")
 data class BuildCheckParams(
     val projectId: String,
     val pipelineId: String,

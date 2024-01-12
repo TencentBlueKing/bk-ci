@@ -29,34 +29,34 @@ package com.tencent.devops.environment.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "NodeBaseInfo-节点信息(权限)")
+@Schema(name = "NodeBaseInfo-节点信息(权限)")
 data class NodeBaseInfo(
-    @Schema(description = "环境 HashId", required = true)
+    @Schema(name = "环境 HashId", required = true)
     val nodeHashId: String,
-    @Schema(description = "节点 Id", required = true)
+    @Schema(name = "节点 Id", required = true)
     val nodeId: String,
-    @Schema(description = "节点名称", required = true)
+    @Schema(name = "节点名称", required = true)
     val name: String,
-    @Schema(description = "IP", required = true)
+    @Schema(name = "IP", required = true)
     val ip: String,
-    @Schema(description = "节点状态", required = true)
+    @Schema(name = "节点状态", required = true)
     val nodeStatus: String,
-    @Schema(description = "agent状态", required = false)
+    @Schema(name = "agent状态", required = false)
     val agentStatus: Boolean?,
-    @Schema(description = "节点类型", required = true)
+    @Schema(name = "节点类型", required = true)
     val nodeType: String,
-    @Schema(description = "操作系统", required = false)
+    @Schema(name = "操作系统", required = false)
     val osName: String?,
-    @Schema(description = "创建人", required = true)
+    @Schema(name = "创建人", required = true)
     val createdUser: String,
-    @Schema(description = "责任人", required = false)
+    @Schema(name = "责任人", required = false)
     val operator: String?,
-    @Schema(description = "备份责任人", required = false)
+    @Schema(name = "备份责任人", required = false)
     val bakOperator: String?,
-    @Schema(description = "网关地域", required = false)
+    @Schema(name = "网关地域", required = false)
     val gateway: String?,
-    @Schema(description = "显示名称", required = false)
+    @Schema(name = "显示名称", required = false)
     val displayName: String?,
-    @Schema(description = "所属业务, 默认-1表示没有绑定业务")
+    @Schema(name = "所属业务, 默认-1表示没有绑定业务")
     val bizId: Long? = -1
 )

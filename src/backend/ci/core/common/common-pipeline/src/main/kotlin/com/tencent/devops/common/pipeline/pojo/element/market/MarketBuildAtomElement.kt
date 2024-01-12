@@ -31,23 +31,23 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线模型-插件市场第三方构建环境类插件", description = MarketBuildAtomElement.classType)
+@Schema(name = "流水线模型-插件市场第三方构建环境类插件", description = MarketBuildAtomElement.classType)
 data class MarketBuildAtomElement(
-    @Schema(description = "任务名称", required = true)
+    @Schema(name = "任务名称", required = true)
     override val name: String = "任务名称由用户自己填写",
-    @Schema(description = "id将由后台生成", required = false)
+    @Schema(name = "id将由后台生成", required = false)
     override var id: String? = null,
-    @Schema(description = "状态", required = false)
+    @Schema(name = "状态", required = false)
     override var status: String? = null,
-    @Schema(description = "插件的唯一标识", required = true)
+    @Schema(name = "插件的唯一标识", required = true)
     private val atomCode: String = "",
-    @Schema(description = "插件版本", required = false)
+    @Schema(name = "插件版本", required = false)
     override var version: String = "1.*",
-    @Schema(description = "用户自定义ID", required = false)
+    @Schema(name = "用户自定义ID", required = false)
     override var stepId: String? = null,
-    @Schema(description = "插件参数数据", required = true)
+    @Schema(name = "插件参数数据", required = true)
     val data: Map<String, Any> = mapOf(),
-    @Schema(description = "附加参数", required = false)
+    @Schema(name = "附加参数", required = false)
     override var additionalOptions: ElementAdditionalOptions? = null
 ) : Element(name, id, status, additionalOptions = additionalOptions) {
 

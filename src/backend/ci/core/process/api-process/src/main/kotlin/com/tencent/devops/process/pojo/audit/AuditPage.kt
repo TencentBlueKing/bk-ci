@@ -29,19 +29,19 @@ package com.tencent.devops.process.pojo.audit
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "Audit分页数据包装模型")
+@Schema(name = "Audit分页数据包装模型")
 data class AuditPage<out T>(
-    @Schema(description = "总记录行数", required = true)
+    @Schema(name = "总记录行数", required = true)
     val count: Long,
-    @Schema(description = "第几页", required = true)
+    @Schema(name = "第几页", required = true)
     val page: Int,
-    @Schema(description = "每页多少条", required = true)
+    @Schema(name = "每页多少条", required = true)
     val pageSize: Int,
-    @Schema(description = "总共多少页", required = true)
+    @Schema(name = "总共多少页", required = true)
     val totalPages: Int,
-    @Schema(description = "数据", required = true)
+    @Schema(name = "数据", required = true)
     val records: List<T>,
-    @Schema(description = "是否拥有创建权限", required = true)
+    @Schema(name = "是否拥有创建权限", required = true)
     val hasCreatePermission: Boolean
 ) {
     constructor(page: Int, pageSize: Int, count: Long, records: List<T>, hasCreatePermission: Boolean) :

@@ -32,24 +32,24 @@ import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "消息通知新增请求报文体")
+@Schema(name = "消息通知新增请求报文体")
 data class AddNotifyMessageTemplateRequest(
-    @Schema(description = "模板代码", required = true)
+    @Schema(name = "模板代码", required = true)
     val templateCode: String,
-    @Schema(description = "模板名称", required = true)
+    @Schema(name = "模板名称", required = true)
     val templateName: String,
-    @Schema(description = "适用的通知类型（EMAIL:邮件 RTX:企业微信 WECHAT:微信 SMS:短信）", required = true)
+    @Schema(name = "适用的通知类型（EMAIL:邮件 RTX:企业微信 WECHAT:微信 SMS:短信）", required = true)
     val notifyTypeScope: ArrayList<String>,
-    @Schema(description = "标题（邮件和RTX方式必填）", required = false)
+    @Schema(name = "标题（邮件和RTX方式必填）", required = false)
     val title: String? = "",
-    @Schema(description = "消息内容", required = true)
+    @Schema(name = "消息内容", required = true)
     val body: String,
-    @Schema(description = "优先级别（-1:低 0:普通 1:高）", allowableValues = "-1,0,1", dataType = "String", required = true)
+    @Schema(name = "优先级别（-1:低 0:普通 1:高）", allowableValues = ["-1", "0", "1"], type = "String", required = true)
     val priority: EnumNotifyPriority,
-    @Schema(description = "通知来源（0:本地业务 1:操作）", allowableValues = "0,1", dataType = "int", required = true)
+    @Schema(name = "通知来源（0:本地业务 1:操作）", allowableValues = ["0", "1"], type = "int", required = true)
     val source: EnumNotifySource,
-    @Schema(description = "邮件格式（邮件方式必填 0:文本 1:html网页）", allowableValues = "0,1", dataType = "int", required = false)
+    @Schema(name = "邮件格式（邮件方式必填 0:文本 1:html网页）", allowableValues = ["0", "1"], type = "int", required = false)
     val bodyFormat: EnumEmailFormat?,
-    @Schema(description = "邮件类型（邮件方式必填 0:外部邮件 1:内部邮件）", allowableValues = "0,1", dataType = "int", required = false)
+    @Schema(name = "邮件类型（邮件方式必填 0:外部邮件 1:内部邮件）", allowableValues = ["0", "1"], type = "int", required = false)
     val emailType: EnumEmailType?
 )

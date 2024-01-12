@@ -29,34 +29,34 @@ package com.tencent.devops.dispatch.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "VM-创建-基本信息")
+@Schema(name = "VM-创建-基本信息")
 data class VMCreate(
-    @Schema(description = "VM ID", required = true)
+    @Schema(name = "VM ID", required = true)
     val id: Long,
-    @Schema(description = "VM 对应母机ID", required = true)
+    @Schema(name = "VM 对应母机ID", required = true)
     val machineId: Int,
-    @Schema(description = "VM 类型ID", required = true)
+    @Schema(name = "VM 类型ID", required = true)
     val typeId: Int,
-    @Schema(description = "VM IP地址", required = true)
+    @Schema(name = "VM IP地址", required = true)
     val ip: String,
-    @Schema(description = "VM 名称", required = true)
+    @Schema(name = "VM 名称", required = true)
     val name: String,
-    @Schema(description = "VM 系统信息", required = true)
+    @Schema(name = "VM 系统信息", required = true)
     val os: String,
-    @Schema(description = "VM 系统版本", required = true)
+    @Schema(name = "VM 系统版本", required = true)
     val osVersion: String,
-    @Schema(description = "VM CPU信息", required = true)
+    @Schema(name = "VM CPU信息", required = true)
     val cpu: String,
-    @Schema(description = "VM 内存信息", required = true)
+    @Schema(name = "VM 内存信息", required = true)
     val memory: String,
-    @Schema(description = "VM 是否在维护状态", required = true)
+    @Schema(name = "VM 是否在维护状态", required = true)
     val inMaintain: Boolean,
-    @Schema(description = "VM 管理员用户名", required = true)
+    @Schema(name = "VM 管理员用户名", required = true)
     val vmManagerUsername: String,
-    @Schema(description = "VM 管理员密码", required = true)
+    @Schema(name = "VM 管理员密码", required = true)
     val vmManagerPassword: String,
-    @Schema(description = "VM 非管理员用户名", required = true)
+    @Schema(name = "VM 非管理员用户名", required = true)
     val vmUsername: String,
-    @Schema(description = "VM 非管理员密码", required = true)
+    @Schema(name = "VM 非管理员密码", required = true)
     val vmPassword: String
 )

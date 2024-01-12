@@ -29,12 +29,12 @@ package com.tencent.devops.misc.pojo.project
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "项目信息")
+@Schema(name = "项目信息")
 data class ProjectInfo(
-    @Schema(description = "主键Id", required = true)
+    @Schema(name = "主键Id", required = true)
     val id: Long,
-    @Schema(description = "项目Id", required = true)
+    @Schema(name = "项目Id", required = true)
     val projectId: String,
-    @Schema(description = "项目渠道", required = true)
+    @Schema(name = "项目渠道", required = true)
     val channel: String
 )

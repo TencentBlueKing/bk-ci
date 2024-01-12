@@ -29,36 +29,36 @@ package com.tencent.devops.stream.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "stream 历史构建模型-对应history页面")
+@Schema(name = "stream 历史构建模型-对应history页面")
 data class StreamGitRequestHistory(
-    @Schema(description = "ID")
+    @Schema(name = "ID")
     var id: Long?,
-    @Schema(description = "OBJECT_KIND")
+    @Schema(name = "OBJECT_KIND")
     val objectKind: String,
-    @Schema(description = "OPERATION_KIND")
+    @Schema(name = "OPERATION_KIND")
     val operationKind: String?,
-    @Schema(description = "GIT_PROJECT_ID")
+    @Schema(name = "GIT_PROJECT_ID")
     val gitProjectId: Long,
-    @Schema(description = "BRANCH")
+    @Schema(name = "BRANCH")
     val branch: String,
-    @Schema(description = "COMMIT_ID")
+    @Schema(name = "COMMIT_ID")
     val commitId: String,
-    @Schema(description = "COMMIT_MESSAGE")
+    @Schema(name = "COMMIT_MESSAGE")
     val commitMsg: String?,
-    @Schema(description = "COMMIT_TIMESTAMP")
+    @Schema(name = "COMMIT_TIMESTAMP")
     val commitTimeStamp: String?,
-    @Schema(description = "用户")
+    @Schema(name = "用户")
     val userId: String,
-    @Schema(description = "TOTAL_COMMIT_COUNT")
+    @Schema(name = "TOTAL_COMMIT_COUNT")
     val totalCommitCount: Long,
-    @Schema(description = "MR_TITLE")
+    @Schema(name = "MR_TITLE")
     var mrTitle: String?,
-    @Schema(description = "MERGE_REQUEST_ID")
+    @Schema(name = "MERGE_REQUEST_ID")
     val mergeRequestId: Long?,
-    @Schema(description = "TARGET_BRANCH")
+    @Schema(name = "TARGET_BRANCH")
     val targetBranch: String?,
-    @Schema(description = "DESCRIPTION")
+    @Schema(name = "DESCRIPTION")
     var description: String?,
-    @Schema(description = "历史构建模型", required = false)
+    @Schema(name = "历史构建模型", required = false)
     val buildRecords: MutableList<StreamBuildHistory>
 )

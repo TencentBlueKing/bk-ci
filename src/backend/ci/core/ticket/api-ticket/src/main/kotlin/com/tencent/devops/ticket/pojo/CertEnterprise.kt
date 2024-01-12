@@ -29,14 +29,14 @@ package com.tencent.devops.ticket.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "证书-ios企业证书加密内容")
+@Schema(name = "证书-ios企业证书加密内容")
 data class CertEnterprise(
-    @Schema(description = "Base64编码的加密公钥", required = true)
+    @Schema(name = "Base64编码的加密公钥", required = true)
     val publicKey: String,
-    @Schema(description = "mobileProvision描述文件名", required = true)
+    @Schema(name = "mobileProvision描述文件名", required = true)
     val mobileProvisionFileName: String,
-    @Schema(description = "Base64编码的加密后mobileProvision描述文件内容", required = true)
+    @Schema(name = "Base64编码的加密后mobileProvision描述文件内容", required = true)
     val mobileProvisionContent: String,
-    @Schema(description = "文件的Sha1值", required = true)
+    @Schema(name = "文件的Sha1值", required = true)
     val mobileProvisionSha1: String
 )

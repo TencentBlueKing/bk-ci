@@ -29,14 +29,14 @@ package com.tencent.devops.store.pojo.atom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "插件替换请求报文")
+@Schema(name = "插件替换请求报文")
 data class AtomReplaceRequest(
-    @Schema(description = "被替换插件代码", required = true)
+    @Schema(name = "被替换插件代码", required = true)
     val fromAtomCode: String,
-    @Schema(description = "替换插件代码", required = true)
+    @Schema(name = "替换插件代码", required = true)
     val toAtomCode: String,
-    @Schema(description = "插件版本替换信息集合", required = true)
+    @Schema(name = "插件版本替换信息集合", required = true)
     val versionInfoList: List<AtomVersionReplaceInfo>,
-    @Schema(description = "需替换的流水线ID集合", required = false)
+    @Schema(name = "需替换的流水线ID集合", required = false)
     val pipelineIdList: List<String>? = null
 )

@@ -30,8 +30,8 @@ package com.tencent.devops.metrics.pojo.vo
 import com.tencent.devops.metrics.pojo.`do`.PipelineSumInfoDO
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线汇总信息视图")
+@Schema(name = "流水线汇总信息视图")
 data class PipelineSumInfoVO(
-    @Schema(description = "流水线汇总信息")
+    @Schema(name = "流水线汇总信息")
     val pipelineSumInfoDO: PipelineSumInfoDO?
 )

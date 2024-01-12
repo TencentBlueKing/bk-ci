@@ -34,38 +34,38 @@ import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "插件发布部署模型")
+@Schema(name = "插件发布部署模型")
 data class ReleaseInfo(
-    @Schema(description = "项目编码", required = true)
+    @Schema(name = "项目编码", required = true)
     var projectId: String = "",
-    @Schema(description = "插件名称", required = true)
+    @Schema(name = "插件名称", required = true)
     @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
     var name: String,
-    @Schema(description = "开发语言", required = true)
+    @Schema(name = "开发语言", required = true)
     @field:BkField(patternStyle = BkStyleEnum.LANGUAGE_STYLE)
     var language: String,
-    @Schema(description = "插件logo地址", required = true)
+    @Schema(name = "插件logo地址", required = true)
     @field:BkField(maxLength = 1024)
     var logoUrl: String,
-    @Schema(description = "支持的操作系统", required = true)
+    @Schema(name = "支持的操作系统", required = true)
     val os: ArrayList<String>,
-    @Schema(description = value = "插件配置信息", required = true)
+    @Schema(name = "插件配置信息", required = true)
     val configInfo: AtomConfigInfo,
-    @Schema(description = "插件所属范畴", required = true)
+    @Schema(name = "插件所属范畴", required = true)
     val category: AtomCategoryEnum,
-    @Schema(description = "所属插件分类代码", required = true)
+    @Schema(name = "所属插件分类代码", required = true)
     val classifyCode: String,
-    @Schema(description = "适用Job类型", required = true)
+    @Schema(name = "适用Job类型", required = true)
     val jobType: JobTypeEnum,
     @JsonProperty(value = "labelCodes", required = false)
-    @Schema(description = "标签标识集合", name = "labelCodes")
+    @Schema(name = "标签标识集合", description = "labelCodes")
     val labelCodes: ArrayList<String>? = null,
-    @Schema(description = "版本信息", required = true)
+    @Schema(name = "版本信息", required = true)
     val versionInfo: VersionInfo,
-    @Schema(description = "插件简介", required = true)
+    @Schema(name = "插件简介", required = true)
     @field:BkField(maxLength = 256)
     val summary: String,
-    @Schema(description = "插件描述", required = true)
+    @Schema(name = "插件描述", required = true)
     @field:BkField(maxLength = 65535)
     var description: String
 )

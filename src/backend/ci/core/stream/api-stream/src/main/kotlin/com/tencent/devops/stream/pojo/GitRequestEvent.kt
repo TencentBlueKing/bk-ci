@@ -35,54 +35,54 @@ import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import io.swagger.v3.oas.annotations.media.Schema
 
 // 将git event统一处理方便前端展示
-@Schema(description = "stream 触发请求")
+@Schema(name = "stream 触发请求")
 data class GitRequestEvent(
-    @Schema(description = "ID")
+    @Schema(name = "ID")
     var id: Long?,
-    @Schema(description = "事件类型")
+    @Schema(name = "事件类型")
     val objectKind: String,
-    @Schema(description = "操作类型")
+    @Schema(name = "操作类型")
     val operationKind: String?,
     // 对于Push是action对于Mr是extension
-    @Schema(description = "拓展操作")
+    @Schema(name = "拓展操作")
     val extensionAction: String?,
-    @Schema(description = "stream 项目ID")
+    @Schema(name = "stream 项目ID")
     val gitProjectId: Long,
-    @Schema(description = "源stream 项目ID")
+    @Schema(name = "源stream 项目ID")
     val sourceGitProjectId: Long?,
-    @Schema(description = "分支名")
+    @Schema(name = "分支名")
     val branch: String,
-    @Schema(description = "目标分支名")
+    @Schema(name = "目标分支名")
     val targetBranch: String?,
-    @Schema(description = "提交ID")
+    @Schema(name = "提交ID")
     val commitId: String,
-    @Schema(description = "提交说明")
+    @Schema(name = "提交说明")
     val commitMsg: String?,
-    @Schema(description = "提交时间")
+    @Schema(name = "提交时间")
     val commitTimeStamp: String?,
     // 目前只在上下文中传递，后续看需求是否保存至数据库
-    @Schema(description = "提交用户")
+    @Schema(name = "提交用户")
     val commitAuthorName: String?,
-    @Schema(description = "用户")
+    @Schema(name = "用户")
     val userId: String,
-    @Schema(description = "提交总数")
+    @Schema(name = "提交总数")
     val totalCommitCount: Long,
     // 这里保存的是MR 的 iid 不是 mrId
-    @Schema(description = "合并请求ID")
+    @Schema(name = "合并请求ID")
     val mergeRequestId: Long?,
-    @Schema(description = "事件原文")
+    @Schema(name = "事件原文")
     val event: String,
-    @Schema(description = "描述（已废弃）")
+    @Schema(name = "描述（已废弃）")
     var description: String?,
-    @Schema(description = "合并请求标题")
+    @Schema(name = "合并请求标题")
     var mrTitle: String?,
-    @Schema(description = "Git事件对象")
+    @Schema(name = "Git事件对象")
     var gitEvent: CodeWebhookEvent?,
-    @Schema(description = "去掉头部url的homepage")
+    @Schema(name = "去掉头部url的homepage")
     var gitProjectName: String?,
-    @Schema(description = "远程仓库触发时得到的主库流水线列表")
+    @Schema(name = "远程仓库触发时得到的主库流水线列表")
     var repoTriggerPipelineList: List<StreamRepoHookEvent>? = null,
-    @Schema(description = "变更的yaml文件")
+    @Schema(name = "变更的yaml文件")
     var changeYamlList: List<ChangeYamlList> = emptyList()
 ) {
     companion object {

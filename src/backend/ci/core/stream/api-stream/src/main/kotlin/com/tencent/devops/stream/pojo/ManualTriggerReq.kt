@@ -29,20 +29,20 @@ package com.tencent.devops.stream.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "手动触发请求")
+@Schema(name = "手动触发请求")
 data class ManualTriggerReq(
-    @Schema(description = "蓝盾项目ID(带前缀 如git_xxx)")
+    @Schema(name = "蓝盾项目ID(带前缀 如git_xxx)")
     val projectId: String,
-    @Schema(description = "分支")
+    @Schema(name = "分支")
     val branch: String,
-    @Schema(description = "Custom commit message")
+    @Schema(name = "Custom commit message")
     val customCommitMsg: String,
-    @Schema(description = "用户选择的触发CommitId")
+    @Schema(name = "用户选择的触发CommitId")
     val commitId: String? = null,
-    @Schema(description = "yaml")
+    @Schema(name = "yaml")
     val yaml: String,
-    @Schema(description = "输入参数(json对象)")
+    @Schema(name = "输入参数(json对象)")
     val inputs: Map<String, Any?>?,
-    @Schema(description = "是否使用commitId进行手动触发")
+    @Schema(name = "是否使用commitId进行手动触发")
     val useCommitId: Boolean
 )

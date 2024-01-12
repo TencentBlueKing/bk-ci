@@ -29,10 +29,10 @@ package com.tencent.devops.dispatch.docker.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "VM TASK DETAIL-分页-基本信息")
+@Schema(name = "VM TASK DETAIL-分页-基本信息")
 data class DockerHostZoneWithPage(
-    @Schema(description = "VM DETAIL总数", required = true)
+    @Schema(name = "VM DETAIL总数", required = true)
     val total: Int,
-    @Schema(description = "VM DETAIL列表", required = true)
+    @Schema(name = "VM DETAIL列表", required = true)
     val data: List<DockerHostZone>
 )

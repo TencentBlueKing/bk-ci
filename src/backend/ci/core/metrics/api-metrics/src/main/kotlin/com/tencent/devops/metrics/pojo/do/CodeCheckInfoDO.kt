@@ -29,10 +29,10 @@ package com.tencent.devops.metrics.pojo.`do`
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "CodeCC度量信息")
+@Schema(name = "CodeCC度量信息")
 data class CodeCheckInfoDO(
-    @Schema(description = "已解决缺陷数")
+    @Schema(name = "已解决缺陷数")
     val resolvedDefectNum: Int?,
-    @Schema(description = "codecc检查代码库平均分")
+    @Schema(name = "codecc检查代码库平均分")
     val repoCodeccAvgScore: Double?
 )

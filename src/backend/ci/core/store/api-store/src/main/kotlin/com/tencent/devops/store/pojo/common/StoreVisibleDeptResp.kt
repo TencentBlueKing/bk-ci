@@ -29,8 +29,8 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "store插件可见范围响应报文体")
+@Schema(name = "store插件可见范围响应报文体")
 data class StoreVisibleDeptResp(
-    @Schema(description = "机构列表", required = true)
+    @Schema(name = "机构列表", required = true)
     val deptInfos: List<DeptInfo>
 )

@@ -29,56 +29,56 @@ package com.tencent.devops.project.pojo.service
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "OP服务-显示模型")
+@Schema(name = "OP服务-显示模型")
 data class OPPServiceVO(
-    @Schema(description = "主键ID")
+    @Schema(name = "主键ID")
     val id: Long,
-    @Schema(description = "服务名称", required = true)
+    @Schema(name = "服务名称", required = true)
     val name: String,
-    @Schema(description = "英文名称", required = true)
+    @Schema(name = "英文名称", required = true)
     val englishName: String,
-    @Schema(description = "服务类型ID", required = true)
+    @Schema(name = "服务类型ID", required = true)
     val serviceTypeId: Long,
-    @Schema(description = "是否在页面显示")
+    @Schema(name = "是否在页面显示")
     val showProjectList: Boolean = true,
-    @Schema(description = "showNav")
+    @Schema(name = "showNav")
     val showNav: Boolean = true,
-    @Schema(description = "状态（是否默认显示灰色）")
+    @Schema(name = "状态（是否默认显示灰色）")
     val status: String = "ok",
-    @Schema(description = "链接1")
+    @Schema(name = "链接1")
     val link: String?,
-    @Schema(description = "链接2")
+    @Schema(name = "链接2")
     val linkNew: String?,
-    @Schema(description = "注入类型")
+    @Schema(name = "注入类型")
     val injectType: String?,
-    @Schema(description = "iframeUrl")
+    @Schema(name = "iframeUrl")
     val iframeUrl: String?,
-    @Schema(description = "grayIframeUrl")
+    @Schema(name = "grayIframeUrl")
     val grayIframeUrl: String?,
-    @Schema(description = "cssUrl")
+    @Schema(name = "cssUrl")
     val cssUrl: String?,
-    @Schema(description = "jsUrl")
+    @Schema(name = "jsUrl")
     val jsUrl: String?,
-    @Schema(description = "grayCssUrl")
+    @Schema(name = "grayCssUrl")
     val grayCssUrl: String?,
-    @Schema(description = "grayJsUrl")
+    @Schema(name = "grayJsUrl")
     val grayJsUrl: String?,
-    @Schema(description = "projectIdType")
+    @Schema(name = "projectIdType")
     val projectIdType: String?,
-    @Schema(description = "logo地址")
+    @Schema(name = "logo地址")
     val logoUrl: String?,
-    @Schema(description = "支持webSocket的页面")
+    @Schema(name = "支持webSocket的页面")
     val webSocket: String?,
-    @Schema(description = "权重")
+    @Schema(name = "权重")
     val weight: Int? = null,
-    @Schema(description = "创建人")
+    @Schema(name = "创建人")
     val createdUser: String,
-    @Schema(description = "创建时间")
+    @Schema(name = "创建时间")
     val createdTime: String,
-    @Schema(description = "修改人修改时间")
+    @Schema(name = "修改人修改时间")
     val updatedUser: String,
-    @Schema(description = "修改时间")
+    @Schema(name = "修改时间")
     val updatedTime: String,
-    @Schema(description = "集群类型")
+    @Schema(name = "集群类型")
     val clusterType: String = ""
 )

@@ -29,74 +29,74 @@ package com.tencent.devops.stream.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "蓝盾stream 项目配置V2")
+@Schema(name = "蓝盾stream 项目配置V2")
 data class StreamBasicSetting(
-    @Schema(description = "stream 项目ID")
+    @Schema(name = "stream 项目ID")
     override val gitProjectId: Long,
-    @Schema(description = "stream 项目名")
+    @Schema(name = "stream 项目名")
     override val name: String,
-    @Schema(description = "stream 项目url")
+    @Schema(name = "stream 项目url")
     override val url: String,
-    @Schema(description = "homepage")
+    @Schema(name = "homepage")
     override val homepage: String,
-    @Schema(description = "gitHttpUrl")
+    @Schema(name = "gitHttpUrl")
     override val gitHttpUrl: String,
-    @Schema(description = "gitSshUrl")
+    @Schema(name = "gitSshUrl")
     override val gitSshUrl: String,
-    @Schema(description = "是否启用CI")
+    @Schema(name = "是否启用CI")
     val enableCi: Boolean,
-    @Schema(description = "Build pushed branches")
+    @Schema(name = "Build pushed branches")
     val buildPushedBranches: Boolean = true,
-    @Schema(description = "Build pushed pull request")
+    @Schema(name = "Build pushed pull request")
     val buildPushedPullRequest: Boolean = true,
-    @Schema(description = "创建时间")
+    @Schema(name = "创建时间")
     val createTime: Long?,
-    @Schema(description = "修改时间")
+    @Schema(name = "修改时间")
     val updateTime: Long?,
-    @Schema(description = "蓝盾项目Code")
+    @Schema(name = "蓝盾项目Code")
     val projectCode: String?,
-    @Schema(description = "是否开启Mr锁定")
+    @Schema(name = "是否开启Mr锁定")
     val enableMrBlock: Boolean = true,
-    @Schema(description = "Stream开启人")
+    @Schema(name = "Stream开启人")
     val enableUserId: String,
-    @Schema(description = "Stream开启人所在事业群")
+    @Schema(name = "Stream开启人所在事业群")
     var creatorBgName: String?,
-    @Schema(description = "Stream开启人所在部门")
+    @Schema(name = "Stream开启人所在部门")
     var creatorDeptName: String?,
-    @Schema(description = "Stream开启人所在中心")
+    @Schema(name = "Stream开启人所在中心")
     var creatorCenterName: String?,
-    @Schema(description = "GIT项目的描述信息")
+    @Schema(name = "GIT项目的描述信息")
     val gitProjectDesc: String?,
-    @Schema(description = "GIT项目的头像信息")
+    @Schema(name = "GIT项目的头像信息")
     val gitProjectAvatar: String?,
-    @Schema(description = "带有名空间的项目名称")
+    @Schema(name = "带有名空间的项目名称")
     val nameWithNamespace: String,
-    @Schema(description = "带有名空间的项目路径")
+    @Schema(name = "带有名空间的项目路径")
     val pathWithNamespace: String?,
-    @Schema(description = "项目最后一次构建的CI信息")
+    @Schema(name = "项目最后一次构建的CI信息")
     val lastCiInfo: StreamCIInfo?,
-    @Schema(description = "项目下构建是否发送commitCheck")
+    @Schema(name = "项目下构建是否发送commitCheck")
     val enableCommitCheck: Boolean = true,
-    @Schema(description = "项目下构建是否发送mrComment")
+    @Schema(name = "项目下构建是否发送mrComment")
     val enableMrComment: Boolean = true,
-    @Schema(description = "pr、mr触发时的权限校验")
+    @Schema(name = "pr、mr触发时的权限校验")
     val triggerReviewSetting: TriggerReviewSetting = TriggerReviewSetting()
 ) : StreamBaseRepository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)
 
-@Schema(description = "蓝盾stream 页面修改配置")
+@Schema(name = "蓝盾stream 页面修改配置")
 data class StreamUpdateSetting(
-    @Schema(description = "Build pushed branches")
+    @Schema(name = "Build pushed branches")
     val buildPushedBranches: Boolean,
-    @Schema(description = "Build pushed pull request")
+    @Schema(name = "Build pushed pull request")
     val buildPushedPullRequest: Boolean,
-    @Schema(description = "是否开启Mr锁定")
+    @Schema(name = "是否开启Mr锁定")
     val enableMrBlock: Boolean
 )
 
-@Schema(description = "mr触发时的权限校验相关配置")
+@Schema(name = "mr触发时的权限校验相关配置")
 data class TriggerReviewSetting(
-    @Schema(description = "主库开发者及以上的用户提交的pr、mr是否默认给触发")
+    @Schema(name = "主库开发者及以上的用户提交的pr、mr是否默认给触发")
     val memberNoNeedApproving: Boolean = true,
-    @Schema(description = "白名单，可以是用户或者项目id")
+    @Schema(name = "白名单，可以是用户或者项目id")
     val whitelist: List<String> = emptyList()
 )

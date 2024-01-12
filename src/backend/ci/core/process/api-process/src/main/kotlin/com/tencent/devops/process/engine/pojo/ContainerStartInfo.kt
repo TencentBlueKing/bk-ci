@@ -29,10 +29,10 @@ package com.tencent.devops.process.engine.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "构建机启动信息模型")
+@Schema(name = "构建机启动信息模型")
 data class ContainerStartInfo(
-    @Schema(description = "主机名称")
+    @Schema(name = "主机名称")
     val buildContainer: PipelineBuildContainer?,
-    @Schema(description = "主机IP")
+    @Schema(name = "主机IP")
     val startBuildTask: PipelineBuildTask?
 )

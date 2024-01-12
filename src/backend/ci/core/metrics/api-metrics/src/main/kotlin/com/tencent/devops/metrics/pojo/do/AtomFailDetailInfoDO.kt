@@ -31,44 +31,44 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(description = "插件失败详情信息")
+@Schema(name = "插件失败详情信息")
 data class AtomFailDetailInfoDO(
-    @Schema(description = "项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @Schema(description = "流水线ID")
+    @Schema(name = "流水线ID")
     val pipelineId: String,
-    @Schema(description = "流水线名称")
+    @Schema(name = "流水线名称")
     val pipelineName: String,
-    @Schema(description = "渠道代码")
+    @Schema(name = "渠道代码")
     val channelCode: String,
-    @Schema(description = "域名")
+    @Schema(name = "域名")
     var domain: String? = null,
-    @Schema(description = "构建ID")
+    @Schema(name = "构建ID")
     val buildId: String,
-    @Schema(description = "构建序号")
+    @Schema(name = "构建序号")
     val buildNum: Int,
-    @Schema(description = "插件代码")
+    @Schema(name = "插件代码")
     val atomCode: String,
-    @Schema(description = "插件名称")
+    @Schema(name = "插件名称")
     val atomName: String,
-    @Schema(description = "插件在model中的位置")
+    @Schema(name = "插件在model中的位置")
     val atomPosition: String,
-    @Schema(description = "插件分类代码")
+    @Schema(name = "插件分类代码")
     val classifyCode: String,
-    @Schema(description = "启动用户")
+    @Schema(name = "启动用户")
     val startUser: String,
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @Schema(description = "启动时间")
+    @Schema(name = "启动时间")
     val startTime: LocalDateTime?,
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @Schema(description = "结束时间")
+    @Schema(name = "结束时间")
     val endTime: LocalDateTime?,
-    @Schema(description = "错误的类型标识")
+    @Schema(name = "错误的类型标识")
     val errorType: Int?,
-    @Schema(description = "错误的类型标识名称")
+    @Schema(name = "错误的类型标识名称")
     var errorTypeName: String? = null,
-    @Schema(description = "错误的标识码")
+    @Schema(name = "错误的标识码")
     val errorCode: Int?,
-    @Schema(description = "错误描述")
+    @Schema(name = "错误描述")
     val errorMsg: String?
 )

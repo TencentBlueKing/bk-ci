@@ -30,10 +30,10 @@ package com.tencent.devops.project.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class BkDeptInfo(
-    @Schema(description = "类型")
+    @Schema(name = "类型")
     val type: String,
-    @Schema(description = "名称")
+    @Schema(name = "名称")
     val name: String,
-    @Schema(description = "部门ID")
+    @Schema(name = "部门ID")
     val id: String
 )

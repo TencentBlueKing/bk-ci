@@ -95,7 +95,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 }
 * */
 
-@Schema(description = "git mr文件变更信息")
+@Schema(name = "git mr文件变更信息")
 data class GitMrChangeInfo(
     val title: String = "",
     @JsonProperty("target_project_id")

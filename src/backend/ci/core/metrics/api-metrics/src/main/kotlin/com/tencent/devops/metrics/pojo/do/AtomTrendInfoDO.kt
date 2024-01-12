@@ -29,12 +29,12 @@ package com.tencent.devops.metrics.pojo.`do`
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "插件趋势信息")
+@Schema(name = "插件趋势信息")
 data class AtomTrendInfoDO(
-    @Schema(description = "插件代码")
+    @Schema(name = "插件代码")
     val atomCode: String,
-    @Schema(description = "插件名称")
+    @Schema(name = "插件名称")
     val atomName: String,
-    @Schema(description = "趋势信息列表")
+    @Schema(name = "趋势信息列表")
     var atomTrendInfos: MutableList<AtomBaseTrendInfoDO>?
 )

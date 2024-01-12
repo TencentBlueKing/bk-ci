@@ -33,10 +33,10 @@ package com.tencent.devops.common.archive.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "版本详情返回包装模型")
+@Schema(name = "版本详情返回包装模型")
 data class PackageVersionInfo(
-    @Schema(description = "基础信息")
+    @Schema(name = "基础信息")
     val basic: BasicInfo,
-    @Schema(description = "元数据信息")
+    @Schema(name = "元数据信息")
     val metadata: List<Map<String, Any>>
 )

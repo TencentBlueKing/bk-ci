@@ -29,24 +29,24 @@ package com.tencent.devops.dispatch.docker.pojo.resource
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "资源配置")
+@Schema(name = "资源配置")
 data class DockerResourceOptionsShow(
 
-    @Schema(description = "内存")
+    @Schema(name = "内存")
     val memory: String,
 
-    @Schema(description = "CPU")
+    @Schema(name = "CPU")
     val cpu: String,
 
-    @Schema(description = "磁盘写速率")
+    @Schema(name = "磁盘写速率")
     val blkioDeviceWriteBps: String = "",
 
-    @Schema(description = "磁盘读速率")
+    @Schema(name = "磁盘读速率")
     val blkioDeviceReadBps: String = "",
 
-    @Schema(description = "磁盘大小: 单位GB")
+    @Schema(name = "磁盘大小: 单位GB")
     val disk: String,
 
-    @Schema(description = "描述")
+    @Schema(name = "描述")
     val description: String
 )

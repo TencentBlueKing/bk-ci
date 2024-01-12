@@ -29,16 +29,16 @@ package com.tencent.devops.process.pojo.app.pipeline
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "手机侧项目模型")
+@Schema(name = "手机侧项目模型")
 data class AppProject(
-    @Schema(description = "项目id", required = false)
+    @Schema(name = "项目id", required = false)
     val projectId: String,
-    @Schema(description = "激活的流水线数量", required = false)
+    @Schema(name = "激活的流水线数量", required = false)
     val activePipelineCount: Int,
-    @Schema(description = "项目名称", required = false)
+    @Schema(name = "项目名称", required = false)
     val projectName: String,
-    @Schema(description = "项目logo", required = false)
+    @Schema(name = "项目logo", required = false)
     val projectLogo: String,
-    @Schema(description = "项目是否已审核，作废字段", required = false)
+    @Schema(name = "项目是否已审核，作废字段", required = false)
     val approvalStatus: String
 )

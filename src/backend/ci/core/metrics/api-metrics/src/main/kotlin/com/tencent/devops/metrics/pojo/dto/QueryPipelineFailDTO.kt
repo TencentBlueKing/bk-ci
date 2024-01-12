@@ -31,23 +31,23 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "查询流水线错误信息传输对象")
+@Schema(name = "查询流水线错误信息传输对象")
 data class QueryPipelineFailDTO(
-    @Schema(description = "项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @Schema(description = "流水线ID")
+    @Schema(name = "流水线ID")
     val pipelineIds: List<String>? = null,
-    @Schema(description = "流水线标签")
+    @Schema(name = "流水线标签")
     val pipelineLabelIds: List<Long>? = null,
-    @Schema(description = "开始时间")
+    @Schema(name = "开始时间")
     val startTime: String,
-    @Schema(description = "结束时间")
+    @Schema(name = "结束时间")
     val endTime: String,
-    @Schema(description = "错误类型")
+    @Schema(name = "错误类型")
     val errorTypes: List<Int>? = null,
-    @Schema(description = "页码")
+    @Schema(name = "页码")
     val page: Int = 1,
-    @Schema(description = "页数")
+    @Schema(name = "页数")
     @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
     val pageSize: Int = 10
 )

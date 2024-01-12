@@ -29,34 +29,34 @@ package com.tencent.devops.dockerhost.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "DockerBuild")
+@Schema(name = "DockerBuild")
 data class DockerBuildParam(
-    @Schema(description = "镜像名称", required = true)
+    @Schema(name = "镜像名称", required = true)
     val imageName: String,
-    @Schema(description = "镜像TAG", required = true)
+    @Schema(name = "镜像TAG", required = true)
     val imageTag: String,
-    @Schema(description = "构建目录", required = false)
+    @Schema(name = "构建目录", required = false)
     val buildDir: String? = ".",
-    @Schema(description = "Dockerfile", required = false)
+    @Schema(name = "Dockerfile", required = false)
     val dockerFile: String? = "Dockerfile",
-    @Schema(description = "repoAddr", required = true)
+    @Schema(name = "repoAddr", required = true)
     val repoAddr: String,
-    @Schema(description = "userName", required = true)
+    @Schema(name = "userName", required = true)
     val userName: String,
-    @Schema(description = "password", required = true)
+    @Schema(name = "password", required = true)
     val password: String,
-    @Schema(description = "基础镜像凭证", required = true)
+    @Schema(name = "基础镜像凭证", required = true)
     val ticket: List<Triple<String, String, String>> = emptyList(),
-    @Schema(description = "构建的参数", required = true)
+    @Schema(name = "构建的参数", required = true)
     val args: List<String> = emptyList(),
-    @Schema(description = "host配置", required = true)
+    @Schema(name = "host配置", required = true)
     val host: List<String> = emptyList(),
-    @Schema(description = "并发构建池序号", required = false)
+    @Schema(name = "并发构建池序号", required = false)
     val poolNo: String? = "0",
-    @Schema(description = "镜像tag列表", required = false)
+    @Schema(name = "镜像tag列表", required = false)
     val imageTagList: List<String> = emptyList(),
-    @Schema(description = "pipelineTaskId", required = false)
+    @Schema(name = "pipelineTaskId", required = false)
     val pipelineTaskId: String = "",
-    @Schema(description = "流水线触发用户", required = false)
+    @Schema(name = "流水线触发用户", required = false)
     val userId: String = ""
 )

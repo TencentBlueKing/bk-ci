@@ -29,10 +29,10 @@ package com.tencent.devops.dispatch.docker.pojo.resource
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "")
+@Schema(name = "")
 data class CreateResourceConfigVO(
-    @Schema(description = "蓝盾项目ID")
+    @Schema(name = "蓝盾项目ID")
     val projectId: String,
-    @Schema(description = "性能基础配置ID")
+    @Schema(name = "性能基础配置ID")
     val optionId: Long
 )

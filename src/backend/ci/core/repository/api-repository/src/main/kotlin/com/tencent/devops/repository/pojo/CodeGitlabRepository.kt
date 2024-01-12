@@ -32,25 +32,25 @@ import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "代码库模型-Code平台GitLab")
+@Schema(name = "代码库模型-Code平台GitLab")
 data class CodeGitlabRepository(
-    @Schema(description = "代码库别名", required = true)
+    @Schema(name = "代码库别名", required = true)
     override val aliasName: String,
-    @Schema(description = "URL", required = true)
+    @Schema(name = "URL", required = true)
     override val url: String,
-    @Schema(description = "凭据id", required = true)
+    @Schema(name = "凭据id", required = true)
     override val credentialId: String,
-    @Schema(description = "gitlab项目名称", example = "devops/devops_ci_example_proj", required = true)
+    @Schema(name = "gitlab项目名称", example = "devops/devops_ci_example_proj", required = true)
     override val projectName: String,
-    @Schema(description = "用户名", required = true)
+    @Schema(name = "用户名", required = true)
     override var userName: String,
-    @Schema(description = "项目id", required = true)
+    @Schema(name = "项目id", required = true)
     override var projectId: String?,
-    @Schema(description = "仓库hash id", required = false)
+    @Schema(name = "仓库hash id", required = false)
     override val repoHashId: String?,
-    @Schema(description = "仓库认证类型", required = false)
+    @Schema(name = "仓库认证类型", required = false)
     val authType: RepoAuthType? = RepoAuthType.HTTP,
-    @Schema(description = "Gitlab仓库ID", required = false)
+    @Schema(name = "Gitlab仓库ID", required = false)
     val gitProjectId: Long?
 ) : Repository {
     companion object {

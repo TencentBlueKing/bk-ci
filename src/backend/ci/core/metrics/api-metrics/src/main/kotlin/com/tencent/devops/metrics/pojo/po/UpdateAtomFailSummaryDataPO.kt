@@ -30,18 +30,18 @@ package com.tencent.devops.metrics.pojo.po
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(description = "更新插件失败汇总数据")
+@Schema(name = "更新插件失败汇总数据")
 data class UpdateAtomFailSummaryDataPO(
-    @Schema(description = "主键ID")
+    @Schema(name = "主键ID")
     val id: Long,
-    @Schema(description = "项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @Schema(description = "插件标识")
+    @Schema(name = "插件标识")
     val atomCode: String,
-    @Schema(description = "错误次数")
+    @Schema(name = "错误次数")
     var errorCount: Int,
-    @Schema(description = "修改人")
+    @Schema(name = "修改人")
     var modifier: String,
-    @Schema(description = "更新时间")
+    @Schema(name = "更新时间")
     var updateTime: LocalDateTime
 )

@@ -30,21 +30,21 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "数据源")
+@Schema(name = "数据源")
 data class DataSource(
-    @Schema(description = "集群名称", required = true)
+    @Schema(name = "集群名称", required = true)
     @field:BkField(minLength = 1, maxLength = 64)
     val clusterName: String,
-    @Schema(description = "模块标识", required = true)
+    @Schema(name = "模块标识", required = true)
     val moduleCode: SystemModuleEnum,
-    @Schema(description = "数据源名称", required = true)
+    @Schema(name = "数据源名称", required = true)
     @field:BkField(minLength = 1, maxLength = 128)
     val dataSourceName: String,
-    @Schema(description = "容量是否满标识", required = true)
+    @Schema(name = "容量是否满标识", required = true)
     @field:BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE)
     val fullFlag: Boolean = false,
-    @Schema(description = "数据源URL", required = false)
+    @Schema(name = "数据源URL", required = false)
     val dsUrl: String? = null,
-    @Schema(description = "数据标签", required = false)
+    @Schema(name = "数据标签", required = false)
     val dataTag: String? = null
 )

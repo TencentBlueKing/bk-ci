@@ -90,49 +90,49 @@ import io.swagger.v3.oas.annotations.media.Schema
     JsonSubTypes.Type(value = CodeP4WebHookTriggerElement::class, name = CodeP4WebHookTriggerElement.classType)
 )
 @Suppress("ALL")
-@Schema(description = "Element 基类")
+@Schema(name = "Element 基类")
 abstract class Element(
-    @Schema(description = "任务名称", required = false)
+    @Schema(name = "任务名称", required = false)
     open val name: String,
-    @Schema(description = "id", required = false)
+    @Schema(name = "id", required = false)
     open var id: String? = null,
-    @Schema(description = "状态(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @Schema(name = "状态(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var status: String? = null,
-    @Schema(description = "执行次数(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @Schema(name = "执行次数(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var executeCount: Int = 1,
-    @Schema(description = "是否重试(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @Schema(name = "是否重试(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var canRetry: Boolean? = null,
-    @Schema(description = "是否跳过(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @Schema(name = "是否跳过(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var canSkip: Boolean? = null,
-    @Schema(description = "执行时间(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @Schema(name = "执行时间(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     @Deprecated("即将被timeCost代替")
     open var elapsed: Long? = null,
-    @Schema(description = "启动时间(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @Schema(name = "启动时间(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     @Deprecated("即将被timeCost代替")
     open var startEpoch: Long? = null,
-    @Schema(description = "插件原始版本(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @Schema(name = "插件原始版本(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var originVersion: String? = null,
-    @Schema(description = "插件版本", required = true)
+    @Schema(name = "插件版本", required = true)
     open var version: String = "1.*",
-    @Schema(description = "模板对比的时候是不是有变更(temporary field)", required = false)
+    @Schema(name = "模板对比的时候是不是有变更(temporary field)", required = false)
     open var templateModify: Boolean? = null, // 模板对比的时候是不是又变更
-    @Schema(description = "附加参数", required = false)
+    @Schema(name = "附加参数", required = false)
     open var additionalOptions: ElementAdditionalOptions? = null,
-    @Schema(description = "用户自定义ID，用于上下文键值设置", required = false)
+    @Schema(name = "用户自定义ID，用于上下文键值设置", required = false)
     open var stepId: String? = null, // 用于上下文键值设置
-    @Schema(description = "各项耗时", required = true)
+    @Schema(name = "各项耗时", required = true)
     open var timeCost: BuildRecordTimeCost? = null,
-    @Schema(description = "错误类型(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @Schema(name = "错误类型(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var errorType: String? = null,
-    @Schema(description = "错误代码(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @Schema(name = "错误代码(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var errorCode: Int? = null,
-    @Schema(description = "错误信息(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @Schema(name = "错误信息(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var errorMsg: String? = null,
-    @Schema(description = "插件名称,构建结束后的快照名称(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @Schema(name = "插件名称,构建结束后的快照名称(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var atomName: String? = null,
-    @Schema(description = "所属插件分类代码(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @Schema(name = "所属插件分类代码(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var classifyCode: String? = null,
-    @Schema(description = "所属插件分类名称(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @Schema(name = "所属插件分类名称(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var classifyName: String? = null
 ) {
 

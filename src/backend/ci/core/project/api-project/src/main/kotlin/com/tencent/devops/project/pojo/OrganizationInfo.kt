@@ -30,15 +30,15 @@ package com.tencent.devops.project.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class OrganizationInfo(
-    @Schema(description = "组织ID")
+    @Schema(name = "组织ID")
     val id: String?,
-    @Schema(description = "组织名称")
+    @Schema(name = "组织名称")
     val name: String?,
-    @Schema(description = "组织类型")
+    @Schema(name = "组织类型")
     val type: String? = null,
-    @Schema(description = "是否有叶子节点")
+    @Schema(name = "是否有叶子节点")
     val leaf: Boolean? = null,
-    @Schema(description = "组织父ID")
+    @Schema(name = "组织父ID")
     val parentId: String? = null
 ) {
     override fun toString(): String {

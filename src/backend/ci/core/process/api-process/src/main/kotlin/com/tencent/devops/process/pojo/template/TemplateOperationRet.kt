@@ -29,12 +29,12 @@ package com.tencent.devops.process.pojo.template
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "返回模型")
+@Schema(name = "返回模型")
 data class TemplateOperationRet(
-    @Schema(description = "状态码", required = false)
+    @Schema(name = "状态码", required = false)
     val status: Int,
-    @Schema(description = "data 信息", required = false)
+    @Schema(name = "data 信息", required = false)
     val data: TemplateOperationMessage,
-    @Schema(description = "message 信息", required = false)
+    @Schema(name = "message 信息", required = false)
     val message: String
 )

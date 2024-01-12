@@ -29,22 +29,22 @@ package com.tencent.devops.common.pipeline.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "检查镜像合法性初始化流水线请求报文体")
+@Schema(name = "检查镜像合法性初始化流水线请求报文体")
 data class CheckImageInitPipelineReq(
-    @Schema(description = "流水线模型", required = true)
+    @Schema(name = "流水线模型", required = true)
     val pipelineModel: String,
-    @Schema(description = "镜像代码", required = true)
+    @Schema(name = "镜像代码", required = true)
     val imageCode: String,
-    @Schema(description = "镜像名称", required = true)
+    @Schema(name = "镜像名称", required = true)
     val imageName: String,
-    @Schema(description = "镜像版本号", required = true)
+    @Schema(name = "镜像版本号", required = true)
     val version: String,
-    @Schema(description = "镜像类型", required = false)
+    @Schema(name = "镜像类型", required = false)
     val imageType: String? = null,
-    @Schema(description = "镜像仓库", required = false)
+    @Schema(name = "镜像仓库", required = false)
     val registryHost: String? = null,
-    @Schema(description = "仓库用户名", required = false)
+    @Schema(name = "仓库用户名", required = false)
     val registryUser: String? = null,
-    @Schema(description = "仓库密码", required = false)
+    @Schema(name = "仓库密码", required = false)
     val registryPwd: String? = null
 )

@@ -30,30 +30,30 @@ package com.tencent.devops.artifactory.pojo
 import com.tencent.bkrepo.repository.pojo.metadata.MetadataModel
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "版本仓库-文件详细信息")
+@Schema(name = "版本仓库-文件详细信息")
 data class FileDetail(
-    @Schema(description = "文件名", required = true)
+    @Schema(name = "文件名", required = true)
     val name: String,
-    @Schema(description = "文件路径", required = true)
+    @Schema(name = "文件路径", required = true)
     val path: String,
-    @Schema(description = "文件全名", required = true)
+    @Schema(name = "文件全名", required = true)
     val fullName: String,
-    @Schema(description = "文件全路径", required = true)
+    @Schema(name = "文件全路径", required = true)
     val fullPath: String,
-    @Schema(description = "文件大小(byte)", required = true)
+    @Schema(name = "文件大小(byte)", required = true)
     val size: Long,
-    @Schema(description = "创建时间", required = true)
+    @Schema(name = "创建时间", required = true)
     val createdTime: Long,
-    @Schema(description = "修改时间", required = true)
+    @Schema(name = "修改时间", required = true)
     val modifiedTime: Long,
-    @Schema(description = "文件摘要", required = true)
+    @Schema(name = "文件摘要", required = true)
     val checksums: FileChecksums,
-    @Schema(description = "meta数据", required = true)
+    @Schema(name = "meta数据", required = true)
     val meta: Map<String, Any>,
-    @Schema(description = "nodeMetadata数据", required = true)
+    @Schema(name = "nodeMetadata数据", required = true)
     val nodeMetadata: List<MetadataModel> = emptyList(),
-    @Schema(description = "下载链接", required = false)
+    @Schema(name = "下载链接", required = false)
     val url: String? = null,
-    @Schema(description = "移动客户端下载链接", required = false)
+    @Schema(name = "移动客户端下载链接", required = false)
     val shortUrl: String? = null
 )

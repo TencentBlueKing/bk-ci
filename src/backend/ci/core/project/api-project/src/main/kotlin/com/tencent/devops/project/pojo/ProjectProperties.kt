@@ -30,20 +30,20 @@ package com.tencent.devops.project.pojo
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "项目其他配置")
+@Schema(name = "项目其他配置")
 data class ProjectProperties(
-    @Schema(description = "YAML流水线功能设置")
+    @Schema(name = "YAML流水线功能设置")
     val pipelineAsCodeSettings: PipelineAsCodeSettings = PipelineAsCodeSettings(
         enable = false
     ),
-    @Schema(description = "是否启用云研发", required = false)
+    @Schema(name = "是否启用云研发", required = false)
     val remotedev: Boolean? = false,
-    @Schema(description = "可申请的云桌面数", required = false)
+    @Schema(name = "可申请的云桌面数", required = false)
     val cloudDesktopNum: Int = 0,
-    @Schema(description = "云研发管理员，多人用分号分隔", required = false)
+    @Schema(name = "云研发管理员，多人用分号分隔", required = false)
     val remotedevManager: String? = null,
-    @Schema(description = "是否开启流水线模板管理", required = false)
+    @Schema(name = "是否开启流水线模板管理", required = false)
     var enableTemplatePermissionManage: Boolean? = null,
-    @Schema(description = "数据标签，创建项目时会为该项目分配指定标签的db")
+    @Schema(name = "数据标签，创建项目时会为该项目分配指定标签的db")
     val dataTag: String? = null
 )

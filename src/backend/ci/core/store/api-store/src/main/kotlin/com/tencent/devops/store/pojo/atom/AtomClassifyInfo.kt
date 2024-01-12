@@ -31,17 +31,17 @@ import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nSourceEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "插件分类信息")
+@Schema(name = "插件分类信息")
 data class AtomClassifyInfo(
-    @Schema(description = "插件代码", required = true)
+    @Schema(name = "插件代码", required = true)
     val atomCode: String,
-    @Schema(description = "版本号", required = true)
+    @Schema(name = "版本号", required = true)
     val version: String,
-    @Schema(description = "插件名称", required = true)
+    @Schema(name = "插件名称", required = true)
     @BkFieldI18n(source = I18nSourceEnum.DB, convertName = "name")
     val atomName: String,
-    @Schema(description = "插件分类编码", required = true)
+    @Schema(name = "插件分类编码", required = true)
     val classifyCode: String,
-    @Schema(description = "插件分类名称", required = true)
+    @Schema(name = "插件分类名称", required = true)
     val classifyName: String
 )

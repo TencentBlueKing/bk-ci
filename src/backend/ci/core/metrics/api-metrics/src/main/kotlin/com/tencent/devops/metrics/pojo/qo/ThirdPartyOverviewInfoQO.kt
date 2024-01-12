@@ -29,12 +29,12 @@ package com.tencent.devops.metrics.pojo.qo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "查询第三方汇总信息查询条件信息对象")
+@Schema(name = "查询第三方汇总信息查询条件信息对象")
 data class ThirdPartyOverviewInfoQO(
-    @Schema(description = "项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @Schema(description = "开始时间", required = true)
+    @Schema(name = "开始时间", required = true)
     val startTime: String,
-    @Schema(description = "结束时间", required = true)
+    @Schema(name = "结束时间", required = true)
     val endTime: String
 )

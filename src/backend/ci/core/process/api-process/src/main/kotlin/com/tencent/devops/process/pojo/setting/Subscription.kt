@@ -30,23 +30,23 @@ package com.tencent.devops.process.pojo.setting
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "设置-订阅消息")
+@Schema(name = "设置-订阅消息")
 data class Subscription(
-    @Schema(description = "通知方式(email, rtx)", required = true)
+    @Schema(name = "通知方式(email, rtx)", required = true)
     val types: Set<PipelineSubscriptionType> = setOf(),
-    @Schema(description = "分组", required = false)
+    @Schema(name = "分组", required = false)
     val groups: Set<String> = setOf(),
-    @Schema(description = "通知人员", required = false)
+    @Schema(name = "通知人员", required = false)
     val users: String = "",
-    @Schema(description = "企业微信群通知开关", required = false)
+    @Schema(name = "企业微信群通知开关", required = false)
     val wechatGroupFlag: Boolean = false,
-    @Schema(description = "企业微信群通知群ID", required = false)
+    @Schema(name = "企业微信群通知群ID", required = false)
     val wechatGroup: String = "",
-    @Schema(description = "企业微信群通知转为Markdown格式开关", required = false)
+    @Schema(name = "企业微信群通知转为Markdown格式开关", required = false)
     val wechatGroupMarkdownFlag: Boolean = false,
-    @Schema(description = "通知的流水线详情连接开关", required = false)
+    @Schema(name = "通知的流水线详情连接开关", required = false)
     val detailFlag: Boolean = false,
-    @Schema(description = "自定义通知内容", required = false)
+    @Schema(name = "自定义通知内容", required = false)
     val content: String = ""
 
 )

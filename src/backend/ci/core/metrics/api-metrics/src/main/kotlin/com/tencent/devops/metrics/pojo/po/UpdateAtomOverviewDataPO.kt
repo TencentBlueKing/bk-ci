@@ -31,26 +31,26 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
-@Schema(description = "更新插件概览数据")
+@Schema(name = "更新插件概览数据")
 data class UpdateAtomOverviewDataPO(
-    @Schema(description = "主键ID")
+    @Schema(name = "主键ID")
     val id: Long,
-    @Schema(description = "项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @Schema(description = "插件标识")
+    @Schema(name = "插件标识")
     val atomCode: String,
-    @Schema(description = "成功率")
+    @Schema(name = "成功率")
     var successRate: BigDecimal,
-    @Schema(description = "平均耗时，单位：毫秒")
+    @Schema(name = "平均耗时，单位：毫秒")
     var avgCostTime: Long,
-    @Schema(description = "总执行次数")
+    @Schema(name = "总执行次数")
     var totalExecuteCount: Long,
-    @Schema(description = "成功执行次数")
+    @Schema(name = "成功执行次数")
     var successExecuteCount: Long,
-    @Schema(description = "失败执行次数")
+    @Schema(name = "失败执行次数")
     var failExecuteCount: Long,
-    @Schema(description = "修改人")
+    @Schema(name = "修改人")
     var modifier: String,
-    @Schema(description = "更新时间")
+    @Schema(name = "更新时间")
     var updateTime: LocalDateTime
 )

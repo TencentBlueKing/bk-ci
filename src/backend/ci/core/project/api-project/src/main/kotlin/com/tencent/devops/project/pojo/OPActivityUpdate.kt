@@ -29,16 +29,16 @@ package com.tencent.devops.project.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "最新动态-修改模型")
+@Schema(name = "最新动态-修改模型")
 data class OPActivityUpdate(
-    @Schema(description = "名称")
+    @Schema(name = "名称")
     val name: String,
-    @Schema(description = "英文名")
+    @Schema(name = "英文名")
     val englishName: String,
-    @Schema(description = "类型")
+    @Schema(name = "类型")
     val type: String,
-    @Schema(description = "状态")
+    @Schema(name = "状态")
     val status: String,
-    @Schema(description = "链接")
+    @Schema(name = "链接")
     val link: String
 )

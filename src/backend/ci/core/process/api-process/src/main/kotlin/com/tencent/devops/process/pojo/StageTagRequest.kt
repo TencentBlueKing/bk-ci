@@ -29,10 +29,10 @@ package com.tencent.devops.process.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线-阶段标签信息请求体")
+@Schema(name = "流水线-阶段标签信息请求体")
 data class StageTagRequest(
-    @Schema(description = "阶段标签名称", required = true)
+    @Schema(name = "阶段标签名称", required = true)
     val stageTagName: String,
-    @Schema(description = "阶段标签权重", required = true)
+    @Schema(name = "阶段标签权重", required = true)
     val weight: Int
 )

@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema
 data class OrganizationEntity(
-    @Schema(description = "组织名称")
+    @Schema(name = "组织名称")
     val organizationName: String,
-    @Schema(description = "组织Id")
+    @Schema(name = "组织Id")
     val organizationId: Int,
-    @Schema(description = "级别")
+    @Schema(name = "级别")
     val level: Int
 )

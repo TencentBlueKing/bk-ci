@@ -29,14 +29,14 @@ package com.tencent.devops.metrics.pojo.dto
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "获取项目下插件列表信息传输对象")
+@Schema(name = "获取项目下插件列表信息传输对象")
 data class QueryProjectAtomListDTO(
-    @Schema(description = "项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @Schema(description = "页码")
+    @Schema(name = "页码")
     val page: Int,
-    @Schema(description = "页数")
+    @Schema(name = "页数")
     val pageSize: Int,
-    @Schema(description = "搜索关键字")
+    @Schema(name = "搜索关键字")
     val keyword: String? = null
 )

@@ -4,15 +4,15 @@ import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nSourceEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "插件状态信息")
+@Schema(name = "插件状态信息")
 data class AtomStatusInfo(
-    @Schema(description = "插件标识")
+    @Schema(name = "插件标识")
     val atomCode: String,
-    @Schema(description = "名称")
+    @Schema(name = "名称")
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val name: String,
-    @Schema(description = "版本号")
+    @Schema(name = "版本号")
     val version: String,
-    @Schema(description = "插件状态")
+    @Schema(name = "插件状态")
     val atomStatus: Byte
 )

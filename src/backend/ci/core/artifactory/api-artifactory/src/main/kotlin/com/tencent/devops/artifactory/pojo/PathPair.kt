@@ -29,10 +29,10 @@ package com.tencent.devops.artifactory.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "版本仓库-路径对")
+@Schema(name = "版本仓库-路径对")
 data class PathPair(
-    @Schema(description = "源路径", required = true)
+    @Schema(name = "源路径", required = true)
     val srcPath: String,
-    @Schema(description = "目标路径", required = true)
+    @Schema(name = "目标路径", required = true)
     val destPath: String
 )

@@ -29,14 +29,14 @@ package com.tencent.devops.process.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "")
+@Schema(name = "")
 data class DockerEnableProject(
-    @Schema(description = "是否启用", required = false)
+    @Schema(name = "是否启用", required = false)
     var enable: Boolean,
-    @Schema(description = "项目id", required = false)
+    @Schema(name = "项目id", required = false)
     val projectId: String,
-    @Schema(description = "创建时间", required = false)
+    @Schema(name = "创建时间", required = false)
     val createTime: Long,
-    @Schema(description = "更新时间", required = false)
+    @Schema(name = "更新时间", required = false)
     var updateTime: Long
 )

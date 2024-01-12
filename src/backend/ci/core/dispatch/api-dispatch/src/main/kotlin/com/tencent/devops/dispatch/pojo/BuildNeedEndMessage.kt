@@ -33,10 +33,10 @@ import io.swagger.v3.oas.annotations.media.Schema
  *
  * Powered By Tencent
  */
-@Schema(description = "构建结束信息")
+@Schema(name = "构建结束信息")
 data class BuildNeedEndMessage(
-    @Schema(description = "构建ID", required = true)
+    @Schema(name = "构建ID", required = true)
     val buildId: String,
-    @Schema(description = "构建开始时间", required = true)
+    @Schema(name = "构建开始时间", required = true)
     val startTime: Long
 )

@@ -30,14 +30,14 @@ package com.tencent.devops.process.pojo.webhook
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "参数")
+@Schema(name = "参数")
 data class WebhookTriggerParams(
-    @Schema(description = "启动参数(webhook之类的预置参数)", required = true)
+    @Schema(name = "启动参数(webhook之类的预置参数)", required = true)
     val params: Map<String, String>,
-    @Schema(description = "启动参数(用户自定义参数)", required = false)
+    @Schema(name = "启动参数(用户自定义参数)", required = false)
     val userParams: List<BuildParameters>? = null,
-    @Schema(description = "手动触发参数", required = false)
+    @Schema(name = "手动触发参数", required = false)
     val startValues: Map<String, String>? = null,
-    @Schema(description = "触发审核人列表", required = false)
+    @Schema(name = "触发审核人列表", required = false)
     val triggerReviewers: List<String>? = null
 )

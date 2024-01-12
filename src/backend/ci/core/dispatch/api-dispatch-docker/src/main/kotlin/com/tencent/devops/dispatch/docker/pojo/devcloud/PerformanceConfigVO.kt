@@ -2,16 +2,16 @@ package com.tencent.devops.dispatch.docker.pojo.devcloud
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "devcloud项目性能配置")
+@Schema(name = "devcloud项目性能配置")
 data class PerformanceConfigVO(
-    @Schema(description = "蓝盾项目ID")
+    @Schema(name = "蓝盾项目ID")
     val projectId: String,
-    @Schema(description = "CPU")
+    @Schema(name = "CPU")
     val cpu: Int,
-    @Schema(description = "内存")
+    @Schema(name = "内存")
     val memory: String,
-    @Schema(description = "磁盘")
+    @Schema(name = "磁盘")
     val disk: String,
-    @Schema(description = "描述")
+    @Schema(name = "描述")
     val description: String
 )

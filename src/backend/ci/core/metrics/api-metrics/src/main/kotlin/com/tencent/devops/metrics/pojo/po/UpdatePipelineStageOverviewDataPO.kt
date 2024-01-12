@@ -30,20 +30,20 @@ package com.tencent.devops.metrics.pojo.po
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(description = "更新流水线stage概览数据")
+@Schema(name = "更新流水线stage概览数据")
 data class UpdatePipelineStageOverviewDataPO(
-    @Schema(description = "主键ID")
+    @Schema(name = "主键ID")
     val id: Long,
-    @Schema(description = "项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @Schema(description = "stage标签名称")
+    @Schema(name = "stage标签名称")
     val stageTagName: String,
-    @Schema(description = "平均耗时，单位：毫秒")
+    @Schema(name = "平均耗时，单位：毫秒")
     var avgCostTime: Long,
-    @Schema(description = "执行次数")
+    @Schema(name = "执行次数")
     var executeCount: Long,
-    @Schema(description = "修改人")
+    @Schema(name = "修改人")
     var modifier: String,
-    @Schema(description = "更新时间")
+    @Schema(name = "更新时间")
     var updateTime: LocalDateTime
 )

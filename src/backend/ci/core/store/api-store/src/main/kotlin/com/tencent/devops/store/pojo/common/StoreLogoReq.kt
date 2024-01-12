@@ -29,12 +29,12 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "增删logo请求")
+@Schema(name = "增删logo请求")
 data class StoreLogoReq(
-    @Schema(description = "logo链接")
+    @Schema(name = "logo链接")
     val logoUrl: String,
-    @Schema(description = "logo展示顺序")
+    @Schema(name = "logo展示顺序")
     val order: Int,
-    @Schema(description = "点击logo后的跳转链接")
+    @Schema(name = "点击logo后的跳转链接")
     val link: String?
 )

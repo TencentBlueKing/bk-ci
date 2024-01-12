@@ -31,36 +31,36 @@ import com.tencent.devops.common.quality.pojo.QualityRuleInterceptRecord
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "质量红线-拦截记录")
+@Schema(name = "质量红线-拦截记录")
 data class RuleInterceptHistory(
-    @Schema(description = "hashId 红线拦截记录在表中主键Id的哈希值，是唯一的", required = true)
+    @Schema(name = "hashId 红线拦截记录在表中主键Id的哈希值，是唯一的", required = true)
     val hashId: String,
-    @Schema(description = "项目里的序号", required = true)
+    @Schema(name = "项目里的序号", required = true)
     val num: Long,
-    @Schema(description = "时间戳(秒)", required = true)
+    @Schema(name = "时间戳(秒)", required = true)
     val timestamp: Long,
-    @Schema(description = "拦截结果", required = true)
+    @Schema(name = "拦截结果", required = true)
     val interceptResult: RuleInterceptResult,
-    @Schema(description = "规则HashId", required = true)
+    @Schema(name = "规则HashId", required = true)
     val ruleHashId: String,
-    @Schema(description = "规则名称", required = true)
+    @Schema(name = "规则名称", required = true)
     val ruleName: String,
-    @Schema(description = "流水线ID", required = true)
+    @Schema(name = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(description = "流水线名称", required = true)
+    @Schema(name = "流水线名称", required = true)
     val pipelineName: String,
-    @Schema(description = "构建ID", required = true)
+    @Schema(name = "构建ID", required = true)
     val buildId: String,
-    @Schema(description = "构建号", required = true)
+    @Schema(name = "构建号", required = true)
     val buildNo: String,
-    @Schema(description = "检查次数", required = true)
+    @Schema(name = "检查次数", required = true)
     val checkTimes: Int,
-    @Schema(description = "描述", required = true)
+    @Schema(name = "描述", required = true)
     val remark: String,
-    @Schema(description = "描述列表", required = true)
+    @Schema(name = "描述列表", required = true)
     val interceptList: List<QualityRuleInterceptRecord>? = null,
-    @Schema(description = "流水线是否已删除", required = true)
+    @Schema(name = "流水线是否已删除", required = true)
     val pipelineIsDelete: Boolean = false,
-    @Schema(description = "红线把关记录", required = false)
+    @Schema(name = "红线把关记录", required = false)
     val qualityRuleBuildHisOpt: QualityRuleBuildHisOpt? = null
 )

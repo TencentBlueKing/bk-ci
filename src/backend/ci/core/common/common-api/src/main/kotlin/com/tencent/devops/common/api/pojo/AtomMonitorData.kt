@@ -30,43 +30,43 @@ package com.tencent.devops.common.api.pojo
 import com.tencent.devops.common.api.annotation.InfluxTag
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "插件监控数据")
+@Schema(name = "插件监控数据")
 data class AtomMonitorData(
-    @Schema(description = "插件执行错误码", required = true)
+    @Schema(name = "插件执行错误码", required = true)
     @InfluxTag
     val errorCode: Int,
-    @Schema(description = "插件执行错误信息", required = false)
+    @Schema(name = "插件执行错误信息", required = false)
     val errorMsg: String? = null,
-    @Schema(description = "插件执行错误类型", required = false)
+    @Schema(name = "插件执行错误类型", required = false)
     @InfluxTag
     val errorType: String? = null,
-    @Schema(description = "插件代码", required = true)
+    @Schema(name = "插件代码", required = true)
     @InfluxTag
     val atomCode: String,
-    @Schema(description = "插件版本", required = true)
+    @Schema(name = "插件版本", required = true)
     val version: String,
-    @Schema(description = "项目ID", required = true)
+    @Schema(name = "项目ID", required = true)
     val projectId: String,
-    @Schema(description = "流水线ID", required = true)
+    @Schema(name = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(description = "构建ID", required = true)
+    @Schema(name = "构建ID", required = true)
     val buildId: String,
-    @Schema(description = "构建环境ID", required = true)
+    @Schema(name = "构建环境ID", required = true)
     val vmSeqId: String,
-    @Schema(description = "执行开始时间", required = false)
+    @Schema(name = "执行开始时间", required = false)
     @InfluxTag
     val startTime: Long?,
-    @Schema(description = "执行结束时间", required = false)
+    @Schema(name = "执行结束时间", required = false)
     @InfluxTag
     val endTime: Long?,
-    @Schema(description = "执行耗时时间", required = false)
+    @Schema(name = "执行耗时时间", required = false)
     val elapseTime: Long?,
-    @Schema(description = "来源渠道", required = false)
+    @Schema(name = "来源渠道", required = false)
     val channel: String? = null,
-    @Schema(description = "执行人", required = true)
+    @Schema(name = "执行人", required = true)
     val starter: String,
-    @Schema(description = "组织架构详细信息", required = true)
+    @Schema(name = "组织架构详细信息", required = true)
     val organizationDetailInfo: OrganizationDetailInfo,
-    @Schema(description = "扩展数据", required = false)
+    @Schema(name = "扩展数据", required = false)
     val extData: Map<String, Any>? = null
 )

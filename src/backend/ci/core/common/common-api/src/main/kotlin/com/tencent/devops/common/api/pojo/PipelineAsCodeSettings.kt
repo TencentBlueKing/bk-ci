@@ -29,8 +29,8 @@ package com.tencent.devops.common.api.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "设置-YAML流水线功能设置")
+@Schema(name = "设置-YAML流水线功能设置")
 data class PipelineAsCodeSettings(
-    @Schema(description = "是否支持YAML流水线功能", required = true)
+    @Schema(name = "是否支持YAML流水线功能", required = true)
     val enable: Boolean = false
 )

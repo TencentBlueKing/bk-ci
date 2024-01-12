@@ -29,24 +29,24 @@ package com.tencent.devops.dispatch.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "虚拟机主机信息")
+@Schema(name = "虚拟机主机信息")
 data class Machine(
-    @Schema(description = "主机 ID", required = true)
+    @Schema(name = "主机 ID", required = true)
     val id: Int,
-    @Schema(description = "主机 IP", required = true)
+    @Schema(name = "主机 IP", required = true)
     val ip: String,
-    @Schema(description = "主机名", required = true)
+    @Schema(name = "主机名", required = true)
     val name: String,
-    @Schema(description = "主机用户名", required = true)
+    @Schema(name = "主机用户名", required = true)
     val username: String,
-    @Schema(description = "主机密码", required = true)
+    @Schema(name = "主机密码", required = true)
     val password: String,
-    @Schema(description = "当前运行数", required = true)
+    @Schema(name = "当前运行数", required = true)
     val currentRunNum: Int,
-    @Schema(description = "最大运行数", required = true)
+    @Schema(name = "最大运行数", required = true)
     val maxVMRun: Int,
-    @Schema(description = "创建时间", required = true)
+    @Schema(name = "创建时间", required = true)
     val createdTime: Long,
-    @Schema(description = "修改时间", required = true)
+    @Schema(name = "修改时间", required = true)
     val updatedTime: Long
 )

@@ -31,28 +31,28 @@ package com.tencent.devops.process.pojo.trigger
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(description = "流水线触发事件")
+@Schema(name = "流水线触发事件")
 data class PipelineTriggerEvent(
-    @Schema(description = "请求ID")
+    @Schema(name = "请求ID")
     val requestId: String,
-    @Schema(description = "项目ID")
+    @Schema(name = "项目ID")
     var projectId: String? = null,
-    @Schema(description = "事件ID")
+    @Schema(name = "事件ID")
     var eventId: Long? = null,
-    @Schema(description = "触发类型")
+    @Schema(name = "触发类型")
     val triggerType: String,
-    @Schema(description = "事件源", required = false)
+    @Schema(name = "事件源", required = false)
     var eventSource: String? = null,
-    @Schema(description = "事件类型")
+    @Schema(name = "事件类型")
     val eventType: String,
-    @Schema(description = "触发人")
+    @Schema(name = "触发人")
     val triggerUser: String,
-    @Schema(description = "事件描述")
+    @Schema(name = "事件描述")
     val eventDesc: String,
-    @Schema(description = "重放事件ID")
+    @Schema(name = "重放事件ID")
     val replayRequestId: String? = null,
-    @Schema(description = "事件请求参数, 记录手动/openapi/定时/远程触发启动参数")
+    @Schema(name = "事件请求参数, 记录手动/openapi/定时/远程触发启动参数")
     val requestParams: Map<String, String>? = null,
-    @Schema(description = "触发时间")
+    @Schema(name = "触发时间")
     val createTime: LocalDateTime
 )

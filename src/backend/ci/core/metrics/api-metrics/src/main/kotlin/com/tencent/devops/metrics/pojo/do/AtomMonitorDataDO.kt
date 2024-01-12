@@ -28,12 +28,12 @@ package com.tencent.devops.metrics.pojo.`do`
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "插件监控数据")
+@Schema(name = "插件监控数据")
 data class AtomMonitorDataDO(
-    @Schema(description = "插件标识", required = true)
+    @Schema(name = "插件标识", required = true)
     val atomCode: String,
-    @Schema(description = "错误类型", required = false)
+    @Schema(name = "错误类型", required = false)
     val errorType: Int? = null,
-    @Schema(description = "执行总次数", required = true)
+    @Schema(name = "执行总次数", required = true)
     val totalExecuteCount: Int = 0
 )

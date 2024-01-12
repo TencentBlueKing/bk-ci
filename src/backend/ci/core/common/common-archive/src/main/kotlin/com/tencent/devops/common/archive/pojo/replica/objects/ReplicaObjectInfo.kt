@@ -30,18 +30,18 @@ package com.tencent.devops.common.archive.pojo.replica.objects
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "同步对象信息")
+@Schema(name = "同步对象信息")
 data class ReplicaObjectInfo(
-    @Schema(description = "本地仓库")
+    @Schema(name = "本地仓库")
     val localRepoName: String,
-    @Schema(description = "远程项目")
+    @Schema(name = "远程项目")
     val remoteProjectId: String?,
-    @Schema(description = "远程仓库")
+    @Schema(name = "远程仓库")
     val remoteRepoName: String?,
-    @Schema(description = "仓库类型")
+    @Schema(name = "仓库类型")
     val repoType: RepositoryType,
-    @Schema(description = "包限制条件")
+    @Schema(name = "包限制条件")
     val packageConstraints: List<PackageConstraint>?,
-    @Schema(description = "路径限制条件")
+    @Schema(name = "路径限制条件")
     val pathConstraints: List<PathConstraint>?
 )

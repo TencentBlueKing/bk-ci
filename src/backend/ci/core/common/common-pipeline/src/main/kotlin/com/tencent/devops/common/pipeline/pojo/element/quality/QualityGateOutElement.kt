@@ -30,19 +30,19 @@ package com.tencent.devops.common.pipeline.pojo.element.quality
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "质量红线(准出)", description = QualityGateOutElement.classType)
+@Schema(name = "质量红线(准出)", description = QualityGateOutElement.classType)
 data class QualityGateOutElement(
-    @Schema(description = "任务名称", required = true)
+    @Schema(name = "任务名称", required = true)
     override val name: String = "质量红线(准出)",
-    @Schema(description = "id", required = false)
+    @Schema(name = "id", required = false)
     override var id: String? = null,
-    @Schema(description = "状态", required = false)
+    @Schema(name = "状态", required = false)
     override var status: String? = null,
-    @Schema(description = "拦截原子", required = false)
+    @Schema(name = "拦截原子", required = false)
     var interceptTask: String? = null,
-    @Schema(description = "拦截原子名称", required = false)
+    @Schema(name = "拦截原子名称", required = false)
     var interceptTaskName: String? = null,
-    @Schema(description = "审核人", required = false)
+    @Schema(name = "审核人", required = false)
     var reviewUsers: Set<String>? = null
 ) : Element(name, id, status) {
     companion object {

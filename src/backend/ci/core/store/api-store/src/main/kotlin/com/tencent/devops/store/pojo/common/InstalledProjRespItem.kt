@@ -29,14 +29,14 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "已安装的项目")
+@Schema(name = "已安装的项目")
 data class InstalledProjRespItem(
-    @Schema(description = "项目标识")
+    @Schema(name = "项目标识")
     val projectCode: String,
-    @Schema(description = "项目名称")
+    @Schema(name = "项目名称")
     val projectName: String?,
-    @Schema(description = "安装人")
+    @Schema(name = "安装人")
     val creator: String,
-    @Schema(description = "安装时间")
+    @Schema(name = "安装时间")
     val createTime: String
 )

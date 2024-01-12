@@ -30,14 +30,14 @@ package com.tencent.devops.environment.pojo
 import com.tencent.devops.environment.pojo.enums.EnvType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "环境基本信息")
+@Schema(name = "环境基本信息")
 data class EnvUpdateInfo(
-    @Schema(description = "环境名称", required = true)
+    @Schema(name = "环境名称", required = true)
     val name: String,
-    @Schema(description = "环境描述", required = true)
+    @Schema(name = "环境描述", required = true)
     val desc: String,
-    @Schema(description = "环境类型（构建环境{BUILD}|部署-开发/测试环境{DEV}|部署-生产环境{PROD}|）", required = true)
+    @Schema(name = "环境类型（构建环境{BUILD}|部署-开发/测试环境{DEV}|部署-生产环境{PROD}|）", required = true)
     val envType: EnvType,
-    @Schema(description = "环境变量", required = false)
+    @Schema(name = "环境变量", required = false)
     val envVars: List<EnvVar>?
 )

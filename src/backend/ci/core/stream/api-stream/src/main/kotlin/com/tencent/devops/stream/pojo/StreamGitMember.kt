@@ -29,12 +29,12 @@ package com.tencent.devops.stream.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "git成员模型")
+@Schema(name = "git成员模型")
 data class StreamGitMember(
-    @Schema(description = "成员id")
+    @Schema(name = "成员id")
     val id: Int,
-    @Schema(description = "用户名")
+    @Schema(name = "用户名")
     val username: String,
-    @Schema(description = "状态")
+    @Schema(name = "状态")
     val state: String
 )

@@ -33,10 +33,10 @@ import io.swagger.v3.oas.annotations.media.Schema
  * @ Date       ：Created in 11:14 2019-07-31
  */
 
-@Schema(description = "子流水线基本信息")
+@Schema(name = "子流水线基本信息")
 data class SubPipeline(
-    @Schema(description = "流水线名称", required = true)
+    @Schema(name = "流水线名称", required = true)
     val pipelineName: String,
-    @Schema(description = "流水线ID", required = true)
+    @Schema(name = "流水线ID", required = true)
     val pipelineId: String
 )

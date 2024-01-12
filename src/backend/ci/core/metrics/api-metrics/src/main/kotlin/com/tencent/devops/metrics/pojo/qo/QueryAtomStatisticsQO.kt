@@ -30,18 +30,18 @@ package com.tencent.devops.metrics.pojo.qo
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "查询插件汇总信息传输对象")
+@Schema(name = "查询插件汇总信息传输对象")
 data class QueryAtomStatisticsQO(
-    @Schema(description = "项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @Schema(description = "查询条件请求信息")
+    @Schema(name = "查询条件请求信息")
     val baseQueryReq: BaseQueryReqVO,
-    @Schema(description = "错误类型")
+    @Schema(name = "错误类型")
     val errorTypes: List<Int>?,
-    @Schema(description = "插件代码")
+    @Schema(name = "插件代码")
     val atomCodes: List<String>,
-    @Schema(description = "页码")
+    @Schema(name = "页码")
     val page: Int = 1,
-    @Schema(description = "页数")
+    @Schema(name = "页数")
     val pageSize: Int = 10
 )

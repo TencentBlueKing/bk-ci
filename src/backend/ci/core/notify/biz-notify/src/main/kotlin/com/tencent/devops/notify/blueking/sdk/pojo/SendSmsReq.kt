@@ -29,7 +29,7 @@ package com.tencent.devops.notify.blueking.sdk.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("ALL")
-@Schema(description = "短信发送模型")
+@Schema(name = "短信发送模型")
 data class SendSmsReq(
     val content: String,
     val receiver: String?,

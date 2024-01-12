@@ -36,34 +36,34 @@ import io.swagger.v3.oas.annotations.media.Schema
  * 阶段流程控制
  * @version 1.0
  */
-@Schema(description = "阶段流程控制模型")
+@Schema(name = "阶段流程控制模型")
 data class StageControlOption(
-    @Schema(description = "是否启用该阶段", required = false)
+    @Schema(name = "是否启用该阶段", required = false)
     val enable: Boolean = true, // 是否启用该阶段
-    @Schema(description = "运行条件", required = false)
+    @Schema(name = "运行条件", required = false)
     val runCondition: StageRunCondition = StageRunCondition.AFTER_LAST_FINISHED, // 运行条件
-    @Schema(description = "自定义变量", required = false)
+    @Schema(name = "自定义变量", required = false)
     val customVariables: List<NameAndValue>? = emptyList(), // 自定义变量
-    @Schema(description = "自定义条件", required = false)
+    @Schema(name = "自定义条件", required = false)
     val customCondition: String? = null, // 自定义条件
 
     // 废弃旧数据字段
-    @Schema(description = "是否人工触发", required = false)
+    @Schema(name = "是否人工触发", required = false)
     @Deprecated("被StagePauseCheck.manualTrigger代替")
     val manualTrigger: Boolean? = false,
-    @Schema(description = "可触发用户，支持引用变量", required = false)
+    @Schema(name = "可触发用户，支持引用变量", required = false)
     @Deprecated("被StagePauseCheck.reviewGroups代替")
     var triggerUsers: List<String>? = null, // 可触发用户，支持引用变量
-    @Schema(description = "已通过审核", required = false)
+    @Schema(name = "已通过审核", required = false)
     @Deprecated("被StagePauseCheck.status代替")
     var triggered: Boolean? = null, // 已通过审核
-    @Schema(description = "等待审核的超时时间", required = false)
+    @Schema(name = "等待审核的超时时间", required = false)
     @Deprecated("被StagePauseCheck.timeout代替")
     val timeout: Int? = null, // 等待审核的超时时间
-    @Schema(description = "审核变量", required = false)
+    @Schema(name = "审核变量", required = false)
     @Deprecated("被StagePauseCheck.reviewParams代替")
     var reviewParams: List<ManualReviewParam>? = null, // 审核变量
-    @Schema(description = "审核说明", required = false)
+    @Schema(name = "审核说明", required = false)
     @Deprecated("被StagePauseCheck.reviewDesc代替")
     var reviewDesc: String? = null // 审核说明
 )

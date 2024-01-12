@@ -29,16 +29,16 @@ package com.tencent.devops.dockerhost.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "验证镜像合法性返回报文体")
+@Schema(name = "验证镜像合法性返回报文体")
 data class CheckImageResponse(
-    @Schema(description = "作者", required = false)
+    @Schema(name = "作者", required = false)
     val author: String?,
-    @Schema(description = "评论", required = false)
+    @Schema(name = "评论", required = false)
     val comment: String?,
-    @Schema(description = "镜像大小", required = true)
+    @Schema(name = "镜像大小", required = true)
     val size: Long,
-    @Schema(description = "虚拟大小", required = false)
+    @Schema(name = "虚拟大小", required = false)
     val virtualSize: Long?,
-    @Schema(description = "tag列表", required = true)
+    @Schema(name = "tag列表", required = true)
     val repoTags: List<String>
 )

@@ -29,28 +29,28 @@ package com.tencent.devops.image.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "Docker标签模型")
+@Schema(name = "Docker标签模型")
 data class DockerTag(
-    @Schema(description = "标签")
+    @Schema(name = "标签")
     var tag: String? = null,
-    @Schema(description = "仓库")
+    @Schema(name = "仓库")
     var repo: String? = null,
-    @Schema(description = "镜像")
+    @Schema(name = "镜像")
     var image: String? = null,
-    @Schema(description = "创建者")
+    @Schema(name = "创建者")
     var createdBy: String? = null,
-    @Schema(description = "创建时间")
+    @Schema(name = "创建时间")
     var created: String? = null,
-    @Schema(description = "修改时间")
+    @Schema(name = "修改时间")
     var modified: String? = null,
-    @Schema(description = "修改者")
+    @Schema(name = "修改者")
     var modifiedBy: String? = null,
-    @Schema(description = "描述")
+    @Schema(name = "描述")
     var desc: String? = "",
-    @Schema(description = "大小")
+    @Schema(name = "大小")
     var size: String? = null,
-    @Schema(description = "构件列表")
+    @Schema(name = "构件列表")
     var artifactorys: List<String>? = null,
-    @Schema(description = "是否已关联到store")
+    @Schema(name = "是否已关联到store")
     var storeFlag: Boolean? = null
 )

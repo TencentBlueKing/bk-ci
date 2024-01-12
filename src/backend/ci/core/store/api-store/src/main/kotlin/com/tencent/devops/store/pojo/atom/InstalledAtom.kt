@@ -31,39 +31,39 @@ import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nSourceEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "已安装插件")
+@Schema(name = "已安装插件")
 data class InstalledAtom(
-    @Schema(description = "插件ID")
+    @Schema(name = "插件ID")
     val atomId: String,
-    @Schema(description = "插件标识")
+    @Schema(name = "插件标识")
     val atomCode: String,
-    @Schema(description = "插件版本")
+    @Schema(name = "插件版本")
     val version: String,
-    @Schema(description = "插件名称")
+    @Schema(name = "插件名称")
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val name: String,
-    @Schema(description = "logo地址")
+    @Schema(name = "logo地址")
     val logoUrl: String?,
-    @Schema(description = "插件分类code")
+    @Schema(name = "插件分类code")
     val classifyCode: String?,
-    @Schema(description = "插件分类名称")
+    @Schema(name = "插件分类名称")
     val classifyName: String?,
-    @Schema(description = "插件范畴")
+    @Schema(name = "插件范畴")
     val category: String?,
-    @Schema(description = "插件简介")
+    @Schema(name = "插件简介")
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val summary: String?,
-    @Schema(description = "发布者")
+    @Schema(name = "发布者")
     @BkFieldI18n(source = I18nSourceEnum.DB, keyPrefixName = "versionInfo")
     val publisher: String?,
-    @Schema(description = "安装者")
+    @Schema(name = "安装者")
     val installer: String,
-    @Schema(description = "安装时间")
+    @Schema(name = "安装时间")
     val installTime: String,
-    @Schema(description = "安装类型")
+    @Schema(name = "安装类型")
     val installType: String,
-    @Schema(description = "流水线个数")
+    @Schema(name = "流水线个数")
     val pipelineCnt: Int,
-    @Schema(description = "是否有卸载权限")
+    @Schema(name = "是否有卸载权限")
     val hasPermission: Boolean
 )

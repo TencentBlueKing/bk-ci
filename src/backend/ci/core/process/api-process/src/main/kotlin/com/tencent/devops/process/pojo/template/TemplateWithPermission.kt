@@ -31,16 +31,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 import org.jooq.Record
 import org.jooq.Result
 
-@Schema(description = "模板-权限实体")
+@Schema(name = "模板-权限实体")
 data class TemplateWithPermission(
-    @Schema(description = "拥有列表权限的模板记录", required = true)
+    @Schema(name = "拥有列表权限的模板记录", required = true)
     val templatesWithListPermRecords: Result<out Record>?,
-    @Schema(description = "拥有查看权限的模板列表ID", required = true)
+    @Schema(name = "拥有查看权限的模板列表ID", required = true)
     val templatesWithViewPermIds: List<String>?,
-    @Schema(description = "拥有编辑权限的模板列表ID", required = true)
+    @Schema(name = "拥有编辑权限的模板列表ID", required = true)
     val templatesWithEditPermIds: List<String>?,
-    @Schema(description = "拥有删除权限的模板列表ID", required = true)
+    @Schema(name = "拥有删除权限的模板列表ID", required = true)
     val templatesWithDeletePermIds: List<String>?,
-    @Schema(description = "数量", required = true)
+    @Schema(name = "数量", required = true)
     val count: Int
 )

@@ -30,12 +30,12 @@ package com.tencent.devops.process.pojo
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线名称与Id")
+@Schema(name = "流水线名称与Id")
 data class PipelineIdAndName(
-    @Schema(description = "流水线Id")
+    @Schema(name = "流水线Id")
     val pipelineId: String,
-    @Schema(description = "流水线名称")
+    @Schema(name = "流水线名称")
     val pipelineName: String,
-    @Schema(description = "流水线的来源渠道")
+    @Schema(name = "流水线的来源渠道")
     val channelCode: ChannelCode? = null
 )

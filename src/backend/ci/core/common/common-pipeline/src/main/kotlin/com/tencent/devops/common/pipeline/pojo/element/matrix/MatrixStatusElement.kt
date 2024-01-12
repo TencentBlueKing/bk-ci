@@ -30,34 +30,34 @@ package com.tencent.devops.common.pipeline.pojo.element.matrix
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线模型-矩阵纯运行状态插件", description = MatrixStatusElement.classType)
+@Schema(name = "流水线模型-矩阵纯运行状态插件", description = MatrixStatusElement.classType)
 data class MatrixStatusElement(
-    @Schema(description = "任务名称", required = true)
+    @Schema(name = "任务名称", required = true)
     override var name: String = "状态插件",
-    @Schema(description = "插件ID", required = false)
+    @Schema(name = "插件ID", required = false)
     override var id: String? = null,
-    @Schema(description = "执行状态", required = false)
+    @Schema(name = "执行状态", required = false)
     override var status: String? = null,
-    @Schema(description = "执行次数", required = false)
+    @Schema(name = "执行次数", required = false)
     override var executeCount: Int = 1,
-    @Schema(description = "执行时间", required = false)
+    @Schema(name = "执行时间", required = false)
     override var elapsed: Long? = null,
-    @Schema(description = "启动时间", required = false)
+    @Schema(name = "启动时间", required = false)
     override var startEpoch: Long? = null,
-    @Schema(description = "上下文标识", required = false)
+    @Schema(name = "上下文标识", required = false)
     override var stepId: String?,
-    @Schema(description = "原插件的类型标识")
+    @Schema(name = "原插件的类型标识")
     val originClassType: String,
-    @Schema(description = "原插件的市场标识")
+    @Schema(name = "原插件的市场标识")
     val originAtomCode: String?,
-    @Schema(description = "原插件的内置标识")
+    @Schema(name = "原插件的内置标识")
     val originTaskAtom: String?,
     // 当状态插件为质量红线插件是需要专门保存
-    @Schema(description = "审核人", required = true)
+    @Schema(name = "审核人", required = true)
     var reviewUsers: MutableList<String>? = null,
-    @Schema(description = "拦截原子", required = false)
+    @Schema(name = "拦截原子", required = false)
     var interceptTask: String? = null,
-    @Schema(description = "拦截原子名称", required = false)
+    @Schema(name = "拦截原子名称", required = false)
     var interceptTaskName: String? = null
 ) : Element(
     name = name,

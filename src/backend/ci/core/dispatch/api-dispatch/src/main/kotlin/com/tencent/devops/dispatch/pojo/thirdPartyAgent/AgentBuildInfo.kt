@@ -29,30 +29,30 @@ package com.tencent.devops.dispatch.pojo.thirdPartyAgent
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "构建机构建信息")
+@Schema(name = "构建机构建信息")
 data class AgentBuildInfo(
-    @Schema(description = "项目id")
+    @Schema(name = "项目id")
     val projectId: String,
-    @Schema(description = "构建机id")
+    @Schema(name = "构建机id")
     val agentId: String,
-    @Schema(description = "流水线id")
+    @Schema(name = "流水线id")
     val pipelineId: String,
-    @Schema(description = "流水线名称")
+    @Schema(name = "流水线名称")
     val pipelineName: String,
-    @Schema(description = "构建id")
+    @Schema(name = "构建id")
     val buildId: String,
-    @Schema(description = "构建计数")
+    @Schema(name = "构建计数")
     val buildNum: Int,
-    @Schema(description = "构建机编排序号")
+    @Schema(name = "构建机编排序号")
     val vmSeqId: String,
-    @Schema(description = "任务名")
+    @Schema(name = "任务名")
     val taskName: String,
-    @Schema(description = "状态")
+    @Schema(name = "状态")
     val status: String,
-    @Schema(description = "创建时间")
+    @Schema(name = "创建时间")
     val createdTime: Long,
-    @Schema(description = "更新时间")
+    @Schema(name = "更新时间")
     val updatedTime: Long,
-    @Schema(description = "工作空间")
+    @Schema(name = "工作空间")
     val workspace: String
 )

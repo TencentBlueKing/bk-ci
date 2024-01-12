@@ -30,7 +30,7 @@ package com.tencent.devops.process.pojo.pipeline
 import io.swagger.v3.oas.annotations.media.Schema
 import com.fasterxml.jackson.annotation.JsonProperty
 
-@Schema(description = "DynamicParameter模型-ID")
+@Schema(name = "DynamicParameter模型-ID")
 data class DynamicParameterInfo(
     @JsonProperty("id")
     val id: String, // 该行的唯一标识，必填

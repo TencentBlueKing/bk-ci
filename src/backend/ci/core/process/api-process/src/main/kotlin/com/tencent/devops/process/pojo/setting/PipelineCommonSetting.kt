@@ -29,10 +29,10 @@ package com.tencent.devops.process.pojo.setting
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线公共配置信息")
+@Schema(name = "流水线公共配置信息")
 data class PipelineCommonSetting(
-    @Schema(description = "每条流水线最大stage个数", required = true)
+    @Schema(name = "每条流水线最大stage个数", required = true)
     val maxStageNum: Int,
-    @Schema(description = "流水线stage公共配置信息", required = true)
+    @Schema(name = "流水线stage公共配置信息", required = true)
     val stageCommonSetting: StageCommonSetting
 )

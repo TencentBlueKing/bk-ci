@@ -29,10 +29,10 @@ package com.tencent.devops.store.pojo.atom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线插件替换记录回滚")
+@Schema(name = "流水线插件替换记录回滚")
 data class AtomReplaceRollBack(
-    @Schema(description = "插件替换基本信息ID", required = true)
+    @Schema(name = "插件替换基本信息ID", required = true)
     val baseId: String,
-    @Schema(description = "插件替换项信息ID", required = false)
+    @Schema(name = "插件替换项信息ID", required = false)
     val itemId: String? = null
 )

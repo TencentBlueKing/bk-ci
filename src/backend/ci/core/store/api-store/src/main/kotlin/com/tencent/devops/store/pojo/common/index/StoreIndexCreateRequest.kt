@@ -34,29 +34,29 @@ import com.tencent.devops.store.pojo.common.enums.IndexOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "新增指标请求报文体")
+@Schema(name = "新增指标请求报文体")
 data class StoreIndexCreateRequest(
-    @Schema(description = "指标代码", required = true)
+    @Schema(name = "指标代码", required = true)
     @BkField(maxLength = 10, patternStyle = BkStyleEnum.CODE_STYLE)
     val indexCode: String,
-    @Schema(description = "指标名称", required = true)
+    @Schema(name = "指标名称", required = true)
     @BkField(maxLength = 64)
     val indexName: String,
-    @Schema(description = "指标描述", required = true)
+    @Schema(name = "指标描述", required = true)
     @BkField(maxLength = 256)
     val description: String,
-    @Schema(description = "等级信息", required = true)
+    @Schema(name = "等级信息", required = true)
     val levelInfos: List<StoreIndexLevelInfo>,
-    @Schema(description = "运算类型", required = true)
+    @Schema(name = "运算类型", required = true)
     val operationType: IndexOperationTypeEnum,
-    @Schema(description = "指标对应的插件件代码", required = false)
+    @Schema(name = "指标对应的插件件代码", required = false)
     val atomCode: String? = null,
-    @Schema(description = "指标对应的插件版本", required = false)
+    @Schema(name = "指标对应的插件版本", required = false)
     val atomVersion: String? = null,
-    @Schema(description = "指标执行时机类型", required = true)
+    @Schema(name = "指标执行时机类型", required = true)
     val executeTimeType: IndexExecuteTimeTypeEnum,
-    @Schema(description = "store组件类型", required = true)
+    @Schema(name = "store组件类型", required = true)
     val storeType: StoreTypeEnum,
-    @Schema(description = "指标展示权重", required = true)
+    @Schema(name = "指标展示权重", required = true)
     val weight: Int
 )

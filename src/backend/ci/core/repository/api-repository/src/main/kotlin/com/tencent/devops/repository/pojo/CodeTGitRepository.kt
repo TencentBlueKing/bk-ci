@@ -32,24 +32,24 @@ import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "代码库模型-Code平台TGit")
+@Schema(name = "代码库模型-Code平台TGit")
 data class CodeTGitRepository(
-    @Schema(description = "代码库别名", required = true)
+    @Schema(name = "代码库别名", required = true)
     override val aliasName: String,
-    @Schema(description = "URL", required = true)
+    @Schema(name = "URL", required = true)
     override val url: String,
-    @Schema(description = "凭据id", required = true)
+    @Schema(name = "凭据id", required = true)
     override val credentialId: String,
-    @Schema(description = "tGit项目名称", example = "xx/yy_ci_example_proj", required = true)
+    @Schema(name = "tGit项目名称", example = "xx/yy_ci_example_proj", required = true)
     override var projectName: String,
-    @Schema(description = "用户名", required = true)
+    @Schema(name = "用户名", required = true)
     override var userName: String,
-    @Schema(description = "仓库认证类型", required = false)
+    @Schema(name = "仓库认证类型", required = false)
     val authType: RepoAuthType? = RepoAuthType.SSH,
-    @Schema(description = "项目id", required = true)
+    @Schema(name = "项目id", required = true)
     override var projectId: String?,
     override val repoHashId: String?,
-    @Schema(description = "TGit仓库ID", required = false)
+    @Schema(name = "TGit仓库ID", required = false)
     val gitProjectId: Long?
 ) : Repository {
     companion object {

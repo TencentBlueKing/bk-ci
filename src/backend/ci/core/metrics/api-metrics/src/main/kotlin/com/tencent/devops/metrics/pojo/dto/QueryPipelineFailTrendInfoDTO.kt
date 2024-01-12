@@ -30,10 +30,10 @@ package com.tencent.devops.metrics.pojo.dto
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "查询流水线失败趋势数据传输对象")
+@Schema(name = "查询流水线失败趋势数据传输对象")
 class QueryPipelineFailTrendInfoDTO(
-    @Schema(description = "项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @Schema(description = "查询条件请求信息", required = true)
+    @Schema(name = "查询条件请求信息", required = true)
     val baseQueryReq: BaseQueryReqVO
 )

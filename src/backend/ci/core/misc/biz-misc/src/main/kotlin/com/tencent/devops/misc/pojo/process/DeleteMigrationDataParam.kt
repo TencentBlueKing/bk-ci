@@ -31,22 +31,22 @@ import com.tencent.devops.misc.lock.MigrationLock
 import io.swagger.v3.oas.annotations.media.Schema
 import org.jooq.DSLContext
 
-@Schema(description = "删除迁移数据参数")
+@Schema(name = "删除迁移数据参数")
 data class DeleteMigrationDataParam(
-    @Schema(description = "jooq上下文", required = true)
+    @Schema(name = "jooq上下文", required = true)
     val dslContext: DSLContext,
-    @Schema(description = "项目ID", required = true)
+    @Schema(name = "项目ID", required = true)
     val projectId: String,
-    @Schema(description = "迁移集群名称", required = true)
+    @Schema(name = "迁移集群名称", required = true)
     val targetClusterName: String,
-    @Schema(description = "迁移数据源名称", required = true)
+    @Schema(name = "迁移数据源名称", required = true)
     val targetDataSourceName: String,
-    @Schema(description = "流水线ID", required = false)
+    @Schema(name = "流水线ID", required = false)
     val pipelineId: String? = null,
-    @Schema(description = "迁移锁", required = false)
+    @Schema(name = "迁移锁", required = false)
     val migrationLock: MigrationLock? = null,
-    @Schema(description = "广播表删除标识", required = false)
+    @Schema(name = "广播表删除标识", required = false)
     val broadcastTableDeleteFlag: Boolean? = true,
-    @Schema(description = "归档流水线标识", required = false)
+    @Schema(name = "归档流水线标识", required = false)
     val archivePipelineFlag: Boolean? = null
 )

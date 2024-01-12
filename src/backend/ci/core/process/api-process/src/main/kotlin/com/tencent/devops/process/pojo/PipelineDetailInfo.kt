@@ -29,26 +29,26 @@ package com.tencent.devops.process.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线名称与Id")
+@Schema(name = "流水线名称与Id")
 data class PipelineDetailInfo(
-    @Schema(description = "流水线Id")
+    @Schema(name = "流水线Id")
     val pipelineId: String,
-    @Schema(description = "流水线名称")
+    @Schema(name = "流水线名称")
     val pipelineName: String,
-    @Schema(description = "是否收藏")
+    @Schema(name = "是否收藏")
     val hasCollect: Boolean,
-    @Schema(description = "canManualStartup")
+    @Schema(name = "canManualStartup")
     val canManualStartup: Int,
-    @Schema(description = "是否关联模板")
+    @Schema(name = "是否关联模板")
     val instanceFromTemplate: Boolean,
-    @Schema(description = "流水线版本")
+    @Schema(name = "流水线版本")
     val pipelineVersion: String,
-    @Schema(description = "部署时间")
+    @Schema(name = "部署时间")
     val deploymentTime: String,
-    @Schema(description = "是否有编辑权限")
+    @Schema(name = "是否有编辑权限")
     val hasPermission: Boolean,
-    @Schema(description = "关联模板ID", required = false)
+    @Schema(name = "关联模板ID", required = false)
     var templateId: String? = null,
-    @Schema(description = "关联模板版本", required = false)
+    @Schema(name = "关联模板版本", required = false)
     var templateVersion: Long? = null
 )

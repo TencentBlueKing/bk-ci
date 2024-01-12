@@ -30,11 +30,11 @@ package com.tencent.devops.repository.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "代码库流水线引用请求")
+@Schema(name = "代码库流水线引用请求")
 data class RepoPipelineRefRequest(
-    @Schema(description = "action", required = true)
+    @Schema(name = "action", required = true)
     val action: String,
-    @Schema(description = "pipelineId", required = true)
+    @Schema(name = "pipelineId", required = true)
     val pipelineId: String,
     val pipelineRefInfos: List<RepoPipelineRefInfo>
 )

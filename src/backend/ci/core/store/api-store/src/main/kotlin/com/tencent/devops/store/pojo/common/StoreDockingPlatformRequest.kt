@@ -31,33 +31,33 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "store组件对接平台请求报文体")
+@Schema(name = "store组件对接平台请求报文体")
 data class StoreDockingPlatformRequest(
-    @Schema(description = "平台代码", required = true)
+    @Schema(name = "平台代码", required = true)
     @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
     val platformCode: String,
-    @Schema(description = "平台名称", required = true)
+    @Schema(name = "平台名称", required = true)
     @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
     val platformName: String,
-    @Schema(description = "网址", required = false)
+    @Schema(name = "网址", required = false)
     @field:BkField(minLength = 1, maxLength = 256, required = false)
     val website: String?,
-    @Schema(description = "简介", required = true)
+    @Schema(name = "简介", required = true)
     @field:BkField(minLength = 1, maxLength = 1024)
     val summary: String,
-    @Schema(description = "标签", required = false)
+    @Schema(name = "标签", required = false)
     val labels: List<String>? = null,
-    @Schema(description = "负责人", required = true)
+    @Schema(name = "负责人", required = true)
     @field:BkField(minLength = 1, maxLength = 50)
     val principal: String,
-    @Schema(description = "平台logo地址", required = false)
+    @Schema(name = "平台logo地址", required = false)
     @field:BkField(minLength = 1, maxLength = 256, required = false)
     val logoUrl: String?,
-    @Schema(description = "所属机构名称", required = true)
+    @Schema(name = "所属机构名称", required = true)
     @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
     val ownerDeptName: String,
-    @Schema(description = "平台所属错误码前缀", required = true)
+    @Schema(name = "平台所属错误码前缀", required = true)
     val errorCodePrefix: Int,
-    @Schema(description = "平台所属错误码信息", required = false)
+    @Schema(name = "平台所属错误码信息", required = false)
     val errorCodeInfo: List<ErrorCodeInfo>? = null
 )

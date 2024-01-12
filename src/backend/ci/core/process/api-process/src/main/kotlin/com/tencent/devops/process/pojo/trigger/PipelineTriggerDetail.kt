@@ -30,27 +30,27 @@ package com.tencent.devops.process.pojo.trigger
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线触发详情")
+@Schema(name = "流水线触发详情")
 data class PipelineTriggerDetail(
     var detailId: Long? = null,
-    @Schema(description = "蓝盾项目ID")
+    @Schema(name = "蓝盾项目ID")
     val projectId: String,
-    @Schema(description = "事件ID")
+    @Schema(name = "事件ID")
     val eventId: Long,
-    @Schema(description = "触发状态")
+    @Schema(name = "触发状态")
     var status: String,
-    @Schema(description = "流水线Id")
+    @Schema(name = "流水线Id")
     var pipelineId: String? = null,
-    @Schema(description = "流水线名称")
+    @Schema(name = "流水线名称")
     var pipelineName: String? = null,
-    @Schema(description = "构建Id")
+    @Schema(name = "构建Id")
     var buildId: String? = null,
-    @Schema(description = "构建编号")
+    @Schema(name = "构建编号")
     var buildNum: String? = null,
-    @Schema(description = "原因")
+    @Schema(name = "原因")
     var reason: String? = null,
-    @Schema(description = "原因详情", required = false)
+    @Schema(name = "原因详情", required = false)
     var reasonDetailList: List<String>? = null,
-    @Schema(description = "创建时间", required = false)
+    @Schema(name = "创建时间", required = false)
     val createTime: Long? = null
 )

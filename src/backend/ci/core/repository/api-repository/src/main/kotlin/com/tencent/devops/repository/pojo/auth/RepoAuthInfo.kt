@@ -29,12 +29,12 @@ package com.tencent.devops.repository.pojo.auth
 import io.swagger.v3.oas.annotations.media.Schema
 import org.apache.commons.lang3.StringUtils
 
-@Schema(description = "代码库授权信息")
+@Schema(name = "代码库授权信息")
 data class RepoAuthInfo(
-    @Schema(description = "授权类型", required = true)
+    @Schema(name = "授权类型", required = true)
     val authType: String,
-    @Schema(description = "授权凭证ID", required = true)
+    @Schema(name = "授权凭证ID", required = true)
     val credentialId: String,
-    @Schema(description = "SVN类型", required = false)
+    @Schema(name = "SVN类型", required = false)
     val svnType: String? = StringUtils.EMPTY
 )

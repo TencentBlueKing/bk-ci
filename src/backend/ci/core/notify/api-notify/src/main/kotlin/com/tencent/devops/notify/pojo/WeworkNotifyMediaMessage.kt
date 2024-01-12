@@ -31,16 +31,16 @@ import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import io.swagger.v3.oas.annotations.media.Schema
 import java.io.InputStream
 
-@Schema(description = "企业微信文本消息")
+@Schema(name = "企业微信文本消息")
 data class WeworkNotifyMediaMessage(
-    @Schema(description = "接收人Id", required = true)
+    @Schema(name = "接收人Id", required = true)
     val receivers: Collection<String>,
-    @Schema(description = "接收人类型", required = true)
+    @Schema(name = "接收人类型", required = true)
     val receiverType: WeworkReceiverType,
-    @Schema(description = "媒体内容", required = true)
+    @Schema(name = "媒体内容", required = true)
     var mediaInputStream: InputStream,
-    @Schema(description = "媒体内容类型", required = true)
+    @Schema(name = "媒体内容类型", required = true)
     var mediaType: WeworkMediaType,
-    @Schema(description = "媒体名称", required = true)
+    @Schema(name = "媒体名称", required = true)
     var mediaName: String
 )

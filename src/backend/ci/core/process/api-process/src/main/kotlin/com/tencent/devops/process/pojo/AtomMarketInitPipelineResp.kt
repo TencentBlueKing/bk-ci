@@ -30,12 +30,12 @@ package com.tencent.devops.process.pojo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "插件市场初始化流水线报文响应体")
+@Schema(name = "插件市场初始化流水线报文响应体")
 data class AtomMarketInitPipelineResp(
-    @Schema(description = "流水线ID", required = true)
+    @Schema(name = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(description = "构建ID", required = false)
+    @Schema(name = "构建ID", required = false)
     val buildId: String?,
-    @Schema(description = "构建状态", required = true)
+    @Schema(name = "构建状态", required = true)
     val atomBuildStatus: AtomStatusEnum
 )

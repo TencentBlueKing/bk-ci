@@ -30,27 +30,27 @@ package com.tencent.devops.process.pojo.app
 import com.tencent.devops.process.pojo.classify.PipelineView
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "Pipeline分页数据包装模型")
+@Schema(name = "Pipeline分页数据包装模型")
 data class PipelinePage<out T>(
-    @Schema(description = "总记录行数", required = true)
+    @Schema(name = "总记录行数", required = true)
     val count: Long,
-    @Schema(description = "第几页", required = true)
+    @Schema(name = "第几页", required = true)
     val page: Int,
-    @Schema(description = "每页多少条", required = true)
+    @Schema(name = "每页多少条", required = true)
     val pageSize: Int,
-    @Schema(description = "总共多少页", required = true)
+    @Schema(name = "总共多少页", required = true)
     val totalPages: Int,
-    @Schema(description = "数据", required = true)
+    @Schema(name = "数据", required = true)
     val records: List<T>,
-    @Schema(description = "是否拥有创建权限", required = true)
+    @Schema(name = "是否拥有创建权限", required = true)
     val hasCreatePermission: Boolean,
-    @Schema(description = "总pipeline是否为空（不管有没有权限的）", required = true)
+    @Schema(name = "总pipeline是否为空（不管有没有权限的）", required = true)
     val hasPipelines: Boolean,
-    @Schema(description = "是否有收藏的流水线", required = true)
+    @Schema(name = "是否有收藏的流水线", required = true)
     val hasFavorPipelines: Boolean,
-    @Schema(description = "是否有用户权限的流水线", required = true)
+    @Schema(name = "是否有用户权限的流水线", required = true)
     val hasPermissionPipelines: Boolean,
-    @Schema(description = "用户当前视图", required = false)
+    @Schema(name = "用户当前视图", required = false)
     val currentView: PipelineView?
 ) {
     constructor(

@@ -29,26 +29,26 @@ package com.tencent.devops.stream.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "手动触发返回结果")
+@Schema(name = "手动触发返回结果")
 data class TriggerBuildResult(
-    @Schema(description = "蓝盾项目ID")
+    @Schema(name = "蓝盾项目ID")
     val projectId: String,
-    @Schema(description = "分支")
+    @Schema(name = "分支")
     val branch: String,
-    @Schema(description = "Custom commit message")
+    @Schema(name = "Custom commit message")
     val customCommitMsg: String?,
-    @Schema(description = "描述")
+    @Schema(name = "描述")
     val description: String?,
-    @Schema(description = "用户选择的触发CommitId")
+    @Schema(name = "用户选择的触发CommitId")
     val commitId: String? = null,
-    @Schema(description = "触发的构建ID")
+    @Schema(name = "触发的构建ID")
     val buildId: String,
-    @Schema(description = "触发的构建详情页")
+    @Schema(name = "触发的构建详情页")
     val buildUrl: String
 )
 
-@Schema(description = "App手动触发返回结果")
+@Schema(name = "App手动触发返回结果")
 data class AppTriggerBuildResult(
-    @Schema(description = "构建ID")
+    @Schema(name = "构建ID")
     val id: String
 )

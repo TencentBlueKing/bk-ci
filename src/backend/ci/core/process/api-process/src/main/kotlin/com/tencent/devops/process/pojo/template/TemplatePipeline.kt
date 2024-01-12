@@ -34,22 +34,22 @@ import io.swagger.v3.oas.annotations.media.Schema
  * 2019-01-08
  * 模板实例化的流水线
  */
-@Schema(description = "")
+@Schema(name = "")
 data class TemplatePipeline(
-    @Schema(description = "模板id", required = false)
+    @Schema(name = "模板id", required = false)
     val templateId: String,
-    @Schema(description = "版本名称", required = false)
+    @Schema(name = "版本名称", required = false)
     val versionName: String,
-    @Schema(description = "版本", required = false)
+    @Schema(name = "版本", required = false)
     val version: Long,
-    @Schema(description = "流水线id", required = false)
+    @Schema(name = "流水线id", required = false)
     val pipelineId: String,
-    @Schema(description = "流水线名称", required = false)
+    @Schema(name = "流水线名称", required = false)
     val pipelineName: String,
-    @Schema(description = "更新时间", required = false)
+    @Schema(name = "更新时间", required = false)
     val updateTime: Long,
-    @Schema(description = "是否有编辑权限", required = false)
+    @Schema(name = "是否有编辑权限", required = false)
     val hasPermission: Boolean,
-    @Schema(description = "流水线模板状态", required = false)
+    @Schema(name = "流水线模板状态", required = false)
     val status: TemplatePipelineStatus
 )

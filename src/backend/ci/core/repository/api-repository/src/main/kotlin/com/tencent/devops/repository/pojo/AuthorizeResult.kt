@@ -30,12 +30,12 @@ package com.tencent.devops.repository.pojo
 import com.tencent.devops.scm.pojo.Project
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "根据用户获取项目返回模型")
+@Schema(name = "根据用户获取项目返回模型")
 data class AuthorizeResult(
-    @Schema(description = "状态")
+    @Schema(name = "状态")
     val status: Int,
-    @Schema(description = "url地址")
+    @Schema(name = "url地址")
     val url: String = "",
-    @Schema(description = "项目列表")
+    @Schema(name = "项目列表")
     val project: MutableList<Project> = mutableListOf()
 )

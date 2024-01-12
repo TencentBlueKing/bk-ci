@@ -34,22 +34,22 @@ import io.swagger.v3.oas.annotations.media.Schema
  *
  * Powered By Tencent
  */
-@Schema(description = "日志查询模型")
+@Schema(name = "日志查询模型")
 data class QueryLogs(
-    @Schema(description = "构建ID", required = true)
+    @Schema(name = "构建ID", required = true)
     val buildId: String,
-    @Schema(description = "是否结束", required = true)
+    @Schema(name = "是否结束", required = true)
     var finished: Boolean,
-    @Schema(description = "是否有后续日志", required = false)
+    @Schema(name = "是否有后续日志", required = false)
     var hasMore: Boolean? = false,
-    @Schema(description = "日志列表", required = true)
+    @Schema(name = "日志列表", required = true)
     var logs: MutableList<LogLine> = mutableListOf(),
-    @Schema(description = "所用时间", required = false)
+    @Schema(name = "所用时间", required = false)
     var timeUsed: Long = 0,
-    @Schema(description = "日志查询状态", required = false)
+    @Schema(name = "日志查询状态", required = false)
     var status: Int = LogStatus.SUCCEED.status,
-    @Schema(description = "日志子tag列表", required = false)
+    @Schema(name = "日志子tag列表", required = false)
     var subTags: List<String>? = null,
-    @Schema(description = "错误信息", required = false)
+    @Schema(name = "错误信息", required = false)
     var message: String? = null
 )

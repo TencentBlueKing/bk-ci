@@ -29,12 +29,12 @@ package com.tencent.devops.dispatch.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "虚拟机主机-任务结束后置处理")
+@Schema(name = "虚拟机主机-任务结束后置处理")
 data class VMTaskResult(
-    @Schema(description = "task id", required = true)
+    @Schema(name = "task id", required = true)
     val taskId: Int,
-    @Schema(description = "脚本执行信息", required = true)
+    @Schema(name = "脚本执行信息", required = true)
     val message: String,
-    @Schema(description = "脚本执行结果", required = true)
+    @Schema(name = "脚本执行结果", required = true)
     val success: Boolean
 )

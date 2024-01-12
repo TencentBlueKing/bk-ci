@@ -30,14 +30,14 @@ package com.tencent.devops.metrics.pojo.dto
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "查询插件趋势信息传输对象")
+@Schema(name = "查询插件趋势信息传输对象")
 data class QueryAtomTrendInfoDTO(
-    @Schema(description = "项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @Schema(description = "查询条件请求信息")
+    @Schema(name = "查询条件请求信息")
     val baseQueryReq: BaseQueryReqVO,
-    @Schema(description = "错误类型")
+    @Schema(name = "错误类型")
     val errorTypes: List<Int>?,
-    @Schema(description = "插件代码")
+    @Schema(name = "插件代码")
     val atomCodes: List<String>?
 )

@@ -30,34 +30,34 @@ package com.tencent.devops.process.pojo
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "流水线模型-构建任务")
+@Schema(name = "流水线模型-构建任务")
 data class BuildTask(
-    @Schema(description = "构建ID", required = true)
+    @Schema(name = "构建ID", required = true)
     val buildId: String,
-    @Schema(description = "构建环境ID", required = true)
+    @Schema(name = "构建环境ID", required = true)
     val vmSeqId: String,
-    @Schema(description = "任务状态", required = true)
+    @Schema(name = "任务状态", required = true)
     val status: BuildTaskStatus,
-    @Schema(description = "任务ID", required = true)
+    @Schema(name = "任务ID", required = true)
     val taskId: String? = null,
     @Deprecated("原本用于标识上下文但统一传了taskId，现废弃")
-    @Schema(description = "插件ID", required = true)
+    @Schema(name = "插件ID", required = true)
     val elementId: String? = null,
-    @Schema(description = "标识上下文的插件ID", required = true)
+    @Schema(name = "标识上下文的插件ID", required = true)
     val stepId: String? = null,
-    @Schema(description = "插件名字", required = true)
+    @Schema(name = "插件名字", required = true)
     val elementName: String? = null,
-    @Schema(description = "插件版本号", required = false)
+    @Schema(name = "插件版本号", required = false)
     var elementVersion: String? = null,
-    @Schema(description = "任务类型", required = false)
+    @Schema(name = "任务类型", required = false)
     val type: String? = null,
-    @Schema(description = "任务参数", required = false)
+    @Schema(name = "任务参数", required = false)
     val params: Map<String, String>? = null,
-    @Schema(description = "环境参数", required = false)
+    @Schema(name = "环境参数", required = false)
     val buildVariable: Map<String, String>? = null,
-    @Schema(description = "容器类型", required = false)
+    @Schema(name = "容器类型", required = false)
     val containerType: String? = null,
-    @Schema(description = "签名token", required = false)
+    @Schema(name = "签名token", required = false)
     val signToken: String? = null
 ) {
 

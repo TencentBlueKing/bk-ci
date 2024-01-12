@@ -30,16 +30,16 @@ package com.tencent.devops.project.pojo.code
 import com.tencent.devops.common.api.pojo.MessageCodeDetail
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "返回码列表信息")
+@Schema(name = "返回码列表信息")
 data class MessageCodeResp(
-    @Schema(description = "总记录数", required = true)
+    @Schema(name = "总记录数", required = true)
     val count: Long,
-    @Schema(description = "当前页码值", required = false)
+    @Schema(name = "当前页码值", required = false)
     val page: Int?,
-    @Schema(description = "每页记录大小", required = false)
+    @Schema(name = "每页记录大小", required = false)
     val pageSize: Int?,
-    @Schema(description = "总页数", required = true)
+    @Schema(name = "总页数", required = true)
     val totalPages: Int,
-    @Schema(description = "数据集合", required = false)
+    @Schema(name = "数据集合", required = false)
     val records: List<MessageCodeDetail>?
 )
