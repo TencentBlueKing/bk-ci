@@ -27,57 +27,56 @@
 
 package com.tencent.devops.environment.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("NodeWithPermission-节点信息(权限)")
+@Schema(description = "NodeWithPermission-节点信息(权限)")
 data class NodeWithPermission(
-    @ApiModelProperty("环境 HashId", required = true)
+    @Schema(description = "环境 HashId", required = true)
     val nodeHashId: String,
-    @ApiModelProperty("节点 Id", required = true)
+    @Schema(description = "节点 Id", required = true)
     val nodeId: String,
-    @ApiModelProperty("节点名称", required = true)
+    @Schema(description = "节点名称", required = true)
     val name: String,
-    @ApiModelProperty("IP", required = true)
+    @Schema(description = "IP", required = true)
     val ip: String,
-    @ApiModelProperty("节点状态", required = true)
+    @Schema(description = "节点状态", required = true)
     val nodeStatus: String,
-    @ApiModelProperty("agent状态", required = true)
+    @Schema(description = "agent状态", required = true)
     val agentStatus: Boolean,
-    @ApiModelProperty("节点类型", required = true)
+    @Schema(description = "节点类型", required = true)
     val nodeType: String,
-    @ApiModelProperty("操作系统", required = false)
+    @Schema(description = "操作系统", required = false)
     val osName: String?,
-    @ApiModelProperty("创建人", required = true)
+    @Schema(description = "创建人", required = true)
     val createdUser: String,
-    @ApiModelProperty("责任人", required = false)
+    @Schema(description = "责任人", required = false)
     val operator: String?,
-    @ApiModelProperty("备份责任人", required = false)
+    @Schema(description = "备份责任人", required = false)
     val bakOperator: String?,
-    @ApiModelProperty("是否可以使用", required = false)
+    @Schema(description = "是否可以使用", required = false)
     val canUse: Boolean?,
-    @ApiModelProperty("是否可以编辑", required = false)
+    @Schema(description = "是否可以编辑", required = false)
     val canEdit: Boolean?,
-    @ApiModelProperty("是否可以删除", required = false)
+    @Schema(description = "是否可以删除", required = false)
     val canDelete: Boolean?,
-    @ApiModelProperty("是否可以查看", required = false)
+    @Schema(description = "是否可以查看", required = false)
     val canView: Boolean? = true,
-    @ApiModelProperty("网关地域", required = false)
+    @Schema(description = "网关地域", required = false)
     val gateway: String?,
-    @ApiModelProperty("显示名称", required = false)
+    @Schema(description = "显示名称", required = false)
     val displayName: String?,
-    @ApiModelProperty("创建/导入时间", required = false)
+    @Schema(description = "创建/导入时间", required = false)
     val createTime: String?,
-    @ApiModelProperty("最后修改时间", required = false)
+    @Schema(description = "最后修改时间", required = false)
     val lastModifyTime: String?,
-    @ApiModelProperty("最后修改人", required = false)
+    @Schema(description = "最后修改人", required = false)
     val lastModifyUser: String?,
-    @ApiModelProperty("所属业务, 默认-1表示没有绑定业务")
+    @Schema(description = "所属业务, 默认-1表示没有绑定业务")
     val bizId: Long? = -1,
-    @ApiModelProperty("流水线Job引用数")
+    @Schema(description = "流水线Job引用数")
     val pipelineRefCount: Int? = 0,
-    @ApiModelProperty("流水线Job引用数")
+    @Schema(description = "流水线Job引用数")
     val lastBuildTime: String? = "",
-    @ApiModelProperty("agent hash id")
+    @Schema(description = "agent hash id")
     val agentHashId: String? = ""
 )

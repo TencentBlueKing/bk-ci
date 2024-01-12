@@ -27,13 +27,12 @@
 
 package com.tencent.devops.dispatch.docker.pojo.resource
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("")
+@Schema(description = "")
 data class CreateResourceConfigVO(
-    @ApiModelProperty("蓝盾项目ID")
+    @Schema(description = "蓝盾项目ID")
     val projectId: String,
-    @ApiModelProperty("性能基础配置ID")
+    @Schema(description = "性能基础配置ID")
     val optionId: Long
 )

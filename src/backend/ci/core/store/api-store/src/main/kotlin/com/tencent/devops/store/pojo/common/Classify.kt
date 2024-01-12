@@ -27,23 +27,22 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("分类信息")
+@Schema(description = "分类信息")
 data class Classify(
-    @ApiModelProperty("分类ID", required = true)
+    @Schema(description = "分类ID", required = true)
     val id: String,
-    @ApiModelProperty("分类编码", required = true)
+    @Schema(description = "分类编码", required = true)
     val classifyCode: String,
-    @ApiModelProperty("分类名称", required = true)
+    @Schema(description = "分类名称", required = true)
     val classifyName: String,
-    @ApiModelProperty("类别 ATOM:插件 TEMPLATE:模板 IMAGE:镜像 IDE_ATOM:IDE插件", required = true)
+    @Schema(description = "类别 ATOM:插件 TEMPLATE:模板 IMAGE:镜像 IDE_ATOM:IDE插件", required = true)
     val classifyType: String,
-    @ApiModelProperty("权重（数值越大代表权重越高）", required = false)
+    @Schema(description = "权重（数值越大代表权重越高）", required = false)
     val weight: Int?,
-    @ApiModelProperty("创建日期")
+    @Schema(description = "创建日期")
     val createTime: Long = 0,
-    @ApiModelProperty("更新日期")
+    @Schema(description = "更新日期")
     val updateTime: Long = 0
 )

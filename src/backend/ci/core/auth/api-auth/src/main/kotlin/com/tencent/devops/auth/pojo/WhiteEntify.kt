@@ -27,15 +27,14 @@
 
 package com.tencent.devops.auth.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("白名单返回模型")
+@Schema(description = "白名单返回模型")
 data class WhiteEntify(
-    @ApiModelProperty("id")
+    @Schema(description = "id")
     val id: Int,
-    @ApiModelProperty("管理员id")
+    @Schema(description = "管理员id")
     val managerId: Int,
-    @ApiModelProperty("用户名")
+    @Schema(description = "用户名")
     val user: String
 )

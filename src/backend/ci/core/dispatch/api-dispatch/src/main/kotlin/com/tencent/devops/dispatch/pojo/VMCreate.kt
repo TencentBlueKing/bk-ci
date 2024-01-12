@@ -27,37 +27,36 @@
 
 package com.tencent.devops.dispatch.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("VM-创建-基本信息")
+@Schema(description = "VM-创建-基本信息")
 data class VMCreate(
-    @ApiModelProperty("VM ID", required = true)
+    @Schema(description = "VM ID", required = true)
     val id: Long,
-    @ApiModelProperty("VM 对应母机ID", required = true)
+    @Schema(description = "VM 对应母机ID", required = true)
     val machineId: Int,
-    @ApiModelProperty("VM 类型ID", required = true)
+    @Schema(description = "VM 类型ID", required = true)
     val typeId: Int,
-    @ApiModelProperty("VM IP地址", required = true)
+    @Schema(description = "VM IP地址", required = true)
     val ip: String,
-    @ApiModelProperty("VM 名称", required = true)
+    @Schema(description = "VM 名称", required = true)
     val name: String,
-    @ApiModelProperty("VM 系统信息", required = true)
+    @Schema(description = "VM 系统信息", required = true)
     val os: String,
-    @ApiModelProperty("VM 系统版本", required = true)
+    @Schema(description = "VM 系统版本", required = true)
     val osVersion: String,
-    @ApiModelProperty("VM CPU信息", required = true)
+    @Schema(description = "VM CPU信息", required = true)
     val cpu: String,
-    @ApiModelProperty("VM 内存信息", required = true)
+    @Schema(description = "VM 内存信息", required = true)
     val memory: String,
-    @ApiModelProperty("VM 是否在维护状态", required = true)
+    @Schema(description = "VM 是否在维护状态", required = true)
     val inMaintain: Boolean,
-    @ApiModelProperty("VM 管理员用户名", required = true)
+    @Schema(description = "VM 管理员用户名", required = true)
     val vmManagerUsername: String,
-    @ApiModelProperty("VM 管理员密码", required = true)
+    @Schema(description = "VM 管理员密码", required = true)
     val vmManagerPassword: String,
-    @ApiModelProperty("VM 非管理员用户名", required = true)
+    @Schema(description = "VM 非管理员用户名", required = true)
     val vmUsername: String,
-    @ApiModelProperty("VM 非管理员密码", required = true)
+    @Schema(description = "VM 非管理员密码", required = true)
     val vmPassword: String
 )

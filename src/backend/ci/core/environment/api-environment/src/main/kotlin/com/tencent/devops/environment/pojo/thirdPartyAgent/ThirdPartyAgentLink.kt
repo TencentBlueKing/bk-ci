@@ -27,13 +27,12 @@
 
 package com.tencent.devops.environment.pojo.thirdPartyAgent
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("第三方构建机接入的链接")
+@Schema(description = "第三方构建机接入的链接")
 data class ThirdPartyAgentLink(
-    @ApiModelProperty("ID")
+    @Schema(description = "ID")
     val agentId: String,
-    @ApiModelProperty("链接")
+    @Schema(description = "链接")
     val link: String
 )

@@ -27,25 +27,24 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件市场插件信息")
+@Schema(description = "插件市场插件信息")
 data class MarketAtomItem(
-    @ApiModelProperty("插件名称")
+    @Schema(description = "插件名称")
     val atomName: String,
-    @ApiModelProperty("插件标识")
+    @Schema(description = "插件标识")
     val atomCode: String,
-    @ApiModelProperty("logo链接")
+    @Schema(description = "logo链接")
     val logoUrl: String?,
-    @ApiModelProperty("发布者")
+    @Schema(description = "发布者")
     val publisher: String,
-    @ApiModelProperty("下载量")
+    @Schema(description = "下载量")
     val downloads: Int?,
-    @ApiModelProperty("评分")
+    @Schema(description = "评分")
     val score: Double?,
-    @ApiModelProperty("简介")
+    @Schema(description = "简介")
     val summary: String?,
-    @ApiModelProperty("是否可安装标识")
+    @Schema(description = "是否可安装标识")
     val flag: Boolean
 )

@@ -30,28 +30,27 @@ package com.tencent.devops.repository.pojo
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("代码库模型-Code平台Git")
+@Schema(description = "代码库模型-Code平台Git")
 data class CodeGitRepository(
-    @ApiModelProperty("代码库别名", required = true)
+    @Schema(description = "代码库别名", required = true)
     override val aliasName: String,
-    @ApiModelProperty("URL", required = true)
+    @Schema(description = "URL", required = true)
     override val url: String,
-    @ApiModelProperty("凭据id(该凭证需要有git仓库Reporter以上权限)", required = true)
+    @Schema(description = "凭据id(该凭证需要有git仓库Reporter以上权限)", required = true)
     override val credentialId: String,
-    @ApiModelProperty("git项目名称", example = "devops/devops_ci_example_proj", required = true)
+    @Schema(description = "git项目名称", example = "devops/devops_ci_example_proj", required = true)
     override val projectName: String,
-    @ApiModelProperty("用户名", required = true)
+    @Schema(description = "用户名", required = true)
     override var userName: String,
-    @ApiModelProperty("仓库认证类型", required = false)
+    @Schema(description = "仓库认证类型", required = false)
     val authType: RepoAuthType? = RepoAuthType.SSH,
-    @ApiModelProperty("项目id", required = true)
+    @Schema(description = "项目id", required = true)
     override var projectId: String?,
-    @ApiModelProperty("仓库hash id", required = false)
+    @Schema(description = "仓库hash id", required = false)
     override val repoHashId: String?,
-    @ApiModelProperty("Git仓库ID", required = false)
+    @Schema(description = "Git仓库ID", required = false)
     val gitProjectId: Long?
 ) : Repository {
     companion object {

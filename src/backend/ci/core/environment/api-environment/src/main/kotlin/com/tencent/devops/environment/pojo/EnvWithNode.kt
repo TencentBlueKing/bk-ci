@@ -27,18 +27,17 @@
 
 package com.tencent.devops.environment.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("环境信息-Node数量")
+@Schema(description = "环境信息-Node数量")
 data class EnvWithNode(
-    @ApiModelProperty("环境 Id", required = true)
+    @Schema(description = "环境 Id", required = true)
     val envId: Long,
-    @ApiModelProperty("环境名称", required = true)
+    @Schema(description = "环境名称", required = true)
     val envName: String,
-    @ApiModelProperty("源项目", required = false)
+    @Schema(description = "源项目", required = false)
     val sharedProjectId: String?,
-    @ApiModelProperty("分享人", required = false)
+    @Schema(description = "分享人", required = false)
     val sharedUserId: String?
 
 )

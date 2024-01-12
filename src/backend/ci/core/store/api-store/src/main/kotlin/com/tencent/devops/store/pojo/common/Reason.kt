@@ -29,28 +29,27 @@ package com.tencent.devops.store.pojo.common
 
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nSourceEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("原因信息")
+@Schema(description = "原因信息")
 data class Reason(
-    @ApiModelProperty("原因ID", required = true)
+    @Schema(description = "原因ID", required = true)
     val id: String,
-    @ApiModelProperty("原因类型", required = true)
+    @Schema(description = "原因类型", required = true)
     val type: String,
-    @ApiModelProperty("原因内容", required = true)
+    @Schema(description = "原因内容", required = true)
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val content: String,
-    @ApiModelProperty("创建人")
+    @Schema(description = "创建人")
     val creator: String,
-    @ApiModelProperty("修改人")
+    @Schema(description = "修改人")
     val modifier: String,
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     val createTime: String,
-    @ApiModelProperty("修改时间")
+    @Schema(description = "修改时间")
     val updateTime: String,
-    @ApiModelProperty("是否启用")
+    @Schema(description = "是否启用")
     val enable: Boolean,
-    @ApiModelProperty("显示顺序")
+    @Schema(description = "显示顺序")
     val order: Int
 )

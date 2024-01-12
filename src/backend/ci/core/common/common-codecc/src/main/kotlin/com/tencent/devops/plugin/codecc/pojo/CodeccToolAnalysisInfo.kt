@@ -27,25 +27,24 @@
 
 package com.tencent.devops.plugin.codecc.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("codecc工具分析信息")
+@Schema(description = "codecc工具分析信息")
 data class CodeccToolAnalysisInfo(
-    @ApiModelProperty("工具名称", required = true)
+    @Schema(description = "工具名称", required = true)
     val toolName: String,
-    @ApiModelProperty("工具展示名称", required = true)
+    @Schema(description = "工具展示名称", required = true)
     val displayName: String,
-    @ApiModelProperty("工具类型", required = true)
+    @Schema(description = "工具类型", required = true)
     val type: String,
-    @ApiModelProperty("分析耗时", required = true)
+    @Schema(description = "分析耗时", required = true)
     val elapseTime: Long,
-    @ApiModelProperty("第几次构建", required = true)
+    @Schema(description = "第几次构建", required = true)
     val buildNum: Int,
-    @ApiModelProperty("工具类型，用来拼接URL", required = false)
+    @Schema(description = "工具类型，用来拼接URL", required = false)
     val pattern: String?,
-    @ApiModelProperty("告警总数", required = true)
+    @Schema(description = "告警总数", required = true)
     val defectCount: Int,
-    @ApiModelProperty("工具对应的跳转地址", required = false)
+    @Schema(description = "工具对应的跳转地址", required = false)
     val defectUrl: String?
 )

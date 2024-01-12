@@ -27,13 +27,12 @@
 
 package com.tencent.devops.common.pipeline.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("构建模型-下拉框表单元素值")
+@Schema(description = "构建模型-下拉框表单元素值")
 data class BuildFormValue(
-    @ApiModelProperty("元素值ID-标识符", required = true)
+    @Schema(description = "元素值ID-标识符", required = true)
     val key: String,
-    @ApiModelProperty("元素值名称-显示用", required = true)
+    @Schema(description = "元素值名称-显示用", required = true)
     val value: String
 )

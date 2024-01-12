@@ -30,57 +30,56 @@ package com.tencent.devops.process.engine.pojo
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.pojo.pipeline.TemplateInfo
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线信息")
+@Schema(description = "流水线信息")
 data class PipelineInfo(
-    @ApiModelProperty("项目ID")
+    @Schema(description = "项目ID")
     val projectId: String,
-    @ApiModelProperty("流水线DI")
+    @Schema(description = "流水线DI")
     val pipelineId: String,
-    @ApiModelProperty("模板ID")
+    @Schema(description = "模板ID")
     val templateId: String?,
-    @ApiModelProperty("流水线名称")
+    @Schema(description = "流水线名称")
     val pipelineName: String,
-    @ApiModelProperty("流水线描述")
+    @Schema(description = "流水线描述")
     val pipelineDesc: String,
-    @ApiModelProperty("版本")
+    @Schema(description = "版本")
     var version: Int = 1,
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     val createTime: Long = 0,
-    @ApiModelProperty("更新时间")
+    @Schema(description = "更新时间")
     val updateTime: Long = 0,
-    @ApiModelProperty("创建者")
+    @Schema(description = "创建者")
     val creator: String,
-    @ApiModelProperty("上一次的更新者")
+    @Schema(description = "上一次的更新者")
     val lastModifyUser: String,
-    @ApiModelProperty("渠道号")
+    @Schema(description = "渠道号")
     val channelCode: ChannelCode,
-    @ApiModelProperty("是否能够手动启动")
+    @Schema(description = "是否能够手动启动")
     val canManualStartup: Boolean,
-    @ApiModelProperty("是否可以跳过")
+    @Schema(description = "是否可以跳过")
     val canElementSkip: Boolean,
-    @ApiModelProperty("任务数")
+    @Schema(description = "任务数")
     val taskCount: Int,
-    @ApiModelProperty("版本名称")
+    @Schema(description = "版本名称")
     var versionName: String = "init",
-    @ApiModelProperty("ID")
+    @Schema(description = "ID")
     val id: Long?,
-    @ApiModelProperty("流水线组名称列表", required = false)
+    @Schema(description = "流水线组名称列表", required = false)
     var viewNames: List<String>? = null,
-    @ApiModelProperty("最后构建启动时间", required = false)
+    @Schema(description = "最后构建启动时间", required = false)
     var latestBuildStartTime: Long? = null,
-    @ApiModelProperty("最后构建结束时间", required = false)
+    @Schema(description = "最后构建结束时间", required = false)
     var latestBuildEndTime: Long? = null,
-    @ApiModelProperty("最后构建状态", required = false)
+    @Schema(description = "最后构建状态", required = false)
     var latestBuildStatus: BuildStatus? = null,
-    @ApiModelProperty("最后构建版本号", required = false)
+    @Schema(description = "最后构建版本号", required = false)
     var latestBuildNum: Int? = null,
-    @ApiModelProperty("最后构建ID", required = false)
+    @Schema(description = "最后构建ID", required = false)
     var latestBuildId: String? = null,
-    @ApiModelProperty("触发方式", required = false)
+    @Schema(description = "触发方式", required = false)
     var trigger: String? = null,
-    @ApiModelProperty("约束模式下的模板信息", required = false)
+    @Schema(description = "约束模式下的模板信息", required = false)
     var templateInfo: TemplateInfo? = null
 )

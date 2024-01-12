@@ -28,19 +28,18 @@
 package com.tencent.devops.project.pojo.code
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("返回码新增请求报文体")
+@Schema(description = "返回码新增请求报文体")
 data class AddMessageCodeRequest(
-    @ApiModelProperty("信息码", required = true)
+    @Schema(description = "信息码", required = true)
     val messageCode: String,
-    @ApiModelProperty("模块代码", required = true)
+    @Schema(description = "模块代码", required = true)
     val moduleCode: SystemModuleEnum,
-    @ApiModelProperty("中文简体描述信息", required = true)
+    @Schema(description = "中文简体描述信息", required = true)
     var messageDetailZhCn: String,
-    @ApiModelProperty("中文繁体描述信息", required = true)
+    @Schema(description = "中文繁体描述信息", required = true)
     var messageDetailZhTw: String,
-    @ApiModelProperty("英文描述信息", required = true)
+    @Schema(description = "英文描述信息", required = true)
     var messageDetailEn: String
 )

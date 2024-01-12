@@ -1,12 +1,11 @@
 package com.tencent.devops.repository.pojo.github
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("github oauth回调后信息")
+@Schema(description = "github oauth回调后信息")
 data class GithubOauthCallback(
     val userId: String,
     val email: String? = "",
-    @ApiModelProperty("回调后跳转的界面")
+    @Schema(description = "回调后跳转的界面")
     val redirectUrl: String
 )

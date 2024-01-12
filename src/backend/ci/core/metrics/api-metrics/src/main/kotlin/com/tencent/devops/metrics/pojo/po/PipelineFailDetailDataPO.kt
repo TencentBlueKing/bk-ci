@@ -27,42 +27,41 @@
 
 package com.tencent.devops.metrics.pojo.po
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("流水线失败明细持久化对象")
+@Schema(description = "流水线失败明细持久化对象")
 data class PipelineFailDetailDataPO(
-    @ApiModelProperty("项目ID")
+    @Schema(description = "项目ID")
     val projectId: String,
-    @ApiModelProperty("流水线ID")
+    @Schema(description = "流水线ID")
     val pipelineId: String,
-    @ApiModelProperty("流水线名称")
+    @Schema(description = "流水线名称")
     val pipelineName: String,
-    @ApiModelProperty("渠道代码")
+    @Schema(description = "渠道代码")
     val channelCode: String,
-    @ApiModelProperty("构建ID")
+    @Schema(description = "构建ID")
     val buildId: String,
-    @ApiModelProperty("构建序号")
+    @Schema(description = "构建序号")
     val buildNum: Int,
-    @ApiModelProperty("触发代码库地址")
+    @Schema(description = "触发代码库地址")
     val repoUrl: String?,
-    @ApiModelProperty("构建代码库分支")
+    @Schema(description = "构建代码库分支")
     val branch: String?,
-    @ApiModelProperty("启动用户")
+    @Schema(description = "启动用户")
     val startUser: String,
-    @ApiModelProperty("启动时间")
+    @Schema(description = "启动时间")
     val startTime: LocalDateTime,
-    @ApiModelProperty("结束时间")
+    @Schema(description = "结束时间")
     val endTime: LocalDateTime,
-    @ApiModelProperty("错误的类型标识")
+    @Schema(description = "错误的类型标识")
     val errorType: Int?,
-    @ApiModelProperty("错误类型名称")
+    @Schema(description = "错误类型名称")
     val errorTypeName: String?,
-    @ApiModelProperty("错误的标识码")
+    @Schema(description = "错误的标识码")
     val errorCode: Int?,
-    @ApiModelProperty("错误描述")
+    @Schema(description = "错误描述")
     val errorMsg: String?,
-    @ApiModelProperty("统计时间")
+    @Schema(description = "统计时间")
     val statisticsTime: LocalDateTime
 )

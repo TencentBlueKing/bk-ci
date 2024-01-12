@@ -29,26 +29,25 @@ package com.tencent.devops.stream.pojo
 
 import com.tencent.devops.common.sdk.github.pojo.GithubRepo
 import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("Git拿到的项目信息")
+@Schema(description = "Git拿到的项目信息")
 data class StreamProjectGitInfo(
-    @ApiModelProperty("Git项目ID")
+    @Schema(description = "Git项目ID")
     val id: Long,
-    @ApiModelProperty("是否为stream 公共项目")
+    @Schema(description = "是否为stream 公共项目")
     val public: Boolean?,
-    @ApiModelProperty("stream 项目名称")
+    @Schema(description = "stream 项目名称")
     val name: String?,
-    @ApiModelProperty("stream 项目名称带有路径")
+    @Schema(description = "stream 项目名称带有路径")
     val pathWithNamespace: String?,
-    @ApiModelProperty("https-git链接")
+    @Schema(description = "https-git链接")
     val httpsUrlToRepo: String?,
-    @ApiModelProperty("项目网页链接")
+    @Schema(description = "项目网页链接")
     val webUrl: String?,
-    @ApiModelProperty("项目头像")
+    @Schema(description = "项目头像")
     val avatarUrl: String?,
-    @ApiModelProperty("项目描述")
+    @Schema(description = "项目描述")
     val description: String?
 ) {
     constructor(p: GitCodeProjectInfo) : this(

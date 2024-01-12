@@ -27,27 +27,26 @@
 
 package com.tencent.devops.common.api.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件错误信息")
+@Schema(description = "插件错误信息")
 data class ErrorInfo(
-    @ApiModelProperty("阶段ID", required = false)
+    @Schema(description = "阶段ID", required = false)
     val stageId: String? = "",
-    @ApiModelProperty("作业ID", required = false)
+    @Schema(description = "作业ID", required = false)
     val containerId: String? = "",
-    @ApiModelProperty("构建矩阵标识", required = false)
+    @Schema(description = "构建矩阵标识", required = false)
     val matrixFlag: Boolean? = false,
-    @ApiModelProperty("插件ID", required = false)
+    @Schema(description = "插件ID", required = false)
     val taskId: String,
-    @ApiModelProperty("插件名称", required = false)
+    @Schema(description = "插件名称", required = false)
     val taskName: String,
-    @ApiModelProperty("插件编号", required = false)
+    @Schema(description = "插件编号", required = false)
     val atomCode: String,
-    @ApiModelProperty("错误类型", required = false)
+    @Schema(description = "错误类型", required = false)
     val errorType: Int,
-    @ApiModelProperty("错误码", required = true)
+    @Schema(description = "错误码", required = true)
     val errorCode: Int,
-    @ApiModelProperty("错误信息", required = false)
+    @Schema(description = "错误信息", required = false)
     val errorMsg: String
 )

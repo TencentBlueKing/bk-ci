@@ -27,59 +27,58 @@
 
 package com.tencent.devops.project.pojo.service
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("OP服务-显示模型")
+@Schema(description = "OP服务-显示模型")
 data class OPPServiceVO(
-    @ApiModelProperty("主键ID")
+    @Schema(description = "主键ID")
     val id: Long,
-    @ApiModelProperty("服务名称", required = true)
+    @Schema(description = "服务名称", required = true)
     val name: String,
-    @ApiModelProperty("英文名称", required = true)
+    @Schema(description = "英文名称", required = true)
     val englishName: String,
-    @ApiModelProperty("服务类型ID", required = true)
+    @Schema(description = "服务类型ID", required = true)
     val serviceTypeId: Long,
-    @ApiModelProperty("是否在页面显示")
+    @Schema(description = "是否在页面显示")
     val showProjectList: Boolean = true,
-    @ApiModelProperty("showNav")
+    @Schema(description = "showNav")
     val showNav: Boolean = true,
-    @ApiModelProperty("状态（是否默认显示灰色）")
+    @Schema(description = "状态（是否默认显示灰色）")
     val status: String = "ok",
-    @ApiModelProperty("链接1")
+    @Schema(description = "链接1")
     val link: String?,
-    @ApiModelProperty("链接2")
+    @Schema(description = "链接2")
     val linkNew: String?,
-    @ApiModelProperty("注入类型")
+    @Schema(description = "注入类型")
     val injectType: String?,
-    @ApiModelProperty("iframeUrl")
+    @Schema(description = "iframeUrl")
     val iframeUrl: String?,
-    @ApiModelProperty("grayIframeUrl")
+    @Schema(description = "grayIframeUrl")
     val grayIframeUrl: String?,
-    @ApiModelProperty("cssUrl")
+    @Schema(description = "cssUrl")
     val cssUrl: String?,
-    @ApiModelProperty("jsUrl")
+    @Schema(description = "jsUrl")
     val jsUrl: String?,
-    @ApiModelProperty("grayCssUrl")
+    @Schema(description = "grayCssUrl")
     val grayCssUrl: String?,
-    @ApiModelProperty("grayJsUrl")
+    @Schema(description = "grayJsUrl")
     val grayJsUrl: String?,
-    @ApiModelProperty("projectIdType")
+    @Schema(description = "projectIdType")
     val projectIdType: String?,
-    @ApiModelProperty("logo地址")
+    @Schema(description = "logo地址")
     val logoUrl: String?,
-    @ApiModelProperty("支持webSocket的页面")
+    @Schema(description = "支持webSocket的页面")
     val webSocket: String?,
-    @ApiModelProperty("权重")
+    @Schema(description = "权重")
     val weight: Int? = null,
-    @ApiModelProperty("创建人")
+    @Schema(description = "创建人")
     val createdUser: String,
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     val createdTime: String,
-    @ApiModelProperty("修改人修改时间")
+    @Schema(description = "修改人修改时间")
     val updatedUser: String,
-    @ApiModelProperty("修改时间")
+    @Schema(description = "修改时间")
     val updatedTime: String,
-    @ApiModelProperty("集群类型")
+    @Schema(description = "集群类型")
     val clusterType: String = ""
 )

@@ -27,13 +27,12 @@
 
 package com.tencent.devops.metrics.pojo.`do`
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线stage耗时信息")
+@Schema(description = "流水线stage耗时信息")
 data class PipelineStageCostTimeInfoDO(
-    @ApiModelProperty("流水线名称")
+    @Schema(description = "流水线名称")
     val pipelineName: String,
-    @ApiModelProperty("stage平均耗时信息")
+    @Schema(description = "stage平均耗时信息")
     val stageAvgCostTimeInfos: List<StageAvgCostTimeInfoDO>
 )

@@ -27,17 +27,16 @@
 
 package com.tencent.devops.dispatch.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("虚拟机主机-创建任务")
+@Schema(description = "虚拟机主机-创建任务")
 data class TaskCreate(
-    @ApiModelProperty("用户id", required = true)
+    @Schema(description = "用户id", required = true)
     val userid: String,
-    @ApiModelProperty("任务名", required = true)
+    @Schema(description = "任务名", required = true)
     val name: String,
-    @ApiModelProperty("任务脚本", required = false)
+    @Schema(description = "任务脚本", required = false)
     var script: String,
-    @ApiModelProperty("机器列表", required = true)
+    @Schema(description = "机器列表", required = true)
     val vmList: List<Int>
 )

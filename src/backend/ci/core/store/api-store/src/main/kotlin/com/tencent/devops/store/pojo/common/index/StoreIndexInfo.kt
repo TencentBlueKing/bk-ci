@@ -27,21 +27,20 @@
 
 package com.tencent.devops.store.pojo.common.index
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("研发商店指标信息")
+@Schema(description = "研发商店指标信息")
 data class StoreIndexInfo(
-    @ApiModelProperty("指标代码", required = true)
+    @Schema(description = "指标代码", required = true)
     val indexCode: String,
-    @ApiModelProperty("指标名称", required = true)
+    @Schema(description = "指标名称", required = true)
     val indexName: String,
-    @ApiModelProperty("图标地址", required = true)
+    @Schema(description = "图标地址", required = true)
     val iconUrl: String,
-    @ApiModelProperty("指标描述", required = true)
+    @Schema(description = "指标描述", required = true)
     val description: String,
-    @ApiModelProperty("等级名称", required = true)
+    @Schema(description = "等级名称", required = true)
     val indexLevelName: String,
-    @ApiModelProperty("指标状态显示", required = true)
+    @Schema(description = "指标状态显示", required = true)
     val hover: String
 )

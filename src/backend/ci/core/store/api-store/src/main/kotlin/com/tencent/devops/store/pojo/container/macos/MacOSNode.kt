@@ -27,13 +27,12 @@
 
 package com.tencent.devops.store.pojo.container.macos
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("macos构建机资源")
+@Schema(description = "macos构建机资源")
 data class MacOSNode(
-    @ApiModelProperty("macos构建资源名")
+    @Schema(description = "macos构建资源名")
     val id: String,
-    @ApiModelProperty("macos构建资源名")
+    @Schema(description = "macos构建资源名")
     val name: String
 )

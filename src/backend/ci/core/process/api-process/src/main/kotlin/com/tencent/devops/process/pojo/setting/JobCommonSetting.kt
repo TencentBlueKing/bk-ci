@@ -27,13 +27,12 @@
 
 package com.tencent.devops.process.pojo.setting
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线job公共配置信息")
+@Schema(description = "流水线job公共配置信息")
 data class JobCommonSetting(
-    @ApiModelProperty("每个job最大task个数", required = true)
+    @Schema(description = "每个job最大task个数", required = true)
     val maxTaskNum: Int,
-    @ApiModelProperty("task公共配置", required = true)
+    @Schema(description = "task公共配置", required = true)
     val taskCommonSetting: TaskCommonSetting
 )

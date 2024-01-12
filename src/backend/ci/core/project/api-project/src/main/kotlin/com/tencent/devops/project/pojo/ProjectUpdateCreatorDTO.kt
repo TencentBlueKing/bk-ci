@@ -1,12 +1,11 @@
 package com.tencent.devops.project.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("修改项目创建人")
+@Schema(description = "修改项目创建人")
 data class ProjectUpdateCreatorDTO(
-    @ApiModelProperty("项目code")
+    @Schema(description = "项目code")
     val projectCode: String,
-    @ApiModelProperty("创建人")
+    @Schema(description = "创建人")
     val creator: String
 )

@@ -27,31 +27,30 @@
 
 package com.tencent.devops.image.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("Docker标签模型")
+@Schema(description = "Docker标签模型")
 data class DockerTag(
-    @ApiModelProperty("标签")
+    @Schema(description = "标签")
     var tag: String? = null,
-    @ApiModelProperty("仓库")
+    @Schema(description = "仓库")
     var repo: String? = null,
-    @ApiModelProperty("镜像")
+    @Schema(description = "镜像")
     var image: String? = null,
-    @ApiModelProperty("创建者")
+    @Schema(description = "创建者")
     var createdBy: String? = null,
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     var created: String? = null,
-    @ApiModelProperty("修改时间")
+    @Schema(description = "修改时间")
     var modified: String? = null,
-    @ApiModelProperty("修改者")
+    @Schema(description = "修改者")
     var modifiedBy: String? = null,
-    @ApiModelProperty("描述")
+    @Schema(description = "描述")
     var desc: String? = "",
-    @ApiModelProperty("大小")
+    @Schema(description = "大小")
     var size: String? = null,
-    @ApiModelProperty("构件列表")
+    @Schema(description = "构件列表")
     var artifactorys: List<String>? = null,
-    @ApiModelProperty("是否已关联到store")
+    @Schema(description = "是否已关联到store")
     var storeFlag: Boolean? = null
 )

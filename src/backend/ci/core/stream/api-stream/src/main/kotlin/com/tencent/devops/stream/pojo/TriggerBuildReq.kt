@@ -27,29 +27,28 @@
 
 package com.tencent.devops.stream.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("TriggerBuild请求")
+@Schema(description = "TriggerBuild请求")
 data class TriggerBuildReq(
-    @ApiModelProperty("蓝盾项目ID")
+    @Schema(description = "蓝盾项目ID")
     val projectId: String,
-    @ApiModelProperty("分支")
+    @Schema(description = "分支")
     val branch: String,
-    @ApiModelProperty("Custom commit message")
+    @Schema(description = "Custom commit message")
     val customCommitMsg: String?,
-    @ApiModelProperty("yaml")
+    @Schema(description = "yaml")
     val yaml: String?,
-    @ApiModelProperty("描述")
+    @Schema(description = "描述")
     val description: String?,
-    @ApiModelProperty("用户选择的触发CommitId")
+    @Schema(description = "用户选择的触发CommitId")
     val commitId: String? = null,
-    @ApiModelProperty("事件请求体")
+    @Schema(description = "事件请求体")
     val payload: String? = null,
-    @ApiModelProperty("模拟代码事件类型")
+    @Schema(description = "模拟代码事件类型")
     val eventType: String? = null,
-    @ApiModelProperty("手动触发输入参数")
+    @Schema(description = "手动触发输入参数")
     val inputs: Map<String, String>? = null,
-    @ApiModelProperty("是否为子流水线触发")
+    @Schema(description = "是否为子流水线触发")
     val subPipelineTriggerId: String? = null
 )

@@ -27,33 +27,33 @@
 
 package com.tencent.devops.process.pojo.code
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class WebhookInfo(
-    @ApiModelProperty("代码库类型", required = true)
+    @Schema(description = "代码库类型", required = true)
     val codeType: String?, // CodeType.name
-    @ApiModelProperty("代码库完整名称", required = true)
+    @Schema(description = "代码库完整名称", required = true)
     val nameWithNamespace: String?,
-    @ApiModelProperty("仓库url链接", required = false)
+    @Schema(description = "仓库url链接", required = false)
     val webhookRepoUrl: String?,
-    @ApiModelProperty("分支名（目标分支）", required = false)
+    @Schema(description = "分支名（目标分支）", required = false)
     val webhookBranch: String?,
-    @ApiModelProperty("别名", required = false)
+    @Schema(description = "别名", required = false)
     val webhookAliasName: String?,
-    @ApiModelProperty("webhook类型", required = false)
+    @Schema(description = "webhook类型", required = false)
     val webhookType: String?,
-    @ApiModelProperty("事件类型", required = false)
+    @Schema(description = "事件类型", required = false)
     val webhookEventType: String?,
-    @ApiModelProperty("提交信息", required = false)
+    @Schema(description = "提交信息", required = false)
     val webhookMessage: String?,
-    @ApiModelProperty("提交信息id", required = false)
+    @Schema(description = "提交信息id", required = false)
     val webhookCommitId: String?,
-    @ApiModelProperty("参考信息(commit_id,mr_id,tag,issue_id,review_id,note_id等)", required = true)
+    @Schema(description = "参考信息(commit_id,mr_id,tag,issue_id,review_id,note_id等)", required = true)
     val refId: String?,
-    @ApiModelProperty("合并后commitId", required = false)
+    @Schema(description = "合并后commitId", required = false)
     // 合并后commitId
     val webhookMergeCommitSha: String?,
-    @ApiModelProperty("源分支", required = false)
+    @Schema(description = "源分支", required = false)
     // 源分支
     val webhookSourceBranch: String?,
     // mr id

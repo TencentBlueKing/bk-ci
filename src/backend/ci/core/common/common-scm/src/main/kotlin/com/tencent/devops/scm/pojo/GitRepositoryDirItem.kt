@@ -27,17 +27,16 @@
 
 package com.tencent.devops.scm.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("git仓库文件和目录列表")
+@Schema(description = "git仓库文件和目录列表")
 class GitRepositoryDirItem(
-    @ApiModelProperty("ID", required = true)
+    @Schema(description = "ID", required = true)
     val id: String,
-    @ApiModelProperty("文件或目录名称", required = true)
+    @Schema(description = "文件或目录名称", required = true)
     val name: String,
-    @ApiModelProperty("类型", required = true)
+    @Schema(description = "类型", required = true)
     val type: String,
-    @ApiModelProperty("模式", required = true)
+    @Schema(description = "模式", required = true)
     val mode: String
 )

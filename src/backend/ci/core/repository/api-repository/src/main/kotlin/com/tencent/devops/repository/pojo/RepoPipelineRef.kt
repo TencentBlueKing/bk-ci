@@ -28,41 +28,41 @@
 
 package com.tencent.devops.repository.pojo
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.Parameter
 
 data class RepoPipelineRef(
     val projectId: String,
     @Parameter(description = "流水线ID")
     val pipelineId: String,
-    @ApiModelProperty("流水线名称")
+    @Schema(description = "流水线名称")
     val pipelineName: String,
-    @ApiModelProperty("代码库Id")
+    @Schema(description = "代码库Id")
     val repositoryId: Long,
-    @ApiModelProperty("插件ID")
+    @Schema(description = "插件ID")
     val taskId: String,
-    @ApiModelProperty("插件名")
+    @Schema(description = "插件名")
     val taskName: String,
-    @ApiModelProperty("插件code")
+    @Schema(description = "插件code")
     val atomCode: String,
-    @ApiModelProperty("插件版本")
+    @Schema(description = "插件版本")
     val atomVersion: String? = null,
-    @ApiModelProperty("插件类别")
+    @Schema(description = "插件类别")
     val atomCategory: String,
-    @ApiModelProperty("插件参数")
+    @Schema(description = "插件参数")
     val taskParams: Map<String, Any>,
-    @ApiModelProperty("插件配置的代码库类型")
+    @Schema(description = "插件配置的代码库类型")
     val taskRepoType: String,
-    @ApiModelProperty("插件配置的代码库hashId")
+    @Schema(description = "插件配置的代码库hashId")
     val taskRepoHashId: String?,
-    @ApiModelProperty("插件配置的代码库别名")
+    @Schema(description = "插件配置的代码库别名")
     val taskRepoRepoName: String?,
-    @ApiModelProperty("触发类型")
+    @Schema(description = "触发类型")
     val triggerType: String?,
-    @ApiModelProperty("事件类型")
+    @Schema(description = "事件类型")
     val eventType: String?,
-    @ApiModelProperty("触发条件")
+    @Schema(description = "触发条件")
     val triggerCondition: String?,
-    @ApiModelProperty("触发条件md5")
+    @Schema(description = "触发条件md5")
     val triggerConditionMd5: String?
 )

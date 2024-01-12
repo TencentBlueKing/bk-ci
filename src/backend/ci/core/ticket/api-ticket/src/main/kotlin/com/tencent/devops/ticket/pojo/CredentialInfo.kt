@@ -28,23 +28,22 @@
 package com.tencent.devops.ticket.pojo
 
 import com.tencent.devops.ticket.pojo.enums.CredentialType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("凭据-凭据内容")
+@Schema(description = "凭据-凭据内容")
 data class CredentialInfo(
-    @ApiModelProperty("Base64编码的加密公钥", required = true)
+    @Schema(description = "Base64编码的加密公钥", required = true)
     val publicKey: String,
-    @ApiModelProperty("凭据类型", required = true)
+    @Schema(description = "凭据类型", required = true)
     val credentialType: CredentialType,
-    @ApiModelProperty("加密后经过Base64编码的凭据", required = true)
+    @Schema(description = "加密后经过Base64编码的凭据", required = true)
     val v1: String,
-    @ApiModelProperty("加密后经过Base64编码的凭据", required = true)
+    @Schema(description = "加密后经过Base64编码的凭据", required = true)
     val v2: String? = null,
-    @ApiModelProperty("加密后经过Base64编码的凭据", required = true)
+    @Schema(description = "加密后经过Base64编码的凭据", required = true)
     val v3: String? = null,
-    @ApiModelProperty("加密后经过Base64编码的凭据", required = true)
+    @Schema(description = "加密后经过Base64编码的凭据", required = true)
     val v4: String? = null,
-    @ApiModelProperty("当前凭证是否允许跨项目使用")
+    @Schema(description = "当前凭证是否允许跨项目使用")
     val allowAcrossProject: Boolean = false
 )

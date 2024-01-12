@@ -27,19 +27,18 @@
 
 package com.tencent.devops.process.pojo.setting
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("")
+@Schema(description = "")
 data class PipelineSettingVersion(
-    @ApiModelProperty("项目id", required = false)
+    @Schema(description = "项目id", required = false)
     val projectId: String = "",
-    @ApiModelProperty("流水线id", required = false)
+    @Schema(description = "流水线id", required = false)
     val pipelineId: String = "",
-    @ApiModelProperty("订阅成功", required = false)
+    @Schema(description = "订阅成功", required = false)
     var successSubscription: Subscription = Subscription(),
-    @ApiModelProperty("订阅失败", required = false)
+    @Schema(description = "订阅失败", required = false)
     var failSubscription: Subscription = Subscription(),
-    @ApiModelProperty("版本", required = false)
+    @Schema(description = "版本", required = false)
     var version: Int = 0
 )

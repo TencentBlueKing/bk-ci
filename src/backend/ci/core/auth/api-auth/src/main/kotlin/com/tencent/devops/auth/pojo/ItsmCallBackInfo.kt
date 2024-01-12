@@ -55,33 +55,32 @@
 package com.tencent.devops.auth.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("Itsm回调单据实体类")
+@Schema(description = "Itsm回调单据实体类")
 data class ItsmCallBackInfo(
-    @ApiModelProperty("标题")
+    @Schema(description = "标题")
     val title: String,
-    @ApiModelProperty("当前状态，为FINISHED为正常结束")
+    @Schema(description = "当前状态，为FINISHED为正常结束")
     @JsonProperty("current_status")
     val currentStatus: String,
-    @ApiModelProperty("itsm单号")
+    @Schema(description = "itsm单号")
     val sn: String,
-    @ApiModelProperty("单据链接")
+    @Schema(description = "单据链接")
     @JsonProperty("ticket_url")
     val ticketUrl: String,
-    @ApiModelProperty("单据更新时间")
+    @Schema(description = "单据更新时间")
     @JsonProperty("update_at")
     val updateAt: String,
-    @ApiModelProperty("单据更新人")
+    @Schema(description = "单据更新人")
     @JsonProperty("updated_by")
     val updatedBy: String,
-    @ApiModelProperty("单据审批结果True or False")
+    @Schema(description = "单据审批结果True or False")
     @JsonProperty("approve_result")
     val approveResult: String,
-    @ApiModelProperty("token")
+    @Schema(description = "token")
     val token: String,
-    @ApiModelProperty("最后一个节点的审批人")
+    @Schema(description = "最后一个节点的审批人")
     @JsonProperty("last_approver")
     val lastApprover: String
 )

@@ -29,8 +29,7 @@ package com.tencent.devops.common.webhook.pojo.code.github
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * Github 评论分四种：
@@ -72,17 +71,17 @@ data class GithubCommitCommentEvent(
     override fun getCommentType() = commentType
 }
 
-@ApiModel("Github Review 评论事件")
+@Schema(description = "Github Review 评论事件")
 data class GithubReviewCommentEvent(
     override val action: String,
     @JsonProperty("pull_request")
-    @ApiModelProperty("Issues相关信息")
+    @Schema(description = "Issues相关信息")
     val pullRequest: GithubPullRequest,
-    @ApiModelProperty("Github仓库相关信息")
+    @Schema(description = "Github仓库相关信息")
     override val repository: GithubRepository,
-    @ApiModelProperty("操作人信息")
+    @Schema(description = "操作人信息")
     override val sender: GithubUser,
-    @ApiModelProperty("Review会话信息")
+    @Schema(description = "Review会话信息")
     override val comment: GithubReviewComment
 ) : GithubCommentEvent(
     action = action,
@@ -113,10 +112,10 @@ data class GithubReviewComment(
     override val createdAt: String?,
     @JsonProperty("updated_at")
     override val updatedAt: String?,
-    @ApiModelProperty("Github PR Review Id")
+    @Schema(description = "Github PR Review Id")
     @JsonProperty("pull_request_review_id")
     val pullRequestReviewId: Long,
-    @ApiModelProperty("Github PR Review会话对应的文件")
+    @Schema(description = "Github PR Review会话对应的文件")
     val path: String
 ) : GithubComment(
     id = id,
@@ -155,26 +154,26 @@ data class GithubIssueCommentEvent(
 }
 
 @Suppress("LongParameterList")
-@ApiModel("Github 评论信息父类")
+@Schema(description = "Github 评论信息父类")
 abstract class GithubComment(
-    @ApiModelProperty("评论ID")
+    @Schema(description = "评论ID")
     override val id: Long,
-    @ApiModelProperty("评论链接[API链接]")
+    @Schema(description = "评论链接[API链接]")
     override val url: String?,
     @JsonProperty("html_url")
-    @ApiModelProperty("评论链接[网页链接]")
+    @Schema(description = "评论链接[网页链接]")
     override val htmlUrl: String?,
     @JsonProperty("node_id")
     override val nodeId: String,
-    @ApiModelProperty("评论内容")
+    @Schema(description = "评论内容")
     open val body: String,
-    @ApiModelProperty("评论的用户")
+    @Schema(description = "评论的用户")
     open val user: GithubUser,
     @JsonProperty("created_at")
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     override val createdAt: String?, // 2022-06-21T08:45:41Z
     @JsonProperty("updated_at")
-    @ApiModelProperty("修改时间")
+    @Schema(description = "修改时间")
     override val updatedAt: String? // 2022-06-21T08:45:41Z
 ) : GithubBaseInfo(
     id = id,
@@ -200,7 +199,7 @@ open class GithubCommitComment(
     @JsonProperty("updated_at")
     override val updatedAt: String?,
     @JsonProperty("commit_id")
-    @ApiModelProperty("commit sha")
+    @Schema(description = "commit sha")
     val commitId: String
 ) : GithubComment(
     id = id,
@@ -213,7 +212,7 @@ open class GithubCommitComment(
     updatedAt = updatedAt
 )
 
-@ApiModel("Github Issue 评论")
+@Schema(description = "Github Issue 评论")
 data class GithubIssueComment(
     override val id: Long,
     override val url: String?,
@@ -228,7 +227,7 @@ data class GithubIssueComment(
     @JsonProperty("updated_at")
     override val updatedAt: String?,
     @JsonProperty("issue_url")
-    @ApiModelProperty("评论链接[API链接]")
+    @Schema(description = "评论链接[API链接]")
     val issueUrl: String
 ) : GithubComment(
     id = id,

@@ -27,31 +27,30 @@
 
 package com.tencent.devops.environment.pojo.thirdPartyAgent
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("ALL")
-@ApiModel("Agent心跳上报模型")
+@Schema(description = "Agent心跳上报模型")
 data class AskHeartbeatResponse(
-    @ApiModelProperty("主版本")
+    @Schema(description = "主版本")
     val masterVersion: String,
-    @ApiModelProperty("从属版本")
+    @Schema(description = "从属版本")
     val slaveVersion: String,
-    @ApiModelProperty("构建机状态")
+    @Schema(description = "构建机状态")
     val agentStatus: String,
-    @ApiModelProperty("通道数量")
+    @Schema(description = "通道数量")
     val parallelTaskCount: Int,
-    @ApiModelProperty("环境变量")
+    @Schema(description = "环境变量")
     val envs: Map<String, String>,
-    @ApiModelProperty("网关地址")
+    @Schema(description = "网关地址")
     val gateway: String? = "",
-    @ApiModelProperty("文件网关路径")
+    @Schema(description = "文件网关路径")
     val fileGateway: String? = "",
-    @ApiModelProperty("Agent的一些属性配置")
+    @Schema(description = "Agent的一些属性配置")
     val props: Map<String, Any>,
-    @ApiModelProperty("docker最大任务数量")
+    @Schema(description = "docker最大任务数量")
     val dockerParallelTaskCount: Int,
-    @ApiModelProperty("用户国际化语言")
+    @Schema(description = "用户国际化语言")
     val language: String
 ) {
     constructor(resp: HeartbeatResponse) : this(

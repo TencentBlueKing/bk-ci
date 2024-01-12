@@ -27,17 +27,16 @@
 
 package com.tencent.devops.dispatch.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  *
  * Powered By Tencent
  */
-@ApiModel("构建结束信息")
+@Schema(description = "构建结束信息")
 data class BuildNeedEndMessage(
-    @ApiModelProperty("构建ID", required = true)
+    @Schema(description = "构建ID", required = true)
     val buildId: String,
-    @ApiModelProperty("构建开始时间", required = true)
+    @Schema(description = "构建开始时间", required = true)
     val startTime: Long
 )

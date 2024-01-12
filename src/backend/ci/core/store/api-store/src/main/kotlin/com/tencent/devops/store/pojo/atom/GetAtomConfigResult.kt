@@ -27,18 +27,17 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("获取并解析插件配置task.json的返回数据")
+@Schema(description = "获取并解析插件配置task.json的返回数据")
 data class GetAtomConfigResult(
-    @ApiModelProperty("状态码", required = true)
+    @Schema(description = "状态码", required = true)
     val errorCode: String,
-    @ApiModelProperty("错误参数", required = false)
+    @Schema(description = "错误参数", required = false)
     val errorParams: Array<String>,
-    @ApiModelProperty("插件json文件配置数据", required = false)
+    @Schema(description = "插件json文件配置数据", required = false)
     val taskDataMap: Map<String, Any>,
-    @ApiModelProperty("环境信息", required = false)
+    @Schema(description = "环境信息", required = false)
     var atomEnvRequests: List<AtomEnvRequest>?
 ) {
     override fun equals(other: Any?): Boolean {

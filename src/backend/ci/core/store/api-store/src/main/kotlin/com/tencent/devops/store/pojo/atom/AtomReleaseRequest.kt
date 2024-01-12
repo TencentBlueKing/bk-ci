@@ -28,23 +28,22 @@
 package com.tencent.devops.store.pojo.atom
 
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件发布请求报文")
+@Schema(description = "插件发布请求报文")
 data class AtomReleaseRequest(
-    @ApiModelProperty("插件ID")
+    @Schema(description = "插件ID")
     val atomId: String,
-    @ApiModelProperty("插件代码")
+    @Schema(description = "插件代码")
     val atomCode: String,
-    @ApiModelProperty("插件版本号")
+    @Schema(description = "插件版本号")
     val version: String,
-    @ApiModelProperty("插件状态")
+    @Schema(description = "插件状态")
     val atomStatus: Byte,
-    @ApiModelProperty("发布类型")
+    @Schema(description = "发布类型")
     val releaseType: ReleaseTypeEnum,
-    @ApiModelProperty("代码库哈希ID")
+    @Schema(description = "代码库哈希ID")
     val repositoryHashId: String? = null,
-    @ApiModelProperty("代码库分支")
+    @Schema(description = "代码库分支")
     val branch: String? = null
 )

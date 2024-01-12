@@ -27,29 +27,28 @@
 
 package com.tencent.devops.environment.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("devCloud节点信息")
+@Schema(description = "devCloud节点信息")
 data class NodeDevCloudInfo(
-    @ApiModelProperty("环境 HashId", required = true)
+    @Schema(description = "环境 HashId", required = true)
     val nodeHashId: String,
-    @ApiModelProperty("节点 Id", required = true)
+    @Schema(description = "节点 Id", required = true)
     val nodeId: String,
-    @ApiModelProperty("节点名称", required = true)
+    @Schema(description = "节点名称", required = true)
     val name: String,
-    @ApiModelProperty("IP", required = true)
+    @Schema(description = "IP", required = true)
     val ip: String,
-    @ApiModelProperty("节点状态", required = true)
+    @Schema(description = "节点状态", required = true)
     val nodeStatus: String,
-    @ApiModelProperty("agent状态", required = false)
+    @Schema(description = "agent状态", required = false)
     val agentStatus: Boolean?,
-    @ApiModelProperty("节点类型", required = true)
+    @Schema(description = "节点类型", required = true)
     val nodeType: String,
-    @ApiModelProperty("操作系统", required = false)
+    @Schema(description = "操作系统", required = false)
     val osName: String?,
-    @ApiModelProperty("创建人", required = true)
+    @Schema(description = "创建人", required = true)
     val createdUser: String,
-    @ApiModelProperty("projectId", required = false)
+    @Schema(description = "projectId", required = false)
     val projectId: String
 )

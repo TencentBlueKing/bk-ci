@@ -27,22 +27,21 @@
 
 package com.tencent.devops.metrics.pojo.po
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("更新插件失败汇总数据")
+@Schema(description = "更新插件失败汇总数据")
 data class UpdateAtomFailSummaryDataPO(
-    @ApiModelProperty("主键ID")
+    @Schema(description = "主键ID")
     val id: Long,
-    @ApiModelProperty("项目ID")
+    @Schema(description = "项目ID")
     val projectId: String,
-    @ApiModelProperty("插件标识")
+    @Schema(description = "插件标识")
     val atomCode: String,
-    @ApiModelProperty("错误次数")
+    @Schema(description = "错误次数")
     var errorCount: Int,
-    @ApiModelProperty("修改人")
+    @Schema(description = "修改人")
     var modifier: String,
-    @ApiModelProperty("更新时间")
+    @Schema(description = "更新时间")
     var updateTime: LocalDateTime
 )

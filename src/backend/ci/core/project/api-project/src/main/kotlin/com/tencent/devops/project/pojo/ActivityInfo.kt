@@ -28,18 +28,17 @@
 package com.tencent.devops.project.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("动态模型")
+@Schema(description = "动态模型")
 data class ActivityInfo(
-    @ApiModelProperty("名称")
+    @Schema(description = "名称")
     val name: String,
-    @ApiModelProperty("英文名")
+    @Schema(description = "英文名")
     val englishName: String? = "NEW",
-    @ApiModelProperty("链接")
+    @Schema(description = "链接")
     val link: String,
-    @ApiModelProperty("创建时间", name = "create_time")
+    @Schema(description = "创建时间", name = "create_time")
     @JsonProperty("create_time")
     val createTime: String?
 )

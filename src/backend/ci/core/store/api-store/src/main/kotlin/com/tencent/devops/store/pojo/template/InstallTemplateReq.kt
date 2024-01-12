@@ -27,13 +27,12 @@
 
 package com.tencent.devops.store.pojo.template
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("安装模板到项目请求报文")
+@Schema(description = "安装模板到项目请求报文")
 data class InstallTemplateReq(
-    @ApiModelProperty("项目标识", required = true)
+    @Schema(description = "项目标识", required = true)
     val projectCodeList: ArrayList<String>,
-    @ApiModelProperty("模板代码", required = true)
+    @Schema(description = "模板代码", required = true)
     val templateCode: String
 )

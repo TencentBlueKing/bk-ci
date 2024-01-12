@@ -28,23 +28,22 @@
 
 package com.tencent.devops.auth.pojo.vo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("itsm回调信息")
+@Schema(description = "itsm回调信息")
 data class AuthItsmCallbackInfo(
-    @ApiModelProperty("权限中心申请单ID")
+    @Schema(description = "权限中心申请单ID")
     val applyId: Int,
-    @ApiModelProperty("itsm 审批单号")
+    @Schema(description = "itsm 审批单号")
     val sn: String,
-    @ApiModelProperty("项目id")
+    @Schema(description = "项目id")
     val projectId: String,
-    @ApiModelProperty("权限中心回调id")
+    @Schema(description = "权限中心回调id")
     val callbackId: String,
-    @ApiModelProperty("申请人")
+    @Schema(description = "申请人")
     val applicant: String,
-    @ApiModelProperty("审批人")
+    @Schema(description = "审批人")
     val approver: String?,
-    @ApiModelProperty("审批结果")
+    @Schema(description = "审批结果")
     val approveResult: Boolean?
 )

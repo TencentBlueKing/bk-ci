@@ -27,13 +27,12 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件输出参数")
+@Schema(description = "插件输出参数")
 data class AtomOutput(
-    @ApiModelProperty("参数名")
+    @Schema(description = "参数名")
     val name: String,
-    @ApiModelProperty("参数说明")
+    @Schema(description = "参数说明")
     val desc: String?
 )

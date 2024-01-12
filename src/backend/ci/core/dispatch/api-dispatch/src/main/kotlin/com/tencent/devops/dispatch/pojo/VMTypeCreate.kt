@@ -27,11 +27,10 @@
 
 package com.tencent.devops.dispatch.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("虚拟机创建类型")
+@Schema(description = "虚拟机创建类型")
 data class VMTypeCreate(
-    @ApiModelProperty("类型名称", required = true)
+    @Schema(description = "类型名称", required = true)
     val typeName: String
 )

@@ -30,7 +30,7 @@ package com.tencent.devops.process.yaml.v2.models.on
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * model
@@ -38,17 +38,17 @@ import io.swagger.annotations.ApiModelProperty
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class MrRule(
-    @ApiModelProperty(name = "source-branches-ignore")
+    @Schema(description = "source-branches-ignore")
     @JsonProperty("source-branches-ignore")
     val sourceBranchesIgnore: List<String>? = null,
 
-    @ApiModelProperty(name = "target-branches")
+    @Schema(description = "target-branches")
     @JsonProperty("target-branches")
     val targetBranches: List<String>? = null,
 
     val paths: List<String>? = null,
 
-    @ApiModelProperty(name = "paths-ignore")
+    @Schema(description = "paths-ignore")
     @JsonProperty("paths-ignore")
     val pathsIgnore: List<String>? = null,
 
@@ -56,15 +56,15 @@ data class MrRule(
 
     val users: List<String>? = null,
 
-    @ApiModelProperty(name = "users-ignore")
+    @Schema(description = "users-ignore")
     @JsonProperty("users-ignore")
     val usersIgnore: List<String>? = null,
 
-    @ApiModelProperty(name = "report-commit-check")
+    @Schema(description = "report-commit-check")
     @JsonProperty("report-commit-check")
     val reportCommitCheck: Boolean? = null,
 
-    @ApiModelProperty(name = "block-mr")
+    @Schema(description = "block-mr")
     @JsonProperty("block-mr")
     val blockMr: Boolean? = null
 )

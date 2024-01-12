@@ -27,15 +27,15 @@
 
 package com.tencent.devops.image.pojo
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class CheckDockerImageRequest(
-    @ApiModelProperty("镜像名称", required = true)
+    @Schema(description = "镜像名称", required = true)
     val imageName: String,
-    @ApiModelProperty("镜像仓库", required = true)
+    @Schema(description = "镜像仓库", required = true)
     val registryHost: String,
-    @ApiModelProperty("用户名", required = false)
+    @Schema(description = "用户名", required = false)
     val registryUser: String?,
-    @ApiModelProperty("密码", required = false)
+    @Schema(description = "密码", required = false)
     val registryPwd: String?
 )

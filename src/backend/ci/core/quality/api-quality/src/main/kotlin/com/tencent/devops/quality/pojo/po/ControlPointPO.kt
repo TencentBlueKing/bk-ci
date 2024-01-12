@@ -27,40 +27,39 @@
 
 package com.tencent.devops.quality.pojo.po
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("质量红线控制点PO")
+@Schema(description = "质量红线控制点PO")
 data class ControlPointPO(
-    @ApiModelProperty("ID")
+    @Schema(description = "ID")
     val id: Long,
-    @ApiModelProperty("原子的ClassType")
+    @Schema(description = "原子的ClassType")
     val elementType: String,
-    @ApiModelProperty("控制点名称(原子名称)")
+    @Schema(description = "控制点名称(原子名称)")
     var name: String,
-    @ApiModelProperty("研发阶段")
+    @Schema(description = "研发阶段")
     var stage: String,
-    @ApiModelProperty("支持红线位置(准入-BEFORE, 准出-AFTER)")
+    @Schema(description = "支持红线位置(准入-BEFORE, 准出-AFTER)")
     val availablePosition: String,
-    @ApiModelProperty("默认红线位置")
+    @Schema(description = "默认红线位置")
     val defaultPosition: String,
-    @ApiModelProperty("是否启用")
+    @Schema(description = "是否启用")
     val enable: Boolean,
-    @ApiModelProperty("创建用户")
+    @Schema(description = "创建用户")
     val createUser: String,
-    @ApiModelProperty("更新用户")
+    @Schema(description = "更新用户")
     val updateUser: String,
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     val createTime: LocalDateTime,
-    @ApiModelProperty("更新时间")
+    @Schema(description = "更新时间")
     val updateTime: LocalDateTime,
-    @ApiModelProperty("更新时间")
+    @Schema(description = "更新时间")
     val atomVersion: String = "1.0.0",
-    @ApiModelProperty("更新时间")
+    @Schema(description = "更新时间")
     val testProject: String = "",
-    @ApiModelProperty("更新时间")
+    @Schema(description = "更新时间")
     val tag: String? = null,
-    @ApiModelProperty("更新时间")
+    @Schema(description = "更新时间")
     val controlPointHashId: String? = null
 )

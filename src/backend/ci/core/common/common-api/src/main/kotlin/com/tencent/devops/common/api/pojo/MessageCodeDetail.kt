@@ -27,8 +27,7 @@
 
 package com.tencent.devops.common.api.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * 返回码详情
@@ -37,18 +36,18 @@ import io.swagger.annotations.ApiModelProperty
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
-@ApiModel("返回码详情")
+@Schema(description = "返回码详情")
 data class MessageCodeDetail(
-    @ApiModelProperty("主键ID", required = true)
+    @Schema(description = "主键ID", required = true)
     val id: String,
-    @ApiModelProperty("信息码", required = true)
+    @Schema(description = "信息码", required = true)
     val messageCode: String,
-    @ApiModelProperty("模块代码", required = true)
+    @Schema(description = "模块代码", required = true)
     val moduleCode: String,
-    @ApiModelProperty("中文简体描述信息", required = true)
+    @Schema(description = "中文简体描述信息", required = true)
     var messageDetailZhCn: String,
-    @ApiModelProperty("中文繁体描述信息", required = false)
+    @Schema(description = "中文繁体描述信息", required = false)
     var messageDetailZhTw: String?,
-    @ApiModelProperty("英文描述信息", required = false)
+    @Schema(description = "英文描述信息", required = false)
     var messageDetailEn: String?
 )

@@ -28,15 +28,14 @@
 package com.tencent.devops.store.pojo.common
 
 import com.tencent.devops.store.pojo.common.enums.ApproveStatusEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("store审批信息请求报文体")
+@Schema(description = "store审批信息请求报文体")
 data class StoreApproveRequest(
-    @ApiModelProperty("审批原因", required = true)
+    @Schema(description = "审批原因", required = true)
     val approveMsg: String,
-    @ApiModelProperty("审批状态", required = true)
+    @Schema(description = "审批状态", required = true)
     val approveStatus: ApproveStatusEnum,
-    @ApiModelProperty("token", required = false)
+    @Schema(description = "token", required = false)
     val token: String? = null
 )

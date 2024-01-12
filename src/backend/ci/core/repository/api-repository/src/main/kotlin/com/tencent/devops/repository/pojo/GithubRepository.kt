@@ -28,27 +28,26 @@
 package com.tencent.devops.repository.pojo
 
 import com.tencent.devops.common.api.enums.ScmType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @SuppressWarnings("ObjectPropertyNaming")
-@ApiModel("代码库模型-GitHub代码库")
+@Schema(description = "代码库模型-GitHub代码库")
 data class GithubRepository(
-    @ApiModelProperty("代码库别名", required = true)
+    @Schema(description = "代码库别名", required = true)
     override val aliasName: String,
-    @ApiModelProperty("URL", required = true)
+    @Schema(description = "URL", required = true)
     override val url: String,
-    @ApiModelProperty("用户名", required = true)
+    @Schema(description = "用户名", required = true)
     override var userName: String = "",
-    @ApiModelProperty("github项目名称", example = "Tencent/bkci", required = true)
+    @Schema(description = "github项目名称", example = "Tencent/bkci", required = true)
     override val projectName: String,
-    @ApiModelProperty("项目id", required = true)
+    @Schema(description = "项目id", required = true)
     override val projectId: String = "",
-    @ApiModelProperty("仓库hash id", required = false)
+    @Schema(description = "仓库hash id", required = false)
     override val repoHashId: String?,
-    @ApiModelProperty("Git仓库ID", required = false)
+    @Schema(description = "Git仓库ID", required = false)
     val gitProjectId: Long? = null,
-    @ApiModelProperty("仓库凭证ID", required = false, hidden = true, allowEmptyValue = true)
+    @Schema(description = "仓库凭证ID", required = false, hidden = true, allowEmptyValue = true)
     override val credentialId: String = ""
 ) : Repository {
     companion object {

@@ -28,25 +28,24 @@
 
 package com.tencent.devops.auth.pojo.vo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("组成员信息")
+@Schema(description = "组成员信息")
 data class IamGroupMemberInfoVo(
-    @ApiModelProperty("成员名")
+    @Schema(description = "成员名")
     val userId: String,
-    @ApiModelProperty("用户组ID")
+    @Schema(description = "用户组ID")
     val groupId: Int,
-    @ApiModelProperty("用户组名")
+    @Schema(description = "用户组名")
     val groupName: String,
-    @ApiModelProperty("加入时间")
+    @Schema(description = "加入时间")
     val createdTime: String,
-    @ApiModelProperty("是否加入组")
+    @Schema(description = "是否加入组")
     val status: String,
-    @ApiModelProperty("过期时间戳")
+    @Schema(description = "过期时间戳")
     val expiredAt: Long,
-    @ApiModelProperty("过期时间展示")
+    @Schema(description = "过期时间展示")
     val expiredDisplay: String,
-    @ApiModelProperty("是否直接加入")
+    @Schema(description = "是否直接加入")
     val directAdded: Boolean? = null
 )

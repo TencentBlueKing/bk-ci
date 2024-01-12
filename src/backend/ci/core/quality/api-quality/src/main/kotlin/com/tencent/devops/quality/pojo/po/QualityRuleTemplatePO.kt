@@ -27,34 +27,33 @@
 
 package com.tencent.devops.quality.pojo.po
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("质量红线模板PO")
+@Schema(description = "质量红线模板PO")
 data class QualityRuleTemplatePO(
-    @ApiModelProperty("ID")
+    @Schema(description = "ID")
     val id: Long,
-    @ApiModelProperty("模板名称")
+    @Schema(description = "模板名称")
     var name: String?,
-    @ApiModelProperty("模板类型(指标集, 模板)")
+    @Schema(description = "模板类型(指标集, 模板)")
     val type: String?,
-    @ApiModelProperty("描述")
+    @Schema(description = "描述")
     var desc: String?,
-    @ApiModelProperty("研发环节")
+    @Schema(description = "研发环节")
     var stage: String?,
-    @ApiModelProperty("控制点原子类型")
+    @Schema(description = "控制点原子类型")
     val controlPoint: String?,
-    @ApiModelProperty("控制点红线位置")
+    @Schema(description = "控制点红线位置")
     val controlPointPosition: String?,
-    @ApiModelProperty("创建用户")
+    @Schema(description = "创建用户")
     val createUser: String?,
-    @ApiModelProperty("更新用户")
+    @Schema(description = "更新用户")
     val updateUser: String?,
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     val createTime: LocalDateTime?,
-    @ApiModelProperty("更新时间")
+    @Schema(description = "更新时间")
     val updateTime: LocalDateTime?,
-    @ApiModelProperty("是否可用")
+    @Schema(description = "是否可用")
     val enable: Boolean
 )

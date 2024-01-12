@@ -1,12 +1,11 @@
 package com.tencent.devops.store.pojo.container
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("操作系统信息")
+@Schema(description = "操作系统信息")
 data class ContainerOsInfo(
-    @ApiModelProperty("OS", required = true)
+    @Schema(description = "OS", required = true)
     val os: String,
-    @ApiModelProperty("NAME", required = true)
+    @Schema(description = "NAME", required = true)
     val name: String
 )

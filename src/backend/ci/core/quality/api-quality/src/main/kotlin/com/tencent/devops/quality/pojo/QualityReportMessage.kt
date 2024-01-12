@@ -26,16 +26,15 @@
  */
 package com.tencent.devops.quality.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("红线报告消息类型")
+@Schema(description = "红线报告消息类型")
 data class QualityReportMessage(
 
-    @ApiModelProperty("项目id")
+    @Schema(description = "项目id")
     var projectId: String = "",
-    @ApiModelProperty("流水线id")
+    @Schema(description = "流水线id")
     var pipelineId: String = "",
-    @ApiModelProperty("构建id")
+    @Schema(description = "构建id")
     var buildId: String = ""
 )

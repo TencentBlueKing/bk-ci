@@ -25,28 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 package com.tencent.devops.project.pojo
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-@ApiModel("公告")
+import io.swagger.v3.oas.annotations.media.Schema
+@Schema(description = "公告")
 data class Notice(
-    @ApiModelProperty("ID")
+    @Schema(description = "ID")
     val id: Long = 0,
-    @ApiModelProperty("公告标题")
+    @Schema(description = "公告标题")
     val noticeTitle: String = "",
-    @ApiModelProperty("生效日期")
+    @Schema(description = "生效日期")
     val effectDate: Long = 0,
-    @ApiModelProperty("失效日期")
+    @Schema(description = "失效日期")
     val invalidDate: Long = 0,
-    @ApiModelProperty("创建日期")
+    @Schema(description = "创建日期")
     val createDate: Long = 0,
-    @ApiModelProperty("更新日期")
+    @Schema(description = "更新日期")
     val updateDate: Long = 0,
-    @ApiModelProperty("公告内容")
+    @Schema(description = "公告内容")
     val noticeContent: String = "",
-    @ApiModelProperty("跳转地址")
+    @Schema(description = "跳转地址")
     val redirectUrl: String = "",
-    @ApiModelProperty("公告类型：0 弹框 1跑马灯")
+    @Schema(description = "公告类型：0 弹框 1跑马灯")
     val noticeType: Int = 0,
-    @ApiModelProperty("公告服务")
+    @Schema(description = "公告服务")
     val noticeService: List<String>? = null
 )

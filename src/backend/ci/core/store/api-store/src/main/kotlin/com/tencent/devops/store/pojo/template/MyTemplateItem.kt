@@ -27,38 +27,37 @@
 
 package com.tencent.devops.store.pojo.template
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("工作台模板列表项")
+@Schema(description = "工作台模板列表项")
 data class MyTemplateItem(
-    @ApiModelProperty("模板ID", required = true)
+    @Schema(description = "模板ID", required = true)
     val templateId: String,
-    @ApiModelProperty("模板代码", required = true)
+    @Schema(description = "模板代码", required = true)
     val templateCode: String,
-    @ApiModelProperty("模板名称", required = true)
+    @Schema(description = "模板名称", required = true)
     val templateName: String,
-    @ApiModelProperty("模板logo", required = false)
+    @Schema(description = "模板logo", required = false)
     val logoUrl: String?,
-    @ApiModelProperty("版本号", required = false)
+    @Schema(description = "版本号", required = false)
     val version: String,
-    @ApiModelProperty(
+    @Schema(description =
         "模板状态，INIT：初始化|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGED：已下架",
         required = true
     )
     val templateStatus: String,
-    @ApiModelProperty("模板所属项目代码", required = false)
+    @Schema(description = "模板所属项目代码", required = false)
     val projectCode: String,
-    @ApiModelProperty("模板所属项目名称", required = false)
+    @Schema(description = "模板所属项目名称", required = false)
     val projectName: String?,
-    @ApiModelProperty("是否有处于上架状态的模板版本", required = true)
+    @Schema(description = "是否有处于上架状态的模板版本", required = true)
     val releaseFlag: Boolean,
-    @ApiModelProperty("创建人", required = true)
+    @Schema(description = "创建人", required = true)
     val creator: String,
-    @ApiModelProperty("创建时间", required = true)
+    @Schema(description = "创建时间", required = true)
     val createTime: Long,
-    @ApiModelProperty("修改人", required = true)
+    @Schema(description = "修改人", required = true)
     val modifier: String,
-    @ApiModelProperty("修改时间", required = true)
+    @Schema(description = "修改时间", required = true)
     val updateTime: Long
 )

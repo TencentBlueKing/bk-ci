@@ -26,19 +26,18 @@
  */
 package com.tencent.devops.openapi.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("AppCode所属项目信息-response")
+@Schema(description = "AppCode所属项目信息-response")
 data class AppCodeProjectResponse(
-    @ApiModelProperty("ID")
+    @Schema(description = "ID")
     val id: Long,
-    @ApiModelProperty("appCode")
+    @Schema(description = "appCode")
     val appCode: String,
-    @ApiModelProperty("项目ID(项目英文名)")
+    @Schema(description = "项目ID(项目英文名)")
     val projectId: String,
-    @ApiModelProperty("创建人")
+    @Schema(description = "创建人")
     val creator: String?,
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     val createTime: Long?
 )

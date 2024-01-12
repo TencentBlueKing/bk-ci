@@ -27,25 +27,24 @@
 
 package com.tencent.devops.store.pojo.container
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线构建容器请求报文体")
+@Schema(description = "流水线构建容器请求报文体")
 data class ContainerRequest(
-    @ApiModelProperty("构建容器名称", required = true)
+    @Schema(description = "构建容器名称", required = true)
     val name: String,
-    @ApiModelProperty("流水线容器类型", required = true)
+    @Schema(description = "流水线容器类型", required = true)
     val type: String,
-    @ApiModelProperty("操作系统", required = true)
+    @Schema(description = "操作系统", required = true)
     val os: String,
-    @ApiModelProperty("支持的构建资源ID列表", required = false)
+    @Schema(description = "支持的构建资源ID列表", required = false)
     val resourceIdList: List<String>?,
-    @ApiModelProperty("容器是否为必需", required = true)
+    @Schema(description = "容器是否为必需", required = true)
     val required: Byte,
-    @ApiModelProperty("最长排队时间", required = false)
+    @Schema(description = "最长排队时间", required = false)
     val maxQueueMinutes: Int?,
-    @ApiModelProperty("最长运行时间", required = false)
+    @Schema(description = "最长运行时间", required = false)
     val maxRunningMinutes: Int?,
-    @ApiModelProperty("自定义扩展容器前端表单属性字段的Json串", required = false)
+    @Schema(description = "自定义扩展容器前端表单属性字段的Json串", required = false)
     val props: String?
 )

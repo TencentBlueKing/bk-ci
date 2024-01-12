@@ -27,13 +27,12 @@
 
 package com.tencent.devops.process.pojo.template
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("复制模版请求包体")
+@Schema(description = "复制模版请求包体")
 data class CopyTemplateReq(
-    @ApiModelProperty("模板名字", required = false)
+    @Schema(description = "模板名字", required = false)
     val templateName: String,
-    @ApiModelProperty("是否复制设置", required = false)
+    @Schema(description = "是否复制设置", required = false)
     val isCopySetting: Boolean
 )

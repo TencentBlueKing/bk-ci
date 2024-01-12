@@ -27,13 +27,12 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("单项评分信息")
+@Schema(description = "单项评分信息")
 data class ScoreItemInfo(
-    @ApiModelProperty("分数", required = true)
+    @Schema(description = "分数", required = true)
     val score: Int,
-    @ApiModelProperty("数量", required = true)
+    @Schema(description = "数量", required = true)
     val num: Int
 )

@@ -27,13 +27,13 @@
 
 package com.tencent.devops.store.pojo.template
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class ApproveReq(
-    @ApiModelProperty("模版标识")
+    @Schema(description = "模版标识")
     val templateCode: String,
-    @ApiModelProperty("审核结果：PASS：通过|REJECT：驳回")
+    @Schema(description = "审核结果：PASS：通过|REJECT：驳回")
     val result: String,
-    @ApiModelProperty("审核结果说明")
+    @Schema(description = "审核结果说明")
     val message: String
 )

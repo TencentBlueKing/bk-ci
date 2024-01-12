@@ -29,134 +29,133 @@ package com.tencent.devops.project.pojo
 
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.project.pojo.enums.ProjectTipsStatus
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("ALL")
-@ApiModel("项目-显示模型")
+@Schema(description = "项目-显示模型")
 data class ProjectVO(
-    @ApiModelProperty("主键ID")
+    @Schema(description = "主键ID")
     val id: Long,
-    @ApiModelProperty("项目ID（很少使用）")
+    @Schema(description = "项目ID（很少使用）")
     val projectId: String,
-    @ApiModelProperty("项目名称")
+    @Schema(description = "项目名称")
     val projectName: String,
-    @ApiModelProperty("项目代码（蓝盾项目Id）")
+    @Schema(description = "项目代码（蓝盾项目Id）")
     val projectCode: String,
-    @ApiModelProperty("项目类型")
+    @Schema(description = "项目类型")
     val projectType: Int?,
-    @ApiModelProperty("审批状态")
+    @Schema(description = "审批状态")
     val approvalStatus: Int?,
-    @ApiModelProperty("审批时间")
+    @Schema(description = "审批时间")
     val approvalTime: String?,
-    @ApiModelProperty("审批人")
+    @Schema(description = "审批人")
     val approver: String?,
-    @ApiModelProperty("cc业务ID")
+    @Schema(description = "cc业务ID")
     val ccAppId: Long?,
-    @ApiModelProperty("cc业务名称")
+    @Schema(description = "cc业务名称")
     val ccAppName: String?,
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     val createdAt: String?,
-    @ApiModelProperty("创建人")
+    @Schema(description = "创建人")
     val creator: String?,
-    @ApiModelProperty("数据ID")
+    @Schema(description = "数据ID")
     val dataId: Long?,
-    @ApiModelProperty("部署类型")
+    @Schema(description = "部署类型")
     val deployType: String?,
-    @ApiModelProperty("事业群ID")
+    @Schema(description = "事业群ID")
     val bgId: String?,
-    @ApiModelProperty("事业群名字")
+    @Schema(description = "事业群名字")
     val bgName: String?,
-    @ApiModelProperty("中心ID")
+    @Schema(description = "中心ID")
     val centerId: String?,
-    @ApiModelProperty("中心名称")
+    @Schema(description = "中心名称")
     val centerName: String?,
-    @ApiModelProperty("部门ID")
+    @Schema(description = "部门ID")
     val deptId: String?,
-    @ApiModelProperty("部门名称")
+    @Schema(description = "部门名称")
     val deptName: String?,
-    @ApiModelProperty("业务线ID")
+    @Schema(description = "业务线ID")
     val businessLineId: String?,
-    @ApiModelProperty("业务线名称")
+    @Schema(description = "业务线名称")
     val businessLineName: String?,
-    @ApiModelProperty("描述")
+    @Schema(description = "描述")
     val description: String?,
-    @ApiModelProperty("英文缩写")
+    @Schema(description = "英文缩写")
     val englishName: String,
-    @ApiModelProperty("extra")
+    @Schema(description = "extra")
     val extra: String?,
-    @ApiModelProperty("是否离线")
+    @Schema(description = "是否离线")
     val offlined: Boolean?,
-    @ApiModelProperty("是否保密")
+    @Schema(description = "是否保密")
     val secrecy: Boolean?,
-    @ApiModelProperty("是否启用图表激活")
+    @Schema(description = "是否启用图表激活")
     val helmChartEnabled: Boolean?,
-    @ApiModelProperty("kind")
+    @Schema(description = "kind")
     val kind: Int?,
-    @ApiModelProperty("logo地址")
+    @Schema(description = "logo地址")
     val logoAddr: String?,
-    @ApiModelProperty("评论")
+    @Schema(description = "评论")
     val remark: String?,
-    @ApiModelProperty("修改时间")
+    @Schema(description = "修改时间")
     val updatedAt: String?,
-    @ApiModelProperty("修改人")
+    @Schema(description = "修改人")
     val updator: String?,
-    @ApiModelProperty("useBK")
+    @Schema(description = "useBK")
     val useBk: Boolean?,
-    @ApiModelProperty("启用")
+    @Schema(description = "启用")
     val enabled: Boolean?,
-    @ApiModelProperty("是否灰度")
+    @Schema(description = "是否灰度")
     val gray: Boolean,
-    @ApiModelProperty("混合云CC业务ID")
+    @Schema(description = "混合云CC业务ID")
     val hybridCcAppId: Long?,
-    @ApiModelProperty("支持构建机访问外网")
+    @Schema(description = "支持构建机访问外网")
     val enableExternal: Boolean?,
-    @ApiModelProperty("支持IDC构建机")
+    @Schema(description = "支持IDC构建机")
     val enableIdc: Boolean? = false,
-    @ApiModelProperty("流水线数量上限")
+    @Schema(description = "流水线数量上限")
     val pipelineLimit: Int? = 500,
     @Deprecated("即将作废，兼容插件中被引用到的旧的字段命名，请用hybridCcAppId代替")
-    @ApiModelProperty("混合云CC业务ID(即将作废，兼容插件中被引用到的旧的字段命名，请用hybridCcAppId代替)")
+    @Schema(description = "混合云CC业务ID(即将作废，兼容插件中被引用到的旧的字段命名，请用hybridCcAppId代替)")
     val hybrid_cc_app_id: Long?,
     @Deprecated("即将作废，兼容插件中被引用到的旧的字段命名，请用projectId代替")
-    @ApiModelProperty("项目ID(即将作废，兼容插件中被引用到的旧的字段命名，请用projectId代替)")
+    @Schema(description = "项目ID(即将作废，兼容插件中被引用到的旧的字段命名，请用projectId代替)")
     val project_id: String?,
     @Deprecated("即将作废，兼容插件中被引用到的旧的字段命名，请用projectName代替")
-    @ApiModelProperty("旧版项目名称(即将作废，兼容插件中被引用到的旧的字段命名，请用projectName代替)")
+    @Schema(description = "旧版项目名称(即将作废，兼容插件中被引用到的旧的字段命名，请用projectName代替)")
     val project_name: String?,
     @Deprecated("即将作废，兼容插件中被引用到的旧的字段命名，请用projectCode代替")
-    @ApiModelProperty("旧版项目代码(即将作废，兼容插件中被引用到的旧的字段命名，请用projectCode代替)")
+    @Schema(description = "旧版项目代码(即将作废，兼容插件中被引用到的旧的字段命名，请用projectCode代替)")
     val project_code: String?,
     @Deprecated("即将作废，兼容插件中被引用到的旧的字段命名，请用ccAppId代替")
-    @ApiModelProperty("旧版cc业务ID(即将作废，兼容插件中被引用到的旧的字段命名，请用ccAppId代替)")
+    @Schema(description = "旧版cc业务ID(即将作废，兼容插件中被引用到的旧的字段命名，请用ccAppId代替)")
     val cc_app_id: Long?,
-    @ApiModelProperty("旧版cc业务名称(即将作废，兼容插件中被引用到的旧的字段命名，请用ccAppName代替)")
+    @Schema(description = "旧版cc业务名称(即将作废，兼容插件中被引用到的旧的字段命名，请用ccAppName代替)")
     @Deprecated("即将作废，兼容插件中被引用到的旧的字段命名，请用ccAppName代替")
     val cc_app_name: String?,
-    @ApiModelProperty("项目路由指向")
+    @Schema(description = "项目路由指向")
     val routerTag: String?,
-    @ApiModelProperty("关联系统Id")
+    @Schema(description = "关联系统Id")
     val relationId: String?,
-    @ApiModelProperty("项目其他配置")
+    @Schema(description = "项目其他配置")
     val properties: ProjectProperties?,
-    @ApiModelProperty("项目最大可授权人员范围")
+    @Schema(description = "项目最大可授权人员范围")
     val subjectScopes: List<SubjectScopeInfo>?,
-    @ApiModelProperty("是否权限私密")
+    @Schema(description = "是否权限私密")
     val authSecrecy: Int?,
-    @ApiModelProperty("项目提示状态,0-不展示,1-展示创建成功,2-展示编辑成功")
+    @Schema(description = "项目提示状态,0-不展示,1-展示创建成功,2-展示编辑成功")
     val tipsStatus: Int? = ProjectTipsStatus.NOT_SHOW.status,
-    @ApiModelProperty("项目审批message")
+    @Schema(description = "项目审批message")
     val approvalMsg: String? = "",
-    @ApiModelProperty("是否拥有新版权限中心项目管理权限")
+    @Schema(description = "是否拥有新版权限中心项目管理权限")
     val managePermission: Boolean? = null,
-    @ApiModelProperty("是否展示用户管理图标")
+    @Schema(description = "是否展示用户管理图标")
     val showUserManageIcon: Boolean? = null,
-    @ApiModelProperty("渠道")
+    @Schema(description = "渠道")
     val channelCode: String? = null,
-    @ApiModelProperty("运营产品ID")
+    @Schema(description = "运营产品ID")
     val productId: Int? = null,
-    @ApiModelProperty("是否可以查看")
+    @Schema(description = "是否可以查看")
     val canView: Boolean? = null,
-    @ApiModelProperty("安装模板权限")
+    @Schema(description = "安装模板权限")
     val pipelineTemplateInstallPerm: Boolean? = null
 )

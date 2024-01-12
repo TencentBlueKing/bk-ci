@@ -1,18 +1,17 @@
 package com.tencent.devops.dispatch.docker.pojo.devcloud
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("devcloud项目性能配置")
+@Schema(description = "devcloud项目性能配置")
 data class PerformanceConfigVO(
-    @ApiModelProperty("蓝盾项目ID")
+    @Schema(description = "蓝盾项目ID")
     val projectId: String,
-    @ApiModelProperty("CPU")
+    @Schema(description = "CPU")
     val cpu: Int,
-    @ApiModelProperty("内存")
+    @Schema(description = "内存")
     val memory: String,
-    @ApiModelProperty("磁盘")
+    @Schema(description = "磁盘")
     val disk: String,
-    @ApiModelProperty("描述")
+    @Schema(description = "描述")
     val description: String
 )

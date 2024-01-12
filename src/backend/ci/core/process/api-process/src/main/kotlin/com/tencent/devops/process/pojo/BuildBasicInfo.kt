@@ -27,17 +27,16 @@
 
 package com.tencent.devops.process.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("构建模型-基础信息")
+@Schema(description = "构建模型-基础信息")
 data class BuildBasicInfo(
-    @ApiModelProperty("构建ID", required = true)
+    @Schema(description = "构建ID", required = true)
     val buildId: String,
-    @ApiModelProperty("项目ID", required = true)
+    @Schema(description = "项目ID", required = true)
     val projectId: String,
-    @ApiModelProperty("流水线ID", required = true)
+    @Schema(description = "流水线ID", required = true)
     val pipelineId: String,
-    @ApiModelProperty("流水线版本", required = true)
+    @Schema(description = "流水线版本", required = true)
     val pipelineVersion: Int
 )

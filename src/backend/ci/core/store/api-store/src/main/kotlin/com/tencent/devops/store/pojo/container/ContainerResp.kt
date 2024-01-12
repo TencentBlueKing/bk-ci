@@ -29,35 +29,34 @@ package com.tencent.devops.store.pojo.container
 
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.store.pojo.app.ContainerAppWithVersion
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线-构建容器接口响应信息")
+@Schema(description = "流水线-构建容器接口响应信息")
 data class ContainerResp(
-    @ApiModelProperty("构建容器ID", required = true)
+    @Schema(description = "构建容器ID", required = true)
     val id: String,
-    @ApiModelProperty("构建容器名称", required = true)
+    @Schema(description = "构建容器名称", required = true)
     val name: String,
-    @ApiModelProperty("流水线容器类型", required = true)
+    @Schema(description = "流水线容器类型", required = true)
     var type: String,
-    @ApiModelProperty("操作系统", required = true)
+    @Schema(description = "操作系统", required = true)
     val baseOS: String,
-    @ApiModelProperty("容器是否为必需", required = true)
+    @Schema(description = "容器是否为必需", required = true)
     val required: String,
-    @ApiModelProperty("最长排队时间", required = false)
+    @Schema(description = "最长排队时间", required = false)
     val maxQueueMinutes: Int?,
-    @ApiModelProperty("最长运行时间", required = false)
+    @Schema(description = "最长运行时间", required = false)
     val maxRunningMinutes: Int?,
-    @ApiModelProperty("默认的构建资源，当操作系统为linux时返回", required = false)
+    @Schema(description = "默认的构建资源，当操作系统为linux时返回", required = false)
     val defaultPublicBuildResource: String?,
-    @ApiModelProperty("支持的构建资源类型", required = false)
+    @Schema(description = "支持的构建资源类型", required = false)
     val typeList: List<ContainerBuildType>?,
-    @ApiModelProperty("默认的构建资源类型", required = false)
+    @Schema(description = "默认的构建资源类型", required = false)
     val defaultBuildType: BuildType?,
-    @ApiModelProperty("自定义扩展容器前端表单属性字段的Json串", required = false)
+    @Schema(description = "自定义扩展容器前端表单属性字段的Json串", required = false)
     val props: Map<String, Any>?,
-    @ApiModelProperty("编译环境信息", required = false)
+    @Schema(description = "编译环境信息", required = false)
     val apps: List<ContainerAppWithVersion>?,
-    @ApiModelProperty("支持的构建资源", required = false)
+    @Schema(description = "支持的构建资源", required = false)
     val resources: Map<BuildType, ContainerResource>?
 )

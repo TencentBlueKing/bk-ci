@@ -27,13 +27,12 @@
 
 package com.tencent.devops.common.pipeline.enums
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("安装的证书类型")
+@Schema(description = "安装的证书类型")
 enum class CertType constructor(val value: String) {
-    @ApiModelProperty("自定义证书安装")
+    @Schema(description = "自定义证书安装")
     PERSONAL("PERSONAL"),
-    @ApiModelProperty("企业证书安装")
+    @Schema(description = "企业证书安装")
     ENTERPRISE("ENTERPRISE");
 }

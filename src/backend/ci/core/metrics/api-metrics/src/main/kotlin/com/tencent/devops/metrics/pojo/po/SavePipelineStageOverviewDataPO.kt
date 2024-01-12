@@ -27,36 +27,35 @@
 
 package com.tencent.devops.metrics.pojo.po
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("保存流水线stage概览数据")
+@Schema(description = "保存流水线stage概览数据")
 data class SavePipelineStageOverviewDataPO(
-    @ApiModelProperty("主键ID")
+    @Schema(description = "主键ID")
     val id: Long,
-    @ApiModelProperty("项目ID")
+    @Schema(description = "项目ID")
     val projectId: String,
-    @ApiModelProperty("流水线ID")
+    @Schema(description = "流水线ID")
     val pipelineId: String,
-    @ApiModelProperty("流水线名称")
+    @Schema(description = "流水线名称")
     val pipelineName: String,
-    @ApiModelProperty("渠道代码")
+    @Schema(description = "渠道代码")
     val channelCode: String,
-    @ApiModelProperty("stage标签名称")
+    @Schema(description = "stage标签名称")
     val stageTagName: String,
-    @ApiModelProperty("平均耗时，单位：毫秒")
+    @Schema(description = "平均耗时，单位：毫秒")
     val avgCostTime: Long,
-    @ApiModelProperty("执行次数")
+    @Schema(description = "执行次数")
     val executeCount: Long,
-    @ApiModelProperty("统计时间")
+    @Schema(description = "统计时间")
     val statisticsTime: LocalDateTime,
-    @ApiModelProperty("创建人")
+    @Schema(description = "创建人")
     val creator: String,
-    @ApiModelProperty("修改人")
+    @Schema(description = "修改人")
     val modifier: String,
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     val createTime: LocalDateTime,
-    @ApiModelProperty("更新时间")
+    @Schema(description = "更新时间")
     val updateTime: LocalDateTime
 )

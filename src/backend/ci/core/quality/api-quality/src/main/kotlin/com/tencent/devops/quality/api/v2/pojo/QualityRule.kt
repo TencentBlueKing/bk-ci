@@ -30,48 +30,47 @@ package com.tencent.devops.quality.api.v2.pojo
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import com.tencent.devops.quality.pojo.enum.RuleOperation
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("红线实体类")
+@Schema(description = "红线实体类")
 data class QualityRule(
-    @ApiModelProperty("hashId", required = true)
+    @Schema(description = "hashId", required = true)
     val hashId: String,
-    @ApiModelProperty("红线名字", required = true)
+    @Schema(description = "红线名字", required = true)
     val name: String,
-    @ApiModelProperty("红线描述", required = true)
+    @Schema(description = "红线描述", required = true)
     val desc: String,
-    @ApiModelProperty("红线指标列表", required = true)
+    @Schema(description = "红线指标列表", required = true)
     val indicators: List<QualityIndicator>,
-    @ApiModelProperty("控制点", required = true)
+    @Schema(description = "控制点", required = true)
     val controlPoint: RuleControlPoint,
-    @ApiModelProperty("流水线范围", required = true)
+    @Schema(description = "流水线范围", required = true)
     val range: List<String>,
-    @ApiModelProperty("模板范围", required = true)
+    @Schema(description = "模板范围", required = true)
     val templateRange: List<String>,
-    @ApiModelProperty("操作类型", required = true)
+    @Schema(description = "操作类型", required = true)
     val operation: RuleOperation,
-    @ApiModelProperty("通知类型", required = false)
+    @Schema(description = "通知类型", required = false)
     val notifyTypeList: List<NotifyType>?,
-    @ApiModelProperty("通知组名单", required = false)
+    @Schema(description = "通知组名单", required = false)
     val notifyGroupList: List<String>?,
-    @ApiModelProperty("通知人员名单", required = false)
+    @Schema(description = "通知人员名单", required = false)
     val notifyUserList: List<String>?,
-    @ApiModelProperty("审核通知人员", required = false)
+    @Schema(description = "审核通知人员", required = false)
     val auditUserList: List<String>?,
-    @ApiModelProperty("审核超时时间", required = false)
+    @Schema(description = "审核超时时间", required = false)
     val auditTimeoutMinutes: Int?,
-    @ApiModelProperty("操作类型列表", required = false)
+    @Schema(description = "操作类型列表", required = false)
     val opList: List<RuleOp>? = null,
-    @ApiModelProperty("红线匹配的id", required = false)
+    @Schema(description = "红线匹配的id", required = false)
     val gatewayId: String?,
-    @ApiModelProperty("红线把关人", required = false)
+    @Schema(description = "红线把关人", required = false)
     val gateKeepers: List<String>?,
-    @ApiModelProperty("红线状态", required = false)
+    @Schema(description = "红线状态", required = false)
     val status: RuleInterceptResult?,
-    @ApiModelProperty("红线所在stage", required = true)
+    @Schema(description = "红线所在stage", required = true)
     val stageId: String,
-    @ApiModelProperty("红线指定的任务节点名", required = false)
+    @Schema(description = "红线指定的任务节点名", required = false)
     val taskSteps: List<RuleTask>?
 ) {
     data class RuleControlPoint(
@@ -83,24 +82,24 @@ data class QualityRule(
     )
 
     data class RuleOp(
-        @ApiModelProperty("操作类型", required = true)
+        @Schema(description = "操作类型", required = true)
         val operation: RuleOperation,
-        @ApiModelProperty("通知类型", required = false)
+        @Schema(description = "通知类型", required = false)
         val notifyTypeList: List<NotifyType>?,
-        @ApiModelProperty("通知组名单", required = false)
+        @Schema(description = "通知组名单", required = false)
         val notifyGroupList: List<String>?,
-        @ApiModelProperty("通知人员名单", required = false)
+        @Schema(description = "通知人员名单", required = false)
         val notifyUserList: List<String>?,
-        @ApiModelProperty("审核通知人员", required = false)
+        @Schema(description = "审核通知人员", required = false)
         val auditUserList: List<String>?,
-        @ApiModelProperty("审核超时时间", required = false)
+        @Schema(description = "审核超时时间", required = false)
         val auditTimeoutMinutes: Int?
     )
 
     data class RuleTask(
-        @ApiModelProperty("任务节点名", required = false)
+        @Schema(description = "任务节点名", required = false)
         val taskName: String?,
-        @ApiModelProperty("指标名", required = false)
+        @Schema(description = "指标名", required = false)
         val indicatorEnName: String?
     )
 }

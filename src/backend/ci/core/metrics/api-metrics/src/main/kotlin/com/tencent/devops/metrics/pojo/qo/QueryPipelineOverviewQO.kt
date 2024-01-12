@@ -28,13 +28,12 @@
 package com.tencent.devops.metrics.pojo.qo
 
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("查询流水线概览数据查询条件信息对象")
+@Schema(description = "查询流水线概览数据查询条件信息对象")
 data class QueryPipelineOverviewQO(
-    @ApiModelProperty("项目ID")
+    @Schema(description = "项目ID")
     val projectId: String,
-    @ApiModelProperty("查询条件信息")
+    @Schema(description = "查询条件信息")
     val baseQueryReq: BaseQueryReqVO
 )

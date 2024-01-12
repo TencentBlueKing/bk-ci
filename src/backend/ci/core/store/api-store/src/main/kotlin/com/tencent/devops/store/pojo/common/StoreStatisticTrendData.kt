@@ -27,15 +27,14 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("统计趋势数据")
+@Schema(description = "统计趋势数据")
 data class StoreStatisticTrendData(
-    @ApiModelProperty("执行失败总数")
+    @Schema(description = "执行失败总数")
     val totalFailNum: Int,
-    @ApiModelProperty("执行失败总数详情")
+    @Schema(description = "执行失败总数详情")
     val totalFailDetail: Map<String, Any>?,
-    @ApiModelProperty("每日统计信息列表")
+    @Schema(description = "每日统计信息列表")
     val dailyStatisticList: List<StoreDailyStatistic>?
 )

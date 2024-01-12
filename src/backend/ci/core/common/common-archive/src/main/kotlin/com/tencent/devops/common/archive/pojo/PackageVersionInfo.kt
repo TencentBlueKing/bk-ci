@@ -31,13 +31,12 @@
 
 package com.tencent.devops.common.archive.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("版本详情返回包装模型")
+@Schema(description = "版本详情返回包装模型")
 data class PackageVersionInfo(
-    @ApiModelProperty("基础信息")
+    @Schema(description = "基础信息")
     val basic: BasicInfo,
-    @ApiModelProperty("元数据信息")
+    @Schema(description = "元数据信息")
     val metadata: List<Map<String, Any>>
 )

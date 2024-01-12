@@ -28,19 +28,18 @@
 package com.tencent.devops.common.log.pojo
 
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  *
  * Powered By Tencent
  */
-@ApiModel("日志状态查询模型")
+@Schema(description = "日志状态查询模型")
 data class QueryLogStatus(
-    @ApiModelProperty("构建ID", required = true)
+    @Schema(description = "构建ID", required = true)
     val buildId: String,
-    @ApiModelProperty("是否结束", required = true)
+    @Schema(description = "是否结束", required = true)
     var finished: Boolean,
-    @ApiModelProperty("日志存储状态", required = false)
+    @Schema(description = "日志存储状态", required = false)
     var logMode: LogStorageMode
 )

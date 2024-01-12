@@ -31,67 +31,66 @@ import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.process.pojo.code.WebhookInfo
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("历史构建模型")
+@Schema(description = "历史构建模型")
 data class BuildHistory(
-    @ApiModelProperty("构建ID", required = true)
+    @Schema(description = "构建ID", required = true)
     val id: String,
-    @ApiModelProperty("启动用户", required = true)
+    @Schema(description = "启动用户", required = true)
     val userId: String,
-    @ApiModelProperty("触发条件", required = true)
+    @Schema(description = "触发条件", required = true)
     val trigger: String,
-    @ApiModelProperty("构建号", required = true)
+    @Schema(description = "构建号", required = true)
     val buildNum: Int?,
-    @ApiModelProperty("编排文件版本号", required = true)
+    @Schema(description = "编排文件版本号", required = true)
     val pipelineVersion: Int,
-    @ApiModelProperty("流水线的执行开始时间", required = true)
+    @Schema(description = "流水线的执行开始时间", required = true)
     val startTime: Long,
-    @ApiModelProperty("流水线的执行结束时间", required = true)
+    @Schema(description = "流水线的执行结束时间", required = true)
     val endTime: Long?,
-    @ApiModelProperty("状态", required = true)
+    @Schema(description = "状态", required = true)
     val status: String,
-    @ApiModelProperty("各阶段状态", required = true)
+    @Schema(description = "各阶段状态", required = true)
     val stageStatus: List<BuildStageStatus>?,
-    @ApiModelProperty("服务器当前时间戳", required = true)
+    @Schema(description = "服务器当前时间戳", required = true)
     val currentTimestamp: Long,
-    @ApiModelProperty("是否是手机启动", required = false)
+    @Schema(description = "是否是手机启动", required = false)
     val isMobileStart: Boolean = false,
-    @ApiModelProperty("原材料", required = false)
+    @Schema(description = "原材料", required = false)
     val material: List<PipelineBuildMaterial>?,
-    @ApiModelProperty("排队于（毫秒时间戳）", required = false)
+    @Schema(description = "排队于（毫秒时间戳）", required = false)
     val queueTime: Long?,
-    @ApiModelProperty("构件列表", required = false)
+    @Schema(description = "构件列表", required = false)
     val artifactList: List<FileInfo>?,
-    @ApiModelProperty("备注", required = false)
+    @Schema(description = "备注", required = false)
     val remark: String?,
-    @ApiModelProperty("总耗时(毫秒)", required = false)
+    @Schema(description = "总耗时(毫秒)", required = false)
     val totalTime: Long?,
-    @ApiModelProperty("运行耗时(毫秒，不包括人工审核时间)", required = false)
+    @Schema(description = "运行耗时(毫秒，不包括人工审核时间)", required = false)
     val executeTime: Long?,
-    @ApiModelProperty("启动参数", required = false)
+    @Schema(description = "启动参数", required = false)
     val buildParameters: List<BuildParameters>?,
-    @ApiModelProperty("WebHookType", required = false)
+    @Schema(description = "WebHookType", required = false)
     val webHookType: String?,
-    @ApiModelProperty("webhookInfo", required = false)
+    @Schema(description = "webhookInfo", required = false)
     val webhookInfo: WebhookInfo?,
-    @ApiModelProperty("启动类型(新)", required = false)
+    @Schema(description = "启动类型(新)", required = false)
     val startType: String?,
-    @ApiModelProperty("推荐版本号", required = false)
+    @Schema(description = "推荐版本号", required = false)
     val recommendVersion: String?,
-    @ApiModelProperty("是否重试", required = false)
+    @Schema(description = "是否重试", required = false)
     val retry: Boolean = false,
-    @ApiModelProperty("流水线任务执行错误", required = false)
+    @Schema(description = "流水线任务执行错误", required = false)
     var errorInfoList: List<ErrorInfo>?,
-    @ApiModelProperty("构建信息", required = false)
+    @Schema(description = "构建信息", required = false)
     var buildMsg: String?,
-    @ApiModelProperty("自定义构建版本号", required = false)
+    @Schema(description = "自定义构建版本号", required = false)
     val buildNumAlias: String? = null,
-    @ApiModelProperty("流水线编排的最后更新时间", required = false)
+    @Schema(description = "流水线编排的最后更新时间", required = false)
     val updateTime: Long? = null,
-    @ApiModelProperty("并发时,设定的group", required = false)
+    @Schema(description = "并发时,设定的group", required = false)
     var concurrencyGroup: String? = null,
-    @ApiModelProperty("构建执行次数（重试次数-1）", required = false)
+    @Schema(description = "构建执行次数（重试次数-1）", required = false)
     val executeCount: Int?
 )

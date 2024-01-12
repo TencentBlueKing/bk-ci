@@ -27,19 +27,18 @@
 
 package com.tencent.devops.environment.pojo.thirdPartyAgent
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("第三方构建机启动信息模型")
+@Schema(description = "第三方构建机启动信息模型")
 data class ThirdPartyAgentStartInfo(
-    @ApiModelProperty("主机名称")
+    @Schema(description = "主机名称")
     val hostname: String,
-    @ApiModelProperty("主机IP")
+    @Schema(description = "主机IP")
     val hostIp: String,
-    @ApiModelProperty("操作系统")
+    @Schema(description = "操作系统")
     val detectOS: String,
-    @ApiModelProperty("版本号")
+    @Schema(description = "版本号")
     val version: String?,
-    @ApiModelProperty("主版本号")
+    @Schema(description = "主版本号")
     val masterVersion: String?
 )

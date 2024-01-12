@@ -27,27 +27,26 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("敏感数据返回")
+@Schema(description = "敏感数据返回")
 data class SensitiveConfResp(
-    @ApiModelProperty("字段ID", required = true)
+    @Schema(description = "字段ID", required = true)
     val fieldId: String,
-    @ApiModelProperty("字段名称", required = true)
+    @Schema(description = "字段名称", required = true)
     val fieldName: String,
-    @ApiModelProperty("字段值", required = true)
+    @Schema(description = "字段值", required = true)
     val fieldValue: String,
-    @ApiModelProperty("字段类型 BACKEND:后端使用，FRONTEND:前端使用，ALL:前后端使用", required = true)
+    @Schema(description = "字段类型 BACKEND:后端使用，FRONTEND:前端使用，ALL:前后端使用", required = true)
     val fieldType: String,
-    @ApiModelProperty("字段描述", required = false)
+    @Schema(description = "字段描述", required = false)
     val fieldDesc: String?,
-    @ApiModelProperty("创建人")
+    @Schema(description = "创建人")
     val creator: String,
-    @ApiModelProperty("修改人")
+    @Schema(description = "修改人")
     val modifier: String,
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     val createTime: String,
-    @ApiModelProperty("修改时间")
+    @Schema(description = "修改时间")
     val updateTime: String
 )

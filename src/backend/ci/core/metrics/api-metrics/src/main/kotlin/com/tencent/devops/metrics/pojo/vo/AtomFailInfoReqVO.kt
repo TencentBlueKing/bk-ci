@@ -27,10 +27,10 @@
 
 package com.tencent.devops.metrics.pojo.vo
 
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.Parameter
 
-@ApiModel("插件错误查询请求报文")
+@Schema(description = "插件错误查询请求报文")
 data class AtomFailInfoReqVO(
     @Parameter(description = "流水线ID", required = false)
     override var pipelineIds: List<String>? = null,

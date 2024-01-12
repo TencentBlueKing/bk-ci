@@ -27,21 +27,20 @@
 
 package com.tencent.devops.process.pojo.template
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * deng
  * 2019-01-09
  */
-@ApiModel("模板版本信息")
+@Schema(description = "模板版本信息")
 data class TemplateVersion(
-    @ApiModelProperty("版本号", required = false)
+    @Schema(description = "版本号", required = false)
     val version: Long,
-    @ApiModelProperty("版本名称", required = false)
+    @Schema(description = "版本名称", required = false)
     val versionName: String,
-    @ApiModelProperty("更新时间", required = false)
+    @Schema(description = "更新时间", required = false)
     val updateTime: Long,
-    @ApiModelProperty("构建者", required = false)
+    @Schema(description = "构建者", required = false)
     val creator: String
 )

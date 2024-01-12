@@ -28,15 +28,14 @@
 package com.tencent.devops.process.pojo
 
 import com.tencent.devops.common.api.model.SQLPage
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("历史构建模型-最新版本号-下载权限")
+@Schema(description = "历史构建模型-最新版本号-下载权限")
 data class BuildHistoryWithPipelineVersion(
-    @ApiModelProperty("构建历史", required = true)
+    @Schema(description = "构建历史", required = true)
     val history: SQLPage<BuildHistory>,
-    @ApiModelProperty("是否拥有下载构建的权限", required = true)
+    @Schema(description = "是否拥有下载构建的权限", required = true)
     val hasDownloadPermission: Boolean,
-    @ApiModelProperty("最新的编排版本号", required = true)
+    @Schema(description = "最新的编排版本号", required = true)
     val pipelineVersion: Int
 )

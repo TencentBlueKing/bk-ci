@@ -28,29 +28,28 @@
 package com.tencent.devops.process.pojo
 
 import com.tencent.devops.common.pipeline.container.Stage
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线-模板信息")
+@Schema(description = "流水线-模板信息")
 data class PipelineTemplate(
-    @ApiModelProperty("模板名称", required = true)
+    @Schema(description = "模板名称", required = true)
     val name: String,
-    @ApiModelProperty("模板描述", required = false)
+    @Schema(description = "模板描述", required = false)
     val desc: String?,
-    @ApiModelProperty("应用范畴", required = true)
+    @Schema(description = "应用范畴", required = true)
     val category: List<String?>,
-    @ApiModelProperty("模板图标", required = false)
+    @Schema(description = "模板图标", required = false)
     val icon: String?,
-    @ApiModelProperty("模板LOGO路径", required = false)
+    @Schema(description = "模板LOGO路径", required = false)
     val logoUrl: String?,
-    @ApiModelProperty("模板作者", required = true)
+    @Schema(description = "模板作者", required = true)
     val author: String,
-    @ApiModelProperty("插件数量", required = true)
+    @Schema(description = "插件数量", required = true)
     val atomNum: Int,
-    @ApiModelProperty("当前模板对应的被复制的模板或安装的研发商店的模板对应的ID", required = true)
+    @Schema(description = "当前模板对应的被复制的模板或安装的研发商店的模板对应的ID", required = true)
     val srcTemplateId: String?,
-    @ApiModelProperty("是否为公共模版", required = true)
+    @Schema(description = "是否为公共模版", required = true)
     val publicFlag: Boolean,
-    @ApiModelProperty("阶段集合", required = true)
+    @Schema(description = "阶段集合", required = true)
     val stages: List<Stage>
 )

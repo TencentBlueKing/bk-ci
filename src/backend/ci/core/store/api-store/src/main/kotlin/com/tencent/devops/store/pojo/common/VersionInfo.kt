@@ -27,13 +27,12 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("商店组件-版本信息")
+@Schema(description = "商店组件-版本信息")
 data class VersionInfo(
-    @ApiModelProperty("版本名称", required = true)
+    @Schema(description = "版本名称", required = true)
     val versionName: String,
-    @ApiModelProperty("版本值", required = true)
+    @Schema(description = "版本值", required = true)
     val versionValue: String
 )

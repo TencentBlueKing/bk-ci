@@ -27,15 +27,14 @@
 
 package com.tencent.devops.artifactory.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("版本仓库-文件摘要")
+@Schema(description = "版本仓库-文件摘要")
 data class FileChecksums(
-    @ApiModelProperty("sha256", required = true)
+    @Schema(description = "sha256", required = true)
     val sha256: String?,
-    @ApiModelProperty("sha1", required = true)
+    @Schema(description = "sha1", required = true)
     val sha1: String,
-    @ApiModelProperty("md5", required = true)
+    @Schema(description = "md5", required = true)
     val md5: String
 )

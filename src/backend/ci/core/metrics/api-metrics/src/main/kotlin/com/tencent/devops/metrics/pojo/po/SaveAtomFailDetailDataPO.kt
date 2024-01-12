@@ -27,56 +27,55 @@
 
 package com.tencent.devops.metrics.pojo.po
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("保存插件失败明细数据")
+@Schema(description = "保存插件失败明细数据")
 data class SaveAtomFailDetailDataPO(
-    @ApiModelProperty("主键ID")
+    @Schema(description = "主键ID")
     val id: Long,
-    @ApiModelProperty("项目ID")
+    @Schema(description = "项目ID")
     val projectId: String,
-    @ApiModelProperty("流水线ID")
+    @Schema(description = "流水线ID")
     val pipelineId: String,
-    @ApiModelProperty("流水线名称")
+    @Schema(description = "流水线名称")
     val pipelineName: String,
-    @ApiModelProperty("渠道代码")
+    @Schema(description = "渠道代码")
     val channelCode: String,
-    @ApiModelProperty("构建ID")
+    @Schema(description = "构建ID")
     val buildId: String,
-    @ApiModelProperty("构建序号")
+    @Schema(description = "构建序号")
     val buildNum: Int,
-    @ApiModelProperty("插件代码")
+    @Schema(description = "插件代码")
     val atomCode: String,
-    @ApiModelProperty("插件名称")
+    @Schema(description = "插件名称")
     val atomName: String,
-    @ApiModelProperty("插件在model中的位置")
+    @Schema(description = "插件在model中的位置")
     val atomPosition: String,
-    @ApiModelProperty("插件分类代码")
+    @Schema(description = "插件分类代码")
     val classifyCode: String,
-    @ApiModelProperty("插件分类名称")
+    @Schema(description = "插件分类名称")
     val classifyName: String,
-    @ApiModelProperty("启动用户")
+    @Schema(description = "启动用户")
     val startUser: String,
-    @ApiModelProperty("启动时间")
+    @Schema(description = "启动时间")
     val startTime: LocalDateTime? = null,
-    @ApiModelProperty("结束时间")
+    @Schema(description = "结束时间")
     val endTime: LocalDateTime? = null,
-    @ApiModelProperty("错误类型")
+    @Schema(description = "错误类型")
     val errorType: Int? = null,
-    @ApiModelProperty("错误码")
+    @Schema(description = "错误码")
     val errorCode: Int? = null,
-    @ApiModelProperty("错误信息")
+    @Schema(description = "错误信息")
     val errorMsg: String? = null,
-    @ApiModelProperty("统计时间")
+    @Schema(description = "统计时间")
     val statisticsTime: LocalDateTime,
-    @ApiModelProperty("创建人")
+    @Schema(description = "创建人")
     val creator: String,
-    @ApiModelProperty("修改人")
+    @Schema(description = "修改人")
     val modifier: String,
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     val createTime: LocalDateTime,
-    @ApiModelProperty("更新时间")
+    @Schema(description = "更新时间")
     val updateTime: LocalDateTime
 )

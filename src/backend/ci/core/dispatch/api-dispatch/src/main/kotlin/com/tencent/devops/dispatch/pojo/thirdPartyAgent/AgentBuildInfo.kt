@@ -27,33 +27,32 @@
 
 package com.tencent.devops.dispatch.pojo.thirdPartyAgent
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("构建机构建信息")
+@Schema(description = "构建机构建信息")
 data class AgentBuildInfo(
-    @ApiModelProperty("项目id")
+    @Schema(description = "项目id")
     val projectId: String,
-    @ApiModelProperty("构建机id")
+    @Schema(description = "构建机id")
     val agentId: String,
-    @ApiModelProperty("流水线id")
+    @Schema(description = "流水线id")
     val pipelineId: String,
-    @ApiModelProperty("流水线名称")
+    @Schema(description = "流水线名称")
     val pipelineName: String,
-    @ApiModelProperty("构建id")
+    @Schema(description = "构建id")
     val buildId: String,
-    @ApiModelProperty("构建计数")
+    @Schema(description = "构建计数")
     val buildNum: Int,
-    @ApiModelProperty("构建机编排序号")
+    @Schema(description = "构建机编排序号")
     val vmSeqId: String,
-    @ApiModelProperty("任务名")
+    @Schema(description = "任务名")
     val taskName: String,
-    @ApiModelProperty("状态")
+    @Schema(description = "状态")
     val status: String,
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     val createdTime: Long,
-    @ApiModelProperty("更新时间")
+    @Schema(description = "更新时间")
     val updatedTime: Long,
-    @ApiModelProperty("工作空间")
+    @Schema(description = "工作空间")
     val workspace: String
 )

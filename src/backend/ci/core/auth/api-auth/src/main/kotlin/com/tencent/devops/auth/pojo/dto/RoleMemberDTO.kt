@@ -28,13 +28,12 @@
 package com.tencent.devops.auth.pojo.dto
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel
+@Schema
 data class RoleMemberDTO(
-    @ApiModelProperty("组员类型 user:单用户, dept:组织")
+    @Schema(description = "组员类型 user:单用户, dept:组织")
     val type: ManagerScopesEnum,
-    @ApiModelProperty("用户Id或组织Id")
+    @Schema(description = "用户Id或组织Id")
     val id: String
 )

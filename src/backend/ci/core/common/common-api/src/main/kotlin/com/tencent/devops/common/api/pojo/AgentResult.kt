@@ -29,18 +29,17 @@ package com.tencent.devops.common.api.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.common.api.enums.AgentStatus
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("第三方Agent数据返回包装模型")
+@Schema(description = "第三方Agent数据返回包装模型")
 data class AgentResult<out T>(
-    @ApiModelProperty("状态码", required = true)
+    @Schema(description = "状态码", required = true)
     val status: Int,
-    @ApiModelProperty("错误信息", required = false)
+    @Schema(description = "错误信息", required = false)
     val message: String? = null,
-    @ApiModelProperty("Agent状态", required = false)
+    @Schema(description = "Agent状态", required = false)
     val agentStatus: AgentStatus?,
-    @ApiModelProperty("数据", required = false)
+    @Schema(description = "数据", required = false)
     val data: T? = null
 ) {
     constructor(status: AgentStatus, data: T) : this(0, null, status, data)

@@ -30,7 +30,7 @@ package com.tencent.devops.process.yaml.v2.models.job
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.pipeline.type.agent.DockerOptions
 import com.tencent.devops.process.yaml.v2.models.step.Step
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
@@ -42,26 +42,26 @@ data class Job(
     @JsonProperty("mutex")
     val mutex: Mutex? = null,
     @JsonProperty("runs-on")
-    @ApiModelProperty(name = "runs-on")
+    @Schema(description = "runs-on")
     val runsOn: RunsOn = RunsOn(),
     // val container: Container?,
     val services: List<Service>? = null,
-    @ApiModelProperty(name = "if")
+    @Schema(description = "if")
     @JsonProperty("if")
     val ifField: String? = null,
     val steps: List<Step>?,
-    @ApiModelProperty(name = "if-modify")
+    @Schema(description = "if-modify")
     @JsonProperty("if-modify")
     val ifModify: List<String>? = null,
-    @ApiModelProperty(name = "timeout-minutes")
+    @Schema(description = "timeout-minutes")
     @JsonProperty("timeout-minutes")
     val timeoutMinutes: Int? = 480,
     val env: Map<String, String>? = emptyMap(),
-    @ApiModelProperty(name = "continue-on-error")
+    @Schema(description = "continue-on-error")
     @JsonProperty("continue-on-error")
     val continueOnError: Boolean? = false,
     val strategy: Strategy? = null,
-    @ApiModelProperty(name = "depend-on")
+    @Schema(description = "depend-on")
     @JsonProperty("depend-on")
     val dependOn: List<String>? = emptyList()
 )
@@ -104,28 +104,28 @@ data class ServiceWith(
 
 data class Strategy(
     val matrix: Any,
-    @ApiModelProperty(name = "fast-kill")
+    @Schema(description = "fast-kill")
     @JsonProperty("fast-kill")
     val fastKill: Boolean? = null,
-    @ApiModelProperty(name = "max-parallel")
+    @Schema(description = "max-parallel")
     @JsonProperty("max-parallel")
     val maxParallel: Int? = null
 )
 
 data class RunsOn(
-    @ApiModelProperty(name = "self-hosted")
+    @Schema(description = "self-hosted")
     @JsonProperty("self-hosted")
     val selfHosted: Boolean? = false,
-    @ApiModelProperty(name = "pool-name")
+    @Schema(description = "pool-name")
     @JsonProperty("pool-name")
     var poolName: String = JobRunsOnType.DOCKER.type,
     val container: Any? = null,
-    @ApiModelProperty(name = "agent-selector")
+    @Schema(description = "agent-selector")
     @JsonProperty("agent-selector")
     val agentSelector: List<String>? = null,
     val workspace: String? = null,
     val xcode: String? = null,
-    @ApiModelProperty(name = "queue-timeout-minutes")
+    @Schema(description = "queue-timeout-minutes")
     @JsonProperty("queue-timeout-minutes")
     val queueTimeoutMinutes: Int? = null,
     val needs: Map<String, String>? = null

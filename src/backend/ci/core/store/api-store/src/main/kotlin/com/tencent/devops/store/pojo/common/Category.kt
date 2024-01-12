@@ -27,26 +27,25 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("范畴信息")
+@Schema(description = "范畴信息")
 data class Category(
-    @ApiModelProperty("范畴ID", required = true)
+    @Schema(description = "范畴ID", required = true)
     val id: String,
-    @ApiModelProperty("范畴代码", required = true)
+    @Schema(description = "范畴代码", required = true)
     val categoryCode: String,
-    @ApiModelProperty("范畴名称", required = true)
+    @Schema(description = "范畴名称", required = true)
     val categoryName: String,
-    @ApiModelProperty("范畴附加属性配置表", required = true)
+    @Schema(description = "范畴附加属性配置表", required = true)
     val settings: MutableMap<String, String> = HashMap(),
-    @ApiModelProperty("icon地址", required = false)
+    @Schema(description = "icon地址", required = false)
     val iconUrl: String?,
-    @ApiModelProperty("类别 ATOM:插件 TEMPLATE:模板 IMAGE:镜像 IDE_ATOM:IDE插件", required = true)
+    @Schema(description = "类别 ATOM:插件 TEMPLATE:模板 IMAGE:镜像 IDE_ATOM:IDE插件", required = true)
     val categoryType: String,
-    @ApiModelProperty("创建日期")
+    @Schema(description = "创建日期")
     val createTime: Long = 0,
-    @ApiModelProperty("更新日期")
+    @Schema(description = "更新日期")
     val updateTime: Long = 0
 
 )

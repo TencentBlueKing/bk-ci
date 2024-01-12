@@ -27,15 +27,14 @@
 
 package com.tencent.devops.repository.pojo.commit
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("提交返回模型")
+@Schema(description = "提交返回模型")
 data class CommitResponse(
-    @ApiModelProperty("仓库名称")
+    @Schema(description = "仓库名称")
     val name: String,
-    @ApiModelProperty("插件ID")
+    @Schema(description = "插件ID")
     val elementId: String,
-    @ApiModelProperty("记录")
+    @Schema(description = "记录")
     val records: List<CommitData>
 )

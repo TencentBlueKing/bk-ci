@@ -33,32 +33,31 @@ import com.tencent.devops.common.pipeline.pojo.element.ElementProp
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
 import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.staffInput
 import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.vuexInput
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("SVN仓库代码提交触发", description = CodeSVNWebHookTriggerElement.classType)
+@Schema(description = "SVN仓库代码提交触发", description = CodeSVNWebHookTriggerElement.classType)
 data class CodeSVNWebHookTriggerElement(
-    @ApiModelProperty("任务名称", required = true)
+    @Schema(description = "任务名称", required = true)
     override val name: String = "SVN变更触发",
-    @ApiModelProperty("id", required = false)
+    @Schema(description = "id", required = false)
     override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @Schema(description = "状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("仓库ID", required = true)
+    @Schema(description = "仓库ID", required = true)
     val repositoryHashId: String?,
-    @ApiModelProperty("路径过滤类型", required = true)
+    @Schema(description = "路径过滤类型", required = true)
     val pathFilterType: PathFilterType? = PathFilterType.NamePrefixFilter,
-    @ApiModelProperty("相对路径", required = true)
+    @Schema(description = "相对路径", required = true)
     val relativePath: String?,
-    @ApiModelProperty("排除的路径", required = false)
+    @Schema(description = "排除的路径", required = false)
     val excludePaths: String?,
-    @ApiModelProperty("用户黑名单", required = false)
+    @Schema(description = "用户黑名单", required = false)
     val excludeUsers: List<String>?,
-    @ApiModelProperty("用户白名单", required = false)
+    @Schema(description = "用户白名单", required = false)
     val includeUsers: List<String>?,
-    @ApiModelProperty("新版的svn原子的类型")
+    @Schema(description = "新版的svn原子的类型")
     val repositoryType: RepositoryType? = null,
-    @ApiModelProperty("新版的svn代码库名")
+    @Schema(description = "新版的svn代码库名")
     val repositoryName: String? = null
 ) : WebHookTriggerElement(name, id, status) {
     companion object {

@@ -28,15 +28,14 @@
 
 package com.tencent.devops.repository.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.Parameter
 
-@ApiModel("流水线引用代码库展示")
+@Schema(description = "流水线引用代码库展示")
 data class RepoPipelineRefVo(
     val projectId: String,
     @Parameter(description = "流水线ID")
     val pipelineId: String,
-    @ApiModelProperty("流水线名称")
+    @Schema(description = "流水线名称")
     val pipelineName: String
 )

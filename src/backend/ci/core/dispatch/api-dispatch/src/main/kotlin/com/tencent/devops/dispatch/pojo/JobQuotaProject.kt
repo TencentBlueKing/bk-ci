@@ -29,27 +29,26 @@ package com.tencent.devops.dispatch.pojo
 
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("项目的JOB配额")
+@Schema(description = "项目的JOB配额")
 data class JobQuotaProject(
-    @ApiModelProperty("项目ID", required = true)
+    @Schema(description = "项目ID", required = true)
     val projectId: String,
-    @ApiModelProperty("构建机类型", required = true)
+    @Schema(description = "构建机类型", required = true)
     val vmType: JobQuotaVmType,
-    @ApiModelProperty("构建来源，默认BS", required = true)
+    @Schema(description = "构建来源，默认BS", required = true)
     val channelCode: String = ChannelCode.BS.name,
-    @ApiModelProperty("项目最大并发JOB数， 默认50", required = false)
+    @Schema(description = "项目最大并发JOB数， 默认50", required = false)
     val runningJobMax: Int,
-    @ApiModelProperty("项目单JOB最大执行时间，默认8小时", required = false)
+    @Schema(description = "项目单JOB最大执行时间，默认8小时", required = false)
     val runningTimeJobMax: Int,
-    @ApiModelProperty("项目所有JOB最大执行时间，默认40小时/月", required = false)
+    @Schema(description = "项目所有JOB最大执行时间，默认40小时/月", required = false)
     val runningTimeProjectMax: Int,
-    @ApiModelProperty("创建时间", required = false)
+    @Schema(description = "创建时间", required = false)
     val createdTime: Long?,
-    @ApiModelProperty("修改时间", required = false)
+    @Schema(description = "修改时间", required = false)
     val updatedTime: Long?,
-    @ApiModelProperty("操作人", required = false)
+    @Schema(description = "操作人", required = false)
     val operator: String?
 )

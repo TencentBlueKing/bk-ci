@@ -28,13 +28,12 @@
 package com.tencent.devops.artifactory.pojo
 
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("创建文件托管任务请求")
+@Schema(description = "创建文件托管任务请求")
 data class CreateFileTaskReq(
-    @ApiModelProperty("文件类型", required = true)
+    @Schema(description = "文件类型", required = true)
     val fileType: FileTypeEnum,
-    @ApiModelProperty("文件路径", required = true)
+    @Schema(description = "文件路径", required = true)
     val path: String
 )

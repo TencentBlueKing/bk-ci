@@ -27,17 +27,16 @@
 
 package com.tencent.devops.dispatch.kubernetes.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("构建机性能基础选项配置")
+@Schema(description = "构建机性能基础选项配置")
 data class PerformanceOptionsVO(
-    @ApiModelProperty("CPU")
+    @Schema(description = "CPU")
     val cpu: Double,
-    @ApiModelProperty("内存")
+    @Schema(description = "内存")
     val memory: String,
-    @ApiModelProperty("磁盘")
+    @Schema(description = "磁盘")
     val disk: String,
-    @ApiModelProperty("描述")
+    @Schema(description = "描述")
     val description: String
 )

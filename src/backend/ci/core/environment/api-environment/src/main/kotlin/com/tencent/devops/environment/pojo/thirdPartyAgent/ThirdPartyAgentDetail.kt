@@ -28,67 +28,66 @@
 package com.tencent.devops.environment.pojo.thirdPartyAgent
 
 import com.tencent.devops.common.api.pojo.agent.NewHeartbeatInfo
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("第三方构建集详情")
+@Schema(description = "第三方构建集详情")
 data class ThirdPartyAgentDetail(
-    @ApiModelProperty("Agent Hash ID", required = true)
+    @Schema(description = "Agent Hash ID", required = true)
     val agentId: String,
-    @ApiModelProperty("Node Hash ID", required = true)
+    @Schema(description = "Node Hash ID", required = true)
     val nodeId: String,
-    @ApiModelProperty("节点名称", required = true)
+    @Schema(description = "节点名称", required = true)
     val displayName: String,
-    @ApiModelProperty("项目ID", required = true)
+    @Schema(description = "项目ID", required = true)
     val projectId: String,
-    @ApiModelProperty("状态", required = true)
+    @Schema(description = "状态", required = true)
     val status: String,
-    @ApiModelProperty("主机名", required = true)
+    @Schema(description = "主机名", required = true)
     val hostname: String,
-    @ApiModelProperty("操作系统 | LINUX MACOS WINDOWS", required = true)
+    @Schema(description = "操作系统 | LINUX MACOS WINDOWS", required = true)
     val os: String,
-    @ApiModelProperty("操作系统", required = true)
+    @Schema(description = "操作系统", required = true)
     val osName: String,
-    @ApiModelProperty("IP地址", required = true)
+    @Schema(description = "IP地址", required = true)
     val ip: String,
-    @ApiModelProperty("导入人", required = true)
+    @Schema(description = "导入人", required = true)
     val createdUser: String,
-    @ApiModelProperty("导入时间", required = true)
+    @Schema(description = "导入时间", required = true)
     val createdTime: String,
-    @ApiModelProperty("Agent版本", required = true)
+    @Schema(description = "Agent版本", required = true)
     val agentVersion: String,
-    @ApiModelProperty("Worker版本", required = true)
+    @Schema(description = "Worker版本", required = true)
     val slaveVersion: String,
-    @ApiModelProperty("agent安装路径", required = true)
+    @Schema(description = "agent安装路径", required = true)
     val agentInstallPath: String,
-    @ApiModelProperty("最大通道数量", required = true)
+    @Schema(description = "最大通道数量", required = true)
     val maxParallelTaskCount: String,
-    @ApiModelProperty("通道数量", required = true)
+    @Schema(description = "通道数量", required = true)
     val parallelTaskCount: String,
-    @ApiModelProperty("docker构建机通道数量", required = true)
+    @Schema(description = "docker构建机通道数量", required = true)
     val dockerParallelTaskCount: String,
-    @ApiModelProperty("启动用户", required = true)
+    @Schema(description = "启动用户", required = true)
     val startedUser: String,
-    @ApiModelProperty("agent链接", required = true)
+    @Schema(description = "agent链接", required = true)
     val agentUrl: String,
-    @ApiModelProperty("agent安装脚本", required = true)
+    @Schema(description = "agent安装脚本", required = true)
     val agentScript: String,
-    @ApiModelProperty("最新心跳时间", required = true)
+    @Schema(description = "最新心跳时间", required = true)
     val lastHeartbeatTime: String,
-    @ApiModelProperty("CPU 核数", required = true)
+    @Schema(description = "CPU 核数", required = true)
     val ncpus: String, // nCpus 序列化JSON会变成 ncpus，但JSON反序列化对象时，nCpus字段不认ncpus
-    @ApiModelProperty("内存", required = true)
+    @Schema(description = "内存", required = true)
     val memTotal: String,
-    @ApiModelProperty("硬盘空间（最大盘）", required = true)
+    @Schema(description = "硬盘空间（最大盘）", required = true)
     val diskTotal: String,
-    @ApiModelProperty("是否可以编辑", required = false)
+    @Schema(description = "是否可以编辑", required = false)
     var canEdit: Boolean? = false,
-    @ApiModelProperty("当前Agent版本", required = false)
+    @Schema(description = "当前Agent版本", required = false)
     val currentAgentVersion: String? = "",
-    @ApiModelProperty("当前Worker版本", required = false)
+    @Schema(description = "当前Worker版本", required = false)
     val currentWorkerVersion: String? = "",
-    @ApiModelProperty("心跳信息", required = false)
+    @Schema(description = "心跳信息", required = false)
     var heartbeatInfo: NewHeartbeatInfo? = null,
-    @ApiModelProperty("错误退出信息", required = false)
+    @Schema(description = "错误退出信息", required = false)
     val exitErrorMsg: String? = null
 )

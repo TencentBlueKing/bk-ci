@@ -28,30 +28,29 @@
 package com.tencent.devops.repository.pojo.git
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("git用户信息")
+@Schema(description = "git用户信息")
 data class GitUserInfo(
-    @ApiModelProperty("ID", name = "id")
+    @Schema(description = "ID", name = "id")
     @JsonProperty("id")
     val id: Int,
-    @ApiModelProperty("email", name = "email")
+    @Schema(description = "email", name = "email")
     @JsonProperty("email")
     val email: String?,
-    @ApiModelProperty("用户名称", name = "username")
+    @Schema(description = "用户名称", name = "username")
     @JsonProperty("username")
     val username: String?,
-    @ApiModelProperty("用户空间地址", name = "web_url")
+    @Schema(description = "用户空间地址", name = "web_url")
     @JsonProperty("web_url")
     val webUrl: String?,
-    @ApiModelProperty("名称", name = "name")
+    @Schema(description = "名称", name = "name")
     @JsonProperty("name")
     val name: String?,
-    @ApiModelProperty("状态", name = "state")
+    @Schema(description = "状态", name = "state")
     @JsonProperty("state")
     val state: String?,
-    @ApiModelProperty("头像", name = "avatar_url")
+    @Schema(description = "头像", name = "avatar_url")
     @JsonProperty("avatar_url")
     val avatarUrl: String?
 )

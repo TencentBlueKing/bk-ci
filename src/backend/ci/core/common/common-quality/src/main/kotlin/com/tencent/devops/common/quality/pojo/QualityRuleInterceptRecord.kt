@@ -28,29 +28,28 @@
 package com.tencent.devops.common.quality.pojo
 
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("质量红线-拦截规则拦截记录")
+@Schema(description = "质量红线-拦截规则拦截记录")
 data class QualityRuleInterceptRecord(
-    @ApiModelProperty("指标ID", required = true)
+    @Schema(description = "指标ID", required = true)
     val indicatorId: String,
-    @ApiModelProperty("指标名称", required = true)
+    @Schema(description = "指标名称", required = true)
     val indicatorName: String,
-    @ApiModelProperty("指标插件类型", required = false)
+    @Schema(description = "指标插件类型", required = false)
     val indicatorType: String?,
-    @ApiModelProperty("关系", required = true)
+    @Schema(description = "关系", required = true)
     val operation: QualityOperation,
-    @ApiModelProperty("阈值值大小", required = true)
+    @Schema(description = "阈值值大小", required = true)
     val value: String?,
-    @ApiModelProperty("实际值", required = true)
+    @Schema(description = "实际值", required = true)
     val actualValue: String?,
-    @ApiModelProperty("控制点", required = true)
+    @Schema(description = "控制点", required = true)
     val controlPoint: String,
-    @ApiModelProperty("是否通过", required = true)
+    @Schema(description = "是否通过", required = true)
     val pass: Boolean,
-    @ApiModelProperty("指标详情", required = true)
+    @Schema(description = "指标详情", required = true)
     val detail: String?,
-    @ApiModelProperty("指标日志输出详情", required = false)
+    @Schema(description = "指标日志输出详情", required = false)
     var logPrompt: String?
 )

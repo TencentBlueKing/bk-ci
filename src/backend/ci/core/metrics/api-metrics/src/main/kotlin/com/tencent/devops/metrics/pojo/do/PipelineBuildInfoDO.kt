@@ -27,25 +27,24 @@
 
 package com.tencent.devops.metrics.pojo.`do`
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线构建信息")
+@Schema(description = "流水线构建信息")
 data class PipelineBuildInfoDO(
-    @ApiModelProperty("项目ID")
+    @Schema(description = "项目ID")
     val projectId: String,
-    @ApiModelProperty("流水线ID")
+    @Schema(description = "流水线ID")
     val pipelineId: String,
-    @ApiModelProperty("流水线名称")
+    @Schema(description = "流水线名称")
     val pipelineName: String,
-    @ApiModelProperty("渠道代码")
+    @Schema(description = "渠道代码")
     val channelCode: String,
-    @ApiModelProperty("域名")
+    @Schema(description = "域名")
     val domain: String,
-    @ApiModelProperty("构建ID")
+    @Schema(description = "构建ID")
     val buildId: String,
-    @ApiModelProperty("构建序号")
+    @Schema(description = "构建序号")
     val buildNum: Int,
-    @ApiModelProperty("构建代码库分支")
+    @Schema(description = "构建代码库分支")
     val branch: String?
 )

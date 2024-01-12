@@ -1,23 +1,22 @@
 package com.tencent.devops.process.pojo.classify
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("Pipeline视图预览")
+@Schema(description = "Pipeline视图预览")
 data class PipelineViewPreview(
-    @ApiModelProperty("新增的流水线ID列表", required = true)
+    @Schema(description = "新增的流水线ID列表", required = true)
     val addedPipelineInfos: List<PipelineInfo>,
-    @ApiModelProperty("删除的流水线ID列表", required = true)
+    @Schema(description = "删除的流水线ID列表", required = true)
     val removedPipelineInfos: List<PipelineInfo>,
-    @ApiModelProperty("保留的流水线ID列表", required = true)
+    @Schema(description = "保留的流水线ID列表", required = true)
     val reservePipelineInfos: List<PipelineInfo>
 ) {
     data class PipelineInfo(
-        @ApiModelProperty("名称", required = true)
+        @Schema(description = "名称", required = true)
         val pipelineName: String,
-        @ApiModelProperty("ID", required = true)
+        @Schema(description = "ID", required = true)
         val pipelineId: String,
-        @ApiModelProperty("是否删除", required = true)
+        @Schema(description = "是否删除", required = true)
         val delete: Boolean
     )
 

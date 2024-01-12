@@ -28,23 +28,23 @@
 package com.tencent.devops.stream.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class StreamCreateFileInfo(
     @JsonProperty("file_path")
-    @ApiModelProperty(name = "file_path")
+    @Schema(description = "file_path")
     val filePath: String,
     @JsonProperty("branch_name")
-    @ApiModelProperty(name = "branch_name")
+    @Schema(description = "branch_name")
     val branch: String,
     @JsonProperty("encoding")
-    @ApiModelProperty(name = "encoding")
+    @Schema(description = "encoding")
     val encoding: StreamFileEncoding = StreamFileEncoding.TEXT,
     @JsonProperty("content")
-    @ApiModelProperty(name = "content")
+    @Schema(description = "content")
     val content: String,
     @JsonProperty("commit_message")
-    @ApiModelProperty(name = "commit_message")
+    @Schema(description = "commit_message")
     val commitMessage: String
 )
 

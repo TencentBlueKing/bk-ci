@@ -31,23 +31,23 @@ package com.tencent.devops.auth.pojo.event
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.trace.ITraceEvent
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @Event(exchange = MQ.EXCHANGE_AUTH_RBAC_LISTENER_EXCHANGE, routeKey = MQ.ROUTE_AUTH_RESOURCE_GROUP_CREATE)
 data class AuthResourceGroupCreateEvent(
-    @ApiModelProperty("分级管理员ID或二级管理员ID")
+    @Schema(description = "分级管理员ID或二级管理员ID")
     val managerId: Int,
     val userId: String,
-    @ApiModelProperty("项目ID")
+    @Schema(description = "项目ID")
     val projectCode: String,
-    @ApiModelProperty("项目名")
+    @Schema(description = "项目名")
     val projectName: String,
-    @ApiModelProperty("资源类型")
+    @Schema(description = "资源类型")
     val resourceType: String,
-    @ApiModelProperty("资源ID")
+    @Schema(description = "资源ID")
     val resourceCode: String,
-    @ApiModelProperty("iam资源ID")
+    @Schema(description = "iam资源ID")
     val iamResourceCode: String,
-    @ApiModelProperty("资源名")
+    @Schema(description = "资源名")
     val resourceName: String
 ) : ITraceEvent()

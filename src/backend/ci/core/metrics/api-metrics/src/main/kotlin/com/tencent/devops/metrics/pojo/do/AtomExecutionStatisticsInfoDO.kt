@@ -27,25 +27,24 @@
 
 package com.tencent.devops.metrics.pojo.`do`
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件执行统计信息")
+@Schema(description = "插件执行统计信息")
 data class AtomExecutionStatisticsInfoDO(
-    @ApiModelProperty("项目ID")
+    @Schema(description = "项目ID")
     val projectId: String,
-    @ApiModelProperty("插件基本信息")
+    @Schema(description = "插件基本信息")
     val atomBaseInfo: AtomBaseInfoDO,
-    @ApiModelProperty("插件分类代码")
+    @Schema(description = "插件分类代码")
     val classifyCode: String,
-    @ApiModelProperty("平均耗时")
+    @Schema(description = "平均耗时")
     val avgCostTime: Double,
-    @ApiModelProperty("总执行次数")
+    @Schema(description = "总执行次数")
     val totalExecuteCount: Long,
-    @ApiModelProperty("成功执行次数")
+    @Schema(description = "成功执行次数")
     val successExecuteCount: Long,
-    @ApiModelProperty("成功率")
+    @Schema(description = "成功率")
     val successRate: Double,
-    @ApiModelProperty("插件错误信息")
+    @Schema(description = "插件错误信息")
     val atomFailInfos: Map<String, String>
 )

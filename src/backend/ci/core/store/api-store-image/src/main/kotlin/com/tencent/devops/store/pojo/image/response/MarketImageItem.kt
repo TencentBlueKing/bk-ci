@@ -28,93 +28,92 @@ package com.tencent.devops.store.pojo.image.response
 
 import com.tencent.devops.store.pojo.common.HonorInfo
 import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * @Description
  * @Date 2019/9/17
  * @Version 1.0
  */
-@ApiModel("首页市场镜像")
+@Schema(description = "首页市场镜像")
 data class MarketImageItem constructor(
 
-    @ApiModelProperty("镜像Id", required = true)
+    @Schema(description = "镜像Id", required = true)
     val id: String,
 
-    @ApiModelProperty("镜像代码", required = true)
+    @Schema(description = "镜像代码", required = true)
     val code: String,
 
-    @ApiModelProperty("镜像名称", required = true)
+    @Schema(description = "镜像名称", required = true)
     val name: String,
 
-    @ApiModelProperty("研发来源")
+    @Schema(description = "研发来源")
     val rdType: String,
 
-    @ApiModelProperty("镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = true)
+    @Schema(description = "镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = true)
     val imageSourceType: String,
 
-    @ApiModelProperty("镜像大小（MB字符串）", required = true)
+    @Schema(description = "镜像大小（MB字符串）", required = true)
     val imageSize: String,
 
-    @ApiModelProperty("镜像大小数值（字节）", required = true)
+    @Schema(description = "镜像大小数值（字节）", required = true)
     val imageSizeNum: Long,
 
-    @ApiModelProperty("所属镜像分类代码", required = true)
+    @Schema(description = "所属镜像分类代码", required = true)
     val classifyCode: String,
 
-    @ApiModelProperty("镜像logo", required = false)
+    @Schema(description = "镜像logo", required = false)
     val logoUrl: String? = null,
 
-    @ApiModelProperty("版本号", required = true)
+    @Schema(description = "版本号", required = true)
     val version: String,
 
-    @ApiModelProperty("镜像简介", required = false)
+    @Schema(description = "镜像简介", required = false)
     val summary: String? = null,
 
-    @ApiModelProperty("星级评分", required = true)
+    @Schema(description = "星级评分", required = true)
     val score: Double,
 
-    @ApiModelProperty("下载量", required = true)
+    @Schema(description = "下载量", required = true)
     val downloads: Int,
 
-    @ApiModelProperty("是否为公共镜像 true：是 false：否", required = true)
+    @Schema(description = "是否为公共镜像 true：是 false：否", required = true)
     val publicFlag: Boolean,
 
-    @ApiModelProperty("是否可安装 true：可以 false：不可以", required = true)
+    @Schema(description = "是否可安装 true：可以 false：不可以", required = true)
     val flag: Boolean,
 
-    @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = true)
+    @Schema(description = "是否推荐标识 true：推荐，false：不推荐", required = true)
     val recommendFlag: Boolean,
 
-    @ApiModelProperty("发布者", required = false)
+    @Schema(description = "发布者", required = false)
     val publisher: String? = null,
 
-    @ApiModelProperty("发布时间", required = false)
+    @Schema(description = "发布时间", required = false)
     val pubTime: Long? = null,
 
-    @ApiModelProperty("创建人", required = true)
+    @Schema(description = "创建人", required = true)
     val creator: String,
 
-    @ApiModelProperty("修改人", required = true)
+    @Schema(description = "修改人", required = true)
     val modifier: String,
 
-    @ApiModelProperty("创建时间", required = true)
+    @Schema(description = "创建时间", required = true)
     val createTime: Long,
 
-    @ApiModelProperty("修改时间", required = true)
+    @Schema(description = "修改时间", required = true)
     val updateTime: Long,
 
-    @ApiModelProperty("是否已安装", required = true)
+    @Schema(description = "是否已安装", required = true)
     var installedFlag: Boolean?,
 
-    @ApiModelProperty("荣誉信息", required = false)
+    @Schema(description = "荣誉信息", required = false)
     val honorInfos: List<HonorInfo>? = null,
 
-    @ApiModelProperty("指标信息列表")
+    @Schema(description = "指标信息列表")
     val indexInfos: List<StoreIndexInfo>? = null,
 
-    @ApiModelProperty("hotFlag")
+    @Schema(description = "hotFlag")
     val hotFlag: Boolean? = null
 ) {
     constructor(instance: MarketImageItem) : this(

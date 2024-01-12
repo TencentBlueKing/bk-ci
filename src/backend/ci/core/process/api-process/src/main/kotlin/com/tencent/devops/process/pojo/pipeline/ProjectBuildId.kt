@@ -27,13 +27,12 @@
 
 package com.tencent.devops.process.pojo.pipeline
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("构建模型-ID")
+@Schema(description = "构建模型-ID")
 data class ProjectBuildId(
-    @ApiModelProperty("构建ID", required = true)
+    @Schema(description = "构建ID", required = true)
     val id: String,
-    @ApiModelProperty("项目ID", required = true)
+    @Schema(description = "项目ID", required = true)
     val projectId: String
 )

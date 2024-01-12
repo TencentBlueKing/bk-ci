@@ -28,8 +28,7 @@
 package com.tencent.devops.repository.pojo.git
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /*
 * {
@@ -95,32 +94,32 @@ import io.swagger.annotations.ApiModelProperty
 }
 * */
 
-@ApiModel("git mr文件变更信息")
+@Schema(description = "git mr文件变更信息")
 data class GitMrChangeInfo(
     val title: String = "",
     @JsonProperty("target_project_id")
-    @ApiModelProperty(name = "target_project_id")
+    @Schema(description = "target_project_id")
     val targetProjectId: String = "",
     @JsonProperty("target_branch")
-    @ApiModelProperty(name = "target_branch")
+    @Schema(description = "target_branch")
     val targetBranch: String? = "",
     @JsonProperty("source_project_id")
-    @ApiModelProperty(name = "source_project_id")
+    @Schema(description = "source_project_id")
     val sourceProjectId: String? = "",
     @JsonProperty("source_branch")
-    @ApiModelProperty(name = "source_branch")
+    @Schema(description = "source_branch")
     val sourceBranch: String? = "",
     @JsonProperty("created_at")
-    @ApiModelProperty(name = "created_at")
+    @Schema(description = "created_at")
     val createTime: String? = "",
     @JsonProperty("updated_at")
-    @ApiModelProperty(name = "updated_at")
+    @Schema(description = "updated_at")
     val updateTime: String? = "",
     @JsonProperty("iid")
-    @ApiModelProperty(name = "iid")
+    @Schema(description = "iid")
     val mrNumber: String = "",
     @JsonProperty("id")
-    @ApiModelProperty(name = "id")
+    @Schema(description = "id")
     val mrId: String = "",
     val labels: List<String>,
     val description: String? = "",
@@ -128,28 +127,28 @@ data class GitMrChangeInfo(
 ) {
     data class GitMrFile(
         @JsonProperty("old_path")
-        @ApiModelProperty(name = "old_path")
+        @Schema(description = "old_path")
         val oldPath: String,
         @JsonProperty("new_path")
-        @ApiModelProperty(name = "new_path")
+        @Schema(description = "new_path")
         val newPath: String,
         @JsonProperty("new_file")
-        @ApiModelProperty(name = "new_file")
+        @Schema(description = "new_file")
         val newFile: Boolean,
         @JsonProperty("renamed_file")
-        @ApiModelProperty(name = "renamed_file")
+        @Schema(description = "renamed_file")
         val renameFile: Boolean,
         @JsonProperty("deleted_file")
-        @ApiModelProperty(name = "deleted_file")
+        @Schema(description = "deleted_file")
         val deletedFile: Boolean,
         @JsonProperty("is_too_large")
-        @ApiModelProperty(name = "is_too_large")
+        @Schema(description = "is_too_large")
         val isTooLarge: Boolean,
         @JsonProperty("additions")
-        @ApiModelProperty(name = "additions")
+        @Schema(description = "additions")
         val additions: Int,
         @JsonProperty("deletions")
-        @ApiModelProperty(name = "deletions")
+        @Schema(description = "deletions")
         val deletions: Int
     )
 }

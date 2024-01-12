@@ -27,15 +27,14 @@
 
 package com.tencent.devops.process.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("stage准入准出-质量红线触发")
+@Schema(description = "stage准入准出-质量红线触发")
 data class StageQualityRequest(
-    @ApiModelProperty("准入准出标识", required = true)
+    @Schema(description = "准入准出标识", required = true)
     val position: String,
-    @ApiModelProperty("把关是否通过", required = true)
+    @Schema(description = "把关是否通过", required = true)
     val pass: Boolean,
-    @ApiModelProperty("第几次检查", required = true)
+    @Schema(description = "第几次检查", required = true)
     val checkTimes: Int
 )

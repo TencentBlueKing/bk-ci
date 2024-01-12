@@ -27,22 +27,21 @@
 
 package com.tencent.devops.project.pojo.user
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("用户-信息模型")
+@Schema(description = "用户-信息模型")
 data class UserVO(
-    @ApiModelProperty("中文名")
+    @Schema(description = "中文名")
 //    @JsonProperty("chinese_name")
     var chineseName: String,
-    @ApiModelProperty("头像URL")
+    @Schema(description = "头像URL")
 //    @JsonProperty("avatar_url")
     val avatarUrl: String?,
-    @ApiModelProperty("bkpaas用户ID")
+    @Schema(description = "bkpaas用户ID")
 //    @JsonProperty("bkpaas_user_id")
     val bkpaasUserId: String?,
-    @ApiModelProperty("用户名")
+    @Schema(description = "用户名")
     var username: String,
-    @ApiModelProperty("权限")
+    @Schema(description = "权限")
     val permissions: String?
 )

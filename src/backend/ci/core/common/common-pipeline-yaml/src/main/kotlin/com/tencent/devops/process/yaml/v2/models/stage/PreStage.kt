@@ -30,7 +30,7 @@ package com.tencent.devops.process.yaml.v2.models.stage
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.process.yaml.v2.models.job.PreJob
 import com.tencent.devops.process.yaml.v2.stageCheck.PreStageCheck
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
@@ -38,20 +38,20 @@ import io.swagger.annotations.ApiModelProperty
 data class PreStage(
     val name: String?,
     val label: Any? = null,
-    @ApiModelProperty(name = "if")
+    @Schema(description = "if")
     @JsonProperty("if")
     val ifField: String? = null,
-    @ApiModelProperty(name = "if-modify")
+    @Schema(description = "if-modify")
     @JsonProperty("if-modify")
     val ifModify: List<String>? = null,
-    @ApiModelProperty(name = "fast-kill")
+    @Schema(description = "fast-kill")
     @JsonProperty("fast-kill")
     val fastKill: Boolean? = false,
     val jobs: Map<String, PreJob>?,
-    @ApiModelProperty(name = "check-in")
+    @Schema(description = "check-in")
     @JsonProperty("check-in")
     val checkIn: PreStageCheck?,
-    @ApiModelProperty(name = "check-out")
+    @Schema(description = "check-out")
     @JsonProperty("check-out")
     val checkOut: PreStageCheck?
 )

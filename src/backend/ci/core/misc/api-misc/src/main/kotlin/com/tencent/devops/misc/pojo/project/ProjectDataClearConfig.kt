@@ -27,14 +27,13 @@
 
 package com.tencent.devops.misc.pojo.project
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("项目流水线数据清理配置")
+@Schema(description = "项目流水线数据清理配置")
 data class ProjectDataClearConfig(
-    @ApiModelProperty("流水线最大启动时间", required = true)
+    @Schema(description = "流水线最大启动时间", required = true)
     val maxStartTime: LocalDateTime,
-    @ApiModelProperty("最大保存数量", required = true)
+    @Schema(description = "最大保存数量", required = true)
     val maxKeepNum: Int
 )

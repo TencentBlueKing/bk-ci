@@ -27,39 +27,38 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件市场-更新插件执行环境信息请求报文体")
+@Schema(description = "插件市场-更新插件执行环境信息请求报文体")
 data class AtomEnvRequest(
-    @ApiModelProperty("用户Id", required = true)
+    @Schema(description = "用户Id", required = true)
     val userId: String,
-    @ApiModelProperty("插件包名", required = false)
+    @Schema(description = "插件包名", required = false)
     var pkgName: String? = "",
-    @ApiModelProperty("安装包位于本地的路径", required = false)
+    @Schema(description = "安装包位于本地的路径", required = false)
     var pkgLocalPath: String? = "",
-    @ApiModelProperty("安装包位于仓库的路径", required = true)
+    @Schema(description = "安装包位于仓库的路径", required = true)
     var pkgRepoPath: String = "",
-    @ApiModelProperty("插件开发语言", required = false)
+    @Schema(description = "插件开发语言", required = false)
     val language: String?,
-    @ApiModelProperty("支持插件开发语言的最低版本", required = false)
+    @Schema(description = "支持插件开发语言的最低版本", required = false)
     val minVersion: String? = null,
-    @ApiModelProperty("插件执行入口", required = false)
+    @Schema(description = "插件执行入口", required = false)
     val target: String? = "",
-    @ApiModelProperty("插件SHA签名串", required = false)
+    @Schema(description = "插件SHA签名串", required = false)
     var shaContent: String? = null,
-    @ApiModelProperty("插件执行前置命令", required = false)
+    @Schema(description = "插件执行前置命令", required = false)
     var preCmd: String? = null,
-    @ApiModelProperty("插件post信息", required = false)
+    @Schema(description = "插件post信息", required = false)
     val atomPostInfo: AtomPostInfo? = null,
-    @ApiModelProperty("支持的操作系统名称", required = false)
+    @Schema(description = "支持的操作系统名称", required = false)
     var osName: String? = null,
-    @ApiModelProperty("支持的操作系统架构", required = false)
+    @Schema(description = "支持的操作系统架构", required = false)
     var osArch: String? = null,
-    @ApiModelProperty("插件运行时版本", required = false)
+    @Schema(description = "插件运行时版本", required = false)
     val runtimeVersion: String? = null,
-    @ApiModelProperty("是否为默认环境信息", required = false)
+    @Schema(description = "是否为默认环境信息", required = false)
     val defaultFlag: Boolean? = null,
-    @ApiModelProperty("插件运行结束后是否立即杀掉其进程", required = false)
+    @Schema(description = "插件运行结束后是否立即杀掉其进程", required = false)
     val finishKillFlag: Boolean? = null
 )

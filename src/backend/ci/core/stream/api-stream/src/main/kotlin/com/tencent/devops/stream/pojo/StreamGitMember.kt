@@ -27,15 +27,14 @@
 
 package com.tencent.devops.stream.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("git成员模型")
+@Schema(description = "git成员模型")
 data class StreamGitMember(
-    @ApiModelProperty("成员id")
+    @Schema(description = "成员id")
     val id: Int,
-    @ApiModelProperty("用户名")
+    @Schema(description = "用户名")
     val username: String,
-    @ApiModelProperty("状态")
+    @Schema(description = "状态")
     val state: String
 )

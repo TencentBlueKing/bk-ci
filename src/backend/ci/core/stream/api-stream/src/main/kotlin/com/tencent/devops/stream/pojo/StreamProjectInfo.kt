@@ -28,53 +28,52 @@
 package com.tencent.devops.stream.pojo
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("Git和Stream项目详细信息")
+@Schema(description = "Git和Stream项目详细信息")
 data class StreamProjectCIInfo(
-    @ApiModelProperty("Git项目ID")
+    @Schema(description = "Git项目ID")
     val id: Long,
-    @ApiModelProperty("蓝盾项目id")
+    @Schema(description = "蓝盾项目id")
     val projectCode: String?,
-    @ApiModelProperty("是否为stream 公共项目")
+    @Schema(description = "是否为stream 公共项目")
     val public: Boolean?,
-    @ApiModelProperty("stream 项目名称")
+    @Schema(description = "stream 项目名称")
     val name: String?,
-    @ApiModelProperty("stream 项目名称带有路径")
+    @Schema(description = "stream 项目名称带有路径")
     val nameWithNamespace: String?,
-    @ApiModelProperty("https-git链接")
+    @Schema(description = "https-git链接")
     val httpsUrlToRepo: String?,
-    @ApiModelProperty("项目网页链接")
+    @Schema(description = "项目网页链接")
     val webUrl: String?,
-    @ApiModelProperty("项目头像")
+    @Schema(description = "项目头像")
     val avatarUrl: String?,
-    @ApiModelProperty("项目描述")
+    @Schema(description = "项目描述")
     val description: String?,
-    @ApiModelProperty("是否开启CI功能")
+    @Schema(description = "是否开启CI功能")
     val enableCI: Boolean?,
-    @ApiModelProperty("Build pushed branches")
+    @Schema(description = "Build pushed branches")
     val buildPushedBranches: Boolean?,
-    @ApiModelProperty("Build pushed pull request")
+    @Schema(description = "Build pushed pull request")
     val buildPushedPullRequest: Boolean?,
-    @ApiModelProperty("是否开启Mr锁定")
+    @Schema(description = "是否开启Mr锁定")
     val enableMrBlock: Boolean?,
-    @ApiModelProperty("当前授权人")
+    @Schema(description = "当前授权人")
     val authUserId: String?,
-    @ApiModelProperty("CI相关信息")
+    @Schema(description = "CI相关信息")
     val ciInfo: StreamCIInfo?
 )
 
-@ApiModel("CI相关信息")
+@Schema(description = "CI相关信息")
 data class StreamCIInfo(
-    @ApiModelProperty("是否开启STREAM")
+    @Schema(description = "是否开启STREAM")
     val enableCI: Boolean,
-    @ApiModelProperty("最后一次构建信息")
+    @Schema(description = "最后一次构建信息")
     val lastBuildMessage: String?,
-    @ApiModelProperty("最后一次构建状态")
+    @Schema(description = "最后一次构建状态")
     val lastBuildStatus: BuildStatus?,
-    @ApiModelProperty("流水线ID")
+    @Schema(description = "流水线ID")
     val lastBuildPipelineId: String?,
-    @ApiModelProperty("构建ID")
+    @Schema(description = "构建ID")
     val lastBuildId: String?
 )

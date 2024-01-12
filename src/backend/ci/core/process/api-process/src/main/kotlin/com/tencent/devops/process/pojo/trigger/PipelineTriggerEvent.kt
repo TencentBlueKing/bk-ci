@@ -28,32 +28,31 @@
 
 package com.tencent.devops.process.pojo.trigger
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("流水线触发事件")
+@Schema(description = "流水线触发事件")
 data class PipelineTriggerEvent(
-    @ApiModelProperty("请求ID")
+    @Schema(description = "请求ID")
     val requestId: String,
-    @ApiModelProperty("项目ID")
+    @Schema(description = "项目ID")
     var projectId: String? = null,
-    @ApiModelProperty("事件ID")
+    @Schema(description = "事件ID")
     var eventId: Long? = null,
-    @ApiModelProperty("触发类型")
+    @Schema(description = "触发类型")
     val triggerType: String,
-    @ApiModelProperty("事件源", required = false)
+    @Schema(description = "事件源", required = false)
     var eventSource: String? = null,
-    @ApiModelProperty("事件类型")
+    @Schema(description = "事件类型")
     val eventType: String,
-    @ApiModelProperty("触发人")
+    @Schema(description = "触发人")
     val triggerUser: String,
-    @ApiModelProperty("事件描述")
+    @Schema(description = "事件描述")
     val eventDesc: String,
-    @ApiModelProperty("重放事件ID")
+    @Schema(description = "重放事件ID")
     val replayRequestId: String? = null,
-    @ApiModelProperty("事件请求参数, 记录手动/openapi/定时/远程触发启动参数")
+    @Schema(description = "事件请求参数, 记录手动/openapi/定时/远程触发启动参数")
     val requestParams: Map<String, String>? = null,
-    @ApiModelProperty("触发时间")
+    @Schema(description = "触发时间")
     val createTime: LocalDateTime
 )

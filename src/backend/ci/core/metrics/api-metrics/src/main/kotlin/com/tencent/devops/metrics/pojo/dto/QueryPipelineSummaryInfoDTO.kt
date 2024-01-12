@@ -27,17 +27,16 @@
 
 package com.tencent.devops.metrics.pojo.dto
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("查询第三方汇总信息传输对象")
+@Schema(description = "查询第三方汇总信息传输对象")
 data class QueryPipelineSummaryInfoDTO(
-    @ApiModelProperty("项目ID")
+    @Schema(description = "项目ID")
     val projectId: String,
-    @ApiModelProperty("userId")
+    @Schema(description = "userId")
     val userId: String,
-    @ApiModelProperty("开始时间", required = true)
+    @Schema(description = "开始时间", required = true)
     val startTime: String,
-    @ApiModelProperty("结束时间", required = true)
+    @Schema(description = "结束时间", required = true)
     val endTime: String
 )

@@ -27,24 +27,23 @@
 
 package com.tencent.devops.common.api.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("构建历史-分页数据包装模型")
+@Schema(description = "构建历史-分页数据包装模型")
 data class BuildHistoryPage<out T>(
-    @ApiModelProperty("总记录行数", required = true)
+    @Schema(description = "总记录行数", required = true)
     val count: Long,
-    @ApiModelProperty("第几页", required = true)
+    @Schema(description = "第几页", required = true)
     val page: Int,
-    @ApiModelProperty("每页多少条", required = true)
+    @Schema(description = "每页多少条", required = true)
     val pageSize: Int,
-    @ApiModelProperty("总共多少页", required = true)
+    @Schema(description = "总共多少页", required = true)
     val totalPages: Int,
-    @ApiModelProperty("数据", required = true)
+    @Schema(description = "数据", required = true)
     val records: List<T>,
-    @ApiModelProperty("是否拥有下载构建的权限", required = true)
+    @Schema(description = "是否拥有下载构建的权限", required = true)
     val hasDownloadPermission: Boolean,
-    @ApiModelProperty("最新的编排版本号", required = true)
+    @Schema(description = "最新的编排版本号", required = true)
     val pipelineVersion: Int
 ) {
     constructor(

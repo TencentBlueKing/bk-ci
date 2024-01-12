@@ -27,19 +27,18 @@
 
 package com.tencent.devops.common.archive.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("")
+@Schema(description = "")
 data class ReportListDTO(
-    @ApiModelProperty("用户id", required = false)
+    @Schema(description = "用户id", required = false)
     val userId: String,
-    @ApiModelProperty("项目id", required = false)
+    @Schema(description = "项目id", required = false)
     val projectId: String,
-    @ApiModelProperty("流水线id", required = false)
+    @Schema(description = "流水线id", required = false)
     val pipelineId: String,
-    @ApiModelProperty("构建id", required = false)
+    @Schema(description = "构建id", required = false)
     val buildId: String,
-    @ApiModelProperty("是否有操作权限", required = false)
+    @Schema(description = "是否有操作权限", required = false)
     val needPermission: Boolean
 )

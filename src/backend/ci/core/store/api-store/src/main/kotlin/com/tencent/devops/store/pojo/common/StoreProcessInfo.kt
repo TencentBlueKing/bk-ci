@@ -27,15 +27,14 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件发布进度信息")
+@Schema(description = "插件发布进度信息")
 data class StoreProcessInfo(
-    @ApiModelProperty("发布进度流程操作权限", required = false)
+    @Schema(description = "发布进度流程操作权限", required = false)
     var opPermission: Boolean? = null,
-    @ApiModelProperty("store组件流水线构建信息", required = false)
+    @Schema(description = "store组件流水线构建信息", required = false)
     var storeBuildInfo: StoreBuildInfo? = null,
-    @ApiModelProperty("发布进度信息", required = true)
+    @Schema(description = "发布进度信息", required = true)
     val processInfos: List<ReleaseProcessItem>
 )

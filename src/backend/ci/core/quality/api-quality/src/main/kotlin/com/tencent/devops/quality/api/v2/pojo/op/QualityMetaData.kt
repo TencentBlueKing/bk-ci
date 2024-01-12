@@ -28,28 +28,27 @@
 package com.tencent.devops.quality.api.v2.pojo.op
 
 import com.fasterxml.jackson.annotation.JsonInclude
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonInclude(JsonInclude.Include.ALWAYS)
-@ApiModel("质量红线-基础数据列表展示信息")
+@Schema(description = "质量红线-基础数据列表展示信息")
 data class QualityMetaData(
-    @ApiModelProperty("ID")
+    @Schema(description = "ID")
     val id: Long,
-    @ApiModelProperty("数据ID")
+    @Schema(description = "数据ID")
     val dataId: String?,
-    @ApiModelProperty("基础数据名称")
+    @Schema(description = "基础数据名称")
     val dataName: String?,
-    @ApiModelProperty("原子的ClassType")
+    @Schema(description = "原子的ClassType")
     val elementType: String?,
-    @ApiModelProperty("产出原子")
+    @Schema(description = "产出原子")
     val elementName: String?,
-    @ApiModelProperty("工具/原子子类")
+    @Schema(description = "工具/原子子类")
     val elementDetail: String?,
-    @ApiModelProperty("数值类型")
+    @Schema(description = "数值类型")
     val valueType: String?,
-    @ApiModelProperty("说明")
+    @Schema(description = "说明")
     val desc: String?,
-    @ApiModelProperty("备注")
+    @Schema(description = "备注")
     var extra: String?
 )

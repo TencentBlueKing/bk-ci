@@ -28,15 +28,14 @@
 package com.tencent.devops.store.pojo.common
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("store组件内置流水线构建结果请求报文体")
+@Schema(description = "store组件内置流水线构建结果请求报文体")
 data class StoreBuildResultRequest(
-    @ApiModelProperty("用户ID", required = true)
+    @Schema(description = "用户ID", required = true)
     val userId: String,
-    @ApiModelProperty("流水线构建状态", required = true)
+    @Schema(description = "流水线构建状态", required = true)
     val buildStatus: BuildStatus,
-    @ApiModelProperty("组件ID", required = true)
+    @Schema(description = "组件ID", required = true)
     val storeId: String
 )

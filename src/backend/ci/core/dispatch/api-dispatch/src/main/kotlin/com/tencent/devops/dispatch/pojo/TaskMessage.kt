@@ -28,25 +28,24 @@
 package com.tencent.devops.dispatch.pojo
 
 import com.tencent.devops.dispatch.pojo.enums.TaskPhase
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  *
  * Powered By Tencent
  */
-@ApiModel("TASK信息")
+@Schema(description = "TASK信息")
 data class TaskMessage(
-    @ApiModelProperty("TASK ID", required = true)
+    @Schema(description = "TASK ID", required = true)
     var taskId: Int,
-    @ApiModelProperty("TASK VM ID", required = true)
+    @Schema(description = "TASK VM ID", required = true)
     var vmId: Int,
-    @ApiModelProperty("TASK 执行的脚本", required = true)
+    @Schema(description = "TASK 执行的脚本", required = true)
     var script: String,
-    @ApiModelProperty("TASK 执行完信息", required = true)
+    @Schema(description = "TASK 执行完信息", required = true)
     var message: String,
-    @ApiModelProperty("TASK 执行的脚本结果", required = true)
+    @Schema(description = "TASK 执行的脚本结果", required = true)
     var status: TaskPhase,
-    @ApiModelProperty("TASK 执行的脚本结果", required = true)
+    @Schema(description = "TASK 执行的脚本结果", required = true)
     var retryCount: Int
 )

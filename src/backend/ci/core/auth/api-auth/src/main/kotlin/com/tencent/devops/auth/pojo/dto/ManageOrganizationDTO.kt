@@ -27,19 +27,18 @@
 
 package com.tencent.devops.auth.pojo.dto
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel
+@Schema
 data class ManageOrganizationDTO(
-    @ApiModelProperty("名称")
+    @Schema(description = "名称")
     val name: String,
-    @ApiModelProperty("组织Id")
+    @Schema(description = "组织Id")
     val organizationId: Int,
-    @ApiModelProperty("组织层级, 1--BG  2--部门  3--中心")
+    @Schema(description = "组织层级, 1--BG  2--部门  3--中心")
     val level: Int,
-    @ApiModelProperty("策略Id")
+    @Schema(description = "策略Id")
     val strategyId: Int,
-    @ApiModelProperty("父组织Id")
+    @Schema(description = "父组织Id")
     val parentOrgId: List<Int>
 )

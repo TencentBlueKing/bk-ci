@@ -27,19 +27,18 @@
 
 package com.tencent.devops.process.pojo.template
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * deng
  * 2019-01-17
  */
-@ApiModel("模板比较模型")
+@Schema(description = "模板比较模型")
 data class TemplateCompareModelResult(
-    @ApiModelProperty("版本列表", required = false)
+    @Schema(description = "版本列表", required = false)
     val versions: List<TemplateVersion>,
-    @ApiModelProperty("来源模板模型", required = false)
+    @Schema(description = "来源模板模型", required = false)
     val origin: TemplateCompareModel,
-    @ApiModelProperty("目标模板模型", required = false)
+    @Schema(description = "目标模板模型", required = false)
     val target: TemplateCompareModel
 )

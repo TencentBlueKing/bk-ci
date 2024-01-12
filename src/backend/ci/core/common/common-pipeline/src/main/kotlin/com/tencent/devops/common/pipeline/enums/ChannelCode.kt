@@ -27,24 +27,23 @@
 
 package com.tencent.devops.common.pipeline.enums
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("渠道代码")
+@Schema(description = "渠道代码")
 enum class ChannelCode {
-    @ApiModelProperty("蓝鲸持续集成平台")
+    @Schema(description = "蓝鲸持续集成平台")
     BS,
-    @ApiModelProperty("蓝鲸流水线插件市场")
+    @Schema(description = "蓝鲸流水线插件市场")
     AM,
-    @ApiModelProperty("蓝鲸代码检查平台")
+    @Schema(description = "蓝鲸代码检查平台")
     CODECC,
-    @ApiModelProperty("GCloud")
+    @Schema(description = "GCloud")
     GCLOUD,
-    @ApiModelProperty("工蜂")
+    @Schema(description = "工蜂")
     GIT,
-    @ApiModelProperty("开源扫描")
+    @Schema(description = "开源扫描")
     GONGFENGSCAN,
-    @ApiModelProperty("codecc回迁")
+    @Schema(description = "codecc回迁")
     CODECC_EE;
 
     companion object {

@@ -27,27 +27,26 @@
 
 package com.tencent.devops.dispatch.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("虚拟机主机信息")
+@Schema(description = "虚拟机主机信息")
 data class Machine(
-    @ApiModelProperty("主机 ID", required = true)
+    @Schema(description = "主机 ID", required = true)
     val id: Int,
-    @ApiModelProperty("主机 IP", required = true)
+    @Schema(description = "主机 IP", required = true)
     val ip: String,
-    @ApiModelProperty("主机名", required = true)
+    @Schema(description = "主机名", required = true)
     val name: String,
-    @ApiModelProperty("主机用户名", required = true)
+    @Schema(description = "主机用户名", required = true)
     val username: String,
-    @ApiModelProperty("主机密码", required = true)
+    @Schema(description = "主机密码", required = true)
     val password: String,
-    @ApiModelProperty("当前运行数", required = true)
+    @Schema(description = "当前运行数", required = true)
     val currentRunNum: Int,
-    @ApiModelProperty("最大运行数", required = true)
+    @Schema(description = "最大运行数", required = true)
     val maxVMRun: Int,
-    @ApiModelProperty("创建时间", required = true)
+    @Schema(description = "创建时间", required = true)
     val createdTime: Long,
-    @ApiModelProperty("修改时间", required = true)
+    @Schema(description = "修改时间", required = true)
     val updatedTime: Long
 )

@@ -27,13 +27,12 @@
 
 package com.tencent.devops.project.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("项目基本信息")
+@Schema(description = "项目基本信息")
 data class ProjectBaseInfo(
-    @ApiModelProperty("主键ID")
+    @Schema(description = "主键ID")
     val id: Long,
-    @ApiModelProperty("英文缩写")
+    @Schema(description = "英文缩写")
     val englishName: String
 )

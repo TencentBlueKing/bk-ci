@@ -27,21 +27,20 @@
 
 package com.tencent.devops.dispatch.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("VM-专机信息")
+@Schema(description = "VM-专机信息")
 data class VMWithPrivateProject(
-    @ApiModelProperty("VM ID", required = true)
+    @Schema(description = "VM ID", required = true)
     val id: Long,
-    @ApiModelProperty("VM 对应母机ID", required = true)
+    @Schema(description = "VM 对应母机ID", required = true)
     val machineId: Int,
-    @ApiModelProperty("VM 类型ID", required = true)
+    @Schema(description = "VM 类型ID", required = true)
     val typeId: Int,
-    @ApiModelProperty("VM IP地址", required = true)
+    @Schema(description = "VM IP地址", required = true)
     val ip: String,
-    @ApiModelProperty("VM 名称", required = true)
+    @Schema(description = "VM 名称", required = true)
     val name: String,
-    @ApiModelProperty("工程ID", required = true)
+    @Schema(description = "工程ID", required = true)
     val projectId: String
 )

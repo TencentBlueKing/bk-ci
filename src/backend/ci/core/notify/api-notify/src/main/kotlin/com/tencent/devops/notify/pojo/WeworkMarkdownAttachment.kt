@@ -28,14 +28,13 @@
 package com.tencent.devops.notify.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("企业微信机器人attachment事件消息")
+@Schema(description = "企业微信机器人attachment事件消息")
 data class WeworkMarkdownAttachment(
-    @ApiModelProperty("回调id", required = true)
+    @Schema(description = "回调id", required = true)
     @JsonProperty("callback_id")
     val callbackId: String,
-    @ApiModelProperty("动作集合", required = true)
+    @Schema(description = "动作集合", required = true)
     val actions: List<WeworkMarkdownAction>
 )

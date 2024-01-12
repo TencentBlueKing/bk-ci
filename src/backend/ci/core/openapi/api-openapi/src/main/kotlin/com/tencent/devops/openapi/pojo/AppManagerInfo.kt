@@ -1,12 +1,11 @@
 package com.tencent.devops.openapi.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("")
+@Schema(description = "")
 data class AppManagerInfo(
-    @ApiModelProperty("app code")
+    @Schema(description = "app code")
     val appCode: String,
-    @ApiModelProperty("管理员")
+    @Schema(description = "管理员")
     val managerUser: String
 )

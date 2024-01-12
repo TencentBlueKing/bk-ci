@@ -28,38 +28,37 @@
 package com.tencent.devops.dispatch.docker.pojo
 
 import com.tencent.devops.common.pipeline.type.BuildType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * DebugStartParam
  */
-@ApiModel("启动webConsole调试请求参数")
+@Schema(description = "启动webConsole调试请求参数")
 data class DebugStartParam(
-    @ApiModelProperty("项目id", required = true)
+    @Schema(description = "项目id", required = true)
     val projectId: String,
-    @ApiModelProperty("流水线Id", required = true)
+    @Schema(description = "流水线Id", required = true)
     val pipelineId: String,
-    @ApiModelProperty("vmSeqId", required = true)
+    @Schema(description = "vmSeqId", required = true)
     val vmSeqId: String,
-    @ApiModelProperty("imageType为BKSTORE时的镜像编码", required = false)
+    @Schema(description = "imageType为BKSTORE时的镜像编码", required = false)
     val imageCode: String? = null,
-    @ApiModelProperty("imageType为BKSTORE时的镜像版本", required = false)
+    @Schema(description = "imageType为BKSTORE时的镜像版本", required = false)
     val imageVersion: String? = null,
-    @ApiModelProperty("镜像名称", required = false)
+    @Schema(description = "镜像名称", required = false)
     val imageName: String? = null,
-    @ApiModelProperty("环境变量", required = true)
+    @Schema(description = "环境变量", required = true)
     val buildEnv: Map<String, String>?,
-    @ApiModelProperty("镜像类型(BKDEVOPS或THIRD或BKSTORE)", required = false)
+    @Schema(description = "镜像类型(BKDEVOPS或THIRD或BKSTORE)", required = false)
     val imageType: String? = null,
-    @ApiModelProperty("镜像仓库凭证ID", required = false)
+    @Schema(description = "镜像仓库凭证ID", required = false)
     val credentialId: String? = null,
-    @ApiModelProperty("启动命令", required = false)
+    @Schema(description = "启动命令", required = false)
     val cmd: String? = "/bin/sh",
-    @ApiModelProperty("镜像信息", required = false)
+    @Schema(description = "镜像信息", required = false)
     val containerPool: String? = null,
-    @ApiModelProperty("buildId", required = false)
+    @Schema(description = "buildId", required = false)
     val buildId: String? = null,
-    @ApiModelProperty("dispatchType", required = false)
+    @Schema(description = "dispatchType", required = false)
     val dispatchType: String = BuildType.DOCKER.name
 )

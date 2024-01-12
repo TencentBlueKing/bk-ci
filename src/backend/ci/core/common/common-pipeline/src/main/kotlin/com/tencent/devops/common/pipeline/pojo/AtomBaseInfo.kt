@@ -27,31 +27,30 @@
 
 package com.tencent.devops.common.pipeline.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件基本信息")
+@Schema(description = "插件基本信息")
 data class AtomBaseInfo(
-    @ApiModelProperty("插件Id", required = true)
+    @Schema(description = "插件Id", required = true)
     val atomId: String,
-    @ApiModelProperty("插件代码", required = true)
+    @Schema(description = "插件代码", required = true)
     val atomCode: String,
-    @ApiModelProperty("插件版本号", required = true)
+    @Schema(description = "插件版本号", required = true)
     val version: String,
-    @ApiModelProperty("插件状态", required = true)
+    @Schema(description = "插件状态", required = true)
     val atomStatus: String,
-    @ApiModelProperty("插件开发语言", required = false)
+    @Schema(description = "插件开发语言", required = false)
     val language: String? = null,
-    @ApiModelProperty("分支", required = false)
+    @Schema(description = "分支", required = false)
     val branch: String? = null,
-    @ApiModelProperty("代码提交ID", required = false)
+    @Schema(description = "代码提交ID", required = false)
     val commitId: String? = null,
-    @ApiModelProperty("支持的操作系统名称", required = false)
+    @Schema(description = "支持的操作系统名称", required = false)
     val osName: String? = null,
-    @ApiModelProperty("支持的操作系统架构", required = false)
+    @Schema(description = "支持的操作系统架构", required = false)
     val osArch: String? = null,
-    @ApiModelProperty("不支持的操作系统组合信息", required = false)
+    @Schema(description = "不支持的操作系统组合信息", required = false)
     val invalidOsInfo: String? = null,
-    @ApiModelProperty("运行时版本", required = false)
+    @Schema(description = "运行时版本", required = false)
     val runtimeVersion: String? = null
 )

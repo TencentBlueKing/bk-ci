@@ -27,25 +27,24 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线信息")
+@Schema(description = "流水线信息")
 data class AtomPipeline(
-    @ApiModelProperty("流水线ID", required = true)
+    @Schema(description = "流水线ID", required = true)
     val pipelineId: String,
-    @ApiModelProperty("流水线名称", required = true)
+    @Schema(description = "流水线名称", required = true)
     var pipelineName: String,
-    @ApiModelProperty("流水线使用的插件版本")
+    @Schema(description = "流水线使用的插件版本")
     var atomVersion: String,
-    @ApiModelProperty("项目标识", required = true)
+    @Schema(description = "项目标识", required = true)
     val projectCode: String,
-    @ApiModelProperty("所属项目")
+    @Schema(description = "所属项目")
     val projectName: String,
-    @ApiModelProperty("所属BG")
+    @Schema(description = "所属BG")
     val bgName: String,
-    @ApiModelProperty("所属部门")
+    @Schema(description = "所属部门")
     val deptName: String,
-    @ApiModelProperty("所属中心")
+    @Schema(description = "所属中心")
     val centerName: String
 )

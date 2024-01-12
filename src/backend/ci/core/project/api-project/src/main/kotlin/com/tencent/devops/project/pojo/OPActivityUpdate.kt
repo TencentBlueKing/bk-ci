@@ -27,19 +27,18 @@
 
 package com.tencent.devops.project.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("最新动态-修改模型")
+@Schema(description = "最新动态-修改模型")
 data class OPActivityUpdate(
-    @ApiModelProperty("名称")
+    @Schema(description = "名称")
     val name: String,
-    @ApiModelProperty("英文名")
+    @Schema(description = "英文名")
     val englishName: String,
-    @ApiModelProperty("类型")
+    @Schema(description = "类型")
     val type: String,
-    @ApiModelProperty("状态")
+    @Schema(description = "状态")
     val status: String,
-    @ApiModelProperty("链接")
+    @Schema(description = "链接")
     val link: String
 )

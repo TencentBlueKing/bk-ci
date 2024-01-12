@@ -26,17 +26,16 @@
  */
 package com.tencent.devops.notify.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("通用消息类型-分页")
+@Schema(description = "通用消息类型-分页")
 open class NotificationResponseWithPage<out T>(
-    @ApiModelProperty("总数")
+    @Schema(description = "总数")
     val count: Int,
-    @ApiModelProperty("页数")
+    @Schema(description = "页数")
     val page: Int,
-    @ApiModelProperty("每页条数")
+    @Schema(description = "每页条数")
     val pageSize: Int,
-    @ApiModelProperty("通知列表")
+    @Schema(description = "通知列表")
     val data: List<NotificationResponse<T>>
 )

@@ -28,21 +28,21 @@
 package com.tencent.devops.repository.pojo.github
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class GithubRepo(
     val id: Long,
     val name: String,
     @JsonProperty("full_name")
-    @ApiModelProperty(name = "full_name")
+    @Schema(description = "full_name")
     val fullName: String,
     @JsonProperty("clone_url")
-    @ApiModelProperty(name = "clone_url")
+    @Schema(description = "clone_url")
     val httpUrl: String,
     @JsonProperty("ssh_url")
-    @ApiModelProperty(name = "ssh_url")
+    @Schema(description = "ssh_url")
     val sshUrl: String,
     @JsonProperty("updated_at")
-    @ApiModelProperty(name = "updated_at")
+    @Schema(description = "updated_at")
     val updateAt: String
 )

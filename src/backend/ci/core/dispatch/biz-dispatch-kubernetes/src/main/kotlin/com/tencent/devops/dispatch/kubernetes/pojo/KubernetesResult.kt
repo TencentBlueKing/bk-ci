@@ -28,16 +28,15 @@
 package com.tencent.devops.dispatch.kubernetes.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("Kubernetes数据返回包装模型")
+@Schema(description = "Kubernetes数据返回包装模型")
 data class KubernetesResult<out T>(
-    @ApiModelProperty("错误码", required = true)
+    @Schema(description = "错误码", required = true)
     val status: Int,
-    @ApiModelProperty("错误信息", required = false)
+    @Schema(description = "错误信息", required = false)
     val message: String? = null,
-    @ApiModelProperty("数据", required = false)
+    @Schema(description = "数据", required = false)
     val data: T? = null
 ) {
     constructor(data: T) : this(0, null, data)

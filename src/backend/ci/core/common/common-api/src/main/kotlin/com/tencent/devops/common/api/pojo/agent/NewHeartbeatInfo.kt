@@ -27,44 +27,43 @@
 
 package com.tencent.devops.common.api.pojo.agent
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("心跳信息模型")
+@Schema(description = "心跳信息模型")
 data class NewHeartbeatInfo(
-    @ApiModelProperty("主版本")
+    @Schema(description = "主版本")
     val masterVersion: String,
-    @ApiModelProperty("从属版本")
+    @Schema(description = "从属版本")
     val slaveVersion: String,
-    @ApiModelProperty("主机名")
+    @Schema(description = "主机名")
     val hostName: String,
-    @ApiModelProperty("构建机模型")
+    @Schema(description = "构建机模型")
     val agentIp: String,
-    @ApiModelProperty("并行任务计数")
+    @Schema(description = "并行任务计数")
     val parallelTaskCount: Int,
-    @ApiModelProperty("构建机安装路径")
+    @Schema(description = "构建机安装路径")
     val agentInstallPath: String,
-    @ApiModelProperty("启动者")
+    @Schema(description = "启动者")
     val startedUser: String,
-    @ApiModelProperty("第三方构建信息列表")
+    @Schema(description = "第三方构建信息列表")
     var taskList: List<ThirdPartyBuildInfo>?,
-    @ApiModelProperty("Agent属性信息")
+    @Schema(description = "Agent属性信息")
     val props: AgentPropsInfo?,
-    @ApiModelProperty("构建机id")
+    @Schema(description = "构建机id")
     var agentId: Long?,
-    @ApiModelProperty("项目id")
+    @Schema(description = "项目id")
     var projectId: String?,
-    @ApiModelProperty("心跳时间戳")
+    @Schema(description = "心跳时间戳")
     var heartbeatTime: Long?,
-    @ApiModelProperty("忙碌运行中任务数量")
+    @Schema(description = "忙碌运行中任务数量")
     var busyTaskSize: Int = 0,
-    @ApiModelProperty("docker并行任务计数")
+    @Schema(description = "docker并行任务计数")
     val dockerParallelTaskCount: Int?,
-    @ApiModelProperty("docker构建信息列表")
+    @Schema(description = "docker构建信息列表")
     var dockerTaskList: List<ThirdPartyDockerBuildInfo>?,
-    @ApiModelProperty("忙碌运行docker中任务数量")
+    @Schema(description = "忙碌运行docker中任务数量")
     var dockerBusyTaskSize: Int = 0,
-    @ApiModelProperty("Agent退出的错误信息")
+    @Schema(description = "Agent退出的错误信息")
     val errorExitData: AgentErrorExitData?
 ) {
     companion object {

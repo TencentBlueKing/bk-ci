@@ -27,17 +27,16 @@
 
 package com.tencent.devops.process.pojo.setting
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线task公共配置信息")
+@Schema(description = "流水线task公共配置信息")
 data class TaskCommonSetting(
-    @ApiModelProperty("最大输入参数个数", required = true)
+    @Schema(description = "最大输入参数个数", required = true)
     val maxInputNum: Int,
-    @ApiModelProperty("最大输出参数个数", required = true)
+    @Schema(description = "最大输出参数个数", required = true)
     val maxOutputNum: Int,
-    @ApiModelProperty("输入参数组件配置", required = true)
+    @Schema(description = "输入参数组件配置", required = true)
     val inputComponentCommonSettings: List<TaskComponentCommonSetting>,
-    @ApiModelProperty("输出参数组件配置", required = true)
+    @Schema(description = "输出参数组件配置", required = true)
     val outputComponentCommonSettings: List<TaskComponentCommonSetting>
 )

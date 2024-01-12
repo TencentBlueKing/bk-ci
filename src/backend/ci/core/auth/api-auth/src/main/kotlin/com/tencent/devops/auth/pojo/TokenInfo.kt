@@ -27,15 +27,14 @@
 
 package com.tencent.devops.auth.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel
+@Schema
 data class TokenInfo(
-    @ApiModelProperty("用户id")
+    @Schema(description = "用户id")
     val userId: String?,
-    @ApiModelProperty("过期时间戳")
+    @Schema(description = "过期时间戳")
     val expirationTime: Long,
-    @ApiModelProperty("用户token")
+    @Schema(description = "用户token")
     var accessToken: String?
 )

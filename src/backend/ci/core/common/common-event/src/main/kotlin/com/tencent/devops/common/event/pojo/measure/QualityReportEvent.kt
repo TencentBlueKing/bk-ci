@@ -29,16 +29,16 @@ package com.tencent.devops.common.event.pojo.measure
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @Event(exchange = MQ.EXCHANGE_QUALITY_DAILY_FANOUT, routeKey = MQ.ROUTE_QUALITY_DAILY_FANOUT)
 data class QualityReportEvent(
-    @ApiModelProperty("统计时间")
+    @Schema(description = "统计时间")
     val statisticsTime: String,
-    @ApiModelProperty("项目ID")
+    @Schema(description = "项目ID")
     val projectId: String,
-    @ApiModelProperty("红线拦截次数")
+    @Schema(description = "红线拦截次数")
     val interceptedCount: Int,
-    @ApiModelProperty("红线执行总次数")
+    @Schema(description = "红线执行总次数")
     val totalCount: Int
 )

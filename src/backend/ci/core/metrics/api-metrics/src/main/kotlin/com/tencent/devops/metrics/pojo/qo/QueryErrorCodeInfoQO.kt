@@ -27,19 +27,18 @@
 
 package com.tencent.devops.metrics.pojo.qo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("查询错误码信息查询条件对象")
+@Schema(description = "查询错误码信息查询条件对象")
 data class QueryErrorCodeInfoQO(
-    @ApiModelProperty("插件代码")
+    @Schema(description = "插件代码")
     val atomCode: String,
-    @ApiModelProperty("错误类型")
+    @Schema(description = "错误类型")
     val errorTypes: List<Int>?,
-    @ApiModelProperty("搜索关键字")
+    @Schema(description = "搜索关键字")
     val keyword: String?,
-    @ApiModelProperty("页码")
+    @Schema(description = "页码")
     val page: Int = 1,
-    @ApiModelProperty("页数")
+    @Schema(description = "页数")
     val pageSize: Int = 10
 )

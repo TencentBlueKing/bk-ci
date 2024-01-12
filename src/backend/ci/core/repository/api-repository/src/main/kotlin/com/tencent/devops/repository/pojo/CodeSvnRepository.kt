@@ -29,28 +29,27 @@ package com.tencent.devops.repository.pojo
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.scm.enums.CodeSvnRegion
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("代码库模型-Code平台Svn")
+@Schema(description = "代码库模型-Code平台Svn")
 data class CodeSvnRepository(
-    @ApiModelProperty("代码库别名", required = true)
+    @Schema(description = "代码库别名", required = true)
     override val aliasName: String,
-    @ApiModelProperty("URL", required = true)
+    @Schema(description = "URL", required = true)
     override val url: String,
-    @ApiModelProperty("凭据id", required = true)
+    @Schema(description = "凭据id", required = true)
     override val credentialId: String,
-    @ApiModelProperty("SVN区域", required = true)
+    @Schema(description = "SVN区域", required = true)
     val region: CodeSvnRegion? = CodeSvnRegion.TC,
-    @ApiModelProperty("svn项目名称", example = "xx/yy_proj", required = true)
+    @Schema(description = "svn项目名称", example = "xx/yy_proj", required = true)
     override val projectName: String,
-    @ApiModelProperty("用户名", required = true)
+    @Schema(description = "用户名", required = true)
     override var userName: String,
-    @ApiModelProperty("项目id", required = true)
+    @Schema(description = "项目id", required = true)
     override var projectId: String?,
-    @ApiModelProperty("仓库hash id", required = false)
+    @Schema(description = "仓库hash id", required = false)
     override val repoHashId: String?,
-    @ApiModelProperty("SVN类型", required = false)
+    @Schema(description = "SVN类型", required = false)
     val svnType: String? = SVN_TYPE_SSH // default is ssh svn type
 ) : Repository {
 

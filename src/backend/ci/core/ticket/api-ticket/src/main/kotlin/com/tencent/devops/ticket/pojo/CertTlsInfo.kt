@@ -27,21 +27,20 @@
 
 package com.tencent.devops.ticket.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("证书-tls证书")
+@Schema(description = "证书-tls证书")
 data class CertTlsInfo(
-    @ApiModelProperty("证书ID", required = true)
+    @Schema(description = "证书ID", required = true)
     val certId: String,
-    @ApiModelProperty("服务器crt证书名", required = true)
+    @Schema(description = "服务器crt证书名", required = true)
     val serverCrtFileName: String,
-    @ApiModelProperty("服务器key证书名", required = true)
+    @Schema(description = "服务器key证书名", required = true)
     val serverKeyFileName: String,
-    @ApiModelProperty("客户端crt证书名", required = true)
+    @Schema(description = "客户端crt证书名", required = true)
     val clientCrtFileName: String?,
-    @ApiModelProperty("客户端key证书名", required = true)
+    @Schema(description = "客户端key证书名", required = true)
     val clientKeyFileName: String?,
-    @ApiModelProperty("remark", required = true)
+    @Schema(description = "remark", required = true)
     val remark: String?
 )

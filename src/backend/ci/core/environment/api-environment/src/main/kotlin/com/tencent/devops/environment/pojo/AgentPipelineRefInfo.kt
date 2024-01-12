@@ -27,21 +27,20 @@
 
 package com.tencent.devops.environment.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("agent流水线引用信息")
+@Schema(description = "agent流水线引用信息")
 data class AgentPipelineRefInfo(
-    @ApiModelProperty("agentHashId", required = true)
+    @Schema(description = "agentHashId", required = true)
     val agentHashId: String,
-    @ApiModelProperty("流水线ID", required = true)
+    @Schema(description = "流水线ID", required = true)
     val pipelineId: String,
-    @ApiModelProperty("流水线名称", required = true)
+    @Schema(description = "流水线名称", required = true)
     val pipelineName: String,
-    @ApiModelProperty("Vm Seq ID", required = true)
+    @Schema(description = "Vm Seq ID", required = true)
     val vmSeqId: String?,
-    @ApiModelProperty("Job ID", required = true)
+    @Schema(description = "Job ID", required = true)
     val jobId: String?,
-    @ApiModelProperty("Job Name", required = true)
+    @Schema(description = "Job Name", required = true)
     val jobName: String
 )

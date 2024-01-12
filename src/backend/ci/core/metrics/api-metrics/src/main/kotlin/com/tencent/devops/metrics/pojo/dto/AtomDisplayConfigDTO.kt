@@ -28,15 +28,14 @@
 package com.tencent.devops.metrics.pojo.dto
 
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("项目下展示插件配置传输对象")
+@Schema(description = "项目下展示插件配置传输对象")
 data class AtomDisplayConfigDTO(
-    @ApiModelProperty("项目ID")
+    @Schema(description = "项目ID")
     val projectId: String,
-    @ApiModelProperty("userId")
+    @Schema(description = "userId")
     val userId: String,
-    @ApiModelProperty("插件基本信息列表")
+    @Schema(description = "插件基本信息列表")
     val atomBaseInfos: List<AtomBaseInfoDO>
 )

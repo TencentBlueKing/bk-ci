@@ -28,18 +28,17 @@
 package com.tencent.devops.dispatch.kubernetes.bcs.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("Bcs数据返回包装模型")
+@Schema(description = "Bcs数据返回包装模型")
 data class BcsResult<out T>(
-    @ApiModelProperty("错误码", required = true)
+    @Schema(description = "错误码", required = true)
     val code: Int,
-    @ApiModelProperty("错误信息", required = false)
+    @Schema(description = "错误信息", required = false)
     val message: String? = null,
-    @ApiModelProperty("数据", required = false)
+    @Schema(description = "数据", required = false)
     val data: T? = null,
-    @ApiModelProperty("接口调用成功", required = false)
+    @Schema(description = "接口调用成功", required = false)
     val result: Boolean? = null
 ) {
     constructor(data: T) : this(0, null, data)

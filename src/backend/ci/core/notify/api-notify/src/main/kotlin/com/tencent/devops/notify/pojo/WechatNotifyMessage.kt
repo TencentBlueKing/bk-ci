@@ -28,23 +28,22 @@ package com.tencent.devops.notify.pojo
 
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("wechat微信消息类型")
+@Schema(description = "wechat微信消息类型")
 open class WechatNotifyMessage : BaseMessage() {
 
-    @ApiModelProperty("通知接收者")
+    @Schema(description = "通知接收者")
     private val receivers: MutableSet<String> = mutableSetOf()
-    @ApiModelProperty("通知内容")
+    @Schema(description = "通知内容")
     var body: String = ""
-    @ApiModelProperty("通知发送者")
+    @Schema(description = "通知发送者")
     var sender: String = ""
-    @ApiModelProperty("优先级", allowableValues = "-1,0,1", dataType = "int")
+    @Schema(description = "优先级", allowableValues = "-1,0,1", dataType = "int")
     var priority: EnumNotifyPriority = EnumNotifyPriority.HIGH
-    @ApiModelProperty("通知来源", allowableValues = "0,1", dataType = "int")
+    @Schema(description = "通知来源", allowableValues = "0,1", dataType = "int")
     var source: EnumNotifySource = EnumNotifySource.BUSINESS_LOGIC
-    @ApiModelProperty("是否markdown")
+    @Schema(description = "是否markdown")
     var markdownContent: Boolean = false
 
     fun addReceiver(receiver: String) {
@@ -63,7 +62,7 @@ open class WechatNotifyMessage : BaseMessage() {
         return receivers.toSet()
     }
 
-    @ApiModelProperty(hidden = true)
+    @Schema(description = hidden = true)
     fun isReceiversEmpty(): Boolean {
         if (receivers.size == 0) return true
         return false

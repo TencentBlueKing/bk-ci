@@ -27,17 +27,16 @@
 
 package com.tencent.devops.ticket.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("凭证-凭证权限")
+@Schema(description = "凭证-凭证权限")
 data class CredentialPermissions(
-    @ApiModelProperty("删除权限", required = true)
+    @Schema(description = "删除权限", required = true)
     val delete: Boolean,
-    @ApiModelProperty("查看权限", required = true)
+    @Schema(description = "查看权限", required = true)
     val view: Boolean,
-    @ApiModelProperty("编辑权限", required = true)
+    @Schema(description = "编辑权限", required = true)
     val edit: Boolean,
-    @ApiModelProperty("使用权限", required = true)
+    @Schema(description = "使用权限", required = true)
     val use: Boolean? = null
 )

@@ -27,11 +27,10 @@
 
 package com.tencent.devops.stream.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("Yaml内容")
+@Schema(description = "Yaml内容")
 data class StreamGitYamlString(
-    @ApiModelProperty("YAML文件内容")
+    @Schema(description = "YAML文件内容")
     val yaml: String
 )

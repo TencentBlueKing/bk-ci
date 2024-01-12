@@ -27,19 +27,18 @@
 
 package com.tencent.devops.environment.pojo.slave
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("网关模型")
+@Schema(description = "网关模型")
 data class SlaveGateway(
-    @ApiModelProperty("网关地域")
+    @Schema(description = "网关地域")
     val zoneName: String,
-    @ApiModelProperty("展示名称")
+    @Schema(description = "展示名称")
     val showName: String,
-    @ApiModelProperty("网关地址")
+    @Schema(description = "网关地址")
     val gateway: String,
-    @ApiModelProperty("文件网关地址")
+    @Schema(description = "文件网关地址")
     val fileGateway: String?,
-    @ApiModelProperty("可见性")
+    @Schema(description = "可见性")
     val visibility: Boolean
 )

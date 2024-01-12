@@ -27,19 +27,18 @@
 
 package com.tencent.devops.dispatch.docker.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("Docker构建机负载配置模型")
+@Schema(description = "Docker构建机负载配置模型")
 data class DockerHostLoadConfig(
-    @ApiModelProperty("处理器负载阈值")
+    @Schema(description = "处理器负载阈值")
     val cpuLoadThreshold: Int,
-    @ApiModelProperty("内存负载阈值")
+    @Schema(description = "内存负载阈值")
     val memLoadThreshold: Int,
-    @ApiModelProperty("存储负载阈值")
+    @Schema(description = "存储负载阈值")
     val diskLoadThreshold: Int,
-    @ApiModelProperty("存储IO负载阈值")
+    @Schema(description = "存储IO负载阈值")
     val diskIOLoadThreshold: Int,
-    @ApiModelProperty("使用量")
+    @Schema(description = "使用量")
     val usedNum: Int = 50
 )

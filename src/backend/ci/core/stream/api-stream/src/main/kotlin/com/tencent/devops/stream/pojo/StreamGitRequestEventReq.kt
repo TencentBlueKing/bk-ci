@@ -38,63 +38,62 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 // 该类提供给前端页面使用
-@ApiModel("stream 触发请求Req")
+@Schema(description = "stream 触发请求Req")
 data class StreamGitRequestEventReq(
-    @ApiModelProperty("ID")
+    @Schema(description = "ID")
     var id: Long?,
-    @ApiModelProperty("事件类型")
+    @Schema(description = "事件类型")
     val objectKind: String,
-    @ApiModelProperty("操作类型")
+    @Schema(description = "操作类型")
     val operationKind: String?,
     // 对于Push是action对于Mr是extension
-    @ApiModelProperty("拓展操作")
+    @Schema(description = "拓展操作")
     val extensionAction: String?,
-    @ApiModelProperty("stream 项目ID")
+    @Schema(description = "stream 项目ID")
     val gitProjectId: Long,
-    @ApiModelProperty("源stream 项目ID")
+    @Schema(description = "源stream 项目ID")
     val sourceGitProjectId: Long?,
-    @ApiModelProperty("分支名")
+    @Schema(description = "分支名")
     val branch: String,
-    @ApiModelProperty("目标分支名")
+    @Schema(description = "目标分支名")
     val targetBranch: String?,
-    @ApiModelProperty("提交ID")
+    @Schema(description = "提交ID")
     val commitId: String,
-    @ApiModelProperty("提交说明")
+    @Schema(description = "提交说明")
     val commitMsg: String?,
-    @ApiModelProperty("提交时间")
+    @Schema(description = "提交时间")
     val commitTimeStamp: String?,
     // 目前只在上下文中传递，后续看需求是否保存至数据库
-    @ApiModelProperty("提交用户")
+    @Schema(description = "提交用户")
     val commitAuthorName: String?,
-    @ApiModelProperty("用户")
+    @Schema(description = "用户")
     val userId: String,
-    @ApiModelProperty("提交总数")
+    @Schema(description = "提交总数")
     val totalCommitCount: Long,
-    @ApiModelProperty("合并请求ID")
+    @Schema(description = "合并请求ID")
     val mergeRequestId: Long?,
-    @ApiModelProperty("描述（已废弃）")
+    @Schema(description = "描述（已废弃）")
     var description: String?,
-    @ApiModelProperty("合并请求标题")
+    @Schema(description = "合并请求标题")
     var mrTitle: String?,
-    @ApiModelProperty("Git事件对象")
+    @Schema(description = "Git事件对象")
     var gitEvent: GitEvent?,
-    @ApiModelProperty("是否是删除分支触发")
+    @Schema(description = "是否是删除分支触发")
     val deleteBranch: Boolean,
-    @ApiModelProperty("是否是删除Tag触发")
+    @Schema(description = "是否是删除Tag触发")
     val deleteTag: Boolean,
-    @ApiModelProperty("评论Id")
+    @Schema(description = "评论Id")
     var noteId: Long?,
-    @ApiModelProperty("评论连接")
+    @Schema(description = "评论连接")
     var jumpUrl: String?,
-    @ApiModelProperty("构建标题")
+    @Schema(description = "构建标题")
     var buildTitle: String?,
-    @ApiModelProperty("构建跳转显示信息")
+    @Schema(description = "构建跳转显示信息")
     var buildSource: String?,
-    @ApiModelProperty("变更的yaml文件")
+    @Schema(description = "变更的yaml文件")
     var changeYamlList: List<ChangeYamlList> = emptyList()
 ) {
     constructor(gitRequestEvent: GitRequestEvent, homepage: String) : this(

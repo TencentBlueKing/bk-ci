@@ -29,27 +29,26 @@
 package com.tencent.devops.project.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("项目consul tag修改入参")
+@Schema(description = "项目consul tag修改入参")
 data class ProjectTagUpdateDTO(
     @JsonProperty(value = "routerTag", required = true)
-    @ApiModelProperty("项目对应的router tags", name = "routerTag")
+    @Schema(description = "项目对应的router tags", name = "routerTag")
     val routerTag: String,
     @JsonProperty(value = "projectCodeList", required = false)
-    @ApiModelProperty("项目编码集合", name = "projectCodeList")
+    @Schema(description = "项目编码集合", name = "projectCodeList")
     val projectCodeList: List<String>?,
     @JsonProperty(value = "bgId", required = false)
-    @ApiModelProperty("BgId", name = "bgId")
+    @Schema(description = "BgId", name = "bgId")
     val bgId: Long?,
     @JsonProperty(value = "centerId", required = false)
-    @ApiModelProperty("centerId", name = "centerId")
+    @Schema(description = "centerId", name = "centerId")
     val centerId: Long?,
     @JsonProperty(value = "deptId", required = false)
-    @ApiModelProperty("deptId", name = "deptId")
+    @Schema(description = "deptId", name = "deptId")
     val deptId: Long?,
     @JsonProperty(value = "channel", required = false)
-    @ApiModelProperty("channel", name = "channel")
+    @Schema(description = "channel", name = "channel")
     val channel: String?
 )

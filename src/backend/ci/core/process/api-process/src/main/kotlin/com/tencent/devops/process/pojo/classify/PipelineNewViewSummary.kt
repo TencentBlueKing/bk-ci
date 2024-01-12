@@ -27,29 +27,28 @@
 
 package com.tencent.devops.process.pojo.classify
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("")
+@Schema(description = "")
 data class PipelineNewViewSummary(
-    @ApiModelProperty("视图id", required = false)
+    @Schema(description = "视图id", required = false)
     val id: String,
-    @ApiModelProperty("项目id", required = false)
+    @Schema(description = "项目id", required = false)
     val projectId: String,
-    @ApiModelProperty("视图名称", required = false)
+    @Schema(description = "视图名称", required = false)
     val name: String,
-    @ApiModelProperty("是否项目", required = false)
+    @Schema(description = "是否项目", required = false)
     val projected: Boolean,
-    @ApiModelProperty("创建时间", required = false)
+    @Schema(description = "创建时间", required = false)
     val createTime: Long,
-    @ApiModelProperty("更新时间", required = false)
+    @Schema(description = "更新时间", required = false)
     val updateTime: Long,
-    @ApiModelProperty("创建者", required = false)
+    @Schema(description = "创建者", required = false)
     val creator: String,
-    @ApiModelProperty("是否置顶", required = false)
+    @Schema(description = "是否置顶", required = false)
     val top: Boolean = false,
-    @ApiModelProperty("流水线组类型,1--动态,2--静态", required = true)
+    @Schema(description = "流水线组类型,1--动态,2--静态", required = true)
     val viewType: Int,
-    @ApiModelProperty("流水线个数", required = true)
+    @Schema(description = "流水线个数", required = true)
     val pipelineCount: Int
 )

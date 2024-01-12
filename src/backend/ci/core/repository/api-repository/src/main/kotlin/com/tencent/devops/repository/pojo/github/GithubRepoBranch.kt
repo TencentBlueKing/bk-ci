@@ -28,8 +28,7 @@
 package com.tencent.devops.repository.pojo.github
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * github获取分支列表:/repos/{owner}/{repo}/branches
@@ -43,12 +42,12 @@ import io.swagger.annotations.ApiModelProperty
  }
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@ApiModel("仓库分支信息")
+@Schema(description = "仓库分支信息")
 data class GithubRepoBranch(
-    @ApiModelProperty("名称")
+    @Schema(description = "名称")
     val name: String,
-    @ApiModelProperty("提交信息")
+    @Schema(description = "提交信息")
     val commit: GithubRepoCommit,
-    @ApiModelProperty("是否是保护分支")
+    @Schema(description = "是否是保护分支")
     val protected: Boolean
 )

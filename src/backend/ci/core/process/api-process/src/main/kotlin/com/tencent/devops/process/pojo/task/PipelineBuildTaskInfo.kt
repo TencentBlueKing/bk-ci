@@ -30,60 +30,59 @@ package com.tencent.devops.process.pojo.task
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.api.pojo.ErrorType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("")
+@Schema(description = "")
 data class PipelineBuildTaskInfo(
-    @ApiModelProperty("项目id", required = false)
+    @Schema(description = "项目id", required = false)
     val projectId: String,
-    @ApiModelProperty("流水线id", required = false)
+    @Schema(description = "流水线id", required = false)
     val pipelineId: String,
-    @ApiModelProperty("模板id", required = false)
+    @Schema(description = "模板id", required = false)
     val templateId: String? = null,
-    @ApiModelProperty("构建id", required = false)
+    @Schema(description = "构建id", required = false)
     val buildId: String,
-    @ApiModelProperty("阶段id", required = false)
+    @Schema(description = "阶段id", required = false)
     val stageId: String,
-    @ApiModelProperty("容器id", required = false)
+    @Schema(description = "容器id", required = false)
     val containerId: String,
-    @ApiModelProperty("容器hash id", required = false)
+    @Schema(description = "容器hash id", required = false)
     val containerHashId: String?,
-    @ApiModelProperty("容器类型", required = false)
+    @Schema(description = "容器类型", required = false)
     val containerType: String,
-    @ApiModelProperty("任务序列", required = false)
+    @Schema(description = "任务序列", required = false)
     val taskSeq: Int,
-    @ApiModelProperty("任务id", required = false)
+    @Schema(description = "任务id", required = false)
     val taskId: String,
-    @ApiModelProperty("任务名称", required = false)
+    @Schema(description = "任务名称", required = false)
     val taskName: String,
-    @ApiModelProperty("任务类型", required = false)
+    @Schema(description = "任务类型", required = false)
     val taskType: String,
-    @ApiModelProperty("任务atom代码", required = false)
+    @Schema(description = "任务atom代码", required = false)
     val taskAtom: String,
-    @ApiModelProperty("状态", required = false)
+    @Schema(description = "状态", required = false)
     var status: BuildStatus,
-    @ApiModelProperty("任务参数集合", required = false)
+    @Schema(description = "任务参数集合", required = false)
     val taskParams: MutableMap<String, Any>,
-    @ApiModelProperty("其他选项", required = false)
+    @Schema(description = "其他选项", required = false)
     val additionalOptions: ElementAdditionalOptions?,
-    @ApiModelProperty("执行次数", required = false)
+    @Schema(description = "执行次数", required = false)
     val executeCount: Int? = 1,
-    @ApiModelProperty("启动者", required = false)
+    @Schema(description = "启动者", required = false)
     var starter: String,
-    @ApiModelProperty("审批人", required = false)
+    @Schema(description = "审批人", required = false)
     val approver: String?,
-    @ApiModelProperty("子构建id", required = false)
+    @Schema(description = "子构建id", required = false)
     var subBuildId: String?,
-    @ApiModelProperty("启动时间", required = false)
+    @Schema(description = "启动时间", required = false)
     val startTime: Long? = null,
-    @ApiModelProperty("结束时间", required = false)
+    @Schema(description = "结束时间", required = false)
     val endTime: Long? = null,
-    @ApiModelProperty("错误类型", required = false)
+    @Schema(description = "错误类型", required = false)
     var errorType: ErrorType? = null,
-    @ApiModelProperty("错误代码", required = false)
+    @Schema(description = "错误代码", required = false)
     var errorCode: Int? = null,
-    @ApiModelProperty("错误信息", required = false)
+    @Schema(description = "错误信息", required = false)
     var errorMsg: String? = null
 ) {
     fun getTaskParam(paramName: String): String {

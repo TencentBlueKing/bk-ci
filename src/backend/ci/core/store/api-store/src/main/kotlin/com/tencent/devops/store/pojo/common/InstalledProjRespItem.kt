@@ -27,17 +27,16 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("已安装的项目")
+@Schema(description = "已安装的项目")
 data class InstalledProjRespItem(
-    @ApiModelProperty("项目标识")
+    @Schema(description = "项目标识")
     val projectCode: String,
-    @ApiModelProperty("项目名称")
+    @Schema(description = "项目名称")
     val projectName: String?,
-    @ApiModelProperty("安装人")
+    @Schema(description = "安装人")
     val creator: String,
-    @ApiModelProperty("安装时间")
+    @Schema(description = "安装时间")
     val createTime: String
 )

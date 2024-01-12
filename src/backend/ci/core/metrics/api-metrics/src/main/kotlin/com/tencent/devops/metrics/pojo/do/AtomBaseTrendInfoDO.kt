@@ -28,17 +28,16 @@
 package com.tencent.devops.metrics.pojo.`do`
 
 import com.fasterxml.jackson.annotation.JsonFormat
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDate
 
-@ApiModel("插件基本趋势信息")
+@Schema(description = "插件基本趋势信息")
 data class AtomBaseTrendInfoDO(
-    @ApiModelProperty("成功率")
+    @Schema(description = "成功率")
     val successRate: Double? = null,
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @ApiModelProperty("统计时间")
+    @Schema(description = "统计时间")
     val statisticsTime: LocalDate,
-    @ApiModelProperty("平均耗时")
+    @Schema(description = "平均耗时")
     val avgCostTime: Double? = null
 )

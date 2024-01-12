@@ -27,31 +27,30 @@
 
 package com.tencent.devops.environment.pojo.thirdPartyAgent
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("第三方构建机流水线引用信息")
+@Schema(description = "第三方构建机流水线引用信息")
 data class AgentPipelineRef(
-    @ApiModelProperty("Node ID", required = true)
+    @Schema(description = "Node ID", required = true)
     val nodeId: Long? = null,
-    @ApiModelProperty("Node Hash ID", required = true)
+    @Schema(description = "Node Hash ID", required = true)
     val nodeHashId: String? = null,
-    @ApiModelProperty("Agent ID", required = true)
+    @Schema(description = "Agent ID", required = true)
     val agentId: Long? = null,
-    @ApiModelProperty("Agent Hash ID", required = true)
+    @Schema(description = "Agent Hash ID", required = true)
     val agentHashId: String? = null,
-    @ApiModelProperty("项目ID", required = true)
+    @Schema(description = "项目ID", required = true)
     val projectId: String,
-    @ApiModelProperty("流水线ID", required = true)
+    @Schema(description = "流水线ID", required = true)
     val pipelineId: String,
-    @ApiModelProperty("流水线名称", required = true)
+    @Schema(description = "流水线名称", required = true)
     val pipelineName: String,
-    @ApiModelProperty("Vm Seq ID", required = true)
+    @Schema(description = "Vm Seq ID", required = true)
     val vmSeqId: String?,
-    @ApiModelProperty("Job ID", required = true)
+    @Schema(description = "Job ID", required = true)
     val jobId: String?,
-    @ApiModelProperty("Job Name", required = true)
+    @Schema(description = "Job Name", required = true)
     val jobName: String,
-    @ApiModelProperty("上次构建时间", required = false)
+    @Schema(description = "上次构建时间", required = false)
     val lastBuildTime: String? = ""
 )

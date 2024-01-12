@@ -27,15 +27,14 @@
 
 package com.tencent.devops.process.pojo.pipeline
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线规则")
+@Schema(description = "流水线规则")
 data class PipelineRule(
-    @ApiModelProperty("规则名称", required = true)
+    @Schema(description = "规则名称", required = true)
     val ruleName: String,
-    @ApiModelProperty("业务标识", required = true)
+    @Schema(description = "业务标识", required = true)
     val busCode: String,
-    @ApiModelProperty("处理器", required = true)
+    @Schema(description = "处理器", required = true)
     val processor: String
 )

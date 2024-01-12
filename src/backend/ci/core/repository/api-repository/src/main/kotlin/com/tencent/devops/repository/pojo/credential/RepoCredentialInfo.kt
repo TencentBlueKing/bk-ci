@@ -26,21 +26,20 @@
  */
 package com.tencent.devops.repository.pojo.credential
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("仓库授权信息")
+@Schema(description = "仓库授权信息")
 data class RepoCredentialInfo(
-    @ApiModelProperty("授权Token")
+    @Schema(description = "授权Token")
     var token: String = "",
-    @ApiModelProperty("授权私钥")
+    @Schema(description = "授权私钥")
     val privateKey: String = "",
-    @ApiModelProperty("私钥密码")
+    @Schema(description = "私钥密码")
     val passPhrase: String? = "",
-    @ApiModelProperty("用户名")
+    @Schema(description = "用户名")
     val username: String = "",
-    @ApiModelProperty("密码")
+    @Schema(description = "密码")
     val password: String = "",
-    @ApiModelProperty("凭证类型")
+    @Schema(description = "凭证类型")
     val credentialType: String = ""
 )

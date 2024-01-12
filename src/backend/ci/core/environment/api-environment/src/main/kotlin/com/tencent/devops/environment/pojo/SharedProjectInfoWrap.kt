@@ -27,10 +27,10 @@
 
 package com.tencent.devops.environment.pojo
 
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.Parameter
 
-@ApiModel("共享的项目列表")
+@Schema(description = "共享的项目列表")
 data class SharedProjectInfoWrap(
     @Parameter(description = "共享的项目列表", required = true)
     val sharedProjects: List<AddSharedProjectInfo>

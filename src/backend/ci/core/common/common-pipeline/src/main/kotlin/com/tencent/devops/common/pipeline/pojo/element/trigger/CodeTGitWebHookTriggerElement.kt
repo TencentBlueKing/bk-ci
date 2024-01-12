@@ -35,18 +35,17 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterT
 import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.selector
 import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.staffInput
 import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.vuexInput
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("TGit事件触发", description = CodeTGitWebHookTriggerElement.classType)
+@Schema(description = "TGit事件触发", description = CodeTGitWebHookTriggerElement.classType)
 data class CodeTGitWebHookTriggerElement(
-    @ApiModelProperty("任务名称", required = true)
+    @Schema(description = "任务名称", required = true)
     override val name: String = "TGit变更触发",
-    @ApiModelProperty("id", required = false)
+    @Schema(description = "id", required = false)
     override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @Schema(description = "状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("数据", required = true)
+    @Schema(description = "数据", required = true)
     val data: CodeTGitWebHookTriggerData
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
@@ -153,60 +152,60 @@ data class CodeTGitWebHookTriggerElement(
 }
 
 data class CodeTGitWebHookTriggerData(
-    @ApiModelProperty("TGit事件触发数据", required = false)
+    @Schema(description = "TGit事件触发数据", required = false)
     val input: CodeTGitWebHookTriggerInput
 )
 
-@ApiModel("TGit事件触发数据")
+@Schema(description = "TGit事件触发数据")
 data class CodeTGitWebHookTriggerInput(
-    @ApiModelProperty("仓库ID", required = true)
+    @Schema(description = "仓库ID", required = true)
     val repositoryHashId: String?,
-    @ApiModelProperty("分支名称", required = false)
+    @Schema(description = "分支名称", required = false)
     val branchName: String?,
-    @ApiModelProperty("用于排除的分支名", required = false)
+    @Schema(description = "用于排除的分支名", required = false)
     val excludeBranchName: String?,
-    @ApiModelProperty("路径过滤类型", required = true)
+    @Schema(description = "路径过滤类型", required = true)
     val pathFilterType: PathFilterType? = PathFilterType.NamePrefixFilter,
-    @ApiModelProperty("用于包含的路径", required = false)
+    @Schema(description = "用于包含的路径", required = false)
     val includePaths: String?,
-    @ApiModelProperty("用于排除的路径", required = false)
+    @Schema(description = "用于排除的路径", required = false)
     val excludePaths: String?,
-    @ApiModelProperty("用户白名单", required = false)
+    @Schema(description = "用户白名单", required = false)
     val includeUsers: List<String>? = null,
-    @ApiModelProperty("用于排除的user id", required = false)
+    @Schema(description = "用于排除的user id", required = false)
     val excludeUsers: List<String>?,
-    @ApiModelProperty("事件类型", required = false)
+    @Schema(description = "事件类型", required = false)
     val eventType: CodeEventType?,
-    @ApiModelProperty("是否为block", required = false)
+    @Schema(description = "是否为block", required = false)
     val block: Boolean?,
-    @ApiModelProperty("新版的git原子的类型")
+    @Schema(description = "新版的git原子的类型")
     val repositoryType: RepositoryType? = null,
-    @ApiModelProperty("新版的git代码库名")
+    @Schema(description = "新版的git代码库名")
     val repositoryName: String? = null,
-    @ApiModelProperty("tag名称", required = false)
+    @Schema(description = "tag名称", required = false)
     val tagName: String? = null,
-    @ApiModelProperty("用于排除的tag名称", required = false)
+    @Schema(description = "用于排除的tag名称", required = false)
     val excludeTagName: String? = null,
-    @ApiModelProperty("用于排除的源分支名称", required = false)
+    @Schema(description = "用于排除的源分支名称", required = false)
     val excludeSourceBranchName: String? = null,
-    @ApiModelProperty("用于包含的源分支名称", required = false)
+    @Schema(description = "用于包含的源分支名称", required = false)
     val includeSourceBranchName: String? = null,
-    @ApiModelProperty("tag从哪条分支创建", required = false)
+    @Schema(description = "tag从哪条分支创建", required = false)
     val fromBranches: String? = null,
-    @ApiModelProperty("code review 状态", required = false)
+    @Schema(description = "code review 状态", required = false)
     val includeCrState: List<String>? = null,
-    @ApiModelProperty("code note comment", required = false)
+    @Schema(description = "code note comment", required = false)
     val includeNoteComment: String? = null,
-    @ApiModelProperty("code note 类型", required = false)
+    @Schema(description = "code note 类型", required = false)
     val includeNoteTypes: List<String>? = null,
-    @ApiModelProperty("issue事件action")
+    @Schema(description = "issue事件action")
     val includeIssueAction: List<String>? = null,
-    @ApiModelProperty("是否启用回写")
+    @Schema(description = "是否启用回写")
     val enableCheck: Boolean? = true,
-    @ApiModelProperty("mr事件action")
+    @Schema(description = "mr事件action")
     val includeMrAction: List<String>? = null,
-    @ApiModelProperty("push事件action")
+    @Schema(description = "push事件action")
     val includePushAction: List<String>? = null,
-    @ApiModelProperty("webhook队列", required = false)
+    @Schema(description = "webhook队列", required = false)
     val webhookQueue: Boolean? = false
 )

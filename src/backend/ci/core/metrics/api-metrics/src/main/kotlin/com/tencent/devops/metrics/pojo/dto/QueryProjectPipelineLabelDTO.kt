@@ -27,19 +27,18 @@
 
 package com.tencent.devops.metrics.pojo.dto
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("获取项目下流水线标签信息传输对象")
+@Schema(description = "获取项目下流水线标签信息传输对象")
 data class QueryProjectPipelineLabelDTO(
-    @ApiModelProperty("项目ID")
+    @Schema(description = "项目ID")
     val projectId: String,
-    @ApiModelProperty("流水线ID")
+    @Schema(description = "流水线ID")
     val pipelineIds: List<String>?,
-    @ApiModelProperty("页码")
+    @Schema(description = "页码")
     val page: Int,
-    @ApiModelProperty("页数")
+    @Schema(description = "页数")
     val pageSize: Int,
-    @ApiModelProperty("搜索关键字")
+    @Schema(description = "搜索关键字")
     val keyword: String?
 )

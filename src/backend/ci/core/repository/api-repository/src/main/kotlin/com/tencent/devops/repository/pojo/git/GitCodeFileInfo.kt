@@ -29,8 +29,7 @@ package com.tencent.devops.repository.pojo.git
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
 {
@@ -45,31 +44,31 @@ import io.swagger.annotations.ApiModelProperty
 }
  */
 
-@ApiModel("工蜂文件信息")
+@Schema(description = "工蜂文件信息")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitCodeFileInfo(
     @JsonProperty("file_name")
-    @ApiModelProperty(name = "file_name")
+    @Schema(description = "file_name")
     val fileName: String,
     @JsonProperty("file_path")
-    @ApiModelProperty(name = "file_path")
+    @Schema(description = "file_path")
     val filePath: String,
     @JsonProperty("size")
-    @ApiModelProperty(name = "size")
+    @Schema(description = "size")
     val size: Int,
     @JsonProperty("ref")
-    @ApiModelProperty(name = "ref")
+    @Schema(description = "ref")
     val ref: String,
     @JsonProperty("blob_id")
-    @ApiModelProperty(name = "blob_id")
+    @Schema(description = "blob_id")
     val blobId: String,
     @JsonProperty("commit_id")
-    @ApiModelProperty(name = "commit_id")
+    @Schema(description = "commit_id")
     val commitId: String,
     @JsonProperty("content")
-    @ApiModelProperty(name = "content")
+    @Schema(description = "content")
     val content: String,
     @JsonProperty("encoding")
-    @ApiModelProperty(name = "encoding")
+    @Schema(description = "encoding")
     val encoding: String
 )

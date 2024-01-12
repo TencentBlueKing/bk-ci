@@ -27,25 +27,24 @@
 
 package com.tencent.devops.process.pojo.template
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("")
+@Schema(description = "")
 data class TemplateInstancePage(
-    @ApiModelProperty("项目id", required = false)
+    @Schema(description = "项目id", required = false)
     val projectId: String,
-    @ApiModelProperty("模板id", required = false)
+    @Schema(description = "模板id", required = false)
     val templateId: String,
-    @ApiModelProperty("模板生成的流水线实例列表", required = false)
+    @Schema(description = "模板生成的流水线实例列表", required = false)
     val instances: List<TemplatePipeline>,
-    @ApiModelProperty("最新版本", required = false)
+    @Schema(description = "最新版本", required = false)
     val latestVersion: TemplateVersion,
-    @ApiModelProperty("数量", required = false)
+    @Schema(description = "数量", required = false)
     val count: Int,
-    @ApiModelProperty("页数", required = false)
+    @Schema(description = "页数", required = false)
     val page: Int?,
-    @ApiModelProperty("每页数量", required = false)
+    @Schema(description = "每页数量", required = false)
     val pageSize: Int?,
-    @ApiModelProperty("是否有创建模板实例权限", required = false)
+    @Schema(description = "是否有创建模板实例权限", required = false)
     val hasCreateTemplateInstancePerm: Boolean? = null
 )

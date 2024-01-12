@@ -27,35 +27,34 @@
 
 package com.tencent.devops.dispatch.docker.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("容器信息模型")
+@Schema(description = "容器信息模型")
 data class ContainerInfo(
-    @ApiModelProperty("项目id")
+    @Schema(description = "项目id")
     val projectId: String,
-    @ApiModelProperty("流水线id")
+    @Schema(description = "流水线id")
     val pipelineId: String,
-    @ApiModelProperty("构建序列号")
+    @Schema(description = "构建序列号")
     val vmSeqId: String,
-    @ApiModelProperty("资源池序号")
+    @Schema(description = "资源池序号")
     val poolNo: Int,
-    @ApiModelProperty("状态")
+    @Schema(description = "状态")
     val status: Int,
-    @ApiModelProperty("镜像名称")
+    @Schema(description = "镜像名称")
     val imageName: String,
-    @ApiModelProperty("容器id")
+    @Schema(description = "容器id")
     val containerId: String,
-    @ApiModelProperty("容器地址")
+    @Schema(description = "容器地址")
     val address: String,
-    @ApiModelProperty("容器token")
+    @Schema(description = "容器token")
     val token: String,
-    @ApiModelProperty("构建环境")
+    @Schema(description = "构建环境")
     val buildEnv: String?,
-    @ApiModelProperty("仓库用户名")
+    @Schema(description = "仓库用户名")
     val registryUser: String?,
-    @ApiModelProperty("仓库密码")
+    @Schema(description = "仓库密码")
     val registryPwd: String?,
-    @ApiModelProperty("镜像类型")
+    @Schema(description = "镜像类型")
     val imageType: String?
 )

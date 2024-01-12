@@ -27,15 +27,14 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件版本替换信息")
+@Schema(description = "插件版本替换信息")
 data class AtomVersionReplaceInfo(
-    @ApiModelProperty("被替换插件版本", required = true)
+    @Schema(description = "被替换插件版本", required = true)
     val fromAtomVersion: String,
-    @ApiModelProperty("替换插件版本", required = true)
+    @Schema(description = "替换插件版本", required = true)
     val toAtomVersion: String,
-    @ApiModelProperty("插件参数替换信息", required = false)
+    @Schema(description = "插件参数替换信息", required = false)
     val paramReplaceInfoList: List<AtomParamReplaceInfo>? = null
 )

@@ -28,19 +28,18 @@
 
 package com.tencent.devops.project.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel
+@Schema
 data class ProjectCreateUserInfo(
-    @ApiModelProperty("操作人")
+    @Schema(description = "操作人")
     val createUserId: String,
-    @ApiModelProperty("待分配的角色名称")
+    @Schema(description = "待分配的角色名称")
     val roleName: String?,
-    @ApiModelProperty("角色Id")
+    @Schema(description = "角色Id")
     val roleId: Int?,
-    @ApiModelProperty("组ID")
+    @Schema(description = "组ID")
     val groupId: Int?,
-    @ApiModelProperty("目标用户")
+    @Schema(description = "目标用户")
     val userIds: List<String>? = emptyList()
 )

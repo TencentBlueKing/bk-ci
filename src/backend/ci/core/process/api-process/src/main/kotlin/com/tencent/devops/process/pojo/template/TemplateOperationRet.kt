@@ -27,15 +27,14 @@
 
 package com.tencent.devops.process.pojo.template
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("返回模型")
+@Schema(description = "返回模型")
 data class TemplateOperationRet(
-    @ApiModelProperty("状态码", required = false)
+    @Schema(description = "状态码", required = false)
     val status: Int,
-    @ApiModelProperty("data 信息", required = false)
+    @Schema(description = "data 信息", required = false)
     val data: TemplateOperationMessage,
-    @ApiModelProperty("message 信息", required = false)
+    @Schema(description = "message 信息", required = false)
     val message: String
 )

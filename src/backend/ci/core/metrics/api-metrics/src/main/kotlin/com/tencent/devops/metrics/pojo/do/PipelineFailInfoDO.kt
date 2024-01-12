@@ -27,15 +27,14 @@
 
 package com.tencent.devops.metrics.pojo.`do`
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线错误统计信息")
+@Schema(description = "流水线错误统计信息")
 data class PipelineFailInfoDO(
-    @ApiModelProperty("错误类型名称")
+    @Schema(description = "错误类型名称")
     val name: String?,
-    @ApiModelProperty("错误类型标识")
+    @Schema(description = "错误类型标识")
     val errorType: Int,
-    @ApiModelProperty("错误次数")
+    @Schema(description = "错误次数")
     val errorCount: Long
 )

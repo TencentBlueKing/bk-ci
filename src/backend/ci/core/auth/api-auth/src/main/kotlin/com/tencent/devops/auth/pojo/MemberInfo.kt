@@ -1,14 +1,13 @@
 package com.tencent.devops.auth.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("成员信息")
+@Schema(description = "成员信息")
 data class MemberInfo(
-    @ApiModelProperty("成员id")
+    @Schema(description = "成员id")
     val id: String,
-    @ApiModelProperty("成员名称")
+    @Schema(description = "成员名称")
     val name: String,
-    @ApiModelProperty("成员类别")
+    @Schema(description = "成员类别")
     val type: String
 )

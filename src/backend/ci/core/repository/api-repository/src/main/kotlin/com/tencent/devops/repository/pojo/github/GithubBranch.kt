@@ -29,8 +29,7 @@ package com.tencent.devops.repository.pojo.github
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * {
@@ -66,42 +65,42 @@ import io.swagger.annotations.ApiModelProperty
  * }
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@ApiModel("分支模型")
+@Schema(description = "分支模型")
 data class GithubBranch(
-    @ApiModelProperty("名称")
+    @Schema(description = "名称")
     val name: String,
-    @ApiModelProperty("提交")
+    @Schema(description = "提交")
     val commit: GithubCommit?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@ApiModel("提交模型")
+@Schema(description = "提交模型")
 data class GithubCommit(
-    @ApiModelProperty("sha值")
+    @Schema(description = "sha值")
     val sha: String,
-    @ApiModelProperty("节点id", name = "node_id")
+    @Schema(description = "节点id", name = "node_id")
     @JsonProperty("node_id")
     val nodeId: String?,
-    @ApiModelProperty("提交内容")
+    @Schema(description = "提交内容")
     val commit: GithubCommitData?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@ApiModel("提交内容模型")
+@Schema(description = "提交内容模型")
 data class GithubCommitData(
-    @ApiModelProperty("提交信息")
+    @Schema(description = "提交信息")
     val message: String,
-    @ApiModelProperty("提交者信息")
+    @Schema(description = "提交者信息")
     val author: GithubCommitAuthor
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@ApiModel("提交者模型")
+@Schema(description = "提交者模型")
 data class GithubCommitAuthor(
-    @ApiModelProperty("提交者名称")
+    @Schema(description = "提交者名称")
     val name: String,
-    @ApiModelProperty("提交时间")
+    @Schema(description = "提交时间")
     val date: String,
-    @ApiModelProperty("提交者email")
+    @Schema(description = "提交者email")
     val email: String
 )
