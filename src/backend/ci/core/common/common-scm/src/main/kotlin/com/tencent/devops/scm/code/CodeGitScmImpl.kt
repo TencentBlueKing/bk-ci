@@ -176,7 +176,9 @@ class CodeGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the username and password of git", ignored)
             throw ScmException(
-                ignored.message ?: I18nUtil.getCodeLanMessage(
+                GitUtils.matchExceptionCode(ignored.message ?: "")?.let {
+                    I18nUtil.getCodeLanMessage(it)
+                } ?: ignored.message ?: I18nUtil.getCodeLanMessage(
                     CommonMessageCode.GIT_LOGIN_FAIL
                 ),
                 ScmType.CODE_GIT.name
