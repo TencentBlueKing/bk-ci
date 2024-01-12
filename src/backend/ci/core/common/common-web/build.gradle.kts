@@ -34,6 +34,8 @@ dependencies {
     api(project(":core:common:common-client"))
     api(project(":core:common:common-third-sdk:common-sdk-util"))
     api("com.tencent.bk.sdk:iam-java-sdk")
+    api("org.reflections:reflections")
+    api("org.glassfish.jersey.media:jersey-media-multipart")
     api("org.springframework.boot:spring-boot-starter-jersey")
     api("org.springframework.boot:spring-boot-starter-undertow")
     api("org.springframework.boot:spring-boot-starter-web")
