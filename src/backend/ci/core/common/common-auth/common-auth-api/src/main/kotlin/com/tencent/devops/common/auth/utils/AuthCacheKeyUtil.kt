@@ -23,36 +23,20 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.project.pojo.enums
+package com.tencent.devops.common.auth.utils
 
-enum class OrganizationType(val typeId: Int) {
-    bg(6),
-    businessLine(8),
-    dept(1),
-    center(7),
-    group(2);
+object AuthCacheKeyUtil {
 
-    companion object {
-        fun getOrganizationTypeName(typeId: Int): String {
-            values().forEach {
-                if (typeId == it.typeId) return it.name
-            }
-            return typeId.toString()
-        }
-
-        // 是否为部门以下层级
-        fun isBelowTheDept(typeId: Int): Boolean {
-            return typeId == center.typeId || typeId == group.typeId
-        }
-
-        fun isDept(typeId: Int): Boolean {
-            return typeId == dept.typeId
-        }
-
-        fun isGroup(typeId: Int): Boolean {
-            return typeId == group.typeId
-        }
+    fun getCacheKey(
+        userId: String,
+        resourceType: String,
+        action: String,
+        projectCode: String,
+        resourceCode: String
+    ): String {
+        return "${userId}_${resourceType}_${action}_${projectCode}_$resourceCode"
     }
 }

@@ -59,12 +59,14 @@ import com.tencent.devops.process.yaml.v2.models.YamlTransferData
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.common.CommonVariables
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.streamActions.StreamOpenApiAction
 import com.tencent.devops.stream.trigger.pojo.ModelParametersData
 import com.tencent.devops.stream.trigger.pojo.StreamGitProjectCache
 
 @Suppress("ComplexMethod")
 object ModelParameters {
     const val VARIABLE_PREFIX = "variables."
+    const val STREAM_SUB_PIPELINE_TRACE_ID = "STREAM_SUB_PIPELINE_TRACE_ID"
     const val CIDir = ".ci/"
 
     fun createPipelineParams(
@@ -135,6 +137,10 @@ object ModelParameters {
             variables = action.getUserVariables(yaml.variables) ?: yaml.variables,
             startParams = startParams
         )
+
+        if (action is StreamOpenApiAction && action.subPipelineTriggerId != null) {
+            startParams[STREAM_SUB_PIPELINE_TRACE_ID] = action.subPipelineTriggerId
+        }
 
         return ModelParametersData(buildFormProperties, startParams)
     }
