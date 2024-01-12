@@ -67,7 +67,8 @@ import org.springframework.stereotype.Service
 
 @Service("AgentService")
 data class AgentService @Autowired constructor(
-    private val agentApi: AgentApi
+    private val agentApi: AgentApi,
+    private val chooseAgentInstallChannelIdService: ChooseAgentInstallChannelIdService
 ) {
     @Value("\${job.bkBizScopeId:#{null}}")
     val bkBizScopeId: Int = 0
@@ -93,7 +94,11 @@ data class AgentService @Autowired constructor(
                     bkHostId = it.bkHostId,
                     bkAddressing = it.bkAddressing,
                     apId = DEFAULT_INSTALL_AGENT_AP_ID,
-                    installChannelId = it.installChannelId,
+                    installChannelId = if (it.isAutoChooseInstallChannelId) {
+                        chooseAgentInstallChannelIdService.autoChooseAgentInstallChannelId(
+                            it.innerIp ?: it.innerIpv6 ?: ""
+                        )
+                    } else it.installChannelId,
                     innerIp = it.innerIp,
                     outerIp = it.outerIp,
                     loginIp = it.loginIp,
