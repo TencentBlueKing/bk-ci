@@ -14,7 +14,6 @@ import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.resp.GetStepInstanceDetailResult
 import com.tencent.devops.environment.pojo.job.resp.GetStepInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
-import com.tencent.devops.environment.pojo.job.agentres.InstallAgentChannel
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentInstallChannelResult
 import com.tencent.devops.environment.pojo.job.resp.JobResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskStatusResult

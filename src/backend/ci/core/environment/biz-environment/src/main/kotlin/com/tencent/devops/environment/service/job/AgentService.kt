@@ -43,7 +43,6 @@ import com.tencent.devops.environment.pojo.job.agentreq.TerminateAgentInstallTas
 import com.tencent.devops.environment.pojo.job.agentres.AgentAgentResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentInstallAgentResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentInstallChannelResult
-import com.tencent.devops.environment.pojo.job.agentres.InstallAgentChannel
 import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentStatusFromNodemanResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentTaskStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
