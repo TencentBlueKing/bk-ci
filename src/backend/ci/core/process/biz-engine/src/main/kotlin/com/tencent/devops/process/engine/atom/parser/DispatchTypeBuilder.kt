@@ -33,7 +33,6 @@ import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
-import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.service.BuildVariableService
 import org.springframework.beans.factory.annotation.Autowired
@@ -76,7 +75,7 @@ class DispatchTypeBuilder @Autowired constructor(
             else if (!param.dockerBuildVersion.isNullOrBlank()) {
                 DockerDispatchType(param.dockerBuildVersion!!)
             } else {
-                ESXiDispatchType()
+                DockerDispatchType(param.dockerBuildVersion!!)
             }
         }
 
