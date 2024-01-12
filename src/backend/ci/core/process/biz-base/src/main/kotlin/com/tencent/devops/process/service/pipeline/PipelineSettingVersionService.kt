@@ -101,7 +101,7 @@ class PipelineSettingVersionService @Autowired constructor(
                 settingInfo.successSubscriptionList = ve.successSubscriptionList
                 settingInfo.failSubscriptionList = ve.failSubscriptionList
                 settingInfo.labels = ve.labels ?: listOf()
-                settingInfo.desc = ve.desc
+                settingInfo.desc = ve.desc ?: ""
                 settingInfo.buildNumRule = ve.buildNumRule
                 settingInfo.runLockType = ve.runLockType
                 settingInfo.waitQueueTimeMinute = ve.waitQueueTimeMinute
