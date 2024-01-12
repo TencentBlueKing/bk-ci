@@ -173,4 +173,13 @@ class UserRemoteDevResourceImpl @Autowired constructor(
             Result(message, res)
         }
     }
+
+    override fun queryCgsPwd(userId: String, cgsId: String): Result<Boolean> {
+        val (res, message) = expertSupportService.queryCgsPwd(userId, cgsId)
+        return if (message.isNullOrBlank()) {
+            Result(res)
+        } else {
+            Result(message, res)
+        }
+    }
 }
