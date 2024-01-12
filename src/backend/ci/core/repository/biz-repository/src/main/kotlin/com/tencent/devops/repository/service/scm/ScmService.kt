@@ -280,7 +280,8 @@ class ScmService @Autowired constructor(
                     ScmType.CODE_GITLAB -> {
                         gitConfig.gitlabHookUrl
                     }
-                    ScmType.CODE_TGIT -> {
+
+                    ScmType.CODE_TGIT, ScmType.CODE_TGIT_CE -> {
                         gitConfig.tGitHookUrl
                     }
                     ScmType.CODE_P4 -> {
@@ -294,7 +295,11 @@ class ScmService @Autowired constructor(
             ScmFactory.getScm(
                 projectName = projectName,
                 url = url,
-                type = type,
+                type = if (type == ScmType.CODE_TGIT_CE) {
+                    ScmType.CODE_TGIT
+                } else {
+                    type
+                },
                 branchName = null,
                 privateKey = privateKey,
                 passPhrase = passPhrase,

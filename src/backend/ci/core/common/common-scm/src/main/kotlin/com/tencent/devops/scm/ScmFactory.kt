@@ -120,7 +120,7 @@ object ScmFactory {
                     event = event
                 )
             }
-            ScmType.CODE_TGIT -> {
+            ScmType.CODE_TGIT, ScmType.CODE_TGIT_CE -> {
                 if (token == null) {
                     throw TaskExecuteException(
                         errorCode = ErrorCode.USER_INPUT_INVAILD,

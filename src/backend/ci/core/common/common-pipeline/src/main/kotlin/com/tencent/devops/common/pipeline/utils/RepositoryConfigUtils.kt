@@ -42,6 +42,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitCeWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 
@@ -96,6 +97,11 @@ object RepositoryConfigUtils {
                 repositoryType = element.data.input.repositoryType ?: RepositoryType.ID
             )
             is CodeP4WebHookTriggerElement -> RepositoryConfig(
+                repositoryHashId = element.data.input.repositoryHashId,
+                repositoryName = element.data.input.repositoryName,
+                repositoryType = element.data.input.repositoryType ?: RepositoryType.ID
+            )
+            is CodeTGitCeWebHookTriggerElement -> RepositoryConfig(
                 repositoryHashId = element.data.input.repositoryHashId,
                 repositoryName = element.data.input.repositoryName,
                 repositoryType = element.data.input.repositoryType ?: RepositoryType.ID
@@ -208,6 +214,15 @@ object RepositoryConfigUtils {
                     repositoryType = element.data.input.repositoryType ?: RepositoryType.ID
                 )
                 Triple(ScmType.CODE_P4, element.data.input.eventType, repositoryConfig)
+            }
+
+            is CodeTGitCeWebHookTriggerElement -> {
+                val repositoryConfig = RepositoryConfig(
+                    repositoryHashId = element.data.input.repositoryHashId,
+                    repositoryName = EnvUtils.parseEnv(element.data.input.repositoryName, variables),
+                    repositoryType = element.data.input.repositoryType ?: RepositoryType.ID
+                )
+                Triple(ScmType.CODE_TGIT_CE, element.data.input.eventType, repositoryConfig)
             }
 
             else ->

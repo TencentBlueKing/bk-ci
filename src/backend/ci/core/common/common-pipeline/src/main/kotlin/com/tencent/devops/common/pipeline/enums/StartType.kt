@@ -112,7 +112,7 @@ enum class StartType {
                         CodeType.GIT.name -> CodeGitWebHookTriggerElement.classType
                         CodeType.GITLAB.name -> CodeGitlabWebHookTriggerElement.classType
                         CodeType.GITHUB.name -> CodeGithubWebHookTriggerElement.classType
-                        CodeType.TGIT.name -> CodeTGitWebHookTriggerElement.classType
+                        CodeType.TGIT.name, CodeType.TGIT_CE.name -> CodeTGitWebHookTriggerElement.classType
                         else -> RemoteTriggerElement.classType
                     }
                 }

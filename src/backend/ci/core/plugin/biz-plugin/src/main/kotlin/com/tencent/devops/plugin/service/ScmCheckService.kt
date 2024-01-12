@@ -46,13 +46,16 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.api.scm.ServiceScmResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.CodeTGitCeRepository
 import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.CommitCheckRequest
+import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.ticket.api.ServiceCredentialResource
+import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -95,6 +98,10 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                         getCredential(projectId, repo).privateKey
                     }
                     Triple(isOauth, token, ScmType.CODE_TGIT)
+                }
+                is CodeTGitCeRepository -> {
+                    val token = getCredential(projectId, repo).privateKey
+                    Triple(false, token, ScmType.CODE_TGIT_CE)
                 }
                 else ->
                     throw OperationException("Not Git Code Repository")
@@ -272,6 +279,27 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                 partAPrivateKey = pair.privateKey
             )
         )
+
+        if ((repository is CodeGitRepository ||
+                    repository is CodeTGitRepository ||
+                    repository is CodeTGitCeRepository) &&
+            (credential.credentialType == CredentialType.USERNAME_PASSWORD)
+        ) {
+            // USERNAME_PASSWORD v1 = username, v2 = password
+            val session = client.get(ServiceScmResource::class).getSession(
+                RepoSessionRequest(
+                    type = repository.getScmType(),
+                    username = privateKey,
+                    password = passPhrase,
+                    url = repository.url
+                )
+            ).data
+            return Credential(
+                username = privateKey,
+                privateKey = session?.privateToken ?: "",
+                passPhrase = passPhrase
+            )
+        }
 
         val list = if (passPhrase.isBlank()) {
             listOf(privateKey)

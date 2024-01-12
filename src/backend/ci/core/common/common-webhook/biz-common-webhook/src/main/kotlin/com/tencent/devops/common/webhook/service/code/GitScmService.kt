@@ -41,6 +41,7 @@ import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.api.scm.ServiceScmResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
+import com.tencent.devops.repository.pojo.CodeTGitCeRepository
 import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
@@ -411,6 +412,8 @@ class GitScmService @Autowired constructor(
                 Pair(repo.authType, ScmType.CODE_GIT)
             is CodeTGitRepository ->
                 Pair(repo.authType, ScmType.CODE_TGIT)
+            is CodeTGitCeRepository ->
+                Pair(repo.authType, ScmType.CODE_TGIT_CE)
             is CodeGitlabRepository ->
                 Pair(RepoAuthType.HTTP, ScmType.CODE_GITLAB)
             else ->

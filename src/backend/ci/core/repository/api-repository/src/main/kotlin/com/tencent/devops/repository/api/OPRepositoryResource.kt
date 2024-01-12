@@ -102,4 +102,13 @@ interface OPRepositoryResource {
         @PathParam("repositoryId")
         repositoryId: Long
     ): Result<Boolean>
+
+    @ApiOperation("拆分TGIT")
+    @PUT
+    @Path("/splitTgit")
+    fun splitTgit(
+        @ApiParam("项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String?
+    ): Result<Boolean>
 }

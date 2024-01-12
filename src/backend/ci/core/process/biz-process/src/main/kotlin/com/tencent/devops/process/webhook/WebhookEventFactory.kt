@@ -78,7 +78,7 @@ class WebhookEventFactory @Autowired constructor(
 
     fun createScmWebHookMatcher(scmType: ScmType, event: CodeWebhookEvent): ScmWebhookMatcher {
         return when (scmType) {
-            ScmType.CODE_GIT, ScmType.CODE_TGIT ->
+            ScmType.CODE_GIT, ScmType.CODE_TGIT, ScmType.CODE_TGIT_CE ->
                 scmWebhookMatcherBuilder.createGitWebHookMatcher(event = event as GitEvent)
 
             ScmType.CODE_SVN ->

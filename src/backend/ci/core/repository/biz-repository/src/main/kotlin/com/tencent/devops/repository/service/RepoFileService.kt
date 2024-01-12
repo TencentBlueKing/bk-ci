@@ -46,6 +46,7 @@ import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.CodeP4Repository
 import com.tencent.devops.repository.pojo.CodeSvnRepository
+import com.tencent.devops.repository.pojo.CodeTGitCeRepository
 import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
@@ -172,75 +173,68 @@ class RepoFileService @Autowired constructor(
             }
             is CodeGitRepository -> {
                 logger.info("get file content of git repo:$repo")
-                if (!reversion.isNullOrBlank()) {
-                    getGitSingleFile(
-                        repo = repo,
-                        filePath = filePath,
-                        ref = reversion ?: "",
-                        subModule = subModule
-                    )
-                } else {
-                    getGitSingleFile(
-                        repo = repo,
-                        filePath = filePath,
-                        ref = branch ?: "master",
-                        subModule = subModule
-                    )
-                }
+                getGitSingleFile(
+                    repo = repo,
+                    filePath = filePath,
+                    ref = if (!reversion.isNullOrBlank()) {
+                        reversion
+                    } else {
+                        branch ?: "master"
+                    },
+                    subModule = subModule
+                )
             }
             is CodeGitlabRepository -> {
                 logger.info("get file content of gitlab repo: $repo")
-                if (!reversion.isNullOrBlank()) {
-                    getGitlabSingleFile(
-                        repo = repo,
-                        filePath = filePath,
-                        ref = reversion ?: "",
-                        subModule = subModule
-                    )
-                } else {
-                    getGitlabSingleFile(
-                        repo = repo,
-                        filePath = filePath,
-                        ref = branch ?: "master",
-                        subModule = subModule
-                    )
-                }
+                getGitlabSingleFile(
+                    repo = repo,
+                    filePath = filePath,
+                    ref = if (!reversion.isNullOrBlank()) {
+                        reversion
+                    } else {
+                        branch ?: "master"
+                    },
+                    subModule = subModule
+                )
             }
             is GithubRepository -> {
                 logger.info("get file content of github repo: $repo")
-                if (!reversion.isNullOrBlank()) {
-                    getGithubFile(
-                        repo = repo,
-                        filePath = filePath,
-                        ref = reversion!!,
-                        subModule = subModule
-                    )
-                } else {
-                    getGithubFile(
-                        repo = repo,
-                        filePath = filePath,
-                        ref = branch ?: "master",
-                        subModule = subModule
-                    )
-                }
+                getGithubFile(
+                    repo = repo,
+                    filePath = filePath,
+                    ref = if (!reversion.isNullOrBlank()) {
+                        reversion
+                    } else {
+                        branch ?: "master"
+                    },
+                    subModule = subModule
+                )
             }
             is CodeTGitRepository -> {
                 logger.info("get file content of tGit repo: $repo")
-                if (!reversion.isNullOrBlank()) {
-                    getTGitSingleFile(
-                        repo = repo,
-                        filePath = filePath,
-                        ref = reversion ?: "",
-                        subModule = subModule
-                    )
-                } else {
-                    getTGitSingleFile(
-                        repo = repo,
-                        filePath = filePath,
-                        ref = branch ?: "master",
-                        subModule = subModule
-                    )
-                }
+                getTGitSingleFile(
+                    repo = repo,
+                    filePath = filePath,
+                    ref = if (!reversion.isNullOrBlank()) {
+                        reversion
+                    } else {
+                        branch ?: "master"
+                    },
+                    subModule = subModule
+                )
+            }
+            is CodeTGitCeRepository -> {
+                logger.info("get file content of tGit repo: $repo")
+                getTGitCeSingleFile(
+                    repo = repo,
+                    filePath = filePath,
+                    ref = if (!reversion.isNullOrBlank()) {
+                        reversion
+                    } else {
+                        branch ?: "master"
+                    },
+                    subModule = subModule
+                )
             }
             is CodeP4Repository -> {
                 logger.info("get file content of tGit repo: $repo")
@@ -398,6 +392,25 @@ class RepoFileService @Autowired constructor(
         )
     }
 
+    private fun getTGitCeSingleFile(
+        repo: CodeTGitCeRepository,
+        filePath: String,
+        ref: String,
+        subModule: String?
+    ): String {
+        logger.info("getTGitCeSingleFile for repo: ${repo.projectName}(subModule: $subModule)")
+        val token = getCredential(repo.projectId ?: "", repo).privateKey
+        val projectName = if (!subModule.isNullOrBlank()) subModule else repo.projectName
+        return gitService.getGitFileContent(
+            repoUrl = repo.url,
+            repoName = projectName,
+            filePath = filePath,
+            authType = repo.authType,
+            token = token,
+            ref = ref
+        )
+    }
+
     fun updateTGitFileContent(
         repositoryConfig: RepositoryConfig,
         userId: String,
@@ -508,9 +521,7 @@ class RepoFileService @Autowired constructor(
         )
 
         // username+password 关联的git代码库
-        if ((repository is CodeGitRepository || repository is CodeTGitRepository) &&
-            (credential.credentialType == CredentialType.USERNAME_PASSWORD)
-        ) {
+        if (needGetSession(repository, credential.credentialType)) {
             // USERNAME_PASSWORD v1 = username, v2 = password
             val session = client.get(ServiceScmResource::class).getSession(
                 RepoSessionRequest(
@@ -534,4 +545,8 @@ class RepoFileService @Autowired constructor(
         }
         return CredentialUtils.getCredential(repository, list, credential.credentialType)
     }
+
+    private fun needGetSession(repository: Repository, credentialType: CredentialType) =
+        (repository is CodeGitRepository || repository is CodeTGitRepository || repository is CodeTGitCeRepository) &&
+                (credentialType == CredentialType.USERNAME_PASSWORD)
 }

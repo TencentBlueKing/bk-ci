@@ -51,6 +51,9 @@ enum class PipelineTriggerType {
     @ApiModelProperty("TGIT 代码库")
     CODE_TGIT,
 
+    @ApiModelProperty("TGIT 代码库（社区版）")
+    CODE_TGIT_CE,
+
     @ApiModelProperty("P4 代码库")
     CODE_P4,
 
@@ -116,7 +119,8 @@ enum class PipelineTriggerType {
                 CODE_GITLAB.name,
                 GITHUB.name,
                 CODE_TGIT.name,
-                CODE_P4.name
+                CODE_P4.name,
+                CODE_TGIT_CE.name
             ).contains(
                 triggerType
             )

@@ -33,7 +33,9 @@ enum class ScmType {
     CODE_GITLAB,
     GITHUB,
     CODE_TGIT,
-    CODE_P4
+    CODE_P4,
+    // 社区版
+    CODE_TGIT_CE
     ;
 
     companion object {
@@ -45,6 +47,7 @@ enum class ScmType {
                 GITHUB -> 4.toShort()
                 CODE_TGIT -> 5.toShort()
                 CODE_P4 -> 6.toShort()
+                CODE_TGIT_CE -> 7.toShort()
             }
         }
     }
