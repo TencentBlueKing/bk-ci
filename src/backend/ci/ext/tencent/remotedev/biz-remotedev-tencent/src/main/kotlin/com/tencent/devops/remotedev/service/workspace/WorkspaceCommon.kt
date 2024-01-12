@@ -427,7 +427,7 @@ class WorkspaceCommon @Autowired constructor(
             logger.warn("Error syncing start cloud resource list: ${it.message}")
         }.getOrNull() ?: emptyList()
     }
-    
+
     fun getWorkspaceDetail(workspaceName: String): WorkSpaceCacheInfo? {
         return try {
             val result = workspaceDao.getWorkspaceDetail(dslContext, workspaceName)?.detail
