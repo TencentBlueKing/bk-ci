@@ -48,10 +48,9 @@ data class AgentHostForInstallAgent(
     @JsonProperty("bk_addressing")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     val bkAddressing: String?,
-    @ApiModelProperty(value = "接入点ID")
+    @ApiModelProperty(value = "接入点ID", required = true)
     @JsonProperty("ap_id")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    val apId: Int?,
+    val apId: Int,
     @ApiModelProperty(value = "安装通道ID")
     @JsonProperty("install_channel_id")
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -80,9 +79,8 @@ data class AgentHostForInstallAgent(
     @JsonProperty("outer_ipv6")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     val outerIpv6: String?,
-    @ApiModelProperty(value = "操作系统，1：LINUX 2：WINDOWS 3：AIX 4：SOLARIS")
+    @ApiModelProperty(value = "操作系统，1：LINUX 2：WINDOWS 3：AIX 4：SOLARIS", required = true)
     @JsonProperty("os_type")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     val osType: String?,
     @ApiModelProperty(value = "认证类型，1：PASSWORD，密码认证 2: KEY，秘钥认证 3：TJJ_PASSWORD，默认为密码认证")
     @JsonProperty("auth_type")
