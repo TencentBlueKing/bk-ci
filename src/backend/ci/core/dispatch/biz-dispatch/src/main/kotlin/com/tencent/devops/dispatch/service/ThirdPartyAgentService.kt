@@ -90,7 +90,9 @@ class ThirdPartyAgentService @Autowired constructor(
         thirdPartyAgentWorkspace: String,
         dispatchMessage: DispatchMessage,
         retryCount: Int = 0,
-        dockerInfo: ThirdPartyAgentDockerInfoDispatch?
+        dockerInfo: ThirdPartyAgentDockerInfoDispatch?,
+        envId: Long?,
+        ignoreEnvAgentIds: Set<String>?
     ) {
         with(dispatchMessage.event) {
             try {
@@ -109,12 +111,22 @@ class ThirdPartyAgentService @Autowired constructor(
                     nodeId = HashUtil.decodeIdToLong(agent.nodeId ?: ""),
                     dockerInfo = dockerInfo,
                     executeCount = executeCount,
-                    containerHashId = containerHashId
+                    containerHashId = containerHashId,
+                    envId = envId,
+                    ignoreEnvAgentIds = ignoreEnvAgentIds
                 )
             } catch (e: DeadlockLoserDataAccessException) {
                 logger.warn("Fail to add the third party agent build of ($buildId|$vmSeqId|${agent.agentId}")
                 if (retryCount <= QUEUE_RETRY_COUNT) {
-                    queueBuild(agent, thirdPartyAgentWorkspace, dispatchMessage, retryCount + 1, dockerInfo)
+                    queueBuild(
+                        agent = agent,
+                        thirdPartyAgentWorkspace = thirdPartyAgentWorkspace,
+                        dispatchMessage = dispatchMessage,
+                        retryCount = retryCount + 1,
+                        dockerInfo = dockerInfo,
+                        envId = envId,
+                        ignoreEnvAgentIds = ignoreEnvAgentIds
+                    )
                 } else {
                     throw OperationException("Fail to add the third party agent build")
                 }
@@ -223,9 +235,9 @@ class ThirdPartyAgentService @Autowired constructor(
                 // 只有凭据ID的参与计算
                 if (dockerInfo != null) {
                     if ((
-                            dockerInfo.credential?.user.isNullOrBlank() &&
-                                dockerInfo.credential?.password.isNullOrBlank()
-                            ) &&
+                        dockerInfo.credential?.user.isNullOrBlank() &&
+                            dockerInfo.credential?.password.isNullOrBlank()
+                        ) &&
                         !(dockerInfo.credential?.credentialId.isNullOrBlank())
                     ) {
                         val (userName, password) = try {
@@ -463,9 +475,9 @@ class ThirdPartyAgentService @Autowired constructor(
         // 有些并发情况可能会导致在finish时AgentBuild状态没有被置为Done在这里改一下
         val buildRecord = thirdPartyAgentBuildDao.get(dslContext, buildInfo.buildId, buildInfo.vmSeqId)
         if (buildRecord != null && (
-                buildRecord.status != PipelineTaskStatus.DONE.status ||
-                    buildRecord.status != PipelineTaskStatus.FAILURE.status
-                )
+            buildRecord.status != PipelineTaskStatus.DONE.status ||
+                buildRecord.status != PipelineTaskStatus.FAILURE.status
+            )
         ) {
             thirdPartyAgentBuildDao.updateStatus(
                 dslContext = dslContext,
@@ -488,7 +500,19 @@ class ThirdPartyAgentService @Autowired constructor(
             simpleResult = SimpleResult(
                 success = buildInfo.success,
                 message = buildInfo.message,
-                error = buildInfo.error
+                error = buildInfo.error,
+                // #9910 环境构建时遇到启动错误时调度到一个新的Agent
+                ignoreAgentIds = if (buildRecord?.envId != null &&
+                    !buildInfo.success && buildInfo.error != null && buildInfo.error?.errorCode == 2128040
+                ) {
+                    if (buildRecord.ignoreEnvAgentIds == null) {
+                        setOf(agentResult.data!!.agentId)
+                    } else {
+                        JsonUtil.to(buildRecord.ignoreEnvAgentIds.data())
+                    }
+                } else {
+                    null
+                }
             )
         )
     }
