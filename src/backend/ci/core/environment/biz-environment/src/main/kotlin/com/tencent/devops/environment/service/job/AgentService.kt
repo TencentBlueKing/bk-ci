@@ -73,7 +73,7 @@ data class AgentService @Autowired constructor(
     val bkBizScopeId: Int = 0
 
     companion object {
-        private const val JOB_TYPE_INSTALL_AGENT = "REINSTALL_AGENT"
+        private const val DEFAULT_INSTALL_AGENT_JOB_TYPE = "REINSTALL_AGENT"
         private const val DEFAULT_INSTALL_AGENT_AP_ID = 1 // 节点管理预发布/正式环境 apId均固定为1
         private const val DEFAULT_INSTALL_AGENT_PORT = "36000"
     }
@@ -85,7 +85,7 @@ data class AgentService @Autowired constructor(
     ): AgentResult<InstallAgentResult> {
         AgentApi.setThreadLocal("installAgent")
         val installAgentRequest = AgentInstallAgentReq(
-            jobType = JOB_TYPE_INSTALL_AGENT,
+            jobType = DEFAULT_INSTALL_AGENT_JOB_TYPE,
             hosts = installAgentReq.hosts.map {
                 AgentHostForInstallAgent(
                     bkBizId = bkBizScopeId,
