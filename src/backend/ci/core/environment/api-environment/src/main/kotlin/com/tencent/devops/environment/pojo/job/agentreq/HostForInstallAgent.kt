@@ -38,8 +38,6 @@ data class HostForInstallAgent(
     val bkHostId: Int?,
     @ApiModelProperty(value = "寻址方式，1: 0，静态 2: 1，动态")
     val bkAddressing: String?,
-    @ApiModelProperty(value = "接入点ID")
-    val apId: Int?,
     @ApiModelProperty(value = "安装通道ID")
     val installChannelId: Int?,
     @ApiModelProperty(value = "内网IPV4地址，inner_ip和inner_ipv6必选其一")
