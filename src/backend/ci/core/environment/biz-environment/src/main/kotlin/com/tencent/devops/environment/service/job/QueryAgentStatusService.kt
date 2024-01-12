@@ -41,8 +41,8 @@ import org.springframework.stereotype.Service
 
 @Service("QueryAgentStatusService")
 class QueryAgentStatusService @Autowired constructor(
-    private val agentApi: AgentApi,
-    private val jobService: JobService
+    private val jobService: JobService,
+    private val agentService: AgentService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(QueryAgentStatusService::class.java)
@@ -128,7 +128,7 @@ class QueryAgentStatusService @Autowired constructor(
             onlyIp = DEFAULT_ONLY_IP,
             runningCount = DEFAULT_RUNNING_COUNT
         )
-        return jobService.queryAgentStatusFromNodeman(getAgentVersionsFromNodemanReq)
+        return agentService.queryAgentStatusFromNodeman(getAgentVersionsFromNodemanReq)
     }
 
     private fun getAgentVersionsFromJob(
