@@ -29,16 +29,6 @@ package com.tencent.devops.environment.api.job
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.environment.pojo.job.agentreq.InstallAgentReq
-import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
-import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
-import com.tencent.devops.environment.pojo.job.agentreq.TerminateAgentInstallTaskReq
-import com.tencent.devops.environment.pojo.job.agentres.AgentResult
-import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
-import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLogResult
-import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskStatusResult
-import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskResult
-import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.req.CreateAccountReq
 import com.tencent.devops.environment.pojo.job.req.DeleteAccountReq
 import com.tencent.devops.environment.pojo.job.req.FileDistributeReq
