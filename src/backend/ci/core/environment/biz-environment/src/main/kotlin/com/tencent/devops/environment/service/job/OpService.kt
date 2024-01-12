@@ -54,6 +54,7 @@ class OpService @Autowired constructor(
         const val SUCCESSFUL_SADD_MSG = "Operation executed successfully. %d new projects have been added."
         const val SUCCESSFUL_SREM_MSG = "Operation executed successfully. %d new projects have been removed."
         const val SUCCESSFUL_SMEMBERS_MSG = "Query all gray projects successfully."
+        const val SUCCESSFUL_SISMEMBER_MSG = "Query gray project(s) successfully."
         const val SUCCESSFUL_DELETE_KEY_MSG = "Clear all gray projects successfully."
 
         const val INVALID_OPERATION_TYPE_CODE = 10001
@@ -120,9 +121,9 @@ class OpService @Autowired constructor(
                 val projectCodeSet = projectCodeList.toSet()
                 val projsGrayStatus = redisOperation.sismember(OP_KEY, *projectCodeSet.toTypedArray())
                 OpOperateResult(
-                    code = EMPTY_PROJ_CODE,
-                    result = EMPTY_PROJ_RESULT,
-                    msg = EMPTY_PROJ_MSG,
+                    code = SUCCESSFUL_CODE,
+                    result = SUCCESSFUL_RESULT,
+                    msg = SUCCESSFUL_SISMEMBER_MSG,
                     grayProjNumber = grayProjsTotalNum(),
                     projGrayStatus = projsGrayStatus?.map {
                         ProjectOpInfo(englishName = it.key.toString(), projGrayStatus = it.value)
