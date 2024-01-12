@@ -197,7 +197,7 @@ class PipelineSettingVersionDao {
                     pipelineId = t.pipelineId,
                     pipelineName = t.name,
                     desc = t.desc,
-                    runLockType = PipelineRunLockType.valueOf(t.runLockType),
+                    runLockType = t.runLockType?.let { PipelineRunLockType.valueOf(it) }?: PipelineRunLockType.MULTIPLE,
                     successSubscriptionList = t.successSubscription?.let {
                         JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
                     },

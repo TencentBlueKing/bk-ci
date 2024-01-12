@@ -64,7 +64,7 @@ data class PipelineSettingVersion(
 
     // 运行控制、流水线禁用相关配置
     @ApiModelProperty("Lock 类型", required = false)
-    val runLockType: PipelineRunLockType = PipelineRunLockType.SINGLE_LOCK,
+    val runLockType: PipelineRunLockType = PipelineRunLockType.MULTIPLE,
     @ApiModelProperty("最大排队时长", required = false)
     val waitQueueTimeMinute: Int?,
     @ApiModelProperty("最大排队数量", required = false)
