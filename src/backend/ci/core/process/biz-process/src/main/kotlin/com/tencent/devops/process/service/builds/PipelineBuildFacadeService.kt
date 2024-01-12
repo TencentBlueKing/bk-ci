@@ -610,7 +610,7 @@ class PipelineBuildFacadeService(
              */
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
 
-            if (startType == StartType.MANUAL) {
+            if (startType == StartType.MANUAL && !debug) {
                 if (!readyToBuildPipelineInfo.canManualStartup) {
                     throw ErrorCodeException(
                         errorCode = ProcessMessageCode.DENY_START_BY_MANUAL
