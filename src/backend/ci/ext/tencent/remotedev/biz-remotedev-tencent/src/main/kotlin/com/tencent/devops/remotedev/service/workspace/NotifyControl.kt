@@ -187,7 +187,6 @@ class NotifyControl @Autowired constructor(
         }
     }
 
-
     /*
     * 通知给系统运维人员
     * 方式是固定企微群

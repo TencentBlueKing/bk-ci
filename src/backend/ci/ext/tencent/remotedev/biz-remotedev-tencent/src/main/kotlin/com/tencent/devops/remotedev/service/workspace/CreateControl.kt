@@ -85,13 +85,13 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OFFICIAL_DEVFI
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.utils.DevfileUtil
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.Executors
 
 @Service
 @Suppress("ALL")
@@ -120,6 +120,7 @@ class CreateControl @Autowired constructor(
     private val notifyControl: NotifyControl
 ) {
     private val executor = Executors.newCachedThreadPool()
+
     companion object {
         private val logger = LoggerFactory.getLogger(CreateControl::class.java)
         private const val BLANK_TEMPLATE_YAML_NAME = "BLANK"
@@ -670,7 +671,8 @@ class CreateControl @Autowired constructor(
     }
 
     private fun workspaceCreateFail(
-        ws: WorkspaceRecord, event: RemoteDevUpdateEvent
+        ws: WorkspaceRecord,
+        event: RemoteDevUpdateEvent
     ) {
         if (ws.ownerType == WorkspaceOwnerType.PROJECT) {
             val imageId = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, ws.workspaceName)?.imageId ?: ""
