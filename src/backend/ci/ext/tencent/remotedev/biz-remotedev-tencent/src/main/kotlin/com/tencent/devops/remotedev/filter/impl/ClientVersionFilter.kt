@@ -8,8 +8,12 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ClientVersionDao
 import com.tencent.devops.remotedev.filter.ApiFilter
+import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
+import com.tencent.devops.remotedev.service.workspace.NotifyControl
+import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.CLIENT_VERSION_WARNING_NOTIFY
+import java.util.concurrent.TimeUnit
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.PreMatching
 import javax.ws.rs.core.MediaType
@@ -18,7 +22,6 @@ import javax.ws.rs.ext.Provider
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import java.util.concurrent.TimeUnit
 
 @Provider
 @PreMatching
@@ -26,7 +29,8 @@ import java.util.concurrent.TimeUnit
 class ClientVersionFilter constructor(
     private val cacheService: RedisCacheService,
     private val clientVersionDao: ClientVersionDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val notifyControl: NotifyControl
 ) : ApiFilter {
     companion object {
         private val logger = LoggerFactory.getLogger(ClientVersionFilter::class.java)
@@ -38,7 +42,12 @@ class ClientVersionFilter constructor(
     @Value("\${remoteDev.clientVersionLimit:0.3.0}")
     val clientVersionLimit: String = "0.3.0"
 
+    @Value("\${remoteDev.clientVersionWarning:0.3.0}")
+    val clientVersionWarning: String = "0.3.0"
+
     lateinit var clientVersionLimitList: List<Int>
+
+    lateinit var clientVersionWarningList: List<Int>
 
     lateinit var clientVersion: MutableMap<String, String>
 
@@ -83,10 +92,11 @@ class ClientVersionFilter constructor(
             )
             return false
         }
+        val user = requestContext.headers[AUTH_HEADER_USER_ID]?.get(0).toString()
         kotlin.runCatching {
             recordClientVersion(
                 requestContext.headers[HEADER_IP]?.get(0).toString(),
-                requestContext.headers[AUTH_HEADER_USER_ID]?.get(0).toString(),
+                user,
                 version.toString(),
                 requestContext.headers[HEADER_MAC_ADDRESS]?.get(0).toString()
             )
@@ -104,6 +114,33 @@ class ClientVersionFilter constructor(
                 v < s -> return false
                 v == s -> return@forEachIndexed
                 v > s -> return true
+            }
+        }
+
+        if (!this::clientVersionWarningList.isInitialized) {
+            clientVersionWarningList = clientVersionWarning.split(".").map { it.toInt() }
+        }
+        kotlin.run {
+            clientVersionWarningList.forEachIndexed { index, s ->
+                if (split.lastIndex < index) {
+                    notifyControl.notify4User(
+                        userIds = mutableSetOf(user),
+                        workspaceName = "",
+                        notifyTemplateCode = CLIENT_VERSION_WARNING_NOTIFY,
+                        notifyType = mutableSetOf(RemoteDevNotifyType.CLIENT_PUSH, RemoteDevNotifyType.EMAIL),
+                        bodyParams = mapOf(
+                            "version" to version
+                        )
+                    )
+                    return@run
+                }
+                val v = split[index].toIntOrNull()
+                when {
+                    v == null -> return false
+                    v < s -> return false
+                    v == s -> return@forEachIndexed
+                    v > s -> return true
+                }
             }
         }
         return true

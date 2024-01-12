@@ -84,6 +84,9 @@ class NotifyControl @Autowired constructor(
 
         /*云桌面通知功能-云桌面已分配到项目时*/
         const val WINDOWS_GPU_ASSIGN_NOTIFY = "WINDOWS_GPU_ASSIGN_NOTIFY"
+
+        /*云桌面通知功能-云桌面已分配到项目时*/
+        const val CLIENT_VERSION_WARNING_NOTIFY = "CLIENT_VERSION_WARNING_NOTIFY"
     }
 
     fun notifyWorkspaceInfo(
