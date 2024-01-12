@@ -188,16 +188,13 @@
                 })
             }
         },
-        mounted () {
-            window.__bk_zIndex_manager.zIndex = 2015
-        },
+
         beforeDestroy () {
-    this.$refs.editor?.destroy()
-    this.setPipelineYaml('')
-    this.setPipeline(null)
-    this.setPipelineWithoutTrigger(null)
-    this.setPipelineSetting(null)
-    window.__bk_zIndex_manager.zIndex = 2000
+            this.$refs.editor?.destroy()
+            this.setPipelineYaml('')
+            this.setPipeline(null)
+            this.setPipelineWithoutTrigger(null)
+            this.setPipelineSetting(null)
         },
         methods: {
             ...mapActions('atom', [

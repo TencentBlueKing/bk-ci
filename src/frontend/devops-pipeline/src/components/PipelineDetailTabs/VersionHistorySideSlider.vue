@@ -22,6 +22,7 @@
                     height="100%"
                     :data="pipelineVersionList"
                     :pagination="pagination"
+                    size="small"
                 >
                     <bk-table-column v-for="column in columns" :key="column.prop" v-bind="column">
                         <template v-if="column.prop === 'versionName'" v-slot="{ row }">
@@ -53,7 +54,7 @@
                             </bk-button>
                             <version-diff-entry
                                 :version="props.row.version"
-                                :release-version="releaseVersion"
+                                :latest-version="releaseVersion"
                                 :current-yaml="currentYaml"
                             />
                         </template>
@@ -100,12 +101,13 @@
         computed: {
             ...mapState('atom', ['pipelineInfo']),
             releaseVersion () {
-                return this.pipelineInfo?.version
+                return this.pipelineInfo?.releaseVersion
             },
             columns () {
                 return [{
                     prop: 'versionName',
-                    label: this.$t('versionNum')
+                    label: this.$t('versionNum'),
+                    width: 360
                 }, {
                     prop: 'description',
                     label: this.$t('versionDesc')
@@ -182,7 +184,15 @@
                     limit: res.pageSize,
                     count: res.count
                 })
-                this.pipelineVersionList = res.records
+                this.pipelineVersionList = res.records.map(item => {
+                    return {
+                        ...item,
+                        versionName: item.versionName || this.$t('editPage.draftVersion', [this.generateDisplayName(item.baseVersion, item.baseVersionName)])
+                    }
+                })
+            },
+            generateDisplayName (version, versionName) {
+                return `V${version} (${versionName})`
             },
             deleteVersion (row) {
                 if (this.pipelineInfo?.hasPermission && this.releaseVersion !== row.version) {
@@ -247,6 +257,7 @@
                 display: flex;
                 align-items: center;
                 grid-gap: 6px;
+
                 .icon-check-circle {
                     font-size: 16px;
                 }

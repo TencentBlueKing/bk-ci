@@ -991,7 +991,7 @@
       "templateDownload": "Download",
       "otherChoice": "Other Choice"
     },
-    "draftVersion": "Draft: (created from {0}) ",
+    "draftVersion": "Draft: created from {0}",
     "releaseVersion": "{0} released",
     "stageOption": "Control Options",
     "pipelineVersionSaveAt": "Version {0} save at {1}",
@@ -1360,7 +1360,7 @@
   "stepPreview": "预览步骤",
   "draftInfoTips": "当前草稿尚未发布，最近保存：{0} {1}",
   "draft": "Draft",
-  "baseOn": "Base {0}",
+  "baseOn": "Base: {0}",
   "noReleaseYetTips": "流水线尚未发布，请发布后再执行",
   "goEdit": "去编辑流水线",
   "draftPipelineExecTips": "流水线尚未发布，请发布后再执行",

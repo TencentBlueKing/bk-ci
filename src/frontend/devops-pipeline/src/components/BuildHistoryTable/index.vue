@@ -287,25 +287,7 @@
                 </bk-exception>
             </bk-table>
         </div>
-        <bk-dialog
-            v-model="isShowMoreMaterial"
-            render-directive="if"
-            :width="640"
-            header-position="left"
-            :title="`#${activeBuild && activeBuild.buildNum} - ${$t('editPage.material')}`"
-            @cancel="hideMoreMaterial"
-        >
-            <template v-if="activeBuild">
-                <div class="all-build-material-row" v-for="material in activeBuild.material" :key="material.aliasName">
-                    <MaterialItem :is-fit-content="false" :material="material" :show-more="false" />
-                </div>
-            </template>
-            <footer slot="footer">
-                <bk-button @click="hideMoreMaterial">
-                    {{$t('close')}}
-                </bk-button>
-            </footer>
-        </bk-dialog>
+
         <bk-dialog
             v-model="isShowMoreArtifactories"
             render-directive="if"

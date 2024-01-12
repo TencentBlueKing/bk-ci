@@ -16,7 +16,7 @@
 </template>
 
 <script>
-    import { mapState } from 'vuex'
+    import { mapState, mapActions } from 'vuex'
     import ReleasePipelineSideSlider from './ReleasePipelineSideSlider'
     export default {
         components: {
@@ -35,7 +35,8 @@
         },
         computed: {
             ...mapState('atom', [
-                'pipelineInfo'
+                'pipelineInfo',
+                'showVariable'
             ]),
             currentVersion () {
                 return this.pipelineInfo?.version ?? ''
@@ -48,8 +49,12 @@
             }
         },
         methods: {
+            ...mapActions('atom', [
+                'setShowVariable'
+            ]),
             showReleaseSlider () {
                 if (this.canRelease) {
+                    this.setShowVariable(false)
                     this.isReleaseSliderShow = true
                 }
             }

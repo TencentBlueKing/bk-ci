@@ -100,7 +100,6 @@
                 isLoading: false,
                 showVersionSideslider: false,
                 versionList: [],
-                versionMap: {},
                 searchKeyword: '',
                 activeVersion: null,
                 pagination: {
@@ -135,7 +134,7 @@
                 return this.activeVersion?.isBranchVersion ?? false
             },
             draftBaseVersionName () {
-                return this.getDraftBaseVersionName(this.activeVersion?.baseVersion)
+                return this.generateDisplayName(this.activeVersion?.baseVersion, this.activeVersion?.baseVersionName)
             }
         },
         watch: {
@@ -154,7 +153,11 @@
             ...mapActions('pipelines', [
                 'requestPipelineVersionList'
             ]),
+            ...mapActions('atom', [
+                'setShowVariable'
+            ]),
             showVersionSideSlider () {
+                this.setShowVariable(false)
                 this.showVersionSideslider = true
             },
             handlePaginationChange ({ current = 1, limit = this.pagination.limit } = {}) {
@@ -171,17 +174,13 @@
                     pageSize: this.pagination.limit,
                     versionName: this.searchKeyword
                 }).then(({ records, count }) => {
-                    this.versionMap = records.reduce((map, item) => {
-                        map[item.version] = item
-                        return map
-                    }, {})
                     this.versionList = records.map(item => {
                         const isDraft = item.status === 'COMMITTING'
                         const displayName = this.generateDisplayName(item.version, item.versionName)
                         return {
                             ...item,
                             displayName: isDraft ? this.$t('draft') : displayName,
-                            description: isDraft ? this.$t('baseOn', [this.getDraftBaseVersionName(item.baseVersion)]) : (item.description || '--'),
+                            description: isDraft ? this.$t('baseOn', [this.generateDisplayName(item.baseVersion, item.baseVersionName)]) : (item.description || '--'),
                             isBranchVersion: item.status === 'BRANCH',
                             isDraft,
                             isRelease: item.status === 'RELEASED'
@@ -222,13 +221,6 @@
             },
             closeVersionSideSlider () {
                 this.showVersionSideslider = false
-            },
-            getDraftBaseVersionName (baseVersion) {
-                if (baseVersion) {
-                    const baseVersionName = this.versionMap[baseVersion]?.versionName ?? '--'
-                    return this.generateDisplayName(baseVersion, baseVersionName)
-                }
-                return '--'
             },
             generateDisplayName (version, versionName) {
                 return `V${version} (${versionName})`

@@ -26,7 +26,6 @@
     height: 100%;
 }
 .bkci-property-panel.with-variable-open {
-    z-index: 2005 !important;
     .bk-sideslider-wrapper {
         right: 480px;
     }
@@ -46,22 +45,20 @@
 
 .pipeline-config-wrapper {
     .bkci-property-panel {
-
         .bk-sideslider-wrapper {
             right: 24px;
         }
         &.with-variable-open {
-            z-index: 2005 !important;
             .bk-sideslider-wrapper {
                 right: 504px;
                 top: 72px;
-                height: calc(100vh - 96px);
+                height: calc(100vh - 105px);
             }
         }
     }
 }
 .bkci-property-panel {
-    background-color: rgba(0, 0, 0, .6);
+
     .bk-sideslider-wrapper {
         top: 48px;
         height: calc(100vh - 48px);

@@ -704,6 +704,7 @@
   .bk-sideslider-wrapper {
     top: 0;
     padding-bottom: 0;
+    height: 100vh;
     .bk-sideslider-content {
       height: calc(100% - 60px);
     }
