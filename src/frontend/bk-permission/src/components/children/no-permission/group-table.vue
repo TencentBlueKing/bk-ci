@@ -38,20 +38,36 @@
             v-if="row.status === 'NOT_JOINED'"
             @click="handleApply(row)"
           >{{ t('申请加入') }}</bk-button>
-          <bk-button
-            class="btn"
-            theme="primary"
-            text
-            v-if="['EXPIRED', 'NORMAL'].includes(row.status)"
-            @click="handleRenewal(row)"
-          >{{ t('续期') }}</bk-button>
-          <bk-button
-            class="btn"
-            theme="primary"
-            text
-            v-if="['EXPIRED', 'NORMAL'].includes(row.status)"
-            @click="handleShowLogout(row)"
-          >{{ t('退出') }}</bk-button>
+          <span
+            v-bk-tooltips="{
+              content: t('通过用户组获得权限，若需续期请联系项目管理员续期用户组'),
+              disabled: row.directAdded
+            }"
+          >
+            <bk-button
+              class="btn"
+              theme="primary"
+              text
+              :disabled="!row.directAdded"
+              v-if="['EXPIRED', 'NORMAL'].includes(row.status)"
+              @click="handleRenewal(row)"
+            >{{ t('续期') }}</bk-button>
+          </span>
+          <span
+            v-bk-tooltips="{
+              content: t('通过用户组获得权限，若需退出先联系项目管理员退出用户组'),
+              disabled: row.directAdded
+            }"
+          >
+            <bk-button
+              class="btn"
+              theme="primary"
+              text
+              :disabled="!row.directAdded"
+              v-if="['EXPIRED', 'NORMAL'].includes(row.status)"
+              @click="handleShowLogout(row)"
+            >{{ t('退出') }}</bk-button>
+          </span>
         </template>
       </bk-table-column>
     </bk-table>

@@ -20,7 +20,6 @@ class BlueShieldWebSocket {
         this.userName = window.userInfo && window.userInfo.username ? window.userInfo.username : 'bkDevops'
         this.uuid = uuid()
         this.stompClient = {}
-        this.notifyInstance = null
         
         this.connect()
         this.closePageDisConnect()
@@ -32,12 +31,44 @@ class BlueShieldWebSocket {
         const socket = new SockJS(`/websocket/ws/user?sessionId=${this.uuid}`)
         this.stompClient = Stomp.over(socket)
         this.stompClient.debug = null
+        this.stompClientConnect()
+        socket.onclose = (err) => {
+            try {
+                console.log(err, socket, this.stompClient)
+                if (err.code === 1006) { // 异常断开
+                    const vm = window.devops
+                    const currentRoute = vm.$router.currentRoute
+                    if (this.detectHasWebsocket(currentRoute) && !this.isConnecting) {
+                        if (currentRoute.path.indexOf('executeDetail') > -1) {
+                            console.log('executeDetail page close reconnect', currentRoute.path)
+                            this.connectCallBack.push(() => {
+                                this.handleMessage({
+                                    body: JSON.stringify({
+                                        webSocketType: 'IFRAME',
+                                        page: currentRoute.path,
+                                        message: JSON.stringify('WEBSOCKET_RECONNECT')
+                                    })
+                                })
+                            })
+                        }
+                        console.log('other page close reconnect')
+                        socket.onclose = null
+                        this.connect()
+                    }
+                } else {
+                    console.log('websocket close event.code: ', err.code)
+                }
+            } catch (error) {
+                console.error(error)
+            }
+        }
+    }
+
+    stompClientConnect () {
         this.isConnecting = true
+        
         this.stompClient.connect({}, () => {
             console.log('websocket connected', this.connectCallBack)
-            if (this.notifyInstance && typeof this.notifyInstance.close === 'function') {
-                this.notifyInstance.close()
-            }
             this.isConnecting = false
             this.stompClient.subscribe(`/topic/bk/notify/${this.uuid}`, (res) => {
                 this.handleMessage(res)
@@ -59,54 +90,6 @@ class BlueShieldWebSocket {
                 window.devops.$bkMessage({ message: err.message || 'websocket connection failed, please try again later', theme: 'error' })
             }
         })
-        
-        socket.onclose = (err) => {
-            try {
-                console.log(err, socket, this.stompClient)
-                const vm = window.devops
-                const currentRoute = vm.$router.currentRoute
-                const h = vm.$createElement
-                if (this.detectHasWebsocket(currentRoute)) {
-                    if (currentRoute.path.indexOf('executeDetail') > -1) {
-                        this.notifyInstance = vm.$bkNotify({
-                            title: vm.$t('websocketNotice'),
-                            limit: 1,
-                            message: h('p', {}, [
-                                vm.$t('websocketInterupt'),
-                                h('br'),
-                                h('bk-button', {
-                                    props: {
-                                        text: true
-                                    },
-                                    on: {
-                                        click: () => {
-                                            this.notifyInstance.close()
-                                            this.connectCallBack.push(() => {
-                                                this.handleMessage({
-                                                    body: JSON.stringify({
-                                                        webSocketType: 'IFRAME',
-                                                        page: currentRoute.path,
-                                                        message: JSON.stringify('WEBSOCKET_RECONNECT')
-                                                    })
-                                                })
-                                            })
-                                            this.connect()
-                                        }
-                                    }
-                                }, vm.$t('reconnect'))
-                            ]),
-                            theme: 'error',
-                            delay: 0
-                        })
-                    } else {
-                        console.log('other page close reconnect')
-                        this.connect()
-                    }
-                }
-            } catch (error) {
-                console.error(error)
-            }
-        }
     }
 
     handleMessage (res) {
