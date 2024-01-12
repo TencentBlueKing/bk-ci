@@ -44,6 +44,7 @@ import com.tencent.devops.auth.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.service.AuthResourceNameConverter
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.AuthProjectUserMetricsService
+import com.tencent.devops.auth.service.BkHttpRequestService
 import com.tencent.devops.auth.service.ItsmService
 import com.tencent.devops.auth.service.PermissionGradeManagerService
 import com.tencent.devops.auth.service.PermissionGroupPoliciesService
@@ -147,8 +148,8 @@ class RbacServiceConfiguration {
     )
 
     @Bean
-    fun itsmService(objectMapper: ObjectMapper) = ItsmService(
-        objectMapper = objectMapper
+    fun itsmService(bkHttpRequestService: BkHttpRequestService) = ItsmService(
+        bkHttpRequestService = bkHttpRequestService
     )
 
     @Bean

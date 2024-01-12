@@ -14,9 +14,8 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
 import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -24,17 +23,14 @@ import org.springframework.stereotype.Service
 @Service
 class TxSecurityService constructor(
     val objectMapper: ObjectMapper,
-    val permissionProjectService: PermissionProjectService
+    val permissionProjectService: PermissionProjectService,
+    val bkHttpRequestService: BkHttpRequestService
 ) {
-
-    @Value("\${auth.appCode:}")
-    private val appCode = ""
-
-    @Value("\${auth.appSecret:}")
-    private val appSecret = ""
-
     @Value("\${secops.url:#{null}}")
     private val secUrlPrefix = ""
+
+    @Value("\${moa.key.verify.url:#{null}}")
+    private val moaKeyVerifyUrl = ""
 
     @Value("\${secops.token:#{null}}")
     private val secToken = ""
@@ -90,62 +86,40 @@ class TxSecurityService constructor(
     }
 
     private fun getUserInfoByMoaCredentialKey(credentialKey: String): MoaCredentialKeyVerifyResponse {
-        return MoaCredentialKeyVerifyResponse(
-            returnFlag = 0,
-            msg = "",
-            userId = ""
-        )
-    }
-
-
-    private fun getUserWaterMark(userId: String): SecOpsWaterMarkInfoVo {
-        logger.info("get user water mark:$userId")
-        return executePostHttpRequest(
-            urlSuffix = USER_WATER_MARK_GET_SUFFIX,
-            body = objectMapper.writeValueAsString(
-                SecOpsWaterMarkDTO(
-                    token = secToken,
-                    username = userId
-                )
-            )
-        ).data?.firstOrNull { it.type == "image_base64" } ?: throw ErrorCodeException(
-            errorCode = ERROR_WATER_MARK_NOT_EXIST,
-            defaultMessage = "user water mark not exist!$userId"
-        )
-    }
-
-    private fun executePostHttpRequest(
-        urlSuffix: String,
-        body: String
-    ): ResponseDTO<List<SecOpsWaterMarkInfoVo>> {
-        val headerMap = mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret)
-        val headerStr = objectMapper.writeValueAsString(headerMap).replace("\\s".toRegex(), "")
-        val url = secUrlPrefix + urlSuffix
-
-        val requestBody = body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
-
+        val url = moaKeyVerifyUrl
+        val formBody = MultipartBody.Builder()
+            .setType(MultipartBody.FORM)
+            .addFormDataPart("key", credentialKey)
+            .build()
         val requestBuilder = Request.Builder()
             .url(url)
-            .addHeader("x-bkapi-authorization", headerStr)
-        requestBuilder.post(requestBody)
-
+            .post(formBody)
         OkhttpUtils.doHttp(requestBuilder.build()).use {
             if (!it.isSuccessful) {
-                logger.warn("request failed, uri:($url)|response: ($it)")
+                logger.warn("request moa failed, uri:($url)|response: ($it)")
                 throw RemoteServiceException("request failed, response:($it)")
             }
             logger.info("executeHttpRequest:${it.body!!}")
             val responseStr = it.body!!.string()
             logger.info("executeHttpRequest:$responseStr")
-            val responseDTO = objectMapper.readValue<ResponseDTO<List<SecOpsWaterMarkInfoVo>>>(responseStr)
-            if (responseDTO.code != 0L) {
-                // 请求错误
-                logger.warn("request failed, url:($url)|response :($it)")
-                throw RemoteServiceException("request failed, response:(${responseDTO.message})")
-            }
-            logger.info("request response：${objectMapper.writeValueAsString(responseDTO.data)}")
-            return responseDTO
+            return objectMapper.readValue(responseStr)
         }
+    }
+
+
+    private fun getUserWaterMark(userId: String): SecOpsWaterMarkInfoVo {
+        logger.info("get user water mark:$userId")
+        val responseDTO: ResponseDTO<List<SecOpsWaterMarkInfoVo>> = bkHttpRequestService.executeHttpPost(
+            url = secUrlPrefix + USER_WATER_MARK_GET_SUFFIX,
+            body = SecOpsWaterMarkDTO(
+                token = secToken,
+                username = userId
+            )
+        )
+        return responseDTO.data?.firstOrNull { it.type == "image_base64" } ?: throw ErrorCodeException(
+            errorCode = ERROR_WATER_MARK_NOT_EXIST,
+            defaultMessage = "user water mark not exist!$userId"
+        )
     }
 
     companion object {
