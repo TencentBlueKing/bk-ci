@@ -43,4 +43,7 @@ interface PacGitPushResult {
 
     // commitId
     val lastCommitId: String
+
+    // mr url
+    val mrUrl: String?
 }
