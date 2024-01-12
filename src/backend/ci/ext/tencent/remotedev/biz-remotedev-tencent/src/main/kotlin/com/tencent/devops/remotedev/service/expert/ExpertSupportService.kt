@@ -278,7 +278,7 @@ class ExpertSupportService @Autowired constructor(
         if (!expertSupportDao.fetchExpertSupportConfig(dslContext, ExpertSupportConfigType.SUPPORTER)
                 .map { it.content.trim() }.toSet().contains(userId.trim())
         ) {
-            return Pair(false, "${userId}不是云研发运维，不可认领")
+            return Pair(false, "${userId}不是云研发运维，不可查询")
         }
         try {
             val infoS = redisOperation.get(PIPELINE_QUERY_CGS_PWD) ?: return Pair(false, null)
