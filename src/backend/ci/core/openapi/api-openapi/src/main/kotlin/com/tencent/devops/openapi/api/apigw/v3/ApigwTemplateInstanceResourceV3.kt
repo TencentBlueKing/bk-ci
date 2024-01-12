@@ -40,11 +40,10 @@ import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
 import com.tencent.devops.process.pojo.template.TemplateInstancePage
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
 import com.tencent.devops.process.pojo.template.TemplateOperationRet
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.annotations.Example
-import io.swagger.annotations.ExampleProperty
+import io.swagger.v3.oas.annotations.media.ExampleObject
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -62,7 +61,10 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface ApigwTemplateInstanceResourceV3 {
-    @Operation(summary = "批量实例化流水线模板", tags = ["v3_app_templateInstance_create", "v3_user_templateInstance_create"])
+    @Operation(
+        summary = "批量实例化流水线模板",
+        tags = ["v3_app_templateInstance_create", "v3_user_templateInstance_create"]
+    )
     @POST
     @Path("/")
     fun createTemplateInstances(
@@ -88,50 +90,49 @@ interface ApigwTemplateInstanceResourceV3 {
         @QueryParam("useTemplateSettings")
         useTemplateSettings: Boolean,
         @Parameter(
-            description = "创建实例", required = true, examples = Example(
-                value = [
-                    ExampleProperty(
-                        mediaType = "如果我想简单的实例化两条无启动变量的流水线1和2",
-                        value = """
-                            [
-                                {
-                                    "pipelineName": "1",
-                                    "param": []
-                                },
-                                {
-                                    "pipelineName": "2",
-                                    "param": []
-                                }
-                            ]
-                                """
-                    ),
-                    ExampleProperty(
-                        mediaType = "如果我想实例化一条带启动变量param1的流水线3",
-                        value = """
-                            [
-                                {
-                                    "pipelineName": "3",
-                                    "param": [
-                                        {
-                                            "id": "param1",
-                                            "required": true,
-                                            "type": "STRING //可以是其他类型，以实际情况为准",
-                                            "defaultValue": "param1的值",
-                                            "desc": "",
-                                            "readOnly": false
-                                        }
-                                    ]
-                                }
-                            ]
-                                """
-                    )
-                ]
-            )
+            description = "创建实例", required = true, examples = [
+                ExampleObject(
+                    description = "如果我想简单的实例化两条无启动变量的流水线1和2",
+                    value = """
+                        [
+                            {
+                                "pipelineName": "1",
+                                "param": []
+                            },
+                            {
+                                "pipelineName": "2",
+                                "param": []
+                            }
+                        ]"""
+                ),
+                ExampleObject(
+                    description = "如果我想实例化一条带启动变量param1的流水线3",
+                    value = """
+                        [
+                            {
+                                "pipelineName": "3",
+                                "param": [
+                                    {
+                                        "id": "param1",
+                                        "required": true,
+                                        "type": "STRING //可以是其他类型，以实际情况为准",
+                                        "defaultValue": "param1的值",
+                                        "desc": "",
+                                        "readOnly": false
+                                    }
+                                ]
+                            }
+                        ]"""
+                )
+            ]
         )
         instances: List<TemplateInstanceCreate>
     ): TemplateOperationRet
 
-    @Operation(summary = "批量更新流水线模板实例", tags = ["v3_user_templateInstance_update", "v3_app_templateInstance_update"])
+    @Operation(
+        summary = "批量更新流水线模板实例",
+        tags = ["v3_user_templateInstance_update", "v3_app_templateInstance_update"]
+    )
     @PUT
     @Path("/")
     fun updateTemplateInstances(
@@ -160,7 +161,10 @@ interface ApigwTemplateInstanceResourceV3 {
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet
 
-    @Operation(summary = "获取流水线模板的实例列表", tags = ["v3_app_templateInstance_get", "v3_user_templateInstance_get"])
+    @Operation(
+        summary = "获取流水线模板的实例列表",
+        tags = ["v3_app_templateInstance_get", "v3_user_templateInstance_get"]
+    )
     @GET
     @Path("/")
     fun listTemplateInstances(

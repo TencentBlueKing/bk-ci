@@ -30,17 +30,15 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialUpdate
 import com.tencent.devops.ticket.pojo.CredentialWithPermission
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.annotations.Example
-import io.swagger.annotations.ExampleProperty
+import io.swagger.v3.oas.annotations.media.ExampleObject
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -108,97 +106,95 @@ interface ApigwCredentialResourceV4 {
         projectId: String,
         @Parameter(
             description = "凭据", required = true,
-            examples = Example(
-                value = [
-                    ExampleProperty(
-                        mediaType = "PASSWORD、ACCESSTOKEN、OAUTHTOKEN、SECRETKEY、MULTI_LINE_PASSWORD 五种类型仅需要填写v1",
-                        value = """
-                            {
-                                "credentialId": "test",
-                                "credentialRemark": "null",
-                                "credentialType": "PASSWORD",
-                                "credentialName": "hello",
-                                "v1": "testpassword"
-                            }"""
-                    ),
-                    ExampleProperty(
-                        mediaType = "新增 USERNAME_PASSWORD",
-                        value = """
-                            {
-                                "credentialId": "test",
-                                "credentialRemark": "null",
-                                "credentialType": "USERNAME_PASSWORD",
-                                "credentialName": "hello",
-                                "v1": "username",
-                                "v2": "password"
-                            }"""
-                    ),
-                    ExampleProperty(
-                        mediaType = "新增 APPID_SECRETKEY",
-                        value = """
-                            {
-                                "credentialId": "test",
-                                "credentialRemark": "null",
-                                "credentialType": "APPID_SECRETKEY",
-                                "credentialName": "hello",
-                                "v1": "appId",
-                                "v2": "secretKey"
-                            }"""
-                    ),
-                    ExampleProperty(
-                        mediaType = "新增 SSH_PRIVATEKEY",
-                        value = """
-                            {
-                                "credentialId": "test",
-                                "credentialRemark": "null",
-                                "credentialType": "SSH_PRIVATEKEY",
-                                "credentialName": "hello",
-                                "v1": "privateKey",
-                                "v2": "passphrase"
-                            }"""
-                    ),
-                    ExampleProperty(
-                        mediaType = "新增 TOKEN_SSH_PRIVATEKEY",
-                        value = """
-                            {
-                                "credentialId": "test",
-                                "credentialRemark": "null",
-                                "credentialType": "TOKEN_SSH_PRIVATEKEY",
-                                "credentialName": "hello",
-                                "v1": "token",
-                                "v2": "privateKey",
-                                "v3": "passphrase"
-                            }"""
-                    ),
-                    ExampleProperty(
-                        mediaType = "新增 TOKEN_USERNAME_PASSWORD",
-                        value = """
-                            {
-                                "credentialId": "test",
-                                "credentialRemark": "null",
-                                "credentialType": "TOKEN_USERNAME_PASSWORD",
-                                "credentialName": "hello",
-                                "v1": "token",
-                                "v2": "username",
-                                "v3": "password"
-                            }"""
-                    ),
-                    ExampleProperty(
-                        mediaType = "新增 COS_APPID_SECRETID_SECRETKEY_REGION",
-                        value = """
-                            {
-                                "credentialId": "test",
-                                "credentialRemark": "null",
-                                "credentialType": "COS_APPID_SECRETID_SECRETKEY_REGION",
-                                "credentialName": "hello",
-                                "v1": "cosappId",
-                                "v2": "secretId",
-                                "v3": "secretKey",
-                                "v4": "region"
-                            }"""
-                    )
-                ]
-            )
+            examples = [
+                ExampleObject(
+                    description = "PASSWORD、ACCESSTOKEN、OAUTHTOKEN、SECRETKEY、MULTI_LINE_PASSWORD 五种类型仅需要填写v1",
+                    value = """
+                        {
+                            "credentialId": "test",
+                            "credentialRemark": "null",
+                            "credentialType": "PASSWORD",
+                            "credentialName": "hello",
+                            "v1": "testpassword"
+                        }"""
+                ),
+                ExampleObject(
+                    description = "新增 USERNAME_PASSWORD",
+                    value = """
+                        {
+                            "credentialId": "test",
+                            "credentialRemark": "null",
+                            "credentialType": "USERNAME_PASSWORD",
+                            "credentialName": "hello",
+                            "v1": "username",
+                            "v2": "password"
+                        }"""
+                ),
+                ExampleObject(
+                    description = "新增 APPID_SECRETKEY",
+                    value = """
+                        {
+                            "credentialId": "test",
+                            "credentialRemark": "null",
+                            "credentialType": "APPID_SECRETKEY",
+                            "credentialName": "hello",
+                            "v1": "appId",
+                            "v2": "secretKey"
+                        }"""
+                ),
+                ExampleObject(
+                    description = "新增 SSH_PRIVATEKEY",
+                    value = """
+                        {
+                            "credentialId": "test",
+                            "credentialRemark": "null",
+                            "credentialType": "SSH_PRIVATEKEY",
+                            "credentialName": "hello",
+                            "v1": "privateKey",
+                            "v2": "passphrase"
+                        }"""
+                ),
+                ExampleObject(
+                    description = "新增 TOKEN_SSH_PRIVATEKEY",
+                    value = """
+                        {
+                            "credentialId": "test",
+                            "credentialRemark": "null",
+                            "credentialType": "TOKEN_SSH_PRIVATEKEY",
+                            "credentialName": "hello",
+                            "v1": "token",
+                            "v2": "privateKey",
+                            "v3": "passphrase"
+                        }"""
+                ),
+                ExampleObject(
+                    description = "新增 TOKEN_USERNAME_PASSWORD",
+                    value = """
+                        {
+                            "credentialId": "test",
+                            "credentialRemark": "null",
+                            "credentialType": "TOKEN_USERNAME_PASSWORD",
+                            "credentialName": "hello",
+                            "v1": "token",
+                            "v2": "username",
+                            "v3": "password"
+                        }"""
+                ),
+                ExampleObject(
+                    description = "新增 COS_APPID_SECRETID_SECRETKEY_REGION",
+                    value = """
+                        {
+                            "credentialId": "test",
+                            "credentialRemark": "null",
+                            "credentialType": "COS_APPID_SECRETID_SECRETKEY_REGION",
+                            "credentialName": "hello",
+                            "v1": "cosappId",
+                            "v2": "secretId",
+                            "v3": "secretKey",
+                            "v4": "region"
+                        }"""
+                ),
+            ]
         )
         credential: CredentialCreate
     ): Result<Boolean>

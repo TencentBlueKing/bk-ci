@@ -45,11 +45,10 @@ import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineSetting
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.annotations.Example
-import io.swagger.annotations.ExampleProperty
+import io.swagger.v3.oas.annotations.media.ExampleObject
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
@@ -112,11 +111,10 @@ interface ApigwPipelineResourceV4 {
         @QueryParam("pipelineId")
         pipelineId: String,
         @Parameter(
-            description = "流水线模型", required = true, examples = Example(
-                value = [
-                    ExampleProperty(
-                        mediaType = "如果我想更改流水线启动变量param的默认值为value2",
-                        value = """
+            description = "流水线模型", required = true, examples = [
+                ExampleObject(
+                    description = "如果我想更改流水线启动变量param的默认值为value2",
+                    value = """
                             {
                                 "name": "更改流水线启动变量默认值",
                                 "stages": [{
@@ -143,10 +141,10 @@ interface ApigwPipelineResourceV4 {
                                 "...": "..."
                             }
                                 """
-                    ),
-                    ExampleProperty(
-                        mediaType = "如果我想启用或是更改job互斥组配置",
-                        value = """
+                ),
+                ExampleObject(
+                    description = "如果我想启用或是更改job互斥组配置",
+                    value = """
                             {
                                 "stages": [{
                                     "containers": [{
@@ -175,10 +173,10 @@ interface ApigwPipelineResourceV4 {
                                 "...": "..."
                             }
                         """
-                    ),
-                    ExampleProperty(
-                        mediaType = "一般先通过接口(比如v3_app_pipeline_get)拿到编排，再根据自己的需求更改后上传更新",
-                        value = """
+                ),
+                ExampleObject(
+                    description = "一般先通过接口(比如v3_app_pipeline_get)拿到编排，再根据自己的需求更改后上传更新",
+                    value = """
                             {
                             "name": "一个非常简单又完整的例子",
                             "desc": "",
@@ -306,9 +304,8 @@ interface ApigwPipelineResourceV4 {
                             "latestVersion": 6
                         }
                         """
-                    )
-                ]
-            )
+                )
+            ]
         )
         pipeline: Model
     ): Result<Boolean>
@@ -376,7 +373,10 @@ interface ApigwPipelineResourceV4 {
         pipelineId: String
     ): Result<Boolean>
 
-    @Operation(summary = "导入新流水线, 包含流水线编排和设置", tags = ["v4_user_pipeline_upload", "v4_app_pipeline_upload"])
+    @Operation(
+        summary = "导入新流水线, 包含流水线编排和设置",
+        tags = ["v4_user_pipeline_upload", "v4_app_pipeline_upload"]
+    )
     @POST
     @Path("/pipeline_with_setting")
     fun uploadPipeline(
@@ -570,7 +570,10 @@ interface ApigwPipelineResourceV4 {
         setting: PipelineSetting
     ): Result<Boolean>
 
-    @Operation(summary = "根据流水线名称搜索", tags = ["v4_app_pipeline_search_by_name", "v4_user_pipeline_search_by_name"])
+    @Operation(
+        summary = "根据流水线名称搜索",
+        tags = ["v4_app_pipeline_search_by_name", "v4_user_pipeline_search_by_name"]
+    )
     @GET
     @Path("/search_by_name")
     fun searchByName(

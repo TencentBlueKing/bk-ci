@@ -38,11 +38,10 @@ import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewId
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.annotations.Example
-import io.swagger.annotations.ExampleProperty
+import io.swagger.v3.oas.annotations.media.ExampleObject
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -61,7 +60,10 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwPipelineViewResourceV4 {
 
-    @Operation(summary = "用户获取视图(流水线组)流水线编排列表", tags = ["v4_user_pipeline_view_pipelines", "v4_app_pipeline_view_pipelines"])
+    @Operation(
+        summary = "用户获取视图(流水线组)流水线编排列表",
+        tags = ["v4_user_pipeline_view_pipelines", "v4_app_pipeline_view_pipelines"]
+    )
     @GET
     @Path("/listViewPipelines")
     fun listViewPipelines(
@@ -139,22 +141,20 @@ interface ApigwPipelineViewResourceV4 {
         projectId: String,
         @Parameter(
             description = "流水线视图创建模型",
-            examples = Example(
-                value = [
-                    ExampleProperty(
-                        mediaType = "当使用静态分组(手动指定组内所包含的流水线)时," +
+            examples = [
+                ExampleObject(
+                    description = "当使用静态分组(手动指定组内所包含的流水线)时," +
                             "仅需指定名称(name)、是否项目级别(projected)和分组类型(viewType:2)",
-                        value = """
+                    value = """
                             {
                                 "name": "我是分组名称",
                                 "projected": true,
                                 "viewType": 2
-                            }
-"""
-                    ),
-                    ExampleProperty(
-                        mediaType = "当使用静态分组时，同时传入几条流水线",
-                        value = """
+                            }"""
+                ),
+                ExampleObject(
+                    description = "当使用静态分组时，同时传入几条流水线",
+                    value = """
                             {
                                 "name": "我是分组名称",
                                 "projected": true,
@@ -163,13 +163,12 @@ interface ApigwPipelineViewResourceV4 {
                                     "p-xxx",
                                     "p-xxx"
                                 ]
-                            }
-"""
-                    ),
-                    ExampleProperty(
-                        mediaType = "当使用动态分组(组内所包含的流水线根据设置的流水线名称、标签等属性去动态匹配)，" +
+                            }"""
+                ),
+                ExampleObject(
+                    description = "当使用动态分组(组内所包含的流水线根据设置的流水线名称、标签等属性去动态匹配)，" +
                             "需额外指定逻辑符(logic)、过滤规则(filters)",
-                                value = """
+                    value = """
                             {
                                 "name": "我是分组名称",
                                 "projected": true,
@@ -189,11 +188,10 @@ interface ApigwPipelineViewResourceV4 {
                                     ]
                                   }
                                 ]
-                            }
-                            """
-                    )
-                ]
-            )
+                            }"""
+                )
+            ]
+
         )
         pipelineView: PipelineViewForm
     ): Result<PipelineViewId>
@@ -259,21 +257,19 @@ interface ApigwPipelineViewResourceV4 {
         isProject: Boolean?,
         @Parameter(
             description = "流水线视图更新模型",
-            examples = Example(
-                value = [
-                    ExampleProperty(
-                        mediaType = "当给分组改名时," +
+            examples = [
+                ExampleObject(
+                    description = "当给分组改名时," +
                             "仅需指定名称(name)、是否项目级别(projected)",
-                        value = """
+                    value = """
                             {
                                 "name": "我是分组名称",
                                 "projected": true
-                            }
-"""
-                    ),
-                    ExampleProperty(
-                        mediaType = "当使用静态分组时，新增流水线到分组，需要将原来的流水线加上，否则会被移除。",
-                        value = """
+                            }"""
+                ),
+                ExampleObject(
+                    description = "当使用静态分组时，新增流水线到分组，需要将原来的流水线加上，否则会被移除。",
+                    value = """
                             {
                                 "name": "我是分组名称",
                                 "projected": true,
@@ -283,13 +279,12 @@ interface ApigwPipelineViewResourceV4 {
                                     "p-old2",
                                     "p-new"
                                 ]
-                            }
-"""
-                    ),
-                    ExampleProperty(
-                        mediaType = "当使用动态分组(组内所包含的流水线根据设置的流水线名称、标签等属性去动态匹配)，" +
+                            }"""
+                ),
+                ExampleObject(
+                    description = "当使用动态分组(组内所包含的流水线根据设置的流水线名称、标签等属性去动态匹配)，" +
                             "需指定逻辑符(logic)、过滤规则(filters)",
-                                value = """
+                    value = """
                             {
                                 "name": "我是分组名称",
                                 "projected": true,
@@ -309,11 +304,9 @@ interface ApigwPipelineViewResourceV4 {
                                     ]
                                   }
                                 ]
-                            }
-                            """
-                    )
-                ]
-            )
+                            }"""
+                )
+            ]
         )
         pipelineView: PipelineViewForm
     ): Result<Boolean>

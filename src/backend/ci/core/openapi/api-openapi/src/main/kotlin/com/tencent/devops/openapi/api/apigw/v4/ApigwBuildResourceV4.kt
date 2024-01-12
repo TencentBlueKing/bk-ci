@@ -48,11 +48,10 @@ import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.annotations.Example
-import io.swagger.annotations.ExampleProperty
+import io.swagger.v3.oas.annotations.media.ExampleObject
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -91,16 +90,13 @@ interface ApigwBuildResourceV4 {
         pipelineId: String,
         @Parameter(
             description = "启动参数：map<变量名(string),变量值(string)>", required = false,
-            examples = Example(
-                value = [
-                    ExampleProperty(
-                        mediaType = "当需要指定启动时流水线变量 var1 为 foobar 时", value = "{\"var1\": \"foobar\"}"
-                    ),
-                    ExampleProperty(
-                        mediaType = "若流水线没有设置输入变量，则填空", value = "{}"
-                    )
-                ]
-            )
+            examples = [
+                ExampleObject(
+                    description = "当需要指定启动时流水线变量 var1 为 foobar 时",
+                    value = "{\"var1\": \"foobar\"}"
+                ),
+                ExampleObject(description = "若流水线没有设置输入变量，则填空", value = "{}")
+            ]
         )
         values: Map<String, String>?,
         @Parameter(description = "手动指定构建版本参数", required = false)
@@ -163,12 +159,18 @@ interface ApigwBuildResourceV4 {
         @Parameter(description = "仅重试所有失败Job", required = false)
         @QueryParam("failedContainer")
         failedContainer: Boolean? = false,
-        @Parameter(description = "跳过失败插件，为true时需要传taskId值（值为stageId则表示跳过Stage下所有失败插件）", required = false)
+        @Parameter(
+            description = "跳过失败插件，为true时需要传taskId值（值为stageId则表示跳过Stage下所有失败插件）",
+            required = false
+        )
         @QueryParam("skip")
         skipFailedTask: Boolean? = false
     ): Result<BuildId>
 
-    @Operation(summary = "查看构建状态信息,#4295增加stageStatus等", tags = ["v4_app_build_status", "v4_user_build_status"])
+    @Operation(
+        summary = "查看构建状态信息,#4295增加stageStatus等",
+        tags = ["v4_app_build_status", "v4_user_build_status"]
+    )
     @GET
     @Path("/build_status")
     fun getStatus(
@@ -398,16 +400,12 @@ interface ApigwBuildResourceV4 {
         buildId: String,
         @Parameter(
             description = "变量名列表", required = true,
-            examples = Example(
-                value = [
-                    ExampleProperty(
-                        mediaType = "以数组形式把需要获取的变量key传进来，比如获取variable1变量",
-                        value = """
+            examples = [ExampleObject(
+                description = "以数组形式把需要获取的变量key传进来，比如获取variable1变量",
+                value = """
                             ["variable1"]
                                 """
-                    )
-                ]
-            )
+            )]
         )
         variableNames: List<String>
     ): Result<Map<String, String>>
@@ -500,7 +498,10 @@ interface ApigwBuildResourceV4 {
         params: ReviewParam
     ): Result<Boolean>
 
-    @Operation(summary = "获取流水线手动启动分页的参数", tags = ["v4_app_build_startOptions", "v4_user_build_startOptions"])
+    @Operation(
+        summary = "获取流水线手动启动分页的参数",
+        tags = ["v4_app_build_startOptions", "v4_user_build_startOptions"]
+    )
     @POST
     @Path("/build_manual_startup_options")
     fun manualStartupOptions(
