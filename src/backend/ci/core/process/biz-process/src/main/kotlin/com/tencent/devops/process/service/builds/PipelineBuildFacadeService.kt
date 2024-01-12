@@ -664,33 +664,38 @@ class PipelineBuildFacadeService(
     }
 
     private fun getModelAndBuildLevel(projectId: String, pipelineId: String, version: Int?): Pair<Model, Boolean> {
-        val defaultVersion = pipelineRepositoryService.getPipelineResourceVersion(
-            projectId = projectId,
-            pipelineId = pipelineId
-        ) ?: throw ErrorCodeException(
-            statusCode = Response.Status.NOT_FOUND.statusCode,
-            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
-            params = arrayOf(pipelineId)
-        )
         if (version == null) {
+            val defaultVersion = pipelineRepositoryService.getPipelineResourceVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                includeDraft = true
+            ) ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
+                params = arrayOf(pipelineId)
+            )
             // 正式执行时，当前最新版本可能是草稿，则作为调试执行
             return if (defaultVersion.status == VersionStatus.COMMITTING) {
                 Pair(defaultVersion.model, true)
             } else {
                 Pair(defaultVersion.model, false)
             }
+        } else {
+            val targetResource = pipelineRepositoryService.getPipelineResourceVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version
+            ) ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
+                params = arrayOf(version.toString())
+            )
+            return if (targetResource.status == VersionStatus.COMMITTING) {
+                Pair(targetResource.model, true)
+            } else {
+                Pair(targetResource.model, false)
+            }
         }
-        val targetResource = pipelineRepositoryService.getDraftVersionResource(
-            projectId = projectId,
-            pipelineId = pipelineId
-        )
-        if (targetResource != null && targetResource.version == version) {
-            return Pair(targetResource.model, true)
-        }
-        throw ErrorCodeException(
-            statusCode = Response.Status.BAD_REQUEST.statusCode,
-            errorCode = ProcessMessageCode.ERROR_VERSION_CANNOT_RUN
-        )
     }
 
     /**
