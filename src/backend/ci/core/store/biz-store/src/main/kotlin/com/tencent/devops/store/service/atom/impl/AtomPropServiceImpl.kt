@@ -97,7 +97,7 @@ class AtomPropServiceImpl @Autowired constructor(
 
     fun partition(
         queryDbAtomCodes: MutableList<String>?,
-        atomPropMap:  MutableMap<String, AtomProp>?,
+        atomPropMap: MutableMap<String, AtomProp>?,
         testProjectFlag: Boolean = false
     ): MutableMap<String, AtomProp>? {
         ListUtils.partition(queryDbAtomCodes!!, 100).forEach { rids ->

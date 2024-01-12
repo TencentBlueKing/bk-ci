@@ -62,7 +62,7 @@ class AtomPropDao {
         val statusList = listOf(
             AtomStatusEnum.TESTING.status.toByte(),
             AtomStatusEnum.AUDITING.status.toByte(),
-            AtomStatusEnum.RELEASED.status.toByte(),
+            AtomStatusEnum.RELEASED.status.toByte()
         )
         return dslContext.selectFrom(t1)
             .where(t1.ATOM_CODE.`in`(atomCodes).and(t1.ATOM_STATUS.`in`(statusList)))
