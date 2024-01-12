@@ -42,6 +42,8 @@ import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentreq.TerminateAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentAgentResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentInstallAgentResult
+import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentInstallChannelResult
+import com.tencent.devops.environment.pojo.job.agentres.InstallAgentChannel
 import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentStatusFromNodemanResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentTaskStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
@@ -55,6 +57,7 @@ import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
 import com.tencent.devops.environment.pojo.job.agentres.IpFilter
 import com.tencent.devops.environment.pojo.job.agentres.JobResultForFilterHostInfo
 import com.tencent.devops.environment.pojo.job.agentres.Meta
+import com.tencent.devops.environment.pojo.job.agentres.QueryAgentInstallChannelResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentStatusFromNodemanResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLogResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskStatusResult
@@ -406,5 +409,29 @@ data class AgentService @Autowired constructor(
             }
         )
         return retryAgentInstallTaskRes
+    }
+
+    fun queryAgentInstallChannel(
+        userId: String,
+        projectId: String,
+        withHidden: Boolean
+    ): AgentResult<QueryAgentInstallChannelResult> {
+        AgentApi.setThreadLocal("queryAgentInstallChannel")
+        val agentQueryAgentInsChannelRes: AgentAgentResult<AgentQueryAgentInstallChannelResult> =
+            agentApi.executeGetRequest(
+                AgentQueryAgentInstallChannelResult::class.java, -1, withHidden
+            )
+        val queryAgentInsChannelRes: AgentResult<QueryAgentInstallChannelResult> = AgentResult(
+            code = agentQueryAgentInsChannelRes.code,
+            result = agentQueryAgentInsChannelRes.result,
+            message = agentQueryAgentInsChannelRes.message,
+            errors = agentQueryAgentInsChannelRes.errors,
+            data = agentQueryAgentInsChannelRes.data?.let {
+                QueryAgentInstallChannelResult(
+                    installChannelList = it.installChannelList
+                )
+            }
+        )
+        return queryAgentInsChannelRes
     }
 }

@@ -12,6 +12,8 @@ import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.resp.GetStepInstanceDetailResult
 import com.tencent.devops.environment.pojo.job.resp.GetStepInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
+import com.tencent.devops.environment.pojo.job.agentres.InstallAgentChannel
+import com.tencent.devops.environment.pojo.job.agentres.QueryAgentInstallChannelResult
 import com.tencent.devops.environment.pojo.job.resp.JobResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskStatusResult
 import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceStatusResult
@@ -207,4 +209,19 @@ interface UserJobResource {
         @ApiParam(value = "重试agent安装任务的请求信息", required = true)
         retryAgentInstallTaskReq: RetryAgentInstallTaskReq
     ): AgentResult<RetryAgentInstallTaskResult>
+
+    @ApiOperation("查询agent安装通道")
+    @GET
+    @Path("/{projectId}/query_agent_install_channel")
+    fun queryAgentInstallChannel(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "是否包括隐藏安装通道")
+        @QueryParam("withHidden")
+        withHidden: Boolean
+    ): AgentResult<QueryAgentInstallChannelResult>
 }

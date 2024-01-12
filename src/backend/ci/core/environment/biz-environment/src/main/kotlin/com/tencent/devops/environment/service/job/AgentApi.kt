@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VAL
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.environment.pojo.job.agentres.AgentAgentResult
+import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentInstallChannelResult
 import okhttp3.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -73,11 +74,15 @@ class AgentApi {
     @Value("\${job.retryAgentInstallTaskPath:#{\"/retry\"}}") // 前面要拼 /job/{jobId}
     private val retryAgentInstallTaskPath = ""
 
+    @Value("\${job.queryAgentInstallChannelPath:#{\"/install_channel\"}}")
+    private val queryAgentInstallChannelPath = ""
+
     companion object {
         private const val LOG_OUTPUT_MAX_LENGTH = 4000
         private const val JOB_PERFIX = "/job"
         private const val HOST_PERFIX = "/host"
         private const val QUERY_AGENT_LOG = "/?instance_id=%s"
+        private const val QUERY_AGENT_INSTALL_CHANNEL = "/?with_hidden=%s"
 
         private val logger = LoggerFactory.getLogger(AgentApi::class.java)
 
@@ -112,6 +117,7 @@ class AgentApi {
         val headers = getAuthHeaderMap(bkAuthorization)
         val suffix = when (operationName) {
             "queryAgentTaskLog" -> QUERY_AGENT_LOG
+            "queryAgentInstallChannel" -> QUERY_AGENT_INSTALL_CHANNEL
             else -> ""
         }
         val urlWithSuffix = url + String.format(suffix, *args)
@@ -151,7 +157,11 @@ class AgentApi {
                 var jsonData = ""
                 val operationResult: T? =
                     if (null != agentResp.data) {
-                        jsonData = jacksonObjectMapper().writeValueAsString(agentResp.data)
+                        jsonData = jacksonObjectMapper().writeValueAsString(
+                            if ("queryAgentInstallChannel" == operationName) {
+                                AgentQueryAgentInstallChannelResult(installChannelList = agentResp.data)
+                            } else agentResp.data
+                        )
                         jacksonObjectMapper().readValue(jsonData, classOfT)
                     } else {
                         null
@@ -208,6 +218,7 @@ class AgentApi {
             "terminalAgentInstallTask" -> nodemanApiBaseUrl + JOB_PERFIX + jobId + terminalAgentInstallTaskPath
             "retryAgentInstallTask" -> nodemanApiBaseUrl + JOB_PERFIX + jobId + retryAgentInstallTaskPath
             "queryAgentStatusFromNodeman" -> nodemanApiBaseUrl + HOST_PERFIX + queryAgentStatusFromNodemanPath
+            "queryAgentInstallChannel" -> nodemanApiBaseUrl + queryAgentInstallChannelPath
 
             else -> ""
         }
