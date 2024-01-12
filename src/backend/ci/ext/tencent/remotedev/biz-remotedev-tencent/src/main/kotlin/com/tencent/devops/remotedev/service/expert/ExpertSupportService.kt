@@ -308,7 +308,7 @@ class ExpertSupportService @Autowired constructor(
             logger.warn("execute createSupport pipeline error", e)
         }
 
-        return Pair(true, "已发起查询，稍后消息通知")
+        return Pair(true, "已发起查询，稍后通知密码")
     }
     companion object {
         private val logger = LoggerFactory.getLogger(ExpertSupportService::class.java)
