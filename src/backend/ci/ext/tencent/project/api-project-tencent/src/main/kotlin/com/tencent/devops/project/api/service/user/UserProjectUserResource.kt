@@ -78,7 +78,7 @@ interface UserProjectUserResource {
 
     @GET
     @Path("/projects/{projectCode}/list")
-    @ApiOperation(" 查看项目下的成员列表")
+    @ApiOperation("查看项目下的成员列表")
     fun getProjectUsers(
         @ApiParam("PAAS_CC Token", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
@@ -93,7 +93,7 @@ interface UserProjectUserResource {
 
     @GET
     @Path("/projects/{projectCode}/roles/list")
-    @ApiOperation(" 查看项目下的成员列表")
+    @ApiOperation("查看项目下的成员列表")
     fun getProjectUserRoles(
         @ApiParam("PAAS_CC Token", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)

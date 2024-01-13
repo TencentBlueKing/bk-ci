@@ -68,5 +68,4 @@ data class DeptInfo(
     @ApiModelProperty(name = "ID")
     @JsonProperty("ID")
     val id: String
-
 )
