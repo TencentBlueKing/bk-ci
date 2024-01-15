@@ -218,7 +218,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 .title(
                     I18nUtil.getCodeLanMessage(
                         messageCode = BK_CREATE_BKCI_PROJECT_APPLICATION,
-                        params = arrayOf(projectName)
+                        params = arrayOf(userId, projectName)
                     )
                 )
                 .build()
@@ -340,7 +340,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 .title(
                     I18nUtil.getCodeLanMessage(
                         messageCode = BK_REVISE_BKCI_PROJECT_APPLICATION,
-                        params = arrayOf(projectName)
+                        params = arrayOf(projectApprovalInfo.creator!!, projectName)
                     )
                 )
                 .build()
