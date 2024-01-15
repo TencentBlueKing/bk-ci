@@ -222,7 +222,7 @@ class RbacPermissionResourceMemberService constructor(
                 resourceCode = projectCode,
                 groupCode = roleCode
             )?.relationId
-        } ?: throw ErrorCodeException(
+        }?.toInt() ?: throw ErrorCodeException(
             errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
             params = arrayOf(roleCode),
             defaultMessage = "group $roleCode not exist"
