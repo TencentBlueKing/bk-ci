@@ -27,21 +27,20 @@
 
 package com.tencent.devops.stream.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("工蜂触发请求-封装给流水线执行库处理使用")
+@Schema(description = "工蜂触发请求-封装给流水线执行库处理使用")
 data class GitRequestEventForHandle(
-    @ApiModelProperty("Git Request Event ID")
+    @Schema(description = "Git Request Event ID")
     val id: Long?,
-    @ApiModelProperty("流水线所在工蜂项目ID")
+    @Schema(description = "流水线所在工蜂项目ID")
     val gitProjectId: Long,
-    @ApiModelProperty("流水线所在分支名")
+    @Schema(description = "流水线所在分支名")
     val branch: String,
-    @ApiModelProperty("触发用户")
+    @Schema(description = "触发用户")
     val userId: String,
-    @ApiModelProperty("是否为远程仓库触发")
+    @Schema(description = "是否为远程仓库触发")
     val checkRepoTrigger: Boolean = false,
-    @ApiModelProperty("工蜂触发的请求内容")
+    @Schema(description = "工蜂触发的请求内容")
     val gitRequestEvent: GitRequestEvent
 )

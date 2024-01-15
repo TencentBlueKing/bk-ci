@@ -31,16 +31,15 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("CodeCC代码检查任务(客户端)")
+@Schema(description = "CodeCC代码检查任务(客户端)")
 open class CodeCCScanClientTask(
-    @ApiModelProperty("displayName", required = false)
+    @Schema(description = "displayName", required = false)
     override var displayName: String?,
-    @ApiModelProperty("入参", required = true)
+    @Schema(description = "入参", required = true)
     override val inputs: CodeCCScanClientInput,
-    @ApiModelProperty("执行条件", required = true)
+    @Schema(description = "执行条件", required = true)
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
 
@@ -94,16 +93,16 @@ open class CodeCCScanClientTask(
     }
 }
 
-@ApiModel("CodeCC代码检查任务(客户端)")
+@Schema(description = "CodeCC代码检查任务(客户端)")
 open class CodeCCScanClientInput(
-    @ApiModelProperty("扫描类型（all：全量, updated：增量）", required = false)
+    @Schema(description = "扫描类型（all：全量, updated：增量）", required = false)
     open var scanType: String? = "all",
-    @ApiModelProperty("工具包,多个之间逗号分隔：ccn,dupc,sensitive,checkstyle,cpplint,detekt,eslint,goml,occheck,phpcs,pylint,styecop", required = true)
+    @Schema(description = "工具包,多个之间逗号分隔：ccn,dupc,sensitive,checkstyle,cpplint,detekt,eslint,goml,occheck,phpcs,pylint,styecop", required = true)
     var tools: String,
-    @ApiModelProperty("要扫描的代码路径，默认为整个workspace", required = false)
+    @Schema(description = "要扫描的代码路径，默认为整个workspace", required = false)
     var path: String?,
-    @ApiModelProperty("规则集,逗号分隔", required = false)
+    @Schema(description = "规则集,逗号分隔", required = false)
     var rules: String?,
-    @ApiModelProperty("排除的目录,逗号分隔", required = false)
+    @Schema(description = "排除的目录,逗号分隔", required = false)
     var skipPath: String?
 ) : AbstractInput()

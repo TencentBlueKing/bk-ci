@@ -28,20 +28,19 @@
 package com.tencent.devops.common.pipeline.element
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("Android证书安装", description = AndroidCertInstallElement.classType)
+@Schema(description = "Android证书安装", description = AndroidCertInstallElement.classType)
 data class AndroidCertInstallElement(
-    @ApiModelProperty("任务名称", required = true)
+    @Schema(description = "任务名称", required = true)
     override val name: String = "Android证书安装",
-    @ApiModelProperty("id", required = false)
+    @Schema(description = "id", required = false)
     override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @Schema(description = "状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("用户在上传证书时指定的ID号", required = false)
+    @Schema(description = "用户在上传证书时指定的ID号", required = false)
     val certId: String = "",
-    @ApiModelProperty("目标路径", required = false)
+    @Schema(description = "目标路径", required = false)
     val destPath: String = ""
 ) : Element(name, id, status) {
     companion object {

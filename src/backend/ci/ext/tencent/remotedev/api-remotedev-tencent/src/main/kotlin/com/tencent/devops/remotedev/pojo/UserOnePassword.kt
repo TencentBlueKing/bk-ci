@@ -27,13 +27,12 @@
 
 package com.tencent.devops.remotedev.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("用户1password模型")
+@Schema(description = "用户1password模型")
 data class UserOnePassword(
-    @ApiModelProperty("用户名")
+    @Schema(description = "用户名")
     val userId: String,
-    @ApiModelProperty("工作空间（审计）")
+    @Schema(description = "工作空间（审计）")
     val workspaceName: String
 )

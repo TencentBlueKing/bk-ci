@@ -27,33 +27,32 @@
 
 package com.tencent.devops.stream.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("Stream服务配置")
+@Schema(description = "Stream服务配置")
 data class GitCIServicesConf(
-    @ApiModelProperty("ID")
+    @Schema(description = "ID")
     val id: Long,
-    @ApiModelProperty("镜像名称")
+    @Schema(description = "镜像名称")
     val imageName: String,
-    @ApiModelProperty("镜像标签")
+    @Schema(description = "镜像标签")
     val imageTag: String,
-    @ApiModelProperty("镜像仓库地址")
+    @Schema(description = "镜像仓库地址")
     val repoUrl: String,
-    @ApiModelProperty("镜像仓库登录用户")
+    @Schema(description = "镜像仓库登录用户")
     val repoUsername: String?,
-    @ApiModelProperty("镜像仓库登录密码")
+    @Schema(description = "镜像仓库登录密码")
     val repoPwd: String?,
-    @ApiModelProperty("是否启用")
+    @Schema(description = "是否启用")
     val enable: Boolean,
-    @ApiModelProperty("环境变量")
+    @Schema(description = "环境变量")
     val env: String?,
-    @ApiModelProperty("创建者")
+    @Schema(description = "创建者")
     val createUser: String?,
-    @ApiModelProperty("修改者")
+    @Schema(description = "修改者")
     val updateUser: String?,
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     val createTime: String?,
-    @ApiModelProperty("修改时间")
+    @Schema(description = "修改时间")
     val updateTime: String?
 )

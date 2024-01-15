@@ -27,19 +27,18 @@
 
 package com.tencent.devops.remotedev.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("WINDOWS 地域表")
+@Schema(description = "WINDOWS 地域表")
 data class WindowsResourceZoneConfig(
-    @ApiModelProperty("Id")
+    @Schema(description = "Id")
     val id: Long?,
-    @ApiModelProperty("是否可用")
+    @Schema(description = "是否可用")
     val available: Boolean?,
-    @ApiModelProperty("区域，深圳，南京等")
+    @Schema(description = "区域，深圳，南京等")
     val zone: String,
-    @ApiModelProperty("区域简称，SZ,NJ")
+    @Schema(description = "区域简称，SZ,NJ")
     var zoneShortName: String,
-    @ApiModelProperty("描述")
+    @Schema(description = "描述")
     val description: String
 )

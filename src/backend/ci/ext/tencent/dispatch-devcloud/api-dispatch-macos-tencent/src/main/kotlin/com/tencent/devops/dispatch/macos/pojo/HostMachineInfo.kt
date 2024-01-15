@@ -1,9 +1,9 @@
 package com.tencent.devops.dispatch.macos.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("母机信息")
+@Schema(description = "母机信息")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class HostMachineInfo(var id: Int = 0) {
     var name: String? = ""

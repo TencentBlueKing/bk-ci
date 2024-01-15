@@ -27,23 +27,22 @@
 
 package com.tencent.devops.remotedev.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("工作空间接口返回")
+@Schema(description = "工作空间接口返回")
 data class WorkspaceResponse(
-    @ApiModelProperty("工作空间名称")
+    @Schema(description = "工作空间名称")
     val workspaceName: String,
-    @ApiModelProperty("工作空间HOST")
+    @Schema(description = "工作空间HOST")
     val workspaceHost: String? = null,
-    @ApiModelProperty("工作空间状态")
+    @Schema(description = "工作空间状态")
     val status: WorkspaceAction,
-    @ApiModelProperty("错误信息")
+    @Schema(description = "错误信息")
     val errorMsg: String? = null,
-    @ApiModelProperty("系统类型")
+    @Schema(description = "系统类型")
     val systemType: WorkspaceSystemType? = null,
-    @ApiModelProperty("挂载平台类型")
+    @Schema(description = "挂载平台类型")
     val workspaceMountType: WorkspaceMountType? = null,
-    @ApiModelProperty("工作空间归属")
+    @Schema(description = "工作空间归属")
     val ownerType: WorkspaceOwnerType? = null
 )

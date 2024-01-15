@@ -27,11 +27,10 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件重新构建请求报文体")
+@Schema(description = "插件重新构建请求报文体")
 data class AtomRebuildRequest(
-    @ApiModelProperty(value = "插件字段校验确认标识", required = false)
+    @Schema(description = "插件字段校验确认标识", required = false)
     val fieldCheckConfirmFlag: Boolean? = false
 )

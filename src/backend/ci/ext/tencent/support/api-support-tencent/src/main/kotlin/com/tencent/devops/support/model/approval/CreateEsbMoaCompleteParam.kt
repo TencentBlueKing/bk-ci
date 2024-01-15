@@ -28,8 +28,7 @@
 package com.tencent.devops.support.model.approval
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * MOA审批结单参数
@@ -38,24 +37,24 @@ import io.swagger.annotations.ApiModelProperty
  * @version: $Revision$ $Date$ $LastChangedBy$
  *.
  */
-@ApiModel("MOA审批结单参数")
+@Schema(description = "MOA审批结单参数")
 open class CreateEsbMoaCompleteParam(
-    @ApiModelProperty("app标识", required = true, name = "app_code")
+    @Schema(description = "app标识", required = true, name = "app_code")
     @JsonProperty("app_code")
     val appCode: String = "",
-    @ApiModelProperty("app私密key", required = true, name = "app_secret")
+    @Schema(description = "app私密key", required = true, name = "app_secret")
     @JsonProperty("app_secret")
     val appSecret: String = "",
-    @ApiModelProperty("用户access_token", required = false, name = "access_token")
+    @Schema(description = "用户access_token", required = false, name = "access_token")
     @JsonProperty("access_token")
     var accessToken: String? = null,
-    @ApiModelProperty("内部版用户登录态", required = false, name = "bk_ticket")
+    @Schema(description = "内部版用户登录态", required = false, name = "bk_ticket")
     @JsonProperty("bk_ticket")
     var bkTicket: String? = null,
-    @ApiModelProperty("操作者RTX英文名", required = false, name = "operator")
+    @Schema(description = "操作者RTX英文名", required = false, name = "operator")
     @JsonProperty("operator")
     var operator: String? = null,
-    @ApiModelProperty("任务ID", required = true, name = "task_id")
+    @Schema(description = "任务ID", required = true, name = "task_id")
     @JsonProperty("task_id")
     val taskId: String
 )

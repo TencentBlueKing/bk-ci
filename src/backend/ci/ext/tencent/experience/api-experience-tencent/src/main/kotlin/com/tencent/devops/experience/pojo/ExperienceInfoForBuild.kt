@@ -1,18 +1,17 @@
 package com.tencent.devops.experience.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("版本体验-体验信息-根据构建")
+@Schema(description = "版本体验-体验信息-根据构建")
 data class ExperienceInfoForBuild(
-    @ApiModelProperty("体验名称", required = true)
+    @Schema(description = "体验名称", required = true)
     val experienceName: String,
-    @ApiModelProperty("版本标题", required = true)
+    @Schema(description = "版本标题", required = true)
     val versionTitle: String,
-    @ApiModelProperty("体验描述", required = true)
+    @Schema(description = "体验描述", required = true)
     val remark: String,
-    @ApiModelProperty("schema跳转链接", required = true)
+    @Schema(description = "schema跳转链接", required = true)
     val scheme: String,
-    @ApiModelProperty("体验id", required = true)
+    @Schema(description = "体验id", required = true)
     val experienceId: String
 )

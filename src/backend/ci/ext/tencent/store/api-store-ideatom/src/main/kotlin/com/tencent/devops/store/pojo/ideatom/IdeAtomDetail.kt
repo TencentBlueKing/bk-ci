@@ -32,69 +32,69 @@ import com.tencent.devops.store.pojo.common.Category
 import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
 import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomStatusEnum
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class IdeAtomDetail(
-    @ApiModelProperty("插件ID")
+    @Schema(description = "插件ID")
     val atomId: String,
-    @ApiModelProperty("插件标识")
+    @Schema(description = "插件标识")
     val atomCode: String,
-    @ApiModelProperty("插件名称")
+    @Schema(description = "插件名称")
     val atomName: String,
-    @ApiModelProperty("logo地址")
+    @Schema(description = "logo地址")
     val logoUrl: String?,
-    @ApiModelProperty("插件分类code")
+    @Schema(description = "插件分类code")
     val classifyCode: String?,
-    @ApiModelProperty("插件分类名称")
+    @Schema(description = "插件分类名称")
     val classifyName: String?,
-    @ApiModelProperty("下载量", required = true)
+    @Schema(description = "下载量", required = true)
     val downloads: Int,
-    @ApiModelProperty("星级评分", required = false)
+    @Schema(description = "星级评分", required = false)
     val score: Double?,
-    @ApiModelProperty("范畴列表")
+    @Schema(description = "范畴列表")
     val categoryList: List<Category>?,
-    @ApiModelProperty("插件类型")
+    @Schema(description = "插件类型")
     val atomType: String?,
-    @ApiModelProperty("插件简介")
+    @Schema(description = "插件简介")
     val summary: String?,
-    @ApiModelProperty("插件描述")
+    @Schema(description = "插件描述")
     val description: String?,
-    @ApiModelProperty("版本号")
+    @Schema(description = "版本号")
     val version: String?,
-    @ApiModelProperty("插件状态")
+    @Schema(description = "插件状态")
     val atomStatus: IdeAtomStatusEnum,
-    @ApiModelProperty("发布类型")
+    @Schema(description = "发布类型")
     val releaseType: String?,
-    @ApiModelProperty("版本日志")
+    @Schema(description = "版本日志")
     val versionContent: String?,
-    @ApiModelProperty("代码库链接")
+    @Schema(description = "代码库链接")
     val codeSrc: String?,
-    @ApiModelProperty("发布者")
+    @Schema(description = "发布者")
     val publisher: String?,
-    @ApiModelProperty("发布时间")
+    @Schema(description = "发布时间")
     val pubTime: String?,
-    @ApiModelProperty("是否为最新版本插件 true：最新 false：非最新")
+    @Schema(description = "是否为最新版本插件 true：最新 false：非最新")
     val latestFlag: Boolean,
-    @ApiModelProperty("是否为公共插件 true：公共插件 false：普通插件")
+    @Schema(description = "是否为公共插件 true：公共插件 false：普通插件")
     val publicFlag: Boolean,
-    @ApiModelProperty("是否推荐， TRUE：是 FALSE：不是")
+    @Schema(description = "是否推荐， TRUE：是 FALSE：不是")
     val recommendFlag: Boolean,
-    @ApiModelProperty("是否可安装标识 true：可以 false：不可以")
+    @Schema(description = "是否可安装标识 true：可以 false：不可以")
     val flag: Boolean?,
-    @ApiModelProperty("标签列表")
+    @Schema(description = "标签列表")
     val labelList: List<Label>?,
-    @ApiModelProperty("用户评论信息")
+    @Schema(description = "用户评论信息")
     val userCommentInfo: StoreUserCommentInfo,
-    @ApiModelProperty("项目可视范围,PRIVATE:私有 LOGIN_PUBLIC:登录用户开源")
+    @Schema(description = "项目可视范围,PRIVATE:私有 LOGIN_PUBLIC:登录用户开源")
     val visibilityLevel: VisibilityLevelEnum?,
-    @ApiModelProperty("插件代码库不开源原因")
+    @Schema(description = "插件代码库不开源原因")
     val privateReason: String?,
-    @ApiModelProperty("创建人")
+    @Schema(description = "创建人")
     val creator: String,
-    @ApiModelProperty("修改人")
+    @Schema(description = "修改人")
     val modifier: String,
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     val createTime: String,
-    @ApiModelProperty("修改时间")
+    @Schema(description = "修改时间")
     val updateTime: String
 )

@@ -1,8 +1,8 @@
 package com.tencent.devops.dispatch.windows.pojo
 
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("Windows类型信息")
+@Schema(description = "Windows类型信息")
 data class VMType(
     var id: Int,
     var name: String,

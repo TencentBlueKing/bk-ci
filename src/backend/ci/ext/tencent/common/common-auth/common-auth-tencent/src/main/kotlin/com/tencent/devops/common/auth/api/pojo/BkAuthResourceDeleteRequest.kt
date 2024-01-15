@@ -28,19 +28,19 @@
 package com.tencent.devops.common.auth.api.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class BkAuthResourceDeleteRequest(
     @JsonProperty("project_code")
-    @ApiModelProperty(name = "project_code")
+    @Schema(description = "project_code")
     val projectCode: String,
     @JsonProperty("service_code")
-    @ApiModelProperty(name = "service_code")
+    @Schema(description = "service_code")
     val serviceCode: String,
     @JsonProperty("resource_code")
-    @ApiModelProperty(name = "resource_code")
+    @Schema(description = "resource_code")
     val resourceCode: String,
     @JsonProperty("resource_type")
-    @ApiModelProperty(name = "resource_type")
+    @Schema(description = "resource_type")
     val resourceType: String
 )

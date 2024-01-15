@@ -27,17 +27,16 @@
 
 package com.tencent.devops.dispatch.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("k8s仓库信息")
+@Schema(description = "k8s仓库信息")
 data class KubernetesRepo(
-    @ApiModelProperty("仓库地址", required = true)
+    @Schema(description = "仓库地址", required = true)
     val registryUrl: String,
-    @ApiModelProperty("用户名", required = true)
+    @Schema(description = "用户名", required = true)
     val username: String,
-    @ApiModelProperty("密码", required = true)
+    @Schema(description = "密码", required = true)
     val password: String,
-    @ApiModelProperty("邮箱", required = false)
+    @Schema(description = "邮箱", required = false)
     val email: String?
 )

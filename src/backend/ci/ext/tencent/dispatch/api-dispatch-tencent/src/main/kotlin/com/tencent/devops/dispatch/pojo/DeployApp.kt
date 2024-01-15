@@ -27,23 +27,23 @@
 
 package com.tencent.devops.dispatch.pojo
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class DeployApp(
-    @ApiModelProperty("bcs请求路径", required = true)
+    @Schema(description = "bcs请求路径", required = true)
     val bcsUrl: String,
-    @ApiModelProperty("请求token", required = true)
+    @Schema(description = "请求token", required = true)
     val token: String,
-    @ApiModelProperty("k8s命名空间名称", required = true)
+    @Schema(description = "k8s命名空间名称", required = true)
     val namespaceName: String,
-    @ApiModelProperty("应用标识", required = true)
+    @Schema(description = "应用标识", required = true)
     val appCode: String,
-    @ApiModelProperty("应用deployment", required = true)
+    @Schema(description = "应用deployment", required = true)
     val appDeployment: AppDeployment,
-    @ApiModelProperty("应用service", required = true)
+    @Schema(description = "应用service", required = true)
     val appService: AppService,
-    @ApiModelProperty(value = "应用ingress", required = false)
+    @Schema(description = "应用ingress", required = false)
     val appIngress: AppIngress,
-    @ApiModelProperty("部署超时时间", required = true)
+    @Schema(description = "部署超时时间", required = true)
     val deployTimeOut: Int
 )

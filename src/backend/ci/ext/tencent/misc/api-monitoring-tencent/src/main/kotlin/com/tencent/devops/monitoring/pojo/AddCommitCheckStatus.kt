@@ -27,36 +27,35 @@
 package com.tencent.devops.monitoring.pojo
 
 import com.tencent.devops.monitoring.pojo.annotions.InfluxTag
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("scm调用工蜂addCommitCheckStatus接口的状态上报")
+@Schema(description = "scm调用工蜂addCommitCheckStatus接口的状态上报")
 data class AddCommitCheckStatus(
-    @ApiModelProperty("请求时间(时间戳，毫秒)", required = true)
+    @Schema(description = "请求时间(时间戳，毫秒)", required = true)
     val requestTime: Long,
-    @ApiModelProperty("响应时间(时间戳，毫秒)", required = true)
+    @Schema(description = "响应时间(时间戳，毫秒)", required = true)
     val responseTime: Long,
-    @ApiModelProperty("耗时(毫秒)", required = true)
+    @Schema(description = "耗时(毫秒)", required = true)
     val elapseTime: Long,
-    @ApiModelProperty("http状态码", required = false)
+    @Schema(description = "http状态码", required = false)
     val statusCode: String?,
-    @ApiModelProperty("状态码对应的错误信息", required = false)
+    @Schema(description = "状态码对应的错误信息", required = false)
     val statusMessage: String?,
-    @ApiModelProperty("错误类型", required = true)
+    @Schema(description = "错误类型", required = true)
     val errorType: String? = null,
-    @ApiModelProperty("蓝盾错误码", required = true)
+    @Schema(description = "蓝盾错误码", required = true)
     @InfluxTag
     val errorCode: String,
-    @ApiModelProperty("错误信息", required = false)
+    @Schema(description = "错误信息", required = false)
     val errorMsg: String?,
-    @ApiModelProperty("工蜂项目名", required = false)
+    @Schema(description = "工蜂项目名", required = false)
     val projectName: String,
-    @ApiModelProperty("commitId", required = false)
+    @Schema(description = "commitId", required = false)
     val commitId: String,
-    @ApiModelProperty("block", required = false)
+    @Schema(description = "block", required = false)
     val block: Boolean? = null,
-    @ApiModelProperty("详情url", required = false)
+    @Schema(description = "详情url", required = false)
     val targetUrl: String? = null,
-    @ApiModelProperty("渠道", required = false)
+    @Schema(description = "渠道", required = false)
     val channel: String? = null
 )

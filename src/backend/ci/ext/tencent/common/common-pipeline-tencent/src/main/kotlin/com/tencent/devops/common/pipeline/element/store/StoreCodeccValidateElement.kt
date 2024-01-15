@@ -28,22 +28,21 @@
 package com.tencent.devops.common.pipeline.element.store
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("研发商店组件codecc代码扫描结果校验", description = StoreCodeccValidateElement.classType)
+@Schema(description = "研发商店组件codecc代码扫描结果校验", description = StoreCodeccValidateElement.classType)
 data class StoreCodeccValidateElement(
-    @ApiModelProperty("任务名称", required = true)
+    @Schema(description = "任务名称", required = true)
     override val name: String = "研发商店组件codecc代码扫描结果校验",
-    @ApiModelProperty("id", required = false)
+    @Schema(description = "id", required = false)
     override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @Schema(description = "状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("组件代码", required = true)
+    @Schema(description = "组件代码", required = true)
     val storeCode: String,
-    @ApiModelProperty("组件类型", required = true)
+    @Schema(description = "组件类型", required = true)
     val storeType: String,
-    @ApiModelProperty("开发语言", required = true)
+    @Schema(description = "开发语言", required = true)
     val language: String = "\${language}"
 ) : Element(name, id, status) {
 

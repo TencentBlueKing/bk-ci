@@ -1,13 +1,12 @@
 package com.tencent.devops.remotedev.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("工作空间信息缓存")
+@Schema(description = "工作空间信息缓存")
 data class WorkSpaceCacheInfo(
-    @ApiModelProperty("工作空间关联秘钥")
+    @Schema(description = "工作空间关联秘钥")
     val sshKey: String,
-    @ApiModelProperty("工作空间Host")
+    @Schema(description = "工作空间Host")
     val environmentHost: String,
     val hostIP: String,
     val environmentIP: String,

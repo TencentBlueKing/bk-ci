@@ -28,51 +28,50 @@
 package com.tencent.devops.remotedev.pojo
 
 import com.tencent.devops.remotedev.pojo.expert.FetchSupportResp
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("工作空间信息")
+@Schema(description = "工作空间信息")
 data class ProjectWorkspace(
-    @ApiModelProperty("工作空间ID<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "工作空间ID<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override val workspaceId: Long?,
-    @ApiModelProperty("工作空间名称")
+    @Schema(description = "工作空间名称")
     override val workspaceName: String,
-    @ApiModelProperty("项目ID")
+    @Schema(description = "项目ID")
     override val projectId: String?,
-    @ApiModelProperty("工作空间备注名称")
+    @Schema(description = "工作空间备注名称")
     override val displayName: String? = null,
-    @ApiModelProperty("工作空间状态<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "工作空间状态<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override val status: WorkspaceStatus? = null,
-    @ApiModelProperty("状态最近更新时间<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "状态最近更新时间<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override val lastStatusUpdateTime: Long? = null,
-    @ApiModelProperty("休眠时间<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "休眠时间<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override val sleepingTime: Long? = null,
-    @ApiModelProperty("工作空间创建人<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "工作空间创建人<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override val createUserId: String,
-    @ApiModelProperty("工作空间对应的IP")
+    @Schema(description = "工作空间对应的IP")
     override val hostName: String? = null,
-    @ApiModelProperty("挂载平台类型")
+    @Schema(description = "挂载平台类型")
     override val workspaceMountType: WorkspaceMountType,
-    @ApiModelProperty("操作系统类型")
+    @Schema(description = "操作系统类型")
     override val workspaceSystemType: WorkspaceSystemType,
-    @ApiModelProperty("windows 资源配置")
+    @Schema(description = "windows 资源配置")
     override val winConfig: WindowsResourceTypeConfig? = null,
-    @ApiModelProperty("拥有者")
+    @Schema(description = "拥有者")
     override val owner: String? = null,
-    @ApiModelProperty("拥有者_CN")
+    @Schema(description = "拥有者_CN")
     override val ownerCN: String? = null,
-    @ApiModelProperty("查看者")
+    @Schema(description = "查看者")
     override val viewers: List<String>? = emptyList(),
-    @ApiModelProperty("查看者_CN")
+    @Schema(description = "查看者_CN")
     override val viewersCN: List<String>? = emptyList(),
     override val gpu: Int = 0,
     override val cpu: Int = 8,
     override val memory: Int = 32,
     override val disk: Int = 100,
-    @ApiModelProperty("windows 地域配置")
+    @Schema(description = "windows 地域配置")
     val zoneConfig: WindowsResourceZoneConfig? = null,
-    @ApiModelProperty("专家协助")
+    @Schema(description = "专家协助")
     val expertSupportList: List<FetchSupportResp>?,
-    @ApiModelProperty("云桌面对应的mac地址")
+    @Schema(description = "云桌面对应的mac地址")
     val macAddress: String? = null
 ) : IWorkspace

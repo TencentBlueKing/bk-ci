@@ -28,26 +28,25 @@
 package com.tencent.devops.common.pipeline.element.store
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("扩展服务构建部署", description = ExtServiceBuildDeployElement.classType)
+@Schema(description = "扩展服务构建部署", description = ExtServiceBuildDeployElement.classType)
 data class ExtServiceBuildDeployElement(
-    @ApiModelProperty("任务名称", required = true)
+    @Schema(description = "任务名称", required = true)
     override val name: String = "扩展服务发布归档",
-    @ApiModelProperty("id", required = false)
+    @Schema(description = "id", required = false)
     override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @Schema(description = "状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("扩展服务标识", required = true)
+    @Schema(description = "扩展服务标识", required = true)
     val serviceCode: String = "\${serviceCode}",
-    @ApiModelProperty("扩展服务版本号", required = true)
+    @Schema(description = "扩展服务版本号", required = true)
     val serviceVersion: String = "\${version}",
-    @ApiModelProperty("扩展服务发布包名称", required = true)
+    @Schema(description = "扩展服务发布包名称", required = true)
     val packageName: String = "\${packageName}",
-    @ApiModelProperty("扩展服务发布包所在相对路径", required = true)
+    @Schema(description = "扩展服务发布包所在相对路径", required = true)
     val filePath: String = "\${filePath}",
-    @ApiModelProperty("目标", required = false)
+    @Schema(description = "目标", required = false)
     val destPath: String = "\${serviceCode}/\${version}/\${packageName}"
 ) : Element(name, id, status) {
 

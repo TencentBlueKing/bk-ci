@@ -28,11 +28,11 @@
 package com.tencent.devops.store.pojo.vo
 
 import com.tencent.devops.store.pojo.VersionLog
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class VersionLogVO(
-    @ApiModelProperty("条数")
+    @Schema(description = "条数")
     val count: Int,
-    @ApiModelProperty("日志信息")
+    @Schema(description = "日志信息")
     val records: List<VersionLog>
 )

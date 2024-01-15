@@ -1,8 +1,8 @@
 package com.tencent.devops.remotedev.pojo.windows
 
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("用户时间段登录数量")
+@Schema(description = "用户时间段登录数量")
 data class UserLoginTimeResp(
     val count: Int,
     val data: List<UserLoginTimeRespData>

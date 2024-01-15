@@ -27,13 +27,12 @@
 
 package com.tencent.devops.remotedev.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("仓库信息")
+@Schema(description = "仓库信息")
 data class RemoteDevRepository(
-    @ApiModelProperty("git项目全路径")
+    @Schema(description = "git项目全路径")
     val pathWithNamespace: String?,
-    @ApiModelProperty("仓库Url")
+    @Schema(description = "仓库Url")
     val url: String?
 )

@@ -3,43 +3,42 @@ package com.tencent.devops.dispatch.kubernetes.pojo.remotedev
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("devfile 定义处")
+@Schema(description = "devfile 定义处")
 data class Devfile(
-    @ApiModelProperty("定义devfile的版本")
+    @Schema(description = "定义devfile的版本")
     val version: String = "",
-    @ApiModelProperty("定义在工作区的git配置键值对。")
+    @Schema(description = "定义在工作区的git配置键值对。")
     val envs: Map<String, String>? = null,
     @JsonProperty("runs-on")
-    @ApiModelProperty("定义用于工作区的docker镜像")
+    @Schema(description = "定义用于工作区的docker镜像")
     val runsOn: RunsOn? = null,
-    @ApiModelProperty("配置vscode")
+    @Schema(description = "配置vscode")
     val vscode: DevfileVscode? = null,
-    @ApiModelProperty("配置需要监听的端口信息")
+    @Schema(description = "配置需要监听的端口信息")
     val ports: List<DevfilePorts>? = null,
-    @ApiModelProperty("用来指定工作空间声明周期命令")
+    @Schema(description = "用来指定工作空间声明周期命令")
     val commands: DevfileCommands? = null,
-    @ApiModelProperty("DEVOPS_REMOTING_GIT_EMAIL 配置")
+    @Schema(description = "DEVOPS_REMOTING_GIT_EMAIL 配置")
     var gitEmail: String? = null,
-    @ApiModelProperty("DEVOPS_REMOTING_DOTFILE_REPO dotfiles仓库地址")
+    @Schema(description = "DEVOPS_REMOTING_DOTFILE_REPO dotfiles仓库地址")
     var dotfileRepo: String? = null,
-    @ApiModelProperty("指定用户在连接到容器时应打开的默认路径")
+    @Schema(description = "指定用户在连接到容器时应打开的默认路径")
     var workspaceFolder: String? = null,
-    @ApiModelProperty("申请云桌面时指定的区域")
+    @Schema(description = "申请云桌面时指定的区域")
     val zoneId: String? = null,
-    @ApiModelProperty("申请云桌面时指定的机型:L、XL等")
+    @Schema(description = "申请云桌面时指定的机型:L、XL等")
     val machineType: String? = null,
-    @ApiModelProperty("指定云桌面Id")
+    @Schema(description = "指定云桌面Id")
     val cgsId: String? = null,
-    @ApiModelProperty("团队空间是否自动分配")
+    @Schema(description = "团队空间是否自动分配")
     val autoAssign: Boolean? = false,
-    @ApiModelProperty("start自定义镜像地址")
+    @Schema(description = "start自定义镜像地址")
     val imageCosFile: String? = "",
-    @ApiModelProperty("通过已有task uid进行创建")
+    @Schema(description = "通过已有task uid进行创建")
     val uid: String? = null,
-    @ApiModelProperty("通过已有task uid进行创建")
+    @Schema(description = "通过已有task uid进行创建")
     val environmentUid: String? = null
 ) {
 
@@ -60,28 +59,28 @@ data class Devfile(
 }
 //
 // data class DevfileImage(
-//    @ApiModelProperty("定义公共镜像")
+//    @Schema(description = "定义公共镜像")
 //    val publicImage: String?,
-//    @ApiModelProperty("定义用户镜像")
+//    @Schema(description = "定义用户镜像")
 //    val file: String?,
-//    @ApiModelProperty("imagePullCertificate")
+//    @Schema(description = "imagePullCertificate")
 //    val imagePullCertificate: ImagePullCertificate? = null
 // )
 
 data class RunsOn(
-    @ApiModelProperty(name = "self-hosted")
+    @Schema(description = "self-hosted")
     @JsonProperty("self-hosted")
     val selfHosted: Boolean? = null,
-    @ApiModelProperty(name = "pool-name")
+    @Schema(description = "pool-name")
     @JsonProperty("pool-name")
     var poolName: String = JobRunsOnType.DOCKER.type,
     val container: Container? = null,
-    @ApiModelProperty(name = "agent-selector")
+    @Schema(description = "agent-selector")
     @JsonProperty("agent-selector")
     val agentSelector: List<String>? = null,
     val workspace: String? = null,
     val xcode: String? = null,
-    @ApiModelProperty(name = "queue-timeout-minutes")
+    @Schema(description = "queue-timeout-minutes")
     @JsonProperty("queue-timeout-minutes")
     val queueTimeoutMinutes: Int? = null,
     val needs: Map<String, String>? = null
@@ -105,24 +104,24 @@ data class ImagePullCertificate(
 )
 
 data class DevfileCommands(
-    @ApiModelProperty("当工作空间首次创建时需要执行的命令")
+    @Schema(description = "当工作空间首次创建时需要执行的命令")
     val postCreateCommand: String?,
-    @ApiModelProperty("当工作空间启动时需要执行的命令")
+    @Schema(description = "当工作空间启动时需要执行的命令")
     val postStartCommand: String?
 )
 
 data class DevfileVscode(
-    @ApiModelProperty("vscode 扩展")
+    @Schema(description = "vscode 扩展")
     //  Open VSX?
     val extensions: List<String>?
 )
 
 data class DevfilePorts(
-    @ApiModelProperty("端口名")
+    @Schema(description = "端口名")
     val name: String?,
-    @ApiModelProperty("端口号")
+    @Schema(description = "端口号")
     val port: Int,
-    @ApiModelProperty("描述")
+    @Schema(description = "描述")
     val desc: String?
 )
 

@@ -27,35 +27,34 @@
 
 package com.tencent.devops.experience.pojo.index
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("版本体验-首页-APP信息")
+@Schema(description = "版本体验-首页-APP信息")
 data class IndexAppInfoVO(
-    @ApiModelProperty("类型", required = true)
+    @Schema(description = "类型", required = true)
     val type: Int,
-    @ApiModelProperty("版本体验ID", required = false)
+    @Schema(description = "版本体验ID", required = false)
     val experienceHashId: String,
-    @ApiModelProperty("体验名称", required = true)
+    @Schema(description = "体验名称", required = true)
     val experienceName: String,
-    @ApiModelProperty("创建时间", required = true)
+    @Schema(description = "创建时间", required = true)
     val createTime: Long,
-    @ApiModelProperty("大小(byte)", required = false)
+    @Schema(description = "大小(byte)", required = false)
     val size: Long,
-    @ApiModelProperty("logo链接", required = true)
+    @Schema(description = "logo链接", required = true)
     val logoUrl: String,
-    @ApiModelProperty("版本体验BundleIdentifier", required = true)
+    @Schema(description = "版本体验BundleIdentifier", required = true)
     val bundleIdentifier: String,
-    @ApiModelProperty("应用Scheme", required = false)
+    @Schema(description = "应用Scheme", required = false)
     val appScheme: String,
-    @ApiModelProperty("是否过期", required = true)
+    @Schema(description = "是否过期", required = true)
     val expired: Boolean,
-    @ApiModelProperty("上次下载的体验ID", required = true)
+    @Schema(description = "上次下载的体验ID", required = true)
     val lastDownloadHashId: String,
-    @ApiModelProperty("外部链接", required = false)
+    @Schema(description = "外部链接", required = false)
     val externalUrl: String,
-    @ApiModelProperty("版本体验版本号", required = true)
+    @Schema(description = "版本体验版本号", required = true)
     val version: String,
-    @ApiModelProperty("下载次数", required = true)
+    @Schema(description = "下载次数", required = true)
     val downloadTime: Int
 )

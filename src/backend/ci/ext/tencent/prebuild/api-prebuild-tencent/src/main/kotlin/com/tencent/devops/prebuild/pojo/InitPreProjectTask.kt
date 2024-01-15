@@ -28,29 +28,28 @@
 package com.tencent.devops.prebuild.pojo
 
 import com.tencent.devops.prebuild.pojo.enums.TaskStatus
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("初始化项目任务")
+@Schema(description = "初始化项目任务")
 data class InitPreProjectTask(
-    @ApiModelProperty("任务ID")
+    @Schema(description = "任务ID")
     val taskId: String,
-    @ApiModelProperty("用户prebuild项目ID")
+    @Schema(description = "用户prebuild项目ID")
     val preProjectId: String,
-    @ApiModelProperty("用户项目ID")
+    @Schema(description = "用户项目ID")
     val projectId: String,
-    @ApiModelProperty("工作空间")
+    @Schema(description = "工作空间")
     val workspace: String,
-    @ApiModelProperty("rsync账号")
+    @Schema(description = "rsync账号")
     val account: String,
-    @ApiModelProperty("password")
+    @Schema(description = "password")
     var password: String,
-    @ApiModelProperty("IP")
+    @Schema(description = "IP")
     var ip: String,
-    @ApiModelProperty("taskStatus")
+    @Schema(description = "taskStatus")
     var taskStatus: TaskStatus,
-    @ApiModelProperty("logs")
+    @Schema(description = "logs")
     var logs: List<String>,
-    @ApiModelProperty("userId")
+    @Schema(description = "userId")
     val userId: String
 )

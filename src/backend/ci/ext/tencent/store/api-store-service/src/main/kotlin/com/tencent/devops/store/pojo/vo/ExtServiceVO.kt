@@ -27,25 +27,24 @@
 
 package com.tencent.devops.store.pojo.vo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("扩展点对应的扩展服务信息")
+@Schema(description = "扩展点对应的扩展服务信息")
 data class ExtServiceVO(
-    @ApiModelProperty("扩展服务Id", required = true)
+    @Schema(description = "扩展服务Id", required = true)
     val serviceId: String,
-    @ApiModelProperty("扩展服务名称", required = true)
+    @Schema(description = "扩展服务名称", required = true)
     val serviceName: String,
-    @ApiModelProperty("扩展服务code", required = true)
+    @Schema(description = "扩展服务code", required = true)
     val serviceCode: String,
-    @ApiModelProperty("版本", required = true)
+    @Schema(description = "版本", required = true)
     val version: String,
-    @ApiModelProperty("扩展服务简介", required = false)
+    @Schema(description = "扩展服务简介", required = false)
     val summary: String?,
-    @ApiModelProperty("扩展服务开发者信息", required = true)
+    @Schema(description = "扩展服务开发者信息", required = true)
     val vendor: ExtServiceVendorVO,
-    @ApiModelProperty("扩展服务访问路径前缀", required = true)
+    @Schema(description = "扩展服务访问路径前缀", required = true)
     val baseUrl: String,
-    @ApiModelProperty("自扩展服务前端针对该扩展点的配置信息Json串", required = false)
+    @Schema(description = "自扩展服务前端针对该扩展点的配置信息Json串", required = false)
     val props: Map<String, Any>?
 )

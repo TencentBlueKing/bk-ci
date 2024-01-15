@@ -28,41 +28,41 @@
 package com.tencent.devops.project.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class PaasCCProjectInfo(
-    @ApiModelProperty("项目名称", name = "project_name")
+    @Schema(description = "项目名称", name = "project_name")
     @JsonProperty("project_name")
     val projectName: String,
-    @ApiModelProperty("英文缩写", name = "english_name")
+    @Schema(description = "英文缩写", name = "english_name")
     @JsonProperty("english_name")
     val englishName: String,
-    @ApiModelProperty("项目类型", name = "project_type")
+    @Schema(description = "项目类型", name = "project_type")
     @JsonProperty("project_type")
     val projectType: Int,
-    @ApiModelProperty("描述")
+    @Schema(description = "描述")
     val description: String,
-    @ApiModelProperty("一级部门ID", name = "bg_id")
+    @Schema(description = "一级部门ID", name = "bg_id")
     @JsonProperty("bg_id")
     val bgId: Long,
-    @ApiModelProperty("一级部门名字", name = "bg_name")
+    @Schema(description = "一级部门名字", name = "bg_name")
     @JsonProperty("bg_name")
     val bgName: String,
-    @ApiModelProperty("二级部门ID", name = "dept_id")
+    @Schema(description = "二级部门ID", name = "dept_id")
     @JsonProperty("dept_id")
     val deptId: Long,
-    @ApiModelProperty("二级部门名称", name = "dept_name")
+    @Schema(description = "二级部门名称", name = "dept_name")
     @JsonProperty("dept_name")
     val deptName: String,
-    @ApiModelProperty("三级部门ID", name = "center_id")
+    @Schema(description = "三级部门ID", name = "center_id")
     @JsonProperty("center_id")
     val centerId: Long,
-    @ApiModelProperty("三级部门名称", name = "center_name")
+    @Schema(description = "三级部门名称", name = "center_name")
     @JsonProperty("center_name")
     val centerName: String,
-    @ApiModelProperty("是否保密", name = "is_secrecy")
+    @Schema(description = "是否保密", name = "is_secrecy")
     @get:JsonProperty("is_secrecy")
     var secrecy: Boolean = false,
-    @ApiModelProperty("kind")
+    @Schema(description = "kind")
     val kind: Int = 0
 )

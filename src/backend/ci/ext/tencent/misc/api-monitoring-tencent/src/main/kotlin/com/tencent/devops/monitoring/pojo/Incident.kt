@@ -27,23 +27,22 @@
 package com.tencent.devops.monitoring.pojo
 
 import com.tencent.devops.monitoring.pojo.enums.IncidentStatus
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("故障")
+@Schema(description = "故障")
 data class Incident(
-    @ApiModelProperty("id", required = true)
+    @Schema(description = "id", required = true)
     val id: Long?,
-    @ApiModelProperty("发生时间（时间戳，毫秒）", required = true)
+    @Schema(description = "发生时间（时间戳，毫秒）", required = true)
     val dayTime: Long,
-    @ApiModelProperty("模块", required = true)
+    @Schema(description = "模块", required = true)
     val moduleName: String,
-    @ApiModelProperty("级别", required = true)
+    @Schema(description = "级别", required = true)
     val level: String,
-    @ApiModelProperty("持续时间(毫秒)", required = true)
+    @Schema(description = "持续时间(毫秒)", required = true)
     val duringTime: Long,
-    @ApiModelProperty("当前状态", required = true)
+    @Schema(description = "当前状态", required = true)
     val status: IncidentStatus,
-    @ApiModelProperty("时间", required = false)
+    @Schema(description = "时间", required = false)
     val message: String?
 )

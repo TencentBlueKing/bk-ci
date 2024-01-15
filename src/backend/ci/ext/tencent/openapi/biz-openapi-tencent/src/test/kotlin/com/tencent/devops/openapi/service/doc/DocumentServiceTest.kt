@@ -3,7 +3,7 @@ package com.tencent.devops.openapi.service.doc
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.tencent.devops.common.web.JerseyConfig
 import com.tencent.devops.openapi.pojo.SwaggerDocParameterInfo
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.reflections.Reflections

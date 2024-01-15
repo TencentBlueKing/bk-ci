@@ -27,27 +27,26 @@
 
 package com.tencent.devops.dispatch.devcloud.pojo.persistence
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("DevCloud持久化容器构建信息")
+@Schema(description = "DevCloud持久化容器构建信息")
 data class PersistenceBuildInfo(
-    @ApiModelProperty("项目id")
+    @Schema(description = "项目id")
     val projectId: String,
-    @ApiModelProperty("构建id")
+    @Schema(description = "构建id")
     val buildId: String,
-    @ApiModelProperty("构建机编排序号")
+    @Schema(description = "构建机编排序号")
     val vmSeqId: String,
-    @ApiModelProperty("工作空间")
+    @Schema(description = "工作空间")
     val workspace: String,
-    @ApiModelProperty("流水线ID")
+    @Schema(description = "流水线ID")
     val pipelineId: String?,
-    @ApiModelProperty("agentId")
+    @Schema(description = "agentId")
     val agentId: String,
-    @ApiModelProperty("secretKey")
+    @Schema(description = "secretKey")
     val secretKey: String,
-    @ApiModelProperty("流水线执行次数")
+    @Schema(description = "流水线执行次数")
     val executeCount: Int?,
-    @ApiModelProperty("容器hashId日志使用")
+    @Schema(description = "容器hashId日志使用")
     val containerHashId: String?
 )

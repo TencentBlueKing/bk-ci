@@ -29,36 +29,35 @@ package com.tencent.devops.remotedev.pojo.project
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("提供给安全侧的项目下云桌面信息")
+@Schema(description = "提供给安全侧的项目下云桌面信息")
 data class WeSecProjectWorkspace(
-    @ApiModelProperty("工作空间名称")
+    @Schema(description = "工作空间名称")
     @JsonProperty("workspace_name")
     val workspaceName: String,
-    @ApiModelProperty("项目ID")
+    @Schema(description = "项目ID")
     @JsonProperty("project_id")
     val projectId: String,
-    @ApiModelProperty("工作空间创建人")
+    @Schema(description = "工作空间创建人")
     val creator: String,
-    @ApiModelProperty("工作空间拥有者")
+    @Schema(description = "工作空间拥有者")
     val owner: String? = null,
-    @ApiModelProperty("工作空间创建时间")
+    @Schema(description = "工作空间创建时间")
     @JsonProperty("create_time")
     val createTime: String? = null,
-    @ApiModelProperty("region_id")
+    @Schema(description = "region_id")
     @JsonProperty("region_id")
     val regionId: String,
-    @ApiModelProperty("inner_ip")
+    @Schema(description = "inner_ip")
     @JsonProperty("inner_ip")
     val innerIp: String?,
-    @ApiModelProperty("状态")
+    @Schema(description = "状态")
     val status: WorkspaceStatus?,
-    @ApiModelProperty("工作空间实际拥有者，待分配时为空")
+    @Schema(description = "工作空间实际拥有者，待分配时为空")
     @JsonProperty("real_owner")
     val realOwner: String? = null,
-    @ApiModelProperty("云桌面别名")
+    @Schema(description = "云桌面别名")
     @JsonProperty("display_name")
     val displayName: String? = null
 )

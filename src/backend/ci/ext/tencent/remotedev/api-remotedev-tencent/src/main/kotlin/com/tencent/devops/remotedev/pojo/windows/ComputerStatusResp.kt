@@ -1,9 +1,9 @@
 package com.tencent.devops.remotedev.pojo.windows
 
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.Parameter
 
-@ApiModel("windows 机器状态信息")
+@Schema(description = "windows 机器状态信息")
 data class ComputerStatusResp(
     @Parameter(description = "机器总数")
     val count: Int,
@@ -13,7 +13,7 @@ data class ComputerStatusResp(
     val users: List<ComputerUserData>
 )
 
-@ApiModel("机器状态信息")
+@Schema(description = "机器状态信息")
 data class ComputerStatusData(
     var value: Int,
     val type: ComputerStatusEnum,

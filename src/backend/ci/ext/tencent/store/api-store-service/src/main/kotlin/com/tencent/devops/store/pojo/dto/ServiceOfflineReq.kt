@@ -27,11 +27,11 @@
 
 package com.tencent.devops.store.pojo.dto
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class ServiceOfflineReq(
-    @ApiModelProperty("下架缓冲期，单位：天")
+    @Schema(description = "下架缓冲期，单位：天")
     val bufferDay: Byte,
-    @ApiModelProperty("下架原因")
+    @Schema(description = "下架原因")
     val reason: String?
 )

@@ -27,11 +27,10 @@
 
 package com.tencent.devops.stream.pojo.openapi
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("蓝盾工蜂项目用户校验请求")
+@Schema(description = "蓝盾工蜂项目用户校验请求")
 data class GitUserValidateRequest(
-    @ApiModelProperty("工蜂项目url")
+    @Schema(description = "工蜂项目url")
     val url: String
 )

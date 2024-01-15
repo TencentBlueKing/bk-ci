@@ -27,17 +27,16 @@
 
 package com.tencent.devops.stream.v1.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("环境变量")
+@Schema(description = "环境变量")
 data class V1EnvironmentVariables(
-    @ApiModelProperty("name")
+    @Schema(description = "name")
     val name: String,
-    @ApiModelProperty("value")
+    @Schema(description = "value")
     val value: String,
-    @ApiModelProperty("branch")
+    @Schema(description = "branch")
     val branch: String?,
-    @ApiModelProperty("display value in build log")
+    @Schema(description = "display value in build log")
     val display: Boolean
 )

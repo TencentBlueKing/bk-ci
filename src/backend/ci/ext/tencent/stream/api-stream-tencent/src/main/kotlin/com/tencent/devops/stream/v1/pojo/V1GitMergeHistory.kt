@@ -27,35 +27,34 @@
 
 package com.tencent.devops.stream.v1.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("工蜂历史构建模型-对应history页面")
+@Schema(description = "工蜂历史构建模型-对应history页面")
 data class V1GitMergeHistory(
-    @ApiModelProperty("ID")
+    @Schema(description = "ID")
     var id: Long,
-    @ApiModelProperty("GIT_PROJECT_ID")
+    @Schema(description = "GIT_PROJECT_ID")
     val gitProjectId: Long,
-    @ApiModelProperty("MERGE_REQUEST_ID")
+    @Schema(description = "MERGE_REQUEST_ID")
     val mergeRequestId: Long,
-    @ApiModelProperty("MR_TITLE")
+    @Schema(description = "MR_TITLE")
     var mrTitle: String,
-    @ApiModelProperty("BRANCH")
+    @Schema(description = "BRANCH")
     val branch: String,
-    @ApiModelProperty("TARGET_BRANCH")
+    @Schema(description = "TARGET_BRANCH")
     val targetBranch: String,
-    @ApiModelProperty("OPERATION_KIND")
+    @Schema(description = "OPERATION_KIND")
     val operationKind: String?,
-    @ApiModelProperty("EXTENSION_ACTION")
+    @Schema(description = "EXTENSION_ACTION")
     val extensionAction: String?,
-    @ApiModelProperty("COMMIT_TIMESTAMP")
+    @Schema(description = "COMMIT_TIMESTAMP")
     val commitTimeStamp: String?,
-    @ApiModelProperty("TOTAL_COMMIT_COUNT")
+    @Schema(description = "TOTAL_COMMIT_COUNT")
     val totalCommitCount: Long,
-    @ApiModelProperty("用户")
+    @Schema(description = "用户")
     val userId: String,
-    @ApiModelProperty("DESCRIPTION")
+    @Schema(description = "DESCRIPTION")
     var description: String?,
-    @ApiModelProperty("历史构建模型", required = false)
+    @Schema(description = "历史构建模型", required = false)
     var buildRecords: MutableList<V1GitCIBuildHistory>? = null
 )

@@ -1,21 +1,20 @@
 package com.tencent.devops.remotedev.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("工作空间共享信息")
+@Schema(description = "工作空间共享信息")
 data class WorkspaceShared(
-    @ApiModelProperty("Id")
+    @Schema(description = "Id")
     val id: Long?,
-    @ApiModelProperty("工作空间名称")
+    @Schema(description = "工作空间名称")
     val workspaceName: String,
-    @ApiModelProperty("操作人")
+    @Schema(description = "操作人")
     val operator: String,
-    @ApiModelProperty("共享用户")
+    @Schema(description = "共享用户")
     val sharedUser: String,
-    @ApiModelProperty("分配类型")
+    @Schema(description = "分配类型")
     val type: AssignType,
-    @ApiModelProperty("start resourceId")
+    @Schema(description = "start resourceId")
     val resourceId: String
 ) {
     enum class AssignType {

@@ -27,35 +27,34 @@
 
 package com.tencent.devops.experience.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("蓝盾APP消息类型")
+@Schema(description = "蓝盾APP消息类型")
 
 open class AppNotifyMessage {
 
-    @ApiModelProperty("消息id")
+    @Schema(description = "消息id")
     var messageId: Long = 0
 
-    @ApiModelProperty("experienceHashId")
+    @Schema(description = "experienceHashId")
     var experienceHashId: String = ""
 
-    @ApiModelProperty("通知接收者")
+    @Schema(description = "通知接收者")
     var receiver: String = ""
 
-    @ApiModelProperty("设备token")
+    @Schema(description = "设备token")
     var token: String = ""
 
-    @ApiModelProperty("通知内容")
+    @Schema(description = "通知内容")
     var body: String = ""
 
-    @ApiModelProperty("通知标题")
+    @Schema(description = "通知标题")
     var title: String = ""
 
-    @ApiModelProperty("跳转路径")
+    @Schema(description = "跳转路径")
     var url: String = ""
 
-    @ApiModelProperty("平台")
+    @Schema(description = "平台")
     var platform: String = ""
     override fun toString(): String {
         return String.format(

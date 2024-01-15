@@ -33,31 +33,31 @@ import com.tencent.devops.common.remotedev.WorkspaceEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @Event(MQ.EXCHANGE_REMOTE_DEV_LISTENER_DIRECT, MQ.ROUTE_WORKSPACE_CREATE_STARTUP)
 data class WorkspaceCreateEvent(
     override val userId: String,
     override val traceId: String,
     override val workspaceName: String,
-    @ApiModelProperty("代码库地址。格式https:://xxx.git")
+    @Schema(description = "代码库地址。格式https:://xxx.git")
     val repositoryUrl: String = "",
-    @ApiModelProperty("代码库分支")
+    @Schema(description = "代码库分支")
     val branch: String = "",
-    @ApiModelProperty("代码库devfile 完整路径。格式 .preci/xxx.yaml(or yml)")
+    @Schema(description = "代码库devfile 完整路径。格式 .preci/xxx.yaml(or yml)")
     val devFilePath: String?,
-    @ApiModelProperty("创建者的oauth token")
+    @Schema(description = "创建者的oauth token")
     val gitOAuth: String? = "",
-    @ApiModelProperty("dev file 详情")
+    @Schema(description = "dev file 详情")
     val devFile: Devfile,
-    @ApiModelProperty("用户设置里云开发的环境变量")
+    @Schema(description = "用户设置里云开发的环境变量")
     val settingEnvs: Map<String, String>,
-    @ApiModelProperty("bkTicket")
+    @Schema(description = "bkTicket")
     val bkTicket: String? = null,
     val mountType: WorkspaceMountType? = WorkspaceMountType.DEVCLOUD,
-    @ApiModelProperty("工作空间归属")
+    @Schema(description = "工作空间归属")
     val ownerType: WorkspaceOwnerType? = WorkspaceOwnerType.PERSONAL,
-    @ApiModelProperty("projectId")
+    @Schema(description = "projectId")
     val projectId: String? = null,
     override var delayMills: Int = 0,
     override var retryTime: Int = 0

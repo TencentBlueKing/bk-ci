@@ -29,19 +29,18 @@ package com.tencent.devops.common.ci.task
 
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * ServiceJobDevCloudTask
  */
-@ApiModel("创建DevCloud容器（GIT_CI工蜂专用）")
+@Schema(description = "创建DevCloud容器（GIT_CI工蜂专用）")
 data class ServiceJobDevCloudTask(
-    @ApiModelProperty("displayName", required = false)
+    @Schema(description = "displayName", required = false)
     override var displayName: String?,
-    @ApiModelProperty("入参", required = true)
+    @Schema(description = "入参", required = true)
     override val inputs: ServiceJobDevCloudInput,
-    @ApiModelProperty("执行条件", required = true)
+    @Schema(description = "执行条件", required = true)
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
     companion object {
@@ -62,17 +61,17 @@ data class ServiceJobDevCloudTask(
     }
 }
 
-@ApiModel("创建DevCloud容器")
+@Schema(description = "创建DevCloud容器")
 data class ServiceJobDevCloudInput(
     val image: String,
-    @ApiModelProperty("镜像仓库地址", required = false)
+    @Schema(description = "镜像仓库地址", required = false)
     val registryHost: String?,
-    @ApiModelProperty("登录镜像仓库使用的用户名", required = false)
+    @Schema(description = "登录镜像仓库使用的用户名", required = false)
     val registryUsername: String?,
-    @ApiModelProperty("镜像仓库密码", required = false)
+    @Schema(description = "镜像仓库密码", required = false)
     val registryPassword: String?,
-    @ApiModelProperty("参数", required = false)
+    @Schema(description = "参数", required = false)
     val params: String?,
-    @ApiModelProperty("服务环境变量", required = false)
+    @Schema(description = "服务环境变量", required = false)
     val serviceEnv: String?
 ) : AbstractInput()

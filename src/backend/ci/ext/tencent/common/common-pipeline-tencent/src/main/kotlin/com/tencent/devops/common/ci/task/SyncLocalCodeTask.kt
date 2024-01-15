@@ -29,19 +29,18 @@ package com.tencent.devops.common.ci.task
 
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * SyncLocalCodeTask
  */
-@ApiModel("同步本地代码")
+@Schema(description = "同步本地代码")
 data class SyncLocalCodeTask(
-    @ApiModelProperty("displayName", required = false)
+    @Schema(description = "displayName", required = false)
     override var displayName: String?,
-    @ApiModelProperty("入参", required = true)
+    @Schema(description = "入参", required = true)
     override var inputs: SyncLocalCodeInput?,
-    @ApiModelProperty("执行条件", required = true)
+    @Schema(description = "执行条件", required = true)
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
     companion object {
@@ -70,14 +69,14 @@ data class SyncLocalCodeTask(
     }
 }
 
-@ApiModel("同步本地代码入参")
+@Schema(description = "同步本地代码入参")
 data class SyncLocalCodeInput(
-    @ApiModelProperty("agentId", required = true)
+    @Schema(description = "agentId", required = true)
     var agentId: String?,
-    @ApiModelProperty("工作目录", required = true)
+    @Schema(description = "工作目录", required = true)
     var workspace: String?,
-    @ApiModelProperty("是否使用Delete", required = false)
+    @Schema(description = "是否使用Delete", required = false)
     var useDelete: Boolean?,
-    @ApiModelProperty("是否同步.git文件夹", required = false)
+    @Schema(description = "是否同步.git文件夹", required = false)
     var syncGitRepository: Boolean?
 ) : AbstractInput()

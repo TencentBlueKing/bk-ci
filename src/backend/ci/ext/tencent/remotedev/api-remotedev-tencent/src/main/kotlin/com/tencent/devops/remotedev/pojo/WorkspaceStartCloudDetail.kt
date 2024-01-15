@@ -27,25 +27,24 @@
 
 package com.tencent.devops.remotedev.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("start客户端工作空间详情")
+@Schema(description = "start客户端工作空间详情")
 data class WorkspaceStartCloudDetail(
-    @ApiModelProperty("ip地址")
+    @Schema(description = "ip地址")
     val ip: String,
-    @ApiModelProperty("start客户端所需唯一索引")
+    @Schema(description = "start客户端所需唯一索引")
     val curLaunchId: Int,
-    @ApiModelProperty("云区域ID")
+    @Schema(description = "云区域ID")
     val regionId: Int? = null,
-    @ApiModelProperty("项目ID")
+    @Schema(description = "项目ID")
     val projectId: String? = null,
-    @ApiModelProperty("工作空间名称")
+    @Schema(description = "工作空间名称")
     val name: String? = null,
-    @ApiModelProperty("创建人")
+    @Schema(description = "创建人")
     val creator: String? = null,
-    @ApiModelProperty("拥有者")
+    @Schema(description = "拥有者")
     val owner: String? = null,
-    @ApiModelProperty("resourceId")
+    @Schema(description = "resourceId")
     val resourceId: String? = null
 )

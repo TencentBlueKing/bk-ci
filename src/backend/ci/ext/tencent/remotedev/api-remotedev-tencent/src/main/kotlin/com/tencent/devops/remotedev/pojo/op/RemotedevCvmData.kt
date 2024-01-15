@@ -1,10 +1,10 @@
 package com.tencent.devops.remotedev.pojo.op
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.Parameter
 
 data class RemotedevCvmData(
-    @ApiModelProperty("ID")
+    @Schema(description = "ID")
     val id: Int?,
     @Parameter(description = "项目ID", required = true)
     val projectId: String,

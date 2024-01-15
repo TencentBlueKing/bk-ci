@@ -27,13 +27,12 @@
 
 package com.tencent.devops.openapi.api.apigw.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel
+@Schema
 data class BlackListInfo(
-    @ApiModelProperty("disable:冻结; enable:解冻")
+    @Schema(description = "disable:冻结; enable:解冻")
     val method: String,
-    @ApiModelProperty("员工英文名称")
+    @Schema(description = "员工英文名称")
     val username: String
 )

@@ -27,25 +27,24 @@
 
 package com.tencent.devops.support.model.app.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("公告")
+@Schema(description = "公告")
 data class Notice(
-    @ApiModelProperty("ID")
+    @Schema(description = "ID")
     val id: Long = 0,
-    @ApiModelProperty("公告标题")
+    @Schema(description = "公告标题")
     val noticeTitle: String = "",
-    @ApiModelProperty("生效日期")
+    @Schema(description = "生效日期")
     val effectDate: Long = 0,
-    @ApiModelProperty("失效日期")
+    @Schema(description = "失效日期")
     val invalidDate: Long = 0,
-    @ApiModelProperty("创建日期")
+    @Schema(description = "创建日期")
     val createDate: Long = 0,
-    @ApiModelProperty("更新日期")
+    @Schema(description = "更新日期")
     val updateDate: Long = 0,
-    @ApiModelProperty("公告内容")
+    @Schema(description = "公告内容")
     val noticeContent: String = "",
-    @ApiModelProperty("跳转地址")
+    @Schema(description = "跳转地址")
     val redirectUrl: String = ""
 )

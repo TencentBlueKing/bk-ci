@@ -27,15 +27,14 @@
 
 package com.tencent.devops.remotedev.pojo.software
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("用户安装软件")
+@Schema(description = "用户安装软件")
 data class UserSoftware(
-    @ApiModelProperty("项目ID")
+    @Schema(description = "项目ID")
     val projectId: String,
-    @ApiModelProperty("用户")
+    @Schema(description = "用户")
     val user: String,
-    @ApiModelProperty("软件ID")
+    @Schema(description = "软件ID")
     val softwareId: Long
 )

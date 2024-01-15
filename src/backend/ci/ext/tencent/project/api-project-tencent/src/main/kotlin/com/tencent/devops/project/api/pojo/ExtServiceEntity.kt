@@ -27,15 +27,14 @@
 
 package com.tencent.devops.project.api.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("蓝盾-服务简要信息")
+@Schema(description = "蓝盾-服务简要信息")
 class ExtServiceEntity(
-    @ApiModelProperty("主键ID")
+    @Schema(description = "主键ID")
     val id: String,
-    @ApiModelProperty("名称")
+    @Schema(description = "名称")
     val name: String,
-    @ApiModelProperty("编码")
+    @Schema(description = "编码")
     val code: String
 )

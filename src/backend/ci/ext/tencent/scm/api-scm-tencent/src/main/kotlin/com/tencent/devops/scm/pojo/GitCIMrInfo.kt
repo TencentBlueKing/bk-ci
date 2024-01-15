@@ -28,8 +28,7 @@
 package com.tencent.devops.scm.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /*
 * {
@@ -71,39 +70,39 @@ import io.swagger.annotations.ApiModelProperty
 }
 * */
 
-@ApiModel("git mr信息")
+@Schema(description = "git mr信息")
 data class GitCIMrInfo(
     val title: String = "",
     @JsonProperty("target_project_id")
-    @ApiModelProperty(name = "target_project_id")
+    @Schema(description = "target_project_id")
     val targetProjectId: String = "",
     @JsonProperty("target_branch")
-    @ApiModelProperty(name = "target_branch")
+    @Schema(description = "target_branch")
     val targetBranch: String? = "",
     @JsonProperty("source_project_id")
-    @ApiModelProperty(name = "source_project_id")
+    @Schema(description = "source_project_id")
     val sourceProjectId: String? = "",
     @JsonProperty("source_branch")
-    @ApiModelProperty(name = "source_branch")
+    @Schema(description = "source_branch")
     val sourceBranch: String? = "",
     @JsonProperty("created_at")
-    @ApiModelProperty(name = "created_at")
+    @Schema(description = "created_at")
     val createTime: String? = "",
     @JsonProperty("updated_at")
-    @ApiModelProperty(name = "updated_at")
+    @Schema(description = "updated_at")
     val updateTime: String? = "",
     @JsonProperty("iid")
-    @ApiModelProperty(name = "iid")
+    @Schema(description = "iid")
     val mrNumber: String = "",
     @JsonProperty("id")
-    @ApiModelProperty(name = "id")
+    @Schema(description = "id")
     val mrId: String = "",
     @JsonProperty("merge_status")
-    @ApiModelProperty(name = "merge_status")
+    @Schema(description = "merge_status")
     val mergeStatus: String = "",
     val labels: List<String>,
     val description: String? = "",
     @JsonProperty("base_commit")
-    @ApiModelProperty(name = "base_commit")
+    @Schema(description = "base_commit")
     val baseCommit: String?
 )

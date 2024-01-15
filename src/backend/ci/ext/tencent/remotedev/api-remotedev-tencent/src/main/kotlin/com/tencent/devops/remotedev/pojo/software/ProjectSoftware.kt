@@ -27,29 +27,28 @@
 
 package com.tencent.devops.remotedev.pojo.software
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("项目下软件信息")
+@Schema(description = "项目下软件信息")
 data class ProjectSoftware(
-    @ApiModelProperty("ID")
+    @Schema(description = "ID")
     val id: Long,
-    @ApiModelProperty("项目ID")
+    @Schema(description = "项目ID")
     val projectId: String,
-    @ApiModelProperty("软件名称")
+    @Schema(description = "软件名称")
     val name: String,
-    @ApiModelProperty("软件logo")
+    @Schema(description = "软件logo")
     val logo: String,
-    @ApiModelProperty("版本")
+    @Schema(description = "版本")
     val version: String,
-    @ApiModelProperty("来源")
+    @Schema(description = "来源")
     val source: String,
-    @ApiModelProperty("状态")
+    @Schema(description = "状态")
     val status: Int,
-    @ApiModelProperty("分类")
+    @Schema(description = "分类")
     val classification: String,
-    @ApiModelProperty("安装方式")
+    @Schema(description = "安装方式")
     val installMethod: String,
-    @ApiModelProperty("创建人")
+    @Schema(description = "创建人")
     val creator: String
 )

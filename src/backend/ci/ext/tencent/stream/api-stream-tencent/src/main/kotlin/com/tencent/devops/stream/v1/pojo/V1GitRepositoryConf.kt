@@ -27,51 +27,50 @@
 
 package com.tencent.devops.stream.v1.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("蓝盾工蜂项目配置")
+@Schema(description = "蓝盾工蜂项目配置")
 data class V1GitRepositoryConf(
-    @ApiModelProperty("工蜂项目ID")
+    @Schema(description = "工蜂项目ID")
     val gitProjectId: Long,
-    @ApiModelProperty("工蜂项目名")
+    @Schema(description = "工蜂项目名")
     val name: String,
-    @ApiModelProperty("工蜂项目url")
+    @Schema(description = "工蜂项目url")
     val url: String,
-    @ApiModelProperty("homepage")
+    @Schema(description = "homepage")
     val homepage: String,
-    @ApiModelProperty("gitHttpUrl")
+    @Schema(description = "gitHttpUrl")
     val gitHttpUrl: String,
-    @ApiModelProperty("gitSshUrl")
+    @Schema(description = "gitSshUrl")
     val gitSshUrl: String,
-    @ApiModelProperty("是否启用CI")
+    @Schema(description = "是否启用CI")
     val enableCi: Boolean,
-    @ApiModelProperty("Build pushed branches")
+    @Schema(description = "Build pushed branches")
     val buildPushedBranches: Boolean = true,
-    @ApiModelProperty("Limit concurrent jobs")
+    @Schema(description = "Limit concurrent jobs")
     val limitConcurrentJobs: Int?,
-    @ApiModelProperty("Build pushed pull request")
+    @Schema(description = "Build pushed pull request")
     val buildPushedPullRequest: Boolean = true,
-    @ApiModelProperty("Auto cancel branch builds")
+    @Schema(description = "Auto cancel branch builds")
     val autoCancelBranchBuilds: Boolean = false,
-    @ApiModelProperty("Auto cancel pull request builds")
+    @Schema(description = "Auto cancel pull request builds")
     val autoCancelPullRequestBuilds: Boolean = false,
-    @ApiModelProperty("Environment variable")
+    @Schema(description = "Environment variable")
     val env: List<V1EnvironmentVariables>?,
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     val createTime: Long?,
-    @ApiModelProperty("修改时间")
+    @Schema(description = "修改时间")
     val updateTime: Long?,
-    @ApiModelProperty("蓝盾项目Code")
+    @Schema(description = "蓝盾项目Code")
     val projectCode: String?,
-    @ApiModelProperty("企业微信客服通知")
+    @Schema(description = "企业微信客服通知")
     val rtxCustomProperty: V1RtxCustomProperty?,
-    @ApiModelProperty("企业微信群通知")
+    @Schema(description = "企业微信群通知")
     val rtxGroupProperty: V1RtxGroupProperty?,
-    @ApiModelProperty("邮件通知")
+    @Schema(description = "邮件通知")
     val emailProperty: V1EmailProperty?,
-    @ApiModelProperty("是否只在失败时通知")
+    @Schema(description = "是否只在失败时通知")
     val onlyFailedNotify: Boolean? = true,
-    @ApiModelProperty("是否开启Mr锁定")
+    @Schema(description = "是否开启Mr锁定")
     val enableMrBlock: Boolean? = true
 )

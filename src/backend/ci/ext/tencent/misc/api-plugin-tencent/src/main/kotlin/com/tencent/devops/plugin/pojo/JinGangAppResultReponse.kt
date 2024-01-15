@@ -27,27 +27,26 @@
 
 package com.tencent.devops.plugin.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("金刚扫面任务结果")
+@Schema(description = "金刚扫面任务结果")
 data class JinGangAppResultReponse(
-    @ApiModelProperty("任务结果Id")
+    @Schema(description = "任务结果Id")
     val id: Long,
-    @ApiModelProperty("构建Id")
+    @Schema(description = "构建Id")
     val buildId: String,
-    @ApiModelProperty("包名称")
+    @Schema(description = "包名称")
     val fileName: String,
-    @ApiModelProperty("版本号")
+    @Schema(description = "版本号")
     val version: String,
-    @ApiModelProperty("文件MD5")
+    @Schema(description = "文件MD5")
     val fileMD5: String,
-    @ApiModelProperty("任务Id")
+    @Schema(description = "任务Id")
     val taskId: Long,
-    @ApiModelProperty("扫描结果的html地址")
+    @Schema(description = "扫描结果的html地址")
     val scanUrl: String,
-    @ApiModelProperty("上传者")
+    @Schema(description = "上传者")
     val responseuser: String,
-    @ApiModelProperty("扫描结果")
+    @Schema(description = "扫描结果")
     val result: Map<String, Any>
 )

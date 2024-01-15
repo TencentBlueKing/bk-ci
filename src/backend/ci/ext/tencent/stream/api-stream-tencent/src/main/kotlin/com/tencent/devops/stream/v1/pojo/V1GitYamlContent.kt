@@ -27,13 +27,12 @@
 
 package com.tencent.devops.stream.v1.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("Stream起始页配置信息-内容和属性")
+@Schema(description = "Stream起始页配置信息-内容和属性")
 data class V1GitYamlContent(
-    @ApiModelProperty("YAML文件内容")
+    @Schema(description = "YAML文件内容")
     val yaml: String,
-    @ApiModelProperty("显示的icon图标名")
+    @Schema(description = "显示的icon图标名")
     val property: V1GitYamlProperty
 )

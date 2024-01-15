@@ -27,15 +27,15 @@
 
 package com.tencent.devops.store.pojo.dto
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class ExtServiceDeploymentDTO(
-    @ApiModelProperty("期望的pod数量", required = true)
+    @Schema(description = "期望的pod数量", required = true)
     val replicas: Int,
-    @ApiModelProperty("扩展服务镜像", required = true)
+    @Schema(description = "扩展服务镜像", required = true)
     val serviceImage: String,
-    @ApiModelProperty(value = "拉取镜像秘钥名称", required = false)
+    @Schema(description = "拉取镜像秘钥名称", required = false)
     val pullImageSecretName: String?,
-    @ApiModelProperty("容器端口", required = true)
+    @Schema(description = "容器端口", required = true)
     val containerPort: Int
 )

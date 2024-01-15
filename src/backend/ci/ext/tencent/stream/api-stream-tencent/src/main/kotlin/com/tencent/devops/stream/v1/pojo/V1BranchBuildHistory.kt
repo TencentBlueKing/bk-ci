@@ -28,17 +28,16 @@
 package com.tencent.devops.stream.v1.pojo
 
 import com.tencent.devops.stream.v1.pojo.enums.V1BranchType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("分支构建列表")
+@Schema(description = "分支构建列表")
 data class V1BranchBuildHistory(
-    @ApiModelProperty("分支名")
+    @Schema(description = "分支名")
     val branchName: String,
-    @ApiModelProperty("构建总次数")
+    @Schema(description = "构建总次数")
     val buildTotal: Long,
-    @ApiModelProperty("分支类型(Default、Active、Inactive)")
+    @Schema(description = "分支类型(Default、Active、Inactive)")
     val branchType: V1BranchType,
-    @ApiModelProperty("buildHistory")
+    @Schema(description = "buildHistory")
     val buildHistory: List<V1GitCIBuildHistory>
 )

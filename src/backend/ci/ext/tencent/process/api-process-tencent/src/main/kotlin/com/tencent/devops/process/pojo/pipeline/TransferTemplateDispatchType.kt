@@ -27,19 +27,18 @@
 
 package com.tencent.devops.process.pojo.pipeline
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("迁移模板构建资源")
+@Schema(description = "迁移模板构建资源")
 data class TransferTemplateDispatchType(
-    @ApiModelProperty("要迁移的项目ID", required = true)
+    @Schema(description = "要迁移的项目ID", required = true)
     val projectId: String,
-    @ApiModelProperty("要迁移的模板ID列表，为空表示所有模板", required = false, hidden = true)
+    @Schema(description = "要迁移的模板ID列表，为空表示所有模板", required = false, hidden = true)
     val templateIds: List<String> = mutableListOf(),
-    @ApiModelProperty("源Dispatch Type, 默认为DOCKER，表示从Docker On VM迁移", required = false, hidden = true)
+    @Schema(description = "源Dispatch Type, 默认为DOCKER，表示从Docker On VM迁移", required = false, hidden = true)
     val sourceDispatchType: String = "DOCKER",
-    @ApiModelProperty("目标Dispatch Type, 默认为PUBLIC_DEVCLOUD，表示迁移到DevCloud公共构建机", required = false, hidden = true)
+    @Schema(description = "目标Dispatch Type, 默认为PUBLIC_DEVCLOUD，表示迁移到DevCloud公共构建机", required = false, hidden = true)
     val targetDispatchType: String = "PUBLIC_DEVCLOUD",
-    @ApiModelProperty("storeFlag是否关联到商店，true/false", required = false, hidden = true)
+    @Schema(description = "storeFlag是否关联到商店，true/false", required = false, hidden = true)
     val storeFlag: Boolean = false
 )

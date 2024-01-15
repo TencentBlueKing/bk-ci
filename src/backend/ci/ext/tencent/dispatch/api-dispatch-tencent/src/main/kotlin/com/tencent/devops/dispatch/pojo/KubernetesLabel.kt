@@ -27,13 +27,12 @@
 
 package com.tencent.devops.dispatch.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("k8s标签信息")
+@Schema(description = "k8s标签信息")
 data class KubernetesLabel(
-    @ApiModelProperty("标签key", required = true)
+    @Schema(description = "标签key", required = true)
     val labelKey: String,
-    @ApiModelProperty("标签value", required = true)
+    @Schema(description = "标签value", required = true)
     val labelValue: String
 )

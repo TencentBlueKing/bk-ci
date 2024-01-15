@@ -27,28 +27,27 @@
 
 package com.tencent.devops.remotedev.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("工作空间信息-创建")
+@Schema(description = "工作空间信息-创建")
 data class WorkspaceCreate(
-    @ApiModelProperty("远程开发仓库地址")
+    @Schema(description = "远程开发仓库地址")
     val repositoryUrl: String,
-    @ApiModelProperty("仓库分支")
+    @Schema(description = "仓库分支")
     val branch: String,
-    @ApiModelProperty("devfile配置路径")
+    @Schema(description = "devfile配置路径")
     var devFilePath: String?,
-    @ApiModelProperty("工作空间模板ID")
+    @Schema(description = "工作空间模板ID")
     val wsTemplateId: Int?,
-    @ApiModelProperty("是否使用官方devfile")
+    @Schema(description = "是否使用官方devfile")
     val useOfficialDevfile: Boolean?,
-    @ApiModelProperty("当前运行客户端的OS")
+    @Schema(description = "当前运行客户端的OS")
     val currentOS: String?,
-    @ApiModelProperty("windows 配置id")
+    @Schema(description = "windows 配置id")
     @Deprecated("not use")
     val windowsResourceConfigId: Int?,
-    @ApiModelProperty("windows 配置")
+    @Schema(description = "windows 配置")
     val windowsType: String?,
-    @ApiModelProperty("云桌面 地域")
+    @Schema(description = "云桌面 地域")
     val windowsZone: String?
 )

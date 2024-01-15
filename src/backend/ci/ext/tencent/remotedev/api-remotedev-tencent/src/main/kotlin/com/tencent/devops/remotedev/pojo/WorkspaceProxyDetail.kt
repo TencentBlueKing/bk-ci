@@ -27,17 +27,16 @@
 
 package com.tencent.devops.remotedev.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("workspaceProxy依赖的工作空间信息")
+@Schema(description = "workspaceProxy依赖的工作空间信息")
 data class WorkspaceProxyDetail(
-    @ApiModelProperty("工作空间名称")
+    @Schema(description = "工作空间名称")
     val workspaceName: String,
-    @ApiModelProperty("工作空间名称")
+    @Schema(description = "工作空间名称")
     val podIp: String,
-    @ApiModelProperty("工作空间关联秘钥")
+    @Schema(description = "工作空间关联秘钥")
     val sshKey: String,
-    @ApiModelProperty("工作空间Host")
+    @Schema(description = "工作空间Host")
     val environmentHost: String
 )

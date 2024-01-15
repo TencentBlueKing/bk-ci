@@ -28,18 +28,17 @@
 package com.tencent.devops.support.model.wechatwork.enums
 
 import com.fasterxml.jackson.annotation.JsonValue
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("消息类型")
+@Schema(description = "消息类型")
 enum class MsgType(private val type: String) {
-    @ApiModelProperty("文本")
+    @Schema(description = "文本")
     text("text"),
-    @ApiModelProperty("图片")
+    @Schema(description = "图片")
     image("image"),
-    @ApiModelProperty("文件")
+    @Schema(description = "文件")
     file("file"),
-    @ApiModelProperty("富文本")
+    @Schema(description = "富文本")
     rich_text("rich_text");
 
     @JsonValue

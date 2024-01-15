@@ -27,31 +27,30 @@
 
 package com.tencent.devops.experience.pojo.download
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("版本体验-下载记录出参")
+@Schema(description = "版本体验-下载记录出参")
 data class DownloadRecordVO(
-    @ApiModelProperty("版本体验ID", required = true)
+    @Schema(description = "版本体验ID", required = true)
     val experienceHashId: String,
-    @ApiModelProperty("文件大小(byte)", required = true)
+    @Schema(description = "文件大小(byte)", required = true)
     val size: Long,
-    @ApiModelProperty("logo链接", required = true)
+    @Schema(description = "logo链接", required = true)
     val logoUrl: String,
-    @ApiModelProperty("体验名称", required = true)
+    @Schema(description = "体验名称", required = true)
     val experienceName: String,
-    @ApiModelProperty("版本标题", required = true)
+    @Schema(description = "版本标题", required = true)
     val versionTitle: String,
-    @ApiModelProperty("创建时间", required = true)
+    @Schema(description = "创建时间", required = true)
     val createTime: Long,
-    @ApiModelProperty("下载时间", required = true)
+    @Schema(description = "下载时间", required = true)
     val downloadTime: Long,
-    @ApiModelProperty("版本体验BundleIdentifier", required = true)
+    @Schema(description = "版本体验BundleIdentifier", required = true)
     val bundleIdentifier: String,
-    @ApiModelProperty("应用Scheme", required = false)
+    @Schema(description = "应用Scheme", required = false)
     val appScheme: String,
-    @ApiModelProperty("是否过期", required = true)
+    @Schema(description = "是否过期", required = true)
     val expired: Boolean,
-    @ApiModelProperty("上次下载的体验ID", required = true)
+    @Schema(description = "上次下载的体验ID", required = true)
     val lastDownloadHashId: String
 )

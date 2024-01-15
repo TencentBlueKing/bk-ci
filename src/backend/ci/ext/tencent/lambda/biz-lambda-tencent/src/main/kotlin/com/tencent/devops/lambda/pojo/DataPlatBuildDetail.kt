@@ -27,47 +27,46 @@
 
 package com.tencent.devops.lambda.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("构建详情")
+@Schema(description = "构建详情")
 data class DataPlatBuildDetail(
-    @ApiModelProperty("清洗时间", required = false)
+    @Schema(description = "清洗时间", required = false)
     val washTime: String,
-    @ApiModelProperty("构建ID", required = true)
+    @Schema(description = "构建ID", required = true)
     val buildId: String,
-    @ApiModelProperty("模板ID", required = true)
+    @Schema(description = "模板ID", required = true)
     val templateId: String,
-    @ApiModelProperty("事业群名称", required = true)
+    @Schema(description = "事业群名称", required = true)
     val bgName: String,
-    @ApiModelProperty("部门名称", required = true)
+    @Schema(description = "部门名称", required = true)
     val deptName: String,
-    @ApiModelProperty("中心名称", required = true)
+    @Schema(description = "中心名称", required = true)
     val centerName: String,
-    @ApiModelProperty("项目ID", required = true)
+    @Schema(description = "项目ID", required = true)
     val projectId: String,
-    @ApiModelProperty("流水线ID", required = true)
+    @Schema(description = "流水线ID", required = true)
     val pipelineId: String,
-    @ApiModelProperty("构建号", required = false)
+    @Schema(description = "构建号", required = false)
     val buildNum: Int?,
-    @ApiModelProperty("是否保密项目", required = false)
+    @Schema(description = "是否保密项目", required = false)
     val isSecrecy: Boolean?,
-    @ApiModelProperty("构建详情", required = true)
+    @Schema(description = "构建详情", required = true)
     val model: String,
-    @ApiModelProperty("构建触发人", required = false)
+    @Schema(description = "构建触发人", required = false)
     val startUser: String?,
-    @ApiModelProperty("出发方式", required = false)
+    @Schema(description = "出发方式", required = false)
     val trigger: String?,
-    @ApiModelProperty("启动时间", required = false)
+    @Schema(description = "启动时间", required = false)
     val startTime: String,
-    @ApiModelProperty("结束时间", required = false)
+    @Schema(description = "结束时间", required = false)
     val endTime: String?,
-    @ApiModelProperty("构建状态", required = false)
+    @Schema(description = "构建状态", required = false)
     val status: String?,
-    @ApiModelProperty("事业群ID", required = false)
+    @Schema(description = "事业群ID", required = false)
     val bgId: String,
-    @ApiModelProperty("部门ID", required = false)
+    @Schema(description = "部门ID", required = false)
     val deptId: String,
-    @ApiModelProperty("中心ID", required = false)
+    @Schema(description = "中心ID", required = false)
     val centerId: String
 )

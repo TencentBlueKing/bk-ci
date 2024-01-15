@@ -28,31 +28,31 @@
 package com.tencent.devops.store.pojo
 
 import com.tencent.devops.store.pojo.enums.DescInputTypeEnum
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class ExtServiceFeatureCreateInfo(
-    @ApiModelProperty("扩展服务code")
+    @Schema(description = "扩展服务code")
     val serviceCode: String,
-    @ApiModelProperty("是否为公共扩展服务， TRUE：是 FALSE：不是  ")
+    @Schema(description = "是否为公共扩展服务， TRUE：是 FALSE：不是  ")
     val publicFlag: Boolean? = false,
-    @ApiModelProperty("是否推荐， TRUE：是 FALSE：不是 ")
+    @Schema(description = "是否推荐， TRUE：是 FALSE：不是 ")
     val recommentFlag: Boolean? = false,
-    @ApiModelProperty("是否官方认证， TRUE：是 FALSE：不是  ")
+    @Schema(description = "是否官方认证， TRUE：是 FALSE：不是  ")
     val certificationFlag: Boolean? = false,
-    @ApiModelProperty("权重（数值越大代表权重越高）")
+    @Schema(description = "权重（数值越大代表权重越高）")
     val weight: Int? = null,
-    @ApiModelProperty("扩展服务可见范围 0：私有 10：登录用户开源")
+    @Schema(description = "扩展服务可见范围 0：私有 10：登录用户开源")
     val visibilityLevel: Int? = 10,
-    @ApiModelProperty("描述录入类型")
+    @Schema(description = "描述录入类型")
     val descInputType: DescInputTypeEnum? = DescInputTypeEnum.MANUAL,
-    @ApiModelProperty("代码库hashId")
+    @Schema(description = "代码库hashId")
     val repositoryHashId: String? = null,
-    @ApiModelProperty("代码库地址")
+    @Schema(description = "代码库地址")
     val codeSrc: String? = null,
-    @ApiModelProperty("删除标签")
+    @Schema(description = "删除标签")
     val deleteFlag: Boolean? = false,
-    @ApiModelProperty("添加用户")
+    @Schema(description = "添加用户")
     val creatorUser: String,
-    @ApiModelProperty("修改用户")
+    @Schema(description = "修改用户")
     val modifierUser: String
 )

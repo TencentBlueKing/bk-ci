@@ -1,22 +1,22 @@
 package com.tencent.devops.notify.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class WeworkSendMessageResp(
-    @ApiModelProperty(name = "errcode")
+    @Schema(description = "errcode")
     @JsonProperty("errcode")
     val errCode: Int?,
-    @ApiModelProperty(name = "errmsg")
+    @Schema(description = "errmsg")
     @JsonProperty("errmsg")
     val errMsg: String?,
-    @ApiModelProperty(name = "invalidparty")
+    @Schema(description = "invalidparty")
     @JsonProperty("invalidparty")
     val invalidParty: String?,
-    @ApiModelProperty(name = "invalidtag")
+    @Schema(description = "invalidtag")
     @JsonProperty("invalidtag")
     val invalidTag: String?,
-    @ApiModelProperty(name = "invaliduser")
+    @Schema(description = "invaliduser")
     @JsonProperty("invaliduser")
     val invalidUser: String?
 )

@@ -27,21 +27,20 @@
 
 package com.tencent.devops.experience.pojo.group
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("版本体验-体验组信息")
+@Schema(description = "版本体验-体验组信息")
 data class Group(
-    @ApiModelProperty("体验组HashID", required = true)
+    @Schema(description = "体验组HashID", required = true)
     val groupHashId: String,
-    @ApiModelProperty("体验组名称", required = true)
+    @Schema(description = "体验组名称", required = true)
     val name: String,
-    @ApiModelProperty("内部人员")
+    @Schema(description = "内部人员")
     val innerUsers: Set<String>,
-    @ApiModelProperty("外部人员")
+    @Schema(description = "外部人员")
     val outerUsers: Set<String>,
-    @ApiModelProperty("组织架构")
+    @Schema(description = "组织架构")
     val depts: Set<String>,
-    @ApiModelProperty("描述")
+    @Schema(description = "描述")
     val remark: String?
 )

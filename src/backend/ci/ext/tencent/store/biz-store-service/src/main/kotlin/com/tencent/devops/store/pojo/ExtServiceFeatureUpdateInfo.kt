@@ -29,36 +29,36 @@ package com.tencent.devops.store.pojo
 
 import com.tencent.devops.store.pojo.enums.DescInputTypeEnum
 import com.tencent.devops.store.pojo.enums.ServiceTypeEnum
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
 data class ExtServiceFeatureUpdateInfo(
-    @ApiModelProperty("扩展服务类型：0：官方自研，1：第三方", required = true)
+    @Schema(description = "扩展服务类型：0：官方自研，1：第三方", required = true)
     val serviceTypeEnum: ServiceTypeEnum? = ServiceTypeEnum.SELF_DEVELOPED,
-    @ApiModelProperty("是否为公共扩展服务， TRUE：是 FALSE：不是  ")
+    @Schema(description = "是否为公共扩展服务， TRUE：是 FALSE：不是  ")
     val publicFlag: Boolean? = null,
-    @ApiModelProperty("是否推荐， TRUE：是 FALSE：不是 ")
+    @Schema(description = "是否推荐， TRUE：是 FALSE：不是 ")
     val recommentFlag: Boolean? = null,
-    @ApiModelProperty("是否官方认证， TRUE：是 FALSE：不是  ")
+    @Schema(description = "是否官方认证， TRUE：是 FALSE：不是  ")
     val certificationFlag: Boolean? = null,
-    @ApiModelProperty("权重（数值越大代表权重越高）")
+    @Schema(description = "权重（数值越大代表权重越高）")
     val weight: Int? = null,
-    @ApiModelProperty("扩展服务可见范围 0：私有 10：登录用户开源")
+    @Schema(description = "扩展服务可见范围 0：私有 10：登录用户开源")
     val visibilityLevel: Int? = null,
-    @ApiModelProperty("描述录入类型")
+    @Schema(description = "描述录入类型")
     val descInputType: DescInputTypeEnum? = null,
-    @ApiModelProperty("代码库hashId")
+    @Schema(description = "代码库hashId")
     val repositoryHashId: String? = null,
-    @ApiModelProperty("代码库地址")
+    @Schema(description = "代码库地址")
     val codeSrc: String? = null,
-    @ApiModelProperty("删除标签")
+    @Schema(description = "删除标签")
     val deleteFlag: Boolean? = null,
-    @ApiModelProperty("是否停掉灰度环境应用， TRUE：是 FALSE：否")
+    @Schema(description = "是否停掉灰度环境应用， TRUE：是 FALSE：否")
     val killGrayAppFlag: Boolean? = null,
-    @ApiModelProperty("停掉灰度环境应用标记时间")
+    @Schema(description = "停掉灰度环境应用标记时间")
     val killGrayAppMarkTime: LocalDateTime? = null,
-    @ApiModelProperty("添加用户")
+    @Schema(description = "添加用户")
     val creatorUser: String? = null,
-    @ApiModelProperty("修改用户")
+    @Schema(description = "修改用户")
     val modifierUser: String? = null
 )

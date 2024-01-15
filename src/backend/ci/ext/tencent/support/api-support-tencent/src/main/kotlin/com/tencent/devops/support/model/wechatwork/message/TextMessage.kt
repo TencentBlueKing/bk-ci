@@ -30,15 +30,14 @@ package com.tencent.devops.support.model.wechatwork.message
 import com.tencent.devops.support.model.wechatwork.base.Receiver
 import com.tencent.devops.support.model.wechatwork.base.Text
 import com.tencent.devops.support.model.wechatwork.enums.MsgType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("文本消息")
+@Schema(description = "文本消息")
 data class TextMessage(
-    @ApiModelProperty("接收者")
+    @Schema(description = "接收者")
     val receiver: Receiver,
-    @ApiModelProperty("消息类型")
+    @Schema(description = "消息类型")
     val msgtype: MsgType = MsgType.text,
-    @ApiModelProperty("文本")
+    @Schema(description = "文本")
     val text: Text
 )

@@ -28,29 +28,28 @@
 package com.tencent.devops.stream.pojo.openapi
 
 import com.tencent.devops.stream.pojo.StreamBaseRepository
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("蓝盾工蜂项目用户校验结果")
+@Schema(description = "蓝盾工蜂项目用户校验结果")
 data class GitUserValidateResult(
-    @ApiModelProperty("工蜂项目ID")
+    @Schema(description = "工蜂项目ID")
     override val gitProjectId: Long,
-    @ApiModelProperty("工蜂项目名")
+    @Schema(description = "工蜂项目名")
     override val name: String,
-    @ApiModelProperty("工蜂项目url")
+    @Schema(description = "工蜂项目url")
     override val url: String,
-    @ApiModelProperty("homepage")
+    @Schema(description = "homepage")
     override val homepage: String,
-    @ApiModelProperty("gitHttpUrl")
+    @Schema(description = "gitHttpUrl")
     override val gitHttpUrl: String,
-    @ApiModelProperty("gitSshUrl")
+    @Schema(description = "gitSshUrl")
     override val gitSshUrl: String,
-    @ApiModelProperty("蓝盾项目ID")
+    @Schema(description = "蓝盾项目ID")
     val projectCode: String,
-    @ApiModelProperty("蓝盾项目名")
+    @Schema(description = "蓝盾项目名")
     val projectName: String,
-    @ApiModelProperty("Stream授权人")
+    @Schema(description = "Stream授权人")
     val authUserId: String,
-    @ApiModelProperty("是否开启CI功能")
+    @Schema(description = "是否开启CI功能")
     val enableCi: Boolean
 ) : StreamBaseRepository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)

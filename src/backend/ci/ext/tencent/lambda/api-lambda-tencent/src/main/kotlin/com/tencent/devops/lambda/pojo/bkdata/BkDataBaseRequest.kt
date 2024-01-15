@@ -28,22 +28,22 @@
 package com.tencent.devops.lambda.pojo.bkdata
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * 数据平台通用请求参数对象
  */
 open class BkDataBaseRequest(
     @JsonProperty("bkdata_authentication_method")
-    @ApiModelProperty("校验方法", required = true, name = "bkdata_authentication_method")
+    @Schema(description = "校验方法", required = true, name = "bkdata_authentication_method")
     open val authenticationMethod: String = "token",
     @JsonProperty("bkdata_data_token")
-    @ApiModelProperty("token", required = true, name = "bkdata_data_token")
+    @Schema(description = "token", required = true, name = "bkdata_data_token")
     open val dataToken: String,
     @JsonProperty("bk_app_code")
-    @ApiModelProperty("蓝鲸应用编码", required = true, name = "bk_app_code")
+    @Schema(description = "蓝鲸应用编码", required = true, name = "bk_app_code")
     open val bkAppCode: String,
     @JsonProperty("bk_app_secret")
-    @ApiModelProperty("蓝鲸应用私密key", required = true, name = "bk_app_secret")
+    @Schema(description = "蓝鲸应用私密key", required = true, name = "bk_app_secret")
     open val bkAppSecret: String
 )

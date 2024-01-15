@@ -29,16 +29,15 @@ package com.tencent.devops.common.ci.task
 
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("PipelineScript")
+@Schema(description = "PipelineScript")
 data class PipelineScriptTask(
-    @ApiModelProperty("displayName", required = false)
+    @Schema(description = "displayName", required = false)
     override var displayName: String?,
-    @ApiModelProperty("入参", required = true)
+    @Schema(description = "入参", required = true)
     override val inputs: PipelineScriptInput,
-    @ApiModelProperty("执行条件", required = true)
+    @Schema(description = "执行条件", required = true)
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
 

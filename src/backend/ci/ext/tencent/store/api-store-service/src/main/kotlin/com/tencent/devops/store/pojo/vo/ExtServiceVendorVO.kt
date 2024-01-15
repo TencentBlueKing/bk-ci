@@ -27,11 +27,10 @@
 
 package com.tencent.devops.store.pojo.vo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("扩展点服务的开发者信息")
+@Schema(description = "扩展点服务的开发者信息")
 data class ExtServiceVendorVO(
-    @ApiModelProperty("开发者名称", required = true)
+    @Schema(description = "开发者名称", required = true)
     val name: String
 )

@@ -28,25 +28,25 @@
 package com.tencent.devops.common.auth.api.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class BkAuthPermissionGrantRequest(
     @JsonProperty("project_code")
-    @ApiModelProperty(name = "project_code")
+    @Schema(description = "project_code")
     val projectCode: String,
     @JsonProperty("service_code")
-    @ApiModelProperty(name = "service_code")
+    @Schema(description = "service_code")
     val serviceCode: String,
-    @ApiModelProperty(name = "policy_code")
+    @Schema(description = "policy_code")
     @JsonProperty("policy_code")
     val policyCode: String,
-    @ApiModelProperty(name = "resource_type")
+    @Schema(description = "resource_type")
     @JsonProperty("resource_type")
     val resourceType: String,
-    @ApiModelProperty(name = "resource_code")
+    @Schema(description = "resource_code")
     @JsonProperty("resource_code")
     val resourceCode: String,
-    @ApiModelProperty(name = "user_id_list")
+    @Schema(description = "user_id_list")
     @JsonProperty("user_id_list")
     val userIdList: List<String>
 )

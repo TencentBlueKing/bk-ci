@@ -27,93 +27,92 @@
 
 package com.tencent.devops.lambda.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("历史构建模型")
+@Schema(description = "历史构建模型")
 data class DataPlatBuildHistory(
-    @ApiModelProperty("清洗时间", required = false)
+    @Schema(description = "清洗时间", required = false)
     val washTime: String,
-    @ApiModelProperty("构建ID", required = true)
+    @Schema(description = "构建ID", required = true)
     val buildId: String,
-    @ApiModelProperty("模板ID", required = true)
+    @Schema(description = "模板ID", required = true)
     val templateId: String,
-    @ApiModelProperty("事业群名称", required = true)
+    @Schema(description = "事业群名称", required = true)
     val bgName: String,
-    @ApiModelProperty("部门名称", required = true)
+    @Schema(description = "部门名称", required = true)
     val deptName: String,
-    @ApiModelProperty("中心名称", required = true)
+    @Schema(description = "中心名称", required = true)
     val centerName: String,
-    @ApiModelProperty("项目ID", required = true)
+    @Schema(description = "项目ID", required = true)
     val projectId: String,
-    @ApiModelProperty("流水线ID", required = true)
+    @Schema(description = "流水线ID", required = true)
     val pipelineId: String,
-    @ApiModelProperty("启动用户", required = true)
+    @Schema(description = "启动用户", required = true)
     val userId: String,
-    @ApiModelProperty("触发条件", required = true)
+    @Schema(description = "触发条件", required = true)
     val trigger: String,
-    @ApiModelProperty("构建号", required = true)
+    @Schema(description = "构建号", required = true)
     val buildNum: Int?,
-    @ApiModelProperty("编排文件版本号", required = true)
+    @Schema(description = "编排文件版本号", required = true)
     val pipelineVersion: Int,
-    @ApiModelProperty("开始时间", required = true)
+    @Schema(description = "开始时间", required = true)
     val startTime: String,
-    @ApiModelProperty("结束时间", required = true)
+    @Schema(description = "结束时间", required = true)
     val endTime: String?,
-    @ApiModelProperty("状态", required = true)
+    @Schema(description = "状态", required = true)
     val status: String,
-    @ApiModelProperty("状态枚举值", required = true)
+    @Schema(description = "状态枚举值", required = true)
     val statusOrdinal: Int,
-    @ApiModelProperty("各阶段状态", required = true)
+    @Schema(description = "各阶段状态", required = true)
     val stageStatus: String?,
-    @ApiModelProperty("结束原因", required = true)
+    @Schema(description = "结束原因", required = true)
     val deleteReason: String?,
-    @ApiModelProperty("服务器当前时间戳", required = true)
+    @Schema(description = "服务器当前时间戳", required = true)
     val currentTimestamp: Long,
-    @ApiModelProperty("是否是手机启动", required = false)
+    @Schema(description = "是否是手机启动", required = false)
     val isMobileStart: Boolean = false,
-    @ApiModelProperty("原材料", required = false)
+    @Schema(description = "原材料", required = false)
     val material: String?,
-    @ApiModelProperty("排队于", required = false)
+    @Schema(description = "排队于", required = false)
     val queueTime: Long?,
-    @ApiModelProperty("构件列表", required = false)
+    @Schema(description = "构件列表", required = false)
     val artifactList: String?,
-    @ApiModelProperty("备注", required = false)
+    @Schema(description = "备注", required = false)
     val remark: String?,
-    @ApiModelProperty("总耗时(秒)", required = false)
+    @Schema(description = "总耗时(秒)", required = false)
     val totalTime: Long?,
-    @ApiModelProperty("运行耗时(秒，不包括人工审核时间)", required = false)
+    @Schema(description = "运行耗时(秒，不包括人工审核时间)", required = false)
     val executeTime: Long?,
-    @ApiModelProperty("启动参数", required = false)
+    @Schema(description = "启动参数", required = false)
     val buildParameters: String?,
-    @ApiModelProperty("WebHookType", required = false)
+    @Schema(description = "WebHookType", required = false)
     val webHookType: String?,
-    @ApiModelProperty("webhookInfo", required = false)
+    @Schema(description = "webhookInfo", required = false)
     val webhookInfo: String?,
-    @ApiModelProperty("启动类型(新)", required = false)
+    @Schema(description = "启动类型(新)", required = false)
     val startType: String?,
-    @ApiModelProperty("推荐版本号", required = false)
+    @Schema(description = "推荐版本号", required = false)
     val recommendVersion: String?,
-    @ApiModelProperty("是否重试", required = false)
+    @Schema(description = "是否重试", required = false)
     val retry: Boolean = false,
-    @ApiModelProperty("流水线任务执行错误", required = false)
+    @Schema(description = "流水线任务执行错误", required = false)
     var errorInfoList: String?,
-    @ApiModelProperty("启动用户", required = false)
+    @Schema(description = "启动用户", required = false)
     var startUser: String?,
-    @ApiModelProperty("渠道", required = false)
+    @Schema(description = "渠道", required = false)
     var channel: String?,
-    @ApiModelProperty("流水线标签", required = false)
+    @Schema(description = "流水线标签", required = false)
     var labels: List<String>?,
-    @ApiModelProperty("是否保密项目", required = false)
+    @Schema(description = "是否保密项目", required = false)
     val isSecrecy: Boolean?,
-    @ApiModelProperty("构建描述", required = false)
+    @Schema(description = "构建描述", required = false)
     val buildMsg: String?,
-    @ApiModelProperty("事业群ID", required = false)
+    @Schema(description = "事业群ID", required = false)
     val bgId: String,
-    @ApiModelProperty("部门ID", required = false)
+    @Schema(description = "部门ID", required = false)
     val deptId: String,
-    @ApiModelProperty("中心ID", required = false)
+    @Schema(description = "中心ID", required = false)
     val centerId: String,
-    @ApiModelProperty("非法变量名列表", required = false)
+    @Schema(description = "非法变量名列表", required = false)
     val invalidKeyList: List<String>?
 )

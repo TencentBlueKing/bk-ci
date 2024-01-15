@@ -1,12 +1,11 @@
 package com.tencent.devops.remotedev.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("SSH公钥")
+@Schema(description = "SSH公钥")
 data class SshPublicKey(
-    @ApiModelProperty("用户")
+    @Schema(description = "用户")
     val user: String,
-    @ApiModelProperty("公钥")
+    @Schema(description = "公钥")
     val publicKey: String
 )

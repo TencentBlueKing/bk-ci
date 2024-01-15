@@ -27,13 +27,12 @@
 
 package com.tencent.devops.project.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("用户PreBuild节点")
+@Schema(description = "用户PreBuild节点")
 data class UserNode(
-    @ApiModelProperty("IP")
+    @Schema(description = "IP")
     val ip: String,
-    @ApiModelProperty("密码")
+    @Schema(description = "密码")
     val pwd: String
 )

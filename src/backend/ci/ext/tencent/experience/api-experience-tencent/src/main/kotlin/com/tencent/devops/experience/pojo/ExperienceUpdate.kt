@@ -27,35 +27,34 @@
 
 package com.tencent.devops.experience.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("版本体验-更新发布信息")
+@Schema(description = "版本体验-更新发布信息")
 data class ExperienceUpdate(
-    @ApiModelProperty("版本名称", required = false)
+    @Schema(description = "版本名称", required = false)
     val name: String?,
-    @ApiModelProperty("描述", required = false)
+    @Schema(description = "描述", required = false)
     val remark: String?,
-    @ApiModelProperty("截止日期", required = false)
+    @Schema(description = "截止日期", required = false)
     val expireDate: Long?,
-    @ApiModelProperty("体验组", required = false)
+    @Schema(description = "体验组", required = false)
     val experienceGroups: Set<String>?,
-    @ApiModelProperty("内部名单", required = false)
+    @Schema(description = "内部名单", required = false)
     val innerUsers: Set<String>?,
-    @ApiModelProperty("外部名单", required = false)
+    @Schema(description = "外部名单", required = false)
     val outerUsers: Set<String>?,
-    @ApiModelProperty("通知类型", required = false)
+    @Schema(description = "通知类型", required = false)
     val notifyTypes: Set<NotifyType>?,
-    @ApiModelProperty("是否开启企业微信群", required = false)
+    @Schema(description = "是否开启企业微信群", required = false)
     val enableWechatGroups: Boolean?,
-    @ApiModelProperty("企业微信群ID(逗号分隔)", required = false)
+    @Schema(description = "企业微信群ID(逗号分隔)", required = false)
     val wechatGroups: String?,
-    @ApiModelProperty("体验名称", required = false)
+    @Schema(description = "体验名称", required = false)
     var experienceName: String?,
-    @ApiModelProperty("版本标题", required = false)
+    @Schema(description = "版本标题", required = false)
     val versionTitle: String?,
-    @ApiModelProperty("产品类别", required = false)
+    @Schema(description = "产品类别", required = false)
     val categoryId: Int?,
-    @ApiModelProperty("产品负责人", required = false)
+    @Schema(description = "产品负责人", required = false)
     val productOwner: List<String>?
 )

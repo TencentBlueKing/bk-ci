@@ -1,8 +1,8 @@
 package com.tencent.devops.dispatch.windows.pojo
 
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("DevCloud创建VM信息")
+@Schema(description = "DevCloud创建VM信息")
 data class DevCloudWindowsInfo(
     var regionId: String,
     var os: String,

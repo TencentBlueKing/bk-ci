@@ -29,31 +29,30 @@ package com.tencent.devops.experience.pojo
 
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.experience.pojo.enums.Source
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("版本体验-发布摘要")
+@Schema(description = "版本体验-发布摘要")
 data class ExperienceSummaryWithPermission(
-    @ApiModelProperty("发布HashId", required = true)
+    @Schema(description = "发布HashId", required = true)
     val experienceHashId: String,
-    @ApiModelProperty("版本名称", required = true)
+    @Schema(description = "版本名称", required = true)
     val name: String,
-    @ApiModelProperty("平台", required = true)
+    @Schema(description = "平台", required = true)
     val platform: PlatformEnum,
-    @ApiModelProperty("版本号", required = true)
+    @Schema(description = "版本号", required = true)
     val version: String,
-    @ApiModelProperty("描述", required = false)
+    @Schema(description = "描述", required = false)
     val remark: String?,
-    @ApiModelProperty("截止日期", required = true)
+    @Schema(description = "截止日期", required = true)
     val expireDate: Long,
-    @ApiModelProperty("来源", required = true)
+    @Schema(description = "来源", required = true)
     val source: Source,
-    @ApiModelProperty("创建者", required = true)
+    @Schema(description = "创建者", required = true)
     val creator: String,
-    @ApiModelProperty("是否已过期", required = true)
+    @Schema(description = "是否已过期", required = true)
     val expired: Boolean,
-    @ApiModelProperty("是否在线", required = true)
+    @Schema(description = "是否在线", required = true)
     val online: Boolean,
-    @ApiModelProperty("权限", required = true)
+    @Schema(description = "权限", required = true)
     val permissions: ExperiencePermission
 )

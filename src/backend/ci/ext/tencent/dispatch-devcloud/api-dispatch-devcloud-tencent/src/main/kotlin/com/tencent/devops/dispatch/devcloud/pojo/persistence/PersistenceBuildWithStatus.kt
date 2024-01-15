@@ -29,28 +29,27 @@ package com.tencent.devops.dispatch.devcloud.pojo.persistence
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.tencent.devops.common.api.pojo.Error
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@ApiModel("DevCloud持久化容器构建信息模型")
+@Schema(description = "DevCloud持久化容器构建信息模型")
 data class PersistenceBuildWithStatus(
-    @ApiModelProperty("项目id")
+    @Schema(description = "项目id")
     val projectId: String,
-    @ApiModelProperty("构建id")
+    @Schema(description = "构建id")
     val buildId: String,
-    @ApiModelProperty("构建环境id")
+    @Schema(description = "构建环境id")
     val vmSeqId: String,
-    @ApiModelProperty("工作空间")
+    @Schema(description = "工作空间")
     val workspace: String,
-    @ApiModelProperty("流水线id")
+    @Schema(description = "流水线id")
     val pipelineId: String?,
-    @ApiModelProperty("是否成功")
+    @Schema(description = "是否成功")
     val success: Boolean,
-    @ApiModelProperty("message信息")
+    @Schema(description = "message信息")
     val message: String?,
-    @ApiModelProperty("错误信息")
+    @Schema(description = "错误信息")
     val error: Error?,
-    @ApiModelProperty("流水线执行次数")
+    @Schema(description = "流水线执行次数")
     val executeCount: Int?
 )

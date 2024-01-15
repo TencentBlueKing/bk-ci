@@ -27,31 +27,30 @@
 
 package com.tencent.devops.store.pojo.ideatom
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("IDE插件市场首页单项信息")
+@Schema(description = "IDE插件市场首页单项信息")
 data class ExternalIdeAtomItem(
-    @ApiModelProperty("插件ID", required = true)
+    @Schema(description = "插件ID", required = true)
     val atomId: String,
-    @ApiModelProperty("插件名称", required = true)
+    @Schema(description = "插件名称", required = true)
     val atomName: String,
-    @ApiModelProperty("插件代码", required = true)
+    @Schema(description = "插件代码", required = true)
     val atomCode: String,
-    @ApiModelProperty("版本号", required = true)
+    @Schema(description = "版本号", required = true)
     val version: String,
-    @ApiModelProperty("插件logo地址", required = false)
+    @Schema(description = "插件logo地址", required = false)
     val logoUrl: String?,
-    @ApiModelProperty("插件简介", required = false)
+    @Schema(description = "插件简介", required = false)
     val summary: String?,
-    @ApiModelProperty("发布者", required = true)
+    @Schema(description = "发布者", required = true)
     val publisher: String,
-    @ApiModelProperty("下载量")
+    @Schema(description = "下载量")
     val downloads: Int?,
-    @ApiModelProperty("评分")
+    @Schema(description = "评分")
     val score: Double?,
-    @ApiModelProperty("代码库链接")
+    @Schema(description = "代码库链接")
     val codeSrc: String?,
-    @ApiModelProperty("权重")
+    @Schema(description = "权重")
     val weight: Int?
 )

@@ -27,21 +27,20 @@
 
 package com.tencent.devops.remotedev.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("团队工作空间信息-创建")
+@Schema(description = "团队工作空间信息-创建")
 data class ProjectWorkspaceCreate(
-    @ApiModelProperty("云桌面 配置")
+    @Schema(description = "云桌面 配置")
     val windowsType: String,
-    @ApiModelProperty("云桌面 地域")
+    @Schema(description = "云桌面 地域")
     val windowsZone: String,
-    @ApiModelProperty("基础镜像Id")
+    @Schema(description = "基础镜像Id")
     val baseImageId: Int,
-    @ApiModelProperty("创建实例的数量")
+    @Schema(description = "创建实例的数量")
     val count: Int,
-    @ApiModelProperty("自定义镜像路径")
+    @Schema(description = "自定义镜像路径")
     val imageCosFile: String = "",
-    @ApiModelProperty("镜像id")
+    @Schema(description = "镜像id")
     val imageId: String = ""
 )

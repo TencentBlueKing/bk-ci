@@ -27,23 +27,23 @@
 
 package com.tencent.devops.dispatch.pojo
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class StopApp(
-    @ApiModelProperty("bcs请求路径", required = true)
+    @Schema(description = "bcs请求路径", required = true)
     val bcsUrl: String,
-    @ApiModelProperty("请求token", required = true)
+    @Schema(description = "请求token", required = true)
     val token: String,
-    @ApiModelProperty("k8s灰度命名空间名称", required = true)
+    @Schema(description = "k8s灰度命名空间名称", required = true)
     val grayNamespaceName: String,
-    @ApiModelProperty("灰度host", required = true)
+    @Schema(description = "灰度host", required = true)
     val grayHost: String,
-    @ApiModelProperty("k8s命名空间名称", required = true)
+    @Schema(description = "k8s命名空间名称", required = true)
     val namespaceName: String,
-    @ApiModelProperty("host", required = true)
+    @Schema(description = "host", required = true)
     val host: String,
-    @ApiModelProperty("deployment名称", required = true)
+    @Schema(description = "deployment名称", required = true)
     val deploymentName: String,
-    @ApiModelProperty("应用deployment", required = true)
+    @Schema(description = "应用deployment", required = true)
     val serviceName: String
 )

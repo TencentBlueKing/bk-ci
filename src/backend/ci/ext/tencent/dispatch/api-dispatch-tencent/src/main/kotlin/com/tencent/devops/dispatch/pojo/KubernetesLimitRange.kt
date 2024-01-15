@@ -27,19 +27,18 @@
 
 package com.tencent.devops.dispatch.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("k8s资源限制信息")
+@Schema(description = "k8s资源限制信息")
 data class KubernetesLimitRange(
-    @ApiModelProperty("默认cpu限额", required = true)
+    @Schema(description = "默认cpu限额", required = true)
     val defaultCpu: String,
-    @ApiModelProperty("默认内存限额", required = true)
+    @Schema(description = "默认内存限额", required = true)
     val defaultMemory: String,
-    @ApiModelProperty("默认请求cpu限额", required = true)
+    @Schema(description = "默认请求cpu限额", required = true)
     val defaultRequestCpu: String,
-    @ApiModelProperty("默认请求内存限额", required = true)
+    @Schema(description = "默认请求内存限额", required = true)
     val defaultRequestMemory: String,
-    @ApiModelProperty("限制资源类型", required = true)
+    @Schema(description = "限制资源类型", required = true)
     val limitType: String
 )

@@ -27,21 +27,20 @@
 
 package com.tencent.devops.sign.api.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("IPA Info Plist内容信息")
+@Schema(description = "IPA Info Plist内容信息")
 data class IpaInfoPlist(
-    @ApiModelProperty("bundleId", required = true)
+    @Schema(description = "bundleId", required = true)
     var bundleIdentifier: String = "",
-    @ApiModelProperty("应用标题", required = true)
+    @Schema(description = "应用标题", required = true)
     var appTitle: String = "",
-    @ApiModelProperty("应用版本", required = true)
+    @Schema(description = "应用版本", required = true)
     var bundleVersion: String = "",
-    @ApiModelProperty("应用构建版本", required = true)
+    @Schema(description = "应用构建版本", required = true)
     var bundleVersionFull: String = "",
-    @ApiModelProperty("应用scheme", required = true)
+    @Schema(description = "应用scheme", required = true)
     var scheme: String = "",
-    @ApiModelProperty("应用名称", required = true)
+    @Schema(description = "应用名称", required = true)
     var appName: String = ""
 )

@@ -27,19 +27,18 @@
 
 package com.tencent.devops.support.model.approval
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("创建微信审批单请求报文体")
+@Schema(description = "创建微信审批单请求报文体")
 data class CreateWechatApproveRequest(
-    @ApiModelProperty("蓝鲸APP名称", required = true)
+    @Schema(description = "蓝鲸APP名称", required = true)
     val appName: String,
-    @ApiModelProperty("审批人，多个以逗号分隔", required = true)
+    @Schema(description = "审批人，多个以逗号分隔", required = true)
     val verifier: String,
-    @ApiModelProperty("消息内容", required = true)
+    @Schema(description = "消息内容", required = true)
     val message: String,
-    @ApiModelProperty("任务ID", required = true)
+    @Schema(description = "任务ID", required = true)
     val taskId: String,
-    @ApiModelProperty("回调URL", required = false)
+    @Schema(description = "回调URL", required = false)
     val url: String? = null
 )

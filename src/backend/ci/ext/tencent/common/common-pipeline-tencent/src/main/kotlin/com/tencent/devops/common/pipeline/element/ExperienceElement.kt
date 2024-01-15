@@ -28,36 +28,35 @@
 package com.tencent.devops.common.pipeline.element
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("版本体验", description = ExperienceElement.classType)
+@Schema(description = "版本体验", description = ExperienceElement.classType)
 data class ExperienceElement(
-    @ApiModelProperty("任务名称", required = true)
+    @Schema(description = "任务名称", required = true)
     override val name: String = "转体验",
-    @ApiModelProperty("id", required = false, hidden = true)
+    @Schema(description = "id", required = false, hidden = true)
     override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @Schema(description = "状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("路径", required = true)
+    @Schema(description = "路径", required = true)
     val path: String = "",
-    @ApiModelProperty("是否自定义仓库", required = true)
+    @Schema(description = "是否自定义仓库", required = true)
     val customized: Boolean,
-    @ApiModelProperty("时间类型(ABSOLUTE, RELATIVE)", required = true)
+    @Schema(description = "时间类型(ABSOLUTE, RELATIVE)", required = true)
     val timeType: String = "ABSOLUTE",
-    @ApiModelProperty("结束时间(s)或者结束天数(day)", required = true)
+    @Schema(description = "结束时间(s)或者结束天数(day)", required = true)
     val expireDate: Long,
-    @ApiModelProperty("体验组", required = true)
+    @Schema(description = "体验组", required = true)
     val experienceGroups: Set<String> = setOf(),
-    @ApiModelProperty("内部名单", required = true)
+    @Schema(description = "内部名单", required = true)
     val innerUsers: Set<String> = setOf(),
-    @ApiModelProperty("外部名单", required = true)
+    @Schema(description = "外部名单", required = true)
     val outerUsers: String = "",
-    @ApiModelProperty("通知类型(RTX,WECHAT,EMAIL)", required = true)
+    @Schema(description = "通知类型(RTX,WECHAT,EMAIL)", required = true)
     val notifyTypes: Set<String> = setOf(),
-    @ApiModelProperty("是否开启企业微信群通知", required = true)
+    @Schema(description = "是否开启企业微信群通知", required = true)
     val enableGroupId: Boolean? = true,
-    @ApiModelProperty("企业微信群ID(逗号分隔)", required = true)
+    @Schema(description = "企业微信群ID(逗号分隔)", required = true)
     val groupId: String = ""
 ) : Element(name, id, status) {
     companion object {

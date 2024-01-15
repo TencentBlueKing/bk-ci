@@ -28,17 +28,17 @@
 package com.tencent.devops.dispatch.pojo
 
 import io.fabric8.kubernetes.api.model.EnvVar
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class AppDeployment(
-    @ApiModelProperty("期望的pod数量", required = true)
+    @Schema(description = "期望的pod数量", required = true)
     val replicas: Int,
-    @ApiModelProperty("镜像", required = true)
+    @Schema(description = "镜像", required = true)
     val image: String,
-    @ApiModelProperty(value = "拉取镜像秘钥名称", required = false)
+    @Schema(description = "拉取镜像秘钥名称", required = false)
     val pullImageSecretName: String?,
-    @ApiModelProperty("容器端口", required = true)
+    @Schema(description = "容器端口", required = true)
     val containerPort: Int,
-    @ApiModelProperty("环境变量列表", required = false)
+    @Schema(description = "环境变量列表", required = false)
     val envVarList: List<EnvVar>? = null
 )

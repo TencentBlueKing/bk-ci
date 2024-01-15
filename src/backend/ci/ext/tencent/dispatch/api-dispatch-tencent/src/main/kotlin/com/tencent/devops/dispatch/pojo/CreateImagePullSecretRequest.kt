@@ -27,13 +27,13 @@
 
 package com.tencent.devops.dispatch.pojo
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class CreateImagePullSecretRequest(
-    @ApiModelProperty("bcs请求路径", required = true)
+    @Schema(description = "bcs请求路径", required = true)
     val bcsUrl: String,
-    @ApiModelProperty("请求token", required = true)
+    @Schema(description = "请求token", required = true)
     val token: String,
-    @ApiModelProperty("k8s仓库信息", required = true)
+    @Schema(description = "k8s仓库信息", required = true)
     val kubernetesRepo: KubernetesRepo
 )

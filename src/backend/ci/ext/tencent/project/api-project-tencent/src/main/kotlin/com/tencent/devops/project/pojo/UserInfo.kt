@@ -27,29 +27,28 @@
 
 package com.tencent.devops.project.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("用户信息-公共账号必须绑定bg")
+@Schema(description = "用户信息-公共账号必须绑定bg")
 data class UserInfo(
-    @ApiModelProperty("用户Id")
+    @Schema(description = "用户Id")
     val userId: String,
-    @ApiModelProperty("用户名")
+    @Schema(description = "用户名")
     val name: String,
-    @ApiModelProperty("BgId")
+    @Schema(description = "BgId")
     val bgId: Int,
-    @ApiModelProperty("Bg名称")
+    @Schema(description = "Bg名称")
     val bgName: String,
-    @ApiModelProperty("部门Id")
+    @Schema(description = "部门Id")
     val deptId: Int?,
-    @ApiModelProperty("部门名称")
+    @Schema(description = "部门名称")
     val deptName: String?,
-    @ApiModelProperty("中心Id")
+    @Schema(description = "中心Id")
     val centerId: Int?,
-    @ApiModelProperty("中心名称")
+    @Schema(description = "中心名称")
     val centerName: String?,
-    @ApiModelProperty("组Id")
+    @Schema(description = "组Id")
     val groupId: Int?,
-    @ApiModelProperty("组名称")
+    @Schema(description = "组名称")
     val groupName: String?
 )

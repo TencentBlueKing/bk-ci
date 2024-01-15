@@ -27,9 +27,9 @@
 
 package com.tencent.devops.store.pojo.ideatom
 
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("IDE插件市场-首页")
+@Schema(description = "IDE插件市场-首页")
 data class MarketIdeAtomMainItem(
     val key: String,
     val label: String,

@@ -27,37 +27,36 @@
 
 package com.tencent.devops.remotedev.pojo.image
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("自定义镜像")
+@Schema(description = "自定义镜像")
 data class ProjectImage(
-    @ApiModelProperty("ID")
+    @Schema(description = "ID")
     val id: Long,
-    @ApiModelProperty("项目ID")
+    @Schema(description = "项目ID")
     val projectId: String,
-    @ApiModelProperty("镜像ID")
+    @Schema(description = "镜像ID")
     val imageId: String,
-    @ApiModelProperty("镜像名称")
+    @Schema(description = "镜像名称")
     val imageName: String,
-    @ApiModelProperty("路径")
+    @Schema(description = "路径")
     val imageCosFile: String,
-    @ApiModelProperty("size")
+    @Schema(description = "size")
     val size: String,
-    @ApiModelProperty("镜像关联cgsId")
+    @Schema(description = "镜像关联cgsId")
     val sourceCgsId: String,
-    @ApiModelProperty("镜像关联cgsType")
+    @Schema(description = "镜像关联cgsType")
     val sourceCgsType: String,
-    @ApiModelProperty("区域")
+    @Schema(description = "区域")
     val sourceCgsZone: String,
-    @ApiModelProperty("展示区域")
+    @Schema(description = "展示区域")
     val sourceCgsZoneName: String,
-    @ApiModelProperty("区域简写")
+    @Schema(description = "区域简写")
     val sourceCgsZoneShortName: String,
-    @ApiModelProperty("状态")
+    @Schema(description = "状态")
     val status: ImageStatus,
-    @ApiModelProperty("创建人")
+    @Schema(description = "创建人")
     val creator: String,
-    @ApiModelProperty("创建时间")
+    @Schema(description = "创建时间")
     val createdTime: Long
 )

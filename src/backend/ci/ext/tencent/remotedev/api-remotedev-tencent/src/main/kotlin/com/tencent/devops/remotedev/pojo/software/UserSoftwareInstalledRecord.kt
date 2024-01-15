@@ -27,23 +27,22 @@
 
 package com.tencent.devops.remotedev.pojo.software
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("工作空间模板配置")
+@Schema(description = "工作空间模板配置")
 data class UserSoftwareInstalledRecord(
-    @ApiModelProperty("项目ID")
+    @Schema(description = "项目ID")
     val projectId: String,
-    @ApiModelProperty("用户")
+    @Schema(description = "用户")
     val user: String,
-    @ApiModelProperty("任务ID")
+    @Schema(description = "任务ID")
     val taskId: Long,
-    @ApiModelProperty("软件名称")
+    @Schema(description = "软件名称")
     val softwareName: String,
-    @ApiModelProperty("云桌面ID")
+    @Schema(description = "云桌面ID")
     val workspaceName: String,
-    @ApiModelProperty("安装状态")
+    @Schema(description = "安装状态")
     val status: SoftwareInstallStatus,
-    @ApiModelProperty("安装时间")
+    @Schema(description = "安装时间")
     val installTime: String
 )

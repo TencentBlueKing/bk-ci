@@ -29,21 +29,20 @@ package com.tencent.devops.stream.pojo.openapi
 
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.stream.pojo.StreamGitRequestEventReq
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("工蜂历史构建模型-对应history页面")
+@Schema(description = "工蜂历史构建模型-对应history页面")
 data class GitCIBuildHistory(
-    @ApiModelProperty("流水线名称", required = true)
+    @Schema(description = "流水线名称", required = true)
     val displayName: String?,
-    @ApiModelProperty("蓝盾流水线ID", required = true)
+    @Schema(description = "蓝盾流水线ID", required = true)
     var pipelineId: String?,
-    @ApiModelProperty("工蜂Event事件", required = true)
+    @Schema(description = "工蜂Event事件", required = true)
     val gitRequestEvent: StreamGitRequestEventReq,
-    @ApiModelProperty("历史构建模型", required = false)
+    @Schema(description = "历史构建模型", required = false)
     val buildHistory: BuildHistory?,
-    @ApiModelProperty("原因", required = true)
+    @Schema(description = "原因", required = true)
     val reason: String? = null,
-    @ApiModelProperty("原因详情", required = true)
+    @Schema(description = "原因详情", required = true)
     var reasonDetail: String? = null
 )

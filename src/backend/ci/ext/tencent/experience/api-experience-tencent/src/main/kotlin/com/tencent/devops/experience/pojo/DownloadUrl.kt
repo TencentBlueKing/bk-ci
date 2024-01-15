@@ -28,15 +28,14 @@
 package com.tencent.devops.experience.pojo
 
 import com.tencent.devops.common.api.enums.PlatformEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("版本体验-下载信息")
+@Schema(description = "版本体验-下载信息")
 data class DownloadUrl(
-    @ApiModelProperty("下载链接", required = true)
+    @Schema(description = "下载链接", required = true)
     val url: String,
-    @ApiModelProperty("平台", required = true)
+    @Schema(description = "平台", required = true)
     val platform: PlatformEnum,
-    @ApiModelProperty("大小(byte)", required = true)
+    @Schema(description = "大小(byte)", required = true)
     val size: Long
 )

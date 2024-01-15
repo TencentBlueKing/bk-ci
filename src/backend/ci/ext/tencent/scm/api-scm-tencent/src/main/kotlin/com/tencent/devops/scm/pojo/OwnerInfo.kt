@@ -28,23 +28,23 @@
 package com.tencent.devops.scm.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class OwnerInfo(
     val id: Int,
     @JsonProperty("username")
-    @ApiModelProperty(name = "username")
+    @Schema(description = "username")
     val userName: String,
     @JsonProperty("web_url")
-    @ApiModelProperty(name = "web_url")
+    @Schema(description = "web_url")
     val webUrl: String,
     val name: String,
     val state: String,
     @JsonProperty("avatar_url")
-    @ApiModelProperty(name = "avatar_url")
+    @Schema(description = "avatar_url")
     val avatarUrl: String,
     @JsonProperty("access_level")
-    @ApiModelProperty(name = "access_level")
+    @Schema(description = "access_level")
 /*GUEST = 10 FOLLOWER = 15 REPORTER = 20 DEVELOPER = 30 MASTER = 40 OWNER = 50*/
     val accessLevel: Int?
 )

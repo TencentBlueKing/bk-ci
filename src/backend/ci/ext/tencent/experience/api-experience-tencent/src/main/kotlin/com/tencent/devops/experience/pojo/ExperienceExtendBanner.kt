@@ -27,19 +27,18 @@
 
 package com.tencent.devops.experience.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("扩展banner图")
+@Schema(description = "扩展banner图")
 data class ExperienceExtendBanner(
-    @ApiModelProperty("配置的BannerURL", required = true)
+    @Schema(description = "配置的BannerURL", required = true)
     val bannerUrl: String?,
-    @ApiModelProperty("banner类型", required = true)
+    @Schema(description = "banner类型", required = true)
     val type: Int?,
-    @ApiModelProperty("跳转链接", required = true)
+    @Schema(description = "跳转链接", required = true)
     val link: String?,
-    @ApiModelProperty("是否上线", required = true)
+    @Schema(description = "是否上线", required = true)
     val online: Boolean?,
-    @ApiModelProperty("过期时间", required = true)
+    @Schema(description = "过期时间", required = true)
     val endTime: Long?
 )

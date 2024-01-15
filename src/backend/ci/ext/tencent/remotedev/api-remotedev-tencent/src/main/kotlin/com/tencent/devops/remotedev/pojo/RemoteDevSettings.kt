@@ -27,35 +27,34 @@
 
 package com.tencent.devops.remotedev.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("远程开发配置")
+@Schema(description = "远程开发配置")
 data class RemoteDevSettings(
-    @ApiModelProperty("默认shell")
+    @Schema(description = "默认shell")
     val defaultShell: String = "shell",
-    @ApiModelProperty("客户端使用，后台只管存的信息")
+    @Schema(description = "客户端使用，后台只管存的信息")
     val basicSetting: Map<String, String> = emptyMap(),
-    @ApiModelProperty("是否连接工蜂")
+    @Schema(description = "是否连接工蜂")
     val gitAttached: Boolean = false,
-    @ApiModelProperty("是否连接合作版工蜂")
+    @Schema(description = "是否连接合作版工蜂")
     val tGitAttached: Boolean = false,
-    @ApiModelProperty("是否连接TAPD")
+    @Schema(description = "是否连接TAPD")
     val tapdAttached: Boolean = false,
-    @ApiModelProperty("是否连接GitHub")
+    @Schema(description = "是否连接GitHub")
     val githubAttached: Boolean = false,
-    @ApiModelProperty("远程开发环境变量配置")
+    @Schema(description = "远程开发环境变量配置")
     val envsForVariable: Map<String, String> = emptyMap(),
-    @ApiModelProperty("远程开发文件配置")
+    @Schema(description = "远程开发文件配置")
     val envsForFile: List<RemoteDevFile> = emptyList(),
-    @ApiModelProperty("dotfiles仓库路径")
+    @Schema(description = "dotfiles仓库路径")
     val dotfileRepo: String = "",
-    @ApiModelProperty("项目Id")
+    @Schema(description = "项目Id")
     var projectId: String = "",
-    @ApiModelProperty("用户名称")
+    @Schema(description = "用户名称")
     var userName: String = "",
-    @ApiModelProperty("公司名称")
+    @Schema(description = "公司名称")
     var companyName: String = "",
-    @ApiModelProperty("平台维护的用户管理设置")
+    @Schema(description = "平台维护的用户管理设置")
     val userSetting: RemoteDevUserSettings = RemoteDevUserSettings()
 )

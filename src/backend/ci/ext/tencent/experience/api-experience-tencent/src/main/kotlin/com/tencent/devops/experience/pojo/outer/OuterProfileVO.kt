@@ -1,16 +1,15 @@
 package com.tencent.devops.experience.pojo.outer
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("外部登录用户信息")
+@Schema(description = "外部登录用户信息")
 data class OuterProfileVO(
-    @ApiModelProperty("用户名")
+    @Schema(description = "用户名")
     val username: String,
-    @ApiModelProperty("头像")
+    @Schema(description = "头像")
     val logo: String,
-    @ApiModelProperty("邮箱")
+    @Schema(description = "邮箱")
     val email: String,
-    @ApiModelProperty("类型,1--蓝鲸外部用户,2--太湖账户")
+    @Schema(description = "类型,1--蓝鲸外部用户,2--太湖账户")
     val type: Int = 1
 )

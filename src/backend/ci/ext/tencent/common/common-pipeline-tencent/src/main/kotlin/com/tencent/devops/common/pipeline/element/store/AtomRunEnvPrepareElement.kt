@@ -28,20 +28,19 @@
 package com.tencent.devops.common.pipeline.element.store
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件运行环境准备", description = AtomRunEnvPrepareElement.classType)
+@Schema(description = "插件运行环境准备", description = AtomRunEnvPrepareElement.classType)
 data class AtomRunEnvPrepareElement(
-    @ApiModelProperty("任务名称", required = true)
+    @Schema(description = "任务名称", required = true)
     override val name: String = "插件运行环境准备",
-    @ApiModelProperty("id", required = false)
+    @Schema(description = "id", required = false)
     override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @Schema(description = "状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("开发语言", required = true)
+    @Schema(description = "开发语言", required = true)
     val language: String = "\${language}",
-    @ApiModelProperty("运行时环境版本", required = false)
+    @Schema(description = "运行时环境版本", required = false)
     val runtimeVersion: String? = "\${runtimeVersion}"
 ) : Element(name, id, status) {
 

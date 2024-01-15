@@ -28,39 +28,38 @@
 package com.tencent.devops.experience.pojo
 
 import com.tencent.devops.experience.pojo.enums.ArtifactoryType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("版本体验-创建发布信息")
+@Schema(description = "版本体验-创建发布信息")
 data class ExperienceServiceCreate(
-    @ApiModelProperty("文件路径", required = true)
+    @Schema(description = "文件路径", required = true)
     val path: String,
-    @ApiModelProperty("版本仓库类型", required = true)
+    @Schema(description = "版本仓库类型", required = true)
     val artifactoryType: ArtifactoryType,
-    @ApiModelProperty("截止日期", required = true)
+    @Schema(description = "截止日期", required = true)
     val expireDate: Long,
-    @ApiModelProperty("体验组", required = false)
+    @Schema(description = "体验组", required = false)
     val experienceGroups: Set<String> = setOf(),
-    @ApiModelProperty("内部名单", required = false)
+    @Schema(description = "内部名单", required = false)
     val innerUsers: Set<String> = setOf(),
-    @ApiModelProperty("外部名单", required = false)
+    @Schema(description = "外部名单", required = false)
     val outerUsers: Set<String> = setOf(),
-    @ApiModelProperty("通知类型", required = false)
+    @Schema(description = "通知类型", required = false)
     val notifyTypes: Set<NotifyType> = setOf(),
-    @ApiModelProperty("是否开启企业微信群", required = true)
+    @Schema(description = "是否开启企业微信群", required = true)
     val enableWechatGroups: Boolean = true,
-    @ApiModelProperty("企业微信群", required = false)
+    @Schema(description = "企业微信群", required = false)
     val wechatGroups: String = "",
-    @ApiModelProperty("版本体验描述", required = false)
+    @Schema(description = "版本体验描述", required = false)
     val description: String? = "",
-    @ApiModelProperty("体验名称", required = true)
+    @Schema(description = "体验名称", required = true)
     val experienceName: String?,
-    @ApiModelProperty("版本标题", required = true)
+    @Schema(description = "版本标题", required = true)
     val versionTitle: String?,
-    @ApiModelProperty("产品类别", required = true)
+    @Schema(description = "产品类别", required = true)
     val categoryId: Int?,
-    @ApiModelProperty("产品负责人", required = true)
+    @Schema(description = "产品负责人", required = true)
     val productOwner: List<String>?,
-    @ApiModelProperty("是否发送通知", required = false)
+    @Schema(description = "是否发送通知", required = false)
     val sendNotification: Boolean = true
 )

@@ -27,17 +27,16 @@
 
 package com.tencent.devops.sign.api.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("IpaUploadInfo-IPA包签名信息")
+@Schema(description = "IpaUploadInfo-IPA包签名信息")
 data class IpaUploadInfo(
-    @ApiModelProperty("项目ID", required = true)
+    @Schema(description = "项目ID", required = true)
     var projectId: String = "",
-    @ApiModelProperty("流水线ID", required = true)
+    @Schema(description = "流水线ID", required = true)
     var pipelineId: String = "",
-    @ApiModelProperty("构建ID", required = true)
+    @Schema(description = "构建ID", required = true)
     var buildId: String = "",
-    @ApiModelProperty("鉴权token", required = true)
+    @Schema(description = "鉴权token", required = true)
     var token: String = ""
 )

@@ -27,17 +27,16 @@
 
 package com.tencent.devops.experience.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("版本体验-项目用户组和所有人员")
+@Schema(description = "版本体验-项目用户组和所有人员")
 data class ProjectGroupAndUsers(
-    @ApiModelProperty("组名称")
+    @Schema(description = "组名称")
     val groupName: String,
-    @ApiModelProperty("组ID")
+    @Schema(description = "组ID")
     val groupId: String,
-    @ApiModelProperty("组数字ID")
+    @Schema(description = "组数字ID")
     val groupRoleId: Int,
-    @ApiModelProperty("组员")
+    @Schema(description = "组员")
     val users: Set<String>
 )

@@ -27,19 +27,18 @@
 
 package com.tencent.devops.prebuild.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("prebuild项目")
+@Schema(description = "prebuild项目")
 data class PreProject(
-    @ApiModelProperty("prebuild项目ID")
+    @Schema(description = "prebuild项目ID")
     val preProjectId: String,
-    @ApiModelProperty("用户项目ID")
+    @Schema(description = "用户项目ID")
     val projectId: String,
-    @ApiModelProperty("工作空间")
+    @Schema(description = "工作空间")
     val workspace: String,
-    @ApiModelProperty("account")
+    @Schema(description = "account")
     val account: String,
-    @ApiModelProperty("password")
+    @Schema(description = "password")
     val password: String
 )

@@ -26,25 +26,24 @@
  */
 package com.tencent.devops.monitoring.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("grafana监控webhook回调通知消息")
+@Schema(description = "grafana监控webhook回调通知消息")
 data class GrafanaNotification(
-    @ApiModelProperty("标题", required = true)
+    @Schema(description = "标题", required = true)
     val title: String,
-    @ApiModelProperty("规则Id", required = true)
+    @Schema(description = "规则Id", required = true)
     val ruleId: Int,
-    @ApiModelProperty("规则名称", required = true)
+    @Schema(description = "规则名称", required = true)
     var ruleName: String,
-    @ApiModelProperty("规则url", required = true)
+    @Schema(description = "规则url", required = true)
     var ruleUrl: String,
-    @ApiModelProperty("状态", required = true)
+    @Schema(description = "状态", required = true)
     var state: String,
-    @ApiModelProperty("图片url", required = false)
+    @Schema(description = "图片url", required = false)
     var imageUrl: String?,
-    @ApiModelProperty("告警消息", required = true)
+    @Schema(description = "告警消息", required = true)
     var message: String,
-    @ApiModelProperty("grafana监控规则匹配信息", required = false)
+    @Schema(description = "grafana监控规则匹配信息", required = false)
     val evalMatches: List<GrafanaEvalMatche>?
 )

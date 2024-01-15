@@ -28,22 +28,22 @@
 package com.tencent.devops.common.auth.api.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class BkAuthGroupUser(
     @JsonProperty("display_name")
-    @ApiModelProperty(name = "display_name")
+    @Schema(description = "display_name")
     val displayName: String,
-    @ApiModelProperty(name = "role_id")
+    @Schema(description = "role_id")
     @JsonProperty("role_id")
     val roleId: Int,
     @JsonProperty("role_name")
-    @ApiModelProperty(name = "role_name")
+    @Schema(description = "role_name")
     val roleName: String,
     @JsonProperty("user_id")
-    @ApiModelProperty(name = "user_id")
+    @Schema(description = "user_id")
     val userId: String,
     @JsonProperty("user_type")
-    @ApiModelProperty(name = "user_type")
+    @Schema(description = "user_type")
     val userType: String
 )

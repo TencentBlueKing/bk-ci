@@ -27,19 +27,18 @@
 
 package com.tencent.devops.lambda.pojo.bkdata
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("数据平台结果对象模型")
+@Schema(description = "数据平台结果对象模型")
 data class BkDataResult<out T>(
-    @ApiModelProperty("状态码", required = true)
+    @Schema(description = "状态码", required = true)
     val code: Int,
-    @ApiModelProperty("是否成功", required = true)
+    @Schema(description = "是否成功", required = true)
     val result: Boolean,
-    @ApiModelProperty("返回信息", required = false)
+    @Schema(description = "返回信息", required = false)
     val message: String? = null,
-    @ApiModelProperty("错误信息", required = false)
+    @Schema(description = "错误信息", required = false)
     val errors: String? = null,
-    @ApiModelProperty("返回结果", required = false)
+    @Schema(description = "返回结果", required = false)
     val data: T? = null
 )

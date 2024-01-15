@@ -31,19 +31,18 @@ import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.CharsetType
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * WindowsScriptTask
  */
-@ApiModel("脚本任务（win环境）")
+@Schema(description = "脚本任务（win环境）")
 data class WindowsScriptTask(
-    @ApiModelProperty("displayName", required = false)
+    @Schema(description = "displayName", required = false)
     override var displayName: String?,
-    @ApiModelProperty("入参", required = true)
+    @Schema(description = "入参", required = true)
     override val inputs: WindowsScriptInput,
-    @ApiModelProperty("执行条件", required = true)
+    @Schema(description = "执行条件", required = true)
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
     companion object {
@@ -63,13 +62,13 @@ data class WindowsScriptTask(
     }
 }
 
-@ApiModel("脚本任务（win环境）")
+@Schema(description = "脚本任务（win环境）")
 data class WindowsScriptInput(
-    @ApiModelProperty("脚本内容", required = true)
+    @Schema(description = "脚本内容", required = true)
     val content: String,
-    @ApiModelProperty("脚本类型", required = true)
+    @Schema(description = "脚本类型", required = true)
     val scriptType: BuildScriptType?,
-    @ApiModelProperty("字符集类型", required = false)
+    @Schema(description = "字符集类型", required = false)
     val charsetType: CharsetType?
 
 ) : AbstractInput()

@@ -27,17 +27,16 @@
 
 package com.tencent.devops.support.model.mta.h5.base
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("指标列表结果")
+@Schema(description = "指标列表结果")
 data class IdxResult(
-    @ApiModelProperty("pv")
+    @Schema(description = "pv")
     val pv: String,
-    @ApiModelProperty("uv")
+    @Schema(description = "uv")
     val uv: String,
-    @ApiModelProperty("vv")
+    @Schema(description = "vv")
     val vv: String,
-    @ApiModelProperty("iv")
+    @Schema(description = "iv")
     val iv: String
 )

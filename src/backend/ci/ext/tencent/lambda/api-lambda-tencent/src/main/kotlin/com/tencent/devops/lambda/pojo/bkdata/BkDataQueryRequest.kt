@@ -28,28 +28,28 @@
 package com.tencent.devops.lambda.pojo.bkdata
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * 数据平台查询接口请求参数对象
  */
 data class BkDataQueryRequest(
     @JsonProperty("bkdata_authentication_method")
-    @ApiModelProperty("校验方法", required = true, name = "bkdata_authentication_method")
+    @Schema(description = "校验方法", required = true, name = "bkdata_authentication_method")
     override val authenticationMethod: String,
     @JsonProperty("bkdata_data_token")
-    @ApiModelProperty("token", required = true, name = "bkdata_data_token")
+    @Schema(description = "token", required = true, name = "bkdata_data_token")
     override val dataToken: String,
     @JsonProperty("bk_app_code")
-    @ApiModelProperty("蓝鲸应用编码", required = true, name = "bk_app_code")
+    @Schema(description = "蓝鲸应用编码", required = true, name = "bk_app_code")
     override val bkAppCode: String,
     @JsonProperty("bk_app_secret")
-    @ApiModelProperty("蓝鲸应用私密key", required = true, name = "bk_app_secret")
+    @Schema(description = "蓝鲸应用私密key", required = true, name = "bk_app_secret")
     override val bkAppSecret: String,
     @JsonProperty("sql")
-    @ApiModelProperty("查询SQL", required = true, name = "sql")
+    @Schema(description = "查询SQL", required = true, name = "sql")
     val sql: String,
     @JsonProperty("prefer_storage")
-    @ApiModelProperty("查询引擎", required = false, name = "prefer_storage")
+    @Schema(description = "查询引擎", required = false, name = "prefer_storage")
     var preferStorage: String? = null
 ) : BkDataBaseRequest(authenticationMethod, dataToken, bkAppCode, bkAppSecret)

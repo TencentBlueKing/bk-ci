@@ -31,20 +31,19 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import org.apache.tools.ant.types.Commandline
 
 /**
  * docker run in devcloud
  */
-@ApiModel("Docker通用插件")
+@Schema(description = "Docker通用插件")
 data class DockerRunDevCloudTask(
-    @ApiModelProperty("displayName", required = false)
+    @Schema(description = "displayName", required = false)
     override var displayName: String?,
-    @ApiModelProperty("入参", required = true)
+    @Schema(description = "入参", required = true)
     override val inputs: DockerRunInput,
-    @ApiModelProperty("执行条件", required = true)
+    @Schema(description = "执行条件", required = true)
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
     companion object {
@@ -108,16 +107,16 @@ data class DockerRunDevCloudInput(
     val params: String
 ) : AbstractInput()
 
-@ApiModel("Docker通用插件参数")
+@Schema(description = "Docker通用插件参数")
 data class DockerRunInput(
-    @ApiModelProperty("镜像名", required = true)
+    @Schema(description = "镜像名", required = true)
     val image: String,
-    @ApiModelProperty("仓库信息", required = false)
+    @Schema(description = "仓库信息", required = false)
     val userName: String? = null,
-    @ApiModelProperty("password", required = false)
+    @Schema(description = "password", required = false)
     val password: String? = null,
-    @ApiModelProperty("pullType", required = true)
+    @Schema(description = "pullType", required = true)
     val cmd: String,
-    @ApiModelProperty("env", required = false)
+    @Schema(description = "env", required = false)
     val env: Map<String, String>?
 ) : AbstractInput()

@@ -27,13 +27,12 @@
 
 package com.tencent.devops.process.pojo.third.tcls
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("TCLS 环境")
+@Schema(description = "TCLS 环境")
 data class TclsEnv(
-    @ApiModelProperty(value = "环境 ID", required = true)
+    @Schema(description = "环境 ID", required = true)
     val envId: String,
-    @ApiModelProperty(value = "环境名称", required = true)
+    @Schema(description = "环境名称", required = true)
     val envName: String
 )
