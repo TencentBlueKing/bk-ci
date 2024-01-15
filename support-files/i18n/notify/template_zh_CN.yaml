@@ -783,11 +783,11 @@
     id: "aab3cc905f004b9392773d388d64daef"
     sender: "DevOps"
     title: "项目【${projectName}】下的流水线【${pipelineName}】#${buildNum} 构建Stage审核"
-    body: "构建状态为stage sucess，需要您的审核才执行后续流程\n审核说明: ${reviewDesc}\n电脑端点击 ${reviewUrl}\n手机端点击 ${reviewAppUrl}"
+    body: "构建状态为stage success，需要您的审核才执行后续流程\n审核说明: ${reviewDesc}\n电脑端点击 ${reviewUrl}\n手机端点击 ${reviewAppUrl}"
   weworkGroupTemplate:
     id: "cead07553b364b5a9c3f0290e35c82da"
     title: "项目【${projectName}】下的流水线【${pipelineName}】#${buildNum} 构建Stage审核"
-    body: "构建状态为stage sucess，需要「${reviewers}」的审核才执行后续流程\n\n审核说明: \n${reviewDesc}\n\n[电脑端点击](${reviewUrl})\n[手机端点击](${reviewAppUrl})"
+    body: "构建状态为stage success，需要「${reviewers}」的审核才执行后续流程\n\n审核说明: \n${reviewDesc}\n\n[电脑端点击](${reviewUrl})\n[手机端点击](${reviewAppUrl})"
   creator: "system"
   modifior: "system"
 - index: 37
@@ -877,5 +877,35 @@
     sender: "DevOps"
     title: "迁移PROCESS数据库中项目【${projectId}】的数据成功"
     body: "迁移PROCESS数据库中项目【${projectId}】的数据成功，迁移成功的流水线一共【${pipelineNum}】条。"
+  creator: "system"
+  modifior: "system"
+- index: 42
+  id: "ea98239a51a74f8db0a012a809bc2018"
+  templateCode: "MIGRATE_PROCESS_PIPELINE_DATA_FAIL_TEMPLATE"
+  templateName: "项目下流水线的数据迁移失败提醒"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "390987c50179422388dd742924fc2003"
+    sender: "DevOps"
+    title: "迁移项目【${projectId}】下流水线【${pipelineId}】的数据失败"
+    body: "迁移项目【${projectId}】下流水线【${pipelineId}】的数据失败，失败原因: ${failMsg}"
+  creator: "system"
+  modifior: "system"
+- index: 43
+  id: "ea98239a51a74f8db0a012a809bc2019"
+  templateCode: "MIGRATE_PROCESS_PIPELINE_DATA_SUCCESS_TEMPLATE"
+  templateName: "项目下流水线的数据迁移成功提醒"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "390987c50179422388dd742924fc2004"
+    sender: "DevOps"
+    title: "迁移项目【${projectId}】下流水线【${pipelineId}】的数据成功"
+    body: "迁移项目【${projectId}】下流水线【${pipelineId}】的数据成功，迁移成功的流水线一共1条。"
   creator: "system"
   modifior: "system"

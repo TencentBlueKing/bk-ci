@@ -90,7 +90,10 @@ interface UserLogResource {
         jobId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?
+        executeCount: Int?,
+        @ApiParam("是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<QueryLogs>
 
     @ApiOperation("获取更多日志")
@@ -138,7 +141,10 @@ interface UserLogResource {
         jobId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?
+        executeCount: Int?,
+        @ApiParam("是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<QueryLogs>
 
     @ApiOperation("获取某行后的日志")
@@ -177,7 +183,10 @@ interface UserLogResource {
         jobId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?
+        executeCount: Int?,
+        @ApiParam("是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<QueryLogs>
 
     @ApiOperation("下载日志接口")
@@ -211,7 +220,10 @@ interface UserLogResource {
         executeCount: Int?,
         @ApiParam("文件名", required = false)
         @QueryParam("fileName")
-        fileName: String?
+        fileName: String?,
+        @ApiParam("是否下载归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Response
 
     @ApiOperation("获取插件的的日志状态")
@@ -235,6 +247,9 @@ interface UserLogResource {
         tag: String,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?
+        executeCount: Int?,
+        @ApiParam("是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<QueryLogStatus>
 }

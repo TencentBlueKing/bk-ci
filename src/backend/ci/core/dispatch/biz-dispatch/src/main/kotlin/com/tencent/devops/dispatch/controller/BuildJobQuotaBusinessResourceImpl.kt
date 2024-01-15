@@ -30,7 +30,7 @@ package com.tencent.devops.dispatch.controller
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.api.BuildJobQuotaBusinessResource
-import com.tencent.devops.dispatch.service.JobQuotaBusinessService
+import com.tencent.devops.dispatch.service.jobquota.JobQuotaBusinessService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource@Suppress("ALL")

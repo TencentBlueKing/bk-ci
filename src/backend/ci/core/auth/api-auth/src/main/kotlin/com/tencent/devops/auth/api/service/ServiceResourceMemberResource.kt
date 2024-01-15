@@ -1,7 +1,9 @@
 package com.tencent.devops.auth.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import io.swagger.annotations.Api
@@ -10,6 +12,7 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -21,6 +24,11 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceResourceMemberResource {
+
+    /**
+     * @param resourceType 是个枚举类型详见 AuthResourceType
+     * @see AuthResourceType
+     */
     @GET
     @Path("/{projectCode}/getResourceGroupUsers")
     @ApiOperation("获取特定资源下用户组成员")
@@ -59,4 +67,24 @@ interface ServiceResourceMemberResource {
         @ApiParam("资源code", required = false)
         resourceCode: String
     ): Result<List<BkAuthGroupAndUserList>>
+
+    @POST
+    @Path("/{projectCode}/batchAddResourceGroupMembers/{groupId}")
+    @ApiOperation("根据组ID往项目下加人")
+    fun batchAddResourceGroupMembers(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectCode")
+        @ApiParam("项目Code", required = true)
+        projectCode: String,
+        @ApiParam(name = "用户组IO", required = true)
+        @PathParam("groupId")
+        groupId: Int,
+        @ApiParam("添加用户集合", required = true)
+        members: List<String>
+    ): Result<Boolean>
 }

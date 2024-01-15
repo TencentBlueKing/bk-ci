@@ -52,7 +52,11 @@ class StreamPermissionProjectServiceImpl @Autowired constructor(
         return emptyList()
     }
 
-    override fun getUserProjectsByPermission(userId: String, action: String): List<String> {
+    override fun getUserProjectsByPermission(
+        userId: String,
+        action: String,
+        resourceType: String?
+    ): List<String> {
         return emptyList()
     }
 

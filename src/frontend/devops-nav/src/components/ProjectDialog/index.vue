@@ -100,6 +100,10 @@
     import { Component, Prop, Watch } from 'vue-property-decorator'
     import { State, Action, Getter } from 'vuex-class'
     import eventBus from '../../utils/eventBus'
+    import {
+        handleProjectNoPermission,
+        RESOURCE_ACTION
+    } from '@/utils/permission'
 
     @Component
     export default class ProjectDialog extends Vue {
@@ -193,8 +197,35 @@
                 } else {
                     throw Error(this.$t('exception.apiError'))
                 }
-            } catch (err) {
-                this.handleError(err, this.$permissionActionMap.create)
+            } catch (err: any) {
+                if (err.code === 403) {
+                    const {
+                        projectCode,
+                        projectName,
+                        routerTag
+                    } = data.data || {}
+                    const url = /rbac/.test(routerTag)
+                            ? `/console/permission/apply?project_code=${projectCode}&resourceType=project&resourceName=${projectName}&action=project_create&iamResourceCode=${projectCode}&groupId&x-devops-project-id=${projectCode}`
+                            : `/console/perm/apply-perm?project_code=${projectCode}&x-devops-project-id=${projectCode}`
+                    handleProjectNoPermission(
+                        {
+                            projectId: projectCode,
+                            resourceCode: projectCode,
+                            action: RESOURCE_ACTION.EDIT
+                        },
+                        {
+                            actionName: this.$t('createProject'),
+                            groupInfoList: [{ url }],
+                            resourceName: projectName,
+                            resourceTypeName: this.$t('project')
+                        }
+                    )
+                } else {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: err.message || this.$t('exception.apiError')
+                    })
+                }
             } finally {
               setTimeout(() => {
                     this.isCreating = false
@@ -215,11 +246,35 @@
                 } else {
                     throw Error(this.$t('exception.apiError'))
                 }
-            } catch (err) {
-                this.handleError(err, this.$permissionActionMap.edit, [{
-                    id: data.projectCode,
-                    name: data.projectName
-                }])
+            } catch (e: any) {
+                if (e.code === 403) {
+                    const {
+                        projectCode,
+                        projectName,
+                        routerTag
+                    } = data.data || {}
+                    const url = /rbac/.test(routerTag)
+                            ? `/console/permission/apply?project_code=${projectCode}&resourceType=project&resourceName=${projectName}&action=project_enable&iamResourceCode=${projectCode}&groupId&x-devops-project-id=${projectCode}`
+                            : `/console/perm/apply-perm?project_code=${projectCode}&x-devops-project-id=${projectCode}`
+                    handleProjectNoPermission(
+                        {
+                            projectId: projectCode,
+                            resourceCode: projectCode,
+                            action: RESOURCE_ACTION.EDIT
+                        },
+                        {
+                            actionName: this.$t('editProject'),
+                            groupInfoList: [{ url }],
+                            resourceName: projectName,
+                            resourceTypeName: this.$t('project')
+                        }
+                    )
+                } else {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: e.message || this.$t('exception.apiError')
+                    })
+                }
                 setTimeout(() => {
                     this.isCreating = false
                 }, 100)
@@ -254,23 +309,6 @@
         cancelProject () {
             this.isCreating = false
             this.showDialog = false
-        }
-
-        handleError (e, actionId, instanceId = []) {
-          if (e.code === 403) {
-            this.$showAskPermissionDialog({
-                noPermissionList: [{
-                    actionId,
-                    instanceId,
-                    resourceId: this.$permissionResourceMap.project
-                }]
-            })
-          } else {
-            this.$bkMessage({
-                theme: 'error',
-                message: e.message || this.$t('exception.apiError')
-            })
-          }
         }
     }
 </script>

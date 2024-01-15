@@ -82,10 +82,10 @@ interface ApigwTemplateResourceV4 {
         @ApiParam("页码", required = true)
         @QueryParam("page")
         page: Int = 1,
-        @ApiParam("每页数量", required = true)
+        @ApiParam("每页条数(默认20, 最大100)", required = true)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
-        pageSize: Int = 10
+        pageSize: Int = 20
     ): Result<OptionalTemplateList>
 
     @ApiOperation("获取流水线模板详情", tags = ["v4_user_template_get", "v4_app_template_get"])
@@ -140,10 +140,10 @@ interface ApigwTemplateResourceV4 {
         @ApiParam("页码", required = true)
         @QueryParam("page")
         page: Int = 1,
-        @ApiParam("每页数量", required = true)
+        @ApiParam("每页条数(默认20, 最大100)", required = true)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
-        pageSize: Int = 10
+        pageSize: Int = 20
     ): Result<TemplateListModel>
 
     @ApiOperation("创建流水线模板", tags = ["v4_user_template_create", "v4_app_template_create"])

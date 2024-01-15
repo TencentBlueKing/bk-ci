@@ -88,6 +88,10 @@
 <script>
     import { mapState, mapActions, mapGetters } from 'vuex'
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
+    import {
+        handlePipelineNoPermission,
+        RESOURCE_ACTION
+    } from '@/utils/permission'
     export default {
         mixins: [piplineActionMixin],
         props: {
@@ -192,12 +196,14 @@
                 try {
                     this.isBusy = true
                     const list = this.isRemoveType ? this.pipelineList : this.hasPermissionPipelines
+                    let showNoPermissionDialog = false
+                    const pipelineIds = list.map(pipeline => pipeline.pipelineId)
                     if (list.length === 0) {
                         throw Error(this.$t('noDeletePipelines'))
                     }
                     const params = {
                         projectId: this.$route.params.projectId,
-                        pipelineIds: list.map(pipeline => pipeline.pipelineId)
+                        pipelineIds
                     }
 
                     if (this.isRemoveType) {
@@ -209,13 +215,24 @@
                             throw Error(this.$t('removedPipelineError'))
                         }
                     } else {
-                        await this.patchDeletePipelines(params)
+                        const { data } = await this.patchDeletePipelines(params)
+                        if (list.length === 1) {
+                            showNoPermissionDialog = !data[list[0].pipelineId]
+                        }
                     }
                     this.requestGetGroupLists(this.$route.params)
-                    this.$showTips({
-                        message: this.$t(this.isRemoveType ? 'removeSuc' : 'deleteSuc'),
-                        theme: 'success'
-                    })
+                    if (showNoPermissionDialog) {
+                        handlePipelineNoPermission({
+                            projectId: this.$route.params.projectId,
+                            resourceCode: pipelineIds[0],
+                            action: RESOURCE_ACTION.DELETE
+                        })
+                    } else {
+                        this.$showTips({
+                            message: this.$t(this.isRemoveType ? 'removeSuc' : 'deleteSuc'),
+                            theme: 'success'
+                        })
+                    }
                     this.handleClose()
                     this.$emit('done')
                 } catch (e) {
