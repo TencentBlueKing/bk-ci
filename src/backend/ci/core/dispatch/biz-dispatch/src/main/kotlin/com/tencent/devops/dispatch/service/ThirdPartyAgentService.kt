@@ -556,7 +556,7 @@ class ThirdPartyAgentService @Autowired constructor(
                     "agentOwner" to agentResult.data!!.createUser
                 ),
                 receivers = if (!starter.isNullOrBlank()) {
-                    mutableSetOf(buildRecord.startUser, agentResult.data!!.createUser)
+                    mutableSetOf(starter, agentResult.data!!.createUser)
                 } else {
                     mutableSetOf(agentResult.data!!.createUser)
                 }
