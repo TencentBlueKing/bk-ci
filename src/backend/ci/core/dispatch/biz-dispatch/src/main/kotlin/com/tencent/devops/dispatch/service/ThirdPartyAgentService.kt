@@ -41,8 +41,10 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.AgentBuildInfo
@@ -59,11 +61,14 @@ import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DeadlockLoserDataAccessException
 import org.springframework.stereotype.Service
 import java.util.concurrent.CancellationException
@@ -84,6 +89,8 @@ class ThirdPartyAgentService @Autowired constructor(
     private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao,
     private val thirdPartyAgentDockerService: ThirdPartyAgentDockerService
 ) {
+    @Value("\${thirdagent.workerErrorTemplate:#{null}}")
+    val workerErrorRtxTemplate: String? = null
 
     fun queueBuild(
         agent: ThirdPartyAgent,
@@ -490,6 +497,21 @@ class ThirdPartyAgentService @Autowired constructor(
             )
         }
 
+        // #9910 环境构建时遇到启动错误时调度到一个新的Agent
+        val ignoreAgentIds = if (buildRecord?.envId != null &&
+            !buildInfo.success &&
+            buildInfo.error != null &&
+            buildInfo.error?.errorCode == 2128040
+        ) {
+            val ignoreIds = mutableSetOf(agentResult.data!!.agentId)
+            if (buildRecord.ignoreEnvAgentIds != null) {
+                ignoreIds.addAll(JsonUtil.to(buildRecord.ignoreEnvAgentIds.data()))
+            }
+            ignoreIds
+        } else {
+            null
+        }
+
         client.get(ServiceBuildResource::class).workerBuildFinish(
             projectId = buildInfo.projectId,
             pipelineId = if (buildInfo.pipelineId.isNullOrBlank()) "dummyPipelineId" else buildInfo.pipelineId!!,
@@ -502,17 +524,33 @@ class ThirdPartyAgentService @Autowired constructor(
                 message = buildInfo.message,
                 error = buildInfo.error,
                 // #9910 环境构建时遇到启动错误时调度到一个新的Agent
-                ignoreAgentIds = if (buildRecord?.envId != null &&
-                    !buildInfo.success && buildInfo.error != null && buildInfo.error?.errorCode == 2128040
-                ) {
-                    if (buildRecord.ignoreEnvAgentIds == null) {
-                        setOf(agentResult.data!!.agentId)
-                    } else {
-                        JsonUtil.to(buildRecord.ignoreEnvAgentIds.data())
-                    }
-                } else {
-                    null
-                }
+                ignoreAgentIds = ignoreAgentIds
+            )
+        )
+
+        // #9910 构建机worker失败时发送通知
+        if (workerErrorRtxTemplate.isNullOrBlank() || buildRecord == null) {
+            return
+        }
+        val buildUrl = "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/" +
+            "${buildRecord.pipelineId}/detail/${buildRecord.buildId}/executeDetail"
+        val agentUrl = "${HomeHostUtil.innerServerHost()}/console/environment/$projectId/" +
+            "nodeDetail/${agentResult.data!!.nodeId}"
+        client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
+            SendNotifyMessageTemplateRequest(
+                templateCode = workerErrorRtxTemplate!!,
+                notifyType = mutableSetOf(NotifyType.RTX.name),
+                titleParams = mapOf(
+                    "agentId" to agentResult.data!!.agentId,
+                    "projectCode" to buildRecord.projectId
+                ),
+                bodyParams = mapOf(
+                    "userId" to buildRecord.startUser,
+                    "buildUrl" to buildUrl,
+                    "agentUrl" to agentUrl,
+                    "agentOwner" to agentResult.data!!.createUser
+                ),
+                receivers = mutableSetOf(buildRecord.startUser, agentResult.data!!.createUser)
             )
         )
     }

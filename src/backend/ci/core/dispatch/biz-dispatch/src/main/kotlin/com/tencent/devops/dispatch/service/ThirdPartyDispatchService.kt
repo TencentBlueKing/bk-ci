@@ -467,9 +467,8 @@ class ThirdPartyDispatchService @Autowired constructor(
                             (dispatchMessage.event.os == it.os || dispatchMessage.event.os == VMBaseOS.ALL.name)
                 }
 
-                val jobEnvActiveAgents = if (dispatchMessage.event.ignoreEnvAgentIds.isNullOrEmpty()) {
-                    activeAgents
-                } else {
+                var jobEnvActiveAgents = activeAgents
+                if (!dispatchMessage.event.ignoreEnvAgentIds.isNullOrEmpty()) {
                     log(
                         buildLogPrinter,
                         dispatchMessage,
@@ -479,7 +478,20 @@ class ThirdPartyDispatchService @Autowired constructor(
                             language = I18nUtil.getDefaultLocaleLanguage()
                         )
                     )
-                    activeAgents.filter { it.agentId !in dispatchMessage.event.ignoreEnvAgentIds!! }
+                    jobEnvActiveAgents =
+                        activeAgents.filter { it.agentId !in dispatchMessage.event.ignoreEnvAgentIds!! }
+                    if (jobEnvActiveAgents.isEmpty()) {
+                        throw BuildFailureException(
+                            ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.errorType,
+                            ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.errorCode,
+                            ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.formatErrorMessage,
+                            I18nUtil.getCodeLanMessage(
+                                messageCode = ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.errorCode.toString(),
+                                params = arrayOf(dispatchMessage.event.ignoreEnvAgentIds!!.joinToString(",")),
+                                language = I18nUtil.getDefaultLocaleLanguage()
+                            )
+                        )
+                    }
                 }
 
                 // 没有可用构建机列表进入下一次重试, 修复获取最近构建构建机超过10次不构建会被驱逐出最近构建机列表的BUG
