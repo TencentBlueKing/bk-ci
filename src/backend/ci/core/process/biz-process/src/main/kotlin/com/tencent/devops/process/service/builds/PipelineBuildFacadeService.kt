@@ -2346,6 +2346,8 @@ class PipelineBuildFacadeService(
                 )
             }
         }
+
+        return buildInfo.startUser
     }
 
     fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, vmSeqId: String, vmInfo: VmInfo) {
