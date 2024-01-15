@@ -297,7 +297,6 @@
         },
         created () {
             this.requestTemplateSetting(this.$route.params)
-            this.requestProjectGroupAndUsers(this.$route.params)
             this.requestGrouptLists()
         },
         mounted () {

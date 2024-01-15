@@ -66,7 +66,6 @@
     // import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     // import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
     // import StaffInput from '@/components/atomFormField/StaffInput/index.vue'
-    import { mapActions } from 'vuex'
     export default {
         name: 'notify-setting',
         components: {
@@ -96,13 +95,7 @@
                 return this.subscription && this.subscription.users ? this.subscription.users.split(',') : []
             }
         },
-        created () {
-            this.requestProjectGroupAndUsers(this.$route.params)
-        },
         methods: {
-            ...mapActions('pipelines', [
-                'requestProjectGroupAndUsers'
-            ]),
             handleUsers (name, value) {
                 this.updateSubscription(name, value.join(','))
             }

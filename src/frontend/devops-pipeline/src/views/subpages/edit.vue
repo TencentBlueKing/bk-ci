@@ -295,7 +295,6 @@
                     })
                     this.isLoading = false
                 }
-                this.requestProjectGroupAndUsers(this.$route.params)
             },
             switchTab (tab) {
                 this.$router.push({
