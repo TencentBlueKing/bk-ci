@@ -29,8 +29,8 @@ package com.tencent.devops.repository.api.github
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GITHUB_TOKEN
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.sdk.github.pojo.Organization
-import com.tencent.devops.common.sdk.github.request.ListOrganizationsRequest
+import com.tencent.devops.repository.sdk.github.pojo.Organization
+import com.tencent.devops.repository.sdk.github.request.ListOrganizationsRequest
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

@@ -2,11 +2,11 @@ package com.tencent.devops.repository.api.github
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GITHUB_TOKEN
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.sdk.github.request.CompareTwoCommitsRequest
-import com.tencent.devops.common.sdk.github.request.GetCommitRequest
-import com.tencent.devops.common.sdk.github.request.ListCommitRequest
-import com.tencent.devops.common.sdk.github.response.CommitResponse
-import com.tencent.devops.common.sdk.github.response.CompareTwoCommitsResponse
+import com.tencent.devops.repository.sdk.github.request.CompareTwoCommitsRequest
+import com.tencent.devops.repository.sdk.github.request.GetCommitRequest
+import com.tencent.devops.repository.sdk.github.request.ListCommitRequest
+import com.tencent.devops.repository.sdk.github.response.CommitResponse
+import com.tencent.devops.repository.sdk.github.response.CompareTwoCommitsResponse
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

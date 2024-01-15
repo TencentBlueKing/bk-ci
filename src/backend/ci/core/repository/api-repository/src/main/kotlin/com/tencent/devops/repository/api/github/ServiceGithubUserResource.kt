@@ -29,8 +29,8 @@ package com.tencent.devops.repository.api.github
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GITHUB_TOKEN
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.sdk.github.response.GetUserEmailResponse
-import com.tencent.devops.common.sdk.github.response.GetUserResponse
+import com.tencent.devops.repository.sdk.github.response.GetUserEmailResponse
+import com.tencent.devops.repository.sdk.github.response.GetUserResponse
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

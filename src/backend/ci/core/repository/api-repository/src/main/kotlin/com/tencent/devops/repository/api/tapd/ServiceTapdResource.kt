@@ -28,7 +28,7 @@
 package com.tencent.devops.repository.api.tapd
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.sdk.tapd.request.StatusMapRequest
+import com.tencent.devops.repository.sdk.tapd.request.StatusMapRequest
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import javax.ws.rs.Consumes

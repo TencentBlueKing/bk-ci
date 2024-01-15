@@ -35,12 +35,12 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.repository.github.service.GithubUserService
 import com.tencent.devops.repository.pojo.github.GithubAppUrl
 import com.tencent.devops.repository.pojo.github.GithubOauth
 import com.tencent.devops.repository.pojo.github.GithubOauthCallback
 import com.tencent.devops.repository.pojo.github.GithubToken
 import com.tencent.devops.repository.pojo.oauth.GithubTokenType
+import com.tencent.devops.repository.sdk.github.service.GithubUserService
 import com.tencent.devops.scm.config.GitConfig
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
