@@ -35,19 +35,25 @@ import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil.getMessageByLocale
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.scm.code.git.api.GitApi
 import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.exception.ScmException
+import com.tencent.devops.scm.pojo.GitSession
+import com.tencent.devops.scm.pojo.SvnTreeInfo
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
+import java.net.URLEncoder
 
 @Suppress("ALL")
 object SVNApi {
 
     private val logger = LoggerFactory.getLogger(SVNApi::class.java)
+    private val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
 
     fun getWebhooks(svnConfig: SVNConfig, url: String): List<String> {
         val request = request(svnConfig, composeGetUrl(svnConfig, toHttpUrl(url))).get().build()
@@ -221,4 +227,114 @@ object SVNApi {
 
     private fun request(svnConfig: SVNConfig, url: String) =
         Request.Builder().url(url).header("apiKey", svnConfig.apiKey)
+
+    private fun request(
+        host: String,
+        url: String,
+        token: String
+    ) = Request.Builder().url("$host/$url").header("PRIVATE-TOKEN", token)
+
+    fun request(host: String, token: String, url: String, page: String): Request.Builder {
+        return if (page.isNotEmpty()) Request.Builder()
+            .url("$host/$url?$page")
+            .header("PRIVATE-TOKEN", token)
+        else Request.Builder()
+            .url("$host/$url")
+            .header("PRIVATE-TOKEN", token)
+    }
+
+    fun post(host: String, token: String, url: String, body: String) =
+        request(host, token, url, "").post(RequestBody.create(mediaType, body)).build()
+
+    fun getWebhooksByToken(
+        host: String,
+        projectName: String,
+        token: String
+    ): List<SvnHook> {
+        val fullName = URLEncoder.encode(projectName, "UTF-8")
+        val request = request(
+            host = host,
+            url = "/api/v3/svn/projects/$fullName/hooks",
+            token = token
+        ).get().build()
+        val body = getBody(request)
+        logger.info("Get the webhook($body)")
+        return JsonUtil.getObjectMapper().readValue<List<SvnHook>>(body)
+    }
+
+    fun addWebhooksByToken(
+        host: String,
+        projectName: String,
+        hookUrl: String,
+        token: String,
+        eventType: SvnHookEventType,
+        path: String
+    ) {
+        val fullName = URLEncoder.encode(projectName, "UTF-8")
+        val param = mutableMapOf<String, Any>(
+            "path" to path,
+            "url" to hookUrl
+        ).let {
+            it[eventType.value] = true
+        }
+        val request = request(
+            host = host,
+            url = "/api/v3/svn/projects/$fullName/hooks",
+            token = token
+        )
+            .post(
+                RequestBody.create(
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
+                    JsonUtil.toJson(param,false)
+                )
+            )
+            .build()
+        val body = getBody(request)
+        logger.info("Get the add hook response $body")
+
+        val hookResponse: HookResponse = JsonUtil.getObjectMapper().readValue(body)
+        if (hookResponse.status != "200") {
+            logger.info("Fail to add the hook. ${hookResponse.message}")
+            throw ScmException("add Svn Webhook fail，cause：${hookResponse.message}", ScmType.CODE_SVN.name)
+        }
+    }
+
+    fun getFileList(
+        host: String,
+        projectName: String,
+        token: String,
+        revision: String,
+        path: String
+    ): SvnTreeInfo {
+        val fullName = URLEncoder.encode(projectName, "UTF-8")
+        val queryParam = "path=$path&revision=$revision"
+        val request = request(
+            host = host,
+            url = "/api/v3/svn/projects/$fullName/tree?&queryParam=$queryParam",
+            token = token
+        ).get().build()
+        val body = getBody(request)
+        logger.info("Get the svn file list($body)")
+        return JsonUtil.getObjectMapper().readValue<SvnTreeInfo>(body)
+    }
+
+    fun getSession(
+        host: String,
+        username: String,
+        password: String
+    ): GitSession? {
+        val body = JsonUtil.toJson(
+            mapOf(
+                "login" to username,
+                "password" to password
+            ),
+            false
+        )
+        val request = post(host, "", "session", body)
+        val responseBody = getBody(request).ifBlank {
+            logger.warn("get session is blank, please check the username and password")
+            return null
+        }
+        return JsonUtil.getObjectMapper().readValue(responseBody)
+    }
 }

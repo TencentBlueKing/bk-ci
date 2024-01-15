@@ -286,6 +286,9 @@ class ScmService @Autowired constructor(
                     ScmType.CODE_P4 -> {
                         p4Config.p4HookUrl
                     }
+                    ScmType.CODE_SVN -> {
+                        svnConfig.svnHookUrl
+                    }
                     else -> {
                         throw IllegalArgumentException("Unknown repository type ($type) when add webhook")
                     }

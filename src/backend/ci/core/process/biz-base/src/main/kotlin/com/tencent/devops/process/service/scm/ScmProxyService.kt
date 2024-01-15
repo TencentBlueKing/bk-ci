@@ -40,6 +40,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_RETRY_3_FAILED
+import com.tencent.devops.process.service.CredentialService
 import com.tencent.devops.process.utils.Credential
 import com.tencent.devops.process.utils.CredentialUtils
 import com.tencent.devops.repository.api.ServiceGithubResource
@@ -56,6 +57,7 @@ import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.pojo.RepoSessionRequest
@@ -71,7 +73,10 @@ import javax.ws.rs.NotFoundException
 
 @Suppress("ALL")
 @Service
-class ScmProxyService @Autowired constructor(private val client: Client) {
+class ScmProxyService @Autowired constructor(
+    private val client: Client,
+    private val credentialService: CredentialService
+) {
     private val logger = LoggerFactory.getLogger(ScmProxyService::class.java)
 
     fun recursiveFetchLatestRevision(
@@ -112,18 +117,23 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         val repo = getRepo(projectId, repositoryConfig, variables)
         when (repo) {
             is CodeSvnRepository -> {
-                val credInfo = getCredential(projectId, repo)
+                val credential = getCredential(projectId, repo)
+                val (privateKey, passPhrase) = if (repo.svnType == CodeSvnRepository.SVN_TYPE_HTTP) {
+                    credential.username to credential.password
+                } else {
+                    credential.privateKey to credential.passPhrase
+                }
                 return client.get(ServiceScmResource::class).getLatestRevision(
                     projectName = repo.projectName,
                     url = repo.url,
                     type = ScmType.CODE_SVN,
                     branchName = branchName,
                     additionalPath = additionalPath,
-                    privateKey = credInfo.privateKey,
-                    passPhrase = credInfo.passPhrase,
-                    token = null,
+                    privateKey = privateKey,
+                    passPhrase = passPhrase,
+                    token = credential.token,
                     region = repo.region,
-                    userName = credInfo.username
+                    userName = credential.username
                 )
             }
             is CodeGitRepository -> {
@@ -152,7 +162,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         additionalPath = additionalPath,
                         privateKey = null,
                         passPhrase = null,
-                        token = credInfo.privateKey,
+                        token = credInfo.token,
                         region = null,
                         userName = credInfo.username
                     )
@@ -168,7 +178,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                     additionalPath = additionalPath,
                     privateKey = null,
                     passPhrase = null,
-                    token = credInfo.privateKey,
+                    token = credInfo.token,
                     region = null,
                     userName = credInfo.username
                 )
@@ -227,16 +237,21 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         val repo = getRepo(projectId, repositoryConfig)
         when (repo) {
             is CodeSvnRepository -> {
-                val credInfo = getCredential(projectId, repo)
+                val credential = getCredential(projectId, repo)
+                val (privateKey, passPhrase) = if (repo.svnType == CodeSvnRepository.SVN_TYPE_HTTP) {
+                    credential.username to credential.password
+                } else {
+                    credential.privateKey to credential.passPhrase
+                }
                 return client.get(ServiceScmResource::class).listBranches(
                     projectName = repo.projectName,
                     url = repo.url,
                     type = ScmType.CODE_SVN,
-                    privateKey = credInfo.privateKey,
-                    passPhrase = credInfo.passPhrase,
-                    token = null,
+                    privateKey = privateKey,
+                    passPhrase = passPhrase,
+                    token = credential.token,
                     region = repo.region,
-                    userName = credInfo.username,
+                    userName = credential.username,
                     search = search
                 )
             }
@@ -263,7 +278,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         type = ScmType.CODE_GIT,
                         privateKey = null,
                         passPhrase = null,
-                        token = credInfo.privateKey,
+                        token = credInfo.token,
                         region = null,
                         userName = credInfo.username,
                         search = search
@@ -278,7 +293,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                     type = ScmType.CODE_GITLAB,
                     privateKey = null,
                     passPhrase = null,
-                    token = credInfo.privateKey,
+                    token = credInfo.token,
                     region = null,
                     userName = credInfo.username,
                     search = search
@@ -312,7 +327,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         type = ScmType.CODE_TGIT,
                         privateKey = null,
                         passPhrase = null,
-                        token = credInfo.privateKey,
+                        token = credInfo.token,
                         region = null,
                         userName = credInfo.username,
                         search = search
@@ -354,7 +369,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         projectName = repo.projectName,
                         url = repo.url,
                         type = ScmType.CODE_GIT,
-                        token = credInfo.privateKey,
+                        token = credInfo.token,
                         userName = credInfo.username,
                         search = search
                     )
@@ -366,7 +381,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                     projectName = repo.projectName,
                     url = repo.url,
                     type = ScmType.CODE_GITLAB,
-                    token = credInfo.privateKey,
+                    token = credInfo.token,
                     userName = credInfo.username,
                     search = search
                 )
@@ -394,7 +409,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         projectName = repo.projectName,
                         url = repo.url,
                         type = ScmType.CODE_TGIT,
-                        token = credInfo.privateKey,
+                        token = credInfo.token,
                         userName = credInfo.username,
                         search = search
                     )
@@ -418,7 +433,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         val token = if (isOauth) {
             getAccessToken(repo.userName).first
         } else {
-            getCredential(projectId, repo).privateKey
+            getCredential(projectId, repo).token
         }
         val event = convertEvent(codeEventType)
 
@@ -460,7 +475,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeGitlabRepository
             ?: throw ErrorCodeException(errorCode = GITLAB_INVALID)
-        val token = getCredential(projectId, repo).privateKey
+        val token = getCredential(projectId, repo).token
         client.get(ServiceScmResource::class).addWebHook(
             projectName = repo.projectName,
             url = repo.url,
@@ -480,13 +495,18 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         val repo = getRepo(projectId, repositoryConfig) as? CodeSvnRepository
             ?: throw ErrorCodeException(errorCode = ProcessMessageCode.SVN_INVALID)
         val credential = getCredential(projectId, repo)
+        val (privateKey, passPhrase) = if (repo.svnType == CodeSvnRepository.SVN_TYPE_HTTP) {
+            credential.username to credential.password
+        } else {
+            credential.privateKey to credential.passPhrase
+        }
         client.get(ServiceScmResource::class).addWebHook(
             projectName = repo.projectName,
             url = repo.url,
             type = ScmType.CODE_SVN,
-            privateKey = credential.privateKey,
-            passPhrase = credential.passPhrase,
-            token = null,
+            privateKey = privateKey,
+            passPhrase = passPhrase,
+            token = credential.token,
             region = repo.region,
             userName = credential.username,
             event = null
@@ -673,66 +693,34 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         return repoResult.data!!
     }
 
-    private fun getCredential(projectId: String, repository: Repository): Credential {
-        val credentialId = repository.credentialId
-        val pair = DHUtil.initKey()
-        val encoder = Base64.getEncoder()
-        val decoder = Base64.getDecoder()
-        val credentialResult = client.get(ServiceCredentialResource::class).get(
-            projectId, credentialId,
-            encoder.encodeToString(pair.publicKey)
+    private fun getCredential(projectId: String, repository: Repository): RepoCredentialInfo {
+        // 凭证数据 to 凭证数据列表(v1,v2,v3等)
+        val (credentialInfo, credentialList) = credentialService.getCredentialInfo(
+            projectId = projectId,
+            credentialId = repository.credentialId
         )
-        if (credentialResult.isNotOk() || credentialResult.data == null) {
-            throw ErrorCodeException(
-                errorCode = credentialResult.status.toString(),
-                defaultMessage = credentialResult.message
-            )
-        }
-
-        val credential = credentialResult.data!!
-
-        val privateKey = String(
-            DHUtil.decrypt(
-                decoder.decode(credential.v1),
-                decoder.decode(credential.publicKey),
-                pair.privateKey
-            )
-        )
-
-        val passPhrase = if (credential.v2.isNullOrBlank()) "" else String(
-            DHUtil.decrypt(
-                decoder.decode(credential.v2),
-                decoder.decode(credential.publicKey),
-                pair.privateKey
-            )
-        )
-
         // username+password 关联的git代码库
-        if ((repository is CodeGitRepository || repository is CodeTGitRepository) &&
-            (credential.credentialType == CredentialType.USERNAME_PASSWORD)
+        if ((repository is CodeGitRepository || repository is CodeTGitRepository || repository is CodeSvnRepository) &&
+            (credentialInfo.credentialType == CredentialType.USERNAME_PASSWORD.name)
         ) {
             // USERNAME_PASSWORD v1 = username, v2 = password
             val session = client.get(ServiceScmResource::class).getSession(
                 RepoSessionRequest(
                     type = repository.getScmType(),
-                    username = privateKey,
-                    password = passPhrase,
+                    username = credentialInfo.username,
+                    password = credentialInfo.password,
                     url = repository.url
                 )
             ).data
-            return Credential(
-                username = privateKey,
-                privateKey = session?.privateToken ?: "",
-                passPhrase = passPhrase
-            )
+            credentialInfo.token = session?.privateToken ?: ""
         }
-
-        val list = if (passPhrase.isBlank()) {
-            listOf(privateKey)
-        } else {
-            listOf(privateKey, passPhrase)
-        }
-        return CredentialUtils.getCredential(repository, list, credentialResult.data!!.credentialType)
+        // 兼容旧数据以及特殊数据，非特殊情况直接使用credentialInfo
+        return CredentialUtils.getCredential(
+            repository = repository,
+            credentials = credentialList,
+            credentialType = credentialInfo.credentialType,
+            token = credentialInfo.token
+        ) ?: credentialInfo
     }
 
     private fun getAccessToken(userName: String): Pair<String, String?> {

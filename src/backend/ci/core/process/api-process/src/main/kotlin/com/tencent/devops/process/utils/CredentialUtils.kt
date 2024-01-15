@@ -30,6 +30,8 @@ package com.tencent.devops.process.utils
 import com.tencent.devops.repository.pojo.CodeP4Repository
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
+import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 
@@ -70,11 +72,47 @@ object CredentialUtils {
         }
     }
 
+    fun getCredential(
+        repository: Repository,
+        credentials: List<String>,
+        credentialType: String,
+        token: String
+    ): RepoCredentialInfo? {
+        return when {
+            repository is CodeSvnRepository && repository.svnType == CodeSvnRepository.SVN_TYPE_HTTP -> {
+                // 兼容老的数据，老的数据是用的是password, 新的是username_password
+                if (credentialType == CredentialType.USERNAME_PASSWORD.name) {
+                    if (credentials.size <= 1) {
+                        logger.warn("Fail to get the username($credentials) of the svn repo $repository")
+                        RepoCredentialInfo(username = repository.userName, password = credentials[0])
+                    } else {
+                        RepoCredentialInfo(username = credentials[0], password = credentials[1])
+                    }
+                } else {
+                    RepoCredentialInfo(username = repository.userName, password = credentials[0])
+                }
+            }
+
+            repository is CodeP4Repository && credentialType == CredentialType.USERNAME_PASSWORD.name ->
+                RepoCredentialInfo(username = credentials[0], password = credentials[1])
+
+            // 非特殊场景，不做处理，直接返回null
+            else -> {
+                logger.info("Non-special certificate, no processing required")
+                null
+            }
+        }?.run {
+            this.token = token
+            this
+        }
+    }
+
     private val logger = LoggerFactory.getLogger(CredentialUtils::class.java)
 }
 
 data class Credential(
     val username: String,
     val privateKey: String, // password or private key
-    val passPhrase: String? // passphrase for ssh private key
+    val passPhrase: String?, // passphrase for ssh private key
+    var token: String? = null
 )
