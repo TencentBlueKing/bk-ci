@@ -29,26 +29,25 @@ package com.tencent.devops.metrics.pojo.dto
 
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("查询流水线错误信息传输对象")
+@Schema(name = "查询流水线错误信息传输对象")
 data class QueryPipelineFailDTO(
-    @ApiModelProperty("项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @ApiModelProperty("流水线ID")
+    @Schema(name = "流水线ID")
     val pipelineIds: List<String>? = null,
-    @ApiModelProperty("流水线标签")
+    @Schema(name = "流水线标签")
     val pipelineLabelIds: List<Long>? = null,
-    @ApiModelProperty("开始时间")
+    @Schema(name = "开始时间")
     val startTime: String,
-    @ApiModelProperty("结束时间")
+    @Schema(name = "结束时间")
     val endTime: String,
-    @ApiModelProperty("错误类型")
+    @Schema(name = "错误类型")
     val errorTypes: List<Int>? = null,
-    @ApiModelProperty("页码")
+    @Schema(name = "页码")
     val page: Int = 1,
-    @ApiModelProperty("页数")
+    @Schema(name = "页数")
     @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
     val pageSize: Int = 10
 )

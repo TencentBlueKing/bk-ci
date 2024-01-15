@@ -28,23 +28,22 @@
 package com.tencent.devops.repository.pojo
 
 import com.tencent.devops.common.api.enums.ScmType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("代码库模型-基本信息")
+@Schema(name = "代码库模型-基本信息")
 data class RepositoryInfo(
-    @ApiModelProperty("仓库ID", required = false)
+    @Schema(name = "仓库ID", required = false)
     val repositoryId: Long?,
-    @ApiModelProperty("仓库哈希ID", required = false)
+    @Schema(name = "仓库哈希ID", required = false)
     val repositoryHashId: String?,
-    @ApiModelProperty("仓库别名", required = true)
+    @Schema(name = "仓库别名", required = true)
     val aliasName: String,
-    @ApiModelProperty("URL", required = true)
+    @Schema(name = "URL", required = true)
     val url: String,
-    @ApiModelProperty("类型", required = true)
+    @Schema(name = "类型", required = true)
     val type: ScmType,
-    @ApiModelProperty("最后更新时间", required = true)
+    @Schema(name = "最后更新时间", required = true)
     val updatedTime: Long,
-    @ApiModelProperty("创建人", required = false)
+    @Schema(name = "创建人", required = false)
     val createUser: String? = null
 )

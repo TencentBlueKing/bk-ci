@@ -27,28 +27,27 @@
 
 package com.tencent.devops.stream.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("蓝盾stream流水线列表")
+@Schema(name = "蓝盾stream流水线列表")
 data class StreamGitProjectPipeline(
-    @ApiModelProperty("git项目ID", required = true)
+    @Schema(name = "git项目ID", required = true)
     val gitProjectId: Long,
-    @ApiModelProperty("流水线名称", required = true)
+    @Schema(name = "流水线名称", required = true)
     var displayName: String,
-    @ApiModelProperty("蓝盾流水线ID", required = true)
+    @Schema(name = "蓝盾流水线ID", required = true)
     var pipelineId: String,
-    @ApiModelProperty("文件路径", required = true)
+    @Schema(name = "文件路径", required = true)
     val filePath: String,
-    @ApiModelProperty("是否启用", required = true)
+    @Schema(name = "是否启用", required = true)
     val enabled: Boolean,
-    @ApiModelProperty("创建人", required = false)
+    @Schema(name = "创建人", required = false)
     val creator: String?,
-    @ApiModelProperty("自己一次构建分支", required = false)
+    @Schema(name = "自己一次构建分支", required = false)
     val latestBuildBranch: String?,
-    @ApiModelProperty("git yaml文件链接", required = false)
+    @Schema(name = "git yaml文件链接", required = false)
     val yamlLink: String? = "",
-    @ApiModelProperty("最后一次更新分支", required = false)
+    @Schema(name = "最后一次更新分支", required = false)
     val lastUpdateBranch: String? = ""
 )
 

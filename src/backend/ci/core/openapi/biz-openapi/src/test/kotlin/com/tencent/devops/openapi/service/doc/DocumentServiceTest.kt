@@ -3,7 +3,7 @@ package com.tencent.devops.openapi.service.doc
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.tencent.devops.common.web.JerseyConfig
 import com.tencent.devops.openapi.pojo.SwaggerDocParameterInfo
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.reflections.Reflections
@@ -60,9 +60,9 @@ class DocumentServiceTest @Autowired constructor(
             val infoMap = mutableMapOf<String, String>()
             val subTypes = it.getAnnotation(JsonSubTypes::class.java).value
 //            val typeInfo = it.getAnnotation(JsonTypeInfo::class.java).property
-            val name = it.getAnnotation(ApiModel::class.java)?.value ?: it.name.split(".").last()
+            val name = it.getAnnotation(Schema::class.java)?.name ?: it.name.split(".").last()
             subTypes.forEach { child ->
-                val childName = child.value.java.getAnnotation(ApiModel::class.java)?.value
+                val childName = child.value.java.getAnnotation(Schema::class.java)?.name
                     ?: child.value.java.name.split(".").last()
                 infoMap[childName] = child.name
             }
@@ -72,14 +72,14 @@ class DocumentServiceTest @Autowired constructor(
     }
 
     fun getAllApiModelInfo(reflections: Reflections): Map<String, Map<String, SwaggerDocParameterInfo>> {
-        val clazz = reflections.getTypesAnnotatedWith(ApiModel::class.java).toList()
+        val clazz = reflections.getTypesAnnotatedWith(Schema::class.java).toList()
         val res = mutableMapOf<String, Map<String, SwaggerDocParameterInfo>>()
-        for (i in 0 until clazz.size) {
+        for (i in clazz.indices) {
             val it = clazz.getOrNull(i) ?: continue
 
             println("$i${it.name}")
             try {
-                val name = it.getAnnotation(ApiModel::class.java).value
+                val name = it.getAnnotation(Schema::class.java).name
                 res[name] = getDataClassParameterDefault(it)
             } catch (e: Throwable) {
 //                println(it.name)

@@ -27,23 +27,22 @@
 
 package com.tencent.devops.environment.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("DevCloud容器机型")
+@Schema(name = "DevCloud容器机型")
 data class DevCloudModel(
-    @ApiModelProperty("moduleId", required = true)
+    @Schema(name = "moduleId", required = true)
     val moduleId: String,
-    @ApiModelProperty("机型名称", required = true)
+    @Schema(name = "机型名称", required = true)
     val moduleName: String,
-    @ApiModelProperty("CPU", required = true)
+    @Schema(name = "CPU", required = true)
     val cpu: Int,
-    @ApiModelProperty("Memory", required = true)
+    @Schema(name = "Memory", required = true)
     val memory: String,
-    @ApiModelProperty("Disk", required = true)
+    @Schema(name = "Disk", required = true)
     val disk: String,
-    @ApiModelProperty("description", required = true)
+    @Schema(name = "description", required = true)
     val description: List<String>?,
-    @ApiModelProperty("description", required = true)
+    @Schema(name = "description", required = true)
     val produceTime: String?
 )

@@ -27,27 +27,26 @@
 
 package com.tencent.devops.process.pojo.classify
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("用户当前视图")
+@Schema(name = "用户当前视图")
 data class PipelineView(
-    @ApiModelProperty("视图id", required = false)
+    @Schema(name = "视图id", required = false)
     val id: String,
-    @ApiModelProperty("项目id", required = false)
+    @Schema(name = "项目id", required = false)
     val projectId: String,
-    @ApiModelProperty("视图名称", required = false)
+    @Schema(name = "视图名称", required = false)
     val name: String,
-    @ApiModelProperty("是否项目", required = false)
+    @Schema(name = "是否项目", required = false)
     val projected: Boolean,
-    @ApiModelProperty("创建时间", required = false)
+    @Schema(name = "创建时间", required = false)
     val createTime: Long,
-    @ApiModelProperty("更新时间", required = false)
+    @Schema(name = "更新时间", required = false)
     val updateTime: Long,
-    @ApiModelProperty("按流水线名过滤", required = false)
+    @Schema(name = "按流水线名过滤", required = false)
     val filterByPipelineName: String, // 按流水线名过滤
-    @ApiModelProperty("按创建人过滤", required = false)
+    @Schema(name = "按创建人过滤", required = false)
     val filterByCreator: List<String>, // 按创建人过滤
-    @ApiModelProperty("流水线分组列表", required = false)
+    @Schema(name = "流水线分组列表", required = false)
     val groups: List<PipelineGroupWithLabels>
 )

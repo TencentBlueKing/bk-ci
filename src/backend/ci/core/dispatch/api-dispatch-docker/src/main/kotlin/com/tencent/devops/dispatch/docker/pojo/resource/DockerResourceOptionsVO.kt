@@ -27,29 +27,28 @@
 
 package com.tencent.devops.dispatch.docker.pojo.resource
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("性能基础选项配置")
+@Schema(name = "性能基础选项配置")
 data class DockerResourceOptionsVO(
-    @ApiModelProperty("内存")
+    @Schema(name = "内存")
     val memoryLimitBytes: Long,
 
-    @ApiModelProperty("CPU")
+    @Schema(name = "CPU")
     val cpuPeriod: Int,
 
-    @ApiModelProperty("CPU")
+    @Schema(name = "CPU")
     val cpuQuota: Int,
 
-    @ApiModelProperty("磁盘写速率")
+    @Schema(name = "磁盘写速率")
     val blkioDeviceWriteBps: Long,
 
-    @ApiModelProperty("磁盘读速率")
+    @Schema(name = "磁盘读速率")
     val blkioDeviceReadBps: Long,
 
-    @ApiModelProperty("磁盘大小: 单位GB")
+    @Schema(name = "磁盘大小: 单位GB")
     val disk: Int,
 
-    @ApiModelProperty("描述")
+    @Schema(name = "描述")
     val description: String
 )

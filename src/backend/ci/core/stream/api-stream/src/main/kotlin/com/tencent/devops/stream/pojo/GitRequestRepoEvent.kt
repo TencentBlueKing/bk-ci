@@ -27,21 +27,20 @@
 
 package com.tencent.devops.stream.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("repo hook 构建信息")
+@Schema(name = "repo hook 构建信息")
 data class GitRequestRepoEvent(
-    @ApiModelProperty("EVENT_ID")
+    @Schema(name = "EVENT_ID")
     val eventId: Long,
-    @ApiModelProperty("流水线id")
+    @Schema(name = "流水线id")
     val pipelineId: String,
-    @ApiModelProperty("构建id")
+    @Schema(name = "构建id")
     val buildId: String?,
-    @ApiModelProperty("流水线主库projectId")
+    @Schema(name = "流水线主库projectId")
     val targetGitProjectId: Long,
-    @ApiModelProperty("触发库projectId")
+    @Schema(name = "触发库projectId")
     val sourceGitProjectId: Long,
-    @ApiModelProperty("创建时间")
+    @Schema(name = "创建时间")
     val createTime: Long?
 )

@@ -27,11 +27,10 @@
 
 package com.tencent.devops.process.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("历史构建备注")
+@Schema(name = "历史构建备注")
 data class BuildHistoryRemark(
-    @ApiModelProperty("备注", required = true)
+    @Schema(name = "备注", required = true)
     val remark: String?
 )

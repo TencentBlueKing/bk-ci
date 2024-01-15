@@ -27,35 +27,34 @@
 
 package com.tencent.devops.dispatch.docker.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("容器信息模型")
+@Schema(name = "容器信息模型")
 data class ContainerInfo(
-    @ApiModelProperty("项目id")
+    @Schema(name = "项目id")
     val projectId: String,
-    @ApiModelProperty("流水线id")
+    @Schema(name = "流水线id")
     val pipelineId: String,
-    @ApiModelProperty("构建序列号")
+    @Schema(name = "构建序列号")
     val vmSeqId: String,
-    @ApiModelProperty("资源池序号")
+    @Schema(name = "资源池序号")
     val poolNo: Int,
-    @ApiModelProperty("状态")
+    @Schema(name = "状态")
     val status: Int,
-    @ApiModelProperty("镜像名称")
+    @Schema(name = "镜像名称")
     val imageName: String,
-    @ApiModelProperty("容器id")
+    @Schema(name = "容器id")
     val containerId: String,
-    @ApiModelProperty("容器地址")
+    @Schema(name = "容器地址")
     val address: String,
-    @ApiModelProperty("容器token")
+    @Schema(name = "容器token")
     val token: String,
-    @ApiModelProperty("构建环境")
+    @Schema(name = "构建环境")
     val buildEnv: String?,
-    @ApiModelProperty("仓库用户名")
+    @Schema(name = "仓库用户名")
     val registryUser: String?,
-    @ApiModelProperty("仓库密码")
+    @Schema(name = "仓库密码")
     val registryPwd: String?,
-    @ApiModelProperty("镜像类型")
+    @Schema(name = "镜像类型")
     val imageType: String?
 )

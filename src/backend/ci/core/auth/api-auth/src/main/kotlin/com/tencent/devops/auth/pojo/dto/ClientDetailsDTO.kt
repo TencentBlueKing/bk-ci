@@ -1,30 +1,29 @@
 package com.tencent.devops.auth.pojo.dto
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("Oauth2客户端请求实体")
+@Schema(name = "Oauth2客户端请求实体")
 data class ClientDetailsDTO(
-    @ApiModelProperty("客户端ID")
+    @Schema(name = "客户端ID")
     val clientId: String,
-    @ApiModelProperty("客户端秘钥")
+    @Schema(name = "客户端秘钥")
     val clientSecret: String,
-    @ApiModelProperty("客户端名称")
+    @Schema(name = "客户端名称")
     val clientName: String,
-    @ApiModelProperty("授权操作范围")
+    @Schema(name = "授权操作范围")
     val scope: String,
-    @ApiModelProperty("图标")
+    @Schema(name = "图标")
     val icon: String,
-    @ApiModelProperty("授权模式")
+    @Schema(name = "授权模式")
     val authorizedGrantTypes: String,
-    @ApiModelProperty("跳转链接")
+    @Schema(name = "跳转链接")
     val webServerRedirectUri: String,
-    @ApiModelProperty("access_token有效时间")
+    @Schema(name = "access_token有效时间")
     val accessTokenValidity: Long,
-    @ApiModelProperty("refresh_token有效时间")
+    @Schema(name = "refresh_token有效时间")
     val refreshTokenValidity: Long,
-    @ApiModelProperty("创建人")
+    @Schema(name = "创建人")
     val createUser: String? = null,
-    @ApiModelProperty("更新人")
+    @Schema(name = "更新人")
     val updateUser: String? = null
 )

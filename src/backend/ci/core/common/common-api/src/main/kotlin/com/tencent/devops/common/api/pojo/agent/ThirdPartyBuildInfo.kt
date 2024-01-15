@@ -27,27 +27,26 @@
 
 package com.tencent.devops.common.api.pojo.agent
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("第三方构建信息")
+@Schema(name = "第三方构建信息")
 data class ThirdPartyBuildInfo(
-    @ApiModelProperty("项目id")
+    @Schema(name = "项目id")
     val projectId: String,
-    @ApiModelProperty("构建id")
+    @Schema(name = "构建id")
     val buildId: String,
-    @ApiModelProperty("构建机编排序号")
+    @Schema(name = "构建机编排序号")
     val vmSeqId: String,
-    @ApiModelProperty("工作空间")
+    @Schema(name = "工作空间")
     val workspace: String
 )
 
-@ApiModel("第三方构建Docker信息")
+@Schema(name = "第三方构建Docker信息")
 data class ThirdPartyDockerBuildInfo(
-    @ApiModelProperty("项目id")
+    @Schema(name = "项目id")
     val projectId: String,
-    @ApiModelProperty("构建id")
+    @Schema(name = "构建id")
     val buildId: String,
-    @ApiModelProperty("构建机编排序号")
+    @Schema(name = "构建机编排序号")
     val vmSeqId: String
 )

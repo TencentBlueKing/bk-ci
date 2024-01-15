@@ -27,17 +27,16 @@
 
 package com.tencent.devops.metrics.pojo.dto
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("codecc数据上报传输对象")
+@Schema(name = "codecc数据上报传输对象")
 data class CodeccDataReportDTO(
-    @ApiModelProperty("统计日期")
+    @Schema(name = "统计日期")
     val statisticsTime: String,
-    @ApiModelProperty("项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @ApiModelProperty("代码库扫描平均分")
+    @Schema(name = "代码库扫描平均分")
     val repoCodeccAvgScore: Double,
-    @ApiModelProperty("已解决缺陷数量")
+    @Schema(name = "已解决缺陷数量")
     val resolvedDefectNum: Int
 )

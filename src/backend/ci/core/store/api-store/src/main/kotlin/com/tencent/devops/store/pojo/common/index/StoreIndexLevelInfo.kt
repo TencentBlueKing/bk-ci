@@ -27,13 +27,12 @@
 
 package com.tencent.devops.store.pojo.common.index
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("指标等级信息")
+@Schema(name = "指标等级信息")
 data class StoreIndexLevelInfo(
-    @ApiModelProperty("等级名称", required = true)
+    @Schema(name = "等级名称", required = true)
     val levelName: String,
-    @ApiModelProperty("图标URL", required = true)
+    @Schema(name = "图标URL", required = true)
     val iconUrl: String
 )

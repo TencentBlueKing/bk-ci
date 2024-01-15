@@ -28,35 +28,34 @@
 package com.tencent.devops.store.pojo.common
 
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("敏感API信息")
+@Schema(name = "敏感API信息")
 data class SensitiveApiInfo(
-    @ApiModelProperty("ID")
+    @Schema(name = "ID")
     val id: String,
-    @ApiModelProperty("store组件类别 ATOM:插件 TEMPLATE:模板 IMAGE:镜像 IDE_ATOM:IDE插件", required = true)
+    @Schema(name = "store组件类别 ATOM:插件 TEMPLATE:模板 IMAGE:镜像 IDE_ATOM:IDE插件", required = true)
     val storeType: StoreTypeEnum,
-    @ApiModelProperty("store组件代码", required = true)
+    @Schema(name = "store组件代码", required = true)
     val storeCode: String,
-    @ApiModelProperty("API名称", required = true)
+    @Schema(name = "API名称", required = true)
     val apiName: String,
-    @ApiModelProperty("API别名,不同语言SDK中敏感API对应的方法名", required = true)
+    @Schema(name = "API别名,不同语言SDK中敏感API对应的方法名", required = true)
     val aliasName: String,
-    @ApiModelProperty("API等级 NORMAL: 普通 SENSITIVE: 敏感", required = true)
+    @Schema(name = "API等级 NORMAL: 普通 SENSITIVE: 敏感", required = true)
     val apiLevel: String,
-    @ApiModelProperty("API状态 WAIT:待审批，PASS:通过，REFUSE:拒绝, CANCEL: 取消", required = true)
+    @Schema(name = "API状态 WAIT:待审批，PASS:通过，REFUSE:拒绝, CANCEL: 取消", required = true)
     val apiStatus: String,
-    @ApiModelProperty("申请描述", required = true)
+    @Schema(name = "申请描述", required = true)
     val applyDesc: String,
-    @ApiModelProperty("审批信息", required = false)
+    @Schema(name = "审批信息", required = false)
     val approveMsg: String?,
-    @ApiModelProperty("创建人", required = true)
+    @Schema(name = "创建人", required = true)
     val creator: String,
-    @ApiModelProperty("修改人", required = true)
+    @Schema(name = "修改人", required = true)
     val modifier: String,
-    @ApiModelProperty("创建日期", required = true)
+    @Schema(name = "创建日期", required = true)
     val createTime: Long = 0,
-    @ApiModelProperty("更新日期", required = true)
+    @Schema(name = "更新日期", required = true)
     val updateTime: Long = 0
 )

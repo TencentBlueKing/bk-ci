@@ -27,19 +27,18 @@
 
 package com.tencent.devops.project.pojo.enums
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("项目道代码")
+@Schema(name = "项目道代码")
 enum class ProjectChannelCode {
-    @ApiModelProperty("蓝盾")
+    @Schema(name = "蓝盾")
     BS,
-    @ApiModelProperty("PREBULD")
+    @Schema(name = "PREBULD")
     PREBUILD,
-    @ApiModelProperty("CODECC")
+    @Schema(name = "CODECC")
     CODECC,
-    @ApiModelProperty("GITCI")
+    @Schema(name = "GITCI")
     GITCI,
-    @ApiModelProperty("自动化集群项目，区分于CODECC项目")
+    @Schema(name = "自动化集群项目，区分于CODECC项目")
     AUTO
 }

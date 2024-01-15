@@ -27,16 +27,15 @@
 
 package com.tencent.devops.dispatch.docker.pojo.resource
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("docker性能用户选项配置")
+@Schema(name = "docker性能用户选项配置")
 data class UserDockerResourceOptionsVO(
-    @ApiModelProperty("默认选项")
+    @Schema(name = "默认选项")
     val default: String,
-    @ApiModelProperty("是否展示")
+    @Schema(name = "是否展示")
     val needShow: Boolean,
-    @ApiModelProperty("性能配置")
+    @Schema(name = "性能配置")
     val dockerResourceOptionsMaps: List<DockerResourceOptionsMap>
 )
 

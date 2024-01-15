@@ -27,14 +27,14 @@
 
 package com.tencent.devops.common.log.pojo.enums
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 enum class LogStorageMode {
-    @ApiModelProperty("上报服务")
+    @Schema(name = "上报服务")
     UPLOAD,
-    @ApiModelProperty("本地保存")
+    @Schema(name = "本地保存")
     LOCAL,
-    @ApiModelProperty("仓库已归档")
+    @Schema(name = "仓库已归档")
     ARCHIVED;
 
     companion object {

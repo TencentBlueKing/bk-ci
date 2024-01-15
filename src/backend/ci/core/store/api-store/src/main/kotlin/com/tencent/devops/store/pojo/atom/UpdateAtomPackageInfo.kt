@@ -28,17 +28,16 @@
 package com.tencent.devops.store.pojo.atom
 
 import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("升级插件包信息")
+@Schema(name = "升级插件包信息")
 data class UpdateAtomPackageInfo(
-    @ApiModelProperty("插件ID")
+    @Schema(name = "插件ID")
     val atomId: String,
-    @ApiModelProperty("国际化资源目录路径")
+    @Schema(name = "国际化资源目录路径")
     val i18nDir: String,
-    @ApiModelProperty("包路径")
+    @Schema(name = "包路径")
     val packagePath: String?,
-    @ApiModelProperty("插件包资源类型")
+    @Schema(name = "插件包资源类型")
     val atomPackageSourceType: PackageSourceTypeEnum
 )

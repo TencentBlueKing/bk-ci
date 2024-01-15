@@ -27,31 +27,30 @@
 
 package com.tencent.devops.environment.pojo.thirdPartyAgent
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("第三方接入机-信息")
+@Schema(name = "第三方接入机-信息")
 data class ThirdPartyAgentStaticInfo(
-    @ApiModelProperty("Agent Hash ID", required = true)
+    @Schema(name = "Agent Hash ID", required = true)
     val agentId: String,
-    @ApiModelProperty("项目ID", required = true)
+    @Schema(name = "项目ID", required = true)
     val projectId: String,
-    @ApiModelProperty("操作系统", required = true)
+    @Schema(name = "操作系统", required = true)
     val os: String,
-    @ApiModelProperty("密钥", required = true)
+    @Schema(name = "密钥", required = true)
     val secretKey: String,
-    @ApiModelProperty("创建人", required = true)
+    @Schema(name = "创建人", required = true)
     val createdUser: String,
-    @ApiModelProperty("gateway", required = false)
+    @Schema(name = "gateway", required = false)
     val gateway: String?,
-    @ApiModelProperty("link", required = true)
+    @Schema(name = "link", required = true)
     val link: String,
-    @ApiModelProperty("script", required = true)
+    @Schema(name = "script", required = true)
     val script: String,
-    @ApiModelProperty("ip", required = true)
+    @Schema(name = "ip", required = true)
     val ip: String,
-    @ApiModelProperty("hostName", required = false)
+    @Schema(name = "hostName", required = false)
     val hostName: String?,
-    @ApiModelProperty("状态")
+    @Schema(name = "状态")
     val status: Int?
 )

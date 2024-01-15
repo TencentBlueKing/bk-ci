@@ -28,17 +28,16 @@
 package com.tencent.devops.repository.pojo.github
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("")
+@Schema(name = "")
 data class GithubToken(
-    @ApiModelProperty("鉴权token", name = "access_token")
+    @Schema(name = "鉴权token", description = "access_token")
     @JsonProperty("access_token")
     val accessToken: String,
     @JsonProperty("token_type")
-    @ApiModelProperty("token类型", name = "token_type")
+    @Schema(name = "token类型", description = "token_type")
     val tokenType: String,
-    @ApiModelProperty("范围")
+    @Schema(name = "范围")
     val scope: String
 )

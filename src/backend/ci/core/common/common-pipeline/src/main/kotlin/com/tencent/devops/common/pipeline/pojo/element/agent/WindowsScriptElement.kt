@@ -30,27 +30,26 @@ package com.tencent.devops.common.pipeline.pojo.element.agent
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.CharsetType
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.net.URLEncoder
 
-@ApiModel("脚本任务（windows环境）", description = WindowsScriptElement.classType)
+@Schema(name = "脚本任务（windows环境）", description = WindowsScriptElement.classType)
 data class WindowsScriptElement(
-    @ApiModelProperty("任务名称", required = true)
+    @Schema(name = "任务名称", required = true)
     override val name: String = "执行Windows的bat脚本",
-    @ApiModelProperty("id", required = false)
+    @Schema(name = "id", required = false)
     override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @Schema(name = "状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("用户自定义ID", required = false)
+    @Schema(name = "用户自定义ID", required = false)
     override var stepId: String? = null,
-    @ApiModelProperty("FAQ url链接", required = false)
+    @Schema(name = "FAQ url链接", required = false)
     val errorFAQUrl: String? = null,
-    @ApiModelProperty("脚本内容", required = true)
+    @Schema(name = "脚本内容", required = true)
     val script: String,
-    @ApiModelProperty("脚本类型", required = true)
+    @Schema(name = "脚本类型", required = true)
     val scriptType: BuildScriptType,
-    @ApiModelProperty("字符集类型", required = false)
+    @Schema(name = "字符集类型", required = false)
     val charsetType: CharsetType? = null
 ) : Element(name, id, status) {
 

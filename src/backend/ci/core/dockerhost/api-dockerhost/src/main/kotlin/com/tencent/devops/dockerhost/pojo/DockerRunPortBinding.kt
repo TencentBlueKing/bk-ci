@@ -27,15 +27,14 @@
 
 package com.tencent.devops.dockerhost.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("DockerRunPortBinding")
+@Schema(name = "DockerRunPortBinding")
 data class DockerRunPortBinding(
-    @ApiModelProperty("构建机IP", required = true)
+    @Schema(name = "构建机IP", required = true)
     val hostIp: String,
-    @ApiModelProperty("容器Port", required = true)
+    @Schema(name = "容器Port", required = true)
     val containerPort: Int,
-    @ApiModelProperty("构建机Port", required = true)
+    @Schema(name = "构建机Port", required = true)
     val hostPort: Int
 )

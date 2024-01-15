@@ -29,49 +29,48 @@ package com.tencent.devops.stream.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("stream 部分项目信息附带蓝盾项目信息")
+@Schema(name = "stream 部分项目信息附带蓝盾项目信息")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class StreamGitProjectInfoWithProject(
-    @ApiModelProperty("项目ID", name = "id")
+    @Schema(name = "项目ID", description = "id")
     @JsonProperty("id")
     val gitProjectId: Long,
-    @ApiModelProperty("项目名称", name = "name")
+    @Schema(name = "项目名称", description = "name")
     @JsonProperty("name")
     val name: String,
-    @ApiModelProperty("页面地址", name = "web_url")
+    @Schema(name = "页面地址", description = "web_url")
     @JsonProperty("web_url")
     val homepage: String?,
-    @ApiModelProperty("HTTP链接", required = true, name = "http_url_to_repo")
+    @Schema(name = "HTTP链接", required = true, description = "http_url_to_repo")
     @JsonProperty("http_url_to_repo")
     val gitHttpUrl: String,
-    @ApiModelProperty("HTTPS链接", name = "https_url_to_repo")
+    @Schema(name = "HTTPS链接", description = "https_url_to_repo")
     @JsonProperty("https_url_to_repo")
     val gitHttpsUrl: String?,
-    @ApiModelProperty("gitSshUrl", name = "ssh_url_to_repo")
+    @Schema(name = "gitSshUrl", description = "ssh_url_to_repo")
     @JsonProperty("ssh_url_to_repo")
     val gitSshUrl: String?,
-    @ApiModelProperty("带有名空间的项目名称", name = "name_with_namespace")
+    @Schema(name = "带有名空间的项目名称", description = "name_with_namespace")
     @JsonProperty("name_with_namespace")
     val nameWithNamespace: String,
-    @ApiModelProperty("带有名空间的项目路径", name = "path_with_namespace")
+    @Schema(name = "带有名空间的项目路径", description = "path_with_namespace")
     @JsonProperty("path_with_namespace")
     val pathWithNamespace: String?,
-    @ApiModelProperty("项目的默认分支", name = "default_branch")
+    @Schema(name = "项目的默认分支", description = "default_branch")
     @JsonProperty("default_branch")
     val defaultBranch: String?,
-    @ApiModelProperty("项目的描述信息", name = "description")
+    @Schema(name = "项目的描述信息", description = "description")
     @JsonProperty("description")
     val description: String?,
-    @ApiModelProperty("项目的头像信息", name = "avatar_url")
+    @Schema(name = "项目的头像信息", description = "avatar_url")
     @JsonProperty("avatar_url")
     val avatarUrl: String?,
-    @ApiModelProperty("环境路由", name = "routerTag")
+    @Schema(name = "环境路由", description = "routerTag")
     @JsonProperty("routerTag")
     val routerTag: String?,
-    @ApiModelProperty("带前缀项目ID", name = "projectCode")
+    @Schema(name = "带前缀项目ID", description = "projectCode")
     @JsonProperty("projectCode")
     val projectCode: String? = null
 )

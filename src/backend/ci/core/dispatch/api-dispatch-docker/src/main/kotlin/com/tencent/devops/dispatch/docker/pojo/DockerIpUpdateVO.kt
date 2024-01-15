@@ -28,23 +28,22 @@
 package com.tencent.devops.dispatch.docker.pojo
 
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("DockerIpUpdateVO")
+@Schema(name = "DockerIpUpdateVO")
 data class DockerIpUpdateVO(
-    @ApiModelProperty("主键ID")
+    @Schema(name = "主键ID")
     val id: Long,
-    @ApiModelProperty("构建机IP")
+    @Schema(name = "构建机IP")
     val dockerIp: String,
-    @ApiModelProperty("构建机PORT")
+    @Schema(name = "构建机PORT")
     val dockerHostPort: Int,
-    @ApiModelProperty("构建机是否可用")
+    @Schema(name = "构建机是否可用")
     val enable: Boolean,
-    @ApiModelProperty("是否为灰度节点")
+    @Schema(name = "是否为灰度节点")
     val grayEnv: Boolean,
-    @ApiModelProperty("是否为专用机独占")
+    @Schema(name = "是否为专用机独占")
     val specialOn: Boolean,
-    @ApiModelProperty("构建集群", required = false)
+    @Schema(name = "构建集群", required = false)
     val clusterType: DockerHostClusterType = DockerHostClusterType.COMMON
 )

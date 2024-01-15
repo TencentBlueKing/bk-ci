@@ -27,13 +27,12 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("研发商店-工作台-插件语言")
+@Schema(name = "研发商店-工作台-插件语言")
 data class AtomDevLanguage(
-    @ApiModelProperty("语言")
+    @Schema(name = "语言")
     val language: String,
-    @ApiModelProperty("名称")
+    @Schema(name = "名称")
     val name: String
 )

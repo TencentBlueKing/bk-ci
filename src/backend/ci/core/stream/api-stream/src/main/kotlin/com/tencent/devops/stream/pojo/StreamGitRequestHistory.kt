@@ -27,39 +27,38 @@
 
 package com.tencent.devops.stream.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("stream 历史构建模型-对应history页面")
+@Schema(name = "stream 历史构建模型-对应history页面")
 data class StreamGitRequestHistory(
-    @ApiModelProperty("ID")
+    @Schema(name = "ID")
     var id: Long?,
-    @ApiModelProperty("OBJECT_KIND")
+    @Schema(name = "OBJECT_KIND")
     val objectKind: String,
-    @ApiModelProperty("OPERATION_KIND")
+    @Schema(name = "OPERATION_KIND")
     val operationKind: String?,
-    @ApiModelProperty("GIT_PROJECT_ID")
+    @Schema(name = "GIT_PROJECT_ID")
     val gitProjectId: Long,
-    @ApiModelProperty("BRANCH")
+    @Schema(name = "BRANCH")
     val branch: String,
-    @ApiModelProperty("COMMIT_ID")
+    @Schema(name = "COMMIT_ID")
     val commitId: String,
-    @ApiModelProperty("COMMIT_MESSAGE")
+    @Schema(name = "COMMIT_MESSAGE")
     val commitMsg: String?,
-    @ApiModelProperty("COMMIT_TIMESTAMP")
+    @Schema(name = "COMMIT_TIMESTAMP")
     val commitTimeStamp: String?,
-    @ApiModelProperty("用户")
+    @Schema(name = "用户")
     val userId: String,
-    @ApiModelProperty("TOTAL_COMMIT_COUNT")
+    @Schema(name = "TOTAL_COMMIT_COUNT")
     val totalCommitCount: Long,
-    @ApiModelProperty("MR_TITLE")
+    @Schema(name = "MR_TITLE")
     var mrTitle: String?,
-    @ApiModelProperty("MERGE_REQUEST_ID")
+    @Schema(name = "MERGE_REQUEST_ID")
     val mergeRequestId: Long?,
-    @ApiModelProperty("TARGET_BRANCH")
+    @Schema(name = "TARGET_BRANCH")
     val targetBranch: String?,
-    @ApiModelProperty("DESCRIPTION")
+    @Schema(name = "DESCRIPTION")
     var description: String?,
-    @ApiModelProperty("历史构建模型", required = false)
+    @Schema(name = "历史构建模型", required = false)
     val buildRecords: MutableList<StreamBuildHistory>
 )

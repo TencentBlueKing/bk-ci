@@ -32,38 +32,37 @@ import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.SVNVersion
 import com.tencent.devops.common.pipeline.enums.SvnDepth
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("拉取SVN仓库代码", description = CodeSvnElement.classType)
+@Schema(name = "拉取SVN仓库代码", description = CodeSvnElement.classType)
 data class CodeSvnElement(
-    @ApiModelProperty("任务名称", required = true)
+    @Schema(name = "任务名称", required = true)
     override val name: String = "",
-    @ApiModelProperty("id", required = false)
+    @Schema(name = "id", required = false)
     override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @Schema(name = "状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("代码库哈希ID", required = true)
+    @Schema(name = "代码库哈希ID", required = true)
     val repositoryHashId: String?,
-    @ApiModelProperty("revision 用于强制指定commitId", required = false)
+    @Schema(name = "revision 用于强制指定commitId", required = false)
     var revision: String? = null,
-    @ApiModelProperty("checkout 策略", required = false)
+    @Schema(name = "checkout 策略", required = false)
     val strategy: CodePullStrategy? = CodePullStrategy.INCREMENT_UPDATE,
-    @ApiModelProperty("代码存放路径", required = false)
+    @Schema(name = "代码存放路径", required = false)
     val path: String? = null,
-    @ApiModelProperty("启动Submodule", required = false)
+    @Schema(name = "启动Submodule", required = false)
     val enableSubmodule: Boolean? = true,
-    @ApiModelProperty("指定版本号", required = false)
+    @Schema(name = "指定版本号", required = false)
     var specifyRevision: Boolean? = false,
-    @ApiModelProperty("拉取仓库深度", required = false)
+    @Schema(name = "拉取仓库深度", required = false)
     val svnDepth: SvnDepth? = SvnDepth.infinity,
-    @ApiModelProperty("SVN相对路径", required = false)
+    @Schema(name = "SVN相对路径", required = false)
     val svnPath: String? = null,
-    @ApiModelProperty("SVN的版本", required = false)
+    @Schema(name = "SVN的版本", required = false)
     val svnVersion: SVNVersion? = null,
-    @ApiModelProperty("新版的svn原子的类型")
+    @Schema(name = "新版的svn原子的类型")
     val repositoryType: RepositoryType? = null,
-    @ApiModelProperty("新版的svn代码库名")
+    @Schema(name = "新版的svn代码库名")
     val repositoryName: String? = null
 ) : Element(name, id, status) {
 

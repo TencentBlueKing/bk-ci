@@ -27,21 +27,20 @@
 
 package com.tencent.devops.metrics.pojo.qo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("查询流水线stage趋势信息查询条件信息对象")
+@Schema(name = "查询流水线stage趋势信息查询条件信息对象")
 data class QueryPipelineStageTrendInfoQO(
-    @ApiModelProperty("项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @ApiModelProperty("流水线ID")
+    @Schema(name = "流水线ID")
     val pipelineIds: List<String>? = null,
-    @ApiModelProperty("流水线标签")
+    @Schema(name = "流水线标签")
     val pipelineLabelIds: List<Long>? = null,
-    @ApiModelProperty("开始时间")
+    @Schema(name = "开始时间")
     var startTime: String,
-    @ApiModelProperty("结束时间")
+    @Schema(name = "结束时间")
     var endTime: String,
-    @ApiModelProperty("stage标签")
+    @Schema(name = "stage标签")
     val stageTag: String
 )

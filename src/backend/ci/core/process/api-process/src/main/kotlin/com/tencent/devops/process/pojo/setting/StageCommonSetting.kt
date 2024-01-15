@@ -27,13 +27,12 @@
 
 package com.tencent.devops.process.pojo.setting
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线stage公共配置信息")
+@Schema(name = "流水线stage公共配置信息")
 data class StageCommonSetting(
-    @ApiModelProperty("每个stage最大job个数", required = true)
+    @Schema(name = "每个stage最大job个数", required = true)
     val maxJobNum: Int,
-    @ApiModelProperty("job公共配置", required = true)
+    @Schema(name = "job公共配置", required = true)
     val jobCommonSetting: JobCommonSetting
 )

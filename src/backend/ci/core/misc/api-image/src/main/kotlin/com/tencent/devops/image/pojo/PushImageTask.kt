@@ -27,23 +27,22 @@
 
 package com.tencent.devops.image.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("推送镜像任务返回模型")
+@Schema(name = "推送镜像任务返回模型")
 data class PushImageTask(
-    @ApiModelProperty("任务id")
+    @Schema(name = "任务id")
     var taskId: String,
-    @ApiModelProperty("项目id")
+    @Schema(name = "项目id")
     var projectId: String,
-    @ApiModelProperty("操作者")
+    @Schema(name = "操作者")
     var operator: String,
-    @ApiModelProperty("创建时间戳")
+    @Schema(name = "创建时间戳")
     var createdTime: Long,
-    @ApiModelProperty("更新时间戳")
+    @Schema(name = "更新时间戳")
     var updatedTime: Long,
-    @ApiModelProperty("任务状态")
+    @Schema(name = "任务状态")
     var taskStatus: String,
-    @ApiModelProperty("任务返回信息")
+    @Schema(name = "任务返回信息")
     var taskMessage: String
 )

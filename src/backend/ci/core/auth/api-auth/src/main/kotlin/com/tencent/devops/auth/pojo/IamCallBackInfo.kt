@@ -27,18 +27,18 @@
 
 package com.tencent.devops.auth.pojo
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class IamCallBackInfo(
     val id: Int?,
-    @ApiModelProperty("网关地址")
+    @Schema(name = "网关地址")
     val gateway: String,
-    @ApiModelProperty("资源类型")
+    @Schema(name = "资源类型")
     val resource: String,
-    @ApiModelProperty("回调接口路径")
+    @Schema(name = "回调接口路径")
     val path: String,
-    @ApiModelProperty("注册系统")
+    @Schema(name = "注册系统")
     val system: String,
-    @ApiModelProperty("是否删除标签")
+    @Schema(name = "是否删除标签")
     val deleteFlag: Boolean
 )

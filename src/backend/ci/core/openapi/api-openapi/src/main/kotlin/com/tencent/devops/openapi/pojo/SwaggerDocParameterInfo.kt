@@ -26,11 +26,11 @@
  */
 package com.tencent.devops.openapi.pojo
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class SwaggerDocParameterInfo(
-    @ApiModelProperty("是否可空")
+    @Schema(name = "是否可空")
     val markedNullable: Boolean,
-    @ApiModelProperty("默认值")
+    @Schema(name = "默认值")
     val defaultValue: String?
 )

@@ -27,19 +27,18 @@
 
 package com.tencent.devops.process.pojo.pipeline
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线最新构建详情")
+@Schema(name = "流水线最新构建详情")
 data class PipelineLatestBuild(
-    @ApiModelProperty("ID", required = true)
+    @Schema(name = "ID", required = true)
     val buildId: String,
-    @ApiModelProperty("启动用户", required = true)
+    @Schema(name = "启动用户", required = true)
     val startUser: String,
-    @ApiModelProperty("Start time", required = true)
+    @Schema(name = "Start time", required = true)
     val startTime: String,
-    @ApiModelProperty("End time", required = false)
+    @Schema(name = "End time", required = false)
     val endTime: String?,
-    @ApiModelProperty("Build status", required = false)
+    @Schema(name = "Build status", required = false)
     val status: String?
 )

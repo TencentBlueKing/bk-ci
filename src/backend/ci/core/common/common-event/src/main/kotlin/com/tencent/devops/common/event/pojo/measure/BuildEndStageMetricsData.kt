@@ -27,19 +27,18 @@
 
 package com.tencent.devops.common.event.pojo.measure
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("构建结束后stage指标数据")
+@Schema(name = "构建结束后stage指标数据")
 data class BuildEndStageMetricsData(
-    @ApiModelProperty("stageId", required = true)
+    @Schema(name = "stageId", required = true)
     val stageId: String,
-    @ApiModelProperty("stage标签名称列表", required = false)
+    @Schema(name = "stage标签名称列表", required = false)
     val stageTagNames: List<String>?,
-    @ApiModelProperty("是否执行成功", required = true)
+    @Schema(name = "是否执行成功", required = true)
     val successFlag: Boolean,
-    @ApiModelProperty("stage构建耗时", required = true)
+    @Schema(name = "stage构建耗时", required = true)
     val costTime: Long,
-    @ApiModelProperty("container指标数据列表", required = true)
+    @Schema(name = "container指标数据列表", required = true)
     val containers: List<BuildEndContainerMetricsData>
 )

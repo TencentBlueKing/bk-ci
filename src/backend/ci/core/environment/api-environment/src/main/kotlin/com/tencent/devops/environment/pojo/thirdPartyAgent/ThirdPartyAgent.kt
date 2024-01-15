@@ -28,33 +28,32 @@
 package com.tencent.devops.environment.pojo.thirdPartyAgent
 
 import com.tencent.devops.common.api.enums.AgentStatus
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("第三方接入机")
+@Schema(name = "第三方接入机")
 data class ThirdPartyAgent(
-    @ApiModelProperty("Agent Hash ID", required = true)
+    @Schema(name = "Agent Hash ID", required = true)
     val agentId: String,
-    @ApiModelProperty("项目ID", required = true)
+    @Schema(name = "项目ID", required = true)
     val projectId: String,
-    @ApiModelProperty("节点ID", required = false)
+    @Schema(name = "节点ID", required = false)
     val nodeId: String?,
-    @ApiModelProperty("状态")
+    @Schema(name = "状态")
     val status: AgentStatus,
-    @ApiModelProperty("主机名", required = true)
+    @Schema(name = "主机名", required = true)
     val hostname: String,
-    @ApiModelProperty("系统", required = true)
+    @Schema(name = "系统", required = true)
     val os: String,
-    @ApiModelProperty("IP地址", required = true)
+    @Schema(name = "IP地址", required = true)
     val ip: String,
-    @ApiModelProperty("Secret KEY", required = true)
+    @Schema(name = "Secret KEY", required = true)
     val secretKey: String,
-    @ApiModelProperty("创建用户", required = true)
+    @Schema(name = "创建用户", required = true)
     val createUser: String,
-    @ApiModelProperty("创建时间", required = true)
+    @Schema(name = "创建时间", required = true)
     val createTime: Long,
-    @ApiModelProperty("并行执行的个数", required = false)
+    @Schema(name = "并行执行的个数", required = false)
     val parallelTaskCount: Int? = 4,
-    @ApiModelProperty("Docker构建机并行执行的个数", required = false)
+    @Schema(name = "Docker构建机并行执行的个数", required = false)
     val dockerParallelTaskCount: Int? = 4
 )

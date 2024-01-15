@@ -29,15 +29,14 @@ package com.tencent.devops.auth.pojo
 
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("")
+@Schema(name = "")
 data class UserPermissionInfo(
-    @ApiModelProperty("组织id")
+    @Schema(name = "组织id")
     val organizationId: Int,
-    @ApiModelProperty("组织级别")
+    @Schema(name = "组织级别")
     val organizationLevel: Int,
-    @ApiModelProperty("权限详情")
+    @Schema(name = "权限详情")
     val permissionMap: Map<AuthResourceType, List<AuthPermission>>
 )

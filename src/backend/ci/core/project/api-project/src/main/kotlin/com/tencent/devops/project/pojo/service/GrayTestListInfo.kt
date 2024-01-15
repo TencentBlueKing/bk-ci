@@ -27,22 +27,21 @@
 
 package com.tencent.devops.project.pojo.service
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("ALL")
-@ApiModel("灰度测试-显示模型")
+@Schema(name = "灰度测试-显示模型")
 data class GrayTestListInfo(
-    @ApiModelProperty("id")
+    @Schema(name = "id")
     val id: Long,
-    @ApiModelProperty("服务器ID")
+    @Schema(name = "服务器ID")
     val server_id: Long,
-    @ApiModelProperty("服务器名")
+    @Schema(name = "服务器名")
     val server_name: String,
-    @ApiModelProperty("用户名称")
+    @Schema(name = "用户名称")
     val userName: String,
-    @ApiModelProperty("状态")
+    @Schema(name = "状态")
     val status: String,
-    @ApiModelProperty("总记录")
+    @Schema(name = "总记录")
     val totalRecord: Long
 )

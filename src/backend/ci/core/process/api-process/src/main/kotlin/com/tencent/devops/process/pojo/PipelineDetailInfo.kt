@@ -27,29 +27,28 @@
 
 package com.tencent.devops.process.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线名称与Id")
+@Schema(name = "流水线名称与Id")
 data class PipelineDetailInfo(
-    @ApiModelProperty("流水线Id")
+    @Schema(name = "流水线Id")
     val pipelineId: String,
-    @ApiModelProperty("流水线名称")
+    @Schema(name = "流水线名称")
     val pipelineName: String,
-    @ApiModelProperty("是否收藏")
+    @Schema(name = "是否收藏")
     val hasCollect: Boolean,
-    @ApiModelProperty("canManualStartup")
+    @Schema(name = "canManualStartup")
     val canManualStartup: Int,
-    @ApiModelProperty("是否关联模板")
+    @Schema(name = "是否关联模板")
     val instanceFromTemplate: Boolean,
-    @ApiModelProperty("流水线版本")
+    @Schema(name = "流水线版本")
     val pipelineVersion: String,
-    @ApiModelProperty("部署时间")
+    @Schema(name = "部署时间")
     val deploymentTime: String,
-    @ApiModelProperty("是否有编辑权限")
+    @Schema(name = "是否有编辑权限")
     val hasPermission: Boolean,
-    @ApiModelProperty("关联模板ID", required = false)
+    @Schema(name = "关联模板ID", required = false)
     var templateId: String? = null,
-    @ApiModelProperty("关联模板版本", required = false)
+    @Schema(name = "关联模板版本", required = false)
     var templateVersion: Long? = null
 )

@@ -27,28 +27,27 @@
 
 package com.tencent.devops.metrics.pojo.po
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("保存插件指标每日统计数据")
+@Schema(name = "保存插件指标每日统计数据")
 data class SaveAtomIndexStatisticsDailyPO(
-    @ApiModelProperty("主键ID")
+    @Schema(name = "主键ID")
     val id: Long,
-    @ApiModelProperty("插件代码")
+    @Schema(name = "插件代码")
     val atomCode: String,
-    @ApiModelProperty("失败执行次数")
+    @Schema(name = "失败执行次数")
     var failExecuteCount: Int,
-    @ApiModelProperty("失败合规次数")
+    @Schema(name = "失败合规次数")
     var failComplianceCount: Int,
-    @ApiModelProperty("统计时间")
+    @Schema(name = "统计时间")
     val statisticsTime: LocalDateTime,
-    @ApiModelProperty("创建人")
+    @Schema(name = "创建人")
     val creator: String,
-    @ApiModelProperty("修改人")
+    @Schema(name = "修改人")
     val modifier: String,
-    @ApiModelProperty("创建时间")
+    @Schema(name = "创建时间")
     val createTime: LocalDateTime,
-    @ApiModelProperty("更新时间")
+    @Schema(name = "更新时间")
     val updateTime: LocalDateTime
 )

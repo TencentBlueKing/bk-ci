@@ -28,27 +28,26 @@
 package com.tencent.devops.dispatch.pojo.thirdPartyAgent
 
 import com.tencent.devops.common.api.pojo.Error
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("第三方构建信息模型")
+@Schema(name = "第三方构建信息模型")
 data class ThirdPartyBuildWithStatus(
-    @ApiModelProperty("项目id")
+    @Schema(name = "项目id")
     val projectId: String,
-    @ApiModelProperty("构建id")
+    @Schema(name = "构建id")
     val buildId: String,
-    @ApiModelProperty("构建环境id")
+    @Schema(name = "构建环境id")
     val vmSeqId: String,
-    @ApiModelProperty("工作空间")
+    @Schema(name = "工作空间")
     val workspace: String,
-    @ApiModelProperty("流水线id")
+    @Schema(name = "流水线id")
     val pipelineId: String?,
-    @ApiModelProperty("是否成功")
+    @Schema(name = "是否成功")
     val success: Boolean,
-    @ApiModelProperty("message信息")
+    @Schema(name = "message信息")
     val message: String?,
-    @ApiModelProperty("错误信息")
+    @Schema(name = "错误信息")
     val error: Error?,
-    @ApiModelProperty("流水线执行次数")
+    @Schema(name = "流水线执行次数")
     val executeCount: Int?
 )

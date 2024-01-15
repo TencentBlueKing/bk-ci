@@ -27,13 +27,12 @@
 
 package com.tencent.devops.process.pojo.classify
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线创建模型")
+@Schema(name = "流水线创建模型")
 data class PipelineGroupCreate(
-    @ApiModelProperty("项目id", required = false)
+    @Schema(name = "项目id", required = false)
     val projectId: String,
-    @ApiModelProperty("名称", required = false)
+    @Schema(name = "名称", required = false)
     val name: String
 )

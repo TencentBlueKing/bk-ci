@@ -27,21 +27,20 @@
 
 package com.tencent.devops.stream.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("openapi触发请求")
+@Schema(name = "openapi触发请求")
 data class OpenapiTriggerReq(
-    @ApiModelProperty("蓝盾项目ID(带前缀 如git_xxx)")
+    @Schema(name = "蓝盾项目ID(带前缀 如git_xxx)")
     val projectId: String,
-    @ApiModelProperty("分支")
+    @Schema(name = "分支")
     val branch: String,
-    @ApiModelProperty("yaml路径")
+    @Schema(name = "yaml路径")
     val path: String,
-    @ApiModelProperty("Custom commit message")
+    @Schema(name = "Custom commit message")
     val customCommitMsg: String,
-    @ApiModelProperty("用户选择的触发CommitId")
+    @Schema(name = "用户选择的触发CommitId")
     val commitId: String? = null,
-    @ApiModelProperty("输入参数(json对象)")
+    @Schema(name = "输入参数(json对象)")
     val inputs: Map<String, Any?>?
 )

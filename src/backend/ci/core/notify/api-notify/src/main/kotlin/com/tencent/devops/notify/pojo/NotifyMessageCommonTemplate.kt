@@ -26,19 +26,18 @@
  */
 package com.tencent.devops.notify.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("消息通知")
+@Schema(name = "消息通知")
 data class NotifyMessageCommonTemplate(
-    @ApiModelProperty("ID", required = true)
+    @Schema(name = "ID", required = true)
     val id: String,
-    @ApiModelProperty("模板代码", required = true)
+    @Schema(name = "模板代码", required = true)
     val templateCode: String,
-    @ApiModelProperty("模板名称", required = true)
+    @Schema(name = "模板名称", required = true)
     val templateName: String,
-    @ApiModelProperty("优先级别（-1:低 0:中 1:高）", required = true)
+    @Schema(name = "优先级别（-1:低 0:中 1:高）", required = true)
     val priority: String,
-    @ApiModelProperty("通知来源（0:本地业务 1:操作）", required = true)
+    @Schema(name = "通知来源（0:本地业务 1:操作）", required = true)
     val source: Int
 )

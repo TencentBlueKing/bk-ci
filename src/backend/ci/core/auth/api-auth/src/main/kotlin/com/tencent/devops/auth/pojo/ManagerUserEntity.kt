@@ -27,19 +27,18 @@
 
 package com.tencent.devops.auth.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel
+@Schema
 data class ManagerUserEntity(
-    @ApiModelProperty("被授权用户Id")
+    @Schema(name = "被授权用户Id")
     val userId: String,
-    @ApiModelProperty("管理员策略Id")
+    @Schema(name = "管理员策略Id")
     val managerId: Int,
-    @ApiModelProperty("授权时间")
+    @Schema(name = "授权时间")
     val startTime: Long,
-    @ApiModelProperty("过期时间")
+    @Schema(name = "过期时间")
     val timeoutTime: Long,
-    @ApiModelProperty("创建人")
+    @Schema(name = "创建人")
     val createUser: String
 )

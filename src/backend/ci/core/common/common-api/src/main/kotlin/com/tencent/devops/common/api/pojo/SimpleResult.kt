@@ -27,20 +27,19 @@
 
 package com.tencent.devops.common.api.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("状态")
+@Schema(name = "状态")
 data class SimpleResult(
-    @ApiModelProperty("是否成功", required = true)
+    @Schema(name = "是否成功", required = true)
     val success: Boolean,
-    @ApiModelProperty("错误信息", required = false)
+    @Schema(name = "错误信息", required = false)
     val message: String? = null,
-    @ApiModelProperty("错误码信息", required = false)
+    @Schema(name = "错误码信息", required = false)
     val error: Error? = null
 )
 
-@ApiModel("第三方构建信息模型-错误信息")
+@Schema(name = "第三方构建信息模型-错误信息")
 data class Error(
     val errorType: String,
     val errorMessage: String,

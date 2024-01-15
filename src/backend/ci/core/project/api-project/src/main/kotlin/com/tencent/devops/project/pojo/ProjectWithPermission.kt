@@ -1,16 +1,15 @@
 package com.tencent.devops.project.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("项目--权限")
+@Schema(name = "项目--权限")
 data class ProjectWithPermission(
-    @ApiModelProperty("项目名称")
+    @Schema(name = "项目名称")
     val projectName: String,
-    @ApiModelProperty("项目英文名称")
+    @Schema(name = "项目英文名称")
     val englishName: String,
-    @ApiModelProperty("权限")
+    @Schema(name = "权限")
     val permission: Boolean,
-    @ApiModelProperty("环境路由")
+    @Schema(name = "环境路由")
     val routerTag: String?
 )

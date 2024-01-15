@@ -27,30 +27,29 @@
 
 package com.tencent.devops.metrics.pojo.po
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("更新流水线概览数据")
+@Schema(name = "更新流水线概览数据")
 data class UpdatePipelineOverviewDataPO(
-    @ApiModelProperty("主键ID")
+    @Schema(name = "主键ID")
     val id: Long,
-    @ApiModelProperty("项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @ApiModelProperty("总平均耗时，单位：毫秒")
+    @Schema(name = "总平均耗时，单位：毫秒")
     val totalAvgCostTime: Long,
-    @ApiModelProperty("成功平均耗时，单位：毫秒")
+    @Schema(name = "成功平均耗时，单位：毫秒")
     val successAvgCostTime: Long? = null,
-    @ApiModelProperty("失败平均耗时，单位：毫秒")
+    @Schema(name = "失败平均耗时，单位：毫秒")
     val failAvgCostTime: Long? = null,
-    @ApiModelProperty("总执行次数")
+    @Schema(name = "总执行次数")
     val totalExecuteCount: Long,
-    @ApiModelProperty("成功执行次数")
+    @Schema(name = "成功执行次数")
     val successExecuteCount: Long,
-    @ApiModelProperty("失败执行次数")
+    @Schema(name = "失败执行次数")
     val failExecuteCount: Long,
-    @ApiModelProperty("修改人")
+    @Schema(name = "修改人")
     val modifier: String,
-    @ApiModelProperty("更新时间")
+    @Schema(name = "更新时间")
     val updateTime: LocalDateTime
 )

@@ -27,19 +27,18 @@
 
 package com.tencent.devops.process.pojo.setting
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线模型版本")
+@Schema(name = "流水线模型版本")
 data class PipelineModelVersion(
-    @ApiModelProperty("项目ID", required = true)
+    @Schema(name = "项目ID", required = true)
     val projectId: String,
-    @ApiModelProperty("流水线ID", required = true)
+    @Schema(name = "流水线ID", required = true)
     val pipelineId: String,
-    @ApiModelProperty("流水线创建人", required = true)
+    @Schema(name = "流水线创建人", required = true)
     val creator: String,
-    @ApiModelProperty("流水线模型", required = true)
+    @Schema(name = "流水线模型", required = true)
     val model: String,
-    @ApiModelProperty("流水线模型版本", required = false)
+    @Schema(name = "流水线模型版本", required = false)
     val version: Int? = null
 )

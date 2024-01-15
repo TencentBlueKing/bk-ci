@@ -28,37 +28,36 @@
 package com.tencent.devops.dispatch.docker.pojo
 
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("DockerIpInfoVO")
+@Schema(name = "DockerIpInfoVO")
 data class DockerIpInfoVO(
-    @ApiModelProperty("主键ID")
+    @Schema(name = "主键ID")
     val id: Long,
-    @ApiModelProperty("构建机IP")
+    @Schema(name = "构建机IP")
     val dockerIp: String,
-    @ApiModelProperty("构建机PORT")
+    @Schema(name = "构建机PORT")
     val dockerHostPort: Int,
-    @ApiModelProperty("构建机容量")
+    @Schema(name = "构建机容量")
     val capacity: Int,
-    @ApiModelProperty("构建机已使用量")
+    @Schema(name = "构建机已使用量")
     val usedNum: Int,
-    @ApiModelProperty("构建机CPU负载")
+    @Schema(name = "构建机CPU负载")
     val averageCpuLoad: Int,
-    @ApiModelProperty("构建机内存负载")
+    @Schema(name = "构建机内存负载")
     val averageMemLoad: Int,
-    @ApiModelProperty("构建机硬盘负载")
+    @Schema(name = "构建机硬盘负载")
     val averageDiskLoad: Int,
-    @ApiModelProperty("构建机硬盘IO负载")
+    @Schema(name = "构建机硬盘IO负载")
     val averageDiskIOLoad: Int,
-    @ApiModelProperty("构建机是否可用")
+    @Schema(name = "构建机是否可用")
     val enable: Boolean,
-    @ApiModelProperty("是否为灰度节点", required = false)
+    @Schema(name = "是否为灰度节点", required = false)
     val grayEnv: Boolean?,
-    @ApiModelProperty("是否为专用机独占", required = false)
+    @Schema(name = "是否为专用机独占", required = false)
     val specialOn: Boolean?,
-    @ApiModelProperty("创建时间", required = false)
+    @Schema(name = "创建时间", required = false)
     val createTime: String?,
-    @ApiModelProperty("构建集群", required = false)
+    @Schema(name = "构建集群", required = false)
     val clusterType: DockerHostClusterType? = DockerHostClusterType.COMMON
 )

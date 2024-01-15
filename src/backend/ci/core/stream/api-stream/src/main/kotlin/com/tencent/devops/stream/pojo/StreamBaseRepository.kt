@@ -27,22 +27,21 @@
 
 package com.tencent.devops.stream.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("UnnecessaryAbstractClass")
-@ApiModel("stream 项目基类")
+@Schema(name = "stream 项目基类")
 abstract class StreamBaseRepository(
-    @ApiModelProperty("stream 项目ID")
+    @Schema(name = "stream 项目ID")
     open val gitProjectId: Long?,
-    @ApiModelProperty("stream 项目名")
+    @Schema(name = "stream 项目名")
     open val name: String?,
-    @ApiModelProperty("stream 项目url")
+    @Schema(name = "stream 项目url")
     open val url: String?,
-    @ApiModelProperty("homepage")
+    @Schema(name = "homepage")
     open val homepage: String?,
-    @ApiModelProperty("gitHttpUrl")
+    @Schema(name = "gitHttpUrl")
     open val gitHttpUrl: String?,
-    @ApiModelProperty("gitSshUrl")
+    @Schema(name = "gitSshUrl")
     open val gitSshUrl: String?
 )

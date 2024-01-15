@@ -27,37 +27,36 @@
 
 package com.tencent.devops.dockerhost.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("DockerBuild")
+@Schema(name = "DockerBuild")
 data class DockerBuildParam(
-    @ApiModelProperty("镜像名称", required = true)
+    @Schema(name = "镜像名称", required = true)
     val imageName: String,
-    @ApiModelProperty("镜像TAG", required = true)
+    @Schema(name = "镜像TAG", required = true)
     val imageTag: String,
-    @ApiModelProperty("构建目录", required = false)
+    @Schema(name = "构建目录", required = false)
     val buildDir: String? = ".",
-    @ApiModelProperty("Dockerfile", required = false)
+    @Schema(name = "Dockerfile", required = false)
     val dockerFile: String? = "Dockerfile",
-    @ApiModelProperty("repoAddr", required = true)
+    @Schema(name = "repoAddr", required = true)
     val repoAddr: String,
-    @ApiModelProperty("userName", required = true)
+    @Schema(name = "userName", required = true)
     val userName: String,
-    @ApiModelProperty("password", required = true)
+    @Schema(name = "password", required = true)
     val password: String,
-    @ApiModelProperty("基础镜像凭证", required = true)
+    @Schema(name = "基础镜像凭证", required = true)
     val ticket: List<Triple<String, String, String>> = emptyList(),
-    @ApiModelProperty("构建的参数", required = true)
+    @Schema(name = "构建的参数", required = true)
     val args: List<String> = emptyList(),
-    @ApiModelProperty("host配置", required = true)
+    @Schema(name = "host配置", required = true)
     val host: List<String> = emptyList(),
-    @ApiModelProperty("并发构建池序号", required = false)
+    @Schema(name = "并发构建池序号", required = false)
     val poolNo: String? = "0",
-    @ApiModelProperty("镜像tag列表", required = false)
+    @Schema(name = "镜像tag列表", required = false)
     val imageTagList: List<String> = emptyList(),
-    @ApiModelProperty("pipelineTaskId", required = false)
+    @Schema(name = "pipelineTaskId", required = false)
     val pipelineTaskId: String = "",
-    @ApiModelProperty("流水线触发用户", required = false)
+    @Schema(name = "流水线触发用户", required = false)
     val userId: String = ""
 )

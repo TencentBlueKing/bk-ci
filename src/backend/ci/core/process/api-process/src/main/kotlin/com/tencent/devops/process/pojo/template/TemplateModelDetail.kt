@@ -29,33 +29,32 @@ package com.tencent.devops.process.pojo.template
 
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("")
+@Schema(name = "")
 data class TemplateModelDetail(
-    @ApiModelProperty("版本列表", required = false)
+    @Schema(name = "版本列表", required = false)
     val versions: List<TemplateVersion>,
-    @ApiModelProperty("当前版本", required = false)
+    @Schema(name = "当前版本", required = false)
     val currentVersion: TemplateVersion,
-    @ApiModelProperty("最新版本", required = false)
+    @Schema(name = "最新版本", required = false)
     val latestVersion: TemplateVersion,
-    @ApiModelProperty("模板名称", required = false)
+    @Schema(name = "模板名称", required = false)
     val templateName: String,
-    @ApiModelProperty("解释说明", required = false)
+    @Schema(name = "解释说明", required = false)
     val description: String,
-    @ApiModelProperty("创建者", required = false)
+    @Schema(name = "创建者", required = false)
     val creator: String,
-    @ApiModelProperty("模板模型", required = false)
+    @Schema(name = "模板模型", required = false)
     val template: Model,
-    @ApiModelProperty("模板类型", required = false)
+    @Schema(name = "模板类型", required = false)
     val templateType: String,
-    @ApiModelProperty("logo的url地址", required = false)
+    @Schema(name = "logo的url地址", required = false)
     val logoUrl: String,
-    @ApiModelProperty("是否有操作权限", required = false)
+    @Schema(name = "是否有操作权限", required = false)
     val hasPermission: Boolean,
-    @ApiModelProperty("参数列表", required = false)
+    @Schema(name = "参数列表", required = false)
     val params: List<BuildFormProperty>,
-    @ApiModelProperty("模板参数构建", required = false)
+    @Schema(name = "模板参数构建", required = false)
     val templateParams: List<BuildFormProperty>? = null
 )

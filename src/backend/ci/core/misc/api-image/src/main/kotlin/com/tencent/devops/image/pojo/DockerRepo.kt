@@ -27,41 +27,40 @@
 
 package com.tencent.devops.image.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("镜像信息模型")
+@Schema(name = "镜像信息模型")
 data class DockerRepo(
-    @ApiModelProperty("仓库url")
+    @Schema(name = "仓库url")
     var repoUrl: String? = null,
-    @ApiModelProperty("仓库")
+    @Schema(name = "仓库")
     var repo: String? = null,
-    @ApiModelProperty("类型")
+    @Schema(name = "类型")
     var type: String? = null,
-    @ApiModelProperty("仓库类型")
+    @Schema(name = "仓库类型")
     var repoType: String? = "",
-    @ApiModelProperty("名称")
+    @Schema(name = "名称")
     var name: String? = null,
-    @ApiModelProperty("创建者")
+    @Schema(name = "创建者")
     var createdBy: String? = null,
-    @ApiModelProperty("创建时间")
+    @Schema(name = "创建时间")
     var created: String? = null,
-    @ApiModelProperty("修改时间")
+    @Schema(name = "修改时间")
     var modified: String? = null,
-    @ApiModelProperty("修改者")
+    @Schema(name = "修改者")
     var modifiedBy: String? = null,
-    @ApiModelProperty("镜像路径")
+    @Schema(name = "镜像路径")
     var imagePath: String? = null,
-    @ApiModelProperty("描述")
+    @Schema(name = "描述")
     var desc: String? = "",
-    @ApiModelProperty("标签")
+    @Schema(name = "标签")
     var tags: List<DockerTag>? = null,
-    @ApiModelProperty("标签数量")
+    @Schema(name = "标签数量")
     var tagCount: Int? = null,
-    @ApiModelProperty("开始索引")
+    @Schema(name = "开始索引")
     var tagStart: Int? = null,
-    @ApiModelProperty("页大小")
+    @Schema(name = "页大小")
     var tagLimit: Int? = null,
-    @ApiModelProperty("下载次数")
+    @Schema(name = "下载次数")
     var downloadCount: Int? = null
 )

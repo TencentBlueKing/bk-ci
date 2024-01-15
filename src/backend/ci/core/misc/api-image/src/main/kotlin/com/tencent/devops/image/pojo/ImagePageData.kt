@@ -27,17 +27,16 @@
 
 package com.tencent.devops.image.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("获取镜像列表返回模型")
+@Schema(name = "获取镜像列表返回模型")
 data class ImagePageData(
-    @ApiModelProperty("镜像列表")
+    @Schema(name = "镜像列表")
     val imageList: List<DockerRepo>,
-    @ApiModelProperty("分页start")
+    @Schema(name = "分页start")
     val start: Int,
-    @ApiModelProperty("分页限制")
+    @Schema(name = "分页限制")
     val limit: Int,
-    @ApiModelProperty("总共数量")
+    @Schema(name = "总共数量")
     val total: Int
 )

@@ -1,12 +1,11 @@
 package com.tencent.devops.auth.pojo.dto
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("安全水印")
+@Schema(name = "安全水印")
 data class SecOpsWaterMarkDTO(
-    @ApiModelProperty("场景token")
+    @Schema(name = "场景token")
     val token: String,
-    @ApiModelProperty("用户名称")
+    @Schema(name = "用户名称")
     val username: String
 )

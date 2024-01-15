@@ -28,15 +28,14 @@
 package com.tencent.devops.store.pojo.common
 
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("研发商店荣誉关联信息")
+@Schema(name = "研发商店荣誉关联信息")
 data class StoreHonorRel(
-    @ApiModelProperty("组件代码", required = true)
+    @Schema(name = "组件代码", required = true)
     val storeCode: String,
-    @ApiModelProperty("组件类型", required = true)
+    @Schema(name = "组件类型", required = true)
     val storeType: StoreTypeEnum,
-    @ApiModelProperty("荣誉ID", required = true)
+    @Schema(name = "荣誉ID", required = true)
     val honorId: String
 )

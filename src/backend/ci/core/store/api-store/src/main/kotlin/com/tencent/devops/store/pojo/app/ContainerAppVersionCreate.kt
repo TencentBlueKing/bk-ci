@@ -27,13 +27,12 @@
 
 package com.tencent.devops.store.pojo.app
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("容器编译环境版本-创建")
+@Schema(name = "容器编译环境版本-创建")
 data class ContainerAppVersionCreate(
-    @ApiModelProperty("编译环境ID", required = true)
+    @Schema(name = "编译环境ID", required = true)
     val appId: Int,
-    @ApiModelProperty("版本号", required = true)
+    @Schema(name = "版本号", required = true)
     val version: String?
 )

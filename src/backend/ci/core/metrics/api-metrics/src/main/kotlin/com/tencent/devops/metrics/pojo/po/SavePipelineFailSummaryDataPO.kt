@@ -27,34 +27,33 @@
 
 package com.tencent.devops.metrics.pojo.po
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("保存流水线失败汇总数据")
+@Schema(name = "保存流水线失败汇总数据")
 data class SavePipelineFailSummaryDataPO(
-    @ApiModelProperty("主键ID")
+    @Schema(name = "主键ID")
     val id: Long,
-    @ApiModelProperty("项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @ApiModelProperty("流水线ID")
+    @Schema(name = "流水线ID")
     val pipelineId: String,
-    @ApiModelProperty("流水线名称")
+    @Schema(name = "流水线名称")
     val pipelineName: String,
-    @ApiModelProperty("渠道代码")
+    @Schema(name = "渠道代码")
     val channelCode: String,
-    @ApiModelProperty("错误类型")
+    @Schema(name = "错误类型")
     val errorType: Int,
-    @ApiModelProperty("错误次数")
+    @Schema(name = "错误次数")
     val errorCount: Int,
-    @ApiModelProperty("统计时间")
+    @Schema(name = "统计时间")
     val statisticsTime: LocalDateTime,
-    @ApiModelProperty("创建人")
+    @Schema(name = "创建人")
     val creator: String,
-    @ApiModelProperty("修改人")
+    @Schema(name = "修改人")
     val modifier: String,
-    @ApiModelProperty("创建时间")
+    @Schema(name = "创建时间")
     val createTime: LocalDateTime,
-    @ApiModelProperty("更新时间")
+    @Schema(name = "更新时间")
     val updateTime: LocalDateTime
 )

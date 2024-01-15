@@ -28,19 +28,18 @@
 package com.tencent.devops.common.webhook.pojo.code.github
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("Github Issues 事件")
+@Schema(name = "Github Issues 事件")
 data class GithubIssuesEvent(
     val action: String,
-    @ApiModelProperty("Issues相关信息")
+    @Schema(name = "Issues相关信息")
     val issue: GithubIssue,
-    @ApiModelProperty("Github仓库相关信息")
+    @Schema(name = "Github仓库相关信息")
     val repository: GithubRepository,
-    @ApiModelProperty("操作人信息")
+    @Schema(name = "操作人信息")
     override val sender: GithubUser,
-    @ApiModelProperty("受理人")
+    @Schema(name = "受理人")
     val assignees: List<GithubUser>?
 ) : GithubEvent(sender) {
     companion object {
@@ -59,9 +58,9 @@ data class GithubIssuesEvent(
 data class GithubIssue(
     override val url: String?,
     @JsonProperty("html_url")
-    @ApiModelProperty("Issue/Pull Request链接[网页链接]")
+    @Schema(name = "Issue/Pull Request链接[网页链接]")
     override val htmlUrl: String?,
-    @ApiModelProperty("Issue ID")
+    @Schema(name = "Issue ID")
     override val id: Long,
     @JsonProperty("node_id")
     override val nodeId: String,
@@ -69,25 +68,25 @@ data class GithubIssue(
     override val createdAt: String?, // 2022-06-21T08:45:41Z
     @JsonProperty("updated_at")
     override val updatedAt: String?, // 2022-06-21T08:45:41Z
-    @ApiModelProperty("Issue/Pull Request编号")
+    @Schema(name = "Issue/Pull Request编号")
     val number: Long,
-    @ApiModelProperty("Issue/Pull Request标题信息")
+    @Schema(name = "Issue/Pull Request标题信息")
     val title: String,
-    @ApiModelProperty("Issue/Pull Request创建用户")
+    @Schema(name = "Issue/Pull Request创建用户")
     val user: GithubUser,
-    @ApiModelProperty("Issue/Pull Request标签信息")
+    @Schema(name = "Issue/Pull Request标签信息")
     val labels: List<GithubLabel>,
-    @ApiModelProperty("issues/Pull Request 状态信息")
+    @Schema(name = "issues/Pull Request 状态信息")
     val state: String,
     val locked: String,
-    @ApiModelProperty("issues/Pull Request 受理人")
+    @Schema(name = "issues/Pull Request 受理人")
     val assignees: List<GithubUser>?,
     @JsonProperty("closed_at")
     val closedAt: String?,
     @JsonProperty("Issues/Pull Request 描述信息")
     val body: String?,
     @JsonProperty("pull_request")
-    @ApiModelProperty("issues 关联的pull request信息，为空时代表仅在issue上操作")
+    @Schema(name = "issues 关联的pull request信息，为空时代表仅在issue上操作")
     val pullRequest: GithubPullRequestUrl?,
     val milestone: GithubMilestone?
 ) : GithubBaseInfo(
@@ -102,39 +101,39 @@ data class GithubIssue(
 data class GithubPullRequestUrl(
     val url: String,
     @JsonProperty("html_url")
-    @ApiModelProperty("Pull Request链接[网页链接]")
+    @Schema(name = "Pull Request链接[网页链接]")
     val htmlUrl: String,
     @JsonProperty("diff_url")
-    @ApiModelProperty("Pull Request 修改内容链接[raw]")
+    @Schema(name = "Pull Request 修改内容链接[raw]")
     val diffUrl: String,
     @JsonProperty("patch_url")
-    @ApiModelProperty("Pull Request 补丁链接[raw]")
+    @Schema(name = "Pull Request 补丁链接[raw]")
     val patchUrl: String
 )
 
-@ApiModel("Github Issue 状态")
+@Schema(name = "Github Issue 状态")
 enum class GithubIssuesState(val value: String) {
     CLOSED("close"),
     OPEN("open")
 }
 
-@ApiModel("Github Issue 操作")
+@Schema(name = "Github Issue 操作")
 enum class GithubIssuesAction(val value: String) {
-    @ApiModelProperty("重新打开")
+    @Schema(name = "重新打开")
     REOPENED("reopened"),
 
-    @ApiModelProperty("关闭")
+    @Schema(name = "关闭")
     CLOSED("closed"),
 
-    @ApiModelProperty("创建")
+    @Schema(name = "创建")
     OPENED("opened"),
 
-    @ApiModelProperty("指派受理人")
+    @Schema(name = "指派受理人")
     ASSIGNED("assigned"),
 
-    @ApiModelProperty("标记")
+    @Schema(name = "标记")
     LABELED("labeled"),
 
-    @ApiModelProperty("修改")
+    @Schema(name = "修改")
     EDITED("edited"),
 }

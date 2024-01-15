@@ -27,17 +27,16 @@
 
 package com.tencent.devops.process.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线-COPY创建信息")
+@Schema(name = "流水线-COPY创建信息")
 data class PipelineCopy(
-    @ApiModelProperty("名称", required = true)
+    @Schema(name = "名称", required = true)
     val name: String,
-    @ApiModelProperty("描述", required = false)
+    @Schema(name = "描述", required = false)
     val desc: String?,
-    @ApiModelProperty("流水线基础设置-基本信息中的标签", required = false)
+    @Schema(name = "流水线基础设置-基本信息中的标签", required = false)
     var labels: List<String> = emptyList(),
-    @ApiModelProperty("配置静态流水线组，需要填写视图ID", required = false)
+    @Schema(name = "配置静态流水线组，需要填写视图ID", required = false)
     var staticViews: List<String> = emptyList()
 )

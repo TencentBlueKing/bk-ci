@@ -1,20 +1,19 @@
 package com.tencent.devops.auth.pojo.dto
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("鉴权记录实体")
+@Schema(name = "鉴权记录实体")
 data class VerifyRecordDTO(
-    @ApiModelProperty("用户ID")
+    @Schema(name = "用户ID")
     val userId: String,
-    @ApiModelProperty("项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @ApiModelProperty("资源类型")
+    @Schema(name = "资源类型")
     val resourceType: String,
-    @ApiModelProperty("资源Code")
+    @Schema(name = "资源Code")
     val resourceCode: String,
-    @ApiModelProperty("操作")
+    @Schema(name = "操作")
     val action: String,
-    @ApiModelProperty("鉴权结果")
+    @Schema(name = "鉴权结果")
     val verifyResult: Boolean
 )

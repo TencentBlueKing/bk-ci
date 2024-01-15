@@ -27,13 +27,12 @@
 
 package com.tencent.devops.dispatch.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("VM-分页-基本信息")
+@Schema(name = "VM-分页-基本信息")
 data class VMWithPage(
-    @ApiModelProperty("VM总数", required = true)
+    @Schema(name = "VM总数", required = true)
     val total: Int,
-    @ApiModelProperty("VM列表", required = true)
+    @Schema(name = "VM列表", required = true)
     val vms: List<VMResponse>
 )

@@ -28,48 +28,47 @@
 package com.tencent.devops.metrics.pojo.`do`
 
 import com.fasterxml.jackson.annotation.JsonFormat
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("插件失败详情信息")
+@Schema(name = "插件失败详情信息")
 data class AtomFailDetailInfoDO(
-    @ApiModelProperty("项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @ApiModelProperty("流水线ID")
+    @Schema(name = "流水线ID")
     val pipelineId: String,
-    @ApiModelProperty("流水线名称")
+    @Schema(name = "流水线名称")
     val pipelineName: String,
-    @ApiModelProperty("渠道代码")
+    @Schema(name = "渠道代码")
     val channelCode: String,
-    @ApiModelProperty("域名")
+    @Schema(name = "域名")
     var domain: String? = null,
-    @ApiModelProperty("构建ID")
+    @Schema(name = "构建ID")
     val buildId: String,
-    @ApiModelProperty("构建序号")
+    @Schema(name = "构建序号")
     val buildNum: Int,
-    @ApiModelProperty("插件代码")
+    @Schema(name = "插件代码")
     val atomCode: String,
-    @ApiModelProperty("插件名称")
+    @Schema(name = "插件名称")
     val atomName: String,
-    @ApiModelProperty("插件在model中的位置")
+    @Schema(name = "插件在model中的位置")
     val atomPosition: String,
-    @ApiModelProperty("插件分类代码")
+    @Schema(name = "插件分类代码")
     val classifyCode: String,
-    @ApiModelProperty("启动用户")
+    @Schema(name = "启动用户")
     val startUser: String,
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @ApiModelProperty("启动时间")
+    @Schema(name = "启动时间")
     val startTime: LocalDateTime?,
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @ApiModelProperty("结束时间")
+    @Schema(name = "结束时间")
     val endTime: LocalDateTime?,
-    @ApiModelProperty("错误的类型标识")
+    @Schema(name = "错误的类型标识")
     val errorType: Int?,
-    @ApiModelProperty("错误的类型标识名称")
+    @Schema(name = "错误的类型标识名称")
     var errorTypeName: String? = null,
-    @ApiModelProperty("错误的标识码")
+    @Schema(name = "错误的标识码")
     val errorCode: Int?,
-    @ApiModelProperty("错误描述")
+    @Schema(name = "错误描述")
     val errorMsg: String?
 )

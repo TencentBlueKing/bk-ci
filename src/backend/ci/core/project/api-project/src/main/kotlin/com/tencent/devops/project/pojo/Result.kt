@@ -29,21 +29,20 @@ package com.tencent.devops.project.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("数据返回包装模型")
+@Schema(name = "数据返回包装模型")
 data class Result<out T>(
-    @ApiModelProperty("状态码", required = true)
+    @Schema(name = "状态码", required = true)
     val code: Int,
-    @ApiModelProperty("错误信息", required = false)
+    @Schema(name = "错误信息", required = false)
     val message: String? = null,
-    @ApiModelProperty("数据", required = false)
+    @Schema(name = "数据", required = false)
     val data: T? = null,
-    @ApiModelProperty("请求ID", required = false, name = "request_id")
+    @Schema(name = "请求ID", required = false, description = "request_id")
     @JsonProperty("request_id")
     val requestId: String? = null,
-    @ApiModelProperty("请求结果", required = false)
+    @Schema(name = "请求结果", required = false)
     val result: Boolean? = null
 ) {
     constructor(data: T) : this(0, null, data)

@@ -1,26 +1,25 @@
 package com.tencent.devops.auth.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("搜索用户组实体")
+@Schema(name = "搜索用户组实体")
 data class SearchGroupInfo(
-    @ApiModelProperty("分级管理员是否继承查询二级管理员的用户组")
+    @Schema(name = "分级管理员是否继承查询二级管理员的用户组")
     var inherit: Boolean? = true,
-    @ApiModelProperty("操作id筛选")
+    @Schema(name = "操作id筛选")
     val actionId: String? = null,
-    @ApiModelProperty("资源类型筛选")
+    @Schema(name = "资源类型筛选")
     val resourceType: String? = null,
-    @ApiModelProperty("资源实例筛选")
+    @Schema(name = "资源实例筛选")
     val iamResourceCode: String? = null,
-    @ApiModelProperty("用户组名称")
+    @Schema(name = "用户组名称")
     val name: String? = null,
-    @ApiModelProperty("用户组描述")
+    @Schema(name = "用户组描述")
     val description: String? = null,
-    @ApiModelProperty("用户组id")
+    @Schema(name = "用户组id")
     val groupId: Int? = null,
-    @ApiModelProperty("page")
+    @Schema(name = "page")
     val page: Int,
-    @ApiModelProperty("pageSize")
+    @Schema(name = "pageSize")
     val pageSize: Int
 )

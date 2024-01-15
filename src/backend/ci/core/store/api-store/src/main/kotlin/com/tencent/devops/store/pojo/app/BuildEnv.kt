@@ -27,17 +27,16 @@
 
 package com.tencent.devops.store.pojo.app
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线模型-构建机环境变量")
+@Schema(name = "流水线模型-构建机环境变量")
 data class BuildEnv(
-    @ApiModelProperty("名称")
+    @Schema(name = "名称")
     val name: String,
-    @ApiModelProperty("版本")
+    @Schema(name = "版本")
     val version: String,
-    @ApiModelProperty("路径")
+    @Schema(name = "路径")
     val binPath: String,
-    @ApiModelProperty("Home 变量")
+    @Schema(name = "Home 变量")
     val env: Map<String/*Name*/, String/*Path*/>
 )

@@ -34,9 +34,9 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.PipelineSumInfoVO
 import com.tencent.devops.metrics.pojo.vo.PipelineTrendInfoVO
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -44,41 +44,41 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_PIPELINE_OVERVIEW_DATAS"], description = "流水线-概览数据")
+@Tag(name = "USER_PIPELINE_OVERVIEW_DATAS", description = "流水线-概览数据")
 @Path("/user/pipeline/overview/datas")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserPipelineOverviewResource {
 
-    @ApiOperation("查询流水线汇总信息")
+    @Operation(summary = "查询流水线汇总信息")
     @Path("/summary/data/get")
     @POST
     fun queryPipelineSumInfo(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         @BkField(required = true)
         projectId: String,
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @BkField(required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("查询条件", required = false)
+        @Parameter(description = "查询条件", required = false)
         baseQueryReq: BaseQueryReqVO?
     ): Result<PipelineSumInfoVO>
 
-    @ApiOperation("查询流水线运行趋势数据")
+    @Operation(summary = "查询流水线运行趋势数据")
     @Path("/trend/info")
     @POST
     fun queryPipelineTrendInfo(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         @BkField(required = true)
         projectId: String,
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         @BkField(required = true)
         userId: String,
-        @ApiParam("查询条件", required = false)
+        @Parameter(description = "查询条件", required = false)
         baseQueryReq: BaseQueryReqVO?
     ): Result<PipelineTrendInfoVO>
 }

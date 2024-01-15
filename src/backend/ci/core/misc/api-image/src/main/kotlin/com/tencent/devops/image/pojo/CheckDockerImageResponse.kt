@@ -28,40 +28,39 @@
 package com.tencent.devops.image.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@ApiModel("检查镜像信息返回模型")
+@Schema(name = "检查镜像信息返回模型")
 data class CheckDockerImageResponse(
-    @ApiModelProperty("错误代码")
+    @Schema(name = "错误代码")
     val errorCode: Int,
-    @ApiModelProperty("错误信息")
+    @Schema(name = "错误信息")
     val errorMessage: String? = "",
-    @ApiModelProperty("架构")
+    @Schema(name = "架构")
     val arch: String? = "",
-    @ApiModelProperty("作者")
+    @Schema(name = "作者")
     val author: String? = "",
-    @ApiModelProperty("评论")
+    @Schema(name = "评论")
     val comment: String? = "",
-    @ApiModelProperty("创建时间")
+    @Schema(name = "创建时间")
     val created: String? = "",
-    @ApiModelProperty("docker版本")
+    @Schema(name = "docker版本")
     val dockerVersion: String? = "",
-    @ApiModelProperty("id")
+    @Schema(name = "id")
     val id: String? = "",
-    @ApiModelProperty("操作系统")
+    @Schema(name = "操作系统")
     val os: String? = "",
-    @ApiModelProperty("操作系统版本")
+    @Schema(name = "操作系统版本")
     val osVersion: String? = "",
-    @ApiModelProperty("父容器")
+    @Schema(name = "父容器")
     val parent: String? = "",
-    @ApiModelProperty("大小")
+    @Schema(name = "大小")
     val size: Long? = 0,
-    @ApiModelProperty("仓库标签")
+    @Schema(name = "仓库标签")
     val repoTags: List<String>? = null,
-    @ApiModelProperty("image存储属性")
+    @Schema(name = "image存储属性")
     val repoDigests: List<String>? = null,
-    @ApiModelProperty("虚拟大小")
+    @Schema(name = "虚拟大小")
     val virtualSize: Long? = 0
 )

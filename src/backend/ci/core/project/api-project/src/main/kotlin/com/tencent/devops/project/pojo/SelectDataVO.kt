@@ -27,13 +27,12 @@
 
 package com.tencent.devops.project.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("下拉框-数据模型")
+@Schema(name = "下拉框-数据模型")
 data class SelectDataVO(
-    @ApiModelProperty("ID")
+    @Schema(name = "ID")
     val id: Int,
-    @ApiModelProperty("名称")
+    @Schema(name = "名称")
     val name: String
 )

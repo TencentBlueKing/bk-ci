@@ -27,24 +27,23 @@
 
 package com.tencent.devops.dispatch.docker.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * DockerHostZone
  */
-@ApiModel("DockerHostZone")
+@Schema(name = "DockerHostZone")
 data class DockerHostZone(
-    @ApiModelProperty("hostIp", required = true)
+    @Schema(name = "hostIp", required = true)
     val hostIp: String,
-    @ApiModelProperty("zone", required = true)
+    @Schema(name = "zone", required = true)
     val zone: String,
-    @ApiModelProperty("enable", required = true)
+    @Schema(name = "enable", required = true)
     val enable: Boolean,
-    @ApiModelProperty("remark", required = true)
+    @Schema(name = "remark", required = true)
     val remark: String?,
-    @ApiModelProperty("createTime", required = true)
+    @Schema(name = "createTime", required = true)
     val createTime: Long,
-    @ApiModelProperty("updateTime", required = true)
+    @Schema(name = "updateTime", required = true)
     val updateTime: Long
 )

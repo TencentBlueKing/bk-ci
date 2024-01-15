@@ -28,30 +28,29 @@
 
 package com.tencent.devops.process.pojo.trigger
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线触发详情")
+@Schema(name = "流水线触发详情")
 data class PipelineTriggerDetail(
     var detailId: Long? = null,
-    @ApiModelProperty("蓝盾项目ID")
+    @Schema(name = "蓝盾项目ID")
     val projectId: String,
-    @ApiModelProperty("事件ID")
+    @Schema(name = "事件ID")
     val eventId: Long,
-    @ApiModelProperty("触发状态")
+    @Schema(name = "触发状态")
     var status: String,
-    @ApiModelProperty("流水线Id")
+    @Schema(name = "流水线Id")
     var pipelineId: String? = null,
-    @ApiModelProperty("流水线名称")
+    @Schema(name = "流水线名称")
     var pipelineName: String? = null,
-    @ApiModelProperty("构建Id")
+    @Schema(name = "构建Id")
     var buildId: String? = null,
-    @ApiModelProperty("构建编号")
+    @Schema(name = "构建编号")
     var buildNum: String? = null,
-    @ApiModelProperty("原因")
+    @Schema(name = "原因")
     var reason: String? = null,
-    @ApiModelProperty("原因详情", required = false)
+    @Schema(name = "原因详情", required = false)
     var reasonDetailList: List<String>? = null,
-    @ApiModelProperty("创建时间", required = false)
+    @Schema(name = "创建时间", required = false)
     val createTime: Long? = null
 )

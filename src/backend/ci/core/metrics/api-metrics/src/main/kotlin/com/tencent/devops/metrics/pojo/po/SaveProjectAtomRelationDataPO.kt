@@ -27,21 +27,20 @@
 
 package com.tencent.devops.metrics.pojo.po
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("保存项目插件关联数据")
+@Schema(name = "保存项目插件关联数据")
 data class SaveProjectAtomRelationDataPO(
-    @ApiModelProperty("主键ID")
+    @Schema(name = "主键ID")
     val id: Long,
-    @ApiModelProperty("项目ID")
+    @Schema(name = "项目ID")
     val projectId: String,
-    @ApiModelProperty("插件代码")
+    @Schema(name = "插件代码")
     val atomCode: String,
-    @ApiModelProperty("插件名称")
+    @Schema(name = "插件名称")
     val atomName: String,
-    @ApiModelProperty("创建人")
+    @Schema(name = "创建人")
     val creator: String,
-    @ApiModelProperty("修改人")
+    @Schema(name = "修改人")
     val modifier: String
 )

@@ -31,55 +31,54 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线模型-构建触发容器")
+@Schema(name = "流水线模型-构建触发容器")
 data class TriggerContainer(
-    @ApiModelProperty("构建容器序号id", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(name = "构建容器序号id", required = false, readOnly = true)
     override var id: String? = null,
-    @ApiModelProperty("容器名称", required = true)
+    @Schema(name = "容器名称", required = true)
     override var name: String = "",
-    @ApiModelProperty("任务集合", required = true)
+    @Schema(name = "任务集合", required = true)
     override var elements: List<Element> = listOf(),
-    @ApiModelProperty("状态", required = true, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(name = "状态", required = true, readOnly = true)
     override var status: String? = null,
-    @ApiModelProperty("系统运行时间", required = false)
+    @Schema(name = "系统运行时间", required = false)
     @Deprecated("即将被timeCost代替")
     override var startEpoch: Long? = null,
-    @ApiModelProperty("系统耗时（开机时间）", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(name = "系统耗时（开机时间）", required = false, readOnly = true)
     @Deprecated("即将被timeCost代替")
     override var systemElapsed: Long? = null,
-    @ApiModelProperty("插件执行耗时", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(name = "插件执行耗时", required = false, readOnly = true)
     @Deprecated("即将被timeCost代替")
     override var elementElapsed: Long? = null,
-    @ApiModelProperty("参数化构建", required = false)
+    @Schema(name = "参数化构建", required = false)
     var params: List<BuildFormProperty> = listOf(),
-    @ApiModelProperty("模板参数构建", required = false)
+    @Schema(name = "模板参数构建", required = false)
     val templateParams: List<BuildFormProperty>? = null,
-    @ApiModelProperty("构建版本号", required = false)
+    @Schema(name = "构建版本号", required = false)
     val buildNo: BuildNo? = null,
-    @ApiModelProperty(
+    @Schema(name =
         "是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储",
         required = false,
-        accessMode = ApiModelProperty.AccessMode.READ_ONLY
+        readOnly = true
     )
     override var canRetry: Boolean? = null,
-    @ApiModelProperty("构建容器顺序ID（同id值）", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(name = "构建容器顺序ID（同id值）", required = false, readOnly = true)
     override var containerId: String? = null,
-    @ApiModelProperty("容器唯一ID", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(name = "容器唯一ID", required = false, readOnly = true)
     override var containerHashId: String? = null,
-    @ApiModelProperty("构建环境启动状态", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(name = "构建环境启动状态", required = false, readOnly = true)
     override var startVMStatus: String? = null,
-    @ApiModelProperty("容器运行次数", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(name = "容器运行次数", required = false, readOnly = true)
     override var executeCount: Int? = null,
-    @ApiModelProperty("用户自定义ID", required = false, hidden = false)
+    @Schema(name = "用户自定义ID", required = false, hidden = false)
     override val jobId: String? = null,
-    @ApiModelProperty("是否包含post任务标识", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(name = "是否包含post任务标识", required = false, readOnly = true)
     override var containPostTaskFlag: Boolean? = null,
-    @ApiModelProperty("是否为构建矩阵", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(name = "是否为构建矩阵", required = false, readOnly = true)
     override var matrixGroupFlag: Boolean? = false,
-    @ApiModelProperty("各项耗时", required = true)
+    @Schema(name = "各项耗时", required = true)
     override var timeCost: BuildRecordTimeCost? = null
 ) : Container {
     companion object {

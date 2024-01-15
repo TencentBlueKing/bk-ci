@@ -31,44 +31,43 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.sdk.github.response.CommitResponse
 import com.tencent.devops.scm.pojo.Commit
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("git 查询代码库项目信息| USER 使用")
+@Schema(name = "git 查询代码库项目信息| USER 使用")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class StreamCommitInfo(
     @JsonProperty("author_email")
-    @ApiModelProperty(name = "author_email")
+    @Schema(name = "author_email")
     val authorEmail: String?,
     @JsonProperty("author_name")
-    @ApiModelProperty(name = "author_name")
+    @Schema(name = "author_name")
     val authorName: String?,
     @JsonProperty("authored_date")
-    @ApiModelProperty(name = "authored_date")
+    @Schema(name = "authored_date")
     val authoredDate: String?,
     @JsonProperty("committed_date")
-    @ApiModelProperty(name = "committed_date")
+    @Schema(name = "committed_date")
     val committedDate: String?,
     @JsonProperty("committer_email")
-    @ApiModelProperty(name = "committer_email")
+    @Schema(name = "committer_email")
     val committerEmail: String?,
     @JsonProperty("committer_name")
-    @ApiModelProperty(name = "committer_name")
+    @Schema(name = "committer_name")
     val committerName: String?,
     @JsonProperty("created_at")
-    @ApiModelProperty(name = "created_at")
+    @Schema(name = "created_at")
     val createdAt: String,
     val id: String,
     val message: String?,
     @JsonProperty("parent_ids")
-    @ApiModelProperty(name = "parent_ids")
+    @Schema(name = "parent_ids")
     val parentIds: List<String>?,
     @JsonProperty("short_id")
-    @ApiModelProperty(name = "short_id")
+    @Schema(name = "short_id")
     val shortId: String?,
     val title: String?,
     @JsonProperty("scroll_object_id")
-    @ApiModelProperty(name = "scroll_object_id")
+    @Schema(name = "scroll_object_id")
     val scrollObjectId: Any?
 ) {
     constructor(c: Commit) : this(

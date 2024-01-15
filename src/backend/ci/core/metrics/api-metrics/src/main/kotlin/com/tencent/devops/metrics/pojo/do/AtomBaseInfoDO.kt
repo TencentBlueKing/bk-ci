@@ -27,13 +27,12 @@
 
 package com.tencent.devops.metrics.pojo.`do`
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件基本信息")
+@Schema(name = "插件基本信息")
 data class AtomBaseInfoDO(
-    @ApiModelProperty("插件标识")
+    @Schema(name = "插件标识")
     val atomCode: String,
-    @ApiModelProperty("插件名称")
+    @Schema(name = "插件名称")
     val atomName: String
 )
