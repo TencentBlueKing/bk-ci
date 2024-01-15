@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.web
 
-import io.swagger.v3.jaxrs2.SwaggerSerializers
 import io.swagger.v3.oas.integration.SwaggerConfiguration
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.info.Info
@@ -58,14 +57,14 @@ class JerseySwaggerConfig : JerseyConfig() {
     @PostConstruct
     fun init() {
         logger.info("[$service|$applicationDesc|$applicationVersion|$swaggerAppendName|$packageName]configSwagger")
-        configSwagger()
-        register(SwaggerSerializers::class.java)
-        register(SwaggerResource::class.java)
+        val swaggerResource = SwaggerResource()
+        swaggerResource.openApiConfiguration(configSwagger())
+        register(swaggerResource)
     }
 
-    private fun configSwagger() {
+    private fun configSwagger(): SwaggerConfiguration? {
         if (!packageName.isNullOrBlank()) {
-            if (swaggerAppendName == "true") {
+            return if (swaggerAppendName == "true") {
                 SwaggerConfiguration().apply {
                     openAPI = OpenAPI()
                         .info(Info().title(applicationDesc).version(applicationVersion))
@@ -81,5 +80,6 @@ class JerseySwaggerConfig : JerseyConfig() {
                 }
             }
         }
+        return null
     }
 }
