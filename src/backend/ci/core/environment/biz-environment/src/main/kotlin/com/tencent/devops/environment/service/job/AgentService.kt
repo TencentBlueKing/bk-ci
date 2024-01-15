@@ -165,12 +165,6 @@ data class AgentService @Autowired constructor(
     ): AgentResult<QueryAgentTaskStatusResult> {
         AgentApi.setThreadLocal("queryAgentTaskStatus")
         val queryAgentTaskStatusRequest = AgentQueryAgentTaskStatusReq(
-            conditions = queryAgentTaskStatusReq.conditions?.map {
-                AgentCondition(
-                    key = it.key,
-                    value = it.value
-                )
-            },
             page = queryAgentTaskStatusReq.page,
             pageSize = queryAgentTaskStatusReq.pageSize
         )

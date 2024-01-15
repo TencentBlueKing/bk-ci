@@ -32,8 +32,6 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("查询agent任务状态的接口的请求信息")
 data class QueryAgentTaskStatusReq(
-    @ApiModelProperty(value = "搜索条件")
-    val conditions: List<Condition<List<String>>>?,
     @ApiModelProperty(value = "当前页数，默认为1")
     val page: Int?,
     @ApiModelProperty(value = "分页大小，默认为10")
