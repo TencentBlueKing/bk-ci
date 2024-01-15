@@ -61,7 +61,7 @@ class ChooseAgentInstallChannelIdService @Autowired constructor(
             "SUPPORTING" -> 4
             "OSS" -> 5
             "DEVNET" -> 6
-            else -> -1
+            else -> -1 // 实际走不到，5 6匹配不到就4了
         }
     }
 
