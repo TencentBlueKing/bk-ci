@@ -204,8 +204,8 @@ class ProjectExtOrganizationService constructor(
                     ProjectOrganizationInfo(
                         bgId = bgId,
                         bgName = bgName,
-                        businessLineId = null,
-                        businessLineName = null,
+                        businessLineId = businessLineId,
+                        businessLineName = businessLineName,
                         centerId = null,
                         centerName = null,
                         deptId = deptId,

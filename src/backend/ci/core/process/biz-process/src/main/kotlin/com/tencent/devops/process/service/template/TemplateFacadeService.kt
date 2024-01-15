@@ -354,7 +354,11 @@ class TemplateFacadeService @Autowired constructor(
     ): String {
         logger.info("Start to saveAsTemplate, $userId | $projectId | $saveAsTemplateReq")
 
-        checkPermission(projectId, userId)
+        pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.CREATE
+        )
 
         val template = pipelineResDao.getLatestVersionModelString(dslContext, projectId, saveAsTemplateReq.pipelineId)
             ?: throw ErrorCodeException(
