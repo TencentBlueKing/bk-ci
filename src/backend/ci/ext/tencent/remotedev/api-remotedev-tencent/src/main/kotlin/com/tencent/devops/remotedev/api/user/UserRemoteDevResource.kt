@@ -166,7 +166,7 @@ interface UserRemoteDevResource {
         workspaceName: String
     ): Result<String>
 
-    @ApiOperation("申请专家协助")
+    @ApiOperation("一键认领求助问题")
     @GET
     @Path("/addExpSup")
     fun addExpSup(
@@ -196,4 +196,15 @@ interface UserRemoteDevResource {
         @QueryParam("avatar")
         avatar: String
     ): Result<String>
+
+    @ApiOperation("一键查询CGS密码")
+    @GET
+    @Path("/queryCgsPwd")
+    fun queryCgsPwd(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "cgsId", required = true)
+        @QueryParam("cgsId")
+        cgsId: String
+    ): Result<Boolean>
 }

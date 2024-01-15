@@ -176,6 +176,15 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         }
     }
 
+    override fun queryCgsPwd(userId: String, cgsId: String): Result<Boolean> {
+        val (res, message) = expertSupportService.queryCgsPwd(userId, cgsId)
+        return if (message.isNullOrBlank()) {
+            Result(res)
+        } else {
+            Result(message, res)
+        }
+    }
+
     override fun getTxcToken(userId: String, openId: String, nickName: String, avatar: String): Result<String> {
         return Result(
             txcService.getTxcToken(
