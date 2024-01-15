@@ -533,7 +533,7 @@ class ThirdPartyAgentService @Autowired constructor(
             buildRecord == null ||
             buildInfo.success ||
             buildInfo.error == null ||
-            buildInfo.error?.errorCode == 2128040
+            buildInfo.error?.errorCode != 2128040
         ) {
             return
         }
