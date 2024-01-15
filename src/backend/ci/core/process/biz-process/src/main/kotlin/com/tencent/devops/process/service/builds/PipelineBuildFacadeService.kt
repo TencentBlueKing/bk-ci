@@ -2234,7 +2234,7 @@ class PipelineBuildFacadeService(
         nodeHashId: String?,
         executeCount: Int?,
         simpleResult: SimpleResult
-    ):String? {
+    ): String? {
         var msg = simpleResult.message
 
         if (!nodeHashId.isNullOrBlank()) {
