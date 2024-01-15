@@ -5,11 +5,6 @@ import com.tencent.devops.common.api.constant.HTTP_403
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.sdk.github.pojo.GithubRepo
-import com.tencent.devops.common.sdk.github.request.GetRepositoryContentRequest
-import com.tencent.devops.common.sdk.github.request.GetTreeRequest
-import com.tencent.devops.common.sdk.github.request.ListBranchesRequest
-import com.tencent.devops.common.sdk.github.request.ListRepositoriesRequest
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.service.IGitTransferService
@@ -23,6 +18,11 @@ import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.oauth.GithubTokenType
+import com.tencent.devops.repository.sdk.github.pojo.GithubRepo
+import com.tencent.devops.repository.sdk.github.request.GetRepositoryContentRequest
+import com.tencent.devops.repository.sdk.github.request.GetTreeRequest
+import com.tencent.devops.repository.sdk.github.request.ListBranchesRequest
+import com.tencent.devops.repository.sdk.github.request.ListRepositoriesRequest
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
