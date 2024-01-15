@@ -2234,7 +2234,7 @@ class PipelineBuildFacadeService(
         nodeHashId: String?,
         executeCount: Int?,
         simpleResult: SimpleResult
-    ) {
+    ):String? {
         var msg = simpleResult.message
 
         if (!nodeHashId.isNullOrBlank()) {
@@ -2267,7 +2267,7 @@ class PipelineBuildFacadeService(
                         executeCount = startUpVMTask.executeCount ?: 1
                     )
                 }
-                return
+                return startUpVMTask?.starter
             }
         } else {
             msg = "$msg| ${I18nUtil.getCodeLanMessage(ProcessMessageCode.BUILD_WORKER_DEAD_ERROR)}"
@@ -2289,7 +2289,7 @@ class PipelineBuildFacadeService(
                         taskId = startUpVMTask.taskId,
                         taskParam = JsonUtil.toJson(taskParam)
                     )
-                    return
+                    return startUpVMTask.starter
                 }
             }
         }
@@ -2305,12 +2305,12 @@ class PipelineBuildFacadeService(
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectCode, buildId)
         if (buildInfo == null || buildInfo.status.isFinish()) {
             logger.warn("[$buildId]|workerBuildFinish|The build status is ${buildInfo?.status}")
-            return
+            return buildInfo?.startUser
         }
 
         if (executeCount != null && buildInfo.executeCount != null && executeCount != buildInfo.executeCount) {
             logger.warn("[$buildId]|workerBuildFinish|executeCount ne [$executeCount != ${buildInfo.executeCount}]")
-            return
+            return buildInfo.startUser
         }
 
         val container = pipelineContainerService.getContainer(

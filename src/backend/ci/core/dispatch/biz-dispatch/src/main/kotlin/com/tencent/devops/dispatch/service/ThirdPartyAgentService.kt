@@ -512,7 +512,7 @@ class ThirdPartyAgentService @Autowired constructor(
             null
         }
 
-        client.get(ServiceBuildResource::class).workerBuildFinish(
+        val starter = client.get(ServiceBuildResource::class).workerBuildFinish(
             projectId = buildInfo.projectId,
             pipelineId = if (buildInfo.pipelineId.isNullOrBlank()) "dummyPipelineId" else buildInfo.pipelineId!!,
             buildId = buildInfo.buildId,
@@ -526,16 +526,21 @@ class ThirdPartyAgentService @Autowired constructor(
                 // #9910 环境构建时遇到启动错误时调度到一个新的Agent
                 ignoreAgentIds = ignoreAgentIds
             )
-        )
+        ).data
 
         // #9910 构建机worker失败时发送通知
-        if (workerErrorRtxTemplate.isNullOrBlank() || buildRecord == null) {
+        if (workerErrorRtxTemplate.isNullOrBlank() ||
+            buildRecord == null ||
+            buildInfo.success ||
+            buildInfo.error == null ||
+            buildInfo.error?.errorCode == 2128040
+        ) {
             return
         }
         val buildUrl = "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/" +
-            "${buildRecord.pipelineId}/detail/${buildRecord.buildId}/executeDetail"
+                "${buildRecord.pipelineId}/detail/${buildRecord.buildId}/executeDetail"
         val agentUrl = "${HomeHostUtil.innerServerHost()}/console/environment/$projectId/" +
-            "nodeDetail/${agentResult.data!!.nodeId}"
+                "nodeDetail/${agentResult.data!!.nodeId}"
         client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
             SendNotifyMessageTemplateRequest(
                 templateCode = workerErrorRtxTemplate!!,
@@ -545,12 +550,16 @@ class ThirdPartyAgentService @Autowired constructor(
                     "projectCode" to buildRecord.projectId
                 ),
                 bodyParams = mapOf(
-                    "userId" to buildRecord.startUser,
+                    "userId" to (starter ?: ""),
                     "buildUrl" to buildUrl,
                     "agentUrl" to agentUrl,
                     "agentOwner" to agentResult.data!!.createUser
                 ),
-                receivers = mutableSetOf(buildRecord.startUser, agentResult.data!!.createUser)
+                receivers = if (!starter.isNullOrBlank()) {
+                    mutableSetOf(buildRecord.startUser, agentResult.data!!.createUser)
+                } else {
+                    mutableSetOf(agentResult.data!!.createUser)
+                }
             )
         )
     }
