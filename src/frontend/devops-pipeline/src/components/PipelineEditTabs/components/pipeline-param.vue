@@ -155,7 +155,6 @@
             },
             updateEditItem (name, value) {
                 Object.assign(this.sliderEditItem, { [name]: value })
-                console.log(this.sliderEditItem, 'editing')
             },
             resetEditItem (param = {}) {
                 this.sliderEditItem = param

@@ -18,7 +18,7 @@
                     :handle-change="handleBuildNoChange"
                 />
             </section>
-            <bk-button v-if="showVersions" @click="editVersions">
+            <bk-button :disabled="disabled" v-if="showVersions" @click="editVersions">
                 {{$t('newui.editVersions')}}
             </bk-button>
         </div>
@@ -97,10 +97,10 @@
                 </bk-form>
             </div>
             <div class="edit-var-footer" slot="footer">
-                <bk-button theme="primary" @click="handleSaveVersion">
+                <bk-button theme="primary" :disabled="disabled" @click="handleSaveVersion">
                     {{ $t('confirm') }}
                 </bk-button>
-                <bk-button style="margin-left: 8px;" @click="cancelEditVersion">
+                <bk-button style="margin-left: 8px;" :disabled="disabled" @click="cancelEditVersion">
                     {{ $t('cancel') }}
                 </bk-button>
             </div>

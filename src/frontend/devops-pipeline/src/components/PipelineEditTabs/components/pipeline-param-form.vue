@@ -45,7 +45,7 @@
                     <atom-checkbox
                         name="valueNotEmpty"
                         class="neccessary-checkbox"
-                        v-if="param.required"
+                        v-show="param.required"
                         :disabled="disabled"
                         :text="$t('editPage.required')"
                         :value="param.valueNotEmpty"
@@ -66,7 +66,6 @@
 </template>
 
 <script>
-    import Vue from 'vue'
     import { deepCopy } from '@/utils/util'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import VuexInput from '@/components/atomFormField/VuexInput'
@@ -154,16 +153,17 @@
                 }
                 this.resetEditItem(this.param)
             } else {
-                Object.assign(this.param, this.editItem)
+                // Object.assign(this.param, this.editItem)
+                this.param = deepCopy(this.editItem)
             }
-            Vue.set(this.param, 'required', this.param.required || true)
         },
         methods: {
             handleParamTypeChange (key, value) {
                 this.param = {
                     ...deepCopy(DEFAULT_PARAM[value]),
                     id: this.param.id,
-                    name: this.param.name
+                    name: this.param.name,
+                    constant: this.paramType === 'constant'
                 }
                 this.resetEditItem(this.param)
             },
