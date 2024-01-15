@@ -34,9 +34,9 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.RepositoryInfo
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -46,74 +46,74 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OPEN_API_REPOSITORY"], description = "OPEN-API-代码仓库资源")
+@Tag(name = "OPEN_API_REPOSITORY", description = "OPEN-API-代码仓库资源")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v2/repositories")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwRepositoryResourceV2 {
 
-    @ApiOperation("查询项目的代码库列表", tags = ["v2_app_repositories_listByProject"])
+    @Operation(summary = "查询项目的代码库列表", tags = ["v2_app_repositories_listByProject"])
     @GET
     @Path("/projects/{projectId}/listByProject")
     fun listByProject(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "组织类型", required = true)
+        @Parameter(description = "组织类型", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
         organizationType: String,
-        @ApiParam(value = "组织ID", required = true)
+        @Parameter(description = "组织ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
         organizationId: Int,
-        @ApiParam("项目ID(项目英文名)", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("仓库类型", required = false)
+        @Parameter(description = "仓库类型", required = false)
         @QueryParam("repositoryType")
         repositoryType: ScmType?,
-        @ApiParam("分页", required = false)
+        @Parameter(description = "分页", required = false)
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页条数(默认20, 最大100)", required = false)
+        @Parameter(description = "每页条数(默认20, 最大100)", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<RepositoryInfo>?>
 
-    @ApiOperation("获取授权路径", tags = ["v2_app_repositories_getAuthUrl"])
+    @Operation(summary = "获取授权路径", tags = ["v2_app_repositories_getAuthUrl"])
     @GET
     @Path("/getAuthUrl")
     fun getAuthUrl(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam("项目id", required = true)
+        @Parameter(description = "项目id", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @ApiParam("用户Id", required = true)
+        @Parameter(description = "用户Id", required = true)
         @QueryParam("userId")
         userId: String,
-        @ApiParam("项目hashId")
+        @Parameter(description = "项目hashId")
         @QueryParam("repoHashId")
         repoHashId: String?
     ): Result<String>
 
-    @ApiOperation("获取git代码库accessToken信息", tags = ["v2_app_repositories_git"])
+    @Operation(summary = "获取git代码库accessToken信息", tags = ["v2_app_repositories_git"])
     @GET
     @Path("/git/{userId}")
     fun gitGet(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @PathParam("userId")
         userId: String
     ): Result<String?>

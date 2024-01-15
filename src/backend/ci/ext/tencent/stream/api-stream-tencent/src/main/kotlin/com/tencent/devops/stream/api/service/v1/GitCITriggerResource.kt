@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.stream.pojo.V1TriggerBuildReq
 import com.tencent.devops.stream.v1.pojo.V1GitYamlString
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -44,57 +44,57 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_STREAM_TRIGGER"], description = "TriggerBuild页面")
+@Tag(name = "SERVICE_STREAM_TRIGGER", description = "TriggerBuild页面")
 @Path("/service/trigger/build")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface GitCITriggerResource {
 
-    @ApiOperation("人工TriggerBuild启动构建")
+    @Operation(summary = "人工TriggerBuild启动构建")
     @POST
     @Path("/{pipelineId}/startup")
     fun triggerStartup(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("TriggerBuild请求", required = true)
+        @Parameter(description = "TriggerBuild请求", required = true)
         v1TriggerBuildReq: V1TriggerBuildReq
     ): Result<Boolean>
 
-    @ApiOperation("校验yaml格式")
+    @Operation(summary = "校验yaml格式")
     @POST
     @Path("/checkYaml")
     fun checkYaml(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("yaml内容", required = true)
+        @Parameter(description = "yaml内容", required = true)
         yaml: V1GitYamlString
     ): Result<String>
 
-    @ApiOperation("获取yaml schema")
+    @Operation(summary = "获取yaml schema")
     @GET
     @Path("/getYamlSchema")
     fun getYamlSchema(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<String>
 
-    @ApiOperation("根据BuildId查询yaml内容")
+    @Operation(summary = "根据BuildId查询yaml内容")
     @GET
     @Path("/getYaml/{gitProjectId}/{buildId}")
     fun getYamlByBuildId(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "工蜂项目ID", required = true)
+        @Parameter(description = "工蜂项目ID", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @ApiParam(value = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<String>

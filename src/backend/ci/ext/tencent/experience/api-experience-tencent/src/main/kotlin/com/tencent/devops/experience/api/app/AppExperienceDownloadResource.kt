@@ -35,9 +35,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.experience.pojo.download.CheckVersionParam
 import com.tencent.devops.experience.pojo.download.CheckVersionVO
 import com.tencent.devops.experience.pojo.download.DownloadRecordVO
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -47,39 +47,39 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["APP_EXPERIENCE_DOWNLOAD"], description = "版本体验-下载管理")
+@Tag(name = "APP_EXPERIENCE_DOWNLOAD", description = "版本体验-下载管理")
 @Path("/app/experiences/download")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface AppExperienceDownloadResource {
-    @ApiOperation("检查更新")
+    @Operation(summary = "检查更新")
     @Path("/checkVersion")
     @POST
     fun checkVersion(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
-        @ApiParam("检查更新参数", required = true)
+        @Parameter(description = "检查更新参数", required = true)
         params: List<CheckVersionParam>
     ): Result<List<CheckVersionVO>>
 
-    @ApiOperation("下载记录")
+    @Operation(summary = "下载记录")
     @Path("/records")
     @GET
     fun records(
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
-        @ApiParam("页目", required = false)
+        @Parameter(description = "页目", required = false)
         @QueryParam("page")
         page: Int,
-        @ApiParam("每页数目", required = false)
+        @Parameter(description = "每页数目", required = false)
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Pagination<DownloadRecordVO>>

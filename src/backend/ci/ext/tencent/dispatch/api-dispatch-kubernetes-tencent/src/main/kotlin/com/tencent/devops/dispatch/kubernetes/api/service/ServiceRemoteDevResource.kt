@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
@@ -46,40 +46,40 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_DISPATCH_KUBERNETES_REMOTE_DEV"], description = "远程开发接口模块")
+@Tag(name = "SERVICE_DISPATCH_KUBERNETES_REMOTE_DEV", description = "远程开发接口模块")
 @Path("/service/remotedev")
 @ServiceInterface("dispatch") // 指明接入到哪个微服务
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceRemoteDevResource {
 
-    @ApiOperation("获取远程工作空间连接")
+    @Operation(summary = "获取远程工作空间连接")
     @GET
     @Path("/workspaces/{workspaceName}/url")
     fun getWorkspaceUrl(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("工作空间唯一name", required = false)
+        @Parameter(description = "工作空间唯一name", required = false)
         @PathParam("workspaceName")
         workspaceName: String,
-        @ApiParam("挂载模式", required = false)
+        @Parameter(description = "挂载模式", required = false)
         @QueryParam("mountType")
         @DefaultValue("DEVCLOUD")
         mountType: WorkspaceMountType
     ): Result<String?>
 
-    @ApiOperation("获取远程工作空间连接")
+    @Operation(summary = "获取远程工作空间连接")
     @GET
     @Path("/workspaces/{workspaceName}/info")
     fun getWorkspaceInfo(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("工作空间唯一name", required = false)
+        @Parameter(description = "工作空间唯一name", required = false)
         @PathParam("workspaceName")
         workspaceName: String,
-        @ApiParam("挂载模式", required = false)
+        @Parameter(description = "挂载模式", required = false)
         @QueryParam("mountType")
         @DefaultValue("DEVCLOUD")
         mountType: WorkspaceMountType

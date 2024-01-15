@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.stream.v1.pojo.V1GitStarterWebList
 import com.tencent.devops.stream.v1.pojo.V1GitYamlContent
 import com.tencent.devops.stream.v1.pojo.V1GitYamlProperty
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -45,50 +45,50 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_STREAM_STARTER"], description = "起始页面模板信息")
+@Tag(name = "SERVICE_STREAM_STARTER", description = "起始页面模板信息")
 @Path("/service/starter")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface GitCIStarterWebResource {
 
-    @ApiOperation("获取所有模板信息-内容和配置")
+    @Operation(summary = "获取所有模板信息-内容和配置")
     @GET
     @Path("/yaml/list")
     fun getYamlList(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<V1GitYamlContent>>
 
-    @ApiOperation("获取所有模板信息-配置")
+    @Operation(summary = "获取所有模板信息-配置")
     @GET
     @Path("/properties/list")
     fun getPropertyList(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("指定类别名", required = false, defaultValue = "")
+        @Parameter(description = "指定类别名", required = false, defaultValue = "")
         @QueryParam("类别名")
         category: String?
     ): Result<List<V1GitYamlProperty>>
 
-    @ApiOperation("获取Stream起始页分类模板信息")
+    @Operation(summary = "获取Stream起始页分类模板信息")
     @GET
     @Path("/web/list")
     fun getWebList(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<V1GitStarterWebList>
 
-    @ApiOperation("更新模板信息-内容和配置")
+    @Operation(summary = "更新模板信息-内容和配置")
     @POST
     @Path("/yaml/update")
     fun update(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "最新的所有模板属性", required = true)
+        @Parameter(description = "最新的所有模板属性", required = true)
         properties: List<V1GitYamlContent>
     ): Result<Int>
 }

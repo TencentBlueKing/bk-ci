@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.image.pojo.ImageListResp
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -43,35 +43,35 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_IMAGE"], description = "镜像-镜像服务")
+@Tag(name = "OP_IMAGE", description = "镜像-镜像服务")
 @Path("/op/image")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.MULTIPART_FORM_DATA)
 interface TxOpImageResource {
 
-    @ApiOperation("获取所有公共镜像列表")
+    @Operation(summary = "获取所有公共镜像列表")
     @Path("/listAllPublicImages")
     @GET
     fun listAllPublicImages(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "查询关键字", required = false)
+        @Parameter(description = "查询关键字", required = false)
         @QueryParam("searchKey")
         searchKey: String?
     ): Result<ImageListResp>
 
-    @ApiOperation("获取所有项目镜像列表")
+    @Operation(summary = "获取所有项目镜像列表")
     @Path("/{projectId}/listAllProjectImages")
     @GET
     fun listAllProjectImages(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "查询关键字", required = false)
+        @Parameter(description = "查询关键字", required = false)
         @QueryParam("searchKey")
         searchKey: String?
     ): Result<ImageListResp>

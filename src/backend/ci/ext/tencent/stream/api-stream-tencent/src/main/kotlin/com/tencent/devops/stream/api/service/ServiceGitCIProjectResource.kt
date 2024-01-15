@@ -34,9 +34,9 @@ import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.stream.pojo.openapi.GitCIProjectType
 import com.tencent.devops.stream.pojo.openapi.ProjectCIInfo
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -45,35 +45,35 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_STREAM_PROJECT"], description = "service-项目资源")
+@Tag(name = "SERVICE_STREAM_PROJECT", description = "service-项目资源")
 @Path("/service/projects")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceGitCIProjectResource {
 
-    @ApiOperation("获取工蜂项目与STREAM关联列表")
+    @Operation(summary = "获取工蜂项目与STREAM关联列表")
     @GET
     @Path("/list")
     fun getProjects(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目列表类型", required = false)
+        @Parameter(description = "项目列表类型", required = false)
         @QueryParam("type")
         type: GitCIProjectType?,
-        @ApiParam("搜索条件，模糊匹配path,name", required = false)
+        @Parameter(description = "搜索条件，模糊匹配path,name", required = false)
         @QueryParam("search")
         search: String?,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "10")
+        @Parameter(description = "每页多少条", required = false, defaultValue = "10")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @ApiParam("排序条件", required = false)
+        @Parameter(description = "排序条件", required = false)
         @QueryParam("orderBy")
         orderBy: GitCodeProjectsOrder?,
-        @ApiParam("排序类型", required = false)
+        @Parameter(description = "排序类型", required = false)
         @QueryParam("sort")
         sort: GitCodeBranchesSort?
     ): Result<List<ProjectCIInfo>>

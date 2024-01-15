@@ -43,9 +43,9 @@ import com.tencent.devops.experience.pojo.enums.ArtifactoryType
 import com.tencent.devops.experience.pojo.outer.OuterCanAddParam
 import com.tencent.devops.experience.pojo.outer.OuterCanAddVO
 import com.tencent.devops.experience.pojo.outer.OuterSelectorVO
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -57,194 +57,194 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_EXPERIENCE"], description = "版本体验-发布体验")
+@Tag(name = "USER_EXPERIENCE", description = "版本体验-发布体验")
 @Path("/user/experiences")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExperienceResource {
-    @ApiOperation("获取是否有文件转体验权限")
+    @Operation(summary = "获取是否有文件转体验权限")
     @Path("/{projectId}/hasPermission")
     @GET
     fun hasArtifactoryPermission(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("体验路径", required = false)
+        @Parameter(description = "体验路径", required = false)
         @QueryParam("path")
         path: String,
-        @ApiParam("仓库类型", required = false)
+        @Parameter(description = "仓库类型", required = false)
         @QueryParam("artifactoryType")
         artifactoryType: ArtifactoryType
     ): Result<Boolean>
 
-    @ApiOperation("获取体验列表")
+    @Operation(summary = "获取体验列表")
     @Path("/{projectId}/list")
     @GET
     fun list(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("", required = false)
+        @Parameter("", required = false)
         @QueryParam("expired")
         expired: Boolean?
     ): Result<List<ExperienceSummaryWithPermission>>
 
-    @ApiOperation("获取体验详情")
+    @Operation(summary = "获取体验详情")
     @Path("/{projectId}/{experienceHashId}")
     @GET
     fun get(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("体验HashId", required = false)
+        @Parameter(description = "体验HashId", required = false)
         @PathParam("experienceHashId")
         experienceHashId: String
     ): Result<Experience>
 
-    @ApiOperation("创建体验")
+    @Operation(summary = "创建体验")
     @Path("/{projectId}/")
     @POST
     fun create(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("发布详情", required = true)
+        @Parameter(description = "发布详情", required = true)
         experience: ExperienceCreate
     ): Result<Boolean>
 
-    @ApiOperation("编辑体验")
+    @Operation(summary = "编辑体验")
     @Path("/{projectId}/{experienceHashId}")
     @PUT
     fun edit(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("发布HashId", required = false)
+        @Parameter(description = "发布HashId", required = false)
         @PathParam("experienceHashId")
         experienceHashId: String,
-        @ApiParam("发布详情", required = true)
+        @Parameter(description = "发布详情", required = true)
         experience: ExperienceUpdate
     ): Result<Boolean>
 
-    @ApiOperation("下架体验")
+    @Operation(summary = "下架体验")
     @Path("/{projectId}/{experienceHashId}/offline")
     @PUT
     fun offline(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("发布HashId", required = false)
+        @Parameter(description = "发布HashId", required = false)
         @PathParam("experienceHashId")
         experienceHashId: String
     ): Result<Boolean>
 
-    @ApiOperation("获取体验统计")
+    @Operation(summary = "获取体验统计")
     @Path("/{projectId}/{experienceHashId}/downloadCount")
     @GET
     fun downloadCount(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("体验HashId", required = false)
+        @Parameter(description = "体验HashId", required = false)
         @PathParam("experienceHashId")
         experienceHashId: String
     ): Result<ExperienceCount>
 
-    @ApiOperation("获取体验用户统计")
+    @Operation(summary = "获取体验用户统计")
     @Path("/{projectId}/{experienceHashId}/downloadUserCount")
     @GET
     fun downloadUserCount(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("发布HashId", required = false)
+        @Parameter(description = "发布HashId", required = false)
         @PathParam("experienceHashId")
         experienceHashId: String,
-        @ApiParam("页目", required = false)
+        @Parameter(description = "页目", required = false)
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页数目", required = false)
+        @Parameter(description = "每页数目", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<ExperienceUserCount>>
 
-    @ApiOperation("获取外部下载链接")
+    @Operation(summary = "获取外部下载链接")
     @Path("/{projectId}/{experienceHashId}/externalUrl")
     @GET
     fun externalUrl(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("体验HashId", required = false)
+        @Parameter(description = "体验HashId", required = false)
         @PathParam("experienceHashId")
         experienceHashId: String
     ): Result<Url>
 
-    @ApiOperation("获取内部下载链接")
+    @Operation(summary = "获取内部下载链接")
     @Path("/{projectId}/{experienceHashId}/downloadUrl")
     @GET
     fun downloadUrl(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("体验HashId", required = false)
+        @Parameter(description = "体验HashId", required = false)
         @PathParam("experienceHashId")
         experienceHashId: String
     ): Result<Url>
 
-    @ApiOperation("列出外部用户列表")
+    @Operation(summary = "列出外部用户列表")
     @Path("/outer/list")
     @GET
     fun outerList(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String
     ): Result<List<OuterSelectorVO>>
 
-    @ApiOperation("检查是否可以添加外部用户")
+    @Operation(summary = "检查是否可以添加外部用户")
     @Path("/outer/canAdd")
     @POST
     fun outerCanAdd(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam("入参")
+        @Parameter(description = "入参")
         param: OuterCanAddParam
     ): Result<OuterCanAddVO>
 }

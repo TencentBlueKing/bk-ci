@@ -4,9 +4,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.macos.pojo.VMType
 import com.tencent.devops.dispatch.macos.pojo.VMTypeCreate
 import com.tencent.devops.dispatch.macos.pojo.VMTypeUpdate
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -17,7 +17,7 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_VMTYPE"], description = "OP接口-虚拟机类型资源")
+@Tag(name = "OP_VMTYPE", description = "OP接口-虚拟机类型资源")
 @Path("op/macos/vmTypes")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -25,7 +25,7 @@ interface OpVMTypeResource {
 
     @GET
     @Path("/{vmTypeId}")
-    @ApiOperation("获取虚拟机类型")
+    @Operation(summary = "获取虚拟机类型")
     fun get(
         @PathParam("vmTypeId")
         vmTypeId: Int
@@ -33,20 +33,20 @@ interface OpVMTypeResource {
 
     @GET
     @Path("/")
-    @ApiOperation("获取虚拟机类型列表")
+    @Operation(summary = "获取虚拟机类型列表")
     fun list(): Result<List<VMType>?>
 
     @POST
     @Path("/")
-    @ApiOperation("创建虚拟机类型")
+    @Operation(summary = "创建虚拟机类型")
     fun create(
-        @ApiParam("vmType", required = true)
+        @Parameter(description = "vmType", required = true)
         vmType: VMTypeCreate
     ): Result<Boolean>
 
     @DELETE
     @Path("/{vmTypeId}")
-    @ApiOperation("删除虚拟机类型")
+    @Operation(summary = "删除虚拟机类型")
     fun delete(
         @PathParam("vmTypeId")
         vmTypeId: Int
@@ -54,9 +54,9 @@ interface OpVMTypeResource {
 
     @PUT
     @Path("/{vmTypeId}")
-    @ApiOperation("更新虚拟机类型")
+    @Operation(summary = "更新虚拟机类型")
     fun update(
-        @ApiParam("vmType", required = true)
+        @Parameter(description = "vmType", required = true)
         vmType: VMTypeUpdate
     ): Result<Boolean>
 }

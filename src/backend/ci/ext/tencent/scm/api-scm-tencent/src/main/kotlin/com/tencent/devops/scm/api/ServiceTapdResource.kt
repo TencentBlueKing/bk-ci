@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.sdk.tapd.TapdResult
 import com.tencent.devops.common.sdk.tapd.request.StatusMapRequest
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -44,37 +44,37 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_TAPD"], description = "tapd服务接口")
+@Tag(name = "SERVICE_TAPD", description = "tapd服务接口")
 @Path("/service/tapd")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceTapdResource {
 
-    @ApiOperation("tapd安装应用url")
+    @Operation(summary = "tapd安装应用url")
     @GET
     @Path("/appInstallUrl")
     fun appInstallUrl(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<String>
 
-    @ApiOperation("tapd回调url")
+    @Operation(summary = "tapd回调url")
     @GET
     @Path("/callbackUrl")
     fun callbackUrl(
-        @ApiParam(value = "code")
+        @Parameter(description = "code")
         @QueryParam("code")
         code: String,
-        @ApiParam(value = "state")
+        @Parameter(description = "state")
         @QueryParam("state")
         state: String,
-        @ApiParam(value = "resource")
+        @Parameter(description = "resource")
         @QueryParam("resource")
         resource: String
     ): Result<String>
 
-    @ApiOperation("获取工作流状态中英文名对应关系")
+    @Operation(summary = "获取工作流状态中英文名对应关系")
     @POST
     @Path("/getWorkflowStatusMap")
     fun getWorkflowStatusMap(request: StatusMapRequest): TapdResult<Map<String, String>>

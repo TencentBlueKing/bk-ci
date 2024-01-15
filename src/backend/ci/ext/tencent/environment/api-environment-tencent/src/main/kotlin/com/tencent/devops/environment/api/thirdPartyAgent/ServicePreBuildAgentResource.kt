@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -45,47 +45,47 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_ENVIRONMENT_THIRD_PARTY_AGENT"], description = "PreBuild构建机资源")
+@Tag(name = "SERVICE_ENVIRONMENT_THIRD_PARTY_AGENT", description = "PreBuild构建机资源")
 @Path("/service/environment/thirdPartyAgent")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServicePreBuildAgentResource {
 
-    @ApiOperation("创建PreBuildAgent")
+    @Operation(summary = "创建PreBuildAgent")
     @POST
     @Path("/projects/{projectId}/os/{os}/createPreBuildAgent")
     fun createPrebuildAgent(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("操作系统", required = true)
+        @Parameter(description = "操作系统", required = true)
         @PathParam("os")
         os: OS,
-        @ApiParam("网关地域", required = false)
+        @Parameter(description = "网关地域", required = false)
         @QueryParam("zoneName")
         zoneName: String?,
-        @ApiParam("初始IP", required = false)
+        @Parameter(description = "初始IP", required = false)
         @QueryParam("zoneName")
         initIp: String?,
-        @ApiParam("指定生成node的别名", required = false)
+        @Parameter(description = "指定生成node的别名", required = false)
         @QueryParam("nodeStingId")
         nodeStingId: String?
     ): Result<ThirdPartyAgentStaticInfo>
 
-    @ApiOperation("拉取Prebuild构建机Agent列表")
+    @Operation(summary = "拉取Prebuild构建机Agent列表")
     @GET
     @Path("/projects/{projectId}/os/{os}/listPreBuildAgents")
     fun listPreBuildAgent(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("操作系统", required = false)
+        @Parameter(description = "操作系统", required = false)
         @PathParam("os")
         os: OS?
     ): Result<List<ThirdPartyAgentStaticInfo>>

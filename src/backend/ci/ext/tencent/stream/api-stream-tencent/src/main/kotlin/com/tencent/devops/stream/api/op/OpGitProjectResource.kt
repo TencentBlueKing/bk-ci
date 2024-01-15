@@ -29,9 +29,9 @@ package com.tencent.devops.stream.api.op
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.stream.pojo.GitProjectConfWithPage
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -48,73 +48,73 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpGitProjectResource {
 
-    @ApiOperation("添加git项目")
+    @Operation(summary = "添加git项目")
     @PUT
     @Path("/create")
     fun create(
-        @ApiParam(value = "工蜂项目ID", required = true)
+        @Parameter(description = "工蜂项目ID", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: Long,
-        @ApiParam(value = "工蜂项目名称", required = true)
+        @Parameter(description = "工蜂项目名称", required = true)
         @QueryParam("name")
         name: String,
-        @ApiParam(value = "工蜂项目URL", required = true)
+        @Parameter(description = "工蜂项目URL", required = true)
         @QueryParam("url")
         url: String,
-        @ApiParam(value = "是否可以启用Stream", required = true)
+        @Parameter(description = "是否可以启用Stream", required = true)
         @QueryParam("enable")
         enable: Boolean
     ): Result<Boolean>
 
-    @ApiOperation("修改git项目")
+    @Operation(summary = "修改git项目")
     @POST
     @Path("/update")
     fun update(
-        @ApiParam(value = "工蜂项目ID", required = true)
+        @Parameter(description = "工蜂项目ID", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: Long,
-        @ApiParam(value = "工蜂项目名称", required = false)
+        @Parameter(description = "工蜂项目名称", required = false)
         @QueryParam("name")
         name: String?,
-        @ApiParam(value = "工蜂项目URL", required = false)
+        @Parameter(description = "工蜂项目URL", required = false)
         @QueryParam("url")
         url: String?,
-        @ApiParam(value = "是否可以启用Stream", required = false)
+        @Parameter(description = "是否可以启用Stream", required = false)
         @QueryParam("enable")
         enable: Boolean?
     ): Result<Boolean>
 
-    @ApiOperation("删除git项目")
+    @Operation(summary = "删除git项目")
     @DELETE
     @Path("/delete")
     fun delete(
-        @ApiParam(value = "工蜂项目ID", required = true)
+        @Parameter(description = "工蜂项目ID", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: Long
     ): Result<Boolean>
 
-    @ApiOperation("列出git项目")
+    @Operation(summary = "列出git项目")
     @GET
     @Path("/project/list")
     fun list(
-        @ApiParam(value = "工蜂项目ID", required = false)
+        @Parameter(description = "工蜂项目ID", required = false)
         @QueryParam("gitProjectId")
         gitProjectId: Long?,
-        @ApiParam(value = "工蜂项目名称", required = false)
+        @Parameter(description = "工蜂项目名称", required = false)
         @QueryParam("name")
         name: String?,
-        @ApiParam(value = "工蜂项目URL", required = false)
+        @Parameter(description = "工蜂项目URL", required = false)
         @QueryParam("url")
         url: String?,
-        @ApiParam(value = "第几页，从1开始", required = true)
+        @Parameter(description = "第几页，从1开始", required = true)
         @QueryParam("page")
         page: Int,
-        @ApiParam(value = "每页条数", required = true)
+        @Parameter(description = "每页条数", required = true)
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<GitProjectConfWithPage>
 
-    @ApiOperation("填充存量流水线的版本信息")
+    @Operation(summary = "填充存量流水线的版本信息")
     @GET
     @Path("/fixPipelineInfo")
     fun fixPipelineInfo(): Result<Int>

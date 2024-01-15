@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineExportV2YamlData
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -46,50 +46,50 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_PIPELINE"], description = "服务-流水线资源")
+@Tag(name = "SERVICE_PIPELINE", description = "服务-流水线资源")
 @Path("/service")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceTXPipelineResource {
 
-    @ApiOperation("导出流水线yaml,gitci")
+    @Operation(summary = "导出流水线yaml,gitci")
     @GET
     @Path("/streams/pipelines/{pipelineId}/projects/{projectId}/yaml/gitci")
     fun exportPipelineGitCI(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "流水线Id", required = true)
+        @Parameter(description = "流水线Id", required = true)
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<PipelineExportV2YamlData>
 
-    @ApiOperation("根据自增id获取流水线信息")
+    @Operation(summary = "根据自增id获取流水线信息")
     @GET
     @Path("/streams/pipelines/ids/{id}/info")
     fun getPipelineInfobyId(
         @PathParam("id")
-        @ApiParam(value = "流水线自增id", required = true)
+        @Parameter(description = "流水线自增id", required = true)
         id: Long
     ): Result<SimplePipeline>
 
-    @ApiOperation("用模板实例化一条AM流水线并且触发运行")
+    @Operation(summary = "用模板实例化一条AM流水线并且触发运行")
     @POST
     @Path("/{projectId}/run_pipeline_with_template")
     fun runPipelineWithTemplate(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("templateVersionId")
         templateVersionId: Long,
-        @ApiParam(value = "实例化所需参数", required = true)
+        @Parameter(description = "实例化所需参数", required = true)
         parameters: Map<String, String>
     ): Result<BuildId>
 }

@@ -36,9 +36,9 @@ import com.tencent.devops.experience.pojo.index.HotCategoryParam
 import com.tencent.devops.experience.pojo.index.IndexAppInfoVO
 import com.tencent.devops.experience.pojo.index.IndexBannerVO
 import com.tencent.devops.experience.pojo.index.NewCategoryParam
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.BeanParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
@@ -48,101 +48,101 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["APP_EXPERIENCE_INDEX"], description = "版本体验-首页")
+@Tag(name = "APP_EXPERIENCE_INDEX", description = "版本体验-首页")
 @Path("/app/experiences/index")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface AppExperienceIndexResource {
 
-    @ApiOperation("banner列表")
+    @Operation(summary = "banner列表")
     @Path("/banners")
     @GET
     fun banners(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
-        @ApiParam("页目", required = false)
+        @Parameter(description = "页目", required = false)
         @QueryParam("page")
         page: Int,
-        @ApiParam("每页数目", required = false)
+        @Parameter(description = "每页数目", required = false)
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Pagination<IndexBannerVO>>
 
-    @ApiOperation("热门推荐")
+    @Operation(summary = "热门推荐")
     @Path("/hots")
     @GET
     fun hots(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
-        @ApiParam("页目", required = false)
+        @Parameter(description = "页目", required = false)
         @QueryParam("page")
         page: Int,
-        @ApiParam("每页数目", required = false)
+        @Parameter(description = "每页数目", required = false)
         @QueryParam("pageSize")
         pageSize: Int,
-        @ApiParam("是否包含外部跳转", required = false)
+        @Parameter(description = "是否包含外部跳转", required = false)
         @QueryParam("includeExternalUrl")
         includeExternalUrl: Boolean? = false
     ): Result<Pagination<IndexAppInfoVO>>
 
-    @ApiOperation("鹅厂必备")
+    @Operation(summary = "鹅厂必备")
     @Path("/necessary")
     @GET
     fun necessary(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
-        @ApiParam("页目", required = false)
+        @Parameter(description = "页目", required = false)
         @QueryParam("page")
         page: Int,
-        @ApiParam("每页数目", required = false)
+        @Parameter(description = "每页数目", required = false)
         @QueryParam("pageSize")
         pageSize: Int,
-        @ApiParam("是否包含外部跳转", required = false)
+        @Parameter(description = "是否包含外部跳转", required = false)
         @QueryParam("includeExternalUrl")
         includeExternalUrl: Boolean? = false
     ): Result<Pagination<IndexAppInfoVO>>
 
-    @ApiOperation("本周最新")
+    @Operation(summary = "本周最新")
     @Path("/newest")
     @GET
     fun newest(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
-        @ApiParam("页目", required = false)
+        @Parameter(description = "页目", required = false)
         @QueryParam("page")
         page: Int,
-        @ApiParam("每页数目", required = false)
+        @Parameter(description = "每页数目", required = false)
         @QueryParam("pageSize")
         pageSize: Int,
-        @ApiParam("是否包含外部跳转", required = false)
+        @Parameter(description = "是否包含外部跳转", required = false)
         @QueryParam("includeExternalUrl")
         includeExternalUrl: Boolean? = false
     ): Result<Pagination<IndexAppInfoVO>>
 
-    @ApiOperation("分类列表--热门")
+    @Operation(summary = "分类列表--热门")
     @Path("/category/{categoryId}/hot")
     @GET
     fun hotCategory(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
         @BeanParam
@@ -150,37 +150,37 @@ interface AppExperienceIndexResource {
 
     ): Result<Pagination<IndexAppInfoVO>>
 
-    @ApiOperation("分类列表--最新")
+    @Operation(summary = "分类列表--最新")
     @Path("/category/{categoryId}/new")
     @GET
     fun newCategory(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
         @BeanParam
         newCategoryParam: NewCategoryParam
     ): Result<Pagination<IndexAppInfoVO>>
 
-    @ApiOperation("MiniGame--公开体验")
+    @Operation(summary = "MiniGame--公开体验")
     @Path("/minigame")
     @GET
     fun miniGameExperience(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int
     ): Result<List<IndexAppInfoVO>>
 
-    @ApiOperation("MiniGame--展示图")
+    @Operation(summary = "MiniGame--展示图")
     @Path("/minigame/picture")
     @GET
     fun miniGamePicture(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<String>

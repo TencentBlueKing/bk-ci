@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.experience.pojo.SubscribeParam
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
@@ -43,51 +43,51 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.POST
 
-@Api(tags = ["APP_EXPERIENCE_PUSH"], description = "应用订阅及推送消息")
+@Tag(name = "APP_EXPERIENCE_PUSH", description = "应用订阅及推送消息")
 @Path("/app/experiences/push")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface AppExperiencePushResource {
-    @ApiOperation("绑定用户设备TOKEN")
+    @Operation(summary = "绑定用户设备TOKEN")
     @Path("/bindDeviceToken")
     @POST
     fun bindDeviceToken(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
-        @ApiParam("设备TOKEN", required = true)
+        @Parameter(description = "设备TOKEN", required = true)
         @QueryParam("token")
         token: String
     ): Result<Boolean>
 
-    @ApiOperation("订阅体验")
+    @Operation(summary = "订阅体验")
     @Path("/subscribe")
     @POST
     fun subscribe(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
-        @ApiParam("订阅参数", required = true)
+        @Parameter(description = "订阅参数", required = true)
         subscribeParam: SubscribeParam
     ): Result<Boolean>
 
-    @ApiOperation("取消订阅体验")
+    @Operation(summary = "取消订阅体验")
     @Path("/unSubscribe")
     @POST
     fun unSubscribe(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
-        @ApiParam("取消订阅参数", required = true)
+        @Parameter(description = "取消订阅参数", required = true)
         subscribeParam: SubscribeParam
     ): Result<Boolean>
 }

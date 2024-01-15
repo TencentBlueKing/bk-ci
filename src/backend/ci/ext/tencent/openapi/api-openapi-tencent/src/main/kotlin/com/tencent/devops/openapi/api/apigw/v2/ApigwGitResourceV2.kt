@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.AuthorizeResult
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -44,32 +44,32 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OPEN_API_V2_GIT"], description = "OPEN-API-V2-GIT工蜂资源")
+@Tag(name = "OPEN_API_V2_GIT", description = "OPEN-API-V2-GIT工蜂资源")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v2/git")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwGitResourceV2 {
 
-    @ApiOperation("根据用户ID, 通过oauth方式获取项目", tags = ["v2_app_git_getProject"])
+    @Operation(summary = "根据用户ID, 通过oauth方式获取项目", tags = ["v2_app_git_getProject"])
     @GET
     @Path("/getProject")
     fun getProject(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @ApiParam(value = "repo hash iD", required = false)
+        @Parameter(description = "repo hash iD", required = false)
         @QueryParam("repoHashId")
         repoHashId: String?,
-        @ApiParam(value = "工蜂代码库名字", required = false)
+        @Parameter(description = "工蜂代码库名字", required = false)
         @QueryParam("search")
         search: String? = null
     ): Result<AuthorizeResult>

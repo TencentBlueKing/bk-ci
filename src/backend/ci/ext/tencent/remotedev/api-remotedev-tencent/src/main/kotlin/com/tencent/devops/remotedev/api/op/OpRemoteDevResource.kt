@@ -37,9 +37,9 @@ import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import com.tencent.devops.remotedev.pojo.windows.WindowsPoolListFetchData
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -52,160 +52,160 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_REMOTE_DEV"], description = "OP-REMOTE-DEV")
+@Tag(name = "OP_REMOTE_DEV", description = "OP-REMOTE-DEV")
 @Path("/op")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpRemoteDevResource {
 
-    @ApiOperation("新增工作空间模板")
+    @Operation(summary = "新增工作空间模板")
     @POST
     @Path("/wstemplate/add")
     fun addWorkspaceTemplate(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "模板信息", required = true)
+        @Parameter(description = "模板信息", required = true)
         workspaceTemplate: WorkspaceTemplate
     ): Result<Boolean>
 
-    @ApiOperation("获取工作空间模板")
+    @Operation(summary = "获取工作空间模板")
     @GET
     @Path("/wstemplate/list")
     fun getWorkspaceTemplateList(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<WorkspaceTemplate>>
 
-    @ApiOperation("更新工作空间模板")
+    @Operation(summary = "更新工作空间模板")
     @PUT
     @Path("/wstemplate/update/template/{wsTemplateId}")
     fun updateWorkspaceTemplate(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("wsTemplateId")
         workspaceTemplateId: Long,
-        @ApiParam(value = "模板信息", required = true)
+        @Parameter(description = "模板信息", required = true)
         workspaceTemplate: WorkspaceTemplate
     ): Result<Boolean>
 
-    @ApiOperation("删除工作空间模板")
+    @Operation(summary = "删除工作空间模板")
     @DELETE
     @Path("/wstemplate/delete/template/{wsTemplateId}")
     fun deleteWorkspaceTemplate(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "模板信息", required = true)
+        @Parameter(description = "模板信息", required = true)
         @PathParam("wsTemplateId")
         wsTemplateId: Long
     ): Result<Boolean>
 
-    @ApiOperation("计费刷新")
+    @Operation(summary = "计费刷新")
     @POST
     @Path("/init_billing")
     fun initBilling(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "freeTime (单位分钟)", required = true)
+        @Parameter(description = "freeTime (单位分钟)", required = true)
         @QueryParam("freeTime")
         freeTime: Int
     ): Result<Boolean>
 
-    @ApiOperation("更新用户级别设置")
+    @Operation(summary = "更新用户级别设置")
     @POST
     @Path("/user_setting")
     fun updateUserSetting(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         data: List<OPUserSetting>
     ): Result<Boolean>
 
-    @ApiOperation("续期体验时长")
+    @Operation(summary = "续期体验时长")
     @POST
     @Path("/renewal_time")
     fun renewalExperienceDuration(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "续期时长", required = true)
+        @Parameter(description = "续期时长", required = true)
         @QueryParam("renewalTime")
         renewalTime: Int
     ): Result<Boolean>
 
-    @ApiOperation("获取用户设置")
+    @Operation(summary = "获取用户设置")
     @GET
     @Path("/get_user_setting")
     fun getUserSetting(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<RemoteDevUserSettings>
 
-    @ApiOperation("获取所有用户设置列表")
+    @Operation(summary = "获取所有用户设置列表")
     @GET
     @Path("/get_all_user_settings")
     fun getAllUserSettings(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "指定查询的用户", required = false)
+        @Parameter(description = "指定查询的用户", required = false)
         @QueryParam("queryUser")
         queryUser: String?,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "6666")
+        @Parameter(description = "每页多少条", required = false, defaultValue = "6666")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<RemoteDevUserSettings>>
 
-    @ApiOperation("更新用户组织架构")
+    @Operation(summary = "更新用户组织架构")
     @POST
     @Path("/refresh/all")
     fun refreshUserInfo(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<Boolean>
 
-    @ApiOperation("添加客户端白名单用户")
+    @Operation(summary = "添加客户端白名单用户")
     @POST
     @Path("/whiteList/add")
     fun addWhiteListUser(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "需要添加的白名单用户，多个用;分隔", required = true)
+        @Parameter(description = "需要添加的白名单用户，多个用;分隔", required = true)
         @QueryParam("whiteListUser")
         whiteListUser: String
     ): Result<Boolean>
 
-    @ApiOperation("添加云桌面白名单用户")
+    @Operation(summary = "添加云桌面白名单用户")
     @POST
     @Path("/GPUWhiteList/add")
     fun addGPUWhiteListUser(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "需要添加的白名单用户，多个用;分隔", required = true)
+        @Parameter(description = "需要添加的白名单用户，多个用;分隔", required = true)
         @QueryParam("whiteListUser")
         whiteListUser: String
     ): Result<Boolean>
 
-    @ApiOperation("新增镜像配置")
+    @Operation(summary = "新增镜像配置")
     @POST
     @Path("/image/spec")
     fun addImageSpec(
         spec: ImageSpec
     ): Result<Boolean>
 
-    @ApiOperation("删除镜像配置")
+    @Operation(summary = "删除镜像配置")
     @DELETE
     @Path("/image/spec")
     fun deleteImageSpec(
@@ -213,7 +213,7 @@ interface OpRemoteDevResource {
         id: Int
     ): Result<Boolean>
 
-    @ApiOperation("修改镜像配置")
+    @Operation(summary = "修改镜像配置")
     @PUT
     @Path("/image/spec")
     fun updateImageSpec(
@@ -222,58 +222,58 @@ interface OpRemoteDevResource {
         spec: ImageSpec
     ): Result<Boolean>
 
-    @ApiOperation("镜像配置列表")
+    @Operation(summary = "镜像配置列表")
     @GET
     @Path("/image/spec")
     fun listImageSpec(): Result<List<ImageSpec>?>
 
-    @ApiOperation("休眠工作空间")
+    @Operation(summary = "休眠工作空间")
     @GET
     @Path("/workspace_stop")
     fun stopWorkspace(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
 
-    @ApiOperation("销毁工作空间")
+    @Operation(summary = "销毁工作空间")
     @DELETE
     @Path("/workspace_delete")
     fun deleteWorkspace(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
 
-    @ApiOperation("实时获取START云桌面资源池的机器")
+    @Operation(summary = "实时获取START云桌面资源池的机器")
     @POST
     @Path("/windows/pool/list")
     fun getStartCloudResourceList(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("查询数据")
+        @Parameter(description = "查询数据")
         data: WindowsPoolListFetchData
     ): Result<Page<Map<String, Any>>>
 
-    @ApiOperation("获取CGS资源池的区域和机型列表")
+    @Operation(summary = "获取CGS资源池的区域和机型列表")
     @GET
     @Path("/windows/pool/config")
     fun getCgsConfig(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<CgsResourceConfig>
 
-    @ApiOperation("初始话太湖账号信息")
+    @Operation(summary = "初始话太湖账号信息")
     @POST
     @Path("/init_tai_user_info")
     fun initTaiUserInfo(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         taiUsers: List<String>

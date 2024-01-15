@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.project.pojo.FetchRemoteDevData
 import com.tencent.devops.project.pojo.user.UserDeptDetail
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -46,7 +46,7 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_USER"], description = "项目-人员信息")
+@Tag(name = "SERVICE_USER", description = "项目-人员信息")
 @Path("/service/user/tx")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -54,37 +54,37 @@ interface ServiceTxUserResource {
 
     @GET
     @Path("/projects/{projectCode}/roles")
-    @ApiOperation("获取项目指定角色用户")
+    @Operation(summary = "获取项目指定角色用户")
     fun getProjectUserRoles(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @ApiParam("角色Id", required = true)
+        @Parameter(description = "角色Id", required = true)
         @QueryParam("roleId")
         roleId: BkAuthGroup
     ): Result<List<String>>
 
     @GET
     @Path("/detail")
-    @ApiOperation("查询用户基本信息")
+    @Operation(summary = "查询用户基本信息")
     fun get(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<UserDeptDetail>
 
     @GET
     @Path("/users")
-    @ApiOperation("查询用户基本信息")
+    @Operation(summary = "查询用户基本信息")
     fun getUser(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<Boolean>
 
     @POST
     @Path("/remotedev")
-    @ApiOperation("查询项目的云研发管理员")
+    @Operation(summary = "查询项目的云研发管理员")
     fun getRemoteDevAdmin(
         data: FetchRemoteDevData
     ): Result<Map<String, Set<String>?>>

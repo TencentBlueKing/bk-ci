@@ -30,9 +30,9 @@ package com.tencent.devops.project.api.op
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.project.pojo.UserInfo
 import com.tencent.devops.project.pojo.user.UserDeptDetail
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.POST
@@ -43,47 +43,47 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_PROJECT_USER"], description = "OP_用户")
+@Tag(name = "OP_PROJECT_USER", description = "OP_用户")
 @Path("/op/users")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpUserResource {
 
-    @ApiOperation("同步指定用户tof组织信息")
+    @Operation(summary = "同步指定用户tof组织信息")
     @PUT
     @Path("/{userId}")
     fun refreshUserGroup(
-        @ApiParam(value = "用户id", required = true)
+        @Parameter(description = "用户id", required = true)
         @PathParam("userId")
         userId: String
     ): Result<UserDeptDetail?>
 
-    @ApiOperation("同步所有用户tof组织信息")
+    @Operation(summary = "同步所有用户tof组织信息")
     @PUT
     @Path("/refresh/all")
     fun refreshAllUserGroup(): Result<Boolean>
 
-    @ApiOperation("重置所有用户tof组织信息")
+    @Operation(summary = "重置所有用户tof组织信息")
     @GET
     @Path("/ext/gitci/reset")
     fun resetProjectInfo(): Result<Int>
 
-    @ApiOperation("刷新工蜂CI项目的组织架构")
+    @Operation(summary = "刷新工蜂CI项目的组织架构")
     @GET
     @Path("/ext/gitci/fixProjectInfo")
     fun fixGitCIProjectInfo(
-        @ApiParam("起始ID", required = false)
+        @Parameter(description = "起始ID", required = false)
         @QueryParam("start")
         start: Long?,
-        @ApiParam("单次数量", required = false)
+        @Parameter(description = "单次数量", required = false)
         @QueryParam("limit")
         limit: Int?,
-        @ApiParam("间隔时间", required = false)
+        @Parameter(description = "间隔时间", required = false)
         @QueryParam("sleep")
         sleep: Long?
     ): Result<Int>
 
-    @ApiOperation("添加公共账号")
+    @Operation(summary = "添加公共账号")
     @POST
     @Path("/ext/public/account")
     fun createPublicAccount(
