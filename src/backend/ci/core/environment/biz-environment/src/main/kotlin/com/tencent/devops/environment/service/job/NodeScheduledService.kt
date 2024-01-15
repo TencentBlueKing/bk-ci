@@ -8,6 +8,7 @@ import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.job.AgentVersion
 import com.tencent.devops.environment.pojo.job.DisplayNameInfo
 import com.tencent.devops.environment.pojo.job.ccres.CCInfo
+import com.tencent.devops.environment.pojo.job.req.OpOperateReq
 import com.tencent.devops.environment.service.job.QueryFromCCService.Companion.FIELD_BK_HOST_ID
 import com.tencent.devops.environment.service.job.QueryFromCCService.Companion.FIELD_BK_HOST_INNERIP
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
@@ -24,7 +25,8 @@ class NodeScheduledService @Autowired constructor(
     private val nodeDao: NodeDao,
     private val queryFromCCService: QueryFromCCService,
     private val redisOperation: RedisOperation,
-    private val queryAgentStatusService: QueryAgentStatusService
+    private val queryAgentStatusService: QueryAgentStatusService,
+    private val opService: OpService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(NodeScheduledService::class.java)
@@ -77,7 +79,12 @@ class NodeScheduledService @Autowired constructor(
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countCmdbNodes.toLong())
             for (page in 1..totalPages) {
                 val cmdbNodesRecords = nodeDao.getCmdbNodes(dslContext, page - 1, DEFAULT_PAGE_SIZE)
-                val existAgentVersionList = cmdbNodesRecords.map {
+                val existAgentVersionList = cmdbNodesRecords.filter {
+                    val opInfo = opService.operateOpProject(
+                        "", OpOperateReq(2, listOf(it.projectId))
+                    ).projGrayStatus?.get(0)
+                    it.projectId == opInfo?.englishName && true == opInfo?.projGrayStatus
+                }.map {
                     AgentVersion(
                         ip = it.nodeIp,
                         bkHostId = it.hostId,

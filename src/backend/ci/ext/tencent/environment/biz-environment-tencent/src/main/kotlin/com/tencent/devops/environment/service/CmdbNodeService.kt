@@ -48,6 +48,8 @@ import com.tencent.devops.environment.pojo.job.ReImportCmdbNodeInfo
 import com.tencent.devops.environment.pojo.job.ccres.CCInfo
 import com.tencent.devops.environment.pojo.job.ccres.CCResp
 import com.tencent.devops.environment.pojo.job.ccres.QueryCCListHostWithoutBizData
+import com.tencent.devops.environment.pojo.job.req.OpOperateReq
+import com.tencent.devops.environment.service.job.OpService
 import com.tencent.devops.environment.service.job.QueryAgentStatusService
 import com.tencent.devops.environment.service.job.QueryFromCCService
 import com.tencent.devops.environment.service.job.QueryFromCCService.Companion.FIELD_BK_HOST_ID
@@ -70,7 +72,8 @@ class CmdbNodeService @Autowired constructor(
     private val esbAgentClient: EsbAgentClient,
     private val environmentPermissionService: EnvironmentPermissionService,
     private val queryFromCCService: QueryFromCCService,
-    private val queryAgentStatusService: QueryAgentStatusService
+    private val queryAgentStatusService: QueryAgentStatusService,
+    private val opService: OpService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(CmdbNodeService::class.java)
@@ -195,6 +198,8 @@ class CmdbNodeService @Autowired constructor(
         if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]ipToAgentVersionMap:$ipToAgentVersionMap")
         val toAddNodeList = toAddIpList.map {
             val cmdbNode = cmdbIpToNodeMap[it]!!
+            val opInfo = opService.operateOpProject("", OpOperateReq(2, listOf(projectId))).projGrayStatus?.get(0)
+            val grayTag = projectId == opInfo?.englishName && true == opInfo.projGrayStatus
             CreateNodeModel(
                 nodeStringId = "",
                 projectId = projectId,
@@ -213,8 +218,12 @@ class CmdbNodeService @Autowired constructor(
                 osName = cmdbNode.osName,
                 operator = cmdbNode.operator,
                 bakOperator = cmdbNode.bakOperator,
-                agentStatus = agentStatusMap[cmdbNode.ip] ?: false,
-                agentVersion = ipToAgentVersionMap?.get(cmdbNode.ip)?.version,
+                agentStatus = if (grayTag) {
+                    1 == ipToAgentVersionMap?.get(cmdbNode.ip)?.status
+                } else {
+                    agentStatusMap[cmdbNode.ip] ?: false
+                },
+                agentVersion = if (grayTag) ipToAgentVersionMap?.get(cmdbNode.ip)?.version else null,
                 hostId = queryCCIpToCCInfoMap[cmdbNode.ip]?.bkHostId,
                 cloudAreaId = DEFAULT_CLOUD_AREA_ID
             )
