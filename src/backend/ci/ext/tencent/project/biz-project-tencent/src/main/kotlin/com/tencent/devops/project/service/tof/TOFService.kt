@@ -110,7 +110,7 @@ class TOFService @Autowired constructor(
         validate()
         var detail = userDeptCache.getIfPresent(userId)
         if (detail == null) {
-            detail = getDeptFromTof(operator, userId, bkTicket)
+            detail = getPublicAccount(userId) ?: getDeptFromTof(operator, userId, bkTicket)
             if (detail == null) {
                 logger.info("user $userId is level office")
                 throw OperationException(
@@ -504,8 +504,8 @@ class TOFService @Autowired constructor(
         }
     }
 
-    private fun getDeftFromCache(userId: String): UserDeptDetail? {
-        val bkCacheDeft = userService.getUserDept(userId)
+    private fun getPublicAccount(userId: String): UserDeptDetail? {
+        val bkCacheDeft = userService.getPublicAccount(userId)
         if (bkCacheDeft != null) {
             return bkCacheDeft
         }
