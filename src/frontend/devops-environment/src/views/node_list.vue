@@ -217,8 +217,18 @@
                                             }"
                                         >
                                             <bk-button
-                                                v-if="['NOT_IN_CC'].includes(props.row.nodeStatus) && (userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator)"
+                                                v-if="['NOT_IN_CC'].includes(props.row.nodeStatus)"
                                                 text
+                                                v-perm="{
+                                                    hasPermission: props.row.canEdit,
+                                                    disablePermissionApi: true,
+                                                    permissionData: {
+                                                        projectId: projectId,
+                                                        resourceType: NODE_RESOURCE_TYPE,
+                                                        resourceCode: props.row.nodeHashId,
+                                                        action: NODE_RESOURCE_ACTION.EDIT
+                                                    }
+                                                }"
                                                 :disabled="!(userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator)"
                                                 @click="handleReImport(props.row.ip)"
                                                 class="mr5">
@@ -228,15 +238,35 @@
                                         <!-- 重装Agent -->
                                         <bk-button
                                             v-if="props.row.nodeStatus === 'ABNORMAL'"
+                                            v-perm="{
+                                                hasPermission: props.row.canEdit,
+                                                disablePermissionApi: true,
+                                                permissionData: {
+                                                    projectId: projectId,
+                                                    resourceType: NODE_RESOURCE_TYPE,
+                                                    resourceCode: props.row.nodeHashId,
+                                                    action: NODE_RESOURCE_ACTION.EDIT
+                                                }
+                                            }"
                                             text
                                             class="mr5"
-                                            @click="handleInstallAgent"
+                                            @click="installAgent(props.row)"
                                         >
                                             {{ $t('environment.reinstallAgent') }}
                                         </bk-button>
                                         <!-- 未安装Agent -->
                                         <bk-button
                                             v-if="props.row.nodeStatus === 'NOT_INSTALLED'"
+                                            v-perm="{
+                                                hasPermission: props.row.canEdit,
+                                                disablePermissionApi: true,
+                                                permissionData: {
+                                                    projectId: projectId,
+                                                    resourceType: NODE_RESOURCE_TYPE,
+                                                    resourceCode: props.row.nodeHashId,
+                                                    action: NODE_RESOURCE_ACTION.EDIT
+                                                }
+                                            }"
                                             text
                                             class="mr5"
                                             @click="installAgent(props.row)"
@@ -249,11 +279,21 @@
                                         <!-- Agent异常 - 重装Agent -->
                                         <bk-button
                                             v-if="props.row.nodeStatus === 'ABNORMAL'"
+                                            v-perm="{
+                                                hasPermission: props.row.canEdit,
+                                                disablePermissionApi: true,
+                                                permissionData: {
+                                                    projectId: projectId,
+                                                    resourceType: NODE_RESOURCE_TYPE,
+                                                    resourceCode: props.row.nodeHashId,
+                                                    action: NODE_RESOURCE_ACTION.EDIT
+                                                }
+                                            }"
                                             text
                                             class="mr5"
                                             @click="installAgent(props.row)"
                                         >
-                                            {{ $t('environment.installAgent') }}
+                                            {{ $t('environment.reinstallAgent') }}
                                         </bk-button>
                                     </template>
                                     <bk-button
@@ -356,6 +396,7 @@
         <!-- 重装/安装Agent -->
         <installAgent
             ref="installAgent"
+            :inner-ip="installAgentIp"
         />
     </div>
 </template>
@@ -494,7 +535,8 @@
                 requestParams: {},
                 buildNodes: ['DEVCLOUD', 'THIRDPARTY'], // Build 构建用途的节点 - 第三方构建机类型
                 deploymentNodes: ['CC', 'CMDB', 'UNKNOWN', 'OTHER'], // deployment 部署用途的节点
-                reImportIp: ''
+                reImportIp: '',
+                installAgentIp: ''
             }
         },
         computed: {
@@ -980,8 +1022,8 @@
                     this.constructToolConf.importText = this.$t('environment.confirm')
                     this.switchConstruct(node)
                 } else if (this.deploymentNodes.includes(node.nodeType)) {
-                    const url = `${IWIKI_DOCS_URL}/x/WtMrAg`
-                    window.open(url, '_blank')
+                    this.installAgentIp = node.ip
+                    this.$refs.installAgent.isShow = true
                 }
             },
             async toImportNode (type) {
@@ -1198,9 +1240,6 @@
             handlePageLimitChange (limit) {
                 this.pagination.limit = limit
                 this.requestList(this.requestParams)
-            },
-            handleInstallAgent () {
-                this.$refs.installAgent.isShow = true
             },
             handleReImport (ip) {
                 this.reImportIp = ip

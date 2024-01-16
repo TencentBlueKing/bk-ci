@@ -254,7 +254,7 @@
         "DELETED": "Deleted",
         "LOST": "Lost",
         "CREATING": "Creating",
-        "RUNNING": "Running Agent",
+        "RUNNING": "Installing Agent",
         "STARTING": "Starting",
         "STOPPING": "Stopping",
         "STOPPED": "Stopped",
@@ -269,8 +269,7 @@
         "TSTACK": "DevCloud",
         "OTHER": "Other",
         "UNKNOWN": "Unknown",
-        "NOT_INSTALLED": "Not installed",
-        "AGENT_ABNORMAL": "Agent Abnormal"
+        "NOT_INSTALLED": "Not installed"
     },
     "newPool": "New Pool",
     "nodeSearchTips": "IP / Alias / Creator / Last Modifier",
@@ -312,6 +311,7 @@
     "retry": "Retry",
     "scriptExecution": "Script Execution",
     "fileTransfer": "File Transfer",
+    "installationChannel": "Installation Channel",
     "状态": "Status",
     "总耗时": "Total Time",
     "未执行": "Not Executed",
@@ -401,5 +401,7 @@
     "重新授权": "Reauthorize",
     "主机负责人已变更，请联系主机负责人重新授权使用": "主机负责人已变更，请联系主机负责人重新授权使用",
     "确认授权节点X在流水线中进行远程脚本执行或构件分发吗": "确认授权节点 [{0}] 在流水线中进行远程脚本执行或构件分发吗？",
-    "你不是主机负责人，请联系主机负责人重新导入使用": "你不是主机负责人，请联系主机负责人重新导入使用"
+    "你不是主机负责人，请联系主机负责人重新导入使用": "你不是主机负责人，请联系主机负责人重新导入使用",
+    "自动选择": "自动选择",
+    "其他": "其他"
 }

@@ -444,7 +444,7 @@
                     style: {
                         textAlign: 'center'
                     }
-                }, `${this.$t('environment.nodeInfo.removeNodetips', [row.nodeId])}？`)
+                }, `${this.$t('environment.nodeInfo.removeNodetips', [row.displayName])}？`)
 
                 this.$bkInfo({
                     title: this.$t('environment.remove'),

@@ -82,7 +82,7 @@
                         <!-- <div class="delete-handler"><i class="devops-icon icon-close"></i></div> -->
                     </div>
                 </div>
-                <p v-if="isAgent" class="target-console-tips">{{ $t('environment.nodeInfo.loginMethod') }}：ssh -p36000 root@{{ nodeIp }} {{ $t('environment.nodeInfo.checkMails') }}！</p>
+                <p v-if="isAgent && constructImportForm.model !== 'WINDOWS'" class="target-console-tips">{{ $t('environment.nodeInfo.loginMethod') }}：ssh -p36000 root@{{ nodeIp }} </p>
             </div>
 
             <empty-tips v-if="!hasPermission"

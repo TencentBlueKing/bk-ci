@@ -7,9 +7,9 @@
     >
         <div class="sideslider-title" slot="header">
             {{ $t('environment.installGseAgent') }}
-            <span class="node-title">{{ $t('environment.nodeTitle') }}: 10.20.65.48</span>
+            <span class="node-title">{{ $t('environment.nodeTitle') }}: {{ innerIp }}</span>
         </div>
-        <!-- <div slot="content">
+        <div slot="content" v-if="isEditing">
             <bk-alert type="info" :title="$t('environment.installAgentTips')" closable></bk-alert>
             <bk-form
                 class="mt20"
@@ -21,16 +21,17 @@
                     :required="true"
                     property="os"
                 >
-                    <bk-radio-group v-model="formData.os">
-                        <bk-radio value="linux" class="mr20">Linux</bk-radio>
-                        <bk-radio value="windows" class="mr20">Windows</bk-radio>
-                        <bk-radio value="macOs">macOs</bk-radio>
+                    <bk-radio-group v-model="formData.osType">
+                        <bk-radio value="LINUX" class="mr20">Linux</bk-radio>
+                        <bk-radio value="WINDOWS" class="mr20">Windows</bk-radio>
+                        <bk-radio value="AIX" class="mr20">Aix</bk-radio>
+                        <bk-radio value="SOLARIS">Solaris</bk-radio>
                     </bk-radio-group>
                 </bk-form-item>
                 <bk-form-item
                     :label="$t('environment.loginAccount')"
                     :required="true"
-                    property="loginAccount"
+                    property="account"
                 >
                     <bk-input
                         v-model="formData.account"
@@ -40,21 +41,22 @@
                 <bk-form-item
                     :label="$t('environment.oauthMethod')"
                     :required="true"
-                    property="oauthMethod"
+                    property="authType"
                 >
-                    <bk-radio-group v-model="formData.oauthMethod">
-                        <bk-radio value="password" class="mr20">{{ $t('environment.password') }}</bk-radio>
-                        <bk-radio value="key" class="mr20">{{ $t('environment.key') }}</bk-radio>
+                    <bk-radio-group v-model="formData.authType">
+                        <bk-radio value="PASSWORD" class="mr20">{{ $t('environment.password') }}</bk-radio>
+                        <bk-radio value="KEY" class="mr20">{{ $t('environment.key') }}</bk-radio>
                     </bk-radio-group>
                 </bk-form-item>
                 <bk-form-item
-                    v-if="formData.oauthMethod === 'password'"
+                    v-if="formData.authType === 'PASSWORD'"
                     :label="$t('environment.loginPassword')"
                     :required="true"
-                    property="loginPassword"
+                    property="password"
                 >
                     <bk-input
-                        v-model="formData.loginPassword"
+                        v-model="formData.password"
+                        type="password"
                         :placeholder="$t('environment.passwordPlaceholder')"
                     />
                     <div class="password-tips">{{ $t('environment.passwordTips') }}</div>
@@ -73,33 +75,56 @@
                     </bk-upload>
                     <div class="keyFile-tips">{{ $t('environment.keyFileTips') }}</div>
                 </bk-form-item>
+                <bk-form-item
+                    :label="$t('environment.installationChannel')"
+                    :required="true"
+                    property="installChannelId"
+                >
+                    <bk-select
+                        v-model="formData.installChannelId"
+                    >
+                        <bk-option v-for="option in channelList"
+                            :key="option.id"
+                            :id="option.id"
+                            :name="option.name">
+                        </bk-option>
+                    </bk-select>
+                </bk-form-item>
             </bk-form>
-        </div> -->
-        <div class="sideslider-content" slot="content">
+        </div>
+        <div class="sideslider-content" slot="content" v-else>
             <div class="install-status">
-                <template>
-                    <Icon class="icon" name="loading" />
-                    <span>{{ $t('environment.installingTips') }}</span>
-                </template>
-                <!-- <template>
+                <template v-if="installStatus === 'SUCCESS'">
                     <i class="bk-icon import-status-icon icon-check-1 success icon"></i>
                     <span>{{ $t('environment.installSuccessTips') }}</span>
-                </template> -->
-                <!-- <template>
+                </template>
+                <template v-else-if="installStatus === 'FAILED'">
                     <i class="bk-icon import-status-icon icon-close error icon"></i>
                     <span>{{ $t('environment.installFailTips') }}</span>
                     <bk-button text class="ml10">{{ $t('environment.retry') }}</bk-button>
-                </template> -->
+                </template>
+                <template v-else>
+                    <Icon class="icon" name="loading" />
+                    <span>{{ $t('environment.installingTips') }}</span>
+                </template>
             </div>
             <div ref="editor" class="log-wrapper">
                 <div ref="executeScriptLog" v-once id="executeScriptLog" style="height: 100%;" />
             </div>
         </div>
         <div slot="footer">
-            <bk-button class="ml20" theme="primary">
+            <bk-button
+                class="ml20"
+                theme="primary"
+                :loading="isLoading"
+                @click="handleConFirm"
+            >
                 {{ $t('environment.confirm') }}
             </bk-button>
-            <bk-button>
+            <bk-button
+                :loading="isLoading"
+                @click="handleCancel"
+            >
                 {{ $t('environment.cancel') }}
             </bk-button>
         </div>
@@ -113,23 +138,50 @@
     import 'ace-builds/src-noconflict/theme-monokai'
     import 'ace-builds/src-noconflict/ext-searchbox'
     export default {
+        props: {
+            innerIp: {
+                type: String,
+                default: ''
+            }
+        },
         data () {
+            const getDefaultFormData = () => {
+                return {
+                    osType: 'LINUX',
+                    account: '',
+                    authType: 'PASSWORD',
+                    password: '',
+                    installChannelId: 'auto',
+                    innerIp: ''
+                }
+            }
             return {
                 isZH: true,
                 isShow: false,
+                isLoading: false,
                 labelWidth: 100,
-                formData: {
-                    oauthMethod: 'password'
-                },
-                isWillAutoScroll: true
+                formData: getDefaultFormData(),
+                isWillAutoScroll: true,
+                getDefaultFormData,
+                channelList: [],
+                isEditing: true,
+                jobId: -1,
+                installStatus: '',
+                taskLog: ''
+            }
+        },
+        computed: {
+            projectId () {
+                return this.$route.params.projectId
             }
         },
         watch: {
             isShow (val) {
                 if (val) {
-                    this.$nextTick(() => {
-                        this.initEditor()
-                    })
+                    this.fetchChannelList()
+                    this.formData.innerIp = this.innerIp
+                } else {
+                    this.handleCancel()
                 }
             }
         },
@@ -168,6 +220,87 @@
                     editor.destroy()
                     editor.container.remove()
                 })
+            },
+
+            async handleConFirm () {
+                try {
+                    this.isLoading = true
+                    const params = { ...this.formData }
+                    if (params.installChannelId === 'auto') {
+                        params.isAutoChooseInstallChannelId = true
+                        delete params.installChannelId
+                    } else if (params.installChannelId === 'others') {
+                        params.isAutoChooseInstallChannelId = false
+                        delete params.installChannelId
+                    } else {
+                        params.isAutoChooseInstallChannelId = false
+                    }
+                    const hosts = []
+                    hosts.push(params)
+                    const res = await this.$store.dispatch('environment/installAgent', {
+                        projectId: this.projectId,
+                        hosts
+                    })
+                    this.jobId = res.jobId
+                    this.isEditing = false
+                    this.$nextTick(() => {
+                        this.initEditor()
+                    })
+                    setTimeout(async () => {
+                        await this.fetchInstallAgentStatus()
+                        await this.fetchInstallAgentTaskLog()
+                    }, 1000)
+                } catch {
+                    this.isLoading = false
+                }
+            },
+
+            handleCancel () {
+                this.formData = this.getDefaultFormData()
+                this.isLoading = false
+                this.isEditing = true
+                this.jobId = -1
+            },
+            
+            async fetchChannelList () {
+                const res = await this.$store.dispatch('environment/getChannelList', {
+                    projectId: this.projectId
+                })
+                this.channelList = res.installChannelList
+                this.channelList.unshift({
+                    id: 'auto',
+                    name: this.$t('environment.自动选择')
+                })
+                this.channelList.push({
+                    id: 'others',
+                    name: this.$t('environment.其他')
+                })
+            },
+
+            async fetchInstallAgentStatus () {
+                const res = await this.$store.dispatch('environment/getAgentTaskStatus', {
+                    projectId: this.projectId,
+                    jobId: 86865,
+                    params: {
+                        page: 1,
+                        pageSize: 20
+                    }
+                })
+                this.installStatus = res.status
+                this.instanceId = res.list.find(i => i.innerIp === this.innerIp).instanceId
+            },
+
+            async fetchInstallAgentTaskLog () {
+                const res = await this.$store.dispatch('environment/getAgentTaskLog', {
+                    projectId: this.projectId,
+                    jobId: this.jobId,
+                    instanceId: this.instanceId
+                })
+                const logList = []
+                res.queryAgentTaskLogResult.forEach(i => {
+                    if (i.log) logList.push(i.log)
+                })
+                this.taskLog = logList.join('/n')
             }
         }
     }

@@ -437,6 +437,32 @@ const actions = {
         projectId, jobInstanceId, stepInstanceId
     }) {
         return vue.$ajax.get(`${prefix}/user/job/${projectId}/get_step_instance_detail?jobInstanceId=${jobInstanceId}&stepInstanceId=${stepInstanceId}`)
+    },
+
+    installAgent (_, { projectId, hosts }) {
+        return vue.$ajax.post(`${prefix}/user/job/${projectId}/install_agent`, {
+            hosts
+        })
+    },
+    // 安装通道列表
+    getChannelList (_, { projectId }) {
+        return vue.$ajax.get(`${prefix}/user/job/${projectId}/query_agent_install_channel?withHidden=true`)
+    },
+    // 查询agent任务状态的接口
+    getAgentTaskStatus (_, { projectId, jobId, params }) {
+        return vue.$ajax.post(`${prefix}/user/job/${projectId}/${jobId}/query_agent_task_status`, params)
+    },
+    // 查询agent任务具体日志
+    getAgentTaskLog (_, { projectId, jobId, instanceId }) {
+        return vue.$ajax.get(`${prefix}/user/job/${projectId}/${jobId}/query_agent_task_log?instanceId=${instanceId}`)
+    },
+    // 终止agent安装任务
+    terminalAgentInstall (_, { projectId, jobId }) {
+        return vue.$ajax.post(`${prefix}/user/job/${projectId}/${jobId}/terminal_agent_install_task`)
+    },
+    // 重装Agent任务
+    retryAgentInstall (_, { projectId, jobId }) {
+        return vue.$ajax.post(`${prefix}/user/job/${projectId}/${jobId}/retry_agent_install_task`)
     }
 }
 
