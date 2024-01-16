@@ -22,6 +22,8 @@ import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTask
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.multipart.MultipartFile
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -136,6 +138,8 @@ interface UserJobResource {
         @ApiParam(value = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
+        @RequestParam("secretKey")
+        secretKey: MultipartFile?,
         @ApiParam(value = "安装agent的请求信息", required = true)
         installAgentReq: InstallAgentReq
     ): AgentResult<InstallAgentResult>

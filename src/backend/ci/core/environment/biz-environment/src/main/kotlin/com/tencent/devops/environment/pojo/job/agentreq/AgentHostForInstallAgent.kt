@@ -33,6 +33,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("安装agent的请求信息中的 host信息")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 data class AgentHostForInstallAgent(
     @ApiModelProperty(value = "业务ID", required = true)
     @JsonProperty("bk_biz_id")

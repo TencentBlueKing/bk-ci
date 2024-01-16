@@ -68,11 +68,13 @@ import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTask
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import org.springframework.web.multipart.MultipartFile
 
 @Service("AgentService")
 data class AgentService @Autowired constructor(
     private val agentApi: AgentApi,
-    private val chooseAgentInstallChannelIdService: ChooseAgentInstallChannelIdService
+    private val chooseAgentInstallChannelIdService: ChooseAgentInstallChannelIdService,
+    private val fileService: FileService
 ) {
     @Value("\${job.bkBizScopeId:#{null}}")
     val bkBizScopeId: Int = 0
@@ -86,6 +88,7 @@ data class AgentService @Autowired constructor(
     fun installAgent(
         userId: String,
         projectId: String,
+        secretKey: MultipartFile?,
         installAgentReq: InstallAgentReq
     ): AgentResult<InstallAgentResult> {
         AgentApi.setThreadLocal("installAgent")
@@ -114,7 +117,7 @@ data class AgentService @Autowired constructor(
                     account = it.account,
                     password = it.password,
                     port = DEFAULT_INSTALL_AGENT_PORT,
-                    key = it.key,
+                    key = if ("KEY" == it.authType) fileService.convertFileContentToString(secretKey) else it.key,
                     isManual = it.isManual,
                     retention = it.retention,
                     peerExchangeSwitchForAgent = it.peerExchangeSwitchForAgent,
