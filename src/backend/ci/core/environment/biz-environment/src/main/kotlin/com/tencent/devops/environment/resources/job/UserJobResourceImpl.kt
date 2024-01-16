@@ -25,7 +25,6 @@ import com.tencent.devops.environment.service.job.AgentService
 import com.tencent.devops.environment.service.job.JobService
 import com.tencent.devops.environment.service.job.PermissionManageService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.multipart.MultipartFile
 
 @RestResource
 class UserJobResourceImpl @Autowired constructor(

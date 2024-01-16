@@ -22,9 +22,6 @@ import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTask
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.multipart.MultipartFile
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
