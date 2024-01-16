@@ -248,17 +248,24 @@ export default {
                     actionType
                 }
             })
+            if (data.yamlInvalidMsg) {
+                throw new Error(data.yamlInvalidMsg)
+            }
             switch (actionType) {
                 case 'FULL_YAML2MODEL':
-                    commit(SET_PIPELINE, data?.modelAndSetting?.model)
-                    commit(SET_PIPELINE_WITHOUT_TRIGGER, {
-                        ...(data?.modelAndSetting?.model ?? {}),
-                        stages: data?.modelAndSetting?.model.stages.slice(1)
-                    })
-                    commit(PIPELINE_SETTING_MUTATION, data?.modelAndSetting?.setting)
+                    if (data?.modelAndSetting?.model) {
+                        commit(SET_PIPELINE, data?.modelAndSetting?.model)
+                        commit(SET_PIPELINE_WITHOUT_TRIGGER, {
+                            ...(data?.modelAndSetting?.model ?? {}),
+                            stages: data?.modelAndSetting?.model.stages.slice(1)
+                        })
+                        commit(PIPELINE_SETTING_MUTATION, data?.modelAndSetting?.setting)
+                    }
                     break
                 case 'FULL_MODEL2YAML':
-                    commit(SET_PIPELINE_YAML, data?.newYaml)
+                    if (data?.newYaml) {
+                        commit(SET_PIPELINE_YAML, data?.newYaml)
+                    }
                     break
             }
             return data

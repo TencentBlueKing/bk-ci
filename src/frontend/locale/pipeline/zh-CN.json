@@ -1191,6 +1191,7 @@
   "lastModify": "最近修改时间",
   "projectedGroupDisableTips": "仅项目管理员可以创建项目可见的流水线组",
   "groupEditDisableTips": "只有管理员\\CI管理员可以对项目流水线组添加\\移出流水线",
+  "pacGroupDisableTips": "由开启 PAC 模式自动创建，不支持手动添加/移除流水线",
   "noDeletePipelines": "删除流水线列表为空",
   "deleted": "已删除",
   "addLabel": "新建标签",
@@ -1381,5 +1382,8 @@
   "templateVersion": "模版版本",
   "documentTitlePipeline": "流水线 | 持续集成平台-蓝盾 | 腾讯蓝鲸智云",
   "saveBeforeSwitch": "请先保存流水线，否则所有修改将丢失",
-  "tips": "提示"
+  "tips": "提示",
+  "filterByPacRepo": "所属代码库",
+  "filterByPacYamlDir": "所属路径",
+  "notAllowPatchDeletePacPipelineTips": "由开启 PAC 模式自动创建，删除流水线请前往代码库操作"
 }

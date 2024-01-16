@@ -95,26 +95,26 @@
                     }
                 })
                 return {
-                    data:
-          res.children?.map((item) => ({
-            ...item,
-            level: folder.level + 1
-          })) ?? []
+                    data: res.children?.map((item) => ({
+                        ...item,
+                        level: folder.level + 1
+                    })) ?? []
                 }
             },
             async search (keyword) {
-                const res = await this.requestCustomRepo({
+                debugger
+                const res = await this.requestCustomFolder({
                     projectId: this.$route.params.projectId,
                     params: {
                         name: `*${keyword}*`
                     }
                 })
-      this.$refs?.customRepoTree?.setData?.([
-        {
-          ...this.customRootFolder,
-          children: res.children
-        }
-      ])
+                this.$refs?.customRepoTree?.setData?.([
+                    {
+                    ...this.customRootFolder,
+                    children: res.children
+                    }
+                ])
             },
             handleSelect (folder) {
                 this.activeFolder = folder.id

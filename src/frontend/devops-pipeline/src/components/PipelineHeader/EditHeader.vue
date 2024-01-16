@@ -25,7 +25,6 @@
             <bk-button
                 :disabled="!canDebug"
                 :loading="executeStatus"
-                :title="canManualStartup ? '' : $t('newlist.cannotManual')"
                 v-perm="{
                     permissionData: {
                         projectId: $route.params.projectId,

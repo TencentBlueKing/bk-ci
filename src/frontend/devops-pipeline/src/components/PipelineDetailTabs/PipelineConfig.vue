@@ -97,7 +97,8 @@
             ]),
             ...mapGetters({
                 isCodeMode: 'isCodeMode',
-                getPipelineSubscriptions: 'atom/getPipelineSubscriptions'
+                getPipelineSubscriptions: 'atom/getPipelineSubscriptions',
+                draftVersionName: 'atom/getDraftVersionName'
             }),
             pipelineType () {
                 return this.$route.params.type
@@ -111,7 +112,7 @@
             canRollBack () {
                 return (
                     this.activePipelineVersion !== this.pipelineInfo?.releaseVersion
-                    && !this.pipelineInfo?.canDebug
+                    && !this.isActiveDraft
                 )
             },
             isCurrentVersion () {
@@ -122,9 +123,6 @@
             },
             draftLastUpdateTime () {
                 return convertTime(this.activePipelineVersionModel?.updateTime)
-            },
-            draftVersionName () {
-                return this.$refs?.versionSideslider?.getDraftVersion()
             },
             dynamicComponentConf () {
                 switch (this.pipelineType) {

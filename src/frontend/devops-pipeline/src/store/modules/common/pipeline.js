@@ -346,5 +346,8 @@ export const actions = {
         } catch (e) {
             console.log(e)
         }
+    },
+    getPACRepoCiDirList: (_, { projectId, repoHashId }) => {
+        return request.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repoHashId}/ciSubDir`)
     }
 }
