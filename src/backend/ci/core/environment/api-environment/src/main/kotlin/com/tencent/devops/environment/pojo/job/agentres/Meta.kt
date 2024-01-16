@@ -32,14 +32,14 @@ import io.swagger.annotations.ApiModelProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Meta(
-    @ApiModelProperty(value = "任务对象类型，1: AGENT 2：PLUGIN 3：PROXY", required = true)
-    val type: String,
-    @ApiModelProperty(value = "步骤类型", required = true)
-    val stepType: String,
-    @ApiModelProperty(value = "操作类型", required = true)
-    val opType: String,
-    @ApiModelProperty(value = "操作类型名称", required = true)
-    val opTypeDisplay: String,
-    @ApiModelProperty(value = "订阅步骤类型", required = true)
-    val stepTypeDisplay: String
+    @ApiModelProperty(value = "任务对象类型，1: AGENT 2：PLUGIN 3：PROXY")
+    val type: String?,
+    @ApiModelProperty(value = "步骤类型")
+    val stepType: String?,
+    @ApiModelProperty(value = "操作类型")
+    val opType: String?,
+    @ApiModelProperty(value = "操作类型名称")
+    val opTypeDisplay: String?,
+    @ApiModelProperty(value = "订阅步骤类型")
+    val stepTypeDisplay: String?
 )
