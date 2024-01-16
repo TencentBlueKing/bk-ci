@@ -86,6 +86,7 @@ class TxSecurityService constructor(
         logger.info("get user water mark by credentialKey:$credentialKey|$projectId")
         val result = verifyUser(credentialKey, projectId)
         return if (result.status != 0) {
+            ActionAuditContext.current().disable()
             result
         } else {
             val userId = result.data!!
