@@ -29,6 +29,7 @@ package com.tencent.devops.common.webhook.pojo.code.github
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMrEventAction
 
 @Suppress("ALL")
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -46,6 +47,25 @@ data class GithubPullRequestEvent(
 ) : GithubEvent(sender) {
     companion object {
         const val classType = "pull_request"
+    }
+
+    /**
+     * 是否合并
+     */
+    fun isMerged() = action == "closed" && pullRequest.merged
+
+    /**
+     * 根据当前event获取Pr的实际action
+     */
+    fun getRealAction(): String? {
+        return when {
+            isMerged() -> TGitMrEventAction.MERGE.value
+            action == "opened" -> TGitMrEventAction.OPEN.value
+            action == "reopened" -> TGitMrEventAction.REOPEN.value
+            action == "synchronize" -> TGitMrEventAction.PUSH_UPDATE.value
+            action == "closed" -> TGitMrEventAction.CLOSE.value
+            else -> null
+        }
     }
 }
 
