@@ -25,11 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:misc:api-image"))
-    api(project(":core:store:api-store"))
-}
+package com.tencent.devops.image.api
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.common.api.annotation.ServiceInterface
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.image.pojo.CheckDockerImageRequest
+import com.tencent.devops.image.pojo.CheckDockerImageResponse
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["SERVICE_DOCKER_IMAGE"], description = "镜像-镜像服务")
+@Path("/service/docker-image")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+@ServiceInterface("misc")
+interface ServiceDockerImageResource {
+
+    @ApiOperation("检查镜像信息")
+    @POST
+    @Path("/checkDockerImage")
+    fun checkDockerImage(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "镜像repo", required = true)
+        checkDockerImageRequestList: List<CheckDockerImageRequest>
+    ): Result<List<CheckDockerImageResponse>>
 }

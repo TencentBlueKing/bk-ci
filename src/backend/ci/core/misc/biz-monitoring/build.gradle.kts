@@ -26,10 +26,9 @@
  */
 
 dependencies {
-    api(project(":core:misc:api-image"))
-    api(project(":core:store:api-store"))
-}
-
-plugins {
-    `task-deploy-to-maven`
+    api(project(":core:misc:api-monitoring"))
+    api(project(":core:common:common-notify"))
+    api("org.apache.commons:commons-compress")
+    api("org.json:json")
+    api("org.influxdb:influxdb-java")
 }

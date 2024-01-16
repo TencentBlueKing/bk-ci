@@ -24,12 +24,32 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.monitoring.api.service
 
-dependencies {
-    api(project(":core:misc:api-image"))
-    api(project(":core:store:api-store"))
-}
+import com.tencent.devops.common.api.annotation.ServiceInterface
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.monitoring.pojo.DispatchStatus
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-plugins {
-    `task-deploy-to-maven`
+@Api(tags = ["SERVICE_MONITORING_REPORT"], description = "监控上报")
+@Path("/service/report")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+@ServiceInterface("misc")
+interface DispatchReportResource {
+
+    @ApiOperation("各个dispatch模块上报开机状态")
+    @POST
+    @Path("/dispatch/status")
+    fun dispatch(
+        @ApiParam("构建机开机关机状态", required = true)
+        dispatchStatus: DispatchStatus
+    ): Result<Boolean>
 }
