@@ -402,7 +402,7 @@ class CodeSvnScmImpl constructor(
 
     override fun getGitSession(): GitSession? {
         return SVNApi.getSession(
-            host = "",
+            host = svnConfig.apiUrlOa,
             username = privateKey,
             password = passphrase ?: ""
         )
