@@ -26,8 +26,8 @@
                 ref="customRepoTree"
                 selectable
                 :expand-on-click="false"
-                :options="repoOptions"
                 :default-expanded-nodes="[customRootFolder.fullPath]"
+                :options="repoOptions"
                 @select-change="handleSelect"
                 :data="customFolders"
                 :lazy-method="getFolders"
@@ -59,6 +59,7 @@
                 customRootFolder: {
                     fullPath: '/',
                     name: this.$t('details.customRepo'),
+                    expanded: true,
                     level: 0,
                     children: []
                 }
@@ -101,20 +102,8 @@
                     })) ?? []
                 }
             },
-            async search (keyword) {
-                debugger
-                const res = await this.requestCustomFolder({
-                    projectId: this.$route.params.projectId,
-                    params: {
-                        name: `*${keyword}*`
-                    }
-                })
-                this.$refs?.customRepoTree?.setData?.([
-                    {
-                    ...this.customRootFolder,
-                    children: res.children
-                    }
-                ])
+            search (keyword) {
+                this.$refs?.customRepoTree.filter(keyword)
             },
             handleSelect (folder) {
                 this.activeFolder = folder.id

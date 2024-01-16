@@ -63,6 +63,7 @@
                                 {{ $t('delete') }}
                             </bk-button>
                             <version-diff-entry
+                                v-if="props.row.version !== releaseVersion"
                                 :version="props.row.version"
                                 :latest-version="releaseVersion"
                                 :current-yaml="currentYaml"
