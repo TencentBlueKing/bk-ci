@@ -68,7 +68,14 @@ class PipelineWebhookVersionDao {
                         webhook.repositoryType.name,
                         webhook.repositoryHashId,
                         webhook.eventType
-                    )
+                    ).onDuplicateKeyUpdate()
+                        .set(TASK_PARAMS, webhook.taskParams)
+                        .set(TASK_REPO_TYPE, webhook.taskRepoType?.name)
+                        .set(TASK_REPO_HASH_ID, webhook.taskRepoHashId)
+                        .set(TASK_REPO_NAME, webhook.taskRepoName)
+                        .set(REPOSITORY_TYPE, webhook.repositoryType.name)
+                        .set(REPOSITORY_HASH_ID, webhook.repositoryHashId)
+                        .set(EVENT_TYPE, webhook.eventType)
                 }
             }.execute()
         }

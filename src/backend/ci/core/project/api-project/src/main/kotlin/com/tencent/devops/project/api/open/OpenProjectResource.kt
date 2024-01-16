@@ -28,6 +28,7 @@
 package com.tencent.devops.project.api.open
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
+import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import io.swagger.annotations.Api
@@ -69,4 +70,13 @@ interface OpenProjectResource {
         @ApiParam(value = "项目id", required = true)
         projectCodes: Set<String>
     ): Result<List<ProjectVO>>
+
+    @GET
+    @Path("/getOperationalProducts")
+    @ApiOperation("查询运营产品")
+    fun getOperationalProducts(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("token")
+        token: String
+    ): Result<List<OperationalProductVO>>
 }

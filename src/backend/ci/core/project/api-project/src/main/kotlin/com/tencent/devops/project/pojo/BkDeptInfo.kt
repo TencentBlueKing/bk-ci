@@ -23,27 +23,17 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.process.yaml.git.pojo
+package com.tencent.devops.project.pojo
 
-/**
- * pac yaml文件发布结果
- */
-interface PacGitPushResult {
-    // ci文件路径
-    val filePath: String
+import io.swagger.annotations.ApiModelProperty
 
-    // 分支名
-    val branch: String
-
-    // 文件blob_id
-    val blobId: String
-
-    // commitId
-    val lastCommitId: String
-
-    // mr url
-    val mrUrl: String?
-}
+data class BkDeptInfo(
+    @ApiModelProperty(name = "类型")
+    val type: String,
+    @ApiModelProperty(name = "名称")
+    val name: String,
+    @ApiModelProperty(name = "部门ID")
+    val id: String
+)

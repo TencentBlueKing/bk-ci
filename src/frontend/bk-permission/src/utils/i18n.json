@@ -61,7 +61,9 @@
                 "尚未开启此流水线权限管理功能": "尚未开启此流水线权限管理功能",
                 "流水线管理": "流水线管理",
                 "流水线模板管理": "流水线模板管理",
-                "流水线组管理": "流水线组管理"
+                "流水线组管理": "流水线组管理",
+                "通过用户组获得权限，若需续期请联系项目管理员续期用户组": "通过用户组获得权限，若需续期请联系项目管理员续期用户组",
+                "通过用户组获得权限，若需退出先联系项目管理员退出用户组": "通过用户组获得权限，若需退出先联系项目管理员退出用户组"
         },
         "en-US": {
                 "开启权限管理": "Turn on permission management",
@@ -124,6 +126,8 @@
                 "尚未开启此流水线权限管理功能": "The permission management function of this pipeline has not been enabled",
                 "流水线管理": "Pipeline Management",
                 "流水线模板管理": "Pipeline Template Management",
-                "流水线组管理": "Pipeline Group Management"
+                "流水线组管理": "Pipeline Group Management",
+                "通过用户组获得权限，若需续期请联系项目管理员续期用户组": "Obtained permissions through user group, if you need to renew, please contact the project administrator to renew the user group",
+                "通过用户组获得权限，若需退出先联系项目管理员退出用户组": "Obtained permissions through user group, if you need to exit, please contact the project administrator to exit the user group first"
         }
 }

@@ -95,10 +95,17 @@ data class CodeGithubWebHookTriggerElement(
     @ApiModelProperty("code note 类型", required = false)
     val includeNoteTypes: List<String>? = null,
     @ApiModelProperty("issue事件action")
-    val includeIssueAction: List<String>? = null
+    val includeIssueAction: List<String>? = null,
+    @ApiModelProperty("pull request事件action")
+    val includeMrAction: List<String>? = listOf(MERGE_ACTION_OPEN, MERGE_ACTION_REOPEN, MERGE_ACTION_PUSH_UPDATE)
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeGithubWebHookTrigger"
+        const val MERGE_ACTION_OPEN = "open"
+        const val MERGE_ACTION_CLOSE = "close"
+        const val MERGE_ACTION_REOPEN = "reopen"
+        const val MERGE_ACTION_PUSH_UPDATE = "push-update"
+        const val MERGE_ACTION_MERGE = "merge"
     }
 
     override fun getClassType() = classType
@@ -114,8 +121,17 @@ data class CodeGithubWebHookTriggerElement(
     // 增加条件这里也要补充上,不然代码库触发器列表展示会不对
     override fun triggerCondition(): List<ElementProp> {
         val props = when (eventType) {
-            CodeEventType.PUSH, CodeEventType.CREATE, CodeEventType.PULL_REQUEST -> {
+            CodeEventType.PUSH, CodeEventType.CREATE -> {
                 listOf(
+                    TriggerElementPropUtils.vuexInput(name = "branchName", value = branchName),
+                    TriggerElementPropUtils.vuexInput(name = "excludeBranchName", value = excludeBranchName),
+                    TriggerElementPropUtils.vuexInput(name = "excludeUsers", value = excludeUsers)
+                )
+            }
+
+            CodeEventType.PULL_REQUEST -> {
+                listOf(
+                    TriggerElementPropUtils.selector(name = "action", value = includeMrAction),
                     TriggerElementPropUtils.vuexInput(name = "branchName", value = branchName),
                     TriggerElementPropUtils.vuexInput(name = "excludeBranchName", value = excludeBranchName),
                     TriggerElementPropUtils.vuexInput(name = "excludeUsers", value = excludeUsers)

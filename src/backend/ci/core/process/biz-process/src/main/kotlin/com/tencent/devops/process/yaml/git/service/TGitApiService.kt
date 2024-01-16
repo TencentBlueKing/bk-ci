@@ -353,10 +353,12 @@ class TGitApiService @Autowired constructor(
                 tokenType = cred.toTokenType()
             )
         }
-        if (targetAction == CodeTargetAction.PUSH_BRANCH_AND_REQUEST_MERGE ||
+        val mrUrl = if (targetAction == CodeTargetAction.PUSH_BRANCH_AND_REQUEST_MERGE ||
             targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE
         ) {
             createYamlMergeRequest(fileExists, pipelineId, token, cred, gitProjectId, branchName, defaultBranch)
+        } else {
+            null
         }
         val fileInfo = getFileInfo(
             cred = cred,
@@ -375,7 +377,8 @@ class TGitApiService @Autowired constructor(
             filePath = filePath,
             branch = branchName,
             blobId = fileInfo!!.blobId,
-            lastCommitId = commitInfo!!.commitId
+            lastCommitId = commitInfo!!.commitId,
+            mrUrl = mrUrl
         )
     }
 
@@ -387,7 +390,7 @@ class TGitApiService @Autowired constructor(
         gitProjectId: String,
         branchName: String,
         defaultBranch: String
-    ) {
+    ): String? {
         val title = if (fileExists) {
             I18nUtil.getCodeLanMessage(
                 messageCode = ProcessMessageCode.BK_MERGE_YAML_UPDATE_FILE_TITLE,
@@ -412,19 +415,27 @@ class TGitApiService @Autowired constructor(
             )
         ).data ?: emptyList()
         // 如果源分支->目标分支的mr已存在,则不需要再发起mr
-        if (mrList.isNotEmpty()) {
-            return
-        }
-        client.get(ServiceGitResource::class).createMergeRequest(
-            token = token,
-            tokenType = cred.toTokenType(),
+        val mrNumber = if (mrList.isNotEmpty()) {
+            mrList[0].mrNumber
+        } else {
+            val mrInfo = client.get(ServiceGitResource::class).createMergeRequest(
+                token = token,
+                tokenType = cred.toTokenType(),
+                gitProjectId = gitProjectId,
+                gitCreateMergeRequest = GitCreateMergeRequest(
+                    sourceBranch = branchName,
+                    targetBranch = defaultBranch,
+                    title = title
+                )
+            ).data
+            mrInfo?.mrNumber
+        } ?: return null
+        val projectInfo = getGitProjectInfo(
+            cred = cred,
             gitProjectId = gitProjectId,
-            gitCreateMergeRequest = GitCreateMergeRequest(
-                sourceBranch = branchName,
-                targetBranch = defaultBranch,
-                title = title
-            )
-        ).data
+            retry = ApiRequestRetryInfo(true)
+        ) ?: return null
+        return "${projectInfo.homepage}/merge_requests/$mrNumber"
     }
 
     private fun PacGitCred.toToken(): String {

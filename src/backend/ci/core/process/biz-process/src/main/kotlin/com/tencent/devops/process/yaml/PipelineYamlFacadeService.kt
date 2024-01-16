@@ -327,7 +327,8 @@ class PipelineYamlFacadeService @Autowired constructor(
             projectId = projectId,
             repoHashId = repoHashId,
             filePath = gitPushResult.filePath,
-            branch = gitPushResult.branch
+            branch = gitPushResult.branch,
+            mrUrl = gitPushResult.mrUrl
         )
     }
 
