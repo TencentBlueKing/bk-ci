@@ -348,7 +348,11 @@ class TemplateFacadeService @Autowired constructor(
     ): String {
         logger.info("Start to saveAsTemplate, $userId | $projectId | $saveAsTemplateReq")
 
-        templateCommonService.checkPermission(projectId, userId)
+        pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.CREATE
+        )
 
         val template = pipelineResourceDao.getLatestVersionModelString(
                 dslContext, projectId, saveAsTemplateReq.pipelineId
@@ -1835,7 +1839,7 @@ class TemplateFacadeService @Autowired constructor(
                 errorCode = ERROR_TEMPLATE_NOT_EXISTS
             )
         val templateModel: Model = objectMapper.readValue(template.template)
-        checkTemplateAtomsForExplicitVersion(templateModel, userId, true)
+        checkTemplateAtomsForExplicitVersion(templateModel, userId)
         // 当更新的实例数量较小则走同步更新逻辑，较大走异步更新逻辑
         if (instances.size <= maxSyncInstanceNum) {
             val successPipelines = ArrayList<String>()
@@ -2236,14 +2240,14 @@ class TemplateFacadeService @Autowired constructor(
     /**
      * 检查模板中是否存在已下架、测试中插件(明确版本号)
      */
-    fun checkTemplateAtomsForExplicitVersion(template: Model, userId: String, flag: Boolean? = false) {
+    fun checkTemplateAtomsForExplicitVersion(template: Model, userId: String) {
         val codeVersions = mutableSetOf<AtomCodeVersionReqItem>()
         template.stages.forEach { stage ->
             stage.containers.forEach { container ->
                 container.elements.forEach nextElement@{ element ->
                     val atomCode = element.getAtomCode()
                     val version = element.version
-                    if (flag == true && version.contains("*")) {
+                    if (version.contains("*")) {
                         return@nextElement
                     }
                     codeVersions.add(AtomCodeVersionReqItem(atomCode, version))

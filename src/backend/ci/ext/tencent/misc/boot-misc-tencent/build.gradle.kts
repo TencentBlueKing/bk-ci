@@ -27,4 +27,7 @@
 
 dependencies {
     api(project(":ext:tencent:misc:biz-misc-tencent"))
+    api(project(":ext:tencent:misc:biz-image-tencent"))
+    api(project(":ext:tencent:misc:biz-monitoring-tencent"))
+    api(project(":ext:tencent:misc:biz-plugin-tencent"))
 }

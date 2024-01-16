@@ -25,14 +25,17 @@ class ProjectExtOrganizationService constructor(
 ) {
     fun fixProjectOrganization(englishName: String) {
         projectDao.getByEnglishName(dslContext, englishName)?.also { tProjectRecord ->
-            if (!fixOrganizationByManager(englishName = englishName)) {
+            if (!fixOrganizationByManager(englishName = englishName, tProjectRecord = tProjectRecord)) {
                 fixOrganizationByNormal(tProjectRecord = tProjectRecord)
             }
         }
     }
 
     @Suppress("MaxLineLength")
-    private fun fixOrganizationByManager(englishName: String): Boolean {
+    private fun fixOrganizationByManager(
+        englishName: String,
+        tProjectRecord: TProjectRecord
+    ): Boolean {
         val managers = client.get(ServiceProjectAuthResource::class).getProjectUsers(
             token = tokenService.getSystemToken(),
             projectCode = englishName,
@@ -46,7 +49,7 @@ class ProjectExtOrganizationService constructor(
         val isManagerCenterSame = centerIds.distinct().size == 1
 
         if (isManagerDepartmentSame) {
-            logger.info("fix organization by manager: $englishName|$isManagerDepartmentSame|$isManagerCenterSame")
+            logger.info("The manager's department is the same: $englishName|$isManagerDepartmentSame|$isManagerCenterSame")
             val deptId = deptIds.first()
             val deptName = deptInfos.first().deptName
             val parentDeptInfos = tofService.getParentDeptInfo(groupId = deptId, level = 10)
@@ -55,20 +58,23 @@ class ProjectExtOrganizationService constructor(
             val businessLineInfo = parentDeptInfos.firstOrNull { it.typeId.toInt() == OrganizationType.businessLine.typeId }
             val centerId = if (isManagerCenterSame) centerIds.first() else null
             val centerName = if (isManagerCenterSame) deptInfos.first().centerName else null
-            projectDao.updateOrganizationByEnglishName(
-                dslContext = dslContext,
-                englishName = englishName,
-                ProjectOrganizationInfo(
-                    bgId = bgInfo?.id?.toLong(),
-                    bgName = bgInfo?.name,
-                    businessLineId = businessLineInfo?.id?.toLong(),
-                    businessLineName = businessLineInfo?.name,
-                    deptId = deptId.toLong(),
-                    deptName = deptName,
-                    centerId = centerId?.toLong(),
-                    centerName = centerName
+            if (tProjectRecord.deptId?.toString() != deptId || tProjectRecord.centerId?.toString() != centerId) {
+                logger.info("fix organization by manager: $englishName|$isManagerDepartmentSame|$isManagerCenterSame")
+                projectDao.updateOrganizationByEnglishName(
+                    dslContext = dslContext,
+                    englishName = englishName,
+                    ProjectOrganizationInfo(
+                        bgId = bgInfo?.id?.toLong(),
+                        bgName = bgInfo?.name,
+                        businessLineId = businessLineInfo?.id?.toLong(),
+                        businessLineName = businessLineInfo?.name,
+                        deptId = deptId.toLong(),
+                        deptName = deptName,
+                        centerId = centerId?.toLong(),
+                        centerName = centerName
+                    )
                 )
-            )
+            }
         }
         return isManagerDepartmentSame
     }
@@ -204,8 +210,8 @@ class ProjectExtOrganizationService constructor(
                     ProjectOrganizationInfo(
                         bgId = bgId,
                         bgName = bgName,
-                        businessLineId = null,
-                        businessLineName = null,
+                        businessLineId = businessLineId,
+                        businessLineName = businessLineName,
                         centerId = null,
                         centerName = null,
                         deptId = deptId,

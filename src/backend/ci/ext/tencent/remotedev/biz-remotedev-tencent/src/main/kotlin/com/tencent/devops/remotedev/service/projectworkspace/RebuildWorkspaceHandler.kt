@@ -58,6 +58,7 @@ import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
+import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
@@ -78,7 +79,8 @@ class RebuildWorkspaceHandler @Autowired constructor(
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val workspaceCommon: WorkspaceCommon,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
-    private val deliverControl: DeliverControl
+    private val deliverControl: DeliverControl,
+    private val notifyControl: NotifyControl
 ) {
 
     companion object {
@@ -181,7 +183,7 @@ class RebuildWorkspaceHandler @Autowired constructor(
                 )
             )
 
-            workspaceCommon.dispatchWebsocketPushEvent(
+            notifyControl.dispatchWebsocketPushEvent(
                 userId = userId,
                 workspaceName = workspaceName,
                 workspaceHost = null,
@@ -266,7 +268,7 @@ class RebuildWorkspaceHandler @Autowired constructor(
         }
 
         // 分发到WS
-        workspaceCommon.dispatchWebsocketPushEvent(
+        notifyControl.dispatchWebsocketPushEvent(
             userId = event.userId,
             workspaceName = event.workspaceName,
             workspaceHost = "",
