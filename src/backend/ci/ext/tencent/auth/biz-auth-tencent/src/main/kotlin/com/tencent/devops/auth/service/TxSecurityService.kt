@@ -109,7 +109,6 @@ class TxSecurityService constructor(
         }
     }
 
-
     private fun getUserWaterMark(userId: String): SecOpsWaterMarkInfoVo {
         logger.info("get user water mark:$userId")
         val responseDTO: ResponseDTO<List<SecOpsWaterMarkInfoVo>> = bkHttpRequestService.executeHttpPost(
