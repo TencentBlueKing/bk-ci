@@ -222,10 +222,7 @@ data class AgentService @Autowired constructor(
                             stepType = meta.stepType,
                             opType = meta.opType,
                             opTypeDisplay = meta.opTypeDisplay,
-                            stepTypeDisplay = meta.stepTypeDisplay,
-                            name = meta.name,
-                            category = meta.category,
-                            pluginName = meta.pluginName
+                            stepTypeDisplay = meta.stepTypeDisplay
                         )
                     }
                 )
