@@ -12,10 +12,22 @@
             <div class="rule-main-wrapper" v-if="showContent && ruleList.length">
                 <div class="rule-main-container">
                     <div class="rule-main-header">
-                        <bk-button theme="primary" @click="toCreateRule">
+                        <button
+                            v-perm="{
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: RULE_RESOURCE_TYPE,
+                                    resourceCode: projectId,
+                                    action: RULE_RESOURCE_ACTION.CREATE
+                                }
+                            }"
+                            key="createBtn"
+                            class="bk-button bk-primary"
+                            @click="toCreateRule"
+                        >
                             <i class="devops-icon icon-plus"></i>
                             <span style="margin-left: 0;">{{$t('quality.创建规则')}}</span>
-                        </bk-button>
+                        </button>
                     </div>
                     <div class="rule-table-wrapper">
                         <bk-table
@@ -69,12 +81,56 @@
                             </bk-table-column>
                             <bk-table-column :label="$t('quality.操作')" min-width="120">
                                 <template slot-scope="props">
-                                    <div class="handler-btn">
-                                        <span class="copy-btn" :data-clipboard-text="props.row.rule" @click="editRule(props.row)">{{$t('quality.编辑')}}</span>
-                                        <span class="switch-btn" v-if="props.row.enable" @click="switchRule(props.row)">{{$t('quality.停用')}}</span>
-                                        <span class="switch-btn" v-else @click="switchRule(props.row)">{{$t('quality.启用')}}</span>
-                                        <span class="delete-btn" @click="toDeleteRule(props.row)">{{$t('quality.删除')}}</span>
-                                    </div>
+                                    <bk-button
+                                        v-perm="{
+                                            hasPermission: props.row.permissions.canEdit,
+                                            disablePermissionApi: true,
+                                            permissionData: {
+                                                projectId: projectId,
+                                                resourceType: RULE_RESOURCE_TYPE,
+                                                resourceCode: props.row.ruleHashId,
+                                                action: RULE_RESOURCE_ACTION.EDIT
+                                            }
+                                        }"
+                                        class="mr5 "
+                                        text
+                                        @click="editRule(props.row)"
+                                    >
+                                        {{$t('quality.编辑')}}
+                                    </bk-button>
+                                    <bk-button
+                                        v-perm="{
+                                            hasPermission: props.row.permissions.canEdit,
+                                            disablePermissionApi: true,
+                                            permissionData: {
+                                                projectId: projectId,
+                                                resourceType: RULE_RESOURCE_TYPE,
+                                                resourceCode: props.row.ruleHashId,
+                                                action: RULE_RESOURCE_ACTION.ENABLE
+                                            }
+                                        }"
+                                        class="mr5"
+                                        text
+                                        @click="switchRule(props.row)"
+                                    >
+                                        {{ $t(`quality.${props.row.enable ? '停用' : '启用'}`) }}
+                                    </bk-button>
+                                    <bk-button
+                                        v-perm="{
+                                            hasPermission: props.row.permissions.canEdit,
+                                            disablePermissionApi: true,
+                                            permissionData: {
+                                                projectId: projectId,
+                                                resourceType: RULE_RESOURCE_TYPE,
+                                                resourceCode: props.row.ruleHashId,
+                                                action: RULE_RESOURCE_ACTION.DELETE
+                                            }
+                                        }"
+                                        text
+                                        @click="toDeleteRule(props.row)"
+                                    >
+                                        {{$t('quality.删除')}}
+                                    </bk-button>
                                 </template>
                             </bk-table-column>
                         </bk-table>
@@ -180,6 +236,7 @@
                                             </bk-table-column>
                                             <bk-table-column :label="$t('quality.状态')" prop="interceptResult" width="80">
                                                 <template slot-scope="props">
+                                                    <span v-if="props.row.interceptResult === 'WAIT'" style="color: #FFB400;">{{$t('quality.等待中')}}</span>
                                                     <span v-if="props.row.interceptResult === 'PASS'" style="color: #30D878;">{{$t('quality.已通过')}}</span>
                                                     <span v-if="props.row.interceptResult === 'FAIL'" style="color: #FFB400;">{{$t('quality.已拦截')}}</span>
                                                 </template>
@@ -232,6 +289,7 @@
     import effectivePipeline from '@/components/devops/effective-pipeline'
     import effectiveRange from '@/components/devops/effective-range'
     import { convertTime, getQueryString } from '@/utils/util'
+    import { RULE_RESOURCE_ACTION, RULE_RESOURCE_TYPE } from '@/utils/permission.js'
 
     export default {
         components: {
@@ -240,7 +298,11 @@
             'image-empty': imageEmpty
         },
         data () {
+            const { projectId } = this.$route.params
+
             return {
+                RULE_RESOURCE_ACTION,
+                RULE_RESOURCE_TYPE,
                 lastClickRule: '',
                 curActiveTab: '',
                 showContent: false,
@@ -266,7 +328,14 @@
                             type: 'primary',
                             size: 'normal',
                             handler: () => this.toCreateRule(),
-                            text: this.$t('quality.创建规则')
+                            text: this.$t('quality.创建规则'),
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: RULE_RESOURCE_TYPE,
+                                resourceCode: projectId,
+                                action: RULE_RESOURCE_ACTION.CREATE
+                            }
+
                         }
                     ]
                 },
@@ -502,18 +571,11 @@
                         type: 'warning',
                         theme: 'warning',
                         subTitle: this.$t('quality.确定删除规则({0})？', [row.name]),
+                        cancelText: this.$t('quality.取消'),
                         confirmFn: async () => {
                             this.deleteRule(row.ruleHashId)
                         }
                     })
-                } else {
-                    const params = {
-                        noPermissionList: [
-                            { resource: this.$t('quality.quality'), option: this.$t('quality.删除规则') }
-                        ],
-                        applyPermissionUrl: PERM_URL_PREFIX
-                    }
-                    this.$showAskPermissionDialog(params)
                 }
             },
             async toSwitchRule (row) {
@@ -637,14 +699,6 @@
                             ruleId: row.ruleHashId
                         }
                     })
-                } else {
-                    const params = {
-                        noPermissionList: [
-                            { resource: this.$t('quality.quality'), option: this.$t('quality.编辑规则') }
-                        ],
-                        applyPermissionUrl: PERM_URL_PREFIX
-                    }
-                    this.$showAskPermissionDialog(params)
                 }
             },
             switchRule (row) {
@@ -660,18 +714,11 @@
                     this.$bkInfo({
                         title: infoTitle,
                         subHeader: content,
+                        cancelText: this.$t('quality.取消'),
                         confirmFn: async () => {
                             this.toSwitchRule(row)
                         }
                     })
-                } else {
-                    const params = {
-                        noPermissionList: [
-                            { resource: this.$t('quality.quality'), option: this.$t('quality.启用和停用规则') }
-                        ],
-                        applyPermissionUrl: PERM_URL_PREFIX
-                    }
-                    this.$showAskPermissionDialog(params)
                 }
             },
             async toShowSlider (ruleHashId, type) {

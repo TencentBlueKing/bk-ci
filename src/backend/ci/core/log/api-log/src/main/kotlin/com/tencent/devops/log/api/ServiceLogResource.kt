@@ -88,7 +88,10 @@ interface ServiceLogResource {
         jobId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?
+        executeCount: Int?,
+        @ApiParam("是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<QueryLogs>
 
     @ApiOperation("获取更多日志")
@@ -133,7 +136,10 @@ interface ServiceLogResource {
         jobId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?
+        executeCount: Int?,
+        @ApiParam("是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<QueryLogs>
 
     @ApiOperation("获取某行前的日志")
@@ -169,7 +175,10 @@ interface ServiceLogResource {
         jobId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?
+        executeCount: Int?,
+        @ApiParam("是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<QueryLogs>
 
     @ApiOperation("下载日志接口")
@@ -197,7 +206,10 @@ interface ServiceLogResource {
         jobId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?
+        executeCount: Int?,
+        @ApiParam("是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Response
 
     @ApiOperation("获取插件的的日志状态")
@@ -221,7 +233,10 @@ interface ServiceLogResource {
         tag: String,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?
+        executeCount: Int?,
+        @ApiParam("是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<QueryLogStatus>
 
     @ApiOperation("获取当前构建的最大行号")
@@ -239,6 +254,9 @@ interface ServiceLogResource {
         pipelineId: String,
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
-        buildId: String
+        buildId: String,
+        @ApiParam("是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<QueryLogLineNum>
 }

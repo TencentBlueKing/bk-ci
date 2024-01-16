@@ -30,12 +30,12 @@ package upgrade
 import (
 	"os"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"time"
 
+	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade/download"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
 
 	"github.com/pkg/errors"
@@ -60,9 +60,9 @@ type JdkVersionType struct {
 func (j *JdkVersionType) GetVersion() []string {
 	data := j.version.Load()
 	if data == nil {
-		return []string{}
+		return make([]string, 0)
 	} else {
-		return j.version.Load().([]string)
+		return data.([]string)
 	}
 }
 
@@ -78,7 +78,6 @@ var DockerFileMd5 struct {
 	// 目前非linux机器不支持，以及一些机器不使用docker就不用计算md5
 	NeedUpgrade bool
 	FileModTime time.Time
-	Lock        sync.Mutex
 	Md5         string
 }
 
@@ -97,95 +96,67 @@ func (u upgradeChangeItem) checkNoChange() bool {
 	return false
 }
 
-// DoPollAndUpgradeAgent 循环，每20s一次执行升级
-func DoPollAndUpgradeAgent() {
-	defer func() {
-		if err := recover(); err != nil {
-			logs.Error("agent upgrade panic: ", err)
-		}
-	}()
-
-	for {
-		time.Sleep(20 * time.Second)
-		logs.Info("try upgrade")
-		// debug模式下关闭升级，方便调试问题
-		if config.IsDebug {
-			logs.Debug("debug no upgrade")
-			continue
-		}
-		agentUpgrade()
-		logs.Info("upgrade done")
-	}
-}
-
-// agentUpgrade 升级主逻辑
-func agentUpgrade() {
+// AgentUpgrade 升级主逻辑
+func AgentUpgrade(upgradeItem *api.UpgradeItem, hasBuild bool) {
 	// #5806 #5172 升级失败，保证重置回状态，防止一直处于升级状态
 	ack := false
 	success := false
 	defer func() {
 		if ack {
 			_, _ = api.FinishUpgrade(success)
-			logs.Info("[agentUpgrade]|report upgrade finish: ", success)
+			logs.Info("agentUpgrade|report upgrade finish: ", success)
 		}
 	}()
 
-	jdkVersion, err := SyncJdkVersion()
-	if err != nil {
-		logs.Error("[agentUpgrade]|sync jdk version err: ", err.Error())
-		return
-	}
-
-	err = SyncDockerInitFileMd5()
-	if err != nil {
-		logs.Error("[agentUpgrade]|sync docker file md5 err: ", err.Error())
-		return
-	}
-
-	checkResult, err := api.CheckUpgrade(jdkVersion, api.DockerInitFileInfo{
-		FileMd5:     DockerFileMd5.Md5,
-		NeedUpgrade: DockerFileMd5.NeedUpgrade,
-	})
-	if err != nil {
-		ack = true
-		logs.Error("[agentUpgrade]|check upgrade err: ", err.Error())
-		return
-	}
-	if !checkResult.IsOk() {
-		logs.Error("[agentUpgrade]|check upgrade failed: ", checkResult.Message)
-		return
-	}
-
-	if checkResult.IsAgentDelete() {
-		logs.Info("[agentUpgrade]|agent is deleted, skip")
-		return
-	}
-
-	upgradeItem := new(api.UpgradeItem)
-	err = util.ParseJsonToData(checkResult.Data, &upgradeItem)
 	if !upgradeItem.Agent && !upgradeItem.Worker && !upgradeItem.Jdk && !upgradeItem.DockerInitFile {
-		logs.Info("[agentUpgrade]|no need to upgrade agent, skip")
 		return
+	} else {
+		// 如果同时还领取了构建任务那么这次的升级取消
+		if hasBuild {
+			ack = true
+			logs.Info("agentUpgrade|has build, skip")
+			return
+		}
 	}
 
 	ack = true
-	logs.Info("[agentUpgrade]|download upgrade files start")
+
+	// 进入升级逻辑时防止agent接构建任务，同时确保无任何构建任务在进行
+	// 放到下载文件前，这样就不会因为有长时间构建任务重复下载文件
+	// 使用 trylock 防止有频繁的任务时长时间阻塞住
+	if !job.BuildTotalManager.Lock.TryLock() {
+		return
+	}
+	defer func() {
+		job.BuildTotalManager.Lock.Unlock()
+	}()
+	if job.CheckRunningJob() {
+		logs.Infof(
+			"agentUpgrade|agent has upgrade item, but has job running prejob: %s job: %s dockerJob: %s so skip.",
+			job.GBuildManager.GetPreInstancesStr(),
+			job.GBuildManager.GetInstanceStr(),
+			job.GBuildDockerManager.GetInstanceStr(),
+		)
+		return
+	}
+
+	logs.Info("agentUpgrade|download upgrade files start")
 	changeItems := downloadUpgradeFiles(upgradeItem)
 	if changeItems.checkNoChange() {
 		return
 	}
 
-	logs.Info("[agentUpgrade]|download upgrade files done")
-	err = DoUpgradeOperation(changeItems)
+	logs.Info("agentUpgrade|download upgrade files done")
+	err := DoUpgradeOperation(changeItems)
 	if err != nil {
-		logs.Error("[agentUpgrade]|do upgrade operation failed", err)
+		logs.Error("agentUpgrade|do upgrade operation failed", err)
 	} else {
 		success = true
 	}
 }
 
 // SyncJdkVersion 同步jdk版本信息
-func SyncJdkVersion() ([]string, error) {
+func SyncJdkVersion() error {
 	// 获取jdk文件状态以及时间
 	stat, err := os.Stat(config.GAgentConfig.JdkDirPath)
 	if err != nil {
@@ -193,9 +164,9 @@ func SyncJdkVersion() ([]string, error) {
 			logs.Error("syncJdkVersion no jdk dir find", err)
 			// jdk版本置为空，否则会一直保持有版本的状态
 			JdkVersion.SetVersion([]string{})
-			return nil, nil
+			return nil
 		}
-		return nil, errors.Wrap(err, "agent check jdk dir error")
+		return errors.Wrap(err, "agent check jdk dir error")
 	}
 	nowModTime := stat.ModTime()
 
@@ -205,16 +176,16 @@ func SyncJdkVersion() ([]string, error) {
 		if err != nil {
 			// 拿取错误时直接下载新的
 			logs.Error("syncJdkVersion getJdkVersion err", err)
-			return nil, nil
+			return nil
 		}
 		JdkVersion.SetVersion(version)
 		JdkVersion.JdkFileModTime = nowModTime
-		return version, nil
+		return nil
 	}
 
 	// 判断文件夹最后修改时间，不一致时不用更改
 	if nowModTime == JdkVersion.JdkFileModTime {
-		return JdkVersion.GetVersion(), nil
+		return nil
 	}
 
 	version, err := getJdkVersion()
@@ -222,11 +193,11 @@ func SyncJdkVersion() ([]string, error) {
 		// 拿取错误时直接下载新的
 		logs.Error("syncJdkVersion getJdkVersion err", err)
 		JdkVersion.SetVersion([]string{})
-		return nil, nil
+		return nil
 	}
 	JdkVersion.SetVersion(version)
 	JdkVersion.JdkFileModTime = nowModTime
-	return version, nil
+	return nil
 }
 
 func SyncDockerInitFileMd5() error {
@@ -234,10 +205,7 @@ func SyncDockerInitFileMd5() error {
 		DockerFileMd5.NeedUpgrade = false
 		return nil
 	}
-	DockerFileMd5.Lock.Lock()
-	defer func() {
-		DockerFileMd5.Lock.Unlock()
-	}()
+
 	DockerFileMd5.NeedUpgrade = true
 
 	filePath := config.GetDockerInitFilePath()
@@ -280,6 +248,7 @@ func getJdkVersion() ([]string, error) {
 	jdkVersion, err := command.RunCommand(config.GetJava(), []string{"-version"}, "", nil)
 	if err != nil {
 		logs.Error("agent get jdk version failed: ", err.Error())
+		exitcode.CheckSignalJdkError(err)
 		return nil, errors.Wrap(err, "agent get jdk version failed")
 	}
 	var jdkV []string
@@ -374,43 +343,43 @@ func downloadUpgradeFiles(item *api.UpgradeItem) upgradeChangeItem {
 
 func downloadUpgradeAgent(workDir, upgradeDir string) (agentChanged bool) {
 	// #4686 devopsDaemon 暂时不考虑单独的替换升级，windows 无法自动升级，仅当devopsAgent有变化时升级。
-	logs.Info("[agentUpgrade]|download upgrader start")
+	logs.Info("agentUpgrade|download upgrader start")
 	_, err := download.DownloadUpgradeFile(upgradeDir)
 	if err != nil {
-		logs.Error("[agentUpgrade]|download upgrader failed", err)
+		logs.Error("agentUpgrade|download upgrader failed", err)
 		return false
 	}
-	logs.Info("[agentUpgrade]|download upgrader done")
+	logs.Info("agentUpgrade|download upgrader done")
 
-	logs.Info("[agentUpgrade]|download daemon start")
+	logs.Info("agentUpgrade|download daemon start")
 	newDaemonMd5, err := download.DownloadDaemonFile(upgradeDir)
 	if err != nil {
-		logs.Error("[agentUpgrade]|download daemon failed", err)
+		logs.Error("agentUpgrade|download daemon failed", err)
 		return false
 	}
-	logs.Info("[agentUpgrade]|download daemon done")
+	logs.Info("agentUpgrade|download daemon done")
 
-	logs.Info("[agentUpgrade]|download agent start")
+	logs.Info("agentUpgrade|download agent start")
 	newAgentMd5, err := download.DownloadAgentFile(upgradeDir)
 	if err != nil {
-		logs.Error("[agentUpgrade]|download agent failed", err)
+		logs.Error("agentUpgrade|download agent failed", err)
 		return false
 	}
-	logs.Info("[agentUpgrade]|download agent done")
+	logs.Info("agentUpgrade|download agent done")
 
 	daemonMd5, err := fileutil.GetFileMd5(workDir + "/" + config.GetClientDaemonFile())
 	if err != nil {
-		logs.Error("[agentUpgrade]|check daemon md5 failed", err)
+		logs.Error("agentUpgrade|check daemon md5 failed", err)
 		return false
 	}
 	agentMd5, err := fileutil.GetFileMd5(workDir + "/" + config.GetClienAgentFile())
 	if err != nil {
-		logs.Error("[agentUpgrade]|check agent md5 failed", err)
+		logs.Error("agentUpgrade|check agent md5 failed", err)
 		return false
 	}
 
-	logs.Info("newDaemonMd5=" + newDaemonMd5 + ",daemonMd5=" + daemonMd5)
-	logs.Info("newAgentMd5=" + newAgentMd5 + ",agentMd5=" + agentMd5)
+	logs.Info("agentUpgrade|newDaemonMd5=" + newDaemonMd5 + ",daemonMd5=" + daemonMd5)
+	logs.Info("agentUpgrade|newAgentMd5=" + newAgentMd5 + ",agentMd5=" + agentMd5)
 
 	// #5806 增强检测版本，防止下载出错的情况下，意外被替换
 	agentVersion := config.DetectAgentVersionByDir(systemutil.GetUpgradeDir())
@@ -423,21 +392,21 @@ func downloadUpgradeAgent(workDir, upgradeDir string) (agentChanged bool) {
 }
 
 func downloadUpgradeWorker(workDir, upgradeDir string) (workAgentChanged bool) {
-	logs.Info("[agentUpgrade]|download worker start")
+	logs.Info("agentUpgrade|download worker start")
 	newWorkerMd5, err := api.DownloadUpgradeFile("jar/"+config.WorkAgentFile, upgradeDir+"/"+config.WorkAgentFile)
 	if err != nil {
-		logs.Error("[agentUpgrade]|download worker failed", err)
+		logs.Error("agentUpgrade|download worker failed", err)
 		return false
 	}
-	logs.Info("[agentUpgrade]|download worker done")
+	logs.Info("agentUpgrade|download worker done")
 
 	workerMd5, err := fileutil.GetFileMd5(workDir + "/" + config.WorkAgentFile)
 	if err != nil {
-		logs.Error("[agentUpgrade]|check worker md5 failed", err)
+		logs.Error("agentUpgrade|check worker md5 failed", err)
 		return false
 	}
 
-	logs.Info("newWorkerMd5=" + newWorkerMd5 + ",workerMd5=" + workerMd5)
+	logs.Info("agentUpgrade|newWorkerMd5=" + newWorkerMd5 + ",workerMd5=" + workerMd5)
 
 	workerVersion := config.DetectWorkerVersionByDir(systemutil.GetUpgradeDir())
 	workAgentChanged = false
@@ -449,25 +418,25 @@ func downloadUpgradeWorker(workDir, upgradeDir string) (workAgentChanged bool) {
 }
 
 func downloadUpgradeJdk(upgradeDir string) (jdkChanged bool) {
-	logs.Info("[agentUpgrade]|download jdk start")
+	logs.Info("agentUpgrade|download jdk start")
 	_, err := download.DownloadJdkFile(upgradeDir)
 	if err != nil {
-		logs.Error("[agentUpgrade]|download jdk failed", err)
+		logs.Error("agentUpgrade|download jdk failed", err)
 		return false
 	}
-	logs.Info("[agentUpgrade]|download jdk done")
+	logs.Info("agentUpgrade|download jdk done")
 
 	return true
 }
 
 func downloadUpgradeDockerInit(upgradeDir string) bool {
-	logs.Info("[agentUpgrade]|download docker init shell start")
+	logs.Info("agentUpgrade|download docker init shell start")
 	_, err := download.DownloadDockerInitFile(upgradeDir)
 	if err != nil {
-		logs.Error("[agentUpgrade]|download docker init shell failed", err)
+		logs.Error("agentUpgrade|download docker init shell failed", err)
 		return false
 	}
-	logs.Info("[agentUpgrade]|download docker init shell done")
+	logs.Info("agentUpgrade|download docker init shell done")
 
 	return true
 }

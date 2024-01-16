@@ -29,5 +29,7 @@ package com.tencent.devops.common.api.pojo
 
 enum class ShardingRuleTypeEnum {
     DB,
-    TABLE
+    TABLE,
+    ARCHIVE_DB,
+    ARCHIVE_TABLE
 }

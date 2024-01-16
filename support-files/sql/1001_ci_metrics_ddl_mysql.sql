@@ -295,6 +295,7 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT_USER_DAILY`
     `PROJECT_ID` VARCHAR(64) not null comment '项目ID',
     `USER_ID`    VARCHAR(64) not null comment '用户ID',
     `THE_DATE`   DATE        not null comment '日期',
+    `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY (`PROJECT_ID`, `USER_ID`, `THE_DATE`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='项目每日用户';
 
@@ -311,6 +312,7 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT_BUILD_SUMMARY_DAILY`
     `TIME_BUILD_COUNT`     int          not null default 0 comment '定时触发构建数',
     `SUB_PIPELINE_BUILD_COUNT` int          not null default 0 comment '子流水线触发构建数',
     `THE_DATE`             DATE         not null comment '日期',
+    `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY (`PROJECT_ID`, `THE_DATE`),
     INDEX `IDX_PRODUCT_ID`(`PRODUCT_ID`,`THE_DATE`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='项目每日构建汇总表';

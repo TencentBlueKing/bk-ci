@@ -56,6 +56,7 @@ object ProcessMessageCode {
     const val ALL_PIPELINES_LABEL = "CONST_PROCESS_VIEW_LABEL_ALL" // "全部流水线"
 
     const val BK_NON_TIMED_TRIGGER_SKIP = "bkNonTimedTriggerSkip" // 非定时触发，直接跳过
+    const val BK_RETRY_TIMED_TRIGGER_SKIP = "bkRetryTimedTriggerSkip" // 重试定时触发的构建，直接跳过
     const val BK_FIRST_STAGE_ENV_NOT_EMPTY = "bkFirstStageEnvNotEmpty" // 第一阶段的环境不能为空
     const val BK_QUALITY_CHECK_SUCCEED = "bkQualityCheckSucceed" // 质量红线({0})检测已通过
     const val BK_QUALITY_CHECK_INTERCEPTED = "bkQualityCheckIntercepted" // 质量红线({0})检测被拦截
@@ -288,8 +289,8 @@ object ProcessMessageCode {
     const val MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL = "2101178" // 最大并发数量非法
     const val PIPELINE_BUILD_HAS_ENDED_CANNOT_BE_CANCELED = "2101179" // 流水线: 流水线构建已结束，不能取消
     const val GET_PIPELINE_ATOM_INFO_NO_PERMISSION = "2101180" // 无权访问插件{0}的流水线信息，请联系组件管理员
-    const val GROUP_IS_EXIST = "2101181" // 分组({0})已存在/group ({0}) is already exist
-    const val GROUP_LABEL_IS_EXIST = "2101182" // 分组标签({0})已存在/group label ({0}) is already exist
+    const val GROUP_IS_EXIST = "2101186" // 分组({0})已存在/group ({0}) is already exist
+    const val GROUP_LABEL_IS_EXIST = "2101187" // 分组标签({0})已存在/group label ({0}) is already exist
     const val ERROR_NO_PERMISSION_OPERATION_TEMPLATE = "2101189" // 用户没有操作模板的权限
 
     const val ERROR_TRIGGER_DETAIL_NOT_FOUND = "2101181" // 触发详情{0}不存在
