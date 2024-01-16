@@ -28,6 +28,7 @@
 package com.tencent.devops.scm.code.svn.api
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
  *
@@ -95,3 +96,30 @@ data class Hook(
     val callBack: String,
     val confTime: Long
 )
+
+data class SvnHook(
+    val id: Int,
+    val url: String,
+    @JsonProperty("created_at")
+    val createdAt: String,
+    @JsonProperty("project_id")
+    val projectId: String,
+    @JsonProperty("svn_post_commit_events")
+    val svnPostCommitEvents: Boolean,
+    @JsonProperty("svn_pre_commit_events")
+    val svnPreCommitEvents: Boolean,
+    @JsonProperty("lock_events")
+    val lockEvents: Boolean,
+    val path: String
+)
+
+enum class SvnHookEventType(val value: String) {
+    // 提交完成后，触发回调钩子
+    SVN_POST_COMMIT_EVENTS("svn_post_commit_events"),
+
+    // 提交时，这个钩子将被触发
+    SVN_PRE_COMMIT_EVENTS("svn_pre_commit_events"),
+
+    // 锁定文件或解锁时
+    LOCK_EVENTS("lock_events");
+}

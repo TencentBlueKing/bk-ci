@@ -32,9 +32,11 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.svn.api.SVNApi
+import com.tencent.devops.scm.code.svn.api.SvnHookEventType
 import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.jmx.JMX
+import com.tencent.devops.scm.pojo.GitSession
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import org.slf4j.LoggerFactory
@@ -53,7 +55,8 @@ class CodeSvnScmImpl constructor(
     private var username: String,
     private var privateKey: String,
     private val passphrase: String?,
-    private val svnConfig: SVNConfig
+    private val svnConfig: SVNConfig,
+    private val token: String?
 ) : IScm {
 
     override fun getLatestRevision(): RevisionInfo {
@@ -116,6 +119,26 @@ class CodeSvnScmImpl constructor(
     }
 
     override fun checkTokenAndPrivateKey() {
+        // 检查私人令牌是否正确，后续凭证改为【TOKEN_SSH_PRIVATEKEY】类型后，强制校验
+        try {
+            if (!token.isNullOrBlank()) {
+                SVNApi.getFileList(
+                    host = "",
+                    token = token,
+                    projectName = projectName,
+                    path = getSubDirPath(),
+                    revision = "HEAD"
+                )
+            }
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to get file list", ignored)
+            throw ScmException(
+                I18nUtil.getCodeLanMessage(
+                    CommonMessageCode.SVN_TOKEN_FAIL
+                ),
+                ScmType.CODE_SVN.name
+            )
+        }
         try {
             getLatestRevision()
         } catch (ignored: Throwable) {
@@ -130,6 +153,26 @@ class CodeSvnScmImpl constructor(
     }
 
     override fun checkTokenAndUsername() {
+        // 检查私人令牌是否正确，后续凭证改为【TOKEN_USERNAME_PASSWORD】类型后，强制校验
+        try {
+            if (!token.isNullOrBlank()) {
+                SVNApi.getFileList(
+                    host = "",
+                    token = token,
+                    projectName = projectName,
+                    path = "/",
+                    revision = "HEAD"
+                )
+            }
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to get file list", ignored)
+            throw ScmException(
+                I18nUtil.getCodeLanMessage(
+                    CommonMessageCode.SVN_TOKEN_FAIL
+                ),
+                ScmType.CODE_SVN.name
+            )
+        }
         try {
             // 检查用户名密码时privateKey为用户名，passphrase为密码
             // 参考：com.tencent.devops.repository.service.scm.ScmService.checkUsernameAndPassword
@@ -153,25 +196,12 @@ class CodeSvnScmImpl constructor(
                     "|AddWebHookSVN|repo=$projectName"
         )
         try {
-            val hooks = SVNApi.getWebhooks(svnConfig, url)
-            val addHooks = if (hooks.isEmpty()) {
-                hookUrl
+            // 存在token则尝试使用token添加webhook，否则使用api添加webhook
+            if (!token.isNullOrBlank()) {
+                addWebhookByToken(hookUrl)
             } else {
-                if (hooks.contains(hookUrl)) {
-                    logger.info("The hook url is already exist, ignore")
-                    return
-                }
-                logger.info("Get the exist hooks - ($hooks)")
-
-                val result = StringBuilder()
-                hooks.forEach {
-                    result.append(it).append(",")
-                }
-                result.append(hookUrl)
-                result.toString()
+                addWebhookByApiKey(hookUrl)
             }
-            logger.info("Adding the svn webhooks($addHooks)")
-            SVNApi.addWebhooks(svnConfig, username, url, addHooks)
         } catch (ignored: Exception) {
             logger.warn("Fail to add the webhook", ignored)
             throw ScmException(
@@ -298,6 +328,84 @@ class CodeSvnScmImpl constructor(
                 scmType = ScmType.CODE_SVN.name
             )
         }
+    }
+
+    private fun getSubDirPath(): String {
+        val index = url.indexOf(projectName)
+        if (index == -1) {
+            logger.warn("invalid param|url[$url]|projectName[$projectName]")
+            return "/"
+        }
+        val substring = url.substring(index + projectName.length)
+        return substring.removeSuffix("/").ifBlank {
+            "/"
+        }
+    }
+
+    /**
+     * 基于私人令牌添加svn仓库的webhook
+     */
+    private fun addWebhookByToken(hookUrl: String) {
+        val hooks = SVNApi.getWebhooksByToken(
+            host = "",
+            projectName = projectName,
+            token = token!!
+        )
+        // 统一设置路径到根目录，避免出现注册多个hook导致的流水线重复触发的情况
+        val subDirPath = "/"
+        val existHook = if (hooks.isEmpty()) {
+            null
+        } else {
+            hooks.find {
+                it.url == hookUrl && it.path == subDirPath
+            }
+        }
+        if (existHook == null) {
+            SVNApi.addWebhooksByToken(
+                host = "",
+                projectName = projectName,
+                hookUrl = hookUrl,
+                token = token,
+                eventType = SvnHookEventType.SVN_POST_COMMIT_EVENTS,
+                path = subDirPath
+            )
+        } else {
+            logger.info("The web hook url($hookUrl) is already exist($existHook)")
+        }
+    }
+
+    /**
+     * 基于API密钥添加svn仓库的webhook
+     * 兼容旧的svn仓库
+     */
+    private fun addWebhookByApiKey(hookUrl: String) {
+        val hooks = SVNApi.getWebhooks(svnConfig, url)
+        val addHooks = if (hooks.isEmpty()) {
+            hookUrl
+        } else {
+            if (hooks.contains(hookUrl)) {
+                logger.info("The hook url is already exist, ignore")
+                return
+            }
+            logger.info("Get the exist hooks - ($hooks)")
+
+            val result = StringBuilder()
+            hooks.forEach {
+                result.append(it).append(",")
+            }
+            result.append(hookUrl)
+            result.toString()
+        }
+        logger.info("Adding the svn webhooks($addHooks)")
+        SVNApi.addWebhooks(svnConfig, username, url, addHooks)
+    }
+
+    override fun getGitSession(): GitSession? {
+        return SVNApi.getSession(
+            host = "",
+            username = privateKey,
+            password = passphrase ?: ""
+        )
     }
 
     companion object {

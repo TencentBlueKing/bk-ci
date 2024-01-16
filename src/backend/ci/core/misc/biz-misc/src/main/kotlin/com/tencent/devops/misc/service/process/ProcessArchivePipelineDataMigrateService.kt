@@ -43,12 +43,15 @@ import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.BkApiUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
 import com.tencent.devops.misc.lock.MigrationLock
+import com.tencent.devops.misc.pojo.constant.MiscMessageCode
 import com.tencent.devops.misc.pojo.process.DeleteMigrationDataParam
 import com.tencent.devops.misc.pojo.process.MigratePipelineDataParam
 import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistory
+import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistoryQueryParam
 import com.tencent.devops.misc.service.project.ProjectDataMigrateHistoryService
 import com.tencent.devops.misc.task.MigratePipelineDataTask
 import com.tencent.devops.misc.utils.MiscUtils
@@ -114,14 +117,18 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
             processDataMigrateDao = processDataMigrateDao,
             archiveFlag = true
         )
-        try {
-            // 执行迁移前的逻辑
-            doPreMigrationBus(
+        // 执行迁移前的逻辑
+        if (!doPreMigrationBus(
+                userId = userId,
                 archiveDbShardingRoutingRule = archiveDbShardingRoutingRule,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 migrationLock = migrationLock
             )
+        ) {
+            return
+        }
+        try {
             // 迁移流水线数据
             MigratePipelineDataTask(migratePipelineDataParam).run()
             // 执行迁移完成后的逻辑
@@ -262,11 +269,39 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
     }
 
     private fun doPreMigrationBus(
+        userId: String,
         archiveDbShardingRoutingRule: ShardingRoutingRule?,
         projectId: String,
         pipelineId: String,
         migrationLock: MigrationLock
-    ) {
+    ): Boolean {
+        if (archiveDbShardingRoutingRule != null) {
+            val queryParam = ProjectDataMigrateHistoryQueryParam(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                moduleCode = SystemModuleEnum.PROCESS,
+                targetClusterName = archiveDbShardingRoutingRule.clusterName,
+                targetDataSourceName = archiveDbShardingRoutingRule.dataSourceName
+            )
+            migrationLock.lock()
+            try {
+                // 判断流水线数据是否能迁移
+                if (!projectDataMigrateHistoryService.isDataCanMigrate(queryParam)) {
+                    sendMigrateProcessDataFailMsg(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        userId = userId,
+                        errorMsg = I18nUtil.getCodeLanMessage(
+                            messageCode = MiscMessageCode.ERROR_PROJECT_DATA_REPEAT_MIGRATE,
+                            params = arrayOf(projectId)
+                        )
+                    )
+                    return false
+                }
+            } finally {
+                migrationLock.unlock()
+            }
+        }
         // 把流水线加入正在迁移流水线集合中
         redisOperation.addSetValue(
             key = MiscUtils.getMigratingPipelinesRedisKey(SystemModuleEnum.PROCESS.name),
@@ -274,19 +309,7 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
         )
         // 锁定流水线,不允许用户发起新构建等操作
         redisOperation.addSetValue(BkApiUtil.getApiAccessLimitPipelinesKey(), pipelineId)
-        // 重试迁移需删除迁移库的数据以保证迁移接口的幂等性
-        if (archiveDbShardingRoutingRule != null) {
-            val deleteMigrationDataParam = DeleteMigrationDataParam(
-                dslContext = archiveShardingDslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                targetClusterName = archiveDbShardingRoutingRule.clusterName,
-                targetDataSourceName = archiveDbShardingRoutingRule.dataSourceName,
-                migrationLock = migrationLock,
-                archivePipelineFlag = true
-            )
-            processMigrationDataDeleteService.deleteProcessData(deleteMigrationDataParam)
-        }
+        return true
     }
 
     private fun sendMigrateProcessDataSuccessMsg(projectId: String, pipelineId: String, userId: String) {

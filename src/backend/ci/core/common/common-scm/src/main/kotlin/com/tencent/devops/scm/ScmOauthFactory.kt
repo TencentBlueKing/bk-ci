@@ -84,7 +84,8 @@ object ScmOauthFactory {
                     username = userName,
                     privateKey = privateKey,
                     passphrase = passPhrase,
-                    svnConfig = svnConfig
+                    svnConfig = svnConfig,
+                    token = token
                 )
             }
             ScmType.CODE_GIT -> {
