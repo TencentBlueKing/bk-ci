@@ -88,7 +88,6 @@ data class AgentService @Autowired constructor(
     fun installAgent(
         userId: String,
         projectId: String,
-        secretKey: MultipartFile?,
         installAgentReq: InstallAgentReq
     ): AgentResult<InstallAgentResult> {
         AgentApi.setThreadLocal("installAgent")
@@ -117,7 +116,8 @@ data class AgentService @Autowired constructor(
                     account = it.account,
                     password = it.password,
                     port = DEFAULT_INSTALL_AGENT_PORT,
-                    key = if ("KEY" == it.authType) fileService.convertFileContentToString(secretKey) else it.key,
+//                    key = if ("KEY" == it.authType) fileService.convertFileContentToString(secretKey) else it.key,
+                    key = it.key,
                     isManual = it.isManual,
                     retention = it.retention,
                     peerExchangeSwitchForAgent = it.peerExchangeSwitchForAgent,

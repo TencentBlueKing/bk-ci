@@ -89,11 +89,10 @@ class UserJobResourceImpl @Autowired constructor(
     override fun installAgent(
         userId: String,
         projectId: String,
-        secretKey: MultipartFile?,
         installAgentReq: InstallAgentReq
     ): AgentResult<InstallAgentResult> {
         checkParamBlank(userId, projectId)
-        return agentService.installAgent(userId, projectId, secretKey, installAgentReq)
+        return agentService.installAgent(userId, projectId, installAgentReq)
     }
 
     override fun queryAgentTaskStatus(
