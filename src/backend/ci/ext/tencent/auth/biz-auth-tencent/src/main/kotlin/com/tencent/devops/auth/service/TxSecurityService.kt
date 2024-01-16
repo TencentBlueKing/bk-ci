@@ -111,17 +111,26 @@ class TxSecurityService constructor(
 
     private fun getUserWaterMark(userId: String): SecOpsWaterMarkInfoVo {
         logger.info("get user water mark:$userId")
-        val responseDTO: ResponseDTO<List<SecOpsWaterMarkInfoVo>> = bkHttpRequestService.executeHttpPost(
+        val responseDTO: ResponseDTO<List<Map<*, *>>> = bkHttpRequestService.executeHttpPost(
             url = secUrlPrefix + USER_WATER_MARK_GET_SUFFIX,
             body = SecOpsWaterMarkDTO(
                 token = secToken,
                 username = userId
             )
         )
-        return responseDTO.data?.firstOrNull { it.type == "image_base64" } ?: throw ErrorCodeException(
-            errorCode = ERROR_WATER_MARK_NOT_EXIST,
-            defaultMessage = "user water mark not exist!$userId"
-        )
+        val waterMarkInfo = responseDTO.data?.firstOrNull { it["type"] == "image_base64" }
+
+        return if (waterMarkInfo != null) {
+            SecOpsWaterMarkInfoVo(
+                type = waterMarkInfo["type"].toString(),
+                data = waterMarkInfo["data"].toString()
+            )
+        } else {
+            throw ErrorCodeException(
+                errorCode = ERROR_WATER_MARK_NOT_EXIST,
+                defaultMessage = "user water mark not exist!$userId"
+            )
+        }
     }
 
     companion object {
