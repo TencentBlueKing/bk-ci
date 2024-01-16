@@ -60,4 +60,8 @@ object ActionId {
     const val CODE_PROXY_CREATE = "code_proxy_create"
     const val CODE_PROXY_LIST = "code_proxy_list"
     const val CODE_PROXY_DELETE = "code_proxy_delete"
+
+    // 自定义操作
+    const val PROJECT_USER_VERIFY = "project_user_verify"
+    const val WATER_MARK_GET = "water_mark_get"
 }
