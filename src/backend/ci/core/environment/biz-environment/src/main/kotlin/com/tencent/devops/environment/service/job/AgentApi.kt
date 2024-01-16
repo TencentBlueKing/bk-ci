@@ -78,7 +78,7 @@ class AgentApi {
 
     companion object {
         private const val LOG_OUTPUT_MAX_LENGTH = 4000
-        private const val JOB_PERFIX = "/job"
+        private const val JOB_PERFIX = "/job/"
         private const val HOST_PERFIX = "/host"
         private const val QUERY_AGENT_LOG = "/?instance_id=%s"
         private const val QUERY_AGENT_INSTALL_CHANNEL = "/?with_hidden=%s"
