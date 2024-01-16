@@ -536,12 +536,13 @@ class PipelineContainerService @Autowired constructor(
             if (!needStartVM && startVMTaskSeq > 0 && container.matrixGroupFlag != true) {
                 needStartVM = true
             }
-
-            // 构建矩阵没有对应的重试插件，单独增加重试记录
-            if (container.matrixGroupFlag == true) {
-                needUpdateContainer = true
-            }
         }
+
+        // 构建矩阵没有对应的重试插件，单独增加重试记录
+        if (container.matrixGroupFlag == true) {
+            needUpdateContainer = true
+        }
+
         // 填入: 构建机或无编译环境的环境处理，需要启动和结束构建机/环境的插件任务
         if (needStartVM) {
             supplyVMTask(
