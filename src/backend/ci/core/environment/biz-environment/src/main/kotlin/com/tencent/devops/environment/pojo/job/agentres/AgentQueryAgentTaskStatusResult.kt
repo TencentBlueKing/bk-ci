@@ -27,11 +27,13 @@
 
 package com.tencent.devops.environment.pojo.job.agentres
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("查询agent任务状态的接口的返回结果")
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class AgentQueryAgentTaskStatusResult(
     @ApiModelProperty(value = "", required = true)
     @JsonProperty("job_id")
