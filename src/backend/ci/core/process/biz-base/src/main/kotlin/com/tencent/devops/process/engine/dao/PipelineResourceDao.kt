@@ -30,7 +30,6 @@ package com.tencent.devops.process.engine.dao
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE
-import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import org.jooq.Condition
