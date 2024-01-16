@@ -37,10 +37,8 @@ class FileService {
         if (file != null && !file.isEmpty) {
             val inputStream = file.inputStream
             val content: String
-            try {
-                content = inputStream.bufferedReader().use { it.readText() }
-            } finally {
-                inputStream.close()
+            inputStream.use { it ->
+                content = it.bufferedReader().use { it.readText() }
             }
             return content
         } else {
