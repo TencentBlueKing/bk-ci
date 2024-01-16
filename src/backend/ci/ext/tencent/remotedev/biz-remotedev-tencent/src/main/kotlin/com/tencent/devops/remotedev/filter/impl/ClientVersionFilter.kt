@@ -75,6 +75,7 @@ class ClientVersionFilter constructor(
         }
     }
 
+    @Suppress("ComplexMethod")
     override fun verify(requestContext: ContainerRequestContext): Boolean {
         // path为为空的时候，直接退出
         val path = requestContext.uriInfo.requestUri.path
