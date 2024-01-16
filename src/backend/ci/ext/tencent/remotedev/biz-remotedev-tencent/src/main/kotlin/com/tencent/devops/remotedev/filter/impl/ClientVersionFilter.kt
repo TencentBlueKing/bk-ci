@@ -102,6 +102,19 @@ class ClientVersionFilter constructor(
                 requestContext.headers[HEADER_MAC_ADDRESS]?.get(0).toString()
             )
         }.onFailure { logger.warn("recordClientVersion error ${it.message}", it) }
+
+        if (checkClientVersionWarning(split = split, user = user, version = version)) {
+            notifyControl.notify4User(
+                userIds = mutableSetOf(user),
+                workspaceName = "",
+                notifyTemplateCode = CLIENT_VERSION_WARNING_NOTIFY,
+                notifyType = mutableSetOf(RemoteDevNotifyType.CLIENT_PUSH, RemoteDevNotifyType.EMAIL),
+                bodyParams = mapOf(
+                    "version" to version
+                )
+            )
+        }
+
         if (!this::clientVersionLimitList.isInitialized) {
             clientVersionLimitList = clientVersionLimit.split(".").map { it.toInt() }
         }
@@ -117,34 +130,33 @@ class ClientVersionFilter constructor(
                 v > s -> return true
             }
         }
+        return true
+    }
 
+    /*
+    * 检查是否需要告警
+    * true： 告警
+    * false： 不告警
+    * */
+    private fun checkClientVersionWarning(split: List<String>, user: String, version: String): Boolean {
         if (!this::clientVersionWarningList.isInitialized) {
             clientVersionWarningList = clientVersionWarning.split(".").map { it.toInt() }
         }
         kotlin.run {
             clientVersionWarningList.forEachIndexed { index, s ->
                 if (split.lastIndex < index) {
-                    notifyControl.notify4User(
-                        userIds = mutableSetOf(user),
-                        workspaceName = "",
-                        notifyTemplateCode = CLIENT_VERSION_WARNING_NOTIFY,
-                        notifyType = mutableSetOf(RemoteDevNotifyType.CLIENT_PUSH, RemoteDevNotifyType.EMAIL),
-                        bodyParams = mapOf(
-                            "version" to version
-                        )
-                    )
-                    return@run
+                    return true
                 }
                 val v = split[index].toIntOrNull()
                 when {
-                    v == null -> return false
-                    v < s -> return false
+                    v == null -> return true
+                    v < s -> return true
                     v == s -> return@forEachIndexed
-                    v > s -> return true
+                    v > s -> return false
                 }
             }
         }
-        return true
+        return false
     }
 
     private fun recordClientVersion(ip: String, user: String, version: String, macAddress: String) {
