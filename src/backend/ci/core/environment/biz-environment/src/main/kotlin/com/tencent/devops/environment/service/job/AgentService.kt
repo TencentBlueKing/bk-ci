@@ -192,6 +192,7 @@ data class AgentService @Autowired constructor(
                             ip = hostDetail.ip,
                             innerIp = hostDetail.innerIp,
                             innerIpv6 = hostDetail.innerIpv6,
+                            instanceId = hostDetail.instanceId,
                             bkCloudId = hostDetail.bkCloudId,
                             bkCloudName = hostDetail.bkCloudName,
                             bkBizId = hostDetail.bkBizId,

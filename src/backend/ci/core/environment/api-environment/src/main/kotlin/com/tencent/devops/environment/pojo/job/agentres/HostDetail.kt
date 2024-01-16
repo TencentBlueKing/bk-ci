@@ -40,6 +40,8 @@ data class HostDetail(
     val ip: String,
     @ApiModelProperty(value = "主机内网IPV4地址")
     val innerIp: String,
+    @ApiModelProperty(value = "实例ID")
+    val instanceId: String,
     @ApiModelProperty(value = "主机内网IPV6地址")
     val innerIpv6: String,
     @ApiModelProperty(value = "管控区域ID")

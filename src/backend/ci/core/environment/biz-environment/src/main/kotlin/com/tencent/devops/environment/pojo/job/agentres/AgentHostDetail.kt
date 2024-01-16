@@ -42,6 +42,9 @@ data class AgentHostDetail(
     @ApiModelProperty(value = "主机内网IPV4地址")
     @JsonProperty("inner_ip")
     val innerIp: String,
+    @ApiModelProperty(value = "实例ID")
+    @JsonProperty("instance_id")
+    val instanceId: String,
     @ApiModelProperty(value = "主机内网IPV6地址")
     @JsonProperty("inner_ipv6")
     val innerIpv6: String,
