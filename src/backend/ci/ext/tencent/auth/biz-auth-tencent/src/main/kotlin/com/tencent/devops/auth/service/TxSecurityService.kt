@@ -2,6 +2,10 @@ package com.tencent.devops.auth.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_MOA_CREDENTIAL_KEY_VERIFY_FAIL
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_USER_NOT_BELONG_TO_THE_PROJECT
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_WATER_MARK_NOT_EXIST
@@ -14,6 +18,9 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import okhttp3.MultipartBody
 import okhttp3.Request
 import org.slf4j.LoggerFactory
@@ -35,28 +42,59 @@ class TxSecurityService constructor(
     @Value("\${secops.token:#{null}}")
     private val secToken = ""
 
+    @ActionAuditRecord(
+        actionId = ActionId.PROJECT_USER_VERIFY,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.SECURITY
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.PROJECT_USER_VERIFY_CONTENT
+    )
     fun verifyProjectUserByCredentialKey(
         credentialKey: String,
         projectId: String
     ): Result<Boolean?> {
+        logger.info("verify project user by credential key($credentialKey) under project($projectId)")
         val result = verifyUser(credentialKey, projectId)
         return if (result.status != 0) {
+            ActionAuditContext.current().disable()
             Result(message = result.message, status = result.status)
         } else {
+            val userId = result.data!!
+            ActionAuditContext.current()
+                .setInstanceId(credentialKey)
+                .setInstanceName(userId)
+            logger.info("verify project user pass:$userId|$credentialKey|$projectId")
             Result(data = true)
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.WATER_MARK_GET,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.SECURITY
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.WATER_MARK_GET_CONTENT
+    )
     fun getUserWaterMarkByCredentialKey(
         credentialKey: String,
         projectId: String
     ): Result<String?> {
+        logger.info("get user water mark by credentialKey:$credentialKey|$projectId")
         val result = verifyUser(credentialKey, projectId)
         return if (result.status != 0) {
             result
         } else {
             val userId = result.data!!
-            Result(data = getUserWaterMark(userId = userId).data)
+            val waterMark = getUserWaterMark(userId = userId).data
+            logger.info("user get water mark success!|$userId|$projectId|$credentialKey|$waterMark")
+            ActionAuditContext.current()
+                .setInstanceId(credentialKey)
+                .setInstanceName(userId)
+            Result(data = waterMark)
         }
     }
 
