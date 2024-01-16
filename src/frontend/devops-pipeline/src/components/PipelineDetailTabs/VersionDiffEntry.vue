@@ -146,7 +146,7 @@
                     this.loadMore(this.page)
                     this.activeVersion = version
 
-                    const [{ yamlPreview }, current] = await Promise.all([
+                    const [activePipeline, current] = await Promise.all([
                         this.fetchPipelineByVersion({
                             projectId: this.$route.params.projectId,
                             pipelineId: this.$route.params.pipelineId,
@@ -158,10 +158,20 @@
                             version: this.latestVersion
                         })
                     ])
-                    this.activeYaml = yamlPreview.yaml
-                    this.currentYaml = current.yamlPreview.yaml
+
+                    if (activePipeline?.yamlSupported && current?.yamlSupported) {
+                        this.activeYaml = activePipeline.yamlPreview.yaml
+                        this.currentYaml = current.yamlPreview.yaml
+                        return
+                    }
+                    console.log(activePipeline, current, 'hahaha')
+                    throw new Error(activePipeline?.yamlInvalidMsg || current?.yamlInvalidMsg)
                 } catch (error) {
                     console.log(error)
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message
+                    })
                 } finally {
                     this.isLoadYaml = false
                 }
