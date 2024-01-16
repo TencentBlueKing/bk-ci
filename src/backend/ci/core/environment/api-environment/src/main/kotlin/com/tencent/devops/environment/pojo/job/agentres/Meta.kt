@@ -41,11 +41,5 @@ data class Meta(
     @ApiModelProperty(value = "操作类型名称", required = true)
     val opTypeDisplay: String,
     @ApiModelProperty(value = "订阅步骤类型", required = true)
-    val stepTypeDisplay: String,
-    @ApiModelProperty(value = "订阅名称")
-    val name: String,
-    @ApiModelProperty(value = "订阅类别，1: None，普通插件任务，2: POLIC， 策略")
-    val category: String,
-    @ApiModelProperty(value = "插件名")
-    val pluginName: String
+    val stepTypeDisplay: String
 )

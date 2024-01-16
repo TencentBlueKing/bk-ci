@@ -31,25 +31,18 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
 data class AgentMeta(
-    @ApiModelProperty(value = "任务对象类型，1: AGENT 2：PLUGIN 3：PROXY", required = true)
-    val type: String,
-    @ApiModelProperty(value = "步骤类型", required = true)
+    @ApiModelProperty(value = "任务对象类型，1: AGENT 2：PLUGIN 3：PROXY")
+    val type: String?,
+    @ApiModelProperty(value = "步骤类型")
     @JsonProperty("step_type")
-    val stepType: String,
-    @ApiModelProperty(value = "操作类型", required = true)
+    val stepType: String?,
+    @ApiModelProperty(value = "操作类型")
     @JsonProperty("op_type")
-    val opType: String,
-    @ApiModelProperty(value = "操作类型名称", required = true)
+    val opType: String?,
+    @ApiModelProperty(value = "操作类型名称")
     @JsonProperty("op_type_display")
-    val opTypeDisplay: String,
-    @ApiModelProperty(value = "订阅步骤类型", required = true)
+    val opTypeDisplay: String?,
+    @ApiModelProperty(value = "订阅步骤类型")
     @JsonProperty("step_type_display")
-    val stepTypeDisplay: String,
-    @ApiModelProperty(value = "订阅名称")
-    val name: String,
-    @ApiModelProperty(value = "订阅类别，1: None，普通插件任务，2: POLIC， 策略")
-    val category: String,
-    @ApiModelProperty(value = "插件名")
-    @JsonProperty("plugin_name")
-    val pluginName: String
+    val stepTypeDisplay: String?
 )
