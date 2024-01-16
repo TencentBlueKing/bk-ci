@@ -84,7 +84,7 @@ class ThirdPartyAgentBuildDao {
             val ignoreEnvAgentIdsJson = if (ignoreEnvAgentIds.isNullOrEmpty()) {
                 null
             } else {
-                JSON.json(JsonUtil.toJson(ignoreEnvAgentIds))
+                JSON.json(JsonUtil.toJson(ignoreEnvAgentIds, false))
             }
             val preRecord =
                 dslContext.selectFrom(this).where(BUILD_ID.eq(buildId)).and(VM_SEQ_ID.eq(vmSeqId)).fetchAny()
