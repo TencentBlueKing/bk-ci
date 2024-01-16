@@ -35,9 +35,9 @@ data class QueryAgentTaskLog(
     @ApiModelProperty(value = "执行状态")
     val status: String,
     @ApiModelProperty(value = "执行日志")
-    val log: String,
+    val log: String?,
     @ApiModelProperty(value = "启动时间")
-    val startTime: String,
+    val startTime: String?,
     @ApiModelProperty(value = "完成时间")
     val finishTime: String?
 )
