@@ -157,7 +157,8 @@ object GitUtils {
     fun matchExceptionCode(message: String) = when {
         Regex("Git repository not found").containsMatchIn(message) -> GIT_SERCRT_WRONG
         Regex("invalid privatekey").containsMatchIn(message) -> GIT_INVALID_PRIVATE_KEY
-        Regex("connection is closed by foreign host").containsMatchIn(message) -> CALL_REPO_ERROR
+        Regex("connection failed").containsMatchIn(message) ||
+                Regex("connection is closed by foreign host").containsMatchIn(message) -> CALL_REPO_ERROR
         Regex("not authorized").containsMatchIn(message) -> GIT_LOGIN_FAIL
         else -> null
     }
