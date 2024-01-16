@@ -63,9 +63,11 @@ class TxSecurityService constructor(
     private fun verifyUser(credentialKey: String, projectCode: String): Result<String> {
         val moaCredentialKeyVerifyResponse = getUserInfoByMoaCredentialKey(credentialKey = credentialKey)
         return if (moaCredentialKeyVerifyResponse.returnFlag != 0) {
+            val errorMeg = moaCredentialKeyVerifyResponse.msg
+            logger.info("Invalid MOA credentials:$errorMeg|$credentialKey|$projectCode")
             Result(
                 status = ERROR_MOA_CREDENTIAL_KEY_VERIFY_FAIL.toInt(),
-                message = moaCredentialKeyVerifyResponse.msg ?: ""
+                message = errorMeg ?: ""
             )
         } else {
             val userId = moaCredentialKeyVerifyResponse.userId
@@ -75,6 +77,7 @@ class TxSecurityService constructor(
                 group = null
             )
             if (!isUserBelongToProject) {
+                logger.info("User($userId) does not have permission to visit the project($projectCode)!")
                 Result(
                     status = ERROR_USER_NOT_BELONG_TO_THE_PROJECT.toInt(),
                     message = "User does not have permission to visit the project!"
