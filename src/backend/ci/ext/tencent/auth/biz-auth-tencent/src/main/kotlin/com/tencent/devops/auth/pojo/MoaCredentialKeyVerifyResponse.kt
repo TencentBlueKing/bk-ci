@@ -14,5 +14,5 @@ data class MoaCredentialKeyVerifyResponse(
     val msg: String?,
     @ApiModelProperty("用户名称")
     @JsonProperty("EnglishName")
-    val userId :String?
+    val userId: String?
 )
