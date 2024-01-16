@@ -58,9 +58,9 @@ data class AgentQueryAgentTaskStatusResult(
     val statistics: AgentStatistics,
     @ApiModelProperty(value = "", required = true)
     val status: String,
-    @ApiModelProperty(value = "", required = true)
+    @ApiModelProperty(value = "")
     @JsonProperty("end_time")
-    val endTime: String,
+    val endTime: String?,
     @ApiModelProperty(value = "", required = true)
     @JsonProperty("start_time")
     val startTime: String,

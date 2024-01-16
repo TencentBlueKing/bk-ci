@@ -50,8 +50,8 @@ data class QueryAgentTaskStatusResult(
     val statistics: Statistics,
     @ApiModelProperty(value = "执行状态", required = true)
     val status: String,
-    @ApiModelProperty(value = "完成时间", required = true)
-    val endTime: String,
+    @ApiModelProperty(value = "完成时间")
+    val endTime: String?,
     @ApiModelProperty(value = "启动时间时间", required = true)
     val startTime: String,
     @ApiModelProperty(value = "执行耗时", required = true)
