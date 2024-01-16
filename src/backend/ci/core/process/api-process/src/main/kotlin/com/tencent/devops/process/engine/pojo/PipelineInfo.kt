@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.pojo
 
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import io.swagger.annotations.ApiModel
@@ -68,6 +69,18 @@ data class PipelineInfo(
     val id: Long?,
     @ApiModelProperty("流水线组名称列表", required = false)
     var viewNames: List<String>? = null,
+    @ApiModelProperty("最后构建启动时间", required = false)
+    var latestBuildStartTime: Long? = null,
+    @ApiModelProperty("最后构建结束时间", required = false)
+    var latestBuildEndTime: Long? = null,
+    @ApiModelProperty("最后构建状态", required = false)
+    var latestBuildStatus: BuildStatus? = null,
+    @ApiModelProperty("最后构建版本号", required = false)
+    var latestBuildNum: Int? = null,
+    @ApiModelProperty("最后构建ID", required = false)
+    var latestBuildId: String? = null,
+    @ApiModelProperty("触发方式", required = false)
+    var trigger: String? = null,
     @ApiModelProperty("约束模式下的模板信息", required = false)
     var templateInfo: TemplateInfo? = null
 )

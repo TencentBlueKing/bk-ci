@@ -85,6 +85,7 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OFFICIAL_DEVFI
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.utils.DevfileUtil
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -115,8 +116,10 @@ class CreateControl @Autowired constructor(
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val deliverControl: DeliverControl,
     private val bkccService: BKCCService,
-    private val windowsSpecResourceDao: WindowsSpecResourceDao
+    private val windowsSpecResourceDao: WindowsSpecResourceDao,
+    private val notifyControl: NotifyControl
 ) {
+    private val executor = Executors.newCachedThreadPool()
 
     companion object {
         private val logger = LoggerFactory.getLogger(CreateControl::class.java)
@@ -201,21 +204,29 @@ class CreateControl @Autowired constructor(
             )
         }
         // 检查是否有特殊机型的配额限制
-        val specQuota = windowsSpecResourceDao.fetchQuota(
-            dslContext = dslContext,
-            projectId = projectInfo.englishName,
-            size = workspaceCreate.windowsType.trim()
-        )
-        if (specQuota != null) {
-            val count = workspaceWindowsDao.fetchUsedSizeCount(
+        val allSpecSize = windowsResourceConfigService.getAllType(true, true).map { it.size }.toSet()
+        if (workspaceCreate.windowsType.trim() in allSpecSize) {
+            val specQuota = windowsSpecResourceDao.fetchQuota(
                 dslContext = dslContext,
-                workspaceNames = workspaceNames,
+                projectId = projectInfo.englishName,
                 size = workspaceCreate.windowsType.trim()
             )
-            if (count >= specQuota) {
+            if (specQuota != null) {
+                val count = workspaceWindowsDao.fetchUsedSizeCount(
+                    dslContext = dslContext,
+                    workspaceNames = workspaceNames,
+                    size = workspaceCreate.windowsType.trim()
+                )
+                if (count >= specQuota) {
+                    throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.PROJECT_DESKTOP_SPEC_RESOURCES_INSUFFICIENT.errorCode,
+                        params = arrayOf(workspaceCreate.windowsType.trim(), specQuota.toString(), count.toString())
+                    )
+                }
+            } else {
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.PROJECT_DESKTOP_SPEC_RESOURCES_INSUFFICIENT.errorCode,
-                    params = arrayOf(workspaceCreate.windowsType.trim(), specQuota.toString(), count.toString())
+                    params = arrayOf(workspaceCreate.windowsType.trim(), "0", "0")
                 )
             }
         }
@@ -366,7 +377,7 @@ class CreateControl @Autowired constructor(
         )
 
         // 发送给用户
-        workspaceCommon.dispatchWebsocketPushEvent(
+        notifyControl.dispatchWebsocketPushEvent(
             userId = userId,
             workspaceName = workspace.workspaceName,
             workspaceHost = null,
@@ -414,7 +425,7 @@ class CreateControl @Autowired constructor(
             afterCreateWorkspace(event, ws)
         }.onFailure {
             logger.error("create workspace ${event.workspaceName} error ${it.message}", it)
-            workspaceCreateFail(ws)
+            workspaceCreateFail(ws, event)
         }
     }
 
@@ -496,8 +507,12 @@ class CreateControl @Autowired constructor(
                     ips = setOf(ip),
                     props = workspaceCommon.genWorkspaceCCInfo(ws.projectId)
                 )
-            }
 
+                // 创建成功后做异步设置
+                executor.execute {
+                    workspaceCommon.makeDiskMount(ip, event.userId)
+                }
+            }
             if (!ws.workspaceSystemType.afterCreateNeedWs(ws.ownerType)) {
                 // 直接return 不做websocket
                 return
@@ -508,10 +523,10 @@ class CreateControl @Autowired constructor(
             // 创建失败
             // websocket 通知失败
             logger.warn("create workspace ${event.workspaceName} failed")
-            workspaceCreateFail(ws)
+            workspaceCreateFail(ws, event)
         }
 
-        workspaceCommon.dispatchWebsocketPushEvent(
+        notifyControl.dispatchWebsocketPushEvent(
             userId = event.userId,
             workspaceName = event.workspaceName,
             workspaceHost = event.environmentHost,
@@ -655,12 +670,18 @@ class CreateControl @Autowired constructor(
         return true
     }
 
-    private fun workspaceCreateFail(ws: WorkspaceRecord) {
+    private fun workspaceCreateFail(
+        ws: WorkspaceRecord,
+        event: RemoteDevUpdateEvent
+    ) {
         if (ws.ownerType == WorkspaceOwnerType.PROJECT) {
+            val imageId = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, ws.workspaceName)?.imageId ?: ""
+            val envId = event.environmentUid ?: ""
             workspaceCommon.updateStatus2DeliveringFailed(
                 workspace = ws,
                 action = WorkspaceAction.CREATE,
-                notifyTemplateCode = "WINDOWS_GPU_CREATE_FAILED"
+                notifyTemplateCode = "WINDOWS_GPU_CREATE_FAILED",
+                noticeParams = mapOf("imageId" to imageId, "envId" to envId)
             )
         } else {
             workspaceDao.deleteWorkspace(ws.workspaceName, dslContext)
@@ -711,7 +732,7 @@ class CreateControl @Autowired constructor(
         if (yaml.isBlank()) {
             logger.warn(
                 "create workspace get devfile blank,return." +
-                    "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
+                        "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
             )
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
@@ -915,9 +936,9 @@ class CreateControl @Autowired constructor(
     private fun startCloudResourceCountCheck(type: String, zone: String) =
         workspaceCommon.syncStartCloudResourceList().count {
             it.status == 11 &&
-                it.machineType == type &&
-                it.zoneId.replace(Regex("\\d+"), "") == zone &&
-                it.locked != true
+                    it.machineType == type &&
+                    it.zoneId.replace(Regex("\\d+"), "") == zone &&
+                    it.locked != true
         }
 
     private fun doPreparing(workspace: Workspace) {
@@ -945,7 +966,7 @@ class CreateControl @Autowired constructor(
             userId
         }
         return subUserId.replace(Regex("[@_]"), "-") +
-            "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
+                "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
     }
 
     // 判断用户定义的镜像是否在默认镜像白名单列表中

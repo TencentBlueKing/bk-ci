@@ -158,6 +158,10 @@
         convertMStoStringByRule,
         navConfirm
     } from '@/utils/util'
+    import {
+        handlePipelineNoPermission,
+        RESOURCE_ACTION
+    } from '@/utils/permission'
 
     export default {
         components: {
@@ -878,10 +882,11 @@
                     feConfig.isRunning = true
                 } catch (err) {
                     if (err.code === 403) { // 没有权限执行
-                        this.setPermissionConfig(this.$permissionResourceMap.pipeline, this.$permissionActionMap.execute, [{
-                            id: curPipeline.pipelineId,
-                            name: curPipeline.pipelineName
-                        }], projectId, this.getPermUrlByRole(projectId, curPipeline.pipelineId, this.roleMap.executor))
+                        handlePipelineNoPermission({
+                            projectId: params.projectId,
+                            resourceCode: curPipeline.pipelineId,
+                            action: RESOURCE_ACTION.EXECUTE
+                        })
                         return
                     } else {
                         feConfig.status = 'known_error'
@@ -950,15 +955,14 @@
                         }
                     })
                 } catch (err) {
-                    this.handleError(err, [{
-                        actionId: this.$permissionActionMap.execute,
-                        resourceId: this.$permissionResourceMap.pipeline,
-                        instanceId: [{
-                            id: target.pipelineId,
-                            name: target.pipelineName
-                        }],
-                        projectId
-                    }], this.getPermUrlByRole(projectId, target.pipelineId, this.roleMap.executor))
+                    this.handleError(
+                        err,
+                        {
+                            projectId: projectId,
+                            resourceCode: target.pipelineId,
+                            action: this.$permissionResourceAction.EXECUTE
+                        }
+                    )
                 } finally {
                     feConfig.buttonAllow.terminatePipeline = true
                 }
@@ -1093,15 +1097,14 @@
                                 message = this.$t('deleteSuc')
                                 theme = 'success'
                             } catch (err) {
-                                this.handleError(err, [{
-                                    actionId: this.$permissionActionMap.delete,
-                                    resourceId: this.$permissionResourceMap.pipeline,
-                                    instanceId: [{
-                                        id: curPipeline.pipelineId,
-                                        name: curPipeline.pipelineName
-                                    }],
-                                    projectId: this.projectId
-                                }], this.getPermUrlByRole(this.projectId, curPipeline.pipelineId, this.roleMap.manager))
+                                this.handleError(
+                                    err,
+                                    {
+                                        projectId: this.projectId,
+                                        resourceCode: curPipeline.pipelineId,
+                                        action: this.$permissionResourceAction.DELETE
+                                    }
+                                )
                             } finally {
                                 message && this.$showTips({
                                     message,
@@ -1210,23 +1213,14 @@
                 } catch (err) {
                     if (err.code === 403) { // 没有权限复制
                         this.copyDialogConfig.isShow = false
-                        this.handleError(err, [{
-                            actionId: this.$permissionActionMap.create,
-                            resourceId: this.$permissionResourceMap.pipeline,
-                            instanceId: [{
-                                id: prePipeline.pipelineId,
-                                name: prePipeline.pipelineName
-                            }],
-                            projectId
-                        }, {
-                            actionId: this.$permissionActionMap.edit,
-                            resourceId: this.$permissionResourceMap.pipeline,
-                            instanceId: [{
-                                id: prePipeline.pipelineId,
-                                name: prePipeline.pipelineName
-                            }],
-                            projectId
-                        }], this.getPermUrlByRole(projectId, prePipeline.pipelineId, this.roleMap.manager))
+                        this.handleError(
+                            err,
+                            {
+                                projectId: projectId,
+                                resourceCode: prePipeline.pipelineId,
+                                action: this.$permissionResourceAction.CREATE
+                            }
+                        )
                     } else {
                         message = err.message || err
                         theme = 'error'

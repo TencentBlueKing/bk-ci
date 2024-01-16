@@ -61,7 +61,9 @@ data class WindowsResourceTypeConfig(
     @ApiModelProperty("权重，用于页面展示先后顺序")
     val weight: Int? = 0,
     @ApiModelProperty("描述")
-    val description: String
+    val description: String,
+    @ApiModelProperty("是否是特殊机型")
+    val specModel: Boolean = false
 ) {
 
     companion object {

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.atom
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.TEMPLATE_PLUGIN_NOT_ALLOWED_USE
 import com.tencent.devops.common.api.constant.KEY_CODE_EDITOR
 import com.tencent.devops.common.api.constant.KEY_DEFAULT
 import com.tencent.devops.common.api.constant.KEY_INPUT
@@ -47,8 +48,11 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.config.TaskCommonSettingConfig
+import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
+import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
+import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.StoreParam
 import com.tencent.devops.store.pojo.common.StoreVersion
@@ -192,6 +196,30 @@ object AtomUtils {
             inputTypeConfigMap[it] = taskCommonSettingConfig.maxMultipleInputComponentSize
         }
         return inputTypeConfigMap
+    }
+
+    fun checkTemplateRealVersionAtoms(
+        codeVersions: Set<AtomCodeVersionReqItem>,
+        userId: String,
+        client: Client
+    ) {
+        val atomInfos = client.get(ServiceAtomResource::class)
+            .getAtomInfos(
+                codeVersions = codeVersions
+            ).data
+        atomInfos?.forEach {
+            val atomStatus = AtomStatusEnum.getAtomStatus(it.atomStatus!!.toInt())
+            if (atomStatus != AtomStatusEnum.RELEASED.name) {
+                throw ErrorCodeException(
+                    errorCode = TEMPLATE_PLUGIN_NOT_ALLOWED_USE,
+                    params = arrayOf(
+                        it.atomName,
+                        it.version,
+                        AtomStatusEnum.valueOf(atomStatus).getI18n(I18nUtil.getLanguage(userId))
+                    )
+                )
+            }
+        }
     }
 
     fun checkModelAtoms(

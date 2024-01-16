@@ -63,13 +63,14 @@ import com.tencent.devops.store.pojo.dto.ExtServiceImageInfoDTO
 import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
 import com.tencent.devops.store.pojo.enums.ExtServicePackageSourceTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
+import java.util.Base64
+import java.util.concurrent.TimeUnit
 import org.apache.commons.text.StringEscapeUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 class TxExtServiceBaseService : ExtServiceBaseService() {
@@ -201,12 +202,14 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
         val script = buildInfo.value1()
         val repoAddr = extServiceImageSecretConfig.repoRegistryUrl
         val imageName = "${extServiceImageSecretConfig.imageNamePrefix}$serviceCode"
+        val username = Base64.getEncoder().encodeToString(extServiceImageSecretConfig.repoUsername.toByteArray())
+        val password = Base64.getEncoder().encodeToString(extServiceImageSecretConfig.repoPassword.toByteArray())
         val extServiceImageInfo = ExtServiceImageInfoDTO(
             imageName = imageName,
             imageTag = version,
             repoAddr = repoAddr,
-            username = extServiceImageSecretConfig.repoUsername,
-            password = extServiceImageSecretConfig.repoPassword
+            username = username,
+            password = password
         )
         // 未正式发布的扩展服务先部署到bcs灰度环境
         val deployApp = extServiceBcsService.generateDeployApp(
@@ -279,9 +282,14 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             val startParams = mutableMapOf<String, String>() // 启动参数
             startParams["serviceCode"] = serviceCode
             startParams["version"] = serviceRecord.version
-            startParams["extServiceImageInfo"] = JsonUtil.toJson(extServiceImageInfo)
+            startParams["imageName"] = serviceCode
+            startParams["imageTag"] = version
             startParams["extServiceDeployInfo"] = JsonUtil.toJson(deployApp)
             startParams["script"] = script
+            startParams["branch"] = MASTER
+            startParams["repoAddr"] = repoAddr
+            startParams["username"] = username
+            startParams["password"] = password
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartup(
                 userId, projectCode!!, servicePipelineRelRecord.pipelineId, startParams,
                 ChannelCode.AM

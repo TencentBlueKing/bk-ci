@@ -31,7 +31,6 @@ import com.tencent.devops.model.process.tables.TAuditResource
 import com.tencent.devops.model.process.tables.TPipelineBuildDetail
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.TPipelineBuildSummary
-import com.tencent.devops.model.process.tables.TPipelineFailureBuild
 import com.tencent.devops.model.process.tables.TPipelineFavor
 import com.tencent.devops.model.process.tables.TPipelineGroup
 import com.tencent.devops.model.process.tables.TPipelineInfo
@@ -178,14 +177,6 @@ class ProcessShardingDataClearDao {
             dslContext.deleteFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(PROJECT_ID.eq(projectId))
-                .execute()
-        }
-    }
-
-    fun deletePipelineFailureBuildByPipelineId(dslContext: DSLContext, pipelineId: String) {
-        with(TPipelineFailureBuild.T_PIPELINE_FAILURE_BUILD) {
-            dslContext.deleteFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
                 .execute()
         }
     }

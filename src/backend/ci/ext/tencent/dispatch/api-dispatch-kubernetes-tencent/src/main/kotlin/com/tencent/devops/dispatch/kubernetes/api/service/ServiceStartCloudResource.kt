@@ -37,6 +37,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.FetchWinPoolData
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmRespData
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
+import com.tencent.devops.remotedev.pojo.image.StandardVmImage
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -143,4 +144,9 @@ interface ServiceStartCloudResource {
         @QueryParam("uid")
         uid: String
     ): Result<TaskStatus?>
+
+    @ApiOperation("查询VM基础镜像")
+    @POST
+    @Path("/resource/standard/image")
+    fun getVmStandardImages(): Result<List<StandardVmImage>?>
 }

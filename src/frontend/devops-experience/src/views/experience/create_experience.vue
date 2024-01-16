@@ -174,7 +174,22 @@
                     </template>
                 </bk-form>
                 <div class="submit-btn-bar">
-                    <bk-button theme="primary" @click.prevent="beforeSubmit">{{ submitText }}</bk-button>
+                    <bk-button
+                        v-perm="{
+                            tooltips: '没有权限',
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: EXPERIENCE_TASK_RESOURCE_TYPE,
+                                resourceCode: projectId,
+                                action: EXPERIENCE_TASK_RESOURCE_ACTION.CREATE
+                            }
+                        }"
+                        theme="primary"
+                        key="submitBtn"
+                        @click.prevent="beforeSubmit"
+                    >
+                        {{ submitText }}
+                    </bk-button>
                     <bk-button theme="default" @click="cancel">取消</bk-button>
                 </div>
             </template>
@@ -210,6 +225,12 @@
 
 <script>
     import GroupIdSelector from '@/components/common/groupIdSelector'
+    import {
+        EXPERIENCE_TASK_RESOURCE_ACTION,
+        EXPERIENCE_TASK_RESOURCE_TYPE,
+        PIPELINE_RESOURCE_ACTION,
+        PIPELINE_RESOURCE_TYPE
+    } from '@/utils/permission'
     import { convertTime } from '@/utils/util'
     import { mapGetters } from 'vuex'
     import experienceGroup from './create_group'
@@ -295,7 +316,11 @@
                 errorFormHandler: {
                     nameError: false,
                     dateError: false
-                }
+                },
+                PIPELINE_RESOURCE_ACTION,
+                PIPELINE_RESOURCE_TYPE,
+                EXPERIENCE_TASK_RESOURCE_TYPE,
+                EXPERIENCE_TASK_RESOURCE_ACTION
             }
         },
         computed: {
@@ -481,14 +506,16 @@
                             }
                         })
                     })
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
+                } catch (e) {
+                    this.handleError(
+                        e,
+                        {
+                            projectId: this.projectId,
+                            resourceType: EXPERIENCE_TASK_RESOURCE_TYPE,
+                            resourceCode: this.experienceHashId,
+                            action: EXPERIENCE_TASK_RESOURCE_ACTION.EDIT
+                        }
+                    )
                 } finally {
                     this.loading.isLoading = false
                 }
@@ -580,7 +607,6 @@
                 this.groupSideslider.visible = false
             },
             cancelFn () {
-                console.log(1111, this.groupSideslider)
                 if (!this.groupSideslider.isLoading) {
                     this.groupSideslider.visible = false
                 }
@@ -790,20 +816,13 @@
                                 message = '新增体验成功'
                                 theme = 'success'
                             } else {
-                                const params = {
-                                    noPermissionList: [{
-                                        actionId: this.$permissionActionMap.execute,
-                                        resourceId: this.$permissionResourceMap.pipeline,
-                                        instanceId: [{
-                                            id: this.curPipelineId,
-                                            name: this.curPipelineName
-                                        }],
-                                        projectId: this.$route.params.projectId
-                                    }],
-                                    applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=pipeline&role_executor=pipeline:${this.curPipelineId}`
-                                }
-            
-                                this.$showAskPermissionDialog(params)
+                                const resourceCode = params.path.split('/')[1] || ''
+                                this.handleNoPermission({
+                                    projectId: this.projectId,
+                                    resourceType: PIPELINE_RESOURCE_TYPE,
+                                    resourceCode,
+                                    action: PIPELINE_RESOURCE_ACTION.EXECUTE
+                                })
                             }
                         }
                     } catch (err) {

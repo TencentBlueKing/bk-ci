@@ -32,21 +32,17 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.notify.enums.NotifyType
-import com.tencent.devops.common.notify.utils.NotifyUtils
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
-import com.tencent.devops.common.websocket.enum.NotityLevel
-import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceStartCloudResource
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.FetchWinPoolData
-import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
-import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -60,32 +56,30 @@ import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
-import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
-import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OP_HISTORY_KEY_PREFIX
-import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
-import com.tencent.devops.remotedev.websocket.push.WorkspaceWebsocketPush
+import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WINDOWS_GPU_OWNER_CHANGE_NOTIFY
 import java.time.Duration
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -102,7 +96,6 @@ class WorkspaceCommon @Autowired constructor(
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val remoteDevBillingDao: RemoteDevBillingDao,
     private val remoteDevSettingService: RemoteDevSettingService,
-    private val webSocketDispatcher: WebSocketDispatcher,
     private val redisCache: RedisCacheService,
     private val profile: Profile,
     @org.springframework.context.annotation.Lazy
@@ -113,59 +106,16 @@ class WorkspaceCommon @Autowired constructor(
     private val deleteControl: DeleteControl,
     private val objectMapper: ObjectMapper,
     private val whiteListService: WhiteListService,
-    private val workspaceWindowsDao: WorkspaceWindowsDao
+    private val workspaceWindowsDao: WorkspaceWindowsDao,
+    private val notifyControl: NotifyControl
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceCommon::class.java)
         private const val DEFAULT_WAIT_TIME = 60
-    }
-
-    @Value("\${notice.wework:#{null}}")
-    private var weworkId: String? = null
-
-    // 封装统一分发WS的方法
-    fun dispatchWebsocketPushEvent(
-        userId: String,
-        workspaceName: String,
-        workspaceHost: String?,
-        errorMsg: String? = null,
-        type: WebSocketActionType,
-        status: Boolean?,
-        action: WorkspaceAction,
-        systemType: WorkspaceSystemType? = null,
-        workspaceMountType: WorkspaceMountType? = null,
-        ownerType: WorkspaceOwnerType? = null,
-        projectId: String = ""
-    ) {
-        webSocketDispatcher.dispatch(
-            WorkspaceWebsocketPush(
-                type = type,
-                status = status ?: true,
-                anyMessage = WorkspaceResponse(
-                    workspaceHost = workspaceHost ?: "",
-                    workspaceName = workspaceName,
-                    status = action,
-                    errorMsg = errorMsg,
-                    systemType = systemType,
-                    workspaceMountType = workspaceMountType,
-                    ownerType = ownerType
-                ),
-                projectId = projectId,
-                userIds = getWebSocketUsers(userId, workspaceName),
-                redisOperation = redisOperation,
-                page = WorkspacePageBuild.buildPage(workspaceName),
-                notifyPost = NotifyPost(
-                    module = "remotedev",
-                    level = NotityLevel.LOW_LEVEL.getLevel(),
-                    message = "",
-                    dealUrl = null,
-                    code = 200,
-                    webSocketType = "IFRAME",
-                    page = WorkspacePageBuild.buildPage(workspaceName)
-                )
-            )
-        )
+        private const val REPOID = "lsync"
+        private const val LOCALDRIVER = "L"
+        private const val PIPELINE_CONFIG_INFO = "remotedev:assignWorkspace.pipelineinfo"
     }
 
     fun getOpHistory(key: OpHistoryCopyWriting) =
@@ -478,14 +428,6 @@ class WorkspaceCommon @Autowired constructor(
         }.getOrNull() ?: emptyList()
     }
 
-    private fun getWebSocketUsers(operator: String, workspaceName: String): Set<String> {
-        return if (operator == ADMIN_NAME) {
-            workspaceDao.fetchWorkspaceUser(dslContext, workspaceName).toSet()
-        } else {
-            setOf(operator)
-        }
-    }
-
     fun getWorkspaceDetail(workspaceName: String): WorkSpaceCacheInfo? {
         return try {
             val result = workspaceDao.getWorkspaceDetail(dslContext, workspaceName)?.detail
@@ -571,6 +513,18 @@ class WorkspaceCommon @Autowired constructor(
             // 没有注册setting就注册
             remoteDevSettingDao.fetchOneSetting(dslContext, it.userId)
             whiteListService.shareWorkspace(operator, it.userId)
+            if (it.type == WorkspaceShared.AssignType.OWNER) {
+                notifyControl.notify4User(
+                    userIds = mutableSetOf(it.userId),
+                    workspaceName = workspaceName,
+                    notifyTemplateCode = WINDOWS_GPU_OWNER_CHANGE_NOTIFY,
+                    notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
+                    bodyParams = mapOf(
+                        "workspaceName" to workspaceName,
+                        "cgsId" to cgsId
+                    )
+                )
+            }
         }
     }
 
@@ -657,7 +611,8 @@ class WorkspaceCommon @Autowired constructor(
     fun updateStatus2DeliveringFailed(
         workspace: WorkspaceRecord,
         action: WorkspaceAction,
-        notifyTemplateCode: String
+        notifyTemplateCode: String,
+        noticeParams: Map<String, String> = emptyMap()
     ) {
         updateStatusAndCreateHistory(
             workspace = workspace,
@@ -665,23 +620,43 @@ class WorkspaceCommon @Autowired constructor(
             action = action
         )
         // 通知
-        if (!weworkId.isNullOrBlank()) {
-            val request = SendNotifyMessageTemplateRequest(
-                templateCode = notifyTemplateCode,
-                bodyParams = mapOf(
-                    WorkspaceRecord::workspaceName.name to workspace.workspaceName,
-                    WorkspaceRecord::projectId.name to workspace.projectId,
-                    WorkspaceRecord::createUserId.name to workspace.createUserId,
-                    NotifyUtils.WEWORK_GROUP_KEY to weworkId!!
-                ),
-                notifyType = mutableSetOf(NotifyType.WEWORK_GROUP.name),
-                markdownContent = false
-            )
-            kotlin.runCatching {
-                client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
-            }.onFailure {
-                logger.warn("notify WINDOWS_GPU_SAFE_INIT_FAILED fail ${it.message}")
+        notifyControl.notify4SystemAdministrator(
+            notifyTemplateCode,
+            mapOf(
+                WorkspaceRecord::workspaceName.name to workspace.workspaceName,
+                WorkspaceRecord::projectId.name to workspace.projectId,
+                WorkspaceRecord::createUserId.name to workspace.createUserId
+            ).plus(noticeParams)
+        )
+    }
+
+    // 创建实例成功后做异步设置，包含L盘挂载
+    fun makeDiskMount(ip: String, user: String) {
+        try {
+            val infoS = redisOperation.get(PIPELINE_CONFIG_INFO) ?: return
+            val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
+            val resIps = mutableSetOf<String>()
+            resIps.add(ip)
+            val newParam = mutableMapOf<String, String>()
+            info.buildParam.forEach { (k, v) ->
+                when (v) {
+                    "job_ip_list" -> newParam[k] = resIps.joinToString(separator = " ")
+                    "repoId" -> newParam[k] = REPOID ?: ""
+                    "localDriver" -> newParam[k] = LOCALDRIVER ?: ""
+                    else -> newParam[k] = v
+                }
             }
+            client.get(ServiceBuildResource::class).manualStartupNew(
+                userId = info.userId ?: user,
+                projectId = info.projectId,
+                pipelineId = info.pipelineId,
+                values = newParam,
+                channelCode = ChannelCode.BS,
+                buildNo = null,
+                startType = StartType.SERVICE
+            )
+        } catch (e: Exception) {
+            logger.warn("execute make disk mount pipeline error", e)
         }
     }
 }

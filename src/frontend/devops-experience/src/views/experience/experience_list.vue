@@ -45,15 +45,52 @@
                                     </bk-popover>
                                 </template>
                                 <i v-bk-tooltips="{ content: '该体验已过期' }" class="devops-icon icon-qrcode expired-text" v-else></i>
-                                <span class="edit" @click.stop="toEditRow(props.row)">编辑</span>
-                                <span class="drop-off" @click.stop="toDropOff(props.row)" v-if="props.row.online && !props.row.expired">下架</span>
+                                <bk-button
+                                    v-perm="{
+                                        hasPermission: props.row.permissions.canEdit,
+                                        disablePermissionApi: true,
+                                        permissionData: {
+                                            projectId: projectId,
+                                            resourceType: EXPERIENCE_TASK_RESOURCE_TYPE,
+                                            resourceCode: props.row.experienceHashId,
+                                            action: EXPERIENCE_TASK_RESOURCE_ACTION.EDIT
+                                        }
+                                    }"
+                                    class="mr5"
+                                    text
+                                    @click.stop="toEditRow(props.row)"
+                                >
+                                    编辑
+                                </bk-button>
+                                <bk-button
+                                    v-if="props.row.online && !props.row.expired"
+                                    v-perm="{
+                                        hasPermission: props.row.permissions.canDelete,
+                                        disablePermissionApi: true,
+                                        tooltips: '没有权限',
+                                        permissionData: {
+                                            projectId: projectId,
+                                            resourceType: EXPERIENCE_TASK_RESOURCE_TYPE,
+                                            resourceCode: props.row.experienceHashId,
+                                            action: EXPERIENCE_TASK_RESOURCE_ACTION.DELETE
+                                        }
+                                    }"
+                                    text
+                                    @click.stop="toDropOff(props.row)"
+                                >
+                                    下架
+                                </bk-button>
                                 <span v-bk-tooltips="{ content: '该体验已下架' }" class="expired-text" v-else>下架</span>
                             </div>
                         </template>
                     </bk-table-column>
                 </bk-table>
             </div>
-            <empty-data v-if="showContent && !releaseList.length" :empty-info="emptyInfo" :to-create-fn="toCreateFn">
+            <empty-data
+                v-if="showContent && !releaseList.length"
+                :empty-info="emptyInfo"
+                :to-create-fn="toCreateFn"
+            >
             </empty-data>
         </section>
     </div>
@@ -64,6 +101,7 @@
     import { convertTime } from '@/utils/util'
     import qrcode from '@/components/devops/qrcode'
     import emptyData from './empty-data'
+    import { EXPERIENCE_TASK_RESOURCE_TYPE, EXPERIENCE_TASK_RESOURCE_ACTION } from '@/utils/permission'
 
     export default {
         components: {
@@ -71,7 +109,10 @@
             qrcode
         },
         data () {
+            const { projectId } = this.$route.params
             return {
+                EXPERIENCE_TASK_RESOURCE_TYPE,
+                EXPERIENCE_TASK_RESOURCE_ACTION,
                 showContent: false,
                 curIndexItemUrl: '',
                 defaultCover: require('@/images/qrcode_app.png'),
@@ -83,7 +124,13 @@
                 },
                 emptyInfo: {
                     title: '暂无体验',
-                    desc: '您可以在新增体验中新增一个体验任务'
+                    desc: '您可以在新增体验中新增一个体验任务',
+                    permissionData: {
+                        projectId: projectId,
+                        resourceType: EXPERIENCE_TASK_RESOURCE_TYPE,
+                        resourceCode: projectId,
+                        action: EXPERIENCE_TASK_RESOURCE_ACTION.CREATE
+                    }
                 },
                 pagination: {
                     current: 1,
@@ -234,8 +281,6 @@
                             experienceId: row.experienceHashId
                         }
                     })
-                } else {
-                    this.askExpEditPermission(row)
                 }
             },
             async toDropOff (row) {
@@ -267,8 +312,6 @@
                             }
                         }
                     })
-                } else {
-                    this.askExpEditPermission(row)
                 }
             },
             toggleExpired (isExpired) {
@@ -288,21 +331,6 @@
                     params: {
                         projectId: this.projectId
                     }
-                })
-            },
-
-            askExpEditPermission (row) {
-                this.$showAskPermissionDialog({
-                    noPermissionList: [{
-                        actionId: this.$permissionActionMap.edit,
-                        resourceId: this.$permissionResourceMap.experience,
-                        instanceId: [{
-                            id: row.experienceHashId,
-                            name: row.name
-                        }],
-                        projectId: this.projectId
-                    }],
-                    applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=experience&role_manager=task:${row.experienceHashId}`
                 })
             }
         }

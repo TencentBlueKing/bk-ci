@@ -1,13 +1,50 @@
 <template>
     <div class="node-list-wrapper">
         <content-header class="env-header">
-            <div slot="left">{{ $t('environment.node') }}</div>
+            <div slot="left">
+                <span>{{ $t('environment.node') }}</span>
+                <span v-if="isEnableDashboard" class="dashboard-entry ml5">
+                    <i class="devops-icon icon-tiaozhuan jump-icon"></i>
+                    <a :href="jumpDashboardUrl" target="_blank">{{ $t('environment.查看构建机监控') }}</a>
+                </span>
+            </div>
             <div slot="right" v-if="nodeList.length > 0">
                 <template v-if="isExtendTx">
-                    <bk-button theme="primary" @click="toImportNode('cmdb')">{{ $t('environment.nodeInfo.idcTestMachine') }}</bk-button>
-                    <bk-button theme="primary" @click="toImportNode('construct')">{{ $t('environment.thirdPartyBuildMachine') }}</bk-button>
+                    <bk-button
+                        v-perm="{
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: NODE_RESOURCE_TYPE,
+                                resourceCode: projectId,
+                                action: NODE_RESOURCE_ACTION.CREATE
+                            }
+                        }"
+                        theme="primary" @click="toImportNode('cmdb')">{{ $t('environment.nodeInfo.idcTestMachine') }}</bk-button>
+                    <bk-button
+                        v-perm="{
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: NODE_RESOURCE_TYPE,
+                                resourceCode: projectId,
+                                action: NODE_RESOURCE_ACTION.CREATE
+                            }
+                        }"
+                        theme="primary" @click="toImportNode('construct')">{{ $t('environment.thirdPartyBuildMachine') }}</bk-button>
                 </template>
-                <bk-button v-else theme="primary" class="import-vmbuild-btn" @click="toImportNode('construct')">{{ $t('environment.nodeInfo.importNode') }}</bk-button>
+                <bk-button
+                    v-else
+                    v-perm="{
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: NODE_RESOURCE_TYPE,
+                            resourceCode: projectId,
+                            action: NODE_RESOURCE_ACTION.CREATE
+                        }
+                    }"
+                    theme="primary"
+                    @click="toImportNode('construct')">
+                    {{ $t('environment.nodeInfo.importNode') }}
+                </bk-button>
             </div>
         </content-header>
         <section class="sub-view-port" v-bkloading="{
@@ -17,7 +54,7 @@
             <bk-table v-if="showContent && nodeList.length"
                 size="medium"
                 class="node-table-wrapper"
-                :row-class-name="getRowCls"
+                row-class-name="node-item-row"
                 :data="nodeList">
                 <bk-table-column :label="$t('environment.nodeInfo.displayName')" prop="displayName">
                     <template slot-scope="props">
@@ -36,16 +73,42 @@
                             </div>
                         </div>
                         <div class="table-node-item node-item-id" v-else>
-                            <span class="node-name"
+                            <span
+                                v-perm="canShowDetail(props.row) ? {
+                                    hasPermission: props.row.canView,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: NODE_RESOURCE_TYPE,
+                                        resourceCode: props.row.nodeHashId,
+                                        action: NODE_RESOURCE_ACTION.VIEW
+                                    }
+                                } : {}"
+                                class="node-name"
                                 :class="{ 'pointer': canShowDetail(props.row), 'useless': !canShowDetail(props.row) || !props.row.canUse }"
                                 :title="props.row.displayName"
                                 @click="toNodeDetail(props.row)"
-                            >{{ props.row.displayName || '-' }}</span>
-                            <i class="devops-icon icon-edit" v-if="!isEditNodeStatus && props.row.canEdit" @click="editNodeName(props.row)"></i>
+                            >
+                                {{ props.row.displayName || '-' }}
+                            </span>
+                            <span
+                                v-perm="{
+                                    hasPermission: props.row.canEdit,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: NODE_RESOURCE_TYPE,
+                                        resourceCode: props.row.nodeHashId,
+                                        action: NODE_RESOURCE_ACTION.EDIT
+                                    }
+                                }"
+                            >
+                                <i class="devops-icon icon-edit" v-if="!isEditNodeStatus" @click="editNodeName(props.row)"></i>
+                            </span>
                         </div>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="`${$t('environment.nodeInfo.intranet')}IP`" prop="ip" min-width="80">
+                <bk-table-column :label="`${$t('environment.nodeInfo.intranet')} Ip`" prop="ip" min-width="80">
                     <template slot-scope="props">
                         {{ props.row.ip || '-' }}
                     </template>
@@ -129,29 +192,49 @@
                 </bk-table-column>
                 <bk-table-column :label="$t('environment.operation')" width="160">
                     <template slot-scope="props">
-                        <div class="table-node-item node-item-handler"
-                            :class="{ 'over-handler': isMultipleBtn }">
-                            <span class="node-handle delete-node-text" :class="{ 'no-node-delete-permission': !props.row.canDelete }"
-                                v-if="props.row.canDelete && !['TSTACK', 'DEVCLOUD'].includes(props.row.nodeType)"
-                                @click.stop="confirmDelete(props.row, index)"
-                            >{{ $t('environment.delete') }}</span>
-                            <span class="node-handle delete-node-text"
-                                v-if="!props.row.canUse && props.row.nodeStatus !== 'CREATING'"
-                                @click.stop="toNodeApplyPerm(props.row)"
-                            >{{ $t('environment.applyPermission') }}</span>
-                            <span id="moreHandler" class="node-handle more-handle"
-                                v-if="props.row.canUse && props.row.nodeType === 'DEVCLOUD'">
-                                <bk-popover
-                                    placement="bottom-start"
-                                    size="samll"
-                                    theme="light">
-                                    <span>{{ $t('environment.more') }}</span>
-                                    <div slot="content" class="devcloud-menu-list">
-                                        <dropdown-list :is-show="showTooltip" @handleNode="handleNode" :node="props.row"></dropdown-list>
-                                    </div>
-                                </bk-popover>
-                            </span>
-                        </div>
+                        <template v-if="props.row.canUse">
+                            <div class="table-node-item node-item-handler">
+                                <span
+                                    v-if="!['TSTACK'].includes(props.row.nodeType)"
+                                    v-perm="{
+                                        hasPermission: props.row.canDelete,
+                                        disablePermissionApi: true,
+                                        permissionData: {
+                                            projectId: projectId,
+                                            resourceType: NODE_RESOURCE_TYPE,
+                                            resourceCode: props.row.nodeHashId,
+                                            action: NODE_RESOURCE_ACTION.DELETE
+                                        }
+                                    }"
+                                    class="node-handle delete-node-text"
+                                    @click.stop="confirmDelete(props.row, index)"
+                                >
+                                    {{ $t('environment.delete') }}
+                                </span>
+                                <span id="moreHandler" class="node-handle more-handle"
+                                    v-if="props.row.canUse && props.row.nodeType === 'DEVCLOUD'">
+                                    <bk-popover
+                                        placement="bottom-start"
+                                        size="samll"
+                                        theme="light">
+                                        <span>{{ $t('environment.more') }}</span>
+                                        <div slot="content" class="devcloud-menu-list">
+                                            <dropdown-list :is-show="showTooltip" @handleNode="handleNode" :node="props.row"></dropdown-list>
+                                        </div>
+                                    </bk-popover>
+                                </span>
+                            </div>
+                        </template>
+                        <template v-else>
+                            <bk-button
+                                v-if="!['TSTACK'].includes(props.row.nodeType)"
+                                theme="primary"
+                                outline
+                                @click="handleApplyPermission(props.row)"
+                            >
+                                {{ $t('environment.applyPermission') }}
+                            </bk-button>
+                        </template>
                     </template>
                 </bk-table-column>
             </bk-table>
@@ -200,6 +283,7 @@
     import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
     import { getQueryString } from '@/utils/util'
     import webSocketMessage from '../utils/webSocketMessage.js'
+    import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
     import emptyNode from './empty_node'
 
     export default {
@@ -212,6 +296,8 @@
         },
         data () {
             return {
+                NODE_RESOURCE_TYPE,
+                NODE_RESOURCE_ACTION,
                 curEditNodeItem: '',
                 curEditNodeDisplayName: '',
                 createImageNode: '',
@@ -292,7 +378,9 @@
                             text: this.$t('environment.applyPermission')
                         }
                     ]
-                }
+                },
+                isEnableDashboard: false,
+                bizId: 0
             }
         },
         computed: {
@@ -301,6 +389,9 @@
             },
             userInfo () {
                 return window.userInfo
+            },
+            jumpDashboardUrl () {
+                return `https://bkm.woa.com/?bizId=${this.bizId}#/grafana/d/bT8qy3NVa`
             }
         },
         watch: {
@@ -332,11 +423,9 @@
         },
         async mounted () {
             await this.init()
+            await this.getEnableDashboard()
         },
         methods: {
-            getRowCls ({ row }) {
-                return `node-item-row ${row.canUse ? '' : 'node-row-useless'}`
-            },
             async init () {
                 const {
                     loading
@@ -385,44 +474,48 @@
                     this.showContent = true
                 }
             },
+            async getEnableDashboard () {
+                try {
+                    const res = await this.$store.dispatch('environment/checkEnableDashboard', {
+                        projectId: this.projectId
+                    })
+                    if (res) {
+                        this.isEnableDashboard = res.result
+                        this.bizId = res.bizId
+                    }
+                } catch (e) {
+                    console.err(e)
+                }
+            },
             changeProject () {
                 this.$toggleProjectMenu(true)
             },
             goToApplyPerm () {
-                // this.applyPermission(this.$permissionActionMap.view, this.$permissionResourceMap.envNode, [{
-                //     id: this.projectId,
-                //     type: this.$permissionResourceTypeMap.PROJECT
-                // }])
-                this.tencentPermission(`/backend/api/perm/apply/subsystem/?client_id=node&project_code=${this.projectId}&service_code=environment&role_creator=env_node`)
-            },
-            toNodeApplyPerm (row) {
-                // this.applyPermission(this.$permissionActionMap.view, this.$permissionResourceMap.envNode, [{
-                //     id: this.projectId,
-                //     type: this.$permissionResourceTypeMap.PROJECT
-                // }, {
-                //     id: row.nodeHashId,
-                //     type: this.$permissionResourceTypeMap.ENVIRONMENT_ENV_NODE
-                // }])
-                this.tencentPermission(`/backend/api/perm/apply/subsystem/?client_id=node&project_code=${this.projectId}&service_code=environment&role_manager=env_node:${row.nodeHashId}`)
+                this.handleNoPermission({
+                    projectId: this.projectId,
+                    resourceType: NODE_RESOURCE_TYPE,
+                    resourceCode: this.projectId,
+                    action: NODE_RESOURCE_ACTION.CREATE
+                })
             },
             toNodeDetail (node) {
                 if (this.canShowDetail(node)) {
-                    if (node.canUse) {
-                        this.$router.push({ name: 'nodeDetail', params: { nodeHashId: node.nodeHashId } })
-                    } else {
-                        this.$showAskPermissionDialog({
-                            noPermissionList: [{
-                                actionId: this.$permissionActionMap.use,
-                                resourceId: this.$permissionResourceMap.envNode,
-                                instanceId: [{
-                                    id: node.nodeHashId,
-                                    name: node.displayName
-                                }],
-                                projectId: this.projectId
-                            }]
-                        })
-                    }
+                    this.$router.push({
+                        name: 'nodeDetail',
+                        params: {
+                            nodeHashId: node.nodeHashId,
+                            enableDashboard: this.enableDashboard
+                        }
+                    })
                 }
+            },
+            handleApplyPermission (node) {
+                this.handleNoPermission({
+                    projectId: this.projectId,
+                    resourceType: NODE_RESOURCE_TYPE,
+                    resourceCode: node.nodeHashId,
+                    action: NODE_RESOURCE_ACTION.USE
+                })
             },
             /**
              * 删除节点
@@ -432,63 +525,42 @@
                 const id = row.nodeHashId
 
                 params.push(id)
-                if (!row.canDelete) {
-                    this.$showAskPermissionDialog({
-                        noPermissionList: [{
-                            actionId: this.$permissionActionMap.delete,
-                            resourceId: this.$permissionResourceMap.envNode,
-                            instanceId: [{
-                                id,
-                                name: row.nodeId
-                            }],
-                            projectId: this.projectId
-                        }],
-                        applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=node&project_code=${this.projectId}&service_code=environment&role_manager=env_node:${row.nodeHashId}`
-                    })
-                } else {
-                    this.$bkInfo({
-                        theme: 'warning',
-                        type: 'warning',
-                        title: this.$t('environment.delete'),
-                        subTitle: `${this.$t('environment.nodeInfo.deleteNodetips', [row.displayName])}`,
-                        confirmFn: async () => {
-                            let message, theme
-                            try {
-                                await this.$store.dispatch('environment/toDeleteNode', {
-                                    projectId: this.projectId,
-                                    params
-                                })
 
-                                message = this.$t('environment.successfullyDeleted')
-                                theme = 'success'
-                            } catch (err) {
-                                if (err.code === 403) {
-                                    this.$showAskPermissionDialog({
-                                        noPermissionList: [{
-                                            actionId: this.$permissionActionMap.delete,
-                                            resourceId: this.$permissionResourceMap.envNode,
-                                            instanceId: [{
-                                                id,
-                                                name: row.nodeId
-                                            }],
-                                            projectId: this.projectId
-                                        }],
-                                        applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=node&project_code=${this.projectId}&service_code=environment&role_manager=env_node:${row.nodeHashId}`
-                                    })
-                                } else {
-                                    message = err.data ? err.data.message : err
-                                    theme = 'error'
+                this.$bkInfo({
+                    theme: 'warning',
+                    type: 'warning',
+                    title: this.$t('environment.delete'),
+                    subTitle: `${this.$t('environment.nodeInfo.deleteNodetips', [row.displayName])}`,
+                    confirmFn: async () => {
+                        let message, theme
+                        try {
+                            await this.$store.dispatch('environment/toDeleteNode', {
+                                projectId: this.projectId,
+                                params
+                            })
+
+                            message = this.$t('environment.successfullyDeleted')
+                            theme = 'success'
+
+                            message && this.$bkMessage({
+                                message,
+                                theme
+                            })
+                        } catch (e) {
+                            this.handleError(
+                                e,
+                                {
+                                    projectId: this.projectId,
+                                    resourceType: NODE_RESOURCE_TYPE,
+                                    resourceCode: row.nodeHashId,
+                                    action: NODE_RESOURCE_ACTION.DELETE
                                 }
-                            } finally {
-                                message && this.$bkMessage({
-                                    message,
-                                    theme
-                                })
-                                this.requestList()
-                            }
+                            )
+                        } finally {
+                            this.requestList()
                         }
-                    })
-                }
+                    }
+                })
             },
             /**
              * 构建机信息
@@ -499,7 +571,7 @@
                     subTitle: this.$t('environment.nodeInfo.modifyOperatorTips'),
                     confirmFn: async () => {
                         let message, theme
-                        
+
                         try {
                             await this.$store.dispatch('environment/changeCreatedUser', {
                                 projectId: this.projectId,
@@ -727,16 +799,22 @@
 
                         message = this.constructToolConf.importText === `${this.$t('environment.submitting')}...` ? this.$t('environment.successfullySubmited') : this.$t('environment.successfullyImported')
                         theme = 'success'
-                        this.constructToolConf.isShow = false
-                    } catch (err) {
-                        message = err.message ? err.message : err
-                        theme = 'error'
-                    } finally {
                         this.$bkMessage({
                             message,
                             theme
                         })
-
+                        this.constructToolConf.isShow = false
+                    } catch (e) {
+                        this.handleError(
+                            e,
+                            {
+                                projectId: this.projectId,
+                                resourceType: NODE_RESOURCE_TYPE,
+                                resourceCode: this.projectId,
+                                action: NODE_RESOURCE_ACTION.CREATE
+                            }
+                        )
+                    } finally {
                         this.dialogLoading.isLoading = false
                         this.dialogLoading.isShow = false
                         this.constructToolConf.importText = this.$t('environment.import')
@@ -782,29 +860,22 @@
 
                         message = this.$t('environment.successfullyModified')
                         theme = 'success'
-                    } catch (err) {
-                        if (err.code === 403) {
-                            this.$showAskPermissionDialog({
-                                noPermissionList: [{
-                                    actionId: this.$permissionActionMap.edit,
-                                    resourceId: this.$permissionResourceMap.envNode,
-                                    instanceId: [{
-                                        id: node.nodeHashId,
-                                        name: displayName
-                                    }],
-                                    projectId: this.projectId
-                                }]
-                            })
-                        } else {
-                            message = err.message ? err.message : err
-                            theme = 'error'
-                        }
+                    } catch (e) {
+                        this.handleError(
+                            e,
+                            {
+                                projectId: this.projectId,
+                                resourceType: NODE_RESOURCE_TYPE,
+                                resourceCode: node.nodeHashId,
+                                action: NODE_RESOURCE_ACTION.EDIT
+                            }
+                        )
                     } finally {
-                        message && this.$bkMessage({
-                            message,
-                            theme
-                        })
                         if (theme === 'success') {
+                            message && this.$bkMessage({
+                                message,
+                                theme
+                            })
                             this.nodeList.forEach(val => {
                                 if (val.nodeHashId === node.nodeHashId) {
                                     val.isEnableEdit = false
@@ -920,6 +991,19 @@
             .devops-icon {
                 margin-right: 6px;
             }
+        }
+        .dashboard-entry {
+            color: #3c96ff;
+            cursor: pointer;
+            a {
+                font-size: 14px;
+                color: #3c96ff;
+            }
+        }
+        .jump-icon {
+            font-size: 18px;
+            position: relative;
+            top: 2px;
         }
 
         .edit-operator {
@@ -1083,9 +1167,6 @@
                 .node-count-item {
                   color: $fontLighterColor;
                 }
-              }
-              .no-node-delete-permission {
-                cursor: url('../images/cursor-lock.png'), auto;
               }
             }
 

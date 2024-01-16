@@ -46,6 +46,7 @@ import com.tencent.devops.process.engine.utils.QualityUtils
 import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.quality.api.v2.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -69,12 +70,13 @@ class PipelineElementService @Autowired constructor(
         pipelineId: String,
         startValues: Map<String, String>? = null,
         startParamsMap: MutableMap<String, BuildParameters>? = null,
-        handlePostFlag: Boolean = true
+        handlePostFlag: Boolean = true,
+        queryDslContext: DSLContext? = null
     ) {
         val watcher = Watcher(id = "fillElementWhenNewBuild#$pipelineId")
         watcher.start("getTemplateIdByPipeline")
         val templateId = if (model.instanceFromTemplate == true) {
-            templateService.getTemplateIdByPipeline(projectId, pipelineId)
+            templateService.getTemplateIdByPipeline(projectId, pipelineId, queryDslContext)
         } else {
             null
         }

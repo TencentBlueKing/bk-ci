@@ -30,7 +30,8 @@ package com.tencent.devops.dispatch.pojo.thirdPartyAgent
 enum class BuildJobType {
     ALL,
     DOCKER,
-    BINARY;
+    BINARY,
+    NONE;
 
     companion object {
         fun toEnum(type: String?): BuildJobType {
@@ -38,6 +39,7 @@ enum class BuildJobType {
                 ALL.name -> ALL
                 DOCKER.name -> DOCKER
                 BINARY.name -> BINARY
+                NONE.name -> NONE
                 // 兼容旧数据和其他非标准参数情况
                 else -> ALL
             }

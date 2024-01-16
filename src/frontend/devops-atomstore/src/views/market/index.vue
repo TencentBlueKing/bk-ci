@@ -78,11 +78,11 @@
 </template>
 
 <script>
-    import { debounce } from '@/utils/index'
-    import eventBus from '@/utils/eventBus'
-    import { mapActions } from 'vuex'
-    import commentRate from '@/components/common/comment-rate'
     import breadCrumbs from '@/components/bread-crumbs.vue'
+    import commentRate from '@/components/common/comment-rate'
+    import eventBus from '@/utils/eventBus'
+    import { debounce } from '@/utils/index'
+    import { mapActions } from 'vuex'
 
     export default {
         components: {
@@ -131,7 +131,7 @@
             features () {
                 return [
                     { name: this.$t('store.蓝鲸官方'), key: 'rdType', value: 'SELF_DEVELOPED' },
-                    { name: this.$t('store.质量红线指标'), key: 'qualityFlag', value: true, hidden: this.filterData.pipeType !== 'atom' },
+                    { name: this.$t('store.质量红线服务'), key: 'qualityFlag', value: true, hidden: this.filterData.pipeType !== 'atom' },
                     { name: this.$t('store.推荐使用'), key: 'recommendFlag', value: true }
                 ]
             },
@@ -454,7 +454,7 @@
 
     .store-main {
         overflow-y: scroll;
-        background: #f1f2f3;
+        height: calc(100% - 52px);
     }
 
     .home-main {

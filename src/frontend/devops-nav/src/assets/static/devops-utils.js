@@ -40,6 +40,7 @@ const devopsUtil = {};
     const BACK_HOME = 'backHome'
     const HOOK_TRIGGER = 'hookTrigger'
     const SYNC_SERVICE_HOOKS = 'syncServiceHooks'
+    const UPDATE_TAB_TITLE = 'updateTabTitle'
 
     function init () {
         if (win.addEventListener) {
@@ -96,6 +97,16 @@ const devopsUtil = {};
 
         triggerEvent('change::$' + prop, {
             [prop]: val
+        })
+    }
+
+    /**
+     * 更新父窗口Tab标题
+     */
+    exports[UPDATE_TAB_TITLE] = function (title) {
+        communicateOuter({
+            action: UPDATE_TAB_TITLE,
+            params: title
         })
     }
     

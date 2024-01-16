@@ -86,7 +86,7 @@
                                 message: this.$t('template.nameInputTips')
                             },
                             {
-                                max: 30,
+                                max: 128,
                                 message: this.$t('pipelineNameInputTips')
                             }
                         ]

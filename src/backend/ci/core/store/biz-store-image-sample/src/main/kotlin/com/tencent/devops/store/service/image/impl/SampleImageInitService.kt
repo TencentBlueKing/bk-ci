@@ -96,7 +96,8 @@ class SampleImageInitService @Autowired constructor(
                     projectInfo = ProjectCreateInfo(
                         projectName = imageInitRequest?.projectCode ?: "Demo",
                         englishName = projectCode,
-                        description = imageInitRequest?.projectDesc ?: "demo project"
+                        description = imageInitRequest?.projectDesc ?: "demo project",
+                        enabled = false
                     ),
                     needAuth = false,
                     needValidate = true,

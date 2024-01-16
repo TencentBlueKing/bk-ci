@@ -42,17 +42,21 @@ data class ProjectCreateInfo(
     val projectType: Int = 0,
     @ApiModelProperty("描述")
     val description: String,
-    @ApiModelProperty("一级部门ID")
+    @ApiModelProperty("BGID")
     val bgId: Long = 0,
-    @ApiModelProperty("一级部门名字")
+    @ApiModelProperty("BG名称")
     val bgName: String = "",
-    @ApiModelProperty("二级部门ID")
+    @ApiModelProperty("业务线ID")
+    val businessLineId: Long? = null,
+    @ApiModelProperty("业务线名称")
+    val businessLineName: String? = "",
+    @ApiModelProperty("部门ID")
     val deptId: Long = 0,
-    @ApiModelProperty("二级部门名称")
+    @ApiModelProperty("部门名称")
     val deptName: String = "",
-    @ApiModelProperty("三级部门ID")
+    @ApiModelProperty("中心ID")
     val centerId: Long = 0,
-    @ApiModelProperty("三级部门名称")
+    @ApiModelProperty("中心名称")
     val centerName: String = "",
     @ApiModelProperty("是否保密")
     var secrecy: Boolean = false,
@@ -66,6 +70,8 @@ data class ProjectCreateInfo(
     val logoAddress: String? = null,
     @ApiModelProperty("项目性质")
     val authSecrecy: Int? = ProjectAuthSecrecyStatus.PUBLIC.value,
+    @ApiModelProperty("是否可用")
+    val enabled: Boolean = true,
     @ApiModelProperty("运营产品ID")
     val productId: Int? = null,
     @ApiModelProperty("运营产品名称")

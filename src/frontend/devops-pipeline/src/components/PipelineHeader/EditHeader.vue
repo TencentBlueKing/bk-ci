@@ -9,14 +9,30 @@
                 :loading="saveStatus"
                 theme="primary"
                 @click="save"
+                v-perm="{
+                    permissionData: {
+                        projectId: projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    }
+                }"
             >
                 {{ $t("save") }}
             </bk-button>
             <bk-button
                 theme="primary"
+                v-perm="{
+                    permissionData: {
+                        projectId: projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: pipelineId,
+                        action: RESOURCE_ACTION.EXECUTE
+                    }
+                }"
                 :disabled="btnDisabled || !canManualStartup"
                 :loading="executeStatus"
-                :title="canManualStartup ? '' : this.$t('newlist.cannotManual')"
+                :title="canManualStartup ? '' : $t('newlist.cannotManual')"
                 @click="saveAndExec"
             >
                 {{ isSaveAndRun ? $t("subpage.saveAndExec") : $t("exec") }}
@@ -29,8 +45,10 @@
 <script>
     import VersionSideslider from '@/components/VersionSideslider'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
+    import {
+        RESOURCE_ACTION
+    } from '@/utils/permission'
     import { HttpError } from '@/utils/util'
-    import cookie from 'js-cookie'
     import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
     import MoreActions from './MoreActions.vue'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
@@ -40,18 +58,25 @@
             VersionSideslider,
             MoreActions
         },
-        
+        data () {
+            return {
+                RESOURCE_ACTION
+            }
+        },
         computed: {
-            ...mapState([
-                'curProject'
-            ]),
-            ...mapState('atom', ['pipeline', 'executeStatus', 'saveStatus', 'authSettingEditing']),
-            ...mapState('pipelines', ['pipelineSetting', 'pipelineAuthority']),
+            ...mapState('atom', ['pipeline', 'executeStatus', 'saveStatus']),
+            ...mapState('pipelines', ['pipelineSetting']),
             ...mapGetters({
                 curPipeline: 'pipelines/getCurPipeline',
                 isEditing: 'atom/isEditing',
                 checkPipelineInvalid: 'atom/checkPipelineInvalid'
             }),
+            projectId () {
+                return this.$route.params.projectId
+            },
+            pipelineId () {
+                return this.$route.params.pipelineId
+            },
             btnDisabled () {
                 return this.saveStatus || this.executeStatus
             },
@@ -134,26 +159,6 @@
                 }
             },
 
-            savePipelineAuthority () {
-                const { role, policy } = this.pipelineAuthority
-                const longProjectId = this.curProject && this.curProject.projectId ? this.curProject.projectId : ''
-                const { pipelineId } = this.$route.params
-                const data = {
-                    project_id: longProjectId,
-                    resource_type_code: 'pipeline',
-                    resource_code: pipelineId,
-                    role: role.map(item => {
-                        item.group_list = item.selected
-                        return item
-                    }),
-                    policy: policy.map(item => {
-                        item.group_list = item.selected
-                        return item
-                    })
-                }
-                return this.$ajax.put('/backend/api/perm/service/pipeline/mgr_resource/permission/', data, { headers: { 'X-CSRFToken': cookie.get('paas_perm_csrftoken') } })
-            },
-
             async savePipelineAndSetting () {
                 const { pipelineSetting, checkPipelineInvalid, pipeline } = this
                 const { inValid, message } = checkPipelineInvalid(pipeline.stages, pipelineSetting)
@@ -208,17 +213,13 @@
                     const saveAction = this.isTemplatePipeline
                         ? this.saveSetting
                         : this.savePipelineAndSetting
-                    const responses = await Promise.all([
-                        saveAction(),
-                        ...(this.authSettingEditing ? [this.savePipelineAuthority()] : [])
-                    ])
+                    const responses = await saveAction()
 
-                    if (responses.some(res => res.code === 403)) {
+                    if (responses.code === 403) {
                         throw new HttpError(403)
                     }
 
                     this.setPipelineEditing(false)
-                    this.setAuthEditing(false)
                     this.$showTips({
                         message: this.$t('saveSuc'),
                         theme: 'success'
@@ -251,19 +252,11 @@
                         data: responses
                     }
                 } catch (e) {
-                    this.handleError(e, [
-                        {
-                            actionId: this.$permissionActionMap.edit,
-                            resourceId: this.$permissionResourceMap.pipeline,
-                            instanceId: [
-                                {
-                                    id: pipelineId,
-                                    name: this.pipeline.name
-                                }
-                            ],
-                            projectId
-                        }
-                    ])
+                    this.handleError(e, {
+                        projectId,
+                        resourceCode: pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    })
                     return {
                         code: e.code,
                         message: e.message

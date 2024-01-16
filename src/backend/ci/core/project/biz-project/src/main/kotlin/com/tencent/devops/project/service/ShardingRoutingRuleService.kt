@@ -93,22 +93,26 @@ interface ShardingRoutingRuleService {
      * 获取可用数据源名称
      * @param clusterName db集群名称
      * @param moduleCode 模块代码
+     * @param ruleType 规则类型
      * @param dataSourceNames 数据源名称集合
      * @return 可用数据源名称
      */
     fun getValidDataSourceName(
         clusterName: String,
         moduleCode: SystemModuleEnum,
+        ruleType: ShardingRuleTypeEnum,
         dataSourceNames: List<String>
     ): String
 
     /**
      * 获取可用数据库表名称
+     * @param ruleType 规则类型
      * @param dataSourceName 数据源名称
      * @param tableShardingConfig 分表配置
      * @return 可用数据库表名称
      */
     fun getValidTableName(
+        ruleType: ShardingRuleTypeEnum,
         dataSourceName: String,
         tableShardingConfig: TableShardingConfig
     ): String

@@ -42,7 +42,8 @@
                                 {
                                     id: 'createEnv',
                                     name: this.$t('environment.createEnvrionment'),
-                                    icon: 'devops-icon icon-env'
+                                    icon: 'devops-icon icon-env',
+                                    aaaa: 'envList'
                                 },
                                 {
                                     id: 'envDetail',
