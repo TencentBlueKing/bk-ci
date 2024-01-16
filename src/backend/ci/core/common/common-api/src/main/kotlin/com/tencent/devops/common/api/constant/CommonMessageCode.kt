@@ -174,12 +174,12 @@ object CommonMessageCode {
     const val ERROR_INTERFACE_RETRY_NUM_EXCEEDED = "2100123" // 接口连续重试次数超过{0}次，请稍后再试
     const val ERROR_PIPELINE_API_ACCESS_NO_PERMISSION = "2100124" // 流水线[{0}]没有接口[{1}]的访问权限
     const val TEMPLATE_PLUGIN_NOT_ALLOWED_USE = "2100125" // 模板中插件【{0}】的【{1}】版本的状态是【{2}】，不允许使用
-    const val ADD_MR_FAIL = "2100124" // 添加MR失败
+    const val ADD_MR_FAIL = "2100126" // 添加MR失败
 
     // 互转使用
-    const val ELEMENT_UPDATE_WRONG_PATH = "2100124" // 更新插件的标注位置有误
-    const val ELEMENT_NOT_SUPPORT_TRANSFER = "2100125" // 如下插件在 Code 方式下已不支持，请修改后再切换: \n[{0}]
-    const val DISPATCH_NOT_SUPPORT_TRANSFER = "2100126" // 如下构建环境在 Code 方式下不支持转换，请修改后再切换: \n[{0}]
+    const val ELEMENT_UPDATE_WRONG_PATH = "2100127" // 更新插件的标注位置有误
+    const val ELEMENT_NOT_SUPPORT_TRANSFER = "2100128" // 如下插件在 Code 方式下已不支持，请修改后再切换: \n[{0}]
+    const val DISPATCH_NOT_SUPPORT_TRANSFER = "2100129" // 如下构建环境在 Code 方式下不支持转换，请修改后再切换: \n[{0}]
     const val YAML_NOT_VALID = "2100130" // yaml不合法 {0}
 
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" // 创建容器超时

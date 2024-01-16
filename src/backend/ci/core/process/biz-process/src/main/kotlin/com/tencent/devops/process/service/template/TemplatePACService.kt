@@ -98,15 +98,18 @@ class TemplatePACService @Autowired constructor(
                 )
             ).newYaml
             Triple(true, yml, null)
-        } catch (e: PipelineTransferException) {
+        } catch (e: Throwable) {
             // 旧流水线可能无法转换，用空YAML代替
             logger.warn("TRANSFER_YAML|$projectId|$userId|FULL_MODEL2YAML", e)
-            Triple(false, null, I18nUtil.getCodeLanMessage(
-                messageCode = e.errorCode,
-                params = e.params,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                defaultMessage = e.defaultMessage
-            ))
+            val msg = if (e is PipelineTransferException) {
+                I18nUtil.getCodeLanMessage(
+                    messageCode = e.errorCode,
+                    params = e.params,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                    defaultMessage = e.defaultMessage
+                )
+            } else null
+            Triple(false, null, msg)
         }
 
         // highlight mark
