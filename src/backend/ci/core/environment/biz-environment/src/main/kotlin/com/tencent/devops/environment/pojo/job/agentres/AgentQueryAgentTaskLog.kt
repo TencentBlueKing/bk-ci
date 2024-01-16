@@ -27,9 +27,22 @@
 
 package com.tencent.devops.environment.pojo.job.agentres
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
-data class QueryAgentTaskLogResult(
-    @ApiModelProperty(value = "agent任务日志接口返回结果")
-    val queryAgentTaskLogResult: List<QueryAgentTaskLog>
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class AgentQueryAgentTaskLog(
+    @ApiModelProperty(value = "节点名称")
+    val step: String,
+    @ApiModelProperty(value = "执行状态")
+    val status: String,
+    @ApiModelProperty(value = "执行日志")
+    val log: String,
+    @ApiModelProperty(value = "启动时间")
+    @JsonProperty("start_time")
+    val startTime: String,
+    @ApiModelProperty(value = "完成时间")
+    @JsonProperty("finish_time")
+    val finishTime: String?
 )

@@ -25,14 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo.job.agentreq
+package com.tencent.devops.environment.pojo.job.agentres
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class AgentQueryAgentTaskLogResult(
+data class QueryAgentTaskLog(
     @ApiModelProperty(value = "节点名称")
     val step: String,
     @ApiModelProperty(value = "执行状态")
@@ -40,9 +37,7 @@ data class AgentQueryAgentTaskLogResult(
     @ApiModelProperty(value = "执行日志")
     val log: String,
     @ApiModelProperty(value = "启动时间")
-    @JsonProperty("start_time")
     val startTime: String,
     @ApiModelProperty(value = "完成时间")
-    @JsonProperty("finish_time")
     val finishTime: String?
 )

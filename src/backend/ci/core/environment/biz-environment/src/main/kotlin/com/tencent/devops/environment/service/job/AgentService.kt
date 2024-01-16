@@ -31,7 +31,7 @@ import com.tencent.devops.environment.pojo.job.agentreq.AgentCondition
 import com.tencent.devops.environment.pojo.job.agentreq.AgentHostForInstallAgent
 import com.tencent.devops.environment.pojo.job.agentreq.AgentInstallAgentReq
 import com.tencent.devops.environment.pojo.job.agentreq.AgentQueryAgentStatusFromNodemanReq
-import com.tencent.devops.environment.pojo.job.agentreq.AgentQueryAgentTaskLogResult
+import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentTaskLog
 import com.tencent.devops.environment.pojo.job.agentreq.AgentQueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.agentreq.AgentRetryAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentreq.AgentTerminateAgentInstallTaskReq
@@ -59,6 +59,7 @@ import com.tencent.devops.environment.pojo.job.agentres.JobResultForFilterHostIn
 import com.tencent.devops.environment.pojo.job.agentres.Meta
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentInstallChannelResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentStatusFromNodemanResult
+import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLog
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskLogResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskResult
@@ -326,8 +327,8 @@ data class AgentService @Autowired constructor(
         instanceId: String
     ): AgentResult<QueryAgentTaskLogResult> {
         AgentApi.setThreadLocal("queryAgentTaskLog")
-        val agentQueryAgentTaskLogRes: AgentAgentResult<AgentQueryAgentTaskLogResult> = agentApi.executeGetRequest(
-            AgentQueryAgentTaskLogResult::class.java, jobId, instanceId
+        val agentQueryAgentTaskLogRes: AgentAgentResult<Array<AgentQueryAgentTaskLog>> = agentApi.executeGetRequest(
+            Array<AgentQueryAgentTaskLog>::class.java, jobId, instanceId
         )
         val queryAgentTaskLogRes: AgentResult<QueryAgentTaskLogResult> = AgentResult(
             code = agentQueryAgentTaskLogRes.code,
@@ -336,11 +337,15 @@ data class AgentService @Autowired constructor(
             errors = agentQueryAgentTaskLogRes.errors,
             data = agentQueryAgentTaskLogRes.data?.let {
                 QueryAgentTaskLogResult(
-                    step = it.step,
-                    status = it.status,
-                    log = it.log,
-                    startTime = it.startTime,
-                    finishTime = it.finishTime
+                    queryAgentTaskLogResult = it.map { queryAgentTaskLog ->
+                        QueryAgentTaskLog(
+                            step = queryAgentTaskLog.step,
+                            status = queryAgentTaskLog.status,
+                            log = queryAgentTaskLog.log,
+                            startTime = queryAgentTaskLog.startTime,
+                            finishTime = queryAgentTaskLog.finishTime
+                        )
+                    }
                 )
             }
         )
