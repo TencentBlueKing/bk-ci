@@ -285,6 +285,6 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         projectId: String,
         envName: String
     ): Result<Pair<Long?, List<ThirdPartyAgent>>> {
-        TODO("Not yet implemented")
+        return Result(thirdPartyAgentService.getAgnetByEnvName(projectId, envName))
     }
 }
