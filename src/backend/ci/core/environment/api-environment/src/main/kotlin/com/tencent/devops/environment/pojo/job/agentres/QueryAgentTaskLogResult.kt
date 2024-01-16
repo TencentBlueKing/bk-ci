@@ -27,10 +27,8 @@
 
 package com.tencent.devops.environment.pojo.job.agentres
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.annotations.ApiModelProperty
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 data class QueryAgentTaskLogResult(
     @ApiModelProperty(value = "节点名称")
     val step: String,
@@ -41,5 +39,5 @@ data class QueryAgentTaskLogResult(
     @ApiModelProperty(value = "启动时间")
     val startTime: String,
     @ApiModelProperty(value = "完成时间")
-    val finishTime: String
+    val finishTime: String?
 )
