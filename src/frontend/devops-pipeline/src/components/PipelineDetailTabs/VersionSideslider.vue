@@ -197,9 +197,6 @@
                     this.isLoading = false
                 })
             },
-            getDraftVersion () {
-                return this.versionList.find(item => item.isDraft)?.versionName ?? ''
-            },
             switchVersion (version) {
                 if (version) {
                     this.activeVersion = version
@@ -255,7 +252,8 @@
     cursor: pointer;
 }
 .pipeline-version-dropmenu-content {
-    width: 360px;
+    width: 100%;
+    min-width: 360px;
     display: flex;
     flex-direction: column;
     max-height: 360px;

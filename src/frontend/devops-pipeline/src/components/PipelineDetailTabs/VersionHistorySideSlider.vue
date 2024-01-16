@@ -24,6 +24,14 @@
                     :pagination="pagination"
                     size="small"
                 >
+                    <bk-exception
+                        :type="emptyType"
+                        slot="empty"
+                        scene="part"
+                    >
+                        <span>{{emptyTips}}</span>
+                        <span v-if="filterKeys.length > 0" class="text-link" @click="clearFilter">{{ $t('清除搜索条件') }}</span>
+                    </bk-exception>
                     <bk-table-column v-for="column in columns" :key="column.prop" v-bind="column">
                         <template v-if="column.prop === 'versionName'" v-slot="{ row }">
                             <div :class="['pipeline-version-name-cell', {
@@ -42,6 +50,8 @@
                         <template slot-scope="props">
                             <rollback-entry
                                 :version="props.row.version"
+                                :version-name="props.row.versionName"
+                                :draft-version-name="draftVersionName"
                             />
                             <bk-button
                                 text
@@ -67,7 +77,7 @@
 
 <script>
     import SearchSelect from '@blueking/search-select'
-    import { mapActions, mapState } from 'vuex'
+    import { mapActions, mapState, mapGetters } from 'vuex'
     import { convertTime, navConfirm } from '@/utils/util'
     import VersionDiffEntry from './VersionDiffEntry'
     import RollbackEntry from './RollbackEntry'
@@ -100,6 +110,9 @@
         },
         computed: {
             ...mapState('atom', ['pipelineInfo']),
+            ...mapGetters({
+                draftVersionName: 'atom/getDraftVersionName'
+            }),
             releaseVersion () {
                 return this.pipelineInfo?.releaseVersion
             },
@@ -142,6 +155,12 @@
                     query[item.id] = item.values.map(value => value.id).join(',')
                     return query
                 }, {})
+            },
+            emptyType () {
+                return this.filterKeys.length > 0 ? 'search-empty' : 'empty'
+            },
+            emptyTips () {
+                return this.$t(this.filterKeys.length > 0 ? '搜索为空' : '暂无数据')
             }
         },
         methods: {
@@ -208,7 +227,7 @@
                                 pipelineId,
                                 version: row.version
                             }).then(() => {
-                                this.getPipelineVersions(1)
+                                this.init(1)
                                 this.$showTips({
                                     message: this.$t('delete') + this.$t('version') + this.$t('success'),
                                     theme: 'success'
@@ -225,7 +244,12 @@
             },
             handleClose () {
                 this.$emit('close')
+                this.clearFilter(false)
                 return true
+            },
+            clearFilter (refresh = true) {
+                this.filterKeys = []
+                refresh && this.queryVersionList()
             }
         }
     }

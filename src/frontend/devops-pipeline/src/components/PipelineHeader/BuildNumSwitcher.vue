@@ -71,6 +71,10 @@
                     })
                 } catch (error) {
                     // TODO: //
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message
+                    })
                 } finally {
                     this.isLoading = false
                 }
