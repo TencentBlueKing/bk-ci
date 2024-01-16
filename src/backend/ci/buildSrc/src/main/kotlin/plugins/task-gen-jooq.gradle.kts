@@ -26,6 +26,9 @@
  */
 import nu.studer.gradle.jooq.JooqGenerate
 
+val commonScriptUrl = javaClass.getResource("/common.gradle.kts")
+apply(from = commonScriptUrl)
+
 plugins {
     id("nu.studer.jooq")
 }
@@ -62,17 +65,11 @@ if (name == "model-dispatch-devcloud-tencent") {
     moduleNames = listOf("dispatch_devcloud", "dispatch_macos", "dispatch_windows", "dispatch_codecc")
 }
 
-val mysqlPrefix: String? = System.getProperty("mysqlPrefix") ?: System.getenv("mysqlPrefix")
-
 jooq {
     configurations {
         moduleNames.forEach { moduleName ->
-            val databaseName = if (mysqlPrefix != null && mysqlPrefix != "") {
-                logger.debug("jooq build env : $mysqlPrefix")
-                mysqlPrefix + moduleName
-            } else {
-                "${project.extra["DB_PREFIX"]}$moduleName"
-            }
+            val getDatabaseName = extra["getDatabaseName"] as (String) -> String
+            val databaseName = getDatabaseName(moduleName)
 
             val specialModule = moduleNames.size != 1
             val taskName = if (specialModule) "${moduleName}Genenrate" else "genenrate"
@@ -84,30 +81,13 @@ jooq {
             create(taskName) {
                 jooqConfiguration.apply {
                     jdbc.apply {
-                        var mysqlURL = System.getProperty("${moduleName}MysqlURL") ?: System.getProperty("mysqlURL")
-                        var mysqlUser = System.getProperty("${moduleName}MysqlUser") ?: System.getProperty("mysqlUser")
-                        var mysqlPasswd =
-                            System.getProperty("${moduleName}MysqlPasswd") ?: System.getProperty("mysqlPasswd")
+                        val getMysqlInfo = extra["getMysqlInfo"] as (String) -> Triple<String, String, String>
+                        var (mysqlURL, mysqlUser, mysqlPasswd) = getMysqlInfo(moduleName)
 
-                        if (mysqlURL == null) {
-                            mysqlURL = System.getenv("${moduleName}MysqlURL") ?: System.getenv("mysqlURL")
-                            mysqlUser =
-                                System.getenv("${moduleName}MysqlUser") ?: System.getenv("mysqlUser")
-                            mysqlPasswd =
-                                System.getenv("${moduleName}MysqlPasswd") ?: System.getenv("mysqlPasswd")
-                        }
-
-                        if (mysqlURL == null) {
-                            logger.debug("use default properties.")
-                            mysqlURL = project.extra["DB_HOST"]?.toString()
-                            mysqlUser = project.extra["DB_USERNAME"]?.toString()
-                            mysqlPasswd = project.extra["DB_PASSWORD"]?.toString()
-                        }
-
-                        logger.debug("moduleName : $moduleName")
-                        logger.debug("mysqlURL : $mysqlURL")
-                        logger.debug("mysqlUser : $mysqlUser")
-                        logger.debug("mysqlPasswd : ${mysqlPasswd?.substring(0, 3)}****")
+                        println("moduleName : $moduleName")
+                        println("mysqlURL : $mysqlURL")
+                        println("mysqlUser : $mysqlUser")
+                        println("mysqlPasswd : ${mysqlPasswd.substring(0, 3)}****")
 
                         driver = "com.mysql.cj.jdbc.Driver"
                         url = "jdbc:mysql://$mysqlURL/$databaseName?useSSL=false"

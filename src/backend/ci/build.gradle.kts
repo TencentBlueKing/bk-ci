@@ -18,6 +18,7 @@ allprojects {
     if (name.startsWith("boot-")) {
         pluginManager.apply("org.owasp.dependencycheck") // 检查依赖包漏洞版本
         pluginManager.apply("task-i18n-load") // i18n插件
+        pluginManager.apply("task-sharding-db-table-check") // 分区表检查插件
         if (System.getProperty("devops.assemblyMode") == "KUBERNETES") {
             pluginManager.apply("task-docker-build") // Docker镜像构建
         }
