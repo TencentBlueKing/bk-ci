@@ -694,7 +694,7 @@ class ScmService @Autowired constructor(
             passPhrase = password,
             token = "",
             region = null,
-            userName = null
+            userName = username
         ).getGitSession()
     }
 
