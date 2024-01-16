@@ -100,6 +100,7 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DISCOUNT_TIME_KEY
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OFFICIAL_DEVFILE_KEY
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
+import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
@@ -138,7 +139,8 @@ class WorkspaceService @Autowired constructor(
     private val bkccService: BKCCService,
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val expertSupportDao: ExpertSupportDao,
-    private val apiGwService: ApiGwService
+    private val apiGwService: ApiGwService,
+    private val notifyControl: NotifyControl
 ) {
     @ActionAuditRecord(
         actionId = ActionId.CGS_EDIT,
@@ -1141,7 +1143,7 @@ class WorkspaceService @Autowired constructor(
             val limit = redisCache.get(RedisKeys.REDIS_NOTICE_AHEAD_OF_TIME)?.toLong() ?: 60
             if (duration < limit * 60) {
                 logger.info("start notify to user $userId")
-                workspaceCommon.dispatchWebsocketPushEvent(
+                notifyControl.dispatchWebsocketPushEvent(
                     userId = userId,
                     workspaceName = workspaces.first(),
                     workspaceHost = null,
