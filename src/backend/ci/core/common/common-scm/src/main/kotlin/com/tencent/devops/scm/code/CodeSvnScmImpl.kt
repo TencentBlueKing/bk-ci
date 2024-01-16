@@ -123,7 +123,7 @@ class CodeSvnScmImpl constructor(
         try {
             if (!token.isNullOrBlank()) {
                 SVNApi.getFileList(
-                    host = "",
+                    host = svnConfig.apiUrlOa,
                     token = token,
                     projectName = projectName,
                     path = getSubDirPath(),
@@ -347,7 +347,7 @@ class CodeSvnScmImpl constructor(
      */
     private fun addWebhookByToken(hookUrl: String) {
         val hooks = SVNApi.getWebhooksByToken(
-            host = "",
+            host = svnConfig.apiUrlOa,
             projectName = projectName,
             token = token!!
         )
