@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.openapi.service.doc
 
+import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.util.FileUtil
@@ -70,6 +71,7 @@ import com.tencent.devops.openapi.utils.markdown.MarkdownElement
 import com.tencent.devops.openapi.utils.markdown.Table
 import com.tencent.devops.openapi.utils.markdown.TableRow
 import com.tencent.devops.openapi.utils.markdown.Text
+import io.swagger.annotations.ApiModel
 import io.swagger.jaxrs.config.BeanConfig
 import io.swagger.models.ArrayModel
 import io.swagger.models.ComposedModel
@@ -99,6 +101,14 @@ import io.swagger.models.properties.Property
 import io.swagger.models.properties.RefProperty
 import io.swagger.models.properties.StringProperty
 import io.swagger.models.properties.UUIDProperty
+import kotlin.jvm.internal.DefaultConstructorMarker
+import kotlin.reflect.KFunction
+import kotlin.reflect.KType
+import kotlin.reflect.full.memberProperties
+import kotlin.reflect.jvm.isAccessible
+import kotlin.reflect.jvm.javaConstructor
+import kotlin.reflect.jvm.javaType
+import org.reflections.Reflections
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
@@ -409,7 +419,7 @@ class DocumentService {
             markdownElement.add(
                 Text(
                     level = 3,
-                    body = "$httpStatus $BK_RETURNS_THE_SAMPLE",
+                    body = "$httpStatus ${getI18n(BK_RETURNS_THE_SAMPLE)}",
                     key = "${httpStatus}_return_example_title"
                 )
             )
@@ -460,6 +470,7 @@ class DocumentService {
                 }
                 loadJson
             }
+
             is ModelImpl -> {
                 val loadJson = mutableMapOf<String, Any>()
                 schema.properties?.forEach { (key, property) ->
@@ -467,16 +478,19 @@ class DocumentService {
                 }
                 loadJson
             }
+
             is RefModel -> {
                 val loadJson = mutableMapOf<String, Any>()
                 loadModelJson(schema, loadJson)
                 loadJson
             }
+
             is ArrayModel -> {
                 val loadJson = mutableListOf<Any>()
                 loadJson.add(loadPropertyJson(schema.items))
                 loadJson
             }
+
             else -> {
                 emptyMap<String, String>()
             }
@@ -498,7 +512,7 @@ class DocumentService {
         val headerString = header.rows.takeIf { it.isNotEmpty() }?.joinToString(prefix = "\\\n", separator = "\\\n") {
             "-H '${it.columns[0]}: ${it.columns[4]}' "
         } ?: ""
-        return "curl -X ${httpMethod.toUpperCase()} ${getI18n(BK_CURL_PROMPT, arrayOf(queryString))} $headerString"
+        return "curl -X ${httpMethod.toUpperCase()} '${getI18n(BK_CURL_PROMPT, arrayOf(queryString))}' $headerString"
     }
 
     private fun parseResponse(responses: Map<String, Response>): List<TableRow> {
@@ -526,6 +540,7 @@ class DocumentService {
                         )
                     )
                 }
+
                 is AbstractSerializableParameter<*> -> {
                     tableRow.addNoRepeat(
                         TableRow(
@@ -550,6 +565,7 @@ class DocumentService {
                         )
                     )
                 }
+
                 else -> {}
             }
         }
@@ -578,9 +594,11 @@ class DocumentService {
                     "ENUM($str)"
                 }
             }
+
             "array" -> {
                 "List<" + loadPropertyType(parameter.items) + ">"
             }
+
             "integer" -> {
                 when (parameter.format) {
                     "int32" -> "Int"
@@ -588,6 +606,7 @@ class DocumentService {
                     else -> "integer"
                 }
             }
+
             else -> parameter.type
         }
     }
@@ -674,12 +693,15 @@ class DocumentService {
             is ModelImpl -> {
                 "Map<String, " + loadPropertyType(model.additionalProperties) + ">"
             }
+
             is RefModel -> {
                 Link(model.originalRef, '#' + model.originalRef).toString()
             }
+
             is ArrayModel -> {
                 "List<" + loadPropertyType(model.items) + ">"
             }
+
             else -> {
                 "parse error"
             }
@@ -694,6 +716,7 @@ class DocumentService {
                     loadModelJson(it, loadJson)
                 }
             }
+
             is ModelImpl -> {
                 if (model.discriminator != null) {
                     loadJson[model.discriminator] = "string"
@@ -702,9 +725,11 @@ class DocumentService {
                     loadJson[key] = loadPropertyJson(property)
                 }
             }
+
             is RefModel -> {
                 definitions[model.originalRef]?.let { loadModelJson(it, loadJson) }
             }
+
             else -> {}
         }
     }
@@ -720,12 +745,15 @@ class DocumentService {
             is MapProperty -> {
                 mapOf("string" to loadPropertyJson(property.additionalProperties))
             }
+
             is ObjectProperty -> {
                 getI18n(BK_OBJECT_PROPERTY_ILLUSTRATE)
             }
+
             is ArrayProperty -> {
                 listOf(loadPropertyJson(property.items))
             }
+
             is StringProperty -> {
                 if (property.enum == null) {
                     property.type
@@ -733,6 +761,7 @@ class DocumentService {
                     "enum"
                 }
             }
+
             is BooleanProperty -> false
             is IntegerProperty -> 0
             is LongProperty -> 0L
@@ -750,27 +779,35 @@ class DocumentService {
             is BooleanProperty -> {
                 property.default?.toString()
             }
+
             is DoubleProperty -> {
                 property.default?.toString()
             }
+
             is FloatProperty -> {
                 property.default?.toString()
             }
+
             is IntegerProperty -> {
                 property.default?.toString()
             }
+
             is LongProperty -> {
                 property.default?.toString()
             }
+
             is StringProperty -> {
                 property.default?.toString()
             }
+
             is PasswordProperty -> {
                 property.default?.toString()
             }
+
             is UUIDProperty -> {
                 property.default?.toString()
             }
+
             else -> {
                 null
             }
@@ -787,12 +824,15 @@ class DocumentService {
             is MapProperty -> {
                 "Map<String, " + loadPropertyType(property.additionalProperties) + ">"
             }
+
             is ObjectProperty -> {
                 "Any"
             }
+
             is ArrayProperty -> {
                 "List<" + loadPropertyType(property.items) + ">"
             }
+
             is StringProperty -> {
                 if (property.enum.isNullOrEmpty()) {
                     property.type
@@ -800,6 +840,7 @@ class DocumentService {
                     "ENUM(" + property.enum.toEnumString() + ")"
                 }
             }
+
             else -> {
                 property.type
             }
@@ -832,5 +873,152 @@ class DocumentService {
             language = "zh_CN",
             params = params
         )
+    }
+
+    companion object {
+        /**
+         *  获取所有多态类的实现信息
+         */
+        fun getAllSubType(reflections: Reflections): Map<String, Map<String, String>> {
+            val subTypesClazz = reflections.getTypesAnnotatedWith(JsonSubTypes::class.java)
+            val res = mutableMapOf<String, Map<String, String>>()
+            subTypesClazz.forEach {
+                val infoMap = mutableMapOf<String, String>()
+                val subTypes = it.getAnnotation(JsonSubTypes::class.java).value
+//            val typeInfo = it.getAnnotation(JsonTypeInfo::class.java).property
+                val name = it.getAnnotation(ApiModel::class.java)?.value ?: it.name.split(".").last()
+                subTypes.forEach { child ->
+                    val childName = child.value.java.getAnnotation(ApiModel::class.java)?.value
+                        ?: child.value.java.name.split(".").last()
+                    infoMap[childName] = child.name
+                }
+                res[name] = infoMap
+            }
+            return res
+        }
+
+        fun getAllApiModelInfo(reflections: Reflections): Map<String, Map<String, SwaggerDocParameterInfo>> {
+            val clazz = reflections.getTypesAnnotatedWith(ApiModel::class.java)
+            val res = mutableMapOf<String, Map<String, SwaggerDocParameterInfo>>()
+            clazz.forEach {
+                val name = it.getAnnotation(ApiModel::class.java)?.value
+                if (name.isNullOrBlank()) return@forEach
+                val info = try {
+                    getDataClassParameterDefault(it)
+                } catch (e: Throwable) {
+                    println(it.name)
+                    println(e)
+                    emptyMap()
+                }
+                res[name] = info
+            }
+            return res
+        }
+
+        /**
+         * 例子:
+         * ```java
+         *  getDataClassParameterDefault(Class.forName("com.tencent.devops.openapi.pojo.SwaggerDocResponse"))
+         * ```
+         *  @param clazz 目标类
+         *  @return 带默认值的map
+         */
+        @Suppress("ComplexMethod")
+        fun getDataClassParameterDefault(clazz: Class<*>): Map<String, SwaggerDocParameterInfo> {
+            val kClazz = clazz.kotlin
+            if (!kClazz.isData) return emptyMap()
+            val constructor = kClazz.constructors.maxByOrNull { it.parameters.size }!!
+            val parameters = constructor.parameters
+            val syntheticInit = clazz.declaredConstructors.find { it.modifiers == 4097 }
+            val argumentsSize = syntheticInit?.parameterTypes?.size ?: parameters.size
+            val arguments = arrayOfNulls<Any>(argumentsSize)
+            var index = 0
+            var offset = 0
+            val nullable = mutableMapOf<String, Boolean>()
+            parameters.forEach {
+                if (it.isOptional) {
+                    offset += 1 shl index
+                }
+                nullable[it.name ?: ""] = it.type.isMarkedNullable
+                arguments[index++] = makeStandardArgument(it.type, constructor)
+            }
+            for (i in index until argumentsSize - 2) {
+                arguments[i] = 0
+            }
+            if (syntheticInit != null) {
+                arguments[argumentsSize - 2] = offset
+                arguments[argumentsSize - 1] = null as DefaultConstructorMarker?
+            }
+            val mock = (syntheticInit ?: constructor.javaConstructor)!!.newInstance(*arguments)
+//        val mock = try {
+            val res = mutableMapOf<String, SwaggerDocParameterInfo>()
+            kClazz.memberProperties.forEach {
+                // 编译后，属性默认是private,需要设置isAccessible  才可以读取到值
+                it.isAccessible = true
+                res[it.name] = SwaggerDocParameterInfo(
+                    markedNullable = nullable[it.name] ?: false,
+                    defaultValue = checkDefaultValue(it.call(mock).toString())
+                )
+            }
+            return res
+        }
+
+        @Suppress("ComplexCondition")
+        private fun checkDefaultValue(v: String): String? {
+            if (v.startsWith("Mock") || v.isBlank() || v == "[]" || v == "{=}" || v == "{}") return null
+            return v
+        }
+
+        @Suppress("ComplexMethod")
+        private fun makeStandardArgument(type: KType, debug: KFunction<*>): Any? {
+            if (type.isMarkedNullable) return null
+            return when (type.classifier) {
+                Boolean::class -> false
+                Byte::class -> 0.toByte()
+                Short::class -> 0.toShort()
+                Char::class -> 0.toChar()
+                Int::class -> 0
+                Long::class -> 0L
+                Float::class -> 0f
+                Double::class -> 0.0
+                String::class -> ""
+                Enum::class -> {
+                    null
+                }
+
+                Set::class -> {
+                    type.arguments.firstOrNull()?.let { setOf(makeStandardArgument(it.type!!, debug)) } ?: ""
+                }
+
+                List::class -> {
+                    type.arguments.firstOrNull()?.let { listOf(makeStandardArgument(it.type!!, debug)) } ?: ""
+                }
+
+                ArrayList::class -> {
+                    type.arguments.firstOrNull()?.let { arrayListOf(makeStandardArgument(it.type!!, debug)) } ?: ""
+                }
+
+                Array::class -> {
+                    type.arguments.firstOrNull()?.let { arrayOf(makeStandardArgument(it.type!!, debug)) } ?: ""
+                }
+
+                Map::class -> {
+                    mapOf(
+                        makeStandardArgument(
+                            type.arguments[0].type!!,
+                            debug
+                        ) to makeStandardArgument(type.arguments[1].type!!, debug)
+                    )
+                }
+
+                else -> {
+                    if (type.javaType is Class<*>) {
+                        (type.javaType as Class<*>).newInstance()
+                    } else {
+                        null
+                    }
+                }
+            }
+        }
     }
 }
