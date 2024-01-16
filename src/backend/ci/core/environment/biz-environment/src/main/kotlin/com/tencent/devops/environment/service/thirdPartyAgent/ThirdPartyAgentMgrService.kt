@@ -688,7 +688,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         )
     }
 
-    fun getAgnetByEnvName(projectId: String, envName: String): Pair<Long?, List<ThirdPartyAgent>> {
+    fun getAgentByEnvName(projectId: String, envName: String): Pair<Long?, List<ThirdPartyAgent>> {
         // 共享环境由 被共享的项目ID@环境名称 组成，这里通过@分隔出的数量来区分是否是共享环境
         val envNameItems = envName.split("@")
         val thirdPartyAgentList = mutableListOf<ThirdPartyAgent>()

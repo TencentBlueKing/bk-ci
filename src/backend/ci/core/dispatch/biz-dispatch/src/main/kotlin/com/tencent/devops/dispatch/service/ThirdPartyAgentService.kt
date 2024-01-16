@@ -537,7 +537,8 @@ class ThirdPartyAgentService @Autowired constructor(
         ) {
             return
         }
-        val buildUrl = "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/" +
+        // 构建需要使用构建的项目id跳转，防止是共享agent，agent链接使用上报的项目Id即可
+        val buildUrl = "${HomeHostUtil.innerServerHost()}/console/pipeline/${buildRecord.projectId}/" +
                 "${buildRecord.pipelineId}/detail/${buildRecord.buildId}/executeDetail"
         val agentUrl = "${HomeHostUtil.innerServerHost()}/console/environment/$projectId/" +
                 "nodeDetail/${agentResult.data!!.nodeId}"

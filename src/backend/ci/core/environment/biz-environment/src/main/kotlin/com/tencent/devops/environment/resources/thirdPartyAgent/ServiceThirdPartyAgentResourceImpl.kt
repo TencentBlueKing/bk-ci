@@ -89,7 +89,7 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         Result(thirdPartyAgentService.getAgentByEnvId(projectId, envId))
 
     override fun getAgentsByEnvName(projectId: String, envName: String): Result<List<ThirdPartyAgent>> {
-        val (_, res) = thirdPartyAgentService.getAgnetByEnvName(projectId, envName)
+        val (_, res) = thirdPartyAgentService.getAgentByEnvName(projectId, envName)
         return Result(res)
     }
 
@@ -285,6 +285,6 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         projectId: String,
         envName: String
     ): Result<Pair<Long?, List<ThirdPartyAgent>>> {
-        return Result(thirdPartyAgentService.getAgnetByEnvName(projectId, envName))
+        return Result(thirdPartyAgentService.getAgentByEnvName(projectId, envName))
     }
 }
