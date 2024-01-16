@@ -52,7 +52,7 @@ interface ApigwProjectResourceV3 {
     @Path("/")
     @Operation(summary = "查询所有项目")
     fun list(
-        @Parameter(description = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
         @Parameter(description = "apigw Type", required = true)

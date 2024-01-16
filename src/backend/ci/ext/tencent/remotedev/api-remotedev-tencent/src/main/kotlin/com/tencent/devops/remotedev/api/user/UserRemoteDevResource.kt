@@ -61,7 +61,7 @@ interface UserRemoteDevResource {
     @GET
     @Path("/settings")
     fun getRemoteDevSettings(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<RemoteDevSettings>
@@ -70,7 +70,7 @@ interface UserRemoteDevResource {
     @POST
     @Path("/settings")
     fun updateRemoteDevSettings(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "工作空间描述", required = false)
@@ -81,10 +81,10 @@ interface UserRemoteDevResource {
     @POST
     @Path("/bkGPT")
     fun bkGPT(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam("X-DEVOPS-BK-TICKET")
         bkTicket: String,
         @Context
@@ -96,7 +96,7 @@ interface UserRemoteDevResource {
     @POST
     @Path("/watermark")
     fun getWatermark(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         data: Watermark
@@ -106,7 +106,7 @@ interface UserRemoteDevResource {
     @POST
     @Path("/preci_agent")
     fun preCiAgent(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "工作空间ID", required = true)

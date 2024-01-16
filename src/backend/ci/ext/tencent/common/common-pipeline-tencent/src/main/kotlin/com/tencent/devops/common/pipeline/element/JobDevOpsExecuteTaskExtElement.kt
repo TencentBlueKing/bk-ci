@@ -31,7 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "作业平台-作业执行", description = JobDevOpsExecuteTaskExtElement.classType)
+@Schema(description = "作业平台-作业执行")
 data class JobDevOpsExecuteTaskExtElement(
     @Schema(description = "任务名称", required = true)
     override val name: String = "执行job作业",

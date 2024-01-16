@@ -60,10 +60,10 @@ interface OpGitCiMarketAtomResource {
         @Parameter(description = "插件Code", required = false)
         @QueryParam("atomCode")
         atomCode: String?,
-        @Parameter(description = "第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<GitCiMarketAtom>>
@@ -72,7 +72,7 @@ interface OpGitCiMarketAtomResource {
     @POST
     @Path("/")
     fun add(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "插件信息列表", required = true)

@@ -30,7 +30,7 @@ interface UserProjectGitProxyResource {
     @POST
     @Path("/create")
     fun createRepo(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "创建数据")
@@ -41,7 +41,7 @@ interface UserProjectGitProxyResource {
     @GET
     @Path("/list")
     fun fetchRepo(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
@@ -62,7 +62,7 @@ interface UserProjectGitProxyResource {
     @DELETE
     @Path("/delete")
     fun deleteRepo(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)

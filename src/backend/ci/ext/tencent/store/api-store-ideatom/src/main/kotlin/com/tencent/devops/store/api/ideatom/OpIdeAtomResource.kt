@@ -62,7 +62,7 @@ interface OpIdeAtomResource {
     @POST
     @Path("/")
     fun addIdeAtom(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "新增IDE插件请求报文体", required = true)
@@ -73,7 +73,7 @@ interface OpIdeAtomResource {
     @PUT
     @Path("/{atomId}")
     fun updateIdeAtom(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "插件ID", required = true)

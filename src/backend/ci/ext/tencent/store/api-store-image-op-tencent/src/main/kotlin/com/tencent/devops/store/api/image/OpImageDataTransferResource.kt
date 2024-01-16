@@ -51,7 +51,7 @@ interface OpImageDataTransferResource {
     @PUT
     @Path("/initClassifyAndCategory")
     fun initClassifyAndCategory(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "分类代码", required = false)
@@ -72,7 +72,7 @@ interface OpImageDataTransferResource {
     @PUT
     @Path("/transferImage")
     fun transferImage(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目编码", required = true)
@@ -90,7 +90,7 @@ interface OpImageDataTransferResource {
     @PUT
     @Path("/batchRecheckByProject")
     fun batchRecheckByProject(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目编码", required = true)
@@ -102,7 +102,7 @@ interface OpImageDataTransferResource {
     @PUT
     @Path("/batchRecheckAll")
     fun batchRecheckAll(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<Int>

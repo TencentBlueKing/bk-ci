@@ -61,10 +61,10 @@ interface UserPipelineTrendResource {
         @Parameter(description = "结束时间", required = true)
         @QueryParam("endTime")
         endTime: Long,
-        @Parameter(description = "页数", required = false, defaultValue = "1")
+        @Parameter(description = "页数", required = false, example = "1")
         @QueryParam("page")
         page: Int,
-        @Parameter(description = "每页多少条", required = false, defaultValue = "1000")
+        @Parameter(description = "每页多少条", required = false, example = "1000")
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<TrendInfoDto>

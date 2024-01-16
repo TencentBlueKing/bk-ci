@@ -52,7 +52,7 @@ interface ApigwRepoResourceV2 {
     @Path("/{projectId}/{pipelineId}/{buildId}")
     @Operation(summary = "拿取报告", tags = ["v2_app_reports_get"])
     fun getBuildReports(
-        @Parameter(description = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
         @Parameter(description = "apigw Type", required = true)

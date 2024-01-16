@@ -30,7 +30,7 @@ package com.tencent.devops.common.pipeline.element.store
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "扩展服务构建部署", description = ExtServiceBuildDeployElement.classType)
+@Schema(description = "扩展服务构建部署")
 data class ExtServiceBuildDeployElement(
     @Schema(description = "任务名称", required = true)
     override val name: String = "扩展服务发布归档",

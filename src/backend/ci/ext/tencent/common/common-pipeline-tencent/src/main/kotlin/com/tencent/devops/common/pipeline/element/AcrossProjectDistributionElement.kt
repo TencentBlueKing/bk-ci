@@ -30,7 +30,7 @@ package com.tencent.devops.common.pipeline.element
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "版本仓库-跨项目构件分发", description = AcrossProjectDistributionElement.classType)
+@Schema(description = "版本仓库-跨项目构件分发")
 data class AcrossProjectDistributionElement(
     @Schema(description = "任务名称", required = true)
     override val name: String = "跨项目构件分发",

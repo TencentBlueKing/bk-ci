@@ -57,7 +57,7 @@ interface ServiceRemoteDevResource {
     @GET
     @Path("/workspaces/{workspaceName}/url")
     fun getWorkspaceUrl(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "工作空间唯一name", required = false)
@@ -73,7 +73,7 @@ interface ServiceRemoteDevResource {
     @GET
     @Path("/workspaces/{workspaceName}/info")
     fun getWorkspaceInfo(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "工作空间唯一name", required = false)

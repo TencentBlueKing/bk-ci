@@ -63,16 +63,16 @@ interface TencentUserArtifactoryResource : UserArtifactoryResource {
     @Path("/{projectId}/ownFileList")
     @GET
     fun getOwnFileList(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<FileInfoPage<FileInfo>>
@@ -81,7 +81,7 @@ interface TencentUserArtifactoryResource : UserArtifactoryResource {
     @Path("/{projectId}/searchFileAndProperty")
     @POST
     fun searchFileAndProperty(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
@@ -96,7 +96,7 @@ interface TencentUserArtifactoryResource : UserArtifactoryResource {
     @Path("/{projectId}/{artifactoryType}/properties")
     @GET
     fun properties(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
@@ -115,7 +115,7 @@ interface TencentUserArtifactoryResource : UserArtifactoryResource {
     @Path("/{projectId}/{artifactoryType}/folderSize")
     @GET
     fun folderSize(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
@@ -134,7 +134,7 @@ interface TencentUserArtifactoryResource : UserArtifactoryResource {
     @Path("/{projectId}/{artifactoryType}/shareUrl")
     @POST
     fun shareUrl(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
@@ -159,7 +159,7 @@ interface TencentUserArtifactoryResource : UserArtifactoryResource {
     @Path("/{projectId}/{artifactoryType}/externalUrl")
     @POST
     fun externalUrl(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
@@ -178,7 +178,7 @@ interface TencentUserArtifactoryResource : UserArtifactoryResource {
     @Path("/{projectId}/{artifactoryType}/ioaUrl")
     @POST
     fun ioaUrl(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
@@ -197,7 +197,7 @@ interface TencentUserArtifactoryResource : UserArtifactoryResource {
     @Path("/{projectId}/{artifactoryType}/filePipelineInfo")
     @GET
     fun getFilePipelineInfo(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
@@ -216,7 +216,7 @@ interface TencentUserArtifactoryResource : UserArtifactoryResource {
     @Path("/{projectId}/{pipelineId}/{buildId}/copyToCustom")
     @POST
     fun copyToCustom(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
@@ -236,7 +236,7 @@ interface TencentUserArtifactoryResource : UserArtifactoryResource {
     @Path("/checkDevnetGateway")
     @GET
     fun checkDevnetGateway(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<Boolean>

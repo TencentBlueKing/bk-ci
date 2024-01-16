@@ -31,12 +31,12 @@ interface OPDcPerformanceConfigResource {
     @Path("/performanceConfig/list")
     @Operation(summary = "获取devcloud性能配置列表")
     fun listDcPerformanceConfig(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, defaultValue = "10")
+        @Parameter(description = "每页多少条", required = false, example = "10")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<ListPage<PerformanceConfigVO>>
@@ -45,7 +45,7 @@ interface OPDcPerformanceConfigResource {
     @Path("/performanceConfig/add")
     @Operation(summary = "新增性能配置")
     fun createDcPerformanceConfig(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @Parameter(description = "性能配置", required = true)
@@ -56,7 +56,7 @@ interface OPDcPerformanceConfigResource {
     @Path("/performanceConfig/{projectId}/update")
     @Operation(summary = "更新Devcloud性能配置")
     fun updateDcPerformanceConfig(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @Parameter(description = "蓝盾项目ID", required = true)
@@ -70,7 +70,7 @@ interface OPDcPerformanceConfigResource {
     @Path("/performanceConfig/delete/{projectId}")
     @Operation(summary = "删除Devcloud性能配置")
     fun deleteDcPerformanceConfig(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @Parameter(description = "服务ID", required = true)

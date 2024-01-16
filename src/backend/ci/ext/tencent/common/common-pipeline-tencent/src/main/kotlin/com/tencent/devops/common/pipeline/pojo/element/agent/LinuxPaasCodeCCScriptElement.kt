@@ -31,7 +31,7 @@ import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("UNUSED")
-@Schema(description = "CodeCC代码检查任务", description = LinuxPaasCodeCCScriptElement.classType)
+@Schema(description = "CodeCC代码检查任务")
 data class LinuxPaasCodeCCScriptElement(
     @Schema(description = "任务名称", required = true)
     override var name: String = "执行Linux脚本",

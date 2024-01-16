@@ -54,7 +54,7 @@ interface GitCILogResource {
     @GET
     @Path("/{gitProjectId}/{pipelineId}/{buildId}/")
     fun getInitLogs(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "工蜂项目ID", required = true)
@@ -84,7 +84,7 @@ interface GitCILogResource {
     @GET
     @Path("/{gitProjectId}/{pipelineId}/{buildId}/after")
     fun getAfterLogs(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "工蜂项目ID", required = true)
@@ -118,7 +118,7 @@ interface GitCILogResource {
     @Path("/{gitProjectId}/{pipelineId}/{buildId}/download")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun downloadLogs(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "工蜂项目ID", required = true)

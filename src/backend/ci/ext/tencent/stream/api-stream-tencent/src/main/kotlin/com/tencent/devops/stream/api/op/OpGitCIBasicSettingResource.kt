@@ -29,7 +29,7 @@ interface OpGitCIBasicSettingResource {
     @POST
     @Path("/save")
     fun save(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @Parameter(description = "工蜂项目", required = true)

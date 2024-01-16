@@ -32,7 +32,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("UNUSED")
-@Schema(description = "CodeCC代码检查任务(service端)", description = LinuxCodeCCScriptElement.classType)
+@Schema(description = "CodeCC代码检查任务(service端)")
 open class LinuxCodeCCScriptElement(
     @Schema(description = "任务名称", required = true)
     override var name: String = "执行Linux脚本",

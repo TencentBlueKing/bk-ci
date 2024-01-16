@@ -30,7 +30,7 @@ package com.tencent.devops.common.pipeline.element.store
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "插件运行环境准备", description = AtomRunEnvPrepareElement.classType)
+@Schema(description = "插件运行环境准备")
 data class AtomRunEnvPrepareElement(
     @Schema(description = "任务名称", required = true)
     override val name: String = "插件运行环境准备",

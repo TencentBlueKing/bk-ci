@@ -66,7 +66,7 @@ interface UserProjectWorkspaceResource {
     @POST
     @Path("/")
     fun createWorkspace(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "bkTicket", required = true)
@@ -83,7 +83,7 @@ interface UserProjectWorkspaceResource {
     @DELETE
     @Path("/")
     fun deleteWorkspace(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "projectId", required = true)
@@ -98,16 +98,16 @@ interface UserProjectWorkspaceResource {
     @GET
     @Path("/")
     fun getWorkspaceList(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, defaultValue = "6666")
+        @Parameter(description = "每页多少条", required = false, example = "6666")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<ProjectWorkspace>>
@@ -116,16 +116,16 @@ interface UserProjectWorkspaceResource {
     @POST
     @Path("/search")
     fun getWorkspaceListNew(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, defaultValue = "6666")
+        @Parameter(description = "每页多少条", required = false, example = "6666")
         @QueryParam("pageSize")
         pageSize: Int?,
         search: WorkspaceSearch
@@ -135,7 +135,7 @@ interface UserProjectWorkspaceResource {
     @POST
     @Path("/assign_user")
     fun assignUser(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "projectId", required = true)
@@ -152,7 +152,7 @@ interface UserProjectWorkspaceResource {
     @GET
     @Path("/checkManager")
     fun checkManager(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "projectId", required = true)
@@ -164,7 +164,7 @@ interface UserProjectWorkspaceResource {
     @GET
     @Path("/computerStatus")
     fun computerStatus(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "projectId", required = true)
@@ -176,7 +176,7 @@ interface UserProjectWorkspaceResource {
     @POST
     @Path("/workspace/{workspaceName}/start")
     fun startWorkspace(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "projectId", required = true)
@@ -191,7 +191,7 @@ interface UserProjectWorkspaceResource {
     @POST
     @Path("/workspace/{workspaceName}/stop")
     fun stopWorkspace(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "projectId", required = true)
@@ -206,7 +206,7 @@ interface UserProjectWorkspaceResource {
     @POST
     @Path("/workspace/{workspaceName}/restart")
     fun restartWorkspace(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "projectId", required = true)
@@ -221,7 +221,7 @@ interface UserProjectWorkspaceResource {
     @POST
     @Path("/workspace/{workspaceName}/make_vm_image")
     fun makeImageByVm(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "projectId", required = true)
@@ -238,7 +238,7 @@ interface UserProjectWorkspaceResource {
     @GET
     @Path("/userLoginTime")
     fun userLoginTime(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "projectId", required = true)
@@ -254,16 +254,16 @@ interface UserProjectWorkspaceResource {
     @Path("/export")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun exportWorkspaceList(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, defaultValue = "6666")
+        @Parameter(description = "每页多少条", required = false, example = "6666")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Response
@@ -272,7 +272,7 @@ interface UserProjectWorkspaceResource {
     @POST
     @Path("/workspace/{workspaceName}/rebuild")
     fun reBuildWorkspace(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "projectId", required = true)

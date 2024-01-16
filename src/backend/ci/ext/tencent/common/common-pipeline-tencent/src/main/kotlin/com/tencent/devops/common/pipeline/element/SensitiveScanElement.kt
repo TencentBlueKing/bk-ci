@@ -30,7 +30,7 @@ package com.tencent.devops.common.pipeline.element
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "敏感信息检查", description = SensitiveScanElement.classType)
+@Schema(description = "敏感信息检查")
 data class SensitiveScanElement(
     @Schema(description = "任务名称", required = true)
     override val name: String = "执行脚本",

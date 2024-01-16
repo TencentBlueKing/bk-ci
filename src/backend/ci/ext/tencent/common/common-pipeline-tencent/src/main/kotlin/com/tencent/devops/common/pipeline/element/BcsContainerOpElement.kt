@@ -33,7 +33,7 @@ import com.tencent.devops.common.pipeline.element.bcs.KeyValue
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "BCS容器部署-研发、测试", description = BcsContainerOpElement.classType)
+@Schema(description = "BCS容器部署-研发、测试")
 data class BcsContainerOpElement(
     @Schema(description = "任务名称", required = true)
     override val name: String = "执行job作业",

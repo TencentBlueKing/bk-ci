@@ -157,10 +157,10 @@ interface OpRemoteDevResource {
         @Parameter(description = "指定查询的用户", required = false)
         @QueryParam("queryUser")
         queryUser: String?,
-        @Parameter(description = "第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, defaultValue = "6666")
+        @Parameter(description = "每页多少条", required = false, example = "6666")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<RemoteDevUserSettings>>
@@ -264,7 +264,7 @@ interface OpRemoteDevResource {
     @GET
     @Path("/windows/pool/config")
     fun getCgsConfig(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<CgsResourceConfig>
@@ -273,7 +273,7 @@ interface OpRemoteDevResource {
     @POST
     @Path("/init_tai_user_info")
     fun initTaiUserInfo(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         taiUsers: List<String>

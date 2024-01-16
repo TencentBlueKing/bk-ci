@@ -65,7 +65,7 @@ interface OpImageResource {
     @POST
     @Path("/")
     fun addImage(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "新增镜像请求报文体", required = true)
@@ -100,7 +100,7 @@ interface OpImageResource {
     @PUT
     @Path("/{imageId}")
     fun updateImage(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "镜像ID", required = true)
@@ -114,7 +114,7 @@ interface OpImageResource {
     @DELETE
     @Path("/imageIds/{imageId}")
     fun deleteImageById(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "镜像ID", required = true)
@@ -126,7 +126,7 @@ interface OpImageResource {
     @GET
     @Path("/imageIds/{imageId}")
     fun getImageById(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "镜像ID", required = true)
@@ -138,7 +138,7 @@ interface OpImageResource {
     @GET
     @Path("/imageCodes/{imageCode}")
     fun getImagesByCodeAndVersion(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "镜像代码", required = true)
@@ -153,7 +153,7 @@ interface OpImageResource {
     @GET
     @Path("/imageCodes/{imageCode}/versions/list")
     fun getImageVersionsByCode(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "镜像代码", required = true)
@@ -228,7 +228,7 @@ interface OpImageResource {
     @Path("/{imageId}/approve")
     @PUT
     fun approveImage(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "ID", required = true)
@@ -242,7 +242,7 @@ interface OpImageResource {
     @GET
     @Path("/{imageCode}/visible")
     fun getVisibleDept(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "代码", required = true)

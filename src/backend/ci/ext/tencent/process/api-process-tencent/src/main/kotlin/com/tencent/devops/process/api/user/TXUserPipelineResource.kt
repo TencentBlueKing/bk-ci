@@ -53,7 +53,7 @@ interface TXUserPipelineResource {
     // @Path("/projects/{projectId}/enableDocker")
     @Path("/{projectId}/enableDocker")
     fun enableDockerBuild(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
@@ -66,7 +66,7 @@ interface TXUserPipelineResource {
     @Path("{pipelineId}/projects/{projectId}/yaml/prebuild")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun exportPipelinePreCI(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
@@ -82,7 +82,7 @@ interface TXUserPipelineResource {
     @Path("{pipelineId}/projects/{projectId}/yaml/gitci")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun exportPipelineGitCI(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)

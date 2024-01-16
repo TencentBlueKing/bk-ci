@@ -50,7 +50,7 @@ interface WebIDEExResource {
     @Path("/heartBeat/{ip}")
     @Operation(summary = "ide心跳上报接口")
     fun heartBeat(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("ip")

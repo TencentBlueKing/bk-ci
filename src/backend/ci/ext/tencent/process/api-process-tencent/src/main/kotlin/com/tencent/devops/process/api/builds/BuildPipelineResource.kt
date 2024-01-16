@@ -70,9 +70,9 @@ interface BuildPipelineResource {
     @Path("/{projectId}/{pipelineId}/history")
     fun getHistoryBuild(
         @Parameter(
-            value = "当前流水线的buildId获取相关buildId进行鉴权",
+            description = "当前流水线的buildId获取相关buildId进行鉴权",
             required = true,
-            defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+            example = AUTH_HEADER_USER_ID_DEFAULT_VALUE
         )
         @QueryParam("currentBuildId")
         currentBuildId: String,
@@ -82,10 +82,10 @@ interface BuildPipelineResource {
         @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<BuildHistoryPage<BuildHistory>>
@@ -96,9 +96,9 @@ interface BuildPipelineResource {
     @Path("/{projectId}/")
     fun list(
         @Parameter(
-            value = "当前流水线的buildId获取相关buildId进行鉴权",
+            description = "当前流水线的buildId获取相关buildId进行鉴权",
             required = true,
-            defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE
+            example = AUTH_HEADER_USER_ID_DEFAULT_VALUE
         )
         @QueryParam("currentBuildId")
         currentBuildId: String,

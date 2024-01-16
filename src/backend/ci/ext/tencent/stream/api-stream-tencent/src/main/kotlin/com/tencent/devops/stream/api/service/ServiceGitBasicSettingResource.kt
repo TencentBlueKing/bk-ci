@@ -60,7 +60,7 @@ interface ServiceGitBasicSettingResource {
     @POST
     @Path("/enable")
     fun enableGitCI(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "开启或关闭", required = true)
@@ -74,7 +74,7 @@ interface ServiceGitBasicSettingResource {
     @GET
     @Path("/{projectId}")
     fun getGitCIConf(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "蓝盾项目ID", required = true)
@@ -86,7 +86,7 @@ interface ServiceGitBasicSettingResource {
     @POST
     @Path("/validate")
     fun validateGitProject(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "工蜂项目URL", required = true)
@@ -97,7 +97,7 @@ interface ServiceGitBasicSettingResource {
     @POST
     @Path("/{projectId}/save")
     fun saveGitCIConf(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "蓝盾项目ID", required = true)
@@ -111,7 +111,7 @@ interface ServiceGitBasicSettingResource {
     @POST
     @Path("/{projectId}/reset/oauth")
     fun updateEnableUser(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "蓝盾项目ID", required = true)
@@ -126,7 +126,7 @@ interface ServiceGitBasicSettingResource {
     @GET
     @Path("/isOauth")
     fun isOAuth(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "重定向url类型", required = false)

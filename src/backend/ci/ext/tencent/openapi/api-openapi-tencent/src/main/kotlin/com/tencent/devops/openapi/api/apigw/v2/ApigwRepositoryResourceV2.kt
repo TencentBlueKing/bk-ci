@@ -56,7 +56,7 @@ interface ApigwRepositoryResourceV2 {
     @GET
     @Path("/projects/{projectId}/listByProject")
     fun listByProject(
-        @Parameter(description = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
         @Parameter(description = "apigw Type", required = true)
@@ -86,7 +86,7 @@ interface ApigwRepositoryResourceV2 {
     @GET
     @Path("/getAuthUrl")
     fun getAuthUrl(
-        @Parameter(description = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
         @Parameter(description = "apigw Type", required = true)
@@ -107,7 +107,7 @@ interface ApigwRepositoryResourceV2 {
     @GET
     @Path("/git/{userId}")
     fun gitGet(
-        @Parameter(description = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
         @Parameter(description = "apigw Type", required = true)

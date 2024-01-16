@@ -54,7 +54,7 @@ interface GitRepositoryConfResource {
     @DELETE
     @Path("/disable/{gitProjectId}")
     fun disableGitCI(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "工蜂项目ID", required = true)
@@ -66,7 +66,7 @@ interface GitRepositoryConfResource {
     @GET
     @Path("/enable/{gitProjectId}")
     fun getGitCIConf(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "gitProjectId", required = true)
@@ -78,7 +78,7 @@ interface GitRepositoryConfResource {
     @POST
     @Path("/settings/save")
     fun saveGitCIConf(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "工蜂项目配置", required = true)

@@ -54,7 +54,7 @@ interface OpExperienceResource {
     @Path("/public/switchNecessary")
     @POST
     fun switchNecessary(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "公开体验记录ID", required = true)
@@ -66,7 +66,7 @@ interface OpExperienceResource {
     @Path("/public/setNecessaryIndex")
     @POST
     fun setNecessaryIndex(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "公开体验记录ID", required = true)
@@ -81,7 +81,7 @@ interface OpExperienceResource {
     @Path("/public/setBannerUrl")
     @POST
     fun setBannerUrl(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "公开体验记录ID", required = true)
@@ -96,7 +96,7 @@ interface OpExperienceResource {
     @Path("/public/setBannerIndex")
     @POST
     fun setBannerIndex(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "公开体验记录ID", required = true)
@@ -111,7 +111,7 @@ interface OpExperienceResource {
     @Path("/public/switchOnline")
     @POST
     fun switchOnline(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "公开体验记录ID", required = true)
@@ -123,7 +123,7 @@ interface OpExperienceResource {
     @Path("/search/addRecommend")
     @POST
     fun addRecommend(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "推荐内容", required = true)
@@ -138,7 +138,7 @@ interface OpExperienceResource {
     @Path("/search/removeRecommend")
     @DELETE
     fun removeRecommend(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "搜索推荐ID", required = true)
@@ -150,7 +150,7 @@ interface OpExperienceResource {
     @Path("/public/addExternal")
     @POST
     fun addExternal(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "外部体验参数")
@@ -161,7 +161,7 @@ interface OpExperienceResource {
     @Path("/index/addExtendBanner")
     @POST
     fun addExtendBanner(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "扩展banner")
@@ -172,7 +172,7 @@ interface OpExperienceResource {
     @Path("/index/updateExtendBanner")
     @POST
     fun updateExtendBanner(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "bannerId", required = true)

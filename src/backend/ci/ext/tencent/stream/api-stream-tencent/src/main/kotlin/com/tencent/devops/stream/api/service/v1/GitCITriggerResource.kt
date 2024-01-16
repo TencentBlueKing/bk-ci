@@ -54,7 +54,7 @@ interface GitCITriggerResource {
     @POST
     @Path("/{pipelineId}/startup")
     fun triggerStartup(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "流水线ID", required = true)
@@ -68,7 +68,7 @@ interface GitCITriggerResource {
     @POST
     @Path("/checkYaml")
     fun checkYaml(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "yaml内容", required = true)
@@ -79,7 +79,7 @@ interface GitCITriggerResource {
     @GET
     @Path("/getYamlSchema")
     fun getYamlSchema(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<String>
@@ -88,7 +88,7 @@ interface GitCITriggerResource {
     @GET
     @Path("/getYaml/{gitProjectId}/{buildId}")
     fun getYamlByBuildId(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "工蜂项目ID", required = true)

@@ -55,7 +55,7 @@ interface ServiceItemResource {
     @Path("/{itemId}")
     @Operation(summary = "获取扩展点信息")
     fun getItemInfo(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @Parameter(description = "扩展点Id", required = true)

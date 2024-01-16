@@ -55,7 +55,7 @@ interface GitCIPipelineResource {
     @GET
     @Path("/{gitProjectId}/list")
     fun getPipelineList(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "gitProjectId", required = true)
@@ -64,10 +64,10 @@ interface GitCIPipelineResource {
         @Parameter(description = "搜索关键字", required = false)
         @QueryParam("keyword")
         keyword: String?,
-        @Parameter(description = "第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, defaultValue = "10")
+        @Parameter(description = "每页多少条", required = false, example = "10")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<V1GitProjectPipeline>>
@@ -76,7 +76,7 @@ interface GitCIPipelineResource {
     @GET
     @Path("/{gitProjectId}/{pipelineId}/info")
     fun getPipeline(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "gitProjectId", required = true)
@@ -94,7 +94,7 @@ interface GitCIPipelineResource {
     @POST
     @Path("/{gitProjectId}/{pipelineId}/enable")
     fun enablePipeline(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "gitProjectId", required = true)
@@ -112,7 +112,7 @@ interface GitCIPipelineResource {
     @GET
     @Path("/{gitProjectId}/listInfo")
     fun listPipelineNames(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "gitProjectId", required = true)

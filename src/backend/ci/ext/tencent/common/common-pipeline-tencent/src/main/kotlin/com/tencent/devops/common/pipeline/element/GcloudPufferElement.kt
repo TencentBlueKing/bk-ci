@@ -30,7 +30,7 @@ package com.tencent.devops.common.pipeline.element
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "GCloud-puffer-动态资源更新(IEG专用)", description = GcloudPufferElement.classType)
+@Schema(description = "GCloud-puffer-动态资源更新(IEG专用)")
 data class GcloudPufferElement(
     @Schema(description = "任务名称", required = true)
     override val name: String = "GCLOUD-创建APP原子",

@@ -60,7 +60,7 @@ interface ServiceStreamTriggerResource {
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}/startup")
     fun triggerStartup(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
@@ -77,7 +77,7 @@ interface ServiceStreamTriggerResource {
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/manual")
     fun getManualTriggerInfo(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "蓝盾项目ID", required = true)
@@ -98,7 +98,7 @@ interface ServiceStreamTriggerResource {
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}/openapi_trigger")
     fun openapiTrigger(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "工蜂项目ID", required = true)
@@ -115,7 +115,7 @@ interface ServiceStreamTriggerResource {
     @POST
     @Path("/check_yaml")
     fun checkYaml(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "yaml 文件体", required = true)
@@ -126,7 +126,7 @@ interface ServiceStreamTriggerResource {
     @GET
     @Path("/projects/{projectId}/name_to_pipelineInfo")
     fun nameToPipelineId(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "蓝盾项目ID(带前缀 如git_xxx)", required = true)

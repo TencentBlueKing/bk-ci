@@ -30,7 +30,7 @@ package com.tencent.devops.common.pipeline.element
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "Android证书安装", description = AndroidCertInstallElement.classType)
+@Schema(description = "Android证书安装")
 data class AndroidCertInstallElement(
     @Schema(description = "任务名称", required = true)
     override val name: String = "Android证书安装",

@@ -31,7 +31,7 @@ import com.tencent.devops.common.pipeline.element.ktlint.KtlintReporter
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "ktlint代码静态检查", description = KtlintStyleElement.classType)
+@Schema(description = "ktlint代码静态检查")
 class KtlintStyleElement(
     @Schema(description = "任务名称", required = true)
     override val name: String = "执行Linux脚本",

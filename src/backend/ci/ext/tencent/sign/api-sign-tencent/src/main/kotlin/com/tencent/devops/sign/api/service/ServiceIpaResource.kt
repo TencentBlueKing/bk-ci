@@ -68,10 +68,10 @@ interface ServiceIpaResource {
         @Parameter(description = "截止时间戳（毫秒）", required = false)
         @QueryParam("endTime")
         endTime: Long?,
-        @Parameter(description = "第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<SignHistory>>

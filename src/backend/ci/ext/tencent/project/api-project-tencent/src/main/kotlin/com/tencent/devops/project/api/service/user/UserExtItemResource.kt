@@ -52,7 +52,7 @@ interface UserExtItemResource {
     @Path("/")
     @Operation(summary = "获取扩展项目列表")
     fun getItemList(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<List<ExtItemDTO>?>
@@ -61,7 +61,7 @@ interface UserExtItemResource {
     @Path("/list")
     @Operation(summary = "获取蓝盾服务下扩展功能点列表")
     fun getServiceItemList(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @Parameter(description = "蓝盾服务Id", required = false)

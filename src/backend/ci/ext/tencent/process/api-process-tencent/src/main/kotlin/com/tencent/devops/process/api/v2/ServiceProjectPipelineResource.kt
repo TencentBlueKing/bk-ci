@@ -57,13 +57,13 @@ interface ServiceProjectPipelineResource {
     @Path("/projectIds")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun listPipelinesByProjectIds(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int = 1,
-        @Parameter(description = "每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int = 20,
         @Parameter(description = "渠道号，默认为DS", required = false)

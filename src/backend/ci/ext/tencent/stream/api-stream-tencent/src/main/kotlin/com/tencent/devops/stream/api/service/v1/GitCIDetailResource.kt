@@ -59,7 +59,7 @@ interface GitCIDetailResource {
     @GET
     @Path("/detail/{gitProjectId}")
     fun getLatestBuildDetail(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "gitProjectId", required = true)
@@ -77,7 +77,7 @@ interface GitCIDetailResource {
     @Path("/artifactories/projects/{gitProjectId}/search")
     @GET
     fun search(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "gitProjectId", required = true)
@@ -89,10 +89,10 @@ interface GitCIDetailResource {
         @Parameter(description = "buildId", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @Parameter(description = "第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条(不传默认全部返回)", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条(不传默认全部返回)", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<FileInfoPage<FileInfo>>
@@ -101,10 +101,10 @@ interface GitCIDetailResource {
     @Path("/artifactories/projects/{gitProjectId}/artifactoryType/{artifactoryType}/downloadUrl")
     @POST
     fun downloadUrl(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "工蜂用户ID", required = true, defaultValue = "0")
+        @Parameter(description = "工蜂用户ID", required = true, example = "0")
         @HeaderParam("X-GIT-UID")
         gitUserId: String,
         @Parameter(description = "gitProjectId", required = true)
@@ -122,7 +122,7 @@ interface GitCIDetailResource {
     @Path("/projects/{gitProjectId}/pipelines/{pipelineId}/builds/{buildId}/report")
     @GET
     fun getReports(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "gitProjectId", required = true)

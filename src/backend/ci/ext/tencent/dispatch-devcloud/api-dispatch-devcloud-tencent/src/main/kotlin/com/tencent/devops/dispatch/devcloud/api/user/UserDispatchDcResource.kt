@@ -30,7 +30,7 @@ interface UserDispatchDcResource {
     @Path("/startDebug/pipeline/{pipelineId}/vmSeq/{vmSeqId}")
     @Operation(summary = "开始启动调试")
     fun startDebug(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "pipelineId", required = true)
@@ -48,7 +48,7 @@ interface UserDispatchDcResource {
     @Path("/stopDebug/pipeline/{pipelineId}/vmSeq/{vmSeqId}")
     @Operation(summary = "关闭调试")
     fun stopDebug(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "pipelineId", required = true)
@@ -66,7 +66,7 @@ interface UserDispatchDcResource {
     @Path("/project/{projectId}/performanceConfig/list")
     @Operation(summary = "获取devcloud性能配置列表")
     fun getDcPerformanceConfigList(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @Parameter(description = "projectId", required = true)

@@ -11,9 +11,9 @@ data class WindowsPoolListFetchData(
     val ips: List<String>?,
     @Parameter(description = "status", required = false)
     val status: Int?,
-    @Parameter(description = "第几页", required = false, defaultValue = "1")
+    @Parameter(description = "第几页", required = false, example = "1")
     val page: Int?,
-    @Parameter(description = "每页多少条", required = false, defaultValue = "6666")
+    @Parameter(description = "每页多少条", required = false, example = "6666")
     val pageSize: Int?,
     @Parameter(description = "是否过滤锁住的机器")
     val lockedFlag: Boolean?

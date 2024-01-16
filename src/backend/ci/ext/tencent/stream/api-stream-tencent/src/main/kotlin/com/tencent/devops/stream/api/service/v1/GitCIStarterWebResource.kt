@@ -55,7 +55,7 @@ interface GitCIStarterWebResource {
     @GET
     @Path("/yaml/list")
     fun getYamlList(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<V1GitYamlContent>>
@@ -64,10 +64,10 @@ interface GitCIStarterWebResource {
     @GET
     @Path("/properties/list")
     fun getPropertyList(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "指定类别名", required = false, defaultValue = "")
+        @Parameter(description = "指定类别名", required = false, example = "")
         @QueryParam("类别名")
         category: String?
     ): Result<List<V1GitYamlProperty>>
@@ -76,7 +76,7 @@ interface GitCIStarterWebResource {
     @GET
     @Path("/web/list")
     fun getWebList(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<V1GitStarterWebList>
@@ -85,7 +85,7 @@ interface GitCIStarterWebResource {
     @POST
     @Path("/yaml/update")
     fun update(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "最新的所有模板属性", required = true)

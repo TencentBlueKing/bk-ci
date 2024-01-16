@@ -102,7 +102,7 @@ interface AppPipelineResource {
         @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode?,
-        @Parameter(description = "流水线排序", required = false, defaultValue = "CREATE_TIME")
+        @Parameter(description = "流水线排序", required = false, example = "CREATE_TIME")
         @QueryParam("sortType")
         sortType: PipelineSortType? = PipelineSortType.CREATE_TIME
     ): Result<PipelinePage<AppPipeline>>
@@ -145,7 +145,7 @@ interface AppPipelineResource {
     @GET
     @Path("/{projectId}/{pipelineId}/historyCondition/branchName")
     fun getHistoryConditionBranch(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
@@ -163,7 +163,7 @@ interface AppPipelineResource {
     @GET
     @Path("/{projectId}/{pipelineId}/historyCondition/status")
     fun getHistoryConditionStatus(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
@@ -178,7 +178,7 @@ interface AppPipelineResource {
     @GET
     @Path("/{projectId}/{pipelineId}/historyCondition/repo")
     fun getHistoryConditionRepo(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
@@ -208,7 +208,7 @@ interface AppPipelineResource {
     @POST
     @Path("/{projectId}/{pipelineId}/collect")
     fun collectPipeline(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)

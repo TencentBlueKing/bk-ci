@@ -55,7 +55,7 @@ interface GitCIBuildResource {
     @POST
     @Path("/{gitProjectId}/{pipelineId}/{buildId}/retry")
     fun retry(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "工蜂项目ID", required = true)
@@ -76,7 +76,7 @@ interface GitCIBuildResource {
     @DELETE
     @Path("/{gitProjectId}/{pipelineId}/{buildId}/")
     fun manualShutdown(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "工蜂项目ID", required = true)
@@ -94,7 +94,7 @@ interface GitCIBuildResource {
     @POST
     @Path("/pipeline/startup")
     fun gitCIStartupPipeline(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "启动信息", required = true)

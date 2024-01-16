@@ -66,7 +66,7 @@ interface ServiceGitRepositoryResource {
     @POST
     @Path("/git/create/repository")
     fun createGitCodeRepository(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目编码", required = false)
@@ -96,7 +96,7 @@ interface ServiceGitRepositoryResource {
     @PUT
     @Path("/git/update/repository/repoId")
     fun updateGitCodeRepository(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "仓库id", required = true)
@@ -113,7 +113,7 @@ interface ServiceGitRepositoryResource {
     @PUT
     @Path("/git/update/repository/projectName")
     fun updateGitCodeRepositoryByProjectName(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目名称", required = true)
@@ -130,7 +130,7 @@ interface ServiceGitRepositoryResource {
     @POST
     @Path("/git/repository/members/add")
     fun addGitProjectMember(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "增加的用户列表", required = true)
@@ -151,7 +151,7 @@ interface ServiceGitRepositoryResource {
     @DELETE
     @Path("/git/repository/members/delete")
     fun deleteGitProjectMember(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "删除的用户列表", required = true)
@@ -169,7 +169,7 @@ interface ServiceGitRepositoryResource {
     @PUT
     @Path("/git/repository/user/info/update")
     fun updateRepositoryUserInfo(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目编码", required = true)
@@ -184,7 +184,7 @@ interface ServiceGitRepositoryResource {
     @GET
     @Path("/git/move/repository/group")
     fun moveGitProjectToGroup(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目组代码", required = false)
@@ -223,7 +223,7 @@ interface ServiceGitRepositoryResource {
     @PUT
     @Path("/{repoId}/updateFileContent")
     fun updateTGitFileContent(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "仓库id")
@@ -240,7 +240,7 @@ interface ServiceGitRepositoryResource {
     @DELETE
     @Path("/{projectId}/{repositoryHashId}")
     fun delete(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
@@ -258,7 +258,7 @@ interface ServiceGitRepositoryResource {
     @GET
     @Path("/git/repository/tree/Info")
     fun getGitRepositoryTreeInfo(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "仓库id", required = true)
@@ -288,7 +288,7 @@ interface ServiceGitRepositoryResource {
     @GET
     @Path("/git/repository/recent/commit/info")
     fun getRepoRecentCommitInfo(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "仓库id", required = true)
@@ -306,7 +306,7 @@ interface ServiceGitRepositoryResource {
     @POST
     @Path("/git/tag/create")
     fun createGitTag(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "仓库id", required = true)

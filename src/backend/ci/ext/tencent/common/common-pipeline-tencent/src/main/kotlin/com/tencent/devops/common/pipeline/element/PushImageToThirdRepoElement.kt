@@ -30,7 +30,7 @@ package com.tencent.devops.common.pipeline.element
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "推送镜像到第三方仓库", description = PushImageToThirdRepoElement.classType)
+@Schema(description = "推送镜像到第三方仓库")
 data class PushImageToThirdRepoElement(
     @Schema(description = "任务名称", required = true)
     override val name: String = "推送镜像到第三方仓库",

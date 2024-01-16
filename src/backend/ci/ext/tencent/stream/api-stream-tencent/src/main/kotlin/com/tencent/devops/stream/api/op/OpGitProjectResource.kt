@@ -29,9 +29,9 @@ package com.tencent.devops.stream.api.op
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.stream.pojo.GitProjectConfWithPage
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -42,7 +42,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = arrayOf("OP_GIT_PROJECT"), description = "git项目管理")
+@Tag(name = "OP_GIT_PROJECT", description = "git项目管理")
 @Path("/op/project")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)

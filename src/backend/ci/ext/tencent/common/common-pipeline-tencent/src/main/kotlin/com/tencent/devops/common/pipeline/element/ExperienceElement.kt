@@ -30,7 +30,7 @@ package com.tencent.devops.common.pipeline.element
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "版本体验", description = ExperienceElement.classType)
+@Schema(description = "版本体验")
 data class ExperienceElement(
     @Schema(description = "任务名称", required = true)
     override val name: String = "转体验",

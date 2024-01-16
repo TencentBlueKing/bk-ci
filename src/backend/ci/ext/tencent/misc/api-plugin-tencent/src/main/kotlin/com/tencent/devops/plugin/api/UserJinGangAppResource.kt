@@ -88,10 +88,10 @@ interface UserJinGangAppResource {
         @Parameter(description = "产品ID", required = true)
         @PathParam(value = "projectId")
         projectId: String,
-        @Parameter(description = "开始页数，从1开始", required = false, defaultValue = "1")
+        @Parameter(description = "开始页数，从1开始", required = false, example = "1")
         @QueryParam("page")
         page: Int,
-        @Parameter(description = "每页数据条数", required = false, defaultValue = "12")
+        @Parameter(description = "每页数据条数", required = false, example = "12")
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<JinGangAppResponse?>

@@ -37,9 +37,9 @@ import com.tencent.devops.experience.pojo.ExperienceInfoForBuild
 import com.tencent.devops.experience.pojo.ExperienceJumpInfo
 import com.tencent.devops.experience.pojo.ExperienceServiceCreate
 import com.tencent.devops.experience.pojo.ExperienceUpdate
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -60,7 +60,7 @@ interface ServiceExperienceResource {
     @Path("/{projectId}/")
     @POST
     fun create(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
@@ -76,7 +76,7 @@ interface ServiceExperienceResource {
     fun count(
         @Parameter(description = "项目ID集合", required = false)
         projectIds: Set<String>? = setOf(),
-        @Parameter("", required = false)
+        @Parameter(description = "", required = false)
         @QueryParam("expired")
         expired: Boolean? = false
     ): Result<Map<String, Int>>
@@ -85,7 +85,7 @@ interface ServiceExperienceResource {
     @Path("/projects/{projectId}/experienceIds/{experienceHashId}")
     @GET
     fun get(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
@@ -100,7 +100,7 @@ interface ServiceExperienceResource {
     @Path("/experienceIds/{experienceHashId}/check")
     @GET
     fun check(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @Parameter(description = "体验HashId", required = false)
@@ -130,7 +130,7 @@ interface ServiceExperienceResource {
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}")
     @GET
     fun listForBuild(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String?,
         @Parameter(description = "项目ID", required = true)
@@ -148,7 +148,7 @@ interface ServiceExperienceResource {
     @Path("/{projectId}/{experienceHashId}")
     @PUT
     fun edit(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
@@ -165,7 +165,7 @@ interface ServiceExperienceResource {
     @Path("/{projectId}/{experienceHashId}/offline")
     @PUT
     fun offline(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String?,
         @Parameter(description = "项目ID", required = true)
@@ -180,7 +180,7 @@ interface ServiceExperienceResource {
     @Path("/{projectId}/{experienceHashId}/online")
     @PUT
     fun online(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String?,
         @Parameter(description = "项目ID", required = true)

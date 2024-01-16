@@ -56,13 +56,13 @@ interface ApigwStatisticResource {
     @GET
     @Path("/pipelinesAndTemplates")
     fun getPipelineAndTemplateStatistic(
-        @Parameter(description = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
         @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @Parameter(description = "组织类型", required = true)
@@ -71,10 +71,10 @@ interface ApigwStatisticResource {
         @Parameter(description = "组织ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
         organizationId: Int,
-        @Parameter(description = "部门名称", required = false, defaultValue = "")
+        @Parameter(description = "部门名称", required = false, example = "")
         @QueryParam("deptName")
         deptName: String? = "",
-        @Parameter(description = "中心名称", required = false, defaultValue = "")
+        @Parameter(description = "中心名称", required = false, example = "")
         @QueryParam("centerName")
         centerName: String? = ""
     ): Result<PipelineAndTemplateStatistic>

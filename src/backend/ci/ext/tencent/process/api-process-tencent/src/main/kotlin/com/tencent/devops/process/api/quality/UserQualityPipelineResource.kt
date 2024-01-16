@@ -61,7 +61,7 @@ interface UserQualityPipelineResource {
     @GET
     @Path("/projects/{projectId}/listViewPipelines")
     fun listViewPipelines(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
@@ -70,10 +70,10 @@ interface UserQualityPipelineResource {
         @Parameter(description = "流水线名称关键字", required = false)
         @QueryParam("keywords")
         keywords: String?,
-        @Parameter(description = "第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
         @Parameter(description = "用户视图ID", required = false)
@@ -85,7 +85,7 @@ interface UserQualityPipelineResource {
     @GET
     @Path("/project/{projectId}/pipeline/{pipelineId}/getPipelineInfo")
     fun getPipelineInfo(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
@@ -104,7 +104,7 @@ interface UserQualityPipelineResource {
     @Path("/{projectId}/")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun list(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "原子类型", required = true)

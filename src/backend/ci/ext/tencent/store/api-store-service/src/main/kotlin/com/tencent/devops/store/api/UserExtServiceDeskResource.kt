@@ -57,7 +57,7 @@ import javax.ws.rs.core.MediaType
 interface UserExtServiceDeskResource {
 
     @POST
-    @Operation(value = "工作台--初始化扩展服务")
+    @Operation(description = "工作台--初始化扩展服务")
     @Path("/")
     fun initExtensionService(
         @Parameter(description = "userId", required = true)
@@ -68,7 +68,7 @@ interface UserExtServiceDeskResource {
     ): Result<Boolean>
 
     @PUT
-    @Operation(value = "工作台-升级扩展")
+    @Operation(description = "工作台-升级扩展")
     @Path("/")
     fun submitExtensionService(
         @Parameter(description = "userId", required = true)
@@ -79,7 +79,7 @@ interface UserExtServiceDeskResource {
     ): Result<String>
 
     @GET
-    @Operation(value = "根据扩展ID获取扩展版本进度")
+    @Operation(description = "根据扩展ID获取扩展版本进度")
     @Path("/release/process/{serviceId}")
     fun getExtensionServiceInfo(
         @Parameter(description = "userId", required = true)
@@ -105,7 +105,7 @@ interface UserExtServiceDeskResource {
     ): Result<Boolean>
 
     @GET
-    @Operation(value = "工作台--根据用户获取服务扩展列表")
+    @Operation(description = "工作台--根据用户获取服务扩展列表")
     @Path("/list")
     fun listDeskExtService(
         @Parameter(description = "userId", required = true)

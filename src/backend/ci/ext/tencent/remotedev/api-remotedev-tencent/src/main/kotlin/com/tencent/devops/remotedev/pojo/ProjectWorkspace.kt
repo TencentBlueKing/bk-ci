@@ -32,7 +32,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(description = "工作空间信息")
 data class ProjectWorkspace(
-    @Schema(description = "工作空间ID<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "工作空间ID<只读>", readOnly = true)
     override val workspaceId: Long?,
     @Schema(description = "工作空间名称")
     override val workspaceName: String,
@@ -40,13 +40,13 @@ data class ProjectWorkspace(
     override val projectId: String?,
     @Schema(description = "工作空间备注名称")
     override val displayName: String? = null,
-    @Schema(description = "工作空间状态<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "工作空间状态<只读>", readOnly = true)
     override val status: WorkspaceStatus? = null,
-    @Schema(description = "状态最近更新时间<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "状态最近更新时间<只读>", readOnly = true)
     override val lastStatusUpdateTime: Long? = null,
-    @Schema(description = "休眠时间<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "休眠时间<只读>", readOnly = true)
     override val sleepingTime: Long? = null,
-    @Schema(description = "工作空间创建人<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Schema(description = "工作空间创建人<只读>", readOnly = true)
     override val createUserId: String,
     @Schema(description = "工作空间对应的IP")
     override val hostName: String? = null,

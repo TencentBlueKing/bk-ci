@@ -381,10 +381,10 @@ interface ServiceGitResource {
         @Parameter(description = "在这之前的时间的提交")
         @QueryParam("until")
         until: String?,
-        @Parameter(description = "页码", defaultValue = "1")
+        @Parameter(description = "页码", example = "1")
         @QueryParam("page")
         page: Int,
-        @Parameter(description = "每页数量,最大100", defaultValue = "20")
+        @Parameter(description = "每页数量,最大100", example = "20")
         @QueryParam("perPage")
         perPage: Int,
         @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)

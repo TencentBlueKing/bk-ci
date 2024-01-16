@@ -30,7 +30,7 @@ package com.tencent.devops.common.pipeline.element.store
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "研发商店组件codecc代码扫描结果校验", description = StoreCodeccValidateElement.classType)
+@Schema(description = "研发商店组件codecc代码扫描结果校验")
 data class StoreCodeccValidateElement(
     @Schema(description = "任务名称", required = true)
     override val name: String = "研发商店组件codecc代码扫描结果校验",

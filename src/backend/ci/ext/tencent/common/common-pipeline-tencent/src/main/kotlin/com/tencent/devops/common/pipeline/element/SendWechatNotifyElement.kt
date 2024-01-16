@@ -30,7 +30,7 @@ package com.tencent.devops.common.pipeline.element
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "发送微信通知", description = SendWechatNotifyElement.classType)
+@Schema(description = "发送微信通知")
 data class SendWechatNotifyElement(
     @Schema(description = "任务名称", required = true)
     override val name: String = "发送Wechat微信通知",

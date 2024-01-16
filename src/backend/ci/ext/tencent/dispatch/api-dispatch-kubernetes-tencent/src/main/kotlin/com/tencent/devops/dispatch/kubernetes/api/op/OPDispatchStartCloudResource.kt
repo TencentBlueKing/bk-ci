@@ -23,7 +23,7 @@ interface OPDispatchStartCloudResource {
     @Path("/startcloud/order-refresh")
     @Operation(summary = "新增性能基础配置")
     fun refreshStartCloudOrderId(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<Boolean>

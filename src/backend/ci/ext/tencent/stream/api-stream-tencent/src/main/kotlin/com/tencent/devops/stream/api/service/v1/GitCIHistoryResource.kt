@@ -55,7 +55,7 @@ interface GitCIHistoryResource {
     @GET
     @Path("/list/{gitProjectId}")
     fun getHistoryBuildList(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "gitProjectId", required = true)
@@ -67,10 +67,10 @@ interface GitCIHistoryResource {
         @Parameter(description = "查询结束时间，格式yyyy-MM-dd HH:mm:ss", required = false)
         @QueryParam("endBeginTime")
         endBeginTime: String?,
-        @Parameter(description = "第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
         @Parameter(description = "分支", required = false)
@@ -91,16 +91,16 @@ interface GitCIHistoryResource {
     @GET
     @Path("/branch/list/{gitProjectId}")
     fun getAllBuildBranchList(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(description = "第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
         @Parameter(description = "分支关键字(模糊搜索)", required = false)

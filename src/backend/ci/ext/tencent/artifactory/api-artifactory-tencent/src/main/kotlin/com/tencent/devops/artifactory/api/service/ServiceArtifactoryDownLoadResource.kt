@@ -70,7 +70,7 @@ interface ServiceArtifactoryDownLoadResource {
         @Parameter(description = "构建ID", required = false)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String?,
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String?,
         @Parameter(description = "版本仓库类型", required = true)
@@ -124,7 +124,7 @@ interface ServiceArtifactoryDownLoadResource {
     @Path("/apkDefender")
     @POST
     fun apkDefender(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "加固请求", required = true)
@@ -138,7 +138,7 @@ interface ServiceArtifactoryDownLoadResource {
         @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "任务ID", required = true)

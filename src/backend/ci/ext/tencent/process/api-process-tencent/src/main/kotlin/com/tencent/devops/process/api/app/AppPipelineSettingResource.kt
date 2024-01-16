@@ -54,7 +54,7 @@ interface AppPipelineSettingResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/setting")
     @Path("/{projectId}/{pipelineId}/setting")
     fun getPipelineSetting(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
@@ -70,7 +70,7 @@ interface AppPipelineSettingResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/save")
     @Path("/{projectId}/{pipelineId}/save")
     fun saveSetting(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目Id")

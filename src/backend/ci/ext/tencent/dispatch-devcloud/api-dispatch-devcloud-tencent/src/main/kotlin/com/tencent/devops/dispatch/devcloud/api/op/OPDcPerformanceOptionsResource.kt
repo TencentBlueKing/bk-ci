@@ -28,7 +28,7 @@ interface OPDcPerformanceOptionsResource {
     @Path("/performanceOptions/list")
     @Operation(summary = "获取devcloud性能基础配置列表")
     fun listDcPerformanceOptions(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<List<PerformanceOptionsVO>>
@@ -37,7 +37,7 @@ interface OPDcPerformanceOptionsResource {
     @Path("/performanceOptions/add")
     @Operation(summary = "新增性能基础配置")
     fun createDcPerformanceOptions(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @Parameter(description = "性能配置", required = true)
@@ -48,7 +48,7 @@ interface OPDcPerformanceOptionsResource {
     @Path("/performanceOptions/{id}/update")
     @Operation(summary = "更新性能基础配置")
     fun updateDcPerformanceOptions(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @Parameter(description = "配置ID", required = true)
@@ -62,7 +62,7 @@ interface OPDcPerformanceOptionsResource {
     @Path("/performanceOptions/delete/{id}")
     @Operation(summary = "删除Devcloud性能基础配置")
     fun deleteDcPerformanceOptions(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @Parameter(description = "ID", required = true)

@@ -53,16 +53,16 @@ interface OpPipelineResource {
     @GET
     @Path("/list")
     fun list(
-        @Parameter(description = "项目ID", required = false, defaultValue = "")
+        @Parameter(description = "项目ID", required = false, example = "")
         @QueryParam("projectId")
         projectId: String?,
-        @Parameter(description = "第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(description = "流水线排序", required = false, defaultValue = "CREATE_TIME")
+        @Parameter(description = "流水线排序", required = false, example = "CREATE_TIME")
         @QueryParam("sortType")
         sortType: PipelineSortType? = PipelineSortType.CREATE_TIME
     ): Result<PipelinePage<Pipeline>>
@@ -71,10 +71,10 @@ interface OpPipelineResource {
     @PUT
     @Path("/dockers/enable")
     fun enableDocker(
-        @Parameter(description = "项目ID", required = true, defaultValue = "")
+        @Parameter(description = "项目ID", required = true, example = "")
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(description = "是否启动", required = true, defaultValue = "true")
+        @Parameter(description = "是否启动", required = true, example = "true")
         @QueryParam("enable")
         enable: Boolean
     ): Result<Boolean>

@@ -48,7 +48,7 @@ interface OpPipelineTemplateResource {
     @POST
     @Path("/")
     fun add(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "author", required = true)
@@ -69,7 +69,7 @@ interface OpPipelineTemplateResource {
         @Parameter(description = "logoUrl", required = false)
         @QueryParam("logoUrl")
         logoUrl: String?,
-        @Parameter(description = "projectCode", required = true, defaultValue = "-1")
+        @Parameter(description = "projectCode", required = true, example = "-1")
         @QueryParam("projectCode")
         projectCode: String,
         @Parameter(description = "流水线", required = true)

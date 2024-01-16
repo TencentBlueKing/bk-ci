@@ -59,9 +59,9 @@ class DocumentServiceTest @Autowired constructor(
             val infoMap = mutableMapOf<String, String>()
             val subTypes = it.getAnnotation(JsonSubTypes::class.java).value
 //            val typeInfo = it.getAnnotation(JsonTypeInfo::class.java).property
-            val name = it.getAnnotation(ApiModel::class.java)?.value ?: it.name.split(".").last()
+            val name = it.getAnnotation(Schema::class.java)?.name ?: it.name.split(".").last()
             subTypes.forEach { child ->
-                val childName = child.value.java.getAnnotation(ApiModel::class.java)?.value
+                val childName = child.value.java.getAnnotation(Schema::class.java)?.name
                     ?: child.value.java.name.split(".").last()
                 infoMap[childName] = child.name
             }
@@ -71,10 +71,10 @@ class DocumentServiceTest @Autowired constructor(
     }
 
     fun getAllApiModelInfo(reflections: Reflections): Map<String, Map<String, SwaggerDocParameterInfo>> {
-        val clazz = reflections.getTypesAnnotatedWith(ApiModel::class.java)
+        val clazz = reflections.getTypesAnnotatedWith(Schema::class.java)
         val res = mutableMapOf<String, Map<String, SwaggerDocParameterInfo>>()
         clazz.forEach {
-            val name = it.getAnnotation(ApiModel::class.java)?.value
+            val name = it.getAnnotation(Schema::class.java)?.name
             if (name.isNullOrBlank()) return@forEach
             val info = try {
                 getDataClassParameterDefault(it)

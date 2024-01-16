@@ -31,7 +31,7 @@ import com.tencent.devops.common.pipeline.enums.Platform
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "bugly符号表上传", description = BuglyElement.classType)
+@Schema(description = "bugly符号表上传")
 data class BuglyElement(
     @Schema(description = "任务名称", required = true)
     override val name: String = "bugly异常上报",

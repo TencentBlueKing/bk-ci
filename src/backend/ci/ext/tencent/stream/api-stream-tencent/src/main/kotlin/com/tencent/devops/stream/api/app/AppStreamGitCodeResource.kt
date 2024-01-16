@@ -30,7 +30,7 @@ interface AppStreamGitCodeResource {
     @GET
     @Path("/projects/{projectId}/commits")
     fun getGitCodeCommits(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "蓝盾项目ID")
@@ -48,10 +48,10 @@ interface AppStreamGitCodeResource {
         @Parameter(description = "在这之前的时间的提交")
         @QueryParam("until")
         until: String?,
-        @Parameter(description = "页码", defaultValue = "1")
+        @Parameter(description = "页码", example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页数量,最大100", defaultValue = "20")
+        @Parameter(description = "每页数量,最大100", example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<Commit>?>
@@ -60,7 +60,7 @@ interface AppStreamGitCodeResource {
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/repository/branches")
     fun getGitCodeBranches(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "蓝盾项目ID")
@@ -72,10 +72,10 @@ interface AppStreamGitCodeResource {
         @Parameter(description = "搜索条件，模糊匹配分支名")
         @QueryParam("search")
         search: String?,
-        @Parameter(description = "页码", defaultValue = "1")
+        @Parameter(description = "页码", example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页数量,最大100", defaultValue = "20")
+        @Parameter(description = "每页数量,最大100", example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
         @Parameter(description = "返回列表的排序字段,可选可选字段:name、updated")

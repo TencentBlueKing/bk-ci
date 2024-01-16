@@ -69,7 +69,7 @@ interface OpProjectWorkspaceResource {
     @POST
     @Path("/list")
     fun getProjectWorkspaceList(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "查询参数")
@@ -80,7 +80,7 @@ interface OpProjectWorkspaceResource {
     @POST
     @Path("/fetchOwnerAndAdmin")
     fun fetchOwnerAndAdmin(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "获取数据")
@@ -91,7 +91,7 @@ interface OpProjectWorkspaceResource {
     @POST
     @Path("/updateCCHost")
     fun updateCCHost(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "修改数据")
@@ -102,7 +102,7 @@ interface OpProjectWorkspaceResource {
     @POST
     @Path("/refreshCodeProxy")
     fun refreshCodeProxy(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("projectId")
@@ -114,7 +114,7 @@ interface OpProjectWorkspaceResource {
     @Path("/list/export")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun exportProjectWorkspaceList(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "查询参数")

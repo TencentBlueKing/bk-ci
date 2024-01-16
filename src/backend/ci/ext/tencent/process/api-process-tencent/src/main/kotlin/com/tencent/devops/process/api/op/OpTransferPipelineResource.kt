@@ -53,7 +53,7 @@ interface OpTransferPipelineResource {
     @POST
     @Path("/transfer_dispatch_type")
     fun transferDispatchType(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "要迁移的内容", required = false)
@@ -64,7 +64,7 @@ interface OpTransferPipelineResource {
     @DELETE
     @Path("/transfer_dispatch_type")
     fun rollBackTransferDispatchType(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "要还原的流水线", required = false)
@@ -75,7 +75,7 @@ interface OpTransferPipelineResource {
     @POST
     @Path("/templates/transfer_dispatch_type")
     fun transferTemplateDispatchType(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "要迁移的内容", required = false)
@@ -86,7 +86,7 @@ interface OpTransferPipelineResource {
     @DELETE
     @Path("/templates/transfer_dispatch_type")
     fun rollBackTransferTemplateDispatchType(
-        @Parameter(description = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "要还原的模板", required = false)

@@ -30,7 +30,7 @@ package com.tencent.devops.common.pipeline.element
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "作业平台-构件分发", description = JobDevOpsFastPushFileElement.classType)
+@Schema(description = "作业平台-构件分发")
 data class JobDevOpsFastPushFileElement(
     @Schema(description = "任务名称", required = true)
     override val name: String = "JOB快速执行脚本",
