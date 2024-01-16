@@ -108,7 +108,7 @@ class UserJobResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         jobId: Int,
-        instanceId: Long
+        instanceId: String
     ): AgentResult<QueryAgentTaskLogResult> {
         checkParamBlank(userId, projectId)
         return agentService.queryAgentTaskLog(userId, projectId, jobId, instanceId)

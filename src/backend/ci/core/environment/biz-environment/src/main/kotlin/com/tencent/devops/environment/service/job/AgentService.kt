@@ -323,7 +323,7 @@ data class AgentService @Autowired constructor(
         userId: String,
         projectId: String,
         jobId: Int,
-        instanceId: Long
+        instanceId: String
     ): AgentResult<QueryAgentTaskLogResult> {
         AgentApi.setThreadLocal("queryAgentTaskLog")
         val agentQueryAgentTaskLogRes: AgentAgentResult<AgentQueryAgentTaskLogResult> = agentApi.executeGetRequest(

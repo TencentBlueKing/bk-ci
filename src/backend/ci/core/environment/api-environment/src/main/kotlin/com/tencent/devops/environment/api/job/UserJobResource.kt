@@ -172,7 +172,7 @@ interface UserJobResource {
         jobId: Int,
         @ApiParam(value = "实例ID")
         @QueryParam("instanceId")
-        instanceId: Long
+        instanceId: String
     ): AgentResult<QueryAgentTaskLogResult>
 
     @ApiOperation("终止agent安装任务的接口")
