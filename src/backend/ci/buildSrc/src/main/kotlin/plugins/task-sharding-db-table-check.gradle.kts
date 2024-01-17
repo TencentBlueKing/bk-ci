@@ -321,8 +321,8 @@ fun compareColumns(
         extraColumns = extraColumns - mismatchColumns
         val columnTip = "Compared with the table of database ($referenceDbUrl/$referenceDatabaseName), " +
             "the differences of table ($tableName) of database ($compareDbUrl/$compareDatabaseName) are as " +
-            "follows: \n missing fields: $missingColumns; \n extra fields: $extraColumns; \n " +
-            "different fields: $mismatchColumns."
+            "follows: \n missing columns: $missingColumns; \n extra columns: $extraColumns; \n " +
+            "different columns: $mismatchColumns."
         if (!missingColumns.isNullOrEmpty() || !extraColumns.isNullOrEmpty() || !mismatchColumns.isNullOrEmpty()) {
             // 字段有差异则抛出错误提示
             throw RuntimeException(columnTip)
