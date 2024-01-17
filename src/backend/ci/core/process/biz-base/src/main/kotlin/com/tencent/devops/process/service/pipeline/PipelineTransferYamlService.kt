@@ -58,7 +58,7 @@ import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectLoa
 import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectWrapper
 import com.tencent.devops.process.yaml.transfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
-import com.tencent.devops.process.yaml.transfer.schema.YamlSchemaCheck
+import com.tencent.devops.process.yaml.transfer.schema.CodeSchemaCheck
 import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
@@ -85,7 +85,7 @@ class PipelineTransferYamlService @Autowired constructor(
     private val yamlIndexService: YamlIndexService,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
     private val client: Client,
-    private val yamlSchemaCheck: YamlSchemaCheck
+    private val yamlSchemaCheck: CodeSchemaCheck
 ) {
 
     companion object {
