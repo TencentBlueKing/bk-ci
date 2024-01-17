@@ -159,9 +159,9 @@ BEGIN
                   FROM information_schema.statistics
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_NODE'
-                    AND INDEX_NAME = 'IDX_STATUS_TYPE') THEN
+                    AND INDEX_NAME = 'IDX_STAT_TYPE') THEN
         ALTER TABLE `T_NODE`
-            ADD INDEX `IDX_STATUS_TYPE` (`NODE_STATUS`, `NODE_TYPE`);
+            ADD INDEX `IDX_STAT_TYPE` (`NODE_STATUS`, `NODE_TYPE`);
     END IF;
 
     COMMIT;
