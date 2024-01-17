@@ -455,14 +455,6 @@ const actions = {
     // 查询agent任务具体日志
     getAgentTaskLog (_, { projectId, jobId, instanceId }) {
         return vue.$ajax.get(`${prefix}/user/job/${projectId}/${jobId}/query_agent_task_log?instanceId=${instanceId}`)
-    },
-    // 终止agent安装任务
-    terminalAgentInstall (_, { projectId, jobId }) {
-        return vue.$ajax.post(`${prefix}/user/job/${projectId}/${jobId}/terminal_agent_install_task`)
-    },
-    // 重装Agent任务
-    retryAgentInstall (_, { projectId, jobId }) {
-        return vue.$ajax.post(`${prefix}/user/job/${projectId}/${jobId}/retry_agent_install_task`)
     }
 }
 

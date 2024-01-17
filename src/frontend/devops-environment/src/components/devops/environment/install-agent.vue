@@ -45,7 +45,7 @@
                 >
                     <bk-radio-group v-model="formData.authType">
                         <bk-radio value="PASSWORD" class="mr20">{{ $t('environment.password') }}</bk-radio>
-                        <bk-radio value="KEY" class="mr20">{{ $t('environment.key') }}</bk-radio>
+                        <!-- <bk-radio value="KEY" class="mr20">{{ $t('environment.key') }}</bk-radio> -->
                     </bk-radio-group>
                 </bk-form-item>
                 <bk-form-item
@@ -101,7 +101,13 @@
                 <template v-else-if="installStatus === 'FAILED'">
                     <i class="bk-icon import-status-icon icon-close error icon"></i>
                     <span>{{ $t('environment.installFailTips') }}</span>
-                    <bk-button text class="ml10">{{ $t('environment.retry') }}</bk-button>
+                    <bk-button
+                        text
+                        class="ml10"
+                        @click="handleRetryInstallAgent"
+                    >
+                        {{ $t('environment.retry') }}
+                    </bk-button>
                 </template>
                 <template v-else>
                     <Icon class="icon" name="loading" />
@@ -113,20 +119,30 @@
             </div>
         </div>
         <div slot="footer">
-            <bk-button
-                class="ml20"
-                theme="primary"
-                :loading="isLoading"
-                @click="handleConFirm"
-            >
-                {{ $t('environment.confirm') }}
-            </bk-button>
-            <bk-button
-                :loading="isLoading"
-                @click="handleCancel"
-            >
-                {{ $t('environment.cancel') }}
-            </bk-button>
+            <template v-if="isEditing">
+                <bk-button
+                    class="ml20"
+                    theme="primary"
+                    :loading="isLoading"
+                    @click="handleConFirm"
+                >
+                    {{ $t('environment.confirm') }}
+                </bk-button>
+                <bk-button
+                    :loading="isLoading"
+                    @click="handleCancel"
+                >
+                    {{ $t('environment.cancel') }}
+                </bk-button>
+            </template>
+            <template v-else>
+                <bk-button
+                    class="ml20"
+                    @click="handleCancel"
+                >
+                    {{ $t('environment.关闭') }}
+                </bk-button>
+            </template>
         </div>
         <section v-once id="executeScriptLog" style="height: 100%;" />
     </bk-sideslider>
@@ -208,6 +224,7 @@
                 const editorSession = editor.getSession()
                 // 自动换行时不添加缩进
                 editorSession.$indentedSoftWrap = false
+                editorSession.setUseWrapMode(true)
                 editorSession.on('changeScrollTop', (scrollTop) => {
                     const {
                         height,
@@ -246,23 +263,31 @@
                     this.$nextTick(() => {
                         this.initEditor()
                     })
+                    this.isLoading = false
                     setTimeout(async () => {
                         await this.fetchInstallAgentStatus()
                         await this.fetchInstallAgentTaskLog()
                     }, 1000)
-                } catch {
+                } catch (e) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: e.message || e
+                    })
                     this.isLoading = false
                 }
             },
 
             handleCancel () {
-                this.formData = this.getDefaultFormData()
+                this.isShow = false
                 this.isLoading = false
                 this.isEditing = true
+                this.installStatus = ''
                 this.jobId = -1
+                this.formData = this.getDefaultFormData()
             },
             
             async fetchChannelList () {
+                if (this.channelList.length) return
                 const res = await this.$store.dispatch('environment/getChannelList', {
                     projectId: this.projectId
                 })
@@ -280,7 +305,7 @@
             async fetchInstallAgentStatus () {
                 const res = await this.$store.dispatch('environment/getAgentTaskStatus', {
                     projectId: this.projectId,
-                    jobId: 86865,
+                    jobId: this.jobId,
                     params: {
                         page: 1,
                         pageSize: 20
@@ -288,6 +313,15 @@
                 })
                 this.installStatus = res.status
                 this.instanceId = res.list.find(i => i.innerIp === this.innerIp).instanceId
+
+                if (['PENDING', 'RUNNING'].includes(this.installStatus)) {
+                    setTimeout(() => {
+                        this.fetchInstallAgentStatus()
+                        this.fetchInstallAgentTaskLog()
+                    }, 5000)
+                } else {
+                    this.$emit('install-end')
+                }
             },
 
             async fetchInstallAgentTaskLog () {
@@ -300,7 +334,15 @@
                 res.queryAgentTaskLogResult.forEach(i => {
                     if (i.log) logList.push(i.log)
                 })
-                this.taskLog = logList.join('/n')
+                this.taskLog = logList.join('\n')
+                this.editor.getSession().setValue(this.taskLog)
+            },
+
+            async handleRetryInstallAgent () {
+                this.installStatus = ''
+                this.taskLog = ''
+                this.editor.getSession().setValue('')
+                this.handleConFirm()
             }
         }
     }
@@ -380,6 +422,7 @@
         .ace_scroller {
             padding-top: 4px;
             margin-bottom: -4px;
+            right: 0 !important;
         }
 
         .ace_hidden-cursors .ace_cursor {
@@ -390,7 +433,6 @@
             background: rgb(135 139 145 / 25%);
         }
 
-        .ace_scrollbar-v,
         .ace_scrollbar-h {
             &::-webkit-scrollbar-thumb {
                 background-color: #3b3c42;
@@ -403,11 +445,8 @@
         }
 
         .ace_scrollbar-v {
-            margin-right: -20px;
-
-            &::-webkit-scrollbar {
-                width: 14px;
-            }
+            overflow-x: hidden !important;
+            overflow-y: hidden !important;
         }
 
         .ace_scrollbar-h {

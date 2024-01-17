@@ -399,9 +399,10 @@
     "正常": "OK",
     "异常": "Abnormal",
     "重新授权": "Reauthorize",
-    "主机负责人已变更，请联系主机负责人重新授权使用": "主机负责人已变更，请联系主机负责人重新授权使用",
-    "确认授权节点X在流水线中进行远程脚本执行或构件分发吗": "确认授权节点 [{0}] 在流水线中进行远程脚本执行或构件分发吗？",
-    "你不是主机负责人，请联系主机负责人重新导入使用": "你不是主机负责人，请联系主机负责人重新导入使用",
-    "自动选择": "自动选择",
-    "其他": "其他"
+    "主机负责人已变更，请联系主机负责人重新授权使用": "The host owner has changed, please contact the host owner to reauthorize use",
+    "确认授权节点X在流水线中进行远程脚本执行或构件分发吗": "Confirm to authorize node [{0}] to execute remote scripts or distribute artifacts in the pipeline?",
+    "你不是主机负责人，请联系主机负责人重新导入使用": "You are not the host owner, please contact the host owner to re-import for use",
+    "自动选择": "Auto Select",
+    "其他": "Others",
+    "关闭": "Close"
 }

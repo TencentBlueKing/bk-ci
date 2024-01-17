@@ -397,6 +397,7 @@
         <installAgent
             ref="installAgent"
             :inner-ip="installAgentIp"
+            @install-end="handleInstallEnd"
         />
     </div>
 </template>
@@ -1247,6 +1248,9 @@
             },
             clearFilter () {
                 this.searchValue = []
+            },
+            handleInstallEnd () {
+                this.requestList(this.requestParams)
             }
         }
     }
