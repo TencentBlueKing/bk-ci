@@ -12,7 +12,7 @@ class JobDao {
         dslContext: DSLContext,
         projectId: String,
         jobInstanceId: Long
-    ): List<TProjectJob> {
+    ): List<TProjectJobRecord> {
         with(TProjectJob.T_JOB_PROJ) {
             return dslContext.selectFrom(this)
                 .where(JOB_INSTANCE_ID.eq(jobInstanceId))
