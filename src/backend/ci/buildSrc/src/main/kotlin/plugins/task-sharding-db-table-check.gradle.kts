@@ -321,7 +321,7 @@ fun compareColumns(
         extraColumns = extraColumns - mismatchColumns
         val columnTip = "Compared with the table of database ($referenceDbUrl/$referenceDatabaseName), " +
             "the differences of table ($tableName) of database ($compareDbUrl/$compareDatabaseName) are as " +
-            "follows: \n missing columns: $missingColumns; \n extra columns: $extraColumns; \n " +
+            "follows:  missing columns: $missingColumns;  extra columns: $extraColumns;  " +
             "different columns: $mismatchColumns."
         if (!missingColumns.isNullOrEmpty() || !extraColumns.isNullOrEmpty() || !mismatchColumns.isNullOrEmpty()) {
             // 字段有差异则抛出错误提示
@@ -354,7 +354,7 @@ fun compareIndexes(
         extraIndexes = extraIndexes - mismatchIndexes
         val indexTip = "Compared with the table of database ($referenceDbUrl/$referenceDatabaseName), " +
             "the differences of table ($tableName) of database ($compareDbUrl/$compareDatabaseName) are as " +
-            "follows: \n missing indexs: $missingIndexes; \n extra indexs: $extraIndexes; \n " +
+            "follows:  missing indexs: $missingIndexes;  extra indexs: $extraIndexes;  " +
             "different indexs: $mismatchIndexes."
         if (!missingIndexes.isNullOrEmpty() || !extraIndexes.isNullOrEmpty() || !mismatchIndexes.isNullOrEmpty()) {
             // 字段有差异则抛出错误提示
