@@ -68,9 +68,9 @@ jooq {
                         println("mysqlURL : $mysqlURL")
                         println("mysqlUser : $mysqlUser")
                         println("mysqlPasswd : ${mysqlPasswd.substring(0, 3)}****")
-
+                        val connectionMysqlURL = mysqlURL.split(",")[0]
                         driver = "com.mysql.cj.jdbc.Driver"
-                        url = "jdbc:mysql://$mysqlURL/$databaseName?useSSL=false"
+                        url = "jdbc:mysql://$connectionMysqlURL/$databaseName?useSSL=false"
                         user = mysqlUser
                         password = mysqlPasswd
                     }
