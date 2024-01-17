@@ -32,7 +32,6 @@ import com.tencent.devops.dispatch.devcloud.client.DispatchDevCloudClient
 import com.tencent.devops.dispatch.devcloud.dao.BuildContainerPoolNoDao
 import com.tencent.devops.dispatch.devcloud.dao.DcPersistenceBuildDao
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildDao
-import com.tencent.devops.dispatch.devcloud.listener.ContainerStatusUpdateJob
 import com.tencent.devops.dispatch.devcloud.pojo.Action
 import com.tencent.devops.dispatch.devcloud.pojo.ContainerBuildStatus
 import com.tencent.devops.dispatch.devcloud.pojo.TaskStatus
