@@ -29,8 +29,8 @@ package com.tencent.devops.artifactory.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "版本仓库-多路径")
+@Schema(title = "版本仓库-多路径")
 data class PathList(
-    @Schema(name = "路径列表", required = true)
+    @Schema(title = "路径列表", required = true)
     val paths: List<String>
 )

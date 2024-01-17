@@ -38,17 +38,17 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class MrRule(
-    @Schema(name = "source-branches-ignore")
+    @Schema(title = "source-branches-ignore")
     @JsonProperty("source-branches-ignore")
     val sourceBranchesIgnore: List<String>? = null,
 
-    @Schema(name = "target-branches")
+    @Schema(title = "target-branches")
     @JsonProperty("target-branches")
     val targetBranches: List<String>? = null,
 
     val paths: List<String>? = null,
 
-    @Schema(name = "paths-ignore")
+    @Schema(title = "paths-ignore")
     @JsonProperty("paths-ignore")
     val pathsIgnore: List<String>? = null,
 
@@ -56,15 +56,15 @@ data class MrRule(
 
     val users: List<String>? = null,
 
-    @Schema(name = "users-ignore")
+    @Schema(title = "users-ignore")
     @JsonProperty("users-ignore")
     val usersIgnore: List<String>? = null,
 
-    @Schema(name = "report-commit-check")
+    @Schema(title = "report-commit-check")
     @JsonProperty("report-commit-check")
     val reportCommitCheck: Boolean? = null,
 
-    @Schema(name = "block-mr")
+    @Schema(title = "block-mr")
     @JsonProperty("block-mr")
     val blockMr: Boolean? = null
 )

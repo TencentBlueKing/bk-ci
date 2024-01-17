@@ -30,34 +30,34 @@ package com.tencent.devops.artifactory.pojo
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "版本仓库-文件信息-APP")
+@Schema(title = "版本仓库-文件信息-APP")
 data class AppFileInfo(
-    @Schema(name = "文件名", required = true)
+    @Schema(title = "文件名", required = true)
     val name: String,
-    @Schema(name = "文件全名", required = true)
+    @Schema(title = "文件全名", required = true)
     val fullName: String,
-    @Schema(name = "文件路径", required = true)
+    @Schema(title = "文件路径", required = true)
     val path: String,
-    @Schema(name = "文件全路径", required = true)
+    @Schema(title = "文件全路径", required = true)
     val fullPath: String,
-    @Schema(name = "文件大小(byte)", required = true)
+    @Schema(title = "文件大小(byte)", required = true)
     val size: Long,
-    @Schema(name = "是否文件夹", required = true)
+    @Schema(title = "是否文件夹", required = true)
     val folder: Boolean,
-    @Schema(name = "更新时间", required = true)
+    @Schema(title = "更新时间", required = true)
     var modifiedTime: Long,
-    @Schema(name = "仓库类型", required = true)
+    @Schema(title = "仓库类型", required = true)
     val artifactoryType: ArtifactoryType,
-    @Schema(name = "是否显示", required = true)
+    @Schema(title = "是否显示", required = true)
     val show: Boolean,
-    @Schema(name = "是否可下载", required = true)
+    @Schema(title = "是否可下载", required = true)
     val canDownload: Boolean,
-    @Schema(name = "版本信息", required = true)
+    @Schema(title = "版本信息", required = true)
     val version: String? = null,
-    @Schema(name = "logo链接", required = false)
+    @Schema(title = "logo链接", required = false)
     val logoUrl: String? = null,
-    @Schema(name = "版本体验BundleIdentifier", required = true)
+    @Schema(title = "版本体验BundleIdentifier", required = true)
     val bundleIdentifier: String? = null,
-    @Schema(name = "MD5", required = false)
+    @Schema(title = "MD5", required = false)
     var md5: String? = null
 )

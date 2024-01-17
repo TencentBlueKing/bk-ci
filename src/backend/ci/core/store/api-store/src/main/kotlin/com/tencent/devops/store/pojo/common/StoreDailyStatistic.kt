@@ -29,22 +29,22 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "每日统计信息")
+@Schema(title = "每日统计信息")
 data class StoreDailyStatistic(
-    @Schema(name = "总下载量")
+    @Schema(title = "总下载量")
     val totalDownloads: Int,
-    @Schema(name = "每日下载量")
+    @Schema(title = "每日下载量")
     val dailyDownloads: Int,
-    @Schema(name = "每日执行成功数")
+    @Schema(title = "每日执行成功数")
     val dailySuccessNum: Int,
-    @Schema(name = "每日执行成功率")
+    @Schema(title = "每日执行成功率")
     val dailySuccessRate: Double?,
-    @Schema(name = "每日执行失败数")
+    @Schema(title = "每日执行失败数")
     val dailyFailNum: Int,
-    @Schema(name = "每日执行失败率")
+    @Schema(title = "每日执行失败率")
     val dailyFailRate: Double?,
-    @Schema(name = "每日执行失败详情")
+    @Schema(title = "每日执行失败详情")
     val dailyFailDetail: Map<String, Any>?,
-    @Schema(name = "统计时间，格式yyyy-MM-dd HH:mm:ss")
+    @Schema(title = "统计时间，格式yyyy-MM-dd HH:mm:ss")
     val statisticsTime: String
 )

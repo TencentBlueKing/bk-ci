@@ -40,9 +40,9 @@ data class NoReplaceStagTemplate(
     val id: String?,
     val label: String? = null,
     @JsonProperty("if")
-    @Schema(name = "if")
+    @Schema(title = "if")
     val ifField: String? = null,
     @JsonProperty("fast-kill")
-    @Schema(name = "fast-kill")
+    @Schema(title = "fast-kill")
     val fastKill: Boolean? = false
 )

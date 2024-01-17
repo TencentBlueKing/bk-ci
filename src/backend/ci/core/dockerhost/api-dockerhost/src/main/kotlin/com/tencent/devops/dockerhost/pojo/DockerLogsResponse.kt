@@ -29,12 +29,12 @@ package com.tencent.devops.dockerhost.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "DockerLogsResponse")
+@Schema(title = "DockerLogsResponse")
 data class DockerLogsResponse(
-    @Schema(name = "是否结束", required = true)
+    @Schema(title = "是否结束", required = true)
     val running: Boolean,
-    @Schema(name = "退出码", required = true)
+    @Schema(title = "退出码", required = true)
     val exitCode: Int?,
-    @Schema(name = "日志", required = true)
+    @Schema(title = "日志", required = true)
     val logs: List<String>
 )

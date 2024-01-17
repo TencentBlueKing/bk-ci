@@ -30,16 +30,16 @@ import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import com.tencent.devops.common.notify.enums.WeworkTextType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "企业微信机器人消息")
+@Schema(title = "企业微信机器人消息")
 data class WeworkRobotNotifyMessage(
-    @Schema(name = "接收人Id", required = true)
+    @Schema(title = "接收人Id", required = true)
     val receivers: String,
-    @Schema(name = "接收人类型", required = true)
+    @Schema(title = "接收人类型", required = true)
     val receiverType: WeworkReceiverType,
-    @Schema(name = "文本内容类型", required = true)
+    @Schema(title = "文本内容类型", required = true)
     var textType: WeworkTextType,
-    @Schema(name = "文本内容", required = true)
+    @Schema(title = "文本内容", required = true)
     var message: String,
-    @Schema(name = "attachments消息事件", required = false)
+    @Schema(title = "attachments消息事件", required = false)
     var attachments: WeworkMarkdownAttachment? = null
 )

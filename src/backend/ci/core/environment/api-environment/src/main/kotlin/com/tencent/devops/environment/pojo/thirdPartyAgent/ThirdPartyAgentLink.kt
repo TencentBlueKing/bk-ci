@@ -29,10 +29,10 @@ package com.tencent.devops.environment.pojo.thirdPartyAgent
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "第三方构建机接入的链接")
+@Schema(title = "第三方构建机接入的链接")
 data class ThirdPartyAgentLink(
-    @Schema(name = "ID")
+    @Schema(title = "ID")
     val agentId: String,
-    @Schema(name = "链接")
+    @Schema(title = "链接")
     val link: String
 )

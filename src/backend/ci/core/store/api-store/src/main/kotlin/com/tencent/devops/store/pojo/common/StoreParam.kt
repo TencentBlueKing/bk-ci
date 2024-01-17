@@ -29,14 +29,14 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "组件参数信息")
+@Schema(title = "组件参数信息")
 data class StoreParam(
-    @Schema(name = "组件代码", required = true)
+    @Schema(title = "组件代码", required = true)
     var storeCode: String,
-    @Schema(name = "组件名称", required = true)
+    @Schema(title = "组件名称", required = true)
     var storeName: String,
-    @Schema(name = "版本号", required = true)
+    @Schema(title = "版本号", required = true)
     var version: String,
-    @Schema(name = "输入参数", required = false)
+    @Schema(title = "输入参数", required = false)
     var inputParam: Map<String, Any?>?
 )

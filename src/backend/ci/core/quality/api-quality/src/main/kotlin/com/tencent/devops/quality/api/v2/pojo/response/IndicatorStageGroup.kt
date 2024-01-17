@@ -30,7 +30,7 @@ package com.tencent.devops.quality.api.v2.pojo.response
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "指标分组响应")
+@Schema(title = "指标分组响应")
 data class IndicatorStageGroup(
     val hashId: String,
     val stage: String,

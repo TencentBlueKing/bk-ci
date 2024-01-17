@@ -31,44 +31,44 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(name = "插件失败详情信息")
+@Schema(title = "插件失败详情信息")
 data class AtomFailDetailInfoDO(
-    @Schema(name = "项目ID")
+    @Schema(title = "项目ID")
     val projectId: String,
-    @Schema(name = "流水线ID")
+    @Schema(title = "流水线ID")
     val pipelineId: String,
-    @Schema(name = "流水线名称")
+    @Schema(title = "流水线名称")
     val pipelineName: String,
-    @Schema(name = "渠道代码")
+    @Schema(title = "渠道代码")
     val channelCode: String,
-    @Schema(name = "域名")
+    @Schema(title = "域名")
     var domain: String? = null,
-    @Schema(name = "构建ID")
+    @Schema(title = "构建ID")
     val buildId: String,
-    @Schema(name = "构建序号")
+    @Schema(title = "构建序号")
     val buildNum: Int,
-    @Schema(name = "插件代码")
+    @Schema(title = "插件代码")
     val atomCode: String,
-    @Schema(name = "插件名称")
+    @Schema(title = "插件名称")
     val atomName: String,
-    @Schema(name = "插件在model中的位置")
+    @Schema(title = "插件在model中的位置")
     val atomPosition: String,
-    @Schema(name = "插件分类代码")
+    @Schema(title = "插件分类代码")
     val classifyCode: String,
-    @Schema(name = "启动用户")
+    @Schema(title = "启动用户")
     val startUser: String,
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @Schema(name = "启动时间")
+    @Schema(title = "启动时间")
     val startTime: LocalDateTime?,
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @Schema(name = "结束时间")
+    @Schema(title = "结束时间")
     val endTime: LocalDateTime?,
-    @Schema(name = "错误的类型标识")
+    @Schema(title = "错误的类型标识")
     val errorType: Int?,
-    @Schema(name = "错误的类型标识名称")
+    @Schema(title = "错误的类型标识名称")
     var errorTypeName: String? = null,
-    @Schema(name = "错误的标识码")
+    @Schema(title = "错误的标识码")
     val errorCode: Int?,
-    @Schema(name = "错误描述")
+    @Schema(title = "错误描述")
     val errorMsg: String?
 )

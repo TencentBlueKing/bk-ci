@@ -29,10 +29,10 @@ package com.tencent.devops.artifactory.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "版本仓库-元数据")
+@Schema(title = "版本仓库-元数据")
 data class Property(
-    @Schema(name = "元数据键", required = true)
+    @Schema(title = "元数据键", required = true)
     val key: String,
-    @Schema(name = "元数据值", required = true)
+    @Schema(title = "元数据值", required = true)
     val value: String
 )

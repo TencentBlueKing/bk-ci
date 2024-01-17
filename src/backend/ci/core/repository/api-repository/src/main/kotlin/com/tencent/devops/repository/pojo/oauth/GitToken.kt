@@ -30,20 +30,20 @@ package com.tencent.devops.repository.pojo.oauth
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "Token模型")
+@Schema(title = "Token模型")
 data class GitToken(
-    @Schema(name = "鉴权token", description = "access_token")
+    @Schema(title = "鉴权token", description = "access_token")
     @JsonProperty("access_token")
     var accessToken: String = "",
-    @Schema(name = "刷新token", description = "refresh_token")
+    @Schema(title = "刷新token", description = "refresh_token")
     @JsonProperty("refresh_token")
     var refreshToken: String = "",
-    @Schema(name = "token类型", description = "token_type")
+    @Schema(title = "token类型", description = "token_type")
     @JsonProperty("token_type")
     val tokenType: String = "",
-    @Schema(name = "过期时间", description = "expires_in")
+    @Schema(title = "过期时间", description = "expires_in")
     @JsonProperty("expires_in")
     val expiresIn: Long = 0L,
-    @Schema(name = "创建时间")
+    @Schema(title = "创建时间")
     val createTime: Long? = 0L
 )

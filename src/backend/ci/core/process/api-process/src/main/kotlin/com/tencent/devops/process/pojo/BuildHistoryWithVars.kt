@@ -33,62 +33,62 @@ import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.process.pojo.code.WebhookInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "带构建变量的历史构建模型")
+@Schema(title = "带构建变量的历史构建模型")
 data class BuildHistoryWithVars(
-    @Schema(name = "构建ID", required = true)
+    @Schema(title = "构建ID", required = true)
     val id: String,
-    @Schema(name = "启动用户", required = true)
+    @Schema(title = "启动用户", required = true)
     val userId: String,
-    @Schema(name = "触发条件", required = true)
+    @Schema(title = "触发条件", required = true)
     val trigger: String,
-    @Schema(name = "构建号", required = true)
+    @Schema(title = "构建号", required = true)
     val buildNum: Int?,
-    @Schema(name = "编排文件版本号", required = true)
+    @Schema(title = "编排文件版本号", required = true)
     val pipelineVersion: Int,
-    @Schema(name = "开始时间", required = true)
+    @Schema(title = "开始时间", required = true)
     val startTime: Long,
-    @Schema(name = "结束时间", required = true)
+    @Schema(title = "结束时间", required = true)
     val endTime: Long?,
-    @Schema(name = "状态", required = true)
+    @Schema(title = "状态", required = true)
     val status: String,
-    @Schema(name = "各阶段状态", required = true)
+    @Schema(title = "各阶段状态", required = true)
     val stageStatus: List<BuildStageStatus>?,
-    @Schema(name = "服务器当前时间戳", required = true)
+    @Schema(title = "服务器当前时间戳", required = true)
     val currentTimestamp: Long,
-    @Schema(name = "是否是手机启动", required = false)
+    @Schema(title = "是否是手机启动", required = false)
     val isMobileStart: Boolean = false,
-    @Schema(name = "原材料", required = false)
+    @Schema(title = "原材料", required = false)
     val material: List<PipelineBuildMaterial>?,
-    @Schema(name = "排队于", required = false)
+    @Schema(title = "排队于", required = false)
     val queueTime: Long?,
-    @Schema(name = "排队位置", required = false)
+    @Schema(title = "排队位置", required = false)
     val currentQueuePosition: Int = 0,
-    @Schema(name = "构件列表", required = false)
+    @Schema(title = "构件列表", required = false)
     val artifactList: List<FileInfo>?,
-    @Schema(name = "备注", required = false)
+    @Schema(title = "备注", required = false)
     val remark: String?,
-    @Schema(name = "总耗时(毫秒)", required = false)
+    @Schema(title = "总耗时(毫秒)", required = false)
     val totalTime: Long?,
-    @Schema(name = "运行耗时(毫秒，不包括人工审核时间)", required = false)
+    @Schema(title = "运行耗时(毫秒，不包括人工审核时间)", required = false)
     val executeTime: Long?,
-    @Schema(name = "启动参数", required = false)
+    @Schema(title = "启动参数", required = false)
     val buildParameters: List<BuildParameters>?,
-    @Schema(name = "WebHook类型", required = false)
+    @Schema(title = "WebHook类型", required = false)
     val webHookType: String?,
-    @Schema(name = "webhook信息", required = false)
+    @Schema(title = "webhook信息", required = false)
     val webhookInfo: WebhookInfo?,
-    @Schema(name = "启动类型(新)", required = false)
+    @Schema(title = "启动类型(新)", required = false)
     val startType: String?,
-    @Schema(name = "推荐版本号", required = false)
+    @Schema(title = "推荐版本号", required = false)
     val recommendVersion: String?,
-    @Schema(name = "是否重试", required = false)
+    @Schema(title = "是否重试", required = false)
     val retry: Boolean = false,
-    @Schema(name = "流水线任务执行错误", required = false)
+    @Schema(title = "流水线任务执行错误", required = false)
     var errorInfoList: List<ErrorInfo>?,
-    @Schema(name = "构建信息", required = false)
+    @Schema(title = "构建信息", required = false)
     var buildMsg: String?,
-    @Schema(name = "自定义构建版本号", required = false)
+    @Schema(title = "自定义构建版本号", required = false)
     val buildNumAlias: String? = null,
-    @Schema(name = "构建变量集合(30天左右过期删除)", required = true)
+    @Schema(title = "构建变量集合(30天左右过期删除)", required = true)
     val variables: Map<String, String>
 )

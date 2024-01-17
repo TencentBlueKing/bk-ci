@@ -29,7 +29,7 @@ package com.tencent.devops.store.pojo.atom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "插件市场-首页标签")
+@Schema(title = "插件市场-首页标签")
 data class MarketMainItemLabel(
     val key: String,
     val label: String

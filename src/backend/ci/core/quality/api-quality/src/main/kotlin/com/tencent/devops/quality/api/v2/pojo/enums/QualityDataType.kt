@@ -29,7 +29,7 @@ package com.tencent.devops.quality.api.v2.pojo.enums
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "数据类型")
+@Schema(title = "数据类型")
 enum class QualityDataType {
     INT,
     BOOLEAN,

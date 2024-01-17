@@ -30,26 +30,26 @@ package com.tencent.devops.metrics.pojo.po
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(name = "更新流水线概览数据")
+@Schema(title = "更新流水线概览数据")
 data class UpdatePipelineOverviewDataPO(
-    @Schema(name = "主键ID")
+    @Schema(title = "主键ID")
     val id: Long,
-    @Schema(name = "项目ID")
+    @Schema(title = "项目ID")
     val projectId: String,
-    @Schema(name = "总平均耗时，单位：毫秒")
+    @Schema(title = "总平均耗时，单位：毫秒")
     val totalAvgCostTime: Long,
-    @Schema(name = "成功平均耗时，单位：毫秒")
+    @Schema(title = "成功平均耗时，单位：毫秒")
     val successAvgCostTime: Long? = null,
-    @Schema(name = "失败平均耗时，单位：毫秒")
+    @Schema(title = "失败平均耗时，单位：毫秒")
     val failAvgCostTime: Long? = null,
-    @Schema(name = "总执行次数")
+    @Schema(title = "总执行次数")
     val totalExecuteCount: Long,
-    @Schema(name = "成功执行次数")
+    @Schema(title = "成功执行次数")
     val successExecuteCount: Long,
-    @Schema(name = "失败执行次数")
+    @Schema(title = "失败执行次数")
     val failExecuteCount: Long,
-    @Schema(name = "修改人")
+    @Schema(title = "修改人")
     val modifier: String,
-    @Schema(name = "更新时间")
+    @Schema(title = "更新时间")
     val updateTime: LocalDateTime
 )

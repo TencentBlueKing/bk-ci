@@ -41,59 +41,59 @@ import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import io.swagger.v3.oas.annotations.media.Schema
 
 // 该类提供给前端页面使用
-@Schema(name = "stream 触发请求Req")
+@Schema(title = "stream 触发请求Req")
 data class StreamGitRequestEventReq(
-    @Schema(name = "ID")
+    @Schema(title = "ID")
     var id: Long?,
-    @Schema(name = "事件类型")
+    @Schema(title = "事件类型")
     val objectKind: String,
-    @Schema(name = "操作类型")
+    @Schema(title = "操作类型")
     val operationKind: String?,
     // 对于Push是action对于Mr是extension
-    @Schema(name = "拓展操作")
+    @Schema(title = "拓展操作")
     val extensionAction: String?,
-    @Schema(name = "stream 项目ID")
+    @Schema(title = "stream 项目ID")
     val gitProjectId: Long,
-    @Schema(name = "源stream 项目ID")
+    @Schema(title = "源stream 项目ID")
     val sourceGitProjectId: Long?,
-    @Schema(name = "分支名")
+    @Schema(title = "分支名")
     val branch: String,
-    @Schema(name = "目标分支名")
+    @Schema(title = "目标分支名")
     val targetBranch: String?,
-    @Schema(name = "提交ID")
+    @Schema(title = "提交ID")
     val commitId: String,
-    @Schema(name = "提交说明")
+    @Schema(title = "提交说明")
     val commitMsg: String?,
-    @Schema(name = "提交时间")
+    @Schema(title = "提交时间")
     val commitTimeStamp: String?,
     // 目前只在上下文中传递，后续看需求是否保存至数据库
-    @Schema(name = "提交用户")
+    @Schema(title = "提交用户")
     val commitAuthorName: String?,
-    @Schema(name = "用户")
+    @Schema(title = "用户")
     val userId: String,
-    @Schema(name = "提交总数")
+    @Schema(title = "提交总数")
     val totalCommitCount: Long,
-    @Schema(name = "合并请求ID")
+    @Schema(title = "合并请求ID")
     val mergeRequestId: Long?,
-    @Schema(name = "描述（已废弃）")
+    @Schema(title = "描述（已废弃）")
     var description: String?,
-    @Schema(name = "合并请求标题")
+    @Schema(title = "合并请求标题")
     var mrTitle: String?,
-    @Schema(name = "Git事件对象")
+    @Schema(title = "Git事件对象")
     var gitEvent: GitEvent?,
-    @Schema(name = "是否是删除分支触发")
+    @Schema(title = "是否是删除分支触发")
     val deleteBranch: Boolean,
-    @Schema(name = "是否是删除Tag触发")
+    @Schema(title = "是否是删除Tag触发")
     val deleteTag: Boolean,
-    @Schema(name = "评论Id")
+    @Schema(title = "评论Id")
     var noteId: Long?,
-    @Schema(name = "评论连接")
+    @Schema(title = "评论连接")
     var jumpUrl: String?,
-    @Schema(name = "构建标题")
+    @Schema(title = "构建标题")
     var buildTitle: String?,
-    @Schema(name = "构建跳转显示信息")
+    @Schema(title = "构建跳转显示信息")
     var buildSource: String?,
-    @Schema(name = "变更的yaml文件")
+    @Schema(title = "变更的yaml文件")
     var changeYamlList: List<ChangeYamlList> = emptyList()
 ) {
     constructor(gitRequestEvent: GitRequestEvent, homepage: String) : this(

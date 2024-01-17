@@ -29,16 +29,16 @@ package com.tencent.devops.process.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "构建模型-ID")
+@Schema(title = "构建模型-ID")
 data class BuildId(
-    @Schema(name = "构建ID", required = true)
+    @Schema(title = "构建ID", required = true)
     val id: String,
-    @Schema(name = "当前执行次数")
+    @Schema(title = "当前执行次数")
     val executeCount: Int = 1,
-    @Schema(name = "项目ID")
+    @Schema(title = "项目ID")
     val projectId: String? = null,
-    @Schema(name = "流水线ID")
+    @Schema(title = "流水线ID")
     val pipelineId: String? = null,
-    @Schema(name = "构建编号")
+    @Schema(title = "构建编号")
     val num: Int? = null
 )

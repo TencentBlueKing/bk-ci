@@ -31,12 +31,12 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "")
+@Schema(title = "")
 data class UserPermissionInfo(
-    @Schema(name = "组织id")
+    @Schema(title = "组织id")
     val organizationId: Int,
-    @Schema(name = "组织级别")
+    @Schema(title = "组织级别")
     val organizationLevel: Int,
-    @Schema(name = "权限详情")
+    @Schema(title = "权限详情")
     val permissionMap: Map<AuthResourceType, List<AuthPermission>>
 )

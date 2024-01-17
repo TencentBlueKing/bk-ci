@@ -29,12 +29,12 @@ package com.tencent.devops.metrics.pojo.`do`
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "质量红线度量信息")
+@Schema(title = "质量红线度量信息")
 data class QualityInfoDO(
-    @Schema(name = "质量红线拦截比例")
+    @Schema(title = "质量红线拦截比例")
     val qualityInterceptionRate: Double?,
-    @Schema(name = "使用质量红线的流水线执行被拦截次数")
+    @Schema(title = "使用质量红线的流水线执行被拦截次数")
     val interceptionCount: Int?,
-    @Schema(name = "使用质量红线的流水线执行总次数")
+    @Schema(title = "使用质量红线的流水线执行总次数")
     val totalExecuteCount: Int?
 )

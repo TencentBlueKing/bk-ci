@@ -29,10 +29,10 @@ package com.tencent.devops.common.pipeline.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "构建模型-下拉框表单元素值")
+@Schema(title = "构建模型-下拉框表单元素值")
 data class BuildFormValue(
-    @Schema(name = "元素值ID-标识符", required = true)
+    @Schema(title = "元素值ID-标识符", required = true)
     val key: String,
-    @Schema(name = "元素值名称-显示用", required = true)
+    @Schema(title = "元素值名称-显示用", required = true)
     val value: String
 )

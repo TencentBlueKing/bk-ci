@@ -29,10 +29,10 @@ package com.tencent.devops.store.pojo.app
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "容器构建资源")
+@Schema(title = "容器构建资源")
 data class ContainerResourceItem(
-    @Schema(name = "ID", required = true)
+    @Schema(title = "ID", required = true)
     val id: String,
-    @Schema(name = "名称", required = true)
+    @Schema(title = "名称", required = true)
     val name: String
 )

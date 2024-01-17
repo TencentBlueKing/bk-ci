@@ -28,14 +28,14 @@ package com.tencent.devops.notify.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "通用消息类型-分页")
+@Schema(title = "通用消息类型-分页")
 open class NotificationResponseWithPage<out T>(
-    @Schema(name = "总数")
+    @Schema(title = "总数")
     val count: Int,
-    @Schema(name = "页数")
+    @Schema(title = "页数")
     val page: Int,
-    @Schema(name = "每页条数")
+    @Schema(title = "每页条数")
     val pageSize: Int,
-    @Schema(name = "通知列表")
+    @Schema(title = "通知列表")
     val data: List<NotificationResponse<T>>
 )

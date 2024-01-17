@@ -31,26 +31,26 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "V2版本多选搜索过滤历史参数")
+@Schema(title = "V2版本多选搜索过滤历史参数")
 data class StreamBuildHistorySearch(
-    @Schema(name = "第几页", required = false)
+    @Schema(title = "第几页", required = false)
     val page: Int?,
-    @Schema(name = "每页多少条", required = false)
+    @Schema(title = "每页多少条", required = false)
     val pageSize: Int?,
-    @Schema(name = "分支", required = false)
+    @Schema(title = "分支", required = false)
     val branch: Set<String>?,
-    @Schema(name = "fork库分支", required = false)
+    @Schema(title = "fork库分支", required = false)
     val sourceGitProjectId: Set<String>?,
-    @Schema(name = "触发人", required = false)
+    @Schema(title = "触发人", required = false)
     val triggerUser: Set<String>?,
-    @Schema(name = "流水线ID", required = false)
+    @Schema(title = "流水线ID", required = false)
     val pipelineId: String?,
-    @Schema(name = "Commit Msg", required = false)
+    @Schema(title = "Commit Msg", required = false)
     val commitMsg: String?,
-    @Schema(name = "Event", required = false)
+    @Schema(title = "Event", required = false)
     val event: Set<StreamGitObjectKind>?,
-    @Schema(name = "构建状态", required = false)
+    @Schema(title = "构建状态", required = false)
     val status: Set<BuildStatus>?,
-    @Schema(name = "流水线列表", required = false)
+    @Schema(title = "流水线列表", required = false)
     val pipelineIds: Set<String>?
 )

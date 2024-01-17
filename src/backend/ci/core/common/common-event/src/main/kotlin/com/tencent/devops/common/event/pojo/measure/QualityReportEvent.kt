@@ -33,12 +33,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Event(exchange = MQ.EXCHANGE_QUALITY_DAILY_FANOUT, routeKey = MQ.ROUTE_QUALITY_DAILY_FANOUT)
 data class QualityReportEvent(
-    @Schema(name = "统计时间")
+    @Schema(title = "统计时间")
     val statisticsTime: String,
-    @Schema(name = "项目ID")
+    @Schema(title = "项目ID")
     val projectId: String,
-    @Schema(name = "红线拦截次数")
+    @Schema(title = "红线拦截次数")
     val interceptedCount: Int,
-    @Schema(name = "红线执行总次数")
+    @Schema(title = "红线执行总次数")
     val totalCount: Int
 )

@@ -29,8 +29,8 @@ package com.tencent.devops.auth.pojo.dto
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "用户组成员续期")
+@Schema(title = "用户组成员续期")
 data class GroupMemberRenewalDTO(
-    @Schema(name = "过期时间戳(单位秒)，即用户或部门在 expired_at 后将不具有该用户组的相关权限")
+    @Schema(title = "过期时间戳(单位秒)，即用户或部门在 expired_at 后将不具有该用户组的相关权限")
     val expiredAt: Long
 )

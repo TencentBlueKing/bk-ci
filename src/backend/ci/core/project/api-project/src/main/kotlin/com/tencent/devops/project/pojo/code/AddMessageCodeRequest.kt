@@ -30,16 +30,16 @@ package com.tencent.devops.project.pojo.code
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "返回码新增请求报文体")
+@Schema(title = "返回码新增请求报文体")
 data class AddMessageCodeRequest(
-    @Schema(name = "信息码", required = true)
+    @Schema(title = "信息码", required = true)
     val messageCode: String,
-    @Schema(name = "模块代码", required = true)
+    @Schema(title = "模块代码", required = true)
     val moduleCode: SystemModuleEnum,
-    @Schema(name = "中文简体描述信息", required = true)
+    @Schema(title = "中文简体描述信息", required = true)
     var messageDetailZhCn: String,
-    @Schema(name = "中文繁体描述信息", required = true)
+    @Schema(title = "中文繁体描述信息", required = true)
     var messageDetailZhTw: String,
-    @Schema(name = "英文描述信息", required = true)
+    @Schema(title = "英文描述信息", required = true)
     var messageDetailEn: String
 )

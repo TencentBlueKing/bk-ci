@@ -28,16 +28,16 @@ package com.tencent.devops.notify.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "消息通知")
+@Schema(title = "消息通知")
 data class NotifyMessageCommonTemplate(
-    @Schema(name = "ID", required = true)
+    @Schema(title = "ID", required = true)
     val id: String,
-    @Schema(name = "模板代码", required = true)
+    @Schema(title = "模板代码", required = true)
     val templateCode: String,
-    @Schema(name = "模板名称", required = true)
+    @Schema(title = "模板名称", required = true)
     val templateName: String,
-    @Schema(name = "优先级别（-1:低 0:中 1:高）", required = true)
+    @Schema(title = "优先级别（-1:低 0:中 1:高）", required = true)
     val priority: String,
-    @Schema(name = "通知来源（0:本地业务 1:操作）", required = true)
+    @Schema(title = "通知来源（0:本地业务 1:操作）", required = true)
     val source: Int
 )

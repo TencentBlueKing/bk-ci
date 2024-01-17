@@ -31,15 +31,15 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "版本信息")
+@Schema(title = "版本信息")
 data class VersionInfo(
-    @Schema(name = "发布者", required = true)
+    @Schema(title = "发布者", required = true)
     var publisher: String,
-    @Schema(name = "发布类型", required = true)
+    @Schema(title = "发布类型", required = true)
     var releaseType: ReleaseTypeEnum,
-    @Schema(name = "插件版本", required = true)
+    @Schema(title = "插件版本", required = true)
     var version: String,
-    @Schema(name = "版本日志内容", required = true)
+    @Schema(title = "版本日志内容", required = true)
     @field:BkField(maxLength = 65535)
     val versionContent: String
 )

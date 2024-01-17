@@ -29,8 +29,8 @@ package com.tencent.devops.artifactory.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "获取文件下载路径响应报文体")
+@Schema(title = "获取文件下载路径响应报文体")
 data class GetFileDownloadUrlsResponse(
-    @Schema(name = "文件下载路径列表", required = false)
+    @Schema(title = "文件下载路径列表", required = false)
     val fileUrlList: List<String>
 )

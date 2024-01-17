@@ -29,8 +29,8 @@ package com.tencent.devops.metrics.pojo.`do`
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "编译加速度量信息")
+@Schema(title = "编译加速度量信息")
 data class TurboInfoDO(
-    @Schema(name = "编译加速节省时间，单位：秒")
+    @Schema(title = "编译加速节省时间，单位：秒")
     val turboSaveTime: Double?
 )

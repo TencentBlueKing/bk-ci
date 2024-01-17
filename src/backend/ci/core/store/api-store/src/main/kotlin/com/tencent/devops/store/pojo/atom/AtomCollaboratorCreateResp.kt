@@ -29,10 +29,10 @@ package com.tencent.devops.store.pojo.atom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "插件市场-申请成为插件协作者请求报文体")
+@Schema(title = "插件市场-申请成为插件协作者请求报文体")
 data class AtomCollaboratorCreateResp(
-    @Schema(name = "申请人", required = true)
+    @Schema(title = "申请人", required = true)
     val applicant: String,
-    @Schema(name = "申请状态", required = true)
+    @Schema(title = "申请状态", required = true)
     val approveStatus: String
 )

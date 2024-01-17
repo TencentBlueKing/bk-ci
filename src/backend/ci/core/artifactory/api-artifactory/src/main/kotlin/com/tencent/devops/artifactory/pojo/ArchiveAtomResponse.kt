@@ -30,10 +30,10 @@ package com.tencent.devops.artifactory.pojo
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "插件市场-归档插件包响应报文体")
+@Schema(title = "插件市场-归档插件包响应报文体")
 data class ArchiveAtomResponse(
-    @Schema(name = "插件环境信息", required = true)
+    @Schema(title = "插件环境信息", required = true)
     val atomEnvRequests: List<AtomEnvRequest>,
-    @Schema(name = "task.json参数", required = true)
+    @Schema(title = "task.json参数", required = true)
     val taskDataMap: Map<String, Any>
 )

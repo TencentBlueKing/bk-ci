@@ -29,14 +29,14 @@ package com.tencent.devops.artifactory.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "插件市场-重新归档插件包请求报文体")
+@Schema(title = "插件市场-重新归档插件包请求报文体")
 data class PackageFileInfo(
-    @Schema(name = "包文件名", required = true)
+    @Schema(title = "包文件名", required = true)
     val packageFileName: String,
-    @Schema(name = "包文件路径", required = true)
+    @Schema(title = "包文件路径", required = true)
     val packageFilePath: String,
-    @Schema(name = "包文件大小", required = true)
+    @Schema(title = "包文件大小", required = true)
     val packageFileSize: Long,
-    @Schema(name = "sha摘要值", required = true)
+    @Schema(title = "sha摘要值", required = true)
     val shaContent: String
 )

@@ -30,15 +30,15 @@ package com.tencent.devops.project.pojo
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "动态模型")
+@Schema(title = "动态模型")
 data class ActivityInfo(
-    @Schema(name = "名称")
+    @Schema(title = "名称")
     val name: String,
-    @Schema(name = "英文名")
+    @Schema(title = "英文名")
     val englishName: String? = "NEW",
-    @Schema(name = "链接")
+    @Schema(title = "链接")
     val link: String,
-    @Schema(name = "创建时间", description = "create_time")
+    @Schema(title = "创建时间", description = "create_time")
     @JsonProperty("create_time")
     val createTime: String?
 )

@@ -31,16 +31,16 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "添加组件荣誉信息请求报文")
+@Schema(title = "添加组件荣誉信息请求报文")
 data class AddStoreHonorRequest(
-    @Schema(name = "荣誉头衔", required = true)
+    @Schema(title = "荣誉头衔", required = true)
     @BkField(maxLength = 4)
     val honorTitle: String,
-    @Schema(name = "荣誉名称", required = true)
+    @Schema(title = "荣誉名称", required = true)
     @BkField(maxLength = 40)
     val honorName: String,
-    @Schema(name = "组件范畴", required = true)
+    @Schema(title = "组件范畴", required = true)
     val storeType: StoreTypeEnum,
-    @Schema(name = "组件代码列表", required = true)
+    @Schema(title = "组件代码列表", required = true)
     val storeCodes: List<String>
 )

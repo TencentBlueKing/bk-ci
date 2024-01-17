@@ -29,12 +29,12 @@ package com.tencent.devops.dispatch.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "停止构建信息")
+@Schema(title = "停止构建信息")
 data class BuildAbortMessage(
-    @Schema(name = "构建ID", required = true)
+    @Schema(title = "构建ID", required = true)
     val buildId: String,
-    @Schema(name = "用户ID", required = true)
+    @Schema(title = "用户ID", required = true)
     val userId: String,
-    @Schema(name = "虚拟Hash ID", required = true)
+    @Schema(title = "虚拟Hash ID", required = true)
     val vmHashId: String
 )

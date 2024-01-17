@@ -29,9 +29,9 @@ package com.tencent.devops.repository.pojo.oauth
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "github token 类型")
+@Schema(title = "github token 类型")
 enum class GithubTokenType(
-    @Schema(name = "前缀")
+    @Schema(title = "前缀")
     var prefix: String
 ) {
     GITHUB_APP("ghu_"),

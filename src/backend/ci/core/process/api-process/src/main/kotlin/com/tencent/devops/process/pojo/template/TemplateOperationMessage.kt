@@ -29,15 +29,15 @@ package com.tencent.devops.process.pojo.template
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "")
+@Schema(title = "")
 data class TemplateOperationMessage constructor(
-    @Schema(name = "成功的流水线", required = false)
+    @Schema(title = "成功的流水线", required = false)
     val successPipelines: List<String>,
-    @Schema(name = "失败的流水线", required = false)
+    @Schema(title = "失败的流水线", required = false)
     val failurePipelines: List<String>,
-    @Schema(name = "失败信息", required = false)
+    @Schema(title = "失败信息", required = false)
     val failureMessages: Map<String/*PipelineName*/, String/*Message*/>,
-    @Schema(name = "成功的流水线id", required = false)
+    @Schema(title = "成功的流水线id", required = false)
     val successPipelinesId: List<String>
 ) {
     constructor(

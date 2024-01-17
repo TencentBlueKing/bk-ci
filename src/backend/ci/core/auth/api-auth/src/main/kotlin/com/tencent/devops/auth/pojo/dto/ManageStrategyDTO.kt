@@ -31,6 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema
 data class ManageStrategyDTO(
-    @Schema(name = "策略内容")
+    @Schema(title = "策略内容")
     val strategy: Map<String, List<String>>
 )

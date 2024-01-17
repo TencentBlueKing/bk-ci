@@ -29,32 +29,32 @@ package com.tencent.devops.dispatch.docker.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "容器信息模型")
+@Schema(title = "容器信息模型")
 data class ContainerInfo(
-    @Schema(name = "项目id")
+    @Schema(title = "项目id")
     val projectId: String,
-    @Schema(name = "流水线id")
+    @Schema(title = "流水线id")
     val pipelineId: String,
-    @Schema(name = "构建序列号")
+    @Schema(title = "构建序列号")
     val vmSeqId: String,
-    @Schema(name = "资源池序号")
+    @Schema(title = "资源池序号")
     val poolNo: Int,
-    @Schema(name = "状态")
+    @Schema(title = "状态")
     val status: Int,
-    @Schema(name = "镜像名称")
+    @Schema(title = "镜像名称")
     val imageName: String,
-    @Schema(name = "容器id")
+    @Schema(title = "容器id")
     val containerId: String,
-    @Schema(name = "容器地址")
+    @Schema(title = "容器地址")
     val address: String,
-    @Schema(name = "容器token")
+    @Schema(title = "容器token")
     val token: String,
-    @Schema(name = "构建环境")
+    @Schema(title = "构建环境")
     val buildEnv: String?,
-    @Schema(name = "仓库用户名")
+    @Schema(title = "仓库用户名")
     val registryUser: String?,
-    @Schema(name = "仓库密码")
+    @Schema(title = "仓库密码")
     val registryPwd: String?,
-    @Schema(name = "镜像类型")
+    @Schema(title = "镜像类型")
     val imageType: String?
 )

@@ -31,24 +31,24 @@ import com.tencent.devops.common.archive.pojo.replica.objects.ReplicaObjectInfo
 import com.tencent.devops.common.archive.pojo.replica.setting.ReplicaSetting
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "同步任务创建请求")
+@Schema(title = "同步任务创建请求")
 data class ReplicaTaskCreateRequest(
-    @Schema(name = "任务名称", required = true)
+    @Schema(title = "任务名称", required = true)
     val name: String,
-    @Schema(name = "本地项目", required = true)
+    @Schema(title = "本地项目", required = true)
     val localProjectId: String,
-    @Schema(name = "同步对象类型", required = true)
+    @Schema(title = "同步对象类型", required = true)
     val replicaObjectType: ReplicaObjectType,
-    @Schema(name = "任务对象信息", required = true)
+    @Schema(title = "任务对象信息", required = true)
     val replicaTaskObjects: List<ReplicaObjectInfo>,
-    @Schema(name = "同步类型", required = true)
+    @Schema(title = "同步类型", required = true)
     val replicaType: ReplicaType = ReplicaType.SCHEDULED,
-    @Schema(name = "任务设置", required = true)
+    @Schema(title = "任务设置", required = true)
     val setting: ReplicaSetting,
-    @Schema(name = "远程集群集合", required = true)
+    @Schema(title = "远程集群集合", required = true)
     val remoteClusterIds: Set<String>,
-    @Schema(name = "是否启用", required = true)
+    @Schema(title = "是否启用", required = true)
     val enabled: Boolean = true,
-    @Schema(name = "任务描述", required = false)
+    @Schema(title = "任务描述", required = false)
     val description: String? = null
 )

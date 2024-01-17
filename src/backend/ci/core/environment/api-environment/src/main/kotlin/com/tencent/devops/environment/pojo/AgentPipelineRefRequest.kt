@@ -29,12 +29,12 @@ package com.tencent.devops.environment.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "agent流水线引用请求")
+@Schema(title = "agent流水线引用请求")
 data class AgentPipelineRefRequest(
-    @Schema(name = "action", required = true)
+    @Schema(title = "action", required = true)
     val action: String,
-    @Schema(name = "pipelineId", required = true)
+    @Schema(title = "pipelineId", required = true)
     val pipelineId: String,
-    @Schema(name = "PipelineId", required = true)
+    @Schema(title = "PipelineId", required = true)
     val pipelineRefInfos: List<AgentPipelineRefInfo>
 )

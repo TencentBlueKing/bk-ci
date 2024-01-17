@@ -29,14 +29,14 @@ package com.tencent.devops.store.pojo.image.response
 import com.tencent.devops.store.pojo.common.MarketItem
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "模版市场-搜索结果")
+@Schema(title = "模版市场-搜索结果")
 data class MarketImageResp(
-    @Schema(name = "总记录数")
+    @Schema(title = "总记录数")
     val count: Int,
-    @Schema(name = "当前页码值")
+    @Schema(title = "当前页码值")
     val page: Int?,
-    @Schema(name = "每页记录大小")
+    @Schema(title = "每页记录大小")
     val pageSize: Int?,
-    @Schema(name = "数据集合")
+    @Schema(title = "数据集合")
     val records: List<MarketItem?>
 )

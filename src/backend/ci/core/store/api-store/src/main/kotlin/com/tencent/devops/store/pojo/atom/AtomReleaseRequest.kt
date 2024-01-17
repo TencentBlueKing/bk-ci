@@ -30,20 +30,20 @@ package com.tencent.devops.store.pojo.atom
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "插件发布请求报文")
+@Schema(title = "插件发布请求报文")
 data class AtomReleaseRequest(
-    @Schema(name = "插件ID")
+    @Schema(title = "插件ID")
     val atomId: String,
-    @Schema(name = "插件代码")
+    @Schema(title = "插件代码")
     val atomCode: String,
-    @Schema(name = "插件版本号")
+    @Schema(title = "插件版本号")
     val version: String,
-    @Schema(name = "插件状态")
+    @Schema(title = "插件状态")
     val atomStatus: Byte,
-    @Schema(name = "发布类型")
+    @Schema(title = "发布类型")
     val releaseType: ReleaseTypeEnum,
-    @Schema(name = "代码库哈希ID")
+    @Schema(title = "代码库哈希ID")
     val repositoryHashId: String? = null,
-    @Schema(name = "代码库分支")
+    @Schema(title = "代码库分支")
     val branch: String? = null
 )

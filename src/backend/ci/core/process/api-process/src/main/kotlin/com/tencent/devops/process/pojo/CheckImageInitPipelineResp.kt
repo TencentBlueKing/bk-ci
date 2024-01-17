@@ -30,12 +30,12 @@ package com.tencent.devops.process.pojo
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "检查镜像合法性初始化流水线报文响应体")
+@Schema(title = "检查镜像合法性初始化流水线报文响应体")
 data class CheckImageInitPipelineResp(
-    @Schema(name = "流水线ID", required = true)
+    @Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(name = "构建ID", required = false)
+    @Schema(title = "构建ID", required = false)
     val buildId: String?,
-    @Schema(name = "验证状态", required = true)
+    @Schema(title = "验证状态", required = true)
     val imageCheckStatus: ImageStatusEnum
 )

@@ -29,14 +29,14 @@ package com.tencent.devops.store.pojo.atom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "插件参数替换信息")
+@Schema(title = "插件参数替换信息")
 data class AtomParamReplaceInfo(
-    @Schema(name = "被替换插件参数名称", required = true)
+    @Schema(title = "被替换插件参数名称", required = true)
     val fromParamName: String,
-    @Schema(name = "替换插件参数名称", required = true)
+    @Schema(title = "替换插件参数名称", required = true)
     val toParamName: String,
-    @Schema(name = "替换插件参数值，不传默认用被替换插件参数值替换", required = false)
+    @Schema(title = "替换插件参数值，不传默认用被替换插件参数值替换", required = false)
     val toParamValue: Any? = null,
-    @Schema(name = "参数自定义转换接口url地址，接口参数结构需统一", required = false)
+    @Schema(title = "参数自定义转换接口url地址，接口参数结构需统一", required = false)
     val paramConvertUrl: String? = null
 )

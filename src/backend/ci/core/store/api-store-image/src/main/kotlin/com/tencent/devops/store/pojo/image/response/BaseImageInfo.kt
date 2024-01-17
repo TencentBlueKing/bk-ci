@@ -33,23 +33,23 @@ import io.swagger.v3.oas.annotations.media.Schema
  * @Date 2019/9/17
  * @Version 1.0
  */
-@Schema(name = "镜像详情")
+@Schema(title = "镜像详情")
 data class BaseImageInfo(
-    @Schema(name = "镜像类型", required = true)
+    @Schema(title = "镜像类型", required = true)
     var imageType: String?,
 
-    @Schema(name = "镜像代码", required = true)
+    @Schema(title = "镜像代码", required = true)
     val code: String,
 
-    @Schema(name = "镜像名称", required = true)
+    @Schema(title = "镜像名称", required = true)
     val name: String,
 
-    @Schema(name = "镜像版本", required = true)
+    @Schema(title = "镜像版本", required = true)
     val version: String,
 
-    @Schema(name = "是否推荐", required = true)
+    @Schema(title = "是否推荐", required = true)
     val recommendFlag: Boolean,
 
-    @Schema(name = "镜像完整地址", required = true)
+    @Schema(title = "镜像完整地址", required = true)
     var value: String?
 )

@@ -36,30 +36,30 @@ import io.swagger.v3.oas.annotations.media.Schema
  * Job流程控制
  * @version 1.0
  */
-@Schema(name = "job流程控制模型")
+@Schema(title = "job流程控制模型")
 data class JobControlOption(
-    @Schema(name = "是否启用Job", required = false)
+    @Schema(title = "是否启用Job", required = false)
     val enable: Boolean = true, // 是否启用Job
-    @Schema(name = "Job准备环境的超时时间 分钟Minutes", required = false)
+    @Schema(title = "Job准备环境的超时时间 分钟Minutes", required = false)
     val prepareTimeout: Int? = null, // Job准备环境的超时时间 分钟Minutes
-    @Schema(name = "ob执行的超时时间 分钟Minutes", required = false)
+    @Schema(title = "ob执行的超时时间 分钟Minutes", required = false)
     var timeout: Int? = 900, // Job执行的超时时间 分钟Minutes
-    @Schema(name = "新的Job执行的超时时间，支持变量 分钟Minutes，出错则取timeout的值", required = false)
+    @Schema(title = "新的Job执行的超时时间，支持变量 分钟Minutes，出错则取timeout的值", required = false)
     var timeoutVar: String? = null, // Job执行的超时时间 分钟Minutes
-    @Schema(name = "运行条件", required = false)
+    @Schema(title = "运行条件", required = false)
     val runCondition: JobRunCondition = JobRunCondition.STAGE_RUNNING, // 运行条件
-    @Schema(name = "自定义变量", required = false)
+    @Schema(title = "自定义变量", required = false)
     val customVariables: List<NameAndValue>? = emptyList(), // 自定义变量
-    @Schema(name = "自定义条件", required = false)
+    @Schema(title = "自定义条件", required = false)
     val customCondition: String? = null, // 自定义条件
-    @Schema(name = "job依赖", required = false) // job依赖
+    @Schema(title = "job依赖", required = false) // job依赖
     val dependOnType: DependOnType? = null,
-    @Schema(name = "需要过滤不存在的job，定义为var类型", required = false)
+    @Schema(title = "需要过滤不存在的job，定义为var类型", required = false)
     var dependOnId: List<String>? = null, // 需要过滤不存在的job，定义为var类型
-    @Schema(name = "job依赖名称", required = false)
+    @Schema(title = "job依赖名称", required = false)
     val dependOnName: String? = null,
-    @Schema(name = "containerId与jobId映射，depend on运行时使用的是containerId", required = false)
+    @Schema(title = "containerId与jobId映射，depend on运行时使用的是containerId", required = false)
     var dependOnContainerId2JobIds: Map<String, String>? = null, // containerId与jobId映射，depend on运行时使用的是containerId
-    @Schema(name = "是否失败继续", required = false)
+    @Schema(title = "是否失败继续", required = false)
     val continueWhenFailed: Boolean? = false // 失败继续
 )

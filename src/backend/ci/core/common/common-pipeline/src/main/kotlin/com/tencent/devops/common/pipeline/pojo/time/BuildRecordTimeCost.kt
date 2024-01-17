@@ -29,16 +29,16 @@ package com.tencent.devops.common.pipeline.pojo.time
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "各项执行耗时（单位毫秒）")
+@Schema(title = "各项执行耗时（单位毫秒）")
 data class BuildRecordTimeCost(
-    @Schema(name = "系统耗时（由总耗时减去其他得出）", required = true)
+    @Schema(title = "系统耗时（由总耗时减去其他得出）", required = true)
     var systemCost: Long = 0,
-    @Schema(name = "执行耗时", required = true)
+    @Schema(title = "执行耗时", required = true)
     var executeCost: Long = 0,
-    @Schema(name = "等待耗时（包括了排队和等待人工审核操作时间）", required = true)
+    @Schema(title = "等待耗时（包括了排队和等待人工审核操作时间）", required = true)
     var waitCost: Long = 0,
-    @Schema(name = "只处于排队的耗时（流水线并发、Stage下Job并发和Job互斥）", required = true)
+    @Schema(title = "只处于排队的耗时（流水线并发、Stage下Job并发和Job互斥）", required = true)
     var queueCost: Long = 0,
-    @Schema(name = "总耗时（结束时间-开始时间）", required = true)
+    @Schema(title = "总耗时（结束时间-开始时间）", required = true)
     var totalCost: Long = 0
 )

@@ -39,27 +39,27 @@ data class UserQualityRule(
     val desc: String,
     val indicators: List<QualityIndicator>,
     val controlPoint: QualityRule.RuleControlPoint?,
-    @Schema(name = "生效的流水线id集合", required = true)
+    @Schema(title = "生效的流水线id集合", required = true)
     val range: List<RangeItem>,
-    @Schema(name = "生效的流水线模板id集合", required = true)
+    @Schema(title = "生效的流水线模板id集合", required = true)
     val templateRange: List<RangeItem>,
-    @Schema(name = "生效的流水线和模板对应的流水线总数", required = true)
+    @Schema(title = "生效的流水线和模板对应的流水线总数", required = true)
     val pipelineCount: Int,
-    @Schema(name = "操作类型", required = true)
+    @Schema(title = "操作类型", required = true)
     val operation: RuleOperation,
-    @Schema(name = "通知类型", required = false)
+    @Schema(title = "通知类型", required = false)
     val notifyTypeList: List<NotifyType>?,
-    @Schema(name = "通知组名单", required = false)
+    @Schema(title = "通知组名单", required = false)
     val notifyGroupList: List<String>?,
-    @Schema(name = "通知人员名单", required = false)
+    @Schema(title = "通知人员名单", required = false)
     val notifyUserList: List<String>?,
-    @Schema(name = "审核通知人员", required = false)
+    @Schema(title = "审核通知人员", required = false)
     val auditUserList: List<String>?,
-    @Schema(name = "审核超时时间", required = false)
+    @Schema(title = "审核超时时间", required = false)
     val auditTimeoutMinutes: Int?,
-    @Schema(name = "最新拦截状态", required = false)
+    @Schema(title = "最新拦截状态", required = false)
     var interceptRecent: String?,
-    @Schema(name = "红线匹配的id", required = false)
+    @Schema(title = "红线匹配的id", required = false)
     val gatewayId: String?
 ) {
     data class RangeItem(

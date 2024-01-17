@@ -30,16 +30,16 @@ package com.tencent.devops.process.pojo
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "流水线暂停操作实体类")
+@Schema(title = "流水线暂停操作实体类")
 data class BuildTaskPauseInfo(
-    @Schema(name = "任务ID")
+    @Schema(title = "任务ID")
     val taskId: String,
-    @Schema(name = "element信息,若插件内有变量变更需给出变更后的element")
+    @Schema(title = "element信息,若插件内有变量变更需给出变更后的element")
     val element: Element?,
-    @Schema(name = "是否继续 true:继续构建 false：停止构建")
+    @Schema(title = "是否继续 true:继续构建 false：停止构建")
     val isContinue: Boolean,
-    @Schema(name = "当前stageId")
+    @Schema(title = "当前stageId")
     val stageId: String,
-    @Schema(name = "当前containerId")
+    @Schema(title = "当前containerId")
     val containerId: String
 )

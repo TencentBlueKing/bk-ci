@@ -30,12 +30,12 @@ package com.tencent.devops.store.pojo.common
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "研发商店错误码信息")
+@Schema(title = "研发商店错误码信息")
 data class StoreErrorCodeInfo(
-    @Schema(name = "store代码")
+    @Schema(title = "store代码")
     val storeCode: String?,
-    @Schema(name = "store组件类型")
+    @Schema(title = "store组件类型")
     val storeType: StoreTypeEnum?,
-    @Schema(name = "错误码集合")
+    @Schema(title = "错误码集合")
     val errorCodes: Set<Int>
 )

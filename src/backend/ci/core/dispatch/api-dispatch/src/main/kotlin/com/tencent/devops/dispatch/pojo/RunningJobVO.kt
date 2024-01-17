@@ -30,28 +30,28 @@ package com.tencent.devops.dispatch.pojo
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "项目的JOB配额")
+@Schema(title = "项目的JOB配额")
 data class RunningJobVO(
-    @Schema(name = "项目ID", required = true)
+    @Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(name = "构建机类型", required = true)
+    @Schema(title = "构建机类型", required = true)
     val vmType: JobQuotaVmType,
-    @Schema(name = "项目最大并发JOB数， 默认50", required = false)
+    @Schema(title = "项目最大并发JOB数， 默认50", required = false)
     val runningJobMax: Int,
-    @Schema(name = "项目单JOB最大执行时间，默认8小时", required = false)
+    @Schema(title = "项目单JOB最大执行时间，默认8小时", required = false)
     val runningTimeJobMax: Int,
-    @Schema(name = "项目所有JOB最大执行时间，默认40小时/月", required = false)
+    @Schema(title = "项目所有JOB最大执行时间，默认40小时/月", required = false)
     val runningTimeProjectMax: Int,
-//    @Schema(name = "工蜂CI最大并发JOB数量，默认10个", required = false)
+//    @Schema(title = "工蜂CI最大并发JOB数量，默认10个", required = false)
 //    val runningJobMaxGitCi: Int,
-//    @Schema(name = "工蜂CI单JOB最大执行时间，默认8小时", required = false)
+//    @Schema(title = "工蜂CI单JOB最大执行时间，默认8小时", required = false)
 //    val runningTimeJobMaxGitCi: Int,
-//    @Schema(name = "工蜂CI所有JOB单项目最大执行时间，默认40小时/月", required = false)
+//    @Schema(title = "工蜂CI所有JOB单项目最大执行时间，默认40小时/月", required = false)
 //    val runningTimeJobMaxProjectGitCi: Int,
-    @Schema(name = "创建时间", required = false)
+    @Schema(title = "创建时间", required = false)
     val createdTime: Long?,
-    @Schema(name = "修改时间", required = false)
+    @Schema(title = "修改时间", required = false)
     val updatedTime: Long?,
-    @Schema(name = "操作人", required = false)
+    @Schema(title = "操作人", required = false)
     val operator: String?
 )

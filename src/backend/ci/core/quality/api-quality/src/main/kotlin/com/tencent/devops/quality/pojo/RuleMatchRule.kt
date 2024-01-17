@@ -29,10 +29,10 @@ package com.tencent.devops.quality.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "质量红线-匹配拦截规则")
+@Schema(title = "质量红线-匹配拦截规则")
 data class RuleMatchRule(
-    @Schema(name = "规则ID", required = true)
+    @Schema(title = "规则ID", required = true)
     val ruleHashId: String,
-    @Schema(name = "规则名称", required = true)
+    @Schema(title = "规则名称", required = true)
     val ruleName: String
 )

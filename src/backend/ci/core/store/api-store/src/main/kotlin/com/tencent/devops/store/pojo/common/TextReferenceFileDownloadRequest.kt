@@ -29,18 +29,18 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "文本引用文件下载请求")
+@Schema(title = "文本引用文件下载请求")
 data class TextReferenceFileDownloadRequest(
-    @Schema(name = "项目代码", required = true)
+    @Schema(title = "项目代码", required = true)
     val projectCode: String,
-    @Schema(name = "组件标识")
+    @Schema(title = "组件标识")
     val storeCode: String,
-    @Schema(name = "引用文件名列表")
+    @Schema(title = "引用文件名列表")
     val fileNames: Set<String>,
-    @Schema(name = "插件包文件路径", required = true)
+    @Schema(title = "插件包文件路径", required = true)
     val fileDir: String,
-    @Schema(name = "仓库哈希ID", required = false)
+    @Schema(title = "仓库哈希ID", required = false)
     val repositoryHashId: String? = null,
-    @Schema(name = "分支", required = false)
+    @Schema(title = "分支", required = false)
     val branch: String? = null
 )

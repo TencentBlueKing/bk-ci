@@ -29,22 +29,22 @@ package com.tencent.devops.dispatch.pojo.thirdPartyAgent
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "第三方构建信息")
+@Schema(title = "第三方构建信息")
 data class ThirdPartyBuildInfo(
-    @Schema(name = "项目id")
+    @Schema(title = "项目id")
     val projectId: String,
-    @Schema(name = "构建id")
+    @Schema(title = "构建id")
     val buildId: String,
-    @Schema(name = "构建机编排序号")
+    @Schema(title = "构建机编排序号")
     val vmSeqId: String,
-    @Schema(name = "工作空间")
+    @Schema(title = "工作空间")
     val workspace: String,
-    @Schema(name = "流水线ID")
+    @Schema(title = "流水线ID")
     val pipelineId: String?,
-    @Schema(name = "docker构建相关信息")
+    @Schema(title = "docker构建相关信息")
     val dockerBuildInfo: ThirdPartyBuildDockerInfo?,
-    @Schema(name = "流水线执行次数")
+    @Schema(title = "流水线执行次数")
     val executeCount: Int?,
-    @Schema(name = "容器hashId日志使用")
+    @Schema(title = "容器hashId日志使用")
     val containerHashId: String?
 )

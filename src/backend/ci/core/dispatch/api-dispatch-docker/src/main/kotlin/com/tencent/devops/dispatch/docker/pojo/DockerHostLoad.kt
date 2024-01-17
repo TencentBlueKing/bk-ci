@@ -29,25 +29,25 @@ package com.tencent.devops.dispatch.docker.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "DockerHostLoad")
+@Schema(title = "DockerHostLoad")
 data class DockerHostLoad(
     val clusterLoad: Map<String, Load>
 )
 
-@Schema(name = "DockerHostLoad")
+@Schema(title = "DockerHostLoad")
 data class Load(
-    @Schema(name = "构建机已使用量")
+    @Schema(title = "构建机已使用量")
     val usedNum: Int,
-    @Schema(name = "构建机CPU负载")
+    @Schema(title = "构建机CPU负载")
     val averageCpuLoad: Int,
-    @Schema(name = "构建机内存负载")
+    @Schema(title = "构建机内存负载")
     val averageMemLoad: Int,
-    @Schema(name = "构建机硬盘负载")
+    @Schema(title = "构建机硬盘负载")
     val averageDiskLoad: Int,
-    @Schema(name = "构建机硬盘IO负载")
+    @Schema(title = "构建机硬盘IO负载")
     val averageDiskIOLoad: Int,
-    @Schema(name = "集群节点数量")
+    @Schema(title = "集群节点数量")
     val totalNode: Int,
-    @Schema(name = "集群可用节点数量")
+    @Schema(title = "集群可用节点数量")
     val enableNode: Int
 )

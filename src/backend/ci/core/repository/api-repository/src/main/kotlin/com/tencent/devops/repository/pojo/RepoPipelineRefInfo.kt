@@ -32,31 +32,31 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.Parameter
 
-@Schema(name = "流水线引用代码库")
+@Schema(title = "流水线引用代码库")
 data class RepoPipelineRefInfo(
     val projectId: String,
     @Parameter(description = "流水线ID")
     val pipelineId: String,
-    @Schema(name = "流水线名称")
+    @Schema(title = "流水线名称")
     val pipelineName: String,
-    @Schema(name = "代码库配置")
+    @Schema(title = "代码库配置")
     val repositoryConfig: RepositoryConfig,
-    @Schema(name = "插件ID")
+    @Schema(title = "插件ID")
     val taskId: String,
-    @Schema(name = "插件名")
+    @Schema(title = "插件名")
     val taskName: String,
-    @Schema(name = "插件参数")
+    @Schema(title = "插件参数")
     val taskParams: Map<String, Any>,
-    @Schema(name = "插件code")
+    @Schema(title = "插件code")
     val atomCode: String,
-    @Schema(name = "插件版本")
+    @Schema(title = "插件版本")
     val atomVersion: String? = null,
-    @Schema(name = "插件类别，TRIGGER：触发器类插件 TASK：任务类插件")
+    @Schema(title = "插件类别，TRIGGER：触发器类插件 TASK：任务类插件")
     val atomCategory: String,
-    @Schema(name = "触发类型,只有触发插件才有值")
+    @Schema(title = "触发类型,只有触发插件才有值")
     val triggerType: String? = null,
-    @Schema(name = "事件类型,只有触发插件才有值")
+    @Schema(title = "事件类型,只有触发插件才有值")
     val eventType: String? = null,
-    @Schema(name = "触发条件")
+    @Schema(title = "触发条件")
     val triggerCondition: String? = null
 )

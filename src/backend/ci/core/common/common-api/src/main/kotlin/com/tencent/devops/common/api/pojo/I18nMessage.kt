@@ -27,14 +27,14 @@
 package com.tencent.devops.common.api.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "国际化信息")
+@Schema(title = "国际化信息")
 data class I18nMessage(
-    @Schema(name = "模块标识")
+    @Schema(title = "模块标识")
     val moduleCode: String,
-    @Schema(name = "国际化语言信息")
+    @Schema(title = "国际化语言信息")
     val language: String,
-    @Schema(name = "国际化变量名")
+    @Schema(title = "国际化变量名")
     val key: String,
-    @Schema(name = "国际化变量值")
+    @Schema(title = "国际化变量值")
     val value: String
 )

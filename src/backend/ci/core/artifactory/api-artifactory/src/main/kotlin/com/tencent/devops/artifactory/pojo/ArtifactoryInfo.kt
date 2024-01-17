@@ -29,28 +29,28 @@ package com.tencent.devops.artifactory.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "版本仓库-构建信息")
+@Schema(title = "版本仓库-构建信息")
 data class ArtifactoryInfo(
-    @Schema(name = "流水线号", required = true)
+    @Schema(title = "流水线号", required = true)
     val pipelineId: String,
-    @Schema(name = "项目ID", required = true)
+    @Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(name = "构建号", required = true)
+    @Schema(title = "构建号", required = true)
     val buildNum: Int,
-    @Schema(name = "包ID", required = true)
+    @Schema(title = "包ID", required = true)
     val bundleId: String,
-    @Schema(name = "产物信息", required = true)
+    @Schema(title = "产物信息", required = true)
     val fileInfo: FileInfo?,
-    @Schema(name = "包名", required = true)
+    @Schema(title = "包名", required = true)
     val name: String,
-    @Schema(name = "包全名", required = true)
+    @Schema(title = "包全名", required = true)
     val fullName: String,
-    @Schema(name = "包大小", required = true)
+    @Schema(title = "包大小", required = true)
     val size: Long,
-    @Schema(name = "添加时间", required = true)
+    @Schema(title = "添加时间", required = true)
     val modifiedTime: Long,
-    @Schema(name = "app版本", required = true)
+    @Schema(title = "app版本", required = true)
     val appVersion: String? = null,
-    @Schema(name = "数据来源：0-自然数据 1-补偿数据", required = true)
+    @Schema(title = "数据来源：0-自然数据 1-补偿数据", required = true)
     val dataForm: Int
 )

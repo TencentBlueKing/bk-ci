@@ -29,12 +29,12 @@ package com.tencent.devops.process.pojo.pipeline
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "流水线规则")
+@Schema(title = "流水线规则")
 data class PipelineRule(
-    @Schema(name = "规则名称", required = true)
+    @Schema(title = "规则名称", required = true)
     val ruleName: String,
-    @Schema(name = "业务标识", required = true)
+    @Schema(title = "业务标识", required = true)
     val busCode: String,
-    @Schema(name = "处理器", required = true)
+    @Schema(title = "处理器", required = true)
     val processor: String
 )

@@ -33,7 +33,7 @@ import com.tencent.devops.common.sdk.github.pojo.Organization
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "Git项目组列表信息")
+@Schema(title = "Git项目组列表信息")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class StreamGitGroup(
     val id: Long,

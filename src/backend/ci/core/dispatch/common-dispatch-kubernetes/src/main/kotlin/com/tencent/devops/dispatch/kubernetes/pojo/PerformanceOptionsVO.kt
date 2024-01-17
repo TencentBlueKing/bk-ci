@@ -29,14 +29,14 @@ package com.tencent.devops.dispatch.kubernetes.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "构建机性能基础选项配置")
+@Schema(title = "构建机性能基础选项配置")
 data class PerformanceOptionsVO(
-    @Schema(name = "CPU")
+    @Schema(title = "CPU")
     val cpu: Double,
-    @Schema(name = "内存")
+    @Schema(title = "内存")
     val memory: String,
-    @Schema(name = "磁盘")
+    @Schema(title = "磁盘")
     val disk: String,
-    @Schema(name = "描述")
+    @Schema(title = "描述")
     val description: String
 )

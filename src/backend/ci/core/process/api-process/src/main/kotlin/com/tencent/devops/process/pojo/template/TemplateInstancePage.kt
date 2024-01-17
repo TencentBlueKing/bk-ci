@@ -29,22 +29,22 @@ package com.tencent.devops.process.pojo.template
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "")
+@Schema(title = "")
 data class TemplateInstancePage(
-    @Schema(name = "项目id", required = false)
+    @Schema(title = "项目id", required = false)
     val projectId: String,
-    @Schema(name = "模板id", required = false)
+    @Schema(title = "模板id", required = false)
     val templateId: String,
-    @Schema(name = "模板生成的流水线实例列表", required = false)
+    @Schema(title = "模板生成的流水线实例列表", required = false)
     val instances: List<TemplatePipeline>,
-    @Schema(name = "最新版本", required = false)
+    @Schema(title = "最新版本", required = false)
     val latestVersion: TemplateVersion,
-    @Schema(name = "数量", required = false)
+    @Schema(title = "数量", required = false)
     val count: Int,
-    @Schema(name = "页数", required = false)
+    @Schema(title = "页数", required = false)
     val page: Int?,
-    @Schema(name = "每页数量", required = false)
+    @Schema(title = "每页数量", required = false)
     val pageSize: Int?,
-    @Schema(name = "是否有创建模板实例权限", required = false)
+    @Schema(title = "是否有创建模板实例权限", required = false)
     val hasCreateTemplateInstancePerm: Boolean? = null
 )

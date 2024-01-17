@@ -28,32 +28,32 @@ package com.tencent.devops.store.pojo.image.request
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "镜像基本信息（不影响执行的信息）修改请求报文体")
+@Schema(title = "镜像基本信息（不影响执行的信息）修改请求报文体")
 data class ImageBaseInfoUpdateRequest(
-    @Schema(name = "镜像名称", required = false)
+    @Schema(title = "镜像名称", required = false)
     val imageName: String? = null,
-    @Schema(name = "所属分类ID", required = false)
+    @Schema(title = "所属分类ID", required = false)
     val classifyId: String? = null,
-    @Schema(name = "功能标签", required = false)
+    @Schema(title = "功能标签", required = false)
     val labelIdList: List<String>? = null,
-    @Schema(name = "镜像所属范畴CATEGORY_CODE", required = false)
+    @Schema(title = "镜像所属范畴CATEGORY_CODE", required = false)
     val category: String? = null,
-    @Schema(name = "镜像简介", required = false)
+    @Schema(title = "镜像简介", required = false)
     val summary: String? = null,
-    @Schema(name = "镜像描述", required = false)
+    @Schema(title = "镜像描述", required = false)
     val description: String? = null,
-    @Schema(name = "镜像logo", required = false)
+    @Schema(title = "镜像logo", required = false)
     val logoUrl: String? = null,
-    @Schema(name = "icon图标base64字符串", required = false)
+    @Schema(title = "icon图标base64字符串", required = false)
     val iconData: String? = null,
-    @Schema(name = "发布者", required = false)
+    @Schema(title = "发布者", required = false)
     val publisher: String? = null,
-    @Schema(name = "镜像大小", required = false)
+    @Schema(title = "镜像大小", required = false)
     var imageSize: String? = null,
-    @Schema(name = "dockerFile类型", required = false)
+    @Schema(title = "dockerFile类型", required = false)
     val dockerFileType: String? = null,
-    @Schema(name = "dockerFile内容", required = false)
+    @Schema(title = "dockerFile内容", required = false)
     val dockerFileContent: String? = null,
-    @Schema(name = "删除标识", required = false)
+    @Schema(title = "删除标识", required = false)
     val deleteFlag: Boolean? = null
 )

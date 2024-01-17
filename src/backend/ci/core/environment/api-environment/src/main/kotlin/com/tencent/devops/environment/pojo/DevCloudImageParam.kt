@@ -29,12 +29,12 @@ package com.tencent.devops.environment.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "DevCloud制作镜像参数")
+@Schema(title = "DevCloud制作镜像参数")
 data class DevCloudImageParam(
-    @Schema(name = "镜像名", required = true)
+    @Schema(title = "镜像名", required = true)
     val name: String,
-    @Schema(name = "镜像TAG", required = true)
+    @Schema(title = "镜像TAG", required = true)
     val tag: String,
-    @Schema(name = "描述", required = true)
+    @Schema(title = "描述", required = true)
     val description: String?
 )

@@ -29,10 +29,10 @@ package com.tencent.devops.store.pojo.template
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "安装模板到项目请求报文")
+@Schema(title = "安装模板到项目请求报文")
 data class InstallTemplateReq(
-    @Schema(name = "项目标识", required = true)
+    @Schema(title = "项目标识", required = true)
     val projectCodeList: ArrayList<String>,
-    @Schema(name = "模板代码", required = true)
+    @Schema(title = "模板代码", required = true)
     val templateCode: String
 )

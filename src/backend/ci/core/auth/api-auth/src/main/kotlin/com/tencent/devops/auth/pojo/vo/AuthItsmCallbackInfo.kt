@@ -30,20 +30,20 @@ package com.tencent.devops.auth.pojo.vo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "itsm回调信息")
+@Schema(title = "itsm回调信息")
 data class AuthItsmCallbackInfo(
-    @Schema(name = "权限中心申请单ID")
+    @Schema(title = "权限中心申请单ID")
     val applyId: Int,
-    @Schema(name = "itsm 审批单号")
+    @Schema(title = "itsm 审批单号")
     val sn: String,
-    @Schema(name = "项目id")
+    @Schema(title = "项目id")
     val projectId: String,
-    @Schema(name = "权限中心回调id")
+    @Schema(title = "权限中心回调id")
     val callbackId: String,
-    @Schema(name = "申请人")
+    @Schema(title = "申请人")
     val applicant: String,
-    @Schema(name = "审批人")
+    @Schema(title = "审批人")
     val approver: String?,
-    @Schema(name = "审批结果")
+    @Schema(title = "审批结果")
     val approveResult: Boolean?
 )

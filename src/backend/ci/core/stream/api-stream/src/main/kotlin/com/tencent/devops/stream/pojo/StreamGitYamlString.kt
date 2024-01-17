@@ -29,8 +29,8 @@ package com.tencent.devops.stream.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "Yaml内容")
+@Schema(title = "Yaml内容")
 data class StreamGitYamlString(
-    @Schema(name = "YAML文件内容")
+    @Schema(title = "YAML文件内容")
     val yaml: String
 )

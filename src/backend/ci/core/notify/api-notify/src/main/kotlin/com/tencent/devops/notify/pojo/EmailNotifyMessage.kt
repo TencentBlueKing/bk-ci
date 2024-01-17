@@ -32,46 +32,46 @@ import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "email电子邮件消息类型")
+@Schema(title = "email电子邮件消息类型")
 open class EmailNotifyMessage : BaseMessage() {
 
-    @Schema(name = "邮件格式", allowableValues = ["0", "1"], type = "int")
+    @Schema(title = "邮件格式", allowableValues = ["0", "1"], type = "int")
     var format: EnumEmailFormat = EnumEmailFormat.PLAIN_TEXT
 
-    @Schema(name = "邮件类型", allowableValues = ["0", "1"], type = "int")
+    @Schema(title = "邮件类型", allowableValues = ["0", "1"], type = "int")
     var type: EnumEmailType = EnumEmailType.OUTER_MAIL
 
-    @Schema(name = "通知接收者")
+    @Schema(title = "通知接收者")
     private val receivers: LinkedHashSet<String> = LinkedHashSet()
 
-    @Schema(name = "邮件抄送接收者")
+    @Schema(title = "邮件抄送接收者")
     private val cc: LinkedHashSet<String> = LinkedHashSet()
 
-    @Schema(name = "邮件密送接收者")
+    @Schema(title = "邮件密送接收者")
     private val bcc: LinkedHashSet<String> = LinkedHashSet()
 
-    @Schema(name = "邮件内容")
+    @Schema(title = "邮件内容")
     var body: String = ""
 
-    @Schema(name = "邮件发送者")
+    @Schema(title = "邮件发送者")
     var sender: String = "DevOps"
 
-    @Schema(name = "邮件标题")
+    @Schema(title = "邮件标题")
     var title: String = ""
 
-    @Schema(name = "优先级", allowableValues = ["-1", "0", "1"], type = "int")
+    @Schema(title = "优先级", allowableValues = ["-1", "0", "1"], type = "int")
     var priority: EnumNotifyPriority = EnumNotifyPriority.HIGH
 
-    @Schema(name = "通知来源", allowableValues = ["0", "1"], type = "int")
+    @Schema(title = "通知来源", allowableValues = ["0", "1"], type = "int")
     var source: EnumNotifySource = EnumNotifySource.BUSINESS_LOGIC
 
-    @Schema(name = "codecc邮件附件内容")
+    @Schema(title = "codecc邮件附件内容")
     var codeccAttachFileContent: Map<String, String>? = mapOf()
 
-    @Schema(name = "邮件内容，可替代的上下文集合[腾讯云邮件服务只支持传模板参数形式]")
+    @Schema(title = "邮件内容，可替代的上下文集合[腾讯云邮件服务只支持传模板参数形式]")
     var variables: Map<String, String>? = mapOf()
 
-    @Schema(name = "腾讯云邮件模板id")
+    @Schema(title = "腾讯云邮件模板id")
     var tencentCloudTemplateId: Int? = null
 
     fun addReceiver(receiver: String) {

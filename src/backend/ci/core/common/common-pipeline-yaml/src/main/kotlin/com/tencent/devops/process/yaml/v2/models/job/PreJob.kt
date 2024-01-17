@@ -44,27 +44,27 @@ data class PreJob(
     val name: String?,
     @JsonProperty("mutex")
     val mutex: Mutex? = null,
-    @Schema(name = "runs-on")
+    @Schema(title = "runs-on")
     @JsonProperty("runs-on")
     val runsOn: Any?,
     val container: Container?,
     val services: Map<String, Service>? = null,
-    @Schema(name = "if")
+    @Schema(title = "if")
     @JsonProperty("if")
     val ifField: String? = null,
-    @Schema(name = "if-modify")
+    @Schema(title = "if-modify")
     @JsonProperty("if-modify")
     val ifModify: List<String>? = null,
     val steps: List<PreStep>?,
-    @Schema(name = "timeout-minutes")
+    @Schema(title = "timeout-minutes")
     @JsonProperty("timeout-minutes")
     val timeoutMinutes: Int? = null,
     val env: Map<String, String>? = emptyMap(),
-    @Schema(name = "continue-on-error")
+    @Schema(title = "continue-on-error")
     @JsonProperty("continue-on-error")
     val continueOnError: Boolean? = null,
     val strategy: Strategy? = null,
-    @Schema(name = "depend-on")
+    @Schema(title = "depend-on")
     @JsonProperty("depend-on")
     val dependOn: List<String>? = null,
     override val yamlMetaData: MetaData? = null

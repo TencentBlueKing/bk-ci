@@ -29,18 +29,18 @@ package com.tencent.devops.ticket.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "证书-tls证书")
+@Schema(title = "证书-tls证书")
 data class CertTlsInfo(
-    @Schema(name = "证书ID", required = true)
+    @Schema(title = "证书ID", required = true)
     val certId: String,
-    @Schema(name = "服务器crt证书名", required = true)
+    @Schema(title = "服务器crt证书名", required = true)
     val serverCrtFileName: String,
-    @Schema(name = "服务器key证书名", required = true)
+    @Schema(title = "服务器key证书名", required = true)
     val serverKeyFileName: String,
-    @Schema(name = "客户端crt证书名", required = true)
+    @Schema(title = "客户端crt证书名", required = true)
     val clientCrtFileName: String?,
-    @Schema(name = "客户端key证书名", required = true)
+    @Schema(title = "客户端key证书名", required = true)
     val clientKeyFileName: String?,
-    @Schema(name = "remark", required = true)
+    @Schema(title = "remark", required = true)
     val remark: String?
 )

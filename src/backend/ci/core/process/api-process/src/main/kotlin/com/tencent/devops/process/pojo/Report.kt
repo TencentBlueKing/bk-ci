@@ -29,12 +29,12 @@ package com.tencent.devops.process.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "自定义报告-报告信息")
+@Schema(title = "自定义报告-报告信息")
 data class Report(
-    @Schema(name = "名称", required = true)
+    @Schema(title = "名称", required = true)
     val name: String,
-    @Schema(name = "首页地址", required = true)
+    @Schema(title = "首页地址", required = true)
     val indexFileUrl: String,
-    @Schema(name = "报告类型", required = true)
+    @Schema(title = "报告类型", required = true)
     val type: String
 )

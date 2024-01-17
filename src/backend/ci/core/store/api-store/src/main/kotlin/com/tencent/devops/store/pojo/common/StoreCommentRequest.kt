@@ -29,10 +29,10 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "评论信息请求报文体")
+@Schema(title = "评论信息请求报文体")
 data class StoreCommentRequest(
-    @Schema(name = "评论内容", required = true)
+    @Schema(title = "评论内容", required = true)
     val commentContent: String,
-    @Schema(name = "评分", required = true)
+    @Schema(title = "评分", required = true)
     val score: Int
 )

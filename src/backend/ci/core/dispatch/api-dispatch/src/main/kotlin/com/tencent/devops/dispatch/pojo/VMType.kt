@@ -29,14 +29,14 @@ package com.tencent.devops.dispatch.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "虚拟机类型")
+@Schema(title = "虚拟机类型")
 data class VMType(
-    @Schema(name = "类型ID", required = true)
+    @Schema(title = "类型ID", required = true)
     val id: Int,
-    @Schema(name = "类型名称", required = true)
+    @Schema(title = "类型名称", required = true)
     val typeName: String,
-    @Schema(name = "创建时间", required = true)
+    @Schema(title = "创建时间", required = true)
     val createdTime: Long,
-    @Schema(name = "修改时间", required = true)
+    @Schema(title = "修改时间", required = true)
     val updatedTime: Long
 )

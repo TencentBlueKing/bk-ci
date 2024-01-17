@@ -30,35 +30,35 @@ package com.tencent.devops.artifactory.pojo
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "版本仓库-文件信息")
+@Schema(title = "版本仓库-文件信息")
 data class FileInfo(
-    @Schema(name = "文件名", required = true)
+    @Schema(title = "文件名", required = true)
     val name: String,
-    @Schema(name = "文件全名", required = true)
+    @Schema(title = "文件全名", required = true)
     val fullName: String,
-    @Schema(name = "文件路径", required = true)
+    @Schema(title = "文件路径", required = true)
     val path: String,
-    @Schema(name = "文件全路径", required = true)
+    @Schema(title = "文件全路径", required = true)
     val fullPath: String,
-    @Schema(name = "文件大小(byte)", required = true)
+    @Schema(title = "文件大小(byte)", required = true)
     val size: Long,
-    @Schema(name = "是否文件夹", required = true)
+    @Schema(title = "是否文件夹", required = true)
     val folder: Boolean,
-    @Schema(name = "更新时间", required = true)
+    @Schema(title = "更新时间", required = true)
     val modifiedTime: Long,
-    @Schema(name = "仓库类型", required = true)
+    @Schema(title = "仓库类型", required = true)
     val artifactoryType: ArtifactoryType,
-    @Schema(name = "元数据", required = true)
+    @Schema(title = "元数据", required = true)
     val properties: List<Property>?,
-    @Schema(name = "app版本", required = true)
+    @Schema(title = "app版本", required = true)
     val appVersion: String? = null,
-    @Schema(name = "下载短链接", required = true)
+    @Schema(title = "下载短链接", required = true)
     val shortUrl: String? = null,
-    @Schema(name = "下载链接", required = false)
+    @Schema(title = "下载链接", required = false)
     var downloadUrl: String? = null,
-    @Schema(name = "MD5", required = false)
+    @Schema(title = "MD5", required = false)
     var md5: String? = null,
-    @Schema(name = "docker registry", required = false)
+    @Schema(title = "docker registry", required = false)
     var registry: String? = null
 ) : Comparable<FileInfo> {
     constructor(

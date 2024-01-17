@@ -30,20 +30,20 @@ package com.tencent.devops.dispatch.docker.pojo
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "DockerIpUpdateVO")
+@Schema(title = "DockerIpUpdateVO")
 data class DockerIpUpdateVO(
-    @Schema(name = "主键ID")
+    @Schema(title = "主键ID")
     val id: Long,
-    @Schema(name = "构建机IP")
+    @Schema(title = "构建机IP")
     val dockerIp: String,
-    @Schema(name = "构建机PORT")
+    @Schema(title = "构建机PORT")
     val dockerHostPort: Int,
-    @Schema(name = "构建机是否可用")
+    @Schema(title = "构建机是否可用")
     val enable: Boolean,
-    @Schema(name = "是否为灰度节点")
+    @Schema(title = "是否为灰度节点")
     val grayEnv: Boolean,
-    @Schema(name = "是否为专用机独占")
+    @Schema(title = "是否为专用机独占")
     val specialOn: Boolean,
-    @Schema(name = "构建集群", required = false)
+    @Schema(title = "构建集群", required = false)
     val clusterType: DockerHostClusterType = DockerHostClusterType.COMMON
 )

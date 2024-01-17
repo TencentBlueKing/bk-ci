@@ -29,10 +29,10 @@ package com.tencent.devops.project.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "项目基本信息")
+@Schema(title = "项目基本信息")
 data class ProjectBaseInfo(
-    @Schema(name = "主键ID")
+    @Schema(title = "主键ID")
     val id: Long,
-    @Schema(name = "英文缩写")
+    @Schema(title = "英文缩写")
     val englishName: String
 )

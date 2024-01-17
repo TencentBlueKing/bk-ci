@@ -29,14 +29,14 @@ package com.tencent.devops.process.pojo.template
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "模板实例模型")
+@Schema(title = "模板实例模型")
 data class TemplateInstances(
-    @Schema(name = "项目id", required = false)
+    @Schema(title = "项目id", required = false)
     val projectId: String,
-    @Schema(name = "模型id", required = false)
+    @Schema(title = "模型id", required = false)
     val templateId: String,
-    @Schema(name = "实例列表", required = false)
+    @Schema(title = "实例列表", required = false)
     val instances: List<TemplatePipeline>,
-    @Schema(name = "最新版本", required = false)
+    @Schema(title = "最新版本", required = false)
     val latestVersion: TemplateVersion
 )

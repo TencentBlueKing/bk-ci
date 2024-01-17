@@ -31,13 +31,13 @@ import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.store.pojo.common.MarketItem
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "插件市场-首页")
+@Schema(title = "插件市场-首页")
 data class MarketMainItem(
-    @Schema(name = "key值")
+    @Schema(title = "key值")
     val key: String,
-    @Schema(name = "标签")
+    @Schema(title = "标签")
     val label: String,
-    @Schema(name = "插件列表")
+    @Schema(title = "插件列表")
     @BkFieldI18n
     val records: List<MarketItem?>
 )

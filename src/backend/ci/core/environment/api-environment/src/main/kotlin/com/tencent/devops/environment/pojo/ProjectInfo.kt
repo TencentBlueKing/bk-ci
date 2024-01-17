@@ -29,22 +29,22 @@ package com.tencent.devops.environment.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "VM虚拟机配额")
+@Schema(title = "VM虚拟机配额")
 data class ProjectInfo(
-    @Schema(name = "允许使用BCS虚拟机功能", required = true)
+    @Schema(title = "允许使用BCS虚拟机功能", required = true)
     val bcsVmEnabled: Boolean,
-    @Schema(name = "BCS虚拟机配额", required = true)
+    @Schema(title = "BCS虚拟机配额", required = true)
     val bcsVmQuota: Int,
-    @Schema(name = "BCS虚拟机已用数量", required = true)
+    @Schema(title = "BCS虚拟机已用数量", required = true)
     val bcsVmUsedCount: Int,
-    @Schema(name = "BCS虚拟机可用数量", required = true)
+    @Schema(title = "BCS虚拟机可用数量", required = true)
     val bcsVmRestCount: Int,
-    @Schema(name = "导入服务器配额", required = true)
+    @Schema(title = "导入服务器配额", required = true)
     val importQuota: Int,
-    @Schema(name = "允许使用DevCloud虚拟机功能", required = true)
+    @Schema(title = "允许使用DevCloud虚拟机功能", required = true)
     val devCloudVmEnabled: Boolean,
-    @Schema(name = "DevCloud虚拟机配额", required = true)
+    @Schema(title = "DevCloud虚拟机配额", required = true)
     val devCloudVmQuota: Int,
-    @Schema(name = "DevCloud虚拟机已用数量", required = true)
+    @Schema(title = "DevCloud虚拟机已用数量", required = true)
     val devCloudVmUsedCount: Int
 )

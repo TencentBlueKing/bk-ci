@@ -29,18 +29,18 @@ package com.tencent.devops.store.pojo.atom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "流水线-插件分类信息")
+@Schema(title = "流水线-插件分类信息")
 data class MarketAtomClassify(
-    @Schema(name = "插件分类ID", required = true)
+    @Schema(title = "插件分类ID", required = true)
     val id: String,
-    @Schema(name = "插件分类编码", required = true)
+    @Schema(title = "插件分类编码", required = true)
     val classifyCode: String,
-    @Schema(name = "插件分类名称", required = true)
+    @Schema(title = "插件分类名称", required = true)
     val classifyName: String,
-    @Schema(name = "插件数量", required = true)
+    @Schema(title = "插件数量", required = true)
     val atomNum: Int,
-    @Schema(name = "创建日期")
+    @Schema(title = "创建日期")
     val createTime: Long = 0,
-    @Schema(name = "更新日期")
+    @Schema(title = "更新日期")
     val updateTime: Long = 0
 )

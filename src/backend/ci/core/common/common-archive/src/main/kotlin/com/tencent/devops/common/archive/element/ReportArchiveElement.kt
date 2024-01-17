@@ -30,25 +30,25 @@ package com.tencent.devops.common.archive.element
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "自定义产出物报告", description = ReportArchiveElement.classType)
+@Schema(title = "自定义产出物报告", description = ReportArchiveElement.classType)
 data class ReportArchiveElement(
-    @Schema(name = "任务名称", required = true)
+    @Schema(title = "任务名称", required = true)
     override val name: String = "python文件编译",
-    @Schema(name = "id", required = false)
+    @Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(name = "状态", required = false)
+    @Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(name = "待上传文件夹）", required = true)
+    @Schema(title = "待上传文件夹）", required = true)
     val fileDir: String = "",
-    @Schema(name = "入口文件）", required = false)
+    @Schema(title = "入口文件）", required = false)
     val indexFile: String = "",
-    @Schema(name = "标签别名", required = true)
+    @Schema(title = "标签别名", required = true)
     val reportName: String = "",
-    @Schema(name = "开启邮件", required = false)
+    @Schema(title = "开启邮件", required = false)
     val enableEmail: Boolean?,
-    @Schema(name = "邮件接收者", required = false)
+    @Schema(title = "邮件接收者", required = false)
     val emailReceivers: Set<String>?,
-    @Schema(name = "邮件标题", required = false)
+    @Schema(title = "邮件标题", required = false)
     val emailTitle: String?
 ) : Element(name, id, status) {
     companion object {

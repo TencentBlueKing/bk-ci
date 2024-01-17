@@ -31,46 +31,46 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "stream 部分项目信息附带蓝盾项目信息")
+@Schema(title = "stream 部分项目信息附带蓝盾项目信息")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class StreamGitProjectInfoWithProject(
-    @Schema(name = "项目ID", description = "id")
+    @Schema(title = "项目ID", description = "id")
     @JsonProperty("id")
     val gitProjectId: Long,
-    @Schema(name = "项目名称", description = "name")
+    @Schema(title = "项目名称", description = "name")
     @JsonProperty("name")
     val name: String,
-    @Schema(name = "页面地址", description = "web_url")
+    @Schema(title = "页面地址", description = "web_url")
     @JsonProperty("web_url")
     val homepage: String?,
-    @Schema(name = "HTTP链接", required = true, description = "http_url_to_repo")
+    @Schema(title = "HTTP链接", required = true, description = "http_url_to_repo")
     @JsonProperty("http_url_to_repo")
     val gitHttpUrl: String,
-    @Schema(name = "HTTPS链接", description = "https_url_to_repo")
+    @Schema(title = "HTTPS链接", description = "https_url_to_repo")
     @JsonProperty("https_url_to_repo")
     val gitHttpsUrl: String?,
-    @Schema(name = "gitSshUrl", description = "ssh_url_to_repo")
+    @Schema(title = "gitSshUrl", description = "ssh_url_to_repo")
     @JsonProperty("ssh_url_to_repo")
     val gitSshUrl: String?,
-    @Schema(name = "带有名空间的项目名称", description = "name_with_namespace")
+    @Schema(title = "带有名空间的项目名称", description = "name_with_namespace")
     @JsonProperty("name_with_namespace")
     val nameWithNamespace: String,
-    @Schema(name = "带有名空间的项目路径", description = "path_with_namespace")
+    @Schema(title = "带有名空间的项目路径", description = "path_with_namespace")
     @JsonProperty("path_with_namespace")
     val pathWithNamespace: String?,
-    @Schema(name = "项目的默认分支", description = "default_branch")
+    @Schema(title = "项目的默认分支", description = "default_branch")
     @JsonProperty("default_branch")
     val defaultBranch: String?,
-    @Schema(name = "项目的描述信息", description = "description")
+    @Schema(title = "项目的描述信息", description = "description")
     @JsonProperty("description")
     val description: String?,
-    @Schema(name = "项目的头像信息", description = "avatar_url")
+    @Schema(title = "项目的头像信息", description = "avatar_url")
     @JsonProperty("avatar_url")
     val avatarUrl: String?,
-    @Schema(name = "环境路由", description = "routerTag")
+    @Schema(title = "环境路由", description = "routerTag")
     @JsonProperty("routerTag")
     val routerTag: String?,
-    @Schema(name = "带前缀项目ID", description = "projectCode")
+    @Schema(title = "带前缀项目ID", description = "projectCode")
     @JsonProperty("projectCode")
     val projectCode: String? = null
 )

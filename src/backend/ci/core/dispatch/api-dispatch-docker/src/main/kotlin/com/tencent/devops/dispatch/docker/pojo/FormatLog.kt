@@ -29,13 +29,13 @@ package com.tencent.devops.dispatch.docker.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "Log消息体模型")
+@Schema(title = "Log消息体模型")
 data class FormatLog(
-    @Schema(name = "日志类型")
+    @Schema(title = "日志类型")
     val logType: LogType,
-    @Schema(name = "处理时间")
+    @Schema(title = "处理时间")
     val washTime: String,
-    @Schema(name = "日志信息map")
+    @Schema(title = "日志信息map")
     val logMessageMap: Map<String, String>
 )
 

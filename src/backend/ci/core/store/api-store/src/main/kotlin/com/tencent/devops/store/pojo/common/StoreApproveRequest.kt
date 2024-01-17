@@ -30,12 +30,12 @@ package com.tencent.devops.store.pojo.common
 import com.tencent.devops.store.pojo.common.enums.ApproveStatusEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "store审批信息请求报文体")
+@Schema(title = "store审批信息请求报文体")
 data class StoreApproveRequest(
-    @Schema(name = "审批原因", required = true)
+    @Schema(title = "审批原因", required = true)
     val approveMsg: String,
-    @Schema(name = "审批状态", required = true)
+    @Schema(title = "审批状态", required = true)
     val approveStatus: ApproveStatusEnum,
-    @Schema(name = "token", required = false)
+    @Schema(title = "token", required = false)
     val token: String? = null
 )

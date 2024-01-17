@@ -30,21 +30,21 @@ package com.tencent.devops.repository.pojo
 import com.tencent.devops.common.api.enums.ScmType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "代码库模型-Code平台P4")
+@Schema(title = "代码库模型-Code平台P4")
 data class CodeP4Repository(
-    @Schema(name = "代码库别名", required = true)
+    @Schema(title = "代码库别名", required = true)
     override val aliasName: String,
-    @Schema(name = "URL", required = true)
+    @Schema(title = "URL", required = true)
     override val url: String,
-    @Schema(name = "凭据id", required = true)
+    @Schema(title = "凭据id", required = true)
     override val credentialId: String,
-    @Schema(name = "项目名称(与aliasName相同)", required = true)
+    @Schema(title = "项目名称(与aliasName相同)", required = true)
     override val projectName: String,
-    @Schema(name = "用户名", required = true)
+    @Schema(title = "用户名", required = true)
     override var userName: String,
-    @Schema(name = "项目id", required = true)
+    @Schema(title = "项目id", required = true)
     override var projectId: String?,
-    @Schema(name = "仓库hash id", required = false)
+    @Schema(title = "仓库hash id", required = false)
     override val repoHashId: String?
 ) : Repository {
 

@@ -29,10 +29,10 @@ package com.tencent.devops.stream.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "Git事件类型")
+@Schema(title = "Git事件类型")
 data class EventTypeConf(
-    @Schema(name = "事件ID")
+    @Schema(title = "事件ID")
     val id: String,
-    @Schema(name = "事件名称")
+    @Schema(title = "事件名称")
     val name: String
 )

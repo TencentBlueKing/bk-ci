@@ -4,14 +4,14 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "矩阵的分裂计算配置")
+@Schema(title = "矩阵的分裂计算配置")
 @Suppress("ComplexMethod")
 data class MatrixConfig(
-    @Schema(name = "分裂策略", required = true)
+    @Schema(title = "分裂策略", required = true)
     val strategy: Map<String, List<String>>?,
-    @Schema(name = "额外的参数组合", required = true)
+    @Schema(title = "额外的参数组合", required = true)
     val include: MutableList<Map<String, String>>?,
-    @Schema(name = "排除的参数组合", required = false)
+    @Schema(title = "排除的参数组合", required = false)
     val exclude: MutableList<Map<String, String>>?
 ) {
 

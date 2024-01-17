@@ -2,18 +2,18 @@ package com.tencent.devops.auth.pojo.dto
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "鉴权记录实体")
+@Schema(title = "鉴权记录实体")
 data class VerifyRecordDTO(
-    @Schema(name = "用户ID")
+    @Schema(title = "用户ID")
     val userId: String,
-    @Schema(name = "项目ID")
+    @Schema(title = "项目ID")
     val projectId: String,
-    @Schema(name = "资源类型")
+    @Schema(title = "资源类型")
     val resourceType: String,
-    @Schema(name = "资源Code")
+    @Schema(title = "资源Code")
     val resourceCode: String,
-    @Schema(name = "操作")
+    @Schema(title = "操作")
     val action: String,
-    @Schema(name = "鉴权结果")
+    @Schema(title = "鉴权结果")
     val verifyResult: Boolean
 )

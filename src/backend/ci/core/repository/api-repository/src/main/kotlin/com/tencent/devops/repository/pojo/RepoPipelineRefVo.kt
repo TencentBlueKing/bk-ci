@@ -31,11 +31,11 @@ package com.tencent.devops.repository.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.Parameter
 
-@Schema(name = "流水线引用代码库展示")
+@Schema(title = "流水线引用代码库展示")
 data class RepoPipelineRefVo(
     val projectId: String,
     @Parameter(description = "流水线ID")
     val pipelineId: String,
-    @Schema(name = "流水线名称")
+    @Schema(title = "流水线名称")
     val pipelineName: String
 )

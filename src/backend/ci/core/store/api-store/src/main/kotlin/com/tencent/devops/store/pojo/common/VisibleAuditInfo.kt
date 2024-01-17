@@ -31,22 +31,22 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema
 data class VisibleAuditInfo(
-    @Schema(name = "审核记录的ID")
+    @Schema(title = "审核记录的ID")
     val id: String,
-    @Schema(name = "组件名称")
+    @Schema(title = "组件名称")
     val storeName: String,
-    @Schema(name = "机构名称")
+    @Schema(title = "机构名称")
     val deptId: Int,
-    @Schema(name = "机构名称")
+    @Schema(title = "机构名称")
     val deptName: String,
-    @Schema(name = "审核状态")
+    @Schema(title = "审核状态")
     val status: Byte,
-    @Schema(name = "批注")
+    @Schema(title = "批注")
     val comment: String?,
-    @Schema(name = "修改人")
+    @Schema(title = "修改人")
     val modifier: String,
-    @Schema(name = "组件类型")
+    @Schema(title = "组件类型")
     val storeType: Byte,
-    @Schema(name = "修改时间")
+    @Schema(title = "修改时间")
     val modifierTime: Long
 )

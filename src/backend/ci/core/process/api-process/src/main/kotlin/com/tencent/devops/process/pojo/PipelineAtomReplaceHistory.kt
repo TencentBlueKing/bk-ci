@@ -29,26 +29,26 @@ package com.tencent.devops.process.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "流水线插件替换历史")
+@Schema(title = "流水线插件替换历史")
 data class PipelineAtomReplaceHistory(
-    @Schema(name = "项目ID", required = true)
+    @Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(name = "业务ID", required = true)
+    @Schema(title = "业务ID", required = true)
     val busId: String,
-    @Schema(name = "业务类型", required = true)
+    @Schema(title = "业务类型", required = true)
     val busType: String,
-    @Schema(name = "源版本号", required = true)
+    @Schema(title = "源版本号", required = true)
     val sourceVersion: Int,
-    @Schema(name = "目标版本号", required = false)
+    @Schema(title = "目标版本号", required = false)
     val targetVersion: Int? = null,
-    @Schema(name = "状态", required = true)
+    @Schema(title = "状态", required = true)
     val status: String,
-    @Schema(name = "插件替换基本信息ID", required = true)
+    @Schema(title = "插件替换基本信息ID", required = true)
     val baseId: String,
-    @Schema(name = "插件替换项信息ID", required = true)
+    @Schema(title = "插件替换项信息ID", required = true)
     val itemId: String,
-    @Schema(name = "用户ID", required = true)
+    @Schema(title = "用户ID", required = true)
     val userId: String,
-    @Schema(name = "日志", required = false)
+    @Schema(title = "日志", required = false)
     val log: String? = null
 )

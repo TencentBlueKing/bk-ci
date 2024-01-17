@@ -31,13 +31,13 @@ package com.tencent.devops.auth.pojo.vo
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "组策略")
+@Schema(title = "组策略")
 data class IamGroupPoliciesVo(
-    @Schema(name = "操作")
+    @Schema(title = "操作")
     val action: String,
-    @Schema(name = "操作名")
+    @Schema(title = "操作名")
     @BkFieldI18n
     val actionName: String,
-    @Schema(name = "是否该action操作权限")
+    @Schema(title = "是否该action操作权限")
     val permission: Boolean
 )

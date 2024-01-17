@@ -33,12 +33,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 /**
  * 资源迁移数
  */
-@Schema(name = "资源迁移数")
+@Schema(title = "资源迁移数")
 class ResourceMigrationCountDTO(
-    @Schema(name = "资源类型")
+    @Schema(title = "资源类型")
     val resourceType: String,
-    @Schema(name = "资源数")
+    @Schema(title = "资源数")
     val count: Int,
-    @Schema(name = "资源用户组数")
+    @Schema(title = "资源用户组数")
     val groupCount: Int
 )

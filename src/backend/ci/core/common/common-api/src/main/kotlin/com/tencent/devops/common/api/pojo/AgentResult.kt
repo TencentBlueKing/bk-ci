@@ -31,15 +31,15 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.common.api.enums.AgentStatus
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "第三方Agent数据返回包装模型")
+@Schema(title = "第三方Agent数据返回包装模型")
 data class AgentResult<out T>(
-    @Schema(name = "状态码", required = true)
+    @Schema(title = "状态码", required = true)
     val status: Int,
-    @Schema(name = "错误信息", required = false)
+    @Schema(title = "错误信息", required = false)
     val message: String? = null,
-    @Schema(name = "Agent状态", required = false)
+    @Schema(title = "Agent状态", required = false)
     val agentStatus: AgentStatus?,
-    @Schema(name = "数据", required = false)
+    @Schema(title = "数据", required = false)
     val data: T? = null
 ) {
     constructor(status: AgentStatus, data: T) : this(0, null, status, data)

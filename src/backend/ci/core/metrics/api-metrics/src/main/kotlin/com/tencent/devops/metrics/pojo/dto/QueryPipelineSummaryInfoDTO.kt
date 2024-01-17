@@ -29,14 +29,14 @@ package com.tencent.devops.metrics.pojo.dto
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "查询第三方汇总信息传输对象")
+@Schema(title = "查询第三方汇总信息传输对象")
 data class QueryPipelineSummaryInfoDTO(
-    @Schema(name = "项目ID")
+    @Schema(title = "项目ID")
     val projectId: String,
-    @Schema(name = "userId")
+    @Schema(title = "userId")
     val userId: String,
-    @Schema(name = "开始时间", required = true)
+    @Schema(title = "开始时间", required = true)
     val startTime: String,
-    @Schema(name = "结束时间", required = true)
+    @Schema(title = "结束时间", required = true)
     val endTime: String
 )

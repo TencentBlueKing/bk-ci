@@ -29,16 +29,16 @@ package com.tencent.devops.dispatch.docker.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "Docker构建机负载配置模型")
+@Schema(title = "Docker构建机负载配置模型")
 data class DockerHostLoadConfig(
-    @Schema(name = "处理器负载阈值")
+    @Schema(title = "处理器负载阈值")
     val cpuLoadThreshold: Int,
-    @Schema(name = "内存负载阈值")
+    @Schema(title = "内存负载阈值")
     val memLoadThreshold: Int,
-    @Schema(name = "存储负载阈值")
+    @Schema(title = "存储负载阈值")
     val diskLoadThreshold: Int,
-    @Schema(name = "存储IO负载阈值")
+    @Schema(title = "存储IO负载阈值")
     val diskIOLoadThreshold: Int,
-    @Schema(name = "使用量")
+    @Schema(title = "使用量")
     val usedNum: Int = 50
 )

@@ -29,10 +29,10 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "标签信息请求报文体")
+@Schema(title = "标签信息请求报文体")
 data class LabelRequest(
-    @Schema(name = "标签代码", required = true)
+    @Schema(title = "标签代码", required = true)
     val labelCode: String,
-    @Schema(name = "标签名称", required = true)
+    @Schema(title = "标签名称", required = true)
     val labelName: String
 )

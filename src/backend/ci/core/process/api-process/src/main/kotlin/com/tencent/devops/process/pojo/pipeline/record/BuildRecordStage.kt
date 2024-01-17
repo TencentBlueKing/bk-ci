@@ -36,32 +36,32 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer.Comp
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(name = "构建详情记录-插件任务")
+@Schema(title = "构建详情记录-插件任务")
 @Suppress("LongParameterList")
 data class BuildRecordStage(
-    @Schema(name = "构建ID", required = true)
+    @Schema(title = "构建ID", required = true)
     val buildId: String,
-    @Schema(name = "项目ID", required = true)
+    @Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(name = "流水线ID", required = true)
+    @Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(name = "编排版本号", required = true)
+    @Schema(title = "编排版本号", required = true)
     val resourceVersion: Int,
-    @Schema(name = "步骤ID", required = true)
+    @Schema(title = "步骤ID", required = true)
     val stageId: String,
-    @Schema(name = "执行次数", required = true)
+    @Schema(title = "执行次数", required = true)
     val executeCount: Int,
-    @Schema(name = "步骤序号", required = true)
+    @Schema(title = "步骤序号", required = true)
     val stageSeq: Int,
-    @Schema(name = "执行变量", required = true)
+    @Schema(title = "执行变量", required = true)
     val stageVar: MutableMap<String, Any>,
-    @Schema(name = "构建状态", required = false)
+    @Schema(title = "构建状态", required = false)
     var status: String? = null,
-    @Schema(name = "开始时间", required = true)
+    @Schema(title = "开始时间", required = true)
     var startTime: LocalDateTime? = null,
-    @Schema(name = "结束时间", required = true)
+    @Schema(title = "结束时间", required = true)
     var endTime: LocalDateTime? = null,
-    @Schema(name = "业务时间戳集合", required = true)
+    @Schema(title = "业务时间戳集合", required = true)
     var timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
 ) {
     companion object {

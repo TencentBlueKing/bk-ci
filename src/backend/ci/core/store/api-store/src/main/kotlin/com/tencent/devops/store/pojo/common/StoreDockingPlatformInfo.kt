@@ -29,32 +29,32 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "store组件对接平台信息")
+@Schema(title = "store组件对接平台信息")
 data class StoreDockingPlatformInfo(
-    @Schema(name = "环境变量ID", required = true)
+    @Schema(title = "环境变量ID", required = true)
     val id: String,
-    @Schema(name = "平台代码", required = true)
+    @Schema(title = "平台代码", required = true)
     val platformCode: String,
-    @Schema(name = "平台名称", required = true)
+    @Schema(title = "平台名称", required = true)
     val platformName: String,
-    @Schema(name = "网址", required = false)
+    @Schema(title = "网址", required = false)
     val website: String?,
-    @Schema(name = "简介", required = true)
+    @Schema(title = "简介", required = true)
     val summary: String,
-    @Schema(name = "负责人", required = true)
+    @Schema(title = "负责人", required = true)
     val principal: String,
-    @Schema(name = "平台logo地址", required = false)
+    @Schema(title = "平台logo地址", required = false)
     val logoUrl: String?,
-    @Schema(name = "标签", required = false)
+    @Schema(title = "标签", required = false)
     val labels: List<String>? = null,
-    @Schema(name = "所属机构名称", required = true)
+    @Schema(title = "所属机构名称", required = true)
     val ownerDeptName: String,
-    @Schema(name = "添加用户", required = true)
+    @Schema(title = "添加用户", required = true)
     val creator: String,
-    @Schema(name = "修改用户", required = true)
+    @Schema(title = "修改用户", required = true)
     val modifier: String,
-    @Schema(name = "添加时间", required = true)
+    @Schema(title = "添加时间", required = true)
     val createTime: String,
-    @Schema(name = "修改时间", required = true)
+    @Schema(title = "修改时间", required = true)
     val updateTime: String
 )

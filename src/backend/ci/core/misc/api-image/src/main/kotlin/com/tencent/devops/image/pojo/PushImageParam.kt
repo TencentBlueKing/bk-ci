@@ -30,29 +30,29 @@ package com.tencent.devops.image.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class PushImageParam(
-    @Schema(name = "用户ID", required = true)
+    @Schema(title = "用户ID", required = true)
     val userId: String,
-    @Schema(name = "源镜像名称", required = true)
+    @Schema(title = "源镜像名称", required = true)
     val srcImageName: String,
-    @Schema(name = "源镜像tag", required = true)
+    @Schema(title = "源镜像tag", required = true)
     val srcImageTag: String,
-    @Schema(name = "镜像仓库地址", required = true)
+    @Schema(title = "镜像仓库地址", required = true)
     val repoAddress: String,
-    @Schema(name = "目标镜像命名空间", required = true)
+    @Schema(title = "目标镜像命名空间", required = true)
     val namespace: String,
-    @Schema(name = "凭证ID", required = false)
+    @Schema(title = "凭证ID", required = false)
     val ticketId: String?,
-    @Schema(name = "目标镜像名称", required = true)
+    @Schema(title = "目标镜像名称", required = true)
     val targetImageName: String,
-    @Schema(name = "目标镜像tag", required = true)
+    @Schema(title = "目标镜像tag", required = true)
     val targetImageTag: String,
-    @Schema(name = "项目ID", required = true)
+    @Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(name = "构建ID", required = true)
+    @Schema(title = "构建ID", required = true)
     val buildId: String,
-    @Schema(name = "流水线ID", required = true)
+    @Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(name = "插件执行次数", required = false)
+    @Schema(title = "插件执行次数", required = false)
     val executeCount: Int?
 ) {
     fun outStr(): String {

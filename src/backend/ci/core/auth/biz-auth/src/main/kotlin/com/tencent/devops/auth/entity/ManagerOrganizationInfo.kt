@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema
 data class ManagerOrganizationInfo(
-    @Schema(name = "Id")
+    @Schema(title = "Id")
     val id: Int?,
-    @Schema(name = "授权名称")
+    @Schema(title = "授权名称")
     val name: String,
-    @Schema(name = "授权策略Id")
+    @Schema(title = "授权策略Id")
     val strategyId: Int,
-    @Schema(name = "组织Id")
+    @Schema(title = "组织Id")
     val organizationId: Int,
-    @Schema(name = "组织级别")
+    @Schema(title = "组织级别")
     val organizationLevel: Int
 )

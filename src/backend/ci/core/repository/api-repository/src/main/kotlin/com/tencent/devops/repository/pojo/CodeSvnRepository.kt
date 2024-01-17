@@ -31,25 +31,25 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "代码库模型-Code平台Svn")
+@Schema(title = "代码库模型-Code平台Svn")
 data class CodeSvnRepository(
-    @Schema(name = "代码库别名", required = true)
+    @Schema(title = "代码库别名", required = true)
     override val aliasName: String,
-    @Schema(name = "URL", required = true)
+    @Schema(title = "URL", required = true)
     override val url: String,
-    @Schema(name = "凭据id", required = true)
+    @Schema(title = "凭据id", required = true)
     override val credentialId: String,
-    @Schema(name = "SVN区域", required = true)
+    @Schema(title = "SVN区域", required = true)
     val region: CodeSvnRegion? = CodeSvnRegion.TC,
-    @Schema(name = "svn项目名称", example = "xx/yy_proj", required = true)
+    @Schema(title = "svn项目名称", example = "xx/yy_proj", required = true)
     override val projectName: String,
-    @Schema(name = "用户名", required = true)
+    @Schema(title = "用户名", required = true)
     override var userName: String,
-    @Schema(name = "项目id", required = true)
+    @Schema(title = "项目id", required = true)
     override var projectId: String?,
-    @Schema(name = "仓库hash id", required = false)
+    @Schema(title = "仓库hash id", required = false)
     override val repoHashId: String?,
-    @Schema(name = "SVN类型", required = false)
+    @Schema(title = "SVN类型", required = false)
     val svnType: String? = SVN_TYPE_SSH // default is ssh svn type
 ) : Repository {
 

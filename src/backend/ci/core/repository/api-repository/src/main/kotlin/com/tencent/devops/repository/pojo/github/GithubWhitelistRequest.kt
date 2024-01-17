@@ -29,8 +29,8 @@ package com.tencent.devops.repository.pojo.github
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "白名单请求包体")
+@Schema(title = "白名单请求包体")
 data class GithubWhitelistRequest(
-    @Schema(name = "Github代码库链接")
+    @Schema(title = "Github代码库链接")
     val url: String = ""
 )

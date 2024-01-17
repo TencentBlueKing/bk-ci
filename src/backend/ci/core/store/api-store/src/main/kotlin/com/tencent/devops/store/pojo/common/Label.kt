@@ -29,19 +29,19 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "标签信息")
+@Schema(title = "标签信息")
 data class Label(
-    @Schema(name = "标签ID", required = true)
+    @Schema(title = "标签ID", required = true)
     val id: String,
-    @Schema(name = "标签代码", required = true)
+    @Schema(title = "标签代码", required = true)
     val labelCode: String,
-    @Schema(name = "标签名称", required = true)
+    @Schema(title = "标签名称", required = true)
     val labelName: String,
-    @Schema(name = "类别 ATOM:插件 TEMPLATE:模板 IMAGE:镜像 IDE_ATOM:IDE插件", required = true)
+    @Schema(title = "类别 ATOM:插件 TEMPLATE:模板 IMAGE:镜像 IDE_ATOM:IDE插件", required = true)
     val labelType: String,
-    @Schema(name = "创建日期")
+    @Schema(title = "创建日期")
     val createTime: Long = 0,
-    @Schema(name = "更新日期")
+    @Schema(title = "更新日期")
     val updateTime: Long = 0
 
 )

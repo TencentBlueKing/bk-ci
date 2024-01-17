@@ -29,14 +29,14 @@ package com.tencent.devops.store.pojo.template
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "OP-模版列表")
+@Schema(title = "OP-模版列表")
 data class OpTemplateResp(
-    @Schema(name = "总记录数")
+    @Schema(title = "总记录数")
     val count: Int,
-    @Schema(name = "当前页码值")
+    @Schema(title = "当前页码值")
     val page: Int?,
-    @Schema(name = "每页记录大小")
+    @Schema(title = "每页记录大小")
     val pageSize: Int?,
-    @Schema(name = "数据集合")
+    @Schema(title = "数据集合")
     val records: List<OpTemplateItem?>
 )

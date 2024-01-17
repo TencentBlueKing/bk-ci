@@ -29,15 +29,15 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "组件版本信息")
+@Schema(title = "组件版本信息")
 data class StoreVersion(
-    @Schema(name = "组件代码", required = true)
+    @Schema(title = "组件代码", required = true)
     var storeCode: String,
-    @Schema(name = "组件名称", required = true)
+    @Schema(title = "组件名称", required = true)
     var storeName: String,
-    @Schema(name = "版本号", required = true)
+    @Schema(title = "版本号", required = true)
     var version: String,
-    @Schema(name = "是否是旧版本", required = true)
+    @Schema(title = "是否是旧版本", required = true)
     var historyFlag: Boolean
 ) {
     override fun equals(other: Any?): Boolean {

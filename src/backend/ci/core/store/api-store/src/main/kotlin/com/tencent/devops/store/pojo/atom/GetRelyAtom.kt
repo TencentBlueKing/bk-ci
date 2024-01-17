@@ -29,8 +29,8 @@ package com.tencent.devops.store.pojo.atom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "批量获取插件依赖关系")
+@Schema(title = "批量获取插件依赖关系")
 data class GetRelyAtom(
-    @Schema(name = "请求所需参数", required = true)
+    @Schema(title = "请求所需参数", required = true)
     val thirdPartyElementList: List<ElementThirdPartySearchParam>
 )

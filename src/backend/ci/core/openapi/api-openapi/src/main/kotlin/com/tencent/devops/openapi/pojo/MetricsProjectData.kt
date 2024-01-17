@@ -28,14 +28,14 @@ package com.tencent.devops.openapi.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "api度量数据")
+@Schema(title = "api度量数据")
 data class MetricsProjectData(
-    @Schema(name = "接口代码")
+    @Schema(title = "接口代码")
     val api: String,
-    @Schema(name = "请求app code/ user id")
+    @Schema(title = "请求app code/ user id")
     val key: String,
-    @Schema(name = "项目id")
+    @Schema(title = "项目id")
     var projectId: String? = null,
-    @Schema(name = "调用量")
+    @Schema(title = "调用量")
     var callHistory: Int? = null
 )

@@ -29,28 +29,28 @@ package com.tencent.devops.environment.pojo.thirdPartyAgent
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "第三方构建机流水线引用信息")
+@Schema(title = "第三方构建机流水线引用信息")
 data class AgentPipelineRef(
-    @Schema(name = "Node ID", required = true)
+    @Schema(title = "Node ID", required = true)
     val nodeId: Long? = null,
-    @Schema(name = "Node Hash ID", required = true)
+    @Schema(title = "Node Hash ID", required = true)
     val nodeHashId: String? = null,
-    @Schema(name = "Agent ID", required = true)
+    @Schema(title = "Agent ID", required = true)
     val agentId: Long? = null,
-    @Schema(name = "Agent Hash ID", required = true)
+    @Schema(title = "Agent Hash ID", required = true)
     val agentHashId: String? = null,
-    @Schema(name = "项目ID", required = true)
+    @Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(name = "流水线ID", required = true)
+    @Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(name = "流水线名称", required = true)
+    @Schema(title = "流水线名称", required = true)
     val pipelineName: String,
-    @Schema(name = "Vm Seq ID", required = true)
+    @Schema(title = "Vm Seq ID", required = true)
     val vmSeqId: String?,
-    @Schema(name = "Job ID", required = true)
+    @Schema(title = "Job ID", required = true)
     val jobId: String?,
-    @Schema(name = "Job Name", required = true)
+    @Schema(title = "Job Name", required = true)
     val jobName: String,
-    @Schema(name = "上次构建时间", required = false)
+    @Schema(title = "上次构建时间", required = false)
     val lastBuildTime: String? = ""
 )

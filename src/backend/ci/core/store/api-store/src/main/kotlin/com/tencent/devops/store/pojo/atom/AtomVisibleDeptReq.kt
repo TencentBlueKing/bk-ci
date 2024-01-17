@@ -30,10 +30,10 @@ package com.tencent.devops.store.pojo.atom
 import com.tencent.devops.store.pojo.common.DeptInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "插件市场-插件可见范围请求报文体")
+@Schema(title = "插件市场-插件可见范围请求报文体")
 data class AtomVisibleDeptReq(
-    @Schema(name = "插件代码", required = true)
+    @Schema(title = "插件代码", required = true)
     val atomCode: String,
-    @Schema(name = "机构列表", required = true)
+    @Schema(title = "机构列表", required = true)
     val deptInfos: List<DeptInfo>
 )

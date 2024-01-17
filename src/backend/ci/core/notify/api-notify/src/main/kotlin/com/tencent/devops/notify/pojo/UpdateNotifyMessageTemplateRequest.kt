@@ -32,22 +32,22 @@ import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "消息通知更新请求报文体")
+@Schema(title = "消息通知更新请求报文体")
 data class UpdateNotifyMessageTemplateRequest(
-    @Schema(name = "模板名称", required = false)
+    @Schema(title = "模板名称", required = false)
     val templateName: String?,
-    @Schema(name = "适用的通知类型（EMAIL:邮件 RTX:企业微信 WECHAT:微信 SMS:短信）", required = false)
+    @Schema(title = "适用的通知类型（EMAIL:邮件 RTX:企业微信 WECHAT:微信 SMS:短信）", required = false)
     val notifyTypeScope: ArrayList<String>?,
-    @Schema(name = "标题（邮件和RTX方式必填）", required = false)
+    @Schema(title = "标题（邮件和RTX方式必填）", required = false)
     val title: String?,
-    @Schema(name = "消息内容", required = true)
+    @Schema(title = "消息内容", required = true)
     val body: String?,
-    @Schema(name = "优先级别（-1:低 0:普通 1:高）", allowableValues = ["-1", "0", "1"], type = "String", required = true)
+    @Schema(title = "优先级别（-1:低 0:普通 1:高）", allowableValues = ["-1", "0", "1"], type = "String", required = true)
     val priority: EnumNotifyPriority?,
-    @Schema(name = "通知来源（0:本地业务 1:操作）", allowableValues = ["0", "1"], type = "int", required = true)
+    @Schema(title = "通知来源（0:本地业务 1:操作）", allowableValues = ["0", "1"], type = "int", required = true)
     val source: EnumNotifySource?,
-    @Schema(name = "邮件格式（邮件方式必填 0:文本 1:html网页）", allowableValues = ["0", "1"], type = "int", required = false)
+    @Schema(title = "邮件格式（邮件方式必填 0:文本 1:html网页）", allowableValues = ["0", "1"], type = "int", required = false)
     val bodyFormat: EnumEmailFormat?,
-    @Schema(name = "邮件类型（邮件方式必填 0:外部邮件 1:内部邮件）", allowableValues = ["0", "1"], type = "int", required = false)
+    @Schema(title = "邮件类型（邮件方式必填 0:外部邮件 1:内部邮件）", allowableValues = ["0", "1"], type = "int", required = false)
     val emailType: EnumEmailType?
 )

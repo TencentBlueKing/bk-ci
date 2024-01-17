@@ -29,34 +29,34 @@ package com.tencent.devops.environment.pojo.thirdPartyAgent
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "第三方构建机构建任务详情")
+@Schema(title = "第三方构建机构建任务详情")
 data class AgentBuildDetail(
-    @Schema(name = "节点 Hash ID", required = true)
+    @Schema(title = "节点 Hash ID", required = true)
     val nodeId: String,
-    @Schema(name = "Agent Hash ID", required = true)
+    @Schema(title = "Agent Hash ID", required = true)
     val agentId: String,
-    @Schema(name = "项目ID", required = true)
+    @Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(name = "流水线ID", required = true)
+    @Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(name = "流水线名称", required = true)
+    @Schema(title = "流水线名称", required = true)
     val pipelineName: String,
-    @Schema(name = "构建ID", required = true)
+    @Schema(title = "构建ID", required = true)
     val buildId: String,
-    @Schema(name = "构建号", required = true)
+    @Schema(title = "构建号", required = true)
     val buildNumber: Int,
-    @Schema(name = "VM_SET_ID", required = true)
+    @Schema(title = "VM_SET_ID", required = true)
     val vmSetId: String,
-    @Schema(name = "构建任务名称", required = true)
+    @Schema(title = "构建任务名称", required = true)
     val taskName: String,
-    @Schema(name = "项目ID", required = true)
+    @Schema(title = "项目ID", required = true)
     val status: String,
-    @Schema(name = "创建时间", required = true)
+    @Schema(title = "创建时间", required = true)
     val createdTime: Long,
-    @Schema(name = "更新时间", required = true)
+    @Schema(title = "更新时间", required = true)
     val updatedTime: Long,
-    @Schema(name = "工作空间", required = true)
+    @Schema(title = "工作空间", required = true)
     val workspace: String,
-    @Schema(name = "agent任务", required = false)
+    @Schema(title = "agent任务", required = false)
     val agentTask: AgentTask?
 )

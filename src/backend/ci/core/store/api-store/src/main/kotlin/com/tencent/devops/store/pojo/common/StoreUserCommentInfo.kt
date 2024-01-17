@@ -29,10 +29,10 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "用户评论信息")
+@Schema(title = "用户评论信息")
 data class StoreUserCommentInfo(
-    @Schema(name = "是否已评论 true:是，false:否", required = true)
+    @Schema(title = "是否已评论 true:是，false:否", required = true)
     val commentFlag: Boolean,
-    @Schema(name = "评论ID", required = false)
+    @Schema(title = "评论ID", required = false)
     val commentId: String?
 )

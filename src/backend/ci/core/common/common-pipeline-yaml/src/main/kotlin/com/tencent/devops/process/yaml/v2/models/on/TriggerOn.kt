@@ -47,7 +47,7 @@ data class TriggerOn(
     val issue: IssueRule? = null,
     val review: ReviewRule? = null,
     val note: NoteRule? = null,
-    @Schema(name = "repo_hook")
+    @Schema(title = "repo_hook")
     @JsonProperty("repo_hook")
     val repoHook: RepositoryHook? = null,
     val manual: String? = null,
@@ -65,7 +65,7 @@ data class PreTriggerOn(
     val issue: IssueRule? = null,
     val review: ReviewRule? = null,
     val note: NoteRule? = null,
-    @Schema(name = "repo_hook")
+    @Schema(title = "repo_hook")
     @JsonProperty("repo_hook")
     val repoHook: List<Any>? = null,
     val manual: String? = null,

@@ -29,14 +29,14 @@ package com.tencent.devops.store.pojo.app
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "容器软件编译环境变量-创建")
+@Schema(title = "容器软件编译环境变量-创建")
 data class ContainerAppEnvCreate(
-    @Schema(name = "编译环境ID", required = true)
+    @Schema(title = "编译环境ID", required = true)
     val appId: Int,
-    @Schema(name = "路径", required = true)
+    @Schema(title = "路径", required = true)
     val path: String,
-    @Schema(name = "环境变量名称", required = true)
+    @Schema(title = "环境变量名称", required = true)
     val name: String,
-    @Schema(name = "描述", required = true)
+    @Schema(title = "描述", required = true)
     val description: String
 )

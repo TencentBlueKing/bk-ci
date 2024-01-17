@@ -32,12 +32,12 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.Instance
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "")
+@Schema(title = "")
 data class PermissionUrlDTO(
-    @Schema(name = "权限类型")
+    @Schema(title = "权限类型")
     val actionId: AuthPermission,
-    @Schema(name = "资源类型")
+    @Schema(title = "资源类型")
     val resourceId: AuthResourceType,
-    @Schema(name = "实例列表")
+    @Schema(title = "实例列表")
     val instanceId: List<Instance>?
 )

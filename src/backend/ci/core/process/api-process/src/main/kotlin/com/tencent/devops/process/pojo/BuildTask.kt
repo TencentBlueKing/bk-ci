@@ -30,34 +30,34 @@ package com.tencent.devops.process.pojo
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "流水线模型-构建任务")
+@Schema(title = "流水线模型-构建任务")
 data class BuildTask(
-    @Schema(name = "构建ID", required = true)
+    @Schema(title = "构建ID", required = true)
     val buildId: String,
-    @Schema(name = "构建环境ID", required = true)
+    @Schema(title = "构建环境ID", required = true)
     val vmSeqId: String,
-    @Schema(name = "任务状态", required = true)
+    @Schema(title = "任务状态", required = true)
     val status: BuildTaskStatus,
-    @Schema(name = "任务ID", required = true)
+    @Schema(title = "任务ID", required = true)
     val taskId: String? = null,
     @Deprecated("原本用于标识上下文但统一传了taskId，现废弃")
-    @Schema(name = "插件ID", required = true)
+    @Schema(title = "插件ID", required = true)
     val elementId: String? = null,
-    @Schema(name = "标识上下文的插件ID", required = true)
+    @Schema(title = "标识上下文的插件ID", required = true)
     val stepId: String? = null,
-    @Schema(name = "插件名字", required = true)
+    @Schema(title = "插件名字", required = true)
     val elementName: String? = null,
-    @Schema(name = "插件版本号", required = false)
+    @Schema(title = "插件版本号", required = false)
     var elementVersion: String? = null,
-    @Schema(name = "任务类型", required = false)
+    @Schema(title = "任务类型", required = false)
     val type: String? = null,
-    @Schema(name = "任务参数", required = false)
+    @Schema(title = "任务参数", required = false)
     val params: Map<String, String>? = null,
-    @Schema(name = "环境参数", required = false)
+    @Schema(title = "环境参数", required = false)
     val buildVariable: Map<String, String>? = null,
-    @Schema(name = "容器类型", required = false)
+    @Schema(title = "容器类型", required = false)
     val containerType: String? = null,
-    @Schema(name = "签名token", required = false)
+    @Schema(title = "签名token", required = false)
     val signToken: String? = null
 ) {
 

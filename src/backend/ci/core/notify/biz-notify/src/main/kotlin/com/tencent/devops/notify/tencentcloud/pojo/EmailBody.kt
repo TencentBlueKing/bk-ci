@@ -5,19 +5,19 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class EmailBody(
     @JsonProperty("Destination")
-    @Schema(name = "收件者信息")
+    @Schema(title = "收件者信息")
     val destination: List<String>,
     @JsonProperty("FromEmailAddress")
-    @Schema(name = "发送者信息")
+    @Schema(title = "发送者信息")
     val fromEmailAddress: String, // QCLOUDTEAM <noreply@mail.qcloud.com>
     @JsonProperty("ReplyToAddresses")
-    @Schema(name = "回复地址")
+    @Schema(title = "回复地址")
     val replyToAddresses: String? = null, // qcloud@tencent.com
     @JsonProperty("Template")
-    @Schema(name = "邮件模板内容")
+    @Schema(title = "邮件模板内容")
     val template: Template,
     @JsonProperty("Subject")
-    @Schema(name = "主题")
+    @Schema(title = "主题")
     val subject: String // YourTestSubject
 )
 

@@ -44,7 +44,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 "parent_id": 95696
 }
  */
-@Schema(name = "工蜂项目组列表信息")
+@Schema(title = "工蜂项目组列表信息")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitCodeGroup(
     val id: Long,

@@ -29,22 +29,22 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "评论回复信息")
+@Schema(title = "评论回复信息")
 data class StoreCommentReplyInfo(
-    @Schema(name = "回复ID", required = true)
+    @Schema(title = "回复ID", required = true)
     val replyId: String,
-    @Schema(name = "回复者", required = true)
+    @Schema(title = "回复者", required = true)
     val replyer: String,
-    @Schema(name = "回复内容", required = true)
+    @Schema(title = "回复内容", required = true)
     val replyContent: String,
-    @Schema(name = "回复者组织架构信息", required = true)
+    @Schema(title = "回复者组织架构信息", required = true)
     val replyerDept: String,
-    @Schema(name = "回复者头像url地址", required = false)
+    @Schema(title = "回复者头像url地址", required = false)
     val profileUrl: String,
-    @Schema(name = "被回复者", required = true)
+    @Schema(title = "被回复者", required = true)
     val replyToUser: String,
-    @Schema(name = "回复创建时间", required = true)
+    @Schema(title = "回复创建时间", required = true)
     val replyTime: Long,
-    @Schema(name = "回复更新时间", required = true)
+    @Schema(title = "回复更新时间", required = true)
     val updateTime: Long
 )

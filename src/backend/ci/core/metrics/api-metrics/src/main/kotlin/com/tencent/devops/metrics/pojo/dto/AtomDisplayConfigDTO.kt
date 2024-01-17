@@ -30,12 +30,12 @@ package com.tencent.devops.metrics.pojo.dto
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "项目下展示插件配置传输对象")
+@Schema(title = "项目下展示插件配置传输对象")
 data class AtomDisplayConfigDTO(
-    @Schema(name = "项目ID")
+    @Schema(title = "项目ID")
     val projectId: String,
-    @Schema(name = "userId")
+    @Schema(title = "userId")
     val userId: String,
-    @Schema(name = "插件基本信息列表")
+    @Schema(title = "插件基本信息列表")
     val atomBaseInfos: List<AtomBaseInfoDO>
 )

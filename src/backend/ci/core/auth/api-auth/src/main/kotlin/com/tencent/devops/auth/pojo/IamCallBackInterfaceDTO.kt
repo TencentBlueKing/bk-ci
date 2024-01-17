@@ -29,18 +29,18 @@ package com.tencent.devops.auth.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "iam回调接口注册参数")
+@Schema(title = "iam回调接口注册参数")
 data class IamCallBackInterfaceDTO(
-    @Schema(name = "网关地址")
+    @Schema(title = "网关地址")
     val gateway: String,
-    @Schema(name = "资源类型")
+    @Schema(title = "资源类型")
     val resource: String,
-    @Schema(name = "回调接口路径")
+    @Schema(title = "回调接口路径")
     val path: String,
-    @Schema(name = "注册系统")
+    @Schema(title = "注册系统")
     val system: String,
-    @Schema(name = "依赖资源")
+    @Schema(title = "依赖资源")
     val relatedResource: List<String>? = emptyList(),
-    @Schema(name = "依赖资源是否必须关联")
+    @Schema(title = "依赖资源是否必须关联")
     val relatedFlag: Boolean? = false
 )

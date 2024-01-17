@@ -29,14 +29,14 @@ package com.tencent.devops.common.log.pojo.enums
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "日志类型")
+@Schema(title = "日志类型")
 enum class LogType {
-    @Schema(name = "提醒日志")
+    @Schema(title = "提醒日志")
     WARN,
-    @Schema(name = "错误日志")
+    @Schema(title = "错误日志")
     ERROR,
-    @Schema(name = "调试日志")
+    @Schema(title = "调试日志")
     DEBUG,
-    @Schema(name = "普通的日志")
+    @Schema(title = "普通的日志")
     LOG
 }

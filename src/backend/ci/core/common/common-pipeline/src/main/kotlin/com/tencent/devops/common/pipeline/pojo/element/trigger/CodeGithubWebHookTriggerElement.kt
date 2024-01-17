@@ -34,37 +34,37 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "Github事件触发", description = CodeGithubWebHookTriggerElement.classType)
+@Schema(title = "Github事件触发", description = CodeGithubWebHookTriggerElement.classType)
 data class CodeGithubWebHookTriggerElement(
-    @Schema(name = "任务名称", required = true)
+    @Schema(title = "任务名称", required = true)
     override val name: String = "Git变更触发",
-    @Schema(name = "id", required = false)
+    @Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(name = "状态", required = false)
+    @Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(name = "仓库ID", required = true)
+    @Schema(title = "仓库ID", required = true)
     val repositoryHashId: String?,
-    @Schema(name = "分支名称", required = false)
+    @Schema(title = "分支名称", required = false)
     val branchName: String?,
-    @Schema(name = "用于排除的分支名称", required = false)
+    @Schema(title = "用于排除的分支名称", required = false)
     val excludeBranchName: String?,
-    @Schema(name = "用于排除的user id", required = false)
+    @Schema(title = "用于排除的user id", required = false)
     val excludeUsers: String?,
-    @Schema(name = "事件类型", required = false)
+    @Schema(title = "事件类型", required = false)
     val eventType: CodeEventType?,
-    @Schema(name = "新版的github原子的类型")
+    @Schema(title = "新版的github原子的类型")
     val repositoryType: RepositoryType? = null,
-    @Schema(name = "新版的github代码库名")
+    @Schema(title = "新版的github代码库名")
     val repositoryName: String? = null,
-    @Schema(name = "code review 状态", required = false)
+    @Schema(title = "code review 状态", required = false)
     val includeCrState: List<String>? = null,
-    @Schema(name = "code note comment", required = false)
+    @Schema(title = "code note comment", required = false)
     val includeNoteComment: String? = null,
-    @Schema(name = "code note 类型", required = false)
+    @Schema(title = "code note 类型", required = false)
     val includeNoteTypes: List<String>? = null,
-    @Schema(name = "issue事件action")
+    @Schema(title = "issue事件action")
     val includeIssueAction: List<String>? = null,
-    @Schema(name ="pull request事件action")
+    @Schema(title ="pull request事件action")
     val includeMrAction: List<String>? = listOf(MERGE_ACTION_OPEN, MERGE_ACTION_REOPEN, MERGE_ACTION_PUSH_UPDATE)
 ) : WebHookTriggerElement(name, id, status) {
     companion object {

@@ -29,8 +29,8 @@ package com.tencent.devops.artifactory.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "版本仓库-文件夹大小")
+@Schema(title = "版本仓库-文件夹大小")
 data class FolderSize(
-    @Schema(name = "文件夹大小(byte)", required = true)
+    @Schema(title = "文件夹大小(byte)", required = true)
     val size: Long
 )

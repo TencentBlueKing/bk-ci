@@ -29,26 +29,26 @@ package com.tencent.devops.process.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "历史构建变量")
+@Schema(title = "历史构建变量")
 data class BuildHistoryVariables(
-    @Schema(name = "构建ID", required = true)
+    @Schema(title = "构建ID", required = true)
     val id: String,
-    @Schema(name = "启动用户", required = true)
+    @Schema(title = "启动用户", required = true)
     val userId: String,
-    @Schema(name = "触发条件", required = true)
+    @Schema(title = "触发条件", required = true)
     val trigger: String,
-    @Schema(name = "流水线名称", required = true)
+    @Schema(title = "流水线名称", required = true)
     val pipelineName: String,
-    @Schema(name = "构建号", required = true)
+    @Schema(title = "构建号", required = true)
     val buildNum: Int,
-    @Schema(name = "编排文件版本号", required = true)
+    @Schema(title = "编排文件版本号", required = true)
     val pipelineVersion: Int,
-    @Schema(name = "开始时间", required = true)
+    @Schema(title = "开始时间", required = true)
     val startTime: Long,
-    @Schema(name = "结束时间", required = true)
+    @Schema(title = "结束时间", required = true)
     val endTime: Long?,
-    @Schema(name = "状态", required = true)
+    @Schema(title = "状态", required = true)
     val status: String,
-    @Schema(name = "构建变量集合", required = true)
+    @Schema(title = "构建变量集合", required = true)
     val variables: Map<String, String>
 )

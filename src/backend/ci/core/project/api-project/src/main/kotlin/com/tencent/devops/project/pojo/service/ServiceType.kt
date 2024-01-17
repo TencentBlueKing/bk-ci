@@ -32,20 +32,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 /**
  *   Date on 2018-12-05.
  */
-@Schema(name = "服务类型-显示模型")
+@Schema(title = "服务类型-显示模型")
 data class ServiceType(
-    @Schema(name = "主键ID")
+    @Schema(title = "主键ID")
     val id: Long,
-    @Schema(name = "服务类型名称")
+    @Schema(title = "服务类型名称")
     val title: String,
-    @Schema(name = "权重")
+    @Schema(title = "权重")
     val weight: Int,
-    @Schema(name = "创建人")
+    @Schema(title = "创建人")
     val createUser: String?,
-    @Schema(name = "创建时间")
+    @Schema(title = "创建时间")
     val createTime: String?,
-    @Schema(name = "修改人")
+    @Schema(title = "修改人")
     val updateUser: String?,
-    @Schema(name = "修改时间")
+    @Schema(title = "修改时间")
     val updateTime: String?
 )

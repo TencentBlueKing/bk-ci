@@ -31,30 +31,30 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "")
+@Schema(title = "")
 data class TemplateModelDetail(
-    @Schema(name = "版本列表", required = false)
+    @Schema(title = "版本列表", required = false)
     val versions: List<TemplateVersion>,
-    @Schema(name = "当前版本", required = false)
+    @Schema(title = "当前版本", required = false)
     val currentVersion: TemplateVersion,
-    @Schema(name = "最新版本", required = false)
+    @Schema(title = "最新版本", required = false)
     val latestVersion: TemplateVersion,
-    @Schema(name = "模板名称", required = false)
+    @Schema(title = "模板名称", required = false)
     val templateName: String,
-    @Schema(name = "解释说明", required = false)
+    @Schema(title = "解释说明", required = false)
     val description: String,
-    @Schema(name = "创建者", required = false)
+    @Schema(title = "创建者", required = false)
     val creator: String,
-    @Schema(name = "模板模型", required = false)
+    @Schema(title = "模板模型", required = false)
     val template: Model,
-    @Schema(name = "模板类型", required = false)
+    @Schema(title = "模板类型", required = false)
     val templateType: String,
-    @Schema(name = "logo的url地址", required = false)
+    @Schema(title = "logo的url地址", required = false)
     val logoUrl: String,
-    @Schema(name = "是否有操作权限", required = false)
+    @Schema(title = "是否有操作权限", required = false)
     val hasPermission: Boolean,
-    @Schema(name = "参数列表", required = false)
+    @Schema(title = "参数列表", required = false)
     val params: List<BuildFormProperty>,
-    @Schema(name = "模板参数构建", required = false)
+    @Schema(title = "模板参数构建", required = false)
     val templateParams: List<BuildFormProperty>? = null
 )

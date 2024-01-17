@@ -30,12 +30,12 @@ package com.tencent.devops.project.pojo
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "灰度项目设置请求实体")
+@Schema(title = "灰度项目设置请求实体")
 data class OpProjectGraySetRequest(
     @JsonProperty(value = "operateFlag", required = true)
-    @Schema(name = "操作标识 1：设置灰度 2：取消灰度", description = "operateFlag")
+    @Schema(title = "操作标识 1：设置灰度 2：取消灰度", description = "operateFlag")
     val operateFlag: Int,
     @JsonProperty(value = "projectCodeList", required = true)
-    @Schema(name = "项目编码集合", description = "projectCodeList")
+    @Schema(title = "项目编码集合", description = "projectCodeList")
     val projectCodeList: List<String>
 )

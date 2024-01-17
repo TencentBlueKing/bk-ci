@@ -32,23 +32,23 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class RepoTriggerRefVo(
     val projectId: String,
-    @Schema(name = "代码库Id")
+    @Schema(title = "代码库Id")
     val repositoryHashId: String,
-    @Schema(name = "插件code")
+    @Schema(title = "插件code")
     val atomCode: String,
-    @Schema(name = "触发类型")
+    @Schema(title = "触发类型")
     val triggerType: String,
-    @Schema(name = "事件类型描述，根据[eventType]进行国际化")
+    @Schema(title = "事件类型描述，根据[eventType]进行国际化")
     val eventTypeDesc: String,
-    @Schema(name = "插件参数")
+    @Schema(title = "插件参数")
     val taskParams: Map<String, Any>,
-    @Schema(name = "触发条件")
+    @Schema(title = "触发条件")
     val triggerCondition: Map<String, Any>?,
-    @Schema(name = "触发条件md5")
+    @Schema(title = "触发条件md5")
     val triggerConditionMd5: String?,
-    @Schema(name = "流水线引用数量")
+    @Schema(title = "流水线引用数量")
     val pipelineRefCount: Int,
     val atomLogo: String? = null,
-    @Schema(name = "事件类型key")
+    @Schema(title = "事件类型key")
     val eventType: String
 )

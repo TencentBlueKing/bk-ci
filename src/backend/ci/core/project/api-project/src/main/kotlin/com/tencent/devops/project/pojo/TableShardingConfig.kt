@@ -29,16 +29,16 @@ import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.web.annotation.BkField
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "数据库表分片配置")
+@Schema(title = "数据库表分片配置")
 data class TableShardingConfig(
-    @Schema(name = "集群名称")
+    @Schema(title = "集群名称")
     @field:BkField(minLength = 1, maxLength = 64)
     val clusterName: String,
-    @Schema(name = "模块标识")
+    @Schema(title = "模块标识")
     val moduleCode: SystemModuleEnum,
-    @Schema(name = "数据库表名称")
+    @Schema(title = "数据库表名称")
     @field:BkField(minLength = 1, maxLength = 128)
     val tableName: String,
-    @Schema(name = "分表数量")
+    @Schema(title = "分表数量")
     val shardingNum: Int
 )

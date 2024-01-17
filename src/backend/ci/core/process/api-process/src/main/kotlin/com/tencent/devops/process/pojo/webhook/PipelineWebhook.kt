@@ -31,32 +31,32 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "流水线http回调模型")
+@Schema(title = "流水线http回调模型")
 data class PipelineWebhook(
-    @Schema(name = "项目id", required = false)
+    @Schema(title = "项目id", required = false)
     val projectId: String,
-    @Schema(name = "流水线id", required = false)
+    @Schema(title = "流水线id", required = false)
     val pipelineId: String,
-    @Schema(name = "代码库类型，见ScmType枚举", required = false)
+    @Schema(title = "代码库类型，见ScmType枚举", required = false)
     val repositoryType: ScmType,
-    @Schema(name = "代码库标识类型， ID 代码库HashId / NAME 别名", required = false)
+    @Schema(title = "代码库标识类型， ID 代码库HashId / NAME 别名", required = false)
     val repoType: RepositoryType?,
-    @Schema(name = "插件配置的代码库HashId，repoHashId与repoName 不能同时为空，如果两个都不为空就用repoName", required = false)
+    @Schema(title = "插件配置的代码库HashId，repoHashId与repoName 不能同时为空，如果两个都不为空就用repoName", required = false)
     var repoHashId: String?, // repoHashId 与 repoName 不能同时为空，如果两个都不为空就用repoName
-    @Schema(name = "代码库别名", required = false)
+    @Schema(title = "代码库别名", required = false)
     val repoName: String?,
-    @Schema(name = "代码库自增ID，唯一", required = false)
+    @Schema(title = "代码库自增ID，唯一", required = false)
     val id: Long? = null,
-    @Schema(name = "项目名称", required = false)
+    @Schema(title = "项目名称", required = false)
     var projectName: String? = null,
-    @Schema(name = "拉取当前代码库所在的插件ID", required = false)
+    @Schema(title = "拉取当前代码库所在的插件ID", required = false)
     val taskId: String? = null,
-    @Schema(name = "事件类型", required = false)
+    @Schema(title = "事件类型", required = false)
     var eventType: String? = null,
-    @Schema(name = "代码库hashId,插件配置解析后的代码库ID", required = false)
+    @Schema(title = "代码库hashId,插件配置解析后的代码库ID", required = false)
     var repositoryHashId: String? = null,
-    @Schema(name = "代码库平台ID", required = false)
+    @Schema(title = "代码库平台ID", required = false)
     var externalId: String? = null,
-    @Schema(name = "代码库平台仓库名", required = false)
+    @Schema(title = "代码库平台仓库名", required = false)
     var externalName: String? = null
 )

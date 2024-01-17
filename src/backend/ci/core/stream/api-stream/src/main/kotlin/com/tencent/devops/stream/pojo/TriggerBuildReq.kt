@@ -29,26 +29,26 @@ package com.tencent.devops.stream.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "TriggerBuild请求")
+@Schema(title = "TriggerBuild请求")
 data class TriggerBuildReq(
-    @Schema(name = "蓝盾项目ID")
+    @Schema(title = "蓝盾项目ID")
     val projectId: String,
-    @Schema(name = "分支")
+    @Schema(title = "分支")
     val branch: String,
-    @Schema(name = "Custom commit message")
+    @Schema(title = "Custom commit message")
     val customCommitMsg: String?,
-    @Schema(name = "yaml")
+    @Schema(title = "yaml")
     val yaml: String?,
-    @Schema(name = "描述")
+    @Schema(title = "描述")
     val description: String?,
-    @Schema(name = "用户选择的触发CommitId")
+    @Schema(title = "用户选择的触发CommitId")
     val commitId: String? = null,
-    @Schema(name = "事件请求体")
+    @Schema(title = "事件请求体")
     val payload: String? = null,
-    @Schema(name = "模拟代码事件类型")
+    @Schema(title = "模拟代码事件类型")
     val eventType: String? = null,
-    @Schema(name = "手动触发输入参数")
+    @Schema(title = "手动触发输入参数")
     val inputs: Map<String, String>? = null,
-    @Schema(name = "是否为子流水线触发")
+    @Schema(title = "是否为子流水线触发")
     val subPipelineTriggerId: String? = null
 )

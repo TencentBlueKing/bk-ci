@@ -30,12 +30,12 @@ package com.tencent.devops.process.pojo.classify
 import com.tencent.devops.process.pojo.Pipeline
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "")
+@Schema(title = "")
 data class PipelineViewAndPipelines(
-    @Schema(name = "当前视图id", required = false)
+    @Schema(title = "当前视图id", required = false)
     val currentViewId: String,
-    @Schema(name = "视图列表", required = false)
+    @Schema(title = "视图列表", required = false)
     val viewList: List<PipelineViewIdAndName>,
-    @Schema(name = "流水线页面", required = false)
+    @Schema(title = "流水线页面", required = false)
     val pipelinePage: PipelineViewPipelinePage<Pipeline>
 )

@@ -29,18 +29,18 @@ package com.tencent.devops.dispatch.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "虚拟机主机-创建信息")
+@Schema(title = "虚拟机主机-创建信息")
 data class MachineCreate(
-    @Schema(name = "主机 ID", required = true)
+    @Schema(title = "主机 ID", required = true)
     val id: Int,
-    @Schema(name = "主机 IP", required = true)
+    @Schema(title = "主机 IP", required = true)
     val ip: String,
-    @Schema(name = "主机名", required = true)
+    @Schema(title = "主机名", required = true)
     val name: String,
-    @Schema(name = "主机用户名", required = true)
+    @Schema(title = "主机用户名", required = true)
     val username: String,
-    @Schema(name = "主机密码", required = true)
+    @Schema(title = "主机密码", required = true)
     val password: String,
-    @Schema(name = "最多允许允许的虚拟机台数", required = true)
+    @Schema(title = "最多允许允许的虚拟机台数", required = true)
     val maxVMRun: Int
 )

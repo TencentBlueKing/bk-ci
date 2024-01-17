@@ -30,11 +30,11 @@ package com.tencent.devops.process.pojo.classify
 import com.tencent.devops.process.pojo.classify.enums.Condition
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "流水线视图-通过创建者过滤", description = PipelineViewFilterByCreator.classType)
+@Schema(title = "流水线视图-通过创建者过滤", description = PipelineViewFilterByCreator.classType)
 data class PipelineViewFilterByCreator(
-    @Schema(name = "条件", required = false)
+    @Schema(title = "条件", required = false)
     val condition: Condition,
-    @Schema(name = "用户id 列表", required = false)
+    @Schema(title = "用户id 列表", required = false)
     val userIds: List<String>
 ) : PipelineViewFilter() {
     companion object {

@@ -29,12 +29,12 @@ package com.tencent.devops.quality.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "质量红线-流水线拦截")
+@Schema(title = "质量红线-流水线拦截")
 data class CountPipelineIntercept(
-    @Schema(name = "流水线ID", required = true)
+    @Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(name = "流水线名称", required = true)
+    @Schema(title = "流水线名称", required = true)
     val pipelineName: String,
-    @Schema(name = "拦截次数", required = true)
+    @Schema(title = "拦截次数", required = true)
     val count: Int
 )

@@ -31,40 +31,40 @@ import com.tencent.bkrepo.repository.pojo.metadata.MetadataModel
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "版本仓库-文件详细信息-APP")
+@Schema(title = "版本仓库-文件详细信息-APP")
 data class FileDetailForApp(
-    @Schema(name = "文件名", required = true)
+    @Schema(title = "文件名", required = true)
     val name: String,
-    @Schema(name = "平台", required = true)
+    @Schema(title = "平台", required = true)
     val platform: String,
-    @Schema(name = "文件大小(byte)", required = true)
+    @Schema(title = "文件大小(byte)", required = true)
     val size: Long,
-    @Schema(name = "创建时间", required = true)
+    @Schema(title = "创建时间", required = true)
     val createdTime: Long,
-    @Schema(name = "项目", required = true)
+    @Schema(title = "项目", required = true)
     val projectName: String,
-    @Schema(name = "流水线", required = true)
+    @Schema(title = "流水线", required = true)
     val pipelineName: String,
-    @Schema(name = "构件创建人", required = true)
+    @Schema(title = "构件创建人", required = true)
     val creator: String,
-    @Schema(name = "版本体验BundleIdentifier", required = true)
+    @Schema(title = "版本体验BundleIdentifier", required = true)
     val bundleIdentifier: String,
-    @Schema(name = "logo链接", required = false)
+    @Schema(title = "logo链接", required = false)
     val logoUrl: String,
-    @Schema(name = "文件路径", required = true)
+    @Schema(title = "文件路径", required = true)
     val path: String,
-    @Schema(name = "文件全名", required = true)
+    @Schema(title = "文件全名", required = true)
     val fullName: String,
-    @Schema(name = "文件全路径", required = true)
+    @Schema(title = "文件全路径", required = true)
     val fullPath: String,
-    @Schema(name = "仓库类型", required = true)
+    @Schema(title = "仓库类型", required = true)
     val artifactoryType: ArtifactoryType,
-    @Schema(name = "修改时间", required = true)
+    @Schema(title = "修改时间", required = true)
     val modifiedTime: Long,
-    @Schema(name = "md5", required = true)
+    @Schema(title = "md5", required = true)
     val md5: String,
-    @Schema(name = "构建号", required = true)
+    @Schema(title = "构建号", required = true)
     val buildNum: Int,
-    @Schema(name = "nodeMetadata数据", required = true)
+    @Schema(title = "nodeMetadata数据", required = true)
     val nodeMetadata: List<MetadataModel> = emptyList()
 )

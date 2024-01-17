@@ -29,18 +29,18 @@ package com.tencent.devops.metrics.pojo.po
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "保存项目插件关联数据")
+@Schema(title = "保存项目插件关联数据")
 data class SaveProjectAtomRelationDataPO(
-    @Schema(name = "主键ID")
+    @Schema(title = "主键ID")
     val id: Long,
-    @Schema(name = "项目ID")
+    @Schema(title = "项目ID")
     val projectId: String,
-    @Schema(name = "插件代码")
+    @Schema(title = "插件代码")
     val atomCode: String,
-    @Schema(name = "插件名称")
+    @Schema(title = "插件名称")
     val atomName: String,
-    @Schema(name = "创建人")
+    @Schema(title = "创建人")
     val creator: String,
-    @Schema(name = "修改人")
+    @Schema(title = "修改人")
     val modifier: String
 )

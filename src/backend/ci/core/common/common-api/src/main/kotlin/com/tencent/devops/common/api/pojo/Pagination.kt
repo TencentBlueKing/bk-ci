@@ -29,10 +29,10 @@ package com.tencent.devops.common.api.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "分页数据包装模型")
+@Schema(title = "分页数据包装模型")
 data class Pagination<out T>(
-    @Schema(name = "是否有下一页", required = true)
+    @Schema(title = "是否有下一页", required = true)
     val hasNext: Boolean,
-    @Schema(name = "数据", required = true)
+    @Schema(title = "数据", required = true)
     val records: List<T>
 )

@@ -44,27 +44,27 @@ import io.swagger.v3.oas.annotations.media.Schema
  * }
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Schema(name = "获取tag返回模型")
+@Schema(title = "获取tag返回模型")
 data class GithubTag(
-    @Schema(name = "远程引用")
+    @Schema(title = "远程引用")
     val ref: String,
     @JsonProperty("node_id")
-    @Schema(name = "节点id", description = "node_id")
+    @Schema(title = "节点id", description = "node_id")
     val nodeId: String,
-    @Schema(name = "url地址")
+    @Schema(title = "url地址")
     val url: String,
-    @Schema(name = "tag数据", description = "object")
+    @Schema(title = "tag数据", description = "object")
     @JsonProperty("object")
     val tagObject: GithubObject?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Schema(name = "")
+@Schema(title = "")
 data class GithubObject(
-    @Schema(name = "sha值")
+    @Schema(title = "sha值")
     val sha: String,
-    @Schema(name = "类型")
+    @Schema(title = "类型")
     val type: String,
-    @Schema(name = "url地址")
+    @Schema(title = "url地址")
     val url: String
 )

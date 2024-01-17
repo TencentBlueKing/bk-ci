@@ -29,12 +29,12 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "回显版本信息")
+@Schema(title = "回显版本信息")
 data class StoreShowVersionItem(
-    @Schema(name = "版本号", required = true)
+    @Schema(title = "版本号", required = true)
     val version: String,
-    @Schema(name = "发布类型", required = true)
+    @Schema(title = "发布类型", required = true)
     val releaseType: String,
-    @Schema(name = "是否默认选中", required = true)
+    @Schema(title = "是否默认选中", required = true)
     val defaultFlag: Boolean = false
 )

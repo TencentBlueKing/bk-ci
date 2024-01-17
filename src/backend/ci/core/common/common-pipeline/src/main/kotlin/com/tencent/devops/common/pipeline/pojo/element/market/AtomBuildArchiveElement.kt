@@ -30,31 +30,31 @@ package com.tencent.devops.common.pipeline.pojo.element.market
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "插件发布归档", description = AtomBuildArchiveElement.classType)
+@Schema(title = "插件发布归档", description = AtomBuildArchiveElement.classType)
 data class AtomBuildArchiveElement(
-    @Schema(name = "任务名称", required = true)
+    @Schema(title = "任务名称", required = true)
     override val name: String = "插件发布归档",
-    @Schema(name = "id", required = false)
+    @Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(name = "状态", required = false)
+    @Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(name = "插件发布包名称", required = true)
+    @Schema(title = "插件发布包名称", required = true)
     val packageName: String = "\${packageName}",
-    @Schema(name = "插件发布包所在相对路径", required = true)
+    @Schema(title = "插件发布包所在相对路径", required = true)
     val filePath: String = "\${filePath}",
-    @Schema(name = "插件发布包上传至仓库的目标路径", required = true)
+    @Schema(title = "插件发布包上传至仓库的目标路径", required = true)
     val destPath: String = "\${atomCode}/\${version}/\${packageName}",
-    @Schema(name = "插件自定义UI前端文件所在相对路径", required = false)
+    @Schema(title = "插件自定义UI前端文件所在相对路径", required = false)
     val frontendFilePath: String? = "\${BK_CI_CUSTOM_FRONTEND_DIST_PATH}",
-    @Schema(name = "插件自定义UI前端文件上传至仓库的目标路径", required = false)
+    @Schema(title = "插件自定义UI前端文件上传至仓库的目标路径", required = false)
     val frontendDestPath: String? = "\${atomCode}/\${version}",
-    @Schema(name = "操作系统名称", required = false)
+    @Schema(title = "操作系统名称", required = false)
     val osName: String? = "\${matrixOsName}",
-    @Schema(name = "操作系统cpu架构", required = false)
+    @Schema(title = "操作系统cpu架构", required = false)
     val osArch: String? = "\${matrixOsArch}",
-    @Schema(name = "是否有可用的操作系统名称配置", required = false)
+    @Schema(title = "是否有可用的操作系统名称配置", required = false)
     val validOsNameFlag: String? = null,
-    @Schema(name = "是否有可用的操作系统cpu架构配置", required = false)
+    @Schema(title = "是否有可用的操作系统cpu架构配置", required = false)
     val validOsArchFlag: String? = null
 ) : Element(name, id, status) {
 

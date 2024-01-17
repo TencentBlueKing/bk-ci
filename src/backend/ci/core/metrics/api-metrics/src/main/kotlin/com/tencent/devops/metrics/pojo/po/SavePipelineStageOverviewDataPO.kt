@@ -30,32 +30,32 @@ package com.tencent.devops.metrics.pojo.po
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(name = "保存流水线stage概览数据")
+@Schema(title = "保存流水线stage概览数据")
 data class SavePipelineStageOverviewDataPO(
-    @Schema(name = "主键ID")
+    @Schema(title = "主键ID")
     val id: Long,
-    @Schema(name = "项目ID")
+    @Schema(title = "项目ID")
     val projectId: String,
-    @Schema(name = "流水线ID")
+    @Schema(title = "流水线ID")
     val pipelineId: String,
-    @Schema(name = "流水线名称")
+    @Schema(title = "流水线名称")
     val pipelineName: String,
-    @Schema(name = "渠道代码")
+    @Schema(title = "渠道代码")
     val channelCode: String,
-    @Schema(name = "stage标签名称")
+    @Schema(title = "stage标签名称")
     val stageTagName: String,
-    @Schema(name = "平均耗时，单位：毫秒")
+    @Schema(title = "平均耗时，单位：毫秒")
     val avgCostTime: Long,
-    @Schema(name = "执行次数")
+    @Schema(title = "执行次数")
     val executeCount: Long,
-    @Schema(name = "统计时间")
+    @Schema(title = "统计时间")
     val statisticsTime: LocalDateTime,
-    @Schema(name = "创建人")
+    @Schema(title = "创建人")
     val creator: String,
-    @Schema(name = "修改人")
+    @Schema(title = "修改人")
     val modifier: String,
-    @Schema(name = "创建时间")
+    @Schema(title = "创建时间")
     val createTime: LocalDateTime,
-    @Schema(name = "更新时间")
+    @Schema(title = "更新时间")
     val updateTime: LocalDateTime
 )

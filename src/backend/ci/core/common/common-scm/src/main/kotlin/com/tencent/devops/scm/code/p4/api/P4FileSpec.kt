@@ -30,11 +30,11 @@ package com.tencent.devops.scm.code.p4.api
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "p4文件描述")
+@Schema(title = "p4文件描述")
 @JsonIgnoreProperties
 data class P4FileSpec(
-    @Schema(name = "文件状态", required = true)
+    @Schema(title = "文件状态", required = true)
     val opStatus: String,
-    @Schema(name = "文件在depot的路径", required = true)
+    @Schema(title = "文件在depot的路径", required = true)
     val depotPathString: String
 )

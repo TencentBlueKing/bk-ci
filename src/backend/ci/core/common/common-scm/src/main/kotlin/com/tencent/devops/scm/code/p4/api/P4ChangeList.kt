@@ -30,11 +30,11 @@ package com.tencent.devops.scm.code.p4.api
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "P4提交列表")
+@Schema(title = "P4提交列表")
 @JsonIgnoreProperties
 data class P4ChangeList(
-    @Schema(name = "提交信息", required = true)
+    @Schema(title = "提交信息", required = true)
     val description: String,
-    @Schema(name = "提交文件列表", required = true)
+    @Schema(title = "提交文件列表", required = true)
     val fileList: List<P4FileSpec>
 )

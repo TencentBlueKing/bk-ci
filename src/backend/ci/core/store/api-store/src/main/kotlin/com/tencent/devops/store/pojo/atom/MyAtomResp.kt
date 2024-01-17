@@ -30,15 +30,15 @@ package com.tencent.devops.store.pojo.atom
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "流水线-插件信息")
+@Schema(title = "流水线-插件信息")
 data class MyAtomResp(
-    @Schema(name = "总记录数", required = true)
+    @Schema(title = "总记录数", required = true)
     val count: Int,
-    @Schema(name = "当前页码值", required = false)
+    @Schema(title = "当前页码值", required = false)
     val page: Int?,
-    @Schema(name = "每页记录大小", required = false)
+    @Schema(title = "每页记录大小", required = false)
     val pageSize: Int?,
-    @Schema(name = "数据集合", required = false)
+    @Schema(title = "数据集合", required = false)
     @BkFieldI18n
     val records: List<MyAtomRespItem?>
 )

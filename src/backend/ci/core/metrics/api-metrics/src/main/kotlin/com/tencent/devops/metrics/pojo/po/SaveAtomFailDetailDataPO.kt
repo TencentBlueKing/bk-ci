@@ -30,52 +30,52 @@ package com.tencent.devops.metrics.pojo.po
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(name = "保存插件失败明细数据")
+@Schema(title = "保存插件失败明细数据")
 data class SaveAtomFailDetailDataPO(
-    @Schema(name = "主键ID")
+    @Schema(title = "主键ID")
     val id: Long,
-    @Schema(name = "项目ID")
+    @Schema(title = "项目ID")
     val projectId: String,
-    @Schema(name = "流水线ID")
+    @Schema(title = "流水线ID")
     val pipelineId: String,
-    @Schema(name = "流水线名称")
+    @Schema(title = "流水线名称")
     val pipelineName: String,
-    @Schema(name = "渠道代码")
+    @Schema(title = "渠道代码")
     val channelCode: String,
-    @Schema(name = "构建ID")
+    @Schema(title = "构建ID")
     val buildId: String,
-    @Schema(name = "构建序号")
+    @Schema(title = "构建序号")
     val buildNum: Int,
-    @Schema(name = "插件代码")
+    @Schema(title = "插件代码")
     val atomCode: String,
-    @Schema(name = "插件名称")
+    @Schema(title = "插件名称")
     val atomName: String,
-    @Schema(name = "插件在model中的位置")
+    @Schema(title = "插件在model中的位置")
     val atomPosition: String,
-    @Schema(name = "插件分类代码")
+    @Schema(title = "插件分类代码")
     val classifyCode: String,
-    @Schema(name = "插件分类名称")
+    @Schema(title = "插件分类名称")
     val classifyName: String,
-    @Schema(name = "启动用户")
+    @Schema(title = "启动用户")
     val startUser: String,
-    @Schema(name = "启动时间")
+    @Schema(title = "启动时间")
     val startTime: LocalDateTime? = null,
-    @Schema(name = "结束时间")
+    @Schema(title = "结束时间")
     val endTime: LocalDateTime? = null,
-    @Schema(name = "错误类型")
+    @Schema(title = "错误类型")
     val errorType: Int? = null,
-    @Schema(name = "错误码")
+    @Schema(title = "错误码")
     val errorCode: Int? = null,
-    @Schema(name = "错误信息")
+    @Schema(title = "错误信息")
     val errorMsg: String? = null,
-    @Schema(name = "统计时间")
+    @Schema(title = "统计时间")
     val statisticsTime: LocalDateTime,
-    @Schema(name = "创建人")
+    @Schema(title = "创建人")
     val creator: String,
-    @Schema(name = "修改人")
+    @Schema(title = "修改人")
     val modifier: String,
-    @Schema(name = "创建时间")
+    @Schema(title = "创建时间")
     val createTime: LocalDateTime,
-    @Schema(name = "更新时间")
+    @Schema(title = "更新时间")
     val updateTime: LocalDateTime
 )

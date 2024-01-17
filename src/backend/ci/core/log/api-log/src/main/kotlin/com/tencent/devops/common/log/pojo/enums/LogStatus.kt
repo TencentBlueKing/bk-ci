@@ -30,17 +30,17 @@ package com.tencent.devops.common.log.pojo.enums
 import com.fasterxml.jackson.annotation.JsonValue
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "日志状态")
+@Schema(title = "日志状态")
 enum class LogStatus(val status: Int) {
-    @Schema(name = "查询成功")
+    @Schema(title = "查询成功")
     SUCCEED(0),
-    @Schema(name = "日志为空")
+    @Schema(title = "日志为空")
     EMPTY(1),
-    @Schema(name = "日志已过期")
+    @Schema(title = "日志已过期")
     CLEAN(2),
-    @Schema(name = "日志已清理")
+    @Schema(title = "日志已清理")
     CLOSED(3),
-    @Schema(name = "查询异常")
+    @Schema(title = "查询异常")
     FAIL(999);
 
     @JsonValue

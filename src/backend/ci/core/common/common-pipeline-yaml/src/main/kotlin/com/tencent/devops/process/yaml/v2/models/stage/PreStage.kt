@@ -38,20 +38,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class PreStage(
     val name: String?,
     val label: Any? = null,
-    @Schema(name = "if")
+    @Schema(title = "if")
     @JsonProperty("if")
     val ifField: String? = null,
-    @Schema(name = "if-modify")
+    @Schema(title = "if-modify")
     @JsonProperty("if-modify")
     val ifModify: List<String>? = null,
-    @Schema(name = "fast-kill")
+    @Schema(title = "fast-kill")
     @JsonProperty("fast-kill")
     val fastKill: Boolean? = false,
     val jobs: Map<String, PreJob>?,
-    @Schema(name = "check-in")
+    @Schema(title = "check-in")
     @JsonProperty("check-in")
     val checkIn: PreStageCheck?,
-    @Schema(name = "check-out")
+    @Schema(title = "check-out")
     @JsonProperty("check-out")
     val checkOut: PreStageCheck?
 )

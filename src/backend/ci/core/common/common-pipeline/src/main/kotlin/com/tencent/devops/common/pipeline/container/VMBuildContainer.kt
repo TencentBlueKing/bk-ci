@@ -36,96 +36,96 @@ import com.tencent.devops.common.pipeline.type.DispatchType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("ReturnCount")
-@Schema(name = "流水线模型-虚拟机构建容器")
+@Schema(title = "流水线模型-虚拟机构建容器")
 data class VMBuildContainer(
-    @Schema(name = "构建容器序号id", required = false, readOnly = true)
+    @Schema(title = "构建容器序号id", required = false, readOnly = true)
     override var id: String? = null,
-    @Schema(name = "容器名称", required = true)
+    @Schema(title = "容器名称", required = true)
     override var name: String = "构建环境",
-    @Schema(name = "任务集合", required = true)
+    @Schema(title = "任务集合", required = true)
     override var elements: List<Element> = listOf(),
-    @Schema(name = "容器状态", required = false, readOnly = true)
+    @Schema(title = "容器状态", required = false, readOnly = true)
     override var status: String? = null,
-    @Schema(name = "系统运行时间", required = false, readOnly = true)
+    @Schema(title = "系统运行时间", required = false, readOnly = true)
     @Deprecated("即将被timeCost代替")
     override var startEpoch: Long? = null,
-    @Schema(name = "系统耗时（开机时间）", required = false, readOnly = true)
+    @Schema(title = "系统耗时（开机时间）", required = false, readOnly = true)
     @Deprecated("即将被timeCost代替")
     override var systemElapsed: Long? = null,
-    @Schema(name = "插件执行耗时", required = false, readOnly = true)
+    @Schema(title = "插件执行耗时", required = false, readOnly = true)
     @Deprecated("即将被timeCost代替")
     override var elementElapsed: Long? = null,
-    @Schema(name = "VM基础操作系统", required = true)
+    @Schema(title = "VM基础操作系统", required = true)
     val baseOS: VMBaseOS,
-    @Schema(name = "预指定VM名称列表", required = true)
+    @Schema(title = "预指定VM名称列表", required = true)
     val vmNames: Set<String> = setOf(),
-    @Schema(name = "排队最长时间(分钟)", required = true)
+    @Schema(title = "排队最长时间(分钟)", required = true)
     @Deprecated(message = "do not use")
     val maxQueueMinutes: Int? = 60,
-    @Schema(name = "运行最长时间(分钟)", required = true)
+    @Schema(title = "运行最长时间(分钟)", required = true)
     @Deprecated(message = "@see JobControlOption.timeout")
     val maxRunningMinutes: Int = 480,
-    @Schema(name = "构建机环境变量", required = false)
+    @Schema(title = "构建机环境变量", required = false)
     val buildEnv: Map<String, String>? = null,
-    @Schema(name = "用户自定义环境变量", required = false)
+    @Schema(title = "用户自定义环境变量", required = false)
     val customBuildEnv: Map<String, String>? = null,
-    @Schema(name = "第三方构建Hash ID", required = false)
+    @Schema(title = "第三方构建Hash ID", required = false)
     val thirdPartyAgentId: String? = null,
-    @Schema(name = "第三方构建环境ID", required = false)
+    @Schema(title = "第三方构建环境ID", required = false)
     val thirdPartyAgentEnvId: String? = null,
-    @Schema(name = "第三方构建环境工作空间", required = false)
+    @Schema(title = "第三方构建环境工作空间", required = false)
     val thirdPartyWorkspace: String? = null,
-    @Schema(name = "Docker构建机", required = false)
+    @Schema(title = "Docker构建机", required = false)
     val dockerBuildVersion: String? = null,
-    @Schema(name = "TStack Hash Id", required = false)
+    @Schema(title = "TStack Hash Id", required = false)
     @Deprecated("do not used")
     val tstackAgentId: String? = null,
-    @Schema(name = "新的选择构建机环境", required = false)
+    @Schema(title = "新的选择构建机环境", required = false)
     val dispatchType: DispatchType? = null,
-    @Schema(name = "是否显示构建资源信息", required = false)
+    @Schema(title = "是否显示构建资源信息", required = false)
     var showBuildResource: Boolean? = false,
-    @Schema(name =
+    @Schema(title =
         "是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储",
         required = false,
         readOnly = true
     )
     override var canRetry: Boolean? = null,
-    @Schema(name = "是否访问外网", required = false, readOnly = true)
+    @Schema(title = "是否访问外网", required = false, readOnly = true)
     var enableExternal: Boolean? = false,
-    @Schema(name = "构建容器顺序ID（同id值）", required = false, readOnly = true)
+    @Schema(title = "构建容器顺序ID（同id值）", required = false, readOnly = true)
     override var containerId: String? = null,
-    @Schema(name = "容器唯一ID", required = false, readOnly = true)
+    @Schema(title = "容器唯一ID", required = false, readOnly = true)
     override var containerHashId: String? = null,
-    @Schema(name = "流程控制选项", required = true)
+    @Schema(title = "流程控制选项", required = true)
     var jobControlOption: JobControlOption? = null, // 为了兼容旧数据，所以定义为可空以及var
-    @Schema(name = "互斥组", required = false)
+    @Schema(title = "互斥组", required = false)
     var mutexGroup: MutexGroup? = null, // 为了兼容旧数据，所以定义为可空以及var
-    @Schema(name = "构建环境启动状态", required = false, readOnly = true)
+    @Schema(title = "构建环境启动状态", required = false, readOnly = true)
     override var startVMStatus: String? = null,
-    @Schema(name = "容器运行次数", required = false, readOnly = true)
+    @Schema(title = "容器运行次数", required = false, readOnly = true)
     override var executeCount: Int? = null,
-    @Schema(name = "用户自定义ID", required = false, hidden = false)
+    @Schema(title = "用户自定义ID", required = false, hidden = false)
     override val jobId: String? = null,
-    @Schema(name = "是否包含post任务标识", required = false, readOnly = true)
+    @Schema(title = "是否包含post任务标识", required = false, readOnly = true)
     override var containPostTaskFlag: Boolean? = null,
-    @Schema(name = "是否为构建矩阵", required = false, readOnly = true)
+    @Schema(title = "是否为构建矩阵", required = false, readOnly = true)
     override var matrixGroupFlag: Boolean? = false,
-    @Schema(name = "各项耗时", required = true)
+    @Schema(title = "各项耗时", required = true)
     override var timeCost: BuildRecordTimeCost? = null,
-    @Schema(name = "构建矩阵配置项", required = false)
+    @Schema(title = "构建矩阵配置项", required = false)
     var matrixControlOption: MatrixControlOption? = null,
-    @Schema(name = "所在构建矩阵组的containerHashId（分裂后的子容器特有字段）", required = false)
+    @Schema(title = "所在构建矩阵组的containerHashId（分裂后的子容器特有字段）", required = false)
     var matrixGroupId: String? = null,
-    @Schema(name = "当前矩阵子容器的上下文组合（分裂后的子容器特有字段）", required = false)
+    @Schema(title = "当前矩阵子容器的上下文组合（分裂后的子容器特有字段）", required = false)
     var matrixContext: Map<String, String>? = null,
-    @Schema(name = "分裂后的容器集合（分裂后的父容器特有字段）", required = false)
+    @Schema(title = "分裂后的容器集合（分裂后的父容器特有字段）", required = false)
     var groupContainers: MutableList<VMBuildContainer>? = null
 ) : Container {
     companion object {
         const val classType = "vmBuild"
     }
 
-    @Schema(name = "nfs挂载开关", required = false, readOnly = true)
+    @Schema(title = "nfs挂载开关", required = false, readOnly = true)
     var nfsSwitch: Boolean? = null
         get() {
             return if (null == field) true else field

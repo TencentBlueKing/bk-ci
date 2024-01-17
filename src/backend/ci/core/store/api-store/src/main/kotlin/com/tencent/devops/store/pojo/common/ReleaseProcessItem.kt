@@ -29,14 +29,14 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "发布进度")
+@Schema(title = "发布进度")
 data class ReleaseProcessItem(
-    @Schema(name = "步骤名称", required = true)
+    @Schema(title = "步骤名称", required = true)
     var name: String,
-    @Schema(name = "步骤代码", required = true)
+    @Schema(title = "步骤代码", required = true)
     var code: String,
-    @Schema(name = "步骤号", required = true)
+    @Schema(title = "步骤号", required = true)
     val step: Int,
-    @Schema(name = "状态", required = true)
+    @Schema(title = "状态", required = true)
     var status: String
 )

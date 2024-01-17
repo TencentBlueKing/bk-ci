@@ -31,46 +31,46 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonInclude(JsonInclude.Include.ALWAYS)
-@Schema(name = "质量红线-指标配置列表信息")
+@Schema(title = "质量红线-指标配置列表信息")
 data class IndicatorData(
-    @Schema(name = "ID")
+    @Schema(title = "ID")
     val id: Long,
-    @Schema(name = "原子的ClassType")
+    @Schema(title = "原子的ClassType")
     val elementType: String?,
-    @Schema(name = "原子名称")
+    @Schema(title = "原子名称")
     val elementName: String?,
-    @Schema(name = "工具/原子子类")
+    @Schema(title = "工具/原子子类")
     val elementDetail: String?,
-    @Schema(name = "指标英文名")
+    @Schema(title = "指标英文名")
     val enName: String?,
-    @Schema(name = "指标中文名")
+    @Schema(title = "指标中文名")
     val cnName: String?,
-    @Schema(name = "指标所包含基础数据")
+    @Schema(title = "指标所包含基础数据")
     val metadataIds: String?,
-    @Schema(name = "指标所包含基础数据")
+    @Schema(title = "指标所包含基础数据")
     val metadataNames: String?,
-    @Schema(name = "默认操作类型")
+    @Schema(title = "默认操作类型")
     val defaultOperation: String?,
-    @Schema(name = "可用操作")
+    @Schema(title = "可用操作")
     val operationAvailable: String?,
-    @Schema(name = "默认阈值")
+    @Schema(title = "默认阈值")
     val threshold: String?,
-    @Schema(name = "阈值类型")
+    @Schema(title = "阈值类型")
     val thresholdType: String?,
-    @Schema(name = "描述")
+    @Schema(title = "描述")
     val desc: String?,
-    @Schema(name = "是否可修改")
+    @Schema(title = "是否可修改")
     val readOnly: Boolean?,
-    @Schema(name = "阶段")
+    @Schema(title = "阶段")
     val stage: String?,
-    @Schema(name = "可见范围类型(ANY, PART_BY_NAME)")
+    @Schema(title = "可见范围类型(ANY, PART_BY_NAME)")
     val range: String?,
-    @Schema(name = "指标类型")
+    @Schema(title = "指标类型")
     val type: String?,
-    @Schema(name = "指标标签，用于前端区分控制")
+    @Schema(title = "指标标签，用于前端区分控制")
     val tag: String?,
-    @Schema(name = "是否启用")
+    @Schema(title = "是否启用")
     val enable: Boolean?,
-    @Schema(name = "指标附加信息")
+    @Schema(title = "指标附加信息")
     val logPrompt: String?
 )

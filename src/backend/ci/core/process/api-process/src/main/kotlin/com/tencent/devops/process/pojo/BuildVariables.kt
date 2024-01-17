@@ -34,34 +34,34 @@ import com.tencent.devops.store.pojo.app.BuildEnv
 import io.swagger.v3.oas.annotations.media.Schema
 import java.util.concurrent.TimeUnit
 
-@Schema(name = "流水线模型-构建参数变量")
+@Schema(title = "流水线模型-构建参数变量")
 data class BuildVariables(
-    @Schema(name = "构建ID", required = true)
+    @Schema(title = "构建ID", required = true)
     val buildId: String,
-    @Schema(name = "构建环境ID", required = true)
+    @Schema(title = "构建环境ID", required = true)
     val vmSeqId: String,
-    @Schema(name = "构建机名称", required = true)
+    @Schema(title = "构建机名称", required = true)
     val vmName: String,
-    @Schema(name = "项目ID", required = true)
+    @Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(name = "pipeline id", required = true)
+    @Schema(title = "pipeline id", required = true)
     val pipelineId: String,
-    @Schema(name = "参数集合（已完成上下文转换）", required = true)
+    @Schema(title = "参数集合（已完成上下文转换）", required = true)
     val variables: Map<String, String>,
-    @Schema(name = "系统环境变量", required = false)
+    @Schema(title = "系统环境变量", required = false)
     val buildEnvs: List<BuildEnv>,
-    @Schema(name = "container的编排ID（同seq）", required = false)
+    @Schema(title = "container的编排ID（同seq）", required = false)
     val containerId: String,
-    @Schema(name = "container的全局ID", required = false)
+    @Schema(title = "container的全局ID", required = false)
     val containerHashId: String,
-    @Schema(name = "container用户自定义ID", required = false)
+    @Schema(title = "container用户自定义ID", required = false)
     val jobId: String?,
-    @Schema(name = "参数类型集合（用于打印时区分敏感信息，建议不要作为传参使用）", required = false)
+    @Schema(title = "参数类型集合（用于打印时区分敏感信息，建议不要作为传参使用）", required = false)
     val variablesWithType: List<BuildParameters>,
-    @Schema(name = "Job超时时间（毫秒）", required = true)
+    @Schema(title = "Job超时时间（毫秒）", required = true)
     var timeoutMills: Long = TimeUnit.MINUTES.toMillis(Timeout.DEFAULT_TIMEOUT_MIN.toLong()),
-    @Schema(name = "容器类型", required = false)
+    @Schema(title = "容器类型", required = false)
     val containerType: String? = null,
-    @Schema(name = "YAML流水线特殊配置", required = false)
+    @Schema(title = "YAML流水线特殊配置", required = false)
     val pipelineAsCodeSettings: PipelineAsCodeSettings? = null
 )

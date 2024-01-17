@@ -29,10 +29,10 @@ package com.tencent.devops.metrics.pojo.`do`
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "流水线异常类型信息")
+@Schema(title = "流水线异常类型信息")
 data class PipelineErrorTypeInfoDO(
-    @Schema(name = "错误类型")
+    @Schema(title = "错误类型")
     val errorType: Int,
-    @Schema(name = "错误名称")
+    @Schema(title = "错误名称")
     var errorName: String
 )

@@ -29,12 +29,12 @@ package com.tencent.devops.store.pojo.atom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "插件版本替换信息")
+@Schema(title = "插件版本替换信息")
 data class AtomVersionReplaceInfo(
-    @Schema(name = "被替换插件版本", required = true)
+    @Schema(title = "被替换插件版本", required = true)
     val fromAtomVersion: String,
-    @Schema(name = "替换插件版本", required = true)
+    @Schema(title = "替换插件版本", required = true)
     val toAtomVersion: String,
-    @Schema(name = "插件参数替换信息", required = false)
+    @Schema(title = "插件参数替换信息", required = false)
     val paramReplaceInfoList: List<AtomParamReplaceInfo>? = null
 )

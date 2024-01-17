@@ -29,22 +29,22 @@ package com.tencent.devops.plugin.codecc.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "codecc工具分析信息")
+@Schema(title = "codecc工具分析信息")
 data class CodeccToolAnalysisInfo(
-    @Schema(name = "工具名称", required = true)
+    @Schema(title = "工具名称", required = true)
     val toolName: String,
-    @Schema(name = "工具展示名称", required = true)
+    @Schema(title = "工具展示名称", required = true)
     val displayName: String,
-    @Schema(name = "工具类型", required = true)
+    @Schema(title = "工具类型", required = true)
     val type: String,
-    @Schema(name = "分析耗时", required = true)
+    @Schema(title = "分析耗时", required = true)
     val elapseTime: Long,
-    @Schema(name = "第几次构建", required = true)
+    @Schema(title = "第几次构建", required = true)
     val buildNum: Int,
-    @Schema(name = "工具类型，用来拼接URL", required = false)
+    @Schema(title = "工具类型，用来拼接URL", required = false)
     val pattern: String?,
-    @Schema(name = "告警总数", required = true)
+    @Schema(title = "告警总数", required = true)
     val defectCount: Int,
-    @Schema(name = "工具对应的跳转地址", required = false)
+    @Schema(title = "工具对应的跳转地址", required = false)
     val defectUrl: String?
 )

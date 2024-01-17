@@ -31,26 +31,26 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema
 data class ManageOrganizationEntity(
-    @Schema(name = "授权Id")
+    @Schema(title = "授权Id")
     val id: Int,
-    @Schema(name = "授权名称")
+    @Schema(title = "授权名称")
     val name: String,
-    @Schema(name = "授权策略Id")
+    @Schema(title = "授权策略Id")
     val strategyId: Int,
-    @Schema(name = "授权策略Name")
+    @Schema(title = "授权策略Name")
     val strategyName: String,
-    @Schema(name = "组织名称")
+    @Schema(title = "组织名称")
     val organizationName: String,
-    @Schema(name = "组织Id")
+    @Schema(title = "组织Id")
     val organizationId: Int,
-    @Schema(name = "组织级别")
+    @Schema(title = "组织级别")
     val organizationLevel: Int,
-    @Schema(name = "父级组织信息")
+    @Schema(title = "父级组织信息")
     val parentOrganizations: List<OrganizationEntity>?,
-    @Schema(name = "用户数")
+    @Schema(title = "用户数")
     var userCount: Int? = 0,
-    @Schema(name = "添加人")
+    @Schema(title = "添加人")
     val createUser: String,
-    @Schema(name = "添加时间")
+    @Schema(title = "添加时间")
     val createTime: String
 )

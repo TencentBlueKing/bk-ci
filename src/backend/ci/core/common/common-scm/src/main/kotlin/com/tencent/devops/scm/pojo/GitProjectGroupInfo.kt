@@ -119,7 +119,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 }
  */
 
-@Schema(name = "git 项目组信息")
+@Schema(title = "git 项目组信息")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitProjectGroupInfo(
     val id: Long,
@@ -130,7 +130,7 @@ data class GitProjectGroupInfo(
     val subProjects: List<GitProjectGroupProject>?
 )
 
-@Schema(name = "git 项目组项目信息")
+@Schema(title = "git 项目组项目信息")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitProjectGroupProject(
     val id: String

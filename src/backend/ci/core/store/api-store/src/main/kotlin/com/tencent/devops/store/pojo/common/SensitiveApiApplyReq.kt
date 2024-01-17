@@ -29,12 +29,12 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "敏感API申请请求体")
+@Schema(title = "敏感API申请请求体")
 data class SensitiveApiApplyReq(
-    @Schema(name = "api列表", required = true)
+    @Schema(title = "api列表", required = true)
     val apiNameList: List<String>,
-    @Schema(name = "申请说明", required = true)
+    @Schema(title = "申请说明", required = true)
     val applyDesc: String,
-    @Schema(name = "插件使用的语言", required = true)
+    @Schema(title = "插件使用的语言", required = true)
     val language: String
 )

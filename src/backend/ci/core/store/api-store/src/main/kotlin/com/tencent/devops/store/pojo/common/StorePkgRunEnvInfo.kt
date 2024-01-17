@@ -29,32 +29,32 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "store组件安装包运行时环境信息")
+@Schema(title = "store组件安装包运行时环境信息")
 data class StorePkgRunEnvInfo(
-    @Schema(name = "环境变量ID", required = true)
+    @Schema(title = "环境变量ID", required = true)
     val id: String,
-    @Schema(name = "store组件类型", required = true)
+    @Schema(title = "store组件类型", required = true)
     val storeType: String,
-    @Schema(name = "开发语言", required = true)
+    @Schema(title = "开发语言", required = true)
     val language: String,
-    @Schema(name = "支持的操作系统名称", required = true)
+    @Schema(title = "支持的操作系统名称", required = true)
     val osName: String,
-    @Schema(name = "支持的操作系统架构", required = true)
+    @Schema(title = "支持的操作系统架构", required = true)
     val osArch: String,
-    @Schema(name = "运行时版本", required = true)
+    @Schema(title = "运行时版本", required = true)
     val runtimeVersion: String,
-    @Schema(name = "安装包名称", required = true)
+    @Schema(title = "安装包名称", required = true)
     val pkgName: String,
-    @Schema(name = "安装包下载路径", required = true)
+    @Schema(title = "安装包下载路径", required = true)
     val pkgDownloadPath: String,
-    @Schema(name = "是否为默认安装包", required = true)
+    @Schema(title = "是否为默认安装包", required = true)
     val defaultFlag: Boolean,
-    @Schema(name = "添加用户", required = true)
+    @Schema(title = "添加用户", required = true)
     val creator: String,
-    @Schema(name = "修改用户", required = true)
+    @Schema(title = "修改用户", required = true)
     val modifier: String,
-    @Schema(name = "添加时间", required = true)
+    @Schema(title = "添加时间", required = true)
     val createTime: String,
-    @Schema(name = "修改时间", required = true)
+    @Schema(title = "修改时间", required = true)
     val updateTime: String
 )

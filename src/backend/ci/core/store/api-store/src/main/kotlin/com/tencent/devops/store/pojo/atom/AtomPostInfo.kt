@@ -29,14 +29,14 @@ package com.tencent.devops.store.pojo.atom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "插件post信息")
+@Schema(title = "插件post信息")
 data class AtomPostInfo(
-    @Schema(name = "插件代码")
+    @Schema(title = "插件代码")
     val atomCode: String,
-    @Schema(name = "插件版本号")
+    @Schema(title = "插件版本号")
     val version: String,
-    @Schema(name = "入口参数")
+    @Schema(title = "入口参数")
     val postEntryParam: String,
-    @Schema(name = "执行条件")
+    @Schema(title = "执行条件")
     val postCondition: String
 )

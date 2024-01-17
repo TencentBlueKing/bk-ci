@@ -28,30 +28,30 @@ package com.tencent.devops.openapi.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "AppCode所属组织架构信息-response")
+@Schema(title = "AppCode所属组织架构信息-response")
 data class AppCodeGroupResponse(
-    @Schema(name = "ID")
+    @Schema(title = "ID")
     val id: Long,
-    @Schema(name = "appCode")
+    @Schema(title = "appCode")
     val appCode: String,
-    @Schema(name = "事业群ID")
+    @Schema(title = "事业群ID")
     val bgId: Int?,
-    @Schema(name = "事业群名字")
+    @Schema(title = "事业群名字")
     val bgName: String?,
-    @Schema(name = "部门ID")
+    @Schema(title = "部门ID")
     val deptId: Int?,
-    @Schema(name = "部门名字")
+    @Schema(title = "部门名字")
     val deptName: String?,
-    @Schema(name = "中心ID")
+    @Schema(title = "中心ID")
     val centerId: Int?,
-    @Schema(name = "中心名字")
+    @Schema(title = "中心名字")
     val centerName: String?,
-    @Schema(name = "创建人")
+    @Schema(title = "创建人")
     val creator: String?,
-    @Schema(name = "创建时间")
+    @Schema(title = "创建时间")
     val createTime: Long?,
-    @Schema(name = "更新人")
+    @Schema(title = "更新人")
     val updater: String?,
-    @Schema(name = "更新时间")
+    @Schema(title = "更新时间")
     val updateTime: Long?
 )

@@ -29,16 +29,16 @@ package com.tencent.devops.common.pipeline.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "插件市场初始化流水线请求报文体")
+@Schema(title = "插件市场初始化流水线请求报文体")
 data class AtomMarketInitPipelineReq(
-    @Schema(name = "流水线模型", required = true)
+    @Schema(title = "流水线模型", required = true)
     val pipelineModel: String,
-    @Schema(name = "脚本任务插件Shell执行脚本", required = true)
+    @Schema(title = "脚本任务插件Shell执行脚本", required = true)
     val script: String,
-    @Schema(name = "插件基本信息", required = true)
+    @Schema(title = "插件基本信息", required = true)
     val atomBaseInfo: AtomBaseInfo,
-    @Schema(name = "是否有可用的操作系统名称配置", required = false)
+    @Schema(title = "是否有可用的操作系统名称配置", required = false)
     val validOsNameFlag: Boolean? = null,
-    @Schema(name = "是否有可用的操作系统cpu架构配置", required = false)
+    @Schema(title = "是否有可用的操作系统cpu架构配置", required = false)
     val validOsArchFlag: Boolean? = null
 )

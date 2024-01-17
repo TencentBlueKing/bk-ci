@@ -30,20 +30,20 @@ package com.tencent.devops.environment.pojo
 import com.tencent.devops.environment.pojo.enums.SharedEnvType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "VM虚拟机配额")
+@Schema(title = "VM虚拟机配额")
 data class SharedProjectInfo(
-    @Schema(name = "蓝盾项目Id", required = true)
+    @Schema(title = "蓝盾项目Id", required = true)
     val projectId: String,
-    @Schema(name = "工蜂项目ID", required = true)
+    @Schema(title = "工蜂项目ID", required = true)
     val gitProjectId: String?,
-    @Schema(name = "项目名称，工蜂项目则为groupName/projectName", required = true)
+    @Schema(title = "项目名称，工蜂项目则为groupName/projectName", required = true)
     val name: String,
-    @Schema(name = "类型，预留", required = true)
+    @Schema(title = "类型，预留", required = true)
     val type: SharedEnvType,
-    @Schema(name = "导入服务器配额", required = true)
+    @Schema(title = "导入服务器配额", required = true)
     val creator: String?,
-    @Schema(name = "允许使用DevCloud虚拟机功能", required = true)
+    @Schema(title = "允许使用DevCloud虚拟机功能", required = true)
     val createTime: Long,
-    @Schema(name = "DevCloud虚拟机配额", required = true)
+    @Schema(title = "DevCloud虚拟机配额", required = true)
     val updateTime: Long
 )

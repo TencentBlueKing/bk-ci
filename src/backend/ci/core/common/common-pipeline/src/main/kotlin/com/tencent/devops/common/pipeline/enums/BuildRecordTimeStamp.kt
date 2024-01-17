@@ -30,11 +30,11 @@ package com.tencent.devops.common.pipeline.enums
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeLine
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "构建详情记录-事件时间戳")
+@Schema(title = "构建详情记录-事件时间戳")
 data class BuildRecordTimeStamp(
-    @Schema(name = "开始时间", required = true)
+    @Schema(title = "开始时间", required = true)
     val startTime: Long?,
-    @Schema(name = "结束时间", required = true)
+    @Schema(title = "结束时间", required = true)
     val endTime: Long?
 ) {
     fun between() = (endTime ?: startTime ?: 0) - (startTime ?: 0)

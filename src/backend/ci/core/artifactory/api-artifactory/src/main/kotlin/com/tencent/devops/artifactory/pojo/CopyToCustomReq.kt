@@ -30,11 +30,11 @@ package com.tencent.devops.artifactory.pojo
 import com.tencent.devops.common.api.exception.OperationException
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "复制流水线构建归档到自定义仓库请求")
+@Schema(title = "复制流水线构建归档到自定义仓库请求")
 data class CopyToCustomReq(
-    @Schema(name = "文件列表", required = true)
+    @Schema(title = "文件列表", required = true)
     val files: List<String>,
-    @Schema(name = "是否拷贝所有文件", required = true)
+    @Schema(title = "是否拷贝所有文件", required = true)
     val copyAll: Boolean
 ) {
     fun check() {

@@ -29,12 +29,12 @@ package com.tencent.devops.store.pojo.app
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "容器编译环境版本")
+@Schema(title = "容器编译环境版本")
 data class ContainerAppVersion(
-    @Schema(name = "ID", required = true)
+    @Schema(title = "ID", required = true)
     val id: Int,
-    @Schema(name = "appId", required = true)
+    @Schema(title = "appId", required = true)
     val appId: Int,
-    @Schema(name = "version", required = true)
+    @Schema(title = "version", required = true)
     val version: String?
 )

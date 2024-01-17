@@ -42,24 +42,24 @@ import java.util.regex.Pattern
 /**
  *  构建矩阵配置项
  */
-@Schema(name = "构建矩阵配置项模型")
+@Schema(title = "构建矩阵配置项模型")
 @Suppress("ReturnCount")
 data class MatrixControlOption(
-    @Schema(name = "分裂策略（支持变量、Json、参数映射表）", required = true)
+    @Schema(title = "分裂策略（支持变量、Json、参数映射表）", required = true)
     val strategyStr: String? = null, // Map<String, List<String>>
-    @Schema(name = "额外的参数组合（变量名到特殊值映射的数组）", required = false)
+    @Schema(title = "额外的参数组合（变量名到特殊值映射的数组）", required = false)
     val includeCaseStr: String? = null, // List<Map<String, String>>
-    @Schema(name = "排除的参数组合（变量名到特殊值映射的数组）", required = false)
+    @Schema(title = "排除的参数组合（变量名到特殊值映射的数组）", required = false)
     val excludeCaseStr: String? = null, // List<Map<String, String>>
-    @Schema(name = "是否启用容器失败快速终止整个矩阵", required = false)
+    @Schema(title = "是否启用容器失败快速终止整个矩阵", required = false)
     val fastKill: Boolean? = false,
-    @Schema(name = "Job运行的最大并发量", required = false)
+    @Schema(title = "Job运行的最大并发量", required = false)
     var maxConcurrency: Int? = 5,
-    @Schema(name = "自定义调度类型（用于生成DispatchType的任意对象）", required = false)
+    @Schema(title = "自定义调度类型（用于生成DispatchType的任意对象）", required = false)
     var customDispatchInfo: DispatchInfo? = null, // DispatchTypeParser的传入和解析保持一致即可
-    @Schema(name = "矩阵组的总数量", required = false)
+    @Schema(title = "矩阵组的总数量", required = false)
     var totalCount: Int? = null,
-    @Schema(name = "完成执行的数量", required = false)
+    @Schema(title = "完成执行的数量", required = false)
     var finishCount: Int? = null
 ) {
 

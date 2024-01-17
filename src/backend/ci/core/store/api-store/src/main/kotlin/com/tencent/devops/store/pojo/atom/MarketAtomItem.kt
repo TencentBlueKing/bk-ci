@@ -29,22 +29,22 @@ package com.tencent.devops.store.pojo.atom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "插件市场插件信息")
+@Schema(title = "插件市场插件信息")
 data class MarketAtomItem(
-    @Schema(name = "插件名称")
+    @Schema(title = "插件名称")
     val atomName: String,
-    @Schema(name = "插件标识")
+    @Schema(title = "插件标识")
     val atomCode: String,
-    @Schema(name = "logo链接")
+    @Schema(title = "logo链接")
     val logoUrl: String?,
-    @Schema(name = "发布者")
+    @Schema(title = "发布者")
     val publisher: String,
-    @Schema(name = "下载量")
+    @Schema(title = "下载量")
     val downloads: Int?,
-    @Schema(name = "评分")
+    @Schema(title = "评分")
     val score: Double?,
-    @Schema(name = "简介")
+    @Schema(title = "简介")
     val summary: String?,
-    @Schema(name = "是否可安装标识")
+    @Schema(title = "是否可安装标识")
     val flag: Boolean
 )

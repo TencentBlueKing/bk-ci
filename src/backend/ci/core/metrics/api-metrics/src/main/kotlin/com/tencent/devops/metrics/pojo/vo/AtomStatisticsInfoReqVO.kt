@@ -30,7 +30,7 @@ package com.tencent.devops.metrics.pojo.vo
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.Parameter
 
-@Schema(name = "插件统计信息查询请求报文")
+@Schema(title = "插件统计信息查询请求报文")
 data class AtomStatisticsInfoReqVO(
     @Parameter(description = "流水线ID", required = false)
     override var pipelineIds: List<String>? = null,

@@ -30,10 +30,10 @@ package com.tencent.devops.auth.pojo.vo
 import com.tencent.devops.auth.pojo.DeptInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "组织列表返回")
+@Schema(title = "组织列表返回")
 data class DeptInfoVo(
-    @Schema(name = "数量")
+    @Schema(title = "数量")
     val count: Int,
-    @Schema(name = "返回列表内容")
+    @Schema(title = "返回列表内容")
     val results: List<DeptInfo>
 )

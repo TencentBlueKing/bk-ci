@@ -29,8 +29,8 @@ package com.tencent.devops.ticket.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "证书-证书列表")
+@Schema(title = "证书-证书列表")
 data class Certs(
-    @Schema(name = "证书列表", required = true)
+    @Schema(title = "证书列表", required = true)
     val certs: List<Cert>
 )

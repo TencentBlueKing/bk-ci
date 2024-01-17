@@ -29,10 +29,10 @@ package com.tencent.devops.metrics.pojo.`do`
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "流水线stage耗时信息")
+@Schema(title = "流水线stage耗时信息")
 data class PipelineStageCostTimeInfoDO(
-    @Schema(name = "流水线名称")
+    @Schema(title = "流水线名称")
     val pipelineName: String,
-    @Schema(name = "stage平均耗时信息")
+    @Schema(title = "stage平均耗时信息")
     val stageAvgCostTimeInfos: List<StageAvgCostTimeInfoDO>
 )

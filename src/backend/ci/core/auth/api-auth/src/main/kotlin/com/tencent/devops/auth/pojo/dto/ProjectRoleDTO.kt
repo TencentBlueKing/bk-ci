@@ -33,17 +33,17 @@ import org.hibernate.validator.constraints.Length
 
 @Schema
 data class ProjectRoleDTO(
-    @Schema(name = "用户组Code")
+    @Schema(title = "用户组Code")
     val code: String,
-    @Schema(name = "用户组名称")
+    @Schema(title = "用户组名称")
     @Length(min = 1, max = 128)
     val name: String,
-    @Schema(name = "用户组别名")
+    @Schema(title = "用户组别名")
     val displayName: String?,
-    @Schema(name = "用户组描述")
+    @Schema(title = "用户组描述")
     val description: String?,
-    @Schema(name = "是否为默认分组")
+    @Schema(title = "是否为默认分组")
     val defaultGroup: Boolean? = true,
-    @Schema(name = "项目名称")
+    @Schema(title = "项目名称")
     val projectName: String
 )

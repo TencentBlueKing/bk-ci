@@ -29,12 +29,12 @@ package com.tencent.devops.process.pojo.classify
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "流水线更新模型")
+@Schema(title = "流水线更新模型")
 data class PipelineGroupUpdate(
-    @Schema(name = "流水线id", required = false)
+    @Schema(title = "流水线id", required = false)
     val id: String,
-    @Schema(name = "项目id", required = false)
+    @Schema(title = "项目id", required = false)
     val projectId: String,
-    @Schema(name = "流水线名字", required = false)
+    @Schema(title = "流水线名字", required = false)
     val name: String
 )

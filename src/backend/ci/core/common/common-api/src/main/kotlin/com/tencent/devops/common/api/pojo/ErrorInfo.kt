@@ -29,24 +29,24 @@ package com.tencent.devops.common.api.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "插件错误信息")
+@Schema(title = "插件错误信息")
 data class ErrorInfo(
-    @Schema(name = "阶段ID", required = false)
+    @Schema(title = "阶段ID", required = false)
     val stageId: String? = "",
-    @Schema(name = "作业ID", required = false)
+    @Schema(title = "作业ID", required = false)
     val containerId: String? = "",
-    @Schema(name = "构建矩阵标识", required = false)
+    @Schema(title = "构建矩阵标识", required = false)
     val matrixFlag: Boolean? = false,
-    @Schema(name = "插件ID", required = false)
+    @Schema(title = "插件ID", required = false)
     val taskId: String,
-    @Schema(name = "插件名称", required = false)
+    @Schema(title = "插件名称", required = false)
     val taskName: String,
-    @Schema(name = "插件编号", required = false)
+    @Schema(title = "插件编号", required = false)
     val atomCode: String,
-    @Schema(name = "错误类型", required = false)
+    @Schema(title = "错误类型", required = false)
     val errorType: Int,
-    @Schema(name = "错误码", required = true)
+    @Schema(title = "错误码", required = true)
     val errorCode: Int,
-    @Schema(name = "错误信息", required = false)
+    @Schema(title = "错误信息", required = false)
     val errorMsg: String
 )

@@ -31,27 +31,27 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "store组件环境变量请求报文体")
+@Schema(title = "store组件环境变量请求报文体")
 data class StoreEnvVarRequest(
-    @Schema(name = "store组件代码", required = true)
+    @Schema(title = "store组件代码", required = true)
     @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
     val storeCode: String,
-    @Schema(name = "store组件类型", required = true)
+    @Schema(title = "store组件类型", required = true)
     @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
     val storeType: String,
-    @Schema(name = "变量名", required = true)
+    @Schema(title = "变量名", required = true)
     @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
     val varName: String,
-    @Schema(name = "变量值", required = true)
+    @Schema(title = "变量值", required = true)
     @field:BkField(patternStyle = BkStyleEnum.COMMON_STYLE)
     val varValue: String,
-    @Schema(name = "描述", required = false)
+    @Schema(title = "描述", required = false)
     @field:BkField(patternStyle = BkStyleEnum.NOTE_STYLE, required = false)
     val varDesc: String?,
-    @Schema(name = "变量值是否加密", required = true)
+    @Schema(title = "变量值是否加密", required = true)
     @field:BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE)
     val encryptFlag: Boolean,
-    @Schema(name = "适用范围 TEST：测试 PRD：正式 ALL：所有", required = true)
+    @Schema(title = "适用范围 TEST：测试 PRD：正式 ALL：所有", required = true)
     @field:BkField(patternStyle = BkStyleEnum.SCOPE_STYLE)
     val scope: String
 )

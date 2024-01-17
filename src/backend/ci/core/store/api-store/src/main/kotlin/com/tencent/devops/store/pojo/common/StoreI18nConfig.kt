@@ -29,22 +29,22 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "研发商店组件国际化配置")
+@Schema(title = "研发商店组件国际化配置")
 data class StoreI18nConfig(
-    @Schema(name = "项目标识")
+    @Schema(title = "项目标识")
     val projectCode: String,
-    @Schema(name = "组件标识")
+    @Schema(title = "组件标识")
     val storeCode: String,
-    @Schema(name = "资源文件目录")
+    @Schema(title = "资源文件目录")
     val fileDir: String,
-    @Schema(name = "国际化目录")
+    @Schema(title = "国际化目录")
     val i18nDir: String,
-    @Schema(name = "map字段在properties中key的前缀")
+    @Schema(title = "map字段在properties中key的前缀")
     val propertiesKeyPrefix: String? = null,
-    @Schema(name = "map字段在db中key的前缀")
+    @Schema(title = "map字段在db中key的前缀")
     val dbKeyPrefix: String? = null,
-    @Schema(name = "代码库哈希ID")
+    @Schema(title = "代码库哈希ID")
     val repositoryHashId: String? = null,
-    @Schema(name = "代码库分支")
+    @Schema(title = "代码库分支")
     val branch: String? = null
 )

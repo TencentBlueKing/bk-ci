@@ -29,14 +29,14 @@ package com.tencent.devops.store.pojo.app
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "容器环境变量列表及版本列表")
+@Schema(title = "容器环境变量列表及版本列表")
 data class ContainerAppWithVersion(
-    @Schema(name = "name", required = true)
+    @Schema(title = "name", required = true)
     val name: String,
-    @Schema(name = "versions", required = true)
+    @Schema(title = "versions", required = true)
     val versions: List<String>,
-    @Schema(name = "bin路径", required = false)
+    @Schema(title = "bin路径", required = false)
     val binPath: String?,
-    @Schema(name = "Home 变量")
+    @Schema(title = "Home 变量")
     val env: List<BuildEnvParameters>
 )

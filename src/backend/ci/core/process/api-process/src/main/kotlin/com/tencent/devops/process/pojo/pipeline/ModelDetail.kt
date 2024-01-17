@@ -30,44 +30,44 @@ package com.tencent.devops.process.pojo.pipeline
 import com.tencent.devops.common.pipeline.Model
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "构建详情-构建信息")
+@Schema(title = "构建详情-构建信息")
 data class ModelDetail(
-    @Schema(name = "构建ID", required = true)
+    @Schema(title = "构建ID", required = true)
     val id: String,
-    @Schema(name = "流水线ID", required = true)
+    @Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(name = "流水线名称", required = true)
+    @Schema(title = "流水线名称", required = true)
     val pipelineName: String,
-    @Schema(name = "启动用户", required = true)
+    @Schema(title = "启动用户", required = true)
     val userId: String,
-    @Schema(name = "触发用户", required = true)
+    @Schema(title = "触发用户", required = true)
     val triggerUser: String? = null,
-    @Schema(name = "触发条件", required = true)
+    @Schema(title = "触发条件", required = true)
     val trigger: String,
-    @Schema(name = "Start time", required = true)
+    @Schema(title = "Start time", required = true)
     val startTime: Long,
-    @Schema(name = "End time", required = false)
+    @Schema(title = "End time", required = false)
     val endTime: Long?,
-    @Schema(name = "Build status", required = true)
+    @Schema(title = "Build status", required = true)
     val status: String,
-    @Schema(name = "Build Model", required = true)
+    @Schema(title = "Build Model", required = true)
     val model: Model,
-    @Schema(name = "服务器当前时间戳", required = true)
+    @Schema(title = "服务器当前时间戳", required = true)
     val currentTimestamp: Long,
-    @Schema(name = "构建号", required = true)
+    @Schema(title = "构建号", required = true)
     val buildNum: Int,
-    @Schema(name = "取消构建的用户", required = false)
+    @Schema(title = "取消构建的用户", required = false)
     val cancelUserId: String?,
-    @Schema(name = "本次执行的编排版本号", required = true)
+    @Schema(title = "本次执行的编排版本号", required = true)
     val curVersion: Int,
-    @Schema(name = "流水线当前最新版本号", required = true)
+    @Schema(title = "流水线当前最新版本号", required = true)
     val latestVersion: Int,
-    @Schema(name = "最新一次的构建buildNo", required = true)
+    @Schema(title = "最新一次的构建buildNo", required = true)
     val latestBuildNum: Int,
-    @Schema(name = "最近修改人", required = true)
+    @Schema(title = "最近修改人", required = true)
     val lastModifyUser: String?,
-    @Schema(name = "执行耗时（排除系统耗时）流水线执行结束时才赋值", required = true)
+    @Schema(title = "执行耗时（排除系统耗时）流水线执行结束时才赋值", required = true)
     val executeTime: Long = 0,
-    @Schema(name = "触发审核人列表", required = false)
+    @Schema(title = "触发审核人列表", required = false)
     val triggerReviewers: List<String>? = null
 )

@@ -29,16 +29,16 @@ package com.tencent.devops.environment.pojo.slave
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "网关模型")
+@Schema(title = "网关模型")
 data class SlaveGateway(
-    @Schema(name = "网关地域")
+    @Schema(title = "网关地域")
     val zoneName: String,
-    @Schema(name = "展示名称")
+    @Schema(title = "展示名称")
     val showName: String,
-    @Schema(name = "网关地址")
+    @Schema(title = "网关地址")
     val gateway: String,
-    @Schema(name = "文件网关地址")
+    @Schema(title = "文件网关地址")
     val fileGateway: String?,
-    @Schema(name = "可见性")
+    @Schema(title = "可见性")
     val visibility: Boolean
 )

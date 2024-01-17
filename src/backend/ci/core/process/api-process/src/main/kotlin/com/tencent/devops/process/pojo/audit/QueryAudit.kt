@@ -29,7 +29,7 @@ package com.tencent.devops.process.pojo.audit
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "审计模型-Audit-查询")
+@Schema(title = "审计模型-Audit-查询")
 data class QueryAudit(
     val projectId: String,
     val resourceType: String,

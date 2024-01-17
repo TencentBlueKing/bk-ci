@@ -33,19 +33,19 @@ import io.swagger.v3.oas.annotations.media.Schema
  * @Date 2019/9/17
  * @Version 1.0
  */
-@Schema(name = "项目简要信息")
+@Schema(title = "项目简要信息")
 data class ProjectSimpleInfo(
 
-    @Schema(name = "项目标识", required = true)
+    @Schema(title = "项目标识", required = true)
     val projectCode: String,
 
-    @Schema(name = "项目名称", required = true)
+    @Schema(title = "项目名称", required = true)
     val projectName: String,
 
-    @Schema(name = "创建人", required = true)
+    @Schema(title = "创建人", required = true)
     val creator: String?,
 
-    @Schema(name = "创建时间", required = true)
+    @Schema(title = "创建时间", required = true)
     val createTime: String?
 
 )

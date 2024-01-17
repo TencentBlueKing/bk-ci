@@ -29,8 +29,8 @@ package com.tencent.devops.process.pojo.setting
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "更新流水线模型请求报文")
+@Schema(title = "更新流水线模型请求报文")
 data class UpdatePipelineModelRequest(
-    @Schema(name = "流水线模型版本集合", required = true)
+    @Schema(title = "流水线模型版本集合", required = true)
     val pipelineModelVersionList: List<PipelineModelVersion>
 )

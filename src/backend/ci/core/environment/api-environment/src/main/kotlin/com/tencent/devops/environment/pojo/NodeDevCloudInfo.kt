@@ -29,26 +29,26 @@ package com.tencent.devops.environment.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "devCloud节点信息")
+@Schema(title = "devCloud节点信息")
 data class NodeDevCloudInfo(
-    @Schema(name = "环境 HashId", required = true)
+    @Schema(title = "环境 HashId", required = true)
     val nodeHashId: String,
-    @Schema(name = "节点 Id", required = true)
+    @Schema(title = "节点 Id", required = true)
     val nodeId: String,
-    @Schema(name = "节点名称", required = true)
+    @Schema(title = "节点名称", required = true)
     val name: String,
-    @Schema(name = "IP", required = true)
+    @Schema(title = "IP", required = true)
     val ip: String,
-    @Schema(name = "节点状态", required = true)
+    @Schema(title = "节点状态", required = true)
     val nodeStatus: String,
-    @Schema(name = "agent状态", required = false)
+    @Schema(title = "agent状态", required = false)
     val agentStatus: Boolean?,
-    @Schema(name = "节点类型", required = true)
+    @Schema(title = "节点类型", required = true)
     val nodeType: String,
-    @Schema(name = "操作系统", required = false)
+    @Schema(title = "操作系统", required = false)
     val osName: String?,
-    @Schema(name = "创建人", required = true)
+    @Schema(title = "创建人", required = true)
     val createdUser: String,
-    @Schema(name = "projectId", required = false)
+    @Schema(title = "projectId", required = false)
     val projectId: String
 )

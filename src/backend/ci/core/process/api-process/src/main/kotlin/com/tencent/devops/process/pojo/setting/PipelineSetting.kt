@@ -47,46 +47,46 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "")
+@Schema(title = "")
 data class PipelineSetting(
-    @Schema(name = "项目id", required = false, readOnly = true)
+    @Schema(title = "项目id", required = false, readOnly = true)
     var projectId: String = "",
-    @Schema(name = "流水线id", required = false, readOnly = true)
+    @Schema(title = "流水线id", required = false, readOnly = true)
     var pipelineId: String = "",
-    @Schema(name = "流水线名称", required = false)
+    @Schema(title = "流水线名称", required = false)
     var pipelineName: String = "",
-    @Schema(name = "描述", required = false)
+    @Schema(title = "描述", required = false)
     val desc: String = "",
-    @Schema(name = "Lock 类型", required = false)
+    @Schema(title = "Lock 类型", required = false)
     val runLockType: PipelineRunLockType = PipelineRunLockType.SINGLE_LOCK,
-    @Schema(name = "订阅成功相关", required = false)
+    @Schema(title = "订阅成功相关", required = false)
     var successSubscription: Subscription = Subscription(),
-    @Schema(name = "订阅失败相关", required = false)
+    @Schema(title = "订阅失败相关", required = false)
     var failSubscription: Subscription = Subscription(),
-    @Schema(name = "标签列表", required = false)
+    @Schema(title = "标签列表", required = false)
     var labels: List<String> = emptyList(),
-    @Schema(name = "最大排队时长", required = false)
+    @Schema(title = "最大排队时长", required = false)
     val waitQueueTimeMinute: Int = PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT,
-    @Schema(name = "最大排队数量", required = false)
+    @Schema(title = "最大排队数量", required = false)
     val maxQueueSize: Int = PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
-    @Schema(name = "并发时,设定的group", required = false)
+    @Schema(title = "并发时,设定的group", required = false)
     var concurrencyGroup: String? = PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT,
-    @Schema(name = "并发时,是否相同group取消正在执行的流水线", required = false)
+    @Schema(title = "并发时,是否相同group取消正在执行的流水线", required = false)
     val concurrencyCancelInProgress: Boolean = false,
-    @Schema(name = "是否有操作权限", required = false)
+    @Schema(title = "是否有操作权限", required = false)
     var hasPermission: Boolean? = null,
-    @Schema(name = "保存流水线编排的最大个数", required = false)
+    @Schema(title = "保存流水线编排的最大个数", required = false)
     val maxPipelineResNum: Int = PIPELINE_RES_NUM_MIN, // 保存流水线编排的最大个数
-    @Schema(name = "并发构建数量限制", required = false)
+    @Schema(title = "并发构建数量限制", required = false)
     val maxConRunningQueueSize: Int? = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX, // MULTIPLE类型时，并发构建数量限制
-    @Schema(name = "版本", required = false)
+    @Schema(title = "版本", required = false)
     var version: Int = 0,
     @field:BkField(patternStyle = BkStyleEnum.BUILD_NUM_RULE_STYLE, required = false)
-    @Schema(name = "构建号生成规则", required = false)
+    @Schema(title = "构建号生成规则", required = false)
     val buildNumRule: String? = null, // 构建号生成规则
-    @Schema(name = "重试时清理引擎变量表", required = false)
+    @Schema(title = "重试时清理引擎变量表", required = false)
     val cleanVariablesWhenRetry: Boolean? = false,
-    @Schema(name = "YAML流水线特殊配置", required = false)
+    @Schema(title = "YAML流水线特殊配置", required = false)
     val pipelineAsCodeSettings: PipelineAsCodeSettings? = null
 ) {
 
