@@ -28,41 +28,22 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.util.Properties
 
+val commonScriptUrl = javaClass.getResource("/common.gradle.kts")
+apply(from = commonScriptUrl)
+
 val i18nPath = joinPath(
     rootDir.absolutePath.replace("${File.separator}src${File.separator}backend${File.separator}ci", ""),
     "support-files",
     "i18n"
 )
 logger.debug("rootDir is: {}, i18nPath is: {}, projectName is: {}", rootDir, i18nPath, project.name)
+val getBkModuleName = extra["getBkModuleName"] as () -> String
 if (File(i18nPath).isDirectory) {
     logger.debug("i18n load register , Path is $i18nPath")
     // 编入i18n文件
     val i18nTask = tasks.register("i18n") {
         doLast {
-            val propertyName = "i18n.module.name"
-            var moduleName = if (project.hasProperty(propertyName)) {
-                project.property(propertyName)?.toString()
-            } else {
-                ""
-            }
-            if (moduleName.isNullOrBlank()) {
-                // 根据项目名称提取微服务名称
-                val parts = project.name.split("-")
-                val num = if (parts.size > 2) {
-                    parts.size - 1
-                } else {
-                    parts.size
-                }
-                val projectNameSb = StringBuilder()
-                for (i in 1 until num) {
-                    if (i != num - 1) {
-                        projectNameSb.append(parts[i]).append("-")
-                    } else {
-                        projectNameSb.append(parts[i])
-                    }
-                }
-                moduleName = projectNameSb.toString().let { if (it == "engine") "process" else it }
-            }
+            val moduleName = getBkModuleName()
             val moduleFileNames = getFileNames(joinPath(i18nPath, moduleName))
 
             logger.debug("copy i18n into {} classpath... , moduleFileNames is : {}", moduleName, moduleFileNames)
