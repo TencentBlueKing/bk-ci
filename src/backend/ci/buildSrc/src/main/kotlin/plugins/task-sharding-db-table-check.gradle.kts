@@ -33,6 +33,7 @@ apply(from = commonScriptUrl)
 val shardingTableRegex = "(.+)_(\\d+)".toRegex()
 val getMysqlInfo = extra["getMysqlInfo"] as (String) -> Triple<String, String, String>
 val getDatabaseName = extra["getDatabaseName"] as (String) -> String
+val getBkModuleName = extra["getBkModuleName"] as () -> String
 val shardingDbTableCheckTask = tasks.register("shardingDbTableCheck") {
     doLast {
         val moduleName = getBkModuleName()
@@ -61,6 +62,7 @@ val shardingDbTableCheckTask = tasks.register("shardingDbTableCheck") {
                 )
             }
             if (archiveDbUrls?.isEmpty() == false) {
+                // 获取归档库的数据库名称
                 val archiveDatabaseName = databaseName.replace(moduleName, "archive_$moduleName")
                 // 各归档DB的表和原表进行比较
                 archiveDbUrls.forEach { archiveDbUrl ->
@@ -170,60 +172,92 @@ fun compareDatabases(
     compareDb: DatabaseInfo,
     singleChipCompareFlag: Boolean = false
 ) {
+    val referenceDbUrl = referenceDb.url
+    val referenceDatabaseName = referenceDb.databaseName
     val referenceTables = referenceDb.tables
     val referenceTableNames = referenceTables.map { it.name }.toSet()
+    val compareDbUrl = compareDb.url
+    val compareDatabaseName = compareDb.databaseName
     val compareTables = compareDb.tables
     val compareTableNames = compareTables.map { it.name }.toSet()
     if (!singleChipCompareFlag) {
+        // 如果没有打开单向对比开关，那么需要将对比库与参照库对比看表是否有缺失
         val missingTableNames = referenceTableNames - compareTableNames
         if (missingTableNames.isNotEmpty()) {
+            // 排除对比库和参照库的表因分表造成的表名差异
             val finalMissingTableNames = getFinalCheckTableNames(referenceTableNames, missingTableNames)
             if (finalMissingTableNames.isNotEmpty()) {
-                println("Missing tables: $finalMissingTableNames")
+                throw RuntimeException("Missing table in database ($compareDbUrl/$compareDatabaseName) relative to " +
+                    "database ($referenceDbUrl/$referenceDatabaseName): $finalMissingTableNames.")
             }
         }
     }
+    // 将对比库与参照库对比看表是否有多出
     val extraTableNames = compareTableNames - referenceTableNames
     var finalExtraTableNames: Set<String> = mutableSetOf()
     if (extraTableNames.isNotEmpty()) {
         finalExtraTableNames = getFinalCheckTableNames(referenceTableNames, extraTableNames)
         if (finalExtraTableNames.isNotEmpty()) {
-            println("Extra tables: $finalExtraTableNames")
+            throw RuntimeException("Compared with database ($referenceDbUrl/$referenceDatabaseName), the extra tables" +
+                " in database ($compareDbUrl/$compareDatabaseName): $finalExtraTableNames.")
         }
     }
+    // 找出对比库的分表集合
     val validShardingTableNames = extraTableNames - finalExtraTableNames
+    // 找出二个库表名相同的公共表
     val commonTableNames = referenceTableNames.intersect(compareTableNames).toMutableSet()
+    // 将对比库的分表集合数据加入公共表集合
     commonTableNames.addAll(validShardingTableNames)
+    // 对比公共表在二个库的结构是否有差异
     for (tableName in commonTableNames) {
         val referenceTable =
             referenceTables.first { it.name == tableName || getValidShardingTableFlag(tableName, it.name) }
         val compareTable =
             compareTables.first { it.name == tableName || getValidShardingTableFlag(tableName, it.name) }
 
+        // 比较表的字段是否有差异
         if (referenceTable.columns != compareTable.columns) {
-            println("Column structure mismatch in table $tableName:")
-            println("Reference columns: ${referenceTable.columns}")
-            println("Compared columns: ${compareTable.columns}")
             var missingColumns = referenceTable.columns - compareTable.columns
             var extraColumns = compareTable.columns - referenceTable.columns
             val mismatchColumns = mutableListOf<ColumnInfo>()
+            val missingColumnNames = missingColumns.map { it.name }
             extraColumns.forEach { extraColumn ->
-                if (!missingColumns.first{ it.name == extraColumn.name}.nullable) {
+                if (missingColumnNames.contains(extraColumn.name)) {
                     mismatchColumns.add(extraColumn)
                 }
             }
-            missingColumns = missingColumns - mismatchColumns
+            val mismatchColumnNames = mismatchColumns.map { it.name }
+            missingColumns = missingColumns.filter { !mismatchColumnNames.contains(it.name) }
             extraColumns = extraColumns - mismatchColumns
-            println("Compared missingColumns: $missingColumns,extraColumns: $extraColumns,mismatchColumns: $mismatchColumns")
+            val columnTip = "Compared with the table of database ($referenceDbUrl/$referenceDatabaseName), " +
+                "the differences of table ($tableName) of database ($compareDbUrl/$compareDatabaseName) are as follows: \n " +
+                "missing fields: $missingColumns; \n extra fields: $extraColumns; \n different fields: $mismatchColumns."
+            if (!missingColumns.isNullOrEmpty() || !extraColumns.isNullOrEmpty() || !mismatchColumns.isNullOrEmpty()) {
+                // 字段有差异则抛出错误提示
+                throw RuntimeException(columnTip)
+            }
         }
-
+        // 比较表的索引是否有差异
         if (referenceTable.indexes != compareTable.indexes) {
-            println("Index structure mismatch in table $tableName:")
-            println("Reference indexes: ${referenceTable.indexes}")
-            println("Compared indexes: ${compareTable.indexes}")
-            val missingIndexes = referenceTable.indexes - compareTable.indexes
-            val extraIndexes = compareTable.indexes - referenceTable.indexes
-            println("Compared missingIndexes: $missingIndexes,extraIndexes: $extraIndexes")
+            var missingIndexes = referenceTable.indexes - compareTable.indexes
+            var extraIndexes = compareTable.indexes - referenceTable.indexes
+            val mismatchIndexes = mutableListOf<IndexInfo>()
+            val missingIndexNames = missingIndexes.map { it.name }
+            extraIndexes.forEach { extraIndex ->
+                if (missingIndexNames.contains(extraIndex.name)) {
+                    mismatchIndexes.add(extraIndex)
+                }
+            }
+            val mismatchIndexNames = mismatchIndexes.map { it.name }
+            missingIndexes = missingIndexes.filter { !mismatchIndexNames.contains(it.name) }
+            extraIndexes = extraIndexes - mismatchIndexes
+            val indexTip = "Compared with the table of database ($referenceDbUrl/$referenceDatabaseName), " +
+                "the differences of table ($tableName) of database ($compareDbUrl/$compareDatabaseName) are as follows: \n " +
+                "missing indexs: $missingIndexes; \n extra indexs: $extraIndexes; \n different indexs: $mismatchIndexes."
+            if (!missingIndexes.isNullOrEmpty() || !extraIndexes.isNullOrEmpty() || !mismatchIndexes.isNullOrEmpty()) {
+                // 字段有差异则抛出错误提示
+                throw RuntimeException(indexTip)
+            }
         }
     }
 }
@@ -253,34 +287,6 @@ fun doCompareDatabasesBus(
     return referDb
 }
 
-fun getBkModuleName(): String {
-    val propertyName = "i18n.module.name"
-    var moduleName = if (project.hasProperty(propertyName)) {
-        project.property(propertyName)?.toString()
-    } else {
-        ""
-    }
-    if (moduleName.isNullOrBlank()) {
-        // 根据项目名称提取微服务名称
-        val parts = project.name.split("-")
-        val num = if (parts.size > 2) {
-            parts.size - 1
-        } else {
-            parts.size
-        }
-        val projectNameSb = StringBuilder()
-        for (i in 1 until num) {
-            if (i != num - 1) {
-                projectNameSb.append(parts[i]).append("-")
-            } else {
-                projectNameSb.append(parts[i])
-            }
-        }
-        moduleName = projectNameSb.toString().let { if (it == "engine") "process" else it }
-    }
-    return moduleName
-}
-
 fun getFinalCheckTableNames(
     referenceTableNames: Set<String>,
     tableNames: Set<String>
@@ -288,10 +294,8 @@ fun getFinalCheckTableNames(
     val finalCheckTableNames = mutableSetOf<String>()
     tableNames.forEach { tableName ->
         val validShardingTableFlag = getValidShardingTableFlag(tableName, referenceTableNames)
-        if (validShardingTableFlag) {
-            // 满足分表正则匹配，则校验表是否存在
-            println("The table structure of $tableName table needs to be verified")
-        } else {
+        if (!validShardingTableFlag) {
+            // 表不是分表类型则需要进一步校验
             finalCheckTableNames.add(tableName)
         }
     }

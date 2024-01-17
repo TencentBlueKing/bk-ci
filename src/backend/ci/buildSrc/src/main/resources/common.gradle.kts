@@ -42,12 +42,12 @@ val getMysqlInfo: (String) -> Triple<String, String, String> = { moduleName ->
     }
 
     if (mysqlURL == null) {
-        logger.debug("use default properties.")
+        println("use default properties.")
         mysqlURL = project.extra["DB_HOST"]?.toString()
         mysqlUser = project.extra["DB_USERNAME"]?.toString()
         mysqlPasswd = project.extra["DB_PASSWORD"]?.toString()
     }
-   Triple(mysqlURL, mysqlUser, mysqlPasswd)
+    Triple(mysqlURL, mysqlUser, mysqlPasswd)
 }
 
 val getDatabaseName: (String) -> String = { moduleName ->
@@ -61,5 +61,34 @@ val getDatabaseName: (String) -> String = { moduleName ->
     databaseName
 }
 
+val getBkModuleName: () -> String = {
+    val propertyName = "i18n.module.name"
+    var moduleName = if (project.hasProperty(propertyName)) {
+        project.property(propertyName)?.toString()
+    } else {
+        ""
+    }
+    if (moduleName.isNullOrBlank()) {
+        // 根据项目名称提取微服务名称
+        val parts = project.name.split("-")
+        val num = if (parts.size > 2) {
+            parts.size - 1
+        } else {
+            parts.size
+        }
+        val projectNameSb = StringBuilder()
+        for (i in 1 until num) {
+            if (i != num - 1) {
+                projectNameSb.append(parts[i]).append("-")
+            } else {
+                projectNameSb.append(parts[i])
+            }
+        }
+        moduleName = projectNameSb.toString().let { if (it == "engine") "process" else it }
+    }
+    moduleName
+}
+
 extra["getMysqlInfo"] = getMysqlInfo
 extra["getDatabaseName"] = getDatabaseName
+extra["getBkModuleName"] = getBkModuleName
