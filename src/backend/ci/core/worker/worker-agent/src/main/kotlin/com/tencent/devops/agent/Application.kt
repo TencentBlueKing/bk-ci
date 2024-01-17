@@ -27,17 +27,14 @@
 
 package com.tencent.devops.agent
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.agent.service.BuildLessStarter
-import com.tencent.devops.worker.WorkRunner
 import com.tencent.devops.common.api.enums.EnumLoader
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHUtil
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.ElementSubTypeRegisterLoader
+import com.tencent.devops.worker.WorkRunner
 import com.tencent.devops.worker.common.BUILD_TYPE
 import com.tencent.devops.worker.common.Runner
 import com.tencent.devops.worker.common.WorkspaceInterface
@@ -46,7 +43,6 @@ import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.env.DockerEnv
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
-import okhttp3.Headers.Companion.toHeaders
 import okhttp3.Request
 import okhttp3.Response
 import java.io.File
