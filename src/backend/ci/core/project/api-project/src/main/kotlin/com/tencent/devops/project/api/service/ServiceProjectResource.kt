@@ -347,7 +347,6 @@ interface ServiceProjectResource {
         productName: String
     ): Result<Boolean>
 
-
     @PUT
     @Path("{projectId}/updateOrganizationByEnglishName")
     @ApiOperation("修改项目组织架构")
