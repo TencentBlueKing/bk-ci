@@ -48,7 +48,7 @@
                 <bk-button theme="primary" :loading="isSavingTrigginSetting" @click="saveTriggerSetting">{{ $t('save') }}</bk-button>
             </section>
         </section>
-        <h3 class="setting-basic-head">{{$t('setting.orgnization')}}</h3>
+        <h3 class="setting-basic-head">{{$t('setting.organization')}}</h3>
         <section class="basic-main">
             <section class="form-item">
                 <p>{{$t('setting.projectOrg')}}</p>
@@ -120,7 +120,6 @@
                     productId: ''
                 },
                 deptMap: {},
-                projectInfo: null,
                 orgs: [],
                 centers: [],
                 products: [],
@@ -153,7 +152,7 @@
                     ])
                     const dept = ['bgId', 'businessLineId', 'deptId'].map(key => projectInfo[key]).filter(item => item)
                     this.initOrgs(dept)
-                    this.projectInfo = projectInfo
+                    
                     this.projectOrg = {
                         dept,
                         centerId: projectInfo.centerId,
@@ -279,13 +278,15 @@
             async saveProjectOrg () {
                 this.isSavingProjectOrg = true
                 try {
-                    const { dept, ...rest } = this.projectOrg
+                    const { dept, productId, centerId } = this.projectOrg
                     
                     await setting.saveProjectInfo(this.projectId, {
-                        ...this.projectInfo,
                         ...this.generateProjectOrgParam(dept),
-                        ...rest,
+                        centerId,
                         centerName: this.centers.find(item => item.id === this.projectOrg.centerId)?.name ?? ''
+                    }, {
+                        productId,
+                        productName: this.products.find(item => item.id === this.projectOrg.productId)?.name ?? ''
                     })
                     this.$bkMessage({ theme: 'success', message: 'Saved successfully' })
                 } catch (err) {

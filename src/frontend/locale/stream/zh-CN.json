@@ -250,7 +250,7 @@
         "createCredential": "创建凭据",
         "crossRepoUse": "允许跨项目使用",
         "crossRepoUseTips": "仅支持通过模板共享凭据。如当前代码库下管理的模板A引用此凭据，其它项目下的流水线B引用模板A的场景下，流水线B运行时才能使用此凭据",
-        "orgnization": "项目归属",
+        "organization": "项目归属",
         "projectOrg": "项目所属组织",
         "projectProduct": "项目所属运营产品",
         "ticket": {

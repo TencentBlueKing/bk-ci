@@ -250,7 +250,7 @@
         "createCredential": "Create Credential",
         "crossRepoUse": "Allow cross-repository use",
         "crossRepoUseTips": "Credential can be referenced across repositories when it's used in template.",
-        "orgnization": "Project Organization",
+        "organization": "Project Organization",
         "projectOrg": "Project Organization",
         "projectProduct": "Project Product",
         "ticket": {

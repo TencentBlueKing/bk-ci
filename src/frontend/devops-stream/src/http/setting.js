@@ -238,9 +238,11 @@ export default {
         return api.get(`${PROJECT_PERFIX}/user/projects/product/getOperationalProducts`)
     },
     getProjectInfo (projectId) {
-        return api.get(`${PROJECT_PERFIX}/user/projects/${projectId}`)
+        return api.get(`${STREAM_PERFIX}/user/projects/${projectId}`)
     },
-    saveProjectInfo (projectId, body) {
-        return api.put(`${PROJECT_PERFIX}/user/projects/${projectId}`, body)
+    saveProjectInfo (projectId, body, query) {
+        return api.put(`${STREAM_PERFIX}/user/projects/${projectId}/organization`, body, {
+            params: query
+        })
     }
 }
