@@ -43,7 +43,7 @@ import com.tencent.devops.common.pipeline.type.kubernetes.KubernetesDispatchType
     JsonSubTypes.Type(value = KubernetesDispatchType::class, name = "KUBERNETES"),
     JsonSubTypes.Type(value = ThirdPartyAgentIDDispatchType::class, name = "THIRD_PARTY_AGENT_ID"),
     JsonSubTypes.Type(value = ThirdPartyAgentEnvDispatchType::class, name = "THIRD_PARTY_AGENT_ENV"),
-    JsonSubTypes.Type(value = ThirdPartyDevCloudDispatchType::class, name = "THIRD_PARTY_DEVCLOUD"),
+    JsonSubTypes.Type(value = ThirdPartyDevCloudDispatchType::class, name = "THIRD_PARTY_DEVCLOUD")
 )
 abstract class DispatchType(
     open var value: String,
