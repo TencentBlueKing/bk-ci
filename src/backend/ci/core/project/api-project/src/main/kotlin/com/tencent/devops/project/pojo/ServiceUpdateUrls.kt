@@ -29,16 +29,16 @@ package com.tencent.devops.project.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "服务-更新Urls模型")
+@Schema(title = "服务-更新Urls模型")
 data class ServiceUpdateUrls(
-    @Schema(name = "服务名称", required = true)
+    @Schema(title = "服务名称", required = true)
     val name: String,
-    @Schema(name = "cssUrl")
+    @Schema(title = "cssUrl")
     val cssUrl: String?,
-    @Schema(name = "jsUrl")
+    @Schema(title = "jsUrl")
     val jsUrl: String?,
-    @Schema(name = "grayCssUrl")
+    @Schema(title = "grayCssUrl")
     val grayCssUrl: String?,
-    @Schema(name = "grayJsUrl")
+    @Schema(title = "grayJsUrl")
     val grayJsUrl: String?
 )

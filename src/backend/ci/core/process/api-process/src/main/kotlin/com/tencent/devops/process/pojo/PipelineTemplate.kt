@@ -30,26 +30,26 @@ package com.tencent.devops.process.pojo
 import com.tencent.devops.common.pipeline.container.Stage
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "流水线-模板信息")
+@Schema(title = "流水线-模板信息")
 data class PipelineTemplate(
-    @Schema(name = "模板名称", required = true)
+    @Schema(title = "模板名称", required = true)
     val name: String,
-    @Schema(name = "模板描述", required = false)
+    @Schema(title = "模板描述", required = false)
     val desc: String?,
-    @Schema(name = "应用范畴", required = true)
+    @Schema(title = "应用范畴", required = true)
     val category: List<String?>,
-    @Schema(name = "模板图标", required = false)
+    @Schema(title = "模板图标", required = false)
     val icon: String?,
-    @Schema(name = "模板LOGO路径", required = false)
+    @Schema(title = "模板LOGO路径", required = false)
     val logoUrl: String?,
-    @Schema(name = "模板作者", required = true)
+    @Schema(title = "模板作者", required = true)
     val author: String,
-    @Schema(name = "插件数量", required = true)
+    @Schema(title = "插件数量", required = true)
     val atomNum: Int,
-    @Schema(name = "当前模板对应的被复制的模板或安装的研发商店的模板对应的ID", required = true)
+    @Schema(title = "当前模板对应的被复制的模板或安装的研发商店的模板对应的ID", required = true)
     val srcTemplateId: String?,
-    @Schema(name = "是否为公共模版", required = true)
+    @Schema(title = "是否为公共模版", required = true)
     val publicFlag: Boolean,
-    @Schema(name = "阶段集合", required = true)
+    @Schema(title = "阶段集合", required = true)
     val stages: List<Stage>
 )

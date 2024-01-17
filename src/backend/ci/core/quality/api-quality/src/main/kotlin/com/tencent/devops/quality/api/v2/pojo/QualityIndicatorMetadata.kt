@@ -30,7 +30,7 @@ package com.tencent.devops.quality.api.v2.pojo
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "指标基础数据")
+@Schema(title = "指标基础数据")
 data class QualityIndicatorMetadata(
     val hashId: String,
     val dataId: String,

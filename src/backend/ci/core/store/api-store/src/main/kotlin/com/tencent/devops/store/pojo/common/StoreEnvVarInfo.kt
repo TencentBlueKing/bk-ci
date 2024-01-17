@@ -29,32 +29,32 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "store组件环境变量信息")
+@Schema(title = "store组件环境变量信息")
 data class StoreEnvVarInfo(
-    @Schema(name = "环境变量ID", required = true)
+    @Schema(title = "环境变量ID", required = true)
     val id: String,
-    @Schema(name = "store组件代码", required = true)
+    @Schema(title = "store组件代码", required = true)
     val storeCode: String,
-    @Schema(name = "store组件类型", required = true)
+    @Schema(title = "store组件类型", required = true)
     val storeType: String,
-    @Schema(name = "变量名", required = true)
+    @Schema(title = "变量名", required = true)
     val varName: String,
-    @Schema(name = "变量值", required = true)
+    @Schema(title = "变量值", required = true)
     val varValue: String,
-    @Schema(name = "描述", required = false)
+    @Schema(title = "描述", required = false)
     val varDesc: String?,
-    @Schema(name = "变量值是否加密", required = true)
+    @Schema(title = "变量值是否加密", required = true)
     val encryptFlag: Boolean,
-    @Schema(name = "适用范围 TEST：测试 PRD：正式 ALL：所有", required = true)
+    @Schema(title = "适用范围 TEST：测试 PRD：正式 ALL：所有", required = true)
     val scope: String,
-    @Schema(name = "版本号", required = true)
+    @Schema(title = "版本号", required = true)
     val version: Int,
-    @Schema(name = "添加用户", required = true)
+    @Schema(title = "添加用户", required = true)
     val creator: String,
-    @Schema(name = "修改用户", required = true)
+    @Schema(title = "修改用户", required = true)
     val modifier: String,
-    @Schema(name = "添加时间", required = true)
+    @Schema(title = "添加时间", required = true)
     val createTime: String,
-    @Schema(name = "修改时间", required = true)
+    @Schema(title = "修改时间", required = true)
     val updateTime: String
 )

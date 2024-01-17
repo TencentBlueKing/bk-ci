@@ -29,12 +29,12 @@ package com.tencent.devops.artifactory.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "版本仓库-文件摘要")
+@Schema(title = "版本仓库-文件摘要")
 data class FileChecksums(
-    @Schema(name = "sha256", required = true)
+    @Schema(title = "sha256", required = true)
     val sha256: String?,
-    @Schema(name = "sha1", required = true)
+    @Schema(title = "sha1", required = true)
     val sha1: String,
-    @Schema(name = "md5", required = true)
+    @Schema(title = "md5", required = true)
     val md5: String
 )

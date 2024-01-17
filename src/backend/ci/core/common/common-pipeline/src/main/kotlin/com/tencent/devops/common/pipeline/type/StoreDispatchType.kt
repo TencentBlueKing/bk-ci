@@ -37,32 +37,32 @@ import io.swagger.v3.oas.annotations.media.Schema
  * @Version 1.0
  */
 abstract class StoreDispatchType(
-    @Schema(name = "docker构建版本", required = false)
+    @Schema(title = "docker构建版本", required = false)
     @JsonProperty("value")
     open var dockerBuildVersion: String?,
     routeKeySuffix: DispatchRouteKeySuffix? = null,
-    @Schema(name = "镜像类型", required = false)
+    @Schema(title = "镜像类型", required = false)
     open var imageType: ImageType? = ImageType.BKDEVOPS,
-    @Schema(name = "凭证id", required = false)
+    @Schema(title = "凭证id", required = false)
     open var credentialId: String? = "",
-    @Schema(name = "凭证项目id", required = false)
+    @Schema(title = "凭证项目id", required = false)
     open var credentialProject: String? = "",
-    @Schema(name = "商店镜像代码", required = false)
+    @Schema(title = "商店镜像代码", required = false)
     // 商店镜像代码
     open var imageCode: String? = "",
-    @Schema(name = "商店镜像版本", required = false)
+    @Schema(title = "商店镜像版本", required = false)
     // 商店镜像版本
     open var imageVersion: String? = "",
-    @Schema(name = "商店镜像名称", required = false)
+    @Schema(title = "商店镜像名称", required = false)
     // 商店镜像名称
     open var imageName: String? = "",
-    @Schema(name = "商店镜像公共标识", required = false)
+    @Schema(title = "商店镜像公共标识", required = false)
     // 商店镜像公共标识
     open var imagePublicFlag: Boolean? = false,
-    @Schema(name = "商店镜像研发来源c", required = false)
+    @Schema(title = "商店镜像研发来源c", required = false)
     // 商店镜像研发来源c
     open var imageRDType: String? = "",
-    @Schema(name = "商店镜像是否推荐", required = false)
+    @Schema(title = "商店镜像是否推荐", required = false)
     // 商店镜像是否推荐
     open var recommendFlag: Boolean? = true
 ) : DispatchType((if (dockerBuildVersion.isNullOrBlank()) imageCode else dockerBuildVersion)

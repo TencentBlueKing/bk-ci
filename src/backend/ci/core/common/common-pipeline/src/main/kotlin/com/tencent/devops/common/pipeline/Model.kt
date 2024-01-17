@@ -38,34 +38,34 @@ import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("ALL")
-@Schema(name = "流水线模型-创建信息")
+@Schema(title = "流水线模型-创建信息")
 data class Model(
-    @Schema(name = "名称", required = true)
+    @Schema(title = "名称", required = true)
     var name: String,
-    @Schema(name = "描述", required = false)
+    @Schema(title = "描述", required = false)
     var desc: String?,
-    @Schema(name = "阶段集合", required = true)
+    @Schema(title = "阶段集合", required = true)
     val stages: List<Stage>,
-    @Schema(name = "标签", required = false)
+    @Schema(title = "标签", required = false)
     var labels: List<String> = emptyList(),
-    @Schema(name = "是否从模板中实例化出来的", required = false)
+    @Schema(title = "是否从模板中实例化出来的", required = false)
     val instanceFromTemplate: Boolean? = null,
-    @Schema(name = "创建人", required = false)
+    @Schema(title = "创建人", required = false)
     var pipelineCreator: String? = null,
-    @Schema(name = "当前模板对应的被复制的模板或安装的研发商店的模板对应的ID", required = false)
+    @Schema(title = "当前模板对应的被复制的模板或安装的研发商店的模板对应的ID", required = false)
     var srcTemplateId: String? = null,
-    @Schema(name = "当前模板的ID", required = false)
+    @Schema(title = "当前模板的ID", required = false)
     var templateId: String? = null,
-    @Schema(name = "提示", required = false)
+    @Schema(title = "提示", required = false)
     var tips: String? = null,
-    @Schema(name = "流水线事件回调", required = false)
+    @Schema(title = "流水线事件回调", required = false)
     var events: Map<String, PipelineCallbackEvent>? = emptyMap(),
-    @Schema(name = "静态流水线组", required = false)
+    @Schema(title = "静态流水线组", required = false)
     var staticViews: List<String> = emptyList(),
-    @Schema(name = "各项耗时", required = true)
+    @Schema(title = "各项耗时", required = true)
     var timeCost: BuildRecordTimeCost? = null
 ) {
-    @Schema(name = "提交时流水线最新版本号", required = false)
+    @Schema(title = "提交时流水线最新版本号", required = false)
     var latestVersion: Int = 0
 
     /**

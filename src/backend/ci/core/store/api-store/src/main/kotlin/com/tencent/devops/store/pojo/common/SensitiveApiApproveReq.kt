@@ -30,12 +30,12 @@ package com.tencent.devops.store.pojo.common
 import com.tencent.devops.store.pojo.common.enums.ApiStatusEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "敏感API审批请求体")
+@Schema(title = "敏感API审批请求体")
 data class SensitiveApiApproveReq(
-    @Schema(name = "敏感API ID", required = true)
+    @Schema(title = "敏感API ID", required = true)
     val id: String,
-    @Schema(name = "审批状态 PASS:通过，REFUSE:拒绝", required = true)
+    @Schema(title = "审批状态 PASS:通过，REFUSE:拒绝", required = true)
     val apiStatus: ApiStatusEnum,
-    @Schema(name = "审批信息", required = true)
+    @Schema(title = "审批信息", required = true)
     val approveMsg: String?
 )

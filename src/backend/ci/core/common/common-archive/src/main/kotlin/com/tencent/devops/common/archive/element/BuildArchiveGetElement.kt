@@ -30,25 +30,25 @@ package com.tencent.devops.common.archive.element
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "拉取流水线已归档构件", description = BuildArchiveGetElement.classType)
+@Schema(title = "拉取流水线已归档构件", description = BuildArchiveGetElement.classType)
 data class BuildArchiveGetElement(
-    @Schema(name = "任务名称", required = true)
+    @Schema(title = "任务名称", required = true)
     override val name: String = "构建产物文件归档下载",
-    @Schema(name = "id", required = false)
+    @Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(name = "状态", required = false)
+    @Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(name = "流水线id", required = true)
+    @Schema(title = "流水线id", required = true)
     val pipelineId: String = "",
-    @Schema(name = "构建号（不传则取最新的构建号）", required = false)
+    @Schema(title = "构建号（不传则取最新的构建号）", required = false)
     val buildNo: String = "",
-    @Schema(name = "待下载文件路径（支持正则表达式，多个用逗号隔开）", required = true)
+    @Schema(title = "待下载文件路径（支持正则表达式，多个用逗号隔开）", required = true)
     val srcPaths: String = "",
-    @Schema(name = "下载到本地的路径（不填则为当前工作空间）", required = false)
+    @Schema(title = "下载到本地的路径（不填则为当前工作空间）", required = false)
     val destPath: String = "",
-    @Schema(name = "是否传最新构建号(LASTEST 表示最新构建号, ASSIGN 指定构建号)", required = true)
+    @Schema(title = "是否传最新构建号(LASTEST 表示最新构建号, ASSIGN 指定构建号)", required = true)
     val buildNoType: String = "",
-    @Schema(name = "是否找不到文件报404退出)", required = false)
+    @Schema(title = "是否找不到文件报404退出)", required = false)
     val notFoundContinue: Boolean? = false
 ) : Element(name, id, status) {
 

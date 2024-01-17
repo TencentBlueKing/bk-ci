@@ -32,42 +32,42 @@ import com.tencent.devops.common.api.enums.I18nSourceEnum
 import com.tencent.devops.common.pipeline.pojo.AtomBaseInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "流水线-插件信息")
+@Schema(title = "流水线-插件信息")
 data class MyAtomRespItem(
-    @Schema(name = "插件ID", required = true)
+    @Schema(title = "插件ID", required = true)
     val atomId: String,
-    @Schema(name = "插件名称", required = true)
+    @Schema(title = "插件名称", required = true)
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val name: String,
-    @Schema(name = "插件代码", required = true)
+    @Schema(title = "插件代码", required = true)
     val atomCode: String,
-    @Schema(name = "开发语言", required = true)
+    @Schema(title = "开发语言", required = true)
     val language: String?,
-    @Schema(name = "插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = true)
+    @Schema(title = "插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = true)
     val category: String,
-    @Schema(name = "logo链接")
+    @Schema(title = "logo链接")
     val logoUrl: String?,
-    @Schema(name = "版本号", required = true)
+    @Schema(title = "版本号", required = true)
     val version: String,
-    @Schema(name =
+    @Schema(title =
         "插件状态，INIT：初始化|COMMITTING：提交中|BUILDING：构建中|BUILD_FAIL：构建失败|TESTING：测试中|" +
             "AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|" +
             "UNDERCARRIAGING：下架中|UNDERCARRIAGED：已下架",
         required = true
     )
     val atomStatus: String,
-    @Schema(name = "项目", required = true)
+    @Schema(title = "项目", required = true)
     val projectName: String,
-    @Schema(name = "是否有处于上架状态的插件插件版本", required = true)
+    @Schema(title = "是否有处于上架状态的插件插件版本", required = true)
     val releaseFlag: Boolean,
-    @Schema(name = "创建人", required = true)
+    @Schema(title = "创建人", required = true)
     val creator: String,
-    @Schema(name = "修改人", required = true)
+    @Schema(title = "修改人", required = true)
     val modifier: String,
-    @Schema(name = "创建时间", required = true)
+    @Schema(title = "创建时间", required = true)
     val createTime: String,
-    @Schema(name = "创建时间", required = true)
+    @Schema(title = "创建时间", required = true)
     val updateTime: String,
-    @Schema(name = "处于流程中的插件版本信息", required = false)
+    @Schema(title = "处于流程中的插件版本信息", required = false)
     val processingVersionInfos: List<AtomBaseInfo>? = null
 )

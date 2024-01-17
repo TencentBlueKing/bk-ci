@@ -29,14 +29,14 @@ package com.tencent.devops.metrics.pojo.dto
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "codecc数据上报传输对象")
+@Schema(title = "codecc数据上报传输对象")
 data class CodeccDataReportDTO(
-    @Schema(name = "统计日期")
+    @Schema(title = "统计日期")
     val statisticsTime: String,
-    @Schema(name = "项目ID")
+    @Schema(title = "项目ID")
     val projectId: String,
-    @Schema(name = "代码库扫描平均分")
+    @Schema(title = "代码库扫描平均分")
     val repoCodeccAvgScore: Double,
-    @Schema(name = "已解决缺陷数量")
+    @Schema(title = "已解决缺陷数量")
     val resolvedDefectNum: Int
 )

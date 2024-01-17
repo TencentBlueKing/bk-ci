@@ -29,16 +29,16 @@ package com.tencent.devops.artifactory.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "插件市场-重新归档插件包请求报文体")
+@Schema(title = "插件市场-重新归档插件包请求报文体")
 data class ReArchiveAtomRequest(
-    @Schema(name = "项目编码", required = true)
+    @Schema(title = "项目编码", required = true)
     val projectCode: String,
-    @Schema(name = "插件ID", required = true)
+    @Schema(title = "插件ID", required = true)
     val atomId: String,
-    @Schema(name = "插件代码", required = true)
+    @Schema(title = "插件代码", required = true)
     val atomCode: String,
-    @Schema(name = "插件版本号", required = true)
+    @Schema(title = "插件版本号", required = true)
     val version: String,
-    @Schema(name = "插件字段校验确认标识", required = false)
+    @Schema(title = "插件字段校验确认标识", required = false)
     val fieldCheckConfirmFlag: Boolean? = false
 )

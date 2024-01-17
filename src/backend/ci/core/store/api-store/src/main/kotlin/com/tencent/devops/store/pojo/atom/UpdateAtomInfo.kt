@@ -30,16 +30,16 @@ package com.tencent.devops.store.pojo.atom
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(name = "插件市场-更新插件对象")
+@Schema(title = "插件市场-更新插件对象")
 data class UpdateAtomInfo(
-    @Schema(name = "插件状态", required = false)
+    @Schema(title = "插件状态", required = false)
     val atomStatus: Byte? = null,
-    @Schema(name = "插件状态信息", required = false)
+    @Schema(title = "插件状态信息", required = false)
     val atomStatusMsg: String? = null,
-    @Schema(name = "是否为最新版本", required = false)
+    @Schema(title = "是否为最新版本", required = false)
     val latestFlag: Boolean? = null,
-    @Schema(name = "发布时间", required = false)
+    @Schema(title = "发布时间", required = false)
     val pubTime: LocalDateTime? = null,
-    @Schema(name = "删除标识", required = false)
+    @Schema(title = "删除标识", required = false)
     val deleteFlag: Boolean? = null
 )

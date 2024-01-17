@@ -29,22 +29,22 @@ package com.tencent.devops.metrics.pojo.`do`
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "插件执行统计信息")
+@Schema(title = "插件执行统计信息")
 data class AtomExecutionStatisticsInfoDO(
-    @Schema(name = "项目ID")
+    @Schema(title = "项目ID")
     val projectId: String,
-    @Schema(name = "插件基本信息")
+    @Schema(title = "插件基本信息")
     val atomBaseInfo: AtomBaseInfoDO,
-    @Schema(name = "插件分类代码")
+    @Schema(title = "插件分类代码")
     val classifyCode: String,
-    @Schema(name = "平均耗时")
+    @Schema(title = "平均耗时")
     val avgCostTime: Double,
-    @Schema(name = "总执行次数")
+    @Schema(title = "总执行次数")
     val totalExecuteCount: Long,
-    @Schema(name = "成功执行次数")
+    @Schema(title = "成功执行次数")
     val successExecuteCount: Long,
-    @Schema(name = "成功率")
+    @Schema(title = "成功率")
     val successRate: Double,
-    @Schema(name = "插件错误信息")
+    @Schema(title = "插件错误信息")
     val atomFailInfos: Map<String, String>
 )

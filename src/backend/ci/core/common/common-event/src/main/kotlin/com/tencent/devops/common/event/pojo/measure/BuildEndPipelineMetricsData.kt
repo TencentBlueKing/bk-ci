@@ -30,40 +30,40 @@ package com.tencent.devops.common.event.pojo.measure
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "构建结束后流水线指标数据")
+@Schema(title = "构建结束后流水线指标数据")
 data class BuildEndPipelineMetricsData(
-    @Schema(name = "统计时间", required = true)
+    @Schema(title = "统计时间", required = true)
     val statisticsTime: String,
-    @Schema(name = "项目ID", required = true)
+    @Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(name = "流水线ID", required = true)
+    @Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(name = "流水线名称", required = true)
+    @Schema(title = "流水线名称", required = true)
     val pipelineName: String,
-    @Schema(name = "构建ID", required = true)
+    @Schema(title = "构建ID", required = true)
     val buildId: String,
-    @Schema(name = "构建序号", required = true)
+    @Schema(title = "构建序号", required = true)
     val buildNum: Int,
-    @Schema(name = "触发类型", required = true)
+    @Schema(title = "触发类型", required = true)
     val trigger: String? = null,
-    @Schema(name = "代码库地址", required = false)
+    @Schema(title = "代码库地址", required = false)
     val repoUrl: String? = null,
-    @Schema(name = "代码库分支", required = false)
+    @Schema(title = "代码库分支", required = false)
     val branch: String? = null,
-    @Schema(name = "启动用户", required = true)
+    @Schema(title = "启动用户", required = true)
     val startUser: String,
-    @Schema(name = "执行开始时间", required = true)
+    @Schema(title = "执行开始时间", required = true)
     val startTime: String? = null,
-    @Schema(name = "执行结束时间", required = true)
+    @Schema(title = "执行结束时间", required = true)
     val endTime: String? = null,
-    @Schema(name = "流水线构建耗时", required = true)
+    @Schema(title = "流水线构建耗时", required = true)
     val costTime: Long,
-    @Schema(name = "是否执行成功", required = true)
+    @Schema(title = "是否执行成功", required = true)
     val successFlag: Boolean,
-    @Schema(name = "错误信息列表", required = false)
+    @Schema(title = "错误信息列表", required = false)
     var errorInfos: List<ErrorInfo>? = null,
-    @Schema(name = "stage指标数据列表", required = true)
+    @Schema(title = "stage指标数据列表", required = true)
     val stages: List<BuildEndStageMetricsData>,
-    @Schema(name = "渠道代码", required = true)
+    @Schema(title = "渠道代码", required = true)
     val channelCode: String
 )

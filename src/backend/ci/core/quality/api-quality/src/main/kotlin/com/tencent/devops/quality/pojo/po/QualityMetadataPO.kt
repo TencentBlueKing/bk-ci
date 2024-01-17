@@ -30,32 +30,32 @@ package com.tencent.devops.quality.pojo.po
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(name = "质量红线基础数据PO")
+@Schema(title = "质量红线基础数据PO")
 data class QualityMetadataPO(
-    @Schema(name = "ID")
+    @Schema(title = "ID")
     val id: Long,
-    @Schema(name = "数据ID")
+    @Schema(title = "数据ID")
     val dataId: String?,
-    @Schema(name = "基础数据名称")
+    @Schema(title = "基础数据名称")
     var dataName: String?,
-    @Schema(name = "原子的classType")
+    @Schema(title = "原子的classType")
     val elementType: String?,
-    @Schema(name = "产出原子")
+    @Schema(title = "产出原子")
     var elementName: String?,
-    @Schema(name = "工具/原子子类")
+    @Schema(title = "工具/原子子类")
     val elementDetail: String?,
-    @Schema(name = "数值类型")
+    @Schema(title = "数值类型")
     val valueType: String?,
-    @Schema(name = "说明")
+    @Schema(title = "说明")
     var desc: String?,
-    @Schema(name = "额外的一些字段")
+    @Schema(title = "额外的一些字段")
     val extra: String?,
-    @Schema(name = "创建用户")
+    @Schema(title = "创建用户")
     val createUser: String?,
-    @Schema(name = "更新用户")
+    @Schema(title = "更新用户")
     val updateUser: String?,
-    @Schema(name = "创建时间")
+    @Schema(title = "创建时间")
     val createTime: LocalDateTime?,
-    @Schema(name = "更新时间")
+    @Schema(title = "更新时间")
     val updateTime: LocalDateTime?
 )

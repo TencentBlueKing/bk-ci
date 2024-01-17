@@ -29,10 +29,10 @@ package com.tencent.devops.notify.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "消息通知的标题和内容")
+@Schema(title = "消息通知的标题和内容")
 data class NotifyContext(
-    @Schema(name = "消息标题", required = true)
+    @Schema(title = "消息标题", required = true)
     val title: String,
-    @Schema(name = "消息文本", required = true)
+    @Schema(title = "消息文本", required = true)
     val body: String
 )

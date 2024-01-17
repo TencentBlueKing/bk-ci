@@ -29,8 +29,8 @@ package com.tencent.devops.artifactory.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "版本仓库-构建曲线")
+@Schema(title = "版本仓库-构建曲线")
 data class TrendInfoDto(
-    @Schema(name = "曲线图谱")
+    @Schema(title = "曲线图谱")
     var trendData: Map<String, List<ArtifactoryInfo>>
 )

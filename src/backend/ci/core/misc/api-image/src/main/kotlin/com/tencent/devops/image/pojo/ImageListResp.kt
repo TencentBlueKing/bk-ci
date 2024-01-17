@@ -29,8 +29,8 @@ package com.tencent.devops.image.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "镜像列表返回报文")
+@Schema(title = "镜像列表返回报文")
 data class ImageListResp(
-    @Schema(name = "数据集合", required = false)
+    @Schema(title = "数据集合", required = false)
     val imageList: List<ImageItem>
 )

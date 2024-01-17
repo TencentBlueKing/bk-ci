@@ -30,16 +30,16 @@ package com.tencent.devops.misc.pojo.project
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "查询项目数据迁移历史记录参数")
+@Schema(title = "查询项目数据迁移历史记录参数")
 data class ProjectDataMigrateHistoryQueryParam(
-    @Schema(name = "项目Id", required = true)
+    @Schema(title = "项目Id", required = true)
     val projectId: String,
-    @Schema(name = "流水线Id", required = false)
+    @Schema(title = "流水线Id", required = false)
     val pipelineId: String? = null,
-    @Schema(name = "模块标识", required = true)
+    @Schema(title = "模块标识", required = true)
     val moduleCode: SystemModuleEnum,
-    @Schema(name = "迁移集群名称", required = true)
+    @Schema(title = "迁移集群名称", required = true)
     val targetClusterName: String,
-    @Schema(name = "迁移数据源名称", required = true)
+    @Schema(title = "迁移数据源名称", required = true)
     val targetDataSourceName: String
 )

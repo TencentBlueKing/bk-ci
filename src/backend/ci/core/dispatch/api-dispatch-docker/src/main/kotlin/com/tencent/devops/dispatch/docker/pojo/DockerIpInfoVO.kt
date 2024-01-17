@@ -30,34 +30,34 @@ package com.tencent.devops.dispatch.docker.pojo
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "DockerIpInfoVO")
+@Schema(title = "DockerIpInfoVO")
 data class DockerIpInfoVO(
-    @Schema(name = "主键ID")
+    @Schema(title = "主键ID")
     val id: Long,
-    @Schema(name = "构建机IP")
+    @Schema(title = "构建机IP")
     val dockerIp: String,
-    @Schema(name = "构建机PORT")
+    @Schema(title = "构建机PORT")
     val dockerHostPort: Int,
-    @Schema(name = "构建机容量")
+    @Schema(title = "构建机容量")
     val capacity: Int,
-    @Schema(name = "构建机已使用量")
+    @Schema(title = "构建机已使用量")
     val usedNum: Int,
-    @Schema(name = "构建机CPU负载")
+    @Schema(title = "构建机CPU负载")
     val averageCpuLoad: Int,
-    @Schema(name = "构建机内存负载")
+    @Schema(title = "构建机内存负载")
     val averageMemLoad: Int,
-    @Schema(name = "构建机硬盘负载")
+    @Schema(title = "构建机硬盘负载")
     val averageDiskLoad: Int,
-    @Schema(name = "构建机硬盘IO负载")
+    @Schema(title = "构建机硬盘IO负载")
     val averageDiskIOLoad: Int,
-    @Schema(name = "构建机是否可用")
+    @Schema(title = "构建机是否可用")
     val enable: Boolean,
-    @Schema(name = "是否为灰度节点", required = false)
+    @Schema(title = "是否为灰度节点", required = false)
     val grayEnv: Boolean?,
-    @Schema(name = "是否为专用机独占", required = false)
+    @Schema(title = "是否为专用机独占", required = false)
     val specialOn: Boolean?,
-    @Schema(name = "创建时间", required = false)
+    @Schema(title = "创建时间", required = false)
     val createTime: String?,
-    @Schema(name = "构建集群", required = false)
+    @Schema(title = "构建集群", required = false)
     val clusterType: DockerHostClusterType? = DockerHostClusterType.COMMON
 )

@@ -29,14 +29,14 @@ package com.tencent.devops.ticket.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "凭证-凭证权限")
+@Schema(title = "凭证-凭证权限")
 data class CredentialPermissions(
-    @Schema(name = "删除权限", required = true)
+    @Schema(title = "删除权限", required = true)
     val delete: Boolean,
-    @Schema(name = "查看权限", required = true)
+    @Schema(title = "查看权限", required = true)
     val view: Boolean,
-    @Schema(name = "编辑权限", required = true)
+    @Schema(title = "编辑权限", required = true)
     val edit: Boolean,
-    @Schema(name = "使用权限", required = true)
+    @Schema(title = "使用权限", required = true)
     val use: Boolean? = null
 )

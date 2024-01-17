@@ -29,24 +29,24 @@ package com.tencent.devops.quality.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "质量红线-用户组摘要信息")
+@Schema(title = "质量红线-用户组摘要信息")
 data class GroupSummaryWithPermission(
-    @Schema(name = "体验组HashID", required = true)
+    @Schema(title = "体验组HashID", required = true)
     val groupHashId: String,
-    @Schema(name = "体验组名称", required = true)
+    @Schema(title = "体验组名称", required = true)
     val name: String,
-    @Schema(name = "内部人员", required = true)
+    @Schema(title = "内部人员", required = true)
     val innerUsersCount: Int,
-    @Schema(name = "外部人员", required = true)
+    @Schema(title = "外部人员", required = true)
     val outerUsersCount: Int,
-    @Schema(name = "内部人员")
+    @Schema(title = "内部人员")
     val innerUsers: Set<String>,
-    @Schema(name = "外部人员")
+    @Schema(title = "外部人员")
     val outerUsers: String,
-    @Schema(name = "创建者", required = true)
+    @Schema(title = "创建者", required = true)
     val creator: String,
-    @Schema(name = "描述", required = true)
+    @Schema(title = "描述", required = true)
     val remark: String,
-    @Schema(name = "权限", required = true)
+    @Schema(title = "权限", required = true)
     val permissions: GroupPermission
 )

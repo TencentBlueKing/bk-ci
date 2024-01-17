@@ -28,16 +28,16 @@ package com.tencent.devops.notify.pojo.messageTemplate
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "模板配置信息")
+@Schema(title = "模板配置信息")
 data class MoaMessageTemplate(
-    @Schema(name = "模板ID", required = true)
+    @Schema(title = "模板ID", required = true)
     val id: String,
-    @Schema(name = "标题", required = false)
+    @Schema(title = "标题", required = false)
     var title: String?,
-    @Schema(name = "内容", required = true)
+    @Schema(title = "内容", required = true)
     var body: String,
-    @Schema(name = "回调地址", required = false)
+    @Schema(title = "回调地址", required = false)
     val callbackUrl: String?,
-    @Schema(name = "流程名称: 单据所属的业务流程名称，由业务传入", required = true)
+    @Schema(title = "流程名称: 单据所属的业务流程名称，由业务传入", required = true)
     val processName: String
 )

@@ -33,38 +33,38 @@ import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(name = "构建详情记录-插件任务")
+@Schema(title = "构建详情记录-插件任务")
 data class BuildRecordModel(
-    @Schema(name = "构建ID", required = true)
+    @Schema(title = "构建ID", required = true)
     val buildId: String,
-    @Schema(name = "项目ID", required = true)
+    @Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(name = "流水线ID", required = true)
+    @Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(name = "编排版本号", required = true)
+    @Schema(title = "编排版本号", required = true)
     val resourceVersion: Int,
-    @Schema(name = "构建号", required = true)
+    @Schema(title = "构建号", required = true)
     val buildNum: Int,
-    @Schema(name = "执行次数", required = true)
+    @Schema(title = "执行次数", required = true)
     val executeCount: Int,
-    @Schema(name = "执行变量", required = true)
+    @Schema(title = "执行变量", required = true)
     val modelVar: MutableMap<String, Any>,
-    @Schema(name = "触发时间", required = false)
+    @Schema(title = "触发时间", required = false)
     val queueTime: LocalDateTime,
-    @Schema(name = "触发人", required = true)
+    @Schema(title = "触发人", required = true)
     val startUser: String,
-    @Schema(name = "触发器", required = true)
+    @Schema(title = "触发器", required = true)
     val startType: String,
-    @Schema(name = "构建状态", required = false)
+    @Schema(title = "构建状态", required = false)
     var status: String? = null,
-    @Schema(name = "取消人", required = false)
+    @Schema(title = "取消人", required = false)
     val cancelUser: String? = null,
-    @Schema(name = "开始时间", required = true)
+    @Schema(title = "开始时间", required = true)
     var startTime: LocalDateTime? = null,
-    @Schema(name = "结束时间", required = true)
+    @Schema(title = "结束时间", required = true)
     var endTime: LocalDateTime? = null,
-    @Schema(name = "流水线任务执行错误", required = false)
+    @Schema(title = "流水线任务执行错误", required = false)
     var errorInfoList: List<ErrorInfo>? = null,
-    @Schema(name = "业务时间戳集合", required = false)
+    @Schema(title = "业务时间戳集合", required = false)
     var timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
 )

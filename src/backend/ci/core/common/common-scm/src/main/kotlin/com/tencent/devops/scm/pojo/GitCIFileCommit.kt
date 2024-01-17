@@ -56,7 +56,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 ]
 }
  */
-@Schema(name = "gitci 文件的提交信息")
+@Schema(title = "gitci 文件的提交信息")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitCIFileCommit(
     val commit: Commit,
@@ -66,36 +66,36 @@ data class GitCIFileCommit(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Commit(
     @JsonProperty("author_email")
-    @Schema(name = "author_email")
+    @Schema(title = "author_email")
     val authorEmail: String?,
     @JsonProperty("author_name")
-    @Schema(name = "author_name")
+    @Schema(title = "author_name")
     val authorName: String?,
     @JsonProperty("authored_date")
-    @Schema(name = "authored_date")
+    @Schema(title = "authored_date")
     val authoredDate: String?,
     @JsonProperty("committed_date")
-    @Schema(name = "committed_date")
+    @Schema(title = "committed_date")
     val committedDate: String?,
     @JsonProperty("committer_email")
-    @Schema(name = "committer_email")
+    @Schema(title = "committer_email")
     val committerEmail: String?,
     @JsonProperty("committer_name")
-    @Schema(name = "committer_name")
+    @Schema(title = "committer_name")
     val committerName: String?,
     @JsonProperty("created_at")
-    @Schema(name = "created_at")
+    @Schema(title = "created_at")
     val createdAt: String,
     val id: String,
     val message: String?,
     @JsonProperty("parent_ids")
-    @Schema(name = "parent_ids")
+    @Schema(title = "parent_ids")
     val parentIds: List<String>?,
     @JsonProperty("short_id")
-    @Schema(name = "short_id")
+    @Schema(title = "short_id")
     val shortId: String?,
     val title: String?,
     @JsonProperty("scroll_object_id")
-    @Schema(name = "scroll_object_id")
+    @Schema(title = "scroll_object_id")
     val scrollObjectId: Any?
 )

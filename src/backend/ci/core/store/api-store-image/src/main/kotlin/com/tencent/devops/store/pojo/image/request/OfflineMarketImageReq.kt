@@ -28,10 +28,10 @@ package com.tencent.devops.store.pojo.image.request
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "下架镜像")
+@Schema(title = "下架镜像")
 data class OfflineMarketImageReq(
-    @Schema(name = "镜像要下架的版本号", required = true)
+    @Schema(title = "镜像要下架的版本号", required = true)
     val version: String,
-    @Schema(name = "镜像下架原因", required = true)
+    @Schema(title = "镜像下架原因", required = true)
     val reason: String
 )

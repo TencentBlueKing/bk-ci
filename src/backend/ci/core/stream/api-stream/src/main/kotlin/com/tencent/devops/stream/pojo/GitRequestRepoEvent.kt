@@ -29,18 +29,18 @@ package com.tencent.devops.stream.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "repo hook 构建信息")
+@Schema(title = "repo hook 构建信息")
 data class GitRequestRepoEvent(
-    @Schema(name = "EVENT_ID")
+    @Schema(title = "EVENT_ID")
     val eventId: Long,
-    @Schema(name = "流水线id")
+    @Schema(title = "流水线id")
     val pipelineId: String,
-    @Schema(name = "构建id")
+    @Schema(title = "构建id")
     val buildId: String?,
-    @Schema(name = "流水线主库projectId")
+    @Schema(title = "流水线主库projectId")
     val targetGitProjectId: Long,
-    @Schema(name = "触发库projectId")
+    @Schema(title = "触发库projectId")
     val sourceGitProjectId: Long,
-    @Schema(name = "创建时间")
+    @Schema(title = "创建时间")
     val createTime: Long?
 )

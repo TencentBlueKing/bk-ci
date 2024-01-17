@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class IamCallBackInfo(
     val id: Int?,
-    @Schema(name = "网关地址")
+    @Schema(title = "网关地址")
     val gateway: String,
-    @Schema(name = "资源类型")
+    @Schema(title = "资源类型")
     val resource: String,
-    @Schema(name = "回调接口路径")
+    @Schema(title = "回调接口路径")
     val path: String,
-    @Schema(name = "注册系统")
+    @Schema(title = "注册系统")
     val system: String,
-    @Schema(name = "是否删除标签")
+    @Schema(title = "是否删除标签")
     val deleteFlag: Boolean
 )

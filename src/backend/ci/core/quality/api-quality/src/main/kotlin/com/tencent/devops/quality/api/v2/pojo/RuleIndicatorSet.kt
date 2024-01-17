@@ -29,7 +29,7 @@ package com.tencent.devops.quality.api.v2.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "指标集")
+@Schema(title = "指标集")
 data class RuleIndicatorSet(
     val hashId: String,
     val name: String,

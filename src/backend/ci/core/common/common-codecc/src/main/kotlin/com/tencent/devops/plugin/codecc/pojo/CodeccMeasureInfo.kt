@@ -29,38 +29,38 @@ package com.tencent.devops.plugin.codecc.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "codecc度量信息")
+@Schema(title = "codecc度量信息")
 data class CodeccMeasureInfo(
-    @Schema(name = "项目ID", required = false)
+    @Schema(title = "项目ID", required = false)
     val projectId: String? = null,
-    @Schema(name = "任务ID", required = false)
+    @Schema(title = "任务ID", required = false)
     val taskId: Long? = null,
-    @Schema(name = "代码库提交ID", required = false)
+    @Schema(title = "代码库提交ID", required = false)
     val commitId: String? = null,
-    @Schema(name = "代码库url地址", required = false)
+    @Schema(title = "代码库url地址", required = false)
     val repoUrl: String? = null,
-    @Schema(name = "codecc扫描详情url地址", required = false)
+    @Schema(title = "codecc扫描详情url地址", required = false)
     val codeccUrl: String? = null,
-    @Schema(name = "规范得分", required = false)
+    @Schema(title = "规范得分", required = false)
     val codeStyleScore: Double? = null,
-    @Schema(name = "安全得分", required = false)
+    @Schema(title = "安全得分", required = false)
     val codeSecurityScore: Double? = null,
-    @Schema(name = "度量得分", required = false)
+    @Schema(title = "度量得分", required = false)
     val codeMeasureScore: Double? = null,
-    @Schema(name = "最近一次分析触发时间", required = false)
+    @Schema(title = "最近一次分析触发时间", required = false)
     val lastAnalysisTime: Long? = null,
-    @Schema(name = "任务状态(失败：1， 执行中: 3， 成功：0, 未执行：2)", required = false)
+    @Schema(title = "任务状态(失败：1， 执行中: 3， 成功：0, 未执行：2)", required = false)
     val status: Int? = null,
-    @Schema(name = "工具执行信息", required = false)
+    @Schema(title = "工具执行信息", required = false)
     val lastAnalysisResultList: List<CodeccToolAnalysisInfo>? = null,
-    @Schema(name = "是否合格", required = false)
+    @Schema(title = "是否合格", required = false)
     var qualifiedFlag: Boolean? = null,
-    @Schema(name = "规范合格分", required = false)
+    @Schema(title = "规范合格分", required = false)
     var codeStyleQualifiedScore: Double? = null,
-    @Schema(name = "安全合格分", required = false)
+    @Schema(title = "安全合格分", required = false)
     var codeSecurityQualifiedScore: Double? = null,
-    @Schema(name = "度量合格分", required = false)
+    @Schema(title = "度量合格分", required = false)
     var codeMeasureQualifiedScore: Double? = null,
-    @Schema(name = "消息内容", required = false)
+    @Schema(title = "消息内容", required = false)
     val message: String? = null
 )

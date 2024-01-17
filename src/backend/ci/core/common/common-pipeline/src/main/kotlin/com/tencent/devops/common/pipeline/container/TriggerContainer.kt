@@ -33,52 +33,52 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "流水线模型-构建触发容器")
+@Schema(title = "流水线模型-构建触发容器")
 data class TriggerContainer(
-    @Schema(name = "构建容器序号id", required = false, readOnly = true)
+    @Schema(title = "构建容器序号id", required = false, readOnly = true)
     override var id: String? = null,
-    @Schema(name = "容器名称", required = true)
+    @Schema(title = "容器名称", required = true)
     override var name: String = "",
-    @Schema(name = "任务集合", required = true)
+    @Schema(title = "任务集合", required = true)
     override var elements: List<Element> = listOf(),
-    @Schema(name = "状态", required = true, readOnly = true)
+    @Schema(title = "状态", required = true, readOnly = true)
     override var status: String? = null,
-    @Schema(name = "系统运行时间", required = false)
+    @Schema(title = "系统运行时间", required = false)
     @Deprecated("即将被timeCost代替")
     override var startEpoch: Long? = null,
-    @Schema(name = "系统耗时（开机时间）", required = false, readOnly = true)
+    @Schema(title = "系统耗时（开机时间）", required = false, readOnly = true)
     @Deprecated("即将被timeCost代替")
     override var systemElapsed: Long? = null,
-    @Schema(name = "插件执行耗时", required = false, readOnly = true)
+    @Schema(title = "插件执行耗时", required = false, readOnly = true)
     @Deprecated("即将被timeCost代替")
     override var elementElapsed: Long? = null,
-    @Schema(name = "参数化构建", required = false)
+    @Schema(title = "参数化构建", required = false)
     var params: List<BuildFormProperty> = listOf(),
-    @Schema(name = "模板参数构建", required = false)
+    @Schema(title = "模板参数构建", required = false)
     val templateParams: List<BuildFormProperty>? = null,
-    @Schema(name = "构建版本号", required = false)
+    @Schema(title = "构建版本号", required = false)
     val buildNo: BuildNo? = null,
-    @Schema(name =
+    @Schema(title =
         "是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储",
         required = false,
         readOnly = true
     )
     override var canRetry: Boolean? = null,
-    @Schema(name = "构建容器顺序ID（同id值）", required = false, readOnly = true)
+    @Schema(title = "构建容器顺序ID（同id值）", required = false, readOnly = true)
     override var containerId: String? = null,
-    @Schema(name = "容器唯一ID", required = false, readOnly = true)
+    @Schema(title = "容器唯一ID", required = false, readOnly = true)
     override var containerHashId: String? = null,
-    @Schema(name = "构建环境启动状态", required = false, readOnly = true)
+    @Schema(title = "构建环境启动状态", required = false, readOnly = true)
     override var startVMStatus: String? = null,
-    @Schema(name = "容器运行次数", required = false, readOnly = true)
+    @Schema(title = "容器运行次数", required = false, readOnly = true)
     override var executeCount: Int? = null,
-    @Schema(name = "用户自定义ID", required = false, hidden = false)
+    @Schema(title = "用户自定义ID", required = false, hidden = false)
     override val jobId: String? = null,
-    @Schema(name = "是否包含post任务标识", required = false, readOnly = true)
+    @Schema(title = "是否包含post任务标识", required = false, readOnly = true)
     override var containPostTaskFlag: Boolean? = null,
-    @Schema(name = "是否为构建矩阵", required = false, readOnly = true)
+    @Schema(title = "是否为构建矩阵", required = false, readOnly = true)
     override var matrixGroupFlag: Boolean? = false,
-    @Schema(name = "各项耗时", required = true)
+    @Schema(title = "各项耗时", required = true)
     override var timeCost: BuildRecordTimeCost? = null
 ) : Container {
     companion object {

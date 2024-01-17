@@ -30,22 +30,22 @@ package com.tencent.devops.common.pipeline.pojo
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "Stage审核组信息")
+@Schema(title = "Stage审核组信息")
 data class StageReviewGroup(
-    @Schema(name = "审核组ID(后台生成)", required = false)
+    @Schema(title = "审核组ID(后台生成)", required = false)
     var id: String? = null,
-    @Schema(name = "审核组名称", required = true)
+    @Schema(title = "审核组名称", required = true)
     val name: String = "Flow 1",
-    @Schema(name = "审核人员", required = true)
+    @Schema(title = "审核人员", required = true)
     var reviewers: List<String> = listOf(),
-    @Schema(name = "审核结果（枚举）", required = false)
+    @Schema(title = "审核结果（枚举）", required = false)
     var status: String? = null,
-    @Schema(name = "审核操作人", required = false)
+    @Schema(title = "审核操作人", required = false)
     var operator: String? = null,
-    @Schema(name = "审核操作时间", required = false)
+    @Schema(title = "审核操作时间", required = false)
     var reviewTime: Long? = null,
-    @Schema(name = "审核建议", required = false)
+    @Schema(title = "审核建议", required = false)
     var suggest: String? = null,
-    @Schema(name = "审核传入变量", required = false)
+    @Schema(title = "审核传入变量", required = false)
     var params: List<ManualReviewParam>? = null
 )

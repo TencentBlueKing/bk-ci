@@ -29,10 +29,10 @@ package com.tencent.devops.process.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "项目的流水线回调创建结果")
+@Schema(title = "项目的流水线回调创建结果")
 data class CreateCallBackResult(
-    @Schema(name = "成功事件列表", required = false)
+    @Schema(title = "成功事件列表", required = false)
     val successEvents: List<String>,
-    @Schema(name = "失败事件列表", required = false)
+    @Schema(title = "失败事件列表", required = false)
     val failureEvents: Map<String, String>
 )

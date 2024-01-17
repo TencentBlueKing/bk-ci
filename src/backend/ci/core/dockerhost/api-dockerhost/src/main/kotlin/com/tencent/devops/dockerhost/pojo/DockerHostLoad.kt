@@ -29,16 +29,16 @@ package com.tencent.devops.dockerhost.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "Docker母机负载模型")
+@Schema(title = "Docker母机负载模型")
 data class DockerHostLoad(
-    @Schema(name = "容器使用数量")
+    @Schema(title = "容器使用数量")
     val usedContainerNum: Int,
-    @Schema(name = "平均处理器负载")
+    @Schema(title = "平均处理器负载")
     val averageCpuLoad: Int,
-    @Schema(name = "平均内存负载")
+    @Schema(title = "平均内存负载")
     val averageMemLoad: Int,
-    @Schema(name = "平均存储器负载")
+    @Schema(title = "平均存储器负载")
     val averageDiskLoad: Int,
-    @Schema(name = "平均存储器IO负载")
+    @Schema(title = "平均存储器IO负载")
     val averageDiskIOLoad: Int
 )

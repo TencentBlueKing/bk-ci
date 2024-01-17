@@ -29,10 +29,10 @@ package com.tencent.devops.environment.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "项目配置(分页)")
+@Schema(title = "项目配置(分页)")
 data class ProjectConfigPage(
-    @Schema(name = "projectConfig总数", required = true)
+    @Schema(title = "projectConfig总数", required = true)
     val total: Int,
-    @Schema(name = "projectConfig详情", required = true)
+    @Schema(title = "projectConfig详情", required = true)
     val data: List<ProjectConfig>
 )

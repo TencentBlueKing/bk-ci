@@ -45,9 +45,9 @@ import io.swagger.v3.oas.annotations.media.Schema
  }
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Schema(name = "仓库tag信息")
+@Schema(title = "仓库tag信息")
 data class GithubRepoTag(
-    @Schema(name = "名称")
+    @Schema(title = "名称")
     val name: String,
     @JsonProperty("zipball_url")
     val zipballUrl: String,

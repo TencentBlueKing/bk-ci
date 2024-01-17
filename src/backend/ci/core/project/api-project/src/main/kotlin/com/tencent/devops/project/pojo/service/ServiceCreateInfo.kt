@@ -32,47 +32,47 @@ import io.swagger.v3.oas.annotations.media.Schema
 /**
  *   Date on 2018-12-05.
  */
-@Schema(name = "服务-创建模型")
+@Schema(title = "服务-创建模型")
 data class ServiceCreateInfo(
-    @Schema(name = "服务名称，英文名，不传则从中文名中读取 流水线(Pipeline)")
+    @Schema(title = "服务名称，英文名，不传则从中文名中读取 流水线(Pipeline)")
     var englishName: String?,
-    @Schema(name = "服务名称，中文名, 例如 流水线(Pipeline)", required = true)
+    @Schema(title = "服务名称，中文名, 例如 流水线(Pipeline)", required = true)
     val name: String,
-    @Schema(name = "服务类型ID，1:项目管理 2:开发 3:测试 4:部署 5:运营 6:安全 8:管理工具", required = true)
+    @Schema(title = "服务类型ID，1:项目管理 2:开发 3:测试 4:部署 5:运营 6:安全 8:管理工具", required = true)
     val serviceTypeId: Long,
-    @Schema(name = "是否展示项目列表")
+    @Schema(title = "是否展示项目列表")
     val showProjectList: Boolean = true,
-    @Schema(name = "是否在服务导航条上显示")
+    @Schema(title = "是否在服务导航条上显示")
     val showNav: Boolean = true,
-    @Schema(name = "服务状态 ok=正常(可用) planning=规划中(灰色不可用) new=新上线(可用)")
+    @Schema(title = "服务状态 ok=正常(可用) planning=规划中(灰色不可用) new=新上线(可用)")
     val status: String = "ok",
 
-    @Schema(name = "链接1，例如 /pipeline/")
+    @Schema(title = "链接1，例如 /pipeline/")
     val link: String?,
-    @Schema(name = "链接2与链接1保持一样，例如 /pipeline/")
+    @Schema(title = "链接2与链接1保持一样，例如 /pipeline/")
     val linkNew: String?,
-    @Schema(name = "注入类型：amd/iframe")
+    @Schema(title = "注入类型：amd/iframe")
     val injectType: String?,
-    @Schema(name = "iframeUrl")
+    @Schema(title = "iframeUrl")
     val iframeUrl: String?,
-    @Schema(name = "grayIframeUrl")
+    @Schema(title = "grayIframeUrl")
     val grayIframeUrl: String?,
-    @Schema(name = "cssUrl")
+    @Schema(title = "cssUrl")
     val cssUrl: String?,
-    @Schema(name = "jsUrl")
+    @Schema(title = "jsUrl")
     val jsUrl: String?,
-    @Schema(name = "grayCssUrl")
+    @Schema(title = "grayCssUrl")
     val grayCssUrl: String?,
-    @Schema(name = "grayJsUrl")
+    @Schema(title = "grayJsUrl")
     val grayJsUrl: String?,
-    @Schema(name = "projectIdType")
+    @Schema(title = "projectIdType")
     val projectIdType: String?,
-    @Schema(name = "权重")
+    @Schema(title = "权重")
     val weight: Int,
-    @Schema(name = "logo地址")
+    @Schema(title = "logo地址")
     val logoUrl: String?,
-    @Schema(name = "支持webSocket的页面")
+    @Schema(title = "支持webSocket的页面")
     val webSocket: String?,
-    @Schema(name = "集群类型")
+    @Schema(title = "集群类型")
     val clusterType: String? = ""
 )

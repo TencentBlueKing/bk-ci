@@ -29,14 +29,14 @@ package com.tencent.devops.process.pojo.setting
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "流水线task公共配置信息")
+@Schema(title = "流水线task公共配置信息")
 data class TaskCommonSetting(
-    @Schema(name = "最大输入参数个数", required = true)
+    @Schema(title = "最大输入参数个数", required = true)
     val maxInputNum: Int,
-    @Schema(name = "最大输出参数个数", required = true)
+    @Schema(title = "最大输出参数个数", required = true)
     val maxOutputNum: Int,
-    @Schema(name = "输入参数组件配置", required = true)
+    @Schema(title = "输入参数组件配置", required = true)
     val inputComponentCommonSettings: List<TaskComponentCommonSetting>,
-    @Schema(name = "输出参数组件配置", required = true)
+    @Schema(title = "输出参数组件配置", required = true)
     val outputComponentCommonSettings: List<TaskComponentCommonSetting>
 )

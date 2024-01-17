@@ -29,24 +29,24 @@ package com.tencent.devops.quality.api.v2.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "质量红线-控制点v2")
+@Schema(title = "质量红线-控制点v2")
 data class QualityControlPoint(
-    @Schema(name = "控制点HashId", required = true)
+    @Schema(title = "控制点HashId", required = true)
     val hashId: String,
-    @Schema(name = "原子的ClassType", required = true)
+    @Schema(title = "原子的ClassType", required = true)
     val type: String,
-    @Schema(name = "控制点名称", required = true)
+    @Schema(title = "控制点名称", required = true)
     val name: String,
-    @Schema(name = "研发阶段", required = true)
+    @Schema(title = "研发阶段", required = true)
     val stage: String,
-    @Schema(name = "支持红线位置(准入-BEFORE, 准出-AFTER)", required = true)
+    @Schema(title = "支持红线位置(准入-BEFORE, 准出-AFTER)", required = true)
     val availablePos: List<ControlPointPosition>,
-    @Schema(name = "默认红线位置", required = true)
+    @Schema(title = "默认红线位置", required = true)
     val defaultPos: ControlPointPosition,
-    @Schema(name = "是否启用", required = true)
+    @Schema(title = "是否启用", required = true)
     val enable: Boolean,
-    @Schema(name = "对应有质量红线输出的版本", required = true)
+    @Schema(title = "对应有质量红线输出的版本", required = true)
     val atomVersion: String,
-    @Schema(name = "对应有质量红线测试项目", required = true)
+    @Schema(title = "对应有质量红线测试项目", required = true)
     val testProject: String = ""
 )

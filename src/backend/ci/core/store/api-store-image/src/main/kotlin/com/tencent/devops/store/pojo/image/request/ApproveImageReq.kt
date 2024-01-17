@@ -31,20 +31,20 @@ import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class ApproveImageReq(
-    @Schema(name = "镜像标识")
+    @Schema(title = "镜像标识")
     val imageCode: String,
-    @Schema(name = "是否为公共镜像")
+    @Schema(title = "是否为公共镜像")
     val publicFlag: Boolean,
-    @Schema(name = "是否推荐")
+    @Schema(title = "是否推荐")
     val recommendFlag: Boolean,
-    @Schema(name = "是否为官方认证")
+    @Schema(title = "是否为官方认证")
     val certificationFlag: Boolean,
-    @Schema(name = "研发来源 SELF_DEVELOPED：自研 THIRD_PARTY：第三方", required = false)
+    @Schema(title = "研发来源 SELF_DEVELOPED：自研 THIRD_PARTY：第三方", required = false)
     val rdType: ImageRDTypeEnum?,
-    @Schema(name = "权重（数值越大代表权重越高）")
+    @Schema(title = "权重（数值越大代表权重越高）")
     val weight: Int?,
-    @Schema(name = "审核结果：PASS：通过|REJECT：驳回")
+    @Schema(title = "审核结果：PASS：通过|REJECT：驳回")
     val result: String,
-    @Schema(name = "审核结果说明")
+    @Schema(title = "审核结果说明")
     val message: String
 )

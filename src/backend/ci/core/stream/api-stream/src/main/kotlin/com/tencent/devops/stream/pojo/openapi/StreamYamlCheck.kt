@@ -29,12 +29,12 @@ package com.tencent.devops.stream.pojo.openapi
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "stream检验yaml格式模型")
+@Schema(title = "stream检验yaml格式模型")
 data class StreamYamlCheck(
-    @Schema(name = "yaml 原文", required = true)
+    @Schema(title = "yaml 原文", required = true)
     val originYaml: String,
-    @Schema(name = "模板类型", required = false)
+    @Schema(title = "模板类型", required = false)
     val templateType: String?,
-    @Schema(name = "是否为流水线yaml", required = true)
+    @Schema(title = "是否为流水线yaml", required = true)
     val checkCiFile: Boolean
 )

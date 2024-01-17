@@ -28,10 +28,10 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "卸载插件原因")
+@Schema(title = "卸载插件原因")
 data class UnInstallReason(
-    @Schema(name = "原因ID")
+    @Schema(title = "原因ID")
     val reasonId: String,
-    @Schema(name = "原因说明")
+    @Schema(title = "原因说明")
     val note: String?
 )

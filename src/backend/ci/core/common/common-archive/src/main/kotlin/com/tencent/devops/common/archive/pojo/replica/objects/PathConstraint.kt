@@ -29,10 +29,10 @@ package com.tencent.devops.common.archive.pojo.replica.objects
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "路径限制")
+@Schema(title = "路径限制")
 data class PathConstraint(
-    @Schema(name = "路径")
+    @Schema(title = "路径")
     val path: String? = null,
-    @Schema(name = "路径正则匹配规则")
+    @Schema(title = "路径正则匹配规则")
     val pathRegex: List<String>? = null
 )

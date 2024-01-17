@@ -30,28 +30,28 @@ package com.tencent.devops.process.pojo.classify
 import com.tencent.devops.process.pojo.classify.enums.Logic
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "流水线视图")
+@Schema(title = "流水线视图")
 data class PipelineNewView(
-    @Schema(name = "流水线id", required = false)
+    @Schema(title = "流水线id", required = false)
     val id: String,
-    @Schema(name = "项目id", required = false)
+    @Schema(title = "项目id", required = false)
     val projectId: String,
-    @Schema(name = "名称", required = false)
+    @Schema(title = "名称", required = false)
     val name: String,
-    @Schema(name = "是否项目", required = false)
+    @Schema(title = "是否项目", required = false)
     val projected: Boolean,
-    @Schema(name = "创建时间", required = false)
+    @Schema(title = "创建时间", required = false)
     val createTime: Long,
-    @Schema(name = "更新时间", required = false)
+    @Schema(title = "更新时间", required = false)
     val updateTime: Long,
-    @Schema(name = "创建者", required = false)
+    @Schema(title = "创建者", required = false)
     val creator: String,
-    @Schema(name = "逻辑符", required = false)
+    @Schema(title = "逻辑符", required = false)
     val logic: Logic,
-    @Schema(name = "流水线视图过滤器列表", required = false)
+    @Schema(title = "流水线视图过滤器列表", required = false)
     val filters: List<PipelineViewFilter>,
-    @Schema(name = "视图类型", required = true)
+    @Schema(title = "视图类型", required = true)
     val viewType: Int,
-    @Schema(name = "流水线ID列表", required = true)
+    @Schema(title = "流水线ID列表", required = true)
     val pipelineIds: List<String>
 )

@@ -29,12 +29,12 @@ package com.tencent.devops.image.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "镜像列表")
+@Schema(title = "镜像列表")
 data class ImageItem(
-    @Schema(name = "镜像仓库地址", required = true)
+    @Schema(title = "镜像仓库地址", required = true)
     var repoUrl: String,
-    @Schema(name = "镜像在仓库中的位置", required = true)
+    @Schema(title = "镜像在仓库中的位置", required = true)
     var repo: String,
-    @Schema(name = "镜像名称", required = true)
+    @Schema(title = "镜像名称", required = true)
     var name: String
 )

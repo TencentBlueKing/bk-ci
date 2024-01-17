@@ -29,32 +29,32 @@ package com.tencent.devops.process.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "流水线模型-构建任务结果")
+@Schema(title = "流水线模型-构建任务结果")
 data class BuildTaskResult(
-    @Schema(name = "任务ID", required = true)
+    @Schema(title = "任务ID", required = true)
     val taskId: String,
-    @Schema(name = "插件ID", required = true)
+    @Schema(title = "插件ID", required = true)
     val elementId: String,
-    @Schema(name = "插件版本号", required = false)
+    @Schema(title = "插件版本号", required = false)
     val elementVersion: String? = null,
-    @Schema(name = "容器Hash ID", required = true)
+    @Schema(title = "容器Hash ID", required = true)
     val containerId: String?,
-    @Schema(name = "是否执行成功", required = true)
+    @Schema(title = "是否执行成功", required = true)
     val success: Boolean,
-    @Schema(name = "构建结果", required = true)
+    @Schema(title = "构建结果", required = true)
     val buildResult: Map<String, String>,
-    @Schema(name = "错误原因", required = false)
+    @Schema(title = "错误原因", required = false)
     val message: String? = null,
-    @Schema(name = "任务类型", required = false)
+    @Schema(title = "任务类型", required = false)
     val type: String? = null,
-    @Schema(name = "错误类型", required = false)
+    @Schema(title = "错误类型", required = false)
     val errorType: String? = null,
-    @Schema(name = "错误码标识", required = false)
+    @Schema(title = "错误码标识", required = false)
     val errorCode: Int? = null,
-    @Schema(name = "对接平台代码", required = false)
+    @Schema(title = "对接平台代码", required = false)
     val platformCode: String? = null,
-    @Schema(name = "对接平台错误码", required = false)
+    @Schema(title = "对接平台错误码", required = false)
     val platformErrorCode: Int? = null,
-    @Schema(name = "插件监控数据", required = false)
+    @Schema(title = "插件监控数据", required = false)
     val monitorData: Map<String, Any>? = null
 )

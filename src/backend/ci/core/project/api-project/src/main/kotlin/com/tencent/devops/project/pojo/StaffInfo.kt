@@ -30,27 +30,27 @@ package com.tencent.devops.project.pojo
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "用户信息")
+@Schema(title = "用户信息")
 data class StaffInfo(
-    @Schema(name = "登录名")
+    @Schema(title = "登录名")
     @JsonProperty("LoginName")
     val loginName: String,
-    @Schema(name = "部门名称")
+    @Schema(title = "部门名称")
     @JsonProperty("DepartmentName")
     val departmentName: String,
-    @Schema(name = "英文全名")
+    @Schema(title = "英文全名")
     @JsonProperty("FullName")
     val fullName: String,
-    @Schema(name = "中文名")
+    @Schema(title = "中文名")
     @JsonProperty("ChineseName")
     val chineseName: String,
-    @Schema(name = "组ID")
+    @Schema(title = "组ID")
     @JsonProperty("GroupId")
     val groupId: String,
-    @Schema(name = "组名称")
+    @Schema(title = "组名称")
     @JsonProperty("GroupName")
     val groupName: String,
-    @Schema(name = "当前状态")
+    @Schema(title = "当前状态")
     @JsonProperty("StatusId")
     val statusId: String
 )

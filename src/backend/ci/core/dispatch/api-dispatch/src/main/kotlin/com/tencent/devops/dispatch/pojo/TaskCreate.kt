@@ -29,14 +29,14 @@ package com.tencent.devops.dispatch.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "虚拟机主机-创建任务")
+@Schema(title = "虚拟机主机-创建任务")
 data class TaskCreate(
-    @Schema(name = "用户id", required = true)
+    @Schema(title = "用户id", required = true)
     val userid: String,
-    @Schema(name = "任务名", required = true)
+    @Schema(title = "任务名", required = true)
     val name: String,
-    @Schema(name = "任务脚本", required = false)
+    @Schema(title = "任务脚本", required = false)
     var script: String,
-    @Schema(name = "机器列表", required = true)
+    @Schema(title = "机器列表", required = true)
     val vmList: List<Int>
 )

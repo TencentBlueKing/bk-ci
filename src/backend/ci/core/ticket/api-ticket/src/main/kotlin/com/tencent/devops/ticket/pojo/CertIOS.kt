@@ -29,18 +29,18 @@ package com.tencent.devops.ticket.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "证书-ios证书加密内容")
+@Schema(title = "证书-ios证书加密内容")
 data class CertIOS(
-    @Schema(name = "Base64编码的加密公钥", required = true)
+    @Schema(title = "Base64编码的加密公钥", required = true)
     val publicKey: String,
-    @Schema(name = "p12证书名", required = true)
+    @Schema(title = "p12证书名", required = true)
     val p12FileName: String,
-    @Schema(name = "Base64编码的加密后p12加密的证书内容", required = true)
+    @Schema(title = "Base64编码的加密后p12加密的证书内容", required = true)
     val p12Content: String,
-    @Schema(name = "mobileProvision描述文件名", required = true)
+    @Schema(title = "mobileProvision描述文件名", required = true)
     val mobileProvisionFileName: String,
-    @Schema(name = "Base64编码的加密后mobileProvision描述文件内容", required = true)
+    @Schema(title = "Base64编码的加密后mobileProvision描述文件内容", required = true)
     val mobileProvisionContent: String,
-    @Schema(name = "p12证书密码", required = false)
+    @Schema(title = "p12证书密码", required = false)
     val credentialId: String?
 )

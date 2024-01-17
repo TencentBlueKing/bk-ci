@@ -29,14 +29,14 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "增删Media请求")
+@Schema(title = "增删Media请求")
 data class StoreMediaInfoRequest /**/(
-    @Schema(name = "研发商店类型", required = true)
+    @Schema(title = "研发商店类型", required = true)
     val storeCode: String,
-    @Schema(name = "媒体url", required = true)
+    @Schema(title = "媒体url", required = true)
     val mediaUrl: String,
-    @Schema(name = "媒体类型", required = true)
+    @Schema(title = "媒体类型", required = true)
     val mediaType: String,
-    @Schema(name = "修改用户", required = true)
+    @Schema(title = "修改用户", required = true)
     val modifier: String
 )

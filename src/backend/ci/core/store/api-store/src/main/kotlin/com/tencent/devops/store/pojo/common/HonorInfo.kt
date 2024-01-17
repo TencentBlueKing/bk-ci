@@ -31,18 +31,18 @@ import com.tencent.devops.common.web.annotation.BkField
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(name = "荣誉信息")
+@Schema(title = "荣誉信息")
 data class HonorInfo(
-    @Schema(name = "荣誉ID")
+    @Schema(title = "荣誉ID")
     val honorId: String,
-    @Schema(name = "荣誉头衔")
+    @Schema(title = "荣誉头衔")
     @BkField(maxLength = 4)
     val honorTitle: String,
-    @Schema(name = "荣誉名称")
+    @Schema(title = "荣誉名称")
     @BkField(maxLength = 40)
     val honorName: String,
-    @Schema(name = "是否佩戴")
+    @Schema(title = "是否佩戴")
     val mountFlag: Boolean,
-    @Schema(name = "创建时间")
+    @Schema(title = "创建时间")
     val createTime: LocalDateTime
 )

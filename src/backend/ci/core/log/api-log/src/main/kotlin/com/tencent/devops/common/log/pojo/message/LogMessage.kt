@@ -34,21 +34,21 @@ import io.swagger.v3.oas.annotations.media.Schema
  *
  * Powered By Tencent
  */
-@Schema(name = "日志模型")
+@Schema(title = "日志模型")
 data class LogMessage(
-    @Schema(name = "日志内容信息")
+    @Schema(title = "日志内容信息")
     var message: String,
-    @Schema(name = "时间戳")
+    @Schema(title = "时间戳")
     val timestamp: Long,
-    @Schema(name = "标签")
+    @Schema(title = "标签")
     val tag: String = "",
-    @Schema(name = "job id")
+    @Schema(title = "job id")
     val jobId: String = "",
-    @Schema(name = "日志类型")
+    @Schema(title = "日志类型")
     val logType: LogType = LogType.LOG,
-    @Schema(name = "执行次数")
+    @Schema(title = "执行次数")
     val executeCount: Int? = null,
-    @Schema(name = "子标签")
+    @Schema(title = "子标签")
     val subTag: String? = null
 ) {
     override fun toString(): String {

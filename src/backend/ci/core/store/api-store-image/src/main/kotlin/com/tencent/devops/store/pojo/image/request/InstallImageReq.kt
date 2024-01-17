@@ -28,10 +28,10 @@ package com.tencent.devops.store.pojo.image.request
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "安装镜像到项目请求报文")
+@Schema(title = "安装镜像到项目请求报文")
 data class InstallImageReq(
-    @Schema(name = "项目标识", required = true)
+    @Schema(title = "项目标识", required = true)
     val projectCodeList: ArrayList<String>,
-    @Schema(name = "镜像代码", required = true)
+    @Schema(title = "镜像代码", required = true)
     val imageCode: String
 )

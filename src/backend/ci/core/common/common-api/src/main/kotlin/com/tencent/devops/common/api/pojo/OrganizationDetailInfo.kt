@@ -29,18 +29,18 @@ package com.tencent.devops.common.api.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "组织架构详细信息")
+@Schema(title = "组织架构详细信息")
 data class OrganizationDetailInfo(
-    @Schema(name = "事业群ID")
+    @Schema(title = "事业群ID")
     val bgId: Int?,
-    @Schema(name = "事业群名字")
+    @Schema(title = "事业群名字")
     val bgName: String?,
-    @Schema(name = "部门ID")
+    @Schema(title = "部门ID")
     val deptId: Int?,
-    @Schema(name = "部门名字")
+    @Schema(title = "部门名字")
     val deptName: String?,
-    @Schema(name = "中心ID")
+    @Schema(title = "中心ID")
     val centerId: Int?,
-    @Schema(name = "中心名字")
+    @Schema(title = "中心名字")
     val centerName: String?
 )

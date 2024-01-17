@@ -31,23 +31,23 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class GitlabFileInfo(
-    @Schema(name = "file_name")
+    @Schema(title = "file_name")
     @JsonProperty("file_name")
     val fileName: String,
-    @Schema(name = "file_path")
+    @Schema(title = "file_path")
     @JsonProperty("file_path")
     val filePath: String,
     val size: Int,
     val encoding: String,
     val content: String,
     val ref: String,
-    @Schema(name = "blob_id")
+    @Schema(title = "blob_id")
     @JsonProperty("blob_id")
     val blobId: String,
-    @Schema(name = "commit_id")
+    @Schema(title = "commit_id")
     @JsonProperty("commit_id")
     val commitId: String,
-    @Schema(name = "last_commit_id")
+    @Schema(title = "last_commit_id")
     @JsonProperty("last_commit_id")
     val lastCommitId: String
 )

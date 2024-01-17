@@ -31,42 +31,42 @@ import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "质量红线-匹配拦截规则原子v2")
+@Schema(title = "质量红线-匹配拦截规则原子v2")
 data class QualityRuleMatchTask(
-    @Schema(name = "原子ID", required = true)
+    @Schema(title = "原子ID", required = true)
     val taskId: String,
-    @Schema(name = "原子名称", required = true)
+    @Schema(title = "原子名称", required = true)
     val taskName: String,
-    @Schema(name = "原子控制阶段", required = true)
+    @Schema(title = "原子控制阶段", required = true)
     val controlStage: ControlPointPosition,
-    @Schema(name = "规则列表", required = true)
+    @Schema(title = "规则列表", required = true)
     val ruleList: List<RuleMatchRule>,
-    @Schema(name = "阈值列表", required = false)
+    @Schema(title = "阈值列表", required = false)
     val thresholdList: List<RuleThreshold>?,
-    @Schema(name = "审核用户列表", required = false)
+    @Schema(title = "审核用户列表", required = false)
     val auditUserList: Set<String>?
 ) {
-    @Schema(name = "质量红线-拦截规则v2")
+    @Schema(title = "质量红线-拦截规则v2")
     data class RuleMatchRule(
-        @Schema(name = "规则ID", required = true)
+        @Schema(title = "规则ID", required = true)
         val ruleHashId: String,
-        @Schema(name = "规则名称", required = true)
+        @Schema(title = "规则名称", required = true)
         val ruleName: String,
-        @Schema(name = "红线匹配的id", required = false)
+        @Schema(title = "红线匹配的id", required = false)
         val gatewayId: String?
     )
 
-    @Schema(name = "质量红线-拦截规则阈值v2")
+    @Schema(title = "质量红线-拦截规则阈值v2")
     data class RuleThreshold(
-        @Schema(name = "指标ID", required = true)
+        @Schema(title = "指标ID", required = true)
         val indicatorId: String,
-        @Schema(name = "指标名称", required = true)
+        @Schema(title = "指标名称", required = true)
         val indicatorName: String,
-        @Schema(name = "元数据DATA_ID", required = true)
+        @Schema(title = "元数据DATA_ID", required = true)
         val metadataIds: List<String>,
-        @Schema(name = "关系", required = true)
+        @Schema(title = "关系", required = true)
         val operation: QualityOperation,
-        @Schema(name = "阈值值大小", required = true)
+        @Schema(title = "阈值值大小", required = true)
         val value: String
     )
 }

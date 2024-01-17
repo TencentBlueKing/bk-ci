@@ -34,35 +34,35 @@ import com.tencent.devops.common.pipeline.enums.SvnDepth
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "拉取SVN仓库代码", description = CodeSvnElement.classType)
+@Schema(title = "拉取SVN仓库代码", description = CodeSvnElement.classType)
 data class CodeSvnElement(
-    @Schema(name = "任务名称", required = true)
+    @Schema(title = "任务名称", required = true)
     override val name: String = "",
-    @Schema(name = "id", required = false)
+    @Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(name = "状态", required = false)
+    @Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(name = "代码库哈希ID", required = true)
+    @Schema(title = "代码库哈希ID", required = true)
     val repositoryHashId: String?,
-    @Schema(name = "revision 用于强制指定commitId", required = false)
+    @Schema(title = "revision 用于强制指定commitId", required = false)
     var revision: String? = null,
-    @Schema(name = "checkout 策略", required = false)
+    @Schema(title = "checkout 策略", required = false)
     val strategy: CodePullStrategy? = CodePullStrategy.INCREMENT_UPDATE,
-    @Schema(name = "代码存放路径", required = false)
+    @Schema(title = "代码存放路径", required = false)
     val path: String? = null,
-    @Schema(name = "启动Submodule", required = false)
+    @Schema(title = "启动Submodule", required = false)
     val enableSubmodule: Boolean? = true,
-    @Schema(name = "指定版本号", required = false)
+    @Schema(title = "指定版本号", required = false)
     var specifyRevision: Boolean? = false,
-    @Schema(name = "拉取仓库深度", required = false)
+    @Schema(title = "拉取仓库深度", required = false)
     val svnDepth: SvnDepth? = SvnDepth.infinity,
-    @Schema(name = "SVN相对路径", required = false)
+    @Schema(title = "SVN相对路径", required = false)
     val svnPath: String? = null,
-    @Schema(name = "SVN的版本", required = false)
+    @Schema(title = "SVN的版本", required = false)
     val svnVersion: SVNVersion? = null,
-    @Schema(name = "新版的svn原子的类型")
+    @Schema(title = "新版的svn原子的类型")
     val repositoryType: RepositoryType? = null,
-    @Schema(name = "新版的svn代码库名")
+    @Schema(title = "新版的svn代码库名")
     val repositoryName: String? = null
 ) : Element(name, id, status) {
 

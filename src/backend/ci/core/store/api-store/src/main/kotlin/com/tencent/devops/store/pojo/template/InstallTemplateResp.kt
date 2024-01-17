@@ -2,10 +2,10 @@ package com.tencent.devops.store.pojo.template
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "安装模板到项目返回报文")
+@Schema(title = "安装模板到项目返回报文")
 data class InstallTemplateResp(
-    @Schema(name = "安装结果")
+    @Schema(title = "安装结果")
     val result: Boolean?,
-    @Schema(name = "安装项目模板返回信息")
+    @Schema(title = "安装项目模板返回信息")
     val installProjectTemplateDTO: List<InstallProjectTemplateDTO>
 )

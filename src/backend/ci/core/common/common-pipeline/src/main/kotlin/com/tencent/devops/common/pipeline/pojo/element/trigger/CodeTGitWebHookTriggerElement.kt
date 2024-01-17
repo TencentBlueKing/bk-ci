@@ -37,15 +37,15 @@ import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.staffInp
 import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.vuexInput
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "TGit事件触发", description = CodeTGitWebHookTriggerElement.classType)
+@Schema(title = "TGit事件触发", description = CodeTGitWebHookTriggerElement.classType)
 data class CodeTGitWebHookTriggerElement(
-    @Schema(name = "任务名称", required = true)
+    @Schema(title = "任务名称", required = true)
     override val name: String = "TGit变更触发",
-    @Schema(name = "id", required = false)
+    @Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(name = "状态", required = false)
+    @Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(name = "数据", required = true)
+    @Schema(title = "数据", required = true)
     val data: CodeTGitWebHookTriggerData
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
@@ -152,60 +152,60 @@ data class CodeTGitWebHookTriggerElement(
 }
 
 data class CodeTGitWebHookTriggerData(
-    @Schema(name = "TGit事件触发数据", required = false)
+    @Schema(title = "TGit事件触发数据", required = false)
     val input: CodeTGitWebHookTriggerInput
 )
 
-@Schema(name = "TGit事件触发数据")
+@Schema(title = "TGit事件触发数据")
 data class CodeTGitWebHookTriggerInput(
-    @Schema(name = "仓库ID", required = true)
+    @Schema(title = "仓库ID", required = true)
     val repositoryHashId: String?,
-    @Schema(name = "分支名称", required = false)
+    @Schema(title = "分支名称", required = false)
     val branchName: String?,
-    @Schema(name = "用于排除的分支名", required = false)
+    @Schema(title = "用于排除的分支名", required = false)
     val excludeBranchName: String?,
-    @Schema(name = "路径过滤类型", required = true)
+    @Schema(title = "路径过滤类型", required = true)
     val pathFilterType: PathFilterType? = PathFilterType.NamePrefixFilter,
-    @Schema(name = "用于包含的路径", required = false)
+    @Schema(title = "用于包含的路径", required = false)
     val includePaths: String?,
-    @Schema(name = "用于排除的路径", required = false)
+    @Schema(title = "用于排除的路径", required = false)
     val excludePaths: String?,
-    @Schema(name = "用户白名单", required = false)
+    @Schema(title = "用户白名单", required = false)
     val includeUsers: List<String>? = null,
-    @Schema(name = "用于排除的user id", required = false)
+    @Schema(title = "用于排除的user id", required = false)
     val excludeUsers: List<String>?,
-    @Schema(name = "事件类型", required = false)
+    @Schema(title = "事件类型", required = false)
     val eventType: CodeEventType?,
-    @Schema(name = "是否为block", required = false)
+    @Schema(title = "是否为block", required = false)
     val block: Boolean?,
-    @Schema(name = "新版的git原子的类型")
+    @Schema(title = "新版的git原子的类型")
     val repositoryType: RepositoryType? = null,
-    @Schema(name = "新版的git代码库名")
+    @Schema(title = "新版的git代码库名")
     val repositoryName: String? = null,
-    @Schema(name = "tag名称", required = false)
+    @Schema(title = "tag名称", required = false)
     val tagName: String? = null,
-    @Schema(name = "用于排除的tag名称", required = false)
+    @Schema(title = "用于排除的tag名称", required = false)
     val excludeTagName: String? = null,
-    @Schema(name = "用于排除的源分支名称", required = false)
+    @Schema(title = "用于排除的源分支名称", required = false)
     val excludeSourceBranchName: String? = null,
-    @Schema(name = "用于包含的源分支名称", required = false)
+    @Schema(title = "用于包含的源分支名称", required = false)
     val includeSourceBranchName: String? = null,
-    @Schema(name = "tag从哪条分支创建", required = false)
+    @Schema(title = "tag从哪条分支创建", required = false)
     val fromBranches: String? = null,
-    @Schema(name = "code review 状态", required = false)
+    @Schema(title = "code review 状态", required = false)
     val includeCrState: List<String>? = null,
-    @Schema(name = "code note comment", required = false)
+    @Schema(title = "code note comment", required = false)
     val includeNoteComment: String? = null,
-    @Schema(name = "code note 类型", required = false)
+    @Schema(title = "code note 类型", required = false)
     val includeNoteTypes: List<String>? = null,
-    @Schema(name = "issue事件action")
+    @Schema(title = "issue事件action")
     val includeIssueAction: List<String>? = null,
-    @Schema(name = "是否启用回写")
+    @Schema(title = "是否启用回写")
     val enableCheck: Boolean? = true,
-    @Schema(name = "mr事件action")
+    @Schema(title = "mr事件action")
     val includeMrAction: List<String>? = null,
-    @Schema(name = "push事件action")
+    @Schema(title = "push事件action")
     val includePushAction: List<String>? = null,
-    @Schema(name = "webhook队列", required = false)
+    @Schema(title = "webhook队列", required = false)
     val webhookQueue: Boolean? = false
 )

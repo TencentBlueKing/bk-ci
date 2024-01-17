@@ -40,17 +40,17 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class TagRule(
     val tags: List<String>? = null,
 
-    @Schema(name = "tags-ignore")
+    @Schema(title = "tags-ignore")
     @JsonProperty("tags-ignore")
     val tagsIgnore: List<String>? = null,
 
-    @Schema(name = "from-branches")
+    @Schema(title = "from-branches")
     @JsonProperty("from-branches")
     val fromBranches: List<String>? = null,
 
     val users: List<String>? = null,
 
-    @Schema(name = "users-ignore")
+    @Schema(title = "users-ignore")
     @JsonProperty("users-ignore")
     val usersIgnore: List<String>? = null
 )

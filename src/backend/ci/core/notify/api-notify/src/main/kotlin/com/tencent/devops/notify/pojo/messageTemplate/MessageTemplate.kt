@@ -30,34 +30,34 @@ import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "消息通知模板配置")
+@Schema(title = "消息通知模板配置")
 data class MessageTemplate(
-    @Schema(name = "配置序号", required = true)
+    @Schema(title = "配置序号", required = true)
     val index: Int,
-    @Schema(name = "公共模板ID", required = true)
+    @Schema(title = "公共模板ID", required = true)
     val id: String,
-    @Schema(name = "公共模板代码", required = true)
+    @Schema(title = "公共模板代码", required = true)
     val templateCode: String,
-    @Schema(name = "公共模板名称", required = true)
+    @Schema(title = "公共模板名称", required = true)
     var templateName: String,
-    @Schema(name = "适用的通知类型（EMAIL:邮件 RTX:企业微信 WECHAT:微信 SMS:短信）", required = true)
+    @Schema(title = "适用的通知类型（EMAIL:邮件 RTX:企业微信 WECHAT:微信 SMS:短信）", required = true)
     val notifyTypeScope: List<String>,
-    @Schema(name = "优先级别（-1:低 0:普通 1:高）", allowableValues = ["-1", "0", "1"], type = "String", required = true)
+    @Schema(title = "优先级别（-1:低 0:普通 1:高）", allowableValues = ["-1", "0", "1"], type = "String", required = true)
     val priority: EnumNotifyPriority,
-    @Schema(name = "通知来源（0:本地业务 1:操作）", allowableValues = ["0", "1"], type = "int", required = true)
+    @Schema(title = "通知来源（0:本地业务 1:操作）", allowableValues = ["0", "1"], type = "int", required = true)
     val source: EnumNotifySource,
-    @Schema(name = "email通知模板", required = false)
+    @Schema(title = "email通知模板", required = false)
     var emailTemplate: EmailMessageTemplate? = null,
-    @Schema(name = "企业微信通知模板", required = false)
+    @Schema(title = "企业微信通知模板", required = false)
     var weworkTemplate: WeworkMessageTemplate? = null,
-    @Schema(name = "微信通知模板", required = false)
+    @Schema(title = "微信通知模板", required = false)
     var wechatTemplate: WechatMessageTemplate? = null,
-    @Schema(name = "微信群模板", required = false)
+    @Schema(title = "微信群模板", required = false)
     var weworkGroupTemplate: WeworkGroupMessageTemplate? = null,
-    @Schema(name = "语音模板", required = false)
+    @Schema(title = "语音模板", required = false)
     val voiceTemplate: VoiceTemplate? = null,
-    @Schema(name = "创建人", required = true)
+    @Schema(title = "创建人", required = true)
     val creator: String,
-    @Schema(name = "修改人", required = true)
+    @Schema(title = "修改人", required = true)
     val modifior: String
 )

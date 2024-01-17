@@ -29,12 +29,12 @@ package com.tencent.devops.environment.pojo.thirdPartyAgent
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "第三方接入机-创建")
+@Schema(title = "第三方接入机-创建")
 data class ThirdPartyAgentCreate(
-    @Schema(name = "名称", required = true)
+    @Schema(title = "名称", required = true)
     val name: String,
-    @Schema(name = "IP地址", required = true)
+    @Schema(title = "IP地址", required = true)
     val ip: String,
-    @Schema(name = "工作空间", required = true)
+    @Schema(title = "工作空间", required = true)
     val workspace: String
 )

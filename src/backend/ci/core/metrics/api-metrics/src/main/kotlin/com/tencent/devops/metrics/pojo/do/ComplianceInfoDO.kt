@@ -29,10 +29,10 @@ package com.tencent.devops.metrics.pojo.`do`
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "错误码合规信息")
+@Schema(title = "错误码合规信息")
 data class ComplianceInfoDO(
-    @Schema(name = "失败执行次数")
+    @Schema(title = "失败执行次数")
     val failExecuteCount: Int,
-    @Schema(name = "失败合规次数")
+    @Schema(title = "失败合规次数")
     val failComplianceCount: Int
 )

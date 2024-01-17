@@ -30,12 +30,12 @@ package com.tencent.devops.common.pipeline.pojo
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "人工审核-自定义参数审核体")
+@Schema(title = "人工审核-自定义参数审核体")
 data class StageReviewRequest(
-    @Schema(name = "审核参数", required = true)
+    @Schema(title = "审核参数", required = true)
     val reviewParams: List<ManualReviewParam>,
-    @Schema(name = "审核组ID", required = false)
+    @Schema(title = "审核组ID", required = false)
     val id: String?,
-    @Schema(name = "审核建议", required = false)
+    @Schema(title = "审核建议", required = false)
     var suggest: String? = ""
 )

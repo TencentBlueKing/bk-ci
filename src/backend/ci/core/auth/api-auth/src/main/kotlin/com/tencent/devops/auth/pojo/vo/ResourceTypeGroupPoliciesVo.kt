@@ -30,12 +30,12 @@ package com.tencent.devops.auth.pojo.vo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "资源类型组策略")
+@Schema(title = "资源类型组策略")
 data class ResourceTypeGroupPoliciesVo(
-    @Schema(name = "资源类型")
+    @Schema(title = "资源类型")
     val resourceType: String,
-    @Schema(name = "策略名")
+    @Schema(title = "策略名")
     val name: String,
-    @Schema(name = "策略展示名")
+    @Schema(title = "策略展示名")
     val displayName: String
 )

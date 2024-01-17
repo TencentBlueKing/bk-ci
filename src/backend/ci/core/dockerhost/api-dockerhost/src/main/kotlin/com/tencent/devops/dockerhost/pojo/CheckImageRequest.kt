@@ -29,14 +29,14 @@ package com.tencent.devops.dockerhost.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "验证镜像合法性请求报文体")
+@Schema(title = "验证镜像合法性请求报文体")
 data class CheckImageRequest(
-    @Schema(name = "镜像类型", required = false)
+    @Schema(title = "镜像类型", required = false)
     val imageType: String?,
-    @Schema(name = "镜像名称", required = true)
+    @Schema(title = "镜像名称", required = true)
     val imageName: String,
-    @Schema(name = "用户名", required = false)
+    @Schema(title = "用户名", required = false)
     val registryUser: String?,
-    @Schema(name = "密码", required = false)
+    @Schema(title = "密码", required = false)
     val registryPwd: String?
 )

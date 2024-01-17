@@ -29,12 +29,12 @@ package com.tencent.devops.metrics.pojo.message
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "Turbo上报消息")
+@Schema(title = "Turbo上报消息")
 data class TurboReportEvent(
-    @Schema(name = "统计日期")
+    @Schema(title = "统计日期")
     val statisticsTime: String,
-    @Schema(name = "项目ID")
+    @Schema(title = "项目ID")
     val projectId: String,
-    @Schema(name = "编译加速节省时间，单位：秒")
+    @Schema(title = "编译加速节省时间，单位：秒")
     val turboSaveTime: Double
 )

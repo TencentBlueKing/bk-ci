@@ -30,12 +30,12 @@ package com.tencent.devops.store.pojo.common
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "研发商店荣誉关联信息")
+@Schema(title = "研发商店荣誉关联信息")
 data class StoreHonorRel(
-    @Schema(name = "组件代码", required = true)
+    @Schema(title = "组件代码", required = true)
     val storeCode: String,
-    @Schema(name = "组件类型", required = true)
+    @Schema(title = "组件类型", required = true)
     val storeType: StoreTypeEnum,
-    @Schema(name = "荣誉ID", required = true)
+    @Schema(title = "荣誉ID", required = true)
     val honorId: String
 )

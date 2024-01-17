@@ -31,27 +31,27 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "插件失败信息查询传输对象")
+@Schema(title = "插件失败信息查询传输对象")
 class QueryAtomFailInfoDTO(
-    @Schema(name = "项目ID")
+    @Schema(title = "项目ID")
     val projectId: String,
-    @Schema(name = "流水线ID")
+    @Schema(title = "流水线ID")
     val pipelineIds: List<String>? = null,
-    @Schema(name = "流水线标签")
+    @Schema(title = "流水线标签")
     val pipelineLabelIds: List<Long>? = null,
-    @Schema(name = "开始时间")
+    @Schema(title = "开始时间")
     val startTime: String,
-    @Schema(name = "结束时间")
+    @Schema(title = "结束时间")
     val endTime: String,
-    @Schema(name = "错误类型", required = false)
+    @Schema(title = "错误类型", required = false)
     val errorTypes: List<Int>?,
-    @Schema(name = "错误码", required = false)
+    @Schema(title = "错误码", required = false)
     val errorCodes: List<Int>?,
-    @Schema(name = "插件code", required = false)
+    @Schema(title = "插件code", required = false)
     val atomCodes: List<String>?,
-    @Schema(name = "页码")
+    @Schema(title = "页码")
     val page: Int = 1,
-    @Schema(name = "页数")
+    @Schema(title = "页数")
     @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
     val pageSize: Int = 10
 )

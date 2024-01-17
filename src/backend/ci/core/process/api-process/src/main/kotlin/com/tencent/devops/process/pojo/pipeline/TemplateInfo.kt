@@ -30,18 +30,18 @@ package com.tencent.devops.process.pojo.pipeline
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "子流水线参数键值对")
+@Schema(title = "子流水线参数键值对")
 data class TemplateInfo(
-    @Schema(name = "模板ID", required = true)
+    @Schema(title = "模板ID", required = true)
     val templateId: String,
-    @Schema(name = "模板名称", required = true)
+    @Schema(title = "模板名称", required = true)
     val templateName: String,
-    @Schema(name = "版本号", required = true)
+    @Schema(title = "版本号", required = true)
     val version: Long,
-    @Schema(name = "版本名称", required = true)
+    @Schema(title = "版本名称", required = true)
     val versionName: String,
-    @Schema(name = "关联模式", required = true)
+    @Schema(title = "关联模式", required = true)
     val instanceType: PipelineInstanceTypeEnum,
-    @Schema(name = "版本描述", required = true)
+    @Schema(title = "版本描述", required = true)
     val desc: String? = null
 )

@@ -30,24 +30,24 @@ package com.tencent.devops.dispatch.pojo.thirdPartyAgent
 import com.tencent.devops.common.api.pojo.Error
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "第三方构建信息模型")
+@Schema(title = "第三方构建信息模型")
 data class ThirdPartyBuildWithStatus(
-    @Schema(name = "项目id")
+    @Schema(title = "项目id")
     val projectId: String,
-    @Schema(name = "构建id")
+    @Schema(title = "构建id")
     val buildId: String,
-    @Schema(name = "构建环境id")
+    @Schema(title = "构建环境id")
     val vmSeqId: String,
-    @Schema(name = "工作空间")
+    @Schema(title = "工作空间")
     val workspace: String,
-    @Schema(name = "流水线id")
+    @Schema(title = "流水线id")
     val pipelineId: String?,
-    @Schema(name = "是否成功")
+    @Schema(title = "是否成功")
     val success: Boolean,
-    @Schema(name = "message信息")
+    @Schema(title = "message信息")
     val message: String?,
-    @Schema(name = "错误信息")
+    @Schema(title = "错误信息")
     val error: Error?,
-    @Schema(name = "流水线执行次数")
+    @Schema(title = "流水线执行次数")
     val executeCount: Int?
 )

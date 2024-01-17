@@ -29,8 +29,8 @@ package com.tencent.devops.environment.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "环境-ID")
+@Schema(title = "环境-ID")
 data class EnvironmentId(
-    @Schema(name = "环境哈希ID", required = true)
+    @Schema(title = "环境哈希ID", required = true)
     val hashId: String
 )

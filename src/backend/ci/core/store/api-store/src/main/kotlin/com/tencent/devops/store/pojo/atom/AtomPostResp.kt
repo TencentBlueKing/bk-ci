@@ -29,8 +29,8 @@ package com.tencent.devops.store.pojo.atom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "插件post属性查询返回报文")
+@Schema(title = "插件post属性查询返回报文")
 data class AtomPostResp(
-    @Schema(name = "带post属性插件集合")
+    @Schema(title = "带post属性插件集合")
     val postAtoms: List<AtomPostInfo>?
 )

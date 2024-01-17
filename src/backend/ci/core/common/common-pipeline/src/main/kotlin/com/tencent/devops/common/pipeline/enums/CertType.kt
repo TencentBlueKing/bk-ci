@@ -29,10 +29,10 @@ package com.tencent.devops.common.pipeline.enums
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "安装的证书类型")
+@Schema(title = "安装的证书类型")
 enum class CertType constructor(val value: String) {
-    @Schema(name = "自定义证书安装")
+    @Schema(title = "自定义证书安装")
     PERSONAL("PERSONAL"),
-    @Schema(name = "企业证书安装")
+    @Schema(title = "企业证书安装")
     ENTERPRISE("ENTERPRISE");
 }

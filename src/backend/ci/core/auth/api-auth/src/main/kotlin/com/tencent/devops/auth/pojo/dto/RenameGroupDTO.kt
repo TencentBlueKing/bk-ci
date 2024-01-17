@@ -30,8 +30,8 @@ package com.tencent.devops.auth.pojo.dto
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "用户组重命名")
+@Schema(title = "用户组重命名")
 data class RenameGroupDTO(
-    @Schema(name = "用户组名称")
+    @Schema(title = "用户组名称")
     val groupName: String
 )

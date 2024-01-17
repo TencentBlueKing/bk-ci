@@ -28,16 +28,16 @@ package com.tencent.devops.openapi.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "AppCode所属项目信息-response")
+@Schema(title = "AppCode所属项目信息-response")
 data class AppCodeProjectResponse(
-    @Schema(name = "ID")
+    @Schema(title = "ID")
     val id: Long,
-    @Schema(name = "appCode")
+    @Schema(title = "appCode")
     val appCode: String,
-    @Schema(name = "项目ID(项目英文名)")
+    @Schema(title = "项目ID(项目英文名)")
     val projectId: String,
-    @Schema(name = "创建人")
+    @Schema(title = "创建人")
     val creator: String?,
-    @Schema(name = "创建时间")
+    @Schema(title = "创建时间")
     val createTime: Long?
 )

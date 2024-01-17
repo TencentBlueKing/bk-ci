@@ -29,16 +29,16 @@ package com.tencent.devops.quality.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "质量红线-用户组信息")
+@Schema(title = "质量红线-用户组信息")
 data class Group(
-    @Schema(name = "用户组HashID", required = true)
+    @Schema(title = "用户组HashID", required = true)
     val groupHashId: String,
-    @Schema(name = "用户组名称", required = true)
+    @Schema(title = "用户组名称", required = true)
     val name: String,
-    @Schema(name = "内部人员")
+    @Schema(title = "内部人员")
     val innerUsers: Set<String>,
-    @Schema(name = "外部人员")
+    @Schema(title = "外部人员")
     val outerUsers: String,
-    @Schema(name = "描述")
+    @Schema(title = "描述")
     val remark: String?
 )

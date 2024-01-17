@@ -30,16 +30,16 @@ package com.tencent.devops.environment.pojo
 import com.tencent.devops.environment.pojo.enums.SharedEnvType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "VM虚拟机配额")
+@Schema(title = "VM虚拟机配额")
 data class AddSharedProjectInfo(
     @Deprecated("普通项目也支持 , 请使用projectId")
-    @Schema(name = "工蜂项目ID", required = false)
+    @Schema(title = "工蜂项目ID", required = false)
     val gitProjectId: String? = null,
-    @Schema(name = "项目名称，工蜂项目则为groupName/projectName", required = true)
+    @Schema(title = "项目名称，工蜂项目则为groupName/projectName", required = true)
     val name: String,
-    @Schema(name = "类型，预留", required = true)
+    @Schema(title = "类型，预留", required = true)
     val type: SharedEnvType,
-    @Schema(name = "项目ID", required = true)
+    @Schema(title = "项目ID", required = true)
     val projectId: String? = null
 ) {
     @SuppressWarnings("TooGenericExceptionThrown")

@@ -30,34 +30,34 @@ package com.tencent.devops.common.pipeline.pojo.element.matrix
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "流水线模型-矩阵纯运行状态插件", description = MatrixStatusElement.classType)
+@Schema(title = "流水线模型-矩阵纯运行状态插件", description = MatrixStatusElement.classType)
 data class MatrixStatusElement(
-    @Schema(name = "任务名称", required = true)
+    @Schema(title = "任务名称", required = true)
     override var name: String = "状态插件",
-    @Schema(name = "插件ID", required = false)
+    @Schema(title = "插件ID", required = false)
     override var id: String? = null,
-    @Schema(name = "执行状态", required = false)
+    @Schema(title = "执行状态", required = false)
     override var status: String? = null,
-    @Schema(name = "执行次数", required = false)
+    @Schema(title = "执行次数", required = false)
     override var executeCount: Int = 1,
-    @Schema(name = "执行时间", required = false)
+    @Schema(title = "执行时间", required = false)
     override var elapsed: Long? = null,
-    @Schema(name = "启动时间", required = false)
+    @Schema(title = "启动时间", required = false)
     override var startEpoch: Long? = null,
-    @Schema(name = "上下文标识", required = false)
+    @Schema(title = "上下文标识", required = false)
     override var stepId: String?,
-    @Schema(name = "原插件的类型标识")
+    @Schema(title = "原插件的类型标识")
     val originClassType: String,
-    @Schema(name = "原插件的市场标识")
+    @Schema(title = "原插件的市场标识")
     val originAtomCode: String?,
-    @Schema(name = "原插件的内置标识")
+    @Schema(title = "原插件的内置标识")
     val originTaskAtom: String?,
     // 当状态插件为质量红线插件是需要专门保存
-    @Schema(name = "审核人", required = true)
+    @Schema(title = "审核人", required = true)
     var reviewUsers: MutableList<String>? = null,
-    @Schema(name = "拦截原子", required = false)
+    @Schema(title = "拦截原子", required = false)
     var interceptTask: String? = null,
-    @Schema(name = "拦截原子名称", required = false)
+    @Schema(title = "拦截原子名称", required = false)
     var interceptTaskName: String? = null
 ) : Element(
     name = name,

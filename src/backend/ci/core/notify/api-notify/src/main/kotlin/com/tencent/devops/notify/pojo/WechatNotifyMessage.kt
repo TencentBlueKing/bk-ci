@@ -30,20 +30,20 @@ import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "wechat微信消息类型")
+@Schema(title = "wechat微信消息类型")
 open class WechatNotifyMessage : BaseMessage() {
 
-    @Schema(name = "通知接收者")
+    @Schema(title = "通知接收者")
     private val receivers: MutableSet<String> = mutableSetOf()
-    @Schema(name = "通知内容")
+    @Schema(title = "通知内容")
     var body: String = ""
-    @Schema(name = "通知发送者")
+    @Schema(title = "通知发送者")
     var sender: String = ""
-    @Schema(name = "优先级", allowableValues = ["-1", "0", "1"], type = "int")
+    @Schema(title = "优先级", allowableValues = ["-1", "0", "1"], type = "int")
     var priority: EnumNotifyPriority = EnumNotifyPriority.HIGH
-    @Schema(name = "通知来源", allowableValues = ["0", "1"], type = "int")
+    @Schema(title = "通知来源", allowableValues = ["0", "1"], type = "int")
     var source: EnumNotifySource = EnumNotifySource.BUSINESS_LOGIC
-    @Schema(name = "是否markdown")
+    @Schema(title = "是否markdown")
     var markdownContent: Boolean = false
 
     fun addReceiver(receiver: String) {

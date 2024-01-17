@@ -31,15 +31,15 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "关联镜像请求报文体")
+@Schema(title = "关联镜像请求报文体")
 data class MarketImageRelRequest(
-    @Schema(name = "项目编码", required = true)
+    @Schema(title = "项目编码", required = true)
     val projectCode: String,
-    @Schema(name = "镜像名称", required = true)
+    @Schema(title = "镜像名称", required = true)
     @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
     val imageName: String,
-    @Schema(name = "镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = true)
+    @Schema(title = "镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = true)
     val imageSourceType: ImageType,
-    @Schema(name = "ticket身份ID", required = false)
+    @Schema(title = "ticket身份ID", required = false)
     val ticketId: String?
 )

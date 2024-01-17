@@ -29,10 +29,10 @@ package com.tencent.devops.environment.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "节点(分页)")
+@Schema(title = "节点(分页)")
 data class NodePage(
-    @Schema(name = "节点总数", required = true)
+    @Schema(title = "节点总数", required = true)
     val total: Int,
-    @Schema(name = "节点详情", required = true)
+    @Schema(title = "节点详情", required = true)
     val data: List<NodeDevCloudInfo>
 )

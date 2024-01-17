@@ -29,14 +29,14 @@ package com.tencent.devops.dispatch.docker.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "专机配置返回模型")
+@Schema(title = "专机配置返回模型")
 data class SpecialDockerHostVO(
-    @Schema(name = "项目id")
+    @Schema(title = "项目id")
     val projectId: String,
-    @Schema(name = "主机ip")
+    @Schema(title = "主机ip")
     val hostIp: String,
-    @Schema(name = "备注")
+    @Schema(title = "备注")
     val remark: String?,
-    @Schema(name = "是否开启共享挂载")
+    @Schema(title = "是否开启共享挂载")
     val nfsShare: Boolean? = false
 )

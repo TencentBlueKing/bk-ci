@@ -31,36 +31,36 @@ package com.tencent.devops.process.pojo.trigger
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class PipelineTriggerEventVo(
-    @Schema(name = "事件明细ID")
+    @Schema(title = "事件明细ID")
     var detailId: Long,
-    @Schema(name = "蓝盾项目ID")
+    @Schema(title = "蓝盾项目ID")
     val projectId: String,
-    @Schema(name = "事件ID")
+    @Schema(title = "事件ID")
     val eventId: Long,
-    @Schema(name = "触发类型")
+    @Schema(title = "触发类型")
     val triggerType: String,
-    @Schema(name = "事件触发源,代码库触发-代码库ID", required = false)
+    @Schema(title = "事件触发源,代码库触发-代码库ID", required = false)
     val eventSource: String? = "",
-    @Schema(name = "事件类型")
+    @Schema(title = "事件类型")
     val eventType: String,
-    @Schema(name = "触发人")
+    @Schema(title = "触发人")
     val triggerUser: String,
-    @Schema(name = "事件描述")
+    @Schema(title = "事件描述")
     var eventDesc: String,
-    @Schema(name = "事件时间")
+    @Schema(title = "事件时间")
     val eventTime: Long,
-    @Schema(name = "触发状态")
+    @Schema(title = "触发状态")
     var status: String,
-    @Schema(name = "流水线Id")
+    @Schema(title = "流水线Id")
     var pipelineId: String? = null,
-    @Schema(name = "流水线名称")
+    @Schema(title = "流水线名称")
     var pipelineName: String? = null,
-    @Schema(name = "构建Id")
+    @Schema(title = "构建Id")
     var buildId: String? = null,
-    @Schema(name = "构建编号")
+    @Schema(title = "构建编号")
     var buildNum: String? = null,
-    @Schema(name = "原因")
+    @Schema(title = "原因")
     var reason: String? = null,
-    @Schema(name = "失败原因详情", required = false)
+    @Schema(title = "失败原因详情", required = false)
     var reasonDetailList: List<String>? = null
 )

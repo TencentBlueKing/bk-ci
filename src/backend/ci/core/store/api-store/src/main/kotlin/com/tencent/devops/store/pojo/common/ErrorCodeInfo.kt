@@ -29,14 +29,14 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "错误码信息")
+@Schema(title = "错误码信息")
 data class ErrorCodeInfo(
-    @Schema(name = "错误码")
+    @Schema(title = "错误码")
     val errorCode: Int,
-    @Schema(name = "中文简体描述信息")
+    @Schema(title = "中文简体描述信息")
     val errorMsgZhCn: String = "",
-    @Schema(name = "中文繁体描述信息")
+    @Schema(title = "中文繁体描述信息")
     val errorMsgZhTw: String? = null,
-    @Schema(name = "英文描述信息")
+    @Schema(title = "英文描述信息")
     val errorMsgEn: String? = null
 )

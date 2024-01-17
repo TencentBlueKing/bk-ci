@@ -29,14 +29,14 @@ package com.tencent.devops.engine.api.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "心跳信息")
+@Schema(title = "心跳信息")
 data class HeartBeatInfo(
-    @Schema(name = "项目ID")
+    @Schema(title = "项目ID")
     val projectId: String,
-    @Schema(name = "构建ID")
+    @Schema(title = "构建ID")
     val buildId: String,
-    @Schema(name = "项目ID")
+    @Schema(title = "项目ID")
     val vmSeqId: String,
-    @Schema(name = "取消的task任务的id集合")
+    @Schema(title = "取消的task任务的id集合")
     val cancelTaskIds: Set<String>? = null
 )

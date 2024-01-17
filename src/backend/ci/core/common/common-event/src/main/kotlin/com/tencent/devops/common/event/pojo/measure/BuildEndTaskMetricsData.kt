@@ -29,32 +29,32 @@ package com.tencent.devops.common.event.pojo.measure
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "构建结束后task指标数据")
+@Schema(title = "构建结束后task指标数据")
 data class BuildEndTaskMetricsData(
-    @Schema(name = "taskId", required = true)
+    @Schema(title = "taskId", required = true)
     val taskId: String,
-    @Schema(name = "插件名称", required = true)
+    @Schema(title = "插件名称", required = true)
     val atomName: String,
-    @Schema(name = "插件标识", required = true)
+    @Schema(title = "插件标识", required = true)
     val atomCode: String,
-    @Schema(name = "插件在model中的位置", required = true)
+    @Schema(title = "插件在model中的位置", required = true)
     val atomPosition: String,
-    @Schema(name = "插件分类代码", required = true)
+    @Schema(title = "插件分类代码", required = true)
     val classifyCode: String,
-    @Schema(name = "插件分类名称", required = true)
+    @Schema(title = "插件分类名称", required = true)
     val classifyName: String,
-    @Schema(name = "执行开始时间", required = false)
+    @Schema(title = "执行开始时间", required = false)
     val startTime: String?,
-    @Schema(name = "执行结束时间", required = false)
+    @Schema(title = "执行结束时间", required = false)
     val endTime: String?,
-    @Schema(name = "task构建耗时", required = true)
+    @Schema(title = "task构建耗时", required = true)
     val costTime: Long,
-    @Schema(name = "是否执行成功", required = true)
+    @Schema(title = "是否执行成功", required = true)
     val successFlag: Boolean,
-    @Schema(name = "错误类型", required = false)
+    @Schema(title = "错误类型", required = false)
     val errorType: Int? = null,
-    @Schema(name = "错误码", required = false)
+    @Schema(title = "错误码", required = false)
     val errorCode: Int? = null,
-    @Schema(name = "错误描述", required = false)
+    @Schema(title = "错误描述", required = false)
     val errorMsg: String? = null
 )

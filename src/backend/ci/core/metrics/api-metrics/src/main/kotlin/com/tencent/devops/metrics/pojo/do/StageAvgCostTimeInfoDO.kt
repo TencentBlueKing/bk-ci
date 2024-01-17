@@ -30,10 +30,10 @@ package com.tencent.devops.metrics.pojo.`do`
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDate
 
-@Schema(name = "stage每日平均耗时信息")
+@Schema(title = "stage每日平均耗时信息")
 data class StageAvgCostTimeInfoDO(
-    @Schema(name = "统计时间")
+    @Schema(title = "统计时间")
     val statisticsTime: LocalDate,
-    @Schema(name = "平均耗时")
+    @Schema(title = "平均耗时")
     val avgCostTime: Double
 )

@@ -29,18 +29,18 @@ package com.tencent.devops.process.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "流水线-阶段标签信息")
+@Schema(title = "流水线-阶段标签信息")
 data class PipelineStageTag(
-    @Schema(name = "阶段标签ID", required = true)
+    @Schema(title = "阶段标签ID", required = true)
     val id: String,
-    @Schema(name = "阶段标签名称", required = true)
+    @Schema(title = "阶段标签名称", required = true)
     val stageTagName: String,
-    @Schema(name = "阶段标签权重", required = true)
+    @Schema(title = "阶段标签权重", required = true)
     val weight: Int,
-    @Schema(name = "是否为默认标签", required = true)
+    @Schema(title = "是否为默认标签", required = true)
     val defaultFlag: Boolean,
-    @Schema(name = "创建日期")
+    @Schema(title = "创建日期")
     val createTime: Long = 0,
-    @Schema(name = "更新日期")
+    @Schema(title = "更新日期")
     val updateTime: Long = 0
 )

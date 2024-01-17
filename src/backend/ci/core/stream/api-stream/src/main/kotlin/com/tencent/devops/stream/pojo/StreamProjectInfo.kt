@@ -30,50 +30,50 @@ package com.tencent.devops.stream.pojo
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "Git和Stream项目详细信息")
+@Schema(title = "Git和Stream项目详细信息")
 data class StreamProjectCIInfo(
-    @Schema(name = "Git项目ID")
+    @Schema(title = "Git项目ID")
     val id: Long,
-    @Schema(name = "蓝盾项目id")
+    @Schema(title = "蓝盾项目id")
     val projectCode: String?,
-    @Schema(name = "是否为stream 公共项目")
+    @Schema(title = "是否为stream 公共项目")
     val public: Boolean?,
-    @Schema(name = "stream 项目名称")
+    @Schema(title = "stream 项目名称")
     val name: String?,
-    @Schema(name = "stream 项目名称带有路径")
+    @Schema(title = "stream 项目名称带有路径")
     val nameWithNamespace: String?,
-    @Schema(name = "https-git链接")
+    @Schema(title = "https-git链接")
     val httpsUrlToRepo: String?,
-    @Schema(name = "项目网页链接")
+    @Schema(title = "项目网页链接")
     val webUrl: String?,
-    @Schema(name = "项目头像")
+    @Schema(title = "项目头像")
     val avatarUrl: String?,
-    @Schema(name = "项目描述")
+    @Schema(title = "项目描述")
     val description: String?,
-    @Schema(name = "是否开启CI功能")
+    @Schema(title = "是否开启CI功能")
     val enableCI: Boolean?,
-    @Schema(name = "Build pushed branches")
+    @Schema(title = "Build pushed branches")
     val buildPushedBranches: Boolean?,
-    @Schema(name = "Build pushed pull request")
+    @Schema(title = "Build pushed pull request")
     val buildPushedPullRequest: Boolean?,
-    @Schema(name = "是否开启Mr锁定")
+    @Schema(title = "是否开启Mr锁定")
     val enableMrBlock: Boolean?,
-    @Schema(name = "当前授权人")
+    @Schema(title = "当前授权人")
     val authUserId: String?,
-    @Schema(name = "CI相关信息")
+    @Schema(title = "CI相关信息")
     val ciInfo: StreamCIInfo?
 )
 
-@Schema(name = "CI相关信息")
+@Schema(title = "CI相关信息")
 data class StreamCIInfo(
-    @Schema(name = "是否开启STREAM")
+    @Schema(title = "是否开启STREAM")
     val enableCI: Boolean,
-    @Schema(name = "最后一次构建信息")
+    @Schema(title = "最后一次构建信息")
     val lastBuildMessage: String?,
-    @Schema(name = "最后一次构建状态")
+    @Schema(title = "最后一次构建状态")
     val lastBuildStatus: BuildStatus?,
-    @Schema(name = "流水线ID")
+    @Schema(title = "流水线ID")
     val lastBuildPipelineId: String?,
-    @Schema(name = "构建ID")
+    @Schema(title = "构建ID")
     val lastBuildId: String?
 )

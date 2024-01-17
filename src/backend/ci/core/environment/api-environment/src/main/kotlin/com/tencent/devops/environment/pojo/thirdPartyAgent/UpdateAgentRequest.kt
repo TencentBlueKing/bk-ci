@@ -30,10 +30,10 @@ package com.tencent.devops.environment.pojo.thirdPartyAgent
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class UpdateAgentRequest(
-    @Schema(name = "Agent Hash ID", required = true)
+    @Schema(title = "Agent Hash ID", required = true)
     val agentId: String,
-    @Schema(name = "Gateway", required = true)
+    @Schema(title = "Gateway", required = true)
     val gateway: String,
-    @Schema(name = "File Gateway", required = true)
+    @Schema(title = "File Gateway", required = true)
     val fileGateway: String
 )

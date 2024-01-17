@@ -29,14 +29,14 @@ package com.tencent.devops.project.pojo.service
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("ALL")
-@Schema(name = "灰度测试-显示模型")
+@Schema(title = "灰度测试-显示模型")
 data class GrayTestInfo(
-    @Schema(name = "id")
+    @Schema(title = "id")
     val id: Long,
-    @Schema(name = "服务器ID")
+    @Schema(title = "服务器ID")
     val server_id: Long,
-    @Schema(name = "用户名称")
+    @Schema(title = "用户名称")
     val userName: String,
-    @Schema(name = "状态")
+    @Schema(title = "状态")
     val status: String
 )

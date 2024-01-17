@@ -29,12 +29,12 @@ package com.tencent.devops.dockerhost.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "DockerRunResponse")
+@Schema(title = "DockerRunResponse")
 data class DockerRunResponse(
-    @Schema(name = "容器Id", required = true)
+    @Schema(title = "容器Id", required = true)
     val containerId: String,
-    @Schema(name = "容器启动时间戳", required = true)
+    @Schema(title = "容器启动时间戳", required = true)
     val startTimeStamp: Int,
-    @Schema(name = "端口绑定列表", required = false)
+    @Schema(title = "端口绑定列表", required = false)
     val dockerRunPortBindings: List<DockerRunPortBinding>?
 )

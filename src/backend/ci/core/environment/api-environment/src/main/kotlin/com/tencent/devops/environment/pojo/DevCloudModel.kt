@@ -29,20 +29,20 @@ package com.tencent.devops.environment.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "DevCloud容器机型")
+@Schema(title = "DevCloud容器机型")
 data class DevCloudModel(
-    @Schema(name = "moduleId", required = true)
+    @Schema(title = "moduleId", required = true)
     val moduleId: String,
-    @Schema(name = "机型名称", required = true)
+    @Schema(title = "机型名称", required = true)
     val moduleName: String,
-    @Schema(name = "CPU", required = true)
+    @Schema(title = "CPU", required = true)
     val cpu: Int,
-    @Schema(name = "Memory", required = true)
+    @Schema(title = "Memory", required = true)
     val memory: String,
-    @Schema(name = "Disk", required = true)
+    @Schema(title = "Disk", required = true)
     val disk: String,
-    @Schema(name = "description", required = true)
+    @Schema(title = "description", required = true)
     val description: List<String>?,
-    @Schema(name = "description", required = true)
+    @Schema(title = "description", required = true)
     val produceTime: String?
 )

@@ -29,14 +29,14 @@ package com.tencent.devops.notify.pojo
 import com.tencent.devops.common.notify.enums.NotifyType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "使用模板获取消息内容请求")
+@Schema(title = "使用模板获取消息内容请求")
 data class NotifyMessageContextRequest(
-    @Schema(name = "通知模板代码", required = true)
+    @Schema(title = "通知模板代码", required = true)
     val templateCode: String,
-    @Schema(name = "通知类型", required = true)
+    @Schema(title = "通知类型", required = true)
     val notifyType: NotifyType,
-    @Schema(name = "标题动态参数", required = false)
+    @Schema(title = "标题动态参数", required = false)
     val titleParams: Map<String, String>? = null,
-    @Schema(name = "内容动态参数", required = false)
+    @Schema(title = "内容动态参数", required = false)
     val bodyParams: Map<String, String>? = null
 )

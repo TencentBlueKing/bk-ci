@@ -29,16 +29,16 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "store组件环境变量变更历史信息")
+@Schema(title = "store组件环境变量变更历史信息")
 data class StoreEnvChangeLogInfo(
-    @Schema(name = "变量名", required = true)
+    @Schema(title = "变量名", required = true)
     val varName: String,
-    @Schema(name = "变更前变量值", required = true)
+    @Schema(title = "变更前变量值", required = true)
     val beforeVarValue: String,
-    @Schema(name = "变更后变量值", required = true)
+    @Schema(title = "变更后变量值", required = true)
     val afterVarValue: String,
-    @Schema(name = "修改用户", required = true)
+    @Schema(title = "修改用户", required = true)
     val modifier: String,
-    @Schema(name = "修改时间", required = true)
+    @Schema(title = "修改时间", required = true)
     val updateTime: String
 )

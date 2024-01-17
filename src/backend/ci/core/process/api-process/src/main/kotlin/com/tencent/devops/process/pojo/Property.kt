@@ -29,10 +29,10 @@ package com.tencent.devops.process.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "属性")
+@Schema(title = "属性")
 data class Property(
-    @Schema(name = "健", required = false)
+    @Schema(title = "健", required = false)
     val key: String,
-    @Schema(name = "值", required = false)
+    @Schema(title = "值", required = false)
     val value: String
 )

@@ -31,13 +31,13 @@ import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "指标列表页面响应")
+@Schema(title = "指标列表页面响应")
 data class IndicatorListResponse(
-    @Schema(name = "脚本指标")
+    @Schema(title = "脚本指标")
     val scriptIndicators: List<IndicatorListItem>,
-    @Schema(name = "系统指标")
+    @Schema(title = "系统指标")
     val systemIndicators: List<IndicatorListItem>,
-    @Schema(name = "研发商店指标")
+    @Schema(title = "研发商店指标")
     val marketIndicators: List<IndicatorListItem>
 ) {
     data class IndicatorListItem(

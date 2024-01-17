@@ -81,7 +81,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 }
 * */
 
-@Schema(name = "git mr reviewers信息")
+@Schema(title = "git mr reviewers信息")
 data class GitMrReviewInfo(
     val author: GitMrInfoReviewer?,
     @JsonProperty("project_id")

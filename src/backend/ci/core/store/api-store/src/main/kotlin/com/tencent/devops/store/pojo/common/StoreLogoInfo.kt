@@ -29,8 +29,8 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "store组件logo信息")
+@Schema(title = "store组件logo信息")
 data class StoreLogoInfo(
-    @Schema(name = "logo地址", required = false)
+    @Schema(title = "logo地址", required = false)
     val logoUrl: String?
 )

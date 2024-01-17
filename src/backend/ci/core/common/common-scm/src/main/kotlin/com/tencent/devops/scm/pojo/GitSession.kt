@@ -29,12 +29,12 @@ package com.tencent.devops.scm.pojo
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "工蜂会话信息")
+@Schema(title = "工蜂会话信息")
 data class GitSession(
     val id: String,
-    @Schema(name = "邮箱地址")
+    @Schema(title = "邮箱地址")
     val email: String,
-    @Schema(name = "用户名")
+    @Schema(title = "用户名")
     val username: String,
     @JsonProperty("private_token")
     val privateToken: String

@@ -28,30 +28,30 @@ package com.tencent.devops.notify.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "消息模板信息")
+@Schema(title = "消息模板信息")
 data class SubNotifyMessageTemplate(
-    @Schema(name = "适用的通知类型（EMAIL:邮件 RTX:企业微信 WECHAT:微信 SMS:短信）", required = true)
+    @Schema(title = "适用的通知类型（EMAIL:邮件 RTX:企业微信 WECHAT:微信 SMS:短信）", required = true)
     val notifyTypeScope: List<String>,
-    @Schema(name = "标题（邮件和RTX方式必填）", required = false)
+    @Schema(title = "标题（邮件和RTX方式必填）", required = false)
     val title: String? = "",
-    @Schema(name = "消息内容", required = true)
+    @Schema(title = "消息内容", required = true)
     val body: String,
-    @Schema(name = "消息内容(md 格式)", required = false)
+    @Schema(title = "消息内容(md 格式)", required = false)
     val bodyMD: String? = null,
-    @Schema(name = "邮件格式（邮件方式必填）", required = false)
+    @Schema(title = "邮件格式（邮件方式必填）", required = false)
     val bodyFormat: Int? = null,
-    @Schema(name = "邮件类型（邮件方式必填）", required = false)
+    @Schema(title = "邮件类型（邮件方式必填）", required = false)
     val emailType: Int? = null,
-    @Schema(name = "创建人", required = true)
+    @Schema(title = "创建人", required = true)
     val creator: String,
-    @Schema(name = "修改人", required = true)
+    @Schema(title = "修改人", required = true)
     val modifier: String,
-    @Schema(name = "回调地址")
+    @Schema(title = "回调地址")
     val callBackUrl: String? = null,
-    @Schema(name = "流程名称")
+    @Schema(title = "流程名称")
     val processName: String? = null,
-    @Schema(name = "创建日期", required = true)
+    @Schema(title = "创建日期", required = true)
     val createTime: Long = 0,
-    @Schema(name = "更新日期", required = true)
+    @Schema(title = "更新日期", required = true)
     val updateTime: Long = 0
 )

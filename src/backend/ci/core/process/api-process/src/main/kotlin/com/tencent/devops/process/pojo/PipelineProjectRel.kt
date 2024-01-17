@@ -29,14 +29,14 @@ package com.tencent.devops.process.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "流水线信息")
+@Schema(title = "流水线信息")
 data class PipelineProjectRel(
-    @Schema(name = "流水线ID", required = true)
+    @Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(name = "流水线名称", required = true)
+    @Schema(title = "流水线名称", required = true)
     var pipelineName: String,
-    @Schema(name = "项目标识", required = true)
+    @Schema(title = "项目标识", required = true)
     val projectCode: String,
-    @Schema(name = "插件版本", required = true)
+    @Schema(title = "插件版本", required = true)
     val atomVersion: String
 )

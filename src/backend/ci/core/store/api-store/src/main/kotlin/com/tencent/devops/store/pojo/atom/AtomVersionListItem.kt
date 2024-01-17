@@ -31,31 +31,31 @@ import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nSourceEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "插件版本列表")
+@Schema(title = "插件版本列表")
 data class AtomVersionListItem(
-    @Schema(name = "插件ID")
+    @Schema(title = "插件ID")
     val atomId: String,
-    @Schema(name = "插件标识")
+    @Schema(title = "插件标识")
     val atomCode: String,
-    @Schema(name = "名称")
+    @Schema(title = "名称")
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val name: String,
-    @Schema(name = "插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = false)
+    @Schema(title = "插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = false)
     val category: String?,
-    @Schema(name = "版本号")
+    @Schema(title = "版本号")
     val version: String,
-    @Schema(name = "版本内容")
+    @Schema(title = "版本内容")
     @BkFieldI18n(source = I18nSourceEnum.DB, keyPrefixName = "versionInfo")
     val versionContent: String?,
-    @Schema(name =
+    @Schema(title =
         "插件状态，INIT：初始化|COMMITTING：提交中|BUILDING：构建中|BUILD_FAIL：构建失败|TESTING：测试中|" +
             "AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|" +
             "UNDERCARRIAGING：下架中|UNDERCARRIAGED：已下架",
         required = true
     )
     val atomStatus: String,
-    @Schema(name = "创建人")
+    @Schema(title = "创建人")
     val creator: String,
-    @Schema(name = "创建时间")
+    @Schema(title = "创建时间")
     val createTime: String
 )

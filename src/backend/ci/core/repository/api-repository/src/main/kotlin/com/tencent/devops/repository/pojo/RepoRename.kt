@@ -30,10 +30,10 @@ package com.tencent.devops.repository.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "代码库重命名")
+@Schema(title = "代码库重命名")
 data class RepoRename(
-    @Schema(name = "代码库修改后的名称", required = true)
+    @Schema(title = "代码库修改后的名称", required = true)
     val name: String,
-    @Schema(name = "代码库修改前的名称", required = false)
+    @Schema(title = "代码库修改前的名称", required = false)
     val oldName: String = ""
 )

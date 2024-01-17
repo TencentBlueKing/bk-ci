@@ -31,18 +31,18 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonInclude(JsonInclude.Include.ALWAYS)
-@Schema(name = "质量红线-(模板/指标集)与指标关联信息显示模型")
+@Schema(title = "质量红线-(模板/指标集)与指标关联信息显示模型")
 data class TemplateIndicatorMap(
-    @Schema(name = "关联表ID")
+    @Schema(title = "关联表ID")
     val id: Long?,
-    @Schema(name = "模板ID")
+    @Schema(title = "模板ID")
     val templateId: Long?,
-    @Schema(name = "指标ID")
+    @Schema(title = "指标ID")
     val indicatorId: Long?,
-    @Schema(name = "指标名称")
+    @Schema(title = "指标名称")
     val indicatorName: String?,
-    @Schema(name = "可选操作")
+    @Schema(title = "可选操作")
     val operation: String?,
-    @Schema(name = "阈值")
+    @Schema(title = "阈值")
     val threshold: String?
 )

@@ -30,18 +30,18 @@ package com.tencent.devops.common.pipeline.pojo
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "构建模型-构建参数")
+@Schema(title = "构建模型-构建参数")
 data class BuildParameters(
-    @Schema(name = "元素值ID-标识符", required = true)
+    @Schema(title = "元素值ID-标识符", required = true)
     var key: String,
-    @Schema(name = "元素值名称-显示用", required = true)
+    @Schema(title = "元素值名称-显示用", required = true)
     var value: Any,
-    @Schema(name = "元素值类型", required = false)
+    @Schema(title = "元素值类型", required = false)
     val valueType: BuildFormPropertyType? = null,
-    @Schema(name = "是否只读", required = false)
+    @Schema(title = "是否只读", required = false)
     val readOnly: Boolean? = false,
-    @Schema(name = "描述", required = false)
+    @Schema(title = "描述", required = false)
     var desc: String? = null,
-    @Schema(name = "默认值", required = false)
+    @Schema(title = "默认值", required = false)
     var defaultValue: Any? = null
 )

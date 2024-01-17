@@ -29,10 +29,10 @@ package com.tencent.devops.store.pojo.atom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "研发商店-工作台-插件语言")
+@Schema(title = "研发商店-工作台-插件语言")
 data class AtomDevLanguage(
-    @Schema(name = "语言")
+    @Schema(title = "语言")
     val language: String,
-    @Schema(name = "名称")
+    @Schema(title = "名称")
     val name: String
 )

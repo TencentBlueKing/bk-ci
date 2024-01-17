@@ -29,20 +29,20 @@ package com.tencent.devops.process.pojo.classify
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "流水线标签")
+@Schema(title = "流水线标签")
 data class PipelineLabel(
-    @Schema(name = "标签id", required = false)
+    @Schema(title = "标签id", required = false)
     val id: String,
-    @Schema(name = "流水线id", required = false)
+    @Schema(title = "流水线id", required = false)
     val groupId: String,
-    @Schema(name = "标签名称", required = false)
+    @Schema(title = "标签名称", required = false)
     val name: String,
-    @Schema(name = "创建时间", required = false)
+    @Schema(title = "创建时间", required = false)
     val createTime: Long,
-    @Schema(name = "更新时间", required = false)
+    @Schema(title = "更新时间", required = false)
     val uptimeTime: Long,
-    @Schema(name = "创建者", required = false)
+    @Schema(title = "创建者", required = false)
     val createUser: String,
-    @Schema(name = "更新者", required = false)
+    @Schema(title = "更新者", required = false)
     val updateUser: String
 )

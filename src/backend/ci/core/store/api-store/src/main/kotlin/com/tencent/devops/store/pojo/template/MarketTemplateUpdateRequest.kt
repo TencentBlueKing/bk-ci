@@ -30,28 +30,28 @@ package com.tencent.devops.store.pojo.template
 import com.tencent.devops.store.pojo.template.enums.TemplateTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "上架模板请求报文体")
+@Schema(title = "上架模板请求报文体")
 data class MarketTemplateUpdateRequest(
-    @Schema(name = "模板代码", required = true)
+    @Schema(title = "模板代码", required = true)
     val templateCode: String,
-    @Schema(name = "模板名称", required = true)
+    @Schema(title = "模板名称", required = true)
     val templateName: String,
-    @Schema(name = "模板类型，FREEDOM：自由模式 CONSTRAINT：约束模式", required = true)
+    @Schema(title = "模板类型，FREEDOM：自由模式 CONSTRAINT：约束模式", required = true)
     val templateType: TemplateTypeEnum,
-    @Schema(name = "应用范畴列表", required = true)
+    @Schema(title = "应用范畴列表", required = true)
     val categoryIdList: ArrayList<String>,
-    @Schema(name = "模板分类代码", required = true)
+    @Schema(title = "模板分类代码", required = true)
     val classifyCode: String,
-    @Schema(name = "模板标签列表", required = false)
+    @Schema(title = "模板标签列表", required = false)
     val labelIdList: ArrayList<String>?,
-    @Schema(name = "插件简介", required = false)
+    @Schema(title = "插件简介", required = false)
     val summary: String?,
-    @Schema(name = "插件描述", required = false)
+    @Schema(title = "插件描述", required = false)
     val description: String?,
-    @Schema(name = "logo地址", required = false)
+    @Schema(title = "logo地址", required = false)
     val logoUrl: String?,
-    @Schema(name = "发布者", required = true)
+    @Schema(title = "发布者", required = true)
     val publisher: String,
-    @Schema(name = "发布者描述", required = false)
+    @Schema(title = "发布者描述", required = false)
     val pubDescription: String?
 )

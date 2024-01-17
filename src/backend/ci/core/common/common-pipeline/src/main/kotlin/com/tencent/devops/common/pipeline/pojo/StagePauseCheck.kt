@@ -37,29 +37,29 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(name = "stage准入准出配置模型")
+@Schema(title = "stage准入准出配置模型")
 data class StagePauseCheck(
-    @Schema(name = "是否人工触发", required = false)
+    @Schema(title = "是否人工触发", required = false)
     var manualTrigger: Boolean? = false,
-    @Schema(name = "状态", required = false)
+    @Schema(title = "状态", required = false)
     var status: String? = null,
-    @Schema(name = "审核说明", required = false)
+    @Schema(title = "审核说明", required = false)
     var reviewDesc: String? = null,
-    @Schema(name = "审核流配置", required = false)
+    @Schema(title = "审核流配置", required = false)
     var reviewGroups: MutableList<StageReviewGroup>? = null, // 审核流配置
-    @Schema(name = "审核变量", required = false)
+    @Schema(title = "审核变量", required = false)
     var reviewParams: List<ManualReviewParam>? = null, // 审核变量
-    @Schema(name = "等待审核的超时时间，默认24小时兜底", required = false)
+    @Schema(title = "等待审核的超时时间，默认24小时兜底", required = false)
     var timeout: Int? = 24, // 等待审核的超时时间，默认24小时兜底
-    @Schema(name = "质量红线规则ID集合", required = false)
+    @Schema(title = "质量红线规则ID集合", required = false)
     var ruleIds: List<String>? = null, // 质量红线规则ID集合
-    @Schema(name = "记录本次构建质量红线规则的检查次数", required = false)
+    @Schema(title = "记录本次构建质量红线规则的检查次数", required = false)
     var checkTimes: Int? = null, // 记录本次构建质量红线规则的检查次数
-    @Schema(name = "是否以markdown格式发送审核说明", required = false)
+    @Schema(title = "是否以markdown格式发送审核说明", required = false)
     var markdownContent: Boolean? = false, // 是否以markdown格式发送审核说明
-    @Schema(name = "发送的通知类型", required = false)
+    @Schema(title = "发送的通知类型", required = false)
     var notifyType: MutableList<String>? = mutableListOf("RTX"), // 通知类型[企业微信群消息]
-    @Schema(name = "企业微信群id", required = false)
+    @Schema(title = "企业微信群id", required = false)
     var notifyGroup: MutableList<String>? = null
 ) {
 

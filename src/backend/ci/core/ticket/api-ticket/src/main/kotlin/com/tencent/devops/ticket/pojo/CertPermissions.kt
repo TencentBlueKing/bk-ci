@@ -29,12 +29,12 @@ package com.tencent.devops.ticket.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "证书-证书权限")
+@Schema(title = "证书-证书权限")
 data class CertPermissions(
-    @Schema(name = "删除权限", required = true)
+    @Schema(title = "删除权限", required = true)
     val delete: Boolean,
-    @Schema(name = "编辑权限", required = true)
+    @Schema(title = "编辑权限", required = true)
     val edit: Boolean,
-    @Schema(name = "使用权限", required = true)
+    @Schema(title = "使用权限", required = true)
     val use: Boolean
 )

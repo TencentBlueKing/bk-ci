@@ -29,14 +29,14 @@ package com.tencent.devops.metrics.pojo.`do`
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "错误码信息")
+@Schema(title = "错误码信息")
 data class ErrorCodeInfoDO(
-    @Schema(name = "错误类型")
+    @Schema(title = "错误类型")
     val errorType: Int?,
-    @Schema(name = "错误类型名称")
+    @Schema(title = "错误类型名称")
     val errorTypeName: String?,
-    @Schema(name = "错误的标识码")
+    @Schema(title = "错误的标识码")
     val errorCode: Int,
-    @Schema(name = "错误描述信息")
+    @Schema(title = "错误描述信息")
     val errorMsg: String?
 )

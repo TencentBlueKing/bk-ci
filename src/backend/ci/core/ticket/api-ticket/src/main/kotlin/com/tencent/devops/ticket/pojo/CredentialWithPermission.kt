@@ -30,30 +30,30 @@ package com.tencent.devops.ticket.pojo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "凭据-凭据内容和权限")
+@Schema(title = "凭据-凭据内容和权限")
 data class CredentialWithPermission(
-    @Schema(name = "凭据ID", required = true)
+    @Schema(title = "凭据ID", required = true)
     val credentialId: String,
-    @Schema(name = "凭据名称", required = true)
+    @Schema(title = "凭据名称", required = true)
     val credentialName: String? = null,
-    @Schema(name = "凭据类型", required = true)
+    @Schema(title = "凭据类型", required = true)
     val credentialType: CredentialType,
-    @Schema(name = "凭据描述", required = false)
+    @Schema(title = "凭据描述", required = false)
     val credentialRemark: String? = null,
-    @Schema(name = "最后更新时间", required = true)
+    @Schema(title = "最后更新时间", required = true)
     val updatedTime: Long,
-    @Schema(name = "凭据内容", required = true)
+    @Schema(title = "凭据内容", required = true)
     val v1: String,
-    @Schema(name = "凭据内容", required = true)
+    @Schema(title = "凭据内容", required = true)
     val v2: String? = null,
-    @Schema(name = "凭据内容", required = true)
+    @Schema(title = "凭据内容", required = true)
     val v3: String? = null,
-    @Schema(name = "凭据内容", required = true)
+    @Schema(title = "凭据内容", required = true)
     val v4: String? = null,
-    @Schema(name = "权限", required = true)
+    @Schema(title = "权限", required = true)
     val permissions: CredentialPermissions,
-    @Schema(name = "最后更新者", required = true)
+    @Schema(title = "最后更新者", required = true)
     val updateUser: String? = null,
-    @Schema(name = "当前凭证是否允许跨项目使用", required = false)
+    @Schema(title = "当前凭证是否允许跨项目使用", required = false)
     val allowAcrossProject: Boolean = false
 )

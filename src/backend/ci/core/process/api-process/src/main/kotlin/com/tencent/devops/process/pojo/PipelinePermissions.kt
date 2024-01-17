@@ -30,20 +30,20 @@ package com.tencent.devops.process.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "流水线-流水线权限")
+@Schema(title = "流水线-流水线权限")
 data class PipelinePermissions(
-    @Schema(name = "管理员权限", required = true)
+    @Schema(title = "管理员权限", required = true)
     val canManage: Boolean,
-    @Schema(name = "删除权限", required = true)
+    @Schema(title = "删除权限", required = true)
     val canDelete: Boolean,
-    @Schema(name = "查看权限", required = true)
+    @Schema(title = "查看权限", required = true)
     val canView: Boolean,
-    @Schema(name = "编辑权限", required = true)
+    @Schema(title = "编辑权限", required = true)
     val canEdit: Boolean,
-    @Schema(name = "执行权限", required = true)
+    @Schema(title = "执行权限", required = true)
     val canExecute: Boolean,
-    @Schema(name = "下载权限", required = true)
+    @Schema(title = "下载权限", required = true)
     val canDownload: Boolean,
-    @Schema(name = "分享权限", required = true)
+    @Schema(title = "分享权限", required = true)
     val canShare: Boolean
 )

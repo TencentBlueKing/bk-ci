@@ -32,44 +32,44 @@ import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonInclude(JsonInclude.Include.ALWAYS)
-@Schema(name = "质量红线-指标配置修改信息")
+@Schema(title = "质量红线-指标配置修改信息")
 data class IndicatorUpdate(
-    @Schema(name = "原子的ClassType")
+    @Schema(title = "原子的ClassType")
     val elementType: String? = null,
-    @Schema(name = "原子名称")
+    @Schema(title = "原子名称")
     val elementName: String? = null,
-    @Schema(name = "工具/原子子类")
+    @Schema(title = "工具/原子子类")
     val elementDetail: String? = null,
-    @Schema(name = "工具/原子版本")
+    @Schema(title = "工具/原子版本")
     val elementVersion: String? = null,
-    @Schema(name = "指标英文名")
+    @Schema(title = "指标英文名")
     val enName: String? = null,
-    @Schema(name = "指标中文名")
+    @Schema(title = "指标中文名")
     val cnName: String? = null,
-    @Schema(name = "指标所包含基础数据")
+    @Schema(title = "指标所包含基础数据")
     val metadataIds: String? = null,
-    @Schema(name = "默认操作类型")
+    @Schema(title = "默认操作类型")
     val defaultOperation: String? = null,
-    @Schema(name = "可用操作")
+    @Schema(title = "可用操作")
     val operationAvailable: String? = null,
-    @Schema(name = "默认阈值")
+    @Schema(title = "默认阈值")
     val threshold: String? = null,
-    @Schema(name = "阈值类型")
+    @Schema(title = "阈值类型")
     val thresholdType: String? = null,
-    @Schema(name = "描述")
+    @Schema(title = "描述")
     val desc: String? = null,
-    @Schema(name = "是否可修改")
+    @Schema(title = "是否可修改")
     val readOnly: Boolean? = null,
-    @Schema(name = "阶段")
+    @Schema(title = "阶段")
     val stage: String? = null,
-    @Schema(name = "可见范围")
+    @Schema(title = "可见范围")
     val range: String? = null,
-    @Schema(name = "指标标签，用于前端区分控制")
+    @Schema(title = "指标标签，用于前端区分控制")
     val tag: String? = null,
-    @Schema(name = "是否启用")
+    @Schema(title = "是否启用")
     val enable: Boolean? = null,
-    @Schema(name = "指标类型")
+    @Schema(title = "指标类型")
     val type: IndicatorType? = IndicatorType.SYSTEM,
-    @Schema(name = "输出日志详情")
+    @Schema(title = "输出日志详情")
     val logPrompt: String? = ""
 )

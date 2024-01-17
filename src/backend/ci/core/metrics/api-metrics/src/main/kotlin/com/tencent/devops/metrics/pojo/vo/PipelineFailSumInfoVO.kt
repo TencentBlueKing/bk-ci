@@ -30,8 +30,8 @@ package com.tencent.devops.metrics.pojo.vo
 import com.tencent.devops.metrics.pojo.`do`.PipelineFailInfoDO
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "流水线错误统计信息视图")
+@Schema(title = "流水线错误统计信息视图")
 data class PipelineFailSumInfoVO(
-    @Schema(name = "流水线错误统计信息")
+    @Schema(title = "流水线错误统计信息")
     val pipelineFailInfoList: List<PipelineFailInfoDO>
 )

@@ -31,32 +31,32 @@ import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.store.pojo.app.ContainerAppWithVersion
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "流水线-构建容器接口响应信息")
+@Schema(title = "流水线-构建容器接口响应信息")
 data class ContainerResp(
-    @Schema(name = "构建容器ID", required = true)
+    @Schema(title = "构建容器ID", required = true)
     val id: String,
-    @Schema(name = "构建容器名称", required = true)
+    @Schema(title = "构建容器名称", required = true)
     val name: String,
-    @Schema(name = "流水线容器类型", required = true)
+    @Schema(title = "流水线容器类型", required = true)
     var type: String,
-    @Schema(name = "操作系统", required = true)
+    @Schema(title = "操作系统", required = true)
     val baseOS: String,
-    @Schema(name = "容器是否为必需", required = true)
+    @Schema(title = "容器是否为必需", required = true)
     val required: String,
-    @Schema(name = "最长排队时间", required = false)
+    @Schema(title = "最长排队时间", required = false)
     val maxQueueMinutes: Int?,
-    @Schema(name = "最长运行时间", required = false)
+    @Schema(title = "最长运行时间", required = false)
     val maxRunningMinutes: Int?,
-    @Schema(name = "默认的构建资源，当操作系统为linux时返回", required = false)
+    @Schema(title = "默认的构建资源，当操作系统为linux时返回", required = false)
     val defaultPublicBuildResource: String?,
-    @Schema(name = "支持的构建资源类型", required = false)
+    @Schema(title = "支持的构建资源类型", required = false)
     val typeList: List<ContainerBuildType>?,
-    @Schema(name = "默认的构建资源类型", required = false)
+    @Schema(title = "默认的构建资源类型", required = false)
     val defaultBuildType: BuildType?,
-    @Schema(name = "自定义扩展容器前端表单属性字段的Json串", required = false)
+    @Schema(title = "自定义扩展容器前端表单属性字段的Json串", required = false)
     val props: Map<String, Any>?,
-    @Schema(name = "编译环境信息", required = false)
+    @Schema(title = "编译环境信息", required = false)
     val apps: List<ContainerAppWithVersion>?,
-    @Schema(name = "支持的构建资源", required = false)
+    @Schema(title = "支持的构建资源", required = false)
     val resources: Map<BuildType, ContainerResource>?
 )

@@ -30,14 +30,14 @@ package com.tencent.devops.process.pojo.trigger
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "代码库webhook事件记录")
+@Schema(title = "代码库webhook事件记录")
 data class RepoTriggerEventDetail(
-    @Schema(name = "项目ID")
+    @Schema(title = "项目ID")
     val projectId: String,
-    @Schema(name = "事件ID")
+    @Schema(title = "事件ID")
     val eventId: Long,
-    @Schema(name = "总流水线数")
+    @Schema(title = "总流水线数")
     val total: Int,
-    @Schema(name = "成功的流水线数")
+    @Schema(title = "成功的流水线数")
     val success: Int
 )

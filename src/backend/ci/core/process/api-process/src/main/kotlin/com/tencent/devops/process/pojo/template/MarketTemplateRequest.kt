@@ -29,20 +29,20 @@ package com.tencent.devops.process.pojo.template
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "模板市场-模板请求报文体")
+@Schema(title = "模板市场-模板请求报文体")
 data class MarketTemplateRequest(
-    @Schema(name = "项目列表", required = true)
+    @Schema(title = "项目列表", required = true)
     val projectCodeList: ArrayList<String>,
-    @Schema(name = "模板代码", required = true)
+    @Schema(title = "模板代码", required = true)
     val templateCode: String,
-    @Schema(name = "模板名称", required = true)
+    @Schema(title = "模板名称", required = true)
     val templateName: String,
-    @Schema(name = "模板logo", required = false)
+    @Schema(title = "模板logo", required = false)
     val logoUrl: String?,
-    @Schema(name = "范畴代码列表", required = false)
+    @Schema(title = "范畴代码列表", required = false)
     val categoryCodeList: List<String>?,
-    @Schema(name = "是否为公共模版", required = true)
+    @Schema(title = "是否为公共模版", required = true)
     val publicFlag: Boolean,
-    @Schema(name = "发布者", required = false)
+    @Schema(title = "发布者", required = false)
     val publisher: String
 )

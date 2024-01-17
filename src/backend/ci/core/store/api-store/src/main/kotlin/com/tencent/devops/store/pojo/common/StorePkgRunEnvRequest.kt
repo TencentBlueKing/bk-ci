@@ -31,30 +31,30 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "store组件安装包运行时环境信息请求报文体")
+@Schema(title = "store组件安装包运行时环境信息请求报文体")
 data class StorePkgRunEnvRequest(
-    @Schema(name = "store组件类型", required = true)
+    @Schema(title = "store组件类型", required = true)
     @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
     val storeType: String,
-    @Schema(name = "开发语言", required = true)
+    @Schema(title = "开发语言", required = true)
     @field:BkField(patternStyle = BkStyleEnum.LANGUAGE_STYLE)
     val language: String,
-    @Schema(name = "支持的操作系统名称", required = true)
+    @Schema(title = "支持的操作系统名称", required = true)
     @field:BkField(patternStyle = BkStyleEnum.COMMON_STYLE, maxLength = 100)
     val osName: String,
-    @Schema(name = "支持的操作系统架构", required = true)
+    @Schema(title = "支持的操作系统架构", required = true)
     @field:BkField(patternStyle = BkStyleEnum.COMMON_STYLE, maxLength = 100)
     val osArch: String,
-    @Schema(name = "运行时版本", required = true)
+    @Schema(title = "运行时版本", required = true)
     @field:BkField(patternStyle = BkStyleEnum.COMMON_STYLE, maxLength = 100)
     val runtimeVersion: String,
-    @Schema(name = "安装包名称", required = true)
+    @Schema(title = "安装包名称", required = true)
     @field:BkField(patternStyle = BkStyleEnum.COMMON_STYLE, maxLength = 100)
     val pkgName: String,
-    @Schema(name = "安装包下载路径", required = true)
+    @Schema(title = "安装包下载路径", required = true)
     @field:BkField(patternStyle = BkStyleEnum.COMMON_STYLE, maxLength = 1000)
     val pkgDownloadPath: String,
-    @Schema(name = "是否为默认安装包", required = true)
+    @Schema(title = "是否为默认安装包", required = true)
     @field:BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE)
     val defaultFlag: Boolean
 )

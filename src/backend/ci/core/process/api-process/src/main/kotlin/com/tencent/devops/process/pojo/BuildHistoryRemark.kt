@@ -29,8 +29,8 @@ package com.tencent.devops.process.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "历史构建备注")
+@Schema(title = "历史构建备注")
 data class BuildHistoryRemark(
-    @Schema(name = "备注", required = true)
+    @Schema(title = "备注", required = true)
     val remark: String?
 )

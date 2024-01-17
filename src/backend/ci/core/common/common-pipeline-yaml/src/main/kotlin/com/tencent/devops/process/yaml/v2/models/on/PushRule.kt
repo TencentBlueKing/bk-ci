@@ -40,19 +40,19 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class PushRule(
     val branches: List<String> = listOf("*"),
 
-    @Schema(name = "branches-ignore")
+    @Schema(title = "branches-ignore")
     @JsonProperty("branches-ignore")
     val branchesIgnore: List<String>? = null,
 
     val paths: List<String>? = null,
 
-    @Schema(name = "paths-ignore")
+    @Schema(title = "paths-ignore")
     @JsonProperty("paths-ignore")
     val pathsIgnore: List<String>? = null,
 
     val users: List<String>? = null,
 
-    @Schema(name = "users-ignore")
+    @Schema(title = "users-ignore")
     @JsonProperty("users-ignore")
     val usersIgnore: List<String>? = null,
 

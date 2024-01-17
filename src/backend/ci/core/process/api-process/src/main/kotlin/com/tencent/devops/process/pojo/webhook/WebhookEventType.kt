@@ -29,10 +29,10 @@ package com.tencent.devops.process.pojo.webhook
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "WEBHOOK-事件类型")
+@Schema(title = "WEBHOOK-事件类型")
 data class WebhookEventType(
-    @Schema(name = "eventType", required = true)
+    @Schema(title = "eventType", required = true)
     val eventType: String,
-    @Schema(name = "eventTypeName", required = true)
+    @Schema(title = "eventTypeName", required = true)
     val eventTypeName: String
 )

@@ -29,21 +29,21 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "统计信息")
+@Schema(title = "统计信息")
 data class StoreStatistic(
-    @Schema(name = "下载量")
+    @Schema(title = "下载量")
     val downloads: Int,
-    @Schema(name = "评论量")
+    @Schema(title = "评论量")
     val commentCnt: Int,
-    @Schema(name = "星级评分")
+    @Schema(title = "星级评分")
     val score: Double?,
-    @Schema(name = "流水线个数")
+    @Schema(title = "流水线个数")
     val pipelineCnt: Int? = null,
-    @Schema(name = "最近执行次数")
+    @Schema(title = "最近执行次数")
     val recentExecuteNum: Int? = null,
-    @Schema(name = "成功率")
+    @Schema(title = "成功率")
     val successRate: Double? = null,
-    @Schema(name = "hotFlag")
+    @Schema(title = "hotFlag")
     val hotFlag: Boolean? = false
 
 )

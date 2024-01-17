@@ -29,14 +29,14 @@ package com.tencent.devops.artifactory.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "版本仓库-文件托管任务信息")
+@Schema(title = "版本仓库-文件托管任务信息")
 data class FileTaskInfo(
-    @Schema(name = "任务Id", required = true)
+    @Schema(title = "任务Id", required = true)
     val id: String,
-    @Schema(name = "任务状态", required = true)
+    @Schema(title = "任务状态", required = true)
     val status: Short,
-    @Schema(name = "文件所在机器IP", required = true)
+    @Schema(title = "文件所在机器IP", required = true)
     val ip: String,
-    @Schema(name = "文件绝对路径", required = true)
+    @Schema(title = "文件绝对路径", required = true)
     val path: String
 )

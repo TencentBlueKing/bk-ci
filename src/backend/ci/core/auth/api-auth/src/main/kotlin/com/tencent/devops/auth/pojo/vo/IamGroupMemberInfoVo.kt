@@ -30,22 +30,22 @@ package com.tencent.devops.auth.pojo.vo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "组成员信息")
+@Schema(title = "组成员信息")
 data class IamGroupMemberInfoVo(
-    @Schema(name = "成员名")
+    @Schema(title = "成员名")
     val userId: String,
-    @Schema(name = "用户组ID")
+    @Schema(title = "用户组ID")
     val groupId: Int,
-    @Schema(name = "用户组名")
+    @Schema(title = "用户组名")
     val groupName: String,
-    @Schema(name = "加入时间")
+    @Schema(title = "加入时间")
     val createdTime: String,
-    @Schema(name = "是否加入组")
+    @Schema(title = "是否加入组")
     val status: String,
-    @Schema(name = "过期时间戳")
+    @Schema(title = "过期时间戳")
     val expiredAt: Long,
-    @Schema(name = "过期时间展示")
+    @Schema(title = "过期时间展示")
     val expiredDisplay: String,
-    @Schema(name = "是否直接加入")
+    @Schema(title = "是否直接加入")
     val directAdded: Boolean? = null
 )

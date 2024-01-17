@@ -30,8 +30,8 @@ package com.tencent.devops.metrics.pojo.vo
 import com.tencent.devops.metrics.pojo.`do`.PipelineTrendInfoDO
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "流水线趋势信息视图")
+@Schema(title = "流水线趋势信息视图")
 data class PipelineTrendInfoVO(
-    @Schema(name = "流水线趋势信息")
+    @Schema(title = "流水线趋势信息")
     val pipelineTrendInfo: List<PipelineTrendInfoDO>
 )

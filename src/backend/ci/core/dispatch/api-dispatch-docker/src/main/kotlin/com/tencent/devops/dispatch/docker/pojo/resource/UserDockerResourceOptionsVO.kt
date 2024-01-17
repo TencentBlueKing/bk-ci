@@ -29,13 +29,13 @@ package com.tencent.devops.dispatch.docker.pojo.resource
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "docker性能用户选项配置")
+@Schema(title = "docker性能用户选项配置")
 data class UserDockerResourceOptionsVO(
-    @Schema(name = "默认选项")
+    @Schema(title = "默认选项")
     val default: String,
-    @Schema(name = "是否展示")
+    @Schema(title = "是否展示")
     val needShow: Boolean,
-    @Schema(name = "性能配置")
+    @Schema(title = "性能配置")
     val dockerResourceOptionsMaps: List<DockerResourceOptionsMap>
 )
 

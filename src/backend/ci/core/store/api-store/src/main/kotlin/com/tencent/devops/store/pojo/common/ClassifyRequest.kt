@@ -29,12 +29,12 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "分类信息请求报文体")
+@Schema(title = "分类信息请求报文体")
 data class ClassifyRequest(
-    @Schema(name = "分类编码", required = true)
+    @Schema(title = "分类编码", required = true)
     val classifyCode: String,
-    @Schema(name = "分类名称", required = true)
+    @Schema(title = "分类名称", required = true)
     val classifyName: String,
-    @Schema(name = "权重（数值越大代表权重越高）", required = false)
+    @Schema(title = "权重（数值越大代表权重越高）", required = false)
     val weight: Int?
 )

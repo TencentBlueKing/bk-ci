@@ -29,40 +29,40 @@ package com.tencent.devops.process.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "项目的流水线回调历史")
+@Schema(title = "项目的流水线回调历史")
 data class ProjectPipelineCallBackHistory(
-    @Schema(name = "流水线id", required = false)
+    @Schema(title = "流水线id", required = false)
     val id: Long? = null,
-    @Schema(name = "项目id", required = false)
+    @Schema(title = "项目id", required = false)
     val projectId: String,
-    @Schema(name = "回调url地址", required = false)
+    @Schema(title = "回调url地址", required = false)
     val callBackUrl: String,
-    @Schema(name = "事件", required = false)
+    @Schema(title = "事件", required = false)
     val events: String,
-    @Schema(name = "状态", required = false)
+    @Schema(title = "状态", required = false)
     val status: String,
-    @Schema(name = "请求header", required = false)
+    @Schema(title = "请求header", required = false)
     val requestHeaders: List<CallBackHeader>? = null,
-    @Schema(name = "请求body", required = false)
+    @Schema(title = "请求body", required = false)
     val requestBody: String,
-    @Schema(name = "响应状态码", required = false)
+    @Schema(title = "响应状态码", required = false)
     val responseCode: Int? = null,
-    @Schema(name = "响应body", required = false)
+    @Schema(title = "响应body", required = false)
     val responseBody: String? = null,
-    @Schema(name = "错误信息", required = false)
+    @Schema(title = "错误信息", required = false)
     val errorMsg: String? = null,
-    @Schema(name = "创建时间", required = false)
+    @Schema(title = "创建时间", required = false)
     val createdTime: Long? = null,
-    @Schema(name = "开始时间", required = false)
+    @Schema(title = "开始时间", required = false)
     val startTime: Long,
-    @Schema(name = "结束时间", required = false)
+    @Schema(title = "结束时间", required = false)
     val endTime: Long
 )
 
-@Schema(name = "回调header 模型")
+@Schema(title = "回调header 模型")
 data class CallBackHeader(
-    @Schema(name = "名字", required = false)
+    @Schema(title = "名字", required = false)
     val name: String,
-    @Schema(name = "值", required = false)
+    @Schema(title = "值", required = false)
     val value: String
 )

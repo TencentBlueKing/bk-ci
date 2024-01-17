@@ -31,30 +31,30 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "系统默认JOB配额")
+@Schema(title = "系统默认JOB配额")
 data class JobQuotaSystem(
-    @Schema(name = "构建机类型", required = true)
+    @Schema(title = "构建机类型", required = true)
     val vmType: JobQuotaVmType,
-    @Schema(name = "构建来源，默认BS", required = true)
+    @Schema(title = "构建来源，默认BS", required = true)
     val channelCode: String = ChannelCode.BS.name,
-    @Schema(name = "蓝盾系统最大并发JOB数，默认5000", required = false)
+    @Schema(title = "蓝盾系统最大并发JOB数，默认5000", required = false)
     val runningJobMaxSystem: Int,
-    @Schema(name = "单项目默认最大并发JOB数， 默认500", required = false)
+    @Schema(title = "单项目默认最大并发JOB数， 默认500", required = false)
     val runningJobMaxProject: Int,
-    @Schema(name = "系统默认所有单个JOB最大执行时间，默认24小时", required = false)
+    @Schema(title = "系统默认所有单个JOB最大执行时间，默认24小时", required = false)
     val runningTimeJobMax: Int,
-    @Schema(name = "默认单项目所有JOB最大执行时间，默认5000小时/月", required = false)
+    @Schema(title = "默认单项目所有JOB最大执行时间，默认5000小时/月", required = false)
     val runningTimeJobMaxProject: Int,
-    @Schema(name = "项目执行job数量告警阈值，百分比，默认80", required = false)
+    @Schema(title = "项目执行job数量告警阈值，百分比，默认80", required = false)
     val projectRunningJobThreshold: Int,
-    @Schema(name = "项目执行job时间告警阈值，百分比，默认80", required = false)
+    @Schema(title = "项目执行job时间告警阈值，百分比，默认80", required = false)
     val projectRunningTimeThreshold: Int,
-    @Schema(name = "系统执行job数量告警阈值，百分比，默认80", required = false)
+    @Schema(title = "系统执行job数量告警阈值，百分比，默认80", required = false)
     val systemRunningJobThreshold: Int,
-    @Schema(name = "创建时间", required = false)
+    @Schema(title = "创建时间", required = false)
     val createdTime: String,
-    @Schema(name = "修改时间", required = false)
+    @Schema(title = "修改时间", required = false)
     val updatedTime: String,
-    @Schema(name = "操作人", required = false)
+    @Schema(title = "操作人", required = false)
     val operator: String
 )

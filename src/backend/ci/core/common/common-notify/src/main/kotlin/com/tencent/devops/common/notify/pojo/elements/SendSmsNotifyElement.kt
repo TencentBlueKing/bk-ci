@@ -30,19 +30,19 @@ package com.tencent.devops.common.notify.pojo.elements
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "发送短信通知", description = SendSmsNotifyElement.classType)
+@Schema(title = "发送短信通知", description = SendSmsNotifyElement.classType)
 data class SendSmsNotifyElement(
-    @Schema(name = "任务名称", required = true)
+    @Schema(title = "任务名称", required = true)
     override val name: String = "发送Sms短信通知",
-    @Schema(name = "id", required = false)
+    @Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(name = "状态", required = false)
+    @Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(name = "接收人集合", required = true)
+    @Schema(title = "接收人集合", required = true)
     val receivers: Set<String> = setOf(),
-    @Schema(name = "通知内容", required = true)
+    @Schema(title = "通知内容", required = true)
     val body: String = "",
-    @Schema(name = "通知内容带上流水线详情连接", required = true)
+    @Schema(title = "通知内容带上流水线详情连接", required = true)
     val detailFlag: Boolean?
 
 ) : Element(name, id, status) {

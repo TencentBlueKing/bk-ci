@@ -31,33 +31,33 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.api.annotation.InfluxTag
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "dispatch状态上报")
+@Schema(title = "dispatch状态上报")
 data class DispatchStatus(
-    @Schema(name = "蓝盾项目ID", required = true)
+    @Schema(title = "蓝盾项目ID", required = true)
     val projectId: String,
-    @Schema(name = "流水线ID", required = true)
+    @Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(name = "构建ID", required = true)
+    @Schema(title = "构建ID", required = true)
     val buildId: String,
-    @Schema(name = "vmSeqId", required = true)
+    @Schema(title = "vmSeqId", required = true)
     val vmSeqId: String,
-    @Schema(name = "actionType", required = true)
+    @Schema(title = "actionType", required = true)
     val actionType: String,
-    @Schema(name = "retryCount", required = false)
+    @Schema(title = "retryCount", required = false)
     val retryCount: Long? = 0,
-    @Schema(name = "channelCode", required = false)
+    @Schema(title = "channelCode", required = false)
     val channelCode: ChannelCode?,
-    @Schema(name = "开机时间", required = true)
+    @Schema(title = "开机时间", required = true)
     val startTime: Long,
-    @Schema(name = "关机时间", required = false)
+    @Schema(title = "关机时间", required = false)
     val stopTime: Long?,
-    @Schema(name = "蓝盾错误码", required = true)
+    @Schema(title = "蓝盾错误码", required = true)
     val errorCode: String,
-    @Schema(name = "失败原因", required = false)
+    @Schema(title = "失败原因", required = false)
     val errorMsg: String?,
-    @Schema(name = "错误类型", required = false)
+    @Schema(title = "错误类型", required = false)
     val errorType: String? = ErrorType.SYSTEM.name,
     @InfluxTag
-    @Schema(name = "BuildType", required = false)
+    @Schema(title = "BuildType", required = false)
     val buildType: String
 )

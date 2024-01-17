@@ -32,62 +32,62 @@ import com.tencent.devops.common.api.enums.I18nSourceEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "插件执行环境信息")
+@Schema(title = "插件执行环境信息")
 data class AtomEnv(
-    @Schema(name = "插件Id", required = true)
+    @Schema(title = "插件Id", required = true)
     val atomId: String,
-    @Schema(name = "插件代码", required = true)
+    @Schema(title = "插件代码", required = true)
     val atomCode: String,
-    @Schema(name = "插件名称", required = true)
+    @Schema(title = "插件名称", required = true)
     @BkFieldI18n(source = I18nSourceEnum.DB, convertName = "name")
     val atomName: String,
-    @Schema(name = "插件状态", required = true)
+    @Schema(title = "插件状态", required = true)
     val atomStatus: String,
-    @Schema(name = "插件创建人", required = true)
+    @Schema(title = "插件创建人", required = true)
     val creator: String,
-    @Schema(name = "插件版本号", required = true)
+    @Schema(title = "插件版本号", required = true)
     val version: String,
-    @Schema(name = "是否是公共插件", required = true)
+    @Schema(title = "是否是公共插件", required = true)
     val publicFlag: Boolean,
-    @Schema(name = "插件简介", required = false)
+    @Schema(title = "插件简介", required = false)
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val summary: String?,
-    @Schema(name = "插件说明文档链接", required = false)
+    @Schema(title = "插件说明文档链接", required = false)
     val docsLink: String?,
-    @Schema(name = "插件自定义json串", required = false)
+    @Schema(title = "插件自定义json串", required = false)
     val props: String?,
-    @Schema(name = "无构建环境插件是否可以在有构建环境运行标识", required = false)
+    @Schema(title = "无构建环境插件是否可以在有构建环境运行标识", required = false)
     val buildLessRunFlag: Boolean?,
-    @Schema(name = "插件创建时间", required = true)
+    @Schema(title = "插件创建时间", required = true)
     val createTime: Long,
-    @Schema(name = "插件最后修改时间", required = true)
+    @Schema(title = "插件最后修改时间", required = true)
     val updateTime: Long,
-    @Schema(name = "插件初始化项目代码", required = false)
+    @Schema(title = "插件初始化项目代码", required = false)
     val projectCode: String? = null,
-    @Schema(name = "安装包路径", required = false)
+    @Schema(title = "安装包路径", required = false)
     val pkgPath: String? = null,
-    @Schema(name = "插件开发语言", required = false)
+    @Schema(title = "插件开发语言", required = false)
     val language: String? = null,
-    @Schema(name = "支持插件开发语言的最低版本", required = false)
+    @Schema(title = "支持插件开发语言的最低版本", required = false)
     val minVersion: String? = null,
-    @Schema(name = "插件执行入口", required = false)
+    @Schema(title = "插件执行入口", required = false)
     val target: String? = null,
-    @Schema(name = "插件SHA签名串", required = false)
+    @Schema(title = "插件SHA签名串", required = false)
     val shaContent: String? = null,
-    @Schema(name = "插件执行前置命令", required = false)
+    @Schema(title = "插件执行前置命令", required = false)
     val preCmd: String? = null,
-    @Schema(name = "Job类型", required = false)
+    @Schema(title = "Job类型", required = false)
     val jobType: JobTypeEnum? = null,
-    @Schema(name = "插件post信息", required = false)
+    @Schema(title = "插件post信息", required = false)
     val atomPostInfo: AtomPostInfo? = null,
-    @Schema(name = "所属插件分类代码", required = false)
+    @Schema(title = "所属插件分类代码", required = false)
     val classifyCode: String? = null,
-    @Schema(name = "所属插件分类名称", required = false)
+    @Schema(title = "所属插件分类名称", required = false)
     val classifyName: String? = null,
-    @Schema(name = "运行时版本", required = false)
+    @Schema(title = "运行时版本", required = false)
     val runtimeVersion: String? = null,
-    @Schema(name = "插件运行结束后是否立即杀掉其进程", required = false)
+    @Schema(title = "插件运行结束后是否立即杀掉其进程", required = false)
     val finishKillFlag: Boolean? = null,
-    @Schema(name = "插件是否需要鉴权（开源插件无需鉴权）", required = false)
+    @Schema(title = "插件是否需要鉴权（开源插件无需鉴权）", required = false)
     val authFlag: Boolean? = null
 )

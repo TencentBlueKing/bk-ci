@@ -42,12 +42,12 @@ import io.swagger.v3.oas.annotations.media.Schema
  }
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Schema(name = "仓库分支信息")
+@Schema(title = "仓库分支信息")
 data class GithubRepoBranch(
-    @Schema(name = "名称")
+    @Schema(title = "名称")
     val name: String,
-    @Schema(name = "提交信息")
+    @Schema(title = "提交信息")
     val commit: GithubRepoCommit,
-    @Schema(name = "是否是保护分支")
+    @Schema(title = "是否是保护分支")
     val protected: Boolean
 )

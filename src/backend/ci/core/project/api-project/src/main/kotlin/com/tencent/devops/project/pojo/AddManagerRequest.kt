@@ -29,10 +29,10 @@ package com.tencent.devops.project.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "项目-新增管理员")
+@Schema(title = "项目-新增管理员")
 data class AddManagerRequest(
-    @Schema(name = "项目英文名")
+    @Schema(title = "项目英文名")
     val projectCode: String,
-    @Schema(name = "管理员列表")
+    @Schema(title = "管理员列表")
     val managerList: List<String>
 )

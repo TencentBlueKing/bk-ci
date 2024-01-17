@@ -44,31 +44,31 @@ import io.swagger.v3.oas.annotations.media.Schema
 }
  */
 
-@Schema(name = "工蜂文件信息")
+@Schema(title = "工蜂文件信息")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitCodeFileInfo(
     @JsonProperty("file_name")
-    @Schema(name = "file_name")
+    @Schema(title = "file_name")
     val fileName: String,
     @JsonProperty("file_path")
-    @Schema(name = "file_path")
+    @Schema(title = "file_path")
     val filePath: String,
     @JsonProperty("size")
-    @Schema(name = "size")
+    @Schema(title = "size")
     val size: Int,
     @JsonProperty("ref")
-    @Schema(name = "ref")
+    @Schema(title = "ref")
     val ref: String,
     @JsonProperty("blob_id")
-    @Schema(name = "blob_id")
+    @Schema(title = "blob_id")
     val blobId: String,
     @JsonProperty("commit_id")
-    @Schema(name = "commit_id")
+    @Schema(title = "commit_id")
     val commitId: String,
     @JsonProperty("content")
-    @Schema(name = "content")
+    @Schema(title = "content")
     val content: String,
     @JsonProperty("encoding")
-    @Schema(name = "encoding")
+    @Schema(title = "encoding")
     val encoding: String
 )

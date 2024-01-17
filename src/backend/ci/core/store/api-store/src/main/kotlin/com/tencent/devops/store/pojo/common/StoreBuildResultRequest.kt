@@ -30,12 +30,12 @@ package com.tencent.devops.store.pojo.common
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "store组件内置流水线构建结果请求报文体")
+@Schema(title = "store组件内置流水线构建结果请求报文体")
 data class StoreBuildResultRequest(
-    @Schema(name = "用户ID", required = true)
+    @Schema(title = "用户ID", required = true)
     val userId: String,
-    @Schema(name = "流水线构建状态", required = true)
+    @Schema(title = "流水线构建状态", required = true)
     val buildStatus: BuildStatus,
-    @Schema(name = "组件ID", required = true)
+    @Schema(title = "组件ID", required = true)
     val storeId: String
 )

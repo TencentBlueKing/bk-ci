@@ -32,25 +32,25 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class StreamProjectSimpleInfo(
     @JsonProperty("id")
-    @Schema(name = "id")
+    @Schema(title = "id")
     val id: Long,
     @JsonProperty("path_with_namespace")
-    @Schema(name = "path_with_namespace")
+    @Schema(title = "path_with_namespace")
     val pathWithNamespace: String?,
     @JsonProperty("description")
-    @Schema(name = "description")
+    @Schema(title = "description")
     val description: String?,
     @JsonProperty("avatar_url")
-    @Schema(name = "avatar_url")
+    @Schema(title = "avatar_url")
     val avatarUrl: String?,
     val enabledCi: Boolean?,
     val projectCode: String?,
-    @Schema(name = "是否为stream 公共项目")
+    @Schema(title = "是否为stream 公共项目")
     val public: Boolean?,
-    @Schema(name = "stream 项目名称")
+    @Schema(title = "stream 项目名称")
     val name: String?,
-    @Schema(name = "https-git链接")
+    @Schema(title = "https-git链接")
     val httpsUrlToRepo: String?,
-    @Schema(name = "项目网页链接")
+    @Schema(title = "项目网页链接")
     val webUrl: String?
 )

@@ -29,16 +29,16 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "组件基本信息")
+@Schema(title = "组件基本信息")
 data class StoreBaseInfo(
-    @Schema(name = "组件Id", required = true)
+    @Schema(title = "组件Id", required = true)
     val storeId: String,
-    @Schema(name = "组件代码", required = true)
+    @Schema(title = "组件代码", required = true)
     val storeCode: String,
-    @Schema(name = "组件名称", required = true)
+    @Schema(title = "组件名称", required = true)
     val storeName: String,
-    @Schema(name = "组件版本号", required = true)
+    @Schema(title = "组件版本号", required = true)
     val version: String,
-    @Schema(name = "是否为公共组件", required = true)
+    @Schema(title = "是否为公共组件", required = true)
     val publicFlag: Boolean
 )

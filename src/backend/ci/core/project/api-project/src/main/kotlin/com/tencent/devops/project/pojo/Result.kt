@@ -31,18 +31,18 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "数据返回包装模型")
+@Schema(title = "数据返回包装模型")
 data class Result<out T>(
-    @Schema(name = "状态码", required = true)
+    @Schema(title = "状态码", required = true)
     val code: Int,
-    @Schema(name = "错误信息", required = false)
+    @Schema(title = "错误信息", required = false)
     val message: String? = null,
-    @Schema(name = "数据", required = false)
+    @Schema(title = "数据", required = false)
     val data: T? = null,
-    @Schema(name = "请求ID", required = false, description = "request_id")
+    @Schema(title = "请求ID", required = false, description = "request_id")
     @JsonProperty("request_id")
     val requestId: String? = null,
-    @Schema(name = "请求结果", required = false)
+    @Schema(title = "请求结果", required = false)
     val result: Boolean? = null
 ) {
     constructor(data: T) : this(0, null, data)

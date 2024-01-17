@@ -30,18 +30,18 @@ package com.tencent.devops.artifactory.pojo
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "插件市场-归档插件包请求报文体")
+@Schema(title = "插件市场-归档插件包请求报文体")
 data class ArchiveAtomRequest(
-    @Schema(name = "项目编码", required = true)
+    @Schema(title = "项目编码", required = true)
     val projectCode: String,
-    @Schema(name = "插件代码", required = true)
+    @Schema(title = "插件代码", required = true)
     val atomCode: String,
-    @Schema(name = "插件版本号", required = true)
+    @Schema(title = "插件版本号", required = true)
     val version: String,
-    @Schema(name = "发布类型", required = false)
+    @Schema(title = "发布类型", required = false)
     val releaseType: ReleaseTypeEnum?,
-    @Schema(name = "支持的操作系统", required = false)
+    @Schema(title = "支持的操作系统", required = false)
     val os: String?,
-    @Schema(name = "重新上传标识", required = true)
+    @Schema(title = "重新上传标识", required = true)
     val reUploadFlag: Boolean = false
 )

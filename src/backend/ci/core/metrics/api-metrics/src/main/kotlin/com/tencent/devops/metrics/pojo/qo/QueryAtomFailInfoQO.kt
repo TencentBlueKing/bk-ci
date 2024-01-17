@@ -32,21 +32,21 @@ import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "插件失败信息查询条件对象")
+@Schema(title = "插件失败信息查询条件对象")
 class QueryAtomFailInfoQO(
-    @Schema(name = "项目ID", required = true)
+    @Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(name = "基本查询条件", required = true)
+    @Schema(title = "基本查询条件", required = true)
     val baseQueryReq: BaseQueryReqVO,
-    @Schema(name = "错误类型", required = false)
+    @Schema(title = "错误类型", required = false)
     val errorTypes: List<Int>?,
-    @Schema(name = "错误码", required = false)
+    @Schema(title = "错误码", required = false)
     val errorCodes: List<Int>?,
-    @Schema(name = "插件code", required = false)
+    @Schema(title = "插件code", required = false)
     val atomCodes: List<String>?,
-    @Schema(name = "页码", required = false)
+    @Schema(title = "页码", required = false)
     val page: Int = 1,
-    @Schema(name = "页数", required = false)
+    @Schema(title = "页数", required = false)
     @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
     val pageSize: Int = 10
 )

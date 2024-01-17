@@ -34,18 +34,18 @@ import io.swagger.v3.oas.annotations.media.Schema
  *
  * Powered By Tencent
  */
-@Schema(name = "结尾的日志查询模型")
+@Schema(title = "结尾的日志查询模型")
 data class EndPageQueryLogs(
-    @Schema(name = "构建ID", required = true)
+    @Schema(title = "构建ID", required = true)
     val buildId: String,
-    @Schema(name = "开始行号", required = true)
+    @Schema(title = "开始行号", required = true)
     var startLineNo: Long = 0L,
-    @Schema(name = "结束行号", required = true)
+    @Schema(title = "结束行号", required = true)
     var endLineNo: Long = 0L,
-    @Schema(name = "日志列表", required = true)
+    @Schema(title = "日志列表", required = true)
     var logs: List<LogLine> = listOf(),
-    @Schema(name = "所用时间", required = false)
+    @Schema(title = "所用时间", required = false)
     var timeUsed: Long = 0,
-    @Schema(name = "日志查询状态", required = false)
+    @Schema(title = "日志查询状态", required = false)
     var status: Int = LogStatus.SUCCEED.status
 )

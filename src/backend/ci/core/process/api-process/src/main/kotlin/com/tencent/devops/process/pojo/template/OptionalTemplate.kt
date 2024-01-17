@@ -30,38 +30,38 @@ package com.tencent.devops.process.pojo.template
 import com.tencent.devops.common.pipeline.container.Stage
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "模板列表")
+@Schema(title = "模板列表")
 data class OptionalTemplateList(
-    @Schema(name = "数量", required = false)
+    @Schema(title = "数量", required = false)
     val count: Int,
-    @Schema(name = "页数", required = false)
+    @Schema(title = "页数", required = false)
     val page: Int?,
-    @Schema(name = "每页数量", required = false)
+    @Schema(title = "每页数量", required = false)
     val pageSize: Int?,
-    @Schema(name = "模板列表", required = false)
+    @Schema(title = "模板列表", required = false)
     val templates: Map<String, OptionalTemplate>
 )
 
-@Schema(name = "模板")
+@Schema(title = "模板")
 data class OptionalTemplate(
-    @Schema(name = "模版名称", required = true)
+    @Schema(title = "模版名称", required = true)
     val name: String,
-    @Schema(name = "模版ID", required = true)
+    @Schema(title = "模版ID", required = true)
     val templateId: String,
-    @Schema(name = "项目ID", required = true)
+    @Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(name = "版本ID", required = true)
+    @Schema(title = "版本ID", required = true)
     val version: Long,
-    @Schema(name = "最新版本号", required = true)
+    @Schema(title = "最新版本号", required = true)
     val versionName: String,
-    @Schema(name = "模板类型", required = true)
+    @Schema(title = "模板类型", required = true)
     val templateType: String,
-    @Schema(name = "模板类型描述", required = true)
+    @Schema(title = "模板类型描述", required = true)
     val templateTypeDesc: String,
-    @Schema(name = "应用范畴", required = true)
+    @Schema(title = "应用范畴", required = true)
     val category: List<String?>,
-    @Schema(name = "模版logo", required = true)
+    @Schema(title = "模版logo", required = true)
     val logoUrl: String,
-    @Schema(name = "阶段集合", required = true)
+    @Schema(title = "阶段集合", required = true)
     val stages: List<Stage>
 )

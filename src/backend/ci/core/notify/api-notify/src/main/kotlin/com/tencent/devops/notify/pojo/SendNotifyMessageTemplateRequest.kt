@@ -28,24 +28,24 @@ package com.tencent.devops.notify.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "使用模板发送消息通知请求报文体")
+@Schema(title = "使用模板发送消息通知请求报文体")
 data class SendNotifyMessageTemplateRequest(
-    @Schema(name = "通知模板代码", required = true)
+    @Schema(title = "通知模板代码", required = true)
     val templateCode: String,
-    @Schema(name = "通知接收者", required = true)
+    @Schema(title = "通知接收者", required = true)
     val receivers: MutableSet<String> = mutableSetOf(),
-    @Schema(name = "指定消息类型", required = false)
+    @Schema(title = "指定消息类型", required = false)
     val notifyType: MutableSet<String>? = null, // 枚举保护：使用NotifyType.name传值
-    @Schema(name = "标题动态参数", required = false)
+    @Schema(title = "标题动态参数", required = false)
     val titleParams: Map<String, String>? = null,
-    @Schema(name = "内容动态参数", required = false)
+    @Schema(title = "内容动态参数", required = false)
     val bodyParams: Map<String, String>? = null,
-    @Schema(name = "邮件抄送接收者", required = false)
+    @Schema(title = "邮件抄送接收者", required = false)
     val cc: MutableSet<String>? = null,
-    @Schema(name = "消息内容", required = false)
+    @Schema(title = "消息内容", required = false)
     val bcc: MutableSet<String>? = null,
-    @Schema(name = "是否以markdown格式发送通知内容, 目前仅企业微信群支持markdown", required = false)
+    @Schema(title = "是否以markdown格式发送通知内容, 目前仅企业微信群支持markdown", required = false)
     val markdownContent: Boolean? = false,
-    @Schema(name = "回调内容", required = false)
+    @Schema(title = "回调内容", required = false)
     val callbackData: Map<String, String>? = null
 )

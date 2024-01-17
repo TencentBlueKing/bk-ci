@@ -30,24 +30,24 @@ package com.tencent.devops.metrics.pojo.po
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(name = "保存错误码信息")
+@Schema(title = "保存错误码信息")
 data class SaveErrorCodeInfoPO(
-    @Schema(name = "主键ID")
+    @Schema(title = "主键ID")
     val id: Long,
-    @Schema(name = "错误类型")
+    @Schema(title = "错误类型")
     val errorType: Int,
-    @Schema(name = "错误码")
+    @Schema(title = "错误码")
     val errorCode: Int,
-    @Schema(name = "错误描述")
+    @Schema(title = "错误描述")
     val errorMsg: String? = null,
-    @Schema(name = "创建人")
+    @Schema(title = "创建人")
     val creator: String,
-    @Schema(name = "修改人")
+    @Schema(title = "修改人")
     val modifier: String,
-    @Schema(name = "创建时间")
+    @Schema(title = "创建时间")
     val createTime: LocalDateTime,
-    @Schema(name = "更新时间")
+    @Schema(title = "更新时间")
     val updateTime: LocalDateTime,
-    @Schema(name = "归属插件")
+    @Schema(title = "归属插件")
     val atomCode: String? = null
 )

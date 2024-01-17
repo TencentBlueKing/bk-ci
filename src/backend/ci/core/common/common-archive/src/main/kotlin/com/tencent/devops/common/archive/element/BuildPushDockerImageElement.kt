@@ -30,21 +30,21 @@ package com.tencent.devops.common.archive.element
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "构建并推送Docker镜像", description = BuildPushDockerImageElement.classType)
+@Schema(title = "构建并推送Docker镜像", description = BuildPushDockerImageElement.classType)
 data class BuildPushDockerImageElement(
-    @Schema(name = "任务名称", required = true)
+    @Schema(title = "任务名称", required = true)
     override val name: String = "执行脚本",
-    @Schema(name = "id", required = false)
+    @Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(name = "状态", required = false)
+    @Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(name = "镜像名称", required = true)
+    @Schema(title = "镜像名称", required = true)
     val imageName: String = "",
-    @Schema(name = "镜像TAG", required = false)
+    @Schema(title = "镜像TAG", required = false)
     val imageTag: String? = "latest",
-    @Schema(name = "build目录", required = false)
+    @Schema(title = "build目录", required = false)
     val buildDir: String? = ".",
-    @Schema(name = "Dockerfile位置", required = false)
+    @Schema(title = "Dockerfile位置", required = false)
     val dockerFile: String? = "Dockerfile"
 ) : Element(name, id, status) {
 

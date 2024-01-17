@@ -29,10 +29,10 @@ package com.tencent.devops.store.pojo.atom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "下架插件请求报文")
+@Schema(title = "下架插件请求报文")
 data class AtomOfflineReq(
-    @Schema(name = "下架原因")
+    @Schema(title = "下架原因")
     val reason: String?,
-    @Schema(name = "版本号")
+    @Schema(title = "版本号")
     val version: String? = null
 )

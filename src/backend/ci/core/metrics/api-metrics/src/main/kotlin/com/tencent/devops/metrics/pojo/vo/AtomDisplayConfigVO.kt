@@ -30,8 +30,8 @@ package com.tencent.devops.metrics.pojo.vo
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "项目下展示插件配置报文")
+@Schema(title = "项目下展示插件配置报文")
 data class AtomDisplayConfigVO(
-    @Schema(name = "插件基本信息列表")
+    @Schema(title = "插件基本信息列表")
     val atomBaseInfos: List<AtomBaseInfoDO>
 )

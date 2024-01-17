@@ -30,16 +30,16 @@ package com.tencent.devops.common.pipeline
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class ModelUpdate(
-    @Schema(name = "项目id", required = true)
+    @Schema(title = "项目id", required = true)
     var projectId: String = "",
-    @Schema(name = "流水线id", required = true)
+    @Schema(title = "流水线id", required = true)
     var pipelineId: String = "",
-    @Schema(name = "名称", required = true)
+    @Schema(title = "名称", required = true)
     val name: String,
-    @Schema(name = "更新人", required = true)
+    @Schema(title = "更新人", required = true)
     var updateUserId: String,
-    @Schema(name = "更新结果信息", required = false)
+    @Schema(title = "更新结果信息", required = false)
     var updateResultMessage: String? = null,
-    @Schema(name = "更新结果信息", required = true)
+    @Schema(title = "更新结果信息", required = true)
     var updateResult: Boolean = false
 )

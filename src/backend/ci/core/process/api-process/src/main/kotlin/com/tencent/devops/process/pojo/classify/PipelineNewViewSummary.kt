@@ -29,26 +29,26 @@ package com.tencent.devops.process.pojo.classify
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "")
+@Schema(title = "")
 data class PipelineNewViewSummary(
-    @Schema(name = "视图id", required = false)
+    @Schema(title = "视图id", required = false)
     val id: String,
-    @Schema(name = "项目id", required = false)
+    @Schema(title = "项目id", required = false)
     val projectId: String,
-    @Schema(name = "视图名称", required = false)
+    @Schema(title = "视图名称", required = false)
     val name: String,
-    @Schema(name = "是否项目", required = false)
+    @Schema(title = "是否项目", required = false)
     val projected: Boolean,
-    @Schema(name = "创建时间", required = false)
+    @Schema(title = "创建时间", required = false)
     val createTime: Long,
-    @Schema(name = "更新时间", required = false)
+    @Schema(title = "更新时间", required = false)
     val updateTime: Long,
-    @Schema(name = "创建者", required = false)
+    @Schema(title = "创建者", required = false)
     val creator: String,
-    @Schema(name = "是否置顶", required = false)
+    @Schema(title = "是否置顶", required = false)
     val top: Boolean = false,
-    @Schema(name = "流水线组类型,1--动态,2--静态", required = true)
+    @Schema(title = "流水线组类型,1--动态,2--静态", required = true)
     val viewType: Int,
-    @Schema(name = "流水线个数", required = true)
+    @Schema(title = "流水线个数", required = true)
     val pipelineCount: Int
 )

@@ -33,23 +33,23 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 import java.net.URLEncoder
 
-@Schema(name = "脚本任务（windows环境）", description = WindowsScriptElement.classType)
+@Schema(title = "脚本任务（windows环境）", description = WindowsScriptElement.classType)
 data class WindowsScriptElement(
-    @Schema(name = "任务名称", required = true)
+    @Schema(title = "任务名称", required = true)
     override val name: String = "执行Windows的bat脚本",
-    @Schema(name = "id", required = false)
+    @Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(name = "状态", required = false)
+    @Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(name = "用户自定义ID", required = false)
+    @Schema(title = "用户自定义ID", required = false)
     override var stepId: String? = null,
-    @Schema(name = "FAQ url链接", required = false)
+    @Schema(title = "FAQ url链接", required = false)
     val errorFAQUrl: String? = null,
-    @Schema(name = "脚本内容", required = true)
+    @Schema(title = "脚本内容", required = true)
     val script: String,
-    @Schema(name = "脚本类型", required = true)
+    @Schema(title = "脚本类型", required = true)
     val scriptType: BuildScriptType,
-    @Schema(name = "字符集类型", required = false)
+    @Schema(title = "字符集类型", required = false)
     val charsetType: CharsetType? = null
 ) : Element(name, id, status) {
 

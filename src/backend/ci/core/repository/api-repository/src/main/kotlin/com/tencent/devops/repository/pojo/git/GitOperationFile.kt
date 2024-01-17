@@ -33,18 +33,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class GitOperationFile(
     @JsonProperty("file_path")
-    @Schema(name = "file_path")
+    @Schema(title = "file_path")
     val filePath: String,
     @JsonProperty("branch_name")
-    @Schema(name = "branch_name")
+    @Schema(title = "branch_name")
     val branch: String,
     @JsonProperty("encoding")
-    @Schema(name = "encoding")
+    @Schema(title = "encoding")
     val encoding: GitCodeFileEncoding = GitCodeFileEncoding.TEXT,
     @JsonProperty("content")
-    @Schema(name = "content")
+    @Schema(title = "content")
     val content: String,
     @JsonProperty("commit_message")
-    @Schema(name = "commit_message")
+    @Schema(title = "commit_message")
     val commitMessage: String
 )

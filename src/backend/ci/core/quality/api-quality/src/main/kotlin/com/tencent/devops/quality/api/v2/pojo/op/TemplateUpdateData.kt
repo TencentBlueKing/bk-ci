@@ -31,10 +31,10 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonInclude(JsonInclude.Include.ALWAYS)
-@Schema(name = "质量红线-(模板/指标集)配置更新模型")
+@Schema(title = "质量红线-(模板/指标集)配置更新模型")
 data class TemplateUpdateData(
-    @Schema(name = "指标详情", required = true)
+    @Schema(title = "指标详情", required = true)
     val templateUpdate: TemplateUpdate,
-    @Schema(name = "指标详情")
+    @Schema(title = "指标详情")
     val indicatorDetail: List<TemplateIndicatorMapUpdate>?
 )

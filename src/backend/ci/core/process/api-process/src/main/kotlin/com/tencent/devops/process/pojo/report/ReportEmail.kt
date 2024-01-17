@@ -29,12 +29,12 @@ package com.tencent.devops.process.pojo.report
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "自定义产出物报告-发送邮件")
+@Schema(title = "自定义产出物报告-发送邮件")
 data class ReportEmail(
-    @Schema(name = "接收人列表", required = false)
+    @Schema(title = "接收人列表", required = false)
     val receivers: Set<String>,
-    @Schema(name = "标题", required = false)
+    @Schema(title = "标题", required = false)
     val title: String,
-    @Schema(name = "html地址", required = false)
+    @Schema(title = "html地址", required = false)
     val html: String
 )

@@ -35,85 +35,85 @@ import io.swagger.v3.oas.annotations.media.Schema
  * @Date 2019/9/17
  * @Version 1.0
  */
-@Schema(name = "首页市场镜像")
+@Schema(title = "首页市场镜像")
 data class MarketImageItem constructor(
 
-    @Schema(name = "镜像Id", required = true)
+    @Schema(title = "镜像Id", required = true)
     val id: String,
 
-    @Schema(name = "镜像代码", required = true)
+    @Schema(title = "镜像代码", required = true)
     val code: String,
 
-    @Schema(name = "镜像名称", required = true)
+    @Schema(title = "镜像名称", required = true)
     val name: String,
 
-    @Schema(name = "研发来源")
+    @Schema(title = "研发来源")
     val rdType: String,
 
-    @Schema(name = "镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = true)
+    @Schema(title = "镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = true)
     val imageSourceType: String,
 
-    @Schema(name = "镜像大小（MB字符串）", required = true)
+    @Schema(title = "镜像大小（MB字符串）", required = true)
     val imageSize: String,
 
-    @Schema(name = "镜像大小数值（字节）", required = true)
+    @Schema(title = "镜像大小数值（字节）", required = true)
     val imageSizeNum: Long,
 
-    @Schema(name = "所属镜像分类代码", required = true)
+    @Schema(title = "所属镜像分类代码", required = true)
     val classifyCode: String,
 
-    @Schema(name = "镜像logo", required = false)
+    @Schema(title = "镜像logo", required = false)
     val logoUrl: String? = null,
 
-    @Schema(name = "版本号", required = true)
+    @Schema(title = "版本号", required = true)
     val version: String,
 
-    @Schema(name = "镜像简介", required = false)
+    @Schema(title = "镜像简介", required = false)
     val summary: String? = null,
 
-    @Schema(name = "星级评分", required = true)
+    @Schema(title = "星级评分", required = true)
     val score: Double,
 
-    @Schema(name = "下载量", required = true)
+    @Schema(title = "下载量", required = true)
     val downloads: Int,
 
-    @Schema(name = "是否为公共镜像 true：是 false：否", required = true)
+    @Schema(title = "是否为公共镜像 true：是 false：否", required = true)
     val publicFlag: Boolean,
 
-    @Schema(name = "是否可安装 true：可以 false：不可以", required = true)
+    @Schema(title = "是否可安装 true：可以 false：不可以", required = true)
     val flag: Boolean,
 
-    @Schema(name = "是否推荐标识 true：推荐，false：不推荐", required = true)
+    @Schema(title = "是否推荐标识 true：推荐，false：不推荐", required = true)
     val recommendFlag: Boolean,
 
-    @Schema(name = "发布者", required = false)
+    @Schema(title = "发布者", required = false)
     val publisher: String? = null,
 
-    @Schema(name = "发布时间", required = false)
+    @Schema(title = "发布时间", required = false)
     val pubTime: Long? = null,
 
-    @Schema(name = "创建人", required = true)
+    @Schema(title = "创建人", required = true)
     val creator: String,
 
-    @Schema(name = "修改人", required = true)
+    @Schema(title = "修改人", required = true)
     val modifier: String,
 
-    @Schema(name = "创建时间", required = true)
+    @Schema(title = "创建时间", required = true)
     val createTime: Long,
 
-    @Schema(name = "修改时间", required = true)
+    @Schema(title = "修改时间", required = true)
     val updateTime: Long,
 
-    @Schema(name = "是否已安装", required = true)
+    @Schema(title = "是否已安装", required = true)
     var installedFlag: Boolean?,
 
-    @Schema(name = "荣誉信息", required = false)
+    @Schema(title = "荣誉信息", required = false)
     val honorInfos: List<HonorInfo>? = null,
 
-    @Schema(name = "指标信息列表")
+    @Schema(title = "指标信息列表")
     val indexInfos: List<StoreIndexInfo>? = null,
 
-    @Schema(name = "hotFlag")
+    @Schema(title = "hotFlag")
     val hotFlag: Boolean? = null
 ) {
     constructor(instance: MarketImageItem) : this(

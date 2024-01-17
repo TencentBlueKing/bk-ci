@@ -32,34 +32,34 @@ import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "流水线-插件信息请求报文体")
+@Schema(title = "流水线-插件信息请求报文体")
 data class AtomCreateRequest(
-    @Schema(name = "插件名称", required = true)
+    @Schema(title = "插件名称", required = true)
     val name: String,
-    @Schema(name = "插件代码", required = true)
+    @Schema(title = "插件代码", required = true)
     val atomCode: String,
-    @Schema(name = "服务范围", required = true)
+    @Schema(title = "服务范围", required = true)
     val serviceScope: ArrayList<String>,
-    @Schema(name = "适用Job类型，AGENT： 编译环境，AGENT_LESS：无编译环境", required = true)
+    @Schema(title = "适用Job类型，AGENT： 编译环境，AGENT_LESS：无编译环境", required = true)
     val jobType: JobTypeEnum,
-    @Schema(name = "支持的操作系统", required = true)
+    @Schema(title = "支持的操作系统", required = true)
     val os: ArrayList<String>,
-    @Schema(name = "所属分类ID", required = true)
+    @Schema(title = "所属分类ID", required = true)
     val classifyId: String,
-    @Schema(name = "插件说明文档链接", required = false)
+    @Schema(title = "插件说明文档链接", required = false)
     val docsLink: String?,
-    @Schema(name = "插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = true)
+    @Schema(title = "插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = true)
     val atomType: AtomTypeEnum,
-    @Schema(name = "是否为默认插件（默认插件默认所有项目可见）true：默认插件 false：普通插件", required = true)
+    @Schema(title = "是否为默认插件（默认插件默认所有项目可见）true：默认插件 false：普通插件", required = true)
     val defaultFlag: Boolean,
-    @Schema(name = "插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = true)
+    @Schema(title = "插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = true)
     val category: AtomCategoryEnum,
-    @Schema(name = "无构建环境插件是否可以在有构建环境运行标识， TRUE：可以 FALSE：不可以", required = false)
+    @Schema(title = "无构建环境插件是否可以在有构建环境运行标识， TRUE：可以 FALSE：不可以", required = false)
     val buildLessRunFlag: Boolean?,
-    @Schema(name = "权重（数值越大代表权重越高）")
+    @Schema(title = "权重（数值越大代表权重越高）")
     val weight: Int?,
-    @Schema(name = "自定义扩展容器前端表单属性字段的Json串", required = false)
+    @Schema(title = "自定义扩展容器前端表单属性字段的Json串", required = false)
     val props: String?,
-    @Schema(name = "预留字段（设置规则等信息的json串）", required = false)
+    @Schema(title = "预留字段（设置规则等信息的json串）", required = false)
     val data: String?
 )

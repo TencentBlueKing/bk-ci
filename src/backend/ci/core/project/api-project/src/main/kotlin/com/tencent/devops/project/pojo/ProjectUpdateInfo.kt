@@ -31,50 +31,50 @@ import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "项目-修改模型")
+@Schema(title = "项目-修改模型")
 data class ProjectUpdateInfo(
-    @Schema(name = "项目名称")
+    @Schema(title = "项目名称")
     val projectName: String,
-    @Schema(name = "项目类型")
+    @Schema(title = "项目类型")
     val projectType: Int = 0,
-    @Schema(name = "事业群ID")
+    @Schema(title = "事业群ID")
     val bgId: Long = 0,
-    @Schema(name = "事业群名字")
+    @Schema(title = "事业群名字")
     val bgName: String = "",
-    @Schema(name = "业务线ID")
+    @Schema(title = "业务线ID")
     val businessLineId: Long? = null,
-    @Schema(name = "业务线名称")
+    @Schema(title = "业务线名称")
     val businessLineName: String? = "",
-    @Schema(name = "中心ID")
+    @Schema(title = "中心ID")
     val centerId: Long = 0,
-    @Schema(name = "中心名称")
+    @Schema(title = "中心名称")
     val centerName: String = "",
-    @Schema(name = "部门ID")
+    @Schema(title = "部门ID")
     val deptId: Long = 0,
-    @Schema(name = "部门名称")
+    @Schema(title = "部门名称")
     val deptName: String = "",
-    @Schema(name = "描述")
+    @Schema(title = "描述")
     val description: String,
-    @Schema(name = "英文缩写")
+    @Schema(title = "英文缩写")
     val englishName: String = "",
-    @Schema(name = "cc app id")
+    @Schema(title = "cc app id")
     val ccAppId: Long?,
-    @Schema(name = "cc app name")
+    @Schema(title = "cc app name")
     var ccAppName: String?, // APP name 通过调用CC接口同步
-    @Schema(name = "容器选择， 0 是不选， 1 是k8s, 2 是mesos")
+    @Schema(title = "容器选择， 0 是不选， 1 是k8s, 2 是mesos")
     val kind: Int?,
-    @Schema(name = "是否保密")
+    @Schema(title = "是否保密")
     var secrecy: Boolean = false,
-    @Schema(name = "项目相关配置")
+    @Schema(title = "项目相关配置")
     val properties: ProjectProperties? = null,
-    @Schema(name = "项目最大可授权人员范围")
+    @Schema(title = "项目最大可授权人员范围")
     val subjectScopes: List<SubjectScopeInfo>? = emptyList(),
-    @Schema(name = "logo地址")
+    @Schema(title = "logo地址")
     val logoAddress: String? = null,
-    @Schema(name = "项目性质")
+    @Schema(title = "项目性质")
     val authSecrecy: Int? = ProjectAuthSecrecyStatus.PUBLIC.value,
-    @Schema(name = "运营产品ID")
+    @Schema(title = "运营产品ID")
     val productId: Int? = null,
-    @Schema(name = "运营产品名称")
+    @Schema(title = "运营产品名称")
     val productName: String? = null
 )

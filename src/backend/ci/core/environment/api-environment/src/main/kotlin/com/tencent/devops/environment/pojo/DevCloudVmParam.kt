@@ -30,16 +30,16 @@ package com.tencent.devops.environment.pojo
 import com.tencent.devops.common.api.pojo.Zone
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "DevCloud虚拟机参数")
+@Schema(title = "DevCloud虚拟机参数")
 data class DevCloudVmParam(
-    @Schema(name = "镜像Id", required = true)
+    @Schema(title = "镜像Id", required = true)
     val imageId: String,
-    @Schema(name = "机型", required = true)
+    @Schema(title = "机型", required = true)
     val modelId: String,
-    @Schema(name = "数量", required = true)
+    @Schema(title = "数量", required = true)
     val instanceCount: Int,
-    @Schema(name = "区域", required = true)
+    @Schema(title = "区域", required = true)
     val zone: Zone,
-    @Schema(name = "有效期", required = true)
+    @Schema(title = "有效期", required = true)
     val validity: Int?
 )

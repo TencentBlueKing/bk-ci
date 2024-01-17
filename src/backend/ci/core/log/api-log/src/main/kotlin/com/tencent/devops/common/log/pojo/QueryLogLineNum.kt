@@ -33,12 +33,12 @@ import io.swagger.v3.oas.annotations.media.Schema
  *
  * Powered By Tencent
  */
-@Schema(name = "日志行号查询模型")
+@Schema(title = "日志行号查询模型")
 data class QueryLogLineNum(
-    @Schema(name = "构建ID", required = true)
+    @Schema(title = "构建ID", required = true)
     val buildId: String,
-    @Schema(name = "是否结束", required = true)
+    @Schema(title = "是否结束", required = true)
     var finished: Boolean,
-    @Schema(name = "日志存储状态", required = false)
+    @Schema(title = "日志存储状态", required = false)
     var lastLineNum: Long
 )

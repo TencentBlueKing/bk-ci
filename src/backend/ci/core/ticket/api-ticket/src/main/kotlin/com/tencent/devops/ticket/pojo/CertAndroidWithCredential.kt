@@ -30,22 +30,22 @@ package com.tencent.devops.ticket.pojo
 import com.tencent.devops.ticket.pojo.enums.CertAndroidType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "证书-android证书加密内容")
+@Schema(title = "证书-android证书加密内容")
 data class CertAndroidWithCredential(
-    @Schema(name = "Base64编码的加密公钥", required = true)
+    @Schema(title = "Base64编码的加密公钥", required = true)
     val publicKey: String,
-    @Schema(name = "Android证书类型", required = true)
+    @Schema(title = "Android证书类型", required = true)
     val type: CertAndroidType,
-    @Schema(name = "证书名", required = true)
+    @Schema(title = "证书名", required = true)
     val fileName: String,
-    @Schema(name = "Base64编码的加密后的证书内容", required = true)
+    @Schema(title = "Base64编码的加密后的证书内容", required = true)
     val fileContent: String,
-    @Schema(name = "证书内容sha1", required = true)
+    @Schema(title = "证书内容sha1", required = true)
     val fileSha1: String,
-    @Schema(name = "Base64编码的加密后的证书密码", required = false)
+    @Schema(title = "Base64编码的加密后的证书密码", required = false)
     val credential: String,
-    @Schema(name = "证书别名", required = false)
+    @Schema(title = "证书别名", required = false)
     val alias: String,
-    @Schema(name = "Base64编码的加密后的证书别名密码", required = false)
+    @Schema(title = "Base64编码的加密后的证书别名密码", required = false)
     val aliasCredential: String
 )

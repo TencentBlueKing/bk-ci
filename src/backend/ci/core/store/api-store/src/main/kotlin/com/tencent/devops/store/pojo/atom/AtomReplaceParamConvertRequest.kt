@@ -29,18 +29,18 @@ package com.tencent.devops.store.pojo.atom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "插件替换自定义参数转换请求报文")
+@Schema(title = "插件替换自定义参数转换请求报文")
 data class AtomReplaceParamConvertRequest(
-    @Schema(name = "替换插件代码", required = true)
+    @Schema(title = "替换插件代码", required = true)
     val toAtomCode: String,
-    @Schema(name = "替换插件版本", required = true)
+    @Schema(title = "替换插件版本", required = true)
     val toAtomVersion: String,
-    @Schema(name = "被替换插件字段名称", required = true)
+    @Schema(title = "被替换插件字段名称", required = true)
     val fromField: String,
-    @Schema(name = "被替换插件字段值", required = false)
+    @Schema(title = "被替换插件字段值", required = false)
     val fromFieldValue: Any?,
-    @Schema(name = "替换插件字段名称", required = true)
+    @Schema(title = "替换插件字段名称", required = true)
     val toField: String,
-    @Schema(name = "替换插件字段值", required = false)
+    @Schema(title = "替换插件字段值", required = false)
     val toFieldDefaultValue: Any?
 )

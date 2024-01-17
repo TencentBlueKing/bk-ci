@@ -30,9 +30,9 @@ package com.tencent.devops.project.pojo
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "灰度项目列表查询响应实体")
+@Schema(title = "灰度项目列表查询响应实体")
 data class OpGrayProject(
     @JsonProperty(value = "projectCodeList", required = true)
-    @Schema(name = "项目编码集合", description = "projectCodeList")
+    @Schema(title = "项目编码集合", description = "projectCodeList")
     val projectCodeList: List<String>
 )

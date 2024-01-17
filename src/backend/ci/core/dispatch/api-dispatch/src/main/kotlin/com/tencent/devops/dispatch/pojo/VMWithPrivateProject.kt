@@ -29,18 +29,18 @@ package com.tencent.devops.dispatch.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "VM-专机信息")
+@Schema(title = "VM-专机信息")
 data class VMWithPrivateProject(
-    @Schema(name = "VM ID", required = true)
+    @Schema(title = "VM ID", required = true)
     val id: Long,
-    @Schema(name = "VM 对应母机ID", required = true)
+    @Schema(title = "VM 对应母机ID", required = true)
     val machineId: Int,
-    @Schema(name = "VM 类型ID", required = true)
+    @Schema(title = "VM 类型ID", required = true)
     val typeId: Int,
-    @Schema(name = "VM IP地址", required = true)
+    @Schema(title = "VM IP地址", required = true)
     val ip: String,
-    @Schema(name = "VM 名称", required = true)
+    @Schema(title = "VM 名称", required = true)
     val name: String,
-    @Schema(name = "工程ID", required = true)
+    @Schema(title = "工程ID", required = true)
     val projectId: String
 )

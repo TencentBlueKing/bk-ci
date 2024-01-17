@@ -29,34 +29,34 @@ package com.tencent.devops.dockerhost.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "DockerBuild")
+@Schema(title = "DockerBuild")
 data class DockerBuildParam(
-    @Schema(name = "镜像名称", required = true)
+    @Schema(title = "镜像名称", required = true)
     val imageName: String,
-    @Schema(name = "镜像TAG", required = true)
+    @Schema(title = "镜像TAG", required = true)
     val imageTag: String,
-    @Schema(name = "构建目录", required = false)
+    @Schema(title = "构建目录", required = false)
     val buildDir: String? = ".",
-    @Schema(name = "Dockerfile", required = false)
+    @Schema(title = "Dockerfile", required = false)
     val dockerFile: String? = "Dockerfile",
-    @Schema(name = "repoAddr", required = true)
+    @Schema(title = "repoAddr", required = true)
     val repoAddr: String,
-    @Schema(name = "userName", required = true)
+    @Schema(title = "userName", required = true)
     val userName: String,
-    @Schema(name = "password", required = true)
+    @Schema(title = "password", required = true)
     val password: String,
-    @Schema(name = "基础镜像凭证", required = true)
+    @Schema(title = "基础镜像凭证", required = true)
     val ticket: List<Triple<String, String, String>> = emptyList(),
-    @Schema(name = "构建的参数", required = true)
+    @Schema(title = "构建的参数", required = true)
     val args: List<String> = emptyList(),
-    @Schema(name = "host配置", required = true)
+    @Schema(title = "host配置", required = true)
     val host: List<String> = emptyList(),
-    @Schema(name = "并发构建池序号", required = false)
+    @Schema(title = "并发构建池序号", required = false)
     val poolNo: String? = "0",
-    @Schema(name = "镜像tag列表", required = false)
+    @Schema(title = "镜像tag列表", required = false)
     val imageTagList: List<String> = emptyList(),
-    @Schema(name = "pipelineTaskId", required = false)
+    @Schema(title = "pipelineTaskId", required = false)
     val pipelineTaskId: String = "",
-    @Schema(name = "流水线触发用户", required = false)
+    @Schema(title = "流水线触发用户", required = false)
     val userId: String = ""
 )

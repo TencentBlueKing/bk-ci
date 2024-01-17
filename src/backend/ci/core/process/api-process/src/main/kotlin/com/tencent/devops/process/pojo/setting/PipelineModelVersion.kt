@@ -29,16 +29,16 @@ package com.tencent.devops.process.pojo.setting
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "流水线模型版本")
+@Schema(title = "流水线模型版本")
 data class PipelineModelVersion(
-    @Schema(name = "项目ID", required = true)
+    @Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(name = "流水线ID", required = true)
+    @Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(name = "流水线创建人", required = true)
+    @Schema(title = "流水线创建人", required = true)
     val creator: String,
-    @Schema(name = "流水线模型", required = true)
+    @Schema(title = "流水线模型", required = true)
     val model: String,
-    @Schema(name = "流水线模型版本", required = false)
+    @Schema(title = "流水线模型版本", required = false)
     val version: Int? = null
 )

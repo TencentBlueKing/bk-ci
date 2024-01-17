@@ -32,57 +32,57 @@ import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.api.pojo.ErrorType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "")
+@Schema(title = "")
 data class PipelineBuildTaskInfo(
-    @Schema(name = "项目id", required = false)
+    @Schema(title = "项目id", required = false)
     val projectId: String,
-    @Schema(name = "流水线id", required = false)
+    @Schema(title = "流水线id", required = false)
     val pipelineId: String,
-    @Schema(name = "模板id", required = false)
+    @Schema(title = "模板id", required = false)
     val templateId: String? = null,
-    @Schema(name = "构建id", required = false)
+    @Schema(title = "构建id", required = false)
     val buildId: String,
-    @Schema(name = "阶段id", required = false)
+    @Schema(title = "阶段id", required = false)
     val stageId: String,
-    @Schema(name = "容器id", required = false)
+    @Schema(title = "容器id", required = false)
     val containerId: String,
-    @Schema(name = "容器hash id", required = false)
+    @Schema(title = "容器hash id", required = false)
     val containerHashId: String?,
-    @Schema(name = "容器类型", required = false)
+    @Schema(title = "容器类型", required = false)
     val containerType: String,
-    @Schema(name = "任务序列", required = false)
+    @Schema(title = "任务序列", required = false)
     val taskSeq: Int,
-    @Schema(name = "任务id", required = false)
+    @Schema(title = "任务id", required = false)
     val taskId: String,
-    @Schema(name = "任务名称", required = false)
+    @Schema(title = "任务名称", required = false)
     val taskName: String,
-    @Schema(name = "任务类型", required = false)
+    @Schema(title = "任务类型", required = false)
     val taskType: String,
-    @Schema(name = "任务atom代码", required = false)
+    @Schema(title = "任务atom代码", required = false)
     val taskAtom: String,
-    @Schema(name = "状态", required = false)
+    @Schema(title = "状态", required = false)
     var status: BuildStatus,
-    @Schema(name = "任务参数集合", required = false)
+    @Schema(title = "任务参数集合", required = false)
     val taskParams: MutableMap<String, Any>,
-    @Schema(name = "其他选项", required = false)
+    @Schema(title = "其他选项", required = false)
     val additionalOptions: ElementAdditionalOptions?,
-    @Schema(name = "执行次数", required = false)
+    @Schema(title = "执行次数", required = false)
     val executeCount: Int? = 1,
-    @Schema(name = "启动者", required = false)
+    @Schema(title = "启动者", required = false)
     var starter: String,
-    @Schema(name = "审批人", required = false)
+    @Schema(title = "审批人", required = false)
     val approver: String?,
-    @Schema(name = "子构建id", required = false)
+    @Schema(title = "子构建id", required = false)
     var subBuildId: String?,
-    @Schema(name = "启动时间", required = false)
+    @Schema(title = "启动时间", required = false)
     val startTime: Long? = null,
-    @Schema(name = "结束时间", required = false)
+    @Schema(title = "结束时间", required = false)
     val endTime: Long? = null,
-    @Schema(name = "错误类型", required = false)
+    @Schema(title = "错误类型", required = false)
     var errorType: ErrorType? = null,
-    @Schema(name = "错误代码", required = false)
+    @Schema(title = "错误代码", required = false)
     var errorCode: Int? = null,
-    @Schema(name = "错误信息", required = false)
+    @Schema(title = "错误信息", required = false)
     var errorMsg: String? = null
 ) {
     fun getTaskParam(paramName: String): String {

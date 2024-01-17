@@ -30,12 +30,12 @@ package com.tencent.devops.dispatch.pojo
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "系统的JOB运行数量")
+@Schema(title = "系统的JOB运行数量")
 data class JobRunningCountSystem(
-    @Schema(name = "构建机类型", required = true)
+    @Schema(title = "构建机类型", required = true)
     val vmType: JobQuotaVmType,
-    @Schema(name = "系统当前并发JOB数", required = true)
+    @Schema(title = "系统当前并发JOB数", required = true)
     val runningJob: Int,
-    @Schema(name = "工蜂CI当前并发JOB数量", required = true)
+    @Schema(title = "工蜂CI当前并发JOB数量", required = true)
     val runningJobMaxGitCiSystem: Int
 )
