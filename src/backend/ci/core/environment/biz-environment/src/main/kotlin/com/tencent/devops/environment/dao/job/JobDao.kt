@@ -13,7 +13,7 @@ class JobDao {
         projectId: String,
         jobInstanceId: Long
     ): List<TProjectJobRecord> {
-        with(TProjectJob.T_JOB_PROJ) {
+        with(TProjectJob.T_PROJECT_JOB) {
             return dslContext.selectFrom(this)
                 .where(JOB_INSTANCE_ID.eq(jobInstanceId))
                 .orderBy(JOB_INSTANCE_ID.desc())
@@ -28,7 +28,7 @@ class JobDao {
         createUser: String
     ): Int {
         val currentTime = LocalDateTime.now()
-        with(TProjectJob.T_JOB_PROJ) {
+        with(TProjectJob.T_PROJECT_JOB) {
             return dslContext.insertInto(
                 this,
                 PROJECT_ID,
