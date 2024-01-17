@@ -39,5 +39,7 @@ data class DeployPipelineResult(
     @ApiModelProperty("流水线版本号", required = true)
     val version: Int,
     @ApiModelProperty("生成版本名称", required = false)
-    val versionName: String?
+    val versionName: String?,
+    @ApiModelProperty("目标链接", required = false)
+    val targetUrl: String?
 )
