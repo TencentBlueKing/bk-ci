@@ -110,8 +110,9 @@ abstract class BasePathFilter(
 
     abstract fun isPathMatch(eventPath: String, userPath: String): Boolean
 
+    // 默认匹配路径取[userPath],存量流水线有引用此值,谨慎修改!!!
     open fun extractMatchUserPath(
         eventPath: String,
         userPath: String
-    ) = eventPath
+    ) = userPath
 }

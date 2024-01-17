@@ -23,38 +23,20 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.process.engine.interceptor
+package com.tencent.devops.common.auth.utils
 
-import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.process.engine.pojo.PipelineInfo
-import com.tencent.devops.process.pojo.setting.PipelineRunLockType
-import io.swagger.v3.oas.annotations.media.Schema
+object AuthCacheKeyUtil {
 
-/**
- *
- *
- * @version 1.0
- */
-data class InterceptData(
-    val pipelineInfo: PipelineInfo,
-    val model: Model?,
-    val startType: StartType,
-    val buildId: String,
-    @Schema(name = "Lock 类型", required = false)
-    val runLockType: PipelineRunLockType,
-    @Schema(name = "最大排队时长", required = false)
-    val waitQueueTimeMinute: Int,
-    @Schema(name = "最大排队数量", required = false)
-    val maxQueueSize: Int,
-    @Schema(name = "并发时,设定的group", required = false)
-    var concurrencyGroup: String?,
-    @Schema(name = "并发时,是否相同group取消正在执行的流水线", required = false)
-    val concurrencyCancelInProgress: Boolean = false,
-    @Schema(name = "并发构建数量限制", required = false)
-    val maxConRunningQueueSize: Int?, // MULTIPLE类型时，并发构建数量限制
-    @Schema(name = "是否为重试操作", required = false)
-    val retry: Boolean? = false
-)
+    fun getCacheKey(
+        userId: String,
+        resourceType: String,
+        action: String,
+        projectCode: String,
+        resourceCode: String
+    ): String {
+        return "${userId}_${resourceType}_${action}_${projectCode}_$resourceCode"
+    }
+}
