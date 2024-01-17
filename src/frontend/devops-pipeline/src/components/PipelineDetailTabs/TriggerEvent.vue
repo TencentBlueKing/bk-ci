@@ -14,6 +14,7 @@
             <bk-date-picker
                 v-model="dateTimeRange"
                 :placeholder="$t('pickTimeRange')"
+                :shortcuts="shortcuts"
                 type="datetimerange"
                 @change="handleFilterChange(queryList)"
             />
@@ -26,12 +27,11 @@
             </search-select>
         </header>
         <div class="trigger-event-timeline">
-            <bk-exception v-if="isSearching && list.length === 0" type="search-empty" scene="part" />
-            <bk-exception v-else-if="list.length === 0" type="empty" scene="part" />
             <bk-timeline
                 v-if="list.length > 0"
                 :list="getTimelineList(list)"
             />
+            <empty-exception v-else :type="emptyType" @clear="clearFilter" />
         </div>
 
     </InfiniteScroll>
@@ -42,6 +42,7 @@
     import TriggerEventChildren from './TriggerEventChildren.vue'
     import InfiniteScroll from '@/components/InfiniteScroll'
     import SearchSelect from '@blueking/search-select'
+    import EmptyException from '@/components/common/exception'
     import moment from 'moment'
 
     import '@blueking/search-select/dist/styles/index.css'
@@ -50,7 +51,8 @@
             // eslint-disable-next-line vue/no-unused-components
             TriggerEventChildren,
             SearchSelect,
-            InfiniteScroll
+            InfiniteScroll,
+            EmptyException
         },
         data () {
             return {
@@ -88,6 +90,46 @@
             isSearching () {
                 console.log(this.searchKey, this.dateTimeRange)
                 return this.searchKey?.length > 0 || this.dateTimeRange.some(item => !!item)
+            },
+            emptyType () {
+                return this.isSearching ? 'search-empty' : 'empty'
+            },
+            shortcuts () {
+                return [{
+                            text: this.$t('今天'),
+                            value () {
+                                const end = new Date()
+                                const start = new Date(end.getFullYear(), end.getMonth(), end.getDate())
+                                return [start, end]
+                            }
+                        },
+                        {
+                            text: this.$t('昨天'),
+                            value () {
+                                const time = new Date()
+                                const end = new Date(time.getFullYear(), time.getMonth(), time.getDate() - 1, 23, 59, 59)
+                                const start = new Date(time.getFullYear(), time.getMonth(), time.getDate() - 1)
+                                return [start, end]
+                            }
+                        },
+                        {
+                            text: this.$t('近3天'),
+                            value () {
+                                const end = new Date()
+                                const start = new Date()
+                                start.setTime(start.getTime() - 3600 * 1000 * 24 * 3)
+                                return [start, end]
+                            }
+                        },
+                        {
+                            text: this.$t('近7天'),
+                            value () {
+                                const end = new Date()
+                                const start = new Date()
+                                start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
+                                return [start, end]
+                            }
+                        }]
             }
         },
         created () {
@@ -177,6 +219,10 @@
                     startTime: this.dateTimeRange[0] ? +(new Date(this.dateTimeRange[0])) : undefined,
                     endTime: this.dateTimeRange[1] ? +(new Date(this.dateTimeRange[1])) : undefined
                 })
+            },
+            clearFilter () {
+                this.dateTimeRange = []
+                this.searchKey = []
             }
 
         }

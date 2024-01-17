@@ -75,7 +75,7 @@
 </template>
 <script>
     import { mapState, mapActions } from 'vuex'
-    import { convertTime } from '@/utils/util'
+    import { convertTime, generateDisplayName } from '@/utils/util'
     import VersionHistorySideSlider from './VersionHistorySideSlider'
     import Logo from '@/components/Logo'
     export default {
@@ -134,7 +134,7 @@
                 return this.activeVersion?.isBranchVersion ?? false
             },
             draftBaseVersionName () {
-                return this.generateDisplayName(this.activeVersion?.baseVersion, this.activeVersion?.baseVersionName)
+                return generateDisplayName(this.activeVersion?.baseVersion, this.activeVersion?.baseVersionName)
             }
         },
         watch: {
@@ -176,11 +176,11 @@
                 }).then(({ records, count }) => {
                     this.versionList = records.map(item => {
                         const isDraft = item.status === 'COMMITTING'
-                        const displayName = this.generateDisplayName(item.version, item.versionName)
+                        const displayName = generateDisplayName(item.version, item.versionName)
                         return {
                             ...item,
                             displayName: isDraft ? this.$t('draft') : displayName,
-                            description: isDraft ? this.$t('baseOn', [this.generateDisplayName(item.baseVersion, item.baseVersionName)]) : (item.description || '--'),
+                            description: isDraft ? this.$t('baseOn', [generateDisplayName(item.baseVersion, item.baseVersionName)]) : (item.description || '--'),
                             isBranchVersion: item.status === 'BRANCH',
                             isDraft,
                             isRelease: item.status === 'RELEASED'
@@ -218,9 +218,6 @@
             },
             closeVersionSideSlider () {
                 this.showVersionSideslider = false
-            },
-            generateDisplayName (version, versionName) {
-                return `V${version} (${versionName})`
             }
         }
     }

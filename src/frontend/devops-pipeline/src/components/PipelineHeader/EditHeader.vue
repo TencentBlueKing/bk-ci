@@ -55,15 +55,15 @@
 </template>
 
 <script>
-    import { mapActions, mapGetters, mapState } from 'vuex'
-    import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
-    import ReleaseButton from './ReleaseButton'
     import ModeSwitch from '@/components/ModeSwitch'
-    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
+    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
+    import { mapActions, mapGetters, mapState } from 'vuex'
+    import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
+    import ReleaseButton from './ReleaseButton'
 
     export default {
         components: {

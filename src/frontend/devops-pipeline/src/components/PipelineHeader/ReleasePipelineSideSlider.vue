@@ -235,6 +235,7 @@
     import PipelineGroupSelector from '@/components/PipelineActionDialog/PipelineGroupSelector'
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import { mapActions, mapGetters, mapState } from 'vuex'
+    import { generateDisplayName } from '@/utils/util'
 
     export default {
         components: {
@@ -531,7 +532,7 @@
                                 },
                                 domProps: {
                                     innerHTML: this.$t(isPacMR ? 'pacMRRelaseSuc' : 'relaseSucTips', [
-                                        `V${version} (${versionName})`
+                                        generateDisplayName(version, versionName)
                                     ])
                                 }
                             }),
