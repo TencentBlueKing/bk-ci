@@ -122,7 +122,7 @@ class UserStreamProjectResourceImpl @Autowired constructor(
                 kind = projectInfo.kind,
                 secrecy = projectInfo.secrecy ?: false,
                 properties = projectInfo.properties,
-                subjectScopes = projectInfo.subjectScopes,
+                subjectScopes = projectInfo.subjectScopes ?: emptyList(),
                 logoAddress = projectInfo.logoAddr,
                 authSecrecy = projectInfo.authSecrecy,
                 productId = productId,
