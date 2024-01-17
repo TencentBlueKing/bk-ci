@@ -1,9 +1,6 @@
 package com.tencent.devops.openapi.service.doc
 
-import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.tencent.devops.common.web.JerseyConfig
-import com.tencent.devops.openapi.pojo.SwaggerDocParameterInfo
-import io.swagger.annotations.ApiModel
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.reflections.Reflections
@@ -13,13 +10,6 @@ import org.reflections.util.ConfigurationBuilder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.junit.jupiter.SpringExtension
-import kotlin.jvm.internal.DefaultConstructorMarker
-import kotlin.reflect.KFunction
-import kotlin.reflect.KType
-import kotlin.reflect.full.memberProperties
-import kotlin.reflect.jvm.isAccessible
-import kotlin.reflect.jvm.javaConstructor
-import kotlin.reflect.jvm.javaType
 
 @ExtendWith(SpringExtension::class)
 @SpringBootTest(classes = [JerseyConfig::class, DocumentService::class])
