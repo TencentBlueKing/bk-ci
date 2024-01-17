@@ -51,5 +51,5 @@ data class CreateNodeModel(
     var pipelineRefCount: Int = 0,
     var lastBuildTime: LocalDateTime? = null,
     var hostId: Long?,
-    var cloudAreaId: Long? = 0
+    var cloudAreaId: Long?
 )

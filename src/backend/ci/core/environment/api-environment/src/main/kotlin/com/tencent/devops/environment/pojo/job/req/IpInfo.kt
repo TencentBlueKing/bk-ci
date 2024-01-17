@@ -31,7 +31,7 @@ import io.swagger.annotations.ApiModelProperty
 
 data class IpInfo(
     @ApiModelProperty(value = "云区域ID")
-    var bkCloudId: Long? = 0,
+    var bkCloudId: Long?,
     @ApiModelProperty(value = "IP地址")
     var ip: String? = ""
 )

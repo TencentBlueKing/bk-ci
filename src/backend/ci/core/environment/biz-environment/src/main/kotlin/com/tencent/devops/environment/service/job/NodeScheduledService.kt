@@ -64,7 +64,7 @@ class NodeScheduledService @Autowired constructor(
     /**
      * 后台定时轮询机器状态，看机器是否在CC中（T_NODE表中host_id字段：为空 - 不在，不为空 - 在）
      * 遍历T_NODE表中 host_id不为空 且 NODE_TYPE为"部署"的记录。部署：CMDB("CMDB")，UNKNOWN("未知")，OTHER("其他")
-     * 用host_id 调用find_host_biz_relations接口，看能否得到对应记录：能-不操作，不能-对应记录host_id置为null
+     * 用host_id 调用find_host_biz_relations接口，看能否得到对应记录：能-不操作，不能-对应记录host_id和云区域id置为null
      * cron：每天上午10点执行。
      */
     @Scheduled(cron = "0 0 10 * * 1-5")
@@ -192,7 +192,8 @@ class NodeScheduledService @Autowired constructor(
                 nodeDao.updateNodeNotInCC(dslContext, invalidHostIdList)
             }
         }
-        // T_NODE表中 NODE_STATUS字段 为NOT_IN_CC的记录，再去查在不在cc中：不在CC中 - 不处理；在CC中 - 将host_id写回T_NODE表中，NODE_STATUS字段 改成 NORMAL
+        // T_NODE表中 NODE_STATUS字段 为NOT_IN_CC的记录，再去查在不在cc中：
+        // 不在CC中 - 不处理；在CC中 - 将host_id和云区域id 写回T_NODE表中，NODE_STATUS字段 改成 NORMAL
         val countNodesNotInCC = nodeDao.countNodesNotInCC(dslContext)
         if (logger.isDebugEnabled) logger.debug("[checkNodeInCC]countNodesNotInCC:$countNodesNotInCC.")
         if (0 < countNodesNotInCC) {

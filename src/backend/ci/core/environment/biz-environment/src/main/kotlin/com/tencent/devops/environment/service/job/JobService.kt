@@ -96,7 +96,7 @@ class JobService @Autowired constructor(
                 },
                 ipList = allHostList.filter { it.bkHostId == null }.map {
                     JobCloudIpInfo(
-                        bkCloudId = it.bkCloudId ?: 0,
+                        bkCloudId = it.bkCloudId,
                         ip = it.ip
                     )
                 }
@@ -142,7 +142,7 @@ class JobService @Autowired constructor(
                     fileList = fileSource.fileList.toList(),
                     server = JobCloudExecuteTarget(
                         ipList = allFileSourceHostList.filter { it.bkHostId == null }.map {
-                            JobCloudIpInfo(bkCloudId = it.bkCloudId ?: 0, ip = it.ip)
+                            JobCloudIpInfo(bkCloudId = it.bkCloudId, ip = it.ip)
                         },
                         hostIdList = allFileSourceHostList.filter { it.bkHostId != null }.map { it.bkHostId ?: 0L }
                     ),
@@ -156,7 +156,7 @@ class JobService @Autowired constructor(
             transferMode = fileDistributeReq.transferMode,
             executeTarget = JobCloudExecuteTarget(
                 ipList = allExecuteTargetHostList.filter { it.bkHostId == null }.map {
-                    JobCloudIpInfo(bkCloudId = it.bkCloudId ?: 0, ip = it.ip)
+                    JobCloudIpInfo(bkCloudId = it.bkCloudId, ip = it.ip)
                 },
                 hostIdList = allExecuteTargetHostList.filter { it.bkHostId != null }.map { it.bkHostId ?: 0L }
             ),
@@ -219,7 +219,7 @@ class JobService @Autowired constructor(
             jobInstanceId = queryJobInstanceLogsReq.jobInstanceId,
             stepInstanceId = queryJobInstanceLogsReq.stepInstanceId,
             ipList = queryJobInstanceLogsReq.ipList?.map {
-                JobCloudIpInfo(bkCloudId = it.bkCloudId ?: 0, ip = it.ip)
+                JobCloudIpInfo(bkCloudId = it.bkCloudId, ip = it.ip)
             },
             hostIdList = queryJobInstanceLogsReq.hostIdList,
             bkUsername = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE

@@ -77,7 +77,6 @@ class CmdbNodeService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(CmdbNodeService::class.java)
-        const val DEFAULT_CLOUD_AREA_ID = 0L
         const val FIELD_BK_SVR_ID = "svr_id"
         const val AGENT_ABNORMAL_NODE_STATUS = 0
         const val AGENT_NORMAL_NODE_STATUS = 1
@@ -225,7 +224,7 @@ class CmdbNodeService @Autowired constructor(
                 },
                 agentVersion = if (grayTag) ipToAgentVersionMap?.get(cmdbNode.ip)?.version else null,
                 hostId = queryCCIpToCCInfoMap[cmdbNode.ip]?.bkHostId,
-                cloudAreaId = DEFAULT_CLOUD_AREA_ID
+                cloudAreaId = queryCCIpToCCInfoMap[cmdbNode.ip]?.bkCloudId?.toLong()
             )
         }
         if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]toAddNodeList:$toAddNodeList")
