@@ -71,6 +71,7 @@ import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectDiffVO
 import com.tencent.devops.project.pojo.ProjectLogo
+import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateCreatorDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
@@ -1274,6 +1275,17 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             dslContext = dslContext,
             englishName = englishName,
             productId = product.productId
+        )
+    }
+
+    override fun updateOrganizationByEnglishName(
+        englishName: String,
+        projectOrganizationInfo: ProjectOrganizationInfo
+    ) {
+        projectDao.updateOrganizationByEnglishName(
+            dslContext = dslContext,
+            englishName = englishName,
+            projectOrganizationInfo = projectOrganizationInfo
         )
     }
 

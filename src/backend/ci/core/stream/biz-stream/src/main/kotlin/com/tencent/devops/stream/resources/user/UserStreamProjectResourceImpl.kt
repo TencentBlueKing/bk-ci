@@ -35,7 +35,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.ProjectOrganizationInfo
-import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.stream.api.user.UserStreamProjectResource
 import com.tencent.devops.stream.permission.StreamPermissionService
@@ -101,35 +100,9 @@ class UserStreamProjectResourceImpl @Autowired constructor(
             projectId = projectId,
             permission = AuthPermission.EDIT
         )
-        val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data
-            ?: throw OperationException("project $projectId not found")
-        val updateProject = with(organization) {
-            ProjectUpdateInfo(
-                projectName = projectInfo.projectName,
-                projectType = projectInfo.projectType ?: 0,
-                bgId = bgId ?: 0,
-                bgName = bgName ?: "",
-                businessLineId = businessLineId,
-                businessLineName = businessLineName,
-                centerId = centerId ?: 0,
-                centerName = centerName ?: "",
-                deptId = deptId ?: 0,
-                deptName = deptName ?: "",
-                description = projectInfo.description ?: "",
-                englishName = projectInfo.englishName,
-                ccAppId = projectInfo.ccAppId,
-                ccAppName = projectInfo.ccAppName,
-                kind = projectInfo.kind,
-                secrecy = projectInfo.secrecy ?: false,
-                properties = projectInfo.properties,
-                subjectScopes = projectInfo.subjectScopes ?: emptyList(),
-                logoAddress = projectInfo.logoAddr,
-                authSecrecy = projectInfo.authSecrecy,
-                productId = productId,
-                productName = productName
-            )
-        }
-        return Result(client.get(ServiceProjectResource::class).update(userId, projectId, updateProject).data!!)
+        client.get(ServiceProjectResource::class).updateProjectProductId(projectId, productName)
+        client.get(ServiceProjectResource::class).updateOrganizationByEnglishName(projectId, organization)
+        return Result(true)
     }
 
     private val maxPageSize = 10L
