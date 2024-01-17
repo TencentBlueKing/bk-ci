@@ -68,14 +68,14 @@ class JerseySwaggerConfig : JerseyConfig() {
                 SwaggerConfiguration().apply {
                     openAPI = OpenAPI()
                         .info(Info().title(applicationDesc).version(applicationVersion))
-                        .addServersItem(Server().url("/$service/api"))
+                        .addServersItem(Server().url("/$service"))
                     resourcePackages = setOf(packageName)
                 }
             } else {
                 SwaggerConfiguration().apply {
                     openAPI = OpenAPI()
                         .info(Info().title(applicationDesc).version(applicationVersion))
-                        .addServersItem(Server().url("/api"))
+                        .addServersItem(Server().url("/"))
                     resourcePackages = setOf(packageName)
                 }
             }
