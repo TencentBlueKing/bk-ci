@@ -35,9 +35,9 @@ import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.Watermark
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.glassfish.jersey.server.ChunkedOutput
 import javax.ws.rs.Consumes
 import javax.ws.rs.DefaultValue
@@ -179,6 +179,23 @@ interface UserRemoteDevResource {
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
+
+    @Operation(summary = "获取兔小巢用户登录态token")
+    @GET
+    @Path("/txc/token")
+    fun getTxcToken(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "用户唯一标识", required = true)
+        @QueryParam("openId")
+        openId: String,
+        @Parameter(description = "用户昵称", required = true)
+        @QueryParam("nickName")
+        nickName: String,
+        @Parameter(description = "用户头像", required = true)
+        @QueryParam("avatar")
+        avatar: String
+    ): Result<String>
 
     @Operation(summary = "一键查询CGS密码")
     @GET
