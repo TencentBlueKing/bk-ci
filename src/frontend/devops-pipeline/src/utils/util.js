@@ -815,3 +815,8 @@ export function areDeeplyEqual (obj1, obj2) {
 
     return true
 }
+
+export function generateDisplayName (version, versionName) {
+    if (!version || !versionName) return '--'
+    return `V${version} (${versionName})`
+}

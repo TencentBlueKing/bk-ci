@@ -62,7 +62,6 @@
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import {
-        handlePipelineNoPermission,
         RESOURCE_ACTION
     } from '@/utils/permission'
 
@@ -215,7 +214,8 @@
                     })
                 } catch (e) {
                     const { projectId, pipelineId } = this.$route.params
-                    handlePipelineNoPermission({
+
+                    this.handleError(e, {
                         projectId,
                         resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EDIT

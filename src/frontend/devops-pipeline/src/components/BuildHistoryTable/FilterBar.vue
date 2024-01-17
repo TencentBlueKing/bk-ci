@@ -2,7 +2,7 @@
     <div class="build-history-filter-bar">
         <bk-date-picker
             :value="historyPageStatus.dateTimeRange"
-            :placeholder="$t('startTimeRangePlaceholder')"
+            :placeholder="$t('pickTimeRange')"
             type="datetimerange"
             @change="handleDateRangeChange"
         />

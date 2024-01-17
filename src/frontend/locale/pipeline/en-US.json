@@ -68,6 +68,7 @@
   "copySuc": "Duplicated successfully ",
   "deleteSuc": "Delete successfully ",
   "noData": "No Data",
+  "searchEmpty": "Search result is empty",
   "atom": "Plugin",
   "icon": "Icon",
   "version": "Version",
@@ -462,7 +463,6 @@
     "tempNameNullTips": "Template name must be filled.",
     "saveAsTempSuc": "Saved as template",
     "saveAsTempFail": "Save as template failed",
-    "filterEmptyTitle": "No results found",
     "filterEmptyDesc": "No pipeline found according to the current filters. Please reset and search again",
     "coloectEmptyTitle": "You haven't add any pipelines to your 'Collection' ",
     "collectEmptyDesc": "Hover your mouse over the 'More' icon to click 'Collect' ",
@@ -1382,5 +1382,7 @@
   "tips": "Tips",
   "filterByPacRepo": "所属代码库",
   "filterByPacYamlDir": "所属路径",
-  "notAllowPatchDeletePacPipelineTips": "Automatically created by enabling PAC mode, delete pipeline please go to the code repository operation"
+  "notAllowPatchDeletePacPipelineTips": "Automatically created by enabling PAC mode, delete pipeline please go to the code repository operation",
+  "clearFilterCondition": "Clear Search Conditions",
+  "clearFilterConditionTips": "You can try adjusting keywords or {0}"
 }

@@ -278,13 +278,8 @@
                         @setting-change="handleTableSettingChange">
                     </bk-table-setting-content>
                 </bk-table-column>
-                <bk-exception
-                    slot="empty"
-                    type="search-empty"
-                    scene="part"
-                >
-                    <span>{{ $t('newlist.filterEmptyTitle') }}</span>
-                </bk-exception>
+
+                <empty-exception slot="empty" type="search-empty" @clear="clearFilter" />
             </bk-table>
         </div>
 
@@ -402,6 +397,7 @@
     import StageSteps from '@/components/StageSteps'
     import MaterialItem from '@/components/ExecDetail/MaterialItem'
     import FilterBar from '@/components/BuildHistoryTable/FilterBar'
+    import EmptyException from '@/components/common/exception'
 
     const LS_COLUMNS_KEYS = 'shownColumns'
     export default {
@@ -411,7 +407,8 @@
             qrcode,
             StageSteps,
             MaterialItem,
-            FilterBar
+            FilterBar,
+            EmptyException
         },
         mixins: [pipelineConstMixin],
         props: {
@@ -595,7 +592,8 @@
             ...mapActions('pipelines', [
                 'updateBuildRemark',
                 'requestPipelinesHistory',
-                'setHistoryPageStatus'
+                'setHistoryPageStatus',
+                'resetHistoryFilterCondition'
             ]),
             handleTableSettingChange ({ fields: selectedFields, size }) {
                 Object.assign(this.tableSetting, {
@@ -612,7 +610,6 @@
                         projectId,
                         pipelineId
                     } = this
-                    console.log(this.isDebug)
                     const res = await this.requestPipelinesHistory({
                         projectId,
                         pipelineId,
@@ -920,6 +917,12 @@
                         ...this.$route.params,
                         version: this.pipelineInfo?.version
                     }
+                })
+            },
+            clearFilter () {
+                this.resetHistoryFilterCondition()
+                this.$nextTick(() => {
+                    this.requestHistory()
                 })
             }
         }

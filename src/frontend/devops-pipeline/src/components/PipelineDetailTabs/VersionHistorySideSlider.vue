@@ -24,14 +24,7 @@
                     :pagination="pagination"
                     size="small"
                 >
-                    <bk-exception
-                        :type="emptyType"
-                        slot="empty"
-                        scene="part"
-                    >
-                        <span>{{emptyTips}}</span>
-                        <span v-if="filterKeys.length > 0" class="text-link" @click="clearFilter">{{ $t('清除搜索条件') }}</span>
-                    </bk-exception>
+                    <empty-exception :type="emptyType" slot="empty" @clear="clearFilter"></empty-exception>
                     <bk-table-column v-for="column in columns" :key="column.prop" v-bind="column">
                         <template v-if="column.prop === 'versionName'" v-slot="{ row }">
                             <div :class="['pipeline-version-name-cell', {
@@ -79,16 +72,17 @@
 <script>
     import SearchSelect from '@blueking/search-select'
     import { mapActions, mapState, mapGetters } from 'vuex'
-    import { convertTime, navConfirm } from '@/utils/util'
+    import { convertTime, navConfirm, generateDisplayName } from '@/utils/util'
     import VersionDiffEntry from './VersionDiffEntry'
     import RollbackEntry from './RollbackEntry'
-
+    import EmptyException from '@/components/common/exception'
     import '@blueking/search-select/dist/styles/index.css'
     export default {
         components: {
             SearchSelect,
             VersionDiffEntry,
-            RollbackEntry
+            RollbackEntry,
+            EmptyException
         },
         props: {
             showVersionSideslider: Boolean,
@@ -207,12 +201,9 @@
                 this.pipelineVersionList = res.records.map(item => {
                     return {
                         ...item,
-                        versionName: item.versionName || this.$t('editPage.draftVersion', [this.generateDisplayName(item.baseVersion, item.baseVersionName)])
+                        versionName: item.versionName || this.$t('editPage.draftVersion', [generateDisplayName(item.baseVersion, item.baseVersionName)])
                     }
                 })
-            },
-            generateDisplayName (version, versionName) {
-                return `V${version} (${versionName})`
             },
             deleteVersion (row) {
                 if (this.pipelineInfo?.hasPermission && this.releaseVersion !== row.version) {

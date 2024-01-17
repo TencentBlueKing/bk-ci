@@ -64,6 +64,7 @@
 <script>
     import { mapActions } from 'vuex'
     import YamlDiff from '@/components/YamlDiff'
+    import { generateDisplayName } from '@/utils/util'
     export default {
         components: {
             YamlDiff
@@ -125,7 +126,7 @@
                         this.pipelineVersionList.push(...res.records.map(item => {
                             return {
                                 ...item,
-                                versionName: item.versionName || this.$t('editPage.draftVersion', [this.generateDisplayName(item.baseVersion, item.baseVersionName)])
+                                versionName: item.versionName || this.$t('editPage.draftVersion', [generateDisplayName(item.baseVersion, item.baseVersionName)])
                             }
                         }))
                     }
@@ -135,11 +136,7 @@
                     this.bottomLoadingOptions.isLoading = false
                 }
             },
-            generateDisplayName (version, versionName) {
-                return `V${version} (${versionName})`
-            },
             async diffVersion (version) {
-                console.log(version)
                 try {
                     this.isLoadYaml = true
                     this.showVersionDiffDialog = true
