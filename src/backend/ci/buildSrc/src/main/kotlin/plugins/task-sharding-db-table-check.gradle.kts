@@ -298,8 +298,8 @@ fun getValidShardingTableFlag(
 }
 
 fun compareColumns(
-    referenceTable: Task_sharding_db_table_check_gradle.TableInfo,
-    compareTable: Task_sharding_db_table_check_gradle.TableInfo,
+    referenceTable: TableInfo,
+    compareTable: TableInfo,
     referenceDbUrl: String,
     referenceDatabaseName: String,
     tableName: String,
@@ -309,7 +309,7 @@ fun compareColumns(
     if (referenceTable.columns != compareTable.columns) {
         var missingColumns = referenceTable.columns - compareTable.columns
         var extraColumns = compareTable.columns - referenceTable.columns
-        val mismatchColumns = mutableListOf<Task_sharding_db_table_check_gradle.ColumnInfo>()
+        val mismatchColumns = mutableListOf<ColumnInfo>()
         val missingColumnNames = missingColumns.map { it.name }
         extraColumns.forEach { extraColumn ->
             if (missingColumnNames.contains(extraColumn.name)) {
@@ -331,8 +331,8 @@ fun compareColumns(
 }
 
 fun compareIndexes(
-    referenceTable: Task_sharding_db_table_check_gradle.TableInfo,
-    compareTable: Task_sharding_db_table_check_gradle.TableInfo,
+    referenceTable: TableInfo,
+    compareTable: TableInfo,
     referenceDbUrl: String,
     referenceDatabaseName: String,
     tableName: String,
@@ -342,7 +342,7 @@ fun compareIndexes(
     if (referenceTable.indexes != compareTable.indexes) {
         var missingIndexes = referenceTable.indexes - compareTable.indexes
         var extraIndexes = compareTable.indexes - referenceTable.indexes
-        val mismatchIndexes = mutableListOf<Task_sharding_db_table_check_gradle.IndexInfo>()
+        val mismatchIndexes = mutableListOf<IndexInfo>()
         val missingIndexNames = missingIndexes.map { it.name }
         extraIndexes.forEach { extraIndex ->
             if (missingIndexNames.contains(extraIndex.name)) {
