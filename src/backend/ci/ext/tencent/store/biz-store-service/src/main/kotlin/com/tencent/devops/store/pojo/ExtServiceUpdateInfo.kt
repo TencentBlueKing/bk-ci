@@ -30,30 +30,30 @@ package com.tencent.devops.store.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class ExtServiceUpdateInfo(
-    @Schema(description = "扩展服务Name")
+    @Schema(title = "扩展服务Name")
     val serviceName: String? = null,
-    @Schema(description = "所属分类")
+    @Schema(title = "所属分类")
     val category: String? = null,
-    @Schema(description = "服务版本")
+    @Schema(title = "服务版本")
     val version: String? = null,
-    @Schema(description = "状态")
+    @Schema(title = "状态")
     val status: Int?,
-    @Schema(description = "状态对应的描述")
+    @Schema(title = "状态对应的描述")
     val statusMsg: String? = null,
-    @Schema(description = "LOGO url")
+    @Schema(title = "LOGO url")
     val logoUrl: String? = null,
-    @Schema(description = "icon图标base64字符串")
+    @Schema(title = "icon图标base64字符串")
     val iconData: String? = null,
-    @Schema(description = "扩展服务简介")
+    @Schema(title = "扩展服务简介")
     val summary: String? = null,
-    @Schema(description = "扩展服务描述")
+    @Schema(title = "扩展服务描述")
     val description: String? = null,
-    @Schema(description = "扩展服务发布者")
+    @Schema(title = "扩展服务发布者")
     val publisher: String? = null,
-    @Schema(description = "发布时间")
+    @Schema(title = "发布时间")
     val publishTime: Long? = 0,
-    @Schema(description = "是否是最后版本")
+    @Schema(title = "是否是最后版本")
     val latestFlag: Boolean?,
-    @Schema(description = "修改用户")
+    @Schema(title = "修改用户")
     val modifierUser: String
 )

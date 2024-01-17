@@ -33,13 +33,13 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import io.swagger.v3.oas.annotations.media.Schema
 import java.net.URLEncoder.encode
 
-@Schema(description = "构建并推送Docker镜像")
+@Schema(title = "构建并推送Docker镜像")
 data class DockerBuildAndPushImageTask(
-    @Schema(description = "displayName", required = false)
+    @Schema(title = "displayName", required = false)
     override var displayName: String?,
-    @Schema(description = "入参", required = true)
+    @Schema(title = "入参", required = true)
     override val inputs: DockerBuildAndPushImageInput,
-    @Schema(description = "执行条件", required = true)
+    @Schema(title = "执行条件", required = true)
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
 

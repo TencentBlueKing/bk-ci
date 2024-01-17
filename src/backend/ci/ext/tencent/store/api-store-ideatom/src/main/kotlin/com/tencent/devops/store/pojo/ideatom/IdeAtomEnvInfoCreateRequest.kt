@@ -29,10 +29,10 @@ package com.tencent.devops.store.pojo.ideatom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "IDE插件环境信息添加请求报文体")
+@Schema(title = "IDE插件环境信息添加请求报文体")
 data class IdeAtomEnvInfoCreateRequest(
-    @Schema(description = "插件ID", required = true)
+    @Schema(title = "插件ID", required = true)
     val atomId: String,
-    @Schema(description = "插件安装包路径", required = true)
+    @Schema(title = "插件安装包路径", required = true)
     val pkgPath: String
 )

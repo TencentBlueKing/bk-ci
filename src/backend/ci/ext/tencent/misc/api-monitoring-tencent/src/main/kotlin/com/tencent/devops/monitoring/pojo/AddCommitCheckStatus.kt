@@ -29,33 +29,33 @@ package com.tencent.devops.monitoring.pojo
 import com.tencent.devops.monitoring.pojo.annotions.InfluxTag
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "scm调用工蜂addCommitCheckStatus接口的状态上报")
+@Schema(title = "scm调用工蜂addCommitCheckStatus接口的状态上报")
 data class AddCommitCheckStatus(
-    @Schema(description = "请求时间(时间戳，毫秒)", required = true)
+    @Schema(title = "请求时间(时间戳，毫秒)", required = true)
     val requestTime: Long,
-    @Schema(description = "响应时间(时间戳，毫秒)", required = true)
+    @Schema(title = "响应时间(时间戳，毫秒)", required = true)
     val responseTime: Long,
-    @Schema(description = "耗时(毫秒)", required = true)
+    @Schema(title = "耗时(毫秒)", required = true)
     val elapseTime: Long,
-    @Schema(description = "http状态码", required = false)
+    @Schema(title = "http状态码", required = false)
     val statusCode: String?,
-    @Schema(description = "状态码对应的错误信息", required = false)
+    @Schema(title = "状态码对应的错误信息", required = false)
     val statusMessage: String?,
-    @Schema(description = "错误类型", required = true)
+    @Schema(title = "错误类型", required = true)
     val errorType: String? = null,
-    @Schema(description = "蓝盾错误码", required = true)
+    @Schema(title = "蓝盾错误码", required = true)
     @InfluxTag
     val errorCode: String,
-    @Schema(description = "错误信息", required = false)
+    @Schema(title = "错误信息", required = false)
     val errorMsg: String?,
-    @Schema(description = "工蜂项目名", required = false)
+    @Schema(title = "工蜂项目名", required = false)
     val projectName: String,
-    @Schema(description = "commitId", required = false)
+    @Schema(title = "commitId", required = false)
     val commitId: String,
-    @Schema(description = "block", required = false)
+    @Schema(title = "block", required = false)
     val block: Boolean? = null,
-    @Schema(description = "详情url", required = false)
+    @Schema(title = "详情url", required = false)
     val targetUrl: String? = null,
-    @Schema(description = "渠道", required = false)
+    @Schema(title = "渠道", required = false)
     val channel: String? = null
 )

@@ -30,29 +30,29 @@ package com.tencent.devops.common.pipeline.element
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "推送镜像到第三方仓库")
+@Schema(title = "推送镜像到第三方仓库")
 data class PushImageToThirdRepoElement(
-    @Schema(description = "任务名称", required = true)
+    @Schema(title = "任务名称", required = true)
     override val name: String = "推送镜像到第三方仓库",
-    @Schema(description = "id", required = false)
+    @Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(description = "状态", required = false)
+    @Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(description = "源镜像名称", required = true)
+    @Schema(title = "源镜像名称", required = true)
     val srcImageName: String,
-    @Schema(description = "源镜像tag", required = true)
+    @Schema(title = "源镜像tag", required = true)
     val srcImageTag: String,
-    @Schema(description = "第三方仓库地址", required = false)
+    @Schema(title = "第三方仓库地址", required = false)
     val repoAddress: String?,
-    @Schema(description = "凭证ID", required = true)
+    @Schema(title = "凭证ID", required = true)
     val ticketId: String = "",
-    @Schema(description = "镜像名称", required = true)
+    @Schema(title = "镜像名称", required = true)
     val targetImageName: String,
-    @Schema(description = "镜像tag", required = true)
+    @Schema(title = "镜像tag", required = true)
     val targetImageTag: String,
-    @Schema(description = "镜像关联的cmdb的ID", required = false)
+    @Schema(title = "镜像关联的cmdb的ID", required = false)
     val cmdbId: String?,
-    @Schema(description = "启用oa验证", required = false)
+    @Schema(title = "启用oa验证", required = false)
     val verifyByOa: Boolean?
 
 ) : Element(name, id, status) {

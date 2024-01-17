@@ -30,28 +30,28 @@ package com.tencent.devops.notify.pojo
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "企业微信机器人消息内容")
+@Schema(title = "企业微信机器人消息内容")
 data class WeworkRobotContentMessage(
     /**
      * 文本内容，最长不超过2048个字节，必须是utf8编码
      */
-    @Schema(description = "文本内容")
+    @Schema(title = "文本内容")
     val content: String,
 
     /**
      * 提醒群中的指定成员(@某个成员)，@all表示提醒所有人，如果开发者获取不到userid，可以使用mentioned_mobile_list，目前 mentioned_list 暂不支持小黑板
      */
     @JsonProperty("mentioned_list")
-    @Schema(description = "userid的列表", name = "mentioned_list")
+    @Schema(title = "userid的列表", description = "mentioned_list")
     val mentionedList: Set<String>?,
 
     /**
      * 手机号列表，提醒手机号对应的群成员(@某个成员)，@all表示提醒所有人，目前 mentioned_mobile_list 暂不支持小黑板
      */
     @JsonProperty("mentioned_mobile_list")
-    @Schema(description = "手机号列表，提醒手机号对应的群成员(@某个成员)，@all表示提醒所有人", name = "mentioned_mobile_list")
+    @Schema(title = "手机号列表，提醒手机号对应的群成员(@某个成员)，@all表示提醒所有人", description = "mentioned_mobile_list")
     val mentionedMobileList: Set<String>?,
 
-    @Schema(description = "attachments消息事件", required = false)
+    @Schema(title = "attachments消息事件", required = false)
     val attachments: WeworkMarkdownAttachment? = null
 )

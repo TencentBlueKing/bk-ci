@@ -30,28 +30,28 @@ package com.tencent.devops.store.pojo
 import com.tencent.devops.store.pojo.enums.DescInputTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "扩展服务基本信息修改请求报文体")
+@Schema(title = "扩展服务基本信息修改请求报文体")
 data class ServiceBaseInfoUpdateRequest(
-    @Schema(description = "扩展名称", required = false)
+    @Schema(title = "扩展名称", required = false)
     val serviceName: String? = null,
-    @Schema(description = "所属分类代码", required = false)
+    @Schema(title = "所属分类代码", required = false)
     val classifyCode: String? = null,
-    @Schema(description = "插件简介", required = false)
+    @Schema(title = "插件简介", required = false)
     val summary: String? = null,
-    @Schema(description = "扩展描述", required = false)
+    @Schema(title = "扩展描述", required = false)
     val description: String? = null,
-    @Schema(description = "扩展logo", required = false)
+    @Schema(title = "扩展logo", required = false)
     val logoUrl: String? = null,
-    @Schema(description = "icon图标base64字符串", required = false)
+    @Schema(title = "icon图标base64字符串", required = false)
     val iconData: String? = null,
-    @Schema(description = "发布者", required = false)
+    @Schema(title = "发布者", required = false)
     val publisher: String? = null,
-    @Schema(description = "原子标签列表", required = false)
+    @Schema(title = "原子标签列表", required = false)
     val labelIdList: ArrayList<String>? = null,
-    @Schema(description = "扩展点列表", required = false)
+    @Schema(title = "扩展点列表", required = false)
     val extensionItemIdList: Set<String>? = null,
-    @Schema(description = "媒体信息列表", required = false)
+    @Schema(title = "媒体信息列表", required = false)
     val mediaList: List<UpdateMediaInfo>? = null,
-    @Schema(description = "描述录入类型")
+    @Schema(title = "描述录入类型")
     val descInputType: DescInputTypeEnum? = DescInputTypeEnum.MANUAL
 )

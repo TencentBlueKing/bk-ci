@@ -29,16 +29,16 @@ package com.tencent.devops.prebuild.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "执行历史响应")
+@Schema(title = "执行历史响应")
 data class HistoryResponse(
-    @Schema(description = "构建ID", required = true)
+    @Schema(title = "构建ID", required = true)
     val buildId: String,
-    @Schema(description = "构建号", required = true)
+    @Schema(title = "构建号", required = true)
     val buildNum: Int?,
-    @Schema(description = "开始时间", required = true)
+    @Schema(title = "开始时间", required = true)
     val startTime: Long,
-    @Schema(description = "结束时间", required = true)
+    @Schema(title = "结束时间", required = true)
     val endTime: Long?,
-    @Schema(description = "状态", required = true)
+    @Schema(title = "状态", required = true)
     val status: String
 )

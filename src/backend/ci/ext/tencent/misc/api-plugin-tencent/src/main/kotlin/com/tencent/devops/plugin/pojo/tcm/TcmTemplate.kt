@@ -29,12 +29,12 @@ package com.tencent.devops.plugin.pojo.tcm
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "tcm模板类型")
+@Schema(title = "tcm模板类型")
 data class TcmTemplate(
-    @Schema(description = "模板所在目录")
+    @Schema(title = "模板所在目录")
     val templateCategory: String,
-    @Schema(description = "模板名称")
+    @Schema(title = "模板名称")
     val templateName: String,
-    @Schema(description = "模板id")
+    @Schema(title = "模板id")
     val templateId: String
 )

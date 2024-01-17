@@ -30,12 +30,12 @@ package com.tencent.devops.remotedev.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(description = "团队工作空间信息-分配")
+@Schema(title = "团队工作空间信息-分配")
 data class ProjectWorkspaceAssign(
-    @Schema(description = "用户id")
+    @Schema(title = "用户id")
     val userId: String,
-    @Schema(description = "分配类型")
+    @Schema(title = "分配类型")
     val type: WorkspaceShared.AssignType,
-    @Schema(description = "分享过期时间")
+    @Schema(title = "分享过期时间")
     val expiration: LocalDateTime?
 )

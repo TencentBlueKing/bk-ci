@@ -29,12 +29,12 @@ package com.tencent.devops.monitoring.pojo
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "NOC告警通知用户信息")
+@Schema(title = "NOC告警通知用户信息")
 data class NocNoticeUserInfo(
-    @Schema(description = "用户名", required = true, name = "username")
+    @Schema(title = "用户名", required = true, description = "username")
     @JsonProperty("username")
     val username: String,
-    @Schema(description = "手机号", required = false, name = "mobile_phone")
+    @Schema(title = "手机号", required = false, description = "mobile_phone")
     @JsonProperty("mobile_phone")
     val mobilePhone: String? = null
 )

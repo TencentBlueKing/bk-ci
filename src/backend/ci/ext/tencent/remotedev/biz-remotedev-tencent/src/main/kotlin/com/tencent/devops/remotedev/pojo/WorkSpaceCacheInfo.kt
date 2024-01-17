@@ -2,11 +2,11 @@ package com.tencent.devops.remotedev.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "工作空间信息缓存")
+@Schema(title = "工作空间信息缓存")
 data class WorkSpaceCacheInfo(
-    @Schema(description = "工作空间关联秘钥")
+    @Schema(title = "工作空间关联秘钥")
     val sshKey: String,
-    @Schema(description = "工作空间Host")
+    @Schema(title = "工作空间Host")
     val environmentHost: String,
     val hostIP: String,
     val environmentIP: String,

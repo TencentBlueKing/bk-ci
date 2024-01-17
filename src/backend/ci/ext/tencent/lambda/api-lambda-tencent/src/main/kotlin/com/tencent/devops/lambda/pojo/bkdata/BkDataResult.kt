@@ -29,16 +29,16 @@ package com.tencent.devops.lambda.pojo.bkdata
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "数据平台结果对象模型")
+@Schema(title = "数据平台结果对象模型")
 data class BkDataResult<out T>(
-    @Schema(description = "状态码", required = true)
+    @Schema(title = "状态码", required = true)
     val code: Int,
-    @Schema(description = "是否成功", required = true)
+    @Schema(title = "是否成功", required = true)
     val result: Boolean,
-    @Schema(description = "返回信息", required = false)
+    @Schema(title = "返回信息", required = false)
     val message: String? = null,
-    @Schema(description = "错误信息", required = false)
+    @Schema(title = "错误信息", required = false)
     val errors: String? = null,
-    @Schema(description = "返回结果", required = false)
+    @Schema(title = "返回结果", required = false)
     val data: T? = null
 )

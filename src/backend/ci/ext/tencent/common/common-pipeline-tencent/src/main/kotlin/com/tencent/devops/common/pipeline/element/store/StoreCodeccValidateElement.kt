@@ -30,19 +30,19 @@ package com.tencent.devops.common.pipeline.element.store
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "研发商店组件codecc代码扫描结果校验")
+@Schema(title = "研发商店组件codecc代码扫描结果校验")
 data class StoreCodeccValidateElement(
-    @Schema(description = "任务名称", required = true)
+    @Schema(title = "任务名称", required = true)
     override val name: String = "研发商店组件codecc代码扫描结果校验",
-    @Schema(description = "id", required = false)
+    @Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(description = "状态", required = false)
+    @Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(description = "组件代码", required = true)
+    @Schema(title = "组件代码", required = true)
     val storeCode: String,
-    @Schema(description = "组件类型", required = true)
+    @Schema(title = "组件类型", required = true)
     val storeType: String,
-    @Schema(description = "开发语言", required = true)
+    @Schema(title = "开发语言", required = true)
     val language: String = "\${language}"
 ) : Element(name, id, status) {
 

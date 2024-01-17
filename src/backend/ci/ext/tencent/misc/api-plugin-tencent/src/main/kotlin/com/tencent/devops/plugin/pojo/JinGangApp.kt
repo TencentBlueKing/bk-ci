@@ -29,37 +29,37 @@ package com.tencent.devops.plugin.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "金刚扫面任务")
+@Schema(title = "金刚扫面任务")
 data class JinGangApp(
-    @Schema(description = "任务Id")
+    @Schema(title = "任务Id")
     val id: Long,
-    @Schema(description = "项目Id")
+    @Schema(title = "项目Id")
     val projectId: String,
-    @Schema(description = "流水线Id")
+    @Schema(title = "流水线Id")
     val pipelineId: String,
-    @Schema(description = "流水线名称")
+    @Schema(title = "流水线名称")
     val pipelineName: String,
-    @Schema(description = "构建Id")
+    @Schema(title = "构建Id")
     val buildId: String,
-    @Schema(description = "构建号")
+    @Schema(title = "构建号")
     val buildNo: Int,
-    @Schema(description = "版本号")
+    @Schema(title = "版本号")
     val version: String,
-    @Schema(description = "包名称")
+    @Schema(title = "包名称")
     val fileName: String,
-    @Schema(description = "文件MD5")
+    @Schema(title = "文件MD5")
     val fileMD5: String,
-    @Schema(description = "文件大小(Byte)")
+    @Schema(title = "文件大小(Byte)")
     val fileSize: Long,
-    @Schema(description = "开始时间")
+    @Schema(title = "开始时间")
     val createTime: Long,
-    @Schema(description = "更新时间")
+    @Schema(title = "更新时间")
     val updateTime: Long,
-    @Schema(description = "执行人")
+    @Schema(title = "执行人")
     val creator: String,
-    @Schema(description = "状态(成功;失败;扫描中)")
+    @Schema(title = "状态(成功;失败;扫描中)")
     val status: String,
-    @Schema(description = "类型(android;ios;其他)")
+    @Schema(title = "类型(android;ios;其他)")
     val type: String
 
 )

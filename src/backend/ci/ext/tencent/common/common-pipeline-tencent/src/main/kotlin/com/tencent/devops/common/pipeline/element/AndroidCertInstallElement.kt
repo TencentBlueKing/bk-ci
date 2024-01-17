@@ -30,17 +30,17 @@ package com.tencent.devops.common.pipeline.element
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "Android证书安装")
+@Schema(title = "Android证书安装")
 data class AndroidCertInstallElement(
-    @Schema(description = "任务名称", required = true)
+    @Schema(title = "任务名称", required = true)
     override val name: String = "Android证书安装",
-    @Schema(description = "id", required = false)
+    @Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(description = "状态", required = false)
+    @Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(description = "用户在上传证书时指定的ID号", required = false)
+    @Schema(title = "用户在上传证书时指定的ID号", required = false)
     val certId: String = "",
-    @Schema(description = "目标路径", required = false)
+    @Schema(title = "目标路径", required = false)
     val destPath: String = ""
 ) : Element(name, id, status) {
     companion object {

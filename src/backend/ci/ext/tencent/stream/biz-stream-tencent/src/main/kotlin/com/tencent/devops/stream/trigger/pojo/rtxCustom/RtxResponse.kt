@@ -34,9 +34,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class RtxResponse(
     @JsonProperty("errcode")
-    @Schema(description = "errcode")
+    @Schema(title = "errcode")
     val errCode: Long,
     @JsonProperty("errmsg")
-    @Schema(description = "errmsg")
+    @Schema(title = "errmsg")
     val errMsg: String
 )

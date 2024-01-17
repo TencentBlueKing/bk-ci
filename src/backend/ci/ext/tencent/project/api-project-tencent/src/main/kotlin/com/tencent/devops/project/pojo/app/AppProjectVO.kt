@@ -29,14 +29,14 @@ package com.tencent.devops.project.pojo.app
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "项目-APP")
+@Schema(title = "项目-APP")
 data class AppProjectVO(
-    @Schema(description = "项目代码")
+    @Schema(title = "项目代码")
     val projectCode: String,
-    @Schema(description = "项目名称")
+    @Schema(title = "项目名称")
     val projectName: String,
-    @Schema(description = "logo地址")
+    @Schema(title = "logo地址")
     val logoUrl: String?,
-    @Schema(description = "项目来源 , 1--蓝盾CI , 2--工蜂CI")
+    @Schema(title = "项目来源 , 1--蓝盾CI , 2--工蜂CI")
     val projectSource: Int
 )

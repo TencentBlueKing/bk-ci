@@ -30,18 +30,18 @@ package com.tencent.devops.stream.v1.pojo
 import com.tencent.devops.process.pojo.BuildHistory
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "工蜂历史构建模型-对应history页面")
+@Schema(title = "工蜂历史构建模型-对应history页面")
 data class V1GitCIBuildHistory(
-    @Schema(description = "流水线名称", required = true)
+    @Schema(title = "流水线名称", required = true)
     val displayName: String?,
-    @Schema(description = "蓝盾流水线ID", required = true)
+    @Schema(title = "蓝盾流水线ID", required = true)
     var pipelineId: String?,
-    @Schema(description = "工蜂Event事件", required = true)
+    @Schema(title = "工蜂Event事件", required = true)
     val gitRequestEvent: V1GitRequestEventReq,
-    @Schema(description = "历史构建模型", required = false)
+    @Schema(title = "历史构建模型", required = false)
     val buildHistory: BuildHistory?,
-    @Schema(description = "原因", required = true)
+    @Schema(title = "原因", required = true)
     val reason: String? = null,
-    @Schema(description = "原因详情", required = true)
+    @Schema(title = "原因详情", required = true)
     var reasonDetail: String? = null
 )

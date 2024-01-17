@@ -29,14 +29,14 @@ package com.tencent.devops.support.model.wechatwork.enums
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "素材类型")
+@Schema(title = "素材类型")
 enum class UploadMediaType(private val type: String) {
-    @Schema(description = "图片")
+    @Schema(title = "图片")
     image("image"),
-    @Schema(description = "语音")
+    @Schema(title = "语音")
     voice("voice"),
-    @Schema(description = "视频")
+    @Schema(title = "视频")
     video("video"),
-    @Schema(description = "普通文件")
+    @Schema(title = "普通文件")
     file("file")
 }

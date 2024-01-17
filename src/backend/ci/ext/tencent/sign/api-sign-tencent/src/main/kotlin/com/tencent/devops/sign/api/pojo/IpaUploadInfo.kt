@@ -29,14 +29,14 @@ package com.tencent.devops.sign.api.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "IpaUploadInfo-IPA包签名信息")
+@Schema(title = "IpaUploadInfo-IPA包签名信息")
 data class IpaUploadInfo(
-    @Schema(description = "项目ID", required = true)
+    @Schema(title = "项目ID", required = true)
     var projectId: String = "",
-    @Schema(description = "流水线ID", required = true)
+    @Schema(title = "流水线ID", required = true)
     var pipelineId: String = "",
-    @Schema(description = "构建ID", required = true)
+    @Schema(title = "构建ID", required = true)
     var buildId: String = "",
-    @Schema(description = "鉴权token", required = true)
+    @Schema(title = "鉴权token", required = true)
     var token: String = ""
 )

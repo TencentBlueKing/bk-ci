@@ -31,33 +31,33 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "提供给安全侧的项目下云桌面信息")
+@Schema(title = "提供给安全侧的项目下云桌面信息")
 data class WeSecProjectWorkspace(
-    @Schema(description = "工作空间名称")
+    @Schema(title = "工作空间名称")
     @JsonProperty("workspace_name")
     val workspaceName: String,
-    @Schema(description = "项目ID")
+    @Schema(title = "项目ID")
     @JsonProperty("project_id")
     val projectId: String,
-    @Schema(description = "工作空间创建人")
+    @Schema(title = "工作空间创建人")
     val creator: String,
-    @Schema(description = "工作空间拥有者")
+    @Schema(title = "工作空间拥有者")
     val owner: String? = null,
-    @Schema(description = "工作空间创建时间")
+    @Schema(title = "工作空间创建时间")
     @JsonProperty("create_time")
     val createTime: String? = null,
-    @Schema(description = "region_id")
+    @Schema(title = "region_id")
     @JsonProperty("region_id")
     val regionId: String,
-    @Schema(description = "inner_ip")
+    @Schema(title = "inner_ip")
     @JsonProperty("inner_ip")
     val innerIp: String?,
-    @Schema(description = "状态")
+    @Schema(title = "状态")
     val status: WorkspaceStatus?,
-    @Schema(description = "工作空间实际拥有者，待分配时为空")
+    @Schema(title = "工作空间实际拥有者，待分配时为空")
     @JsonProperty("real_owner")
     val realOwner: String? = null,
-    @Schema(description = "云桌面别名")
+    @Schema(title = "云桌面别名")
     @JsonProperty("display_name")
     val displayName: String? = null
 )

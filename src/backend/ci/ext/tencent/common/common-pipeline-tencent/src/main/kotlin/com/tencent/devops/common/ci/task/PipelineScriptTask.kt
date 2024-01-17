@@ -31,13 +31,13 @@ import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "PipelineScript")
+@Schema(title = "PipelineScript")
 data class PipelineScriptTask(
-    @Schema(description = "displayName", required = false)
+    @Schema(title = "displayName", required = false)
     override var displayName: String?,
-    @Schema(description = "入参", required = true)
+    @Schema(title = "入参", required = true)
     override val inputs: PipelineScriptInput,
-    @Schema(description = "执行条件", required = true)
+    @Schema(title = "执行条件", required = true)
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
 

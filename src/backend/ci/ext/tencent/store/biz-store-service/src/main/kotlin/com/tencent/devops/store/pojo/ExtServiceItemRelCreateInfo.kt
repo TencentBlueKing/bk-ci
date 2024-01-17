@@ -30,14 +30,14 @@ package com.tencent.devops.store.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class ExtServiceItemRelCreateInfo(
-    @Schema(description = "扩展服务ID")
+    @Schema(title = "扩展服务ID")
     val serviceId: String,
-    @Schema(description = "服务功能项ID")
+    @Schema(title = "服务功能项ID")
     val itemId: String,
-    @Schema(description = "bkServiceId")
+    @Schema(title = "bkServiceId")
     val bkServiceId: Long,
-    @Schema(description = "添加用户")
+    @Schema(title = "添加用户")
     val creatorUser: String,
-    @Schema(description = "修改用户")
+    @Schema(title = "修改用户")
     val modifierUser: String
 )

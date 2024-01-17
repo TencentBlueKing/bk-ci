@@ -29,15 +29,15 @@ package com.tencent.devops.monitoring.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "SLA--CodeCC--统计数据")
+@Schema(title = "SLA--CodeCC--统计数据")
 data class SlaCodeccResponseData(
-    @Schema(description = "执行次数")
+    @Schema(title = "执行次数")
     val count: Int,
-    @Schema(description = "耗时")
+    @Schema(title = "耗时")
     val costTime: Long,
-    @Schema(description = "成功率")
+    @Schema(title = "成功率")
     val successRate: Double,
-    @Schema(description = "错误码分布")
+    @Schema(title = "错误码分布")
     val errorPie: List<ErrorPie>
 ) {
     companion object {
@@ -50,12 +50,12 @@ data class SlaCodeccResponseData(
     }
 }
 
-@Schema(description = "SLA--CodeCC--错误码分布")
+@Schema(title = "SLA--CodeCC--错误码分布")
 data class ErrorPie(
-    @Schema(description = "错误码")
+    @Schema(title = "错误码")
     val code: String?,
-    @Schema(description = "错误信息")
+    @Schema(title = "错误信息")
     val message: String?,
-    @Schema(description = "次数")
+    @Schema(title = "次数")
     val count: Int
 )

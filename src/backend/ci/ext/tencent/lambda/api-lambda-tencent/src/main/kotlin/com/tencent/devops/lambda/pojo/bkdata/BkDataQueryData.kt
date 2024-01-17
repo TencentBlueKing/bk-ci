@@ -29,15 +29,15 @@ package com.tencent.devops.lambda.pojo.bkdata
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "数据平台查询接口结果对象模型")
+@Schema(title = "数据平台查询接口结果对象模型")
 data class BkDataQueryData(
-    @Schema(description = "总记录数", required = true)
+    @Schema(title = "总记录数", required = true)
     val totalRecords: Int,
-    @Schema(description = "耗费时间", required = true)
+    @Schema(title = "耗费时间", required = true)
     val timetaken: Double,
-    @Schema(description = "数据集合", required = false)
+    @Schema(title = "数据集合", required = false)
     val list: List<Map<String, String?>>?,
     @JsonProperty("select_fields_order")
-    @Schema(description = "查询字段集合", required = true)
+    @Schema(title = "查询字段集合", required = true)
     val selectFieldsOrder: List<String>
 )

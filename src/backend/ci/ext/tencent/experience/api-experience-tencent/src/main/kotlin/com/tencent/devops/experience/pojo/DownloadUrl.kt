@@ -30,12 +30,12 @@ package com.tencent.devops.experience.pojo
 import com.tencent.devops.common.api.enums.PlatformEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "版本体验-下载信息")
+@Schema(title = "版本体验-下载信息")
 data class DownloadUrl(
-    @Schema(description = "下载链接", required = true)
+    @Schema(title = "下载链接", required = true)
     val url: String,
-    @Schema(description = "平台", required = true)
+    @Schema(title = "平台", required = true)
     val platform: PlatformEnum,
-    @Schema(description = "大小(byte)", required = true)
+    @Schema(title = "大小(byte)", required = true)
     val size: Long
 )

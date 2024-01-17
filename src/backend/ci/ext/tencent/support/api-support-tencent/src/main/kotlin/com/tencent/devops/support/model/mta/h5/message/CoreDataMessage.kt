@@ -29,10 +29,10 @@ package com.tencent.devops.support.model.mta.h5.message
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "应用历史趋势查询消息")
+@Schema(title = "应用历史趋势查询消息")
 data class CoreDataMessage(
-    @Schema(description = "开始日期(时间戳形式毫秒)")
+    @Schema(title = "开始日期(时间戳形式毫秒)")
     var startDate: Long,
-    @Schema(description = "结束日期(时间戳形式毫秒)")
+    @Schema(title = "结束日期(时间戳形式毫秒)")
     var endDate: Long
 )

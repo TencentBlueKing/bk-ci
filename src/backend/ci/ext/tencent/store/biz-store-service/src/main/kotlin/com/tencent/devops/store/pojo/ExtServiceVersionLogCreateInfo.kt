@@ -30,14 +30,14 @@ package com.tencent.devops.store.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class ExtServiceVersionLogCreateInfo(
-    @Schema(description = "扩展服务ID")
+    @Schema(title = "扩展服务ID")
     val serviceId: String,
-    @Schema(description = "发布类型，0：新上架 1：非兼容性升级 2：兼容性功能更新 3：兼容性问题修正  ")
+    @Schema(title = "发布类型，0：新上架 1：非兼容性升级 2：兼容性功能更新 3：兼容性问题修正  ")
     val releaseType: Byte,
-    @Schema(description = "版本日志内容")
+    @Schema(title = "版本日志内容")
     val content: String,
-    @Schema(description = "添加用户")
+    @Schema(title = "添加用户")
     val creatorUser: String,
-    @Schema(description = "修改用户")
+    @Schema(title = "修改用户")
     val modifierUser: String
 )

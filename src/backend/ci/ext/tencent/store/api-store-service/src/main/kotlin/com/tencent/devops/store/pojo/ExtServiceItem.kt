@@ -29,34 +29,34 @@ package com.tencent.devops.store.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "扩展服务首页信息")
+@Schema(title = "扩展服务首页信息")
 data class ExtServiceItem(
-    @Schema(description = "ID")
+    @Schema(title = "ID")
     val id: String,
-    @Schema(description = "名称")
+    @Schema(title = "名称")
     val name: String,
-    @Schema(description = "标识")
+    @Schema(title = "标识")
     val code: String,
-    @Schema(description = "分类")
+    @Schema(title = "分类")
     val classifyCode: String?,
-    @Schema(description = "logo链接")
+    @Schema(title = "logo链接")
     val logoUrl: String?,
-    @Schema(description = "发布者")
+    @Schema(title = "发布者")
     val publisher: String,
-    @Schema(description = "下载量")
+    @Schema(title = "下载量")
     val downloads: Int?,
-    @Schema(description = "评分")
+    @Schema(title = "评分")
     val score: Double?,
-    @Schema(description = "简介")
+    @Schema(title = "简介")
     val summary: String?,
-    @Schema(description = "是否有权限安装标识")
+    @Schema(title = "是否有权限安装标识")
     val flag: Boolean,
-    @Schema(description = "是否公共标识")
+    @Schema(title = "是否公共标识")
     val publicFlag: Boolean,
-    @Schema(description = "修改人")
+    @Schema(title = "修改人")
     val modifier: String,
-    @Schema(description = "修改时间")
+    @Schema(title = "修改时间")
     val updateTime: String,
-    @Schema(description = "是否推荐标识 true：推荐，false：不推荐", required = false)
+    @Schema(title = "是否推荐标识 true：推荐，false：不推荐", required = false)
     val recommendFlag: Boolean? = null
 )

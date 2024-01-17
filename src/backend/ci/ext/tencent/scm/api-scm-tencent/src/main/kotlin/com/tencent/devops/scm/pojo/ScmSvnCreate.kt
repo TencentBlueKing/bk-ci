@@ -29,19 +29,19 @@ package com.tencent.devops.scm.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "工程仓库模型-Svn-创建类型")
+@Schema(title = "工程仓库模型-Svn-创建类型")
 @Suppress("MaxLineLength")
 class ScmSvnCreate(
-    @Schema(description = "repo url", required = true)
+    @Schema(title = "repo url", required = true)
     val url: String,
-    @Schema(description = "repo addition path", required = false)
+    @Schema(title = "repo addition path", required = false)
     val additionPath: String?,
-    @Schema(description = "用户名", required = true)
+    @Schema(title = "用户名", required = true)
     val username: String,
-    @Schema(description = "密码", required = false)
+    @Schema(title = "密码", required = false)
     val password: String?,
-    @Schema(description = "用户访问私钥(明文)", required = false)
+    @Schema(title = "用户访问私钥(明文)", required = false)
     val privateKey: String?, // Just need one from [password, privateKey]. If protocol is svn+ssh, it's privateKey, otherwise it's password
-    @Schema(description = "Private Key Passphrase", required = false)
+    @Schema(title = "Private Key Passphrase", required = false)
     val passPhrase: String?
 )

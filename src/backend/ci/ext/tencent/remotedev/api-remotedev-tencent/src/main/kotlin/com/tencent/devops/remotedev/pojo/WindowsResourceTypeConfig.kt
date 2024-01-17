@@ -29,39 +29,39 @@ package com.tencent.devops.remotedev.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "WINDOWS GPU资源配置表")
+@Schema(title = "WINDOWS GPU资源配置表")
 data class WindowsResourceTypeConfig(
-    @Schema(description = "Id")
+    @Schema(title = "Id")
     val id: Long?,
-    @Schema(description = "是否可用")
+    @Schema(title = "是否可用")
     val available: Boolean?,
-    @Schema(description = "资源类型：M，L，XL，S")
+    @Schema(title = "资源类型：M，L，XL，S")
     val size: String,
-    @Schema(description = "GPU卡类型")
+    @Schema(title = "GPU卡类型")
     val type: String? = null,
-    @Schema(description = "GPU")
+    @Schema(title = "GPU")
     val gpu: Int,
-    @Schema(description = "vGPU")
+    @Schema(title = "vGPU")
     val vgpu: String? = "",
-    @Schema(description = "CPU")
+    @Schema(title = "CPU")
     val cpu: Int,
-    @Schema(description = "vCPU")
+    @Schema(title = "vCPU")
     val vcpu: String? = "",
-    @Schema(description = "内存")
+    @Schema(title = "内存")
     val memory: Int,
-    @Schema(description = "独享内存")
+    @Schema(title = "独享内存")
     val vmemory: String? = "",
-    @Schema(description = "数据盘，本地SSD盘")
+    @Schema(title = "数据盘，本地SSD盘")
     val disk: String,
-    @Schema(description = "云SSD盘")
+    @Schema(title = "云SSD盘")
     val hdisk: String,
-    @Schema(description = "系统盘，本地SSD")
+    @Schema(title = "系统盘，本地SSD")
     val sdisk: String,
-    @Schema(description = "权重，用于页面展示先后顺序")
+    @Schema(title = "权重，用于页面展示先后顺序")
     val weight: Int? = 0,
-    @Schema(description = "描述")
+    @Schema(title = "描述")
     val description: String,
-    @Schema(description = "是否是特殊机型")
+    @Schema(title = "是否是特殊机型")
     val specModel: Boolean = false
 ) {
 

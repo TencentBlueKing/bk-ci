@@ -29,22 +29,22 @@ package com.tencent.devops.remotedev.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "start客户端工作空间详情")
+@Schema(title = "start客户端工作空间详情")
 data class WorkspaceStartCloudDetail(
-    @Schema(description = "ip地址")
+    @Schema(title = "ip地址")
     val ip: String,
-    @Schema(description = "start客户端所需唯一索引")
+    @Schema(title = "start客户端所需唯一索引")
     val curLaunchId: Int,
-    @Schema(description = "云区域ID")
+    @Schema(title = "云区域ID")
     val regionId: Int? = null,
-    @Schema(description = "项目ID")
+    @Schema(title = "项目ID")
     val projectId: String? = null,
-    @Schema(description = "工作空间名称")
+    @Schema(title = "工作空间名称")
     val name: String? = null,
-    @Schema(description = "创建人")
+    @Schema(title = "创建人")
     val creator: String? = null,
-    @Schema(description = "拥有者")
+    @Schema(title = "拥有者")
     val owner: String? = null,
-    @Schema(description = "resourceId")
+    @Schema(title = "resourceId")
     val resourceId: String? = null
 )

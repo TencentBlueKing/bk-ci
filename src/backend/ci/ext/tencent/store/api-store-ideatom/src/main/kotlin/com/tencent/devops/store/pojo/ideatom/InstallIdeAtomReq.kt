@@ -29,10 +29,10 @@ package com.tencent.devops.store.pojo.ideatom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "安装IDE插件请求报文")
+@Schema(title = "安装IDE插件请求报文")
 data class InstallIdeAtomReq(
-    @Schema(description = "插件标识", required = true)
+    @Schema(title = "插件标识", required = true)
     val atomCode: String,
-    @Schema(description = "安装用户", required = false)
+    @Schema(title = "安装用户", required = false)
     val userName: String
 )

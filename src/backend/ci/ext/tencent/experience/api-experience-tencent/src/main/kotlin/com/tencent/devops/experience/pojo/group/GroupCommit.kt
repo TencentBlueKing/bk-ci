@@ -2,24 +2,24 @@ package com.tencent.devops.experience.pojo.group
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "版本体验-体验组提交")
+@Schema(title = "版本体验-体验组提交")
 data class GroupCommit(
-    @Schema(description = "体验组ID,不传为新建,传值为更新", required = false)
+    @Schema(title = "体验组ID,不传为新建,传值为更新", required = false)
     val groupHashId: String? = null,
-    @Schema(description = "体验组名称", required = true)
+    @Schema(title = "体验组名称", required = true)
     val name: String,
-    @Schema(description = "描述", required = true)
+    @Schema(title = "描述", required = true)
     val remark: String,
-    @Schema(description = "成员列表", required = true)
+    @Schema(title = "成员列表", required = true)
     val members: List<Member>
 ) {
-    @Schema(description = "版本体验--体验组提交--成员信息")
+    @Schema(title = "版本体验--体验组提交--成员信息")
     data class Member(
-        @Schema(description = "成员ID")
+        @Schema(title = "成员ID")
         val id: String,
-        @Schema(description = "成员名称")
+        @Schema(title = "成员名称")
         val name: String,
-        @Schema(description = "类别,1--内部人员,2--外部人员,3--内部组织", required = true)
+        @Schema(title = "类别,1--内部人员,2--外部人员,3--内部组织", required = true)
         val type: Int
     )
 }

@@ -29,10 +29,10 @@ package com.tencent.devops.remotedev.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "用户1password模型")
+@Schema(title = "用户1password模型")
 data class UserOnePassword(
-    @Schema(description = "用户名")
+    @Schema(title = "用户名")
     val userId: String,
-    @Schema(description = "工作空间（审计）")
+    @Schema(title = "工作空间（审计）")
     val workspaceName: String
 )

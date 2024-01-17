@@ -29,47 +29,47 @@ package com.tencent.devops.lambda.pojo.project
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "项目-型")
+@Schema(title = "项目-型")
 data class DataPlatProjectInfo(
-    @Schema(description = "项目名称")
+    @Schema(title = "项目名称")
 //    @JsonProperty("project_name")
     val projectName: String,
-    @Schema(description = "项目类型")
+    @Schema(title = "项目类型")
 //    @JsonProperty("project_type")
     val projectType: Int = 0,
-    @Schema(description = "事业群ID")
+    @Schema(title = "事业群ID")
 //    @JsonProperty("bg_id")
     val bgId: Long = 0,
-    @Schema(description = "事业群名字")
+    @Schema(title = "事业群名字")
 //    @JsonProperty("bg_name")
     val bgName: String = "",
-    @Schema(description = "中心ID")
+    @Schema(title = "中心ID")
 //    @JsonProperty("center_id")
     val centerId: Long = 0,
-    @Schema(description = "中心名称")
+    @Schema(title = "中心名称")
 //    @JsonProperty("center_name")
     val centerName: String = "",
-    @Schema(description = "部门ID")
+    @Schema(title = "部门ID")
 //    @JsonProperty("dept_id")
     val deptId: Long = 0,
-    @Schema(description = "部门名称")
+    @Schema(title = "部门名称")
 //    @JsonProperty("dept_name")
     val deptName: String = "",
-    @Schema(description = "描述")
+    @Schema(title = "描述")
     val description: String,
-    @Schema(description = "英文缩写")
+    @Schema(title = "英文缩写")
 //    @JsonProperty("english_name")
     val englishName: String = "",
-    @Schema(description = "cc app id")
+    @Schema(title = "cc app id")
 //    @JsonProperty("cc_app_id")
     val ccAppId: Long?,
-    @Schema(description = "cc app name")
+    @Schema(title = "cc app name")
 //    @JsonProperty("cc_app_name")
     var ccAppName: String?, // APP name 通过调用CC接口同步
-    @Schema(description = "容器选择， 0 是不选， 1 是k8s, 2 是mesos")
+    @Schema(title = "容器选择， 0 是不选， 1 是k8s, 2 是mesos")
     val kind: Int?,
-    @Schema(description = "是否保密")
+    @Schema(title = "是否保密")
     var secrecy: Boolean = false,
-    @Schema(description = "清洗时间")
+    @Schema(title = "清洗时间")
     val washTime: String
 )

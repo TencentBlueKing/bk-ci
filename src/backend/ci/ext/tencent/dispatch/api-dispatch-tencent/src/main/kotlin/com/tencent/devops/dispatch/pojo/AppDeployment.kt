@@ -31,14 +31,14 @@ import io.fabric8.kubernetes.api.model.EnvVar
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class AppDeployment(
-    @Schema(description = "期望的pod数量", required = true)
+    @Schema(title = "期望的pod数量", required = true)
     val replicas: Int,
-    @Schema(description = "镜像", required = true)
+    @Schema(title = "镜像", required = true)
     val image: String,
-    @Schema(description = "拉取镜像秘钥名称", required = false)
+    @Schema(title = "拉取镜像秘钥名称", required = false)
     val pullImageSecretName: String?,
-    @Schema(description = "容器端口", required = true)
+    @Schema(title = "容器端口", required = true)
     val containerPort: Int,
-    @Schema(description = "环境变量列表", required = false)
+    @Schema(title = "环境变量列表", required = false)
     val envVarList: List<EnvVar>? = null
 )

@@ -29,8 +29,8 @@ package com.tencent.devops.store.pojo.vo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "扩展点服务的开发者信息")
+@Schema(title = "扩展点服务的开发者信息")
 data class ExtServiceVendorVO(
-    @Schema(description = "开发者名称", required = true)
+    @Schema(title = "开发者名称", required = true)
     val name: String
 )

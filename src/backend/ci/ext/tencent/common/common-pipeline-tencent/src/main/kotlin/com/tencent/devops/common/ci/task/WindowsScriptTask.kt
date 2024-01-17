@@ -36,13 +36,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 /**
  * WindowsScriptTask
  */
-@Schema(description = "脚本任务（win环境）")
+@Schema(title = "脚本任务（win环境）")
 data class WindowsScriptTask(
-    @Schema(description = "displayName", required = false)
+    @Schema(title = "displayName", required = false)
     override var displayName: String?,
-    @Schema(description = "入参", required = true)
+    @Schema(title = "入参", required = true)
     override val inputs: WindowsScriptInput,
-    @Schema(description = "执行条件", required = true)
+    @Schema(title = "执行条件", required = true)
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
     companion object {
@@ -62,13 +62,13 @@ data class WindowsScriptTask(
     }
 }
 
-@Schema(description = "脚本任务（win环境）")
+@Schema(title = "脚本任务（win环境）")
 data class WindowsScriptInput(
-    @Schema(description = "脚本内容", required = true)
+    @Schema(title = "脚本内容", required = true)
     val content: String,
-    @Schema(description = "脚本类型", required = true)
+    @Schema(title = "脚本类型", required = true)
     val scriptType: BuildScriptType?,
-    @Schema(description = "字符集类型", required = false)
+    @Schema(title = "字符集类型", required = false)
     val charsetType: CharsetType?
 
 ) : AbstractInput()

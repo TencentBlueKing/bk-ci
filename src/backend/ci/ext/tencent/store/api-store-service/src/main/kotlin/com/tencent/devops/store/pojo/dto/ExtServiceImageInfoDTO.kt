@@ -29,16 +29,16 @@ package com.tencent.devops.store.pojo.dto
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "扩展服务镜像信息")
+@Schema(title = "扩展服务镜像信息")
 data class ExtServiceImageInfoDTO(
-    @Schema(description = "镜像名称", required = true)
+    @Schema(title = "镜像名称", required = true)
     val imageName: String,
-    @Schema(description = "镜像TAG", required = true)
+    @Schema(title = "镜像TAG", required = true)
     val imageTag: String,
-    @Schema(description = "镜像仓库地址", required = true)
+    @Schema(title = "镜像仓库地址", required = true)
     val repoAddr: String,
-    @Schema(description = "镜像仓库用户名", required = true)
+    @Schema(title = "镜像仓库用户名", required = true)
     val username: String,
-    @Schema(description = "镜像仓库密码", required = true)
+    @Schema(title = "镜像仓库密码", required = true)
     val password: String
 )

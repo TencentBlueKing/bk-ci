@@ -2,7 +2,7 @@ package com.tencent.devops.dispatch.windows.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "Windows类型信息")
+@Schema(title = "Windows类型信息")
 data class VMType(
     var id: Int,
     var name: String,

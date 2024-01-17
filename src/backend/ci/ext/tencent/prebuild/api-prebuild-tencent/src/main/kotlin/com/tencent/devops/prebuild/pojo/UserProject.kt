@@ -29,22 +29,22 @@ package com.tencent.devops.prebuild.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "用户项目")
+@Schema(title = "用户项目")
 data class UserProject(
-    @Schema(description = "主键ID")
+    @Schema(title = "主键ID")
     val id: Long,
-    @Schema(description = "prebuild项目ID")
+    @Schema(title = "prebuild项目ID")
     val preProjectId: String,
-    @Schema(description = "prebuild项目名称")
+    @Schema(title = "prebuild项目名称")
     val preProjectName: String,
-    @Schema(description = "蓝盾项目代码")
+    @Schema(title = "蓝盾项目代码")
     val projectCode: String,
-    @Schema(description = "创建人")
+    @Schema(title = "创建人")
     val creator: String?,
-    @Schema(description = "描述")
+    @Schema(title = "描述")
     val description: String?,
-    @Schema(description = "英文缩写")
+    @Schema(title = "英文缩写")
     val english_name: String,
-    @Schema(description = "修改时间")
+    @Schema(title = "修改时间")
     val updated_at: String?
 )

@@ -29,18 +29,18 @@ package com.tencent.devops.lambda.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "构建详情")
+@Schema(title = "构建详情")
 data class DataPlatPipelineResource(
-    @Schema(description = "清洗时间", required = false)
+    @Schema(title = "清洗时间", required = false)
     val washTime: String,
-    @Schema(description = "流水线ID", required = true)
+    @Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(description = "版本号", required = false)
+    @Schema(title = "版本号", required = false)
     val version: Int,
-    @Schema(description = "构建详情", required = true)
+    @Schema(title = "构建详情", required = true)
     val model: String,
-    @Schema(description = "创建人", required = false)
+    @Schema(title = "创建人", required = false)
     val creator: String?,
-    @Schema(description = "创建时间", required = false)
+    @Schema(title = "创建时间", required = false)
     val createTime: String?
 )

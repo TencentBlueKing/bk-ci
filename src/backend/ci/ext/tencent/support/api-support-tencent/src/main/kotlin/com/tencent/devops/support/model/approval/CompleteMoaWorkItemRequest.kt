@@ -29,36 +29,36 @@ package com.tencent.devops.support.model.approval
 import io.swagger.v3.oas.annotations.media.Schema
 import com.fasterxml.jackson.annotation.JsonProperty
 
-@Schema(description = "审批单关闭请求报文体")
+@Schema(title = "审批单关闭请求报文体")
 data class CompleteMoaWorkItemRequest(
-    @Schema(description = "app标识", required = false, name = "app_code")
+    @Schema(title = "app标识", required = false, description = "app_code")
     @JsonProperty("app_code")
     var appCode: String? = null,
-    @Schema(description = "app私密key", required = false, name = "app_secret")
+    @Schema(title = "app私密key", required = false, description = "app_secret")
     @JsonProperty("app_secret")
     var appSecret: String? = null,
-    @Schema(description = "用户access_token", required = false, name = "access_token")
+    @Schema(title = "用户access_token", required = false, description = "access_token")
     @JsonProperty("access_token")
     var accessToken: String? = null,
-    @Schema(description = "内部版用户登录态", required = false, name = "bk_ticket")
+    @Schema(title = "内部版用户登录态", required = false, description = "bk_ticket")
     @JsonProperty("bk_ticket")
     var bkTicket: String? = null,
-    @Schema(description = "操作者RTX英文名", required = false, name = "operator")
+    @Schema(title = "操作者RTX英文名", required = false, description = "operator")
     @JsonProperty("operator")
     var operator: String? = null,
     @JsonProperty("activity")
-    @Schema(description = "审批流程对应的审批节点", required = false)
+    @Schema(title = "审批流程对应的审批节点", required = false)
     val activity: String?, // GM审批
     @JsonProperty("category")
-    @Schema(description = "单据类别", required = true)
+    @Schema(title = "单据类别", required = true)
     val category: String = MoaWorkitemCreateCategoryType.IT.id, // C23D7091B98844659D128773209BBF85
     @JsonProperty("handler")
-    @Schema(description = "单据审批人", required = false)
+    @Schema(title = "单据审批人", required = false)
     val handler: String?, // erkehe
     @JsonProperty("process_inst_id")
-    @Schema(description = "流程实例标识", required = true)
+    @Schema(title = "流程实例标识", required = true)
     val processInstId: String, // Cost/ExpenseProcess/p20210080912
     @JsonProperty("process_name")
-    @Schema(description = "流程名称", required = true)
+    @Schema(title = "流程名称", required = true)
     val processName: String // Cost/ExpenseProcess
 )

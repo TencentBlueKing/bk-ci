@@ -58,60 +58,60 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class BkAuthProject(
     @JsonProperty("bg_id", required = true)
-    @Schema(description = "bg_id")
+    @Schema(title = "bg_id")
     val bgId: Int,
     @JsonProperty("bg_name", required = true)
-    @Schema(description = "bg_name")
+    @Schema(title = "bg_name")
     val bgName: String,
     @JsonProperty("cc_app_id", required = true)
-    @Schema(description = "cc_app_id")
+    @Schema(title = "cc_app_id")
     val ccAppId: String,
     @JsonProperty("center_id", required = true)
-    @Schema(description = "center_id")
+    @Schema(title = "center_id")
     val centerId: String,
     @JsonProperty("center_name", required = true)
-    @Schema(description = "center_name")
+    @Schema(title = "center_name")
     val centerName: String,
     @JsonProperty("created_at", required = true)
-    @Schema(description = "created_at")
+    @Schema(title = "created_at")
     val createdAt: String,
     @JsonProperty("creator", required = true)
-    @Schema(description = "creator")
+    @Schema(title = "creator")
     val creator: String,
     @JsonProperty("dept_id", required = true)
-    @Schema(description = "dept_id")
+    @Schema(title = "dept_id")
     val deptId: Int,
     @JsonProperty("dept_name", required = true)
-    @Schema(description = "dept_name")
+    @Schema(title = "dept_name")
     val deptName: String,
     @JsonProperty("description", required = true)
-    @Schema(description = "description")
+    @Schema(title = "description")
     val description: String,
     @JsonProperty("english_name", required = true)
-    @Schema(description = "english_name")
+    @Schema(title = "english_name")
     val projectCode: String,
     @get:JsonProperty("is_offlined", required = true)
-    @Schema(description = "is_offlined")
+    @Schema(title = "is_offlined")
     val isOfflined: Boolean,
     @JsonProperty("logo_addr", required = true)
-    @Schema(description = "logo_addr")
+    @Schema(title = "logo_addr")
     val logoAddr: String,
     @JsonProperty("project_id", required = true)
-    @Schema(description = "project_id")
+    @Schema(title = "project_id")
     val projectId: String,
     @JsonProperty("project_name", required = true)
-    @Schema(description = "project_name")
+    @Schema(title = "project_name")
     val projectName: String,
     @JsonProperty("project_type", required = true)
-    @Schema(description = "project_type")
+    @Schema(title = "project_type")
     val projectType: Int,
     @JsonProperty("updated_at", required = true)
-    @Schema(description = "updated_at")
+    @Schema(title = "updated_at")
     val updatedAt: String,
     @JsonProperty("use_bk", required = true)
-    @Schema(description = "use_bk")
+    @Schema(title = "use_bk")
     val useBk: Boolean,
     @JsonProperty("approval_status", required = true)
-    @Schema(description = "approval_status")
+    @Schema(title = "approval_status")
     val approvalStatus: String
 )

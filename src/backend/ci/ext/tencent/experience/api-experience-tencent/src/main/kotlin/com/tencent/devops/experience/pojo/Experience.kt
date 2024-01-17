@@ -32,52 +32,52 @@ import com.tencent.devops.experience.pojo.enums.ArtifactoryType
 import com.tencent.devops.experience.pojo.group.Group
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "版本体验-发布信息")
+@Schema(title = "版本体验-发布信息")
 data class Experience(
-    @Schema(description = "版本名称", required = true)
+    @Schema(title = "版本名称", required = true)
     val name: String,
-    @Schema(description = "文件路径", required = true)
+    @Schema(title = "文件路径", required = true)
     val path: String,
-    @Schema(description = "版本仓库类型", required = true)
+    @Schema(title = "版本仓库类型", required = true)
     val artifactoryType: ArtifactoryType,
-    @Schema(description = "平台", required = true)
+    @Schema(title = "平台", required = true)
     val platform: PlatformEnum?,
-    @Schema(description = "版本号", required = true)
+    @Schema(title = "版本号", required = true)
     val version: String,
-    @Schema(description = "描述", required = false)
+    @Schema(title = "描述", required = false)
     val remark: String?,
-    @Schema(description = "创建时间", required = true)
+    @Schema(title = "创建时间", required = true)
     val createDate: Long,
-    @Schema(description = "截止日期", required = true)
+    @Schema(title = "截止日期", required = true)
     val expireDate: Long,
-    @Schema(description = "体验组", required = true)
+    @Schema(title = "体验组", required = true)
     val experienceGroups: List<Group>,
-    @Schema(description = "内部名单", required = true)
+    @Schema(title = "内部名单", required = true)
     val innerUsers: Set<String>,
-    @Schema(description = "外部名单", required = true)
+    @Schema(title = "外部名单", required = true)
     val outerUsers: Set<String>,
-    @Schema(description = "通知类型", required = true)
+    @Schema(title = "通知类型", required = true)
     val notifyTypes: Set<NotifyType>,
-    @Schema(description = "是否开启企业微信群", required = true)
+    @Schema(title = "是否开启企业微信群", required = true)
     val enableWechatGroups: Boolean,
-    @Schema(description = "企业微信群ID(逗号分隔)", required = false)
+    @Schema(title = "企业微信群ID(逗号分隔)", required = false)
     val wechatGroups: String,
-    @Schema(description = "创建者", required = true)
+    @Schema(title = "创建者", required = true)
     val creator: String,
-    @Schema(description = "是否已过期", required = true)
+    @Schema(title = "是否已过期", required = true)
     val expired: Boolean,
-    @Schema(description = "是否可体验", required = true)
+    @Schema(title = "是否可体验", required = true)
     val canExperience: Boolean,
-    @Schema(description = "是否在线", required = true)
+    @Schema(title = "是否在线", required = true)
     val online: Boolean,
-    @Schema(description = "下载链接", required = true)
+    @Schema(title = "下载链接", required = true)
     val url: String?,
-    @Schema(description = "体验名称", required = true)
+    @Schema(title = "体验名称", required = true)
     val experienceName: String,
-    @Schema(description = "版本标题", required = true)
+    @Schema(title = "版本标题", required = true)
     val versionTitle: String,
-    @Schema(description = "产品类别", required = true)
+    @Schema(title = "产品类别", required = true)
     val categoryId: Int,
-    @Schema(description = "产品负责人", required = true)
+    @Schema(title = "产品负责人", required = true)
     val productOwner: List<String>
 )

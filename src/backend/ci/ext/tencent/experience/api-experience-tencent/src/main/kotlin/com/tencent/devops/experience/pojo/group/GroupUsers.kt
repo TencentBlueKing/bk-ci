@@ -29,10 +29,10 @@ package com.tencent.devops.experience.pojo.group
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "版本体验-体验组用户")
+@Schema(title = "版本体验-体验组用户")
 data class GroupUsers(
-    @Schema(description = "内部人员")
+    @Schema(title = "内部人员")
     val innerUsers: Set<String>,
-    @Schema(description = "外部人员")
+    @Schema(title = "外部人员")
     val outerUsers: Set<String>
 )

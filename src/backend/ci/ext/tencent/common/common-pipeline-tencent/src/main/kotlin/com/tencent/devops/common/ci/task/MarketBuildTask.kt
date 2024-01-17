@@ -34,13 +34,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 /**
  * marketBuild
  */
-@Schema(description = "插件市场")
+@Schema(title = "插件市场")
 data class MarketBuildTask(
-    @Schema(description = "displayName", required = false)
+    @Schema(title = "displayName", required = false)
     override var displayName: String?,
-    @Schema(description = "入参", required = true)
+    @Schema(title = "入参", required = true)
     override val inputs: MarketBuildInput,
-    @Schema(description = "执行条件", required = true)
+    @Schema(title = "执行条件", required = true)
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
     companion object {
@@ -60,14 +60,14 @@ data class MarketBuildTask(
     }
 }
 
-@Schema(description = "插件市场入参")
+@Schema(title = "插件市场入参")
 data class MarketBuildInput(
-    @Schema(description = "atomCode", required = true)
+    @Schema(title = "atomCode", required = true)
     val atomCode: String,
-    @Schema(description = "name", required = false)
+    @Schema(title = "name", required = false)
     val name: String?,
-    @Schema(description = "原子版本", required = false)
+    @Schema(title = "原子版本", required = false)
     var version: String = "1.*",
-    @Schema(description = "原子参数数据", required = true)
+    @Schema(title = "原子参数数据", required = true)
     val data: Map<String, Any> = mapOf()
 ) : AbstractInput()

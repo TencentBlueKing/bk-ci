@@ -29,12 +29,12 @@ package com.tencent.devops.common.pipeline.element.ktlint
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "ktlint reporter")
+@Schema(title = "ktlint reporter")
 data class KtlintReporter(
-    @Schema(description = "reporter", required = true)
+    @Schema(title = "reporter", required = true)
     val reporter: KtlintReporterType,
-    @Schema(description = "报告保存路径", required = false)
+    @Schema(title = "报告保存路径", required = false)
     val reportOutput: String?,
-    @Schema(description = "报告在构件详情中显示的名字", required = false)
+    @Schema(title = "报告在构件详情中显示的名字", required = false)
     val reportName: String?
 )

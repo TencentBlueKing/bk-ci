@@ -30,20 +30,20 @@ package com.tencent.devops.store.pojo.ideatom
 import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "IDE插件市场-IDE插件特性信息请求报文体")
+@Schema(title = "IDE插件市场-IDE插件特性信息请求报文体")
 data class IdeAtomFeatureRequest(
-    @Schema(description = "IDE插件代码", required = true)
+    @Schema(title = "IDE插件代码", required = true)
     val atomCode: String,
-    @Schema(description = "插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = false)
+    @Schema(title = "插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = false)
     val atomType: IdeAtomTypeEnum? = null,
-    @Schema(description = "是否为公共IDE插件， TRUE：是 FALSE：不是", required = false)
+    @Schema(title = "是否为公共IDE插件， TRUE：是 FALSE：不是", required = false)
     val publicFlag: Boolean? = null,
-    @Schema(description = "是否推荐标识 true：推荐，false：不推荐", required = false)
+    @Schema(title = "是否推荐标识 true：推荐，false：不推荐", required = false)
     val recommendFlag: Boolean? = null,
-    @Schema(description = "代码库地址", required = false)
+    @Schema(title = "代码库地址", required = false)
     var codeSrc: String? = null,
-    @Schema(description = "代码库命名空间", required = false)
+    @Schema(title = "代码库命名空间", required = false)
     var nameSpacePath: String? = null,
-    @Schema(description = "权重（数值越大代表权重越高）", required = false)
+    @Schema(title = "权重（数值越大代表权重越高）", required = false)
     var weight: Int? = null
 )

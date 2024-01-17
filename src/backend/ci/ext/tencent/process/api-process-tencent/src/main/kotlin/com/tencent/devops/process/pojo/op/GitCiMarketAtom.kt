@@ -29,16 +29,16 @@ package com.tencent.devops.process.pojo.op
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "工蜂CI支持的插件")
+@Schema(title = "工蜂CI支持的插件")
 data class GitCiMarketAtom(
-    @Schema(description = "记录ID", required = true)
+    @Schema(title = "记录ID", required = true)
     val id: Int,
-    @Schema(description = "插件code", required = true)
+    @Schema(title = "插件code", required = true)
     val atomCode: String,
-    @Schema(description = "描述")
+    @Schema(title = "描述")
     val desc: String?,
-    @Schema(description = "更新时间", required = true)
+    @Schema(title = "更新时间", required = true)
     val updateTime: String,
-    @Schema(description = "更新人", required = true)
+    @Schema(title = "更新人", required = true)
     val modifyUser: String
 )

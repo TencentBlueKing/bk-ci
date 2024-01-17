@@ -30,27 +30,27 @@ package com.tencent.devops.project.api.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class ServiceItem(
-    @Schema(description = "扩展Id")
+    @Schema(title = "扩展Id")
     val itemId: String,
-    @Schema(description = "扩展名称")
+    @Schema(title = "扩展名称")
     val itemName: String,
-    @Schema(description = "扩展标示编码")
+    @Schema(title = "扩展标示编码")
     val itemCode: String,
-    @Schema(description = "扩展蓝盾服务Id")
+    @Schema(title = "扩展蓝盾服务Id")
     val parentId: String,
-    @Schema(description = "扩展蓝盾服务Name")
+    @Schema(title = "扩展蓝盾服务Name")
     var parentName: String? = "",
-    @Schema(description = "页面路径")
+    @Schema(title = "页面路径")
     val htmlPath: String? = null,
-    @Schema(description = "UI组件类型")
+    @Schema(title = "UI组件类型")
     val htmlType: String? = null,
-    @Schema(description = "扩展服务安装个数")
+    @Schema(title = "扩展服务安装个数")
     val serviceCount: Int? = 0,
     val tooltip: String? = "",
-    @Schema(description = "icon路径")
+    @Schema(title = "icon路径")
     val icon: String? = "",
-    @Schema(description = "props参数")
+    @Schema(title = "props参数")
     val props: String = "",
-    @Schema(description = "扩展点状态")
+    @Schema(title = "扩展点状态")
     val itemStatus: String? = "ENABLE"
 )

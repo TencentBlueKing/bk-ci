@@ -31,28 +31,28 @@ import com.tencent.devops.store.pojo.enums.DescInputTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class ExtServiceFeatureCreateInfo(
-    @Schema(description = "扩展服务code")
+    @Schema(title = "扩展服务code")
     val serviceCode: String,
-    @Schema(description = "是否为公共扩展服务， TRUE：是 FALSE：不是  ")
+    @Schema(title = "是否为公共扩展服务， TRUE：是 FALSE：不是  ")
     val publicFlag: Boolean? = false,
-    @Schema(description = "是否推荐， TRUE：是 FALSE：不是 ")
+    @Schema(title = "是否推荐， TRUE：是 FALSE：不是 ")
     val recommentFlag: Boolean? = false,
-    @Schema(description = "是否官方认证， TRUE：是 FALSE：不是  ")
+    @Schema(title = "是否官方认证， TRUE：是 FALSE：不是  ")
     val certificationFlag: Boolean? = false,
-    @Schema(description = "权重（数值越大代表权重越高）")
+    @Schema(title = "权重（数值越大代表权重越高）")
     val weight: Int? = null,
-    @Schema(description = "扩展服务可见范围 0：私有 10：登录用户开源")
+    @Schema(title = "扩展服务可见范围 0：私有 10：登录用户开源")
     val visibilityLevel: Int? = 10,
-    @Schema(description = "描述录入类型")
+    @Schema(title = "描述录入类型")
     val descInputType: DescInputTypeEnum? = DescInputTypeEnum.MANUAL,
-    @Schema(description = "代码库hashId")
+    @Schema(title = "代码库hashId")
     val repositoryHashId: String? = null,
-    @Schema(description = "代码库地址")
+    @Schema(title = "代码库地址")
     val codeSrc: String? = null,
-    @Schema(description = "删除标签")
+    @Schema(title = "删除标签")
     val deleteFlag: Boolean? = false,
-    @Schema(description = "添加用户")
+    @Schema(title = "添加用户")
     val creatorUser: String,
-    @Schema(description = "修改用户")
+    @Schema(title = "修改用户")
     val modifierUser: String
 )

@@ -28,10 +28,10 @@ package com.tencent.devops.monitoring.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "NOC业务故障数据")
+@Schema(title = "NOC业务故障数据")
 data class NocNoticeBusData(
-    @Schema(description = "故障标识", required = true)
+    @Schema(title = "故障标识", required = true)
     val label: String,
-    @Schema(description = "故障内容", required = true)
+    @Schema(title = "故障内容", required = true)
     val value: String
 )

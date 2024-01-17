@@ -29,28 +29,28 @@ package com.tencent.devops.store.pojo.ideatom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "IDE插件市场首页单项信息")
+@Schema(title = "IDE插件市场首页单项信息")
 data class ExternalIdeAtomItem(
-    @Schema(description = "插件ID", required = true)
+    @Schema(title = "插件ID", required = true)
     val atomId: String,
-    @Schema(description = "插件名称", required = true)
+    @Schema(title = "插件名称", required = true)
     val atomName: String,
-    @Schema(description = "插件代码", required = true)
+    @Schema(title = "插件代码", required = true)
     val atomCode: String,
-    @Schema(description = "版本号", required = true)
+    @Schema(title = "版本号", required = true)
     val version: String,
-    @Schema(description = "插件logo地址", required = false)
+    @Schema(title = "插件logo地址", required = false)
     val logoUrl: String?,
-    @Schema(description = "插件简介", required = false)
+    @Schema(title = "插件简介", required = false)
     val summary: String?,
-    @Schema(description = "发布者", required = true)
+    @Schema(title = "发布者", required = true)
     val publisher: String,
-    @Schema(description = "下载量")
+    @Schema(title = "下载量")
     val downloads: Int?,
-    @Schema(description = "评分")
+    @Schema(title = "评分")
     val score: Double?,
-    @Schema(description = "代码库链接")
+    @Schema(title = "代码库链接")
     val codeSrc: String?,
-    @Schema(description = "权重")
+    @Schema(title = "权重")
     val weight: Int?
 )

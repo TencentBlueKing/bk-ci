@@ -29,16 +29,16 @@ package com.tencent.devops.prebuild.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "prebuild项目")
+@Schema(title = "prebuild项目")
 data class PreProject(
-    @Schema(description = "prebuild项目ID")
+    @Schema(title = "prebuild项目ID")
     val preProjectId: String,
-    @Schema(description = "用户项目ID")
+    @Schema(title = "用户项目ID")
     val projectId: String,
-    @Schema(description = "工作空间")
+    @Schema(title = "工作空间")
     val workspace: String,
-    @Schema(description = "account")
+    @Schema(title = "account")
     val account: String,
-    @Schema(description = "password")
+    @Schema(title = "password")
     val password: String
 )

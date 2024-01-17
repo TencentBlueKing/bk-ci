@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory
 @Event(exchange = MQ.EXCHANGE_WEBSOCKET_TMP_FANOUT, routeKey = MQ.ROUTE_WEBSOCKET_TMP_EVENT)
 data class WorkspaceWebsocketPush(
     val type: WebSocketActionType,
-    @Schema(description = "行为是否成功")
+    @Schema(title = "行为是否成功")
     val status: Boolean,
     val anyMessage: Any,
     val projectId: String,

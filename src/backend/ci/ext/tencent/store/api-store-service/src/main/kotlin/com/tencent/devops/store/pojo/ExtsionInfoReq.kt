@@ -30,11 +30,11 @@ package com.tencent.devops.store.pojo
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "扩展服务扩展点--该对象可能会要调整")
+@Schema(title = "扩展服务扩展点--该对象可能会要调整")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ExtsionInfoReq(
-    @Schema(description = "页面服务模块")
+    @Schema(title = "页面服务模块")
     val serviceModel: String,
-    @Schema(description = "页面动作")
+    @Schema(title = "页面动作")
     val serviceEvent: String
 )

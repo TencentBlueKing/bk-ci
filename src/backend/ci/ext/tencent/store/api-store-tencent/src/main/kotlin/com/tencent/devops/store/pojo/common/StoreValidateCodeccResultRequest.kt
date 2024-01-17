@@ -30,18 +30,18 @@ package com.tencent.devops.store.pojo.common
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "校验codecc扫描结果请求报文体")
+@Schema(title = "校验codecc扫描结果请求报文体")
 data class StoreValidateCodeccResultRequest(
-    @Schema(description = "项目代码", required = true)
+    @Schema(title = "项目代码", required = true)
     val projectCode: String,
-    @Schema(description = "用户ID", required = true)
+    @Schema(title = "用户ID", required = true)
     val userId: String,
-    @Schema(description = "构建ID", required = true)
+    @Schema(title = "构建ID", required = true)
     val buildId: String,
-    @Schema(description = "组件代码", required = true)
+    @Schema(title = "组件代码", required = true)
     val storeCode: String,
-    @Schema(description = "组件类型", required = true)
+    @Schema(title = "组件类型", required = true)
     val storeType: StoreTypeEnum,
-    @Schema(description = "开发语言", required = true)
+    @Schema(title = "开发语言", required = true)
     val language: String
 )

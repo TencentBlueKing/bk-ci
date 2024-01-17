@@ -29,37 +29,37 @@ package com.tencent.devops.remotedev.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "工作空间搜索模型,为什么是list，因为支持同时匹配多个目标")
+@Schema(title = "工作空间搜索模型,为什么是list，因为支持同时匹配多个目标")
 data class WorkspaceSearch(
-    @Schema(description = "工作空间名称")
+    @Schema(title = "工作空间名称")
     val workspaceName: List<String>? = null,
-    @Schema(description = "工作空间备注名称")
+    @Schema(title = "工作空间备注名称")
     val displayName: List<String>? = null,
-    @Schema(description = "操作系统类型")
+    @Schema(title = "操作系统类型")
     val workspaceSystemType: List<WorkspaceSystemType>? = null,
-    @Schema(description = "工作空间状态")
+    @Schema(title = "工作空间状态")
     val status: List<WorkspaceStatus>? = null,
-    @Schema(description = "区域简称，SZ,NJ")
+    @Schema(title = "区域简称，SZ,NJ")
     var zoneShortName: List<String>? = null,
-    @Schema(description = "资源类型：M，L，XL，S")
+    @Schema(title = "资源类型：M，L，XL，S")
     val size: List<String>? = null,
-    @Schema(description = "工作空间对应的IP")
+    @Schema(title = "工作空间对应的IP")
     val ips: List<String>? = null,
-    @Schema(description = "云桌面对应的mac地址")
+    @Schema(title = "云桌面对应的mac地址")
     val macAddress: List<String>? = null,
-    @Schema(description = "拥有者_CN")
+    @Schema(title = "拥有者_CN")
     val ownerCN: List<String>? = null,
-    @Schema(description = "拥有者")
+    @Schema(title = "拥有者")
     val owner: List<String>? = null,
-    @Schema(description = "查看者_CN")
+    @Schema(title = "查看者_CN")
     val viewersCN: List<String>? = null,
-    @Schema(description = "查看者")
+    @Schema(title = "查看者")
     var viewers: List<String>? = null,
-    @Schema(description = "项目id")
+    @Schema(title = "项目id")
     var projectId: List<String>? = null,
-    @Schema(description = "协助工单，仅op有效")
+    @Schema(title = "协助工单，仅op有效")
     var expertSupId: List<Long>? = null,
-    @Schema(description = "是否模糊匹配，可以关闭，查询会更快。")
+    @Schema(title = "是否模糊匹配，可以关闭，查询会更快。")
     val onFuzzyMatch: Boolean = true
 ) {
     fun onlyNeedCheckWorkspace() = !needCheckDetail() &&

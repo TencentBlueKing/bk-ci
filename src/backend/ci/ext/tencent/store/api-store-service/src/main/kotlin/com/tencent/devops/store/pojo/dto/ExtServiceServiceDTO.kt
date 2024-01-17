@@ -30,6 +30,6 @@ package com.tencent.devops.store.pojo.dto
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class ExtServiceServiceDTO(
-    @Schema(description = "容器对应的service端口", required = true)
+    @Schema(title = "容器对应的service端口", required = true)
     val servicePort: Int
 )

@@ -29,13 +29,13 @@ package com.tencent.devops.remotedev.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "共享工作空间")
+@Schema(title = "共享工作空间")
 data class ShareWorkspace(
-    @Schema(description = "workspaceName")
+    @Schema(title = "workspaceName")
     val workspaceName: String,
-    @Schema(description = "共享用户")
+    @Schema(title = "共享用户")
     val sharedUser: List<String>,
-    @Schema(description = "操作类型，新增或删除")
+    @Schema(title = "操作类型，新增或删除")
     val opType: OpType
 ) {
     enum class OpType {

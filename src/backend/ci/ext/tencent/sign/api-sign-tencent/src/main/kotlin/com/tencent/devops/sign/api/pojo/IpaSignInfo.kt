@@ -29,52 +29,52 @@ package com.tencent.devops.sign.api.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "IpaSignInfo-IPA包签名信息")
+@Schema(title = "IpaSignInfo-IPA包签名信息")
 data class IpaSignInfo(
-    @Schema(description = "操作用户", required = true)
+    @Schema(title = "操作用户", required = true)
     var userId: String = "",
-    @Schema(description = "是否采用通配符重签", required = true)
+    @Schema(title = "是否采用通配符重签", required = true)
     var wildcard: Boolean = true,
-    @Schema(description = "文件名称", required = true)
+    @Schema(title = "文件名称", required = true)
     var fileName: String = "",
-    @Schema(description = "文件大小", required = false)
+    @Schema(title = "文件大小", required = false)
     var fileSize: Long = 0L,
-    @Schema(description = "文件MD5", required = false)
+    @Schema(title = "文件MD5", required = false)
     var md5: String = "",
-    @Schema(description = "证书ID", required = false)
+    @Schema(title = "证书ID", required = false)
     var certId: String = "",
-    @Schema(description = "归档类型(PIPELINE|CUSTOM)", required = false)
+    @Schema(title = "归档类型(PIPELINE|CUSTOM)", required = false)
     var archiveType: String = "PIPELINE",
-    @Schema(description = "项目ID", required = false)
+    @Schema(title = "项目ID", required = false)
     var projectId: String = "",
-    @Schema(description = "流水线ID", required = false)
+    @Schema(title = "流水线ID", required = false)
     var pipelineId: String? = null,
-    @Schema(description = "构建ID", required = false)
+    @Schema(title = "构建ID", required = false)
     var buildId: String? = null,
-    @Schema(description = "构建号", required = false)
+    @Schema(title = "构建号", required = false)
     var buildNum: Int? = null,
-    @Schema(description = "任务ID", required = false)
+    @Schema(title = "任务ID", required = false)
     var taskId: String? = null,
-    @Schema(description = "结果文件名后缀", required = false)
+    @Schema(title = "结果文件名后缀", required = false)
     var resultSuffix: String? = "_enterprise_sign",
-    @Schema(description = "归档路径", required = false)
+    @Schema(title = "归档路径", required = false)
     var archivePath: String? = "/",
-    @Schema(description = "主App描述文件ID", required = false)
+    @Schema(title = "主App描述文件ID", required = false)
     var mobileProvisionId: String? = null,
-    @Schema(description = "Universal Link的设置", required = false)
+    @Schema(title = "Universal Link的设置", required = false)
     var universalLinks: List<String>? = null,
-    @Schema(description = "安全应用组，应为securityApplicationGroupList", required = false)
+    @Schema(title = "安全应用组，应为securityApplicationGroupList", required = false)
     var keychainAccessGroups: List<String>? = null,
-    @Schema(description = "是否替换bundleId", required = false)
+    @Schema(title = "是否替换bundleId", required = false)
     var replaceBundleId: Boolean? = false,
-    @Schema(description = "拓展应用名和对应的描述文件ID", required = false)
+    @Schema(title = "拓展应用名和对应的描述文件ID", required = false)
     var appexSignInfo: List<AppexSignInfo>? = null,
-    @Schema(description = "待替换的plist信息", required = false)
+    @Schema(title = "待替换的plist信息", required = false)
     var replaceKeyList: Map<String, String>? = null,
-    @Schema(description = "指定xcode签名工具版本", required = false)
+    @Schema(title = "指定xcode签名工具版本", required = false)
     var codeSignVersion: String? = null,
-    @Schema(description = "codesign插件额外参数", required = false)
+    @Schema(title = "codesign插件额外参数", required = false)
     var codesignExternalStr: String? = null,
-    @Schema(description = "钥匙串访问组", required = false)
+    @Schema(title = "钥匙串访问组", required = false)
     var keychainAccessGroupList: List<String>? = null
 )

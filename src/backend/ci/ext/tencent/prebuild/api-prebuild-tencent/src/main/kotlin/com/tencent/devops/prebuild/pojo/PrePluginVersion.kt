@@ -30,16 +30,16 @@ package com.tencent.devops.prebuild.pojo
 import com.tencent.devops.prebuild.pojo.enums.PreBuildPluginType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "prebuild插件版本")
+@Schema(title = "prebuild插件版本")
 data class PrePluginVersion(
-    @Schema(description = "插件版本")
+    @Schema(title = "插件版本")
     val version: String,
-    @Schema(description = "插件更新时间")
+    @Schema(title = "插件更新时间")
     val updateTime: String,
-    @Schema(description = "插件更新人")
+    @Schema(title = "插件更新人")
     val modifyUser: String,
-    @Schema(description = "插件更新内容")
+    @Schema(title = "插件更新内容")
     val desc: String,
-    @Schema(description = "插件类型")
+    @Schema(title = "插件类型")
     val pluginType: PreBuildPluginType
 )

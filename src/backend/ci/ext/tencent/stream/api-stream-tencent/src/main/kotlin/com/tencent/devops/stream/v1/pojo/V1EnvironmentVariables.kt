@@ -29,14 +29,14 @@ package com.tencent.devops.stream.v1.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "环境变量")
+@Schema(title = "环境变量")
 data class V1EnvironmentVariables(
-    @Schema(description = "name")
+    @Schema(title = "name")
     val name: String,
-    @Schema(description = "value")
+    @Schema(title = "value")
     val value: String,
-    @Schema(description = "branch")
+    @Schema(title = "branch")
     val branch: String?,
-    @Schema(description = "display value in build log")
+    @Schema(title = "display value in build log")
     val display: Boolean
 )

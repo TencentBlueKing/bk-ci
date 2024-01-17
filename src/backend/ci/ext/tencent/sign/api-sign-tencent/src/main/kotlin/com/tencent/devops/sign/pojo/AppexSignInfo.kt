@@ -29,10 +29,10 @@ package com.tencent.devops.sign.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "项目信息")
+@Schema(title = "项目信息")
 data class AppexSignInfo(
-    @Schema(description = "appex拓展应用名", required = true)
+    @Schema(title = "appex拓展应用名", required = true)
     val appexName: String,
-    @Schema(description = "对应证书ID", required = true)
+    @Schema(title = "对应证书ID", required = true)
     val certId: String
 )

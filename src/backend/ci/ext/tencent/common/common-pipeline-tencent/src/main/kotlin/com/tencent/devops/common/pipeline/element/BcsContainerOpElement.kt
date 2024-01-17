@@ -33,51 +33,51 @@ import com.tencent.devops.common.pipeline.element.bcs.KeyValue
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "BCS容器部署-研发、测试")
+@Schema(title = "BCS容器部署-研发、测试")
 data class BcsContainerOpElement(
-    @Schema(description = "任务名称", required = true)
+    @Schema(title = "任务名称", required = true)
     override val name: String = "执行job作业",
-    @Schema(description = "id", required = false)
+    @Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(description = "状态", required = false)
+    @Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(description = "关联CC业务Id", required = true)
+    @Schema(title = "关联CC业务Id", required = true)
     val ccAppId: String = "",
-    @Schema(description = "操作类型(包括：create,recreate,scale,rollingupdate,delete)", required = true)
+    @Schema(title = "操作类型(包括：create,recreate,scale,rollingupdate,delete)", required = true)
     val opType: String = "",
         // 其他操作参数
-    @Schema(description = "对象类型(包含k8s: DaemonSet/Job/Deployment/StatefulSet/,mesos: Application/Deployment)", required = false)
+    @Schema(title = "对象类型(包含k8s: DaemonSet/Job/Deployment/StatefulSet/,mesos: Application/Deployment)", required = false)
     val category: String?,
-    @Schema(description = "超时时间(minutes)", required = false)
+    @Schema(title = "超时时间(minutes)", required = false)
     val timeout: Int = 8,
 
         // 创建类参数
-    @Schema(description = "集群ID", required = false)
+    @Schema(title = "集群ID", required = false)
     val clusterId: String?,
-    @Schema(description = "模板ID", required = false)
+    @Schema(title = "模板ID", required = false)
     val musterId: String?,
-    @Schema(description = "版本ID", required = false)
+    @Schema(title = "版本ID", required = false)
     val versionId: String?,
-    @Schema(description = "展示的版本ID", required = false)
+    @Schema(title = "展示的版本ID", required = false)
     val showVersionId: String?,
-    @Schema(description = "展示版本名称", required = false)
+    @Schema(title = "展示版本名称", required = false)
     val showVersionName: String?,
-    @Schema(description = "模板详细信息", required = false)
+    @Schema(title = "模板详细信息", required = false)
     val instanceEntity: String?,
-    @Schema(description = "模板详细信息", required = false)
+    @Schema(title = "模板详细信息", required = false)
     val namespaceVar: List<BcsNamespaceVar>?,
 
-    @Schema(description = "应用实例名称", required = false)
+    @Schema(title = "应用实例名称", required = false)
     val bcsAppInstName: String?,
-    @Schema(description = "应用实例ID", required = false)
+    @Schema(title = "应用实例ID", required = false)
     val bcsInstNum: Int?,
-    @Schema(description = "应用实例名称", required = false)
+    @Schema(title = "应用实例名称", required = false)
     val instVersionId: String?,
-    @Schema(description = "应用实例ID", required = false)
+    @Schema(title = "应用实例ID", required = false)
     val bcsAppInstId: String?,
 
         // 公共参数
-    @Schema(description = "命名空间以及变量", required = false)
+    @Schema(title = "命名空间以及变量", required = false)
     val instVar: List<KeyValue>?
 
 ) : Element(name, id, status) {

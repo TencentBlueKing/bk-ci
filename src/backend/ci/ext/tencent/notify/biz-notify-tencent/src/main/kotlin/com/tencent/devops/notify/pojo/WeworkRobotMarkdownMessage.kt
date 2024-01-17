@@ -29,7 +29,7 @@ package com.tencent.devops.notify.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "企业微信机器人Markdown消息")
+@Schema(title = "企业微信机器人Markdown消息")
 data class WeworkRobotMarkdownMessage(
     override val chatid: String?,
     override val postId: String?,

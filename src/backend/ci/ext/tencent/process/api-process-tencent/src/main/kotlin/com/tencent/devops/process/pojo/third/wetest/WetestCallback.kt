@@ -29,30 +29,30 @@ package com.tencent.devops.process.pojo.third.wetest
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "wetest 回调模型")
+@Schema(title = "wetest 回调模型")
 data class WetestCallback(
-    @Schema(description = "相当于projectId", required = true)
+    @Schema(title = "相当于projectId", required = true)
     val productID: String,
-    @Schema(description = "wetest的jobID", required = true)
+    @Schema(title = "wetest的jobID", required = true)
     val jobID: String,
-    @Schema(description = "buildID", required = true)
+    @Schema(title = "buildID", required = true)
     val buildID: String,
-    @Schema(description = "wetest的taskID", required = true)
+    @Schema(title = "wetest的taskID", required = true)
     val taskID: String,
-    @Schema(description = "wetest的sodaID，相当于pipelineId,", required = true)
+    @Schema(title = "wetest的sodaID，相当于pipelineId,", required = true)
     val sodaId: String,
-    @Schema(description = "result_quality", required = false)
+    @Schema(title = "result_quality", required = false)
     val resultQuality: String,
-    @Schema(description = "result_devnum", required = false)
+    @Schema(title = "result_devnum", required = false)
     val resultDevNum: String,
-    @Schema(description = "result_Rate", required = false)
+    @Schema(title = "result_Rate", required = false)
     val resultRate: String,
-    @Schema(description = "result_Problems", required = false)
+    @Schema(title = "result_Problems", required = false)
     val resultProblems: String,
-    @Schema(description = "result_Serious", required = false)
+    @Schema(title = "result_Serious", required = false)
     val resultSerious: String,
-    @Schema(description = "starttime", required = false)
+    @Schema(title = "starttime", required = false)
     val startTime: String,
-    @Schema(description = "endtime", required = false)
+    @Schema(title = "endtime", required = false)
     val endTime: String
 )

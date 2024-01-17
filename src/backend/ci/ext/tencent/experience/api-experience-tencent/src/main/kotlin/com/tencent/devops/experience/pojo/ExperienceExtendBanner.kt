@@ -29,16 +29,16 @@ package com.tencent.devops.experience.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "扩展banner图")
+@Schema(title = "扩展banner图")
 data class ExperienceExtendBanner(
-    @Schema(description = "配置的BannerURL", required = true)
+    @Schema(title = "配置的BannerURL", required = true)
     val bannerUrl: String?,
-    @Schema(description = "banner类型", required = true)
+    @Schema(title = "banner类型", required = true)
     val type: Int?,
-    @Schema(description = "跳转链接", required = true)
+    @Schema(title = "跳转链接", required = true)
     val link: String?,
-    @Schema(description = "是否上线", required = true)
+    @Schema(title = "是否上线", required = true)
     val online: Boolean?,
-    @Schema(description = "过期时间", required = true)
+    @Schema(title = "过期时间", required = true)
     val endTime: Long?
 )

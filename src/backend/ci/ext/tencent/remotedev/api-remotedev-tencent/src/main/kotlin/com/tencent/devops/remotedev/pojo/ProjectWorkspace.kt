@@ -30,48 +30,48 @@ package com.tencent.devops.remotedev.pojo
 import com.tencent.devops.remotedev.pojo.expert.FetchSupportResp
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "工作空间信息")
+@Schema(title = "工作空间信息")
 data class ProjectWorkspace(
-    @Schema(description = "工作空间ID<只读>", readOnly = true)
+    @Schema(title = "工作空间ID<只读>", readOnly = true)
     override val workspaceId: Long?,
-    @Schema(description = "工作空间名称")
+    @Schema(title = "工作空间名称")
     override val workspaceName: String,
-    @Schema(description = "项目ID")
+    @Schema(title = "项目ID")
     override val projectId: String?,
-    @Schema(description = "工作空间备注名称")
+    @Schema(title = "工作空间备注名称")
     override val displayName: String? = null,
-    @Schema(description = "工作空间状态<只读>", readOnly = true)
+    @Schema(title = "工作空间状态<只读>", readOnly = true)
     override val status: WorkspaceStatus? = null,
-    @Schema(description = "状态最近更新时间<只读>", readOnly = true)
+    @Schema(title = "状态最近更新时间<只读>", readOnly = true)
     override val lastStatusUpdateTime: Long? = null,
-    @Schema(description = "休眠时间<只读>", readOnly = true)
+    @Schema(title = "休眠时间<只读>", readOnly = true)
     override val sleepingTime: Long? = null,
-    @Schema(description = "工作空间创建人<只读>", readOnly = true)
+    @Schema(title = "工作空间创建人<只读>", readOnly = true)
     override val createUserId: String,
-    @Schema(description = "工作空间对应的IP")
+    @Schema(title = "工作空间对应的IP")
     override val hostName: String? = null,
-    @Schema(description = "挂载平台类型")
+    @Schema(title = "挂载平台类型")
     override val workspaceMountType: WorkspaceMountType,
-    @Schema(description = "操作系统类型")
+    @Schema(title = "操作系统类型")
     override val workspaceSystemType: WorkspaceSystemType,
-    @Schema(description = "windows 资源配置")
+    @Schema(title = "windows 资源配置")
     override val winConfig: WindowsResourceTypeConfig? = null,
-    @Schema(description = "拥有者")
+    @Schema(title = "拥有者")
     override val owner: String? = null,
-    @Schema(description = "拥有者_CN")
+    @Schema(title = "拥有者_CN")
     override val ownerCN: String? = null,
-    @Schema(description = "查看者")
+    @Schema(title = "查看者")
     override val viewers: List<String>? = emptyList(),
-    @Schema(description = "查看者_CN")
+    @Schema(title = "查看者_CN")
     override val viewersCN: List<String>? = emptyList(),
     override val gpu: Int = 0,
     override val cpu: Int = 8,
     override val memory: Int = 32,
     override val disk: Int = 100,
-    @Schema(description = "windows 地域配置")
+    @Schema(title = "windows 地域配置")
     val zoneConfig: WindowsResourceZoneConfig? = null,
-    @Schema(description = "专家协助")
+    @Schema(title = "专家协助")
     val expertSupportList: List<FetchSupportResp>?,
-    @Schema(description = "云桌面对应的mac地址")
+    @Schema(title = "云桌面对应的mac地址")
     val macAddress: String? = null
 ) : IWorkspace

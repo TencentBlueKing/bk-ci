@@ -29,10 +29,10 @@ package com.tencent.devops.project.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "用户PreBuild节点")
+@Schema(title = "用户PreBuild节点")
 data class UserNode(
-    @Schema(description = "IP")
+    @Schema(title = "IP")
     val ip: String,
-    @Schema(description = "密码")
+    @Schema(title = "密码")
     val pwd: String
 )

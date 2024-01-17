@@ -29,44 +29,44 @@ package com.tencent.devops.lambda.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "构建详情")
+@Schema(title = "构建详情")
 data class DataPlatBuildDetail(
-    @Schema(description = "清洗时间", required = false)
+    @Schema(title = "清洗时间", required = false)
     val washTime: String,
-    @Schema(description = "构建ID", required = true)
+    @Schema(title = "构建ID", required = true)
     val buildId: String,
-    @Schema(description = "模板ID", required = true)
+    @Schema(title = "模板ID", required = true)
     val templateId: String,
-    @Schema(description = "事业群名称", required = true)
+    @Schema(title = "事业群名称", required = true)
     val bgName: String,
-    @Schema(description = "部门名称", required = true)
+    @Schema(title = "部门名称", required = true)
     val deptName: String,
-    @Schema(description = "中心名称", required = true)
+    @Schema(title = "中心名称", required = true)
     val centerName: String,
-    @Schema(description = "项目ID", required = true)
+    @Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(description = "流水线ID", required = true)
+    @Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(description = "构建号", required = false)
+    @Schema(title = "构建号", required = false)
     val buildNum: Int?,
-    @Schema(description = "是否保密项目", required = false)
+    @Schema(title = "是否保密项目", required = false)
     val isSecrecy: Boolean?,
-    @Schema(description = "构建详情", required = true)
+    @Schema(title = "构建详情", required = true)
     val model: String,
-    @Schema(description = "构建触发人", required = false)
+    @Schema(title = "构建触发人", required = false)
     val startUser: String?,
-    @Schema(description = "出发方式", required = false)
+    @Schema(title = "出发方式", required = false)
     val trigger: String?,
-    @Schema(description = "启动时间", required = false)
+    @Schema(title = "启动时间", required = false)
     val startTime: String,
-    @Schema(description = "结束时间", required = false)
+    @Schema(title = "结束时间", required = false)
     val endTime: String?,
-    @Schema(description = "构建状态", required = false)
+    @Schema(title = "构建状态", required = false)
     val status: String?,
-    @Schema(description = "事业群ID", required = false)
+    @Schema(title = "事业群ID", required = false)
     val bgId: String,
-    @Schema(description = "部门ID", required = false)
+    @Schema(title = "部门ID", required = false)
     val deptId: String,
-    @Schema(description = "中心ID", required = false)
+    @Schema(title = "中心ID", required = false)
     val centerId: String
 )

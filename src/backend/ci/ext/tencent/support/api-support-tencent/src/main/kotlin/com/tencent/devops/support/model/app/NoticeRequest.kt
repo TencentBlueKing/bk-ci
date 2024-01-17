@@ -29,16 +29,16 @@ package com.tencent.devops.support.model.app
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "公告请求报文体")
+@Schema(title = "公告请求报文体")
 data class NoticeRequest(
-    @Schema(description = "公告标题")
+    @Schema(title = "公告标题")
     val noticeTitle: String = "",
-    @Schema(description = "生效日期")
+    @Schema(title = "生效日期")
     val effectDate: Long = 0,
-    @Schema(description = "失效日期")
+    @Schema(title = "失效日期")
     val invalidDate: Long = 0,
-    @Schema(description = "公告内容")
+    @Schema(title = "公告内容")
     val noticeContent: String = "",
-    @Schema(description = "跳转地址")
+    @Schema(title = "跳转地址")
     val redirectUrl: String = ""
 )

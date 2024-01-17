@@ -29,24 +29,24 @@ package com.tencent.devops.dispatch.devcloud.pojo.persistence
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "DevCloud持久化容器构建信息")
+@Schema(title = "DevCloud持久化容器构建信息")
 data class PersistenceBuildInfo(
-    @Schema(description = "项目id")
+    @Schema(title = "项目id")
     val projectId: String,
-    @Schema(description = "构建id")
+    @Schema(title = "构建id")
     val buildId: String,
-    @Schema(description = "构建机编排序号")
+    @Schema(title = "构建机编排序号")
     val vmSeqId: String,
-    @Schema(description = "工作空间")
+    @Schema(title = "工作空间")
     val workspace: String,
-    @Schema(description = "流水线ID")
+    @Schema(title = "流水线ID")
     val pipelineId: String?,
-    @Schema(description = "agentId")
+    @Schema(title = "agentId")
     val agentId: String,
-    @Schema(description = "secretKey")
+    @Schema(title = "secretKey")
     val secretKey: String,
-    @Schema(description = "流水线执行次数")
+    @Schema(title = "流水线执行次数")
     val executeCount: Int?,
-    @Schema(description = "容器hashId日志使用")
+    @Schema(title = "容器hashId日志使用")
     val containerHashId: String?
 )

@@ -30,18 +30,18 @@ package com.tencent.devops.prebuild.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 import com.tencent.devops.common.api.pojo.OS
 
-@Schema(description = "启动构建参数")
+@Schema(title = "启动构建参数")
 data class StartUpReq(
-    @Schema(description = "workspace", required = true)
+    @Schema(title = "workspace", required = true)
     val workspace: String,
-    @Schema(description = "yaml", required = true)
+    @Schema(title = "yaml", required = true)
     val yaml: String,
-    @Schema(description = "os", required = true)
+    @Schema(title = "os", required = true)
     val os: OS,
-    @Schema(description = "ip", required = true)
+    @Schema(title = "ip", required = true)
     val ip: String,
-    @Schema(description = "hostname", required = true)
+    @Schema(title = "hostname", required = true)
     val hostname: String,
-    @Schema(description = "extraParam", required = false)
+    @Schema(title = "extraParam", required = false)
     val extraParam: ExtraParam?
 )

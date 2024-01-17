@@ -39,60 +39,60 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import io.swagger.v3.oas.annotations.media.Schema
 
 // 该类提供给前端页面使用
-@Schema(description = "工蜂触发请求Req")
+@Schema(title = "工蜂触发请求Req")
 data class V1GitRequestEventReq(
-    @Schema(description = "ID")
+    @Schema(title = "ID")
     var id: Long?,
     // TODO: 开源版时将不同仓库的事件类型使用统一的Stream Action做映射来判断，存储。
-    @Schema(description = "事件类型")
+    @Schema(title = "事件类型")
     val objectKind: String,
-    @Schema(description = "操作类型")
+    @Schema(title = "操作类型")
     val operationKind: String?,
     // 对于Push是action对于Mr是extension
-    @Schema(description = "拓展操作")
+    @Schema(title = "拓展操作")
     val extensionAction: String?,
-    @Schema(description = "工蜂项目ID")
+    @Schema(title = "工蜂项目ID")
     val gitProjectId: Long,
-    @Schema(description = "源工蜂项目ID")
+    @Schema(title = "源工蜂项目ID")
     val sourceGitProjectId: Long?,
-    @Schema(description = "分支名")
+    @Schema(title = "分支名")
     val branch: String,
-    @Schema(description = "目标分支名")
+    @Schema(title = "目标分支名")
     val targetBranch: String?,
-    @Schema(description = "提交ID")
+    @Schema(title = "提交ID")
     val commitId: String,
-    @Schema(description = "提交说明")
+    @Schema(title = "提交说明")
     val commitMsg: String?,
-    @Schema(description = "提交时间")
+    @Schema(title = "提交时间")
     val commitTimeStamp: String?,
     // 目前只在上下文中传递，后续看需求是否保存至数据库
-    @Schema(description = "提交用户")
+    @Schema(title = "提交用户")
     val commitAuthorName: String?,
-    @Schema(description = "用户")
+    @Schema(title = "用户")
     val userId: String,
-    @Schema(description = "提交总数")
+    @Schema(title = "提交总数")
     val totalCommitCount: Long,
     // todo: 这里保存的是MR 的 iid 不是 mrId
-    @Schema(description = "合并请求ID")
+    @Schema(title = "合并请求ID")
     val mergeRequestId: Long?,
-    @Schema(description = "描述（已废弃）")
+    @Schema(title = "描述（已废弃）")
     var description: String?,
-    @Schema(description = "合并请求标题")
+    @Schema(title = "合并请求标题")
     var mrTitle: String?,
     // TODO: 后续修改统一参数时可以将GitEvent统一放在这里维护
-    @Schema(description = "Git事件对象")
+    @Schema(title = "Git事件对象")
     var gitEvent: GitEvent?,
-    @Schema(description = "是否是删除分支触发")
+    @Schema(title = "是否是删除分支触发")
     val deleteBranch: Boolean,
-    @Schema(description = "是否是删除Tag触发")
+    @Schema(title = "是否是删除Tag触发")
     val deleteTag: Boolean,
-    @Schema(description = "评论Id")
+    @Schema(title = "评论Id")
     var noteId: Long?,
-    @Schema(description = "评论连接")
+    @Schema(title = "评论连接")
     var jumpUrl: String?,
-    @Schema(description = "构建标题")
+    @Schema(title = "构建标题")
     var buildTitle: String?,
-    @Schema(description = "构建跳转显示信息")
+    @Schema(title = "构建跳转显示信息")
     var buildSource: String?
 ) {
     constructor(gitRequestEvent: V1GitRequestEvent) : this(

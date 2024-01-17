@@ -31,14 +31,14 @@ import com.tencent.devops.store.pojo.enums.ServiceTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class UpdateSettingInfo(
-    @Schema(description = "扩展服务类型：0：官方自研，1：第三方", required = true)
+    @Schema(title = "扩展服务类型：0：官方自研，1：第三方", required = true)
     val type: ServiceTypeEnum? = ServiceTypeEnum.SELF_DEVELOPED,
-    @Schema(description = "是否公共", required = true)
+    @Schema(title = "是否公共", required = true)
     val publicFlag: Boolean?,
-    @Schema(description = "是否推荐", required = true)
+    @Schema(title = "是否推荐", required = true)
     val recommendFlag: Boolean?,
-    @Schema(description = "是否官方认证", required = true)
+    @Schema(title = "是否官方认证", required = true)
     val certificationFlag: Boolean?,
-    @Schema(description = "权重", required = true)
+    @Schema(title = "权重", required = true)
     val weight: Int?
 )

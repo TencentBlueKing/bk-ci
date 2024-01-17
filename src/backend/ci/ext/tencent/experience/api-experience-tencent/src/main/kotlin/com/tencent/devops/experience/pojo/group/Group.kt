@@ -29,18 +29,18 @@ package com.tencent.devops.experience.pojo.group
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "版本体验-体验组信息")
+@Schema(title = "版本体验-体验组信息")
 data class Group(
-    @Schema(description = "体验组HashID", required = true)
+    @Schema(title = "体验组HashID", required = true)
     val groupHashId: String,
-    @Schema(description = "体验组名称", required = true)
+    @Schema(title = "体验组名称", required = true)
     val name: String,
-    @Schema(description = "内部人员")
+    @Schema(title = "内部人员")
     val innerUsers: Set<String>,
-    @Schema(description = "外部人员")
+    @Schema(title = "外部人员")
     val outerUsers: Set<String>,
-    @Schema(description = "组织架构")
+    @Schema(title = "组织架构")
     val depts: Set<String>,
-    @Schema(description = "描述")
+    @Schema(title = "描述")
     val remark: String?
 )

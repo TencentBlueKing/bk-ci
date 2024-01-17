@@ -30,39 +30,39 @@ package com.tencent.devops.common.pipeline.element
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "GCloud-puffer-动态资源更新(IEG专用)")
+@Schema(title = "GCloud-puffer-动态资源更新(IEG专用)")
 data class GcloudPufferElement(
-    @Schema(description = "任务名称", required = true)
+    @Schema(title = "任务名称", required = true)
     override val name: String = "GCLOUD-创建APP原子",
-    @Schema(description = "id", required = false)
+    @Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(description = "状态", required = false)
+    @Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(description = "环境配置id", required = true)
+    @Schema(title = "环境配置id", required = true)
     var configId: String,
-    @Schema(description = "游戏ID", required = true)
+    @Schema(title = "游戏ID", required = true)
     var gameId: String,
-    @Schema(description = "accessId && accessKey 的ticket id", required = true)
+    @Schema(title = "accessId && accessKey 的ticket id", required = true)
     var ticketId: String,
-    @Schema(description = "上传文件的accessId && accessKey 的ticket id", required = false)
+    @Schema(title = "上传文件的accessId && accessKey 的ticket id", required = false)
     var fileTicketId: String?,
-    @Schema(description = "渠道 ID", required = true)
+    @Schema(title = "渠道 ID", required = true)
     var productId: String,
-    @Schema(description = "资源版本号，格式同 IPv4 点分十进制格式，如 3.3.3.3", required = true)
+    @Schema(title = "资源版本号，格式同 IPv4 点分十进制格式，如 3.3.3.3", required = true)
     var resourceVersion: String,
-    @Schema(description = "资源名称", required = true)
+    @Schema(title = "资源名称", required = true)
     var resourceName: String,
-    @Schema(description = "CDN 是否使用 HTTPS, 可选值 0/1", required = false)
+    @Schema(title = "CDN 是否使用 HTTPS, 可选值 0/1", required = false)
     var https: String?,
-    @Schema(description = "文件路径，支持正则表达式(不支持逗号分隔多个文件)", required = true)
+    @Schema(title = "文件路径，支持正则表达式(不支持逗号分隔多个文件)", required = true)
     var filePath: String,
-    @Schema(description = "文件来源（PIPELINE-流水线仓库、CUSTOMIZE-自定义仓库）", required = true)
+    @Schema(title = "文件来源（PIPELINE-流水线仓库、CUSTOMIZE-自定义仓库）", required = true)
     var fileSource: String,
-    @Schema(description = "版本标签(0: 不可用，1：正式版本, 2：审核版本）", required = true)
+    @Schema(title = "版本标签(0: 不可用，1：正式版本, 2：审核版本）", required = true)
     var versionType: String,
-    @Schema(description = "版本描述", required = false)
+    @Schema(title = "版本描述", required = false)
     var versionDes: String?,
-    @Schema(description = "自定义字符串", required = false)
+    @Schema(title = "自定义字符串", required = false)
     var customStr: String?
 ) : Element(name, id, status) {
     companion object {

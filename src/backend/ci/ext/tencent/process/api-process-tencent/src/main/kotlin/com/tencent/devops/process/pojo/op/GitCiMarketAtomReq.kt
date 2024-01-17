@@ -29,10 +29,10 @@ package com.tencent.devops.process.pojo.op
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "工蜂CI支持的插件,新增接口参数")
+@Schema(title = "工蜂CI支持的插件,新增接口参数")
 data class GitCiMarketAtomReq(
-    @Schema(description = "插件code", required = true)
+    @Schema(title = "插件code", required = true)
     val atomCodeList: List<String>,
-    @Schema(description = "描述")
+    @Schema(title = "描述")
     val desc: String?
 )

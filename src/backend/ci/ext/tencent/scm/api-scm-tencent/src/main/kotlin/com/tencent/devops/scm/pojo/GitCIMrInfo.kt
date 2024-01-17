@@ -70,39 +70,39 @@ import io.swagger.v3.oas.annotations.media.Schema
 }
 * */
 
-@Schema(description = "git mr信息")
+@Schema(title = "git mr信息")
 data class GitCIMrInfo(
     val title: String = "",
     @JsonProperty("target_project_id")
-    @Schema(description = "target_project_id")
+    @Schema(title = "target_project_id")
     val targetProjectId: String = "",
     @JsonProperty("target_branch")
-    @Schema(description = "target_branch")
+    @Schema(title = "target_branch")
     val targetBranch: String? = "",
     @JsonProperty("source_project_id")
-    @Schema(description = "source_project_id")
+    @Schema(title = "source_project_id")
     val sourceProjectId: String? = "",
     @JsonProperty("source_branch")
-    @Schema(description = "source_branch")
+    @Schema(title = "source_branch")
     val sourceBranch: String? = "",
     @JsonProperty("created_at")
-    @Schema(description = "created_at")
+    @Schema(title = "created_at")
     val createTime: String? = "",
     @JsonProperty("updated_at")
-    @Schema(description = "updated_at")
+    @Schema(title = "updated_at")
     val updateTime: String? = "",
     @JsonProperty("iid")
-    @Schema(description = "iid")
+    @Schema(title = "iid")
     val mrNumber: String = "",
     @JsonProperty("id")
-    @Schema(description = "id")
+    @Schema(title = "id")
     val mrId: String = "",
     @JsonProperty("merge_status")
-    @Schema(description = "merge_status")
+    @Schema(title = "merge_status")
     val mergeStatus: String = "",
     val labels: List<String>,
     val description: String? = "",
     @JsonProperty("base_commit")
-    @Schema(description = "base_commit")
+    @Schema(title = "base_commit")
     val baseCommit: String?
 )

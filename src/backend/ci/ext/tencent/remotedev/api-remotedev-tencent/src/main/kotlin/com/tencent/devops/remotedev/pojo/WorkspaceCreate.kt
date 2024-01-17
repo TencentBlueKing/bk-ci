@@ -29,25 +29,25 @@ package com.tencent.devops.remotedev.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "工作空间信息-创建")
+@Schema(title = "工作空间信息-创建")
 data class WorkspaceCreate(
-    @Schema(description = "远程开发仓库地址")
+    @Schema(title = "远程开发仓库地址")
     val repositoryUrl: String,
-    @Schema(description = "仓库分支")
+    @Schema(title = "仓库分支")
     val branch: String,
-    @Schema(description = "devfile配置路径")
+    @Schema(title = "devfile配置路径")
     var devFilePath: String?,
-    @Schema(description = "工作空间模板ID")
+    @Schema(title = "工作空间模板ID")
     val wsTemplateId: Int?,
-    @Schema(description = "是否使用官方devfile")
+    @Schema(title = "是否使用官方devfile")
     val useOfficialDevfile: Boolean?,
-    @Schema(description = "当前运行客户端的OS")
+    @Schema(title = "当前运行客户端的OS")
     val currentOS: String?,
-    @Schema(description = "windows 配置id")
+    @Schema(title = "windows 配置id")
     @Deprecated("not use")
     val windowsResourceConfigId: Int?,
-    @Schema(description = "windows 配置")
+    @Schema(title = "windows 配置")
     val windowsType: String?,
-    @Schema(description = "云桌面 地域")
+    @Schema(title = "云桌面 地域")
     val windowsZone: String?
 )

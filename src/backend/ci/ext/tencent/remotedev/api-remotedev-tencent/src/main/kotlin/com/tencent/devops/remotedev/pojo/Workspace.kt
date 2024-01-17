@@ -52,66 +52,66 @@ interface IWorkspace {
     val disk: Int
 }
 
-@Schema(description = "工作空间信息")
+@Schema(title = "工作空间信息")
 data class Workspace(
-    @Schema(description = "工作空间ID<只读>", readOnly = true)
+    @Schema(title = "工作空间ID<只读>", readOnly = true)
     override val workspaceId: Long?,
-    @Schema(description = "工作空间名称")
+    @Schema(title = "工作空间名称")
     override val workspaceName: String,
-    @Schema(description = "项目ID")
+    @Schema(title = "项目ID")
     override val projectId: String?,
-    @Schema(description = "工作空间备注名称")
+    @Schema(title = "工作空间备注名称")
     override val displayName: String? = null,
-    @Schema(description = "工作空间状态<只读>", readOnly = true)
+    @Schema(title = "工作空间状态<只读>", readOnly = true)
     override val status: WorkspaceStatus? = null,
-    @Schema(description = "状态最近更新时间<只读>", readOnly = true)
+    @Schema(title = "状态最近更新时间<只读>", readOnly = true)
     override val lastStatusUpdateTime: Long? = null,
-    @Schema(description = "休眠时间<只读>", readOnly = true)
+    @Schema(title = "休眠时间<只读>", readOnly = true)
     override val sleepingTime: Long? = null,
-    @Schema(description = "工作空间创建人<只读>", readOnly = true)
+    @Schema(title = "工作空间创建人<只读>", readOnly = true)
     override val createUserId: String,
-    @Schema(description = "工作空间拥有人<只读>", readOnly = true)
+    @Schema(title = "工作空间拥有人<只读>", readOnly = true)
     override val owner: String? = null,
-    @Schema(description = "工作空间拥有人CN<只读>", readOnly = true)
+    @Schema(title = "工作空间拥有人CN<只读>", readOnly = true)
     override val ownerCN: String? = null,
-    @Schema(description = "查看者")
+    @Schema(title = "查看者")
     override val viewers: List<String>? = null,
-    @Schema(description = "查看者_CN")
+    @Schema(title = "查看者_CN")
     override val viewersCN: List<String>? = null,
-    @Schema(description = "工作空间对应的IP")
+    @Schema(title = "工作空间对应的IP")
     override val hostName: String? = null,
-    @Schema(description = "挂载平台类型")
+    @Schema(title = "挂载平台类型")
     override val workspaceMountType: WorkspaceMountType,
-    @Schema(description = "操作系统类型")
+    @Schema(title = "操作系统类型")
     override val workspaceSystemType: WorkspaceSystemType,
-    @Schema(description = "windows 资源配置")
+    @Schema(title = "windows 资源配置")
     override val winConfig: WindowsResourceTypeConfig? = null,
     override val gpu: Int = 0,
     override val cpu: Int = 8,
     override val memory: Int = 32,
     override val disk: Int = 100,
-    @Schema(description = "windows 地域配置")
+    @Schema(title = "windows 地域配置")
     val zoneConfig: WindowsResourceZoneConfig? = null,
-    @Schema(description = "远程开发仓库地址")
+    @Schema(title = "远程开发仓库地址")
     val repositoryUrl: String? = null,
-    @Schema(description = "仓库分支")
+    @Schema(title = "仓库分支")
     val branch: String? = null,
-    @Schema(description = "devfile配置路径")
+    @Schema(title = "devfile配置路径")
     val devFilePath: String? = null,
-    @Schema(description = "devfile 内容")
+    @Schema(title = "devfile 内容")
     val yaml: String? = null,
-    @Schema(description = "工作空间模板ID")
+    @Schema(title = "工作空间模板ID")
     val wsTemplateId: Int? = null,
-    @Schema(description = "工作空间操作路径")
+    @Schema(title = "工作空间操作路径")
     val workPath: String? = null,
-    @Schema(description = "工作空间默认打开工程相对路径，默认根目录")
+    @Schema(title = "工作空间默认打开工程相对路径，默认根目录")
     val workspaceFolder: String? = null,
-    @Schema(description = "镜像id")
+    @Schema(title = "镜像id")
     val imageId: String = "",
-    @Schema(description = "工作空间归属")
+    @Schema(title = "工作空间归属")
     val ownerType: WorkspaceOwnerType,
-    @Schema(description = "当前用户在此工作空间分配的人员类型")
+    @Schema(title = "当前用户在此工作空间分配的人员类型")
     val assignType: WorkspaceShared.AssignType = WorkspaceShared.AssignType.OWNER,
-    @Schema(description = "windows资源配置id")
+    @Schema(title = "windows资源配置id")
     val winConfigId: Int? = null
 ) : IWorkspace

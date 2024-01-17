@@ -32,15 +32,15 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class BkAuthResourceDeleteRequest(
     @JsonProperty("project_code")
-    @Schema(description = "project_code")
+    @Schema(title = "project_code")
     val projectCode: String,
     @JsonProperty("service_code")
-    @Schema(description = "service_code")
+    @Schema(title = "service_code")
     val serviceCode: String,
     @JsonProperty("resource_code")
-    @Schema(description = "resource_code")
+    @Schema(title = "resource_code")
     val resourceCode: String,
     @JsonProperty("resource_type")
-    @Schema(description = "resource_type")
+    @Schema(title = "resource_type")
     val resourceType: String
 )

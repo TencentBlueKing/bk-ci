@@ -29,36 +29,36 @@ package com.tencent.devops.remotedev.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "获取指定工作空间详情model")
+@Schema(title = "获取指定工作空间详情model")
 data class WorkspaceDetail(
-    @Schema(description = "工作空间ID")
+    @Schema(title = "工作空间ID")
     val workspaceId: Long,
-    @Schema(description = "工作空间名称")
+    @Schema(title = "工作空间名称")
     val workspaceName: String,
-    @Schema(description = "工作空间备注名称")
+    @Schema(title = "工作空间备注名称")
     val displayName: String?,
-    @Schema(description = "工作空间状态")
+    @Schema(title = "工作空间状态")
     val status: WorkspaceStatus,
-    @Schema(description = "最近状态修改时间")
+    @Schema(title = "最近状态修改时间")
     val lastUpdateTime: Long,
-    @Schema(description = "计费时间（秒）")
+    @Schema(title = "计费时间（秒）")
     val chargeableTime: Long,
-    @Schema(description = "使用时间（秒）")
+    @Schema(title = "使用时间（秒）")
     val usageTime: Long,
-    @Schema(description = "休眠时间（秒）")
+    @Schema(title = "休眠时间（秒）")
     val sleepingTime: Long,
-    @Schema(description = "CPU 核心数")
+    @Schema(title = "CPU 核心数")
     val cpu: Int,
-    @Schema(description = "内存大小（MB）")
+    @Schema(title = "内存大小（MB）")
     val memory: Int,
-    @Schema(description = "存储空间大小（GB）")
+    @Schema(title = "存储空间大小（GB）")
     val disk: Int,
-    @Schema(description = "yaml 配置内容")
+    @Schema(title = "yaml 配置内容")
     val yaml: String?,
-    @Schema(description = "操作系统类型")
+    @Schema(title = "操作系统类型")
     val systemType: WorkspaceSystemType,
-    @Schema(description = "挂载平台类型")
+    @Schema(title = "挂载平台类型")
     val workspaceMountType: WorkspaceMountType,
-    @Schema(description = "工作空间归属")
+    @Schema(title = "工作空间归属")
     val ownerType: WorkspaceOwnerType
 )

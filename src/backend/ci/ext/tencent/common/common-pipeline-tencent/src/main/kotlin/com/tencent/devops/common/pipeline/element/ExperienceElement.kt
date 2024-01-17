@@ -30,33 +30,33 @@ package com.tencent.devops.common.pipeline.element
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "版本体验")
+@Schema(title = "版本体验")
 data class ExperienceElement(
-    @Schema(description = "任务名称", required = true)
+    @Schema(title = "任务名称", required = true)
     override val name: String = "转体验",
-    @Schema(description = "id", required = false, hidden = true)
+    @Schema(title = "id", required = false, hidden = true)
     override var id: String? = null,
-    @Schema(description = "状态", required = false)
+    @Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(description = "路径", required = true)
+    @Schema(title = "路径", required = true)
     val path: String = "",
-    @Schema(description = "是否自定义仓库", required = true)
+    @Schema(title = "是否自定义仓库", required = true)
     val customized: Boolean,
-    @Schema(description = "时间类型(ABSOLUTE, RELATIVE)", required = true)
+    @Schema(title = "时间类型(ABSOLUTE, RELATIVE)", required = true)
     val timeType: String = "ABSOLUTE",
-    @Schema(description = "结束时间(s)或者结束天数(day)", required = true)
+    @Schema(title = "结束时间(s)或者结束天数(day)", required = true)
     val expireDate: Long,
-    @Schema(description = "体验组", required = true)
+    @Schema(title = "体验组", required = true)
     val experienceGroups: Set<String> = setOf(),
-    @Schema(description = "内部名单", required = true)
+    @Schema(title = "内部名单", required = true)
     val innerUsers: Set<String> = setOf(),
-    @Schema(description = "外部名单", required = true)
+    @Schema(title = "外部名单", required = true)
     val outerUsers: String = "",
-    @Schema(description = "通知类型(RTX,WECHAT,EMAIL)", required = true)
+    @Schema(title = "通知类型(RTX,WECHAT,EMAIL)", required = true)
     val notifyTypes: Set<String> = setOf(),
-    @Schema(description = "是否开启企业微信群通知", required = true)
+    @Schema(title = "是否开启企业微信群通知", required = true)
     val enableGroupId: Boolean? = true,
-    @Schema(description = "企业微信群ID(逗号分隔)", required = true)
+    @Schema(title = "企业微信群ID(逗号分隔)", required = true)
     val groupId: String = ""
 ) : Element(name, id, status) {
     companion object {

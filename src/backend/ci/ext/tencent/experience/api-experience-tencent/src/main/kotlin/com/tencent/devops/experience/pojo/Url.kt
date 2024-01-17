@@ -29,8 +29,8 @@ package com.tencent.devops.experience.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "版本体验-下载链接")
+@Schema(title = "版本体验-下载链接")
 data class Url(
-    @Schema(description = "下载链接", required = true)
+    @Schema(title = "下载链接", required = true)
     val url: String
 )

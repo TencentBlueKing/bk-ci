@@ -29,20 +29,20 @@ package com.tencent.devops.monitoring.pojo
 import com.tencent.devops.monitoring.pojo.enums.IncidentStatus
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "故障")
+@Schema(title = "故障")
 data class Incident(
-    @Schema(description = "id", required = true)
+    @Schema(title = "id", required = true)
     val id: Long?,
-    @Schema(description = "发生时间（时间戳，毫秒）", required = true)
+    @Schema(title = "发生时间（时间戳，毫秒）", required = true)
     val dayTime: Long,
-    @Schema(description = "模块", required = true)
+    @Schema(title = "模块", required = true)
     val moduleName: String,
-    @Schema(description = "级别", required = true)
+    @Schema(title = "级别", required = true)
     val level: String,
-    @Schema(description = "持续时间(毫秒)", required = true)
+    @Schema(title = "持续时间(毫秒)", required = true)
     val duringTime: Long,
-    @Schema(description = "当前状态", required = true)
+    @Schema(title = "当前状态", required = true)
     val status: IncidentStatus,
-    @Schema(description = "时间", required = false)
+    @Schema(title = "时间", required = false)
     val message: String?
 )

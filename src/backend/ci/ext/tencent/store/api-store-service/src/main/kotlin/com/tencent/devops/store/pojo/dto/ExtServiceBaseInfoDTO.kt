@@ -30,18 +30,18 @@ package com.tencent.devops.store.pojo.dto
 import com.tencent.devops.dispatch.pojo.DeployApp
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "扩展服务基本信息")
+@Schema(title = "扩展服务基本信息")
 data class ExtServiceBaseInfoDTO(
-    @Schema(description = "扩展服务Id", required = true)
+    @Schema(title = "扩展服务Id", required = true)
     val serviceId: String,
-    @Schema(description = "扩展服务代码", required = true)
+    @Schema(title = "扩展服务代码", required = true)
     val serviceCode: String,
-    @Schema(description = "扩展服务版本号", required = true)
+    @Schema(title = "扩展服务版本号", required = true)
     val version: String,
-    @Schema(description = "扩展服务镜像信息", required = true)
+    @Schema(title = "扩展服务镜像信息", required = true)
     val extServiceImageInfo: ExtServiceImageInfoDTO,
-    @Schema(description = "扩展服务部署信息", required = true)
+    @Schema(title = "扩展服务部署信息", required = true)
     val extServiceDeployInfo: DeployApp,
-    @Schema(description = "分支", required = false)
+    @Schema(title = "分支", required = false)
     val branch: String? = null
 )

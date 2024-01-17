@@ -30,8 +30,8 @@ package com.tencent.devops.project.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class DepartmentInfo(
-    @Schema(description = "部门id")
+    @Schema(title = "部门id")
     val id: String,
-    @Schema(description = "部门名称")
+    @Schema(title = "部门名称")
     val name: String
 )

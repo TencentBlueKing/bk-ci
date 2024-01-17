@@ -33,13 +33,13 @@ import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "CodeCC代码检查任务(离线版)")
+@Schema(title = "CodeCC代码检查任务(离线版)")
 open class CodeCCScanTask(
-    @Schema(description = "displayName", required = false)
+    @Schema(title = "displayName", required = false)
     override var displayName: String?,
-    @Schema(description = "入参", required = true)
+    @Schema(title = "入参", required = true)
     override val inputs: CodeCCScanInput,
-    @Schema(description = "执行条件", required = true)
+    @Schema(title = "执行条件", required = true)
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
 
@@ -99,16 +99,16 @@ open class CodeCCScanTask(
     }
 }
 
-@Schema(description = "CodeCC代码检查任务(客户端)")
+@Schema(title = "CodeCC代码检查任务(客户端)")
 open class CodeCCScanInput(
-    @Schema(description = "扫描类型（0：全量, 1：增量）", required = false)
+    @Schema(title = "扫描类型（0：全量, 1：增量）", required = false)
     open var scanType: Int? = 0,
-    @Schema(description = "工具包,多个之间逗号分隔：ccn,dupc,sensitive,checkstyle,cpplint,detekt,eslint,goml,occheck,phpcs,pylint,styecop", required = true)
+    @Schema(title = "工具包,多个之间逗号分隔：ccn,dupc,sensitive,checkstyle,cpplint,detekt,eslint,goml,occheck,phpcs,pylint,styecop", required = true)
     var tools: String,
-    @Schema(description = "要扫描的代码路径，默认为整个workspace", required = false)
+    @Schema(title = "要扫描的代码路径，默认为整个workspace", required = false)
     var path: String?,
-    @Schema(description = "规则集,分隔", required = false)
+    @Schema(title = "规则集,分隔", required = false)
     var rules: String?,
-    @Schema(description = "排除的目录,分隔", required = false)
+    @Schema(title = "排除的目录,分隔", required = false)
     var skipPath: String?
 ) : AbstractInput()

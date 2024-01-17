@@ -30,56 +30,56 @@ package com.tencent.devops.experience.pojo
 import com.tencent.devops.common.api.enums.PlatformEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "版本体验-版本详情")
+@Schema(title = "版本体验-版本详情")
 data class AppExperienceDetail(
-    @Schema(description = "版本体验ID", required = true)
+    @Schema(title = "版本体验ID", required = true)
     val experienceHashId: String,
-    @Schema(description = "文件大小(byte)", required = true)
+    @Schema(title = "文件大小(byte)", required = true)
     val size: Long,
-    @Schema(description = "logo链接", required = true)
+    @Schema(title = "logo链接", required = true)
     val logoUrl: String,
-    @Schema(description = "分享链接", required = true)
+    @Schema(title = "分享链接", required = true)
     val shareUrl: String,
-    @Schema(description = "版本名称", required = true)
+    @Schema(title = "版本名称", required = true)
     val name: String,
-    @Schema(description = "包名称", required = true)
+    @Schema(title = "包名称", required = true)
     val packageName: String,
-    @Schema(description = "平台", required = true)
+    @Schema(title = "平台", required = true)
     val platform: PlatformEnum,
-    @Schema(description = "版本体验版本号", required = true)
+    @Schema(title = "版本体验版本号", required = true)
     val version: String,
-    @Schema(description = "是否已过期", required = true)
+    @Schema(title = "是否已过期", required = true)
     val expired: Boolean,
-    @Schema(description = "是否可体验", required = true)
+    @Schema(title = "是否可体验", required = true)
     val canExperience: Boolean,
-    @Schema(description = "是否在线", required = true)
+    @Schema(title = "是否在线", required = true)
     val online: Boolean,
-    @Schema(description = "是否订阅", required = true)
+    @Schema(title = "是否订阅", required = true)
     val subscribe: Boolean,
-    @Schema(description = "更新日志", required = true)
+    @Schema(title = "更新日志", required = true)
     val changeLog: List<ExperienceChangeLog>,
-    @Schema(description = "体验名称", required = true)
+    @Schema(title = "体验名称", required = true)
     val experienceName: String,
-    @Schema(description = "版本标题", required = true)
+    @Schema(title = "版本标题", required = true)
     val versionTitle: String,
-    @Schema(description = "产品类别", required = true)
+    @Schema(title = "产品类别", required = true)
     val categoryId: Int,
-    @Schema(description = "产品负责人", required = true)
+    @Schema(title = "产品负责人", required = true)
     val productOwner: List<String>,
-    @Schema(description = "创建时间", required = true)
+    @Schema(title = "创建时间", required = true)
     val createDate: Long,
-    @Schema(description = "体验截至时间", required = true)
+    @Schema(title = "体验截至时间", required = true)
     val endDate: Long,
-    @Schema(description = "是否为公开体验", required = true)
+    @Schema(title = "是否为公开体验", required = true)
     val publicExperience: Boolean,
-    @Schema(description = "描述", required = true)
+    @Schema(title = "描述", required = true)
     val remark: String,
-    @Schema(description = "版本体验BundleIdentifier", required = true)
+    @Schema(title = "版本体验BundleIdentifier", required = true)
     val bundleIdentifier: String,
-    @Schema(description = "体验状态", required = true)
+    @Schema(title = "体验状态", required = true)
     val experienceCondition: Int,
-    @Schema(description = "应用Scheme", required = false)
+    @Schema(title = "应用Scheme", required = false)
     val appScheme: String,
-    @Schema(description = "上次下载的体验ID", required = true)
+    @Schema(title = "上次下载的体验ID", required = true)
     val lastDownloadHashId: String
 )

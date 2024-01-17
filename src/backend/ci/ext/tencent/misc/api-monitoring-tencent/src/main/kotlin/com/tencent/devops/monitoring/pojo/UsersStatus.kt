@@ -29,30 +29,30 @@ package com.tencent.devops.monitoring.pojo
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "project接口，users接口的状态上报")
+@Schema(title = "project接口，users接口的状态上报")
 data class UsersStatus(
-    @Schema(description = "蓝盾项目ID", required = false)
+    @Schema(title = "蓝盾项目ID", required = false)
     val projectId: String?,
-    @Schema(description = "流水线ID", required = false)
+    @Schema(title = "流水线ID", required = false)
     val pipelineId: String?,
-    @Schema(description = "构建ID", required = false)
+    @Schema(title = "构建ID", required = false)
     val buildId: String?,
-    @Schema(description = "vmSeqId", required = false)
+    @Schema(title = "vmSeqId", required = false)
     val vmSeqId: String?,
-    @Schema(description = "channelCode", required = false)
+    @Schema(title = "channelCode", required = false)
     val channelCode: ChannelCode?,
-    @Schema(description = "请求时间(时间戳，毫秒)", required = true)
+    @Schema(title = "请求时间(时间戳，毫秒)", required = true)
     val requestTime: Long,
-    @Schema(description = "响应时间(时间戳，毫秒)", required = true)
+    @Schema(title = "响应时间(时间戳，毫秒)", required = true)
     val responseTime: Long,
-    @Schema(description = "耗时(毫秒)", required = true)
+    @Schema(title = "耗时(毫秒)", required = true)
     val elapseTime: Long,
-    @Schema(description = "Http状态码", required = false)
+    @Schema(title = "Http状态码", required = false)
     val statusCode: String?,
-    @Schema(description = "状态码对应的错误信息", required = false)
+    @Schema(title = "状态码对应的错误信息", required = false)
     val statusMessage: String?,
-    @Schema(description = "蓝盾错误码", required = true)
+    @Schema(title = "蓝盾错误码", required = true)
     val errorCode: String,
-    @Schema(description = "错误信息", required = false)
+    @Schema(title = "错误信息", required = false)
     val errorMsg: String?
 )

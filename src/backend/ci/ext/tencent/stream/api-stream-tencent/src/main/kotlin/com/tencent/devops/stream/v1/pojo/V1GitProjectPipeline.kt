@@ -29,23 +29,23 @@ package com.tencent.devops.stream.v1.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "蓝盾工蜂流水线列表")
+@Schema(title = "蓝盾工蜂流水线列表")
 data class V1GitProjectPipeline(
-    @Schema(description = "工蜂项目ID", required = true)
+    @Schema(title = "工蜂项目ID", required = true)
     val gitProjectId: Long,
-    @Schema(description = "流水线名称", required = true)
+    @Schema(title = "流水线名称", required = true)
     var displayName: String,
-    @Schema(description = "蓝盾流水线ID", required = true)
+    @Schema(title = "蓝盾流水线ID", required = true)
     var pipelineId: String,
-    @Schema(description = "文件路径", required = true)
+    @Schema(title = "文件路径", required = true)
     val filePath: String,
-    @Schema(description = "是否启用", required = true)
+    @Schema(title = "是否启用", required = true)
     val enabled: Boolean,
-    @Schema(description = "创建人", required = false)
+    @Schema(title = "创建人", required = false)
     val creator: String?,
-    @Schema(description = "最近一次构建详情", required = false)
+    @Schema(title = "最近一次构建详情", required = false)
     val latestBuildInfo: V1GitCIBuildHistory?,
-    @Schema(description = "自己一次构建分支", required = false)
+    @Schema(title = "自己一次构建分支", required = false)
     val latestBuildBranch: String?
 )
 

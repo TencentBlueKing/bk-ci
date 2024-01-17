@@ -28,12 +28,12 @@ package com.tencent.devops.monitoring.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "grafana监控规则匹配信息")
+@Schema(title = "grafana监控规则匹配信息")
 data class GrafanaEvalMatche(
-    @Schema(description = "监控对象", required = true)
+    @Schema(title = "监控对象", required = true)
     val metric: String,
-    @Schema(description = "监控对象数值", required = true)
+    @Schema(title = "监控对象数值", required = true)
     val value: String,
-    @Schema(description = "标签", required = false)
+    @Schema(title = "标签", required = false)
     var tags: Map<String, Any>?
 )

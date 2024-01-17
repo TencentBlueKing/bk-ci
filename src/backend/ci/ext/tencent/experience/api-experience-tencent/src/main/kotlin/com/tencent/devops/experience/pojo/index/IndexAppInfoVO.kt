@@ -29,32 +29,32 @@ package com.tencent.devops.experience.pojo.index
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "版本体验-首页-APP信息")
+@Schema(title = "版本体验-首页-APP信息")
 data class IndexAppInfoVO(
-    @Schema(description = "类型", required = true)
+    @Schema(title = "类型", required = true)
     val type: Int,
-    @Schema(description = "版本体验ID", required = false)
+    @Schema(title = "版本体验ID", required = false)
     val experienceHashId: String,
-    @Schema(description = "体验名称", required = true)
+    @Schema(title = "体验名称", required = true)
     val experienceName: String,
-    @Schema(description = "创建时间", required = true)
+    @Schema(title = "创建时间", required = true)
     val createTime: Long,
-    @Schema(description = "大小(byte)", required = false)
+    @Schema(title = "大小(byte)", required = false)
     val size: Long,
-    @Schema(description = "logo链接", required = true)
+    @Schema(title = "logo链接", required = true)
     val logoUrl: String,
-    @Schema(description = "版本体验BundleIdentifier", required = true)
+    @Schema(title = "版本体验BundleIdentifier", required = true)
     val bundleIdentifier: String,
-    @Schema(description = "应用Scheme", required = false)
+    @Schema(title = "应用Scheme", required = false)
     val appScheme: String,
-    @Schema(description = "是否过期", required = true)
+    @Schema(title = "是否过期", required = true)
     val expired: Boolean,
-    @Schema(description = "上次下载的体验ID", required = true)
+    @Schema(title = "上次下载的体验ID", required = true)
     val lastDownloadHashId: String,
-    @Schema(description = "外部链接", required = false)
+    @Schema(title = "外部链接", required = false)
     val externalUrl: String,
-    @Schema(description = "版本体验版本号", required = true)
+    @Schema(title = "版本体验版本号", required = true)
     val version: String,
-    @Schema(description = "下载次数", required = true)
+    @Schema(title = "下载次数", required = true)
     val downloadTime: Int
 )

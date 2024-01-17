@@ -29,10 +29,10 @@ package com.tencent.devops.prebuild.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "PreProject请求")
+@Schema(title = "PreProject请求")
 data class PreProjectReq(
-    @Schema(description = "项目名称", required = true)
+    @Schema(title = "项目名称", required = true)
     val preProjectId: String,
-    @Schema(description = "工作空间", required = true)
+    @Schema(title = "工作空间", required = true)
     val workspace: String
 )

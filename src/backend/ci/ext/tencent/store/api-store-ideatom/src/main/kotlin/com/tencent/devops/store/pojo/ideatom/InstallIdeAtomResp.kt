@@ -29,10 +29,10 @@ package com.tencent.devops.store.pojo.ideatom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "安装IDE插件返回报文")
+@Schema(title = "安装IDE插件返回报文")
 data class InstallIdeAtomResp(
-    @Schema(description = "devnet环境插件包路径", required = false)
+    @Schema(title = "devnet环境插件包路径", required = false)
     val atomFileDevnetUrl: String?,
-    @Schema(description = "idc环境插件包路径", required = false)
+    @Schema(title = "idc环境插件包路径", required = false)
     val atomFileIdcUrl: String?
 )

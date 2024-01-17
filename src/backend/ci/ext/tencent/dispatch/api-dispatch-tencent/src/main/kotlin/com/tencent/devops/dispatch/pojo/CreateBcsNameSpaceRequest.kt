@@ -30,12 +30,12 @@ package com.tencent.devops.dispatch.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class CreateBcsNameSpaceRequest(
-    @Schema(description = "bcs请求路径", required = true)
+    @Schema(title = "bcs请求路径", required = true)
     val bcsUrl: String,
-    @Schema(description = "请求token", required = true)
+    @Schema(title = "请求token", required = true)
     val token: String,
-    @Schema(description = "命名空间标签信息", required = true)
+    @Schema(title = "命名空间标签信息", required = true)
     val kubernetesLabel: KubernetesLabel,
-    @Schema(description = "k8s资源限制信息", required = false)
+    @Schema(title = "k8s资源限制信息", required = false)
     val limitRangeInfo: KubernetesLimitRange? = null
 )

@@ -2,12 +2,12 @@ package com.tencent.devops.experience.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "V2-体验列表")
+@Schema(title = "V2-体验列表")
 data class ExperienceList(
-    @Schema(description = "内部体验列表")
+    @Schema(title = "内部体验列表")
     val privateExperiences: List<AppExperience>,
-    @Schema(description = "公开体验列表")
+    @Schema(title = "公开体验列表")
     val publicExperiences: List<AppExperience>,
-    @Schema(description = "红点个数")
+    @Schema(title = "红点个数")
     val redPointCount: Int
 )

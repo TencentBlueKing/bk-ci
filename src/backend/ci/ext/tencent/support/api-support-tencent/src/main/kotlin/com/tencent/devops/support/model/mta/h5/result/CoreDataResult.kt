@@ -30,12 +30,12 @@ package com.tencent.devops.support.model.mta.h5.result
 import com.tencent.devops.support.model.mta.h5.base.IdxResult
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "MTA的H5接口请求返回结果")
+@Schema(title = "MTA的H5接口请求返回结果")
 data class CoreDataResult(
-    @Schema(description = "状态码")
+    @Schema(title = "状态码")
     val code: Int,
-    @Schema(description = "消息")
+    @Schema(title = "消息")
     val info: String,
-    @Schema(description = "内容")
+    @Schema(title = "内容")
     val data: Map<String, IdxResult>?
 )

@@ -3,11 +3,11 @@ package com.tencent.devops.remotedev.pojo
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "bk-chat")
+@Schema(title = "bk-chat")
 data class BKGPT(
-    @Schema(description = "插件透传")
+    @Schema(title = "插件透传")
     val data: Any,
-    @Schema(description = "插件透传")
+    @Schema(title = "插件透传")
     val config: Any,
     @JsonProperty("bkdata_authentication_method")
     var method: String?,

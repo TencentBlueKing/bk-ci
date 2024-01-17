@@ -29,10 +29,10 @@ package com.tencent.devops.experience.pojo.download
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "版本体验-检查更新参数")
+@Schema(title = "版本体验-检查更新参数")
 data class CheckVersionParam(
-    @Schema(description = "版本体验BundleIdentifier", required = true)
+    @Schema(title = "版本体验BundleIdentifier", required = true)
     val bundleIdentifier: String,
-    @Schema(description = "创建时间", required = true)
+    @Schema(title = "创建时间", required = true)
     val createTime: Long
 )

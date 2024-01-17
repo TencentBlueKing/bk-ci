@@ -28,10 +28,10 @@
 package com.tencent.devops.project.pojo.label
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "项目标签")
+@Schema(title = "项目标签")
 data class ProjectLabel(
-    @Schema(description = "主键ID")
+    @Schema(title = "主键ID")
     val id: String,
-    @Schema(description = "标签名称")
+    @Schema(title = "标签名称")
     val labelName: String
 )

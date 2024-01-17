@@ -29,24 +29,24 @@ package com.tencent.devops.plugin.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "金刚扫面任务结果")
+@Schema(title = "金刚扫面任务结果")
 data class JinGangAppResultReponse(
-    @Schema(description = "任务结果Id")
+    @Schema(title = "任务结果Id")
     val id: Long,
-    @Schema(description = "构建Id")
+    @Schema(title = "构建Id")
     val buildId: String,
-    @Schema(description = "包名称")
+    @Schema(title = "包名称")
     val fileName: String,
-    @Schema(description = "版本号")
+    @Schema(title = "版本号")
     val version: String,
-    @Schema(description = "文件MD5")
+    @Schema(title = "文件MD5")
     val fileMD5: String,
-    @Schema(description = "任务Id")
+    @Schema(title = "任务Id")
     val taskId: Long,
-    @Schema(description = "扫描结果的html地址")
+    @Schema(title = "扫描结果的html地址")
     val scanUrl: String,
-    @Schema(description = "上传者")
+    @Schema(title = "上传者")
     val responseuser: String,
-    @Schema(description = "扫描结果")
+    @Schema(title = "扫描结果")
     val result: Map<String, Any>
 )

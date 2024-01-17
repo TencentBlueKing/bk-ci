@@ -32,12 +32,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class MyServiceVO(
-    @Schema(description = "总记录数", required = true)
+    @Schema(title = "总记录数", required = true)
     val count: Int,
-    @Schema(description = "当前页码值", required = false)
+    @Schema(title = "当前页码值", required = false)
     val page: Int?,
-    @Schema(description = "每页记录大小", required = false)
+    @Schema(title = "每页记录大小", required = false)
     val pageSize: Int?,
-    @Schema(description = "数据集合", required = false)
+    @Schema(title = "数据集合", required = false)
     val records: List<ExtServiceRespItem?>
 )

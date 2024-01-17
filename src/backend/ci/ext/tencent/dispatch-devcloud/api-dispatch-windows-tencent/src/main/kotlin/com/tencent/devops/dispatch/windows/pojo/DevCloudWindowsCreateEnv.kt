@@ -3,7 +3,7 @@ package com.tencent.devops.dispatch.windows.pojo
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "DevCloud获取windows所需的env信息")
+@Schema(title = "DevCloud获取windows所需的env信息")
 data class DevCloudWindowsCreateEnv(
     var project: String,
     var pipelineId: String,

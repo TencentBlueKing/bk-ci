@@ -29,20 +29,20 @@ package com.tencent.devops.remotedev.pojo.software
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "工作空间模板配置")
+@Schema(title = "工作空间模板配置")
 data class UserSoftwareInstalledRecord(
-    @Schema(description = "项目ID")
+    @Schema(title = "项目ID")
     val projectId: String,
-    @Schema(description = "用户")
+    @Schema(title = "用户")
     val user: String,
-    @Schema(description = "任务ID")
+    @Schema(title = "任务ID")
     val taskId: Long,
-    @Schema(description = "软件名称")
+    @Schema(title = "软件名称")
     val softwareName: String,
-    @Schema(description = "云桌面ID")
+    @Schema(title = "云桌面ID")
     val workspaceName: String,
-    @Schema(description = "安装状态")
+    @Schema(title = "安装状态")
     val status: SoftwareInstallStatus,
-    @Schema(description = "安装时间")
+    @Schema(title = "安装时间")
     val installTime: String
 )

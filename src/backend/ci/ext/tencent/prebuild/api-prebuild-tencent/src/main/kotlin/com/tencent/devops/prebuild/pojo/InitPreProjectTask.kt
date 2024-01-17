@@ -30,26 +30,26 @@ package com.tencent.devops.prebuild.pojo
 import com.tencent.devops.prebuild.pojo.enums.TaskStatus
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "初始化项目任务")
+@Schema(title = "初始化项目任务")
 data class InitPreProjectTask(
-    @Schema(description = "任务ID")
+    @Schema(title = "任务ID")
     val taskId: String,
-    @Schema(description = "用户prebuild项目ID")
+    @Schema(title = "用户prebuild项目ID")
     val preProjectId: String,
-    @Schema(description = "用户项目ID")
+    @Schema(title = "用户项目ID")
     val projectId: String,
-    @Schema(description = "工作空间")
+    @Schema(title = "工作空间")
     val workspace: String,
-    @Schema(description = "rsync账号")
+    @Schema(title = "rsync账号")
     val account: String,
-    @Schema(description = "password")
+    @Schema(title = "password")
     var password: String,
-    @Schema(description = "IP")
+    @Schema(title = "IP")
     var ip: String,
-    @Schema(description = "taskStatus")
+    @Schema(title = "taskStatus")
     var taskStatus: TaskStatus,
-    @Schema(description = "logs")
+    @Schema(title = "logs")
     var logs: List<String>,
-    @Schema(description = "userId")
+    @Schema(title = "userId")
     val userId: String
 )

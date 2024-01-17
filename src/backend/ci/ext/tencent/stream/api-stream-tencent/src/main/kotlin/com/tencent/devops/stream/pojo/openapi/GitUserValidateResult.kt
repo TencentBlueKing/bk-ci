@@ -30,26 +30,26 @@ package com.tencent.devops.stream.pojo.openapi
 import com.tencent.devops.stream.pojo.StreamBaseRepository
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "蓝盾工蜂项目用户校验结果")
+@Schema(title = "蓝盾工蜂项目用户校验结果")
 data class GitUserValidateResult(
-    @Schema(description = "工蜂项目ID")
+    @Schema(title = "工蜂项目ID")
     override val gitProjectId: Long,
-    @Schema(description = "工蜂项目名")
+    @Schema(title = "工蜂项目名")
     override val name: String,
-    @Schema(description = "工蜂项目url")
+    @Schema(title = "工蜂项目url")
     override val url: String,
-    @Schema(description = "homepage")
+    @Schema(title = "homepage")
     override val homepage: String,
-    @Schema(description = "gitHttpUrl")
+    @Schema(title = "gitHttpUrl")
     override val gitHttpUrl: String,
-    @Schema(description = "gitSshUrl")
+    @Schema(title = "gitSshUrl")
     override val gitSshUrl: String,
-    @Schema(description = "蓝盾项目ID")
+    @Schema(title = "蓝盾项目ID")
     val projectCode: String,
-    @Schema(description = "蓝盾项目名")
+    @Schema(title = "蓝盾项目名")
     val projectName: String,
-    @Schema(description = "Stream授权人")
+    @Schema(title = "Stream授权人")
     val authUserId: String,
-    @Schema(description = "是否开启CI功能")
+    @Schema(title = "是否开启CI功能")
     val enableCi: Boolean
 ) : StreamBaseRepository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)

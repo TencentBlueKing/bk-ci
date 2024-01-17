@@ -31,28 +31,28 @@ import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.experience.pojo.enums.Source
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "版本体验-发布摘要")
+@Schema(title = "版本体验-发布摘要")
 data class ExperienceSummaryWithPermission(
-    @Schema(description = "发布HashId", required = true)
+    @Schema(title = "发布HashId", required = true)
     val experienceHashId: String,
-    @Schema(description = "版本名称", required = true)
+    @Schema(title = "版本名称", required = true)
     val name: String,
-    @Schema(description = "平台", required = true)
+    @Schema(title = "平台", required = true)
     val platform: PlatformEnum,
-    @Schema(description = "版本号", required = true)
+    @Schema(title = "版本号", required = true)
     val version: String,
-    @Schema(description = "描述", required = false)
+    @Schema(title = "描述", required = false)
     val remark: String?,
-    @Schema(description = "截止日期", required = true)
+    @Schema(title = "截止日期", required = true)
     val expireDate: Long,
-    @Schema(description = "来源", required = true)
+    @Schema(title = "来源", required = true)
     val source: Source,
-    @Schema(description = "创建者", required = true)
+    @Schema(title = "创建者", required = true)
     val creator: String,
-    @Schema(description = "是否已过期", required = true)
+    @Schema(title = "是否已过期", required = true)
     val expired: Boolean,
-    @Schema(description = "是否在线", required = true)
+    @Schema(title = "是否在线", required = true)
     val online: Boolean,
-    @Schema(description = "权限", required = true)
+    @Schema(title = "权限", required = true)
     val permissions: ExperiencePermission
 )

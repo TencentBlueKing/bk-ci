@@ -36,7 +36,7 @@ import io.swagger.v3.oas.annotations.media.Schema
     }
  */
 
-@Schema(description = "gitci commit的归属")
+@Schema(title = "gitci commit的归属")
 data class GitCICommitRef(
     val name: String,
     val type: String

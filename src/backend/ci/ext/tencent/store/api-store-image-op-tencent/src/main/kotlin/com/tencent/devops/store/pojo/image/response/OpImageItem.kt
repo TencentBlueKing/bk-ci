@@ -31,64 +31,64 @@ import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "OP镜像详情")
+@Schema(title = "OP镜像详情")
 data class OpImageItem(
-    @Schema(description = "镜像ID", required = true)
+    @Schema(title = "镜像ID", required = true)
     val imageId: String,
-    @Schema(description = "镜像代码", required = true)
+    @Schema(title = "镜像代码", required = true)
     val imageCode: String,
-    @Schema(description = "镜像名称", required = true)
+    @Schema(title = "镜像名称", required = true)
     val imageName: String,
-    @Schema(description = "研发来源")
+    @Schema(title = "研发来源")
     val rdType: String,
-    @Schema(description = "镜像适用的Agent类型")
+    @Schema(title = "镜像适用的Agent类型")
     var agentTypeScope: List<ImageAgentTypeEnum>,
-    @Schema(description = "镜像类型，BKDEVOPS：蓝盾  BKSTORE：研发商店  THIRD：第三方开发", required = false)
+    @Schema(title = "镜像类型，BKDEVOPS：蓝盾  BKSTORE：研发商店  THIRD：第三方开发", required = false)
     val imageType: ImageType?,
-    @Schema(description = "版本号", required = true)
+    @Schema(title = "版本号", required = true)
     val imageVersion: String,
-    @Schema(description = 
+    @Schema(title =
         "镜像状态，INIT：初始化|COMMITTING：提交中|CHECKING：验证中|CHECK_FAIL：验证失败|TESTING：测试中|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGING：下架中|UNDERCARRIAGED：已下架",
         required = false
     )
     val imageStatus: String,
-    @Schema(description = "需管理员操作的最新镜像ID", required = false)
+    @Schema(title = "需管理员操作的最新镜像ID", required = false)
     var opImageId: String? = null,
-    @Schema(description = "需管理员操作的最新镜像版本号", required = false)
+    @Schema(title = "需管理员操作的最新镜像版本号", required = false)
     var opImageVersion: String? = null,
-    @Schema(description = 
+    @Schema(title =
         "需管理员操作的最新镜像状态，INIT：初始化|COMMITTING：提交中|CHECKING：验证中|CHECK_FAIL：验证失败|TESTING：测试中|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGING：下架中|UNDERCARRIAGED：已下架",
         required = false
     )
     var opImageStatus: String? = null,
-    @Schema(description = "所属分类代码", required = false)
+    @Schema(title = "所属分类代码", required = false)
     val classifyCode: String?,
-    @Schema(description = "所属分类名称", required = false)
+    @Schema(title = "所属分类名称", required = false)
     val classifyName: String?,
-    @Schema(description = "范畴", required = false)
+    @Schema(title = "范畴", required = false)
     val category: String,
-    @Schema(description = "范畴名称", required = false)
+    @Schema(title = "范畴名称", required = false)
     val categoryName: String,
-    @Schema(description = "发布者", required = true)
+    @Schema(title = "发布者", required = true)
     val publisher: String?,
-    @Schema(description = "发布时间", required = false)
+    @Schema(title = "发布时间", required = false)
     val pubTime: Long?,
-    @Schema(description = "发布描述", required = false)
+    @Schema(title = "发布描述", required = false)
     val pubDescription: String?,
-    @Schema(description = "是否为最新版本镜像 true：最新 false：非最新", required = true)
+    @Schema(title = "是否为最新版本镜像 true：最新 false：非最新", required = true)
     val latestFlag: Boolean,
-    @Schema(description = "是否为公共镜像 true：公共镜像 false：普通镜像", required = false)
+    @Schema(title = "是否为公共镜像 true：公共镜像 false：普通镜像", required = false)
     val publicFlag: Boolean?,
-    @Schema(description = "是否推荐， TRUE：是 FALSE：不是", required = false)
+    @Schema(title = "是否推荐， TRUE：是 FALSE：不是", required = false)
     val recommendFlag: Boolean?,
-    @Schema(description = "权重（数值越大代表权重越高）", required = false)
+    @Schema(title = "权重（数值越大代表权重越高）", required = false)
     val weight: Int?,
-    @Schema(description = "创建人")
+    @Schema(title = "创建人")
     val creator: String?,
-    @Schema(description = "修改人")
+    @Schema(title = "修改人")
     val modifier: String?,
-    @Schema(description = "创建时间")
+    @Schema(title = "创建时间")
     val createTime: Long,
-    @Schema(description = "修改时间")
+    @Schema(title = "修改时间")
     val updateTime: Long
 )

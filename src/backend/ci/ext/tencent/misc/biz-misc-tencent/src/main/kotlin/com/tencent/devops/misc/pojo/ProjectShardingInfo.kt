@@ -29,14 +29,14 @@ package com.tencent.devops.misc.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "项目DB分片信息")
+@Schema(title = "项目DB分片信息")
 data class ProjectShardingInfo(
-    @Schema(description = "主键Id", required = true)
+    @Schema(title = "主键Id", required = true)
     val id: Long,
-    @Schema(description = "项目Id", required = true)
+    @Schema(title = "项目Id", required = true)
     val projectId: String,
-    @Schema(description = "项目渠道", required = true)
+    @Schema(title = "项目渠道", required = true)
     val channel: String,
-    @Schema(description = "DB路由规则", required = false)
+    @Schema(title = "DB路由规则", required = false)
     val routingRule: String?
 )

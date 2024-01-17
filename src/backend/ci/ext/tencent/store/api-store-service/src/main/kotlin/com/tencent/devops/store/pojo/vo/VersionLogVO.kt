@@ -31,8 +31,8 @@ import com.tencent.devops.store.pojo.VersionLog
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class VersionLogVO(
-    @Schema(description = "条数")
+    @Schema(title = "条数")
     val count: Int,
-    @Schema(description = "日志信息")
+    @Schema(title = "日志信息")
     val records: List<VersionLog>
 )

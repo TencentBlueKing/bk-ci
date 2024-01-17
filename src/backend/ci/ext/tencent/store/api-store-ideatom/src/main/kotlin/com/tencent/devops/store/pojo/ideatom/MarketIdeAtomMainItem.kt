@@ -29,7 +29,7 @@ package com.tencent.devops.store.pojo.ideatom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "IDE插件市场-首页")
+@Schema(title = "IDE插件市场-首页")
 data class MarketIdeAtomMainItem(
     val key: String,
     val label: String,

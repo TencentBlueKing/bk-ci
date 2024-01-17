@@ -29,8 +29,8 @@ package com.tencent.devops.store.pojo.atom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "插件重新构建请求报文体")
+@Schema(title = "插件重新构建请求报文体")
 data class AtomRebuildRequest(
-    @Schema(description = "插件字段校验确认标识", required = false)
+    @Schema(title = "插件字段校验确认标识", required = false)
     val fieldCheckConfirmFlag: Boolean? = false
 )

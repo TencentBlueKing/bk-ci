@@ -34,15 +34,15 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class RtxTokenResponse(
     @JsonProperty("errcode")
-    @Schema(description = "errcode")
+    @Schema(title = "errcode")
     val errCode: Long,
     @JsonProperty("errmsg")
-    @Schema(description = "errmsg")
+    @Schema(title = "errmsg")
     val errMsg: String,
     @JsonProperty("access_token")
-    @Schema(description = "access_token")
+    @Schema(title = "access_token")
     val accessToken: String,
     @JsonProperty("expires_in")
-    @Schema(description = "expires_in")
+    @Schema(title = "expires_in")
     val expiresIn: Long
 )

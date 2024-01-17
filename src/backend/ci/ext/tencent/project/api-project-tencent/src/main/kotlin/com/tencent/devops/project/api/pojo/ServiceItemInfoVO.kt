@@ -30,22 +30,22 @@ package com.tencent.devops.project.api.pojo
 import com.tencent.devops.project.api.pojo.enums.HtmlComponentTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "扩展服务功能点信息")
+@Schema(title = "扩展服务功能点信息")
 data class ServiceItemInfoVO(
-    @Schema(description = "扩展点ID", required = true)
+    @Schema(title = "扩展点ID", required = true)
     val itemId: String,
-    @Schema(description = "扩展点标识", required = true)
+    @Schema(title = "扩展点标识", required = true)
     val itemCode: String,
-    @Schema(description = "扩展点名称", required = true)
+    @Schema(title = "扩展点名称", required = true)
     val itemName: String,
-    @Schema(description = "扩展点对应的页面路径信息", required = true)
+    @Schema(title = "扩展点对应的页面路径信息", required = true)
     val htmlPath: String,
-    @Schema(description = "扩展点对应的前端组件类型", required = true)
+    @Schema(title = "扩展点对应的前端组件类型", required = true)
     val htmlComponentType: HtmlComponentTypeEnum,
-    @Schema(description = "扩展点提示信息", required = false)
+    @Schema(title = "扩展点提示信息", required = false)
     val tooltip: String?,
-    @Schema(description = "扩展点对应的图标地址", required = false)
+    @Schema(title = "扩展点对应的图标地址", required = false)
     val iconUrl: String?,
-    @Schema(description = "自定义扩展点前端表单属性配置Json串", required = false)
+    @Schema(title = "自定义扩展点前端表单属性配置Json串", required = false)
     val props: Map<String, Any>?
 )

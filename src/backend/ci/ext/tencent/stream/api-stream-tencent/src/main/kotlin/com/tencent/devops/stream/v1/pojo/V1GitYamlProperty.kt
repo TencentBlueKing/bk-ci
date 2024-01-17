@@ -29,18 +29,18 @@ package com.tencent.devops.stream.v1.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "Stream起始页内容-属性")
+@Schema(title = "Stream起始页内容-属性")
 data class V1GitYamlProperty(
-    @Schema(description = "Yaml的文件名")
+    @Schema(title = "Yaml的文件名")
     val name: String,
-    @Schema(description = "Yaml的描述")
+    @Schema(title = "Yaml的描述")
     val description: String,
-    @Schema(description = "显示的icon图标名")
+    @Schema(title = "显示的icon图标名")
     val iconName: String,
-    @Schema(description = "分类标识")
+    @Schema(title = "分类标识")
     val categories: List<String>?,
-    @Schema(description = "Yaml的文件名")
+    @Schema(title = "Yaml的文件名")
     var yamlUrl: String? = "",
-    @Schema(description = "显示的icon路径")
+    @Schema(title = "显示的icon路径")
     var iconUrl: String? = ""
 )

@@ -29,10 +29,10 @@ package com.tencent.devops.stream.v1.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "Stream起始页配置信息-分类")
+@Schema(title = "Stream起始页配置信息-分类")
 data class V1GitStarterWebList(
-    @Schema(description = "TKEX分类")
+    @Schema(title = "TKEX分类")
     val tkex: List<V1GitYamlProperty>,
-    @Schema(description = "其他分类")
+    @Schema(title = "其他分类")
     val others: List<V1GitYamlProperty>
 )

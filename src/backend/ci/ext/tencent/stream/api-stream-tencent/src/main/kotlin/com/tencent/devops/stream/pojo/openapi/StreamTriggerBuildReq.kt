@@ -31,26 +31,26 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "StreamTriggerBuild请求")
+@Schema(title = "StreamTriggerBuild请求")
 data class StreamTriggerBuildReq(
-    @Schema(description = "分支")
+    @Schema(title = "分支")
     val branch: String?,
-    @Schema(description = "Custom commit message")
+    @Schema(title = "Custom commit message")
     val customCommitMsg: String?,
-    @Schema(description = "yaml")
+    @Schema(title = "yaml")
     val yaml: String?,
-    @Schema(description = "描述")
+    @Schema(title = "描述")
     val description: String?,
-    @Schema(description = "用户选择的触发CommitId")
+    @Schema(title = "用户选择的触发CommitId")
     val commitId: String? = null,
-    @Schema(description = "模拟代码库事件请求体")
+    @Schema(title = "模拟代码库事件请求体")
     val payload: String? = null,
-    @Schema(description = "模拟代码库类型,预留字段")
+    @Schema(title = "模拟代码库类型,预留字段")
     val scmType: ScmType = ScmType.CODE_GIT,
-    @Schema(description = "模拟代码事件类型,预留字段")
+    @Schema(title = "模拟代码事件类型,预留字段")
     val eventType: String? = null,
-    @Schema(description = "触发方式")
+    @Schema(title = "触发方式")
     val objectKind: String = OBJECT_KIND_MANUAL,
-    @Schema(description = "yaml文件路径")
+    @Schema(title = "yaml文件路径")
     val path: String? = null
 )

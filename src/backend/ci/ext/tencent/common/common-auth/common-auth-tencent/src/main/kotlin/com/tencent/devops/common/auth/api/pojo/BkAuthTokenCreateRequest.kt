@@ -32,18 +32,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class BkAuthTokenCreateRequest(
     @JsonProperty("env_name")
-    @Schema(description = "env_name")
+    @Schema(title = "env_name")
     val envName: String,
     @JsonProperty("app_code")
-    @Schema(description = "app_code")
+    @Schema(title = "app_code")
     val appCode: String,
     @JsonProperty("app_secret")
-    @Schema(description = "app_secret")
+    @Schema(title = "app_secret")
     val appSecret: String,
     @JsonProperty("id_provider")
-    @Schema(description = "id_provider")
+    @Schema(title = "id_provider")
     val idProvider: String,
     @JsonProperty("grant_type")
-    @Schema(description = "grant_type")
+    @Schema(title = "grant_type")
     val grantType: String
 )

@@ -32,12 +32,12 @@ import com.tencent.devops.support.model.wechatwork.base.Text
 import com.tencent.devops.support.model.wechatwork.enums.MsgType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "文本消息")
+@Schema(title = "文本消息")
 data class TextMessage(
-    @Schema(description = "接收者")
+    @Schema(title = "接收者")
     val receiver: Receiver,
-    @Schema(description = "消息类型")
+    @Schema(title = "消息类型")
     val msgtype: MsgType = MsgType.text,
-    @Schema(description = "文本")
+    @Schema(title = "文本")
     val text: Text
 )

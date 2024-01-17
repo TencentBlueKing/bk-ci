@@ -29,10 +29,10 @@ package com.tencent.devops.sign.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "IPA包签名请求")
+@Schema(title = "IPA包签名请求")
 data class IpaCustomizedSignRequest(
-    @Schema(description = "keystore应用ID", required = false)
+    @Schema(title = "keystore应用ID", required = false)
     var appId: String? = null,
-    @Schema(description = "拓展应用名和对应的描述文件ID", required = false)
+    @Schema(title = "拓展应用名和对应的描述文件ID", required = false)
     var appexSignInfo: List<AppexSignInfo>? = null
 )

@@ -30,22 +30,22 @@ package com.tencent.devops.project.api.pojo
 import com.tencent.devops.project.api.pojo.enums.HtmlComponentTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "扩展点操作入参")
+@Schema(title = "扩展点操作入参")
 data class ItemInfoResponse(
-    @Schema(description = "扩展点名称")
+    @Schema(title = "扩展点名称")
     val itemName: String,
-    @Schema(description = "扩展点标示")
+    @Schema(title = "扩展点标示")
     val itemCode: String,
-    @Schema(description = "扩展服务Id（父级）")
+    @Schema(title = "扩展服务Id（父级）")
     val pid: String,
-    @Schema(description = "UI组件类型")
+    @Schema(title = "UI组件类型")
     val UiType: HtmlComponentTypeEnum,
-    @Schema(description = "页面路径")
+    @Schema(title = "页面路径")
     val htmlPath: String,
-    @Schema(description = "icon地址")
+    @Schema(title = "icon地址")
     val iconUrl: String?,
-    @Schema(description = "提示信息")
+    @Schema(title = "提示信息")
     val tooltip: String?,
-    @Schema(description = "自定义扩展点前端表单属性配置Json串")
+    @Schema(title = "自定义扩展点前端表单属性配置Json串")
     val props: String?
 )

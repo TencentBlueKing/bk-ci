@@ -28,22 +28,22 @@ package com.tencent.devops.monitoring.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "grafana监控webhook回调通知消息")
+@Schema(title = "grafana监控webhook回调通知消息")
 data class GrafanaNotification(
-    @Schema(description = "标题", required = true)
+    @Schema(title = "标题", required = true)
     val title: String,
-    @Schema(description = "规则Id", required = true)
+    @Schema(title = "规则Id", required = true)
     val ruleId: Int,
-    @Schema(description = "规则名称", required = true)
+    @Schema(title = "规则名称", required = true)
     var ruleName: String,
-    @Schema(description = "规则url", required = true)
+    @Schema(title = "规则url", required = true)
     var ruleUrl: String,
-    @Schema(description = "状态", required = true)
+    @Schema(title = "状态", required = true)
     var state: String,
-    @Schema(description = "图片url", required = false)
+    @Schema(title = "图片url", required = false)
     var imageUrl: String?,
-    @Schema(description = "告警消息", required = true)
+    @Schema(title = "告警消息", required = true)
     var message: String,
-    @Schema(description = "grafana监控规则匹配信息", required = false)
+    @Schema(title = "grafana监控规则匹配信息", required = false)
     val evalMatches: List<GrafanaEvalMatche>?
 )

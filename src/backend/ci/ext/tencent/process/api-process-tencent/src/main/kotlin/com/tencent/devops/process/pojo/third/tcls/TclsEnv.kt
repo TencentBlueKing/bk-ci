@@ -29,10 +29,10 @@ package com.tencent.devops.process.pojo.third.tcls
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "TCLS 环境")
+@Schema(title = "TCLS 环境")
 data class TclsEnv(
-    @Schema(description = "环境 ID", required = true)
+    @Schema(title = "环境 ID", required = true)
     val envId: String,
-    @Schema(description = "环境名称", required = true)
+    @Schema(title = "环境名称", required = true)
     val envName: String
 )

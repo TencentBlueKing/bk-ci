@@ -29,14 +29,14 @@ package com.tencent.devops.openapi.api.apigw.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "IEG安全团队标准输出")
+@Schema(title = "IEG安全团队标准输出")
 data class WesecResult(
-    @Schema(description = "操作结果: true表示成功;false表示失败")
+    @Schema(title = "操作结果: true表示成功;false表示失败")
     val result: Boolean,
-    @Schema(description = "0为成功;其它为失败")
+    @Schema(title = "0为成功;其它为失败")
     val code: Int,
-    @Schema(description = "失败原因")
+    @Schema(title = "失败原因")
     val message: String?,
-    @Schema(description = "数据")
+    @Schema(title = "数据")
     val data: Any? = null
 )

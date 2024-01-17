@@ -29,12 +29,12 @@ package com.tencent.devops.project.api.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "蓝盾-服务简要信息")
+@Schema(title = "蓝盾-服务简要信息")
 class ExtServiceEntity(
-    @Schema(description = "主键ID")
+    @Schema(title = "主键ID")
     val id: String,
-    @Schema(description = "名称")
+    @Schema(title = "名称")
     val name: String,
-    @Schema(description = "编码")
+    @Schema(title = "编码")
     val code: String
 )

@@ -29,10 +29,10 @@ package com.tencent.devops.stream.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "分页-基本信息")
+@Schema(title = "分页-基本信息")
 data class GitProjectConfWithPage(
-    @Schema(description = "总数", required = true)
+    @Schema(title = "总数", required = true)
     val total: Int,
-    @Schema(description = "列表", required = true)
+    @Schema(title = "列表", required = true)
     val data: List<GitProjectConf>
 )

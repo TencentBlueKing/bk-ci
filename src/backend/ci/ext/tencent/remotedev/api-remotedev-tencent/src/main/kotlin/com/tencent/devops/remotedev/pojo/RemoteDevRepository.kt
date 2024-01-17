@@ -29,10 +29,10 @@ package com.tencent.devops.remotedev.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "仓库信息")
+@Schema(title = "仓库信息")
 data class RemoteDevRepository(
-    @Schema(description = "git项目全路径")
+    @Schema(title = "git项目全路径")
     val pathWithNamespace: String?,
-    @Schema(description = "仓库Url")
+    @Schema(title = "仓库Url")
     val url: String?
 )

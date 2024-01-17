@@ -29,20 +29,20 @@ package com.tencent.devops.remotedev.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "工作空间模板配置")
+@Schema(title = "工作空间模板配置")
 data class WorkspaceTemplate(
-    @Schema(description = "模板ID")
+    @Schema(title = "模板ID")
     val wsTemplateId: Int,
-    @Schema(description = "模板镜像")
+    @Schema(title = "模板镜像")
     val image: String,
-    @Schema(description = "模板名称")
+    @Schema(title = "模板名称")
     val name: String,
-    @Schema(description = "模板来源")
+    @Schema(title = "模板来源")
     val source: String,
-    @Schema(description = "模板LOGO")
+    @Schema(title = "模板LOGO")
     val logo: String,
-    @Schema(description = "模板对应项目URL")
+    @Schema(title = "模板对应项目URL")
     val url: String,
-    @Schema(description = "模板描述")
+    @Schema(title = "模板描述")
     val description: String
 )

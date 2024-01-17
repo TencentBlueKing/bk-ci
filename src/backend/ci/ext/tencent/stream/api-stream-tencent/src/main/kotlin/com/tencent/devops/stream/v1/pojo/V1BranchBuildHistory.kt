@@ -30,14 +30,14 @@ package com.tencent.devops.stream.v1.pojo
 import com.tencent.devops.stream.v1.pojo.enums.V1BranchType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "分支构建列表")
+@Schema(title = "分支构建列表")
 data class V1BranchBuildHistory(
-    @Schema(description = "分支名")
+    @Schema(title = "分支名")
     val branchName: String,
-    @Schema(description = "构建总次数")
+    @Schema(title = "构建总次数")
     val buildTotal: Long,
-    @Schema(description = "分支类型(Default、Active、Inactive)")
+    @Schema(title = "分支类型(Default、Active、Inactive)")
     val branchType: V1BranchType,
-    @Schema(description = "buildHistory")
+    @Schema(title = "buildHistory")
     val buildHistory: List<V1GitCIBuildHistory>
 )

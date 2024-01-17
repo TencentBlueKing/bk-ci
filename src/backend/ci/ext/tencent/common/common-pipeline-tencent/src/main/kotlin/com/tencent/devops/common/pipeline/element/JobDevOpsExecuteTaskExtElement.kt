@@ -31,19 +31,19 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "作业平台-作业执行")
+@Schema(title = "作业平台-作业执行")
 data class JobDevOpsExecuteTaskExtElement(
-    @Schema(description = "任务名称", required = true)
+    @Schema(title = "任务名称", required = true)
     override val name: String = "执行job作业",
-    @Schema(description = "id", required = false)
+    @Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(description = "状态", required = false)
+    @Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(description = "作业ID", required = true)
+    @Schema(title = "作业ID", required = true)
     val taskId: Int,
-    @Schema(description = "全局参数", required = true)
+    @Schema(title = "全局参数", required = true)
     val globalVar: Map<String, String> = mapOf(),
-    @Schema(description = "超时时间(s)", required = true)
+    @Schema(title = "超时时间(s)", required = true)
     val timeout: Int
 ) : Element(name, id, status) {
     companion object {

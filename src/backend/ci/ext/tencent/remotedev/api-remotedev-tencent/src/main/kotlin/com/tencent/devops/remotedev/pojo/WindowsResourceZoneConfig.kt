@@ -29,16 +29,16 @@ package com.tencent.devops.remotedev.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "WINDOWS 地域表")
+@Schema(title = "WINDOWS 地域表")
 data class WindowsResourceZoneConfig(
-    @Schema(description = "Id")
+    @Schema(title = "Id")
     val id: Long?,
-    @Schema(description = "是否可用")
+    @Schema(title = "是否可用")
     val available: Boolean?,
-    @Schema(description = "区域，深圳，南京等")
+    @Schema(title = "区域，深圳，南京等")
     val zone: String,
-    @Schema(description = "区域简称，SZ,NJ")
+    @Schema(title = "区域简称，SZ,NJ")
     var zoneShortName: String,
-    @Schema(description = "描述")
+    @Schema(title = "描述")
     val description: String
 )

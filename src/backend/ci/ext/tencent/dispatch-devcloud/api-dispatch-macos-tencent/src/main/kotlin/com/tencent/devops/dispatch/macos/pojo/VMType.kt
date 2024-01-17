@@ -2,7 +2,7 @@ package com.tencent.devops.dispatch.macos.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "虚拟机类型信息")
+@Schema(title = "虚拟机类型信息")
 data class VMType(
     var id: Int,
     var name: String,

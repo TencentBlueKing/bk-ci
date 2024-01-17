@@ -30,10 +30,10 @@ package com.tencent.devops.dispatch.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class CreateImagePullSecretRequest(
-    @Schema(description = "bcs请求路径", required = true)
+    @Schema(title = "bcs请求路径", required = true)
     val bcsUrl: String,
-    @Schema(description = "请求token", required = true)
+    @Schema(title = "请求token", required = true)
     val token: String,
-    @Schema(description = "k8s仓库信息", required = true)
+    @Schema(title = "k8s仓库信息", required = true)
     val kubernetesRepo: KubernetesRepo
 )

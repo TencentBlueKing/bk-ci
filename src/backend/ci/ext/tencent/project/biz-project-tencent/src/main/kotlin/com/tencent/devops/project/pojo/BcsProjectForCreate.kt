@@ -34,46 +34,46 @@ import io.swagger.v3.oas.annotations.media.Schema
  * 文档地址：
  * https://github.com/Tencent/bk-bcs/blob/master/bcs-services/bcs-project/proto/bcsproject/bcsproject.swagger.json#L171
  */
-@Schema(description = "创建BCS项目实体类")
+@Schema(title = "创建BCS项目实体类")
 data class BcsProjectForCreate(
-    @Schema(description = "创建时间")
+    @Schema(title = "创建时间")
     val createTime: String? = null,
-    @Schema(description = "项目创建者")
+    @Schema(title = "项目创建者")
     val creator: String,
-    @Schema(description = "项目ID, 全局唯一, 长度为32位字符串, 自动生成")
+    @Schema(title = "项目ID, 全局唯一, 长度为32位字符串, 自动生成")
     val projectID: String? = null,
-    @Schema(description = "项目中文名称, 长度不能超过64字符")
+    @Schema(title = "项目中文名称, 长度不能超过64字符")
     val name: String,
-    @Schema(description = "项目编码(英文缩写), 全局唯一, 长度不能超过64字符")
+    @Schema(title = "项目编码(英文缩写), 全局唯一, 长度不能超过64字符")
     val projectCode: String,
-    @Schema(description = "是否使用蓝鲸提供的资源池, 主要用于资源计费, 默认false")
+    @Schema(title = "是否使用蓝鲸提供的资源池, 主要用于资源计费, 默认false")
     val useBKRes: Boolean? = false,
-    @Schema(description = "项目描述, 尽量限制在100字符")
+    @Schema(title = "项目描述, 尽量限制在100字符")
     val description: String,
-    @Schema(description = "项目是否已经下线, 默认false")
+    @Schema(title = "项目是否已经下线, 默认false")
     val isOffline: Boolean? = false,
-    @Schema(description = "项目中集群类型, 可选k8s/mesos")
+    @Schema(title = "项目中集群类型, 可选k8s/mesos")
     val kind: String? = null,
-    @Schema(description = "项目绑定的蓝鲸CMDB中业务ID信息")
+    @Schema(title = "项目绑定的蓝鲸CMDB中业务ID信息")
     val businessID: String? = null,
-    @Schema(description = "是否为保密项目, 默认为false")
+    @Schema(title = "是否为保密项目, 默认为false")
     val isSecret: Boolean? = false,
-    @Schema(description = "项目类型, 保留字段, 默认为0, 可选 1:手游, 2:端游, 3:页游, 4:平台产品, 5:支撑产品")
+    @Schema(title = "项目类型, 保留字段, 默认为0, 可选 1:手游, 2:端游, 3:页游, 4:平台产品, 5:支撑产品")
     val projectType: Int,
-    @Schema(description = "业务部署类型, 保留字段, 1:物理机部署, 2:容器部署")
+    @Schema(title = "业务部署类型, 保留字段, 1:物理机部署, 2:容器部署")
     val deployType: Int? = null,
-    @Schema(description = "事业群ID, 保留字段, 默认为0")
+    @Schema(title = "事业群ID, 保留字段, 默认为0")
     @JsonProperty("BGID")
     val bgId: String? = "",
-    @Schema(description = "事业群名称, 保留字段, 默认为空")
+    @Schema(title = "事业群名称, 保留字段, 默认为空")
     @JsonProperty("BGName")
     val bgName: String? = "",
-    @Schema(description = "部门ID, 保留字段, 默认为0")
+    @Schema(title = "部门ID, 保留字段, 默认为0")
     val deptID: String? = "",
-    @Schema(description = "部门名称, 保留字段, 默认为空")
+    @Schema(title = "部门名称, 保留字段, 默认为空")
     val deptName: String? = "",
-    @Schema(description = "中心ID, 保留字段, 默认为0")
+    @Schema(title = "中心ID, 保留字段, 默认为0")
     val centerID: String? = "",
-    @Schema(description = "中心名称, 保留字段, 默认为空")
+    @Schema(title = "中心名称, 保留字段, 默认为空")
     val centerName: String? = ""
 )

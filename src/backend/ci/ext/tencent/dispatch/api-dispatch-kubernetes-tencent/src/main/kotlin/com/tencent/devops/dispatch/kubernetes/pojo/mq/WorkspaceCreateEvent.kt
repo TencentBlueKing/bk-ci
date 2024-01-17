@@ -40,24 +40,24 @@ data class WorkspaceCreateEvent(
     override val userId: String,
     override val traceId: String,
     override val workspaceName: String,
-    @Schema(description = "代码库地址。格式https:://xxx.git")
+    @Schema(title = "代码库地址。格式https:://xxx.git")
     val repositoryUrl: String = "",
-    @Schema(description = "代码库分支")
+    @Schema(title = "代码库分支")
     val branch: String = "",
-    @Schema(description = "代码库devfile 完整路径。格式 .preci/xxx.yaml(or yml)")
+    @Schema(title = "代码库devfile 完整路径。格式 .preci/xxx.yaml(or yml)")
     val devFilePath: String?,
-    @Schema(description = "创建者的oauth token")
+    @Schema(title = "创建者的oauth token")
     val gitOAuth: String? = "",
-    @Schema(description = "dev file 详情")
+    @Schema(title = "dev file 详情")
     val devFile: Devfile,
-    @Schema(description = "用户设置里云开发的环境变量")
+    @Schema(title = "用户设置里云开发的环境变量")
     val settingEnvs: Map<String, String>,
-    @Schema(description = "bkTicket")
+    @Schema(title = "bkTicket")
     val bkTicket: String? = null,
     val mountType: WorkspaceMountType? = WorkspaceMountType.DEVCLOUD,
-    @Schema(description = "工作空间归属")
+    @Schema(title = "工作空间归属")
     val ownerType: WorkspaceOwnerType? = WorkspaceOwnerType.PERSONAL,
-    @Schema(description = "projectId")
+    @Schema(title = "projectId")
     val projectId: String? = null,
     override var delayMills: Int = 0,
     override var retryTime: Int = 0

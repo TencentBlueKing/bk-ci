@@ -32,20 +32,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ExtensionServiceVO(
-    @Schema(description = "扩展服务Id")
+    @Schema(title = "扩展服务Id")
     val serviceId: String,
-    @Schema(description = "扩展服务名称")
+    @Schema(title = "扩展服务名称")
     val serviceName: String,
-    @Schema(description = "扩展服务code")
+    @Schema(title = "扩展服务code")
     val serviceCode: String,
-    @Schema(description = "版本")
+    @Schema(title = "版本")
     val version: String,
-    @Schema(description = "调试项目Code")
+    @Schema(title = "调试项目Code")
     val projectCode: String? = null,
-    @Schema(description = "状态")
+    @Schema(title = "状态")
     val serviceStatus: Int,
-    @Schema(description = "扩展服务发布者")
+    @Schema(title = "扩展服务发布者")
     val publisher: String?,
-    @Schema(description = "修改时间")
+    @Schema(title = "修改时间")
     val modifierTime: String
 )

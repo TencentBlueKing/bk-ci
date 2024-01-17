@@ -35,7 +35,7 @@ data class FastExecuteScriptRequest(
     val scriptContent: String,
     val scriptTimeout: Long,
     val scriptParam: String? = null,
-    @Schema(description = "isParamSensive")
+    @Schema(title = "isParamSensive")
     @JsonProperty("isParamSensive")
     val paramSensive: Int,
     val scriptType: Int,

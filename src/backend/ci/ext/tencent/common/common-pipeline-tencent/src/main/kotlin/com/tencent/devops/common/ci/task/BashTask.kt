@@ -35,13 +35,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 /**
  * BashTask
  */
-@Schema(description = "脚本任务（linux和macOS环境）")
+@Schema(title = "脚本任务（linux和macOS环境）")
 data class BashTask(
-    @Schema(description = "displayName", required = false)
+    @Schema(title = "displayName", required = false)
     override var displayName: String?,
-    @Schema(description = "入参", required = true)
+    @Schema(title = "入参", required = true)
     override val inputs: LinuxScriptInput,
-    @Schema(description = "执行条件", required = true)
+    @Schema(title = "执行条件", required = true)
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
     companion object {
@@ -61,12 +61,12 @@ data class BashTask(
     }
 }
 
-@Schema(description = "脚本任务（linux和macOS环境）")
+@Schema(title = "脚本任务（linux和macOS环境）")
 data class LinuxScriptInput(
-    @Schema(description = "脚本类型", required = true)
+    @Schema(title = "脚本类型", required = true)
     val scriptType: BuildScriptType?,
-    @Schema(description = "脚本内容", required = true)
+    @Schema(title = "脚本内容", required = true)
     val content: String,
-    @Schema(description = "某次执行为非0时（失败）是否继续执行脚本", required = false)
+    @Schema(title = "某次执行为非0时（失败）是否继续执行脚本", required = false)
     val continueOnError: Boolean?
 ) : AbstractInput()

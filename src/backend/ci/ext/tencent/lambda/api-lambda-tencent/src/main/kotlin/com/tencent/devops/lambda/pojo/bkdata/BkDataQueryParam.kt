@@ -28,10 +28,10 @@ package com.tencent.devops.lambda.pojo.bkdata
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "数据平台查询接口参数")
+@Schema(title = "数据平台查询接口参数")
 data class BkDataQueryParam(
-    @Schema(description = "查询SQL", required = true)
+    @Schema(title = "查询SQL", required = true)
     val sql: String,
-    @Schema(description = "查询引擎", required = false)
+    @Schema(title = "查询引擎", required = false)
     var preferStorage: String? = null
 )

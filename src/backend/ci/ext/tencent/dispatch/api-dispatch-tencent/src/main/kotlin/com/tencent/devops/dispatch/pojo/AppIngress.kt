@@ -30,10 +30,10 @@ package com.tencent.devops.dispatch.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class AppIngress(
-    @Schema(description = "虚拟主机", required = true)
+    @Schema(title = "虚拟主机", required = true)
     val host: String,
-    @Schema(description = "虚拟主机对应的上下文路径", required = true)
+    @Schema(title = "虚拟主机对应的上下文路径", required = true)
     val contextPath: String,
-    @Schema(description = "ingress注解", required = false)
+    @Schema(title = "ingress注解", required = false)
     val ingressAnnotationMap: Map<String, String>? = mapOf()
 )

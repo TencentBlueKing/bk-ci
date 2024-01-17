@@ -29,10 +29,10 @@ package com.tencent.devops.store.pojo.dto
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "安装扩展服务到项目")
+@Schema(title = "安装扩展服务到项目")
 data class InstallExtServiceReq(
-    @Schema(description = "项目标识", required = true)
+    @Schema(title = "项目标识", required = true)
     val projectCodeList: ArrayList<String>,
-    @Schema(description = "扩展服务编码", required = true)
+    @Schema(title = "扩展服务编码", required = true)
     val serviceCode: String
 )

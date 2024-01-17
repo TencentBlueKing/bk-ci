@@ -31,21 +31,21 @@ import com.tencent.devops.common.pipeline.element.ktlint.KtlintReporter
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "ktlint代码静态检查")
+@Schema(title = "ktlint代码静态检查")
 class KtlintStyleElement(
-    @Schema(description = "任务名称", required = true)
+    @Schema(title = "任务名称", required = true)
     override val name: String = "执行Linux脚本",
-    @Schema(description = "id", required = false)
+    @Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(description = "状态", required = false)
+    @Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(description = "代码存放路径", required = false)
+    @Schema(title = "代码存放路径", required = false)
     val path: String? = null,
-    @Schema(description = "ktlint要检查的文件pattern", required = false)
+    @Schema(title = "ktlint要检查的文件pattern", required = false)
     val patterns: String?,
-    @Schema(description = "ktlint命令行参数", required = false)
+    @Schema(title = "ktlint命令行参数", required = false)
     val flags: String?,
-    @Schema(description = "ktlint reporters", required = false)
+    @Schema(title = "ktlint reporters", required = false)
     val reporters: List<KtlintReporter>?
 ) : Element(name, id, status) {
 

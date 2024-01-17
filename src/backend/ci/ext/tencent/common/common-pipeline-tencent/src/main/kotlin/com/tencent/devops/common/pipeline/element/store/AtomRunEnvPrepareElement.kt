@@ -30,17 +30,17 @@ package com.tencent.devops.common.pipeline.element.store
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "插件运行环境准备")
+@Schema(title = "插件运行环境准备")
 data class AtomRunEnvPrepareElement(
-    @Schema(description = "任务名称", required = true)
+    @Schema(title = "任务名称", required = true)
     override val name: String = "插件运行环境准备",
-    @Schema(description = "id", required = false)
+    @Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(description = "状态", required = false)
+    @Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(description = "开发语言", required = true)
+    @Schema(title = "开发语言", required = true)
     val language: String = "\${language}",
-    @Schema(description = "运行时环境版本", required = false)
+    @Schema(title = "运行时环境版本", required = false)
     val runtimeVersion: String? = "\${runtimeVersion}"
 ) : Element(name, id, status) {
 

@@ -31,13 +31,13 @@ import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "CodeCC代码检查任务(V3插件)")
+@Schema(title = "CodeCC代码检查任务(V3插件)")
 open class CodeCCScanInContainerTask(
-    @Schema(description = "displayName", required = false)
+    @Schema(title = "displayName", required = false)
     override var displayName: String?,
-    @Schema(description = "入参", required = true)
+    @Schema(title = "入参", required = true)
     override val inputs: CodeCCScanInContainerInput,
-    @Schema(description = "执行条件", required = true)
+    @Schema(title = "执行条件", required = true)
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
 
@@ -59,22 +59,22 @@ open class CodeCCScanInContainerTask(
     }
 }
 
-@Schema(description = "CodeCC代码检查任务(V3插件)")
+@Schema(title = "CodeCC代码检查任务(V3插件)")
 data class CodeCCScanInContainerInput(
-    @Schema(description = "语言", required = true)
+    @Schema(title = "语言", required = true)
     val languages: List<String>? = null, // ["PYTHON", "KOTLIN"]
-    @Schema(description = "工具", required = true)
+    @Schema(title = "工具", required = true)
     val tools: List<String>? = null, // ["PYTHON", "KOTLIN"]
-    @Schema(description = "白名单", required = false)
+    @Schema(title = "白名单", required = false)
     var path: List<String>? = null,
-    @Schema(description = "编译脚本", required = false)
+    @Schema(title = "编译脚本", required = false)
     val script: String? = null,
-    @Schema(description = "规则集", required = true)
+    @Schema(title = "规则集", required = true)
     val languageRuleSetMap: Map<String, List<String>?>? = emptyMap(),
-    @Schema(description = "全量还是增量, 1：增量；0：全量", required = false)
+    @Schema(title = "全量还是增量, 1：增量；0：全量", required = false)
     val toolScanType: String? = null, // 对应接口的scanType, 1：增量；0：全量 2: diff模式
-    @Schema(description = "黑名单，添加后的代码路径将不会产生告警", required = false)
+    @Schema(title = "黑名单，添加后的代码路径将不会产生告警", required = false)
     val customPath: String? = null, // 黑名单，添加后的代码路径将不会产生告警
-    @Schema(description = "Python版本", required = false)
+    @Schema(title = "Python版本", required = false)
     val pyVersion: String? = null
 ) : AbstractInput()

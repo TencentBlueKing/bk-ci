@@ -29,8 +29,8 @@ package com.tencent.devops.remotedev.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "重装工作空间系统接口请求")
+@Schema(title = "重装工作空间系统接口请求")
 data class WorkspaceRebuildReq(
-    @Schema(description = "工作空间镜像地址")
+    @Schema(title = "工作空间镜像地址")
     val imageCosFile: String
 )

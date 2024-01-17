@@ -29,14 +29,14 @@ package com.tencent.devops.remotedev.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "远程开发配置")
+@Schema(title = "远程开发配置")
 data class RemoteDevFile(
-    @Schema(description = "文件id")
+    @Schema(title = "文件id")
     val id: Long?,
-    @Schema(description = "md5 32位")
+    @Schema(title = "md5 32位")
     val md5: String?,
-    @Schema(description = "文件路径")
+    @Schema(title = "文件路径")
     val path: String,
-    @Schema(description = "文件内容")
+    @Schema(title = "文件内容")
     val content: String
 )

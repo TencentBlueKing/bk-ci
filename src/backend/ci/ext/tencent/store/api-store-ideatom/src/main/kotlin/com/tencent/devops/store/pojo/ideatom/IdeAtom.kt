@@ -35,64 +35,64 @@ import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomStatusEnum
 import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "IDE插件信息")
+@Schema(title = "IDE插件信息")
 data class IdeAtom(
-    @Schema(description = "插件ID", required = true)
+    @Schema(title = "插件ID", required = true)
     val atomId: String,
-    @Schema(description = "插件名称", required = true)
+    @Schema(title = "插件名称", required = true)
     val atomName: String,
-    @Schema(description = "插件代码", required = true)
+    @Schema(title = "插件代码", required = true)
     val atomCode: String,
-    @Schema(description = "插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = false)
+    @Schema(title = "插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = false)
     val atomType: IdeAtomTypeEnum?,
-    @Schema(description = "插件状态，INIT：初始化|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGED：已下架")
+    @Schema(title = "插件状态，INIT：初始化|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGED：已下架")
     val atomStatus: IdeAtomStatusEnum,
-    @Schema(description = "插件分类code", required = false)
+    @Schema(title = "插件分类code", required = false)
     val classifyCode: String?,
-    @Schema(description = "插件分类名称", required = false)
+    @Schema(title = "插件分类名称", required = false)
     val classifyName: String?,
-    @Schema(description = "版本号", required = true)
+    @Schema(title = "版本号", required = true)
     val version: String,
-    @Schema(description = "发布类型，NEW：新上架 INCOMPATIBILITY_UPGRADE：非兼容性升级 COMPATIBILITY_UPGRADE：兼容性功能更新 COMPATIBILITY_FIX：兼容性问题修正", required = true)
+    @Schema(title = "发布类型，NEW：新上架 INCOMPATIBILITY_UPGRADE：非兼容性升级 COMPATIBILITY_UPGRADE：兼容性功能更新 COMPATIBILITY_FIX：兼容性问题修正", required = true)
     val releaseType: ReleaseTypeEnum,
-    @Schema(description = "版本日志内容", required = false)
+    @Schema(title = "版本日志内容", required = false)
     val versionContent: String?,
-    @Schema(description = "IDE插件代码库地址", required = false)
+    @Schema(title = "IDE插件代码库地址", required = false)
     val codeSrc: String?,
-    @Schema(description = "插件logo地址", required = false)
+    @Schema(title = "插件logo地址", required = false)
     val logoUrl: String?,
-    @Schema(description = "插件简介", required = false)
+    @Schema(title = "插件简介", required = false)
     val summary: String?,
-    @Schema(description = "插件描述", required = false)
+    @Schema(title = "插件描述", required = false)
     val description: String?,
-    @Schema(description = "发布者", required = true)
+    @Schema(title = "发布者", required = true)
     val publisher: String,
-    @Schema(description = "发布时间", required = false)
+    @Schema(title = "发布时间", required = false)
     val pubTime: String?,
-    @Schema(description = "是否为最新版本插件 true：最新 false：非最新", required = true)
+    @Schema(title = "是否为最新版本插件 true：最新 false：非最新", required = true)
     val latestFlag: Boolean,
-    @Schema(description = "是否为公共插件 true：公共插件 false：普通插件", required = false)
+    @Schema(title = "是否为公共插件 true：公共插件 false：普通插件", required = false)
     val publicFlag: Boolean?,
-    @Schema(description = "是否推荐， TRUE：是 FALSE：不是", required = false)
+    @Schema(title = "是否推荐， TRUE：是 FALSE：不是", required = false)
     val recommendFlag: Boolean?,
-    @Schema(description = "权重（数值越大代表权重越高）", required = false)
+    @Schema(title = "权重（数值越大代表权重越高）", required = false)
     val weight: Int?,
-    @Schema(description = "应用范畴列表", required = false)
+    @Schema(title = "应用范畴列表", required = false)
     val categoryList: List<Category>?,
-    @Schema(description = "标签列表", required = false)
+    @Schema(title = "标签列表", required = false)
     val labelList: List<Label>?,
-    @Schema(description = "项目可视范围,PRIVATE:私有 LOGIN_PUBLIC:登录用户开源")
+    @Schema(title = "项目可视范围,PRIVATE:私有 LOGIN_PUBLIC:登录用户开源")
     val visibilityLevel: VisibilityLevelEnum?,
-    @Schema(description = "插件代码库不开源原因")
+    @Schema(title = "插件代码库不开源原因")
     val privateReason: String?,
-    @Schema(description = "插件安装包名称")
+    @Schema(title = "插件安装包名称")
     val pkgName: String?,
-    @Schema(description = "创建人", required = true)
+    @Schema(title = "创建人", required = true)
     val creator: String,
-    @Schema(description = "创建时间", required = true)
+    @Schema(title = "创建时间", required = true)
     val createTime: String,
-    @Schema(description = "修改人", required = true)
+    @Schema(title = "修改人", required = true)
     val modifier: String,
-    @Schema(description = "修改时间", required = true)
+    @Schema(title = "修改时间", required = true)
     val updateTime: String
 )

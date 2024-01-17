@@ -30,21 +30,21 @@ package com.tencent.devops.common.pipeline.element
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "版本仓库-跨项目构件分发")
+@Schema(title = "版本仓库-跨项目构件分发")
 data class AcrossProjectDistributionElement(
-    @Schema(description = "任务名称", required = true)
+    @Schema(title = "任务名称", required = true)
     override val name: String = "跨项目构件分发",
-    @Schema(description = "id", required = false, hidden = true)
+    @Schema(title = "id", required = false, hidden = true)
     override var id: String? = null,
-    @Schema(description = "状态", required = false)
+    @Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(description = "路径", required = true)
+    @Schema(title = "路径", required = true)
     val path: String = "",
-    @Schema(description = "是否自定义仓库", required = true)
+    @Schema(title = "是否自定义仓库", required = true)
     val customized: Boolean,
-    @Schema(description = "目标项目", required = true)
+    @Schema(title = "目标项目", required = true)
     val targetProjectId: String = "",
-    @Schema(description = "目标路径", required = true)
+    @Schema(title = "目标路径", required = true)
     val targetPath: String = ""
 ) : Element(name, id, status) {
     companion object {

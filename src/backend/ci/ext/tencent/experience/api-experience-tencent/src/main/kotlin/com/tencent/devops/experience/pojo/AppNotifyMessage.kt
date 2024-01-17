@@ -29,32 +29,32 @@ package com.tencent.devops.experience.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "蓝盾APP消息类型")
+@Schema(title = "蓝盾APP消息类型")
 
 open class AppNotifyMessage {
 
-    @Schema(description = "消息id")
+    @Schema(title = "消息id")
     var messageId: Long = 0
 
-    @Schema(description = "experienceHashId")
+    @Schema(title = "experienceHashId")
     var experienceHashId: String = ""
 
-    @Schema(description = "通知接收者")
+    @Schema(title = "通知接收者")
     var receiver: String = ""
 
-    @Schema(description = "设备token")
+    @Schema(title = "设备token")
     var token: String = ""
 
-    @Schema(description = "通知内容")
+    @Schema(title = "通知内容")
     var body: String = ""
 
-    @Schema(description = "通知标题")
+    @Schema(title = "通知标题")
     var title: String = ""
 
-    @Schema(description = "跳转路径")
+    @Schema(title = "跳转路径")
     var url: String = ""
 
-    @Schema(description = "平台")
+    @Schema(title = "平台")
     var platform: String = ""
     override fun toString(): String {
         return String.format(

@@ -29,10 +29,10 @@ package com.tencent.devops.dispatch.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "k8s标签信息")
+@Schema(title = "k8s标签信息")
 data class KubernetesLabel(
-    @Schema(description = "标签key", required = true)
+    @Schema(title = "标签key", required = true)
     val labelKey: String,
-    @Schema(description = "标签value", required = true)
+    @Schema(title = "标签value", required = true)
     val labelValue: String
 )

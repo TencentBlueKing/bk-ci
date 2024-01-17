@@ -29,16 +29,16 @@ package com.tencent.devops.dispatch.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "k8s资源限制信息")
+@Schema(title = "k8s资源限制信息")
 data class KubernetesLimitRange(
-    @Schema(description = "默认cpu限额", required = true)
+    @Schema(title = "默认cpu限额", required = true)
     val defaultCpu: String,
-    @Schema(description = "默认内存限额", required = true)
+    @Schema(title = "默认内存限额", required = true)
     val defaultMemory: String,
-    @Schema(description = "默认请求cpu限额", required = true)
+    @Schema(title = "默认请求cpu限额", required = true)
     val defaultRequestCpu: String,
-    @Schema(description = "默认请求内存限额", required = true)
+    @Schema(title = "默认请求内存限额", required = true)
     val defaultRequestMemory: String,
-    @Schema(description = "限制资源类型", required = true)
+    @Schema(title = "限制资源类型", required = true)
     val limitType: String
 )

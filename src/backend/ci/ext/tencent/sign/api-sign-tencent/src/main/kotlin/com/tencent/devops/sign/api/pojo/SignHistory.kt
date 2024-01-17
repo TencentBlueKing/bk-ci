@@ -29,48 +29,48 @@ package com.tencent.devops.sign.api.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "SignHistory-IPA包签名信息")
+@Schema(title = "SignHistory-IPA包签名信息")
 data class SignHistory(
-    @Schema(description = "签名ID", required = true)
+    @Schema(title = "签名ID", required = true)
     val resignId: String,
-    @Schema(description = "操作用户", required = true)
+    @Schema(title = "操作用户", required = true)
     val userId: String,
-    @Schema(description = "文件MD5", required = false)
+    @Schema(title = "文件MD5", required = false)
     val md5: String?,
-    @Schema(description = "结果文件名称", required = false)
+    @Schema(title = "结果文件名称", required = false)
     val resultFileName: String? = "",
-    @Schema(description = "结果文件MD5", required = false)
+    @Schema(title = "结果文件MD5", required = false)
     val resultFileMd5: String? = "",
-    @Schema(description = "归档类型(PIPELINE|CUSTOM)", required = false)
+    @Schema(title = "归档类型(PIPELINE|CUSTOM)", required = false)
     val archiveType: String?,
-    @Schema(description = "项目Id", required = false)
+    @Schema(title = "项目Id", required = false)
     val projectId: String?,
-    @Schema(description = "流水线Id", required = false)
+    @Schema(title = "流水线Id", required = false)
     val pipelineId: String?,
-    @Schema(description = "构建ID", required = false)
+    @Schema(title = "构建ID", required = false)
     val buildId: String?,
-    @Schema(description = "插件ID", required = false)
+    @Schema(title = "插件ID", required = false)
     val taskId: String? = null,
-    @Schema(description = "归档路径", required = false)
+    @Schema(title = "归档路径", required = false)
     val archivePath: String?,
-    @Schema(description = "任务状态", required = false)
+    @Schema(title = "任务状态", required = false)
     val status: String?,
-    @Schema(description = "创建时间", required = true)
+    @Schema(title = "创建时间", required = true)
     val createTime: Long?,
-    @Schema(description = "完成时间", required = false)
+    @Schema(title = "完成时间", required = false)
     val endTime: Long?,
-    @Schema(description = "上传完成时间", required = false)
+    @Schema(title = "上传完成时间", required = false)
     val uploadFinishTime: Long?,
-    @Schema(description = "解压完成时间", required = false)
+    @Schema(title = "解压完成时间", required = false)
     val unzipFinishTime: Long?,
-    @Schema(description = "签名完成时间", required = false)
+    @Schema(title = "签名完成时间", required = false)
     val resignFinishTime: Long?,
-    @Schema(description = "压缩完成时间", required = false)
+    @Schema(title = "压缩完成时间", required = false)
     val zipFinishTime: Long?,
-    @Schema(description = "归档完成时间", required = false)
+    @Schema(title = "归档完成时间", required = false)
     val archiveFinishTime: Long?,
-    @Schema(description = "错误信息", required = false)
+    @Schema(title = "错误信息", required = false)
     val errorMessage: String?,
-    @Schema(description = "签名任务请求原文", required = false)
+    @Schema(title = "签名任务请求原文", required = false)
     var ipaSignInfoStr: String?
 )

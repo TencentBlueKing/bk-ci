@@ -30,22 +30,22 @@ package com.tencent.devops.store.pojo.dto
 import com.tencent.devops.store.pojo.enums.ServiceTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "审核请求报文")
+@Schema(title = "审核请求报文")
 data class ServiceApproveReq(
-    @Schema(description = "插件标识")
+    @Schema(title = "插件标识")
     val serviceCode: String,
-    @Schema(description = "审核结果：PASS：通过|REJECT：驳回")
+    @Schema(title = "审核结果：PASS：通过|REJECT：驳回")
     val result: String,
-    @Schema(description = "审核结果说明")
+    @Schema(title = "审核结果说明")
     val message: String,
-    @Schema(description = "权重（数值越大代表权重越高）")
+    @Schema(title = "权重（数值越大代表权重越高）")
     val weight: Int?,
-    @Schema(description = "扩展类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = true)
+    @Schema(title = "扩展类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = true)
     val serviceType: ServiceTypeEnum,
-    @Schema(description = "是否官方认证，true：官方推荐 false：官方不推荐", required = true)
+    @Schema(title = "是否官方认证，true：官方推荐 false：官方不推荐", required = true)
     val certificationFlag: Boolean,
-    @Schema(description = "是否公共， TRUE：是 FALSE：否", required = false)
+    @Schema(title = "是否公共， TRUE：是 FALSE：否", required = false)
     val publicFlag: Boolean? = null,
-    @Schema(description = "是否推荐， TRUE：可以 FALSE：不可以", required = false)
+    @Schema(title = "是否推荐， TRUE：可以 FALSE：不可以", required = false)
     val recommendFlag: Boolean? = null
 )

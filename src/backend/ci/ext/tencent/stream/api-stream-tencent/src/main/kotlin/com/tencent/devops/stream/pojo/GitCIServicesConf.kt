@@ -29,30 +29,30 @@ package com.tencent.devops.stream.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "Stream服务配置")
+@Schema(title = "Stream服务配置")
 data class GitCIServicesConf(
-    @Schema(description = "ID")
+    @Schema(title = "ID")
     val id: Long,
-    @Schema(description = "镜像名称")
+    @Schema(title = "镜像名称")
     val imageName: String,
-    @Schema(description = "镜像标签")
+    @Schema(title = "镜像标签")
     val imageTag: String,
-    @Schema(description = "镜像仓库地址")
+    @Schema(title = "镜像仓库地址")
     val repoUrl: String,
-    @Schema(description = "镜像仓库登录用户")
+    @Schema(title = "镜像仓库登录用户")
     val repoUsername: String?,
-    @Schema(description = "镜像仓库登录密码")
+    @Schema(title = "镜像仓库登录密码")
     val repoPwd: String?,
-    @Schema(description = "是否启用")
+    @Schema(title = "是否启用")
     val enable: Boolean,
-    @Schema(description = "环境变量")
+    @Schema(title = "环境变量")
     val env: String?,
-    @Schema(description = "创建者")
+    @Schema(title = "创建者")
     val createUser: String?,
-    @Schema(description = "修改者")
+    @Schema(title = "修改者")
     val updateUser: String?,
-    @Schema(description = "创建时间")
+    @Schema(title = "创建时间")
     val createTime: String?,
-    @Schema(description = "修改时间")
+    @Schema(title = "修改时间")
     val updateTime: String?
 )

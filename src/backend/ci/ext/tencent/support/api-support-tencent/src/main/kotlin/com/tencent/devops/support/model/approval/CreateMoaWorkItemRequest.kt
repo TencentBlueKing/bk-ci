@@ -29,16 +29,16 @@ package com.tencent.devops.support.model.approval
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "创建审批单请求报文体")
+@Schema(title = "创建审批单请求报文体")
 data class CreateMoaWorkItemRequest(
-    @Schema(description = "审批人，多个以逗号分隔", required = true)
+    @Schema(title = "审批人，多个以逗号分隔", required = true)
     val verifier: String,
-    @Schema(description = "标题", required = true)
+    @Schema(title = "标题", required = true)
     val title: String,
-    @Schema(description = "任务ID", required = true)
+    @Schema(title = "任务ID", required = true)
     val taskId: String,
-    @Schema(description = "回调URL", required = true)
+    @Schema(title = "回调URL", required = true)
     val backUrl: String,
-    @Schema(description = "系统URL，用于用户审核时跳转系统查看", required = false)
+    @Schema(title = "系统URL，用于用户审核时跳转系统查看", required = false)
     val sysUrl: String? = null
 )

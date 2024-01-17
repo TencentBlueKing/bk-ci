@@ -29,18 +29,18 @@ package com.tencent.devops.stream.v1.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "工蜂触发请求-封装给流水线执行库处理使用")
+@Schema(title = "工蜂触发请求-封装给流水线执行库处理使用")
 data class V1GitRequestEventForHandle(
-    @Schema(description = "Git Request Event ID")
+    @Schema(title = "Git Request Event ID")
     val id: Long?,
-    @Schema(description = "流水线所在工蜂项目ID")
+    @Schema(title = "流水线所在工蜂项目ID")
     val gitProjectId: Long,
-    @Schema(description = "流水线所在分支名")
+    @Schema(title = "流水线所在分支名")
     val branch: String,
-    @Schema(description = "触发用户")
+    @Schema(title = "触发用户")
     val userId: String,
-    @Schema(description = "是否为远程仓库触发")
+    @Schema(title = "是否为远程仓库触发")
     val checkRepoTrigger: Boolean = false,
-    @Schema(description = "工蜂触发的请求内容")
+    @Schema(title = "工蜂触发的请求内容")
     val gitRequestEvent: V1GitRequestEvent
 )

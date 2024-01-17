@@ -29,14 +29,14 @@ package com.tencent.devops.support.model.mta.h5.enums
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "指标列表")
+@Schema(title = "指标列表")
 enum class IdxType(private val type: String) {
-    @Schema(description = "浏览量")
+    @Schema(title = "浏览量")
     pv("pv"),
-    @Schema(description = "独立访客")
+    @Schema(title = "独立访客")
     uv("uv"),
-    @Schema(description = "访问次数")
+    @Schema(title = "访问次数")
     vv("vv"),
-    @Schema(description = "独立IP")
+    @Schema(title = "独立IP")
     iv("iv");
 }

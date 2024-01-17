@@ -29,28 +29,28 @@ package com.tencent.devops.remotedev.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "获取用户工作空间详情model")
+@Schema(title = "获取用户工作空间详情model")
 data class WorkspaceUserDetail(
-    @Schema(description = "运行中容器数量")
+    @Schema(title = "运行中容器数量")
     val runningCount: Int,
-    @Schema(description = "已休眠容器数量")
+    @Schema(title = "已休眠容器数量")
     val sleepingCount: Int,
-    @Schema(description = "已销毁容器数量")
+    @Schema(title = "已销毁容器数量")
     val deleteCount: Int,
-    @Schema(description = "计费时间（秒）")
+    @Schema(title = "计费时间（秒）")
     val chargeableTime: Long,
-    @Schema(description = "使用时间（秒）")
+    @Schema(title = "使用时间（秒）")
     val usageTime: Long,
-    @Schema(description = "休眠时间（秒）")
+    @Schema(title = "休眠时间（秒）")
     val sleepingTime: Long,
-    @Schema(description = "免费时间（秒）")
+    @Schema(title = "免费时间（秒）")
     val discountTime: Long,
-    @Schema(description = "CPU 核心数")
+    @Schema(title = "CPU 核心数")
     val cpu: Int,
-    @Schema(description = "内存大小（MB）")
+    @Schema(title = "内存大小（MB）")
     val memory: Int,
-    @Schema(description = "存储空间大小（GB）")
+    @Schema(title = "存储空间大小（GB）")
     val disk: Int,
-    @Schema(description = "windows-gpu体验剩余时长(秒)")
+    @Schema(title = "windows-gpu体验剩余时长(秒)")
     val winUsageTimeLeft: Int
 )

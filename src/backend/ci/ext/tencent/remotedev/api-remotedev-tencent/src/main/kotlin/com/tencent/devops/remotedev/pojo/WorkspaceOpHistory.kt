@@ -29,14 +29,14 @@ package com.tencent.devops.remotedev.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "工作空间时间轴（分页）")
+@Schema(title = "工作空间时间轴（分页）")
 data class WorkspaceOpHistory(
-    @Schema(description = "操作时间")
+    @Schema(title = "操作时间")
     val createdTime: Long,
-    @Schema(description = "操作人")
+    @Schema(title = "操作人")
     val operator: String,
-    @Schema(description = "操作类型")
+    @Schema(title = "操作类型")
     val action: WorkspaceAction,
-    @Schema(description = "操作描述")
+    @Schema(title = "操作描述")
     val actionMessage: String
 )

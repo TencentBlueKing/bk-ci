@@ -2,10 +2,10 @@ package com.tencent.devops.dispatch.devcloud.pojo.performance
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "devcloud项目性能配置")
+@Schema(title = "devcloud项目性能配置")
 data class OPPerformanceConfigVO(
-    @Schema(description = "蓝盾项目ID")
+    @Schema(title = "蓝盾项目ID")
     val projectId: String,
-    @Schema(description = "性能基础配置ID")
+    @Schema(title = "性能基础配置ID")
     val optionId: Long
 )

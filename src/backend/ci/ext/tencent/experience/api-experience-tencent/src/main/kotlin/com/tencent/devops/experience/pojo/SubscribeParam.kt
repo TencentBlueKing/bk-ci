@@ -29,8 +29,8 @@ package com.tencent.devops.experience.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "订阅参数")
+@Schema(title = "订阅参数")
 data class SubscribeParam(
-    @Schema(description = "experienceHashId", required = true)
+    @Schema(title = "experienceHashId", required = true)
     val experienceHashId: String
 )

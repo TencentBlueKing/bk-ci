@@ -29,8 +29,8 @@ package com.tencent.devops.remotedev.pojo.image
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "创建VM镜像请求报文")
+@Schema(title = "创建VM镜像请求报文")
 data class MakeWorkspaceImageReq(
-    @Schema(description = "imageName")
+    @Schema(title = "imageName")
     val imageName: String
 )

@@ -29,18 +29,18 @@ package com.tencent.devops.stream.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "工蜂项目配置")
+@Schema(title = "工蜂项目配置")
 data class GitProjectConf(
-    @Schema(description = "工蜂项目ID")
+    @Schema(title = "工蜂项目ID")
     val gitProjectId: Long,
-    @Schema(description = "工蜂项目名")
+    @Schema(title = "工蜂项目名")
     val name: String,
-    @Schema(description = "工蜂项目url")
+    @Schema(title = "工蜂项目url")
     val url: String,
-    @Schema(description = "是否可以启用CI")
+    @Schema(title = "是否可以启用CI")
     val enable: Boolean,
-    @Schema(description = "创建时间")
+    @Schema(title = "创建时间")
     val createTime: Long?,
-    @Schema(description = "修改时间")
+    @Schema(title = "修改时间")
     val updateTime: Long?
 )

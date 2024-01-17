@@ -32,21 +32,21 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class BkAuthPermissionGrantRequest(
     @JsonProperty("project_code")
-    @Schema(description = "project_code")
+    @Schema(title = "project_code")
     val projectCode: String,
     @JsonProperty("service_code")
-    @Schema(description = "service_code")
+    @Schema(title = "service_code")
     val serviceCode: String,
-    @Schema(description = "policy_code")
+    @Schema(title = "policy_code")
     @JsonProperty("policy_code")
     val policyCode: String,
-    @Schema(description = "resource_type")
+    @Schema(title = "resource_type")
     @JsonProperty("resource_type")
     val resourceType: String,
-    @Schema(description = "resource_code")
+    @Schema(title = "resource_code")
     @JsonProperty("resource_code")
     val resourceCode: String,
-    @Schema(description = "user_id_list")
+    @Schema(title = "user_id_list")
     @JsonProperty("user_id_list")
     val userIdList: List<String>
 )

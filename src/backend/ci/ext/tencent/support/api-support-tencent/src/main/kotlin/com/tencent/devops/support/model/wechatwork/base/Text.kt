@@ -29,8 +29,8 @@ package com.tencent.devops.support.model.wechatwork.base
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "文本")
+@Schema(title = "文本")
 data class Text(
-    @Schema(description = "文本内容")
+    @Schema(title = "文本内容")
     val content: String
 )

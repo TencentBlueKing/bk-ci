@@ -28,18 +28,18 @@ package com.tencent.devops.statistics.pojo.openapi
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "AppCode所属组织架构信息")
+@Schema(title = "AppCode所属组织架构信息")
 data class AppCodeGroup(
-    @Schema(description = "事业群ID")
+    @Schema(title = "事业群ID")
     val bgId: Int?,
-    @Schema(description = "事业群名字")
+    @Schema(title = "事业群名字")
     val bgName: String?,
-    @Schema(description = "部门ID")
+    @Schema(title = "部门ID")
     val deptId: Int?,
-    @Schema(description = "部门名字")
+    @Schema(title = "部门名字")
     val deptName: String?,
-    @Schema(description = "中心ID")
+    @Schema(title = "中心ID")
     val centerId: Int?,
-    @Schema(description = "中心名字")
+    @Schema(title = "中心名字")
     val centerName: String?
 )

@@ -32,24 +32,24 @@ import com.tencent.devops.common.api.pojo.Error
 import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Schema(description = "DevCloud持久化容器构建信息模型")
+@Schema(title = "DevCloud持久化容器构建信息模型")
 data class PersistenceBuildWithStatus(
-    @Schema(description = "项目id")
+    @Schema(title = "项目id")
     val projectId: String,
-    @Schema(description = "构建id")
+    @Schema(title = "构建id")
     val buildId: String,
-    @Schema(description = "构建环境id")
+    @Schema(title = "构建环境id")
     val vmSeqId: String,
-    @Schema(description = "工作空间")
+    @Schema(title = "工作空间")
     val workspace: String,
-    @Schema(description = "流水线id")
+    @Schema(title = "流水线id")
     val pipelineId: String?,
-    @Schema(description = "是否成功")
+    @Schema(title = "是否成功")
     val success: Boolean,
-    @Schema(description = "message信息")
+    @Schema(title = "message信息")
     val message: String?,
-    @Schema(description = "错误信息")
+    @Schema(title = "错误信息")
     val error: Error?,
-    @Schema(description = "流水线执行次数")
+    @Schema(title = "流水线执行次数")
     val executeCount: Int?
 )

@@ -29,48 +29,48 @@ package com.tencent.devops.stream.v1.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "蓝盾工蜂项目配置")
+@Schema(title = "蓝盾工蜂项目配置")
 data class V1GitRepositoryConf(
-    @Schema(description = "工蜂项目ID")
+    @Schema(title = "工蜂项目ID")
     val gitProjectId: Long,
-    @Schema(description = "工蜂项目名")
+    @Schema(title = "工蜂项目名")
     val name: String,
-    @Schema(description = "工蜂项目url")
+    @Schema(title = "工蜂项目url")
     val url: String,
-    @Schema(description = "homepage")
+    @Schema(title = "homepage")
     val homepage: String,
-    @Schema(description = "gitHttpUrl")
+    @Schema(title = "gitHttpUrl")
     val gitHttpUrl: String,
-    @Schema(description = "gitSshUrl")
+    @Schema(title = "gitSshUrl")
     val gitSshUrl: String,
-    @Schema(description = "是否启用CI")
+    @Schema(title = "是否启用CI")
     val enableCi: Boolean,
-    @Schema(description = "Build pushed branches")
+    @Schema(title = "Build pushed branches")
     val buildPushedBranches: Boolean = true,
-    @Schema(description = "Limit concurrent jobs")
+    @Schema(title = "Limit concurrent jobs")
     val limitConcurrentJobs: Int?,
-    @Schema(description = "Build pushed pull request")
+    @Schema(title = "Build pushed pull request")
     val buildPushedPullRequest: Boolean = true,
-    @Schema(description = "Auto cancel branch builds")
+    @Schema(title = "Auto cancel branch builds")
     val autoCancelBranchBuilds: Boolean = false,
-    @Schema(description = "Auto cancel pull request builds")
+    @Schema(title = "Auto cancel pull request builds")
     val autoCancelPullRequestBuilds: Boolean = false,
-    @Schema(description = "Environment variable")
+    @Schema(title = "Environment variable")
     val env: List<V1EnvironmentVariables>?,
-    @Schema(description = "创建时间")
+    @Schema(title = "创建时间")
     val createTime: Long?,
-    @Schema(description = "修改时间")
+    @Schema(title = "修改时间")
     val updateTime: Long?,
-    @Schema(description = "蓝盾项目Code")
+    @Schema(title = "蓝盾项目Code")
     val projectCode: String?,
-    @Schema(description = "企业微信客服通知")
+    @Schema(title = "企业微信客服通知")
     val rtxCustomProperty: V1RtxCustomProperty?,
-    @Schema(description = "企业微信群通知")
+    @Schema(title = "企业微信群通知")
     val rtxGroupProperty: V1RtxGroupProperty?,
-    @Schema(description = "邮件通知")
+    @Schema(title = "邮件通知")
     val emailProperty: V1EmailProperty?,
-    @Schema(description = "是否只在失败时通知")
+    @Schema(title = "是否只在失败时通知")
     val onlyFailedNotify: Boolean? = true,
-    @Schema(description = "是否开启Mr锁定")
+    @Schema(title = "是否开启Mr锁定")
     val enableMrBlock: Boolean? = true
 )

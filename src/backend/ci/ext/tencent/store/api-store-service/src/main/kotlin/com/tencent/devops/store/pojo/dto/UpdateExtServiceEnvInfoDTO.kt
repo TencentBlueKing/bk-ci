@@ -30,14 +30,14 @@ package com.tencent.devops.store.pojo.dto
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class UpdateExtServiceEnvInfoDTO(
-    @Schema(description = "用户Id", required = true)
+    @Schema(title = "用户Id", required = true)
     val userId: String,
-    @Schema(description = "扩展服务执行包路径")
+    @Schema(title = "扩展服务执行包路径")
     val pkgPath: String? = null,
-    @Schema(description = "扩展服务执行包SHA签名串")
+    @Schema(title = "扩展服务执行包SHA签名串")
     val pkgShaContent: String? = null,
-    @Schema(description = "dockerfile内容")
+    @Schema(title = "dockerfile内容")
     val dockerFileContent: String? = null,
-    @Schema(description = "扩展服务镜像路径")
+    @Schema(title = "扩展服务镜像路径")
     val imagePath: String? = null
 )

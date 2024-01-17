@@ -29,8 +29,8 @@ package com.tencent.devops.support.model.wechatwork.base
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "图片")
+@Schema(title = "图片")
 data class Image(
-    @Schema(description = "图片内容")
+    @Schema(title = "图片内容")
     val media_id: String
 )

@@ -29,10 +29,10 @@ package com.tencent.devops.support.model.wechatwork.enums
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "接受者类型")
+@Schema(title = "接受者类型")
 enum class ReceiverType(private val type: String) {
-    @Schema(description = "个人")
+    @Schema(title = "个人")
     single("single"),
-    @Schema(description = "企业微信群")
+    @Schema(title = "企业微信群")
     group("group"),
 }

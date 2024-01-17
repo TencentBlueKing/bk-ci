@@ -2,7 +2,7 @@ package com.tencent.devops.dispatch.windows.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "DevCloud创建VM")
+@Schema(title = "DevCloud创建VM")
 data class DevCloudWindowsCreate(
     var regionId: String? = "ap-guangzhou",
     var os: String? = "windows-2022",

@@ -31,49 +31,49 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "TriggerBuild请求")
+@Schema(title = "TriggerBuild请求")
 data class V1TriggerBuildReq(
-    @Schema(description = "工蜂项目ID")
+    @Schema(title = "工蜂项目ID")
     override val gitProjectId: Long,
-    @Schema(description = "工蜂项目名")
+    @Schema(title = "工蜂项目名")
     override val name: String?,
-    @Schema(description = "工蜂项目url")
+    @Schema(title = "工蜂项目url")
     override val url: String?,
-    @Schema(description = "homepage")
+    @Schema(title = "homepage")
     override val homepage: String?,
-    @Schema(description = "gitHttpUrl")
+    @Schema(title = "gitHttpUrl")
     override val gitHttpUrl: String?,
-    @Schema(description = "gitSshUrl")
+    @Schema(title = "gitSshUrl")
     override val gitSshUrl: String?,
-    @Schema(description = "分支")
+    @Schema(title = "分支")
     val branch: String,
-    @Schema(description = "Custom commit message")
+    @Schema(title = "Custom commit message")
     val customCommitMsg: String?,
-    @Schema(description = "yaml")
+    @Schema(title = "yaml")
     val yaml: String?,
-    @Schema(description = "描述")
+    @Schema(title = "描述")
     val description: String?,
-    @Schema(description = "用户选择的触发CommitId")
+    @Schema(title = "用户选择的触发CommitId")
     val commitId: String? = null,
-    @Schema(description = "事件请求体")
+    @Schema(title = "事件请求体")
     val payload: String? = null,
-    @Schema(description = "模拟代码库类型")
+    @Schema(title = "模拟代码库类型")
     val scmType: ScmType = ScmType.CODE_GIT,
-    @Schema(description = "模拟代码事件类型")
+    @Schema(title = "模拟代码事件类型")
     val eventType: String? = null,
     val objectKind: String = StreamGitObjectKind.OBJECT_KIND_MANUAL
 ) : StreamBaseRepository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)
 
-@Schema(description = "V2AppTriggerBuild请求")
+@Schema(title = "V2AppTriggerBuild请求")
 data class V2AppTriggerBuildReq(
-    @Schema(description = "分支")
+    @Schema(title = "分支")
     val branch: String,
-    @Schema(description = "Custom commit message")
+    @Schema(title = "Custom commit message")
     val customCommitMsg: String?,
-    @Schema(description = "yaml")
+    @Schema(title = "yaml")
     val yaml: String?,
-    @Schema(description = "描述")
+    @Schema(title = "描述")
     val description: String?,
-    @Schema(description = "用户选择的触发CommitId")
+    @Schema(title = "用户选择的触发CommitId")
     val commitId: String? = null
 )

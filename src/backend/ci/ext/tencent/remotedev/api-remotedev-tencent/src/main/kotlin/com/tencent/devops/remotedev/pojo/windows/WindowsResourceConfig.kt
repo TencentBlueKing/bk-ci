@@ -29,30 +29,30 @@ package com.tencent.devops.remotedev.pojo.windows
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "WINDOWS GPU资源配置表")
+@Schema(title = "WINDOWS GPU资源配置表")
 data class WindowsResourceConfig(
-    @Schema(description = "Id")
+    @Schema(title = "Id")
     val id: Long?,
-    @Schema(description = "是否可用")
+    @Schema(title = "是否可用")
     val available: Boolean?,
-    @Schema(description = "区域，深圳，南京等")
+    @Schema(title = "区域，深圳，南京等")
     val zone: String,
-    @Schema(description = "区域简称，SZ,NJ")
+    @Schema(title = "区域简称，SZ,NJ")
     var zoneShortName: String,
-    @Schema(description = "资源类型：M，L，XL，S")
+    @Schema(title = "资源类型：M，L，XL，S")
     val size: String,
-    @Schema(description = "GPU卡类型")
+    @Schema(title = "GPU卡类型")
     val type: String? = null,
-    @Schema(description = "vGPU")
+    @Schema(title = "vGPU")
     val gpu: Int,
-    @Schema(description = "CPU")
+    @Schema(title = "CPU")
     val cpu: Int,
-    @Schema(description = "内存")
+    @Schema(title = "内存")
     val memory: Int,
-    @Schema(description = "本地SSD盘")
+    @Schema(title = "本地SSD盘")
     val disk: Int,
-    @Schema(description = "云SSD盘")
+    @Schema(title = "云SSD盘")
     val hdisk: Int? = 1,
-    @Schema(description = "描述")
+    @Schema(title = "描述")
     val description: String
 )

@@ -30,22 +30,22 @@ package com.tencent.devops.store.pojo.common
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "store代码扫描信息")
+@Schema(title = "store代码扫描信息")
 data class StoreCodeccInfo(
-    @Schema(description = "store组件ID", required = true)
+    @Schema(title = "store组件ID", required = true)
     val storeId: String,
-    @Schema(description = "store组件编码", required = true)
+    @Schema(title = "store组件编码", required = true)
     val storeCode: String,
-    @Schema(description = "组件类型", required = true)
+    @Schema(title = "组件类型", required = true)
     val storeType: StoreTypeEnum,
-    @Schema(description = "构建ID", required = true)
+    @Schema(title = "构建ID", required = true)
     val buildId: String,
-    @Schema(description = "代码扫描任务ID", required = true)
+    @Schema(title = "代码扫描任务ID", required = true)
     val taskId: String,
-    @Schema(description = "代码规范评分", required = true)
+    @Schema(title = "代码规范评分", required = true)
     val codeStyleScore: Double,
-    @Schema(description = "代码安全评分", required = true)
+    @Schema(title = "代码安全评分", required = true)
     val codeSecurityScore: Double,
-    @Schema(description = "代码度量和检查评分", required = true)
+    @Schema(title = "代码度量和检查评分", required = true)
     val codeMeasureScore: Double
 )

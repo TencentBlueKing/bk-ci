@@ -29,34 +29,34 @@ package com.tencent.devops.remotedev.pojo.image
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "自定义镜像")
+@Schema(title = "自定义镜像")
 data class ProjectImage(
-    @Schema(description = "ID")
+    @Schema(title = "ID")
     val id: Long,
-    @Schema(description = "项目ID")
+    @Schema(title = "项目ID")
     val projectId: String,
-    @Schema(description = "镜像ID")
+    @Schema(title = "镜像ID")
     val imageId: String,
-    @Schema(description = "镜像名称")
+    @Schema(title = "镜像名称")
     val imageName: String,
-    @Schema(description = "路径")
+    @Schema(title = "路径")
     val imageCosFile: String,
-    @Schema(description = "size")
+    @Schema(title = "size")
     val size: String,
-    @Schema(description = "镜像关联cgsId")
+    @Schema(title = "镜像关联cgsId")
     val sourceCgsId: String,
-    @Schema(description = "镜像关联cgsType")
+    @Schema(title = "镜像关联cgsType")
     val sourceCgsType: String,
-    @Schema(description = "区域")
+    @Schema(title = "区域")
     val sourceCgsZone: String,
-    @Schema(description = "展示区域")
+    @Schema(title = "展示区域")
     val sourceCgsZoneName: String,
-    @Schema(description = "区域简写")
+    @Schema(title = "区域简写")
     val sourceCgsZoneShortName: String,
-    @Schema(description = "状态")
+    @Schema(title = "状态")
     val status: ImageStatus,
-    @Schema(description = "创建人")
+    @Schema(title = "创建人")
     val creator: String,
-    @Schema(description = "创建时间")
+    @Schema(title = "创建时间")
     val createdTime: Long
 )

@@ -29,8 +29,8 @@ package com.tencent.devops.prebuild.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "Yaml内容")
+@Schema(title = "Yaml内容")
 data class GitYamlString(
-    @Schema(description = "YAML文件内容")
+    @Schema(title = "YAML文件内容")
     val yaml: String
 )

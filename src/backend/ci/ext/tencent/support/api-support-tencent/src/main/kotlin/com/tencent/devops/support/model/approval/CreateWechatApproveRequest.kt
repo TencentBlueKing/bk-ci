@@ -29,16 +29,16 @@ package com.tencent.devops.support.model.approval
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "创建微信审批单请求报文体")
+@Schema(title = "创建微信审批单请求报文体")
 data class CreateWechatApproveRequest(
-    @Schema(description = "蓝鲸APP名称", required = true)
+    @Schema(title = "蓝鲸APP名称", required = true)
     val appName: String,
-    @Schema(description = "审批人，多个以逗号分隔", required = true)
+    @Schema(title = "审批人，多个以逗号分隔", required = true)
     val verifier: String,
-    @Schema(description = "消息内容", required = true)
+    @Schema(title = "消息内容", required = true)
     val message: String,
-    @Schema(description = "任务ID", required = true)
+    @Schema(title = "任务ID", required = true)
     val taskId: String,
-    @Schema(description = "回调URL", required = false)
+    @Schema(title = "回调URL", required = false)
     val url: String? = null
 )

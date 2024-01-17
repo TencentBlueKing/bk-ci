@@ -29,26 +29,26 @@ package com.tencent.devops.remotedev.pojo.software
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "项目下软件信息")
+@Schema(title = "项目下软件信息")
 data class ProjectSoftware(
-    @Schema(description = "ID")
+    @Schema(title = "ID")
     val id: Long,
-    @Schema(description = "项目ID")
+    @Schema(title = "项目ID")
     val projectId: String,
-    @Schema(description = "软件名称")
+    @Schema(title = "软件名称")
     val name: String,
-    @Schema(description = "软件logo")
+    @Schema(title = "软件logo")
     val logo: String,
-    @Schema(description = "版本")
+    @Schema(title = "版本")
     val version: String,
-    @Schema(description = "来源")
+    @Schema(title = "来源")
     val source: String,
-    @Schema(description = "状态")
+    @Schema(title = "状态")
     val status: Int,
-    @Schema(description = "分类")
+    @Schema(title = "分类")
     val classification: String,
-    @Schema(description = "安装方式")
+    @Schema(title = "安装方式")
     val installMethod: String,
-    @Schema(description = "创建人")
+    @Schema(title = "创建人")
     val creator: String
 )

@@ -30,12 +30,12 @@ package com.tencent.devops.store.pojo.dto
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class ExtServiceDeploymentDTO(
-    @Schema(description = "期望的pod数量", required = true)
+    @Schema(title = "期望的pod数量", required = true)
     val replicas: Int,
-    @Schema(description = "扩展服务镜像", required = true)
+    @Schema(title = "扩展服务镜像", required = true)
     val serviceImage: String,
-    @Schema(description = "拉取镜像秘钥名称", required = false)
+    @Schema(title = "拉取镜像秘钥名称", required = false)
     val pullImageSecretName: String?,
-    @Schema(description = "容器端口", required = true)
+    @Schema(title = "容器端口", required = true)
     val containerPort: Int
 )

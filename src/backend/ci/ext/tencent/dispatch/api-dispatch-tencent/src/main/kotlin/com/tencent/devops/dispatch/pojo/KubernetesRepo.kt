@@ -29,14 +29,14 @@ package com.tencent.devops.dispatch.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "k8s仓库信息")
+@Schema(title = "k8s仓库信息")
 data class KubernetesRepo(
-    @Schema(description = "仓库地址", required = true)
+    @Schema(title = "仓库地址", required = true)
     val registryUrl: String,
-    @Schema(description = "用户名", required = true)
+    @Schema(title = "用户名", required = true)
     val username: String,
-    @Schema(description = "密码", required = true)
+    @Schema(title = "密码", required = true)
     val password: String,
-    @Schema(description = "邮箱", required = false)
+    @Schema(title = "邮箱", required = false)
     val email: String?
 )

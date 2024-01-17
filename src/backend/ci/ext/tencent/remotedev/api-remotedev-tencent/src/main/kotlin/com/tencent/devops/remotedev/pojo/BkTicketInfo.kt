@@ -2,12 +2,12 @@ package com.tencent.devops.remotedev.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "更新bkticket信息")
+@Schema(title = "更新bkticket信息")
 data class BkTicketInfo(
-    @Schema(description = "bkTicket")
+    @Schema(title = "bkTicket")
     val bkTicket: String,
-    @Schema(description = "hostName")
+    @Schema(title = "hostName")
     val hostName: String,
-    @Schema(description = "mountType")
+    @Schema(title = "mountType")
     val mountType: WorkspaceMountType
 )

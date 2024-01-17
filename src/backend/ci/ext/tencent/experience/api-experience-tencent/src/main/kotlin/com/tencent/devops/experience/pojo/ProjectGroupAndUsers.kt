@@ -29,14 +29,14 @@ package com.tencent.devops.experience.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "版本体验-项目用户组和所有人员")
+@Schema(title = "版本体验-项目用户组和所有人员")
 data class ProjectGroupAndUsers(
-    @Schema(description = "组名称")
+    @Schema(title = "组名称")
     val groupName: String,
-    @Schema(description = "组ID")
+    @Schema(title = "组ID")
     val groupId: String,
-    @Schema(description = "组数字ID")
+    @Schema(title = "组数字ID")
     val groupRoleId: Int,
-    @Schema(description = "组员")
+    @Schema(title = "组员")
     val users: Set<String>
 )

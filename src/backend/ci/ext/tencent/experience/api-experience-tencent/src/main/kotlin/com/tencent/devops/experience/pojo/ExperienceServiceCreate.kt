@@ -30,36 +30,36 @@ package com.tencent.devops.experience.pojo
 import com.tencent.devops.experience.pojo.enums.ArtifactoryType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "版本体验-创建发布信息")
+@Schema(title = "版本体验-创建发布信息")
 data class ExperienceServiceCreate(
-    @Schema(description = "文件路径", required = true)
+    @Schema(title = "文件路径", required = true)
     val path: String,
-    @Schema(description = "版本仓库类型", required = true)
+    @Schema(title = "版本仓库类型", required = true)
     val artifactoryType: ArtifactoryType,
-    @Schema(description = "截止日期", required = true)
+    @Schema(title = "截止日期", required = true)
     val expireDate: Long,
-    @Schema(description = "体验组", required = false)
+    @Schema(title = "体验组", required = false)
     val experienceGroups: Set<String> = setOf(),
-    @Schema(description = "内部名单", required = false)
+    @Schema(title = "内部名单", required = false)
     val innerUsers: Set<String> = setOf(),
-    @Schema(description = "外部名单", required = false)
+    @Schema(title = "外部名单", required = false)
     val outerUsers: Set<String> = setOf(),
-    @Schema(description = "通知类型", required = false)
+    @Schema(title = "通知类型", required = false)
     val notifyTypes: Set<NotifyType> = setOf(),
-    @Schema(description = "是否开启企业微信群", required = true)
+    @Schema(title = "是否开启企业微信群", required = true)
     val enableWechatGroups: Boolean = true,
-    @Schema(description = "企业微信群", required = false)
+    @Schema(title = "企业微信群", required = false)
     val wechatGroups: String = "",
-    @Schema(description = "版本体验描述", required = false)
+    @Schema(title = "版本体验描述", required = false)
     val description: String? = "",
-    @Schema(description = "体验名称", required = true)
+    @Schema(title = "体验名称", required = true)
     val experienceName: String?,
-    @Schema(description = "版本标题", required = true)
+    @Schema(title = "版本标题", required = true)
     val versionTitle: String?,
-    @Schema(description = "产品类别", required = true)
+    @Schema(title = "产品类别", required = true)
     val categoryId: Int?,
-    @Schema(description = "产品负责人", required = true)
+    @Schema(title = "产品负责人", required = true)
     val productOwner: List<String>?,
-    @Schema(description = "是否发送通知", required = false)
+    @Schema(title = "是否发送通知", required = false)
     val sendNotification: Boolean = true
 )

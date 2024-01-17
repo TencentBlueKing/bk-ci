@@ -37,24 +37,24 @@ import io.swagger.v3.oas.annotations.media.Schema
  * @version: $Revision$ $Date$ $LastChangedBy$
  *.
  */
-@Schema(description = "MOA审批结单参数")
+@Schema(title = "MOA审批结单参数")
 open class CreateEsbMoaCompleteParam(
-    @Schema(description = "app标识", required = true, name = "app_code")
+    @Schema(title = "app标识", required = true, description = "app_code")
     @JsonProperty("app_code")
     val appCode: String = "",
-    @Schema(description = "app私密key", required = true, name = "app_secret")
+    @Schema(title = "app私密key", required = true, description = "app_secret")
     @JsonProperty("app_secret")
     val appSecret: String = "",
-    @Schema(description = "用户access_token", required = false, name = "access_token")
+    @Schema(title = "用户access_token", required = false, description = "access_token")
     @JsonProperty("access_token")
     var accessToken: String? = null,
-    @Schema(description = "内部版用户登录态", required = false, name = "bk_ticket")
+    @Schema(title = "内部版用户登录态", required = false, description = "bk_ticket")
     @JsonProperty("bk_ticket")
     var bkTicket: String? = null,
-    @Schema(description = "操作者RTX英文名", required = false, name = "operator")
+    @Schema(title = "操作者RTX英文名", required = false, description = "operator")
     @JsonProperty("operator")
     var operator: String? = null,
-    @Schema(description = "任务ID", required = true, name = "task_id")
+    @Schema(title = "任务ID", required = true, description = "task_id")
     @JsonProperty("task_id")
     val taskId: String
 )

@@ -30,27 +30,27 @@ package com.tencent.devops.plugin.pojo
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "金刚app扫描回调结果")
+@Schema(title = "金刚app扫描回调结果")
 data class JinGangAppCallback(
-    @Schema(description = "0表示成功，其他表示失败")
+    @Schema(title = "0表示成功，其他表示失败")
     val status: String,
-    @Schema(description = "失败提示信息，成功则为空")
+    @Schema(title = "失败提示信息，成功则为空")
     val msg: String,
-    @Schema(description = "构建号")
+    @Schema(title = "构建号")
     val buildId: String,
-    @Schema(description = "构建下面对应的任务号")
+    @Schema(title = "构建下面对应的任务号")
     val taskId: String,
-    @Schema(description = "element ID")
+    @Schema(title = "element ID")
     val elementId: String,
-    @Schema(description = "该次扫描文件md5")
+    @Schema(title = "该次扫描文件md5")
     val md5: String,
-    @Schema(description = "结果html地址", name = "scan_url")
+    @Schema(title = "结果html地址", description = "scan_url")
     @JsonProperty("scan_url")
     val scanUrl: String,
-    @Schema(description = "结果xml下载地址", name = "scan_xml")
+    @Schema(title = "结果xml下载地址", description = "scan_xml")
     @JsonProperty("scan_xml")
     val scanXml: String,
-    @Schema(description = "上传人", name = "responseuser")
+    @Schema(title = "上传人", description = "responseuser")
     @JsonProperty("responseuser")
     val responseUser: String
 

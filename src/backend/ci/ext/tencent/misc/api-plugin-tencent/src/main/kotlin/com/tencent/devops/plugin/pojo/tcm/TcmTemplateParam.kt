@@ -29,10 +29,10 @@ package com.tencent.devops.plugin.pojo.tcm
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "tcm模板参数类型")
+@Schema(title = "tcm模板参数类型")
 data class TcmTemplateParam(
-    @Schema(description = "参数序号，顺序从1开始")
+    @Schema(title = "参数序号，顺序从1开始")
     val seq: String,
-    @Schema(description = "模板参数名称")
+    @Schema(title = "模板参数名称")
     val paramName: String
 )

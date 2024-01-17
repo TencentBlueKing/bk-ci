@@ -29,18 +29,18 @@ package com.tencent.devops.remotedev.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "团队工作空间信息-创建")
+@Schema(title = "团队工作空间信息-创建")
 data class ProjectWorkspaceCreate(
-    @Schema(description = "云桌面 配置")
+    @Schema(title = "云桌面 配置")
     val windowsType: String,
-    @Schema(description = "云桌面 地域")
+    @Schema(title = "云桌面 地域")
     val windowsZone: String,
-    @Schema(description = "基础镜像Id")
+    @Schema(title = "基础镜像Id")
     val baseImageId: Int,
-    @Schema(description = "创建实例的数量")
+    @Schema(title = "创建实例的数量")
     val count: Int,
-    @Schema(description = "自定义镜像路径")
+    @Schema(title = "自定义镜像路径")
     val imageCosFile: String = "",
-    @Schema(description = "镜像id")
+    @Schema(title = "镜像id")
     val imageId: String = ""
 )

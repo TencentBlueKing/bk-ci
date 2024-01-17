@@ -29,12 +29,12 @@ package com.tencent.devops.monitoring.pojo
 import com.tencent.devops.monitoring.pojo.enums.GrafanaNotifyTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "grafana消息")
+@Schema(title = "grafana消息")
 data class GrafanaMessage(
-    @Schema(description = "通知类型", required = false)
+    @Schema(title = "通知类型", required = false)
     val notifyType: GrafanaNotifyTypeEnum?,
-    @Schema(description = "接收者", required = false)
+    @Schema(title = "接收者", required = false)
     val notifyReceivers: MutableSet<String>?,
-    @Schema(description = "消息内容", required = true)
+    @Schema(title = "消息内容", required = true)
     val notifyMessage: String
 )

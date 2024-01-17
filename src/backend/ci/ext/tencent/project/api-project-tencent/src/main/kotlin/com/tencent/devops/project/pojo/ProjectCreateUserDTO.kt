@@ -30,14 +30,14 @@ package com.tencent.devops.project.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class ProjectCreateUserDTO(
-    @Schema(description = "目标项目Id")
+    @Schema(title = "目标项目Id")
     val projectId: String,
-    @Schema(description = "目标用户id")
+    @Schema(title = "目标用户id")
     val userId: String? = "",
-    @Schema(description = "角色名称")
+    @Schema(title = "角色名称")
     val roleName: String?,
-    @Schema(description = "角色Id")
+    @Schema(title = "角色Id")
     val roleId: Int?,
-    @Schema(description = "多目标用户id")
+    @Schema(title = "多目标用户id")
     val userIds: List<String>? = emptyList()
 )

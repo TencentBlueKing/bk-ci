@@ -30,33 +30,33 @@ package com.tencent.devops.common.pipeline.element
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "作业平台-脚本执行")
+@Schema(title = "作业平台-脚本执行")
 data class JobDevOpsFastExecuteScriptElement(
-    @Schema(description = "任务名称", required = true)
+    @Schema(title = "任务名称", required = true)
     override val name: String = "JOB快速执行脚本",
-    @Schema(description = "id", required = false)
+    @Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(description = "状态", required = false)
+    @Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(description = "脚本内容", required = true)
+    @Schema(title = "脚本内容", required = true)
     val content: String = "",
-    @Schema(description = "超时时间", required = true)
+    @Schema(title = "超时时间", required = true)
     val scriptTimeout: Int,
-    @Schema(description = "脚本参数", required = true)
+    @Schema(title = "脚本参数", required = true)
     val scriptParams: String? = null,
-    @Schema(description = "脚本参数", required = true)
+    @Schema(title = "脚本参数", required = true)
     val paramSensitive: Boolean,
-    @Schema(description = "脚本类型", required = true)
+    @Schema(title = "脚本类型", required = true)
     val type: Int,
-    @Schema(description = "选择环境类型", required = true)
+    @Schema(title = "选择环境类型", required = true)
     val envType: String = "",
-    @Schema(description = "环境ID", required = false)
+    @Schema(title = "环境ID", required = false)
     val envId: List<String>?,
-    @Schema(description = "环境名称", required = false)
+    @Schema(title = "环境名称", required = false)
     val envName: List<String>?,
-    @Schema(description = "节点ID", required = false)
+    @Schema(title = "节点ID", required = false)
     val nodeId: List<String>?,
-    @Schema(description = "目标机器账户名", required = true)
+    @Schema(title = "目标机器账户名", required = true)
     val account: String = ""
 ) : Element(name, id, status) {
     companion object {

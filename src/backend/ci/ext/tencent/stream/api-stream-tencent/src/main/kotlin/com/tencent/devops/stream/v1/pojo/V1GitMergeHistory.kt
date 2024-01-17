@@ -29,32 +29,32 @@ package com.tencent.devops.stream.v1.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "工蜂历史构建模型-对应history页面")
+@Schema(title = "工蜂历史构建模型-对应history页面")
 data class V1GitMergeHistory(
-    @Schema(description = "ID")
+    @Schema(title = "ID")
     var id: Long,
-    @Schema(description = "GIT_PROJECT_ID")
+    @Schema(title = "GIT_PROJECT_ID")
     val gitProjectId: Long,
-    @Schema(description = "MERGE_REQUEST_ID")
+    @Schema(title = "MERGE_REQUEST_ID")
     val mergeRequestId: Long,
-    @Schema(description = "MR_TITLE")
+    @Schema(title = "MR_TITLE")
     var mrTitle: String,
-    @Schema(description = "BRANCH")
+    @Schema(title = "BRANCH")
     val branch: String,
-    @Schema(description = "TARGET_BRANCH")
+    @Schema(title = "TARGET_BRANCH")
     val targetBranch: String,
-    @Schema(description = "OPERATION_KIND")
+    @Schema(title = "OPERATION_KIND")
     val operationKind: String?,
-    @Schema(description = "EXTENSION_ACTION")
+    @Schema(title = "EXTENSION_ACTION")
     val extensionAction: String?,
-    @Schema(description = "COMMIT_TIMESTAMP")
+    @Schema(title = "COMMIT_TIMESTAMP")
     val commitTimeStamp: String?,
-    @Schema(description = "TOTAL_COMMIT_COUNT")
+    @Schema(title = "TOTAL_COMMIT_COUNT")
     val totalCommitCount: Long,
-    @Schema(description = "用户")
+    @Schema(title = "用户")
     val userId: String,
-    @Schema(description = "DESCRIPTION")
+    @Schema(title = "DESCRIPTION")
     var description: String?,
-    @Schema(description = "历史构建模型", required = false)
+    @Schema(title = "历史构建模型", required = false)
     var buildRecords: MutableList<V1GitCIBuildHistory>? = null
 )

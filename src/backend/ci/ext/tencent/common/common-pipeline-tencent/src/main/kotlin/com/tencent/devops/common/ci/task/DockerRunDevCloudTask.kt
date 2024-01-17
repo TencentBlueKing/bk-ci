@@ -37,13 +37,13 @@ import org.apache.tools.ant.types.Commandline
 /**
  * docker run in devcloud
  */
-@Schema(description = "Docker通用插件")
+@Schema(title = "Docker通用插件")
 data class DockerRunDevCloudTask(
-    @Schema(description = "displayName", required = false)
+    @Schema(title = "displayName", required = false)
     override var displayName: String?,
-    @Schema(description = "入参", required = true)
+    @Schema(title = "入参", required = true)
     override val inputs: DockerRunInput,
-    @Schema(description = "执行条件", required = true)
+    @Schema(title = "执行条件", required = true)
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
     companion object {
@@ -107,16 +107,16 @@ data class DockerRunDevCloudInput(
     val params: String
 ) : AbstractInput()
 
-@Schema(description = "Docker通用插件参数")
+@Schema(title = "Docker通用插件参数")
 data class DockerRunInput(
-    @Schema(description = "镜像名", required = true)
+    @Schema(title = "镜像名", required = true)
     val image: String,
-    @Schema(description = "仓库信息", required = false)
+    @Schema(title = "仓库信息", required = false)
     val userName: String? = null,
-    @Schema(description = "password", required = false)
+    @Schema(title = "password", required = false)
     val password: String? = null,
-    @Schema(description = "pullType", required = true)
+    @Schema(title = "pullType", required = true)
     val cmd: String,
-    @Schema(description = "env", required = false)
+    @Schema(title = "env", required = false)
     val env: Map<String, String>?
 ) : AbstractInput()

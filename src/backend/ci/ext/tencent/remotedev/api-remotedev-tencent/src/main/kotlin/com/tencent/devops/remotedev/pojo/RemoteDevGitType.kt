@@ -29,7 +29,7 @@ package com.tencent.devops.remotedev.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "remoteDev 支持git类型")
+@Schema(title = "remoteDev 支持git类型")
 enum class RemoteDevGitType(val flag: String) {
     GIT("woa"),
     T_GIT("git.tencent"),

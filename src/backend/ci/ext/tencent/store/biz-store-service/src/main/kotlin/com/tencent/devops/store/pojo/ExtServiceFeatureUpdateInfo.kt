@@ -33,32 +33,32 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
 data class ExtServiceFeatureUpdateInfo(
-    @Schema(description = "扩展服务类型：0：官方自研，1：第三方", required = true)
+    @Schema(title = "扩展服务类型：0：官方自研，1：第三方", required = true)
     val serviceTypeEnum: ServiceTypeEnum? = ServiceTypeEnum.SELF_DEVELOPED,
-    @Schema(description = "是否为公共扩展服务， TRUE：是 FALSE：不是  ")
+    @Schema(title = "是否为公共扩展服务， TRUE：是 FALSE：不是  ")
     val publicFlag: Boolean? = null,
-    @Schema(description = "是否推荐， TRUE：是 FALSE：不是 ")
+    @Schema(title = "是否推荐， TRUE：是 FALSE：不是 ")
     val recommentFlag: Boolean? = null,
-    @Schema(description = "是否官方认证， TRUE：是 FALSE：不是  ")
+    @Schema(title = "是否官方认证， TRUE：是 FALSE：不是  ")
     val certificationFlag: Boolean? = null,
-    @Schema(description = "权重（数值越大代表权重越高）")
+    @Schema(title = "权重（数值越大代表权重越高）")
     val weight: Int? = null,
-    @Schema(description = "扩展服务可见范围 0：私有 10：登录用户开源")
+    @Schema(title = "扩展服务可见范围 0：私有 10：登录用户开源")
     val visibilityLevel: Int? = null,
-    @Schema(description = "描述录入类型")
+    @Schema(title = "描述录入类型")
     val descInputType: DescInputTypeEnum? = null,
-    @Schema(description = "代码库hashId")
+    @Schema(title = "代码库hashId")
     val repositoryHashId: String? = null,
-    @Schema(description = "代码库地址")
+    @Schema(title = "代码库地址")
     val codeSrc: String? = null,
-    @Schema(description = "删除标签")
+    @Schema(title = "删除标签")
     val deleteFlag: Boolean? = null,
-    @Schema(description = "是否停掉灰度环境应用， TRUE：是 FALSE：否")
+    @Schema(title = "是否停掉灰度环境应用， TRUE：是 FALSE：否")
     val killGrayAppFlag: Boolean? = null,
-    @Schema(description = "停掉灰度环境应用标记时间")
+    @Schema(title = "停掉灰度环境应用标记时间")
     val killGrayAppMarkTime: LocalDateTime? = null,
-    @Schema(description = "添加用户")
+    @Schema(title = "添加用户")
     val creatorUser: String? = null,
-    @Schema(description = "修改用户")
+    @Schema(title = "修改用户")
     val modifierUser: String? = null
 )

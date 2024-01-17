@@ -28,10 +28,10 @@ package com.tencent.devops.monitoring.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "模块可用性")
+@Schema(title = "模块可用性")
 data class ModelGroup(
-    @Schema(description = "模块名", required = true)
+    @Schema(title = "模块名", required = true)
     val modelName: String,
-    @Schema(description = "详情", required = true)
+    @Schema(title = "详情", required = true)
     val detail: List<Incident>
 )

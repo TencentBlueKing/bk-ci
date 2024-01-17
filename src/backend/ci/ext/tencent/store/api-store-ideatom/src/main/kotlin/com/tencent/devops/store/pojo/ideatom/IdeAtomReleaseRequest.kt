@@ -30,16 +30,16 @@ package com.tencent.devops.store.pojo.ideatom
 import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "IDE插件发布请求报文体")
+@Schema(title = "IDE插件发布请求报文体")
 data class IdeAtomReleaseRequest(
-    @Schema(description = "插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = true)
+    @Schema(title = "插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = true)
     val atomType: IdeAtomTypeEnum,
-    @Schema(description = "是否为公共插件 true：公共插件 false：普通插件", required = true)
+    @Schema(title = "是否为公共插件 true：公共插件 false：普通插件", required = true)
     val publicFlag: Boolean,
-    @Schema(description = "是否推荐， TRUE：是 FALSE：不是", required = true)
+    @Schema(title = "是否推荐， TRUE：是 FALSE：不是", required = true)
     val recommendFlag: Boolean,
-    @Schema(description = "权重（数值越大代表权重越高）", required = false)
+    @Schema(title = "权重（数值越大代表权重越高）", required = false)
     val weight: Int?,
-    @Schema(description = "插件安装包名称", required = true)
+    @Schema(title = "插件安装包名称", required = true)
     val pkgName: String
 )

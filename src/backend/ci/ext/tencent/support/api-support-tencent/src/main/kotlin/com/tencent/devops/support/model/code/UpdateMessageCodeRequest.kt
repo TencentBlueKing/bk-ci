@@ -29,12 +29,12 @@ package com.tencent.devops.support.model.code
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "返回码更新请求报文体")
+@Schema(title = "返回码更新请求报文体")
 data class UpdateMessageCodeRequest(
-    @Schema(description = "中文简体描述信息", required = true)
+    @Schema(title = "中文简体描述信息", required = true)
     var messageDetailZhCn: String,
-    @Schema(description = "中文繁体描述信息", required = true)
+    @Schema(title = "中文繁体描述信息", required = true)
     var messageDetailZhTw: String,
-    @Schema(description = "英文描述信息", required = true)
+    @Schema(title = "英文描述信息", required = true)
     var messageDetailEn: String
 )

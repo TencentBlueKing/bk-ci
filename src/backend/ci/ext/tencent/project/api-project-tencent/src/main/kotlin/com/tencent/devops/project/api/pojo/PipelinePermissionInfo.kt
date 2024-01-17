@@ -30,14 +30,14 @@ package com.tencent.devops.project.api.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class PipelinePermissionInfo(
-    @Schema(description = "目标用Id")
+    @Schema(title = "目标用Id")
     val userId: String,
-    @Schema(description = "项目Code")
+    @Schema(title = "项目Code")
     val projectId: String,
-    @Schema(description = "权限名称")
+    @Schema(title = "权限名称")
     val permission: String,
-    @Schema(description = "资源类型")
+    @Schema(title = "资源类型")
     val resourceType: String,
-    @Schema(description = "资源Code,如pipelineId,projectId")
+    @Schema(title = "资源Code,如pipelineId,projectId")
     val resourceTypeCode: String
 )

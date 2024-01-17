@@ -3,17 +3,17 @@ package com.tencent.devops.dispatch.devcloud.pojo
 import com.fasterxml.jackson.annotation.JsonIgnore
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "数据返回包装模型")
+@Schema(title = "数据返回包装模型")
 data class Result<out T>(
-    @Schema(description = "状态码", required = true)
+    @Schema(title = "状态码", required = true)
     val code: Int,
-    @Schema(description = "错误信息", required = false)
+    @Schema(title = "错误信息", required = false)
     val message: String? = null,
-    @Schema(description = "数据", required = false)
+    @Schema(title = "数据", required = false)
     val data: T? = null,
-    @Schema(description = "请求ID", required = false)
+    @Schema(title = "请求ID", required = false)
     val requestId: String? = null,
-    @Schema(description = "请求结果", required = false)
+    @Schema(title = "请求结果", required = false)
     val result: Boolean? = null
 ) {
     constructor(data: T) : this(0, null, data)

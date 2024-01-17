@@ -32,21 +32,21 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Schema(description = "安装软件信息")
+@Schema(title = "安装软件信息")
 data class SoftwareInfo(
-    @Schema(description = "软件名称")
+    @Schema(title = "软件名称")
     val name: String,
-    @Schema(description = "版本")
+    @Schema(title = "版本")
     val version: String,
-    @Schema(description = "参数")
+    @Schema(title = "参数")
     @JsonProperty("common_args")
     val commonArgs: CommonArgs? = null
 )
 
 data class CommonArgs(
-    @Schema(description = "base64参数")
+    @Schema(title = "base64参数")
     val base64: String,
-    @Schema(description = "云桌面ID")
+    @Schema(title = "云桌面ID")
     @JsonProperty("cloud_desktop_id")
     val cloudDesktopId: String? = ""
 )

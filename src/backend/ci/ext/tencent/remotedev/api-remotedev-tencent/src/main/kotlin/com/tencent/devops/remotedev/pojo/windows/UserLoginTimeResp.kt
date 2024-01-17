@@ -2,7 +2,7 @@ package com.tencent.devops.remotedev.pojo.windows
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "用户时间段登录数量")
+@Schema(title = "用户时间段登录数量")
 data class UserLoginTimeResp(
     val count: Int,
     val data: List<UserLoginTimeRespData>

@@ -30,12 +30,12 @@ package com.tencent.devops.process.pojo.pipeline
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "扩展服务初始化构建流水线报文响应体")
+@Schema(title = "扩展服务初始化构建流水线报文响应体")
 data class ExtServiceBuildInitPipelineResp(
-    @Schema(description = "流水线ID", required = true)
+    @Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(description = "构建ID", required = false)
+    @Schema(title = "构建ID", required = false)
     val buildId: String?,
-    @Schema(description = "构建状态", required = true)
+    @Schema(title = "构建状态", required = true)
     val extServiceStatus: ExtServiceStatusEnum
 )

@@ -32,12 +32,12 @@ import com.tencent.devops.support.model.wechatwork.base.Receiver
 import com.tencent.devops.support.model.wechatwork.enums.MsgType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "图片消息")
+@Schema(title = "图片消息")
 data class ImageMessage(
-    @Schema(description = "接收者")
+    @Schema(title = "接收者")
     val receiver: Receiver,
-    @Schema(description = "消息类型")
+    @Schema(title = "消息类型")
     val msgtype: MsgType = MsgType.image,
-    @Schema(description = "文本")
+    @Schema(title = "文本")
     val image: Image
 )

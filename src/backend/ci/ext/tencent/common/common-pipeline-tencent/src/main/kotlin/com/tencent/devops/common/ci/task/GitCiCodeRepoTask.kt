@@ -37,13 +37,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 /**
  * gitCiCodeRepo
  */
-@Schema(description = "拉代码（GIT_CI工蜂专用）")
+@Schema(title = "拉代码（GIT_CI工蜂专用）")
 data class GitCiCodeRepoTask(
-    @Schema(description = "displayName", required = false)
+    @Schema(title = "displayName", required = false)
     override var displayName: String?,
-    @Schema(description = "入参", required = true)
+    @Schema(title = "入参", required = true)
     override val inputs: GitCiCodeRepoInput,
-    @Schema(description = "执行条件", required = true)
+    @Schema(title = "执行条件", required = true)
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
     companion object {
@@ -64,40 +64,40 @@ data class GitCiCodeRepoTask(
     }
 }
 
-@Schema(description = "git工蜂ci拉取代码")
+@Schema(title = "git工蜂ci拉取代码")
 data class GitCiCodeRepoInput(
-    @Schema(description = "工蜂仓库名称", required = true)
+    @Schema(title = "工蜂仓库名称", required = true)
     val repositoryName: String,
-    @Schema(description = "工蜂仓库URL", required = true)
+    @Schema(title = "工蜂仓库URL", required = true)
     val repositoryUrl: String,
-    @Schema(description = "oauthToken", required = true)
+    @Schema(title = "oauthToken", required = true)
     val oauthToken: String,
-    @Schema(description = "localPath", required = false)
+    @Schema(title = "localPath", required = false)
     val localPath: String? = null,
-    @Schema(description = "strategy", required = false)
+    @Schema(title = "strategy", required = false)
     val strategy: CodePullStrategy = CodePullStrategy.REVERT_UPDATE,
-    @Schema(description = "pullType", required = false)
+    @Schema(title = "pullType", required = false)
     val pullType: GitPullModeType = GitPullModeType.BRANCH,
-    @Schema(description = "refName", required = false)
+    @Schema(title = "refName", required = false)
     val refName: String? = "master",
-    @Schema(description = "pipelineStartType", required = false)
+    @Schema(title = "pipelineStartType", required = false)
     val pipelineStartType: StartType = StartType.MANUAL,
-    @Schema(description = "hookEventType", required = false)
+    @Schema(title = "hookEventType", required = false)
     val hookEventType: String? = null,
-    @Schema(description = "hookSourceBranch", required = false)
+    @Schema(title = "hookSourceBranch", required = false)
     val hookSourceBranch: String? = null,
-    @Schema(description = "hookTargetBranch", required = false)
+    @Schema(title = "hookTargetBranch", required = false)
     val hookTargetBranch: String? = null,
-    @Schema(description = "hookSourceUrl", required = false)
+    @Schema(title = "hookSourceUrl", required = false)
     val hookSourceUrl: String? = null,
-    @Schema(description = "hookTargetUrl", required = false)
+    @Schema(title = "hookTargetUrl", required = false)
     val hookTargetUrl: String? = null,
-    @Schema(description = "enableSubmodule", required = false)
+    @Schema(title = "enableSubmodule", required = false)
     val enableSubmodule: Boolean = true,
-    @Schema(description = "enableVirtualMergeBranch", required = false)
+    @Schema(title = "enableVirtualMergeBranch", required = false)
     val enableVirtualMergeBranch: Boolean = true,
-    @Schema(description = "enableSubmoduleRemote", required = false)
+    @Schema(title = "enableSubmoduleRemote", required = false)
     val enableSubmoduleRemote: Boolean = true,
-    @Schema(description = "autoCrlf", required = false)
+    @Schema(title = "autoCrlf", required = false)
     val autoCrlf: Boolean = true
 ) : AbstractInput()

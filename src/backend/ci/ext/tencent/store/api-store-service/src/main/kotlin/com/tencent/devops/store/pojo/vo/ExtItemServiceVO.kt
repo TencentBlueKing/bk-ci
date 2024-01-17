@@ -29,10 +29,10 @@ package com.tencent.devops.store.pojo.vo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "扩展点对应的扩展服务信息")
+@Schema(title = "扩展点对应的扩展服务信息")
 data class ExtItemServiceVO(
-    @Schema(description = "扩展点Id", required = true)
+    @Schema(title = "扩展点Id", required = true)
     val itemId: String,
-    @Schema(description = "扩展服务列表", required = false)
+    @Schema(title = "扩展服务列表", required = false)
     val extServiceList: List<ExtServiceVO>?
 )

@@ -30,18 +30,18 @@ package com.tencent.devops.store.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class QueryServiceFeatureParam(
-    @Schema(description = "扩展服务代码", required = false)
+    @Schema(title = "扩展服务代码", required = false)
     val serviceCode: String? = null,
-    @Schema(description = "删除标志", required = false)
+    @Schema(title = "删除标志", required = false)
     val deleteFlag: Boolean? = null,
-    @Schema(description = "是否停掉灰度环境应用， TRUE：是 FALSE：否", required = false)
+    @Schema(title = "是否停掉灰度环境应用， TRUE：是 FALSE：否", required = false)
     val killGrayAppFlag: Boolean? = null,
-    @Schema(description = "标记停掉灰度环境应用间隔时间（单位：小时）", required = false)
+    @Schema(title = "标记停掉灰度环境应用间隔时间（单位：小时）", required = false)
     val killGrayAppIntervalTime: Long? = null,
-    @Schema(description = "是否倒序查询", required = true)
+    @Schema(title = "是否倒序查询", required = true)
     val descFlag: Boolean = true,
-    @Schema(description = "页码", required = false)
+    @Schema(title = "页码", required = false)
     val page: Int? = null,
-    @Schema(description = "每页大小", required = false)
+    @Schema(title = "每页大小", required = false)
     val pageSize: Int? = null
 )

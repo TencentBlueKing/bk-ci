@@ -29,10 +29,10 @@ package com.tencent.devops.prebuild.pojo.ide
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "ide打开的目录情况")
+@Schema(title = "ide打开的目录情况")
 data class IdeDirInfo(
-    @Schema(description = "目录路径", required = true)
+    @Schema(title = "目录路径", required = true)
     val dirPath: String,
-    @Schema(description = "server id", required = true)
+    @Schema(title = "server id", required = true)
     val serverId: String
 )

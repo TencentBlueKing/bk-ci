@@ -30,46 +30,46 @@ package com.tencent.devops.store.pojo.ideatom
 import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "IDE插件市场首页单项信息")
+@Schema(title = "IDE插件市场首页单项信息")
 data class MarketIdeAtomItem(
-    @Schema(description = "插件ID", required = true)
+    @Schema(title = "插件ID", required = true)
     val id: String,
-    @Schema(description = "插件名称", required = true)
+    @Schema(title = "插件名称", required = true)
     val name: String,
-    @Schema(description = "插件代码", required = true)
+    @Schema(title = "插件代码", required = true)
     val code: String,
-    @Schema(description = "插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = true)
+    @Schema(title = "插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = true)
     val rdType: IdeAtomTypeEnum?,
-    @Schema(description = "所属分类代码", required = true)
+    @Schema(title = "所属分类代码", required = true)
     val classifyCode: String?,
-    @Schema(description = "插件logo地址", required = false)
+    @Schema(title = "插件logo地址", required = false)
     val logoUrl: String?,
-    @Schema(description = "插件简介", required = false)
+    @Schema(title = "插件简介", required = false)
     val summary: String?,
-    @Schema(description = "发布者", required = true)
+    @Schema(title = "发布者", required = true)
     val publisher: String,
-    @Schema(description = "发布时间", required = true)
+    @Schema(title = "发布时间", required = true)
     val pubTime: String?,
-    @Schema(description = "是否为最新版本插件 true：最新 false：非最新", required = true)
+    @Schema(title = "是否为最新版本插件 true：最新 false：非最新", required = true)
     val latestFlag: Boolean,
-    @Schema(description = "是否为公共插件 true：公共插件 false：普通插件", required = true)
+    @Schema(title = "是否为公共插件 true：公共插件 false：普通插件", required = true)
     val publicFlag: Boolean,
-    @Schema(description = "是否推荐， TRUE：是 FALSE：不是", required = true)
+    @Schema(title = "是否推荐， TRUE：是 FALSE：不是", required = true)
     val recommendFlag: Boolean,
-    @Schema(description = "是否有权限安装标识")
+    @Schema(title = "是否有权限安装标识")
     val flag: Boolean,
-    @Schema(description = "创建人", required = true)
+    @Schema(title = "创建人", required = true)
     val creator: String,
-    @Schema(description = "创建时间", required = true)
+    @Schema(title = "创建时间", required = true)
     val createTime: String,
-    @Schema(description = "修改人", required = true)
+    @Schema(title = "修改人", required = true)
     val modifier: String,
-    @Schema(description = "修改时间", required = true)
+    @Schema(title = "修改时间", required = true)
     val updateTime: String,
-    @Schema(description = "下载量")
+    @Schema(title = "下载量")
     val downloads: Int?,
-    @Schema(description = "评分")
+    @Schema(title = "评分")
     val score: Double?,
-    @Schema(description = "权重")
+    @Schema(title = "权重")
     val weight: Int?
 )

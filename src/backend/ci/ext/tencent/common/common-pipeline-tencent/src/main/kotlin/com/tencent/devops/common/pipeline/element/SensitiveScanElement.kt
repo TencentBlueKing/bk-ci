@@ -30,15 +30,15 @@ package com.tencent.devops.common.pipeline.element
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "敏感信息检查")
+@Schema(title = "敏感信息检查")
 data class SensitiveScanElement(
-    @Schema(description = "任务名称", required = true)
+    @Schema(title = "任务名称", required = true)
     override val name: String = "执行脚本",
-    @Schema(description = "id", required = false)
+    @Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(description = "状态", required = false)
+    @Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(description = "扫描需要排除的路径，多个以分号分隔", required = false)
+    @Schema(title = "扫描需要排除的路径，多个以分号分隔", required = false)
     val excludePath: String? = ""
 ) : Element(name, id, status) {
 

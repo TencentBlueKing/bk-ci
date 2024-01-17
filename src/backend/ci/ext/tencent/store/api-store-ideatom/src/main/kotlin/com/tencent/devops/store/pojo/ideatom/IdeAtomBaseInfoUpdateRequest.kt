@@ -31,16 +31,16 @@ import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomStatusEnum
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(description = "IDE插件基本信息修改请求报文体")
+@Schema(title = "IDE插件基本信息修改请求报文体")
 data class IdeAtomBaseInfoUpdateRequest(
-    @Schema(description = "插件状态", required = false)
+    @Schema(title = "插件状态", required = false)
     val atomStatus: IdeAtomStatusEnum? = null,
-    @Schema(description = "插件状态描述", required = false)
+    @Schema(title = "插件状态描述", required = false)
     val atomStatusMsg: String? = null,
-    @Schema(description = "插件发布时间", required = false)
+    @Schema(title = "插件发布时间", required = false)
     val pubTime: LocalDateTime? = null,
-    @Schema(description = "IDE插件代码库tag", required = false)
+    @Schema(title = "IDE插件代码库tag", required = false)
     val repositoryTag: String? = null,
-    @Schema(description = "是否为最新课件版本IDE插件", required = false)
+    @Schema(title = "是否为最新课件版本IDE插件", required = false)
     val latestFlag: Boolean? = null
 )

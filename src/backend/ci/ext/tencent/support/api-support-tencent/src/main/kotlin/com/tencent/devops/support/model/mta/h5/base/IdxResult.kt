@@ -29,14 +29,14 @@ package com.tencent.devops.support.model.mta.h5.base
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "指标列表结果")
+@Schema(title = "指标列表结果")
 data class IdxResult(
-    @Schema(description = "pv")
+    @Schema(title = "pv")
     val pv: String,
-    @Schema(description = "uv")
+    @Schema(title = "uv")
     val uv: String,
-    @Schema(description = "vv")
+    @Schema(title = "vv")
     val vv: String,
-    @Schema(description = "iv")
+    @Schema(title = "iv")
     val iv: String
 )

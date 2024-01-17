@@ -29,32 +29,32 @@ package com.tencent.devops.remotedev.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "远程开发配置")
+@Schema(title = "远程开发配置")
 data class RemoteDevSettings(
-    @Schema(description = "默认shell")
+    @Schema(title = "默认shell")
     val defaultShell: String = "shell",
-    @Schema(description = "客户端使用，后台只管存的信息")
+    @Schema(title = "客户端使用，后台只管存的信息")
     val basicSetting: Map<String, String> = emptyMap(),
-    @Schema(description = "是否连接工蜂")
+    @Schema(title = "是否连接工蜂")
     val gitAttached: Boolean = false,
-    @Schema(description = "是否连接合作版工蜂")
+    @Schema(title = "是否连接合作版工蜂")
     val tGitAttached: Boolean = false,
-    @Schema(description = "是否连接TAPD")
+    @Schema(title = "是否连接TAPD")
     val tapdAttached: Boolean = false,
-    @Schema(description = "是否连接GitHub")
+    @Schema(title = "是否连接GitHub")
     val githubAttached: Boolean = false,
-    @Schema(description = "远程开发环境变量配置")
+    @Schema(title = "远程开发环境变量配置")
     val envsForVariable: Map<String, String> = emptyMap(),
-    @Schema(description = "远程开发文件配置")
+    @Schema(title = "远程开发文件配置")
     val envsForFile: List<RemoteDevFile> = emptyList(),
-    @Schema(description = "dotfiles仓库路径")
+    @Schema(title = "dotfiles仓库路径")
     val dotfileRepo: String = "",
-    @Schema(description = "项目Id")
+    @Schema(title = "项目Id")
     var projectId: String = "",
-    @Schema(description = "用户名称")
+    @Schema(title = "用户名称")
     var userName: String = "",
-    @Schema(description = "公司名称")
+    @Schema(title = "公司名称")
     var companyName: String = "",
-    @Schema(description = "平台维护的用户管理设置")
+    @Schema(title = "平台维护的用户管理设置")
     val userSetting: RemoteDevUserSettings = RemoteDevUserSettings()
 )

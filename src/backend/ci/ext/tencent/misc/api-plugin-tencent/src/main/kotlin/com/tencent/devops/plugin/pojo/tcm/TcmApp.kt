@@ -29,10 +29,10 @@ package com.tencent.devops.plugin.pojo.tcm
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "tcm应用类型")
+@Schema(title = "tcm应用类型")
 data class TcmApp(
-    @Schema(description = "应用id")
+    @Schema(title = "应用id")
     val buid: String,
-    @Schema(description = "应用名称")
+    @Schema(title = "应用名称")
     val buname: String
 )

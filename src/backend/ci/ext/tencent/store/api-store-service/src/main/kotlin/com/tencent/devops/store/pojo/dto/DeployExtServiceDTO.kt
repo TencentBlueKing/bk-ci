@@ -30,14 +30,14 @@ package com.tencent.devops.store.pojo.dto
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class DeployExtServiceDTO(
-    @Schema(description = "k8s命名空间名称", required = true)
+    @Schema(title = "k8s命名空间名称", required = true)
     val namespaceName: String,
-    @Schema(description = "扩展服务标识", required = true)
+    @Schema(title = "扩展服务标识", required = true)
     val serviceCode: String,
-    @Schema(description = "扩展服务deployment", required = true)
+    @Schema(title = "扩展服务deployment", required = true)
     val extServiceDeployment: ExtServiceDeploymentDTO,
-    @Schema(description = "扩展服务service", required = true)
+    @Schema(title = "扩展服务service", required = true)
     val extServiceService: ExtServiceServiceDTO,
-    @Schema(description = "扩展服务ingress", required = false)
+    @Schema(title = "扩展服务ingress", required = false)
     val extServiceIngress: ExtServiceIngressDTO
 )

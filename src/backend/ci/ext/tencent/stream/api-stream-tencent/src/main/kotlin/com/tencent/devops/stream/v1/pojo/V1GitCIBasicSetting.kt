@@ -29,64 +29,64 @@ package com.tencent.devops.stream.v1.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "蓝盾工蜂项目配置V2")
+@Schema(title = "蓝盾工蜂项目配置V2")
 data class V1GitCIBasicSetting(
-    @Schema(description = "工蜂项目ID")
+    @Schema(title = "工蜂项目ID")
     val gitProjectId: Long,
-    @Schema(description = "工蜂项目名")
+    @Schema(title = "工蜂项目名")
     val name: String,
-    @Schema(description = "工蜂项目url")
+    @Schema(title = "工蜂项目url")
     val url: String,
-    @Schema(description = "homepage")
+    @Schema(title = "homepage")
     val homepage: String,
-    @Schema(description = "gitHttpUrl")
+    @Schema(title = "gitHttpUrl")
     val gitHttpUrl: String,
-    @Schema(description = "gitSshUrl")
+    @Schema(title = "gitSshUrl")
     val gitSshUrl: String,
-    @Schema(description = "是否启用CI")
+    @Schema(title = "是否启用CI")
     val enableCi: Boolean,
-    @Schema(description = "Build pushed branches")
+    @Schema(title = "Build pushed branches")
     val buildPushedBranches: Boolean = true,
-    @Schema(description = "Build pushed pull request")
+    @Schema(title = "Build pushed pull request")
     val buildPushedPullRequest: Boolean = true,
-    @Schema(description = "创建时间")
+    @Schema(title = "创建时间")
     val createTime: Long?,
-    @Schema(description = "修改时间")
+    @Schema(title = "修改时间")
     val updateTime: Long?,
-    @Schema(description = "蓝盾项目Code")
+    @Schema(title = "蓝盾项目Code")
     val projectCode: String?,
-    @Schema(description = "是否开启Mr锁定")
+    @Schema(title = "是否开启Mr锁定")
     val enableMrBlock: Boolean = true,
-    @Schema(description = "Stream开启人")
+    @Schema(title = "Stream开启人")
     val enableUserId: String,
-    @Schema(description = "Stream开启人所在事业群")
+    @Schema(title = "Stream开启人所在事业群")
     var creatorBgName: String?,
-    @Schema(description = "Stream开启人所在部门")
+    @Schema(title = "Stream开启人所在部门")
     var creatorDeptName: String?,
-    @Schema(description = "Stream开启人所在中心")
+    @Schema(title = "Stream开启人所在中心")
     var creatorCenterName: String?,
-    @Schema(description = "GIT项目的描述信息")
+    @Schema(title = "GIT项目的描述信息")
     val gitProjectDesc: String?,
-    @Schema(description = "GIT项目的头像信息")
+    @Schema(title = "GIT项目的头像信息")
     val gitProjectAvatar: String?,
-    @Schema(description = "带有名空间的项目名称")
+    @Schema(title = "带有名空间的项目名称")
     val nameWithNamespace: String,
-    @Schema(description = "带有名空间的项目路径")
+    @Schema(title = "带有名空间的项目路径")
     val pathWithNamespace: String?,
-    @Schema(description = "项目最后一次构建的CI信息")
+    @Schema(title = "项目最后一次构建的CI信息")
     val lastCiInfo: V1CIInfo?,
-    @Schema(description = "项目下构建是否发送commitCheck")
+    @Schema(title = "项目下构建是否发送commitCheck")
     val enableCommitCheck: Boolean = true,
-    @Schema(description = "项目下构建是否发送mrComment")
+    @Schema(title = "项目下构建是否发送mrComment")
     val enableMrComment: Boolean = true
 )
 
-@Schema(description = "蓝盾工蜂页面修改配置")
+@Schema(title = "蓝盾工蜂页面修改配置")
 data class V1GitCIUpdateSetting(
-    @Schema(description = "Build pushed branches")
+    @Schema(title = "Build pushed branches")
     val buildPushedBranches: Boolean,
-    @Schema(description = "Build pushed pull request")
+    @Schema(title = "Build pushed pull request")
     val buildPushedPullRequest: Boolean,
-    @Schema(description = "是否开启Mr锁定")
+    @Schema(title = "是否开启Mr锁定")
     val enableMrBlock: Boolean
 )

@@ -29,17 +29,17 @@ package com.tencent.devops.plugin.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "金刚扫面任务分页列表")
+@Schema(title = "金刚扫面任务分页列表")
 data class JinGangAppResponse(
-    @Schema(description = "任务总数")
+    @Schema(title = "任务总数")
     val count: Int,
-    @Schema(description = "当前页数")
+    @Schema(title = "当前页数")
     val page: Int,
-    @Schema(description = "每页数量")
+    @Schema(title = "每页数量")
     val pageSize: Int,
-    @Schema(description = "金刚扫面任务列表")
+    @Schema(title = "金刚扫面任务列表")
     val records: List<JinGangApp>,
-    @Schema(description = "总页数")
+    @Schema(title = "总页数")
     val totalPages: Int
 
 )

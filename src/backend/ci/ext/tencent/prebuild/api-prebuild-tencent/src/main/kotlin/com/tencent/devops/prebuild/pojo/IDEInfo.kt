@@ -29,28 +29,28 @@ package com.tencent.devops.prebuild.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "WebIDE实例状态")
+@Schema(title = "WebIDE实例状态")
 data class IDEInfo(
-    @Schema(description = "Web IDE实例状态")
+    @Schema(title = "Web IDE实例状态")
     val ideInstanceStatus: Int,
-    @Schema(description = "Agent实例状态")
+    @Schema(title = "Agent实例状态")
     var agentInstanceStatus: Int,
-    @Schema(description = "机器IP地址")
+    @Schema(title = "机器IP地址")
     val ip: String,
-    @Schema(description = "ide实例的http服务url")
+    @Schema(title = "ide实例的http服务url")
     val ideURL: String,
-    @Schema(description = "web ide 版本")
+    @Schema(title = "web ide 版本")
     val ideVersion: String,
-    @Schema(description = "机器类型")
+    @Schema(title = "机器类型")
     val serverType: String,
-    @Schema(description = "服务器创建时间")
+    @Schema(title = "服务器创建时间")
     val serverCreateTime: Long
 )
 
-@Schema(description = "IDEAgent请求")
+@Schema(title = "IDEAgent请求")
 data class IDEAgentReq(
-    @Schema(description = "项目名称", required = true)
+    @Schema(title = "项目名称", required = true)
     val projectId: String,
-    @Schema(description = "devcloud服务器IP", required = true)
+    @Schema(title = "devcloud服务器IP", required = true)
     val ip: String
 )

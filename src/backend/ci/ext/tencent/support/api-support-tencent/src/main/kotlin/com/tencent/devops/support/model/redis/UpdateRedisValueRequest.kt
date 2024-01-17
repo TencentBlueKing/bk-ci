@@ -29,20 +29,20 @@ package com.tencent.devops.support.model.redis
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "更新redis缓存值请求报文体")
+@Schema(title = "更新redis缓存值请求报文体")
 data class UpdateRedisValueRequest(
-    @Schema(description = "更新方法名称", required = true)
+    @Schema(title = "更新方法名称", required = true)
     val methodName: String,
-    @Schema(description = "key", required = true)
+    @Schema(title = "key", required = true)
     val key: String,
-    @Schema(description = "值", required = true)
+    @Schema(title = "值", required = true)
     val value: String,
-    @Schema(description = "hashKey", required = false)
+    @Schema(title = "hashKey", required = false)
     val hashKey: String? = null,
-    @Schema(description = "超时时间", required = false)
+    @Schema(title = "超时时间", required = false)
     val expiredInSecond: Long? = null,
-    @Schema(description = "是否超时", required = false)
+    @Schema(title = "是否超时", required = false)
     val expired: Boolean? = true,
-    @Schema(description = "是否区分集群", required = false)
+    @Schema(title = "是否区分集群", required = false)
     val isDistinguishCluster: Boolean? = false
 )

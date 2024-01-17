@@ -29,26 +29,26 @@ package com.tencent.devops.project.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "用户信息-公共账号必须绑定bg")
+@Schema(title = "用户信息-公共账号必须绑定bg")
 data class UserInfo(
-    @Schema(description = "用户Id")
+    @Schema(title = "用户Id")
     val userId: String,
-    @Schema(description = "用户名")
+    @Schema(title = "用户名")
     val name: String,
-    @Schema(description = "BgId")
+    @Schema(title = "BgId")
     val bgId: Int,
-    @Schema(description = "Bg名称")
+    @Schema(title = "Bg名称")
     val bgName: String,
-    @Schema(description = "部门Id")
+    @Schema(title = "部门Id")
     val deptId: Int?,
-    @Schema(description = "部门名称")
+    @Schema(title = "部门名称")
     val deptName: String?,
-    @Schema(description = "中心Id")
+    @Schema(title = "中心Id")
     val centerId: Int?,
-    @Schema(description = "中心名称")
+    @Schema(title = "中心名称")
     val centerName: String?,
-    @Schema(description = "组Id")
+    @Schema(title = "组Id")
     val groupId: Int?,
-    @Schema(description = "组名称")
+    @Schema(title = "组名称")
     val groupName: String?
 )

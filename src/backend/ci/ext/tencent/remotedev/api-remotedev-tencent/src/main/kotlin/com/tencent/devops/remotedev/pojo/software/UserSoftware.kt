@@ -29,12 +29,12 @@ package com.tencent.devops.remotedev.pojo.software
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "用户安装软件")
+@Schema(title = "用户安装软件")
 data class UserSoftware(
-    @Schema(description = "项目ID")
+    @Schema(title = "项目ID")
     val projectId: String,
-    @Schema(description = "用户")
+    @Schema(title = "用户")
     val user: String,
-    @Schema(description = "软件ID")
+    @Schema(title = "软件ID")
     val softwareId: Long
 )

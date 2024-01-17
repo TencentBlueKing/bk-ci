@@ -30,10 +30,10 @@ package com.tencent.devops.store.pojo
 import com.tencent.devops.store.pojo.common.DeptInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "扩展服务可见范围")
+@Schema(title = "扩展服务可见范围")
 data class ExtsionServiceVisibleDeptReq(
-    @Schema(description = "扩展服务编码", required = true)
+    @Schema(title = "扩展服务编码", required = true)
     val serviceCode: String,
-    @Schema(description = "机构列表", required = true)
+    @Schema(title = "机构列表", required = true)
     val deptInfos: List<DeptInfo>
 )

@@ -31,23 +31,23 @@ import com.tencent.devops.common.pipeline.enums.Platform
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "bugly符号表上传")
+@Schema(title = "bugly符号表上传")
 data class BuglyElement(
-    @Schema(description = "任务名称", required = true)
+    @Schema(title = "任务名称", required = true)
     override val name: String = "bugly异常上报",
-    @Schema(description = "id", required = false)
+    @Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(description = "状态", required = false)
+    @Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(description = "版本号", required = false)
+    @Schema(title = "版本号", required = false)
     val versionId: String = "",
-    @Schema(description = "待上传给bugly的符号表文件夹(选择了安卓平台才显示，只能填一个路径，不支持正则匹配)", required = false)
+    @Schema(title = "待上传给bugly的符号表文件夹(选择了安卓平台才显示，只能填一个路径，不支持正则匹配)", required = false)
     val buglyFolder: String = "",
-    @Schema(description = "App所在的文件夹", required = false)
+    @Schema(title = "App所在的文件夹", required = false)
     val appFolder: String = "",
-    @Schema(description = "凭证id", required = true)
+    @Schema(title = "凭证id", required = true)
     val credId: String = "",
-    @Schema(description = "平台类型（ANDROID或者IPHONE）", required = true)
+    @Schema(title = "平台类型（ANDROID或者IPHONE）", required = true)
     val platform: Platform
 ) : Element(name, id, status) {
     companion object {

@@ -30,25 +30,25 @@ package com.tencent.devops.common.pipeline.element
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "发送企业微信通知")
+@Schema(title = "发送企业微信通知")
 data class SendRTXNotifyElement(
-    @Schema(description = "任务名称", required = true)
+    @Schema(title = "任务名称", required = true)
     override val name: String = "发送企业微信通知",
-    @Schema(description = "id", required = false)
+    @Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(description = "状态", required = false)
+    @Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(description = "接收人集合", required = true)
+    @Schema(title = "接收人集合", required = true)
     val receivers: Set<String> = setOf(),
-    @Schema(description = "通知标题", required = true)
+    @Schema(title = "通知标题", required = true)
     val title: String = "",
-    @Schema(description = "通知内容", required = true)
+    @Schema(title = "通知内容", required = true)
     val body: String = "",
-    @Schema(description = "启动企业微信群", required = true)
+    @Schema(title = "启动企业微信群", required = true)
     val wechatGroupFlag: Boolean?,
-    @Schema(description = "企业微信群Id", required = true)
+    @Schema(title = "企业微信群Id", required = true)
     val wechatGroup: String?,
-    @Schema(description = "通知内容带上流水线详情连接", required = true)
+    @Schema(title = "通知内容带上流水线详情连接", required = true)
     val detailFlag: Boolean?
 ) : Element(name, id, status) {
     companion object {

@@ -29,8 +29,8 @@ package com.tencent.devops.stream.pojo.openapi
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "蓝盾工蜂项目用户校验请求")
+@Schema(title = "蓝盾工蜂项目用户校验请求")
 data class GitUserValidateRequest(
-    @Schema(description = "工蜂项目url")
+    @Schema(title = "工蜂项目url")
     val url: String
 )

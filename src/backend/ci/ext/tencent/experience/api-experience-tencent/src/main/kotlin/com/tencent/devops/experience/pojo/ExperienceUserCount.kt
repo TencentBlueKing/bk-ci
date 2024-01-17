@@ -29,12 +29,12 @@ package com.tencent.devops.experience.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "版本体验-用户下载统计")
+@Schema(title = "版本体验-用户下载统计")
 data class ExperienceUserCount(
-    @Schema(description = "用户名", required = true)
+    @Schema(title = "用户名", required = true)
     val userId: String,
-    @Schema(description = "下载次数", required = true)
+    @Schema(title = "下载次数", required = true)
     val times: Int,
-    @Schema(description = "最近下载时间", required = true)
+    @Schema(title = "最近下载时间", required = true)
     val latestTime: Long
 )

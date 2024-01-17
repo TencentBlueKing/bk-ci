@@ -29,18 +29,18 @@ package com.tencent.devops.support.model.app.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "App版本日志")
+@Schema(title = "App版本日志")
 data class AppVersion(
-    @Schema(description = "ID")
+    @Schema(title = "ID")
     val id: Long = 0,
-    @Schema(description = "版本号")
+    @Schema(title = "版本号")
     val versionId: String = "",
-    @Schema(description = "发布日志")
+    @Schema(title = "发布日志")
     val releaseDate: Long = 0,
-    @Schema(description = "发布内容")
+    @Schema(title = "发布内容")
     val releaseContent: String = "",
-    @Schema(description = "渠道类型（1:\"安卓\", 2:\"IOS\"）")
+    @Schema(title = "渠道类型（1:\"安卓\", 2:\"IOS\"）")
     val channelType: Byte = 1,
-    @Schema(description = "更新类型(1:强更新 , 2:软更新)")
+    @Schema(title = "更新类型(1:强更新 , 2:软更新)")
     val updateType: Int = 1
 )

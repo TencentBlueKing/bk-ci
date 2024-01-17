@@ -31,38 +31,38 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class PaasCCProjectInfo(
-    @Schema(description = "项目名称", name = "project_name")
+    @Schema(title = "项目名称", description = "project_name")
     @JsonProperty("project_name")
     val projectName: String,
-    @Schema(description = "英文缩写", name = "english_name")
+    @Schema(title = "英文缩写", description = "english_name")
     @JsonProperty("english_name")
     val englishName: String,
-    @Schema(description = "项目类型", name = "project_type")
+    @Schema(title = "项目类型", description = "project_type")
     @JsonProperty("project_type")
     val projectType: Int,
-    @Schema(description = "描述")
+    @Schema(title = "描述")
     val description: String,
-    @Schema(description = "一级部门ID", name = "bg_id")
+    @Schema(title = "一级部门ID", description = "bg_id")
     @JsonProperty("bg_id")
     val bgId: Long,
-    @Schema(description = "一级部门名字", name = "bg_name")
+    @Schema(title = "一级部门名字", description = "bg_name")
     @JsonProperty("bg_name")
     val bgName: String,
-    @Schema(description = "二级部门ID", name = "dept_id")
+    @Schema(title = "二级部门ID", description = "dept_id")
     @JsonProperty("dept_id")
     val deptId: Long,
-    @Schema(description = "二级部门名称", name = "dept_name")
+    @Schema(title = "二级部门名称", description = "dept_name")
     @JsonProperty("dept_name")
     val deptName: String,
-    @Schema(description = "三级部门ID", name = "center_id")
+    @Schema(title = "三级部门ID", description = "center_id")
     @JsonProperty("center_id")
     val centerId: Long,
-    @Schema(description = "三级部门名称", name = "center_name")
+    @Schema(title = "三级部门名称", description = "center_name")
     @JsonProperty("center_name")
     val centerName: String,
-    @Schema(description = "是否保密", name = "is_secrecy")
+    @Schema(title = "是否保密", description = "is_secrecy")
     @get:JsonProperty("is_secrecy")
     var secrecy: Boolean = false,
-    @Schema(description = "kind")
+    @Schema(title = "kind")
     val kind: Int = 0
 )

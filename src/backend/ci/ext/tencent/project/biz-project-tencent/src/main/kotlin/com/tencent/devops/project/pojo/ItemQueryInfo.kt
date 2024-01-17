@@ -30,16 +30,16 @@ package com.tencent.devops.project.pojo
 import com.tencent.devops.project.api.pojo.enums.ServiceItemStatusEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "查询扩展点请求对象")
+@Schema(title = "查询扩展点请求对象")
 data class ItemQueryInfo(
-    @Schema(description = "所属服务Id", required = false)
+    @Schema(title = "所属服务Id", required = false)
     val serviceId: String? = null,
-    @Schema(description = "扩展点名称", required = false)
+    @Schema(title = "扩展点名称", required = false)
     val itemName: String? = null,
-    @Schema(description = "扩展点状态", required = false)
+    @Schema(title = "扩展点状态", required = false)
     val itemStatusList: List<ServiceItemStatusEnum>?,
-    @Schema(description = "页数", required = false)
+    @Schema(title = "页数", required = false)
     val page: Int? = 1,
-    @Schema(description = "每页条数", required = false)
+    @Schema(title = "每页条数", required = false)
     val pageSize: Int? = 10
 )

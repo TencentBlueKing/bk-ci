@@ -32,8 +32,8 @@ import com.tencent.devops.store.pojo.common.MediaInfoReq
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class ExtSubmitDTO(
-    @Schema(description = "媒体信息", required = true)
+    @Schema(title = "媒体信息", required = true)
     val mediaInfoList: List<MediaInfoReq>,
-    @Schema(description = "机构列表", required = true)
+    @Schema(title = "机构列表", required = true)
     val deptInfoList: List<DeptInfo>
 )
