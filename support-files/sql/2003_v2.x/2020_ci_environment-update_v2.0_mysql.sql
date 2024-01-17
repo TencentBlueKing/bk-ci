@@ -141,27 +141,27 @@ BEGIN
                   FROM information_schema.statistics
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_NODE'
-                    AND INDEX_NAME = 'IDX_HOST') THEN
+                    AND INDEX_NAME = 'IDX_HOST_PROJ') THEN
         ALTER TABLE `T_NODE`
-            ADD INDEX `IDX_HOST` (`HOST_ID`, `PROJECT_ID`);
+            ADD INDEX `IDX_HOST_PROJ` (`HOST_ID`, `PROJECT_ID`);
     END IF;
 
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.statistics
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_NODE'
-                    AND INDEX_NAME = 'IDX_TYPE') THEN
+                    AND INDEX_NAME = 'IDX_TYPE_HOST') THEN
         ALTER TABLE `T_NODE`
-            ADD INDEX `IDX_TYPE` (`NODE_TYPE`, `HOST_ID`);
+            ADD INDEX `IDX_TYPE_HOST` (`NODE_TYPE`, `HOST_ID`);
     END IF;
 
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.statistics
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_NODE'
-                    AND INDEX_NAME = 'IDX_STAT') THEN
+                    AND INDEX_NAME = 'IDX_STATUS_TYPE') THEN
         ALTER TABLE `T_NODE`
-            ADD INDEX `IDX_STAT` (`NODE_STATUS`, `NODE_TYPE`);
+            ADD INDEX `IDX_STATUS_TYPE` (`NODE_STATUS`, `NODE_TYPE`);
     END IF;
 
     COMMIT;
