@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.service.impl
 
+import com.tencent.bkrepo.common.api.constant.StringPool
 import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.constant.BKREPO_DEVOPS_PROJECT_ID
 import com.tencent.devops.artifactory.constant.BKREPO_STATIC_PROJECT_ID
@@ -62,13 +63,7 @@ import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.archive.util.MimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.stereotype.Service
-import org.springframework.web.context.request.RequestContextHolder
-import org.springframework.web.context.request.ServletRequestAttributes
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import java.io.File
 import java.io.OutputStream
 import java.net.URLDecoder
@@ -78,6 +73,13 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.NotFoundException
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.stereotype.Service
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 
 @Service
 @Suppress("TooManyFunctions", "MagicNumber", "ComplexMethod")
@@ -108,7 +110,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         fileType: FileTypeEnum?,
         props: Map<String, String?>?,
         fileChannelType: FileChannelTypeEnum,
-        logo: Boolean?
+        staticFlag: Boolean?
     ): String {
         val pathSplit = file.name.split('.')
         val destPath = filePath ?: DefaultPathUtils.randomFileName(pathSplit[pathSplit.size - 1])
@@ -144,7 +146,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             } else {
                 defaultUrl
             }
-        } else if (logo == true) {
+        } else if (staticFlag == true) {
             bkRepoClient.uploadLocalFile(
                 userId = BKREPO_DEFAULT_USER,
                 projectId = BKREPO_STORE_PROJECT_ID,
@@ -153,7 +155,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
                 file = file,
                 properties = metadata
             )
-            generateFileDownloadUrl(fileChannelType, destPath).plus("?logo=true")
+            generateFileDownloadUrl(fileChannelType, destPath = "$BKREPO_STORE_PROJECT_ID/$REPO_NAME_STATIC/$destPath")
         } else {
             bkRepoClient.uploadLocalFile(userId, repoProjectId, repoName, destPath, file, properties = metadata)
             generateFileDownloadUrl(fileChannelType, "$repoProjectId/$repoName/$destPath")
@@ -294,16 +296,37 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
                 )
             }
         } else {
+            buildGenericFileInfo(it)
+        }
+    }
+
+    private fun buildGenericFileInfo(nodeInfo: QueryNodeInfo): FileInfo {
+        // 归档插件归档目录时，在目录多归档一个.bkci_pipeline文件, 记录归档目录的信息
+        return if (nodeInfo.name == ".bkci_pipeline") {
             FileInfo(
-                name = it.name,
-                fullName = it.name,
-                path = "${it.projectId}/${it.repoName}${it.fullPath}",
-                fullPath = it.fullPath,
-                size = it.size,
-                folder = it.folder,
-                properties = it.metadata?.map { m -> Property(m.key, m.value.toString()) },
-                modifiedTime = LocalDateTime.parse(it.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-                artifactoryType = parseArtifactoryType(it.repoName)
+                name = nodeInfo.path.split("/").lastOrNull { it.isNotBlank() } ?: StringPool.ROOT,
+                fullName = nodeInfo.name,
+                path = nodeInfo.fullPath,
+                fullPath = nodeInfo.fullPath,
+                size = nodeInfo.size,
+                folder = nodeInfo.folder,
+                properties = nodeInfo.metadata?.map { m -> Property(m.key, m.value.toString()) },
+                modifiedTime = LocalDateTime.parse(nodeInfo.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME)
+                    .timestamp(),
+                artifactoryType = parseArtifactoryType(nodeInfo.repoName)
+            )
+        } else {
+            FileInfo(
+                name = nodeInfo.name,
+                fullName = nodeInfo.name,
+                path = nodeInfo.fullPath,
+                fullPath = nodeInfo.fullPath,
+                size = nodeInfo.size,
+                folder = nodeInfo.folder,
+                properties = nodeInfo.metadata?.map { m -> Property(m.key, m.value.toString()) },
+                modifiedTime = LocalDateTime.parse(nodeInfo.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME)
+                    .timestamp(),
+                artifactoryType = parseArtifactoryType(nodeInfo.repoName)
             )
         }
     }
@@ -476,6 +499,42 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         return flag
     }
 
+    override fun generateFileDownloadUrl(
+        fileChannelType: FileChannelTypeEnum,
+        destPath: String,
+        fullUrl: Boolean
+    ): String {
+        val urlPrefix = StringBuilder()
+        when (fileChannelType) {
+            FileChannelTypeEnum.WEB_SHOW -> {
+                if (fullUrl) {
+                    urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsHostGateway!!))
+                }
+                urlPrefix.append("/bkrepo/api/user/generic")
+            }
+            FileChannelTypeEnum.WEB_DOWNLOAD -> {
+                if (fullUrl) {
+                    urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsHostGateway!!))
+                }
+                urlPrefix.append("/bkrepo/api/user/generic")
+            }
+            FileChannelTypeEnum.SERVICE -> {
+                if (fullUrl) {
+                    urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsApiGateway!!))
+                }
+                urlPrefix.append("/bkrepo/api/service/generic")
+            }
+            FileChannelTypeEnum.BUILD -> {
+                if (fullUrl) {
+                    urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsBuildGateway!!))
+                }
+                urlPrefix.append("/bkrepo/api/build/generic")
+            }
+        }
+        val filePath = URLEncoder.encode("/$destPath", "UTF-8")
+        return "$urlPrefix/$filePath"
+    }
+
     override fun deleteFile(userId: String, filePath: String) {
         logger.info("deleteFile, filePath: $filePath")
         val artifactInfo = BkRepoUtils.parseArtifactoryInfo(filePath)
@@ -547,7 +606,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
                 destFile = tmpFile
             )
             tmpFile.readText(Charsets.UTF_8)
-        } catch (e: NotFoundException) {
+        } catch (ignore: NotFoundException) {
             logger.warn("file[$filePath] not exists")
             ""
         } catch (e: RemoteServiceException) {

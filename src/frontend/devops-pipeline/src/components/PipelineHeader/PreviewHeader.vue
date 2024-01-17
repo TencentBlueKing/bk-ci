@@ -6,13 +6,32 @@
             </span>
         </pipeline-bread-crumb>
         <aside class="pipeline-preview-right-aside">
-            <bk-button :disabled="executeStatus" @click="goEdit">
+            <bk-button
+                :disabled="executeStatus"
+                v-perm="{
+                    permissionData: {
+                        projectId: $route.params.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: $route.params.pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    }
+                }"
+                @click="goEdit"
+            >
                 {{ $t("cancel") }}
             </bk-button>
             <bk-button
                 theme="primary"
                 :disabled="executeStatus"
                 :loading="executeStatus"
+                v-perm="{
+                    permissionData: {
+                        projectId: $route.params.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: $route.params.pipelineId,
+                        action: RESOURCE_ACTION.EXECUTE
+                    }
+                }"
                 @click="handleClick"
             >
                 {{ $t("exec") }}
@@ -22,15 +41,21 @@
 </template>
 
 <script>
+    import { bus } from '@/utils/bus'
+    import {
+        RESOURCE_ACTION
+    } from '@/utils/permission'
     import { mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
-    import { bus } from '@/utils/bus'
     export default {
         components: {
             PipelineBreadCrumb
         },
         computed: {
-            ...mapState('atom', ['executeStatus', 'execDetail'])
+            ...mapState('atom', ['executeStatus', 'execDetail']),
+            RESOURCE_ACTION () {
+                return RESOURCE_ACTION
+            }
         },
         methods: {
             handleClick () {

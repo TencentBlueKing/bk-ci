@@ -129,7 +129,7 @@ class PipelinePauseBuildFacadeService(
 
         if (taskRecord?.status != BuildStatus.PAUSE) {
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PARUS_PIEPLINE_IS_RUNNINT
+                errorCode = ProcessMessageCode.ERROR_PAUSE_PIPELINE_IS_RUNNING
             )
         }
 
@@ -242,21 +242,34 @@ class PipelinePauseBuildFacadeService(
                 params = arrayOf(buildId)
             )
         }
-        val isDiff = findDiffValue(
+        val currPause = pipelineTaskPauseService.getPauseTask(
+            projectId = projectId,
+            buildId = buildId,
+            taskId = taskId,
+            executeCount = taskRecord.executeCount
+        )
+        if (currPause != null) {
+            logger.warn("executePauseAtom element has been continue")
+            throw ErrorCodeException(
+                statusCode = Response.Status.FORBIDDEN.statusCode,
+                errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT,
+                params = arrayOf(buildId)
+            )
+        }
+        findDiffValue(
             buildId = buildId,
             taskId = taskId,
             newElement = element,
             oldTask = taskRecord
         )
-
-        if (isDiff) {
-            pipelineTaskPauseService.savePauseValue(PipelinePauseValue(
-                projectId = projectId,
-                buildId = buildId,
-                taskId = taskId,
-                newValue = newElementStr,
-                defaultValue = JsonUtil.toJson(taskRecord.taskParams, formatted = false)
-            ))
-        }
+        // #9113 凡是有操作记录都保存下来，用于冲突判断
+        pipelineTaskPauseService.savePauseValue(PipelinePauseValue(
+            projectId = projectId,
+            buildId = buildId,
+            taskId = taskId,
+            newValue = newElementStr,
+            defaultValue = JsonUtil.toJson(taskRecord.taskParams, formatted = false),
+            executeCount = taskRecord.executeCount
+        ))
     }
 }

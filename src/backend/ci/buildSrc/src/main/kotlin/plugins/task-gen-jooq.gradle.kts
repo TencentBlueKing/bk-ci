@@ -40,7 +40,16 @@ dependencies {
 
 var moduleNames = when (val moduleName = name.split("-")[1]) {
     "misc" -> {
-        listOf("process", "project", "repository", "dispatch", "plugin", "quality", "artifactory", "environment")
+        listOf(
+            "process",
+            "project",
+            "repository",
+            "dispatch",
+            "plugin",
+            "quality",
+            "artifactory",
+            "environment"
+        )
     }
 
     "statistics" -> {
@@ -51,13 +60,15 @@ var moduleNames = when (val moduleName = name.split("-")[1]) {
         listOf("process", "project", "lambda", "store")
     }
 
+    "dispatch" -> {
+        listOf("dispatch", "dispatch_kubernetes")
+    }
+
     else -> listOf(moduleName)
 }
 
-if (name == "model-dispatch-kubernetes") {
-    moduleNames = listOf("dispatch_kubernetes")
-} else if (name == "model-dispatch-devcloud-tencent") {
-    moduleNames = listOf("dispatch_devcloud", "dispatch_macos", "dispatch_windows")
+if (name == "model-dispatch-devcloud-tencent") {
+    moduleNames = listOf("dispatch_devcloud", "dispatch_macos", "dispatch_windows", "dispatch_codecc")
 }
 
 val mysqlPrefix: String? = System.getProperty("mysqlPrefix") ?: System.getenv("mysqlPrefix")
@@ -66,7 +77,7 @@ jooq {
     configurations {
         moduleNames.forEach { moduleName ->
             val databaseName = if (mysqlPrefix != null && mysqlPrefix != "") {
-                println("jooq build env : $mysqlPrefix")
+                logger.debug("jooq build env : $mysqlPrefix")
                 mysqlPrefix + moduleName
             } else {
                 "${project.extra["DB_PREFIX"]}$moduleName"
@@ -96,16 +107,16 @@ jooq {
                         }
 
                         if (mysqlURL == null) {
-                            println("use default properties.")
+                            logger.debug("use default properties.")
                             mysqlURL = project.extra["DB_HOST"]?.toString()
                             mysqlUser = project.extra["DB_USERNAME"]?.toString()
                             mysqlPasswd = project.extra["DB_PASSWORD"]?.toString()
                         }
 
-                        println("moduleName : $moduleName")
-                        println("mysqlURL : $mysqlURL")
-                        println("mysqlUser : $mysqlUser")
-                        println("mysqlPasswd : ${mysqlPasswd?.substring(0, 3)}****")
+                        logger.debug("moduleName : $moduleName")
+                        logger.debug("mysqlURL : $mysqlURL")
+                        logger.debug("mysqlUser : $mysqlUser")
+                        logger.debug("mysqlPasswd : ${mysqlPasswd?.substring(0, 3)}****")
 
                         driver = "com.mysql.cj.jdbc.Driver"
                         url = "jdbc:mysql://$mysqlURL/$databaseName?useSSL=false"

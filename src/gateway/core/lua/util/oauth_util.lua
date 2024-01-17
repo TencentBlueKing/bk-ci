@@ -84,4 +84,61 @@ function _M:get_ticket(bk_token)
     -- 记录用户的访问情况
     return result.data
 end
+
+function _M:is_login(bk_token)
+    if bk_token == nil then
+        ngx.log(ngx.ERR, "bk_token is null")
+        ngx.exit(400)
+        return
+    end
+
+    local httpc = http.new()
+    if not httpc then
+        ngx.log(ngx.ERR, "failed to create httpc")
+        ngx.exit(500)
+        return
+    end
+
+    local lang = cookieUtil:get_cookie("blueking_language")
+
+    local res, err = httpc:request_uri(
+                         config.esb.host .. config.esb.path .. "?bk_app_code=" .. config.oauth.app_code ..
+                             "&bk_app_secret=" .. config.oauth.app_secret .. "&bk_token=" .. bk_token,
+                         {method = "GET", ssl_verify = false, headers = {["blueking-language"] = lang}})
+    --- 设置HTTP保持连接
+    httpc:set_keepalive(60000, 5)
+
+    if not res then
+        ngx.log(ngx.ERR, "failed to request esb info: ", err)
+        ngx.exit(500)
+        return
+    end
+
+    if res.status ~= 200 then
+        ngx.log(ngx.STDERR, "failed to request esb info, status: ", res.status)
+        ngx.exit(res.status)
+        return
+    end
+
+    --- 获取所有回复
+    local responseBody = res.body
+    --- 转换JSON的返回数据为TABLE
+    local result = json.decode(responseBody)
+
+    --  判断是否有权限
+    if result == nil then
+        ngx.log(ngx.ERR, "null is login result")
+        ngx.exit(401)
+    end
+    if result.code == 1302403 then
+        ngx.log(ngx.ERR, "is_login code is 1302403 , need Authentication")
+        ngx.header["X-DEVOPS-ERROR-RETURN"] = '{"status": 417,"message": "'..result.message..'", "errorCode": 1302403 , "redirectUrl":"/esb.error.html?message='..result.message..'"}'
+        ngx.header["X-DEVOPS-ERROR-STATUS"] = 417
+        ngx.exit(401)
+    elseif result.code ~= 0 then
+        ngx.log(ngx.ERR, "is_login code is " .. result.code .. " , return 401")
+        ngx.exit(401)
+    end
+end
+
 return _M

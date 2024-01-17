@@ -29,7 +29,9 @@ package com.tencent.devops.common.pipeline.pojo.element.trigger
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.element.ElementProp
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -54,10 +56,25 @@ data class CodeGithubWebHookTriggerElement(
     @ApiModelProperty("新版的github原子的类型")
     val repositoryType: RepositoryType? = null,
     @ApiModelProperty("新版的github代码库名")
-    val repositoryName: String? = null
+    val repositoryName: String? = null,
+    @ApiModelProperty("code review 状态", required = false)
+    val includeCrState: List<String>? = null,
+    @ApiModelProperty("code note comment", required = false)
+    val includeNoteComment: String? = null,
+    @ApiModelProperty("code note 类型", required = false)
+    val includeNoteTypes: List<String>? = null,
+    @ApiModelProperty("issue事件action")
+    val includeIssueAction: List<String>? = null,
+    @ApiModelProperty("pull request事件action")
+    val includeMrAction: List<String>? = listOf(MERGE_ACTION_OPEN, MERGE_ACTION_REOPEN, MERGE_ACTION_PUSH_UPDATE)
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeGithubWebHookTrigger"
+        const val MERGE_ACTION_OPEN = "open"
+        const val MERGE_ACTION_CLOSE = "close"
+        const val MERGE_ACTION_REOPEN = "reopen"
+        const val MERGE_ACTION_PUSH_UPDATE = "push-update"
+        const val MERGE_ACTION_MERGE = "merge"
     }
 
     override fun getClassType() = classType
@@ -68,5 +85,49 @@ data class CodeGithubWebHookTriggerElement(
         } else {
             super.findFirstTaskIdByStartType(startType)
         }
+    }
+
+    // 增加条件这里也要补充上,不然代码库触发器列表展示会不对
+    override fun triggerCondition(): List<ElementProp> {
+        val props = when (eventType) {
+            CodeEventType.PUSH, CodeEventType.CREATE -> {
+                listOf(
+                    TriggerElementPropUtils.vuexInput(name = "branchName", value = branchName),
+                    TriggerElementPropUtils.vuexInput(name = "excludeBranchName", value = excludeBranchName),
+                    TriggerElementPropUtils.vuexInput(name = "excludeUsers", value = excludeUsers)
+                )
+            }
+
+            CodeEventType.PULL_REQUEST -> {
+                listOf(
+                    TriggerElementPropUtils.selector(name = "action", value = includeMrAction),
+                    TriggerElementPropUtils.vuexInput(name = "branchName", value = branchName),
+                    TriggerElementPropUtils.vuexInput(name = "excludeBranchName", value = excludeBranchName),
+                    TriggerElementPropUtils.vuexInput(name = "excludeUsers", value = excludeUsers)
+                )
+            }
+
+            CodeEventType.REVIEW -> {
+                listOf(
+                    TriggerElementPropUtils.selector(name = "includeCrState", value = includeCrState)
+                )
+            }
+
+            CodeEventType.ISSUES -> {
+                listOf(
+                    TriggerElementPropUtils.selector(name = "includeIssueAction", value = includeIssueAction)
+                )
+            }
+
+            CodeEventType.NOTE -> {
+                listOf(
+                    TriggerElementPropUtils.selector(name = "includeNoteTypes", value = includeNoteTypes),
+                    TriggerElementPropUtils.vuexInput(name = "includeNoteComment", value = includeNoteComment)
+                )
+            }
+
+            else -> emptyList()
+        }
+        return props.filterNotNull()
     }
 }

@@ -111,10 +111,12 @@ class StreamBuildFinishListenerService @Autowired constructor(
                 setting = setting,
                 event = objectMapper.readValue(requestEvent.event)
             )
+
             StreamObjectKind.SCHEDULE.value -> actionFactory.loadScheduleAction(
                 setting = setting,
                 event = objectMapper.readValue(requestEvent.event)
             )
+
             StreamObjectKind.OPENAPI.value -> {
                 // openApi可以手工触发也可以模拟事件触发,所以event有两种结构
                 try {
@@ -132,6 +134,7 @@ class StreamBuildFinishListenerService @Autowired constructor(
                     )
                 }
             }
+
             else -> actionFactory.load(
                 actionFactory.loadEvent(
                     requestEvent.event,
@@ -157,6 +160,8 @@ class StreamBuildFinishListenerService @Autowired constructor(
             stageId = null
         )
         action.data.context.requestEventId = requestEvent.id
+        action.data.context.extensionAction = requestEvent.extensionAction
+        action.data.context.mrTargetBranch = requestEvent.targetBranch
 
         // 推送结束构建消息
         sendCommitCheck.sendCommitCheck(action)

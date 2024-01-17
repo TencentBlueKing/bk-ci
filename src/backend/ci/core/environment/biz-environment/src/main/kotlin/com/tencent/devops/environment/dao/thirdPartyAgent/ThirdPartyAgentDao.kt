@@ -154,6 +154,19 @@ class ThirdPartyAgentDao {
         }
     }
 
+    fun listByStatusAndProject(
+        dslContext: DSLContext,
+        status: Set<AgentStatus>,
+        projects: Set<String>
+    ): List<TEnvironmentThirdpartyAgentRecord> {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.`in`(projects))
+                .and(STATUS.`in`(status.map { it.status }))
+                .fetch()
+        }
+    }
+
     fun countAgentByStatusAndOS(
         dslContext: DSLContext,
         projectId: String,
@@ -295,6 +308,7 @@ class ThirdPartyAgentDao {
                 when {
                     AgentStatus.isUnImport(agentStatus) ->
                         step.set(STATUS, AgentStatus.UN_IMPORT_OK.status)
+
                     AgentStatus.isImportException(agentStatus) ->
                         step.set(STATUS, AgentStatus.IMPORT_OK.status)
                 }
@@ -308,12 +322,24 @@ class ThirdPartyAgentDao {
 
     fun getAgent(
         dslContext: DSLContext,
+        id: Long
+    ): TEnvironmentThirdpartyAgentRecord? {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            return dslContext.selectFrom(this)
+                .where(ID.eq(id))
+                .fetchOne()
+        }
+    }
+
+    fun getAgentByProject(
+        dslContext: DSLContext,
         id: Long,
         projectId: String
     ): TEnvironmentThirdpartyAgentRecord? {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.selectFrom(this)
                 .where(ID.eq(id))
+                .and(PROJECT_ID.eq(projectId))
                 .fetchOne()
         }
     }
@@ -359,17 +385,6 @@ class ThirdPartyAgentDao {
                     }
                 }
                 .fetch()
-        }
-    }
-
-    fun getAgent(
-        dslContext: DSLContext,
-        id: Long
-    ): TEnvironmentThirdpartyAgentRecord? {
-        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
-            return dslContext.selectFrom(this)
-                .where(ID.eq(id))
-                .fetchOne()
         }
     }
 

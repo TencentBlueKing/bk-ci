@@ -30,11 +30,13 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.notify.tables.TCommonNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.TEmailsNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.TRtxNotifyMessageTemplate
+import com.tencent.devops.model.notify.tables.TVoiceNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.TWechatNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.TWeworkNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TEmailsNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TRtxNotifyMessageTemplateRecord
+import com.tencent.devops.model.notify.tables.records.TVoiceNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TWechatNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TWeworkNotifyMessageTemplateRecord
 import com.tencent.devops.notify.pojo.NotifyTemplateMessage
@@ -100,10 +102,24 @@ class NotifyMessageTemplateDao {
         commonTemplateId: String
     ): TWechatNotifyMessageTemplateRecord? {
         with(TWechatNotifyMessageTemplate.T_WECHAT_NOTIFY_MESSAGE_TEMPLATE) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(COMMON_TEMPLATE_ID.contains(commonTemplateId))
             return dslContext.selectFrom(this)
-                .where(conditions)
+                .where(COMMON_TEMPLATE_ID.eq(commonTemplateId))
+                .fetchOne()
+        }
+    }
+
+    /**
+     * 获取语音消息模板
+     * @param dslContext
+     * @param commonTemplateId
+     */
+    fun getVoiceNotifyMessageTemplate(
+        dslContext: DSLContext,
+        commonTemplateId: String
+    ): TVoiceNotifyMessageTemplateRecord? {
+        with(TVoiceNotifyMessageTemplate.T_VOICE_NOTIFY_MESSAGE_TEMPLATE) {
+            return dslContext.selectFrom(this)
+                .where(COMMON_TEMPLATE_ID.eq(commonTemplateId))
                 .fetchOne()
         }
     }
@@ -118,10 +134,8 @@ class NotifyMessageTemplateDao {
         commonTemplateId: String
     ): TRtxNotifyMessageTemplateRecord? {
         with(TRtxNotifyMessageTemplate.T_RTX_NOTIFY_MESSAGE_TEMPLATE) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(COMMON_TEMPLATE_ID.contains(commonTemplateId))
             return dslContext.selectFrom(this)
-                .where(conditions)
+                .where(COMMON_TEMPLATE_ID.eq(commonTemplateId))
                 .fetchOne()
         }
     }
@@ -135,7 +149,7 @@ class NotifyMessageTemplateDao {
     ): TEmailsNotifyMessageTemplateRecord? {
         with(TEmailsNotifyMessageTemplate.T_EMAILS_NOTIFY_MESSAGE_TEMPLATE) {
             return dslContext.selectFrom(this)
-                .where(this.COMMON_TEMPLATE_ID.eq(commonTemplateId))
+                .where(COMMON_TEMPLATE_ID.eq(commonTemplateId))
                 .fetchOne()
         }
     }
@@ -150,10 +164,8 @@ class NotifyMessageTemplateDao {
         commonTemplateId: String
     ): TWeworkNotifyMessageTemplateRecord? {
         with(TWeworkNotifyMessageTemplate.T_WEWORK_NOTIFY_MESSAGE_TEMPLATE) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(COMMON_TEMPLATE_ID.contains(commonTemplateId))
             return dslContext.selectFrom(this)
-                .where(conditions)
+                .where(COMMON_TEMPLATE_ID.eq(commonTemplateId))
                 .fetchOne()
         }
     }
@@ -306,6 +318,38 @@ class NotifyMessageTemplateDao {
         }
     }
 
+    fun addVoiceNotifyMessageTemplate(
+        dslContext: DSLContext,
+        commonTemplateId: String,
+        id: String,
+        userId: String,
+        notifyTemplateMessage: NotifyTemplateMessage
+    ) {
+        with(TVoiceNotifyMessageTemplate.T_VOICE_NOTIFY_MESSAGE_TEMPLATE) {
+            val now = LocalDateTime.now()
+            dslContext.insertInto(
+                this,
+                ID,
+                COMMON_TEMPLATE_ID,
+                CREATOR,
+                MODIFIOR,
+                TASK_NAME,
+                CONTENT,
+                CREATE_TIME,
+                UPDATE_TIME
+            ).values(
+                id,
+                commonTemplateId,
+                userId,
+                userId,
+                notifyTemplateMessage.title,
+                notifyTemplateMessage.body,
+                now,
+                now
+            ).execute()
+        }
+    }
+
     fun addWECHATNotifyMessageTemplate(
         dslContext: DSLContext,
         id: String,
@@ -369,6 +413,14 @@ class NotifyMessageTemplateDao {
         }
     }
 
+    fun deleteVoiceNotifyMessageTemplate(dslContext: DSLContext, commonTemplateId: String): Int {
+        with(TVoiceNotifyMessageTemplate.T_VOICE_NOTIFY_MESSAGE_TEMPLATE) {
+            return dslContext.deleteFrom(this)
+                .where(COMMON_TEMPLATE_ID.eq(commonTemplateId))
+                .execute()
+        }
+    }
+
     /**
      * 删除企业微信类型的消息通知模板信息
      */
@@ -410,6 +462,23 @@ class NotifyMessageTemplateDao {
                 .set(this.BODY, notifyMessageTemplate.body)
                 .set(this.UPDATE_TIME, LocalDateTime.now())
                 .where(this.COMMON_TEMPLATE_ID.eq(templateId))
+                .execute()
+        }
+    }
+
+    fun updateVoiceNotifyMessageTemplate(
+        dslContext: DSLContext,
+        userId: String,
+        templateId: String,
+        notifyTemplateMessage: NotifyTemplateMessage
+    ): Int {
+        with(TVoiceNotifyMessageTemplate.T_VOICE_NOTIFY_MESSAGE_TEMPLATE) {
+            return dslContext.update(this)
+                .set(MODIFIOR, userId)
+                .set(TASK_NAME, notifyTemplateMessage.title)
+                .set(CONTENT, notifyTemplateMessage.body)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(COMMON_TEMPLATE_ID.eq(templateId))
                 .execute()
         }
     }
@@ -514,6 +583,15 @@ class NotifyMessageTemplateDao {
      */
     fun countRtxMessageTemplate(dslContext: DSLContext, templateId: String): Int {
         with(TRtxNotifyMessageTemplate.T_RTX_NOTIFY_MESSAGE_TEMPLATE) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(COMMON_TEMPLATE_ID.eq(templateId))
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun countVoiceMessageTemplate(dslContext: DSLContext, templateId: String): Int {
+        with(TVoiceNotifyMessageTemplate.T_VOICE_NOTIFY_MESSAGE_TEMPLATE) {
             return dslContext.selectCount()
                 .from(this)
                 .where(COMMON_TEMPLATE_ID.eq(templateId))

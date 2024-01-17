@@ -77,10 +77,27 @@ class PipelineBuildNotifyListener @Autowired constructor(
                     )
                 }
             }
+            PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_REMINDER_NOTIFY_TEMPLATE -> {
+                event.sendReviewReminder()
+            }
             else -> {
                 // need to add
             }
         }
+    }
+
+    fun PipelineBuildNotifyEvent.sendReviewReminder() {
+        val request = SendNotifyMessageTemplateRequest(
+            templateCode = PipelineNotifyTemplateEnum.valueOf(notifyTemplateEnum).templateCode,
+            receivers = receivers.toMutableSet(),
+            cc = receivers.toMutableSet(),
+            titleParams = titleParams,
+            bodyParams = bodyParams,
+            notifyType = notifyType,
+            markdownContent = markdownContent,
+            callbackData = callbackData
+        )
+        client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
     }
 
     fun PipelineBuildNotifyEvent.sendReviewNotify(reviewUrl: String, reviewAppUrl: String, templateCode: String) {

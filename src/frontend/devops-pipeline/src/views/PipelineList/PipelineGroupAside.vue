@@ -1,5 +1,6 @@
 <template>
-    <aside v-bkloading="{ isLoading }" class="pipeline-group-aside">
+    <aside class="pipeline-group-aside"
+    >
         <div class="pipeline-group-aside-main">
             <header class="pipeline-group-aside-header">
                 <div :class="{
@@ -29,6 +30,13 @@
                         <span class="pipeline-group-header-name">{{block.title}}</span>
                         <span v-bk-tooltips="block.tooltips">
                             <bk-button
+                                v-perm="block.isCheckPermission ?
+                                    {
+                                        hasPermission: block.hasPermission,
+                                        disablePermissionApi: block.disablePermissionApi,
+                                        permissionData: block.permissionData
+                                    }
+                                    : {}"
                                 text
                                 theme="primary"
                                 class="add-pipeline-group-btn"
@@ -60,7 +68,7 @@
                                 @enter="submitRename(item)"
                                 v-model.trim="newViewName"
                             />
-                            <span v-else class="pipeline-group-item-name">
+                            <span v-else class="pipeline-group-item-name" v-bk-overflow-tips>
                                 {{item.name}}
                             </span>
                             <span
@@ -100,9 +108,9 @@
             :loading="isAdding"
             @cancel="closeAddPipelineGroupDialog"
         >
-            <bk-form ref="newPipelineGroupForm" v-bkloading="{ isLoading: isAdding }" form-type="vertical" :model="newPipelineGroup">
+            <bk-form ref="newPipelineGroupForm" :label-width="200" v-bkloading="{ isLoading: isAdding }" form-type="vertical" :model="newPipelineGroup">
                 <bk-form-item property="name" :rules="groupNameRules" :label="$t('pipelineGroupName')">
-                    <bk-input v-model.trim="newPipelineGroup.name" />
+                    <bk-input v-model.trim="newPipelineGroup.name" :placeholder="$t('groupNamePlaceholder')" />
                 </bk-form-item>
                 <bk-form-item required property="projected" :label="$t('visibleRange')">
                     <bk-radio-group class="pipeline-group-visible-range-group" v-model="newPipelineGroup.projected">
@@ -130,21 +138,22 @@
                 </bk-button>
             </footer>
         </bk-dialog>
-
     </aside>
-
 </template>
 
 <script>
     import { mapActions, mapGetters, mapState } from 'vuex'
     import {
         DELETED_VIEW_ID,
-        UNCLASSIFIED_PIPELINE_VIEW_ID
+        UNCLASSIFIED_PIPELINE_VIEW_ID,
+        CACHE_PIPELINE_GROUP_NAV_STATUS
     } from '@/store/constants'
     import { cacheViewId } from '@/utils/util'
     import Logo from '@/components/Logo'
     import ExtMenu from '@/components/pipelineList/extMenu'
-
+    import {
+        PROJECT_RESOURCE_ACTION
+    } from '@/utils/permission'
     export default {
         components: {
             Logo,
@@ -158,10 +167,7 @@
                 editingGroupId: null,
                 renaming: false,
                 newViewName: '',
-                showClassify: {
-                    personalViewList: true,
-                    projectViewList: true
-                },
+                showClassify: {},
                 isAdding: false,
                 isAddPipelineGroupDialogShow: false,
                 isValidGroupName: false,
@@ -215,7 +221,8 @@
                         icon: view.icon ?? 'pipelineGroup',
                         name: view.i18nKey ? this.$t(view.i18nKey) : view.name,
                         actions: this.pipelineGroupActions(view)
-                    }))
+                    })),
+                    isCheckPermission: false
                 }, {
                     title: `${this.$t('projectViewList')}(${this.pipelineGroupDict.projectViewList.length - 1})`,
                     id: 'projectViewList',
@@ -228,7 +235,16 @@
                         ...view,
                         icon: view.id === UNCLASSIFIED_PIPELINE_VIEW_ID ? 'unGroup' : 'pipelineGroup',
                         actions: this.pipelineGroupActions(view)
-                    }))
+                    })),
+                    isCheckPermission: true,
+                    hasPermission: this.isManage,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId: this.$route.params.projectId,
+                        resourceType: 'project',
+                        resourceCode: this.$route.params.projectId,
+                        action: PROJECT_RESOURCE_ACTION.MANAGE
+                    }
                 }]
             },
             projectedGroupDisableTips () {
@@ -250,6 +266,11 @@
             }
         },
         created () {
+            this.showClassify = JSON.parse(localStorage.getItem(CACHE_PIPELINE_GROUP_NAV_STATUS)) || {
+                personalViewList: true,
+                projectViewList: true
+            }
+
             this.refreshPipelineGroup()
         },
         methods: {
@@ -291,17 +312,33 @@
                             }
                         ]
                         : []),
-                    // {
-                    //     text: this.$t('pipelineGroupAuth'),
-                    //     handler: () => {
-                    //         this.$router.push({
-                    //             name: 'pipelineListAuth',
-                    //             params: {
-                    //                 viewId: group.id
-                    //             }
-                    //         })
-                    //     }
-                    // },
+                    ...(
+                        group.projected
+                            ? [
+                                {
+                                    text: this.$t('pipelineGroupAuth'),
+                                    handler: () => {
+                                        this.$router.push({
+                                            name: 'PipelineListAuth',
+                                            params: {
+                                                id: group.id,
+                                                groupName: group.name
+                                            }
+                                        })
+                                    },
+                                    hasPermission: this.isManage,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: this.$route.params.projectId,
+                                        resourceType: 'project',
+                                        resourceCode: this.$route.params.projectId,
+                                        action: PROJECT_RESOURCE_ACTION.MANAGE
+                                    }
+                                }
+                            ]
+                            : []
+                    ),
+                    
                     {
                         text: this.$t(group.top ? 'unStickyTop' : 'stickyTop'),
                         disabled: this.isSticking,
@@ -330,6 +367,7 @@
             },
             toggle (id) {
                 this.showClassify[id] = !this.showClassify[id]
+                localStorage.setItem(CACHE_PIPELINE_GROUP_NAV_STATUS, JSON.stringify(this.showClassify))
             },
             resetEditing () {
                 this.editingGroupId = ''
@@ -490,12 +528,16 @@
     @import '@/scss/conf';
 
     .pipeline-group-aside {
+        position: relative;
         display: flex;
         flex-direction: column;
-        width: 280px;
+        width: 0px;
         background: white;
         padding: 0;
         border-right: 1px solid #DCDEE5;
+        transition: width 0.2s linear;
+        width: 100%;
+        height: 100%;
         .pipeline-group-item-icon {
             display: inline-flex;
             margin-right: 10px;
@@ -506,6 +548,7 @@
             flex: 1;
             display: flex;
             flex-direction: column;
+            overflow: auto;
             overflow: overlay;
         }
         .pipeline-group-aside-header {
@@ -559,6 +602,7 @@
             padding: 0 0 0 32px;
             cursor: pointer;
             font-size: 14px;
+            width: 100%;
             &:hover,
             &.active {
                 color: $primaryColor;

@@ -27,10 +27,12 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -44,6 +46,7 @@ import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.ReviewParam
+import com.tencent.devops.process.pojo.pipeline.BuildRecordInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.service.PipelineRecentUseService
@@ -76,15 +79,25 @@ class UserBuildResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        buildId: String
+        buildId: String,
+        archiveFlag: Boolean?
     ): Result<List<BuildParameters>> {
         checkParam(userId, projectId, pipelineId)
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(pipelineBuildFacadeService.getBuildParameters(userId, projectId, pipelineId, buildId))
+        return Result(
+            pipelineBuildFacadeService.getBuildParameters(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                archiveFlag = archiveFlag
+            )
+        )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_EXECUTE)
     override fun manualStartup(
         userId: String,
         projectId: String,
@@ -108,6 +121,7 @@ class UserBuildResourceImpl @Autowired constructor(
         return Result(manualStartup)
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_EXECUTE)
     override fun retry(
         userId: String,
         projectId: String,
@@ -272,7 +286,8 @@ class UserBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        executeCount: Int?
+        executeCount: Int?,
+        archiveFlag: Boolean?
     ): Result<ModelRecord> {
         checkParam(userId, projectId, pipelineId)
         if (buildId.isBlank()) {
@@ -285,6 +300,28 @@ class UserBuildResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId,
                 executeCount = executeCount,
+                channelCode = ChannelCode.BS,
+                archiveFlag = archiveFlag
+            )
+        )
+    }
+
+    override fun getBuildRecordInfo(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<List<BuildRecordInfo>> {
+        checkParam(userId, projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return Result(
+            pipelineBuildFacadeService.getBuildRecordInfo(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
                 channelCode = ChannelCode.BS
             )
         )
@@ -390,7 +427,8 @@ class UserBuildResourceImpl @Autowired constructor(
         remark: String?,
         buildNoStart: Int?,
         buildNoEnd: Int?,
-        buildMsg: String?
+        buildMsg: String?,
+        archiveFlag: Boolean?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkParam(userId, projectId, pipelineId)
         val result = pipelineBuildFacadeService.getHistoryBuild(
@@ -417,9 +455,12 @@ class UserBuildResourceImpl @Autowired constructor(
             remark = remark,
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd,
-            buildMsg = buildMsg
+            buildMsg = buildMsg,
+            archiveFlag = archiveFlag
         )
-        pipelineRecentUseService.record(userId, projectId, pipelineId)
+        if (archiveFlag != true) {
+            pipelineRecentUseService.record(userId, projectId, pipelineId)
+        }
         return Result(result)
     }
 

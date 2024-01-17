@@ -26,7 +26,6 @@
  */
 
 dependencies {
-    api(project(":core:process:plugin-load")) // Model检查
     api(project(":core:common:common-service"))
     api(project(":core:common:common-client")) // 其他微服务调用
     api(project(":core:common:common-archive"))

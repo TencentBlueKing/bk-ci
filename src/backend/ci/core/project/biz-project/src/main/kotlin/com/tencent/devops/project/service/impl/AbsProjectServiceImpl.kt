@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.FileUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -47,7 +48,9 @@ import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
@@ -89,16 +92,16 @@ import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.project.util.exception.ProjectNotExistException
-import java.io.File
-import java.io.InputStream
-import java.util.regex.Pattern
-import javax.ws.rs.NotFoundException
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
+import java.io.File
+import java.io.InputStream
+import java.util.regex.Pattern
+import javax.ws.rs.NotFoundException
 
 @Suppress("ALL")
 abstract class AbsProjectServiceImpl @Autowired constructor(
@@ -114,7 +117,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private val shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
     private val objectMapper: ObjectMapper,
     private val projectExtService: ProjectExtService,
-    private val projectApprovalService: ProjectApprovalService
+    private val projectApprovalService: ProjectApprovalService,
+    private val clientTokenService: ClientTokenService,
+    private val profile: Profile
 ) : ProjectService {
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
@@ -206,7 +211,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("Failed to create project in permission center： $projectCreateInfo | ${e.message}")
             throw OperationException(
-                I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL)
+                message = I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL) + ": ${e.message}"
             )
         }
         if (projectId.isNullOrEmpty()) {
@@ -226,7 +231,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     projectId = projectId,
                     channelCode = projectChannel,
                     approvalStatus = approvalStatus,
-                    subjectScopesStr = subjectScopesStr
+                    subjectScopesStr = subjectScopesStr,
+                    properties = buildProjectProperties(projectInfo.properties)
                 )
                 if (!needApproval) {
                     projectExtService.createExtProjectInfo(
@@ -242,7 +248,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 shardingRoutingRuleAssignService.assignShardingRoutingRule(
                     channelCode = projectChannel,
                     routingName = projectInfo.englishName,
-                    moduleCodes = listOf(SystemModuleEnum.PROCESS, SystemModuleEnum.METRICS)
+                    moduleCodes = listOf(SystemModuleEnum.PROCESS, SystemModuleEnum.METRICS),
+                    dataTag = projectInfo.properties?.dataTag
                 )
                 if (projectInfo.secrecy) {
                     redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectInfo.englishName)
@@ -252,7 +259,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         } catch (e: DuplicateKeyException) {
             logger.warn("Duplicate project $projectCreateInfo", e)
             if (createExtInfo.needAuth) {
-                // todo 待确定，切换v3-RBAC后，是否需要做其他操作
                 deleteAuth(projectId, accessToken)
             }
             throw OperationException(I18nUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
@@ -267,6 +273,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             throw ignored
         }
         return projectId
+    }
+
+    private fun buildProjectProperties(properties: ProjectProperties?): ProjectProperties? {
+        var finalProperties = properties
+        if (profile.isRbac()) {
+            // rbac新建项目默认开启流水线模板管理权限
+            finalProperties = properties ?: ProjectProperties()
+            finalProperties.enableTemplatePermissionManage = true
+        }
+        return finalProperties
     }
 
     override fun createExtProject(
@@ -323,9 +339,21 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return projectVO
     }
 
+    override fun getByEnglishNameWithoutPerm(englishName: String): ProjectVO? {
+        val record = projectDao.getByEnglishName(
+            dslContext = dslContext,
+            englishName = englishName
+        ) ?: return null
+        return ProjectUtils.packagingBean(record)
+    }
+
     override fun show(userId: String, englishName: String, accessToken: String?): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
-        val projectInfo = ProjectUtils.packagingBean(record)
+        val rightProjectOrganization = fixProjectOrganization(tProjectRecord = record)
+        val projectInfo = ProjectUtils.packagingBean(
+            tProjectRecord = record,
+            projectOrganizationInfo = rightProjectOrganization
+        )
         val approvalStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
         if (approvalStatus.isCreatePending() && record.creator != userId) {
             throw ErrorCodeException(
@@ -371,7 +399,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     override fun diff(userId: String, englishName: String, accessToken: String?): ProjectDiffVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
         val projectApprovalInfo = projectApprovalService.get(englishName)
-        return ProjectUtils.packagingBean(record, projectApprovalInfo)
+        val rightProjectOrganization = fixProjectOrganization(tProjectRecord = record)
+        return ProjectUtils.packagingBean(
+            tProjectRecord = record,
+            projectApprovalInfo = projectApprovalInfo,
+            projectOrganizationInfo = rightProjectOrganization
+        )
     }
 
     override fun getByEnglishName(englishName: String): ProjectVO? {
@@ -433,7 +466,15 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     subjectScopes = subjectScopes,
                     approvalStatus = newApprovalStatus
                 )
-                modifyProjectAuthResource(resourceUpdateInfo)
+                if (needModifyAuthResource(
+                        originalProjectName = projectInfo.projectName,
+                        modifiedProjectName = projectUpdateInfo.projectName,
+                        finalNeedApproval = finalNeedApproval,
+                        beforeSubjectScopesStr = projectInfo.subjectScopes,
+                        afterSubjectScopesStr = subjectScopesStr
+                    )) {
+                    modifyProjectAuthResource(resourceUpdateInfo)
+                }
                 if (finalNeedApproval) {
                     updateApprovalInfo(
                         userId = userId,
@@ -487,13 +528,30 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     I18nUtil.getCodeLanMessage(
                         messageCode = ProjectMessageCode.PROJECT_UPDATE_FAIL,
                         defaultMessage = "update project failed: $e "
-                    )
+                    ) + ": ${e.message}"
                 )
             }
         } finally {
             projectJmxApi.execute(ProjectJmxApi.PROJECT_UPDATE, System.currentTimeMillis() - startEpoch, success)
         }
         return success
+    }
+
+    /**
+     * 修改蓝盾项目需要修改权限中心的场景。
+     * 1.若需要审批则必然需要修改到权限中心资源
+     * 2.修改到名称需要同步修改权限中心资源
+     * 3.通过service接口时，不需要审批，但是修改到可授权范围也需要修改权限中心资源
+     * */
+    private fun needModifyAuthResource(
+        originalProjectName: String,
+        modifiedProjectName: String,
+        finalNeedApproval: Boolean,
+        beforeSubjectScopesStr: String,
+        afterSubjectScopesStr: String
+    ): Boolean {
+        return originalProjectName != modifiedProjectName || finalNeedApproval ||
+            beforeSubjectScopesStr != afterSubjectScopesStr
     }
 
     private fun getUpdateApprovalStatus(
@@ -578,16 +636,37 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     accessToken = accessToken,
                     permission = AuthPermission.MANAGE
                 )
+                val projectsWithPipelineTemplateCreatePerm = try {
+                    getProjectFromAuth(
+                        userId = userId,
+                        accessToken = accessToken,
+                        permission = AuthPermission.CREATE,
+                        resourceType = AuthResourceType.PIPELINE_TEMPLATE.value
+                    )
+                } catch (ex: Exception) {
+                    emptyList()
+                }
+                val projectsWithViewPermission = getProjectFromAuth(
+                    userId = userId,
+                    accessToken = accessToken,
+                    permission = AuthPermission.VIEW
+                )
                 projectDao.listByEnglishName(
                     dslContext = dslContext,
                     englishNameList = projectsWithVisitPermission.toList(),
                     enabled = enabled
                 ).forEach {
+                    val pipelineTemplateInstallPerm = pipelineTemplateInstallPerm(
+                        projectsWithPipelineTemplateCreatePerm = projectsWithPipelineTemplateCreatePerm,
+                        tProjectRecord = it
+                    )
                     projectsResp.add(
                         ProjectUtils.packagingBean(
                             tProjectRecord = it,
                             managePermission = projectsWithManagePermission?.contains(it.englishName),
-                            showUserManageIcon = isShowUserManageIcon(it.routerTag)
+                            showUserManageIcon = isShowUserManageIcon(it.routerTag),
+                            viewPermission = projectsWithViewPermission?.contains(it.englishName),
+                            pipelineTemplateInstallPerm = pipelineTemplateInstallPerm
                         )
                     )
                 }
@@ -612,6 +691,22 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         } finally {
             projectJmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
+        }
+    }
+
+    private fun pipelineTemplateInstallPerm(
+        projectsWithPipelineTemplateCreatePerm: List<String>?,
+        tProjectRecord: TProjectRecord
+    ): Boolean {
+        val properties = tProjectRecord.properties?.let { self ->
+            JsonUtil.to(self, ProjectProperties::class.java)
+        }
+        return if (properties != null && properties.enableTemplatePermissionManage == true) {
+            // 开启了模板权限，在给项目安装研发商店模板时，需要校验是否有当前项目的模板创建权限。
+            projectsWithPipelineTemplateCreatePerm?.contains(tProjectRecord.englishName) ?: false
+        } else {
+            // 未开启模板权限的默认有安装模板权限
+            true
         }
     }
 
@@ -650,16 +745,21 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun list(projectCodes: Set<String>): List<ProjectVO> {
+    override fun list(
+        projectCodes: Set<String>,
+        enabled: Boolean?
+    ): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            val list = ArrayList<ProjectVO>()
-            projectDao.listByCodes(dslContext, projectCodes, enabled = true).map {
-                list.add(ProjectUtils.packagingBean(it))
-            }
             success = true
-            return list
+            return projectDao.listByCodes(
+                dslContext = dslContext,
+                projectCodeList = projectCodes,
+                enabled = enabled
+            ).map {
+                ProjectUtils.packagingBean(it)
+            }
         } finally {
             projectJmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
@@ -788,7 +888,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
     }
 
-    override fun listByChannel(limit: Int, offset: Int, projectChannelCode: ProjectChannelCode): Page<ProjectVO> {
+    override fun listByChannel(limit: Int, offset: Int, projectChannelCode: List<String>): Page<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         try {
             val list = ArrayList<ProjectVO>()
@@ -915,21 +1015,30 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return projectDao.updateProjectName(dslContext, projectId, projectName) > 0
     }
 
-    override fun updateUsableStatus(userId: String, englishName: String, enabled: Boolean) {
+    override fun updateUsableStatus(
+        userId: String?,
+        englishName: String,
+        enabled: Boolean,
+        checkPermission: Boolean
+    ) {
         logger.info("updateUsableStatus userId[$userId], englishName[$englishName] , enabled[$enabled]")
-
         val projectInfo = projectDao.getByEnglishName(dslContext, englishName)
-            ?: throw ErrorCodeException(errorCode = ProjectMessageCode.PROJECT_NOT_EXIST)
-        val verify = validatePermission(
-            userId = userId,
-            projectCode = englishName,
-            permission = AuthPermission.ENABLE
-        )
-        if (!verify) {
-            logger.info("$englishName| $userId| ${AuthPermission.DELETE} validatePermission fail")
-            throw PermissionForbiddenException(
-                I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL)
+            ?: throw ErrorCodeException(
+                errorCode = PROJECT_NOT_EXIST,
+                defaultMessage = "project($englishName) not exist!"
             )
+        if (checkPermission) {
+            val verify = validatePermission(
+                userId = userId!!,
+                projectCode = englishName,
+                permission = AuthPermission.ENABLE
+            )
+            if (!verify) {
+                logger.info("$englishName| $userId| ${AuthPermission.DELETE} validatePermission fail")
+                throw PermissionForbiddenException(
+                    I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL)
+                )
+            }
         }
         projectDao.updateUsableStatus(
             dslContext = dslContext,
@@ -941,22 +1050,26 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun searchProjectByProjectName(projectName: String, limit: Int, offset: Int): Page<ProjectVO> {
         val startTime = System.currentTimeMillis()
-        val list = mutableListOf<ProjectVO>()
-        projectDao.searchByProjectName(
+        val projectList = projectDao.searchByProjectName(
             dslContext = dslContext,
             projectName = projectName,
+            channelCodes = listOf(ProjectChannelCode.BS.name, ProjectChannelCode.PREBUILD.name),
             limit = limit,
             offset = offset
         ).map {
-            list.add(ProjectUtils.packagingBean(it))
+            ProjectUtils.packagingBean(it)
         }
-        val count = projectDao.countByProjectName(dslContext, projectName).toLong()
+        val count = projectDao.countByProjectName(
+            dslContext = dslContext,
+            projectName = projectName,
+            channelCodes = listOf(ProjectChannelCode.BS.name, ProjectChannelCode.PREBUILD.name)
+        ).toLong()
         LogUtils.costTime("search project by projectName", startTime)
         return Page(
             count = count,
             page = offset,
             pageSize = limit,
-            records = list
+            records = projectList
         )
     }
 
@@ -1031,7 +1144,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     override fun cancelCreateProject(userId: String, projectId: String): Boolean {
         logger.info("$userId cancel create project($projectId)")
         val projectInfo = projectDao.get(dslContext, projectId) ?: throw ErrorCodeException(
-            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
+            errorCode = PROJECT_NOT_EXIST,
             params = arrayOf(projectId),
             defaultMessage = "project - $projectId is not exist!"
         )
@@ -1104,7 +1217,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     }
 
     override fun updateProjectProperties(
-        userId: String,
+        userId: String?,
         projectCode: String,
         properties: ProjectProperties
     ): Boolean {
@@ -1145,6 +1258,25 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return true
     }
 
+    override fun updateProjectProductId(
+        englishName: String,
+        productName: String
+    ) {
+        logger.info("update project productId|$englishName|$productName")
+        projectDao.getByEnglishName(
+            dslContext = dslContext,
+            englishName = englishName
+        ) ?: throw NotFoundException("project - $englishName is not exist!")
+        val product = getOperationalProducts().firstOrNull {
+            it.productName == productName
+        } ?: throw NotFoundException("product - $productName is not exist!")
+        projectDao.updateProductId(
+            dslContext = dslContext,
+            englishName = englishName,
+            productId = product.productId
+        )
+    }
+
     abstract fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean
 
     abstract fun getDeptInfo(userId: String): UserDeptDetail
@@ -1155,7 +1287,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     abstract fun getProjectFromAuth(userId: String?, accessToken: String?): List<String>
 
-    abstract fun getProjectFromAuth(userId: String, accessToken: String?, permission: AuthPermission): List<String>?
+    abstract fun getProjectFromAuth(
+        userId: String,
+        accessToken: String?,
+        permission: AuthPermission,
+        resourceType: String? = null
+    ): List<String>?
 
     abstract fun isShowUserManageIcon(routerTag: String?): Boolean
 

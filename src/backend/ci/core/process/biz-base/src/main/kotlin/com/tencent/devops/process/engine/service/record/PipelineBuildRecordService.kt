@@ -164,7 +164,8 @@ class PipelineBuildRecordService @Autowired constructor(
     fun getBuildRecord(
         buildInfo: BuildInfo,
         executeCount: Int?,
-        refreshStatus: Boolean = true
+        refreshStatus: Boolean = true,
+        queryDslContext: DSLContext? = null
     ): ModelRecord? {
         // 直接取构建记录数据，防止接口传错
         val projectId = buildInfo.projectId
@@ -177,7 +178,11 @@ class PipelineBuildRecordService @Autowired constructor(
         var fixedExecuteCount = executeCount ?: buildInfo.executeCount ?: 1
         watcher.start("buildRecordModel")
         val buildRecordModel = recordModelDao.getRecord(
-            dslContext, projectId, pipelineId, buildId, fixedExecuteCount
+            dslContext = queryDslContext ?: dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            executeCount = fixedExecuteCount
         )
         watcher.start("genRecordModel")
         val version = buildInfo.version
@@ -187,7 +192,8 @@ class PipelineBuildRecordService @Autowired constructor(
                 version = version, buildId = buildId,
                 fixedExecuteCount = fixedExecuteCount,
                 buildRecordModel = buildRecordModel,
-                executeCount = executeCount
+                executeCount = executeCount,
+                queryDslContext = queryDslContext
             )
             if (record == null) fixedExecuteCount = buildInfo.executeCount!!
             record
@@ -199,16 +205,20 @@ class PipelineBuildRecordService @Autowired constructor(
                     "fixedExecuteCount=$fixedExecuteCount"
             )
             watcher.start("getDetailModel")
-            val detail = pipelineBuildDetailService.getBuildModel(projectId, buildId) ?: return null
+            val detail = pipelineBuildDetailService.getBuildModel(projectId, buildId, queryDslContext) ?: return null
             fixDetailTimeCost(buildInfo, detail)
             detail
         }
         watcher.start("getPipelineInfo")
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
-            projectId, buildInfo.pipelineId
+            projectId = projectId, pipelineId = buildInfo.pipelineId, queryDslContext = queryDslContext
         ) ?: return null
 
-        val buildSummaryRecord = pipelineBuildSummaryDao.get(dslContext, projectId, buildInfo.pipelineId)
+        val buildSummaryRecord = pipelineBuildSummaryDao.get(
+            dslContext = queryDslContext ?: dslContext,
+            projectId = projectId,
+            pipelineId = buildInfo.pipelineId
+        )
 
         // 判断需要刷新状态，目前只会改变canRetry & canSkip 状态
         // #7983 仅当查看最新一次执行记录时可以选择重试
@@ -239,50 +249,26 @@ class PipelineBuildRecordService @Autowired constructor(
             stage.resetBuildOption()
             // #4518 兼容历史构建的containerId作为日志JobId，发布后新产生的groupContainers无需校准
             stage.containers.forEach { container ->
-                container.containerHashId = container.containerHashId ?: container.containerId
-                container.containerId = container.id
-                var elementElapsed = 0L
-                container.elements.forEach { element ->
-                    element.timeCost?.executeCost?.let {
-                        element.elapsed = it
-                        elementElapsed += it
-                    }
-                    element.additionalOptions?.let {
-                        if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
-                    }
+                fixContainerDetail(container)
+                container.fetchGroupContainers()?.forEach { groupContainer ->
+                    fixContainerDetail(groupContainer)
                 }
-                if (container is NormalContainer) {
-                    container.jobControlOption?.let {
-                        if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
-                    }
-                    container.mutexGroup?.let {
-                        if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
-                    }
-                } else if (container is VMBuildContainer) {
-                    container.jobControlOption?.let {
-                        if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
-                    }
-                    container.mutexGroup?.let {
-                        if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
-                    }
-                }
-                container.elementElapsed = container.elementElapsed ?: elementElapsed
-                container.systemElapsed = container.systemElapsed ?: container.timeCost?.systemCost
             }
             stage.elapsed = stage.elapsed ?: stage.timeCost?.totalCost
         }
         val triggerReviewers = pipelineTriggerReviewDao.getTriggerReviewers(
-            dslContext = dslContext,
+            dslContext = queryDslContext ?: dslContext,
             projectId = projectId,
             pipelineId = pipelineInfo.pipelineId,
             buildId = buildId
         )
         watcher.start("startUserList")
-        val startUserList = recordModelDao.getRecordStartUserList(
-            dslContext = dslContext,
+
+        val recordList = getRecordInfo(
             pipelineId = pipelineInfo.pipelineId,
             projectId = projectId,
-            buildId = buildId
+            buildId = buildId,
+            queryDslContext = queryDslContext
         )
         watcher.start("parseTriggerInfo")
         // TODO 临时解析旧触发器获取实际触发信息，后续触发器完善需要改回
@@ -366,7 +352,7 @@ class PipelineBuildRecordService @Autowired constructor(
             stageStatus = buildInfo.stageStatus,
             triggerReviewers = triggerReviewers,
             executeCount = fixedExecuteCount,
-            startUserList = startUserList,
+            startUserList = recordList.map { it.startUser },
             buildMsg = BuildMsgUtils.getBuildMsg(
                 buildMsg = buildInfo.buildMsg,
                 startType = StartType.toStartType(buildInfo.trigger),
@@ -374,8 +360,50 @@ class PipelineBuildRecordService @Autowired constructor(
             ),
             material = buildInfo.material,
             remark = buildInfo.remark,
-            webhookInfo = buildInfo.webhookInfo
+            webhookInfo = buildInfo.webhookInfo,
+            templateInfo = pipelineInfo.templateInfo,
+            recordList = recordList
         )
+    }
+
+    fun getRecordInfo(pipelineId: String, projectId: String, buildId: String, queryDslContext: DSLContext? = null) =
+        recordModelDao.getRecordInfoList(
+            dslContext = queryDslContext ?: dslContext,
+            pipelineId = pipelineId,
+            projectId = projectId,
+            buildId = buildId
+        )
+
+    private fun fixContainerDetail(container: Container) {
+        container.containerHashId = container.containerHashId ?: container.containerId
+        container.containerId = container.id
+        var elementElapsed = 0L
+        container.elements.forEach { element ->
+            element.timeCost?.executeCost?.let {
+                element.elapsed = it
+                elementElapsed += it
+            }
+            element.additionalOptions?.let {
+                if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
+            }
+        }
+        if (container is NormalContainer) {
+            container.jobControlOption?.let {
+                if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
+            }
+            container.mutexGroup?.let {
+                if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
+            }
+        } else if (container is VMBuildContainer) {
+            container.jobControlOption?.let {
+                if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
+            }
+            container.mutexGroup?.let {
+                if (it.timeoutVar.isNullOrBlank()) it.timeoutVar = it.timeout.toString()
+            }
+        }
+        container.elementElapsed = container.elementElapsed ?: elementElapsed
+        container.systemElapsed = container.systemElapsed ?: container.timeCost?.systemCost
     }
 
     private fun fixDetailTimeCost(buildInfo: BuildInfo, detail: Model) {
@@ -494,6 +522,13 @@ class PipelineBuildRecordService @Autowired constructor(
                 recordModel.modelVar.plus(modelVar), null, LocalDateTime.now(),
                 null, cancelUser, null
             )
+            pipelineRecordChangeEvent(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                startUser = recordModel.startUser,
+                executeCount = executeCount
+            )
         }
     }
 
@@ -567,6 +602,13 @@ class PipelineBuildRecordService @Autowired constructor(
                 context, projectId, pipelineId, buildId, executeCount, buildStatus,
                 recordModel.modelVar.plus(modelVar), null, LocalDateTime.now(),
                 errorInfoList, null, null
+            )
+            pipelineRecordChangeEvent(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                startUser = recordModel.startUser,
+                executeCount = executeCount
             )
         }
         val detail = pipelineBuildDetailService.buildEnd(

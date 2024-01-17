@@ -150,7 +150,7 @@ class PipelineBuildSummaryDao {
     fun listPipelineInfoBuildSummaryCount(
         dslContext: DSLContext,
         projectId: String,
-        channelCode: ChannelCode,
+        channelCode: ChannelCode? = null,
         pipelineIds: Collection<String>? = null,
         viewId: String? = null,
         favorPipelines: List<String> = emptyList(),
@@ -180,7 +180,7 @@ class PipelineBuildSummaryDao {
     fun listPipelineInfoBuildSummary(
         dslContext: DSLContext,
         projectId: String,
-        channelCode: ChannelCode,
+        channelCode: ChannelCode? = null,
         sortType: PipelineSortType? = null,
         pipelineIds: Collection<String>? = null,
         favorPipelines: List<String> = emptyList(),
@@ -221,7 +221,7 @@ class PipelineBuildSummaryDao {
 
     private fun generatePipelineFilterCondition(
         projectId: String,
-        channelCode: ChannelCode,
+        channelCode: ChannelCode? = null,
         pipelineIds: Collection<String>?,
         viewId: String?,
         favorPipelines: List<String>,
@@ -233,7 +233,9 @@ class PipelineBuildSummaryDao {
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(T_PIPELINE_INFO.PROJECT_ID.eq(projectId))
-        conditions.add(T_PIPELINE_INFO.CHANNEL.eq(channelCode.name))
+        if (channelCode != null) {
+            conditions.add(T_PIPELINE_INFO.CHANNEL.eq(channelCode.name))
+        }
         if (includeDelete == false) {
             conditions.add(T_PIPELINE_INFO.DELETE.eq(false))
         }
@@ -494,8 +496,11 @@ class PipelineBuildSummaryDao {
     }
 
     /**
-     * 更新运行中的任务信息摘要
+     * 更新运行中的任务信息摘要,
+     *
+     * 卡片界面上 已经不再展示当前正在执行的插件任务名称, 因此该函数废弃,减少热点流水线的锁竞争.
      */
+    @Suppress("UNUSED")
     fun updateCurrentBuildTask(
         dslContext: DSLContext,
         projectId: String,

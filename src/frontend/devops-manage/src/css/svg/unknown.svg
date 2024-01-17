@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>停用状态</title>
+    <g id="项目管理" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="项目启用优化-交互说明" transform="translate(-374.000000, -3040.000000)">
+            <g id="编组-3备份-10" transform="translate(50.000000, 2873.000000)">
+                <g id="编组-13" transform="translate(24.000000, 134.000000)">
+                    <g id="编组-4" transform="translate(48.000000, 29.000000)">
+                        <g id="编组-8" transform="translate(244.000000, 0.000000)">
+                            <g id="停用状态" transform="translate(8.000000, 4.000000)">
+                                <rect id="矩形" x="0" y="0" width="16" height="16"></rect>
+                                <path d="M8,1.5 C11.5898509,1.5 14.5,4.41014913 14.5,8 C14.5,11.5898509 11.5898509,14.5 8,14.5 C4.41014913,14.5 1.5,11.5898509 1.5,8 C1.5,4.41014913 4.41014913,1.5 8,1.5 Z M8,4.5 C6.06700338,4.5 4.5,6.06700338 4.5,8 C4.5,9.93299662 6.06700338,11.5 8,11.5 C9.93299662,11.5 11.5,9.93299662 11.5,8 C11.5,6.06700338 9.93299662,4.5 8,4.5 Z" id="形状结合" fill="#E1E3E7"></path>
+                                <circle id="椭圆形" fill="#979BA5" cx="8" cy="8" r="3.5"></circle>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

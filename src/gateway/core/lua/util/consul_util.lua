@@ -21,7 +21,7 @@ local _M = {}
 function _M:getAllWhitelistIp()
     local ip_whitelist = {}
     if type(config.service_ip_whitelist) == "string" then
-        ip_whitelist = {config.service_ip_whitelist}
+        ip_whitelist = { config.service_ip_whitelist }
     else
         for k, v in ipairs(config.service_ip_whitelist) do
             if v ~= "" then
@@ -34,13 +34,7 @@ function _M:getAllWhitelistIp()
     local in_container = ngx.var.namespace ~= '' and ngx.var.namespace ~= nil
     if not in_container and #ip_whitelist > 1 then
         -- 获取灰度设置
-        local ns_config = nil
-        if ngx.var.devops_region ~= "DEVNET" then
-            ns_config = config.ns
-        else
-            ns_config = config.ns_devnet
-        end
-
+        local ns_config = config.ns
         local white_ip_hot_cache = ngx.shared.white_ip_hot_store
         local white_ip_cold_cache = ngx.shared.white_ip_cold_store
         local ip_cache_key = "X-DEVOPS-WHITE-IP-CONSOL"
@@ -63,7 +57,7 @@ function _M:getAllWhitelistIp()
             --- 发送请求
             -- local url = config.oauth.scheme .. config.oauth.ip  .. config.oauth.loginUrl .. bk_token
             local url = ns_config.nodes_url
-            local res, err = httpc:request({path = url, method = "GET"})
+            local res, err = httpc:request({ path = url, method = "GET" })
 
             local useHttp = true
             if not res then --- 判断是否出错了
@@ -120,9 +114,6 @@ function _M:getAllWhitelistIp()
         local ip_cache_key = "X-DEVOPS-WHITE-IP-K8S"
         local responseBody = white_ip_hot_cache:get(ip_cache_key)
 
-        local kubernetes_api_host = config.kubernetes.api.host
-        local kubernetes_api_port = config.kubernetes.api.port
-
         if responseBody == nil then
             --- 初始化HTTP连接
             local httpc = http.new()
@@ -131,11 +122,10 @@ function _M:getAllWhitelistIp()
             else
                 --- 开始连接
                 httpc:set_timeout(3000)
-                local headers = {["Authorization"] = "Bearer " .. kubernetes_api_token}
+                local headers = { ["Authorization"] = "Bearer " .. kubernetes_api_token }
                 --- 发送请求
-                local res, err = httpc:request_uri("https://" .. kubernetes_api_host .. ":" ..
-                                                       tostring(kubernetes_api_port) .. "/api/v1/nodes",
-                                                   {method = "GET", headers = headers, ssl_verify = false})
+                local res, err = httpc:request_uri(config.kubernetes.api.url,
+                    { method = "GET", headers = headers, ssl_verify = false })
                 local useHttp = true
                 if not res then --- 判断是否出错了
                     ngx.log(ngx.ERR, "failed to request get k8s ip: ", err)

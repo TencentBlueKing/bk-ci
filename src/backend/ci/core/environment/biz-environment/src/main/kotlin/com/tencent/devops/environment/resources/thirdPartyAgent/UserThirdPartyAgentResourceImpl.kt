@@ -43,6 +43,7 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentLink
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStatusWithInfo
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
+import com.tencent.devops.environment.service.thirdPartyAgent.AgentMetricService
 import com.tencent.devops.environment.service.thirdPartyAgent.ImportService
 import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentMgrService
 import org.springframework.beans.factory.annotation.Autowired
@@ -52,7 +53,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserThirdPartyAgentResourceImpl @Autowired constructor(
     private val thirdPartyAgentService: ThirdPartyAgentMgrService,
     private val slaveGatewayService: SlaveGatewayService,
-    private val importService: ImportService
+    private val importService: ImportService,
+    private val agentMetricService: AgentMetricService
 ) : UserThirdPartyAgentResource {
     override fun isProjectEnable(userId: String, projectId: String): Result<Boolean> {
         return Result(true)
@@ -205,7 +207,17 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         checkUserId(userId)
         checkProjectId(projectId)
         checkNodeId(nodeHashId)
-        return Result(thirdPartyAgentService.listAgentBuilds(userId, projectId, nodeHashId, page, pageSize))
+        return Result(
+            thirdPartyAgentService.listAgentBuilds(
+                userId = userId,
+                projectId = projectId,
+                nodeHashId = nodeHashId,
+                status = null,
+                pipelineId = null,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 
     override fun listAgentActions(
@@ -229,7 +241,7 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
     ): Result<Map<String, List<Map<String, Any>>>> {
         checkUserId(userId)
         checkProjectId(projectId)
-        return Result(thirdPartyAgentService.queryCpuUsageMetrix(userId, projectId, nodeHashId, timeRange))
+        return Result(agentMetricService.queryCpuUsageMetrix(userId, projectId, nodeHashId, timeRange))
     }
 
     override fun queryMemoryUsageMetrix(
@@ -240,7 +252,7 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
     ): Result<Map<String, List<Map<String, Any>>>> {
         checkUserId(userId)
         checkProjectId(projectId)
-        return Result(thirdPartyAgentService.queryMemoryUsageMetrix(userId, projectId, nodeHashId, timeRange))
+        return Result(agentMetricService.queryMemoryUsageMetrix(userId, projectId, nodeHashId, timeRange))
     }
 
     override fun queryDiskioMetrix(
@@ -251,7 +263,7 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
     ): Result<Map<String, List<Map<String, Any>>>> {
         checkUserId(userId)
         checkProjectId(projectId)
-        return Result(thirdPartyAgentService.queryDiskioMetrix(userId, projectId, nodeHashId, timeRange))
+        return Result(agentMetricService.queryDiskioMetrix(userId, projectId, nodeHashId, timeRange))
     }
 
     override fun queryNetMetrix(
@@ -262,7 +274,7 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
     ): Result<Map<String, List<Map<String, Any>>>> {
         checkUserId(userId)
         checkProjectId(projectId)
-        return Result(thirdPartyAgentService.queryNetMetrix(userId, projectId, nodeHashId, timeRange))
+        return Result(agentMetricService.queryNetMetrix(userId, projectId, nodeHashId, timeRange))
     }
 
     private fun checkUserId(userId: String) {

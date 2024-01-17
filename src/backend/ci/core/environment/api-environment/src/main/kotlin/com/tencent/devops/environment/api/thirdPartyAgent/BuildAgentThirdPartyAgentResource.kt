@@ -172,4 +172,21 @@ interface BuildAgentThirdPartyAgentResource {
         @ApiParam("管道状态信息", required = true)
         response: PipelineResponse
     ): Result<Boolean>
+
+    @ApiOperation("接受telegraf监控数据")
+    @POST
+    @Path("/agents/metrics")
+    fun reportAgentMetrics(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam("Agent ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
+        agentId: String,
+        @ApiParam("秘钥", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
+        secretKey: String,
+        @ApiParam("数据", required = true)
+        data: String
+    ): Result<Boolean>
 }

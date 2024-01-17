@@ -28,6 +28,7 @@
 package com.tencent.devops.project
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.project.pojo.ProjectProperties
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -53,22 +54,28 @@ data class ProjectInfoResponse(
     val creatorCenterName: String,
     @JsonProperty(value = "bg_id", required = true)
     @ApiModelProperty("项目所属一级机构ID", name = "bg_id")
-    val bgId: Long,
+    val bgId: Long? = null,
     @JsonProperty(value = "bg_name", required = true)
     @ApiModelProperty("项目所属一级机构名称", name = "bg_name")
-    val bgName: String,
+    val bgName: String? = "",
+    @JsonProperty(value = "business_line_id", required = true)
+    @ApiModelProperty("业务线ID")
+    val businessLineId: Long? = null,
+    @JsonProperty(value = "business_line_name", required = true)
+    @ApiModelProperty("业务线名称")
+    val businessLineName: String? = "",
     @JsonProperty(value = "dept_id", required = true)
     @ApiModelProperty("项目所属二级机构ID", name = "dept_id")
-    val deptId: Long,
+    val deptId: Long? = null,
     @JsonProperty(value = "dept_name", required = true)
     @ApiModelProperty("项目所属二级机构名称", name = "dept_name")
-    val deptName: String,
+    val deptName: String? = null,
     @JsonProperty(value = "center_id", required = true)
     @ApiModelProperty("项目所属三级机构ID", name = "center_id")
-    val centerId: Long,
+    val centerId: Long? = null,
     @JsonProperty(value = "center_name", required = true)
     @ApiModelProperty("项目所属三级机构名称", name = "center_name")
-    val centerName: String,
+    val centerName: String? = null,
     @JsonProperty(value = "project_type", required = false)
     @ApiModelProperty("项目类型", name = "project_type")
     val projectType: Int?,
@@ -121,5 +128,9 @@ data class ProjectInfoResponse(
     @ApiModelProperty("支持IDC构建机")
     val enableIdc: Boolean? = false,
     @ApiModelProperty("流水线数量上限")
-    val pipelineLimit: Int? = 500
+    val pipelineLimit: Int? = 500,
+    @ApiModelProperty("项目其他设置")
+    val properties: ProjectProperties?,
+    @ApiModelProperty("产品运营ID")
+    val productId: Int? = null
 )

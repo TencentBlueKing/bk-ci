@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_BRANCH_TEST_FLAG
 import com.tencent.devops.common.api.constant.KEY_DESCRIPTION
 import com.tencent.devops.common.api.constant.KEY_DOCSLINK
 import com.tencent.devops.common.api.constant.KEY_OS
@@ -68,16 +69,19 @@ import com.tencent.devops.store.dao.common.StoreErrorCodeInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
+import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureRequest
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
+import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
+import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
 import com.tencent.devops.store.pojo.common.KEY_ATOM_STATUS
 import com.tencent.devops.store.pojo.common.KEY_ATOM_TYPE
@@ -114,7 +118,6 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomLabelService
 import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
-import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreHonorService
@@ -122,16 +125,17 @@ import com.tencent.devops.store.service.common.StoreI18nMessageService
 import com.tencent.devops.store.service.common.StoreIndexManageService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreUserService
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.utils.StoreUtils
 import com.tencent.devops.store.utils.VersionUtils
-import java.math.BigDecimal
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 import org.apache.commons.collections4.ListUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.math.BigDecimal
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 /**
  * 插件业务逻辑类
@@ -214,7 +218,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     @Suppress("UNCHECKED_CAST")
     @BkTimed(extraTags = ["get", "getPipelineAtom"], value = "store_get_pipeline_atom")
     override fun getPipelineAtoms(
-        accessToken: String,
         userId: String,
         serviceScope: String?,
         jobType: String?,
@@ -235,7 +238,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             val validateFlag: Boolean?
             try {
                 validateFlag = client.get(ServiceProjectResource::class).verifyUserProjectPermission(
-                    accessToken = accessToken,
                     projectCode = projectCode,
                     userId = userId
                 ).data
@@ -344,7 +346,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             val name = it[NAME] as String
             val atomCode = it[KEY_ATOM_CODE] as String
             val version = it[VERSION] as String
-            val defaultVersion = VersionUtils.convertLatestVersion(version)
+            val branchTestFlag = it[KEY_BRANCH_TEST_FLAG] as Boolean
+            val defaultVersion = if (branchTestFlag) {
+                version
+            } else {
+                VersionUtils.convertLatestVersion(version)
+            }
             val classType = it[KEY_CLASS_TYPE] as String
             val serviceScopeStr = it[KEY_SERVICE_SCOPE] as? String
             val honorInfos = atomHonorInfoMap[atomCode]
@@ -377,6 +384,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 userId = userId,
                 visibleList = atomVisibleDataMap?.get(atomCode),
                 userDeptList = userDeptList!!) else null
+            val description = it[KEY_DESCRIPTION] as? String
             val pipelineAtomRespItem = AtomRespItem(
                 name = name,
                 atomCode = atomCode,
@@ -385,7 +393,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 classType = classType,
                 serviceScope = serviceScopeList,
                 os = osList,
-                logoUrl = logoUrl,
+                logoUrl = logoUrl?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                },
                 icon = it[KEY_ICON] as? String,
                 classifyCode = classifyCode,
                 classifyName = classifyLanName,
@@ -394,7 +404,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 docsLink = it[KEY_DOCSLINK] as? String,
                 atomType = AtomTypeEnum.getAtomType(atomType.toInt()),
                 atomStatus = AtomStatusEnum.getAtomStatus(atomStatus.toInt()),
-                description = it[KEY_DESCRIPTION] as? String,
+                description = description?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(description) as? String
+                },
                 publisher = it[KEY_PUBLISHER] as? String,
                 creator = it[KEY_CREATOR] as String,
                 modifier = it[KEY_MODIFIER] as String,
@@ -549,6 +561,97 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     }
 
     /**
+     * 根据插件代码和版本号集合批量获取插件信息
+     */
+    override fun getAtomInfos(
+        codeVersions: Set<AtomCodeVersionReqItem>
+    ): Result<List<AtomRunInfo>> {
+        val atomRunInfos = mutableListOf<AtomRunInfo>()
+        codeVersions.forEach {
+            val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, it.atomCode)
+            val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, it.version)
+            if (!atomRunInfoJson.isNullOrBlank()) {
+                try {
+                    val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
+                    if (atomRunInfo.atomStatus != null && atomRunInfo.version == it.version) {
+                        atomRunInfos.add(atomRunInfo)
+                    } else {
+                        atomRunInfos.add(
+                            setCache(
+                                atomRunInfoKey = atomRunInfoKey,
+                                version = it.version,
+                                atomCode = it.atomCode
+                            )
+                        )
+                    }
+                } catch (e: Exception) {
+                    atomRunInfos.add(
+                        setCache(
+                            atomRunInfoKey = atomRunInfoKey,
+                            version = it.version,
+                            atomCode = it.atomCode
+                        )
+                    )
+                    logger.error("atomRunInfoJson convert error: $it", e)
+                }
+            } else {
+                atomRunInfos.add(
+                    setCache(
+                        atomRunInfoKey = atomRunInfoKey,
+                        version = it.version,
+                        atomCode = it.atomCode
+                    )
+                )
+            }
+        }
+        return Result(atomRunInfos)
+    }
+
+    fun setCache(
+        atomRunInfoKey: String,
+        version: String,
+        atomCode: String
+    ): AtomRunInfo {
+        val atomRunInfoFromDb = getAtomRunInfo(
+            atomCode = atomCode,
+            version = version,
+            dslContext = dslContext
+        )
+        // 将db中的环境信息写入缓存
+        redisOperation.hset(atomRunInfoKey, version, JsonUtil.toJson(atomRunInfoFromDb))
+        return atomRunInfoFromDb
+    }
+
+    fun getAtomRunInfo(
+        atomCode: String,
+        version: String,
+        dslContext: DSLContext
+    ): AtomRunInfo {
+        val tAtomRecord = atomDao.getPipelineAtom(
+            dslContext = dslContext,
+            atomCode = atomCode,
+            version = version
+        ) ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf("$atomCode:$version")
+        )
+        val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+            dslContext = dslContext,
+            storeCode = atomCode,
+            storeType = StoreTypeEnum.ATOM.type.toByte()
+        ) ?: ""
+        return AtomRunInfo(
+            atomCode = atomCode,
+            atomName = tAtomRecord.name,
+            version = version,
+            initProjectCode = initProjectCode,
+            jobType = if (tAtomRecord.jobType == null) null else JobTypeEnum.valueOf(tAtomRecord.jobType),
+            buildLessRunFlag = tAtomRecord.buildLessRunFlag,
+            inputTypeInfos = marketAtomCommonService.generateInputTypeInfos(tAtomRecord.props),
+            atomStatus = tAtomRecord.atomStatus
+        )
+    }
+    /**
      * 根据项目代码、插件代码和版本号获取插件信息
      */
     @Suppress("UNCHECKED_CAST")
@@ -604,7 +707,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     atomCode = pipelineAtomRecord.atomCode,
                     version = pipelineAtomRecord.version,
                     classType = pipelineAtomRecord.classType,
-                    logoUrl = pipelineAtomRecord.logoUrl,
+                    logoUrl = pipelineAtomRecord.logoUrl?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+                    },
                     icon = pipelineAtomRecord.icon,
                     summary = pipelineAtomRecord.summary,
                     serviceScope =
@@ -618,7 +723,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     category = AtomCategoryEnum.getAtomCategory(pipelineAtomRecord.categroy.toInt()),
                     atomType = AtomTypeEnum.getAtomType(pipelineAtomRecord.atomType.toInt()),
                     atomStatus = AtomStatusEnum.getAtomStatus(pipelineAtomRecord.atomStatus.toInt()),
-                    description = pipelineAtomRecord.description,
+                    description = pipelineAtomRecord.description?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+                    },
                     versionList = versionList!!,
                     atomLabelList = atomLabelList,
                     creator = pipelineAtomRecord.creator,
@@ -636,11 +743,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                                 version = pipelineAtomRecord.version
                             )
                         )
-                        AtomDecorateFactory.get(AtomDecorateFactory.Kind.PROPS)
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.PROPS)
                             ?.decorate(propJsonStr) as Map<String, Any>?
                     },
                     data = pipelineAtomRecord.data?.let {
-                        AtomDecorateFactory.get(AtomDecorateFactory.Kind.DATA)
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.DATA)
                             ?.decorate(pipelineAtomRecord.data) as Map<String, Any>?
                     },
                     recommendFlag = atomFeature?.recommendFlag,
@@ -706,7 +813,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 versionName = "$atomVersion ($atomStatusMsg)"
                 latestVersionName = "$latestVersionName ($atomStatusMsg)"
             }
-            if (tmpVersionPrefix != versionPrefix) {
+            if (tmpVersionPrefix != versionPrefix && (it[KEY_BRANCH_TEST_FLAG] as Boolean) != true) {
                 versionList.add(VersionInfo(latestVersionName, "$versionPrefix*")) // 添加大版本号的通用最新模式（如1.*）
                 tmpVersionPrefix = versionPrefix
             }
@@ -950,7 +1057,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         val result = mutableListOf<InstalledAtom>()
         val count = atomDao.countInstalledAtoms(dslContext, projectCode, classifyCode, name)
         if (count == 0) {
-            return Page(page, pageSize, count.toLong(), result)
+            return Page(page, pageSize, 0, result)
         }
         val records = atomDao.getInstalledAtoms(
             dslContext = dslContext,
@@ -984,13 +1091,16 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 messageCode = "${StoreTypeEnum.ATOM.name}.classify.$atomClassifyCode",
                 defaultMessage = classifyName
             )
+            val logoUrl = it[KEY_LOGO_URL] as? String
             result.add(
                 InstalledAtom(
                     atomId = it[KEY_ID] as String,
                     atomCode = atomCode,
                     version = it[KEY_VERSION] as String,
                     name = it[NAME] as String,
-                    logoUrl = it[KEY_LOGO_URL] as? String,
+                    logoUrl = logoUrl?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                    },
                     classifyCode = atomClassifyCode,
                     classifyName = classifyLanName,
                     category = AtomCategoryEnum.getAtomCategory((it[KEY_CATEGORY] as Byte).toInt()),
@@ -1029,13 +1139,16 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 messageCode = "${StoreTypeEnum.ATOM.name}.classify.$classifyCode",
                 defaultMessage = classifyName
             )
+            val logoUrl = it[KEY_LOGO_URL] as? String
             // 判断项目是否是初始化项目或者调试项目
             InstalledAtom(
                 atomId = it[KEY_ID] as String,
                 atomCode = atomCode,
                 version = it[KEY_VERSION] as String,
                 name = it[NAME] as String,
-                logoUrl = it[KEY_LOGO_URL] as? String,
+                logoUrl = logoUrl?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                },
                 classifyCode = classifyCode,
                 classifyName = classifyLanName,
                 category = AtomCategoryEnum.getAtomCategory((it[KEY_CATEGORY] as Byte).toInt()),
@@ -1051,12 +1164,15 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
 
         // 获取自研插件
         val selfAtoms = atomDao.getSelfDevelopAtoms(dslContext)?.map {
+            val logoUrl = it.logoUrl
             InstalledAtom(
                 atomId = it.id,
                 atomCode = it.atomCode,
                 version = it[KEY_VERSION] as String,
                 name = it.name,
-                logoUrl = it.logoUrl,
+                logoUrl = logoUrl?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                },
                 classifyCode = "",
                 classifyName = "",
                 category = AtomCategoryEnum.getAtomCategory((it.categroy).toInt()),

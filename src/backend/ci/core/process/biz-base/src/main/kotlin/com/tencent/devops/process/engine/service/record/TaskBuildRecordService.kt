@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.service.record
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
@@ -38,18 +39,18 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAto
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
-import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
-import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
-import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateTaskTimeCost
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.PipelineResVersionDao
+import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.StageTagService
@@ -370,16 +371,16 @@ class TaskBuildRecordService(
                 }
                 val taskVar = mutableMapOf<String, Any>()
                 if (atomVersion != null) {
-                    when (recordTask.classType) {
-                        MarketBuildAtomElement.classType -> {
-                            taskVar[MarketBuildAtomElement::version.name] = atomVersion
-                        }
-                        MarketBuildLessAtomElement.classType -> {
-                            taskVar[MarketBuildLessAtomElement::version.name] = atomVersion
-                        }
-                        else -> {
-                            taskVar[MarketBuildAtomElement::version.name] = INIT_VERSION
-                        }
+                    // 将插件的执行版本刷新
+                    if (
+                        recordTask.classType == MarketBuildAtomElement.classType ||
+                        recordTask.originClassType == MarketBuildAtomElement.classType ||
+                        recordTask.classType == MarketBuildLessAtomElement.classType ||
+                        recordTask.originClassType == MarketBuildLessAtomElement.classType
+                    ) {
+                        taskVar[MarketBuildAtomElement::version.name] = atomVersion
+                    } else {
+                        taskVar[MarketBuildAtomElement::version.name] = INIT_VERSION
                     }
                 }
                 var timestamps: MutableMap<BuildTimestampType, BuildRecordTimeStamp>? = null
@@ -479,6 +480,23 @@ class TaskBuildRecordService(
                 )
             }
         }
+    }
+
+    fun getTaskInfo(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String,
+        executeCount: Int
+    ): BuildRecordTask? {
+        return recordTaskDao.getRecord(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId,
+            executeCount = executeCount
+        )
     }
 
     companion object {

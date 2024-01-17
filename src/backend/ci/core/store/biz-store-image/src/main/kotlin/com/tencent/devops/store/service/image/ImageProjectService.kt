@@ -27,6 +27,9 @@
 
 package com.tencent.devops.store.service.image
 
+import com.tencent.devops.common.api.constant.KEY_SUMMARY
+import com.tencent.devops.common.api.constant.KEY_VERSION
+import com.tencent.devops.common.api.constant.KEY_WEIGHT
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -57,9 +60,12 @@ import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_NAME
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_RD_TYPE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_REPO_NAME
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_REPO_URL
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_SIZE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_SOURCE_TYPE
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_STATUS
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_SUMMARY
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_TAG
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_TYPE
 import com.tencent.devops.store.dao.image.ImageAgentTypeDao
 import com.tencent.devops.store.dao.image.ImageDao
 import com.tencent.devops.store.dao.image.MarketImageDao
@@ -67,8 +73,18 @@ import com.tencent.devops.store.dao.image.MarketImageFeatureDao
 import com.tencent.devops.store.exception.image.ImageNotExistException
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_NAME
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_CODE
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_ID
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_NAME
+import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_CREATOR
+import com.tencent.devops.store.pojo.common.KEY_ICON
+import com.tencent.devops.store.pojo.common.KEY_LATEST_FLAG
+import com.tencent.devops.store.pojo.common.KEY_LOGO_URL
 import com.tencent.devops.store.pojo.common.KEY_MODIFIER
 import com.tencent.devops.store.pojo.common.KEY_PUBLISHER
+import com.tencent.devops.store.pojo.common.KEY_PUB_TIME
+import com.tencent.devops.store.pojo.common.KEY_RECOMMEND_FLAG
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
@@ -81,6 +97,7 @@ import com.tencent.devops.store.pojo.image.response.JobMarketImageItem
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreUserService
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.util.MultiSourceDataPaginator
 import com.tencent.devops.store.util.PagableDataSource
 import com.tencent.devops.store.utils.VersionUtils
@@ -115,13 +132,11 @@ class ImageProjectService @Autowired constructor(
      * 校验权限
      */
     private fun checkPermission(
-        accessToken: String,
         userId: String,
         projectCode: String
     ) {
         val result =
             client.get(ServiceProjectResource::class).verifyUserProjectPermission(
-                accessToken = accessToken,
                 projectCode = projectCode,
                 userId = userId
             )
@@ -134,7 +149,6 @@ class ImageProjectService @Autowired constructor(
      * 根据项目标识获取可用镜像列表（公共+已安装）
      */
     fun getJobImages(
-        accessToken: String,
         userId: String,
         projectCode: String,
         agentType: ImageAgentTypeEnum?,
@@ -144,7 +158,7 @@ class ImageProjectService @Autowired constructor(
         pageSize: Int?
     ): Page<JobImageItem>? {
         // 校验用户是否有该项目的权限
-        checkPermission(accessToken, userId, projectCode)
+        checkPermission(userId, projectCode)
         val totalSize: Long
         val jobImageItemList = mutableListOf<JobImageItem>()
         if (agentType != null) {
@@ -307,45 +321,45 @@ class ImageProjectService @Autowired constructor(
 
     @Suppress("UNCHECKED_CAST")
     private fun generateJobImageItem(isContainAgentType: Boolean, it: Record): JobImageItem {
-        val imageId = it["imageId"] as String
-        val imageCode = it["imageCode"] as String
-        val imageName = it["imageName"] as String
-        val version = it["version"] as String
+        val imageId = it[KEY_IMAGE_ID] as String
+        val imageCode = it[KEY_IMAGE_CODE] as String
+        val imageName = it[KEY_IMAGE_NAME] as String
+        val version = it[KEY_VERSION] as String
         val defaultVersion = VersionUtils.convertLatestVersion(version)
-        val imageStatus = it["imageStatus"] as Byte
-        val dbClassifyId = it["classifyId"] as String
-        val classifyCode = it["classifyCode"] as String
-        val classifyName = it["classifyName"] as String
+        val imageStatus = it[KEY_IMAGE_STATUS] as Byte
+        val dbClassifyId = it[KEY_CLASSIFY_ID] as String
+        val classifyCode = it[KEY_CLASSIFY_CODE] as String
+        val classifyName = it[KEY_CLASSIFY_NAME] as String
         val classifyLanName = I18nUtil.getCodeLanMessage(
             messageCode = "${StoreTypeEnum.IMAGE.name}.classify.$classifyCode",
             defaultMessage = classifyName
         )
-        val logoUrl = it["logoUrl"] as? String
-        val icon = it["icon"] as? String
-        val summary = it["summary"] as? String
-        val publisher = it["publisher"] as? String
-        val pubTime = it["pubTime"] as? LocalDateTime
-        val creator = it["creator"] as String
-        val createTime = it["createTime"] as LocalDateTime
-        val latestFlag = it["latestFlag"] as Boolean
-        val agentTypeScopeStr = it["agentTypeScope"] as? String
+        val logoUrl = it[KEY_LOGO_URL] as? String
+        val icon = it[KEY_ICON] as? String
+        val summary = it[KEY_SUMMARY] as? String
+        val publisher = it[KEY_PUBLISHER] as? String
+        val pubTime = it[KEY_PUB_TIME] as? LocalDateTime
+        val creator = it[KEY_CREATOR] as String
+        val createTime = it[KEY_CREATE_TIME] as LocalDateTime
+        val latestFlag = it[KEY_LATEST_FLAG] as Boolean
+        val agentTypeScopeStr = it[KEY_IMAGE_AGENT_TYPE_SCOPE] as? String
         val agentTypeScopeList = if (!agentTypeScopeStr.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(
             agentTypeScopeStr,
             List::class.java
         ) as List<String> else listOf()
-        val imageSourceType = it["imageSourceType"] as String
-        val imageRepoUrl = it["imageRepoUrl"] as? String
-        val imageRepoName = it["imageRepoName"] as String
-        val imageTag = it["imageTag"] as String
-        val imageSize = it["imageSize"] as String
-        val certificationFlag = it["certificationFlag"] as? Boolean
-        val publicFlag = it["publicFlag"] as? Boolean
-        val imageType = it["imageType"] as? Byte
-        val weight = it["weight"] as? Int
-        val recommendFlag = it["recommendFlag"] as? Boolean
+        val imageSourceType = it[KEY_IMAGE_SOURCE_TYPE] as String
+        val imageRepoUrl = it[KEY_IMAGE_REPO_URL] as? String
+        val imageRepoName = it[KEY_IMAGE_REPO_NAME] as String
+        val imageTag = it[KEY_IMAGE_TAG] as String
+        val imageSize = it[KEY_IMAGE_SIZE] as String
+        val certificationFlag = it[KEY_IMAGE_FEATURE_CERTIFICATION_FLAG] as? Boolean
+        val publicFlag = it[KEY_IMAGE_FEATURE_PUBLIC_FLAG] as? Boolean
+        val imageType = it[KEY_IMAGE_TYPE] as? Byte
+        val weight = it[KEY_WEIGHT] as? Int
+        val recommendFlag = it[KEY_RECOMMEND_FLAG] as? Boolean
         val labelNames = it["labelNames"] as? String
-        val modifier = it["modifier"] as String?
-        val updateTime = (it["updateTime"] as LocalDateTime).timestampmilli()
+        val modifier = it[KEY_MODIFIER] as String?
+        val updateTime = (it[KEY_UPDATE_TIME] as LocalDateTime).timestampmilli()
         return JobImageItem(
             id = imageId,
             code = imageCode,
@@ -356,7 +370,9 @@ class ImageProjectService @Autowired constructor(
             classifyId = dbClassifyId,
             classifyCode = classifyCode,
             classifyName = classifyLanName,
-            logoUrl = logoUrl,
+            logoUrl = logoUrl?.let {
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+            },
             icon = icon,
             summary = summary,
             docsLink = storeCommonService.getStoreDetailUrl(StoreTypeEnum.IMAGE, imageCode),
@@ -400,7 +416,7 @@ class ImageProjectService @Autowired constructor(
         // 默认拉取所有
         val validPageSize = pageSize ?: -1
         // 2.权限校验：用户是否有该项目的权限
-        checkPermission(accessToken, userId, projectCode)
+        checkPermission(userId, projectCode)
         // 3.查数据库
         // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)
@@ -455,7 +471,6 @@ class ImageProjectService @Autowired constructor(
      * 根据项目标识获取商店镜像列表
      */
     fun getJobMarketImagesByProjectCode(
-        accessToken: String,
         userId: String,
         projectCode: String,
         agentType: ImageAgentTypeEnum,
@@ -465,7 +480,6 @@ class ImageProjectService @Autowired constructor(
         interfaceName: String? = "Anon interface"
     ): Page<JobMarketImageItem?>? {
         return searchJobMarketImages(
-            accessToken = accessToken,
             userId = userId,
             projectCode = projectCode,
             agentType = agentType,
@@ -481,7 +495,6 @@ class ImageProjectService @Autowired constructor(
     }
 
     fun searchJobMarketImages(
-        accessToken: String,
         userId: String,
         projectCode: String,
         agentType: ImageAgentTypeEnum,
@@ -499,7 +512,7 @@ class ImageProjectService @Autowired constructor(
         // 默认拉取所有
         val validPageSize = pageSize ?: -1
         // 2.权限校验：用户是否有该项目的权限
-        checkPermission(accessToken, userId, projectCode)
+        checkPermission(userId, projectCode)
         // 3.查数据库
         // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)
@@ -976,7 +989,9 @@ class ImageProjectService @Autowired constructor(
             rdType = rdType,
             agentTypeScope = agentTypeScope,
             availableFlag = availableFlag,
-            logoUrl = logoUrl ?: "",
+            logoUrl = logoUrl?.let {
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+            } ?: "",
             icon = icon ?: "",
             summary = summary ?: "",
             docsLink = docsLink,

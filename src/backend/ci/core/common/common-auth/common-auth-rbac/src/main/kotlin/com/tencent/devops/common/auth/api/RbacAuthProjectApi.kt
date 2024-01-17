@@ -52,7 +52,7 @@ class RbacAuthProjectApi @Autowired constructor(
         permission: AuthPermission
     ): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             action = RbacAuthUtils.buildAction(
                 authResourceType = AuthResourceType.PROJECT,
@@ -69,7 +69,7 @@ class RbacAuthProjectApi @Autowired constructor(
         group: BkAuthGroup?
     ): List<String> {
         return client.get(ServiceProjectAuthResource::class).getProjectUsers(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             projectCode = projectCode,
             group = group
         ).data ?: emptyList()
@@ -80,7 +80,7 @@ class RbacAuthProjectApi @Autowired constructor(
         projectCode: String
     ): List<BkAuthGroupAndUserList> {
         return client.get(ServiceProjectAuthResource::class).getProjectGroupAndUserList(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             projectCode = projectCode
         ).data ?: emptyList()
     }
@@ -91,7 +91,7 @@ class RbacAuthProjectApi @Autowired constructor(
         supplier: (() -> List<String>)?
     ): List<String> {
         return client.get(ServiceProjectAuthResource::class).getUserProjects(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId
         ).data ?: emptyList()
     }
@@ -100,12 +100,14 @@ class RbacAuthProjectApi @Autowired constructor(
         serviceCode: AuthServiceCode,
         userId: String,
         permission: AuthPermission,
-        supplier: (() -> List<String>)?
+        supplier: (() -> List<String>)?,
+        resourceType: String?
     ): List<String> {
         return client.get(ServiceProjectAuthResource::class).getUserProjectsByPermission(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
-            action = permission.value
+            action = permission.value,
+            resourceType = resourceType
         ).data ?: emptyList()
     }
 
@@ -129,7 +131,7 @@ class RbacAuthProjectApi @Autowired constructor(
         group: BkAuthGroup?
     ): Boolean {
         return client.get(ServiceProjectAuthResource::class).isProjectUser(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             projectCode = projectCode,
             group = group
@@ -138,7 +140,7 @@ class RbacAuthProjectApi @Autowired constructor(
 
     override fun checkProjectUser(user: String, serviceCode: AuthServiceCode, projectCode: String): Boolean {
         return client.get(ServiceProjectAuthResource::class).isProjectUser(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             projectCode = projectCode
         ).data ?: false
@@ -148,7 +150,7 @@ class RbacAuthProjectApi @Autowired constructor(
         return client.get(ServiceProjectAuthResource::class).checkProjectManager(
             userId = userId,
             projectCode = projectCode,
-            token = tokenService.getSystemToken(null)!!
+            token = tokenService.getSystemToken()!!
         ).data ?: false
     }
 
@@ -159,7 +161,7 @@ class RbacAuthProjectApi @Autowired constructor(
         role: String
     ): Boolean {
         return client.get(ServiceProjectAuthResource::class).createProjectUser(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             projectCode = projectCode,
             roleCode = role
@@ -172,7 +174,7 @@ class RbacAuthProjectApi @Autowired constructor(
         projectId: String
     ): List<BKAuthProjectRolesResources> {
         return client.get(ServiceProjectAuthResource::class).getProjectRoles(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             projectCode = projectCode,
             projectId = projectId
         ).data ?: emptyList()

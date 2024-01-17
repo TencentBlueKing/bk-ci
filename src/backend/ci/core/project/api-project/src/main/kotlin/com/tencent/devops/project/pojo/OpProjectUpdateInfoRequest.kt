@@ -46,6 +46,12 @@ data class OpProjectUpdateInfoRequest(
     @JsonProperty(value = "bg_name", required = true)
     @ApiModelProperty("项目所属一级机构名称", name = "bg_name")
     val bgName: String,
+    @JsonProperty(value = "business_line_id", required = true)
+    @ApiModelProperty("业务线ID")
+    val businessLineId: Long? = null,
+    @JsonProperty(value = "business_line_name", required = true)
+    @ApiModelProperty("业务线名称")
+    val businessLineName: String? = "",
     @JsonProperty(value = "dept_id", required = true)
     @ApiModelProperty("项目所属二级机构ID", name = "dept_id")
     val deptId: Long,
@@ -99,5 +105,9 @@ data class OpProjectUpdateInfoRequest(
     @ApiModelProperty(value = "支持IDC构建机", required = false)
     val enableIdc: Boolean? = false,
     @ApiModelProperty(value = "流水线数量上限", required = false)
-    val pipelineLimit: Int? = 500
+    val pipelineLimit: Int? = 500,
+    @ApiModelProperty("项目相关配置")
+    val properties: ProjectProperties? = null,
+    @ApiModelProperty("运营产品id")
+    val productId: Int? = null
 )

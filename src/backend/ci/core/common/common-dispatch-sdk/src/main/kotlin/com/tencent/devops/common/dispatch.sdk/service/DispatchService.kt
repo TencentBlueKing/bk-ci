@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.JOB_BUILD_STOPS
 import com.tencent.devops.common.api.constant.CommonMessageCode.UNABLE_GET_PIPELINE_JOB_STATUS
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
@@ -65,6 +66,7 @@ import java.util.Date
 import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 
+@Suppress("LongParameterList", "TooManyFunctions")
 class DispatchService constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper,
@@ -116,24 +118,8 @@ class DispatchService constructor(
             id = secretInfo.hashId,
             secretKey = secretInfo.secretKey,
             gateway = gateway!!,
-            projectId = event.projectId,
-            pipelineId = event.pipelineId,
-            buildId = event.buildId,
-            dispatchMessage = event.dispatchType.value,
-            userId = event.userId,
-            vmSeqId = event.vmSeqId,
-            channelCode = event.channelCode,
-            vmNames = event.vmNames,
-            atoms = event.atoms,
-            zone = event.zone,
-            containerHashId = event.containerHashId,
-            executeCount = event.executeCount,
-            containerId = event.containerId,
-            containerType = event.containerType,
-            stageId = event.stageId,
-            dispatchType = event.dispatchType,
             customBuildEnv = customBuildEnv,
-            dockerRoutingType = event.dockerRoutingType
+            event = event
         )
     }
 
@@ -148,15 +134,19 @@ class DispatchService constructor(
 
     fun checkRunning(event: PipelineAgentStartupEvent): Boolean {
         // 判断流水线当前container是否在运行中
-        val statusResult = client.get(ServicePipelineTaskResource::class).getTaskStatus(
+        val statusResult = client.get(ServicePipelineTaskResource::class).getContainerStartupInfo(
             projectId = event.projectId,
             buildId = event.buildId,
+            containerId = event.containerId,
             taskId = VMUtils.genStartVMTaskId(event.containerId)
         )
-
-        if (statusResult.isNotOk() || statusResult.data == null) {
-            logger.warn("The build event($event) fail to check if pipeline task is running " +
-                            "because of ${statusResult.message}")
+        val startBuildTask = statusResult.data?.startBuildTask
+        val buildContainer = statusResult.data?.buildContainer
+        if (statusResult.isNotOk() || startBuildTask == null || buildContainer == null) {
+            logger.warn(
+                "The build event($event) fail to check if pipeline task is running " +
+                    "because of statusResult(${statusResult.message})"
+            )
             val errorMessage = I18nUtil.getCodeLanMessage(UNABLE_GET_PIPELINE_JOB_STATUS)
             throw BuildFailureException(
                 errorType = ErrorType.SYSTEM,
@@ -166,10 +156,21 @@ class DispatchService constructor(
             )
         }
 
-        if (!statusResult.data!!.isRunning()) {
+        var needStart = true
+        if (event.executeCount != startBuildTask.executeCount) {
+            // 如果已经重试过或执行次数不匹配则直接丢弃
+            needStart = false
+        } else if (startBuildTask.status.isFinish() && buildContainer.status.isRunning()) {
+            // 如果Job已经启动在运行或则直接丢弃
+            needStart = false
+        } else if (!buildContainer.status.isRunning() && !buildContainer.status.isReadyToRun()) {
+            needStart = false
+        }
+
+        if (!needStart) {
             logger.warn("The build event($event) is not running")
-            // dispatch主动发起的重试，当遇到流水线非运行状态时，主动停止消费
-            if (event.retryTime > 1) {
+            // dispatch主动发起的重试或者用户已取消的流水线忽略异常报错
+            if (event.retryTime > 1 || buildContainer.status.isCancel()) {
                 return false
             }
 
@@ -181,7 +182,6 @@ class DispatchService constructor(
                 errorMessage = errorMessage
             )
         }
-
         return true
     }
 
@@ -258,7 +258,8 @@ class DispatchService constructor(
 
     private fun setRedisAuth(event: PipelineAgentStartupEvent): SecretInfo {
         val secretInfoRedisKey = secretInfoRedisKey(event.buildId)
-        val redisResult = redisOperation.hget(key = secretInfoRedisKey,
+        val redisResult = redisOperation.hget(
+            key = secretInfoRedisKey,
             hashKey = secretInfoRedisMapKey(event.vmSeqId, event.executeCount ?: 1)
         )
         if (redisResult != null) {
@@ -277,7 +278,8 @@ class DispatchService constructor(
                     buildId = event.buildId,
                     vmSeqId = event.vmSeqId,
                     channelCode = event.channelCode,
-                    zone = event.zone,
+                    // 待废弃属性
+                    zone = Zone.SHENZHEN,
                     atoms = event.atoms,
                     executeCount = event.executeCount ?: 1
                 )

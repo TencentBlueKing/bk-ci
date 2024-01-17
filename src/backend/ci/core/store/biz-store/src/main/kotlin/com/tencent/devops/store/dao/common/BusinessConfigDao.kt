@@ -27,10 +27,10 @@
 
 package com.tencent.devops.store.dao.common
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TBusinessConfig
 import com.tencent.devops.model.store.tables.records.TBusinessConfigRecord
 import com.tencent.devops.store.pojo.common.BusinessConfigRequest
-import com.tencent.devops.store.pojo.common.enums.BusinessEnum
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -55,7 +55,7 @@ class BusinessConfigDao {
                 DESCRIPTION
             )
                 .values(
-                    request.business.name,
+                    request.business,
                     request.feature,
                     request.businessValue,
                     request.configValue,
@@ -67,7 +67,7 @@ class BusinessConfigDao {
     fun updateById(dslContext: DSLContext, id: Int, request: BusinessConfigRequest): Int {
         with(TBusinessConfig.T_BUSINESS_CONFIG) {
             return dslContext.update(this)
-                .set(BUSINESS, request.business.name)
+                .set(BUSINESS, request.business)
                 .set(FEATURE, request.feature)
                 .set(BUSINESS_VALUE, request.businessValue)
                 .set(CONFIG_VALUE, request.configValue)
@@ -82,7 +82,7 @@ class BusinessConfigDao {
             return dslContext.update(this)
                 .set(CONFIG_VALUE, request.configValue)
                 .set(DESCRIPTION, request.description)
-                .where(BUSINESS.eq(request.business.name))
+                .where(BUSINESS.eq(request.business))
                 .and(FEATURE.eq(request.feature))
                 .and(BUSINESS_VALUE.eq(request.businessValue))
                 .execute()
@@ -113,16 +113,8 @@ class BusinessConfigDao {
                 .where(BUSINESS.eq(business))
                 .and(FEATURE.eq(feature))
                 .and(BUSINESS_VALUE.eq(businessValue))
+                .skipCheck()
                 .fetchOne()
-        }
-    }
-
-    fun getConfigsByFeature(dslContext: DSLContext, business: String, feature: String): Result<TBusinessConfigRecord>? {
-        with(TBusinessConfig.T_BUSINESS_CONFIG) {
-            return dslContext.selectFrom(this)
-                .where(BUSINESS.eq(business))
-                .and(FEATURE.eq(feature))
-                .fetch()
         }
     }
 
@@ -135,19 +127,20 @@ class BusinessConfigDao {
             return dslContext.selectFrom(this)
                 .where(BUSINESS.eq(business))
                 .and(BUSINESS_VALUE.eq(businessValue))
+                .skipCheck()
                 .fetch()
         }
     }
 
     fun existFeatureConfig(
         dslContext: DSLContext,
-        business: BusinessEnum,
+        business: String,
         feature: String,
         businessValue: String
     ): Boolean {
         with(TBusinessConfig.T_BUSINESS_CONFIG) {
             return dslContext.selectCount().from(this)
-                .where(BUSINESS.eq(business.name))
+                .where(BUSINESS.eq(business))
                 .and(FEATURE.eq(feature))
                 .and(BUSINESS_VALUE.eq(businessValue))
                 .fetchOne(0, Int::class.java)!! > 0
@@ -168,6 +161,7 @@ class BusinessConfigDao {
                 .where(BUSINESS.eq(business))
                 .and(FEATURE.eq(feature))
                 .and(CONFIG_VALUE.eq(configValue))
+                .skipCheck()
                 .fetch()
         }
     }
@@ -176,6 +170,7 @@ class BusinessConfigDao {
         with(TBusinessConfig.T_BUSINESS_CONFIG) {
             return dslContext.selectFrom(this)
                 .where(ID.eq(id))
+                .skipCheck()
                 .fetchOne()
         }
     }
@@ -183,6 +178,7 @@ class BusinessConfigDao {
     fun listAll(dslContext: DSLContext): Result<TBusinessConfigRecord>? {
         with(TBusinessConfig.T_BUSINESS_CONFIG) {
             return dslContext.selectFrom(this)
+                .skipCheck()
                 .fetch()
         }
     }

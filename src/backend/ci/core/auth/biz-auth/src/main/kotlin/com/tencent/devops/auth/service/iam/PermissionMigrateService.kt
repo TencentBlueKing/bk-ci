@@ -28,6 +28,8 @@
 
 package com.tencent.devops.auth.service.iam
 
+import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
+import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 
 /**
@@ -63,14 +65,34 @@ interface PermissionMigrateService {
     /**
      * 迁移特定资源类型资源
      */
-    fun migrateResource(
-        projectCode: String,
-        resourceType: String,
-        projectCreator: String
-    ): Boolean
+    fun migrateSpecificResource(migrateResourceDTO: MigrateResourceDTO): Boolean
+
+    /**
+     * 迁移所有项目特定资源类型资源
+     */
+    fun migrateSpecificResourceOfAllProject(migrateResourceDTO: MigrateResourceDTO): Boolean
 
     /**
      * 授予项目下自定义用户组RBAC新增的权限
      */
     fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean
+
+    /**
+     * 权限交接--全量
+     */
+    fun handoverAllPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean
+
+    /**
+     * 权限交接
+     */
+    fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean
+
+    /**
+     * 迁移监控空间权限资源--该接口仅用于迁移“已迁移成功”的项目
+     */
+    fun migrateMonitorResource(
+        projectCodes: List<String>,
+        asyncMigrateManagerGroup: Boolean = true,
+        asyncMigrateOtherGroup: Boolean = true
+    ): Boolean
 }

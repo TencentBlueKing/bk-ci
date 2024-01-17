@@ -394,8 +394,6 @@
                             this.$bkMessage({ message: err.message || err, theme: 'error' })
                         }).finally(() => (this.relateImageData.isLoading = false))
                     }
-                }).catch(() => {
-                    this.$bkMessage({ message: this.$t('store.校验不通过，请修改后再试'), theme: 'error' })
                 })
             },
 

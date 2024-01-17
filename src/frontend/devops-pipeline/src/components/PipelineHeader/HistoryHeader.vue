@@ -4,11 +4,33 @@
             {{ $t("pipelinesHistory") }}
         </pipeline-bread-crumb>
         <aside class="pipeline-history-right-aside">
-            <router-link :to="editRouteName">
-                <bk-button>{{ $t("edit") }}</bk-button>
-            </router-link>
-            <bk-button theme="primary" @click="goExecPreview">
+            <bk-button
+                v-perm="{
+                    permissionData: {
+                        projectId: $route.params.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: $route.params.pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    }
+                }"
+                @click="goEdit"
+            >
+                {{ $t("edit") }}
+            </bk-button>
+            <bk-button
+                theme="primary"
+                v-perm="{
+                    permissionData: {
+                        projectId: $route.params.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: $route.params.pipelineId,
+                        action: RESOURCE_ACTION.EXECUTE
+                    }
+                }"
+                @click="goExecPreview"
+            >
                 {{ $t("exec") }}
+
             </bk-button>
             <more-actions />
         </aside>
@@ -16,8 +38,11 @@
 </template>
 
 <script>
-    import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
+    import {
+        RESOURCE_ACTION
+    } from '@/utils/permission'
     import MoreActions from './MoreActions.vue'
+    import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
 
     export default {
         components: {
@@ -25,11 +50,16 @@
             MoreActions
         },
         computed: {
-            editRouteName () {
-                return { name: 'pipelinesEdit' }
+            RESOURCE_ACTION () {
+                return RESOURCE_ACTION
             }
         },
         methods: {
+            goEdit () {
+                this.$router.push({
+                    name: 'pipelinesEdit'
+                })
+            },
             goExecPreview () {
                 this.$router.push({
                     name: 'pipelinesPreview'

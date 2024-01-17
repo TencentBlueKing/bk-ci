@@ -42,7 +42,6 @@ import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_AND_CREATETOR_PERMISSION
 import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
@@ -51,18 +50,13 @@ import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.atom.MarketAtomEnvService
 import com.tencent.devops.store.service.atom.SampleAtomReleaseService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServiceImpl() {
-
-    @Autowired
-    private lateinit var marketAtomEnvService: MarketAtomEnvService
 
     private val logger = LoggerFactory.getLogger(SampleAtomReleaseServiceImpl::class.java)
 
@@ -100,7 +94,7 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
     override fun validateUpdateMarketAtomReq(
         userId: String,
         marketAtomUpdateRequest: MarketAtomUpdateRequest,
-        atomRecord: TAtomRecord
+        repositoryHashId: String?
     ): Result<Boolean> {
         // 开源版升级插件暂无特殊参数需要校验
         return Result(true)
@@ -224,4 +218,15 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         return if (validateFlag) Triple(true, "", null)
         else Triple(false, StoreMessageCode.USER_ATOM_RELEASE_STEPS_ERROR, null)
     }
+
+    override fun creatAtomBranchTestVersion(
+        userId: String,
+        marketAtomUpdateRequest: MarketAtomUpdateRequest
+    ): Result<String> = Result("")
+
+    override fun endBranchVersionTest(
+        userId: String,
+        atomCode: String,
+        branch: String
+    ): Result<Boolean> = Result(true)
 }

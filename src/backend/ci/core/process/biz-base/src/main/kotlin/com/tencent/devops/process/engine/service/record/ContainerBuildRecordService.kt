@@ -204,7 +204,7 @@ class ContainerBuildRecordService(
         )
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
-            cancelUser = null, operation = "updateContainerStatus#$containerId"
+            cancelUser = null, operation = "$operation#$containerId"
         ) {
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
@@ -386,7 +386,7 @@ class ContainerBuildRecordService(
                 }
                 val containerVar = mutableMapOf<String, Any>()
                 if (recordContainer.containerType == VMBuildContainer.classType &&
-                    containerVar[VMBuildContainer::showBuildResource.name] == true
+                    recordContainer.containerVar[VMBuildContainer::showBuildResource.name] == true
                 ) {
                     containerVar[VMBuildContainer::name.name] = vmInfo.name
                 }
@@ -417,7 +417,7 @@ class ContainerBuildRecordService(
                 buildId = buildId, containerId = containerId, executeCount = executeCount
             ) ?: run {
                 logger.warn(
-                    "ENGINE|$buildId|updateContainerByMap| get container($containerId) record failed."
+                    "ENGINE|$buildId|updateContainerRecord| get container($containerId) record failed."
                 )
                 return@transaction
             }

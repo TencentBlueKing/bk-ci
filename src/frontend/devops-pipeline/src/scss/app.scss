@@ -30,7 +30,7 @@
 @import './mixins/scroller.scss';
 @import '@/scss/dialog-position';
 
-@include scroller(#a5a5a5, 9px);
+@include scroller(#DCDEE5, 9px);
 html,
 body {
     position: fixed;
