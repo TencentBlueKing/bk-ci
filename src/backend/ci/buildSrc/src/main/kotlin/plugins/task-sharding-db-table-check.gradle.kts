@@ -34,52 +34,44 @@ val shardingTableRegex = "(.+)_(\\d+)".toRegex()
 val getMysqlInfo = extra["getMysqlInfo"] as (String) -> Triple<String, String, String>
 val getDatabaseName = extra["getDatabaseName"] as (String) -> String
 val getBkModuleName = extra["getBkModuleName"] as () -> String
+val getBkActualModuleNames = extra["getBkActualModuleNames"] as (String) -> List<String>
+var moduleNames = getBkActualModuleNames(getBkModuleName())
 val shardingDbTableCheckTask = tasks.register("shardingDbTableCheck") {
     doLast {
-        val moduleName = getBkModuleName()
-        var (mysqlURL, mysqlUser, mysqlPasswd) = getMysqlInfo(moduleName)
-        val normalDbUrls = mysqlURL.split(",")
-        var archiveDbUrls = System.getenv("${moduleName}ArchiveMysqlURL")?.split(",")
-        if (moduleName in listOf("process", "engine") && archiveDbUrls == null) {
-            archiveDbUrls = normalDbUrls
-        }
-        if ((!normalDbUrls.isEmpty() && normalDbUrls.size >1) || archiveDbUrls?.isEmpty() == false) {
-            val databaseName = getDatabaseName(moduleName)
-            // 各普通DB的表进行比较
-            val referNormalDb = if (normalDbUrls.size >1) {
-                doCompareDatabasesBus(
+        moduleNames.forEach { moduleName ->
+            var (mysqlURL, mysqlUser, mysqlPasswd) = getMysqlInfo(moduleName)
+            val normalDbUrls = mysqlURL.split(",")
+            var archiveDbUrls = System.getenv("${moduleName}ArchiveMysqlURL")?.split(",")
+            if (moduleName in listOf("process", "engine") && archiveDbUrls == null) {
+                archiveDbUrls = normalDbUrls
+            }
+            if ((!normalDbUrls.isEmpty() && normalDbUrls.size > 1) || archiveDbUrls?.isEmpty() == false) {
+                val databaseName = getDatabaseName(moduleName)
+                // 各普通DB的表进行比较
+                val referNormalDb = doCompareDatabasesBus(
                     dbUrls = normalDbUrls,
                     mysqlUser = mysqlUser,
                     mysqlPasswd = mysqlPasswd,
                     databaseName = databaseName
                 )
-            } else {
-                getDatabaseData(
-                    url = normalDbUrls[0],
-                    user = mysqlUser,
-                    password = mysqlPasswd,
-                    databaseName = databaseName
-                )
-            }
-            if (archiveDbUrls?.isEmpty() == false) {
-                // 获取归档库的数据库名称
-                val archiveDatabaseName = databaseName.replace(moduleName, "archive_$moduleName")
-                // 各归档DB的表和原表进行比较
-                archiveDbUrls.forEach { archiveDbUrl ->
-                    val compareArchiveDb = getDatabaseData(
-                        url = archiveDbUrl,
-                        user = mysqlUser,
-                        password = mysqlPasswd,
-                        databaseName = archiveDatabaseName
-                    )
-                    compareDatabases(
-                        referenceDb = referNormalDb,
-                        compareDb = compareArchiveDb,
-                        singleChipCompareFlag = true
-                    )
-                }
-                // 各归档DB的表进行比较
-                if (archiveDbUrls.size > 1) {
+                if (archiveDbUrls?.isEmpty() == false) {
+                    // 获取归档库的数据库名称
+                    val archiveDatabaseName = databaseName.replace(moduleName, "archive_$moduleName")
+                    // 各归档DB的表和原表进行比较
+                    archiveDbUrls.forEach { archiveDbUrl ->
+                        val compareArchiveDb = getDatabaseData(
+                            url = archiveDbUrl,
+                            user = mysqlUser,
+                            password = mysqlPasswd,
+                            databaseName = archiveDatabaseName
+                        )
+                        compareDatabases(
+                            referenceDb = referNormalDb,
+                            compareDb = compareArchiveDb,
+                            singleChipCompareFlag = true
+                        )
+                    }
+                    // 各归档DB的表进行比较
                     doCompareDatabasesBus(
                         dbUrls = archiveDbUrls,
                         mysqlUser = mysqlUser,
@@ -106,6 +98,7 @@ fun getDatabaseData(
 ): DatabaseInfo {
     val tables = mutableListOf<TableInfo>()
     val connectionUrl = "jdbc:mysql://$url/$databaseName?useSSL=false&nullCatalogMeansCurrent=true"
+    Class.forName("com.mysql.cj.jdbc.Driver");
     DriverManager.getConnection(connectionUrl, user, password).use { connection ->
         val metaData = connection.metaData
         val tableNames = getTableNames(metaData, databaseName)
@@ -187,8 +180,10 @@ fun compareDatabases(
             // 排除对比库和参照库的表因分表造成的表名差异
             val finalMissingTableNames = getFinalCheckTableNames(referenceTableNames, missingTableNames)
             if (finalMissingTableNames.isNotEmpty()) {
-                throw RuntimeException("Missing table in database ($compareDbUrl/$compareDatabaseName) relative to " +
-                    "database ($referenceDbUrl/$referenceDatabaseName): $finalMissingTableNames.")
+                throw RuntimeException(
+                    "Missing table in database ($compareDbUrl/$compareDatabaseName) relative to " +
+                        "database ($referenceDbUrl/$referenceDatabaseName): $finalMissingTableNames."
+                )
             }
         }
     }
@@ -198,8 +193,10 @@ fun compareDatabases(
     if (extraTableNames.isNotEmpty()) {
         finalExtraTableNames = getFinalCheckTableNames(referenceTableNames, extraTableNames)
         if (finalExtraTableNames.isNotEmpty()) {
-            throw RuntimeException("Compared with database ($referenceDbUrl/$referenceDatabaseName), the extra tables" +
-                " in database ($compareDbUrl/$compareDatabaseName): $finalExtraTableNames.")
+            throw RuntimeException(
+                "Compared with database ($referenceDbUrl/$referenceDatabaseName), the extra tables" +
+                    " in database ($compareDbUrl/$compareDatabaseName): $finalExtraTableNames."
+            )
         }
     }
     // 找出对比库的分表集合
@@ -216,49 +213,25 @@ fun compareDatabases(
             compareTables.first { it.name == tableName || getValidShardingTableFlag(tableName, it.name) }
 
         // 比较表的字段是否有差异
-        if (referenceTable.columns != compareTable.columns) {
-            var missingColumns = referenceTable.columns - compareTable.columns
-            var extraColumns = compareTable.columns - referenceTable.columns
-            val mismatchColumns = mutableListOf<ColumnInfo>()
-            val missingColumnNames = missingColumns.map { it.name }
-            extraColumns.forEach { extraColumn ->
-                if (missingColumnNames.contains(extraColumn.name)) {
-                    mismatchColumns.add(extraColumn)
-                }
-            }
-            val mismatchColumnNames = mismatchColumns.map { it.name }
-            missingColumns = missingColumns.filter { !mismatchColumnNames.contains(it.name) }
-            extraColumns = extraColumns - mismatchColumns
-            val columnTip = "Compared with the table of database ($referenceDbUrl/$referenceDatabaseName), " +
-                "the differences of table ($tableName) of database ($compareDbUrl/$compareDatabaseName) are as follows: \n " +
-                "missing fields: $missingColumns; \n extra fields: $extraColumns; \n different fields: $mismatchColumns."
-            if (!missingColumns.isNullOrEmpty() || !extraColumns.isNullOrEmpty() || !mismatchColumns.isNullOrEmpty()) {
-                // 字段有差异则抛出错误提示
-                throw RuntimeException(columnTip)
-            }
-        }
+        compareColumns(
+            referenceTable = referenceTable,
+            compareTable = compareTable,
+            referenceDbUrl = referenceDbUrl,
+            referenceDatabaseName = referenceDatabaseName,
+            tableName = tableName,
+            compareDbUrl = compareDbUrl,
+            compareDatabaseName = compareDatabaseName
+        )
         // 比较表的索引是否有差异
-        if (referenceTable.indexes != compareTable.indexes) {
-            var missingIndexes = referenceTable.indexes - compareTable.indexes
-            var extraIndexes = compareTable.indexes - referenceTable.indexes
-            val mismatchIndexes = mutableListOf<IndexInfo>()
-            val missingIndexNames = missingIndexes.map { it.name }
-            extraIndexes.forEach { extraIndex ->
-                if (missingIndexNames.contains(extraIndex.name)) {
-                    mismatchIndexes.add(extraIndex)
-                }
-            }
-            val mismatchIndexNames = mismatchIndexes.map { it.name }
-            missingIndexes = missingIndexes.filter { !mismatchIndexNames.contains(it.name) }
-            extraIndexes = extraIndexes - mismatchIndexes
-            val indexTip = "Compared with the table of database ($referenceDbUrl/$referenceDatabaseName), " +
-                "the differences of table ($tableName) of database ($compareDbUrl/$compareDatabaseName) are as follows: \n " +
-                "missing indexs: $missingIndexes; \n extra indexs: $extraIndexes; \n different indexs: $mismatchIndexes."
-            if (!missingIndexes.isNullOrEmpty() || !extraIndexes.isNullOrEmpty() || !mismatchIndexes.isNullOrEmpty()) {
-                // 字段有差异则抛出错误提示
-                throw RuntimeException(indexTip)
-            }
-        }
+        compareIndexes(
+            referenceTable = referenceTable,
+            compareTable = compareTable,
+            referenceDbUrl = referenceDbUrl,
+            referenceDatabaseName = referenceDatabaseName,
+            tableName = tableName,
+            compareDbUrl = compareDbUrl,
+            compareDatabaseName = compareDatabaseName
+        )
     }
 }
 
@@ -275,14 +248,16 @@ fun doCompareDatabasesBus(
         password = mysqlPasswd,
         databaseName = databaseName
     )
-    dbUrls.subList(1, dbUrls.size).forEach { dbUrl ->
-        val compareDb = getDatabaseData(
-            url = dbUrl,
-            user = mysqlUser,
-            password = mysqlPasswd,
-            databaseName = databaseName
-        )
-        compareDatabases(referDb, compareDb)
+    if (dbUrls.size > 1) {
+        dbUrls.subList(1, dbUrls.size).forEach { dbUrl ->
+            val compareDb = getDatabaseData(
+                url = dbUrl,
+                user = mysqlUser,
+                password = mysqlPasswd,
+                databaseName = databaseName
+            )
+            compareDatabases(referDb, compareDb)
+        }
     }
     return referDb
 }
@@ -320,4 +295,70 @@ fun getValidShardingTableFlag(
     val validShardingTableFlag =
         tableMatchResult != null && referenceTableName == tableMatchResult.groupValues[1]
     return validShardingTableFlag
+}
+
+fun compareColumns(
+    referenceTable: Task_sharding_db_table_check_gradle.TableInfo,
+    compareTable: Task_sharding_db_table_check_gradle.TableInfo,
+    referenceDbUrl: String,
+    referenceDatabaseName: String,
+    tableName: String,
+    compareDbUrl: String,
+    compareDatabaseName: String
+) {
+    if (referenceTable.columns != compareTable.columns) {
+        var missingColumns = referenceTable.columns - compareTable.columns
+        var extraColumns = compareTable.columns - referenceTable.columns
+        val mismatchColumns = mutableListOf<Task_sharding_db_table_check_gradle.ColumnInfo>()
+        val missingColumnNames = missingColumns.map { it.name }
+        extraColumns.forEach { extraColumn ->
+            if (missingColumnNames.contains(extraColumn.name)) {
+                mismatchColumns.add(extraColumn)
+            }
+        }
+        val mismatchColumnNames = mismatchColumns.map { it.name }
+        missingColumns = missingColumns.filter { !mismatchColumnNames.contains(it.name) }
+        extraColumns = extraColumns - mismatchColumns
+        val columnTip = "Compared with the table of database ($referenceDbUrl/$referenceDatabaseName), " +
+            "the differences of table ($tableName) of database ($compareDbUrl/$compareDatabaseName) are as " +
+            "follows: \n missing fields: $missingColumns; \n extra fields: $extraColumns; \n " +
+            "different fields: $mismatchColumns."
+        if (!missingColumns.isNullOrEmpty() || !extraColumns.isNullOrEmpty() || !mismatchColumns.isNullOrEmpty()) {
+            // 字段有差异则抛出错误提示
+            throw RuntimeException(columnTip)
+        }
+    }
+}
+
+fun compareIndexes(
+    referenceTable: Task_sharding_db_table_check_gradle.TableInfo,
+    compareTable: Task_sharding_db_table_check_gradle.TableInfo,
+    referenceDbUrl: String,
+    referenceDatabaseName: String,
+    tableName: String,
+    compareDbUrl: String,
+    compareDatabaseName: String
+) {
+    if (referenceTable.indexes != compareTable.indexes) {
+        var missingIndexes = referenceTable.indexes - compareTable.indexes
+        var extraIndexes = compareTable.indexes - referenceTable.indexes
+        val mismatchIndexes = mutableListOf<Task_sharding_db_table_check_gradle.IndexInfo>()
+        val missingIndexNames = missingIndexes.map { it.name }
+        extraIndexes.forEach { extraIndex ->
+            if (missingIndexNames.contains(extraIndex.name)) {
+                mismatchIndexes.add(extraIndex)
+            }
+        }
+        val mismatchIndexNames = mismatchIndexes.map { it.name }
+        missingIndexes = missingIndexes.filter { !mismatchIndexNames.contains(it.name) }
+        extraIndexes = extraIndexes - mismatchIndexes
+        val indexTip = "Compared with the table of database ($referenceDbUrl/$referenceDatabaseName), " +
+            "the differences of table ($tableName) of database ($compareDbUrl/$compareDatabaseName) are as " +
+            "follows: \n missing indexs: $missingIndexes; \n extra indexs: $extraIndexes; \n " +
+            "different indexs: $mismatchIndexes."
+        if (!missingIndexes.isNullOrEmpty() || !extraIndexes.isNullOrEmpty() || !mismatchIndexes.isNullOrEmpty()) {
+            // 字段有差异则抛出错误提示
+            throw RuntimeException(indexTip)
+        }
+    }
 }

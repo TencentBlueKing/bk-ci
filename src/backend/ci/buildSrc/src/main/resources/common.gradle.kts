@@ -1,5 +1,3 @@
-import com.github.jk1.license.render.TextReportRenderer
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -89,6 +87,33 @@ val getBkModuleName: () -> String = {
     moduleName
 }
 
+val getBkActualModuleNames: (String) -> List<String> = { moduleName ->
+    when (moduleName) {
+        "misc" -> {
+            listOf("process", "project", "repository", "dispatch", "plugin", "quality", "artifactory", "environment")
+        }
+
+        "statistics" -> {
+            listOf("process", "project", "openapi")
+        }
+
+        "lambda" -> {
+            listOf("process", "project", "lambda", "store")
+        }
+
+        "dispatch" -> {
+            listOf("dispatch", "dispatch_kubernetes")
+        }
+
+        "dispatch-devcloud" -> {
+            listOf("dispatch_devcloud", "dispatch_macos", "dispatch_windows", "dispatch_codecc")
+        }
+
+        else -> listOf(moduleName)
+    }
+}
+
 extra["getMysqlInfo"] = getMysqlInfo
 extra["getDatabaseName"] = getDatabaseName
 extra["getBkModuleName"] = getBkModuleName
+extra["getBkActualModuleNames"] = getBkActualModuleNames

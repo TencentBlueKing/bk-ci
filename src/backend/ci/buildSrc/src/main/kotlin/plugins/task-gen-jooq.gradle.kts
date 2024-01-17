@@ -41,34 +41,14 @@ dependencies {
     api("org.jooq:jooq")
 }
 
-var moduleNames = when (val moduleName = name.split("-")[1]) {
-    "misc" -> {
-        listOf("process", "project", "repository", "dispatch", "plugin", "quality", "artifactory", "environment")
-    }
-
-    "statistics" -> {
-        listOf("process", "project", "openapi")
-    }
-
-    "lambda" -> {
-        listOf("process", "project", "lambda", "store")
-    }
-
-    "dispatch" -> {
-        listOf("dispatch", "dispatch_kubernetes")
-    }
-
-    else -> listOf(moduleName)
-}
-
-if (name == "model-dispatch-devcloud-tencent") {
-    moduleNames = listOf("dispatch_devcloud", "dispatch_macos", "dispatch_windows", "dispatch_codecc")
-}
+val getDatabaseName = extra["getDatabaseName"] as (String) -> String
+val getBkModuleName = extra["getBkModuleName"] as () -> String
+val getBkActualModuleNames = extra["getBkActualModuleNames"] as (String) -> List<String>
+var moduleNames = getBkActualModuleNames(getBkModuleName())
 
 jooq {
     configurations {
         moduleNames.forEach { moduleName ->
-            val getDatabaseName = extra["getDatabaseName"] as (String) -> String
             val databaseName = getDatabaseName(moduleName)
 
             val specialModule = moduleNames.size != 1
