@@ -25,6 +25,7 @@ import com.tencent.devops.environment.service.job.AgentService
 import com.tencent.devops.environment.service.job.JobService
 import com.tencent.devops.environment.service.job.PermissionManageService
 import org.springframework.beans.factory.annotation.Autowired
+import java.io.InputStream
 
 @RestResource
 class UserJobResourceImpl @Autowired constructor(
@@ -88,10 +89,11 @@ class UserJobResourceImpl @Autowired constructor(
     override fun installAgent(
         userId: String,
         projectId: String,
+        keyFile: InputStream?,
         installAgentReq: InstallAgentReq
     ): AgentResult<InstallAgentResult> {
         checkParamBlank(userId, projectId)
-        return agentService.installAgent(userId, projectId, installAgentReq)
+        return agentService.installAgent(userId, projectId, keyFile, installAgentReq)
     }
 
     override fun queryAgentTaskStatus(

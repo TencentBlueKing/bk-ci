@@ -22,6 +22,8 @@ import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTask
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import org.glassfish.jersey.media.multipart.FormDataParam
+import java.io.InputStream
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -129,6 +131,7 @@ interface UserJobResource {
     @ApiOperation("安装agent的接口")
     @POST
     @Path("/{projectId}/install_agent")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun installAgent(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -136,7 +139,11 @@ interface UserJobResource {
         @ApiParam(value = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
+        @ApiParam(value = "密钥文件")
+        @FormDataParam("keyFile")
+        keyFile: InputStream?,
         @ApiParam(value = "安装agent的请求信息", required = true)
+        @FormDataParam("installAgentReq")
         installAgentReq: InstallAgentReq
     ): AgentResult<InstallAgentResult>
 

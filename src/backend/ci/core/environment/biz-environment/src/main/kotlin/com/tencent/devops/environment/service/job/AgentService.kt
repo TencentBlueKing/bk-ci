@@ -68,6 +68,7 @@ import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTask
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.io.InputStream
 
 @Service("AgentService")
 data class AgentService @Autowired constructor(
@@ -87,6 +88,7 @@ data class AgentService @Autowired constructor(
     fun installAgent(
         userId: String,
         projectId: String,
+        keyFile: InputStream?,
         installAgentReq: InstallAgentReq
     ): AgentResult<InstallAgentResult> {
         AgentApi.setThreadLocal("installAgent")
@@ -115,8 +117,7 @@ data class AgentService @Autowired constructor(
                     account = it.account,
                     password = it.password,
                     port = DEFAULT_INSTALL_AGENT_PORT,
-//                    key = if ("KEY" == it.authType) fileService.convertFileContentToString(secretKey) else it.key,
-                    key = it.key,
+                    key = if ("KEY" == it.authType) fileService.convertFileContentToString(keyFile) else it.key,
                     isManual = it.isManual,
                     retention = it.retention,
                     peerExchangeSwitchForAgent = it.peerExchangeSwitchForAgent,

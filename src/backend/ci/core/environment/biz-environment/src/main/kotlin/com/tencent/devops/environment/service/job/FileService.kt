@@ -29,13 +29,12 @@ package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import org.springframework.stereotype.Service
-import org.springframework.web.multipart.MultipartFile
+import java.io.InputStream
 
 @Service("FileService")
 class FileService {
-    fun convertFileContentToString(file: MultipartFile?): String {
-        if (file != null && !file.isEmpty) {
-            val inputStream = file.inputStream
+    fun convertFileContentToString(inputStream: InputStream?): String {
+        if (inputStream != null) {
             val content: String
             inputStream.use { it ->
                 content = it.bufferedReader().use { it.readText() }
