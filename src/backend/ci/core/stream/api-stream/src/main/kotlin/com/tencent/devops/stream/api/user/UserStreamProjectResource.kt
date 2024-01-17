@@ -27,10 +27,14 @@
 
 package com.tencent.devops.stream.api.user
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.project.pojo.ProjectOrganizationInfo
+import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.stream.pojo.StreamProjectCIInfo
 import com.tencent.devops.stream.pojo.enums.StreamProjectType
 import com.tencent.devops.stream.pojo.enums.StreamProjectsOrder
@@ -41,6 +45,7 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -91,4 +96,36 @@ interface UserStreamProjectResource {
         @QueryParam("pageSize")
         size: Long?
     ): Result<List<StreamProjectCIInfo>>
+
+    @ApiOperation("获取项目信息")
+    @GET
+    @Path("/{english_name}")
+    fun getProjectInfo(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID英文名标识", required = true)
+        @PathParam("english_name")
+        projectId: String
+    ): Result<ProjectVO>
+
+    @ApiOperation("更新项目组织架构和归属")
+    @PUT
+    @Path("/{english_name}/organization")
+    fun updateProjectOrganization(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID英文名标识", required = true)
+        @PathParam("english_name")
+        projectId: String,
+        @ApiParam("产品ID", required = true)
+        @QueryParam("productId")
+        productId: Int,
+        @ApiParam("产品名称", required = true)
+        @QueryParam("productName")
+        productName: String,
+        @ApiParam("项目组织", required = true)
+        organization: ProjectOrganizationInfo
+    ): Result<Boolean>
 }
