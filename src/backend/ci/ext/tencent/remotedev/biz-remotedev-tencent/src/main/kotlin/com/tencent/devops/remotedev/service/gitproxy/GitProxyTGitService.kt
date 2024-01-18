@@ -127,7 +127,7 @@ class GitProxyTGitService @Autowired constructor(
                     }
 
                     // 如果全都是项目判断那么只要项目判断完就可以退出
-                    if (noGroup && result.keys.subtract(projectUrls).isEmpty()) {
+                    if (noGroup && projectUrls.subtract(result.keys).isEmpty()) {
                         return
                     }
                 }
