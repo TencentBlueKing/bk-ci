@@ -1,5 +1,5 @@
 import { handleNoPermission } from 'bk-permission'
-import * as BKUI from 'bk-magic-vue'
+import * as BKUI from '@tencent/bk-magic-vue'
 
 // 权限动作
 export const RESOURCE_ACTION = {
