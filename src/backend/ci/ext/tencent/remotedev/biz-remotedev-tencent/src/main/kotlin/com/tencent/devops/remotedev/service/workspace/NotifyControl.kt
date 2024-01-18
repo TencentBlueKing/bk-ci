@@ -66,7 +66,6 @@ class NotifyControl @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val workspaceDao: WorkspaceDao,
-    private val workspaceCommon: WorkspaceCommon
     private val redisOperation: RedisOperation,
     private val webSocketDispatcher: WebSocketDispatcher,
     private val taiClient: TaiClient
