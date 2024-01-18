@@ -23,13 +23,11 @@ import java.util.concurrent.TimeUnit
 import java.util.function.Supplier
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Primary
 import org.springframework.core.io.ClassPathResource
 import org.springframework.stereotype.Component
 
-@Primary
 @Component
-class YamlSchemaCheck @Autowired constructor(
+class CodeSchemaCheck @Autowired constructor(
     private val redisOperation: RedisOperation
 ) {
 
@@ -54,7 +52,7 @@ class YamlSchemaCheck @Autowired constructor(
         }
 
     private val logger =
-        LoggerFactory.getLogger(YamlSchemaCheck::class.java)
+        LoggerFactory.getLogger(CodeSchemaCheck::class.java)
 
     private val schemaFactory = JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7))
         .objectMapper(YamlUtil.getObjectMapper())
