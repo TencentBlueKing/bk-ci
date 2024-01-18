@@ -20,7 +20,6 @@ import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.QueryType
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -29,6 +28,7 @@ import org.jooq.SelectConditionStep
 import org.jooq.SelectJoinStep
 import org.jooq.impl.TableImpl
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 /**
  * 针对 workspace 需要连表查询的复杂场景独立出来的 dao 方便整理代码
@@ -56,45 +56,51 @@ class WorkspaceJoinDao {
      */
     fun limitFetchProjectWorkspace(
         dslContext: DSLContext,
-        limit: SQLLimit,
+        limit: SQLLimit?,
         queryType: QueryType = QueryType.WEB,
         search: WorkspaceSearch
     ): List<WorkspaceRecordInf>? {
         with(TWorkspace.T_WORKSPACE) {
             // 没有包含其他表的条件
             if (search.onlyNeedCheckWorkspace()) {
-                return (
+                val dsl = (
                         genFetchProjectWorkspaceCond(
                             dslContext = dslContext,
                             queryType = queryType,
                             search = search
                         ) as SelectConditionStep<TWorkspaceRecord>
                         ).orderBy(CREATE_TIME.desc(), ID.desc())
-                    .limit(limit.limit).offset(limit.offset)
-                    .skipCheck()
+                if (limit != null) {
+                    dsl.limit(limit.limit).offset(limit.offset)
+                }
+                return dsl.skipCheck()
                     .fetch(WorkspaceDao.workspaceMapper)
             }
 
             // 包含 detail 表的条件
             if (search.needCheckDetail()) {
-                return genFetchProjectWorkspaceCond(
+                val dsl = genFetchProjectWorkspaceCond(
                     dslContext = dslContext,
                     queryType = queryType,
                     search = search
                 ).orderBy(CREATE_TIME.desc(), ID.desc())
-                    .limit(limit.limit).offset(limit.offset)
-                    .skipCheck()
+                if (limit != null) {
+                    dsl.limit(limit.limit).offset(limit.offset)
+                }
+                return dsl.skipCheck()
                     .fetch(workspaceWithDetailMapper)
             }
 
             // 剩下的只剩 workspace 表的
-            return genFetchProjectWorkspaceCond(
+            val dsl = genFetchProjectWorkspaceCond(
                 dslContext = dslContext,
                 queryType = queryType,
                 search = search
             ).orderBy(CREATE_TIME.desc(), ID.desc())
-                .limit(limit.limit).offset(limit.offset)
-                .skipCheck()
+            if (limit != null) {
+                dsl.limit(limit.limit).offset(limit.offset)
+            }
+            return dsl.skipCheck()
                 .fetch(workspaceFieldMapper)
         }
     }

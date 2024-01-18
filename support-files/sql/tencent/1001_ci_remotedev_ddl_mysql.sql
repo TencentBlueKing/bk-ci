@@ -517,5 +517,14 @@ CREATE TABLE IF NOT EXISTS `T_WINDOWS_SPEC_RESOURCE` (
     PRIMARY KEY (`PROJECT_ID`, `SIZE`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='windows特殊机型配额表';
 
+-- ----------------------------
+-- Table structure for T_PROJECT_TGIT_LINK 蓝盾项目和工蜂关联表
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_PROJECT_TGIT_LINK`(
+	PROJECT_ID varchar(64) NOT NULL COMMENT '蓝盾项目ID',
+	URL varchar(255) NOT NULL COMMENT '工蜂url地址',
+	PRIMARY KEY (`PROJECT_ID`, `URL`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 
 SET FOREIGN_KEY_CHECKS = 1;
