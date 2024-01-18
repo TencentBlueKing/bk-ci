@@ -311,6 +311,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         useSubscriptionSettings: Boolean? = false,
         useLabelSettings: Boolean? = false,
         useConcurrencyGroup: Boolean? = false,
+        description: String? = null,
         pipelineAsCodeSettings: PipelineAsCodeSettings? = null
     ): DeployPipelineResult {
         val watcher =
@@ -443,7 +444,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     versionStatus = versionStatus,
                     branchName = branchName,
                     templateId = templateId,
-                    description = null,
+                    description = description,
                     yamlStr = null,
                     baseVersion = null,
                     pipelineAsCodeSettings = pipelineAsCodeSettings
@@ -562,6 +563,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         yamlFileName: String,
         branchName: String,
         isDefaultBranch: Boolean,
+        description: String? = null,
         aspects: LinkedList<IPipelineTransferAspect>? = null
     ): DeployPipelineResult {
         val pipelineAsCodeSettings = PipelineAsCodeSettings(enable = true)
@@ -587,6 +589,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             yaml = yaml,
             versionStatus = versionStatus,
             branchName = branchName,
+            description = description,
             pipelineAsCodeSettings = pipelineAsCodeSettings
         )
         newResource.setting.projectId = projectId
@@ -614,6 +617,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         yamlFileName: String,
         branchName: String,
         isDefaultBranch: Boolean,
+        description: String? = null,
         aspects: LinkedList<IPipelineTransferAspect>? = null
     ): DeployPipelineResult {
         val pipelineAsCodeSettings = PipelineAsCodeSettings(enable = true)
@@ -654,6 +658,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             savedSetting = savedSetting,
             versionStatus = versionStatus,
             branchName = branchName,
+            description = description,
             pipelineAsCodeSettings = pipelineAsCodeSettings
         )
     }
