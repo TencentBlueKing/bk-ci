@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "素材类型")
 enum class UploadMediaType(private val type: String) {
-    @get:Schema(title = "图片")
+    @Schema(title = "图片")
     image("image"),
-    @get:Schema(title = "语音")
+    @Schema(title = "语音")
     voice("voice"),
-    @get:Schema(title = "视频")
+    @Schema(title = "视频")
     video("video"),
-    @get:Schema(title = "普通文件")
+    @Schema(title = "普通文件")
     file("file")
 }

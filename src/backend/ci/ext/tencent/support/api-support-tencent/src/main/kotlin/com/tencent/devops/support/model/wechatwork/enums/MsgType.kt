@@ -32,13 +32,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "消息类型")
 enum class MsgType(private val type: String) {
-    @get:Schema(title = "文本")
+    @Schema(title = "文本")
     text("text"),
-    @get:Schema(title = "图片")
+    @Schema(title = "图片")
     image("image"),
-    @get:Schema(title = "文件")
+    @Schema(title = "文件")
     file("file"),
-    @get:Schema(title = "富文本")
+    @Schema(title = "富文本")
     rich_text("rich_text");
 
     @JsonValue

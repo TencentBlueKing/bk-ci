@@ -13,7 +13,7 @@ data class GroupV2(
     @get:Schema(title = "成员列表")
     val members: List<Member>
 ) {
-    @get:Schema(title = "版本体验-体验组-成员信息")
+    @Schema(title = "版本体验-体验组-成员信息")
     data class Member(
         @get:Schema(title = "ID", required = true)
         val id: String,

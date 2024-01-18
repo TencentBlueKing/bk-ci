@@ -13,7 +13,7 @@ data class GroupCommit(
     @get:Schema(title = "成员列表", required = true)
     val members: List<Member>
 ) {
-    @get:Schema(title = "版本体验--体验组提交--成员信息")
+    @Schema(title = "版本体验--体验组提交--成员信息")
     data class Member(
         @get:Schema(title = "成员ID")
         val id: String,
