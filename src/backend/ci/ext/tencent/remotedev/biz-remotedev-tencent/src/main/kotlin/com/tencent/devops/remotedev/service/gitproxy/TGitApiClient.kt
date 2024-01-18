@@ -111,6 +111,9 @@ object TGitApiClient {
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class TGitProjectInfo(
+    @JsonProperty("http_url_to_repo")
+    val httpUrlToRepo: String?,
+    @JsonProperty("https_url_to_repo")
     val httpsUrlToRepo: String?,
     val permissions: TGitProjectInfoPermissions?
 )

@@ -108,12 +108,13 @@ class GitProxyTGitService @Autowired constructor(
             // 过滤项目信息
             projects.forEach { project ->
                 projectUrls.forEach urls@{ projectUrl ->
-                    if (project.httpsUrlToRepo.isNullOrBlank()) {
+                    if (project.httpsUrlToRepo.isNullOrBlank() && project.httpUrlToRepo.isNullOrBlank()) {
                         logger.warn("filterUrlPermission|httpsUrl is null $project")
                         return@urls
                     }
-                    if (project.httpsUrlToRepo.removeHttpPrefix() != projectUrl &&
-                        !project.httpsUrlToRepo.removeHttpPrefix().startsWith(projectUrl)
+                    val url = project.httpsUrlToRepo ?: project.httpUrlToRepo
+                    if (url?.removeHttpPrefix() != projectUrl &&
+                        url?.removeHttpPrefix()?.startsWith(projectUrl) != true
                     ) {
                         return@forEach
                     }
