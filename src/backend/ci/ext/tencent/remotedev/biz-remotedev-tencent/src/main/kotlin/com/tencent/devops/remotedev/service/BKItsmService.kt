@@ -34,12 +34,20 @@ class BKItsmService @Autowired constructor(
             creator = userId,
             fields = listOf(
                 mapOf(
+                    "key" to "title",
+                    "value" to "$projectId|$userId"
+                ),
+                mapOf(
                     "key" to "bkci_project_id",
                     "value" to projectId
                 ),
                 mapOf(
                     "key" to "url",
                     "value" to urls.joinToString { "\n" }
+                ),
+                mapOf(
+                    "key" to "userId",
+                    "value" to userId
                 )
             )
         )
