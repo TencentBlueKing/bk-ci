@@ -52,7 +52,8 @@ BEGIN
         `PROJECT_ID`      varchar(64)     DEFAULT NULL COMMENT '蓝盾项目id',
         `CREATED_USER`    varchar(64)     DEFAULT NULL COMMENT 'job实例创建人',
         `CREATED_TIME`    timestamp  NULL DEFAULT NULL COMMENT 'job实例创建时间',
-        PRIMARY KEY (`PROJECT_ID`, `JOB_INSTANCE_ID`)
+        PRIMARY KEY (`PROJECT_ID`, `JOB_INSTANCE_ID`),
+        KEY `CREATED_TIME` (`CREATED_TIME`)
     ) ENGINE = InnoDB
       DEFAULT CHARSET = utf8mb4 COMMENT ='';
 
