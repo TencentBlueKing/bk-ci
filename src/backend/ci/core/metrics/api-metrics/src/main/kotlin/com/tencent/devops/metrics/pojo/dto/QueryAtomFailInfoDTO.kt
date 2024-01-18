@@ -33,25 +33,25 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件失败信息查询传输对象")
 class QueryAtomFailInfoDTO(
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "流水线ID")
+    @get:Schema(title = "流水线ID")
     val pipelineIds: List<String>? = null,
-    @Schema(title = "流水线标签")
+    @get:Schema(title = "流水线标签")
     val pipelineLabelIds: List<Long>? = null,
-    @Schema(title = "开始时间")
+    @get:Schema(title = "开始时间")
     val startTime: String,
-    @Schema(title = "结束时间")
+    @get:Schema(title = "结束时间")
     val endTime: String,
-    @Schema(title = "错误类型", required = false)
+    @get:Schema(title = "错误类型", required = false)
     val errorTypes: List<Int>?,
-    @Schema(title = "错误码", required = false)
+    @get:Schema(title = "错误码", required = false)
     val errorCodes: List<Int>?,
-    @Schema(title = "插件code", required = false)
+    @get:Schema(title = "插件code", required = false)
     val atomCodes: List<String>?,
-    @Schema(title = "页码")
+    @get:Schema(title = "页码")
     val page: Int = 1,
-    @Schema(title = "页数")
+    @get:Schema(title = "页数")
     @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
     val pageSize: Int = 10
 )

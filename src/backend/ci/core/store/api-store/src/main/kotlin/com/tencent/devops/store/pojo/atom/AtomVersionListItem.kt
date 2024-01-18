@@ -33,29 +33,29 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件版本列表")
 data class AtomVersionListItem(
-    @Schema(title = "插件ID")
+    @get:Schema(title = "插件ID")
     val atomId: String,
-    @Schema(title = "插件标识")
+    @get:Schema(title = "插件标识")
     val atomCode: String,
-    @Schema(title = "名称")
+    @get:Schema(title = "名称")
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val name: String,
-    @Schema(title = "插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = false)
+    @get:Schema(title = "插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = false)
     val category: String?,
-    @Schema(title = "版本号")
+    @get:Schema(title = "版本号")
     val version: String,
-    @Schema(title = "版本内容")
+    @get:Schema(title = "版本内容")
     @BkFieldI18n(source = I18nSourceEnum.DB, keyPrefixName = "versionInfo")
     val versionContent: String?,
-    @Schema(title =
+    @get:Schema(title =
         "插件状态，INIT：初始化|COMMITTING：提交中|BUILDING：构建中|BUILD_FAIL：构建失败|TESTING：测试中|" +
             "AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|" +
             "UNDERCARRIAGING：下架中|UNDERCARRIAGED：已下架",
         required = true
     )
     val atomStatus: String,
-    @Schema(title = "创建人")
+    @get:Schema(title = "创建人")
     val creator: String,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: String
 )

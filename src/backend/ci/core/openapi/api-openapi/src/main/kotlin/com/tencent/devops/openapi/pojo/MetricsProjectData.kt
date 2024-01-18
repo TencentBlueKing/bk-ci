@@ -30,12 +30,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "api度量数据")
 data class MetricsProjectData(
-    @Schema(title = "接口代码")
+    @get:Schema(title = "接口代码")
     val api: String,
-    @Schema(title = "请求app code/ user id")
+    @get:Schema(title = "请求app code/ user id")
     val key: String,
-    @Schema(title = "项目id")
+    @get:Schema(title = "项目id")
     var projectId: String? = null,
-    @Schema(title = "调用量")
+    @get:Schema(title = "调用量")
     var callHistory: Int? = null
 )

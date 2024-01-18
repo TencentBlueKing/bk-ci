@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "新增操作日志")
 data class OperationLogCreateRequest(
-    @Schema(title = "store组件代码", required = true)
+    @get:Schema(title = "store组件代码", required = true)
     val storeCode: String,
-    @Schema(title = "store组件类型", required = true)
+    @get:Schema(title = "store组件类型", required = true)
     val storeType: Byte,
-    @Schema(title = "操作类型", required = true)
+    @get:Schema(title = "操作类型", required = true)
     val optType: String,
-    @Schema(title = "操作用户", required = true)
+    @get:Schema(title = "操作用户", required = true)
     val optUser: String,
-    @Schema(title = "操作内容", required = true)
+    @get:Schema(title = "操作内容", required = true)
     val optDesc: String
 )

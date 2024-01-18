@@ -33,9 +33,9 @@ import java.time.LocalDate
 
 @Schema(title = "流水线错误每日统计信息")
 data class PipelineFailStatisticsInfoDO(
-    @Schema(title = "统计时间")
+    @get:Schema(title = "统计时间")
     @JsonFormat(pattern = "yyyy-MM-dd")
     val statisticsTime: LocalDate,
-    @Schema(title = "错误次数")
+    @get:Schema(title = "错误次数")
     val errorCount: Int
 )

@@ -32,10 +32,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "store审批信息请求报文体")
 data class StoreApproveRequest(
-    @Schema(title = "审批原因", required = true)
+    @get:Schema(title = "审批原因", required = true)
     val approveMsg: String,
-    @Schema(title = "审批状态", required = true)
+    @get:Schema(title = "审批状态", required = true)
     val approveStatus: ApproveStatusEnum,
-    @Schema(title = "token", required = false)
+    @get:Schema(title = "token", required = false)
     val token: String? = null
 )

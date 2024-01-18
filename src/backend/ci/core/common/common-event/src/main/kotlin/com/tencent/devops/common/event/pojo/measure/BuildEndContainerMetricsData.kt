@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "构建结束后container指标数据")
 data class BuildEndContainerMetricsData(
-    @Schema(title = "containerId", required = true)
+    @get:Schema(title = "containerId", required = true)
     val containerId: String,
-    @Schema(title = "是否执行成功", required = true)
+    @get:Schema(title = "是否执行成功", required = true)
     val successFlag: Boolean,
-    @Schema(title = "container构建耗时", required = true)
+    @get:Schema(title = "container构建耗时", required = true)
     val costTime: Long,
-    @Schema(title = "插件标识列表", required = true)
+    @get:Schema(title = "插件标识列表", required = true)
     val atomCodes: List<String>,
-    @Schema(title = "task指标数据列表", required = true)
+    @get:Schema(title = "task指标数据列表", required = true)
     val tasks: List<BuildEndTaskMetricsData>
 )

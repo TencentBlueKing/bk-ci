@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "组件参数信息")
 data class StoreParam(
-    @Schema(title = "组件代码", required = true)
+    @get:Schema(title = "组件代码", required = true)
     var storeCode: String,
-    @Schema(title = "组件名称", required = true)
+    @get:Schema(title = "组件名称", required = true)
     var storeName: String,
-    @Schema(title = "版本号", required = true)
+    @get:Schema(title = "版本号", required = true)
     var version: String,
-    @Schema(title = "输入参数", required = false)
+    @get:Schema(title = "输入参数", required = false)
     var inputParam: Map<String, Any?>?
 )

@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "复制模版请求包体")
 data class CopyTemplateReq(
-    @Schema(title = "模板名字", required = false)
+    @get:Schema(title = "模板名字", required = false)
     val templateName: String,
-    @Schema(title = "是否复制设置", required = false)
+    @get:Schema(title = "是否复制设置", required = false)
     val isCopySetting: Boolean
 )

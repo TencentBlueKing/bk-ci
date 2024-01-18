@@ -5,16 +5,16 @@ import java.time.LocalDateTime
 
 @Schema(title = "流水线关联标签数据")
 data class PipelineLabelRelateInfo(
-    @Schema(title = "项目id")
+    @get:Schema(title = "项目id")
     val projectId: String,
-    @Schema(title = "流水线id")
+    @get:Schema(title = "流水线id")
     val pipelineId: String? = null,
-    @Schema(title = "标签id")
+    @get:Schema(title = "标签id")
     val labelId: Long? = null,
-    @Schema(title = "标签名称")
+    @get:Schema(title = "标签名称")
     val name: String? = null,
-    @Schema(title = "创建者")
+    @get:Schema(title = "创建者")
     val createUser: String? = null,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: LocalDateTime? = null
 )

@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "错误码信息")
 data class ErrorCodeInfoDO(
-    @Schema(title = "错误类型")
+    @get:Schema(title = "错误类型")
     val errorType: Int?,
-    @Schema(title = "错误类型名称")
+    @get:Schema(title = "错误类型名称")
     val errorTypeName: String?,
-    @Schema(title = "错误的标识码")
+    @get:Schema(title = "错误的标识码")
     val errorCode: Int,
-    @Schema(title = "错误描述信息")
+    @get:Schema(title = "错误描述信息")
     val errorMsg: String?
 )

@@ -32,32 +32,32 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "消息通知模板配置")
 data class MessageTemplate(
-    @Schema(title = "配置序号", required = true)
+    @get:Schema(title = "配置序号", required = true)
     val index: Int,
-    @Schema(title = "公共模板ID", required = true)
+    @get:Schema(title = "公共模板ID", required = true)
     val id: String,
-    @Schema(title = "公共模板代码", required = true)
+    @get:Schema(title = "公共模板代码", required = true)
     val templateCode: String,
-    @Schema(title = "公共模板名称", required = true)
+    @get:Schema(title = "公共模板名称", required = true)
     var templateName: String,
-    @Schema(title = "适用的通知类型（EMAIL:邮件 RTX:企业微信 WECHAT:微信 SMS:短信）", required = true)
+    @get:Schema(title = "适用的通知类型（EMAIL:邮件 RTX:企业微信 WECHAT:微信 SMS:短信）", required = true)
     val notifyTypeScope: List<String>,
-    @Schema(title = "优先级别（-1:低 0:普通 1:高）", allowableValues = ["-1", "0", "1"], type = "String", required = true)
+    @get:Schema(title = "优先级别（-1:低 0:普通 1:高）", allowableValues = ["-1", "0", "1"], type = "String", required = true)
     val priority: EnumNotifyPriority,
-    @Schema(title = "通知来源（0:本地业务 1:操作）", allowableValues = ["0", "1"], type = "int", required = true)
+    @get:Schema(title = "通知来源（0:本地业务 1:操作）", allowableValues = ["0", "1"], type = "int", required = true)
     val source: EnumNotifySource,
-    @Schema(title = "email通知模板", required = false)
+    @get:Schema(title = "email通知模板", required = false)
     var emailTemplate: EmailMessageTemplate? = null,
-    @Schema(title = "企业微信通知模板", required = false)
+    @get:Schema(title = "企业微信通知模板", required = false)
     var weworkTemplate: WeworkMessageTemplate? = null,
-    @Schema(title = "微信通知模板", required = false)
+    @get:Schema(title = "微信通知模板", required = false)
     var wechatTemplate: WechatMessageTemplate? = null,
-    @Schema(title = "微信群模板", required = false)
+    @get:Schema(title = "微信群模板", required = false)
     var weworkGroupTemplate: WeworkGroupMessageTemplate? = null,
-    @Schema(title = "语音模板", required = false)
+    @get:Schema(title = "语音模板", required = false)
     val voiceTemplate: VoiceTemplate? = null,
-    @Schema(title = "创建人", required = true)
+    @get:Schema(title = "创建人", required = true)
     val creator: String,
-    @Schema(title = "修改人", required = true)
+    @get:Schema(title = "修改人", required = true)
     val modifior: String
 )

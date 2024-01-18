@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "下拉框-数据模型")
 data class SelectDataVO(
-    @Schema(title = "ID")
+    @get:Schema(title = "ID")
     val id: Int,
-    @Schema(title = "名称")
+    @get:Schema(title = "名称")
     val name: String
 )

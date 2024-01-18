@@ -32,12 +32,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "第三方构建机UI查询状态")
 data class ThirdPartyAgentStatusWithInfo(
-    @Schema(title = "状态")
+    @get:Schema(title = "状态")
     val status: AgentStatus,
-    @Schema(title = "主机名")
+    @get:Schema(title = "主机名")
     val hostname: String,
-    @Schema(title = "IP")
+    @get:Schema(title = "IP")
     val ip: String,
-    @Schema(title = "操作系统")
+    @get:Schema(title = "操作系统")
     val os: String
 )

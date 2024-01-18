@@ -31,18 +31,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线版本摘要")
 data class PipelineVersionSimple(
-    @Schema(title = "流水线ID", required = true)
+    @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(title = "流水线创建人", required = true)
+    @get:Schema(title = "流水线创建人", required = true)
     val creator: String,
-    @Schema(title = "创建时间戳", required = true)
+    @get:Schema(title = "创建时间戳", required = true)
     val createTime: Long,
-    @Schema(title = "流水线版本号", required = true)
+    @get:Schema(title = "流水线版本号", required = true)
     val version: Int,
-    @Schema(title = "流水线版本名称", required = true)
+    @get:Schema(title = "流水线版本名称", required = true)
     val versionName: String,
-    @Schema(title = "是否还有构建记录引用该版本标识", required = false)
+    @get:Schema(title = "是否还有构建记录引用该版本标识", required = false)
     val referFlag: Boolean? = null,
-    @Schema(title = "关联构建记录总数", required = false)
+    @get:Schema(title = "关联构建记录总数", required = false)
     val referCount: Int? = null
 )

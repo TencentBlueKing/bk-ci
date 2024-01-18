@@ -31,6 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "历史构建备注")
 data class BuildHistoryRemark(
-    @Schema(title = "备注", required = true)
+    @get:Schema(title = "备注", required = true)
     val remark: String?
 )

@@ -4,10 +4,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "成员信息")
 data class MemberInfo(
-    @Schema(title = "成员id")
+    @get:Schema(title = "成员id")
     val id: String,
-    @Schema(title = "成员名称")
+    @get:Schema(title = "成员名称")
     val name: String,
-    @Schema(title = "成员类别")
+    @get:Schema(title = "成员类别")
     val type: String
 )

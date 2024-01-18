@@ -31,19 +31,19 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "统计信息")
 data class StoreStatistic(
-    @Schema(title = "下载量")
+    @get:Schema(title = "下载量")
     val downloads: Int,
-    @Schema(title = "评论量")
+    @get:Schema(title = "评论量")
     val commentCnt: Int,
-    @Schema(title = "星级评分")
+    @get:Schema(title = "星级评分")
     val score: Double?,
-    @Schema(title = "流水线个数")
+    @get:Schema(title = "流水线个数")
     val pipelineCnt: Int? = null,
-    @Schema(title = "最近执行次数")
+    @get:Schema(title = "最近执行次数")
     val recentExecuteNum: Int? = null,
-    @Schema(title = "成功率")
+    @get:Schema(title = "成功率")
     val successRate: Double? = null,
-    @Schema(title = "hotFlag")
+    @get:Schema(title = "hotFlag")
     val hotFlag: Boolean? = false
 
 )

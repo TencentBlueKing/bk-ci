@@ -36,20 +36,20 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "")
 data class TemplatePipeline(
-    @Schema(title = "模板id", required = false)
+    @get:Schema(title = "模板id", required = false)
     val templateId: String,
-    @Schema(title = "版本名称", required = false)
+    @get:Schema(title = "版本名称", required = false)
     val versionName: String,
-    @Schema(title = "版本", required = false)
+    @get:Schema(title = "版本", required = false)
     val version: Long,
-    @Schema(title = "流水线id", required = false)
+    @get:Schema(title = "流水线id", required = false)
     val pipelineId: String,
-    @Schema(title = "流水线名称", required = false)
+    @get:Schema(title = "流水线名称", required = false)
     val pipelineName: String,
-    @Schema(title = "更新时间", required = false)
+    @get:Schema(title = "更新时间", required = false)
     val updateTime: Long,
-    @Schema(title = "是否有编辑权限", required = false)
+    @get:Schema(title = "是否有编辑权限", required = false)
     val hasPermission: Boolean,
-    @Schema(title = "流水线模板状态", required = false)
+    @get:Schema(title = "流水线模板状态", required = false)
     val status: TemplatePipelineStatus
 )

@@ -31,16 +31,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线-构建资源信息")
 data class BuildResource(
-    @Schema(title = "构建资源ID", required = true)
+    @get:Schema(title = "构建资源ID", required = true)
     val id: String,
-    @Schema(title = "构建资源代码", required = true)
+    @get:Schema(title = "构建资源代码", required = true)
     val buildResourceCode: String,
-    @Schema(title = "构建资源名称", required = true)
+    @get:Schema(title = "构建资源名称", required = true)
     val buildResourceName: String,
-    @Schema(title = "是否为默认构建资源，TRUE：是 FALSE：否", required = true)
+    @get:Schema(title = "是否为默认构建资源，TRUE：是 FALSE：否", required = true)
     val defaultFlag: Boolean,
-    @Schema(title = "创建日期")
+    @get:Schema(title = "创建日期")
     val createTime: Long = 0,
-    @Schema(title = "更新日期")
+    @get:Schema(title = "更新日期")
     val updateTime: Long = 0
 )

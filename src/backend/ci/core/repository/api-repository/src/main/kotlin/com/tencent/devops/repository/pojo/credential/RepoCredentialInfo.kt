@@ -30,16 +30,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "仓库授权信息")
 data class RepoCredentialInfo(
-    @Schema(title = "授权Token")
+    @get:Schema(title = "授权Token")
     var token: String = "",
-    @Schema(title = "授权私钥")
+    @get:Schema(title = "授权私钥")
     val privateKey: String = "",
-    @Schema(title = "私钥密码")
+    @get:Schema(title = "私钥密码")
     val passPhrase: String? = "",
-    @Schema(title = "用户名")
+    @get:Schema(title = "用户名")
     val username: String = "",
-    @Schema(title = "密码")
+    @get:Schema(title = "密码")
     val password: String = "",
-    @Schema(title = "凭证类型")
+    @get:Schema(title = "凭证类型")
     val credentialType: String = ""
 )

@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线异常类型信息")
 data class PipelineErrorTypeInfoDO(
-    @Schema(title = "错误类型")
+    @get:Schema(title = "错误类型")
     val errorType: Int,
-    @Schema(title = "错误名称")
+    @get:Schema(title = "错误名称")
     var errorName: String
 )

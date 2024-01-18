@@ -31,39 +31,39 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "心跳信息模型")
 data class NewHeartbeatInfo(
-    @Schema(title = "主版本")
+    @get:Schema(title = "主版本")
     val masterVersion: String,
-    @Schema(title = "从属版本")
+    @get:Schema(title = "从属版本")
     val slaveVersion: String,
-    @Schema(title = "主机名")
+    @get:Schema(title = "主机名")
     val hostName: String,
-    @Schema(title = "构建机模型")
+    @get:Schema(title = "构建机模型")
     val agentIp: String,
-    @Schema(title = "并行任务计数")
+    @get:Schema(title = "并行任务计数")
     val parallelTaskCount: Int,
-    @Schema(title = "构建机安装路径")
+    @get:Schema(title = "构建机安装路径")
     val agentInstallPath: String,
-    @Schema(title = "启动者")
+    @get:Schema(title = "启动者")
     val startedUser: String,
-    @Schema(title = "第三方构建信息列表")
+    @get:Schema(title = "第三方构建信息列表")
     var taskList: List<ThirdPartyBuildInfo>?,
-    @Schema(title = "Agent属性信息")
+    @get:Schema(title = "Agent属性信息")
     val props: AgentPropsInfo?,
-    @Schema(title = "构建机id")
+    @get:Schema(title = "构建机id")
     var agentId: Long?,
-    @Schema(title = "项目id")
+    @get:Schema(title = "项目id")
     var projectId: String?,
-    @Schema(title = "心跳时间戳")
+    @get:Schema(title = "心跳时间戳")
     var heartbeatTime: Long?,
-    @Schema(title = "忙碌运行中任务数量")
+    @get:Schema(title = "忙碌运行中任务数量")
     var busyTaskSize: Int = 0,
-    @Schema(title = "docker并行任务计数")
+    @get:Schema(title = "docker并行任务计数")
     val dockerParallelTaskCount: Int?,
-    @Schema(title = "docker构建信息列表")
+    @get:Schema(title = "docker构建信息列表")
     var dockerTaskList: List<ThirdPartyDockerBuildInfo>?,
-    @Schema(title = "忙碌运行docker中任务数量")
+    @get:Schema(title = "忙碌运行docker中任务数量")
     var dockerBusyTaskSize: Int = 0,
-    @Schema(title = "Agent退出的错误信息")
+    @get:Schema(title = "Agent退出的错误信息")
     val errorExitData: AgentErrorExitData?
 ) {
     companion object {

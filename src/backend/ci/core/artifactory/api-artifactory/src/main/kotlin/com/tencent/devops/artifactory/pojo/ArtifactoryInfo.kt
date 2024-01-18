@@ -31,26 +31,26 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "版本仓库-构建信息")
 data class ArtifactoryInfo(
-    @Schema(title = "流水线号", required = true)
+    @get:Schema(title = "流水线号", required = true)
     val pipelineId: String,
-    @Schema(title = "项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(title = "构建号", required = true)
+    @get:Schema(title = "构建号", required = true)
     val buildNum: Int,
-    @Schema(title = "包ID", required = true)
+    @get:Schema(title = "包ID", required = true)
     val bundleId: String,
-    @Schema(title = "产物信息", required = true)
+    @get:Schema(title = "产物信息", required = true)
     val fileInfo: FileInfo?,
-    @Schema(title = "包名", required = true)
+    @get:Schema(title = "包名", required = true)
     val name: String,
-    @Schema(title = "包全名", required = true)
+    @get:Schema(title = "包全名", required = true)
     val fullName: String,
-    @Schema(title = "包大小", required = true)
+    @get:Schema(title = "包大小", required = true)
     val size: Long,
-    @Schema(title = "添加时间", required = true)
+    @get:Schema(title = "添加时间", required = true)
     val modifiedTime: Long,
-    @Schema(title = "app版本", required = true)
+    @get:Schema(title = "app版本", required = true)
     val appVersion: String? = null,
-    @Schema(title = "数据来源：0-自然数据 1-补偿数据", required = true)
+    @get:Schema(title = "数据来源：0-自然数据 1-补偿数据", required = true)
     val dataForm: Int
 )

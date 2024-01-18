@@ -32,28 +32,28 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "凭据-凭据内容和权限")
 data class CredentialWithPermission(
-    @Schema(title = "凭据ID", required = true)
+    @get:Schema(title = "凭据ID", required = true)
     val credentialId: String,
-    @Schema(title = "凭据名称", required = true)
+    @get:Schema(title = "凭据名称", required = true)
     val credentialName: String? = null,
-    @Schema(title = "凭据类型", required = true)
+    @get:Schema(title = "凭据类型", required = true)
     val credentialType: CredentialType,
-    @Schema(title = "凭据描述", required = false)
+    @get:Schema(title = "凭据描述", required = false)
     val credentialRemark: String? = null,
-    @Schema(title = "最后更新时间", required = true)
+    @get:Schema(title = "最后更新时间", required = true)
     val updatedTime: Long,
-    @Schema(title = "凭据内容", required = true)
+    @get:Schema(title = "凭据内容", required = true)
     val v1: String,
-    @Schema(title = "凭据内容", required = true)
+    @get:Schema(title = "凭据内容", required = true)
     val v2: String? = null,
-    @Schema(title = "凭据内容", required = true)
+    @get:Schema(title = "凭据内容", required = true)
     val v3: String? = null,
-    @Schema(title = "凭据内容", required = true)
+    @get:Schema(title = "凭据内容", required = true)
     val v4: String? = null,
-    @Schema(title = "权限", required = true)
+    @get:Schema(title = "权限", required = true)
     val permissions: CredentialPermissions,
-    @Schema(title = "最后更新者", required = true)
+    @get:Schema(title = "最后更新者", required = true)
     val updateUser: String? = null,
-    @Schema(title = "当前凭证是否允许跨项目使用", required = false)
+    @get:Schema(title = "当前凭证是否允许跨项目使用", required = false)
     val allowAcrossProject: Boolean = false
 )

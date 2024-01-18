@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "容器编译环境基本信息")
 data class ContainerApp(
-    @Schema(title = "ID", required = true)
+    @get:Schema(title = "ID", required = true)
     val id: Int,
-    @Schema(title = "name", required = true)
+    @get:Schema(title = "name", required = true)
     val name: String,
-    @Schema(title = "os", required = true)
+    @get:Schema(title = "os", required = true)
     val os: String,
-    @Schema(title = "binPath", required = false)
+    @get:Schema(title = "binPath", required = false)
     val binPath: String?
 )

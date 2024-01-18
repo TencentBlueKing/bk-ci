@@ -31,18 +31,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "模板市场-模板请求报文体")
 data class MarketTemplateRequest(
-    @Schema(title = "项目列表", required = true)
+    @get:Schema(title = "项目列表", required = true)
     val projectCodeList: ArrayList<String>,
-    @Schema(title = "模板代码", required = true)
+    @get:Schema(title = "模板代码", required = true)
     val templateCode: String,
-    @Schema(title = "模板名称", required = true)
+    @get:Schema(title = "模板名称", required = true)
     val templateName: String,
-    @Schema(title = "模板logo", required = false)
+    @get:Schema(title = "模板logo", required = false)
     val logoUrl: String?,
-    @Schema(title = "范畴代码列表", required = false)
+    @get:Schema(title = "范畴代码列表", required = false)
     val categoryCodeList: List<String>?,
-    @Schema(title = "是否为公共模版", required = true)
+    @get:Schema(title = "是否为公共模版", required = true)
     val publicFlag: Boolean,
-    @Schema(title = "发布者", required = false)
+    @get:Schema(title = "发布者", required = false)
     val publisher: String
 )

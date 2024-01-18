@@ -31,30 +31,30 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "容器信息模型")
 data class ContainerInfo(
-    @Schema(title = "项目id")
+    @get:Schema(title = "项目id")
     val projectId: String,
-    @Schema(title = "流水线id")
+    @get:Schema(title = "流水线id")
     val pipelineId: String,
-    @Schema(title = "构建序列号")
+    @get:Schema(title = "构建序列号")
     val vmSeqId: String,
-    @Schema(title = "资源池序号")
+    @get:Schema(title = "资源池序号")
     val poolNo: Int,
-    @Schema(title = "状态")
+    @get:Schema(title = "状态")
     val status: Int,
-    @Schema(title = "镜像名称")
+    @get:Schema(title = "镜像名称")
     val imageName: String,
-    @Schema(title = "容器id")
+    @get:Schema(title = "容器id")
     val containerId: String,
-    @Schema(title = "容器地址")
+    @get:Schema(title = "容器地址")
     val address: String,
-    @Schema(title = "容器token")
+    @get:Schema(title = "容器token")
     val token: String,
-    @Schema(title = "构建环境")
+    @get:Schema(title = "构建环境")
     val buildEnv: String?,
-    @Schema(title = "仓库用户名")
+    @get:Schema(title = "仓库用户名")
     val registryUser: String?,
-    @Schema(title = "仓库密码")
+    @get:Schema(title = "仓库密码")
     val registryPwd: String?,
-    @Schema(title = "镜像类型")
+    @get:Schema(title = "镜像类型")
     val imageType: String?
 )

@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件市场-申请成为插件协作者请求报文体")
 data class AtomCollaboratorCreateReq(
-    @Schema(title = "调试项目编码", required = true)
+    @get:Schema(title = "调试项目编码", required = true)
     val testProjectCode: String,
-    @Schema(title = "插件代码", required = true)
+    @get:Schema(title = "插件代码", required = true)
     val atomCode: String,
-    @Schema(title = "申请原因", required = true)
+    @get:Schema(title = "申请原因", required = true)
     val applyReason: String
 )

@@ -4,29 +4,29 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线组与流水线的对应关系")
 data class PipelineViewDict(
-    @Schema(title = "个人流水线组列表")
+    @get:Schema(title = "个人流水线组列表")
     val personalViewList: List<ViewInfo>,
-    @Schema(title = "项目流水线列表")
+    @get:Schema(title = "项目流水线列表")
     val projectViewList: List<ViewInfo>
 ) {
-    @Schema(title = "流水线组信息")
+    @get:Schema(title = "流水线组信息")
     data class ViewInfo(
-        @Schema(title = "流水线组ID")
+        @get:Schema(title = "流水线组ID")
         val viewId: String,
-        @Schema(title = "流水线组名")
+        @get:Schema(title = "流水线组名")
         val viewName: String,
-        @Schema(title = "流水线列表")
+        @get:Schema(title = "流水线列表")
         val pipelineList: List<PipelineInfo>
     ) {
-        @Schema(title = "流水线信息")
+        @get:Schema(title = "流水线信息")
         data class PipelineInfo(
-            @Schema(title = "流水线ID")
+            @get:Schema(title = "流水线ID")
             val pipelineId: String,
-            @Schema(title = "流水线名称")
+            @get:Schema(title = "流水线名称")
             val pipelineName: String,
-            @Schema(title = "流水线组ID")
+            @get:Schema(title = "流水线组ID")
             val viewId: String,
-            @Schema(title = "是否删除")
+            @get:Schema(title = "是否删除")
             val delete: Boolean
         )
     }

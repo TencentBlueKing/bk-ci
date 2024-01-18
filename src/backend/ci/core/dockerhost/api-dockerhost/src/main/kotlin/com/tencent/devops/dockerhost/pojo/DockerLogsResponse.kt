@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "DockerLogsResponse")
 data class DockerLogsResponse(
-    @Schema(title = "是否结束", required = true)
+    @get:Schema(title = "是否结束", required = true)
     val running: Boolean,
-    @Schema(title = "退出码", required = true)
+    @get:Schema(title = "退出码", required = true)
     val exitCode: Int?,
-    @Schema(title = "日志", required = true)
+    @get:Schema(title = "日志", required = true)
     val logs: List<String>
 )

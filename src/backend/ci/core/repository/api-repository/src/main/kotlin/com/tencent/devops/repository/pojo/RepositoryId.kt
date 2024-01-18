@@ -31,6 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "代码库模型-ID")
 data class RepositoryId(
-    @Schema(title = "代码库哈希ID", required = true)
+    @get:Schema(title = "代码库哈希ID", required = true)
     val hashId: String
 )

@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "构建-common-环境变量")
 data class BuildEnvParameters(
-    @Schema(title = "名称")
+    @get:Schema(title = "名称")
     val name: String,
-    @Schema(title = "描述")
+    @get:Schema(title = "描述")
     val desc: String,
-    @Schema(title = "路径")
+    @get:Schema(title = "路径")
     val path: String? = null
 )

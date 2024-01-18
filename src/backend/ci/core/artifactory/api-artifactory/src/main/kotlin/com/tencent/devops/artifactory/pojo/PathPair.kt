@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "版本仓库-路径对")
 data class PathPair(
-    @Schema(title = "源路径", required = true)
+    @get:Schema(title = "源路径", required = true)
     val srcPath: String,
-    @Schema(title = "目标路径", required = true)
+    @get:Schema(title = "目标路径", required = true)
     val destPath: String
 )

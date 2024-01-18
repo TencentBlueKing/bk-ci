@@ -33,24 +33,24 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @Schema(title = "质量红线-(模板/指标集)配置展示信息")
 data class TemplateUpdate(
-    @Schema(title = "模板名称")
+    @get:Schema(title = "模板名称")
     val name: String?,
-    @Schema(title = "模板类型(指标集, 模板)")
+    @get:Schema(title = "模板类型(指标集, 模板)")
     val type: String?,
-    @Schema(title = "描述")
+    @get:Schema(title = "描述")
     val desc: String?,
-    @Schema(title = "可见范围类型(ANY, PART_BY_NAME)")
+    @get:Schema(title = "可见范围类型(ANY, PART_BY_NAME)")
     val range: String?,
-    @Schema(title = "ANY-项目ID集合, PART_BY_NAME-空集合")
+    @get:Schema(title = "ANY-项目ID集合, PART_BY_NAME-空集合")
     val rangeIdentification: String?,
-    @Schema(title = "研发环节")
+    @get:Schema(title = "研发环节")
     val stage: String?,
-    @Schema(title = "原子的ClassType")
+    @get:Schema(title = "原子的ClassType")
     val elementType: String?,
-    @Schema(title = "原子名称")
+    @get:Schema(title = "原子名称")
     val elementName: String?,
-    @Schema(title = "红线位置(BEFORE, AFTER)")
+    @get:Schema(title = "红线位置(BEFORE, AFTER)")
     val controlPointPostion: String?,
-    @Schema(title = "是否可用")
+    @get:Schema(title = "是否可用")
     val enable: Boolean?
 )

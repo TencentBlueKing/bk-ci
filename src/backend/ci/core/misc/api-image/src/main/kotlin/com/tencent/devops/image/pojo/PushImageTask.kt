@@ -31,18 +31,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "推送镜像任务返回模型")
 data class PushImageTask(
-    @Schema(title = "任务id")
+    @get:Schema(title = "任务id")
     var taskId: String,
-    @Schema(title = "项目id")
+    @get:Schema(title = "项目id")
     var projectId: String,
-    @Schema(title = "操作者")
+    @get:Schema(title = "操作者")
     var operator: String,
-    @Schema(title = "创建时间戳")
+    @get:Schema(title = "创建时间戳")
     var createdTime: Long,
-    @Schema(title = "更新时间戳")
+    @get:Schema(title = "更新时间戳")
     var updatedTime: Long,
-    @Schema(title = "任务状态")
+    @get:Schema(title = "任务状态")
     var taskStatus: String,
-    @Schema(title = "任务返回信息")
+    @get:Schema(title = "任务返回信息")
     var taskMessage: String
 )

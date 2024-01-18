@@ -32,22 +32,22 @@ import java.time.LocalDateTime
 
 @Schema(title = "保存插件监控每日统计数据")
 data class SaveAtomMonitorDailyPO(
-    @Schema(title = "主键ID")
+    @get:Schema(title = "主键ID")
     val id: Long,
-    @Schema(title = "插件代码")
+    @get:Schema(title = "插件代码")
     val atomCode: String,
-    @Schema(title = "执行次数")
+    @get:Schema(title = "执行次数")
     var executeCount: Long,
-    @Schema(title = "错误类型")
+    @get:Schema(title = "错误类型")
     val errorType: Int,
-    @Schema(title = "统计时间")
+    @get:Schema(title = "统计时间")
     val statisticsTime: LocalDateTime,
-    @Schema(title = "创建人")
+    @get:Schema(title = "创建人")
     val creator: String,
-    @Schema(title = "修改人")
+    @get:Schema(title = "修改人")
     val modifier: String,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: LocalDateTime,
-    @Schema(title = "更新时间")
+    @get:Schema(title = "更新时间")
     val updateTime: LocalDateTime
 )

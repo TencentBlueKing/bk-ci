@@ -98,28 +98,28 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class GitMrChangeInfo(
     val title: String = "",
     @JsonProperty("target_project_id")
-    @Schema(title = "target_project_id")
+    @get:Schema(title = "target_project_id")
     val targetProjectId: String = "",
     @JsonProperty("target_branch")
-    @Schema(title = "target_branch")
+    @get:Schema(title = "target_branch")
     val targetBranch: String? = "",
     @JsonProperty("source_project_id")
-    @Schema(title = "source_project_id")
+    @get:Schema(title = "source_project_id")
     val sourceProjectId: String? = "",
     @JsonProperty("source_branch")
-    @Schema(title = "source_branch")
+    @get:Schema(title = "source_branch")
     val sourceBranch: String? = "",
     @JsonProperty("created_at")
-    @Schema(title = "created_at")
+    @get:Schema(title = "created_at")
     val createTime: String? = "",
     @JsonProperty("updated_at")
-    @Schema(title = "updated_at")
+    @get:Schema(title = "updated_at")
     val updateTime: String? = "",
     @JsonProperty("iid")
-    @Schema(title = "iid")
+    @get:Schema(title = "iid")
     val mrNumber: String = "",
     @JsonProperty("id")
-    @Schema(title = "id")
+    @get:Schema(title = "id")
     val mrId: String = "",
     val labels: List<String>,
     val description: String? = "",
@@ -127,28 +127,28 @@ data class GitMrChangeInfo(
 ) {
     data class GitMrFile(
         @JsonProperty("old_path")
-        @Schema(title = "old_path")
+        @get:Schema(title = "old_path")
         val oldPath: String,
         @JsonProperty("new_path")
-        @Schema(title = "new_path")
+        @get:Schema(title = "new_path")
         val newPath: String,
         @JsonProperty("new_file")
-        @Schema(title = "new_file")
+        @get:Schema(title = "new_file")
         val newFile: Boolean,
         @JsonProperty("renamed_file")
-        @Schema(title = "renamed_file")
+        @get:Schema(title = "renamed_file")
         val renameFile: Boolean,
         @JsonProperty("deleted_file")
-        @Schema(title = "deleted_file")
+        @get:Schema(title = "deleted_file")
         val deletedFile: Boolean,
         @JsonProperty("is_too_large")
-        @Schema(title = "is_too_large")
+        @get:Schema(title = "is_too_large")
         val isTooLarge: Boolean,
         @JsonProperty("additions")
-        @Schema(title = "additions")
+        @get:Schema(title = "additions")
         val additions: Int,
         @JsonProperty("deletions")
-        @Schema(title = "deletions")
+        @get:Schema(title = "deletions")
         val deletions: Int
     )
 }

@@ -33,8 +33,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "p4文件描述")
 @JsonIgnoreProperties
 data class P4FileSpec(
-    @Schema(title = "文件状态", required = true)
+    @get:Schema(title = "文件状态", required = true)
     val opStatus: String,
-    @Schema(title = "文件在depot的路径", required = true)
+    @get:Schema(title = "文件在depot的路径", required = true)
     val depotPathString: String
 )

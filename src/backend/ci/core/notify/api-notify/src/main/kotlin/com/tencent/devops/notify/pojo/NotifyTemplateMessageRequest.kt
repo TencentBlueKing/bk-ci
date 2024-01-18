@@ -32,14 +32,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "消息通知新增请求报文体")
 data class NotifyTemplateMessageRequest(
-    @Schema(title = "模板代码", required = true)
+    @get:Schema(title = "模板代码", required = true)
     val templateCode: String,
-    @Schema(title = "模板名称", required = true)
+    @get:Schema(title = "模板名称", required = true)
     val templateName: String,
-    @Schema(title = "优先级别（-1:低 0:普通 1:高）", allowableValues = ["-1", "0", "1"], type = "String", required = true)
+    @get:Schema(title = "优先级别（-1:低 0:普通 1:高）", allowableValues = ["-1", "0", "1"], type = "String", required = true)
     val priority: EnumNotifyPriority,
-    @Schema(title = "通知来源（0:本地业务 1:操作）", allowableValues = ["0", "1"], type = "int", required = true)
+    @get:Schema(title = "通知来源（0:本地业务 1:操作）", allowableValues = ["0", "1"], type = "int", required = true)
     val source: EnumNotifySource,
-    @Schema(title = "消息模板详细信息集合", required = true)
+    @get:Schema(title = "消息模板详细信息集合", required = true)
     val msg: List<NotifyTemplateMessage>
 )

@@ -32,28 +32,28 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "版本仓库-文件详细信息")
 data class FileDetail(
-    @Schema(title = "文件名", required = true)
+    @get:Schema(title = "文件名", required = true)
     val name: String,
-    @Schema(title = "文件路径", required = true)
+    @get:Schema(title = "文件路径", required = true)
     val path: String,
-    @Schema(title = "文件全名", required = true)
+    @get:Schema(title = "文件全名", required = true)
     val fullName: String,
-    @Schema(title = "文件全路径", required = true)
+    @get:Schema(title = "文件全路径", required = true)
     val fullPath: String,
-    @Schema(title = "文件大小(byte)", required = true)
+    @get:Schema(title = "文件大小(byte)", required = true)
     val size: Long,
-    @Schema(title = "创建时间", required = true)
+    @get:Schema(title = "创建时间", required = true)
     val createdTime: Long,
-    @Schema(title = "修改时间", required = true)
+    @get:Schema(title = "修改时间", required = true)
     val modifiedTime: Long,
-    @Schema(title = "文件摘要", required = true)
+    @get:Schema(title = "文件摘要", required = true)
     val checksums: FileChecksums,
-    @Schema(title = "meta数据", required = true)
+    @get:Schema(title = "meta数据", required = true)
     val meta: Map<String, Any>,
-    @Schema(title = "nodeMetadata数据", required = true)
+    @get:Schema(title = "nodeMetadata数据", required = true)
     val nodeMetadata: List<MetadataModel> = emptyList(),
-    @Schema(title = "下载链接", required = false)
+    @get:Schema(title = "下载链接", required = false)
     val url: String? = null,
-    @Schema(title = "移动客户端下载链接", required = false)
+    @get:Schema(title = "移动客户端下载链接", required = false)
     val shortUrl: String? = null
 )

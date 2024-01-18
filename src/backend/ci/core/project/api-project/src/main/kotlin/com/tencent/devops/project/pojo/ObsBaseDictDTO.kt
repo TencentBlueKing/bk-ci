@@ -4,12 +4,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "OBS基礎字典数据")
 data class ObsBaseDictDTO(
-    @Schema(title = "jsonrpc")
+    @get:Schema(title = "jsonrpc")
     val jsonrpc: String,
-    @Schema(title = "id")
+    @get:Schema(title = "id")
     val id: String,
-    @Schema(title = "method")
+    @get:Schema(title = "method")
     val method: String,
-    @Schema(title = "params")
+    @get:Schema(title = "params")
     val params: Map<String, String>
 )

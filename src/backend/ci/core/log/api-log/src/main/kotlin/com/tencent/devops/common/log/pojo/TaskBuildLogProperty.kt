@@ -32,14 +32,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.io.File
 
 data class TaskBuildLogProperty(
-    @Schema(title = "插件任务ID", required = true)
+    @get:Schema(title = "插件任务ID", required = true)
     val elementId: String,
-    @Schema(title = "日志文件子路径", required = true)
+    @get:Schema(title = "日志文件子路径", required = true)
     val childPath: String,
-    @Schema(title = "日志zip文件子路径", required = true)
+    @get:Schema(title = "日志zip文件子路径", required = true)
     val childZipPath: String?,
-    @Schema(title = "日志文件句柄", required = true)
+    @get:Schema(title = "日志文件句柄", required = true)
     val logFile: File,
-    @Schema(title = "日志的存储模式", required = false)
+    @get:Schema(title = "日志的存储模式", required = false)
     var logStorageMode: LogStorageMode = LogStorageMode.UPLOAD
 )

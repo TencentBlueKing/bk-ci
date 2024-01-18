@@ -33,33 +33,33 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "规则创建请求")
 data class RuleCreateRequest(
-    @Schema(title = "规则名称", required = true)
+    @get:Schema(title = "规则名称", required = true)
     val name: String,
-    @Schema(title = "规则描述", required = true)
+    @get:Schema(title = "规则描述", required = true)
     val desc: String,
-    @Schema(title = "指标类型", required = true)
+    @get:Schema(title = "指标类型", required = true)
     val indicatorIds: List<CreateRequestIndicator>,
-    @Schema(title = "控制点", required = true)
+    @get:Schema(title = "控制点", required = true)
     val controlPoint: String,
-    @Schema(title = "控制点位置", required = true)
+    @get:Schema(title = "控制点位置", required = true)
     val controlPointPosition: String,
-    @Schema(title = "生效的流水线id集合", required = true)
+    @get:Schema(title = "生效的流水线id集合", required = true)
     val range: List<String>,
-    @Schema(title = "生效的流水线模板id集合", required = true)
+    @get:Schema(title = "生效的流水线模板id集合", required = true)
     val templateRange: List<String>,
-    @Schema(title = "操作类型", required = true)
+    @get:Schema(title = "操作类型", required = true)
     val operation: RuleOperation,
-    @Schema(title = "通知类型", required = false)
+    @get:Schema(title = "通知类型", required = false)
     val notifyTypeList: List<NotifyType>?,
-    @Schema(title = "通知组名单", required = false)
+    @get:Schema(title = "通知组名单", required = false)
     val notifyGroupList: List<String>?,
-    @Schema(title = "通知人员名单", required = false)
+    @get:Schema(title = "通知人员名单", required = false)
     val notifyUserList: List<String>?,
-    @Schema(title = "审核通知人员", required = false)
+    @get:Schema(title = "审核通知人员", required = false)
     val auditUserList: List<String>?,
-    @Schema(title = "审核超时时间", required = false)
+    @get:Schema(title = "审核超时时间", required = false)
     val auditTimeoutMinutes: Int?,
-    @Schema(title = "红线匹配的id", required = false)
+    @get:Schema(title = "红线匹配的id", required = false)
     val gatewayId: String?
 ) {
     data class CreateRequestIndicator(

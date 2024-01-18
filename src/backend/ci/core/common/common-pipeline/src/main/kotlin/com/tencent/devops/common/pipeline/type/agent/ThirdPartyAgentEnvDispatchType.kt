@@ -36,11 +36,11 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class ThirdPartyAgentEnvDispatchType(
     @JsonProperty("value")
     var envName: String,
-    @Schema(title = "共享环境时必填，值为提供共享环境的项目id")
+    @get:Schema(title = "共享环境时必填，值为提供共享环境的项目id")
     var envProjectId: String?,
-    @Schema(title = "工作空间")
+    @get:Schema(title = "工作空间")
     var workspace: String?,
-    @Schema(title = "agent类型,默认NAME")
+    @get:Schema(title = "agent类型,默认NAME")
     val agentType: AgentType = AgentType.NAME,
     // 第三方构建机用docker作为构建机
     val dockerInfo: ThirdPartyAgentDockerInfo?

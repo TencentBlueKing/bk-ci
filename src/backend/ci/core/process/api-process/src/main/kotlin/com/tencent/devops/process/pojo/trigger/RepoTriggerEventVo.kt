@@ -32,18 +32,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "代码库webhook事件记录")
 data class RepoTriggerEventVo(
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "事件ID")
+    @get:Schema(title = "事件ID")
     val eventId: Long,
-    @Schema(title = "代码库ID", required = false)
+    @get:Schema(title = "代码库ID", required = false)
     val repoHashId: String,
-    @Schema(title = "事件描述")
+    @get:Schema(title = "事件描述")
     var eventDesc: String,
-    @Schema(title = "触发时间")
+    @get:Schema(title = "触发时间")
     val eventTime: Long,
-    @Schema(title = "总流水线数")
+    @get:Schema(title = "总流水线数")
     val total: Int,
-    @Schema(title = "成功的流水线数")
+    @get:Schema(title = "成功的流水线数")
     val success: Int
 )

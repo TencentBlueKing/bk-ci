@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "第三方构建机接入的链接")
 data class ThirdPartyAgentLink(
-    @Schema(title = "ID")
+    @get:Schema(title = "ID")
     val agentId: String,
-    @Schema(title = "链接")
+    @get:Schema(title = "链接")
     val link: String
 )

@@ -34,17 +34,17 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "新增指标要素请求报文体")
 data class CreateIndexComputeDetailRequest(
-    @Schema(title = "组件代码", required = true)
+    @get:Schema(title = "组件代码", required = true)
     val storeCode: String,
-    @Schema(title = "store组件类型", required = true)
+    @get:Schema(title = "store组件类型", required = true)
     val storeType: StoreTypeEnum,
-    @Schema(title = "图标提示信息", required = true)
+    @get:Schema(title = "图标提示信息", required = true)
     val iconTips: String,
-    @Schema(title = "等级名称", required = true)
+    @get:Schema(title = "等级名称", required = true)
     val levelName: String,
-    @Schema(title = "指标代码", required = true)
+    @get:Schema(title = "指标代码", required = true)
     @BkField(maxLength = 10, patternStyle = BkStyleEnum.CODE_STYLE)
     val indexCode: String,
-    @Schema(title = "指标要素列表", required = true)
+    @get:Schema(title = "指标要素列表", required = true)
     val elementInfos: List<StoreIndexElementInfo>
 )

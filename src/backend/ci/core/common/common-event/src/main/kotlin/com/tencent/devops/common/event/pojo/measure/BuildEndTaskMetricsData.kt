@@ -31,30 +31,30 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "构建结束后task指标数据")
 data class BuildEndTaskMetricsData(
-    @Schema(title = "taskId", required = true)
+    @get:Schema(title = "taskId", required = true)
     val taskId: String,
-    @Schema(title = "插件名称", required = true)
+    @get:Schema(title = "插件名称", required = true)
     val atomName: String,
-    @Schema(title = "插件标识", required = true)
+    @get:Schema(title = "插件标识", required = true)
     val atomCode: String,
-    @Schema(title = "插件在model中的位置", required = true)
+    @get:Schema(title = "插件在model中的位置", required = true)
     val atomPosition: String,
-    @Schema(title = "插件分类代码", required = true)
+    @get:Schema(title = "插件分类代码", required = true)
     val classifyCode: String,
-    @Schema(title = "插件分类名称", required = true)
+    @get:Schema(title = "插件分类名称", required = true)
     val classifyName: String,
-    @Schema(title = "执行开始时间", required = false)
+    @get:Schema(title = "执行开始时间", required = false)
     val startTime: String?,
-    @Schema(title = "执行结束时间", required = false)
+    @get:Schema(title = "执行结束时间", required = false)
     val endTime: String?,
-    @Schema(title = "task构建耗时", required = true)
+    @get:Schema(title = "task构建耗时", required = true)
     val costTime: Long,
-    @Schema(title = "是否执行成功", required = true)
+    @get:Schema(title = "是否执行成功", required = true)
     val successFlag: Boolean,
-    @Schema(title = "错误类型", required = false)
+    @get:Schema(title = "错误类型", required = false)
     val errorType: Int? = null,
-    @Schema(title = "错误码", required = false)
+    @get:Schema(title = "错误码", required = false)
     val errorCode: Int? = null,
-    @Schema(title = "错误描述", required = false)
+    @get:Schema(title = "错误描述", required = false)
     val errorMsg: String? = null
 )

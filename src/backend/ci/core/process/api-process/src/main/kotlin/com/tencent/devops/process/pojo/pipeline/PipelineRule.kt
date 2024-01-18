@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线规则")
 data class PipelineRule(
-    @Schema(title = "规则名称", required = true)
+    @get:Schema(title = "规则名称", required = true)
     val ruleName: String,
-    @Schema(title = "业务标识", required = true)
+    @get:Schema(title = "业务标识", required = true)
     val busCode: String,
-    @Schema(title = "处理器", required = true)
+    @get:Schema(title = "处理器", required = true)
     val processor: String
 )

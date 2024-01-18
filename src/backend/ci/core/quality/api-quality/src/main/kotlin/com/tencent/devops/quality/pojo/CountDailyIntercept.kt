@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "质量红线-每日拦截")
 data class CountDailyIntercept(
-    @Schema(title = "日期", required = true)
+    @get:Schema(title = "日期", required = true)
     val date: String,
-    @Schema(title = "拦截数", required = true)
+    @get:Schema(title = "拦截数", required = true)
     val count: Int,
-    @Schema(title = "生效流水线执行数", required = true)
+    @get:Schema(title = "生效流水线执行数", required = true)
     val pipelineExecuteCount: Int = 0
 )

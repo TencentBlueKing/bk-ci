@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "研发商店-工作台-插件语言")
 data class AtomDevLanguage(
-    @Schema(title = "语言")
+    @get:Schema(title = "语言")
     val language: String,
-    @Schema(title = "名称")
+    @get:Schema(title = "名称")
     val name: String
 )

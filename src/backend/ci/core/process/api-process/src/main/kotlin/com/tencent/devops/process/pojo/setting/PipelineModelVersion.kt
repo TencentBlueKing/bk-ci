@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线模型版本")
 data class PipelineModelVersion(
-    @Schema(title = "项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(title = "流水线ID", required = true)
+    @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(title = "流水线创建人", required = true)
+    @get:Schema(title = "流水线创建人", required = true)
     val creator: String,
-    @Schema(title = "流水线模型", required = true)
+    @get:Schema(title = "流水线模型", required = true)
     val model: String,
-    @Schema(title = "流水线模型版本", required = false)
+    @get:Schema(title = "流水线模型版本", required = false)
     val version: Int? = null
 )

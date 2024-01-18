@@ -32,12 +32,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "查询插件趋势信息传输对象")
 data class QueryAtomTrendInfoDTO(
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "查询条件请求信息")
+    @get:Schema(title = "查询条件请求信息")
     val baseQueryReq: BaseQueryReqVO,
-    @Schema(title = "错误类型")
+    @get:Schema(title = "错误类型")
     val errorTypes: List<Int>?,
-    @Schema(title = "插件代码")
+    @get:Schema(title = "插件代码")
     val atomCodes: List<String>?
 )

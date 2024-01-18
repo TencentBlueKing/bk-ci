@@ -31,13 +31,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "环境信息-Node数量")
 data class EnvWithNode(
-    @Schema(title = "环境 Id", required = true)
+    @get:Schema(title = "环境 Id", required = true)
     val envId: Long,
-    @Schema(title = "环境名称", required = true)
+    @get:Schema(title = "环境名称", required = true)
     val envName: String,
-    @Schema(title = "源项目", required = false)
+    @get:Schema(title = "源项目", required = false)
     val sharedProjectId: String?,
-    @Schema(title = "分享人", required = false)
+    @get:Schema(title = "分享人", required = false)
     val sharedUserId: String?
 
 )

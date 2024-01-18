@@ -31,18 +31,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "项目配置")
 data class ProjectConfigParam(
-    @Schema(title = "项目Id", required = true)
+    @get:Schema(title = "项目Id", required = true)
     val projectId: String,
-    @Schema(title = "更新人", required = true)
+    @get:Schema(title = "更新人", required = true)
     val updatedUser: String,
-    @Schema(title = "允许使用BCS虚拟机功能", required = true)
+    @get:Schema(title = "允许使用BCS虚拟机功能", required = true)
     val bcsVmEnabled: Boolean,
-    @Schema(title = "BCS虚拟机配额", required = true)
+    @get:Schema(title = "BCS虚拟机配额", required = true)
     val bcsVmQuota: Int,
-    @Schema(title = "导入服务器配额", required = true)
+    @get:Schema(title = "导入服务器配额", required = true)
     val importQuota: Int,
-    @Schema(title = "允许使用DevCloud功能", required = true)
+    @get:Schema(title = "允许使用DevCloud功能", required = true)
     val devCloudEnable: Boolean,
-    @Schema(title = "DevCloud配额", required = true)
+    @get:Schema(title = "DevCloud配额", required = true)
     val devCloudQuota: Int
 )

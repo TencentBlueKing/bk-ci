@@ -33,15 +33,15 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件分类信息")
 data class AtomClassifyInfo(
-    @Schema(title = "插件代码", required = true)
+    @get:Schema(title = "插件代码", required = true)
     val atomCode: String,
-    @Schema(title = "版本号", required = true)
+    @get:Schema(title = "版本号", required = true)
     val version: String,
-    @Schema(title = "插件名称", required = true)
+    @get:Schema(title = "插件名称", required = true)
     @BkFieldI18n(source = I18nSourceEnum.DB, convertName = "name")
     val atomName: String,
-    @Schema(title = "插件分类编码", required = true)
+    @get:Schema(title = "插件分类编码", required = true)
     val classifyCode: String,
-    @Schema(title = "插件分类名称", required = true)
+    @get:Schema(title = "插件分类名称", required = true)
     val classifyName: String
 )

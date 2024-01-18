@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线创建模型")
 data class PipelineGroupCreate(
-    @Schema(title = "项目id", required = false)
+    @get:Schema(title = "项目id", required = false)
     val projectId: String,
-    @Schema(title = "名称", required = false)
+    @get:Schema(title = "名称", required = false)
     val name: String
 )

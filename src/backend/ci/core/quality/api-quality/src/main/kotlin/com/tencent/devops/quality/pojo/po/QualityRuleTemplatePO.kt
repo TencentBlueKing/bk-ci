@@ -32,28 +32,28 @@ import java.time.LocalDateTime
 
 @Schema(title = "质量红线模板PO")
 data class QualityRuleTemplatePO(
-    @Schema(title = "ID")
+    @get:Schema(title = "ID")
     val id: Long,
-    @Schema(title = "模板名称")
+    @get:Schema(title = "模板名称")
     var name: String?,
-    @Schema(title = "模板类型(指标集, 模板)")
+    @get:Schema(title = "模板类型(指标集, 模板)")
     val type: String?,
-    @Schema(title = "描述")
+    @get:Schema(title = "描述")
     var desc: String?,
-    @Schema(title = "研发环节")
+    @get:Schema(title = "研发环节")
     var stage: String?,
-    @Schema(title = "控制点原子类型")
+    @get:Schema(title = "控制点原子类型")
     val controlPoint: String?,
-    @Schema(title = "控制点红线位置")
+    @get:Schema(title = "控制点红线位置")
     val controlPointPosition: String?,
-    @Schema(title = "创建用户")
+    @get:Schema(title = "创建用户")
     val createUser: String?,
-    @Schema(title = "更新用户")
+    @get:Schema(title = "更新用户")
     val updateUser: String?,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: LocalDateTime?,
-    @Schema(title = "更新时间")
+    @get:Schema(title = "更新时间")
     val updateTime: LocalDateTime?,
-    @Schema(title = "是否可用")
+    @get:Schema(title = "是否可用")
     val enable: Boolean
 )

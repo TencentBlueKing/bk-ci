@@ -34,21 +34,21 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "人工审核-自定义参数")
 data class ManualReviewParam(
-    @Schema(title = "参数名", required = true)
+    @get:Schema(title = "参数名", required = true)
     var key: String = "",
-    @Schema(title = "参数内容(Any 类型)", required = true, type = "string")
+    @get:Schema(title = "参数内容(Any 类型)", required = true, type = "string")
     var value: Any? = "",
-    @Schema(title = "参数类型", required = false)
+    @get:Schema(title = "参数类型", required = false)
     val valueType: ManualReviewParamType = ManualReviewParamType.STRING,
-    @Schema(title = "是否必填", required = true)
+    @get:Schema(title = "是否必填", required = true)
     val required: Boolean = false,
-    @Schema(title = "参数描述", required = false)
+    @get:Schema(title = "参数描述", required = false)
     val desc: String? = "",
-    @Schema(title = "下拉框列表")
+    @get:Schema(title = "下拉框列表")
     var options: List<ManualReviewParamPair>? = null,
-    @Schema(title = "中文名称", required = false)
+    @get:Schema(title = "中文名称", required = false)
     val chineseName: String? = null,
-    @Schema(title = "变量形式的options")
+    @get:Schema(title = "变量形式的options")
     val variableOption: String? = null
 ) {
     /**

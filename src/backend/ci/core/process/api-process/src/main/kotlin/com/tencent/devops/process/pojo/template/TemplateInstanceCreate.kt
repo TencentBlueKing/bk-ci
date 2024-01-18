@@ -37,10 +37,10 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "")
 data class TemplateInstanceCreate(
-    @Schema(title = "流水线名称", required = false)
+    @get:Schema(title = "流水线名称", required = false)
     val pipelineName: String,
-    @Schema(title = "构建号（推荐版本号）", required = false)
+    @get:Schema(title = "构建号（推荐版本号）", required = false)
     val buildNo: BuildNo?,
-    @Schema(title = "流水线变量列表", required = false)
+    @get:Schema(title = "流水线变量列表", required = false)
     val param: List<BuildFormProperty>? = null
 )

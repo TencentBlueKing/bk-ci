@@ -33,12 +33,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "构建模型-流水线手动启动信息")
 data class BuildManualStartupInfo(
-    @Schema(title = "是否可手工启动", required = true)
+    @get:Schema(title = "是否可手工启动", required = true)
     val canManualStartup: Boolean,
-    @Schema(title = "是否可跳过插件", required = true)
+    @get:Schema(title = "是否可跳过插件", required = true)
     val canElementSkip: Boolean,
-    @Schema(title = "启动表单元素列表", required = true)
+    @get:Schema(title = "启动表单元素列表", required = true)
     val properties: List<BuildFormProperty> = listOf(),
-    @Schema(title = "指定的构建号", required = true)
+    @get:Schema(title = "指定的构建号", required = true)
     val buildNo: BuildNo?
 )

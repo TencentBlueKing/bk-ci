@@ -7,11 +7,11 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "矩阵的分裂计算配置")
 @Suppress("ComplexMethod")
 data class MatrixConfig(
-    @Schema(title = "分裂策略", required = true)
+    @get:Schema(title = "分裂策略", required = true)
     val strategy: Map<String, List<String>>?,
-    @Schema(title = "额外的参数组合", required = true)
+    @get:Schema(title = "额外的参数组合", required = true)
     val include: MutableList<Map<String, String>>?,
-    @Schema(title = "排除的参数组合", required = false)
+    @get:Schema(title = "排除的参数组合", required = false)
     val exclude: MutableList<Map<String, String>>?
 ) {
 

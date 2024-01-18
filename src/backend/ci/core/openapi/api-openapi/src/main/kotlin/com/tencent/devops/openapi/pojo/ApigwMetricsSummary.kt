@@ -32,8 +32,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线构建统计数据响应消息体")
 data class ApigwMetricsSummary(
-    @Schema(title = "第三方汇总信息")
+    @get:Schema(title = "第三方汇总信息")
     val overview: ThirdPlatformOverviewInfoVO?,
-    @Schema(title = "流水线汇总信息")
+    @get:Schema(title = "流水线汇总信息")
     val sumInfo: PipelineSumInfoVO?
 )

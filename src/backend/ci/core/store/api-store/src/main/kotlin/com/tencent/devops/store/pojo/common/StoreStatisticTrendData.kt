@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "统计趋势数据")
 data class StoreStatisticTrendData(
-    @Schema(title = "执行失败总数")
+    @get:Schema(title = "执行失败总数")
     val totalFailNum: Int,
-    @Schema(title = "执行失败总数详情")
+    @get:Schema(title = "执行失败总数详情")
     val totalFailDetail: Map<String, Any>?,
-    @Schema(title = "每日统计信息列表")
+    @get:Schema(title = "每日统计信息列表")
     val dailyStatisticList: List<StoreDailyStatistic>?
 )

@@ -32,8 +32,8 @@ import java.time.LocalDateTime
 
 @Schema(title = "项目流水线数据清理配置")
 data class ProjectDataClearConfig(
-    @Schema(title = "流水线最大启动时间", required = true)
+    @get:Schema(title = "流水线最大启动时间", required = true)
     val maxStartTime: LocalDateTime,
-    @Schema(title = "最大保存数量", required = true)
+    @get:Schema(title = "最大保存数量", required = true)
     val maxKeepNum: Int
 )

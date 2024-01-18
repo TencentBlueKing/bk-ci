@@ -31,6 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "回显版本详情")
 data class StoreShowVersionInfo(
-    @Schema(title = "回显版本信息列表", required = true)
+    @get:Schema(title = "回显版本信息列表", required = true)
     val showVersionList: List<StoreShowVersionItem>
 )

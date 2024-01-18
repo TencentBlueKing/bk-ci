@@ -33,14 +33,14 @@ import org.jooq.Result
 
 @Schema(title = "模板-权限实体")
 data class TemplateWithPermission(
-    @Schema(title = "拥有列表权限的模板记录", required = true)
+    @get:Schema(title = "拥有列表权限的模板记录", required = true)
     val templatesWithListPermRecords: Result<out Record>?,
-    @Schema(title = "拥有查看权限的模板列表ID", required = true)
+    @get:Schema(title = "拥有查看权限的模板列表ID", required = true)
     val templatesWithViewPermIds: List<String>?,
-    @Schema(title = "拥有编辑权限的模板列表ID", required = true)
+    @get:Schema(title = "拥有编辑权限的模板列表ID", required = true)
     val templatesWithEditPermIds: List<String>?,
-    @Schema(title = "拥有删除权限的模板列表ID", required = true)
+    @get:Schema(title = "拥有删除权限的模板列表ID", required = true)
     val templatesWithDeletePermIds: List<String>?,
-    @Schema(title = "数量", required = true)
+    @get:Schema(title = "数量", required = true)
     val count: Int
 )

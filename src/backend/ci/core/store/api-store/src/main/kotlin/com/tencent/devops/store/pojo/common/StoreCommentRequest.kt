@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "评论信息请求报文体")
 data class StoreCommentRequest(
-    @Schema(title = "评论内容", required = true)
+    @get:Schema(title = "评论内容", required = true)
     val commentContent: String,
-    @Schema(title = "评分", required = true)
+    @get:Schema(title = "评分", required = true)
     val score: Int
 )

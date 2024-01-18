@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Suppress("ALL")
 @Schema(title = "灰度测试-显示模型")
 data class GrayTestInfo(
-    @Schema(title = "id")
+    @get:Schema(title = "id")
     val id: Long,
-    @Schema(title = "服务器ID")
+    @get:Schema(title = "服务器ID")
     val server_id: Long,
-    @Schema(title = "用户名称")
+    @get:Schema(title = "用户名称")
     val userName: String,
-    @Schema(title = "状态")
+    @get:Schema(title = "状态")
     val status: String
 )

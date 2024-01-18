@@ -32,25 +32,25 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "用户信息")
 data class StaffInfo(
-    @Schema(title = "登录名")
+    @get:Schema(title = "登录名")
     @JsonProperty("LoginName")
     val loginName: String,
-    @Schema(title = "部门名称")
+    @get:Schema(title = "部门名称")
     @JsonProperty("DepartmentName")
     val departmentName: String,
-    @Schema(title = "英文全名")
+    @get:Schema(title = "英文全名")
     @JsonProperty("FullName")
     val fullName: String,
-    @Schema(title = "中文名")
+    @get:Schema(title = "中文名")
     @JsonProperty("ChineseName")
     val chineseName: String,
-    @Schema(title = "组ID")
+    @get:Schema(title = "组ID")
     @JsonProperty("GroupId")
     val groupId: String,
-    @Schema(title = "组名称")
+    @get:Schema(title = "组名称")
     @JsonProperty("GroupName")
     val groupName: String,
-    @Schema(title = "当前状态")
+    @get:Schema(title = "当前状态")
     @JsonProperty("StatusId")
     val statusId: String
 )

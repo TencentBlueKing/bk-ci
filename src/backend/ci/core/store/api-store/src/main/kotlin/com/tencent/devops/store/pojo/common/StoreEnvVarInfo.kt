@@ -31,30 +31,30 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "store组件环境变量信息")
 data class StoreEnvVarInfo(
-    @Schema(title = "环境变量ID", required = true)
+    @get:Schema(title = "环境变量ID", required = true)
     val id: String,
-    @Schema(title = "store组件代码", required = true)
+    @get:Schema(title = "store组件代码", required = true)
     val storeCode: String,
-    @Schema(title = "store组件类型", required = true)
+    @get:Schema(title = "store组件类型", required = true)
     val storeType: String,
-    @Schema(title = "变量名", required = true)
+    @get:Schema(title = "变量名", required = true)
     val varName: String,
-    @Schema(title = "变量值", required = true)
+    @get:Schema(title = "变量值", required = true)
     val varValue: String,
-    @Schema(title = "描述", required = false)
+    @get:Schema(title = "描述", required = false)
     val varDesc: String?,
-    @Schema(title = "变量值是否加密", required = true)
+    @get:Schema(title = "变量值是否加密", required = true)
     val encryptFlag: Boolean,
-    @Schema(title = "适用范围 TEST：测试 PRD：正式 ALL：所有", required = true)
+    @get:Schema(title = "适用范围 TEST：测试 PRD：正式 ALL：所有", required = true)
     val scope: String,
-    @Schema(title = "版本号", required = true)
+    @get:Schema(title = "版本号", required = true)
     val version: Int,
-    @Schema(title = "添加用户", required = true)
+    @get:Schema(title = "添加用户", required = true)
     val creator: String,
-    @Schema(title = "修改用户", required = true)
+    @get:Schema(title = "修改用户", required = true)
     val modifier: String,
-    @Schema(title = "添加时间", required = true)
+    @get:Schema(title = "添加时间", required = true)
     val createTime: String,
-    @Schema(title = "修改时间", required = true)
+    @get:Schema(title = "修改时间", required = true)
     val updateTime: String
 )

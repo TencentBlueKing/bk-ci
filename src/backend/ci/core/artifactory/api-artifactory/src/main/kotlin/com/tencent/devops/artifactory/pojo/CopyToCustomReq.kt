@@ -32,9 +32,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "复制流水线构建归档到自定义仓库请求")
 data class CopyToCustomReq(
-    @Schema(title = "文件列表", required = true)
+    @get:Schema(title = "文件列表", required = true)
     val files: List<String>,
-    @Schema(title = "是否拷贝所有文件", required = true)
+    @get:Schema(title = "是否拷贝所有文件", required = true)
     val copyAll: Boolean
 ) {
     fun check() {

@@ -31,32 +31,32 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "DockerBuild")
 data class DockerBuildParam(
-    @Schema(title = "镜像名称", required = true)
+    @get:Schema(title = "镜像名称", required = true)
     val imageName: String,
-    @Schema(title = "镜像TAG", required = true)
+    @get:Schema(title = "镜像TAG", required = true)
     val imageTag: String,
-    @Schema(title = "构建目录", required = false)
+    @get:Schema(title = "构建目录", required = false)
     val buildDir: String? = ".",
-    @Schema(title = "Dockerfile", required = false)
+    @get:Schema(title = "Dockerfile", required = false)
     val dockerFile: String? = "Dockerfile",
-    @Schema(title = "repoAddr", required = true)
+    @get:Schema(title = "repoAddr", required = true)
     val repoAddr: String,
-    @Schema(title = "userName", required = true)
+    @get:Schema(title = "userName", required = true)
     val userName: String,
-    @Schema(title = "password", required = true)
+    @get:Schema(title = "password", required = true)
     val password: String,
-    @Schema(title = "基础镜像凭证", required = true)
+    @get:Schema(title = "基础镜像凭证", required = true)
     val ticket: List<Triple<String, String, String>> = emptyList(),
-    @Schema(title = "构建的参数", required = true)
+    @get:Schema(title = "构建的参数", required = true)
     val args: List<String> = emptyList(),
-    @Schema(title = "host配置", required = true)
+    @get:Schema(title = "host配置", required = true)
     val host: List<String> = emptyList(),
-    @Schema(title = "并发构建池序号", required = false)
+    @get:Schema(title = "并发构建池序号", required = false)
     val poolNo: String? = "0",
-    @Schema(title = "镜像tag列表", required = false)
+    @get:Schema(title = "镜像tag列表", required = false)
     val imageTagList: List<String> = emptyList(),
-    @Schema(title = "pipelineTaskId", required = false)
+    @get:Schema(title = "pipelineTaskId", required = false)
     val pipelineTaskId: String = "",
-    @Schema(title = "流水线触发用户", required = false)
+    @get:Schema(title = "流水线触发用户", required = false)
     val userId: String = ""
 )

@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "第三方构建机启动信息模型")
 data class ThirdPartyAgentStartInfo(
-    @Schema(title = "主机名称")
+    @get:Schema(title = "主机名称")
     val hostname: String,
-    @Schema(title = "主机IP")
+    @get:Schema(title = "主机IP")
     val hostIp: String,
-    @Schema(title = "操作系统")
+    @get:Schema(title = "操作系统")
     val detectOS: String,
-    @Schema(title = "版本号")
+    @get:Schema(title = "版本号")
     val version: String?,
-    @Schema(title = "主版本号")
+    @get:Schema(title = "主版本号")
     val masterVersion: String?
 )

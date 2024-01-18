@@ -32,19 +32,19 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线模型-插件市场第三方无构建环境类插件", description = MarketBuildLessAtomElement.classType)
 data class MarketBuildLessAtomElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "任务名称由用户自己填写",
-    @Schema(title = "id将由后台生成", required = false)
+    @get:Schema(title = "id将由后台生成", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "插件的唯一标识", required = true)
+    @get:Schema(title = "插件的唯一标识", required = true)
     private val atomCode: String = "",
-    @Schema(title = "插件版本", required = false)
+    @get:Schema(title = "插件版本", required = false)
     override var version: String = "1.*",
-    @Schema(title = "用户自定义ID", required = false)
+    @get:Schema(title = "用户自定义ID", required = false)
     override var stepId: String? = null,
-    @Schema(title = "插件参数数据", required = true)
+    @get:Schema(title = "插件参数数据", required = true)
     val data: Map<String, Any> = mapOf()
 ) : Element(name, id, status) {
 

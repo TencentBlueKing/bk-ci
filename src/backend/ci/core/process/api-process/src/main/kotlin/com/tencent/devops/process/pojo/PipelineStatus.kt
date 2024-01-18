@@ -32,39 +32,39 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线模型-列表-状态信息")
 data class PipelineStatus(
-    @Schema(title = "流水线任务数量", required = true)
+    @get:Schema(title = "流水线任务数量", required = true)
     val taskCount: Int,
-    @Schema(title = "构建次数", required = true)
+    @get:Schema(title = "构建次数", required = true)
     val buildCount: Long,
-    @Schema(title = "运行锁定", required = false)
+    @get:Schema(title = "运行锁定", required = false)
     val lock: Boolean,
-    @Schema(title = "是否可手工启动", required = true)
+    @get:Schema(title = "是否可手工启动", required = true)
     val canManualStartup: Boolean,
-    @Schema(title = "最后构建时间", required = false)
+    @get:Schema(title = "最后构建时间", required = false)
     val latestBuildStartTime: Long?,
-    @Schema(title = "最后构建结束时间", required = false)
+    @get:Schema(title = "最后构建结束时间", required = false)
     val latestBuildEndTime: Long?,
-    @Schema(title = "最后构建状态", required = false)
+    @get:Schema(title = "最后构建状态", required = false)
     val latestBuildStatus: BuildStatus?,
-    @Schema(title = "最后构建版本号", required = false)
+    @get:Schema(title = "最后构建版本号", required = false)
     val latestBuildNum: Int?,
-    @Schema(title = "最后构建任务名称", required = false)
+    @get:Schema(title = "最后构建任务名称", required = false)
     @Deprecated("无用.不再提供任何信息")
     val latestBuildTaskName: String? = null,
-    @Schema(title = "最后任务预计执行时间（毫秒）", required = false)
+    @get:Schema(title = "最后任务预计执行时间（毫秒）", required = false)
     val latestBuildEstimatedExecutionSeconds: Long?,
-    @Schema(title = "最后构建实例ID", required = false)
+    @get:Schema(title = "最后构建实例ID", required = false)
     val latestBuildId: String?,
-    @Schema(title = "服务器当前时间戳", required = true)
+    @get:Schema(title = "服务器当前时间戳", required = true)
     val currentTimestamp: Long,
-    @Schema(title = "当前运行的构建的个数", required = true)
+    @get:Schema(title = "当前运行的构建的个数", required = true)
     val runningBuildCount: Int,
-    @Schema(title = "是否被收藏", required = true)
+    @get:Schema(title = "是否被收藏", required = true)
     val hasCollect: Boolean,
-    @Schema(title = "最后一次构建所有的任务个数", required = false)
+    @get:Schema(title = "最后一次构建所有的任务个数", required = false)
     var lastBuildTotalCount: Int? = null,
-    @Schema(title = "最后一次构建已完成的任务个数", required = false)
+    @get:Schema(title = "最后一次构建已完成的任务个数", required = false)
     var lastBuildFinishCount: Int? = null,
-    @Schema(title = "触发方式", required = false)
+    @get:Schema(title = "触发方式", required = false)
     var trigger: String? = null
 )

@@ -32,8 +32,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "查询流水线失败趋势数据传输对象")
 class QueryPipelineFailTrendInfoDTO(
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "查询条件请求信息", required = true)
+    @get:Schema(title = "查询条件请求信息", required = true)
     val baseQueryReq: BaseQueryReqVO
 )

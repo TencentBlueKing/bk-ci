@@ -32,16 +32,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "历史构建模型-对应history页面")
 data class StreamBuildHistory(
-    @Schema(title = "流水线名称", required = true)
+    @get:Schema(title = "流水线名称", required = true)
     val displayName: String?,
-    @Schema(title = "蓝盾流水线ID", required = true)
+    @get:Schema(title = "蓝盾流水线ID", required = true)
     var pipelineId: String?,
-    @Schema(title = "git request Event事件", required = true)
+    @get:Schema(title = "git request Event事件", required = true)
     val gitRequestEvent: StreamGitRequestEventReq,
-    @Schema(title = "历史构建模型", required = false)
+    @get:Schema(title = "历史构建模型", required = false)
     val buildHistory: BuildHistory?,
-    @Schema(title = "原因", required = true)
+    @get:Schema(title = "原因", required = true)
     val reason: String? = null,
-    @Schema(title = "原因详情", required = true)
+    @get:Schema(title = "原因详情", required = true)
     var reasonDetail: String? = null
 )

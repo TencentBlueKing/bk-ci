@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线-COPY创建信息")
 data class PipelineCopy(
-    @Schema(title = "名称", required = true)
+    @get:Schema(title = "名称", required = true)
     val name: String,
-    @Schema(title = "描述", required = false)
+    @get:Schema(title = "描述", required = false)
     val desc: String?,
-    @Schema(title = "流水线基础设置-基本信息中的标签", required = false)
+    @get:Schema(title = "流水线基础设置-基本信息中的标签", required = false)
     var labels: List<String> = emptyList(),
-    @Schema(title = "配置静态流水线组，需要填写视图ID", required = false)
+    @get:Schema(title = "配置静态流水线组，需要填写视图ID", required = false)
     var staticViews: List<String> = emptyList()
 )

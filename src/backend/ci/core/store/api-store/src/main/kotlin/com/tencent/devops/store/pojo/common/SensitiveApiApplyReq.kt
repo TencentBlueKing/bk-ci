@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "敏感API申请请求体")
 data class SensitiveApiApplyReq(
-    @Schema(title = "api列表", required = true)
+    @get:Schema(title = "api列表", required = true)
     val apiNameList: List<String>,
-    @Schema(title = "申请说明", required = true)
+    @get:Schema(title = "申请说明", required = true)
     val applyDesc: String,
-    @Schema(title = "插件使用的语言", required = true)
+    @get:Schema(title = "插件使用的语言", required = true)
     val language: String
 )

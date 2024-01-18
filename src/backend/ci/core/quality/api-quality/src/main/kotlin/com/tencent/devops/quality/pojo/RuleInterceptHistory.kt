@@ -33,34 +33,34 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "质量红线-拦截记录")
 data class RuleInterceptHistory(
-    @Schema(title = "hashId 红线拦截记录在表中主键Id的哈希值，是唯一的", required = true)
+    @get:Schema(title = "hashId 红线拦截记录在表中主键Id的哈希值，是唯一的", required = true)
     val hashId: String,
-    @Schema(title = "项目里的序号", required = true)
+    @get:Schema(title = "项目里的序号", required = true)
     val num: Long,
-    @Schema(title = "时间戳(秒)", required = true)
+    @get:Schema(title = "时间戳(秒)", required = true)
     val timestamp: Long,
-    @Schema(title = "拦截结果", required = true)
+    @get:Schema(title = "拦截结果", required = true)
     val interceptResult: RuleInterceptResult,
-    @Schema(title = "规则HashId", required = true)
+    @get:Schema(title = "规则HashId", required = true)
     val ruleHashId: String,
-    @Schema(title = "规则名称", required = true)
+    @get:Schema(title = "规则名称", required = true)
     val ruleName: String,
-    @Schema(title = "流水线ID", required = true)
+    @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(title = "流水线名称", required = true)
+    @get:Schema(title = "流水线名称", required = true)
     val pipelineName: String,
-    @Schema(title = "构建ID", required = true)
+    @get:Schema(title = "构建ID", required = true)
     val buildId: String,
-    @Schema(title = "构建号", required = true)
+    @get:Schema(title = "构建号", required = true)
     val buildNo: String,
-    @Schema(title = "检查次数", required = true)
+    @get:Schema(title = "检查次数", required = true)
     val checkTimes: Int,
-    @Schema(title = "描述", required = true)
+    @get:Schema(title = "描述", required = true)
     val remark: String,
-    @Schema(title = "描述列表", required = true)
+    @get:Schema(title = "描述列表", required = true)
     val interceptList: List<QualityRuleInterceptRecord>? = null,
-    @Schema(title = "流水线是否已删除", required = true)
+    @get:Schema(title = "流水线是否已删除", required = true)
     val pipelineIsDelete: Boolean = false,
-    @Schema(title = "红线把关记录", required = false)
+    @get:Schema(title = "红线把关记录", required = false)
     val qualityRuleBuildHisOpt: QualityRuleBuildHisOpt? = null
 )

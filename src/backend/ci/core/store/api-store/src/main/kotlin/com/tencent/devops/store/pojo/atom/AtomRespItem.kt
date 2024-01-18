@@ -36,84 +36,84 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线-插件信息")
 data class AtomRespItem(
-    @Schema(title = "插件名称", required = true)
+    @get:Schema(title = "插件名称", required = true)
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val name: String,
-    @Schema(title = "插件代码", required = true)
+    @get:Schema(title = "插件代码", required = true)
     val atomCode: String,
-    @Schema(title = "插件版本", required = true)
+    @get:Schema(title = "插件版本", required = true)
     val version: String,
-    @Schema(title = "插件默认版本号", required = true)
+    @get:Schema(title = "插件默认版本号", required = true)
     val defaultVersion: String,
-    @Schema(title = "插件大类（插件市场发布的插件分为有marketBuild：构建环境和marketBuildLess：无构建环境）", required = true)
+    @get:Schema(title = "插件大类（插件市场发布的插件分为有marketBuild：构建环境和marketBuildLess：无构建环境）", required = true)
     val classType: String,
-    @Schema(title = "服务范围", required = true)
+    @get:Schema(title = "服务范围", required = true)
     val serviceScope: List<String>,
-    @Schema(title = "支持的操作系统", required = true)
+    @get:Schema(title = "支持的操作系统", required = true)
     val os: List<String>,
-    @Schema(title = "插件logo", required = false)
+    @get:Schema(title = "插件logo", required = false)
     val logoUrl: String?,
-    @Schema(title = "插件图标", required = false)
+    @get:Schema(title = "插件图标", required = false)
     val icon: String?,
-    @Schema(title = "所属分类编码", required = true)
+    @get:Schema(title = "所属分类编码", required = true)
     val classifyCode: String,
-    @Schema(title = "所属分类名称", required = true)
+    @get:Schema(title = "所属分类名称", required = true)
     val classifyName: String,
-    @Schema(title = "插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = true)
+    @get:Schema(title = "插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = true)
     val category: String,
-    @Schema(title = "插件简介", required = false)
+    @get:Schema(title = "插件简介", required = false)
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val summary: String?,
-    @Schema(title = "插件说明文档链接", required = false)
+    @get:Schema(title = "插件说明文档链接", required = false)
     val docsLink: String?,
-    @Schema(title = "插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = true)
+    @get:Schema(title = "插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = true)
     val atomType: String,
-    @Schema(title = "插件状态，INIT：初始化|COMMITTING：提交中|BUILDING：构建中|BUILD_FAIL：构建失败|TESTING：测试中" +
+    @get:Schema(title = "插件状态，INIT：初始化|COMMITTING：提交中|BUILDING：构建中|BUILD_FAIL：构建失败|TESTING：测试中" +
         "|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGING：下架中" +
         "|UNDERCARRIAGED：已下架", required = true)
     val atomStatus: String,
-    @Schema(title = "插件描述", required = false)
+    @get:Schema(title = "插件描述", required = false)
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val description: String?,
-    @Schema(title = "发布者")
+    @get:Schema(title = "发布者")
     @BkFieldI18n(source = I18nSourceEnum.DB, keyPrefixName = "versionInfo")
     val publisher: String?,
-    @Schema(title = "创建人", required = true)
+    @get:Schema(title = "创建人", required = true)
     val creator: String,
-    @Schema(title = "修改人")
+    @get:Schema(title = "修改人")
     val modifier: String,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: String,
-    @Schema(title = "修改时间")
+    @get:Schema(title = "修改时间")
     val updateTime: String,
-    @Schema(title = "是否为默认插件（默认插件默认所有项目可见）true：默认插件 false：普通插件", required = true)
+    @get:Schema(title = "是否为默认插件（默认插件默认所有项目可见）true：默认插件 false：普通插件", required = true)
     val defaultFlag: Boolean,
-    @Schema(title = "是否为最新版本插件 true：最新 false：非最新", required = true)
+    @get:Schema(title = "是否为最新版本插件 true：最新 false：非最新", required = true)
     val latestFlag: Boolean,
-    @Schema(title = "前端渲染模板版本（1.0代表历史存量插件渲染模板版本）", required = true)
+    @get:Schema(title = "前端渲染模板版本（1.0代表历史存量插件渲染模板版本）", required = true)
     val htmlTemplateVersion: String,
-    @Schema(title = "无构建环境插件是否可以在有构建环境运行标识， TRUE：可以 FALSE：不可以", required = false)
+    @get:Schema(title = "无构建环境插件是否可以在有构建环境运行标识， TRUE：可以 FALSE：不可以", required = false)
     val buildLessRunFlag: Boolean?,
-    @Schema(title = "权重（数值越大代表权重越高）", required = false)
+    @get:Schema(title = "权重（数值越大代表权重越高）", required = false)
     val weight: Int?,
-    @Schema(title = "是否推荐标识 true：推荐，false：不推荐", required = false)
+    @get:Schema(title = "是否推荐标识 true：推荐，false：不推荐", required = false)
     val recommendFlag: Boolean?,
-    @Schema(title = "评分", required = false)
+    @get:Schema(title = "评分", required = false)
     val score: Double? = null,
-    @Schema(title = "最近执行次数", required = false)
+    @get:Schema(title = "最近执行次数", required = false)
     val recentExecuteNum: Int? = null,
-    @Schema(title = "是否能卸载标识", required = false)
+    @get:Schema(title = "是否能卸载标识", required = false)
     val uninstallFlag: Boolean? = null,
-    @Schema(title = "标签列表", required = false)
+    @get:Schema(title = "标签列表", required = false)
     val labelList: List<Label>? = null,
-    @Schema(title = "是否有权限安装标识", required = false)
+    @get:Schema(title = "是否有权限安装标识", required = false)
     val installFlag: Boolean? = null,
-    @Schema(title = "是否已安装", required = false)
+    @get:Schema(title = "是否已安装", required = false)
     val installed: Boolean? = null,
-    @Schema(title = "荣誉信息", required = false)
+    @get:Schema(title = "荣誉信息", required = false)
     val honorInfos: List<HonorInfo>? = null,
-    @Schema(title = "指标信息列表")
+    @get:Schema(title = "指标信息列表")
     val indexInfos: List<StoreIndexInfo>? = null,
-    @Schema(title = "hotFlag")
+    @get:Schema(title = "hotFlag")
     val hotFlag: Boolean? = null
 )

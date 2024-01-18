@@ -34,14 +34,14 @@ import io.swagger.v3.oas.annotations.media.Schema
  * 2019-04-10
  */
 data class AgentResponse(
-    @Schema(title = "env hash id", required = true)
+    @get:Schema(title = "env hash id", required = true)
     val id: String, // env hash id
-    @Schema(title = "env name", required = true)
+    @get:Schema(title = "env name", required = true)
     val name: String, // env name
-    @Schema(title = "agent status", required = true)
+    @get:Schema(title = "agent status", required = true)
     val label: String, // 正常: xx个，异常: xx个 | (agent status)
-    @Schema(title = "源项目", required = false)
+    @get:Schema(title = "源项目", required = false)
     val sharedProjectId: String? = null,
-    @Schema(title = "分享人", required = false)
+    @get:Schema(title = "分享人", required = false)
     val sharedUserId: String? = null
 )

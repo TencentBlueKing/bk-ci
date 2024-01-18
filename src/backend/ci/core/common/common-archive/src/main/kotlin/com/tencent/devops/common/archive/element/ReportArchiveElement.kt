@@ -32,23 +32,23 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "自定义产出物报告", description = ReportArchiveElement.classType)
 data class ReportArchiveElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "python文件编译",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "待上传文件夹）", required = true)
+    @get:Schema(title = "待上传文件夹）", required = true)
     val fileDir: String = "",
-    @Schema(title = "入口文件）", required = false)
+    @get:Schema(title = "入口文件）", required = false)
     val indexFile: String = "",
-    @Schema(title = "标签别名", required = true)
+    @get:Schema(title = "标签别名", required = true)
     val reportName: String = "",
-    @Schema(title = "开启邮件", required = false)
+    @get:Schema(title = "开启邮件", required = false)
     val enableEmail: Boolean?,
-    @Schema(title = "邮件接收者", required = false)
+    @get:Schema(title = "邮件接收者", required = false)
     val emailReceivers: Set<String>?,
-    @Schema(title = "邮件标题", required = false)
+    @get:Schema(title = "邮件标题", required = false)
     val emailTitle: String?
 ) : Element(name, id, status) {
     companion object {

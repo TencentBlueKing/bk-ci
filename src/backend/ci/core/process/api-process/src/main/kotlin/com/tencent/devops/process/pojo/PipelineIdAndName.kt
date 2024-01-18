@@ -32,10 +32,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线名称与Id")
 data class PipelineIdAndName(
-    @Schema(title = "流水线Id")
+    @get:Schema(title = "流水线Id")
     val pipelineId: String,
-    @Schema(title = "流水线名称")
+    @get:Schema(title = "流水线名称")
     val pipelineName: String,
-    @Schema(title = "流水线的来源渠道")
+    @get:Schema(title = "流水线的来源渠道")
     val channelCode: ChannelCode? = null
 )

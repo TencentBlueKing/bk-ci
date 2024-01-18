@@ -5,19 +5,19 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "第三方构建Docker登录调试信息")
 data class ThirdPartyDockerDebugInfo(
-    @Schema(title = "项目id")
+    @get:Schema(title = "项目id")
     val projectId: String,
-    @Schema(title = "构建id")
+    @get:Schema(title = "构建id")
     val buildId: String,
-    @Schema(title = "构建机编排序号")
+    @get:Schema(title = "构建机编排序号")
     val vmSeqId: String,
-    @Schema(title = "工作空间")
+    @get:Schema(title = "工作空间")
     val workspace: String,
-    @Schema(title = "流水线ID")
+    @get:Schema(title = "流水线ID")
     val pipelineId: String,
-    @Schema(title = "调试用户")
+    @get:Schema(title = "调试用户")
     val debugUserId: String,
-    @Schema(title = "debugId")
+    @get:Schema(title = "debugId")
     val debugId: Long,
     val image: String,
     val credential: ThirdPartyBuildDockerInfoCredential?,

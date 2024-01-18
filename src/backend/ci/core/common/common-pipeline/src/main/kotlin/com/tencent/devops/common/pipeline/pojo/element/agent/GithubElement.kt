@@ -36,29 +36,29 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "拉取Github仓库代码", description = GithubElement.classType)
 data class GithubElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "代码库哈希ID", required = true)
+    @get:Schema(title = "代码库哈希ID", required = true)
     val repositoryHashId: String?,
-    @Schema(title = "checkout 策略", required = false)
+    @get:Schema(title = "checkout 策略", required = false)
     val strategy: CodePullStrategy? = CodePullStrategy.INCREMENT_UPDATE,
-    @Schema(title = "代码存放路径", required = false)
+    @get:Schema(title = "代码存放路径", required = false)
     val path: String? = null,
-    @Schema(title = "启动Submodule", required = false)
+    @get:Schema(title = "启动Submodule", required = false)
     val enableSubmodule: Boolean? = true,
-    @Schema(title = "revision 用于强制指定commitId", required = false)
+    @get:Schema(title = "revision 用于强制指定commitId", required = false)
     var revision: String? = null,
-    @Schema(title = "指定拉取方式", required = false)
+    @get:Schema(title = "指定拉取方式", required = false)
     val gitPullMode: GitPullMode?,
-    @Schema(title = "支持虚拟合并分支", required = false)
+    @get:Schema(title = "支持虚拟合并分支", required = false)
     val enableVirtualMergeBranch: Boolean? = false,
-    @Schema(title = "新版的github原子的类型")
+    @get:Schema(title = "新版的github原子的类型")
     val repositoryType: RepositoryType? = null,
-    @Schema(title = "新版的github代码库名")
+    @get:Schema(title = "新版的github代码库名")
     val repositoryName: String? = null
 ) : Element(name, id, status) {
 

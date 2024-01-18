@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线最新构建详情")
 data class PipelineLatestBuild(
-    @Schema(title = "ID", required = true)
+    @get:Schema(title = "ID", required = true)
     val buildId: String,
-    @Schema(title = "启动用户", required = true)
+    @get:Schema(title = "启动用户", required = true)
     val startUser: String,
-    @Schema(title = "Start time", required = true)
+    @get:Schema(title = "Start time", required = true)
     val startTime: String,
-    @Schema(title = "End time", required = false)
+    @get:Schema(title = "End time", required = false)
     val endTime: String?,
-    @Schema(title = "Build status", required = false)
+    @get:Schema(title = "Build status", required = false)
     val status: String?
 )

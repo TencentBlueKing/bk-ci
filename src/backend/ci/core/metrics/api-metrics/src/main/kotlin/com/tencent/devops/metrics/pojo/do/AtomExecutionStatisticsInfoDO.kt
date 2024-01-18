@@ -31,20 +31,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件执行统计信息")
 data class AtomExecutionStatisticsInfoDO(
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "插件基本信息")
+    @get:Schema(title = "插件基本信息")
     val atomBaseInfo: AtomBaseInfoDO,
-    @Schema(title = "插件分类代码")
+    @get:Schema(title = "插件分类代码")
     val classifyCode: String,
-    @Schema(title = "平均耗时")
+    @get:Schema(title = "平均耗时")
     val avgCostTime: Double,
-    @Schema(title = "总执行次数")
+    @get:Schema(title = "总执行次数")
     val totalExecuteCount: Long,
-    @Schema(title = "成功执行次数")
+    @get:Schema(title = "成功执行次数")
     val successExecuteCount: Long,
-    @Schema(title = "成功率")
+    @get:Schema(title = "成功率")
     val successRate: Double,
-    @Schema(title = "插件错误信息")
+    @get:Schema(title = "插件错误信息")
     val atomFailInfos: Map<String, String>
 )

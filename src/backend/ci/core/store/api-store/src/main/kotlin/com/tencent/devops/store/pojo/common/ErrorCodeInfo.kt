@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "错误码信息")
 data class ErrorCodeInfo(
-    @Schema(title = "错误码")
+    @get:Schema(title = "错误码")
     val errorCode: Int,
-    @Schema(title = "中文简体描述信息")
+    @get:Schema(title = "中文简体描述信息")
     val errorMsgZhCn: String = "",
-    @Schema(title = "中文繁体描述信息")
+    @get:Schema(title = "中文繁体描述信息")
     val errorMsgZhTw: String? = null,
-    @Schema(title = "英文描述信息")
+    @get:Schema(title = "英文描述信息")
     val errorMsgEn: String? = null
 )

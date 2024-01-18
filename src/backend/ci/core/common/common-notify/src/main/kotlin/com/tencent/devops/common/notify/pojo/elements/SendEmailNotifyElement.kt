@@ -32,19 +32,19 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "发送邮件通知", description = SendEmailNotifyElement.classType)
 data class SendEmailNotifyElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "发送Email通知",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "通知接收者", required = true)
+    @get:Schema(title = "通知接收者", required = true)
     val receivers: Set<String> = setOf(),
-    @Schema(title = "邮件抄送接收者")
+    @get:Schema(title = "邮件抄送接收者")
     val cc: Set<String> = setOf(),
-    @Schema(title = "Email通知标题", required = true)
+    @get:Schema(title = "Email通知标题", required = true)
     val title: String = "",
-    @Schema(title = "Email通知内容", required = true)
+    @get:Schema(title = "Email通知内容", required = true)
     val body: String = ""
 ) : Element(name, id, status) {
     companion object {

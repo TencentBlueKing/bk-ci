@@ -32,34 +32,34 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "代码库模型-基本信息")
 data class RepositoryInfoWithPermission(
-    @Schema(title = "仓库哈希ID", required = true)
+    @get:Schema(title = "仓库哈希ID", required = true)
     val repositoryHashId: String,
-    @Schema(title = "仓库别名", required = true)
+    @get:Schema(title = "仓库别名", required = true)
     val aliasName: String,
-    @Schema(title = "URL", required = true)
+    @get:Schema(title = "URL", required = true)
     val url: String,
-    @Schema(title = "类型", required = true)
+    @get:Schema(title = "类型", required = true)
     val type: ScmType,
-    @Schema(title = "最后更新时间", required = true)
+    @get:Schema(title = "最后更新时间", required = true)
     val updatedTime: Long,
-    @Schema(title = "最后更新用户", required = false)
+    @get:Schema(title = "最后更新用户", required = false)
     val updatedUser: String?,
-    @Schema(title = "创建时间", required = true)
+    @get:Schema(title = "创建时间", required = true)
     val createTime: Long,
-    @Schema(title = "创建人", required = true)
+    @get:Schema(title = "创建人", required = true)
     val createUser: String,
-    @Schema(title = "能否被编辑", required = true)
+    @get:Schema(title = "能否被编辑", required = true)
     val canEdit: Boolean,
-    @Schema(title = "能否被删除", required = true)
+    @get:Schema(title = "能否被删除", required = true)
     val canDelete: Boolean,
-    @Schema(title = "能否被查看", required = true)
+    @get:Schema(title = "能否被查看", required = true)
     val canView: Boolean? = null,
-    @Schema(title = "能否被使用", required = true)
+    @get:Schema(title = "能否被使用", required = true)
     val canUse: Boolean? = null,
-    @Schema(title = "认证类型", required = false)
+    @get:Schema(title = "认证类型", required = false)
     val authType: String = "",
-    @Schema(title = "svn的protocal类型（http|ssh）", required = false)
+    @get:Schema(title = "svn的protocal类型（http|ssh）", required = false)
     val svnType: String? = null,
-    @Schema(title = "授权身份", required = true)
+    @get:Schema(title = "授权身份", required = true)
     val authIdentity: String? = null
 )

@@ -32,17 +32,17 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "质量红线(准出)", description = QualityGateOutElement.classType)
 data class QualityGateOutElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "质量红线(准出)",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "拦截原子", required = false)
+    @get:Schema(title = "拦截原子", required = false)
     var interceptTask: String? = null,
-    @Schema(title = "拦截原子名称", required = false)
+    @get:Schema(title = "拦截原子名称", required = false)
     var interceptTaskName: String? = null,
-    @Schema(title = "审核人", required = false)
+    @get:Schema(title = "审核人", required = false)
     var reviewUsers: Set<String>? = null
 ) : Element(name, id, status) {
     companion object {

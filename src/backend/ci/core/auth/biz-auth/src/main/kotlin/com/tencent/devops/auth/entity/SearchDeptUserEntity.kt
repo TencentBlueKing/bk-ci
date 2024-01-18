@@ -32,9 +32,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema
 data class SearchDeptUserEntity(
-    @Schema(title = "部门 ID")
+    @get:Schema(title = "部门 ID")
     val id: Int,
-    @Schema(title = "是否级联查询部门用户")
+    @get:Schema(title = "是否级联查询部门用户")
     val recursive: Boolean,
     val accessToken: String? = null,
     override var bk_app_code: String,

@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线-阶段标签信息请求体")
 data class StageTagRequest(
-    @Schema(title = "阶段标签名称", required = true)
+    @get:Schema(title = "阶段标签名称", required = true)
     val stageTagName: String,
-    @Schema(title = "阶段标签权重", required = true)
+    @get:Schema(title = "阶段标签权重", required = true)
     val weight: Int
 )

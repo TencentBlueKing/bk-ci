@@ -31,6 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "证书-证书列表")
 data class Certs(
-    @Schema(title = "证书列表", required = true)
+    @get:Schema(title = "证书列表", required = true)
     val certs: List<Cert>
 )

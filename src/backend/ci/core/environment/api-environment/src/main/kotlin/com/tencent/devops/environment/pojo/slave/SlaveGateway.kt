@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "网关模型")
 data class SlaveGateway(
-    @Schema(title = "网关地域")
+    @get:Schema(title = "网关地域")
     val zoneName: String,
-    @Schema(title = "展示名称")
+    @get:Schema(title = "展示名称")
     val showName: String,
-    @Schema(title = "网关地址")
+    @get:Schema(title = "网关地址")
     val gateway: String,
-    @Schema(title = "文件网关地址")
+    @get:Schema(title = "文件网关地址")
     val fileGateway: String?,
-    @Schema(title = "可见性")
+    @get:Schema(title = "可见性")
     val visibility: Boolean
 )

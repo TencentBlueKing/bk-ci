@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "获取镜像列表返回模型")
 data class ImagePageData(
-    @Schema(title = "镜像列表")
+    @get:Schema(title = "镜像列表")
     val imageList: List<DockerRepo>,
-    @Schema(title = "分页start")
+    @get:Schema(title = "分页start")
     val start: Int,
-    @Schema(title = "分页限制")
+    @get:Schema(title = "分页限制")
     val limit: Int,
-    @Schema(title = "总共数量")
+    @get:Schema(title = "总共数量")
     val total: Int
 )

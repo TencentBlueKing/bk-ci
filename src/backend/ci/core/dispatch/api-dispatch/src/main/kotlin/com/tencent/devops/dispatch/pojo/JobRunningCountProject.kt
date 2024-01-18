@@ -32,14 +32,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "项目的JOB运行数量")
 data class JobRunningCountProject(
-    @Schema(title = "项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(title = "构建机类型", required = true)
+    @get:Schema(title = "构建机类型", required = true)
     val vmType: JobQuotaVmType,
-    @Schema(title = "项目当前并发JOB数", required = true)
+    @get:Schema(title = "项目当前并发JOB数", required = true)
     val runningJobs: Int,
-    @Schema(title = "项目当前所有JOB当月已经执行时间，小时", required = true)
+    @get:Schema(title = "项目当前所有JOB当月已经执行时间，小时", required = true)
     val runningTimeProject: Int,
-    @Schema(title = "工蜂CI当前并发JOB数量", required = true)
+    @get:Schema(title = "工蜂CI当前并发JOB数量", required = true)
     val runningJobsGitCi: Int
 )

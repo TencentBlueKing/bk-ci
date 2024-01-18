@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线stage公共配置信息")
 data class StageCommonSetting(
-    @Schema(title = "每个stage最大job个数", required = true)
+    @get:Schema(title = "每个stage最大job个数", required = true)
     val maxJobNum: Int,
-    @Schema(title = "job公共配置", required = true)
+    @get:Schema(title = "job公共配置", required = true)
     val jobCommonSetting: JobCommonSetting
 )

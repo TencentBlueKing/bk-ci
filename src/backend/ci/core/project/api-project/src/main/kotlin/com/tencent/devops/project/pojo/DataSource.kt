@@ -32,19 +32,19 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "数据源")
 data class DataSource(
-    @Schema(title = "集群名称", required = true)
+    @get:Schema(title = "集群名称", required = true)
     @field:BkField(minLength = 1, maxLength = 64)
     val clusterName: String,
-    @Schema(title = "模块标识", required = true)
+    @get:Schema(title = "模块标识", required = true)
     val moduleCode: SystemModuleEnum,
-    @Schema(title = "数据源名称", required = true)
+    @get:Schema(title = "数据源名称", required = true)
     @field:BkField(minLength = 1, maxLength = 128)
     val dataSourceName: String,
-    @Schema(title = "容量是否满标识", required = true)
+    @get:Schema(title = "容量是否满标识", required = true)
     @field:BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE)
     val fullFlag: Boolean = false,
-    @Schema(title = "数据源URL", required = false)
+    @get:Schema(title = "数据源URL", required = false)
     val dsUrl: String? = null,
-    @Schema(title = "数据标签", required = false)
+    @get:Schema(title = "数据标签", required = false)
     val dataTag: String? = null
 )

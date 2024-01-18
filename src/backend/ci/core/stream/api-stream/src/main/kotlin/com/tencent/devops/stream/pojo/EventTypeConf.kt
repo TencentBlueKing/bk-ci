@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "Git事件类型")
 data class EventTypeConf(
-    @Schema(title = "事件ID")
+    @get:Schema(title = "事件ID")
     val id: String,
-    @Schema(title = "事件名称")
+    @get:Schema(title = "事件名称")
     val name: String
 )

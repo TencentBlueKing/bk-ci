@@ -35,27 +35,27 @@ import java.net.URLEncoder
 
 @Schema(title = "脚本任务（linux和macOS环境）", description = LinuxScriptElement.classType)
 data class LinuxScriptElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "执行Linux脚本",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "用户自定义ID", required = false)
+    @get:Schema(title = "用户自定义ID", required = false)
     override var stepId: String? = null,
-    @Schema(title = "FAQ url链接", required = false)
+    @get:Schema(title = "FAQ url链接", required = false)
     val errorFAQUrl: String? = null,
-    @Schema(title = "脚本类型", required = true)
+    @get:Schema(title = "脚本类型", required = true)
     val scriptType: BuildScriptType,
-    @Schema(title = "脚本内容", required = true)
+    @get:Schema(title = "脚本内容", required = true)
     val script: String,
-    @Schema(title = "某次执行为非0时（失败）是否继续执行脚本", required = false)
+    @get:Schema(title = "某次执行为非0时（失败）是否继续执行脚本", required = false)
     val continueNoneZero: Boolean?,
-    @Schema(title = "启用脚本执行失败时归档的文件", required = false)
+    @get:Schema(title = "启用脚本执行失败时归档的文件", required = false)
     val enableArchiveFile: Boolean? = false,
-    @Schema(title = "脚本执行失败时归档的文件", required = false)
+    @get:Schema(title = "脚本执行失败时归档的文件", required = false)
     val archiveFile: String? = null,
-    @Schema(title = "附加参数", required = false)
+    @get:Schema(title = "附加参数", required = false)
     override var additionalOptions: ElementAdditionalOptions? = null
 ) : Element(name, id, status, additionalOptions = additionalOptions) {
 

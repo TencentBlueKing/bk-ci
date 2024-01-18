@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件发布进度信息")
 data class StoreProcessInfo(
-    @Schema(title = "发布进度流程操作权限", required = false)
+    @get:Schema(title = "发布进度流程操作权限", required = false)
     var opPermission: Boolean? = null,
-    @Schema(title = "store组件流水线构建信息", required = false)
+    @get:Schema(title = "store组件流水线构建信息", required = false)
     var storeBuildInfo: StoreBuildInfo? = null,
-    @Schema(title = "发布进度信息", required = true)
+    @get:Schema(title = "发布进度信息", required = true)
     val processInfos: List<ReleaseProcessItem>
 )

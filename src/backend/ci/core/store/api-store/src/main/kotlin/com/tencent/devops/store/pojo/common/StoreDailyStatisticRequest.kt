@@ -34,16 +34,16 @@ import java.util.Date
 
 @Schema(title = "每日统计信息请求报文")
 data class StoreDailyStatisticRequest(
-    @Schema(title = "总下载量")
+    @get:Schema(title = "总下载量")
     var totalDownloads: Int? = null,
-    @Schema(title = "每日下载量")
+    @get:Schema(title = "每日下载量")
     var dailyDownloads: Int? = null,
-    @Schema(title = "每日执行成功数")
+    @get:Schema(title = "每日执行成功数")
     val dailySuccessNum: Int? = null,
-    @Schema(title = "每日执行失败数")
+    @get:Schema(title = "每日执行失败数")
     val dailyFailNum: Int? = null,
-    @Schema(title = "每日执行失败详情")
+    @get:Schema(title = "每日执行失败详情")
     val dailyFailDetail: Map<String, Any>? = null,
-    @Schema(title = "统计时间")
+    @get:Schema(title = "统计时间")
     val statisticsTime: LocalDateTime? = DateTimeUtil.convertDateToFormatLocalDateTime(Date(), "yyyy-MM-dd")
 )

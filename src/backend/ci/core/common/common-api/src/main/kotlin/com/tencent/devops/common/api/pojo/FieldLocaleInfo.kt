@@ -29,10 +29,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "字段国际化信息")
 data class FieldLocaleInfo(
-    @Schema(title = "字段名称")
+    @get:Schema(title = "字段名称")
     val fieldName: String,
-    @Schema(title = "字段值")
+    @get:Schema(title = "字段值")
     val fieldValue: String,
-    @Schema(title = "语言信息")
+    @get:Schema(title = "语言信息")
     val language: String? = null
 )

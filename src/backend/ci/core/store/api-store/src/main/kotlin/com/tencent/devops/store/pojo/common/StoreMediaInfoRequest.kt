@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "增删Media请求")
 data class StoreMediaInfoRequest /**/(
-    @Schema(title = "研发商店类型", required = true)
+    @get:Schema(title = "研发商店类型", required = true)
     val storeCode: String,
-    @Schema(title = "媒体url", required = true)
+    @get:Schema(title = "媒体url", required = true)
     val mediaUrl: String,
-    @Schema(title = "媒体类型", required = true)
+    @get:Schema(title = "媒体类型", required = true)
     val mediaType: String,
-    @Schema(title = "修改用户", required = true)
+    @get:Schema(title = "修改用户", required = true)
     val modifier: String
 )

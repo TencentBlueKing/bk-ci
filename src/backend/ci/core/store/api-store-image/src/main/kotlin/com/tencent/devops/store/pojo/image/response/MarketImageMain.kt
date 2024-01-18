@@ -36,13 +36,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "市场镜像分页")
 data class MarketImageMain(
 
-    @Schema(title = "镜像分类代码", required = true)
+    @get:Schema(title = "镜像分类代码", required = true)
     val key: String,
 
-    @Schema(title = "镜像分类名称", required = true)
+    @get:Schema(title = "镜像分类名称", required = true)
     val label: String,
 
-    @Schema(title = "MarketImageItem数组", required = true)
+    @get:Schema(title = "MarketImageItem数组", required = true)
     val records: List<MarketImageItem>
 
 )

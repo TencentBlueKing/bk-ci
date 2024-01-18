@@ -32,19 +32,19 @@ import java.time.LocalDateTime
 
 @Schema(title = "T_ENV_SHARE_PROJECT POJO")
 data class TEnvShareProjectInfo(
-    @Schema(title = "环境ID")
+    @get:Schema(title = "环境ID")
     val envId: Long,
-    @Schema(title = "名称")
+    @get:Schema(title = "名称")
     val envName: String,
-    @Schema(title = "主项目ID")
+    @get:Schema(title = "主项目ID")
     val mainProjectId: String,
-    @Schema(title = "共享的目标项目ID")
+    @get:Schema(title = "共享的目标项目ID")
     val sharedProjectId: String?,
-    @Schema(title = "目标项目名称")
+    @get:Schema(title = "目标项目名称")
     val sharedProjectName: String,
-    @Schema(title = "类型")
+    @get:Schema(title = "类型")
     val type: String?,
-    @Schema(title = "创建者")
+    @get:Schema(title = "创建者")
     val creator: String?,
     val createTime: LocalDateTime,
     val updateTime: LocalDateTime

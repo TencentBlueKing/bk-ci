@@ -31,36 +31,36 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "构建模型-ID")
 data class SubPipelineStartUpInfo(
-    @Schema(title = "参数key值", required = true)
+    @get:Schema(title = "参数key值", required = true)
     val key: String,
-    @Schema(title = "key值是否可以更改", required = true)
+    @get:Schema(title = "key值是否可以更改", required = true)
     val keyDisable: Boolean,
-    @Schema(title = "key值前端组件类型", required = true)
+    @get:Schema(title = "key值前端组件类型", required = true)
     val keyType: String,
-    @Schema(title = "key值获取方式", required = true)
+    @get:Schema(title = "key值获取方式", required = true)
     val keyListType: String,
-    @Schema(title = "key值获取路径", required = true)
+    @get:Schema(title = "key值获取路径", required = true)
     val keyUrl: String,
-    @Schema
+    @get:Schema
     val keyUrlQuery: List<String>,
-    @Schema(title = "key值获取集合", required = true)
+    @get:Schema(title = "key值获取集合", required = true)
     val keyList: List<StartUpInfo>,
-    @Schema(title = "key值是否多选", required = true)
+    @get:Schema(title = "key值是否多选", required = true)
     val keyMultiple: Boolean,
-    @Schema(title = "参数value值", required = true)
+    @get:Schema(title = "参数value值", required = true)
     val value: Any,
-    @Schema(title = "value值是否可以更改", required = true)
+    @get:Schema(title = "value值是否可以更改", required = true)
     val valueDisable: Boolean,
-    @Schema(title = "value值前端组件类型", required = true)
+    @get:Schema(title = "value值前端组件类型", required = true)
     val valueType: String,
-    @Schema(title = "value值获取方式", required = true)
+    @get:Schema(title = "value值获取方式", required = true)
     val valueListType: String,
-    @Schema(title = "value值获取路径", required = true)
+    @get:Schema(title = "value值获取路径", required = true)
     val valueUrl: String,
-    @Schema
+    @get:Schema
     val valueUrlQuery: List<String>,
-    @Schema(title = "value值获取集合", required = true)
+    @get:Schema(title = "value值获取集合", required = true)
     val valueList: List<StartUpInfo>,
-    @Schema(title = "value值是否多选", required = true)
+    @get:Schema(title = "value值是否多选", required = true)
     val valueMultiple: Boolean
 )

@@ -5,16 +5,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "第三方构建Docker登录调试完成信息")
 data class ThirdPartyDockerDebugDoneInfo(
-    @Schema(title = "项目id")
+    @get:Schema(title = "项目id")
     val projectId: String,
-    @Schema(title = "debugId")
+    @get:Schema(title = "debugId")
     val debugId: Long,
-    @Schema(title = "流水线id")
+    @get:Schema(title = "流水线id")
     val pipelineId: String,
-    @Schema(title = "debug链接")
+    @get:Schema(title = "debug链接")
     val debugUrl: String,
-    @Schema(title = "是否成功")
+    @get:Schema(title = "是否成功")
     val success: Boolean,
-    @Schema(title = "错误信息")
+    @get:Schema(title = "错误信息")
     val error: Error?
 )

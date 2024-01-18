@@ -31,16 +31,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线-插件分类信息")
 data class MarketAtomClassify(
-    @Schema(title = "插件分类ID", required = true)
+    @get:Schema(title = "插件分类ID", required = true)
     val id: String,
-    @Schema(title = "插件分类编码", required = true)
+    @get:Schema(title = "插件分类编码", required = true)
     val classifyCode: String,
-    @Schema(title = "插件分类名称", required = true)
+    @get:Schema(title = "插件分类名称", required = true)
     val classifyName: String,
-    @Schema(title = "插件数量", required = true)
+    @get:Schema(title = "插件数量", required = true)
     val atomNum: Int,
-    @Schema(title = "创建日期")
+    @get:Schema(title = "创建日期")
     val createTime: Long = 0,
-    @Schema(title = "更新日期")
+    @get:Schema(title = "更新日期")
     val updateTime: Long = 0
 )

@@ -31,24 +31,24 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线插件替换历史")
 data class PipelineAtomReplaceHistory(
-    @Schema(title = "项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(title = "业务ID", required = true)
+    @get:Schema(title = "业务ID", required = true)
     val busId: String,
-    @Schema(title = "业务类型", required = true)
+    @get:Schema(title = "业务类型", required = true)
     val busType: String,
-    @Schema(title = "源版本号", required = true)
+    @get:Schema(title = "源版本号", required = true)
     val sourceVersion: Int,
-    @Schema(title = "目标版本号", required = false)
+    @get:Schema(title = "目标版本号", required = false)
     val targetVersion: Int? = null,
-    @Schema(title = "状态", required = true)
+    @get:Schema(title = "状态", required = true)
     val status: String,
-    @Schema(title = "插件替换基本信息ID", required = true)
+    @get:Schema(title = "插件替换基本信息ID", required = true)
     val baseId: String,
-    @Schema(title = "插件替换项信息ID", required = true)
+    @get:Schema(title = "插件替换项信息ID", required = true)
     val itemId: String,
-    @Schema(title = "用户ID", required = true)
+    @get:Schema(title = "用户ID", required = true)
     val userId: String,
-    @Schema(title = "日志", required = false)
+    @get:Schema(title = "日志", required = false)
     val log: String? = null
 )

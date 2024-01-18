@@ -32,46 +32,46 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "git项目信息")
 data class GitProjectInfo(
-    @Schema(title = "项目ID", description = "id")
+    @get:Schema(title = "项目ID", description = "id")
     @JsonProperty("id")
     val id: Long,
-    @Schema(title = "项目名称", description = "name")
+    @get:Schema(title = "项目名称", description = "name")
     @JsonProperty("name")
     val name: String,
-    @Schema(title = "命名空间名称", description = "name_with_namespace")
+    @get:Schema(title = "命名空间名称", description = "name_with_namespace")
     @JsonProperty("name_with_namespace")
     val namespaceName: String,
-    @Schema(title = "可见范围", description = "visibility_level")
+    @get:Schema(title = "可见范围", description = "visibility_level")
     @JsonProperty("visibility_level")
     val visibilityLevel: Int?,
-    @Schema(title = "仓库地址", required = true, description = "http_url_to_repo")
+    @get:Schema(title = "仓库地址", required = true, description = "http_url_to_repo")
     @JsonProperty("http_url_to_repo")
     val repositoryUrl: String,
-    @Schema(title = "页面地址", description = "web_url")
+    @get:Schema(title = "页面地址", description = "web_url")
     @JsonProperty("web_url")
     val homepage: String?,
-    @Schema(title = "HTTPS链接", description = "https_url_to_repo")
+    @get:Schema(title = "HTTPS链接", description = "https_url_to_repo")
     @JsonProperty("https_url_to_repo")
     val gitHttpsUrl: String?,
-    @Schema(title = "gitSshUrl", description = "ssh_url_to_repo")
+    @get:Schema(title = "gitSshUrl", description = "ssh_url_to_repo")
     @JsonProperty("ssh_url_to_repo")
     val gitSshUrl: String?,
-    @Schema(title = "带有名空间的项目路径", description = "path_with_namespace")
+    @get:Schema(title = "带有名空间的项目路径", description = "path_with_namespace")
     @JsonProperty("path_with_namespace")
     val pathWithNamespace: String?,
-    @Schema(title = "项目的默认分支", description = "default_branch")
+    @get:Schema(title = "项目的默认分支", description = "default_branch")
     @JsonProperty("default_branch")
     val defaultBranch: String?,
-    @Schema(title = "项目的描述信息", description = "description")
+    @get:Schema(title = "项目的描述信息", description = "description")
     @JsonProperty("description")
     val description: String?,
-    @Schema(title = "项目的头像信息", description = "avatar_url")
+    @get:Schema(title = "项目的头像信息", description = "avatar_url")
     @JsonProperty("avatar_url")
     val avatarUrl: String?,
-    @Schema(title = "项目创建时间", description = "created_at")
+    @get:Schema(title = "项目创建时间", description = "created_at")
     @JsonProperty("created_at")
     val createdAt: String?,
-    @Schema(title = "项目创建人id", description = "creator_id")
+    @get:Schema(title = "项目创建人id", description = "creator_id")
     @JsonProperty("creator_id")
     val creatorId: String?
 )

@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "自定义报告-报告信息")
 data class Report(
-    @Schema(title = "名称", required = true)
+    @get:Schema(title = "名称", required = true)
     val name: String,
-    @Schema(title = "首页地址", required = true)
+    @get:Schema(title = "首页地址", required = true)
     val indexFileUrl: String,
-    @Schema(title = "报告类型", required = true)
+    @get:Schema(title = "报告类型", required = true)
     val type: String
 )

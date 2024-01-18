@@ -5,11 +5,11 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "用户部门详细信息")
 data class BkUserDeptInfo(
-    @Schema(title = "id")
+    @get:Schema(title = "id")
     val id: String?,
-    @Schema(title = "部门名称")
+    @get:Schema(title = "部门名称")
     val name: String?,
-    @Schema(title = "部门详细名称")
+    @get:Schema(title = "部门详细名称")
     @JsonProperty("full_name")
     val fullName: String?
 )

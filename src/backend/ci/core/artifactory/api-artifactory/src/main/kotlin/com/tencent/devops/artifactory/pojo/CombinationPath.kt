@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "版本仓库-组合路径")
 data class CombinationPath(
-    @Schema(title = "原路径列表", required = true)
+    @get:Schema(title = "原路径列表", required = true)
     val srcPaths: List<String>,
-    @Schema(title = "目标路径", required = true)
+    @get:Schema(title = "目标路径", required = true)
     val destPath: String
 )

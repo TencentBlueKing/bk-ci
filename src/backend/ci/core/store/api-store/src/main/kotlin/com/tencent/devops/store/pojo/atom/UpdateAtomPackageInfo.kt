@@ -32,12 +32,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "升级插件包信息")
 data class UpdateAtomPackageInfo(
-    @Schema(title = "插件ID")
+    @get:Schema(title = "插件ID")
     val atomId: String,
-    @Schema(title = "国际化资源目录路径")
+    @get:Schema(title = "国际化资源目录路径")
     val i18nDir: String,
-    @Schema(title = "包路径")
+    @get:Schema(title = "包路径")
     val packagePath: String?,
-    @Schema(title = "插件包资源类型")
+    @get:Schema(title = "插件包资源类型")
     val atomPackageSourceType: PackageSourceTypeEnum
 )

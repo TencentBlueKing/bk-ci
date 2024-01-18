@@ -32,20 +32,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件运行时信息")
 data class AtomRunInfo(
-    @Schema(title = "插件代码", required = true)
+    @get:Schema(title = "插件代码", required = true)
     val atomCode: String,
-    @Schema(title = "插件名称", required = true)
+    @get:Schema(title = "插件名称", required = true)
     var atomName: String,
-    @Schema(title = "插件版本号", required = true)
+    @get:Schema(title = "插件版本号", required = true)
     val version: String,
-    @Schema(title = "插件状态")
+    @get:Schema(title = "插件状态")
     val atomStatus: Byte? = null,
-    @Schema(title = "插件初始化项目代码", required = true)
+    @get:Schema(title = "插件初始化项目代码", required = true)
     val initProjectCode: String,
-    @Schema(title = "Job类型", required = false)
+    @get:Schema(title = "Job类型", required = false)
     var jobType: JobTypeEnum?,
-    @Schema(title = "无构建环境插件是否可以在有构建环境运行标识", required = false)
+    @get:Schema(title = "无构建环境插件是否可以在有构建环境运行标识", required = false)
     var buildLessRunFlag: Boolean?,
-    @Schema(title = "输入字段类型信息数据", required = false)
+    @get:Schema(title = "输入字段类型信息数据", required = false)
     var inputTypeInfos: Map<String, String>?
 )

@@ -37,27 +37,27 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "SVN仓库代码提交触发", description = CodeSVNWebHookTriggerElement.classType)
 data class CodeSVNWebHookTriggerElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "SVN变更触发",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "仓库ID", required = true)
+    @get:Schema(title = "仓库ID", required = true)
     val repositoryHashId: String?,
-    @Schema(title = "路径过滤类型", required = true)
+    @get:Schema(title = "路径过滤类型", required = true)
     val pathFilterType: PathFilterType? = PathFilterType.NamePrefixFilter,
-    @Schema(title = "相对路径", required = true)
+    @get:Schema(title = "相对路径", required = true)
     val relativePath: String?,
-    @Schema(title = "排除的路径", required = false)
+    @get:Schema(title = "排除的路径", required = false)
     val excludePaths: String?,
-    @Schema(title = "用户黑名单", required = false)
+    @get:Schema(title = "用户黑名单", required = false)
     val excludeUsers: List<String>?,
-    @Schema(title = "用户白名单", required = false)
+    @get:Schema(title = "用户白名单", required = false)
     val includeUsers: List<String>?,
-    @Schema(title = "新版的svn原子的类型")
+    @get:Schema(title = "新版的svn原子的类型")
     val repositoryType: RepositoryType? = null,
-    @Schema(title = "新版的svn代码库名")
+    @get:Schema(title = "新版的svn代码库名")
     val repositoryName: String? = null
 ) : WebHookTriggerElement(name, id, status) {
     companion object {

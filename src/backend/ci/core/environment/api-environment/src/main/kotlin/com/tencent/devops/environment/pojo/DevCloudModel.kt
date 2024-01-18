@@ -31,18 +31,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "DevCloud容器机型")
 data class DevCloudModel(
-    @Schema(title = "moduleId", required = true)
+    @get:Schema(title = "moduleId", required = true)
     val moduleId: String,
-    @Schema(title = "机型名称", required = true)
+    @get:Schema(title = "机型名称", required = true)
     val moduleName: String,
-    @Schema(title = "CPU", required = true)
+    @get:Schema(title = "CPU", required = true)
     val cpu: Int,
-    @Schema(title = "Memory", required = true)
+    @get:Schema(title = "Memory", required = true)
     val memory: String,
-    @Schema(title = "Disk", required = true)
+    @get:Schema(title = "Disk", required = true)
     val disk: String,
-    @Schema(title = "description", required = true)
+    @get:Schema(title = "description", required = true)
     val description: List<String>?,
-    @Schema(title = "description", required = true)
+    @get:Schema(title = "description", required = true)
     val produceTime: String?
 )

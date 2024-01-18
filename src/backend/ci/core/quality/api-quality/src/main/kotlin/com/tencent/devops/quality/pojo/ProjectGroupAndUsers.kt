@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "质量红线-项目用户组和所有人员")
 data class ProjectGroupAndUsers(
-    @Schema(title = "组名称")
+    @get:Schema(title = "组名称")
     val groupName: String,
-    @Schema(title = "组ID")
+    @get:Schema(title = "组ID")
     val groupId: String,
-    @Schema(title = "组员")
+    @get:Schema(title = "组员")
     val users: Set<String>
 )

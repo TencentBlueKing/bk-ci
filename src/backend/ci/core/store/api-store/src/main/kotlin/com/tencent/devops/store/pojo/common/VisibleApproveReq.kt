@@ -31,11 +31,11 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "审核可见范围请求报文")
 data class VisibleApproveReq(
-    @Schema(title = "审核结果：PASS：通过|REJECT：驳回")
+    @get:Schema(title = "审核结果：PASS：通过|REJECT：驳回")
     val result: String,
-    @Schema(title = "审核结果说明")
+    @get:Schema(title = "审核结果说明")
     val message: String,
-    @Schema(title = "机构ID列表")
+    @get:Schema(title = "机构ID列表")
     val deptIdList: List<Int>
 
 )

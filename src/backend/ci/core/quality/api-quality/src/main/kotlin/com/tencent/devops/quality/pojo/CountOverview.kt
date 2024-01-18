@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "质量红线-总览")
 data class CountOverview(
-    @Schema(title = "规则数", required = true)
+    @get:Schema(title = "规则数", required = true)
     val ruleCount: Int,
-    @Schema(title = "指标数", required = true)
+    @get:Schema(title = "指标数", required = true)
     val metadataCount: Int,
-    @Schema(title = "拦截数", required = true)
+    @get:Schema(title = "拦截数", required = true)
     val interceptCount: Int,
-    @Schema(title = "流水线数", required = true)
+    @get:Schema(title = "流水线数", required = true)
     val pipelineCount: Int
 )

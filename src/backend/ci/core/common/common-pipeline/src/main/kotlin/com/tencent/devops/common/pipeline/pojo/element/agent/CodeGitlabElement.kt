@@ -36,29 +36,29 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "拉取Gitlab仓库代码", description = CodeGitlabElement.classType)
 data class CodeGitlabElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "代码库哈希ID", required = true)
+    @get:Schema(title = "代码库哈希ID", required = true)
     val repositoryHashId: String?,
-    @Schema(title = "分支名称", required = false)
+    @get:Schema(title = "分支名称", required = false)
     val branchName: String? = null,
-    @Schema(title = "revision 用于强制指定commitId", required = false)
+    @get:Schema(title = "revision 用于强制指定commitId", required = false)
     var revision: String? = null,
-    @Schema(title = "checkout 策略", required = false)
+    @get:Schema(title = "checkout 策略", required = false)
     val strategy: CodePullStrategy? = CodePullStrategy.INCREMENT_UPDATE,
-    @Schema(title = "代码存放路径", required = false)
+    @get:Schema(title = "代码存放路径", required = false)
     val path: String? = null,
-    @Schema(title = "启动Submodule", required = false)
+    @get:Schema(title = "启动Submodule", required = false)
     val enableSubmodule: Boolean? = true,
-    @Schema(title = "Git指定拉取方式", required = false)
+    @get:Schema(title = "Git指定拉取方式", required = false)
     val gitPullMode: GitPullMode?,
-    @Schema(title = "新版的gitlab原子的类型")
+    @get:Schema(title = "新版的gitlab原子的类型")
     val repositoryType: RepositoryType? = null,
-    @Schema(title = "新版的gitlab代码库名")
+    @get:Schema(title = "新版的gitlab代码库名")
     val repositoryName: String? = null
 ) : Element(name, id, status) {
 

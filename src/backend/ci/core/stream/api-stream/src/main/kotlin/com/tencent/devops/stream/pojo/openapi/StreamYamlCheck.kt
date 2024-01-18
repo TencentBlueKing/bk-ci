@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "stream检验yaml格式模型")
 data class StreamYamlCheck(
-    @Schema(title = "yaml 原文", required = true)
+    @get:Schema(title = "yaml 原文", required = true)
     val originYaml: String,
-    @Schema(title = "模板类型", required = false)
+    @get:Schema(title = "模板类型", required = false)
     val templateType: String?,
-    @Schema(title = "是否为流水线yaml", required = true)
+    @get:Schema(title = "是否为流水线yaml", required = true)
     val checkCiFile: Boolean
 )

@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "消息通知的标题和内容")
 data class NotifyContext(
-    @Schema(title = "消息标题", required = true)
+    @get:Schema(title = "消息标题", required = true)
     val title: String,
-    @Schema(title = "消息文本", required = true)
+    @get:Schema(title = "消息文本", required = true)
     val body: String
 )

@@ -32,11 +32,11 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线视图-通过label过滤", description = PipelineViewFilterByLabel.classType)
 data class PipelineViewFilterByLabel(
-    @Schema(title = "条件", required = false)
+    @get:Schema(title = "条件", required = false)
     val condition: Condition,
-    @Schema(title = "流水线id", required = false)
+    @get:Schema(title = "流水线id", required = false)
     val groupId: String,
-    @Schema(title = "标签id列表", required = false)
+    @get:Schema(title = "标签id列表", required = false)
     val labelIds: List<String>
 ) : PipelineViewFilter() {
     companion object {

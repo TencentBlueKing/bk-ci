@@ -32,13 +32,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "动态模型")
 data class ActivityInfo(
-    @Schema(title = "名称")
+    @get:Schema(title = "名称")
     val name: String,
-    @Schema(title = "英文名")
+    @get:Schema(title = "英文名")
     val englishName: String? = "NEW",
-    @Schema(title = "链接")
+    @get:Schema(title = "链接")
     val link: String,
-    @Schema(title = "创建时间", description = "create_time")
+    @get:Schema(title = "创建时间", description = "create_time")
     @JsonProperty("create_time")
     val createTime: String?
 )

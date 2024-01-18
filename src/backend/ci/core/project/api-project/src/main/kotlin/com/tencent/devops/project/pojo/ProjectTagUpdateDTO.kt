@@ -34,21 +34,21 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "项目consul tag修改入参")
 data class ProjectTagUpdateDTO(
     @JsonProperty(value = "routerTag", required = true)
-    @Schema(title = "项目对应的router tags", description = "routerTag")
+    @get:Schema(title = "项目对应的router tags", description = "routerTag")
     val routerTag: String,
     @JsonProperty(value = "projectCodeList", required = false)
-    @Schema(title = "项目编码集合", description = "projectCodeList")
+    @get:Schema(title = "项目编码集合", description = "projectCodeList")
     val projectCodeList: List<String>?,
     @JsonProperty(value = "bgId", required = false)
-    @Schema(title = "BgId", description = "bgId")
+    @get:Schema(title = "BgId", description = "bgId")
     val bgId: Long?,
     @JsonProperty(value = "centerId", required = false)
-    @Schema(title = "centerId", description = "centerId")
+    @get:Schema(title = "centerId", description = "centerId")
     val centerId: Long?,
     @JsonProperty(value = "deptId", required = false)
-    @Schema(title = "deptId", description = "deptId")
+    @get:Schema(title = "deptId", description = "deptId")
     val deptId: Long?,
     @JsonProperty(value = "channel", required = false)
-    @Schema(title = "channel", description = "channel")
+    @get:Schema(title = "channel", description = "channel")
     val channel: String?
 )

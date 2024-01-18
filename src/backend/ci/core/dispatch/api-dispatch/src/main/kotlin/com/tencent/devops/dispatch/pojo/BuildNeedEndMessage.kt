@@ -35,8 +35,8 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "构建结束信息")
 data class BuildNeedEndMessage(
-    @Schema(title = "构建ID", required = true)
+    @get:Schema(title = "构建ID", required = true)
     val buildId: String,
-    @Schema(title = "构建开始时间", required = true)
+    @get:Schema(title = "构建开始时间", required = true)
     val startTime: Long
 )

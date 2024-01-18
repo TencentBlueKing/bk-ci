@@ -34,17 +34,17 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "rtx消息类型")
 open class RtxNotifyMessage : BaseMessage() {
 
-    @Schema(title = "通知接收者")
+    @get:Schema(title = "通知接收者")
     private val receivers: MutableSet<String> = mutableSetOf()
-    @Schema(title = "RTX通知内容")
+    @get:Schema(title = "RTX通知内容")
     var body: String = ""
-    @Schema(title = "通知发送者")
+    @get:Schema(title = "通知发送者")
     var sender: String = ""
-    @Schema(title = "RTX通知标题")
+    @get:Schema(title = "RTX通知标题")
     var title: String = ""
-    @Schema(title = "优先级", allowableValues = ["-1", "0", "1"], type = "int")
+    @get:Schema(title = "优先级", allowableValues = ["-1", "0", "1"], type = "int")
     var priority: EnumNotifyPriority = EnumNotifyPriority.HIGH
-    @Schema(title = "通知来源", allowableValues = ["0", "1"], type = "int")
+    @get:Schema(title = "通知来源", allowableValues = ["0", "1"], type = "int")
     var source: EnumNotifySource = EnumNotifySource.BUSINESS_LOGIC
 
     fun addReceiver(receiver: String) {
@@ -63,7 +63,7 @@ open class RtxNotifyMessage : BaseMessage() {
         receivers.clear()
     }
 
-    @Schema(hidden = true)
+    @get:Schema(hidden = true)
     @JsonIgnore
     fun isReceiversEmpty(): Boolean {
         if (receivers.size == 0) return true

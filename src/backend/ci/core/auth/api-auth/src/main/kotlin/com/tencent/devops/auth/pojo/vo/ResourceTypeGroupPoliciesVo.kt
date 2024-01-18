@@ -32,10 +32,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "资源类型组策略")
 data class ResourceTypeGroupPoliciesVo(
-    @Schema(title = "资源类型")
+    @get:Schema(title = "资源类型")
     val resourceType: String,
-    @Schema(title = "策略名")
+    @get:Schema(title = "策略名")
     val name: String,
-    @Schema(title = "策略展示名")
+    @get:Schema(title = "策略展示名")
     val displayName: String
 )

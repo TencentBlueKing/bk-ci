@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "单项评分信息")
 data class ScoreItemInfo(
-    @Schema(title = "分数", required = true)
+    @get:Schema(title = "分数", required = true)
     val score: Int,
-    @Schema(title = "数量", required = true)
+    @get:Schema(title = "数量", required = true)
     val num: Int
 )

@@ -42,26 +42,26 @@ data class Job(
     @JsonProperty("mutex")
     val mutex: Mutex? = null,
     @JsonProperty("runs-on")
-    @Schema(title = "runs-on")
+    @get:Schema(title = "runs-on")
     val runsOn: RunsOn = RunsOn(),
     // val container: Container?,
     val services: List<Service>? = null,
-    @Schema(title = "if")
+    @get:Schema(title = "if")
     @JsonProperty("if")
     val ifField: String? = null,
     val steps: List<Step>?,
-    @Schema(title = "if-modify")
+    @get:Schema(title = "if-modify")
     @JsonProperty("if-modify")
     val ifModify: List<String>? = null,
-    @Schema(title = "timeout-minutes")
+    @get:Schema(title = "timeout-minutes")
     @JsonProperty("timeout-minutes")
     val timeoutMinutes: Int? = 480,
     val env: Map<String, String>? = emptyMap(),
-    @Schema(title = "continue-on-error")
+    @get:Schema(title = "continue-on-error")
     @JsonProperty("continue-on-error")
     val continueOnError: Boolean? = false,
     val strategy: Strategy? = null,
-    @Schema(title = "depend-on")
+    @get:Schema(title = "depend-on")
     @JsonProperty("depend-on")
     val dependOn: List<String>? = emptyList()
 )
@@ -104,28 +104,28 @@ data class ServiceWith(
 
 data class Strategy(
     val matrix: Any,
-    @Schema(title = "fast-kill")
+    @get:Schema(title = "fast-kill")
     @JsonProperty("fast-kill")
     val fastKill: Boolean? = null,
-    @Schema(title = "max-parallel")
+    @get:Schema(title = "max-parallel")
     @JsonProperty("max-parallel")
     val maxParallel: Int? = null
 )
 
 data class RunsOn(
-    @Schema(title = "self-hosted")
+    @get:Schema(title = "self-hosted")
     @JsonProperty("self-hosted")
     val selfHosted: Boolean? = false,
-    @Schema(title = "pool-name")
+    @get:Schema(title = "pool-name")
     @JsonProperty("pool-name")
     var poolName: String = JobRunsOnType.DOCKER.type,
     val container: Any? = null,
-    @Schema(title = "agent-selector")
+    @get:Schema(title = "agent-selector")
     @JsonProperty("agent-selector")
     val agentSelector: List<String>? = null,
     val workspace: String? = null,
     val xcode: String? = null,
-    @Schema(title = "queue-timeout-minutes")
+    @get:Schema(title = "queue-timeout-minutes")
     @JsonProperty("queue-timeout-minutes")
     val queueTimeoutMinutes: Int? = null,
     val needs: Map<String, String>? = null

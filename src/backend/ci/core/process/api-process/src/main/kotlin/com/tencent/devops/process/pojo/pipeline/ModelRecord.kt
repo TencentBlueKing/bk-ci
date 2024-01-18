@@ -36,68 +36,68 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "构建详情-构建信息")
 data class ModelRecord(
-    @Schema(title = "构建ID", required = true)
+    @get:Schema(title = "构建ID", required = true)
     val id: String,
-    @Schema(title = "流水线ID", required = true)
+    @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(title = "流水线名称", required = true)
+    @get:Schema(title = "流水线名称", required = true)
     val pipelineName: String,
-    @Schema(title = "启动用户", required = true)
+    @get:Schema(title = "启动用户", required = true)
     val userId: String,
-    @Schema(title = "触发用户", required = true)
+    @get:Schema(title = "触发用户", required = true)
     val triggerUser: String? = null,
-    @Schema(title = "触发条件", required = true)
+    @get:Schema(title = "触发条件", required = true)
     val trigger: String,
-    @Schema(title = "触发时间（进队列时间）", required = true)
+    @get:Schema(title = "触发时间（进队列时间）", required = true)
     val queueTime: Long,
-    @Schema(title = "执行开始时间", required = true)
+    @get:Schema(title = "执行开始时间", required = true)
     val startTime: Long?,
-    @Schema(title = "排队耗时（进队列到开始执行）", required = true)
+    @get:Schema(title = "排队耗时（进队列到开始执行）", required = true)
     val queueTimeCost: Long?,
-    @Schema(title = "执行结束时间", required = false)
+    @get:Schema(title = "执行结束时间", required = false)
     val endTime: Long?,
-    @Schema(title = "Build status", required = true)
+    @get:Schema(title = "Build status", required = true)
     val status: String,
-    @Schema(title = "Build Model", required = true)
+    @get:Schema(title = "Build Model", required = true)
     val model: Model,
-    @Schema(title = "服务器当前时间戳", required = true)
+    @get:Schema(title = "服务器当前时间戳", required = true)
     val currentTimestamp: Long,
-    @Schema(title = "构建号", required = true)
+    @get:Schema(title = "构建号", required = true)
     val buildNum: Int,
-    @Schema(title = "取消构建的用户", required = false)
+    @get:Schema(title = "取消构建的用户", required = false)
     val cancelUserId: String?,
-    @Schema(title = "本次执行的编排版本号", required = true)
+    @get:Schema(title = "本次执行的编排版本号", required = true)
     val curVersion: Int,
-    @Schema(title = "流水线当前最新版本号", required = true)
+    @get:Schema(title = "流水线当前最新版本号", required = true)
     val latestVersion: Int,
-    @Schema(title = "最新一次的构建buildNo", required = true)
+    @get:Schema(title = "最新一次的构建buildNo", required = true)
     val latestBuildNum: Int,
-    @Schema(title = "最近修改人", required = false)
+    @get:Schema(title = "最近修改人", required = false)
     val lastModifyUser: String?,
     @Deprecated("保留是为了兼容detail，后续耗时不再以executeTime为准")
-    @Schema(title = "执行耗时（排除系统耗时）流水线执行结束时才赋值", required = true)
+    @get:Schema(title = "执行耗时（排除系统耗时）流水线执行结束时才赋值", required = true)
     val executeTime: Long = 0,
-    @Schema(title = "流水线任务执行错误", required = false)
+    @get:Schema(title = "流水线任务执行错误", required = false)
     var errorInfoList: List<ErrorInfo>?,
-    @Schema(title = "已执行stage的状态", required = false)
+    @get:Schema(title = "已执行stage的状态", required = false)
     var stageStatus: List<BuildStageStatus>?,
-    @Schema(title = "触发审核人列表", required = false)
+    @get:Schema(title = "触发审核人列表", required = false)
     val triggerReviewers: List<String>? = null,
-    @Schema(title = "当前查询的执行次数", required = false)
+    @get:Schema(title = "当前查询的执行次数", required = false)
     val executeCount: Int,
     @Deprecated("信息已在recordList中存在")
-    @Schema(title = "历史重试执行人列表（有序）", required = true)
+    @get:Schema(title = "历史重试执行人列表（有序）", required = true)
     val startUserList: List<String>,
-    @Schema(title = "历史重试人列表（有序）", required = true)
+    @get:Schema(title = "历史重试人列表（有序）", required = true)
     val recordList: List<BuildRecordInfo>,
-    @Schema(title = "构建信息", required = false)
+    @get:Schema(title = "构建信息", required = false)
     var buildMsg: String?,
-    @Schema(title = "原材料", required = false)
+    @get:Schema(title = "原材料", required = false)
     val material: List<PipelineBuildMaterial>?,
-    @Schema(title = "备注", required = false)
+    @get:Schema(title = "备注", required = false)
     val remark: String?,
-    @Schema(title = "触发信息（包括代码库等）", required = false)
+    @get:Schema(title = "触发信息（包括代码库等）", required = false)
     val webhookInfo: WebhookInfo?,
-    @Schema(title = "约束模式下的模板信息", required = false)
+    @get:Schema(title = "约束模式下的模板信息", required = false)
     var templateInfo: TemplateInfo? = null
 )

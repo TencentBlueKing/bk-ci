@@ -31,26 +31,26 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件基本信息")
 data class AtomBaseInfo(
-    @Schema(title = "插件Id", required = true)
+    @get:Schema(title = "插件Id", required = true)
     val atomId: String,
-    @Schema(title = "插件代码", required = true)
+    @get:Schema(title = "插件代码", required = true)
     val atomCode: String,
-    @Schema(title = "插件版本号", required = true)
+    @get:Schema(title = "插件版本号", required = true)
     val version: String,
-    @Schema(title = "插件状态", required = true)
+    @get:Schema(title = "插件状态", required = true)
     val atomStatus: String,
-    @Schema(title = "插件开发语言", required = false)
+    @get:Schema(title = "插件开发语言", required = false)
     val language: String? = null,
-    @Schema(title = "分支", required = false)
+    @get:Schema(title = "分支", required = false)
     val branch: String? = null,
-    @Schema(title = "代码提交ID", required = false)
+    @get:Schema(title = "代码提交ID", required = false)
     val commitId: String? = null,
-    @Schema(title = "支持的操作系统名称", required = false)
+    @get:Schema(title = "支持的操作系统名称", required = false)
     val osName: String? = null,
-    @Schema(title = "支持的操作系统架构", required = false)
+    @get:Schema(title = "支持的操作系统架构", required = false)
     val osArch: String? = null,
-    @Schema(title = "不支持的操作系统组合信息", required = false)
+    @get:Schema(title = "不支持的操作系统组合信息", required = false)
     val invalidOsInfo: String? = null,
-    @Schema(title = "运行时版本", required = false)
+    @get:Schema(title = "运行时版本", required = false)
     val runtimeVersion: String? = null
 )

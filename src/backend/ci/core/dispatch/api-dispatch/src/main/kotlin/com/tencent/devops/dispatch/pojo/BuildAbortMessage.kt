@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "停止构建信息")
 data class BuildAbortMessage(
-    @Schema(title = "构建ID", required = true)
+    @get:Schema(title = "构建ID", required = true)
     val buildId: String,
-    @Schema(title = "用户ID", required = true)
+    @get:Schema(title = "用户ID", required = true)
     val userId: String,
-    @Schema(title = "虚拟Hash ID", required = true)
+    @get:Schema(title = "虚拟Hash ID", required = true)
     val vmHashId: String
 )

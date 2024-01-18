@@ -30,14 +30,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "镜像市场-镜像特性信息更新请求报文体")
 data class ImageFeatureUpdateRequest(
-    @Schema(title = "镜像代码", required = true)
+    @get:Schema(title = "镜像代码", required = true)
     val imageCode: String,
-    @Schema(title = "是否为公共镜像， TRUE：是 FALSE：不是", required = false)
+    @get:Schema(title = "是否为公共镜像， TRUE：是 FALSE：不是", required = false)
     val publicFlag: Boolean? = null,
-    @Schema(title = "是否推荐标识 true：推荐，false：不推荐", required = false)
+    @get:Schema(title = "是否推荐标识 true：推荐，false：不推荐", required = false)
     val recommendFlag: Boolean? = null,
-    @Schema(title = "是否官方认证， TRUE：是 FALSE：不是", required = false)
+    @get:Schema(title = "是否官方认证， TRUE：是 FALSE：不是", required = false)
     val certificationFlag: Boolean? = null,
-    @Schema(title = "删除标识", required = false)
+    @get:Schema(title = "删除标识", required = false)
     val deleteFlag: Boolean? = null
 )

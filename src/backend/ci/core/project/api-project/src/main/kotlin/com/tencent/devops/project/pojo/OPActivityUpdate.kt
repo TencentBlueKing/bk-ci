@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "最新动态-修改模型")
 data class OPActivityUpdate(
-    @Schema(title = "名称")
+    @get:Schema(title = "名称")
     val name: String,
-    @Schema(title = "英文名")
+    @get:Schema(title = "英文名")
     val englishName: String,
-    @Schema(title = "类型")
+    @get:Schema(title = "类型")
     val type: String,
-    @Schema(title = "状态")
+    @get:Schema(title = "状态")
     val status: String,
-    @Schema(title = "链接")
+    @get:Schema(title = "链接")
     val link: String
 )

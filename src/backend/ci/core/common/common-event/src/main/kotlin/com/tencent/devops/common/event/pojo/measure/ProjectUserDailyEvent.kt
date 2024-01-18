@@ -35,10 +35,10 @@ import java.time.LocalDate
 
 @Event(exchange = MQ.EXCHANGE_PROJECT_USER_DAILY_FANOUT)
 data class ProjectUserDailyEvent(
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     override val projectId: String,
-    @Schema(title = "用户ID")
+    @get:Schema(title = "用户ID")
     val userId: String,
-    @Schema(title = "统计日期")
+    @get:Schema(title = "统计日期")
     val theDate: LocalDate
 ) : IMeasureEvent(projectId = projectId, pipelineId = "", buildId = "")

@@ -32,16 +32,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "用户和组件可见范围校验请求报文")
 data class UserStoreDeptInfoRequest(
-    @Schema(title = "用户ID", required = true)
+    @get:Schema(title = "用户ID", required = true)
     val userId: String,
-    @Schema(title = "用户机构ID列表", required = true)
+    @get:Schema(title = "用户机构ID列表", required = true)
     val userDeptIdList: List<Int>,
-    @Schema(title = "store组件代码", required = true)
+    @get:Schema(title = "store组件代码", required = true)
     val storeCode: String,
-    @Schema(title = "store组件类型", required = true)
+    @get:Schema(title = "store组件类型", required = true)
     val storeType: StoreTypeEnum,
-    @Schema(title = "公共组件标识", required = true)
+    @get:Schema(title = "公共组件标识", required = true)
     val publicFlag: Boolean,
-    @Schema(title = "store组件机构信息列表", required = true)
+    @get:Schema(title = "store组件机构信息列表", required = true)
     val storeDepInfoList: List<DeptInfo>?
 )

@@ -32,21 +32,21 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "子流水线调用", description = SubPipelineCallElement.classType)
 data class SubPipelineCallElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "自流水线调用",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "子流水线ID", required = true)
+    @get:Schema(title = "子流水线ID", required = true)
     val subPipelineId: String = "",
-    @Schema(title = "是否异步", required = true)
+    @get:Schema(title = "是否异步", required = true)
     val asynchronous: Boolean,
-    @Schema(title = "新版的子流水线原子的类型")
+    @get:Schema(title = "新版的子流水线原子的类型")
     val subPipelineType: SubPipelineType? = SubPipelineType.ID,
-    @Schema(title = "新版的子流水线名")
+    @get:Schema(title = "新版的子流水线名")
     val subPipelineName: String? = null,
-    @Schema(title = "启动参数", required = false)
+    @get:Schema(title = "启动参数", required = false)
     val parameters: Map<String, String>?
 ) : Element(name, id, status) {
     companion object {

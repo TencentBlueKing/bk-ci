@@ -31,28 +31,28 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "构建机构建信息")
 data class AgentBuildInfo(
-    @Schema(title = "项目id")
+    @get:Schema(title = "项目id")
     val projectId: String,
-    @Schema(title = "构建机id")
+    @get:Schema(title = "构建机id")
     val agentId: String,
-    @Schema(title = "流水线id")
+    @get:Schema(title = "流水线id")
     val pipelineId: String,
-    @Schema(title = "流水线名称")
+    @get:Schema(title = "流水线名称")
     val pipelineName: String,
-    @Schema(title = "构建id")
+    @get:Schema(title = "构建id")
     val buildId: String,
-    @Schema(title = "构建计数")
+    @get:Schema(title = "构建计数")
     val buildNum: Int,
-    @Schema(title = "构建机编排序号")
+    @get:Schema(title = "构建机编排序号")
     val vmSeqId: String,
-    @Schema(title = "任务名")
+    @get:Schema(title = "任务名")
     val taskName: String,
-    @Schema(title = "状态")
+    @get:Schema(title = "状态")
     val status: String,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createdTime: Long,
-    @Schema(title = "更新时间")
+    @get:Schema(title = "更新时间")
     val updatedTime: Long,
-    @Schema(title = "工作空间")
+    @get:Schema(title = "工作空间")
     val workspace: String
 )

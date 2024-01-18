@@ -33,31 +33,31 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "人工审核", description = ManualReviewUserTaskElement.classType)
 data class ManualReviewUserTaskElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "人工审核",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "审核人", required = true)
+    @get:Schema(title = "审核人", required = true)
     var reviewUsers: MutableList<String> = mutableListOf(),
-    @Schema(title = "描述", required = false)
+    @get:Schema(title = "描述", required = false)
     var desc: String? = "",
-    @Schema(title = "审核意见", required = false)
+    @get:Schema(title = "审核意见", required = false)
     var suggest: String? = "",
-    @Schema(title = "参数列表", required = false)
+    @get:Schema(title = "参数列表", required = false)
     var params: MutableList<ManualReviewParam> = mutableListOf(),
-    @Schema(title = "输出变量名空间", required = false)
+    @get:Schema(title = "输出变量名空间", required = false)
     var namespace: String? = "",
-    @Schema(title = "发送的通知类型", required = false)
+    @get:Schema(title = "发送的通知类型", required = false)
     var notifyType: MutableList<String>? = null,
-    @Schema(title = "发送通知的标题", required = false)
+    @get:Schema(title = "发送通知的标题", required = false)
     var notifyTitle: String? = null,
-    @Schema(title = "是否以markdown格式发送审核说明", required = false)
+    @get:Schema(title = "是否以markdown格式发送审核说明", required = false)
     var markdownContent: Boolean? = false,
-    @Schema(title = "企业微信群id", required = false)
+    @get:Schema(title = "企业微信群id", required = false)
     var notifyGroup: MutableList<String>? = null,
-    @Schema(title = "审核提醒时间（小时），支持每隔x小时提醒一次", required = false)
+    @get:Schema(title = "审核提醒时间（小时），支持每隔x小时提醒一次", required = false)
     var reminderTime: Int? = null
 ) : Element(name, id, status) {
     companion object {

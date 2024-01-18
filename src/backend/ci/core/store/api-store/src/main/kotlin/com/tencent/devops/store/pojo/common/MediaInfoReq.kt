@@ -32,8 +32,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "媒体信息添加类")
 data class MediaInfoReq(
-    @Schema(title = "媒体url", required = true)
+    @get:Schema(title = "媒体url", required = true)
     val mediaUrl: String,
-    @Schema(title = "媒体类型", required = true)
+    @get:Schema(title = "媒体类型", required = true)
     val mediaType: MediaTypeEnum
 )

@@ -32,18 +32,18 @@ import java.time.LocalDateTime
 
 @Schema(title = "项目下展示插件配置持久化对象")
 data class AtomDisplayConfigPO(
-    @Schema(title = "主键ID")
+    @get:Schema(title = "主键ID")
     val id: Long,
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "userId")
+    @get:Schema(title = "userId")
     val userId: String,
-    @Schema(title = "插件标识")
+    @get:Schema(title = "插件标识")
     val atomCode: String,
-    @Schema(title = "插件名称")
+    @get:Schema(title = "插件名称")
     val atomName: String,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: LocalDateTime,
-    @Schema(title = "更新时间")
+    @get:Schema(title = "更新时间")
     val updateTime: LocalDateTime
 )

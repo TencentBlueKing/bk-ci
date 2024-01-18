@@ -6,14 +6,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "授权范围")
 data class SubjectScopeInfo(
-    @Schema(title = "ID")
+    @get:Schema(title = "ID")
     val id: String?,
-    @Schema(title = "name")
+    @get:Schema(title = "name")
     val name: String,
-    @Schema(title = "类型")
+    @get:Schema(title = "类型")
     val type: String? = SubjectScopeType.USER.value,
     @JsonProperty("full_name")
     val fullName: String? = "",
-    @Schema(title = "用户名")
+    @get:Schema(title = "用户名")
     val username: String? = ""
 )

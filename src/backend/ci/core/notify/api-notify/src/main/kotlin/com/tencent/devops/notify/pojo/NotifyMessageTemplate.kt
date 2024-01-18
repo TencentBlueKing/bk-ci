@@ -30,32 +30,32 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "消息通知")
 data class NotifyMessageTemplate(
-    @Schema(title = "ID", required = true)
+    @get:Schema(title = "ID", required = true)
     val id: String,
-    @Schema(title = "模板代码", required = true)
+    @get:Schema(title = "模板代码", required = true)
     val templateCode: String,
-    @Schema(title = "模板名称", required = true)
+    @get:Schema(title = "模板名称", required = true)
     val templateName: String,
-    @Schema(title = "适用的通知类型（EMAIL:邮件 RTX:企业微信 WECHAT:微信 SMS:短信）", required = true)
+    @get:Schema(title = "适用的通知类型（EMAIL:邮件 RTX:企业微信 WECHAT:微信 SMS:短信）", required = true)
     val notifyTypeScope: List<String>,
-    @Schema(title = "标题（邮件和RTX方式必填）", required = false)
+    @get:Schema(title = "标题（邮件和RTX方式必填）", required = false)
     val title: String? = "",
-    @Schema(title = "消息内容", required = true)
+    @get:Schema(title = "消息内容", required = true)
     val body: String,
-    @Schema(title = "优先级别", required = true)
+    @get:Schema(title = "优先级别", required = true)
     val priority: String,
-    @Schema(title = "通知来源", required = true)
+    @get:Schema(title = "通知来源", required = true)
     val source: Int,
-    @Schema(title = "邮件格式（邮件方式必填）", required = false)
+    @get:Schema(title = "邮件格式（邮件方式必填）", required = false)
     val bodyFormat: Int? = null,
-    @Schema(title = "邮件类型（邮件方式必填）", required = false)
+    @get:Schema(title = "邮件类型（邮件方式必填）", required = false)
     val emailType: Int? = null,
-    @Schema(title = "创建人", required = true)
+    @get:Schema(title = "创建人", required = true)
     val creator: String,
-    @Schema(title = "修改人", required = true)
+    @get:Schema(title = "修改人", required = true)
     val modifier: String,
-    @Schema(title = "创建日期", required = true)
+    @get:Schema(title = "创建日期", required = true)
     val createTime: Long = 0,
-    @Schema(title = "更新日期", required = true)
+    @get:Schema(title = "更新日期", required = true)
     val updateTime: Long = 0
 )

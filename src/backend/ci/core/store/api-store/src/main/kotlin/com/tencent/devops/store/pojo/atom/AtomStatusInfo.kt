@@ -6,13 +6,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件状态信息")
 data class AtomStatusInfo(
-    @Schema(title = "插件标识")
+    @get:Schema(title = "插件标识")
     val atomCode: String,
-    @Schema(title = "名称")
+    @get:Schema(title = "名称")
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val name: String,
-    @Schema(title = "版本号")
+    @get:Schema(title = "版本号")
     val version: String,
-    @Schema(title = "插件状态")
+    @get:Schema(title = "插件状态")
     val atomStatus: Byte
 )

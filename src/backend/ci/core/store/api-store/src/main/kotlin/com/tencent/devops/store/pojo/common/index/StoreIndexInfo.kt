@@ -31,16 +31,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "研发商店指标信息")
 data class StoreIndexInfo(
-    @Schema(title = "指标代码", required = true)
+    @get:Schema(title = "指标代码", required = true)
     val indexCode: String,
-    @Schema(title = "指标名称", required = true)
+    @get:Schema(title = "指标名称", required = true)
     val indexName: String,
-    @Schema(title = "图标地址", required = true)
+    @get:Schema(title = "图标地址", required = true)
     val iconUrl: String,
-    @Schema(title = "指标描述", required = true)
+    @get:Schema(title = "指标描述", required = true)
     val description: String,
-    @Schema(title = "等级名称", required = true)
+    @get:Schema(title = "等级名称", required = true)
     val indexLevelName: String,
-    @Schema(title = "指标状态显示", required = true)
+    @get:Schema(title = "指标状态显示", required = true)
     val hover: String
 )

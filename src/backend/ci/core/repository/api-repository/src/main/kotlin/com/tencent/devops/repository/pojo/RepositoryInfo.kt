@@ -32,18 +32,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "代码库模型-基本信息")
 data class RepositoryInfo(
-    @Schema(title = "仓库ID", required = false)
+    @get:Schema(title = "仓库ID", required = false)
     val repositoryId: Long?,
-    @Schema(title = "仓库哈希ID", required = false)
+    @get:Schema(title = "仓库哈希ID", required = false)
     val repositoryHashId: String?,
-    @Schema(title = "仓库别名", required = true)
+    @get:Schema(title = "仓库别名", required = true)
     val aliasName: String,
-    @Schema(title = "URL", required = true)
+    @get:Schema(title = "URL", required = true)
     val url: String,
-    @Schema(title = "类型", required = true)
+    @get:Schema(title = "类型", required = true)
     val type: ScmType,
-    @Schema(title = "最后更新时间", required = true)
+    @get:Schema(title = "最后更新时间", required = true)
     val updatedTime: Long,
-    @Schema(title = "创建人", required = false)
+    @get:Schema(title = "创建人", required = false)
     val createUser: String? = null
 )

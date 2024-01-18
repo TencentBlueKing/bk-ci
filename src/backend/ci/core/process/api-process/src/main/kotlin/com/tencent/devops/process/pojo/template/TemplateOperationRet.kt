@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "返回模型")
 data class TemplateOperationRet(
-    @Schema(title = "状态码", required = false)
+    @get:Schema(title = "状态码", required = false)
     val status: Int,
-    @Schema(title = "data 信息", required = false)
+    @get:Schema(title = "data 信息", required = false)
     val data: TemplateOperationMessage,
-    @Schema(title = "message 信息", required = false)
+    @get:Schema(title = "message 信息", required = false)
     val message: String
 )

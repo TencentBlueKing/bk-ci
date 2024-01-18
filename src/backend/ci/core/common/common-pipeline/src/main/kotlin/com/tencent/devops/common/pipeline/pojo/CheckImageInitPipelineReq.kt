@@ -31,20 +31,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "检查镜像合法性初始化流水线请求报文体")
 data class CheckImageInitPipelineReq(
-    @Schema(title = "流水线模型", required = true)
+    @get:Schema(title = "流水线模型", required = true)
     val pipelineModel: String,
-    @Schema(title = "镜像代码", required = true)
+    @get:Schema(title = "镜像代码", required = true)
     val imageCode: String,
-    @Schema(title = "镜像名称", required = true)
+    @get:Schema(title = "镜像名称", required = true)
     val imageName: String,
-    @Schema(title = "镜像版本号", required = true)
+    @get:Schema(title = "镜像版本号", required = true)
     val version: String,
-    @Schema(title = "镜像类型", required = false)
+    @get:Schema(title = "镜像类型", required = false)
     val imageType: String? = null,
-    @Schema(title = "镜像仓库", required = false)
+    @get:Schema(title = "镜像仓库", required = false)
     val registryHost: String? = null,
-    @Schema(title = "仓库用户名", required = false)
+    @get:Schema(title = "仓库用户名", required = false)
     val registryUser: String? = null,
-    @Schema(title = "仓库密码", required = false)
+    @get:Schema(title = "仓库密码", required = false)
     val registryPwd: String? = null
 )

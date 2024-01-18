@@ -32,54 +32,54 @@ import java.time.LocalDateTime
 
 @Schema(title = "质量红线指标PO")
 data class QualityIndicatorPO(
-    @Schema(title = "ID")
+    @get:Schema(title = "ID")
     val id: Long,
-    @Schema(title = "原子的ClassType")
+    @get:Schema(title = "原子的ClassType")
     val elementType: String?,
-    @Schema(title = "产出原子")
+    @get:Schema(title = "产出原子")
     var elementName: String?,
-    @Schema(title = "工具/原子子类")
+    @get:Schema(title = "工具/原子子类")
     val elementDetail: String?,
-    @Schema(title = "指标英文名")
+    @get:Schema(title = "指标英文名")
     val enName: String?,
-    @Schema(title = "指标中文名")
+    @get:Schema(title = "指标中文名")
     val cnName: String?,
-    @Schema(title = "指标所包含基础数据")
+    @get:Schema(title = "指标所包含基础数据")
     val metadataIds: String?,
-    @Schema(title = "默认操作")
+    @get:Schema(title = "默认操作")
     val defaultOperation: String?,
-    @Schema(title = "可用操作")
+    @get:Schema(title = "可用操作")
     val operationAvailable: String?,
-    @Schema(title = "默认阈值")
+    @get:Schema(title = "默认阈值")
     val threshold: String?,
-    @Schema(title = "阈值类型")
+    @get:Schema(title = "阈值类型")
     val thresholdType: String?,
-    @Schema(title = "描述")
+    @get:Schema(title = "描述")
     var desc: String?,
-    @Schema(title = "是否可修改")
+    @get:Schema(title = "是否可修改")
     val indicatorReadOnly: Boolean?,
-    @Schema(title = "阶段")
+    @get:Schema(title = "阶段")
     val stage: String?,
-    @Schema(title = "可见项目范围")
+    @get:Schema(title = "可见项目范围")
     val indicatorRange: String?,
-    @Schema(title = "是否启用")
+    @get:Schema(title = "是否启用")
     val enable: Boolean?,
-    @Schema(title = "指标类型")
+    @get:Schema(title = "指标类型")
     val type: String?,
-    @Schema(title = "指标标签，用于前端区分控制")
+    @get:Schema(title = "指标标签，用于前端区分控制")
     val tag: String?,
-    @Schema(title = "创建用户")
+    @get:Schema(title = "创建用户")
     val createUser: String?,
-    @Schema(title = "更新用户")
+    @get:Schema(title = "更新用户")
     val updateUser: String?,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: LocalDateTime?,
-    @Schema(title = "更新时间")
+    @get:Schema(title = "更新时间")
     val updateTime: LocalDateTime?,
-    @Schema(title = "插件版本号")
+    @get:Schema(title = "插件版本号")
     val atomVersion: String,
-    @Schema(title = "用户自定义提示日志")
+    @get:Schema(title = "用户自定义提示日志")
     val logPrompt: String,
-    @Schema(title = "指标权重")
+    @get:Schema(title = "指标权重")
     val weight: Int? = null
 )

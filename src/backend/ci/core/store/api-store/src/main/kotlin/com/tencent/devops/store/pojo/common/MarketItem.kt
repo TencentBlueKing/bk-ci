@@ -34,62 +34,62 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "研发商店组件信息")
 data class MarketItem(
-    @Schema(title = "ID")
+    @get:Schema(title = "ID")
     val id: String,
-    @Schema(title = "名称")
+    @get:Schema(title = "名称")
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val name: String,
-    @Schema(title = "标识")
+    @get:Schema(title = "标识")
     val code: String,
-    @Schema(title = "版本号")
+    @get:Schema(title = "版本号")
     val version: String,
-    @Schema(title = "类型")
+    @get:Schema(title = "类型")
     val type: String,
-    @Schema(title = "研发来源")
+    @get:Schema(title = "研发来源")
     val rdType: String,
-    @Schema(title = "分类")
+    @get:Schema(title = "分类")
     val classifyCode: String?,
-    @Schema(title = "所属范畴")
+    @get:Schema(title = "所属范畴")
     val category: String? = null,
-    @Schema(title = "logo链接")
+    @get:Schema(title = "logo链接")
     val logoUrl: String?,
-    @Schema(title = "发布者")
+    @get:Schema(title = "发布者")
     val publisher: String,
-    @Schema(title = "操作系统")
+    @get:Schema(title = "操作系统")
     val os: List<String>?,
-    @Schema(title = "下载量")
+    @get:Schema(title = "下载量")
     val downloads: Int?,
-    @Schema(title = "评分")
+    @get:Schema(title = "评分")
     val score: Double?,
-    @Schema(title = "简介")
+    @get:Schema(title = "简介")
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val summary: String?,
-    @Schema(title = "是否有权限安装标识")
+    @get:Schema(title = "是否有权限安装标识")
     val flag: Boolean,
-    @Schema(title = "是否公共标识")
+    @get:Schema(title = "是否公共标识")
     val publicFlag: Boolean,
-    @Schema(title = "无编译环境插件是否可以在编译环境下执行标识")
+    @get:Schema(title = "无编译环境插件是否可以在编译环境下执行标识")
     val buildLessRunFlag: Boolean?,
-    @Schema(title = "帮助文档")
+    @get:Schema(title = "帮助文档")
     val docsLink: String?,
-    @Schema(title = "修改人")
+    @get:Schema(title = "修改人")
     val modifier: String,
-    @Schema(title = "修改时间")
+    @get:Schema(title = "修改时间")
     val updateTime: String,
-    @Schema(title = "是否推荐标识 true：推荐，false：不推荐", required = false)
+    @get:Schema(title = "是否推荐标识 true：推荐，false：不推荐", required = false)
     val recommendFlag: Boolean? = null,
-    @Schema(title = "yaml可用标识 true：是，false：否")
+    @get:Schema(title = "yaml可用标识 true：是，false：否")
     val yamlFlag: Boolean? = null,
-    @Schema(title = "是否已在该项目安装 true：是，false：否")
+    @get:Schema(title = "是否已在该项目安装 true：是，false：否")
     val installed: Boolean? = null,
-    @Schema(title = "每日统计信息列表")
+    @get:Schema(title = "每日统计信息列表")
     val dailyStatisticList: List<StoreDailyStatistic>? = null,
-    @Schema(title = "荣誉信息列表")
+    @get:Schema(title = "荣誉信息列表")
     val honorInfos: List<HonorInfo>? = null,
-    @Schema(title = "指标信息列表")
+    @get:Schema(title = "指标信息列表")
     val indexInfos: List<StoreIndexInfo>? = null,
-    @Schema(title = "最近执行次数")
+    @get:Schema(title = "最近执行次数")
     val recentExecuteNum: Int? = null,
-    @Schema(title = "是否为受欢迎组件")
+    @get:Schema(title = "是否为受欢迎组件")
     val hotFlag: Boolean? = null
 )

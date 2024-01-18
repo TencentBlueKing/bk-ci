@@ -32,12 +32,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "鉴权记录实体")
 data class VerifyResourceRecordDTO(
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "资源类型")
+    @get:Schema(title = "资源类型")
     val resourceType: String,
-    @Schema(title = "资源Code")
+    @get:Schema(title = "资源Code")
     val resourceCode: String,
-    @Schema(title = "用户ID")
+    @get:Schema(title = "用户ID")
     val userId: String
 )

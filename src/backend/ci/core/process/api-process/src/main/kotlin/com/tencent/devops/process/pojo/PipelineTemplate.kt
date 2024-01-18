@@ -32,24 +32,24 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线-模板信息")
 data class PipelineTemplate(
-    @Schema(title = "模板名称", required = true)
+    @get:Schema(title = "模板名称", required = true)
     val name: String,
-    @Schema(title = "模板描述", required = false)
+    @get:Schema(title = "模板描述", required = false)
     val desc: String?,
-    @Schema(title = "应用范畴", required = true)
+    @get:Schema(title = "应用范畴", required = true)
     val category: List<String?>,
-    @Schema(title = "模板图标", required = false)
+    @get:Schema(title = "模板图标", required = false)
     val icon: String?,
-    @Schema(title = "模板LOGO路径", required = false)
+    @get:Schema(title = "模板LOGO路径", required = false)
     val logoUrl: String?,
-    @Schema(title = "模板作者", required = true)
+    @get:Schema(title = "模板作者", required = true)
     val author: String,
-    @Schema(title = "插件数量", required = true)
+    @get:Schema(title = "插件数量", required = true)
     val atomNum: Int,
-    @Schema(title = "当前模板对应的被复制的模板或安装的研发商店的模板对应的ID", required = true)
+    @get:Schema(title = "当前模板对应的被复制的模板或安装的研发商店的模板对应的ID", required = true)
     val srcTemplateId: String?,
-    @Schema(title = "是否为公共模版", required = true)
+    @get:Schema(title = "是否为公共模版", required = true)
     val publicFlag: Boolean,
-    @Schema(title = "阶段集合", required = true)
+    @get:Schema(title = "阶段集合", required = true)
     val stages: List<Stage>
 )

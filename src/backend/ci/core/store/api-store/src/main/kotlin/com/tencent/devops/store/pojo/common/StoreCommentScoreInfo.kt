@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "评论评分信息")
 data class StoreCommentScoreInfo(
-    @Schema(title = "平均分", required = true)
+    @get:Schema(title = "平均分", required = true)
     val avgScore: Double,
-    @Schema(title = "评分总份数", required = true)
+    @get:Schema(title = "评分总份数", required = true)
     val totalNum: Long,
-    @Schema(title = "单项评分信息列表", required = true)
+    @get:Schema(title = "单项评分信息列表", required = true)
     val scoreItemList: List<ScoreItemInfo>
 )

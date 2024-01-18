@@ -35,18 +35,18 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "")
 data class PipelineBuildMaterial(
-    @Schema(title = "代码库类型", required = false)
+    @get:Schema(title = "代码库类型", required = false)
     val scmType: String? = ScmType.CODE_TGIT.name,
-    @Schema(title = "别名", required = false)
+    @get:Schema(title = "别名", required = false)
     val aliasName: String?,
-    @Schema(title = "url 地址", required = false)
+    @get:Schema(title = "url 地址", required = false)
     val url: String,
-    @Schema(title = "分支名称", required = false)
+    @get:Schema(title = "分支名称", required = false)
     val branchName: String?,
-    @Schema(title = "当前最新提交id", required = false)
+    @get:Schema(title = "当前最新提交id", required = false)
     val newCommitId: String?,
-    @Schema(title = "当前提交备注信息", required = false)
+    @get:Schema(title = "当前提交备注信息", required = false)
     val newCommitComment: String?,
-    @Schema(title = "提交次数", required = false)
+    @get:Schema(title = "提交次数", required = false)
     val commitTimes: Int?
 )

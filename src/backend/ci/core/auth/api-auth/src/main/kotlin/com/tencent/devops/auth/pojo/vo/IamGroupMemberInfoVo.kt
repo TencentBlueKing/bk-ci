@@ -32,20 +32,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "组成员信息")
 data class IamGroupMemberInfoVo(
-    @Schema(title = "成员名")
+    @get:Schema(title = "成员名")
     val userId: String,
-    @Schema(title = "用户组ID")
+    @get:Schema(title = "用户组ID")
     val groupId: Int,
-    @Schema(title = "用户组名")
+    @get:Schema(title = "用户组名")
     val groupName: String,
-    @Schema(title = "加入时间")
+    @get:Schema(title = "加入时间")
     val createdTime: String,
-    @Schema(title = "是否加入组")
+    @get:Schema(title = "是否加入组")
     val status: String,
-    @Schema(title = "过期时间戳")
+    @get:Schema(title = "过期时间戳")
     val expiredAt: Long,
-    @Schema(title = "过期时间展示")
+    @get:Schema(title = "过期时间展示")
     val expiredDisplay: String,
-    @Schema(title = "是否直接加入")
+    @get:Schema(title = "是否直接加入")
     val directAdded: Boolean? = null
 )

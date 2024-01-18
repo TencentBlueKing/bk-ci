@@ -35,14 +35,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Event(exchange = MQ.EXCHANGE_AUTH_RBAC_LISTENER_EXCHANGE, routeKey = MQ.ROUTE_AUTH_RESOURCE_GROUP_MODIFY)
 data class AuthResourceGroupModifyEvent(
-    @Schema(title = "分级管理员ID或二级管理员ID")
+    @get:Schema(title = "分级管理员ID或二级管理员ID")
     val managerId: Int,
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectCode: String,
-    @Schema(title = "资源类型")
+    @get:Schema(title = "资源类型")
     val resourceType: String,
-    @Schema(title = "资源ID")
+    @get:Schema(title = "资源ID")
     val resourceCode: String,
-    @Schema(title = "资源名")
+    @get:Schema(title = "资源名")
     val resourceName: String
 ) : ITraceEvent()

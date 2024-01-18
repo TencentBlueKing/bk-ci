@@ -34,15 +34,15 @@ data class GitlabProjectInfo(
     val id: Int,
     val description: String,
     @JsonProperty("ssh_url_to_repo")
-    @Schema(title = "ssh_url_to_repo")
+    @get:Schema(title = "ssh_url_to_repo")
     val sshUrl: String,
     @JsonProperty("http_url_to_repo")
-    @Schema(title = "http_url_to_repo")
+    @get:Schema(title = "http_url_to_repo")
     val httpUrl: String,
     @JsonProperty("name")
-    @Schema(title = "name")
+    @get:Schema(title = "name")
     val name: String,
-    @Schema(title = "path_with_namespace")
+    @get:Schema(title = "path_with_namespace")
     @JsonProperty("path_with_namespace")
     val pathWithNamespace: String
 )

@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "提交返回模型")
 data class CommitResponse(
-    @Schema(title = "仓库名称")
+    @get:Schema(title = "仓库名称")
     val name: String,
-    @Schema(title = "插件ID")
+    @get:Schema(title = "插件ID")
     val elementId: String,
-    @Schema(title = "记录")
+    @get:Schema(title = "记录")
     val records: List<CommitData>
 )

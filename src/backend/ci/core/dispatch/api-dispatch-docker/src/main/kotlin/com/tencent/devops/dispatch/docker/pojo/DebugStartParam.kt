@@ -35,30 +35,30 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "启动webConsole调试请求参数")
 data class DebugStartParam(
-    @Schema(title = "项目id", required = true)
+    @get:Schema(title = "项目id", required = true)
     val projectId: String,
-    @Schema(title = "流水线Id", required = true)
+    @get:Schema(title = "流水线Id", required = true)
     val pipelineId: String,
-    @Schema(title = "vmSeqId", required = true)
+    @get:Schema(title = "vmSeqId", required = true)
     val vmSeqId: String,
-    @Schema(title = "imageType为BKSTORE时的镜像编码", required = false)
+    @get:Schema(title = "imageType为BKSTORE时的镜像编码", required = false)
     val imageCode: String? = null,
-    @Schema(title = "imageType为BKSTORE时的镜像版本", required = false)
+    @get:Schema(title = "imageType为BKSTORE时的镜像版本", required = false)
     val imageVersion: String? = null,
-    @Schema(title = "镜像名称", required = false)
+    @get:Schema(title = "镜像名称", required = false)
     val imageName: String? = null,
-    @Schema(title = "环境变量", required = true)
+    @get:Schema(title = "环境变量", required = true)
     val buildEnv: Map<String, String>?,
-    @Schema(title = "镜像类型(BKDEVOPS或THIRD或BKSTORE)", required = false)
+    @get:Schema(title = "镜像类型(BKDEVOPS或THIRD或BKSTORE)", required = false)
     val imageType: String? = null,
-    @Schema(title = "镜像仓库凭证ID", required = false)
+    @get:Schema(title = "镜像仓库凭证ID", required = false)
     val credentialId: String? = null,
-    @Schema(title = "启动命令", required = false)
+    @get:Schema(title = "启动命令", required = false)
     val cmd: String? = "/bin/sh",
-    @Schema(title = "镜像信息", required = false)
+    @get:Schema(title = "镜像信息", required = false)
     val containerPool: String? = null,
-    @Schema(title = "buildId", required = false)
+    @get:Schema(title = "buildId", required = false)
     val buildId: String? = null,
-    @Schema(title = "dispatchType", required = false)
+    @get:Schema(title = "dispatchType", required = false)
     val dispatchType: String = BuildType.DOCKER.name
 )

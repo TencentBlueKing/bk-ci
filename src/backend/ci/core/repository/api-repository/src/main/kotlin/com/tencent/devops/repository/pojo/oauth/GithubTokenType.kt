@@ -31,7 +31,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "github token 类型")
 enum class GithubTokenType(
-    @Schema(title = "前缀")
+    @get:Schema(title = "前缀")
     var prefix: String
 ) {
     GITHUB_APP("ghu_"),

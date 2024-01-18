@@ -31,6 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "批量获取插件依赖关系")
 data class GetRelyAtom(
-    @Schema(title = "请求所需参数", required = true)
+    @get:Schema(title = "请求所需参数", required = true)
     val thirdPartyElementList: List<ElementThirdPartySearchParam>
 )

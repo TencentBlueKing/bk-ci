@@ -30,14 +30,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "AppCode所属项目信息-response")
 data class AppCodeProjectResponse(
-    @Schema(title = "ID")
+    @get:Schema(title = "ID")
     val id: Long,
-    @Schema(title = "appCode")
+    @get:Schema(title = "appCode")
     val appCode: String,
-    @Schema(title = "项目ID(项目英文名)")
+    @get:Schema(title = "项目ID(项目英文名)")
     val projectId: String,
-    @Schema(title = "创建人")
+    @get:Schema(title = "创建人")
     val creator: String?,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: Long?
 )

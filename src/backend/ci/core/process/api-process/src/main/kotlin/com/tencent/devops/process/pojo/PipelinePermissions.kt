@@ -32,18 +32,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线-流水线权限")
 data class PipelinePermissions(
-    @Schema(title = "管理员权限", required = true)
+    @get:Schema(title = "管理员权限", required = true)
     val canManage: Boolean,
-    @Schema(title = "删除权限", required = true)
+    @get:Schema(title = "删除权限", required = true)
     val canDelete: Boolean,
-    @Schema(title = "查看权限", required = true)
+    @get:Schema(title = "查看权限", required = true)
     val canView: Boolean,
-    @Schema(title = "编辑权限", required = true)
+    @get:Schema(title = "编辑权限", required = true)
     val canEdit: Boolean,
-    @Schema(title = "执行权限", required = true)
+    @get:Schema(title = "执行权限", required = true)
     val canExecute: Boolean,
-    @Schema(title = "下载权限", required = true)
+    @get:Schema(title = "下载权限", required = true)
     val canDownload: Boolean,
-    @Schema(title = "分享权限", required = true)
+    @get:Schema(title = "分享权限", required = true)
     val canShare: Boolean
 )

@@ -32,26 +32,26 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "上架模板请求报文体")
 data class MarketTemplateUpdateRequest(
-    @Schema(title = "模板代码", required = true)
+    @get:Schema(title = "模板代码", required = true)
     val templateCode: String,
-    @Schema(title = "模板名称", required = true)
+    @get:Schema(title = "模板名称", required = true)
     val templateName: String,
-    @Schema(title = "模板类型，FREEDOM：自由模式 CONSTRAINT：约束模式", required = true)
+    @get:Schema(title = "模板类型，FREEDOM：自由模式 CONSTRAINT：约束模式", required = true)
     val templateType: TemplateTypeEnum,
-    @Schema(title = "应用范畴列表", required = true)
+    @get:Schema(title = "应用范畴列表", required = true)
     val categoryIdList: ArrayList<String>,
-    @Schema(title = "模板分类代码", required = true)
+    @get:Schema(title = "模板分类代码", required = true)
     val classifyCode: String,
-    @Schema(title = "模板标签列表", required = false)
+    @get:Schema(title = "模板标签列表", required = false)
     val labelIdList: ArrayList<String>?,
-    @Schema(title = "插件简介", required = false)
+    @get:Schema(title = "插件简介", required = false)
     val summary: String?,
-    @Schema(title = "插件描述", required = false)
+    @get:Schema(title = "插件描述", required = false)
     val description: String?,
-    @Schema(title = "logo地址", required = false)
+    @get:Schema(title = "logo地址", required = false)
     val logoUrl: String?,
-    @Schema(title = "发布者", required = true)
+    @get:Schema(title = "发布者", required = true)
     val publisher: String,
-    @Schema(title = "发布者描述", required = false)
+    @get:Schema(title = "发布者描述", required = false)
     val pubDescription: String?
 )

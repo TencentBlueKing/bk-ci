@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "镜像市场-镜像可见范围请求报文体")
 data class ImageVisibleDeptReq(
-    @Schema(title = "镜像代码", required = true)
+    @get:Schema(title = "镜像代码", required = true)
     val imageCode: String,
-    @Schema(title = "机构列表", required = true)
+    @get:Schema(title = "机构列表", required = true)
     val deptInfos: List<DeptInfo>
 )

@@ -32,16 +32,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "数据库分片信息")
 data class DataBasePiecewiseInfo(
-    @Schema(title = "项目ID/项目CODE")
+    @get:Schema(title = "项目ID/项目CODE")
     val projectId: String,
-    @Schema(title = "集群名称")
+    @get:Schema(title = "集群名称")
     val clusterName: String,
-    @Schema(title = "微服务模块名称")
+    @get:Schema(title = "微服务模块名称")
     val moduleCode: SystemModuleEnum,
-    @Schema(title = "数据源名称")
+    @get:Schema(title = "数据源名称")
     val dataSourceName: String,
-    @Schema(title = "路由规则")
+    @get:Schema(title = "路由规则")
     val routingRule: String,
-    @Schema(title = "数据源URL")
+    @get:Schema(title = "数据源URL")
     val dsUrl: String? = null
 )

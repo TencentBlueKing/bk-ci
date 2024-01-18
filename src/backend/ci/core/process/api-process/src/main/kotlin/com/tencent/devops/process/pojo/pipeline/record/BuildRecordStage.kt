@@ -39,29 +39,29 @@ import java.time.LocalDateTime
 @Schema(title = "构建详情记录-插件任务")
 @Suppress("LongParameterList")
 data class BuildRecordStage(
-    @Schema(title = "构建ID", required = true)
+    @get:Schema(title = "构建ID", required = true)
     val buildId: String,
-    @Schema(title = "项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(title = "流水线ID", required = true)
+    @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(title = "编排版本号", required = true)
+    @get:Schema(title = "编排版本号", required = true)
     val resourceVersion: Int,
-    @Schema(title = "步骤ID", required = true)
+    @get:Schema(title = "步骤ID", required = true)
     val stageId: String,
-    @Schema(title = "执行次数", required = true)
+    @get:Schema(title = "执行次数", required = true)
     val executeCount: Int,
-    @Schema(title = "步骤序号", required = true)
+    @get:Schema(title = "步骤序号", required = true)
     val stageSeq: Int,
-    @Schema(title = "执行变量", required = true)
+    @get:Schema(title = "执行变量", required = true)
     val stageVar: MutableMap<String, Any>,
-    @Schema(title = "构建状态", required = false)
+    @get:Schema(title = "构建状态", required = false)
     var status: String? = null,
-    @Schema(title = "开始时间", required = true)
+    @get:Schema(title = "开始时间", required = true)
     var startTime: LocalDateTime? = null,
-    @Schema(title = "结束时间", required = true)
+    @get:Schema(title = "结束时间", required = true)
     var endTime: LocalDateTime? = null,
-    @Schema(title = "业务时间戳集合", required = true)
+    @get:Schema(title = "业务时间戳集合", required = true)
     var timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
 ) {
     companion object {

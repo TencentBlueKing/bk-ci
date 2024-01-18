@@ -33,44 +33,44 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @Schema(title = "质量红线-指标配置列表信息")
 data class IndicatorData(
-    @Schema(title = "ID")
+    @get:Schema(title = "ID")
     val id: Long,
-    @Schema(title = "原子的ClassType")
+    @get:Schema(title = "原子的ClassType")
     val elementType: String?,
-    @Schema(title = "原子名称")
+    @get:Schema(title = "原子名称")
     val elementName: String?,
-    @Schema(title = "工具/原子子类")
+    @get:Schema(title = "工具/原子子类")
     val elementDetail: String?,
-    @Schema(title = "指标英文名")
+    @get:Schema(title = "指标英文名")
     val enName: String?,
-    @Schema(title = "指标中文名")
+    @get:Schema(title = "指标中文名")
     val cnName: String?,
-    @Schema(title = "指标所包含基础数据")
+    @get:Schema(title = "指标所包含基础数据")
     val metadataIds: String?,
-    @Schema(title = "指标所包含基础数据")
+    @get:Schema(title = "指标所包含基础数据")
     val metadataNames: String?,
-    @Schema(title = "默认操作类型")
+    @get:Schema(title = "默认操作类型")
     val defaultOperation: String?,
-    @Schema(title = "可用操作")
+    @get:Schema(title = "可用操作")
     val operationAvailable: String?,
-    @Schema(title = "默认阈值")
+    @get:Schema(title = "默认阈值")
     val threshold: String?,
-    @Schema(title = "阈值类型")
+    @get:Schema(title = "阈值类型")
     val thresholdType: String?,
-    @Schema(title = "描述")
+    @get:Schema(title = "描述")
     val desc: String?,
-    @Schema(title = "是否可修改")
+    @get:Schema(title = "是否可修改")
     val readOnly: Boolean?,
-    @Schema(title = "阶段")
+    @get:Schema(title = "阶段")
     val stage: String?,
-    @Schema(title = "可见范围类型(ANY, PART_BY_NAME)")
+    @get:Schema(title = "可见范围类型(ANY, PART_BY_NAME)")
     val range: String?,
-    @Schema(title = "指标类型")
+    @get:Schema(title = "指标类型")
     val type: String?,
-    @Schema(title = "指标标签，用于前端区分控制")
+    @get:Schema(title = "指标标签，用于前端区分控制")
     val tag: String?,
-    @Schema(title = "是否启用")
+    @get:Schema(title = "是否启用")
     val enable: Boolean?,
-    @Schema(title = "指标附加信息")
+    @get:Schema(title = "指标附加信息")
     val logPrompt: String?
 )

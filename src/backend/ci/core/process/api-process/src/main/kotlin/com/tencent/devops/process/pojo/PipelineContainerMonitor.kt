@@ -37,14 +37,14 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "")
 data class PipelineContainerMonitor(
-    @Schema(title = "操作系统类型", required = false)
+    @get:Schema(title = "操作系统类型", required = false)
     val osType: VMBaseOS,
-    @Schema(title = "创建类型", required = false)
+    @get:Schema(title = "创建类型", required = false)
     val buildType: BuildType,
-    @Schema(title = "最长启动时间", required = false)
+    @get:Schema(title = "最长启动时间", required = false)
     val maxStartupTime: Long,
-    @Schema(title = "最长执行时间", required = false)
+    @get:Schema(title = "最长执行时间", required = false)
     val maxExecuteTime: Long,
-    @Schema(title = "用户列表", required = false)
+    @get:Schema(title = "用户列表", required = false)
     val users: List<String>
 )

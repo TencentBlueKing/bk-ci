@@ -33,8 +33,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "P4提交列表")
 @JsonIgnoreProperties
 data class P4ChangeList(
-    @Schema(title = "提交信息", required = true)
+    @get:Schema(title = "提交信息", required = true)
     val description: String,
-    @Schema(title = "提交文件列表", required = true)
+    @get:Schema(title = "提交文件列表", required = true)
     val fileList: List<P4FileSpec>
 )

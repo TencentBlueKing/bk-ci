@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "CodeCC度量信息")
 data class CodeCheckInfoDO(
-    @Schema(title = "已解决缺陷数")
+    @get:Schema(title = "已解决缺陷数")
     val resolvedDefectNum: Int?,
-    @Schema(title = "codecc检查代码库平均分")
+    @get:Schema(title = "codecc检查代码库平均分")
     val repoCodeccAvgScore: Double?
 )

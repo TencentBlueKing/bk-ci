@@ -32,10 +32,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "研发商店荣誉关联信息")
 data class StoreHonorRel(
-    @Schema(title = "组件代码", required = true)
+    @get:Schema(title = "组件代码", required = true)
     val storeCode: String,
-    @Schema(title = "组件类型", required = true)
+    @get:Schema(title = "组件类型", required = true)
     val storeType: StoreTypeEnum,
-    @Schema(title = "荣誉ID", required = true)
+    @get:Schema(title = "荣誉ID", required = true)
     val honorId: String
 )

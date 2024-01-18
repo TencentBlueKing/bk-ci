@@ -87,28 +87,28 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class GitMrInfo(
     val title: String = "",
     @JsonProperty("target_project_id")
-    @Schema(title = "target_project_id")
+    @get:Schema(title = "target_project_id")
     val targetProjectId: String = "",
     @JsonProperty("target_branch")
-    @Schema(title = "target_branch")
+    @get:Schema(title = "target_branch")
     val targetBranch: String? = "",
     @JsonProperty("source_project_id")
-    @Schema(title = "source_project_id")
+    @get:Schema(title = "source_project_id")
     val sourceProjectId: String? = "",
     @JsonProperty("source_branch")
-    @Schema(title = "source_branch")
+    @get:Schema(title = "source_branch")
     val sourceBranch: String? = "",
     @JsonProperty("created_at")
-    @Schema(title = "created_at")
+    @get:Schema(title = "created_at")
     val createTime: String? = "",
     @JsonProperty("updated_at")
-    @Schema(title = "updated_at")
+    @get:Schema(title = "updated_at")
     val updateTime: String? = "",
     @JsonProperty("iid")
-    @Schema(title = "iid")
+    @get:Schema(title = "iid")
     val mrNumber: String = "",
     @JsonProperty("id")
-    @Schema(title = "id")
+    @get:Schema(title = "id")
     val mrId: String = "",
     val labels: List<String>,
     val description: String? = "",
@@ -116,53 +116,53 @@ data class GitMrInfo(
     val milestone: GitMrInfoMilestone? = null,
     val author: GitMrInfoAuthor = GitMrInfoAuthor(),
     @JsonProperty("merge_status")
-    @Schema(title = "merge_status")
+    @get:Schema(title = "merge_status")
     val mergeStatus: String = "",
     @JsonProperty("base_commit")
-    @Schema(title = "base_commit")
+    @get:Schema(title = "base_commit")
     val baseCommit: String?
 ) {
     data class GitMrInfoAssignee(
         @JsonProperty("id")
-        @Schema(title = "id")
+        @get:Schema(title = "id")
         val id: Int = 0,
         val username: String = "",
         @JsonProperty("web_url")
-        @Schema(title = "web_url")
+        @get:Schema(title = "web_url")
         val webUrl: String = "",
         @JsonProperty("avatar_url")
-        @Schema(title = "avatar_url")
+        @get:Schema(title = "avatar_url")
         val avatarUrl: String = ""
     )
 
     data class GitMrInfoMilestone(
         @JsonProperty("id")
-        @Schema(title = "id")
+        @get:Schema(title = "id")
         val id: Int = 0,
         @JsonProperty("title")
-        @Schema(title = "title")
+        @get:Schema(title = "title")
         val title: String = "",
         @JsonProperty("due_date")
-        @Schema(title = "due_date")
+        @get:Schema(title = "due_date")
         val dueDate: String = "",
         val description: String? = ""
     )
 
     data class GitMrInfoAuthor(
         @JsonProperty("id")
-        @Schema(title = "id")
+        @get:Schema(title = "id")
         val id: Int = 0,
         @JsonProperty("username")
-        @Schema(title = "username")
+        @get:Schema(title = "username")
         val username: String = "",
         @JsonProperty("web_url")
-        @Schema(title = "web_url")
+        @get:Schema(title = "web_url")
         val webUrl: String = "",
         @JsonProperty("title")
-        @Schema(title = "title")
+        @get:Schema(title = "title")
         val title: String = "",
         @JsonProperty("avatar_url")
-        @Schema(title = "avatar_url")
+        @get:Schema(title = "avatar_url")
         val avatarUrl: String = ""
     )
 }

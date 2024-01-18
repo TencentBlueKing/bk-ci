@@ -38,16 +38,16 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "返回码详情")
 data class MessageCodeDetail(
-    @Schema(title = "主键ID", required = true)
+    @get:Schema(title = "主键ID", required = true)
     val id: String,
-    @Schema(title = "信息码", required = true)
+    @get:Schema(title = "信息码", required = true)
     val messageCode: String,
-    @Schema(title = "模块代码", required = true)
+    @get:Schema(title = "模块代码", required = true)
     val moduleCode: String,
-    @Schema(title = "中文简体描述信息", required = true)
+    @get:Schema(title = "中文简体描述信息", required = true)
     var messageDetailZhCn: String,
-    @Schema(title = "中文繁体描述信息", required = false)
+    @get:Schema(title = "中文繁体描述信息", required = false)
     var messageDetailZhTw: String?,
-    @Schema(title = "英文描述信息", required = false)
+    @get:Schema(title = "英文描述信息", required = false)
     var messageDetailEn: String?
 )

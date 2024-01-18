@@ -36,13 +36,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "p4事件触发", description = CodeP4WebHookTriggerElement.classType)
 data class CodeP4WebHookTriggerElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "TGit变更触发",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "数据", required = true)
+    @get:Schema(title = "数据", required = true)
     val data: CodeP4WebHookTriggerData
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
@@ -90,16 +90,16 @@ data class CodeP4WebHookTriggerData(
 )
 
 data class CodeP4WebHookTriggerInput(
-    @Schema(title = "仓库ID", required = true)
+    @get:Schema(title = "仓库ID", required = true)
     val repositoryHashId: String?,
-    @Schema(title = "新版的git原子的类型")
+    @get:Schema(title = "新版的git原子的类型")
     val repositoryType: RepositoryType? = null,
-    @Schema(title = "新版的git代码库名")
+    @get:Schema(title = "新版的git代码库名")
     val repositoryName: String? = null,
-    @Schema(title = "用于包含的路径", required = false)
+    @get:Schema(title = "用于包含的路径", required = false)
     val includePaths: String?,
-    @Schema(title = "用于排除的路径", required = false)
+    @get:Schema(title = "用于排除的路径", required = false)
     val excludePaths: String?,
-    @Schema(title = "事件类型", required = false)
+    @get:Schema(title = "事件类型", required = false)
     val eventType: CodeEventType?
 )

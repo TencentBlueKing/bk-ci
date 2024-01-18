@@ -31,6 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "Job互斥组模型-列表信息")
 data class JobMutexGroup(
-    @Schema(title = "Job互斥组名字", required = true)
+    @get:Schema(title = "Job互斥组名字", required = true)
     val jobMutexGroupName: String
 )

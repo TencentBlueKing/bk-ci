@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件市场-重新归档插件包请求报文体")
 data class PackageFileInfo(
-    @Schema(title = "包文件名", required = true)
+    @get:Schema(title = "包文件名", required = true)
     val packageFileName: String,
-    @Schema(title = "包文件路径", required = true)
+    @get:Schema(title = "包文件路径", required = true)
     val packageFilePath: String,
-    @Schema(title = "包文件大小", required = true)
+    @get:Schema(title = "包文件大小", required = true)
     val packageFileSize: Long,
-    @Schema(title = "sha摘要值", required = true)
+    @get:Schema(title = "sha摘要值", required = true)
     val shaContent: String
 )

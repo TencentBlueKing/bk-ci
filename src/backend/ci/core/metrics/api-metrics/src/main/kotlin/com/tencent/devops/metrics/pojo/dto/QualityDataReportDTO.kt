@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "质量红线数据上报传输对象")
 data class QualityDataReportDTO(
-    @Schema(title = "统计日期")
+    @get:Schema(title = "统计日期")
     val statisticsTime: String,
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "使用质量红线的流水线执行被拦截次数")
+    @get:Schema(title = "使用质量红线的流水线执行被拦截次数")
     val qualityPipelineInterceptionNum: Int,
-    @Schema(title = "使用质量红线的流水线执行总次数")
+    @get:Schema(title = "使用质量红线的流水线执行总次数")
     val qualityPipelineExecuteNum: Int
 )

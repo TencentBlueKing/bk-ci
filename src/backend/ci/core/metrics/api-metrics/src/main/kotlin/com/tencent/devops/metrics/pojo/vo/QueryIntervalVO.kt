@@ -32,8 +32,8 @@ import java.time.LocalDateTime
 
 @Schema(title = "查询区间VO")
 data class QueryIntervalVO(
-    @Schema(title = "开始时间", required = true)
+    @get:Schema(title = "开始时间", required = true)
     val startDateTime: LocalDateTime,
-    @Schema(title = "结束时间", required = true)
+    @get:Schema(title = "结束时间", required = true)
     val endDateTime: LocalDateTime
 )

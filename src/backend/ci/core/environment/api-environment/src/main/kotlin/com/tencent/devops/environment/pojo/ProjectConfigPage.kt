@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "项目配置(分页)")
 data class ProjectConfigPage(
-    @Schema(title = "projectConfig总数", required = true)
+    @get:Schema(title = "projectConfig总数", required = true)
     val total: Int,
-    @Schema(title = "projectConfig详情", required = true)
+    @get:Schema(title = "projectConfig详情", required = true)
     val data: List<ProjectConfig>
 )

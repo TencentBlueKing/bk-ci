@@ -31,9 +31,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "镜像支持的机器类型详情")
 data class ImageAgentTypeInfo(
 
-    @Schema(title = "类型代码", required = true)
+    @get:Schema(title = "类型代码", required = true)
     val code: String,
 
-    @Schema(title = "类型名称", required = true)
+    @get:Schema(title = "类型名称", required = true)
     val name: String
 )

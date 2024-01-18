@@ -32,14 +32,14 @@ import java.time.LocalDateTime
 
 @Schema(title = "插件市场-更新插件对象")
 data class UpdateAtomInfo(
-    @Schema(title = "插件状态", required = false)
+    @get:Schema(title = "插件状态", required = false)
     val atomStatus: Byte? = null,
-    @Schema(title = "插件状态信息", required = false)
+    @get:Schema(title = "插件状态信息", required = false)
     val atomStatusMsg: String? = null,
-    @Schema(title = "是否为最新版本", required = false)
+    @get:Schema(title = "是否为最新版本", required = false)
     val latestFlag: Boolean? = null,
-    @Schema(title = "发布时间", required = false)
+    @get:Schema(title = "发布时间", required = false)
     val pubTime: LocalDateTime? = null,
-    @Schema(title = "删除标识", required = false)
+    @get:Schema(title = "删除标识", required = false)
     val deleteFlag: Boolean? = null
 )

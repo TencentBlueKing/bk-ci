@@ -33,6 +33,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "灰度项目列表查询响应实体")
 data class OpGrayProject(
     @JsonProperty(value = "projectCodeList", required = true)
-    @Schema(title = "项目编码集合", description = "projectCodeList")
+    @get:Schema(title = "项目编码集合", description = "projectCodeList")
     val projectCodeList: List<String>
 )

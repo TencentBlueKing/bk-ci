@@ -31,26 +31,26 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "第三方接入机-信息")
 data class ThirdPartyAgentStaticInfo(
-    @Schema(title = "Agent Hash ID", required = true)
+    @get:Schema(title = "Agent Hash ID", required = true)
     val agentId: String,
-    @Schema(title = "项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(title = "操作系统", required = true)
+    @get:Schema(title = "操作系统", required = true)
     val os: String,
-    @Schema(title = "密钥", required = true)
+    @get:Schema(title = "密钥", required = true)
     val secretKey: String,
-    @Schema(title = "创建人", required = true)
+    @get:Schema(title = "创建人", required = true)
     val createdUser: String,
-    @Schema(title = "gateway", required = false)
+    @get:Schema(title = "gateway", required = false)
     val gateway: String?,
-    @Schema(title = "link", required = true)
+    @get:Schema(title = "link", required = true)
     val link: String,
-    @Schema(title = "script", required = true)
+    @get:Schema(title = "script", required = true)
     val script: String,
-    @Schema(title = "ip", required = true)
+    @get:Schema(title = "ip", required = true)
     val ip: String,
-    @Schema(title = "hostName", required = false)
+    @get:Schema(title = "hostName", required = false)
     val hostName: String?,
-    @Schema(title = "状态")
+    @get:Schema(title = "状态")
     val status: Int?
 )

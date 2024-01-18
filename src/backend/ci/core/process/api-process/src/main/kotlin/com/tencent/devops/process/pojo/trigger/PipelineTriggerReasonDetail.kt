@@ -32,12 +32,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线触发原因详情")
 data class PipelineTriggerReasonDetail(
-    @Schema(title = "触发插件ID")
+    @get:Schema(title = "触发插件ID")
     val elementId: String?,
-    @Schema(title = "触发插件Code")
+    @get:Schema(title = "触发插件Code")
     val elementAtomCode: String,
-    @Schema(title = "触发插件名称")
+    @get:Schema(title = "触发插件名称")
     val elementName: String,
-    @Schema(title = "触发原因，JSON字符串，便于国际化")
+    @get:Schema(title = "触发原因，JSON字符串，便于国际化")
     val reasonMsg: String
 )

@@ -31,13 +31,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "获取并解析插件配置task.json的返回数据")
 data class GetAtomConfigResult(
-    @Schema(title = "状态码", required = true)
+    @get:Schema(title = "状态码", required = true)
     val errorCode: String,
-    @Schema(title = "错误参数", required = false)
+    @get:Schema(title = "错误参数", required = false)
     val errorParams: Array<String>,
-    @Schema(title = "插件json文件配置数据", required = false)
+    @get:Schema(title = "插件json文件配置数据", required = false)
     val taskDataMap: Map<String, Any>,
-    @Schema(title = "环境信息", required = false)
+    @get:Schema(title = "环境信息", required = false)
     var atomEnvRequests: List<AtomEnvRequest>?
 ) {
     override fun equals(other: Any?): Boolean {

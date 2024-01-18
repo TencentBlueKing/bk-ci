@@ -31,6 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "环境-ID")
 data class EnvironmentId(
-    @Schema(title = "环境哈希ID", required = true)
+    @get:Schema(title = "环境哈希ID", required = true)
     val hashId: String
 )

@@ -37,12 +37,12 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "")
 data class TemplateInstanceUpdate(
-    @Schema(title = "流水线id", required = false)
+    @get:Schema(title = "流水线id", required = false)
     val pipelineId: String,
-    @Schema(title = "流水线那名称", required = false)
+    @get:Schema(title = "流水线那名称", required = false)
     val pipelineName: String,
-    @Schema(title = "构建版本号", required = false)
+    @get:Schema(title = "构建版本号", required = false)
     val buildNo: BuildNo?,
-    @Schema(title = "流水线变量列表, 建议先通过v4_app_template_get获取，再按需修改。", required = false)
+    @get:Schema(title = "流水线变量列表, 建议先通过v4_app_template_get获取，再按需修改。", required = false)
     val param: List<BuildFormProperty>?
 )

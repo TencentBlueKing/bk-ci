@@ -31,22 +31,22 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线模型-列表信息")
 data class SimplePipeline(
-    @Schema(title = "项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(title = "流水线ID", required = true)
+    @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(title = "流水线名称", required = true)
+    @get:Schema(title = "流水线名称", required = true)
     var pipelineName: String,
-    @Schema(title = "流水线描述", required = false)
+    @get:Schema(title = "流水线描述", required = false)
     var pipelineDesc: String?,
-    @Schema(title = "流水线任务数量", required = true)
+    @get:Schema(title = "流水线任务数量", required = true)
     val taskCount: Int,
-    @Schema(title = "是否被删除了", required = false)
+    @get:Schema(title = "是否被删除了", required = false)
     val isDelete: Boolean,
-    @Schema(title = "是否模板实例化的流水线", required = true)
+    @get:Schema(title = "是否模板实例化的流水线", required = true)
     val instanceFromTemplate: Boolean,
-    @Schema(title = "自增id", required = true)
+    @get:Schema(title = "自增id", required = true)
     val id: Long?,
-    @Schema(title = "创建人", required = false)
+    @get:Schema(title = "创建人", required = false)
     val createUser: String? = null
 )

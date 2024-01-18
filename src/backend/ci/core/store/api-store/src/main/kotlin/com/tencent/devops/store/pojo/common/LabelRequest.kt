@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "标签信息请求报文体")
 data class LabelRequest(
-    @Schema(title = "标签代码", required = true)
+    @get:Schema(title = "标签代码", required = true)
     val labelCode: String,
-    @Schema(title = "标签名称", required = true)
+    @get:Schema(title = "标签名称", required = true)
     val labelName: String
 )

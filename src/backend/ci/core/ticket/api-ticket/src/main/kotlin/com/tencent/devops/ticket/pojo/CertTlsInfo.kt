@@ -31,16 +31,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "证书-tls证书")
 data class CertTlsInfo(
-    @Schema(title = "证书ID", required = true)
+    @get:Schema(title = "证书ID", required = true)
     val certId: String,
-    @Schema(title = "服务器crt证书名", required = true)
+    @get:Schema(title = "服务器crt证书名", required = true)
     val serverCrtFileName: String,
-    @Schema(title = "服务器key证书名", required = true)
+    @get:Schema(title = "服务器key证书名", required = true)
     val serverKeyFileName: String,
-    @Schema(title = "客户端crt证书名", required = true)
+    @get:Schema(title = "客户端crt证书名", required = true)
     val clientCrtFileName: String?,
-    @Schema(title = "客户端key证书名", required = true)
+    @get:Schema(title = "客户端key证书名", required = true)
     val clientKeyFileName: String?,
-    @Schema(title = "remark", required = true)
+    @get:Schema(title = "remark", required = true)
     val remark: String?
 )

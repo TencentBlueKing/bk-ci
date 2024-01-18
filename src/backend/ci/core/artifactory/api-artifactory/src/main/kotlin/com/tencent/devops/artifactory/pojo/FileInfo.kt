@@ -32,33 +32,33 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "版本仓库-文件信息")
 data class FileInfo(
-    @Schema(title = "文件名", required = true)
+    @get:Schema(title = "文件名", required = true)
     val name: String,
-    @Schema(title = "文件全名", required = true)
+    @get:Schema(title = "文件全名", required = true)
     val fullName: String,
-    @Schema(title = "文件路径", required = true)
+    @get:Schema(title = "文件路径", required = true)
     val path: String,
-    @Schema(title = "文件全路径", required = true)
+    @get:Schema(title = "文件全路径", required = true)
     val fullPath: String,
-    @Schema(title = "文件大小(byte)", required = true)
+    @get:Schema(title = "文件大小(byte)", required = true)
     val size: Long,
-    @Schema(title = "是否文件夹", required = true)
+    @get:Schema(title = "是否文件夹", required = true)
     val folder: Boolean,
-    @Schema(title = "更新时间", required = true)
+    @get:Schema(title = "更新时间", required = true)
     val modifiedTime: Long,
-    @Schema(title = "仓库类型", required = true)
+    @get:Schema(title = "仓库类型", required = true)
     val artifactoryType: ArtifactoryType,
-    @Schema(title = "元数据", required = true)
+    @get:Schema(title = "元数据", required = true)
     val properties: List<Property>?,
-    @Schema(title = "app版本", required = true)
+    @get:Schema(title = "app版本", required = true)
     val appVersion: String? = null,
-    @Schema(title = "下载短链接", required = true)
+    @get:Schema(title = "下载短链接", required = true)
     val shortUrl: String? = null,
-    @Schema(title = "下载链接", required = false)
+    @get:Schema(title = "下载链接", required = false)
     var downloadUrl: String? = null,
-    @Schema(title = "MD5", required = false)
+    @get:Schema(title = "MD5", required = false)
     var md5: String? = null,
-    @Schema(title = "docker registry", required = false)
+    @get:Schema(title = "docker registry", required = false)
     var registry: String? = null
 ) : Comparable<FileInfo> {
     constructor(

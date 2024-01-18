@@ -33,13 +33,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "第三方Agent数据返回包装模型")
 data class AgentResult<out T>(
-    @Schema(title = "状态码", required = true)
+    @get:Schema(title = "状态码", required = true)
     val status: Int,
-    @Schema(title = "错误信息", required = false)
+    @get:Schema(title = "错误信息", required = false)
     val message: String? = null,
-    @Schema(title = "Agent状态", required = false)
+    @get:Schema(title = "Agent状态", required = false)
     val agentStatus: AgentStatus?,
-    @Schema(title = "数据", required = false)
+    @get:Schema(title = "数据", required = false)
     val data: T? = null
 ) {
     constructor(status: AgentStatus, data: T) : this(0, null, status, data)

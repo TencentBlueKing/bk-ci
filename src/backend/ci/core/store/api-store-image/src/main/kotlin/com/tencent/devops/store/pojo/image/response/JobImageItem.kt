@@ -32,102 +32,102 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "JOB编辑页镜像选项信息")
 data class JobImageItem(
 
-    @Schema(title = "镜像ID", required = true)
+    @get:Schema(title = "镜像ID", required = true)
     val id: String,
 
-    @Schema(title = "镜像代码", required = true)
+    @get:Schema(title = "镜像代码", required = true)
     val code: String,
 
-    @Schema(title = "镜像名称", required = true)
+    @get:Schema(title = "镜像名称", required = true)
     val name: String,
 
-    @Schema(title = "版本号", required = true)
+    @get:Schema(title = "版本号", required = true)
     val version: String,
 
-    @Schema(title = "镜像默认版本号", required = true)
+    @get:Schema(title = "镜像默认版本号", required = true)
     val defaultVersion: String,
 
-    @Schema(title = "镜像状态", required = true)
+    @get:Schema(title = "镜像状态", required = true)
     val imageStatus: String,
 
-    @Schema(title = "所属分类ID", required = true)
+    @get:Schema(title = "所属分类ID", required = true)
     val classifyId: String,
 
-    @Schema(title = "所属分类编码", required = true)
+    @get:Schema(title = "所属分类编码", required = true)
     val classifyCode: String,
 
-    @Schema(title = "所属分类名称", required = true)
+    @get:Schema(title = "所属分类名称", required = true)
     val classifyName: String,
 
-    @Schema(title = "镜像logo", required = false)
+    @get:Schema(title = "镜像logo", required = false)
     val logoUrl: String?,
 
-    @Schema(title = "镜像图标", required = false)
+    @get:Schema(title = "镜像图标", required = false)
     val icon: String?,
 
-    @Schema(title = "镜像简介", required = false)
+    @get:Schema(title = "镜像简介", required = false)
     val summary: String?,
 
-    @Schema(title = "镜像说明文档链接", required = false)
+    @get:Schema(title = "镜像说明文档链接", required = false)
     val docsLink: String?,
 
-    @Schema(title = "发布者", required = false)
+    @get:Schema(title = "发布者", required = false)
     val publisher: String?,
 
-    @Schema(title = "发布时间", required = false)
+    @get:Schema(title = "发布时间", required = false)
     val pubTime: Long? = null,
 
-    @Schema(title = "创建人", required = true)
+    @get:Schema(title = "创建人", required = true)
     val creator: String,
 
-    @Schema(title = "创建时间", required = true)
+    @get:Schema(title = "创建时间", required = true)
     val createTime: Long,
 
-    @Schema(title = "是否为最新版本镜像 true：最新 false：非最新", required = true)
+    @get:Schema(title = "是否为最新版本镜像 true：最新 false：非最新", required = true)
     val latestFlag: Boolean,
 
-    @Schema(title = "镜像适用的Agent类型", required = true)
+    @get:Schema(title = "镜像适用的Agent类型", required = true)
     var agentTypeScope: List<String>,
 
-    @Schema(title = "镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = true)
+    @get:Schema(title = "镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = true)
     val imageSourceType: ImageType,
 
-    @Schema(title = "镜像仓库Url", required = false)
+    @get:Schema(title = "镜像仓库Url", required = false)
     val imageRepoUrl: String?,
 
-    @Schema(title = "镜像仓库名称", required = true)
+    @get:Schema(title = "镜像仓库名称", required = true)
     val imageRepoName: String,
 
-    @Schema(title = "镜像tag", required = true)
+    @get:Schema(title = "镜像tag", required = true)
     val imageTag: String,
 
-    @Schema(title = "镜像大小（MB字符串）", required = true)
+    @get:Schema(title = "镜像大小（MB字符串）", required = true)
     val imageSize: String,
 
-    @Schema(title = "是否官方认证 true：是 false：否", required = false)
+    @get:Schema(title = "是否官方认证 true：是 false：否", required = false)
     val certificationFlag: Boolean?,
 
-    @Schema(title = "是否为公共镜像 true：是 false：否", required = false)
+    @get:Schema(title = "是否为公共镜像 true：是 false：否", required = false)
     val publicFlag: Boolean?,
 
-    @Schema(title = "镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = false)
+    @get:Schema(title = "镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = false)
     val imageType: String?,
 
-    @Schema(title = "权重（数值越大代表权重越高）", required = false)
+    @get:Schema(title = "权重（数值越大代表权重越高）", required = false)
     val weight: Int?,
 
-    @Schema(title = "是否推荐标识 true：推荐，false：不推荐", required = false)
+    @get:Schema(title = "是否推荐标识 true：推荐，false：不推荐", required = false)
     val recommendFlag: Boolean?,
 
-    @Schema(title = "创建人", required = false)
+    @get:Schema(title = "创建人", required = false)
     val labelNames: String?,
 
-    @Schema(title = "是否可用标识", required = false)
+    @get:Schema(title = "是否可用标识", required = false)
     val availableFlag: Boolean,
 
-    @Schema(title = "最近修改人", required = true)
+    @get:Schema(title = "最近修改人", required = true)
     val modifier: String,
 
-    @Schema(title = "最近修改时间", required = true)
+    @get:Schema(title = "最近修改时间", required = true)
     val updateTime: Long
 )

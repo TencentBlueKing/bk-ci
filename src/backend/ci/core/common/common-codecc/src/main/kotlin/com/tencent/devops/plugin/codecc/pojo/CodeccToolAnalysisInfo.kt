@@ -31,20 +31,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "codecc工具分析信息")
 data class CodeccToolAnalysisInfo(
-    @Schema(title = "工具名称", required = true)
+    @get:Schema(title = "工具名称", required = true)
     val toolName: String,
-    @Schema(title = "工具展示名称", required = true)
+    @get:Schema(title = "工具展示名称", required = true)
     val displayName: String,
-    @Schema(title = "工具类型", required = true)
+    @get:Schema(title = "工具类型", required = true)
     val type: String,
-    @Schema(title = "分析耗时", required = true)
+    @get:Schema(title = "分析耗时", required = true)
     val elapseTime: Long,
-    @Schema(title = "第几次构建", required = true)
+    @get:Schema(title = "第几次构建", required = true)
     val buildNum: Int,
-    @Schema(title = "工具类型，用来拼接URL", required = false)
+    @get:Schema(title = "工具类型，用来拼接URL", required = false)
     val pattern: String?,
-    @Schema(title = "告警总数", required = true)
+    @get:Schema(title = "告警总数", required = true)
     val defectCount: Int,
-    @Schema(title = "工具对应的跳转地址", required = false)
+    @get:Schema(title = "工具对应的跳转地址", required = false)
     val defectUrl: String?
 )

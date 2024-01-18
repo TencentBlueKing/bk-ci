@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "验证镜像合法性请求报文体")
 data class CheckImageRequest(
-    @Schema(title = "镜像类型", required = false)
+    @get:Schema(title = "镜像类型", required = false)
     val imageType: String?,
-    @Schema(title = "镜像名称", required = true)
+    @get:Schema(title = "镜像名称", required = true)
     val imageName: String,
-    @Schema(title = "用户名", required = false)
+    @get:Schema(title = "用户名", required = false)
     val registryUser: String?,
-    @Schema(title = "密码", required = false)
+    @get:Schema(title = "密码", required = false)
     val registryPwd: String?
 )

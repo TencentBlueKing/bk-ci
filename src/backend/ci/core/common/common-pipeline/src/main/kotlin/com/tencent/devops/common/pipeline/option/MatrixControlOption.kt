@@ -45,21 +45,21 @@ import java.util.regex.Pattern
 @Schema(title = "构建矩阵配置项模型")
 @Suppress("ReturnCount")
 data class MatrixControlOption(
-    @Schema(title = "分裂策略（支持变量、Json、参数映射表）", required = true)
+    @get:Schema(title = "分裂策略（支持变量、Json、参数映射表）", required = true)
     val strategyStr: String? = null, // Map<String, List<String>>
-    @Schema(title = "额外的参数组合（变量名到特殊值映射的数组）", required = false)
+    @get:Schema(title = "额外的参数组合（变量名到特殊值映射的数组）", required = false)
     val includeCaseStr: String? = null, // List<Map<String, String>>
-    @Schema(title = "排除的参数组合（变量名到特殊值映射的数组）", required = false)
+    @get:Schema(title = "排除的参数组合（变量名到特殊值映射的数组）", required = false)
     val excludeCaseStr: String? = null, // List<Map<String, String>>
-    @Schema(title = "是否启用容器失败快速终止整个矩阵", required = false)
+    @get:Schema(title = "是否启用容器失败快速终止整个矩阵", required = false)
     val fastKill: Boolean? = false,
-    @Schema(title = "Job运行的最大并发量", required = false)
+    @get:Schema(title = "Job运行的最大并发量", required = false)
     var maxConcurrency: Int? = 5,
-    @Schema(title = "自定义调度类型（用于生成DispatchType的任意对象）", required = false)
+    @get:Schema(title = "自定义调度类型（用于生成DispatchType的任意对象）", required = false)
     var customDispatchInfo: DispatchInfo? = null, // DispatchTypeParser的传入和解析保持一致即可
-    @Schema(title = "矩阵组的总数量", required = false)
+    @get:Schema(title = "矩阵组的总数量", required = false)
     var totalCount: Int? = null,
-    @Schema(title = "完成执行的数量", required = false)
+    @get:Schema(title = "完成执行的数量", required = false)
     var finishCount: Int? = null
 ) {
 

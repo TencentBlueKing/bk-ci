@@ -35,10 +35,10 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "模板比较模型")
 data class TemplateCompareModelResult(
-    @Schema(title = "版本列表", required = false)
+    @get:Schema(title = "版本列表", required = false)
     val versions: List<TemplateVersion>,
-    @Schema(title = "来源模板模型", required = false)
+    @get:Schema(title = "来源模板模型", required = false)
     val origin: TemplateCompareModel,
-    @Schema(title = "目标模板模型", required = false)
+    @get:Schema(title = "目标模板模型", required = false)
     val target: TemplateCompareModel
 )

@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "查询错误码信息查询条件对象")
 data class QueryErrorCodeInfoQO(
-    @Schema(title = "插件代码")
+    @get:Schema(title = "插件代码")
     val atomCode: String,
-    @Schema(title = "错误类型")
+    @get:Schema(title = "错误类型")
     val errorTypes: List<Int>?,
-    @Schema(title = "搜索关键字")
+    @get:Schema(title = "搜索关键字")
     val keyword: String?,
-    @Schema(title = "页码")
+    @get:Schema(title = "页码")
     val page: Int = 1,
-    @Schema(title = "页数")
+    @get:Schema(title = "页数")
     val pageSize: Int = 10
 )

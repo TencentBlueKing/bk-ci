@@ -32,18 +32,18 @@ import java.time.LocalDateTime
 
 @Schema(title = "自定义报告-报告信息")
 data class TaskReport(
-    @Schema(title = "名称", required = true)
+    @get:Schema(title = "名称", required = true)
     val name: String,
-    @Schema(title = "首页地址", required = true)
+    @get:Schema(title = "首页地址", required = true)
     val indexFileUrl: String,
-    @Schema(title = "报告类型", required = true)
+    @get:Schema(title = "报告类型", required = true)
     val type: String,
-    @Schema(title = "插件名称", required = true)
+    @get:Schema(title = "插件名称", required = true)
     val atomName: String,
-    @Schema(title = "插件Id", required = true)
+    @get:Schema(title = "插件Id", required = true)
     val taskId: String,
-    @Schema(title = "插件code", required = true)
+    @get:Schema(title = "插件code", required = true)
     val atomCode: String,
-    @Schema(title = "创建时间", required = true)
+    @get:Schema(title = "创建时间", required = true)
     val createTime: LocalDateTime
 )

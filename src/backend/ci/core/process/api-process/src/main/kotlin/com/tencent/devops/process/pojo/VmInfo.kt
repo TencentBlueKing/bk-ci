@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "Vm信息")
 data class VmInfo(
-    @Schema(title = "IP", required = false)
+    @get:Schema(title = "IP", required = false)
     val ip: String?,
-    @Schema(title = "名称", required = true)
+    @get:Schema(title = "名称", required = true)
     val name: String
 )

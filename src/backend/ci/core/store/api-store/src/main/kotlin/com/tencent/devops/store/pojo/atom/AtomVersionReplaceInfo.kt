@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件版本替换信息")
 data class AtomVersionReplaceInfo(
-    @Schema(title = "被替换插件版本", required = true)
+    @get:Schema(title = "被替换插件版本", required = true)
     val fromAtomVersion: String,
-    @Schema(title = "替换插件版本", required = true)
+    @get:Schema(title = "替换插件版本", required = true)
     val toAtomVersion: String,
-    @Schema(title = "插件参数替换信息", required = false)
+    @get:Schema(title = "插件参数替换信息", required = false)
     val paramReplaceInfoList: List<AtomParamReplaceInfo>? = null
 )

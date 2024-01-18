@@ -33,22 +33,22 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "同步任务创建请求")
 data class ReplicaTaskCreateRequest(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     val name: String,
-    @Schema(title = "本地项目", required = true)
+    @get:Schema(title = "本地项目", required = true)
     val localProjectId: String,
-    @Schema(title = "同步对象类型", required = true)
+    @get:Schema(title = "同步对象类型", required = true)
     val replicaObjectType: ReplicaObjectType,
-    @Schema(title = "任务对象信息", required = true)
+    @get:Schema(title = "任务对象信息", required = true)
     val replicaTaskObjects: List<ReplicaObjectInfo>,
-    @Schema(title = "同步类型", required = true)
+    @get:Schema(title = "同步类型", required = true)
     val replicaType: ReplicaType = ReplicaType.SCHEDULED,
-    @Schema(title = "任务设置", required = true)
+    @get:Schema(title = "任务设置", required = true)
     val setting: ReplicaSetting,
-    @Schema(title = "远程集群集合", required = true)
+    @get:Schema(title = "远程集群集合", required = true)
     val remoteClusterIds: Set<String>,
-    @Schema(title = "是否启用", required = true)
+    @get:Schema(title = "是否启用", required = true)
     val enabled: Boolean = true,
-    @Schema(title = "任务描述", required = false)
+    @get:Schema(title = "任务描述", required = false)
     val description: String? = null
 )

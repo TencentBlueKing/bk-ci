@@ -32,21 +32,21 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "资源配置")
 data class DockerResourceOptionsShow(
 
-    @Schema(title = "内存")
+    @get:Schema(title = "内存")
     val memory: String,
 
-    @Schema(title = "CPU")
+    @get:Schema(title = "CPU")
     val cpu: String,
 
-    @Schema(title = "磁盘写速率")
+    @get:Schema(title = "磁盘写速率")
     val blkioDeviceWriteBps: String = "",
 
-    @Schema(title = "磁盘读速率")
+    @get:Schema(title = "磁盘读速率")
     val blkioDeviceReadBps: String = "",
 
-    @Schema(title = "磁盘大小: 单位GB")
+    @get:Schema(title = "磁盘大小: 单位GB")
     val disk: String,
 
-    @Schema(title = "描述")
+    @get:Schema(title = "描述")
     val description: String
 )

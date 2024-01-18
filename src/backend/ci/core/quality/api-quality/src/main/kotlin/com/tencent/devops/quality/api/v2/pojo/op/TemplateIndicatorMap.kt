@@ -33,16 +33,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @Schema(title = "质量红线-(模板/指标集)与指标关联信息显示模型")
 data class TemplateIndicatorMap(
-    @Schema(title = "关联表ID")
+    @get:Schema(title = "关联表ID")
     val id: Long?,
-    @Schema(title = "模板ID")
+    @get:Schema(title = "模板ID")
     val templateId: Long?,
-    @Schema(title = "指标ID")
+    @get:Schema(title = "指标ID")
     val indicatorId: Long?,
-    @Schema(title = "指标名称")
+    @get:Schema(title = "指标名称")
     val indicatorName: String?,
-    @Schema(title = "可选操作")
+    @get:Schema(title = "可选操作")
     val operation: String?,
-    @Schema(title = "阈值")
+    @get:Schema(title = "阈值")
     val threshold: String?
 )

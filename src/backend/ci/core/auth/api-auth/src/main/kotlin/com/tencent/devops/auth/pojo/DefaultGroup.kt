@@ -4,10 +4,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "默认组信息")
 data class DefaultGroup(
-    @Schema(title = "名称")
+    @get:Schema(title = "名称")
     val name: String,
-    @Schema(title = "展示名称")
+    @get:Schema(title = "展示名称")
     val displayName: String,
-    @Schema(title = "组编码")
+    @get:Schema(title = "组编码")
     val code: String
 )

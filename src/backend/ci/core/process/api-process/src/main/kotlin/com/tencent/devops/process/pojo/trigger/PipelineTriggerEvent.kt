@@ -33,26 +33,26 @@ import java.time.LocalDateTime
 
 @Schema(title = "流水线触发事件")
 data class PipelineTriggerEvent(
-    @Schema(title = "请求ID")
+    @get:Schema(title = "请求ID")
     val requestId: String,
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     var projectId: String? = null,
-    @Schema(title = "事件ID")
+    @get:Schema(title = "事件ID")
     var eventId: Long? = null,
-    @Schema(title = "触发类型")
+    @get:Schema(title = "触发类型")
     val triggerType: String,
-    @Schema(title = "事件源", required = false)
+    @get:Schema(title = "事件源", required = false)
     var eventSource: String? = null,
-    @Schema(title = "事件类型")
+    @get:Schema(title = "事件类型")
     val eventType: String,
-    @Schema(title = "触发人")
+    @get:Schema(title = "触发人")
     val triggerUser: String,
-    @Schema(title = "事件描述")
+    @get:Schema(title = "事件描述")
     val eventDesc: String,
-    @Schema(title = "重放事件ID")
+    @get:Schema(title = "重放事件ID")
     val replayRequestId: String? = null,
-    @Schema(title = "事件请求参数, 记录手动/openapi/定时/远程触发启动参数")
+    @get:Schema(title = "事件请求参数, 记录手动/openapi/定时/远程触发启动参数")
     val requestParams: Map<String, String>? = null,
-    @Schema(title = "触发时间")
+    @get:Schema(title = "触发时间")
     val createTime: LocalDateTime
 )

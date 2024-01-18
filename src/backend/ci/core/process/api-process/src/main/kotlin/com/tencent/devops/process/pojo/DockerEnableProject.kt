@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "")
 data class DockerEnableProject(
-    @Schema(title = "是否启用", required = false)
+    @get:Schema(title = "是否启用", required = false)
     var enable: Boolean,
-    @Schema(title = "项目id", required = false)
+    @get:Schema(title = "项目id", required = false)
     val projectId: String,
-    @Schema(title = "创建时间", required = false)
+    @get:Schema(title = "创建时间", required = false)
     val createTime: Long,
-    @Schema(title = "更新时间", required = false)
+    @get:Schema(title = "更新时间", required = false)
     var updateTime: Long
 )

@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线job公共配置信息")
 data class JobCommonSetting(
-    @Schema(title = "每个job最大task个数", required = true)
+    @get:Schema(title = "每个job最大task个数", required = true)
     val maxTaskNum: Int,
-    @Schema(title = "task公共配置", required = true)
+    @get:Schema(title = "task公共配置", required = true)
     val taskCommonSetting: TaskCommonSetting
 )

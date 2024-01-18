@@ -32,22 +32,22 @@ import java.time.LocalDateTime
 
 @Schema(title = "保存错误码信息")
 data class SaveErrorCodeInfoPO(
-    @Schema(title = "主键ID")
+    @get:Schema(title = "主键ID")
     val id: Long,
-    @Schema(title = "错误类型")
+    @get:Schema(title = "错误类型")
     val errorType: Int,
-    @Schema(title = "错误码")
+    @get:Schema(title = "错误码")
     val errorCode: Int,
-    @Schema(title = "错误描述")
+    @get:Schema(title = "错误描述")
     val errorMsg: String? = null,
-    @Schema(title = "创建人")
+    @get:Schema(title = "创建人")
     val creator: String,
-    @Schema(title = "修改人")
+    @get:Schema(title = "修改人")
     val modifier: String,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: LocalDateTime,
-    @Schema(title = "更新时间")
+    @get:Schema(title = "更新时间")
     val updateTime: LocalDateTime,
-    @Schema(title = "归属插件")
+    @get:Schema(title = "归属插件")
     val atomCode: String? = null
 )

@@ -32,16 +32,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "构建模型-构建参数")
 data class BuildParameters(
-    @Schema(title = "元素值ID-标识符", required = true)
+    @get:Schema(title = "元素值ID-标识符", required = true)
     var key: String,
-    @Schema(title = "元素值名称-显示用", required = true)
+    @get:Schema(title = "元素值名称-显示用", required = true)
     var value: Any,
-    @Schema(title = "元素值类型", required = false)
+    @get:Schema(title = "元素值类型", required = false)
     val valueType: BuildFormPropertyType? = null,
-    @Schema(title = "是否只读", required = false)
+    @get:Schema(title = "是否只读", required = false)
     val readOnly: Boolean? = false,
-    @Schema(title = "描述", required = false)
+    @get:Schema(title = "描述", required = false)
     var desc: String? = null,
-    @Schema(title = "默认值", required = false)
+    @get:Schema(title = "默认值", required = false)
     var defaultValue: Any? = null
 )

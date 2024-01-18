@@ -31,6 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件post属性查询返回报文")
 data class AtomPostResp(
-    @Schema(title = "带post属性插件集合")
+    @get:Schema(title = "带post属性插件集合")
     val postAtoms: List<AtomPostInfo>?
 )

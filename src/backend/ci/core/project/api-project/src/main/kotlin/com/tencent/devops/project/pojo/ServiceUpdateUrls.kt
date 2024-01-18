@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "服务-更新Urls模型")
 data class ServiceUpdateUrls(
-    @Schema(title = "服务名称", required = true)
+    @get:Schema(title = "服务名称", required = true)
     val name: String,
-    @Schema(title = "cssUrl")
+    @get:Schema(title = "cssUrl")
     val cssUrl: String?,
-    @Schema(title = "jsUrl")
+    @get:Schema(title = "jsUrl")
     val jsUrl: String?,
-    @Schema(title = "grayCssUrl")
+    @get:Schema(title = "grayCssUrl")
     val grayCssUrl: String?,
-    @Schema(title = "grayJsUrl")
+    @get:Schema(title = "grayJsUrl")
     val grayJsUrl: String?
 )

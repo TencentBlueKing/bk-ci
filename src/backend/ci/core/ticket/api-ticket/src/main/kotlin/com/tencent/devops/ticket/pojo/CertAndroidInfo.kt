@@ -31,16 +31,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "证书-android证书")
 data class CertAndroidInfo(
-    @Schema(title = "证书ID", required = true)
+    @get:Schema(title = "证书ID", required = true)
     val certId: String,
-    @Schema(title = "证书名", required = true)
+    @get:Schema(title = "证书名", required = true)
     val jksFileName: String,
-    @Schema(title = "p12证书密码", required = false)
+    @get:Schema(title = "p12证书密码", required = false)
     val credentialId: String,
-    @Schema(title = "别名", required = false)
+    @get:Schema(title = "别名", required = false)
     val alias: String?,
-    @Schema(title = "别名ID", required = false)
+    @get:Schema(title = "别名ID", required = false)
     val aliasCredentialId: String,
-    @Schema(title = "备注", required = false)
+    @get:Schema(title = "备注", required = false)
     val remark: String?
 )

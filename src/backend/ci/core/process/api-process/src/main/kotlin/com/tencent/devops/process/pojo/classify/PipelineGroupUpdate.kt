@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线更新模型")
 data class PipelineGroupUpdate(
-    @Schema(title = "流水线id", required = false)
+    @get:Schema(title = "流水线id", required = false)
     val id: String,
-    @Schema(title = "项目id", required = false)
+    @get:Schema(title = "项目id", required = false)
     val projectId: String,
-    @Schema(title = "流水线名字", required = false)
+    @get:Schema(title = "流水线名字", required = false)
     val name: String
 )

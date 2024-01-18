@@ -32,12 +32,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "构建模型-ID")
 data class SubPipelineStatus(
-    @Schema(title = "子流水线状态", required = true)
+    @get:Schema(title = "子流水线状态", required = true)
     val status: String,
-    @Schema(title = "错误类型", required = false)
+    @get:Schema(title = "错误类型", required = false)
     var errorType: ErrorType? = null,
-    @Schema(title = "错误码", required = false)
+    @get:Schema(title = "错误码", required = false)
     var errorCode: Int? = null,
-    @Schema(title = "错误信息", required = false)
+    @get:Schema(title = "错误信息", required = false)
     var errorMsg: String? = null
 )

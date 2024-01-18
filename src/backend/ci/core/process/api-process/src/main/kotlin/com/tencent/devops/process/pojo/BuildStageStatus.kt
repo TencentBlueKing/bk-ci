@@ -32,20 +32,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "历史构建阶段状态")
 data class BuildStageStatus(
-    @Schema(title = "阶段ID", required = true)
+    @get:Schema(title = "阶段ID", required = true)
     val stageId: String,
-    @Schema(title = "阶段名称", required = true)
+    @get:Schema(title = "阶段名称", required = true)
     val name: String,
-    @Schema(title = "阶段状态", required = false, readOnly = true)
+    @get:Schema(title = "阶段状态", required = false, readOnly = true)
     var status: String? = null,
-    @Schema(title = "阶段标签", required = false, readOnly = true)
+    @get:Schema(title = "阶段标签", required = false, readOnly = true)
     var tag: List<String>? = null,
-    @Schema(title = "阶段启动时间", required = false, readOnly = true)
+    @get:Schema(title = "阶段启动时间", required = false, readOnly = true)
     var startEpoch: Long? = null,
-    @Schema(title = "容器运行时间", required = false, readOnly = true)
+    @get:Schema(title = "容器运行时间", required = false, readOnly = true)
     var elapsed: Long? = null,
-    @Schema(title = "各项耗时", required = true)
+    @get:Schema(title = "各项耗时", required = true)
     var timeCost: BuildRecordTimeCost? = null,
-    @Schema(title = "前端", required = false, readOnly = true)
+    @get:Schema(title = "前端", required = false, readOnly = true)
     var showMsg: String? = null
 )

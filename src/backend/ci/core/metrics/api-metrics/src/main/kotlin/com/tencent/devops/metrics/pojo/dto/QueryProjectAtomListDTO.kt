@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "获取项目下插件列表信息传输对象")
 data class QueryProjectAtomListDTO(
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "页码")
+    @get:Schema(title = "页码")
     val page: Int,
-    @Schema(title = "页数")
+    @get:Schema(title = "页数")
     val pageSize: Int,
-    @Schema(title = "搜索关键字")
+    @get:Schema(title = "搜索关键字")
     val keyword: String? = null
 )

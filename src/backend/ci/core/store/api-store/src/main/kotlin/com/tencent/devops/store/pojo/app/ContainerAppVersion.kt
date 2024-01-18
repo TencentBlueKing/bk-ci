@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "容器编译环境版本")
 data class ContainerAppVersion(
-    @Schema(title = "ID", required = true)
+    @get:Schema(title = "ID", required = true)
     val id: Int,
-    @Schema(title = "appId", required = true)
+    @get:Schema(title = "appId", required = true)
     val appId: Int,
-    @Schema(title = "version", required = true)
+    @get:Schema(title = "version", required = true)
     val version: String?
 )

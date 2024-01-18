@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件市场-重新归档插件包请求报文体")
 data class ReArchiveAtomRequest(
-    @Schema(title = "项目编码", required = true)
+    @get:Schema(title = "项目编码", required = true)
     val projectCode: String,
-    @Schema(title = "插件ID", required = true)
+    @get:Schema(title = "插件ID", required = true)
     val atomId: String,
-    @Schema(title = "插件代码", required = true)
+    @get:Schema(title = "插件代码", required = true)
     val atomCode: String,
-    @Schema(title = "插件版本号", required = true)
+    @get:Schema(title = "插件版本号", required = true)
     val version: String,
-    @Schema(title = "插件字段校验确认标识", required = false)
+    @get:Schema(title = "插件字段校验确认标识", required = false)
     val fieldCheckConfirmFlag: Boolean? = false
 )

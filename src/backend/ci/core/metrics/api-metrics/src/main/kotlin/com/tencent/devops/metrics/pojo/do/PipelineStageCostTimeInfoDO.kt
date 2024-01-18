@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线stage耗时信息")
 data class PipelineStageCostTimeInfoDO(
-    @Schema(title = "流水线名称")
+    @get:Schema(title = "流水线名称")
     val pipelineName: String,
-    @Schema(title = "stage平均耗时信息")
+    @get:Schema(title = "stage平均耗时信息")
     val stageAvgCostTimeInfos: List<StageAvgCostTimeInfoDO>
 )

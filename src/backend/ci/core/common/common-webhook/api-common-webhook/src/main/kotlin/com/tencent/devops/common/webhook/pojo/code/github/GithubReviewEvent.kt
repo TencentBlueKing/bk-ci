@@ -34,13 +34,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class GithubReviewEvent(
     val action: String,
     @JsonProperty("pull_request")
-    @Schema(title = "Issues相关信息")
+    @get:Schema(title = "Issues相关信息")
     val pullRequest: GithubPullRequest,
-    @Schema(title = "Github仓库相关信息")
+    @get:Schema(title = "Github仓库相关信息")
     val repository: GithubRepository,
-    @Schema(title = "操作人信息")
+    @get:Schema(title = "操作人信息")
     override val sender: GithubUser,
-    @Schema(title = "评审信息")
+    @get:Schema(title = "评审信息")
     val review: GithubReview
 ) : GithubEvent(sender) {
     companion object {
@@ -73,24 +73,24 @@ data class GithubReview(
     @JsonProperty("node_id")
     override val nodeId: String,
     @JsonProperty("html_url")
-    @Schema(title = "评审地址[网页地址]")
+    @get:Schema(title = "评审地址[网页地址]")
     override val htmlUrl: String?,
     @JsonProperty("created_at")
     override val createdAt: String?, // 2022-06-21T08:45:41Z
     @JsonProperty("updated_at")
     override val updatedAt: String?, // 2022-06-21T08:45:41Z
     val user: GithubUser,
-    @Schema(title = "评审内容")
+    @get:Schema(title = "评审内容")
     val body: String?,
     @JsonProperty("commit_id")
     val commitId: String,
-    @Schema(title = "提交时间")
+    @get:Schema(title = "提交时间")
     @JsonProperty("submitted_at")
     val submittedAt: String,
-    @Schema(title = "评审状态")
+    @get:Schema(title = "评审状态")
     val state: String,
     @JsonProperty("pull_request_url")
-    @Schema(title = "PR地址[Api地址]")
+    @get:Schema(title = "PR地址[Api地址]")
     val pullRequestUrl: String,
     @JsonProperty("author_association")
     val authorAssociation: String
@@ -104,41 +104,41 @@ data class GithubReview(
 
 @Schema(title = "Github Review 状态")
 enum class GithubReviewState(val value: String) {
-    @Schema(title = "批准")
+    @get:Schema(title = "批准")
     APPROVED("approved"),
 
-    @Schema(title = "要求修改")
+    @get:Schema(title = "要求修改")
     CHANGES_REQUESTED("changes_requested"),
 
-    @Schema(title = "评论")
+    @get:Schema(title = "评论")
     COMMENTED("commented"),
 
-    @Schema(title = "驳回")
+    @get:Schema(title = "驳回")
     DISMISSED("dismissed"),
 
-    @Schema(title = "尚未提交的评审报告")
+    @get:Schema(title = "尚未提交的评审报告")
     PENDING("pending"),
 
-    @Schema(title = "评审中【自定义枚举项，实际不存在】")
+    @get:Schema(title = "评审中【自定义枚举项，实际不存在】")
     APPROVING("approving")
 }
 
 @Schema(title = "Github Review 合并状态")
 enum class ReviewMergeStateStatus {
-    @Schema(title = "头标已过时")
+    @get:Schema(title = "头标已过时")
     BEHIND,
-    @Schema(title = "阻塞")
+    @get:Schema(title = "阻塞")
     BLOCKED,
-    @Schema(title = "可合并和传递提交状态")
+    @get:Schema(title = "可合并和传递提交状态")
     CLEAN,
-    @Schema(title = "无法干净地创建合并提交")
+    @get:Schema(title = "无法干净地创建合并提交")
     DIRTY,
-    @Schema(title = "由于拉取请求是草稿")
+    @get:Schema(title = "由于拉取请求是草稿")
     DRAFT,
-    @Schema(title = "可与传递的提交状态和预接收挂钩合并")
+    @get:Schema(title = "可与传递的提交状态和预接收挂钩合并")
     HAS_HOOKS,
-    @Schema(title = "目前无法确定状态")
+    @get:Schema(title = "目前无法确定状态")
     UNKNOWN,
-    @Schema(title = "可与非传递提交状态合并")
+    @get:Schema(title = "可与非传递提交状态合并")
     UNSTABLE
 }

@@ -6,28 +6,28 @@ import java.time.LocalDateTime
 
 @Schema(title = "第三方平台数据对象")
 data class ThirdPlatformDatePO(
-    @Schema(title = "主键ID")
+    @get:Schema(title = "主键ID")
     val id: Long,
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "codecc检查代码库平均分")
+    @get:Schema(title = "codecc检查代码库平均分")
     val repoCodeccAvgScore: BigDecimal?,
-    @Schema(title = "已解决缺陷数")
+    @get:Schema(title = "已解决缺陷数")
     val resolvedDefectNum: Int?,
-    @Schema(title = "使用质量红线的流水线执行被拦截次数")
+    @get:Schema(title = "使用质量红线的流水线执行被拦截次数")
     val qualityPipelineInterceptionNum: Int?,
-    @Schema(title = "使用质量红线的流水线执行总次数")
+    @get:Schema(title = "使用质量红线的流水线执行总次数")
     val qualityPipelineExecuteNum: Int?,
-    @Schema(title = "编译加速节省时间，单位：秒")
+    @get:Schema(title = "编译加速节省时间，单位：秒")
     val turboSaveTime: BigDecimal?,
-    @Schema(title = "统计时间")
+    @get:Schema(title = "统计时间")
     val statisticsTime: LocalDateTime,
-    @Schema(title = "创建者")
+    @get:Schema(title = "创建者")
     val creator: String? = null,
-    @Schema(title = "修改者")
+    @get:Schema(title = "修改者")
     val modifier: String? = null,
-    @Schema(title = "修改时间")
+    @get:Schema(title = "修改时间")
     val updateTime: LocalDateTime,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: LocalDateTime
 )

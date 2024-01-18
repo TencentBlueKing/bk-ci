@@ -31,23 +31,23 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "蓝盾stream流水线列表")
 data class StreamGitProjectPipeline(
-    @Schema(title = "git项目ID", required = true)
+    @get:Schema(title = "git项目ID", required = true)
     val gitProjectId: Long,
-    @Schema(title = "流水线名称", required = true)
+    @get:Schema(title = "流水线名称", required = true)
     var displayName: String,
-    @Schema(title = "蓝盾流水线ID", required = true)
+    @get:Schema(title = "蓝盾流水线ID", required = true)
     var pipelineId: String,
-    @Schema(title = "文件路径", required = true)
+    @get:Schema(title = "文件路径", required = true)
     val filePath: String,
-    @Schema(title = "是否启用", required = true)
+    @get:Schema(title = "是否启用", required = true)
     val enabled: Boolean,
-    @Schema(title = "创建人", required = false)
+    @get:Schema(title = "创建人", required = false)
     val creator: String?,
-    @Schema(title = "自己一次构建分支", required = false)
+    @get:Schema(title = "自己一次构建分支", required = false)
     val latestBuildBranch: String?,
-    @Schema(title = "git yaml文件链接", required = false)
+    @get:Schema(title = "git yaml文件链接", required = false)
     val yamlLink: String? = "",
-    @Schema(title = "最后一次更新分支", required = false)
+    @get:Schema(title = "最后一次更新分支", required = false)
     val lastUpdateBranch: String? = ""
 )
 

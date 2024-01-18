@@ -36,16 +36,16 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "TASK信息")
 data class TaskMessage(
-    @Schema(title = "TASK ID", required = true)
+    @get:Schema(title = "TASK ID", required = true)
     var taskId: Int,
-    @Schema(title = "TASK VM ID", required = true)
+    @get:Schema(title = "TASK VM ID", required = true)
     var vmId: Int,
-    @Schema(title = "TASK 执行的脚本", required = true)
+    @get:Schema(title = "TASK 执行的脚本", required = true)
     var script: String,
-    @Schema(title = "TASK 执行完信息", required = true)
+    @get:Schema(title = "TASK 执行完信息", required = true)
     var message: String,
-    @Schema(title = "TASK 执行的脚本结果", required = true)
+    @get:Schema(title = "TASK 执行的脚本结果", required = true)
     var status: TaskPhase,
-    @Schema(title = "TASK 执行的脚本结果", required = true)
+    @get:Schema(title = "TASK 执行的脚本结果", required = true)
     var retryCount: Int
 )

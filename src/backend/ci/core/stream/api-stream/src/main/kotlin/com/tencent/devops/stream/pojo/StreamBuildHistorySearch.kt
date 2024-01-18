@@ -33,24 +33,24 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "V2版本多选搜索过滤历史参数")
 data class StreamBuildHistorySearch(
-    @Schema(title = "第几页", required = false)
+    @get:Schema(title = "第几页", required = false)
     val page: Int?,
-    @Schema(title = "每页多少条", required = false)
+    @get:Schema(title = "每页多少条", required = false)
     val pageSize: Int?,
-    @Schema(title = "分支", required = false)
+    @get:Schema(title = "分支", required = false)
     val branch: Set<String>?,
-    @Schema(title = "fork库分支", required = false)
+    @get:Schema(title = "fork库分支", required = false)
     val sourceGitProjectId: Set<String>?,
-    @Schema(title = "触发人", required = false)
+    @get:Schema(title = "触发人", required = false)
     val triggerUser: Set<String>?,
-    @Schema(title = "流水线ID", required = false)
+    @get:Schema(title = "流水线ID", required = false)
     val pipelineId: String?,
-    @Schema(title = "Commit Msg", required = false)
+    @get:Schema(title = "Commit Msg", required = false)
     val commitMsg: String?,
-    @Schema(title = "Event", required = false)
+    @get:Schema(title = "Event", required = false)
     val event: Set<StreamGitObjectKind>?,
-    @Schema(title = "构建状态", required = false)
+    @get:Schema(title = "构建状态", required = false)
     val status: Set<BuildStatus>?,
-    @Schema(title = "流水线列表", required = false)
+    @get:Schema(title = "流水线列表", required = false)
     val pipelineIds: Set<String>?
 )

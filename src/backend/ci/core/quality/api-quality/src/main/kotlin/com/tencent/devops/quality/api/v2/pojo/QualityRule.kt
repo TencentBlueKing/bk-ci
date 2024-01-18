@@ -34,43 +34,43 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "红线实体类")
 data class QualityRule(
-    @Schema(title = "hashId", required = true)
+    @get:Schema(title = "hashId", required = true)
     val hashId: String,
-    @Schema(title = "红线名字", required = true)
+    @get:Schema(title = "红线名字", required = true)
     val name: String,
-    @Schema(title = "红线描述", required = true)
+    @get:Schema(title = "红线描述", required = true)
     val desc: String,
-    @Schema(title = "红线指标列表", required = true)
+    @get:Schema(title = "红线指标列表", required = true)
     val indicators: List<QualityIndicator>,
-    @Schema(title = "控制点", required = true)
+    @get:Schema(title = "控制点", required = true)
     val controlPoint: RuleControlPoint,
-    @Schema(title = "流水线范围", required = true)
+    @get:Schema(title = "流水线范围", required = true)
     val range: List<String>,
-    @Schema(title = "模板范围", required = true)
+    @get:Schema(title = "模板范围", required = true)
     val templateRange: List<String>,
-    @Schema(title = "操作类型", required = true)
+    @get:Schema(title = "操作类型", required = true)
     val operation: RuleOperation,
-    @Schema(title = "通知类型", required = false)
+    @get:Schema(title = "通知类型", required = false)
     val notifyTypeList: List<NotifyType>?,
-    @Schema(title = "通知组名单", required = false)
+    @get:Schema(title = "通知组名单", required = false)
     val notifyGroupList: List<String>?,
-    @Schema(title = "通知人员名单", required = false)
+    @get:Schema(title = "通知人员名单", required = false)
     val notifyUserList: List<String>?,
-    @Schema(title = "审核通知人员", required = false)
+    @get:Schema(title = "审核通知人员", required = false)
     val auditUserList: List<String>?,
-    @Schema(title = "审核超时时间", required = false)
+    @get:Schema(title = "审核超时时间", required = false)
     val auditTimeoutMinutes: Int?,
-    @Schema(title = "操作类型列表", required = false)
+    @get:Schema(title = "操作类型列表", required = false)
     val opList: List<RuleOp>? = null,
-    @Schema(title = "红线匹配的id", required = false)
+    @get:Schema(title = "红线匹配的id", required = false)
     val gatewayId: String?,
-    @Schema(title = "红线把关人", required = false)
+    @get:Schema(title = "红线把关人", required = false)
     val gateKeepers: List<String>?,
-    @Schema(title = "红线状态", required = false)
+    @get:Schema(title = "红线状态", required = false)
     val status: RuleInterceptResult?,
-    @Schema(title = "红线所在stage", required = true)
+    @get:Schema(title = "红线所在stage", required = true)
     val stageId: String,
-    @Schema(title = "红线指定的任务节点名", required = false)
+    @get:Schema(title = "红线指定的任务节点名", required = false)
     val taskSteps: List<RuleTask>?
 ) {
     data class RuleControlPoint(
@@ -82,24 +82,24 @@ data class QualityRule(
     )
 
     data class RuleOp(
-        @Schema(title = "操作类型", required = true)
+        @get:Schema(title = "操作类型", required = true)
         val operation: RuleOperation,
-        @Schema(title = "通知类型", required = false)
+        @get:Schema(title = "通知类型", required = false)
         val notifyTypeList: List<NotifyType>?,
-        @Schema(title = "通知组名单", required = false)
+        @get:Schema(title = "通知组名单", required = false)
         val notifyGroupList: List<String>?,
-        @Schema(title = "通知人员名单", required = false)
+        @get:Schema(title = "通知人员名单", required = false)
         val notifyUserList: List<String>?,
-        @Schema(title = "审核通知人员", required = false)
+        @get:Schema(title = "审核通知人员", required = false)
         val auditUserList: List<String>?,
-        @Schema(title = "审核超时时间", required = false)
+        @get:Schema(title = "审核超时时间", required = false)
         val auditTimeoutMinutes: Int?
     )
 
     data class RuleTask(
-        @Schema(title = "任务节点名", required = false)
+        @get:Schema(title = "任务节点名", required = false)
         val taskName: String?,
-        @Schema(title = "指标名", required = false)
+        @get:Schema(title = "指标名", required = false)
         val indicatorEnName: String?
     )
 }

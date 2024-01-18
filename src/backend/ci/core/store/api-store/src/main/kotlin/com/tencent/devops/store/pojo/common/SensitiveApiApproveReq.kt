@@ -32,10 +32,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "敏感API审批请求体")
 data class SensitiveApiApproveReq(
-    @Schema(title = "敏感API ID", required = true)
+    @get:Schema(title = "敏感API ID", required = true)
     val id: String,
-    @Schema(title = "审批状态 PASS:通过，REFUSE:拒绝", required = true)
+    @get:Schema(title = "审批状态 PASS:通过，REFUSE:拒绝", required = true)
     val apiStatus: ApiStatusEnum,
-    @Schema(title = "审批信息", required = true)
+    @get:Schema(title = "审批信息", required = true)
     val approveMsg: String?
 )

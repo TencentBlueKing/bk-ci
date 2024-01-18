@@ -32,26 +32,26 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class TaskBuildEndParam(
-    @Schema(title = "项目id", required = false)
+    @get:Schema(title = "项目id", required = false)
     val projectId: String,
-    @Schema(title = "流水线id", required = false)
+    @get:Schema(title = "流水线id", required = false)
     val pipelineId: String,
-    @Schema(title = "构建id", required = false)
+    @get:Schema(title = "构建id", required = false)
     val buildId: String,
-    @Schema(title = "容器作业id", required = false)
+    @get:Schema(title = "容器作业id", required = false)
     val containerId: String,
-    @Schema(title = "任务id", required = false)
+    @get:Schema(title = "任务id", required = false)
     val taskId: String,
-    @Schema(title = "执行次数", required = false)
+    @get:Schema(title = "执行次数", required = false)
     val executeCount: Int,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     var buildStatus: BuildStatus,
-    @Schema(title = "插件版本", required = false)
+    @get:Schema(title = "插件版本", required = false)
     val atomVersion: String? = null,
-    @Schema(title = "错误类型", required = false)
+    @get:Schema(title = "错误类型", required = false)
     var errorType: ErrorType? = null,
-    @Schema(title = "错误代码", required = false)
+    @get:Schema(title = "错误代码", required = false)
     var errorCode: Int? = null,
-    @Schema(title = "错误信息", required = false)
+    @get:Schema(title = "错误信息", required = false)
     var errorMsg: String? = null
 )

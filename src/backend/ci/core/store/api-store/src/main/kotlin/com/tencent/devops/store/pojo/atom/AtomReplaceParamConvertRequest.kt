@@ -31,16 +31,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件替换自定义参数转换请求报文")
 data class AtomReplaceParamConvertRequest(
-    @Schema(title = "替换插件代码", required = true)
+    @get:Schema(title = "替换插件代码", required = true)
     val toAtomCode: String,
-    @Schema(title = "替换插件版本", required = true)
+    @get:Schema(title = "替换插件版本", required = true)
     val toAtomVersion: String,
-    @Schema(title = "被替换插件字段名称", required = true)
+    @get:Schema(title = "被替换插件字段名称", required = true)
     val fromField: String,
-    @Schema(title = "被替换插件字段值", required = false)
+    @get:Schema(title = "被替换插件字段值", required = false)
     val fromFieldValue: Any?,
-    @Schema(title = "替换插件字段名称", required = true)
+    @get:Schema(title = "替换插件字段名称", required = true)
     val toField: String,
-    @Schema(title = "替换插件字段值", required = false)
+    @get:Schema(title = "替换插件字段值", required = false)
     val toFieldDefaultValue: Any?
 )

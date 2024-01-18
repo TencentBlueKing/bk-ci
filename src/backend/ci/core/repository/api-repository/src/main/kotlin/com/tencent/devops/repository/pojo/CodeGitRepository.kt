@@ -34,23 +34,23 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "代码库模型-Code平台Git")
 data class CodeGitRepository(
-    @Schema(title = "代码库别名", required = true)
+    @get:Schema(title = "代码库别名", required = true)
     override val aliasName: String,
-    @Schema(title = "URL", required = true)
+    @get:Schema(title = "URL", required = true)
     override val url: String,
-    @Schema(title = "凭据id(该凭证需要有git仓库Reporter以上权限)", required = true)
+    @get:Schema(title = "凭据id(该凭证需要有git仓库Reporter以上权限)", required = true)
     override val credentialId: String,
-    @Schema(title = "git项目名称", example = "devops/devops_ci_example_proj", required = true)
+    @get:Schema(title = "git项目名称", example = "devops/devops_ci_example_proj", required = true)
     override val projectName: String,
-    @Schema(title = "用户名", required = true)
+    @get:Schema(title = "用户名", required = true)
     override var userName: String,
-    @Schema(title = "仓库认证类型", required = false)
+    @get:Schema(title = "仓库认证类型", required = false)
     val authType: RepoAuthType? = RepoAuthType.SSH,
-    @Schema(title = "项目id", required = true)
+    @get:Schema(title = "项目id", required = true)
     override var projectId: String?,
-    @Schema(title = "仓库hash id", required = false)
+    @get:Schema(title = "仓库hash id", required = false)
     override val repoHashId: String?,
-    @Schema(title = "Git仓库ID", required = false)
+    @get:Schema(title = "Git仓库ID", required = false)
     val gitProjectId: Long?
 ) : Repository {
     companion object {

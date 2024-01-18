@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "通用消息类型")
 data class NotificationResponse<out T> (
     val id: String,
-    @Schema(title = "是否成功")
+    @get:Schema(title = "是否成功")
     val success: Boolean,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createdTime: Long?,
-    @Schema(title = "更新时间")
+    @get:Schema(title = "更新时间")
     val updatedTime: Long?,
-    @Schema(title = "总数")
+    @get:Schema(title = "总数")
     val contentMD5: String,
-    @Schema(title = "通知数据")
+    @get:Schema(title = "通知数据")
     val notificationMessage: T
 )

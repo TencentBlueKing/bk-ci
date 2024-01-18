@@ -32,25 +32,25 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "check run 模型")
 data class GithubCheckRuns(
-    @Schema(title = "名称")
+    @get:Schema(title = "名称")
     val name: String,
     @JsonProperty("head_sha")
-    @Schema(title = "head sha值", description = "head_sha")
+    @get:Schema(title = "head sha值", description = "head_sha")
     val headSha: String,
     @JsonProperty("details_url")
-    @Schema(title = "详情链接", description = "details_url")
+    @get:Schema(title = "详情链接", description = "details_url")
     val detailsUrl: String,
     @JsonProperty("external_id")
-    @Schema(title = "拓展ID", description = "external_id")
+    @get:Schema(title = "拓展ID", description = "external_id")
     val externalId: String,
-    @Schema(title = "状态")
+    @get:Schema(title = "状态")
     val status: String,
     @JsonProperty("started_at")
-    @Schema(title = "开始于", description = "started_at")
+    @get:Schema(title = "开始于", description = "started_at")
     val startedAt: String?,
-    @Schema(title = "结论")
+    @get:Schema(title = "结论")
     val conclusion: String?,
     @JsonProperty("completed_at")
-    @Schema(title = "完成于", description = "completed_at")
+    @get:Schema(title = "完成于", description = "completed_at")
     val completedAt: String?
 )

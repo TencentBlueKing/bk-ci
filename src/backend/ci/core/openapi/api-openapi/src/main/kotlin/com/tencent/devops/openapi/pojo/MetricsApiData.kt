@@ -30,20 +30,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "api度量数据")
 data class MetricsApiData(
-    @Schema(title = "接口代码")
+    @get:Schema(title = "接口代码")
     val api: String,
-    @Schema(title = "请求app code/ user id")
+    @get:Schema(title = "请求app code/ user id")
     val key: String,
-    @Schema(title = "秒级并发量")
+    @get:Schema(title = "秒级并发量")
     var secondLevelConcurrency: Int? = null,
-    @Schema(title = "峰值并发量")
+    @get:Schema(title = "峰值并发量")
     var peakConcurrency: Int? = null,
-    @Schema(title = "5min调用量")
+    @get:Schema(title = "5min调用量")
     var call5m: Int? = null,
-    @Schema(title = "1h调用量")
+    @get:Schema(title = "1h调用量")
     var call1h: Int? = null,
-    @Schema(title = "24h调用量")
+    @get:Schema(title = "24h调用量")
     var call24h: Int? = null,
-    @Schema(title = "7d调用量")
+    @get:Schema(title = "7d调用量")
     var call7d: Int? = null
 )

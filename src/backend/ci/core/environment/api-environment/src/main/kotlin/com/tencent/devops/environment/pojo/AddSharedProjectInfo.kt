@@ -33,13 +33,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "VM虚拟机配额")
 data class AddSharedProjectInfo(
     @Deprecated("普通项目也支持 , 请使用projectId")
-    @Schema(title = "工蜂项目ID", required = false)
+    @get:Schema(title = "工蜂项目ID", required = false)
     val gitProjectId: String? = null,
-    @Schema(title = "项目名称，工蜂项目则为groupName/projectName", required = true)
+    @get:Schema(title = "项目名称，工蜂项目则为groupName/projectName", required = true)
     val name: String,
-    @Schema(title = "类型，预留", required = true)
+    @get:Schema(title = "类型，预留", required = true)
     val type: SharedEnvType,
-    @Schema(title = "项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String? = null
 ) {
     @SuppressWarnings("TooGenericExceptionThrown")

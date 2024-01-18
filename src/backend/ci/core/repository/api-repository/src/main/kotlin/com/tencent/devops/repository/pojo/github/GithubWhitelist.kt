@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "白名单信息")
 data class GithubWhitelist(
-    @Schema(title = "ID")
+    @get:Schema(title = "ID")
     val id: Long = 0,
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String = "",
-    @Schema(title = "代码库链接")
+    @get:Schema(title = "代码库链接")
     val url: String = "",
-    @Schema(title = "创建人")
+    @get:Schema(title = "创建人")
     val creator: String = "",
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createdTime: String = ""
 )

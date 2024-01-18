@@ -33,14 +33,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "新增敏感数据请求包体")
 data class SensitiveConfReq(
-    @Schema(title = "字段名称", required = true)
+    @get:Schema(title = "字段名称", required = true)
     @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
     val fieldName: String,
-    @Schema(title = "字段值", required = true)
+    @get:Schema(title = "字段值", required = true)
     val fieldValue: String,
-    @Schema(title = "字段类型 BACKEND:后端使用，FRONTEND:前端使用，ALL:前后端使用", required = true)
+    @get:Schema(title = "字段类型 BACKEND:后端使用，FRONTEND:前端使用，ALL:前后端使用", required = true)
     @field:BkField(patternStyle = BkStyleEnum.STORE_FIELD_TYPE_STYLE)
     val fieldType: String,
-    @Schema(title = "字段描述", required = false)
+    @get:Schema(title = "字段描述", required = false)
     val fieldDesc: String?
 )

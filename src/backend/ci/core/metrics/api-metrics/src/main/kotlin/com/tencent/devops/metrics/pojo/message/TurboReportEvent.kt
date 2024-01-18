@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "Turbo上报消息")
 data class TurboReportEvent(
-    @Schema(title = "统计日期")
+    @get:Schema(title = "统计日期")
     val statisticsTime: String,
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "编译加速节省时间，单位：秒")
+    @get:Schema(title = "编译加速节省时间，单位：秒")
     val turboSaveTime: Double
 )

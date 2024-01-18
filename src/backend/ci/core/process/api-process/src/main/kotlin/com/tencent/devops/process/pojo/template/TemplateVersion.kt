@@ -35,12 +35,12 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "模板版本信息")
 data class TemplateVersion(
-    @Schema(title = "版本号", required = false)
+    @get:Schema(title = "版本号", required = false)
     val version: Long,
-    @Schema(title = "版本名称", required = false)
+    @get:Schema(title = "版本名称", required = false)
     val versionName: String,
-    @Schema(title = "更新时间", required = false)
+    @get:Schema(title = "更新时间", required = false)
     val updateTime: Long,
-    @Schema(title = "构建者", required = false)
+    @get:Schema(title = "构建者", required = false)
     val creator: String
 )

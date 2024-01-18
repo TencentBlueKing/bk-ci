@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "质量红线-用户组用户")
 data class GroupUsers(
-    @Schema(title = "内部人员")
+    @get:Schema(title = "内部人员")
     val innerUsers: Set<String>,
-    @Schema(title = "外部人员")
+    @get:Schema(title = "外部人员")
     val outerUsers: Set<String>
 )

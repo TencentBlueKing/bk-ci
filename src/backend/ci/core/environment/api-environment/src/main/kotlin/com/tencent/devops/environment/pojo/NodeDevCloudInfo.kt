@@ -31,24 +31,24 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "devCloud节点信息")
 data class NodeDevCloudInfo(
-    @Schema(title = "环境 HashId", required = true)
+    @get:Schema(title = "环境 HashId", required = true)
     val nodeHashId: String,
-    @Schema(title = "节点 Id", required = true)
+    @get:Schema(title = "节点 Id", required = true)
     val nodeId: String,
-    @Schema(title = "节点名称", required = true)
+    @get:Schema(title = "节点名称", required = true)
     val name: String,
-    @Schema(title = "IP", required = true)
+    @get:Schema(title = "IP", required = true)
     val ip: String,
-    @Schema(title = "节点状态", required = true)
+    @get:Schema(title = "节点状态", required = true)
     val nodeStatus: String,
-    @Schema(title = "agent状态", required = false)
+    @get:Schema(title = "agent状态", required = false)
     val agentStatus: Boolean?,
-    @Schema(title = "节点类型", required = true)
+    @get:Schema(title = "节点类型", required = true)
     val nodeType: String,
-    @Schema(title = "操作系统", required = false)
+    @get:Schema(title = "操作系统", required = false)
     val osName: String?,
-    @Schema(title = "创建人", required = true)
+    @get:Schema(title = "创建人", required = true)
     val createdUser: String,
-    @Schema(title = "projectId", required = false)
+    @get:Schema(title = "projectId", required = false)
     val projectId: String
 )

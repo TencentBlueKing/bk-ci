@@ -31,52 +31,52 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "NodeWithPermission-节点信息(权限)")
 data class NodeWithPermission(
-    @Schema(title = "环境 HashId", required = true)
+    @get:Schema(title = "环境 HashId", required = true)
     val nodeHashId: String,
-    @Schema(title = "节点 Id", required = true)
+    @get:Schema(title = "节点 Id", required = true)
     val nodeId: String,
-    @Schema(title = "节点名称", required = true)
+    @get:Schema(title = "节点名称", required = true)
     val name: String,
-    @Schema(title = "IP", required = true)
+    @get:Schema(title = "IP", required = true)
     val ip: String,
-    @Schema(title = "节点状态", required = true)
+    @get:Schema(title = "节点状态", required = true)
     val nodeStatus: String,
-    @Schema(title = "agent状态", required = true)
+    @get:Schema(title = "agent状态", required = true)
     val agentStatus: Boolean,
-    @Schema(title = "节点类型", required = true)
+    @get:Schema(title = "节点类型", required = true)
     val nodeType: String,
-    @Schema(title = "操作系统", required = false)
+    @get:Schema(title = "操作系统", required = false)
     val osName: String?,
-    @Schema(title = "创建人", required = true)
+    @get:Schema(title = "创建人", required = true)
     val createdUser: String,
-    @Schema(title = "责任人", required = false)
+    @get:Schema(title = "责任人", required = false)
     val operator: String?,
-    @Schema(title = "备份责任人", required = false)
+    @get:Schema(title = "备份责任人", required = false)
     val bakOperator: String?,
-    @Schema(title = "是否可以使用", required = false)
+    @get:Schema(title = "是否可以使用", required = false)
     val canUse: Boolean?,
-    @Schema(title = "是否可以编辑", required = false)
+    @get:Schema(title = "是否可以编辑", required = false)
     val canEdit: Boolean?,
-    @Schema(title = "是否可以删除", required = false)
+    @get:Schema(title = "是否可以删除", required = false)
     val canDelete: Boolean?,
-    @Schema(title = "是否可以查看", required = false)
+    @get:Schema(title = "是否可以查看", required = false)
     val canView: Boolean? = true,
-    @Schema(title = "网关地域", required = false)
+    @get:Schema(title = "网关地域", required = false)
     val gateway: String?,
-    @Schema(title = "显示名称", required = false)
+    @get:Schema(title = "显示名称", required = false)
     val displayName: String?,
-    @Schema(title = "创建/导入时间", required = false)
+    @get:Schema(title = "创建/导入时间", required = false)
     val createTime: String?,
-    @Schema(title = "最后修改时间", required = false)
+    @get:Schema(title = "最后修改时间", required = false)
     val lastModifyTime: String?,
-    @Schema(title = "最后修改人", required = false)
+    @get:Schema(title = "最后修改人", required = false)
     val lastModifyUser: String?,
-    @Schema(title = "所属业务, 默认-1表示没有绑定业务")
+    @get:Schema(title = "所属业务, 默认-1表示没有绑定业务")
     val bizId: Long? = -1,
-    @Schema(title = "流水线Job引用数")
+    @get:Schema(title = "流水线Job引用数")
     val pipelineRefCount: Int? = 0,
-    @Schema(title = "流水线Job引用数")
+    @get:Schema(title = "流水线Job引用数")
     val lastBuildTime: String? = "",
-    @Schema(title = "agent hash id")
+    @get:Schema(title = "agent hash id")
     val agentHashId: String? = ""
 )

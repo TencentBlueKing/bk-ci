@@ -31,20 +31,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "每日统计信息")
 data class StoreDailyStatistic(
-    @Schema(title = "总下载量")
+    @get:Schema(title = "总下载量")
     val totalDownloads: Int,
-    @Schema(title = "每日下载量")
+    @get:Schema(title = "每日下载量")
     val dailyDownloads: Int,
-    @Schema(title = "每日执行成功数")
+    @get:Schema(title = "每日执行成功数")
     val dailySuccessNum: Int,
-    @Schema(title = "每日执行成功率")
+    @get:Schema(title = "每日执行成功率")
     val dailySuccessRate: Double?,
-    @Schema(title = "每日执行失败数")
+    @get:Schema(title = "每日执行失败数")
     val dailyFailNum: Int,
-    @Schema(title = "每日执行失败率")
+    @get:Schema(title = "每日执行失败率")
     val dailyFailRate: Double?,
-    @Schema(title = "每日执行失败详情")
+    @get:Schema(title = "每日执行失败详情")
     val dailyFailDetail: Map<String, Any>?,
-    @Schema(title = "统计时间，格式yyyy-MM-dd HH:mm:ss")
+    @get:Schema(title = "统计时间，格式yyyy-MM-dd HH:mm:ss")
     val statisticsTime: String
 )

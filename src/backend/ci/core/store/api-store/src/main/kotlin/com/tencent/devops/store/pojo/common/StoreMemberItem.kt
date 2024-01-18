@@ -31,22 +31,22 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "store成员")
 data class StoreMemberItem(
-    @Schema(title = "ID")
+    @get:Schema(title = "ID")
     val id: String,
-    @Schema(title = "成员名称")
+    @get:Schema(title = "成员名称")
     val userName: String,
-    @Schema(title = "成员类型")
+    @get:Schema(title = "成员类型")
     val type: String,
-    @Schema(title = "所属调试项目标识")
+    @get:Schema(title = "所属调试项目标识")
     val projectCode: String,
-    @Schema(title = "所属调试项目名称")
+    @get:Schema(title = "所属调试项目名称")
     val projectName: String,
-    @Schema(title = "创建人")
+    @get:Schema(title = "创建人")
     val creator: String,
-    @Schema(title = "修改人")
+    @get:Schema(title = "修改人")
     val modifier: String,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: String,
-    @Schema(title = "修改时间")
+    @get:Schema(title = "修改时间")
     val updateTime: String
 )

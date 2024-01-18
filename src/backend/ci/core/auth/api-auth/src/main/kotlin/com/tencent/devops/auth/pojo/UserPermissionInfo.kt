@@ -33,10 +33,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "")
 data class UserPermissionInfo(
-    @Schema(title = "组织id")
+    @get:Schema(title = "组织id")
     val organizationId: Int,
-    @Schema(title = "组织级别")
+    @get:Schema(title = "组织级别")
     val organizationLevel: Int,
-    @Schema(title = "权限详情")
+    @get:Schema(title = "权限详情")
     val permissionMap: Map<AuthResourceType, List<AuthPermission>>
 )

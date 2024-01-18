@@ -33,24 +33,24 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "流水线触发详情")
 data class PipelineTriggerDetail(
     var detailId: Long? = null,
-    @Schema(title = "蓝盾项目ID")
+    @get:Schema(title = "蓝盾项目ID")
     val projectId: String,
-    @Schema(title = "事件ID")
+    @get:Schema(title = "事件ID")
     val eventId: Long,
-    @Schema(title = "触发状态")
+    @get:Schema(title = "触发状态")
     var status: String,
-    @Schema(title = "流水线Id")
+    @get:Schema(title = "流水线Id")
     var pipelineId: String? = null,
-    @Schema(title = "流水线名称")
+    @get:Schema(title = "流水线名称")
     var pipelineName: String? = null,
-    @Schema(title = "构建Id")
+    @get:Schema(title = "构建Id")
     var buildId: String? = null,
-    @Schema(title = "构建编号")
+    @get:Schema(title = "构建编号")
     var buildNum: String? = null,
-    @Schema(title = "原因")
+    @get:Schema(title = "原因")
     var reason: String? = null,
-    @Schema(title = "原因详情", required = false)
+    @get:Schema(title = "原因详情", required = false)
     var reasonDetailList: List<String>? = null,
-    @Schema(title = "创建时间", required = false)
+    @get:Schema(title = "创建时间", required = false)
     val createTime: Long? = null
 )

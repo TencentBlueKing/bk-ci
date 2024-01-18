@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "服务-列表显示模型")
 data class ServiceListVO(
-    @Schema(title = "服务类型标题")
+    @get:Schema(title = "服务类型标题")
     val title: String,
-    @Schema(title = "服务类型权重")
+    @get:Schema(title = "服务类型权重")
     val weigHt: Int,
-    @Schema(title = "服务集合")
+    @get:Schema(title = "服务集合")
     val children: List<ServiceVO>
 )

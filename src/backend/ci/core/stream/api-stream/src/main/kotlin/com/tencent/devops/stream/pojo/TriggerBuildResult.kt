@@ -31,24 +31,24 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "手动触发返回结果")
 data class TriggerBuildResult(
-    @Schema(title = "蓝盾项目ID")
+    @get:Schema(title = "蓝盾项目ID")
     val projectId: String,
-    @Schema(title = "分支")
+    @get:Schema(title = "分支")
     val branch: String,
-    @Schema(title = "Custom commit message")
+    @get:Schema(title = "Custom commit message")
     val customCommitMsg: String?,
-    @Schema(title = "描述")
+    @get:Schema(title = "描述")
     val description: String?,
-    @Schema(title = "用户选择的触发CommitId")
+    @get:Schema(title = "用户选择的触发CommitId")
     val commitId: String? = null,
-    @Schema(title = "触发的构建ID")
+    @get:Schema(title = "触发的构建ID")
     val buildId: String,
-    @Schema(title = "触发的构建详情页")
+    @get:Schema(title = "触发的构建详情页")
     val buildUrl: String
 )
 
 @Schema(title = "App手动触发返回结果")
 data class AppTriggerBuildResult(
-    @Schema(title = "构建ID")
+    @get:Schema(title = "构建ID")
     val id: String
 )

@@ -32,9 +32,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "构建详情记录-事件时间戳")
 data class BuildRecordTimeStamp(
-    @Schema(title = "开始时间", required = true)
+    @get:Schema(title = "开始时间", required = true)
     val startTime: Long?,
-    @Schema(title = "结束时间", required = true)
+    @get:Schema(title = "结束时间", required = true)
     val endTime: Long?
 ) {
     fun between() = (endTime ?: startTime ?: 0) - (startTime ?: 0)

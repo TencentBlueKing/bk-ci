@@ -32,22 +32,22 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "质量红线-规则拦截数")
 data class QualityRuleIntercept(
-    @Schema(title = "流水线ID", required = true)
+    @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(title = "流水线名称", required = true)
+    @get:Schema(title = "流水线名称", required = true)
     val pipelineName: String,
-    @Schema(title = "构建ID", required = true)
+    @get:Schema(title = "构建ID", required = true)
     val buildId: String,
-    @Schema(title = "规则ID", required = true)
+    @get:Schema(title = "规则ID", required = true)
     val ruleHashId: String,
-    @Schema(title = "规则名称", required = true)
+    @get:Schema(title = "规则名称", required = true)
     val ruleName: String,
-    @Schema(title = "拦截时间", required = true)
+    @get:Schema(title = "拦截时间", required = true)
     val interceptTime: Long,
-    @Schema(title = "拦截结果", required = true)
+    @get:Schema(title = "拦截结果", required = true)
     val result: RuleInterceptResult,
-    @Schema(title = "拦截次数", required = true)
+    @get:Schema(title = "拦截次数", required = true)
     val checkTimes: Int,
-    @Schema(title = "拦截结果信息列表", required = true)
+    @get:Schema(title = "拦截结果信息列表", required = true)
     val resultMsg: List<QualityRuleInterceptRecord>
 )

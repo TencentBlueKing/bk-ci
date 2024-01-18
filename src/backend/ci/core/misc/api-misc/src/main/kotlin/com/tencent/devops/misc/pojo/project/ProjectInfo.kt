@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "项目信息")
 data class ProjectInfo(
-    @Schema(title = "主键Id", required = true)
+    @get:Schema(title = "主键Id", required = true)
     val id: Long,
-    @Schema(title = "项目Id", required = true)
+    @get:Schema(title = "项目Id", required = true)
     val projectId: String,
-    @Schema(title = "项目渠道", required = true)
+    @get:Schema(title = "项目渠道", required = true)
     val channel: String
 )

@@ -33,29 +33,29 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "质量红线-规则简要信息v2")
 data class QualityRuleSummaryWithPermission(
-    @Schema(title = "规则HashId", required = true)
+    @get:Schema(title = "规则HashId", required = true)
     val ruleHashId: String,
-    @Schema(title = "规则名称", required = true)
+    @get:Schema(title = "规则名称", required = true)
     val name: String,
-    @Schema(title = "控制点", required = true)
+    @get:Schema(title = "控制点", required = true)
     val controlPoint: RuleSummaryControlPoint,
-    @Schema(title = "指标列表", required = true)
+    @get:Schema(title = "指标列表", required = true)
     val indicatorList: List<RuleSummaryIndicator>,
-    @Schema(title = "生效范围", required = true)
+    @get:Schema(title = "生效范围", required = true)
     val range: RuleRange,
-    @Schema(title = "包含模板和流水线的生效范围（新）", required = true)
+    @get:Schema(title = "包含模板和流水线的生效范围（新）", required = true)
     val rangeSummary: List<RuleRangeSummary>,
-    @Schema(title = "流水线个数", required = true)
+    @get:Schema(title = "流水线个数", required = true)
     val pipelineCount: Int,
-    @Schema(title = "生效流水线执次数", required = true)
+    @get:Schema(title = "生效流水线执次数", required = true)
     val pipelineExecuteCount: Int,
-    @Schema(title = "拦截次数", required = true)
+    @get:Schema(title = "拦截次数", required = true)
     val interceptTimes: Int,
-    @Schema(title = "是否启用", required = true)
+    @get:Schema(title = "是否启用", required = true)
     val enable: Boolean,
-    @Schema(title = "规则权限", required = true)
+    @get:Schema(title = "规则权限", required = true)
     val permissions: RulePermission,
-    @Schema(title = "红线ID", required = true)
+    @get:Schema(title = "红线ID", required = true)
     val gatewayId: String?
 ) {
         data class RuleSummaryControlPoint(

@@ -33,11 +33,11 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "国际化变量")
 data class I18Variable(
-    @Schema(title = "国际化变量名")
+    @get:Schema(title = "国际化变量名")
     val code: String,
-    @Schema(title = "国际化参数")
+    @get:Schema(title = "国际化参数")
     val params: List<String>,
-    @Schema(title = "默认信息")
+    @get:Schema(title = "默认信息")
     val defaultMessage: String? = null
 ) {
     fun toJsonStr() = JsonUtil.toJson(this, false)

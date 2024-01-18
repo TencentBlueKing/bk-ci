@@ -37,26 +37,26 @@ data class RepoPipelineRefInfo(
     val projectId: String,
     @Parameter(description = "流水线ID")
     val pipelineId: String,
-    @Schema(title = "流水线名称")
+    @get:Schema(title = "流水线名称")
     val pipelineName: String,
-    @Schema(title = "代码库配置")
+    @get:Schema(title = "代码库配置")
     val repositoryConfig: RepositoryConfig,
-    @Schema(title = "插件ID")
+    @get:Schema(title = "插件ID")
     val taskId: String,
-    @Schema(title = "插件名")
+    @get:Schema(title = "插件名")
     val taskName: String,
-    @Schema(title = "插件参数")
+    @get:Schema(title = "插件参数")
     val taskParams: Map<String, Any>,
-    @Schema(title = "插件code")
+    @get:Schema(title = "插件code")
     val atomCode: String,
-    @Schema(title = "插件版本")
+    @get:Schema(title = "插件版本")
     val atomVersion: String? = null,
-    @Schema(title = "插件类别，TRIGGER：触发器类插件 TASK：任务类插件")
+    @get:Schema(title = "插件类别，TRIGGER：触发器类插件 TASK：任务类插件")
     val atomCategory: String,
-    @Schema(title = "触发类型,只有触发插件才有值")
+    @get:Schema(title = "触发类型,只有触发插件才有值")
     val triggerType: String? = null,
-    @Schema(title = "事件类型,只有触发插件才有值")
+    @get:Schema(title = "事件类型,只有触发插件才有值")
     val eventType: String? = null,
-    @Schema(title = "触发条件")
+    @get:Schema(title = "触发条件")
     val triggerCondition: String? = null
 )

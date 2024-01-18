@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "VM-分页-基本信息")
 data class VMWithPage(
-    @Schema(title = "VM总数", required = true)
+    @get:Schema(title = "VM总数", required = true)
     val total: Int,
-    @Schema(title = "VM列表", required = true)
+    @get:Schema(title = "VM列表", required = true)
     val vms: List<VMResponse>
 )
