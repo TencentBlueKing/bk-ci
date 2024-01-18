@@ -401,11 +401,16 @@ class CodeSvnScmImpl constructor(
     }
 
     override fun getGitSession(): GitSession? {
-        return SVNApi.getSession(
-            host = svnConfig.apiUrlOa,
-            username = privateKey,
-            password = passphrase ?: ""
-        )
+        return try {
+            SVNApi.getSession(
+                host = svnConfig.apiUrlOa,
+                username = privateKey,
+                password = passphrase ?: ""
+            )
+        } catch (e: ScmException) {
+            logger.warn("fail get the svn session", e)
+            null
+        }
     }
 
     companion object {
