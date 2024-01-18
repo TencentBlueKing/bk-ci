@@ -56,8 +56,15 @@
                 }]
             }
         },
-        created () {
-            this.init()
+        watch: {
+            '$route.params.pipelineId': {
+                handler (val) {
+                    this.$nextTick(() => {
+                        this.init()
+                    })
+                },
+                immediate: true
+            }
         },
         methods: {
             ...mapActions('pipelines', [

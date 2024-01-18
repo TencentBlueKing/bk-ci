@@ -2,9 +2,8 @@
     <bk-sideslider
         :is-show.sync="value"
         :width="800"
-        @showen="showReleaseSlider"
+        @shown="showReleaseSlider"
         @hidden="hideReleaseSlider"
-        :transfer="false"
         ext-cls="release-pipeline-side-slider"
     >
         <header slot="header" class="release-pipeline-side-slider-header">
@@ -225,7 +224,7 @@
             >
                 {{ $t("release") }}
             </bk-button>
-            <bk-button :disabled="releasing" @click="hideReleaseSlider">
+            <bk-button :disabled="releasing" @click="$emit('input', false)">
                 {{ $t("cancel") }}
             </bk-button>
         </footer>
@@ -392,6 +391,9 @@
                 },
                 immediate: true
             }
+        },
+        mounted () {
+            window.__bk_zIndex_manager.zIndex = 2050
         },
         beforeDestroy () {
             window.__bk_zIndex_manager.zIndex = 2000
@@ -717,9 +719,7 @@
 
 <style lang="scss">
 @import "@/scss/conf";
-.release-pipeline-side-slider {
-    z-index: 2036 !important;
-}
+
 .release-pipeline-side-slider-header {
   display: flex;
   align-items: center;

@@ -155,10 +155,13 @@
             },
             emptyType () {
                 return this.filterKeys.length > 0 ? 'search-empty' : 'empty'
-            },
-            emptyTips () {
-                return this.$t(this.filterKeys.length > 0 ? '搜索为空' : '暂无数据')
             }
+        },
+        mounted () {
+            window.__bk_zIndex_manager.zIndex = 2050
+        },
+        beforeDestroy () {
+            window.__bk_zIndex_manager.zIndex = 2000
         },
         methods: {
             ...mapActions('pipelines', [
@@ -251,9 +254,6 @@
 
 <style lang="scss">
     @import "@/scss/select-dark-theme.scss";
-    .pipeline-version-sideslider {
-        z-index: 2036 !important;
-    }
     .pipeline-version-history {
         padding: 24px;
         display: flex;
