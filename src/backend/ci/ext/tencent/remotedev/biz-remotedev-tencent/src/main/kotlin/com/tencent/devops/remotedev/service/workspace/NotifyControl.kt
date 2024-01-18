@@ -46,6 +46,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
+import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -257,7 +258,7 @@ class NotifyControl @Autowired constructor(
 
     private fun getWebSocketUsers(operator: String, workspaceName: String): Set<String> {
         return if (operator == ADMIN_NAME) {
-            workspaceDao.fetchWorkspaceUser(dslContext, workspaceName).toSet()
+            workspaceDao.fetchWorkspaceUser(dslContext, workspaceName, WorkspaceShared.AssignType.OWNER).toSet()
         } else {
             setOf(operator)
         }

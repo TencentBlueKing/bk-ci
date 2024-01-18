@@ -299,14 +299,20 @@ class WorkspaceDao {
      */
     fun fetchWorkspaceUser(
         dslContext: DSLContext,
-        workspaceName: String
+        workspaceName: String,
+        assignType: WorkspaceShared.AssignType? = null
     ): List<String> {
         val shared = TWorkspaceShared.T_WORKSPACE_SHARED
+        val conditions = mutableListOf<Condition>()
+        conditions.add(shared.WORKSPACE_NAME.eq(workspaceName))
+        if (assignType != null) {
+            conditions.add(shared.ASSIGN_TYPE.eq(assignType.name))
+        }
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.select(CREATOR).from(this)
                 .where(NAME.eq(workspaceName)).unionAll(
                     DSL.select(shared.SHARED_USER).from(shared).where(
-                        shared.WORKSPACE_NAME.eq(workspaceName)
+                        conditions
                     )
                 ).fetch(0, String::class.java)
         }
