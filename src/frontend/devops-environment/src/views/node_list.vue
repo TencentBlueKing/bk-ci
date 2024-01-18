@@ -169,7 +169,10 @@
                                         <div class="rotate rotate8"></div>
                                     </div>
                                     <!-- 状态值 -->
-                                    <span class="node-status">{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}({{ props.row.agentVersion }})</span>
+                                    <span class="node-status">
+                                        {{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}
+                                        <span v-if="props.row.agentVersion">({{ props.row.agentVersion }})</span>
+                                    </span>
                                 </template>
                             </div>
                         </template>

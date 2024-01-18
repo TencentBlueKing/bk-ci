@@ -45,7 +45,7 @@
                 >
                     <bk-radio-group v-model="formData.authType">
                         <bk-radio value="PASSWORD" class="mr20">{{ $t('environment.password') }}</bk-radio>
-                        <!-- <bk-radio value="KEY" class="mr20">{{ $t('environment.key') }}</bk-radio> -->
+                        <bk-radio value="KEY" class="mr20">{{ $t('environment.key') }}</bk-radio>
                     </bk-radio-group>
                 </bk-form-item>
                 <bk-form-item
@@ -71,6 +71,10 @@
                         ext-cls="upload-file-btn"
                         theme="button"
                         :tip="$t('environment.uploadTips')"
+                        :custom-request="handleUpload"
+                        url="/"
+                        :limit="1"
+                        :multiple="false"
                     >
                     </bk-upload>
                     <div class="keyFile-tips">{{ $t('environment.keyFileTips') }}</div>
@@ -183,7 +187,8 @@
                 isEditing: true,
                 jobId: -1,
                 installStatus: '',
-                taskLog: ''
+                taskLog: '',
+                keyFileFormData: new FormData()
             }
         },
         computed: {
@@ -254,9 +259,13 @@
                     }
                     const hosts = []
                     hosts.push(params)
+                    this.keyFileFormData.append('installAgentReq', JSON.stringify({ hosts }))
                     const res = await this.$store.dispatch('environment/installAgent', {
                         projectId: this.projectId,
-                        hosts
+                        data: this.keyFileFormData,
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
                     })
                     this.jobId = res.jobId
                     this.isEditing = false
@@ -283,6 +292,7 @@
                 this.isEditing = true
                 this.installStatus = ''
                 this.jobId = -1
+                this.keyFile = null
                 this.formData = this.getDefaultFormData()
             },
             
@@ -336,6 +346,7 @@
                 })
                 this.taskLog = logList.join('\n')
                 this.editor.getSession().setValue(this.taskLog)
+                this.editor.scrollToLine(Infinity)
             },
 
             async handleRetryInstallAgent () {
@@ -343,6 +354,10 @@
                 this.taskLog = ''
                 this.editor.getSession().setValue('')
                 this.handleConFirm()
+            },
+
+            handleUpload (option) {
+                this.keyFileFormData.append('keyFile', option.fileObj.origin)
             }
         }
     }

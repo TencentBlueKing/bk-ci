@@ -439,9 +439,9 @@ const actions = {
         return vue.$ajax.get(`${prefix}/user/job/${projectId}/get_step_instance_detail?jobInstanceId=${jobInstanceId}&stepInstanceId=${stepInstanceId}`)
     },
 
-    installAgent (_, { projectId, hosts }) {
-        return vue.$ajax.post(`${prefix}/user/job/${projectId}/install_agent`, {
-            hosts
+    installAgent (_, { projectId, data, headers }) {
+        return vue.$ajax.post(`${prefix}/user/job/${projectId}/install_agent`, data, {
+            headers
         })
     },
     // 安装通道列表
