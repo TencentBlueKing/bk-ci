@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "白名单返回模型")
 data class WhiteEntify(
-    @Schema(title = "id")
+    @get:Schema(title = "id")
     val id: Int,
-    @Schema(title = "管理员id")
+    @get:Schema(title = "管理员id")
     val managerId: Int,
-    @Schema(title = "用户名")
+    @get:Schema(title = "用户名")
     val user: String
 )

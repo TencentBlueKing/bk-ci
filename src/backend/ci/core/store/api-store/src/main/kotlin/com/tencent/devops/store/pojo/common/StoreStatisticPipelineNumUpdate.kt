@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "使用store组件流水线数量更新实体对象")
 data class StoreStatisticPipelineNumUpdate(
-    @Schema(title = "插件标识")
+    @get:Schema(title = "插件标识")
     val storeCode: String,
-    @Schema(title = "数量增长标识")
+    @get:Schema(title = "数量增长标识")
     val incrementFlag: Boolean? = null,
-    @Schema(title = "更新数量")
+    @get:Schema(title = "更新数量")
     val num: Int? = null
 )

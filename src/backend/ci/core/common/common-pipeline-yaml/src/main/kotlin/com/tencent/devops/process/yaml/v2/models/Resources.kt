@@ -50,7 +50,7 @@ data class Repositories(
 )
 
 data class ResCredentials(
-    @Schema(title = "personal-access-token")
+    @get:Schema(title = "personal-access-token")
     @JsonProperty("personal-access-token")
     val personalAccessToken: String?
 )

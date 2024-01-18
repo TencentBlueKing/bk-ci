@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "组件基本信息")
 data class StoreBaseInfo(
-    @Schema(title = "组件Id", required = true)
+    @get:Schema(title = "组件Id", required = true)
     val storeId: String,
-    @Schema(title = "组件代码", required = true)
+    @get:Schema(title = "组件代码", required = true)
     val storeCode: String,
-    @Schema(title = "组件名称", required = true)
+    @get:Schema(title = "组件名称", required = true)
     val storeName: String,
-    @Schema(title = "组件版本号", required = true)
+    @get:Schema(title = "组件版本号", required = true)
     val version: String,
-    @Schema(title = "是否为公共组件", required = true)
+    @get:Schema(title = "是否为公共组件", required = true)
     val publicFlag: Boolean
 )

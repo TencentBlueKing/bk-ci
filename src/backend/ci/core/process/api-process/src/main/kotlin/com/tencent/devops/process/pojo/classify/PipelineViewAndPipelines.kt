@@ -32,10 +32,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "")
 data class PipelineViewAndPipelines(
-    @Schema(title = "当前视图id", required = false)
+    @get:Schema(title = "当前视图id", required = false)
     val currentViewId: String,
-    @Schema(title = "视图列表", required = false)
+    @get:Schema(title = "视图列表", required = false)
     val viewList: List<PipelineViewIdAndName>,
-    @Schema(title = "流水线页面", required = false)
+    @get:Schema(title = "流水线页面", required = false)
     val pipelinePage: PipelineViewPipelinePage<Pipeline>
 )

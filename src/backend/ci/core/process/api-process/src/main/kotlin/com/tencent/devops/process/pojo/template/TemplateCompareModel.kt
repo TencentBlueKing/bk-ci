@@ -34,10 +34,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "")
 data class TemplateCompareModel(
-    @Schema(title = "构建号", required = false)
+    @get:Schema(title = "构建号", required = false)
     val buildNo: BuildNo?,
-    @Schema(title = "流水线变量列表", required = false)
+    @get:Schema(title = "流水线变量列表", required = false)
     val params: List<BuildFormProperty>,
-    @Schema(title = "流水线模型", required = false)
+    @get:Schema(title = "流水线模型", required = false)
     val model: Model
 )

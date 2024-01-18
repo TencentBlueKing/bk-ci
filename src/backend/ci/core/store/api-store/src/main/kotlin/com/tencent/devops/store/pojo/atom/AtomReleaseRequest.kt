@@ -32,18 +32,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件发布请求报文")
 data class AtomReleaseRequest(
-    @Schema(title = "插件ID")
+    @get:Schema(title = "插件ID")
     val atomId: String,
-    @Schema(title = "插件代码")
+    @get:Schema(title = "插件代码")
     val atomCode: String,
-    @Schema(title = "插件版本号")
+    @get:Schema(title = "插件版本号")
     val version: String,
-    @Schema(title = "插件状态")
+    @get:Schema(title = "插件状态")
     val atomStatus: Byte,
-    @Schema(title = "发布类型")
+    @get:Schema(title = "发布类型")
     val releaseType: ReleaseTypeEnum,
-    @Schema(title = "代码库哈希ID")
+    @get:Schema(title = "代码库哈希ID")
     val repositoryHashId: String? = null,
-    @Schema(title = "代码库分支")
+    @get:Schema(title = "代码库分支")
     val branch: String? = null
 )

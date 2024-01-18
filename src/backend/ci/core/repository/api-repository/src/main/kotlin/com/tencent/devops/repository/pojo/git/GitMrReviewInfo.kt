@@ -84,35 +84,35 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "git mr reviewers信息")
 data class GitMrReviewInfo(
     @JsonProperty("created_at")
-    @Schema(title = "created_at")
+    @get:Schema(title = "created_at")
     val createTime: String? = "",
     @JsonProperty("updated_at")
-    @Schema(title = "updated_at")
+    @get:Schema(title = "updated_at")
     val updateTime: String? = "",
     @JsonProperty("iid")
-    @Schema(title = "iid")
+    @get:Schema(title = "iid")
     val mrNumber: String = "",
     @JsonProperty("id")
-    @Schema(title = "id")
+    @get:Schema(title = "id")
     val mrId: String = "",
     val reviewers: List<GitMrInfoReviewer>
 ) {
 
     data class GitMrInfoReviewer(
         @JsonProperty("id")
-        @Schema(title = "id")
+        @get:Schema(title = "id")
         val id: Int = 0,
         @JsonProperty("username")
-        @Schema(title = "username")
+        @get:Schema(title = "username")
         val username: String = "",
         @JsonProperty("web_url")
-        @Schema(title = "web_url")
+        @get:Schema(title = "web_url")
         val webUrl: String = "",
         @JsonProperty("state")
-        @Schema(title = "state")
+        @get:Schema(title = "state")
         val title: String = "",
         @JsonProperty("avatar_url")
-        @Schema(title = "avatar_url")
+        @get:Schema(title = "avatar_url")
         val avatarUrl: String = ""
     )
 }

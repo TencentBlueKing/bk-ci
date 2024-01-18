@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "Agent活动（上下线）")
 data class ThirdPartyAgentAction(
-    @Schema(title = "Agent Hash Id", required = true)
+    @get:Schema(title = "Agent Hash Id", required = true)
     val agentId: String,
-    @Schema(title = "项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(title = "活动", required = true)
+    @get:Schema(title = "活动", required = true)
     val action: String,
-    @Schema(title = "活动时间", required = true)
+    @get:Schema(title = "活动时间", required = true)
     val actionTime: Long
 )

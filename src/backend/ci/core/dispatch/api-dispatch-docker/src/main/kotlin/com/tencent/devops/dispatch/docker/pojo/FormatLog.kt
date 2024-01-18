@@ -31,11 +31,11 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "Log消息体模型")
 data class FormatLog(
-    @Schema(title = "日志类型")
+    @get:Schema(title = "日志类型")
     val logType: LogType,
-    @Schema(title = "处理时间")
+    @get:Schema(title = "处理时间")
     val washTime: String,
-    @Schema(title = "日志信息map")
+    @get:Schema(title = "日志信息map")
     val logMessageMap: Map<String, String>
 )
 

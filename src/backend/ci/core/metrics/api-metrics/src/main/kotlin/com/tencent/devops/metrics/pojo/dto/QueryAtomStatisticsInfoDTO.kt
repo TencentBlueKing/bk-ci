@@ -33,23 +33,23 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件统计信息查询传输对象")
 data class QueryAtomStatisticsInfoDTO(
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "流水线ID")
+    @get:Schema(title = "流水线ID")
     val pipelineIds: List<String>? = null,
-    @Schema(title = "流水线标签")
+    @get:Schema(title = "流水线标签")
     val pipelineLabelIds: List<Long>? = null,
-    @Schema(title = "开始时间")
+    @get:Schema(title = "开始时间")
     val startTime: String,
-    @Schema(title = "结束时间")
+    @get:Schema(title = "结束时间")
     val endTime: String,
-    @Schema(title = "错误类型")
+    @get:Schema(title = "错误类型")
     val errorTypes: List<Int>? = null,
-    @Schema(title = "插件代码")
+    @get:Schema(title = "插件代码")
     val atomCodes: List<String>?,
-    @Schema(title = "页码")
+    @get:Schema(title = "页码")
     val page: Int = 1,
-    @Schema(title = "页数")
+    @get:Schema(title = "页数")
     @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
     val pageSize: Int = 10
 )

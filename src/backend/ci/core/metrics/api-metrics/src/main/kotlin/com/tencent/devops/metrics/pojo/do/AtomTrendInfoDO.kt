@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件趋势信息")
 data class AtomTrendInfoDO(
-    @Schema(title = "插件代码")
+    @get:Schema(title = "插件代码")
     val atomCode: String,
-    @Schema(title = "插件名称")
+    @get:Schema(title = "插件名称")
     val atomName: String,
-    @Schema(title = "趋势信息列表")
+    @get:Schema(title = "趋势信息列表")
     var atomTrendInfos: MutableList<AtomBaseTrendInfoDO>?
 )

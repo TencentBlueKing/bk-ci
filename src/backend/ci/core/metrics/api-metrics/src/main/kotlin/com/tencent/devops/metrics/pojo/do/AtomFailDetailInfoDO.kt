@@ -33,42 +33,42 @@ import java.time.LocalDateTime
 
 @Schema(title = "插件失败详情信息")
 data class AtomFailDetailInfoDO(
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "流水线ID")
+    @get:Schema(title = "流水线ID")
     val pipelineId: String,
-    @Schema(title = "流水线名称")
+    @get:Schema(title = "流水线名称")
     val pipelineName: String,
-    @Schema(title = "渠道代码")
+    @get:Schema(title = "渠道代码")
     val channelCode: String,
-    @Schema(title = "域名")
+    @get:Schema(title = "域名")
     var domain: String? = null,
-    @Schema(title = "构建ID")
+    @get:Schema(title = "构建ID")
     val buildId: String,
-    @Schema(title = "构建序号")
+    @get:Schema(title = "构建序号")
     val buildNum: Int,
-    @Schema(title = "插件代码")
+    @get:Schema(title = "插件代码")
     val atomCode: String,
-    @Schema(title = "插件名称")
+    @get:Schema(title = "插件名称")
     val atomName: String,
-    @Schema(title = "插件在model中的位置")
+    @get:Schema(title = "插件在model中的位置")
     val atomPosition: String,
-    @Schema(title = "插件分类代码")
+    @get:Schema(title = "插件分类代码")
     val classifyCode: String,
-    @Schema(title = "启动用户")
+    @get:Schema(title = "启动用户")
     val startUser: String,
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @Schema(title = "启动时间")
+    @get:Schema(title = "启动时间")
     val startTime: LocalDateTime?,
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @Schema(title = "结束时间")
+    @get:Schema(title = "结束时间")
     val endTime: LocalDateTime?,
-    @Schema(title = "错误的类型标识")
+    @get:Schema(title = "错误的类型标识")
     val errorType: Int?,
-    @Schema(title = "错误的类型标识名称")
+    @get:Schema(title = "错误的类型标识名称")
     var errorTypeName: String? = null,
-    @Schema(title = "错误的标识码")
+    @get:Schema(title = "错误的标识码")
     val errorCode: Int?,
-    @Schema(title = "错误描述")
+    @get:Schema(title = "错误描述")
     val errorMsg: String?
 )

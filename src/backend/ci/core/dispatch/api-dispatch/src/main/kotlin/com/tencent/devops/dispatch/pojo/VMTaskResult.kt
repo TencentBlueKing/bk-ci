@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "虚拟机主机-任务结束后置处理")
 data class VMTaskResult(
-    @Schema(title = "task id", required = true)
+    @get:Schema(title = "task id", required = true)
     val taskId: Int,
-    @Schema(title = "脚本执行信息", required = true)
+    @get:Schema(title = "脚本执行信息", required = true)
     val message: String,
-    @Schema(title = "脚本执行结果", required = true)
+    @get:Schema(title = "脚本执行结果", required = true)
     val success: Boolean
 )

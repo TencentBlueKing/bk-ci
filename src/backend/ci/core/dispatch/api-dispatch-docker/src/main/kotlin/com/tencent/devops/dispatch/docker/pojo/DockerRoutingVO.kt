@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "docker构建路由模型")
 data class DockerRoutingVO(
-    @Schema(title = "项目id")
+    @get:Schema(title = "项目id")
     val projectId: String,
-    @Schema(title = "路由类型")
+    @get:Schema(title = "路由类型")
     val dockerRoutingType: String
 )

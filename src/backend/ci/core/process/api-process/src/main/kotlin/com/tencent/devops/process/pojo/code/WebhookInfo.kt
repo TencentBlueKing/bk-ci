@@ -30,30 +30,30 @@ package com.tencent.devops.process.pojo.code
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class WebhookInfo(
-    @Schema(title = "代码库类型", required = true)
+    @get:Schema(title = "代码库类型", required = true)
     val codeType: String?, // CodeType.name
-    @Schema(title = "代码库完整名称", required = true)
+    @get:Schema(title = "代码库完整名称", required = true)
     val nameWithNamespace: String?,
-    @Schema(title = "仓库url链接", required = false)
+    @get:Schema(title = "仓库url链接", required = false)
     val webhookRepoUrl: String?,
-    @Schema(title = "分支名（目标分支）", required = false)
+    @get:Schema(title = "分支名（目标分支）", required = false)
     val webhookBranch: String?,
-    @Schema(title = "别名", required = false)
+    @get:Schema(title = "别名", required = false)
     val webhookAliasName: String?,
-    @Schema(title = "webhook类型", required = false)
+    @get:Schema(title = "webhook类型", required = false)
     val webhookType: String?,
-    @Schema(title = "事件类型", required = false)
+    @get:Schema(title = "事件类型", required = false)
     val webhookEventType: String?,
-    @Schema(title = "提交信息", required = false)
+    @get:Schema(title = "提交信息", required = false)
     val webhookMessage: String?,
-    @Schema(title = "提交信息id", required = false)
+    @get:Schema(title = "提交信息id", required = false)
     val webhookCommitId: String?,
-    @Schema(title = "参考信息(commit_id,mr_id,tag,issue_id,review_id,note_id等)", required = true)
+    @get:Schema(title = "参考信息(commit_id,mr_id,tag,issue_id,review_id,note_id等)", required = true)
     val refId: String?,
-    @Schema(title = "合并后commitId", required = false)
+    @get:Schema(title = "合并后commitId", required = false)
     // 合并后commitId
     val webhookMergeCommitSha: String?,
-    @Schema(title = "源分支", required = false)
+    @get:Schema(title = "源分支", required = false)
     // 源分支
     val webhookSourceBranch: String?,
     // mr id

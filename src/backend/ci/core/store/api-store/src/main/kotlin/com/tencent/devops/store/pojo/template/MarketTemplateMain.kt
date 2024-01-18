@@ -32,10 +32,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "模版市场-首页")
 data class MarketTemplateMain(
-    @Schema(title = "key值")
+    @get:Schema(title = "key值")
     val key: String,
-    @Schema(title = "标签")
+    @get:Schema(title = "标签")
     val label: String,
-    @Schema(title = "插件列表")
+    @get:Schema(title = "插件列表")
     val records: List<MarketItem?>
 )

@@ -33,15 +33,15 @@ import java.time.LocalDateTime
 
 @Schema(title = "流水线趋势信息")
 data class PipelineTrendInfoDO(
-    @Schema(title = "统计时间")
+    @get:Schema(title = "统计时间")
     @JsonFormat(pattern = "yyyy-MM-dd")
     val statisticsTime: LocalDateTime,
-    @Schema(title = "流水线总执行次数")
+    @get:Schema(title = "流水线总执行次数")
     val totalExecuteCount: Long,
-    @Schema(title = "流水线执行失败数")
+    @get:Schema(title = "流水线执行失败数")
     val failedExecuteCount: Long,
-    @Schema(title = "总平均耗时，单位：min")
+    @get:Schema(title = "总平均耗时，单位：min")
     val totalAvgCostTime: Double,
-    @Schema(title = "失败平均耗时，单位：min")
+    @get:Schema(title = "失败平均耗时，单位：min")
     val failAvgCostTime: Double
 )

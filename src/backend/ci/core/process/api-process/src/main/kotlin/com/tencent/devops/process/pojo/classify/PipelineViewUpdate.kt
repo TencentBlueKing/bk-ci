@@ -31,18 +31,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线视图更新模型")
 data class PipelineViewUpdate(
-    @Schema(title = "视图id", required = false)
+    @get:Schema(title = "视图id", required = false)
     val id: String,
-    @Schema(title = "项目id", required = false)
+    @get:Schema(title = "项目id", required = false)
     val projectId: String,
-    @Schema(title = "视图名称", required = false)
+    @get:Schema(title = "视图名称", required = false)
     val name: String,
-    @Schema(title = "是否项目", required = false)
+    @get:Schema(title = "是否项目", required = false)
     val projected: Boolean? = false,
-    @Schema(title = "按流水线名过滤", required = false)
+    @get:Schema(title = "按流水线名过滤", required = false)
     val filterByPipelineName: String,
-    @Schema(title = "按创建人过滤", required = false)
+    @get:Schema(title = "按创建人过滤", required = false)
     val filterByCreator: List<String>,
-    @Schema(title = "标签列表", required = false)
+    @get:Schema(title = "标签列表", required = false)
     val labels: List<PipelineLabelId>
 )

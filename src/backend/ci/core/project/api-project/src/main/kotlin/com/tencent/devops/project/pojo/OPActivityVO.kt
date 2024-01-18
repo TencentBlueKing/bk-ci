@@ -31,20 +31,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "最新动态-显示模型")
 data class OPActivityVO(
-    @Schema(title = "主键ID")
+    @get:Schema(title = "主键ID")
     val id: Long,
-    @Schema(title = "名称")
+    @get:Schema(title = "名称")
     val name: String,
-    @Schema(title = "英文名称")
+    @get:Schema(title = "英文名称")
     val englishName: String,
-    @Schema(title = "链接")
+    @get:Schema(title = "链接")
     val link: String,
-    @Schema(title = "类型")
+    @get:Schema(title = "类型")
     val type: String,
-    @Schema(title = "状态")
+    @get:Schema(title = "状态")
     val status: String,
-    @Schema(title = "创建人")
+    @get:Schema(title = "创建人")
     val creator: String,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: String
 )

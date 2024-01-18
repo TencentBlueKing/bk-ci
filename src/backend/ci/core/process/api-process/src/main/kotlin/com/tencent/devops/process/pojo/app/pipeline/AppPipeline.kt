@@ -32,37 +32,37 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "app流水线信息")
 data class AppPipeline(
-    @Schema(title = "项目id", required = false)
+    @get:Schema(title = "项目id", required = false)
     val projectId: String,
-    @Schema(title = "项目名称", required = false)
+    @get:Schema(title = "项目名称", required = false)
     var projectName: String,
-    @Schema(title = "流水线id", required = false)
+    @get:Schema(title = "流水线id", required = false)
     val pipelineId: String,
-    @Schema(title = "流水线名称", required = false)
+    @get:Schema(title = "流水线名称", required = false)
     var pipelineName: String,
-    @Schema(title = "流水线描述", required = false)
+    @get:Schema(title = "流水线描述", required = false)
     var pipelineDesc: String,
-    @Schema(title = "最新构建状态", required = false)
+    @get:Schema(title = "最新构建状态", required = false)
     val latestBuildStatus: BuildStatus?,
-    @Schema(title = "最近一次构建序号", required = false)
+    @get:Schema(title = "最近一次构建序号", required = false)
     val latestBuildNum: Int?,
-    @Schema(title = "最新构建号id", required = false)
+    @get:Schema(title = "最新构建号id", required = false)
     val latestBuildId: String?,
-    @Schema(title = "最近构建启动时间", required = false)
+    @get:Schema(title = "最近构建启动时间", required = false)
     val latestBuildStartTime: Long?,
-    @Schema(title = "最近构建结束时间", required = false)
+    @get:Schema(title = "最近构建结束时间", required = false)
     val latestBuildEndTime: Long?,
-    @Schema(title = "最近构建用户", required = false)
+    @get:Schema(title = "最近构建用户", required = false)
     var latestBuildUser: String,
-    @Schema(title = "流水线版本", required = false)
+    @get:Schema(title = "流水线版本", required = false)
     val pipelineVersion: Int,
-    @Schema(title = "是否可手工启动", required = true)
+    @get:Schema(title = "是否可手工启动", required = true)
     val canManualStartup: Boolean,
     var hasCollect: Boolean = false,
-    @Schema(title = "部署时间", required = true)
+    @get:Schema(title = "部署时间", required = true)
     val deploymentTime: Long = 0L,
-    @Schema(title = "流水线创建时间", required = true)
+    @get:Schema(title = "流水线创建时间", required = true)
     val createTime: Long = 0L,
-    @Schema(title = "项目图标链接", required = false)
+    @get:Schema(title = "项目图标链接", required = false)
     val logoUrl: String = ""
 )

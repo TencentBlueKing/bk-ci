@@ -59,28 +59,28 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "Itsm回调单据实体类")
 data class ItsmCallBackInfo(
-    @Schema(title = "标题")
+    @get:Schema(title = "标题")
     val title: String,
-    @Schema(title = "当前状态，为FINISHED为正常结束")
+    @get:Schema(title = "当前状态，为FINISHED为正常结束")
     @JsonProperty("current_status")
     val currentStatus: String,
-    @Schema(title = "itsm单号")
+    @get:Schema(title = "itsm单号")
     val sn: String,
-    @Schema(title = "单据链接")
+    @get:Schema(title = "单据链接")
     @JsonProperty("ticket_url")
     val ticketUrl: String,
-    @Schema(title = "单据更新时间")
+    @get:Schema(title = "单据更新时间")
     @JsonProperty("update_at")
     val updateAt: String,
-    @Schema(title = "单据更新人")
+    @get:Schema(title = "单据更新人")
     @JsonProperty("updated_by")
     val updatedBy: String,
-    @Schema(title = "单据审批结果True or False")
+    @get:Schema(title = "单据审批结果True or False")
     @JsonProperty("approve_result")
     val approveResult: String,
-    @Schema(title = "token")
+    @get:Schema(title = "token")
     val token: String,
-    @Schema(title = "最后一个节点的审批人")
+    @get:Schema(title = "最后一个节点的审批人")
     @JsonProperty("last_approver")
     val lastApprover: String
 )

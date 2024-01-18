@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件输出参数")
 data class AtomOutput(
-    @Schema(title = "参数名")
+    @get:Schema(title = "参数名")
     val name: String,
-    @Schema(title = "参数说明")
+    @get:Schema(title = "参数说明")
     val desc: String?
 )

@@ -36,18 +36,18 @@ data class DockerHostLoad(
 
 @Schema(title = "DockerHostLoad")
 data class Load(
-    @Schema(title = "构建机已使用量")
+    @get:Schema(title = "构建机已使用量")
     val usedNum: Int,
-    @Schema(title = "构建机CPU负载")
+    @get:Schema(title = "构建机CPU负载")
     val averageCpuLoad: Int,
-    @Schema(title = "构建机内存负载")
+    @get:Schema(title = "构建机内存负载")
     val averageMemLoad: Int,
-    @Schema(title = "构建机硬盘负载")
+    @get:Schema(title = "构建机硬盘负载")
     val averageDiskLoad: Int,
-    @Schema(title = "构建机硬盘IO负载")
+    @get:Schema(title = "构建机硬盘IO负载")
     val averageDiskIOLoad: Int,
-    @Schema(title = "集群节点数量")
+    @get:Schema(title = "集群节点数量")
     val totalNode: Int,
-    @Schema(title = "集群可用节点数量")
+    @get:Schema(title = "集群可用节点数量")
     val enableNode: Int
 )

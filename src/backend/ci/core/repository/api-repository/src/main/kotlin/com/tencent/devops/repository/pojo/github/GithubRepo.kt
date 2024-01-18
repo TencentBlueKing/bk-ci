@@ -34,15 +34,15 @@ data class GithubRepo(
     val id: Long,
     val name: String,
     @JsonProperty("full_name")
-    @Schema(title = "full_name")
+    @get:Schema(title = "full_name")
     val fullName: String,
     @JsonProperty("clone_url")
-    @Schema(title = "clone_url")
+    @get:Schema(title = "clone_url")
     val httpUrl: String,
     @JsonProperty("ssh_url")
-    @Schema(title = "ssh_url")
+    @get:Schema(title = "ssh_url")
     val sshUrl: String,
     @JsonProperty("updated_at")
-    @Schema(title = "updated_at")
+    @get:Schema(title = "updated_at")
     val updateAt: String
 )

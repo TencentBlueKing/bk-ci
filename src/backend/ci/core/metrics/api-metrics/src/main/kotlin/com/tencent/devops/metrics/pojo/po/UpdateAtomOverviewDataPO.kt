@@ -33,24 +33,24 @@ import java.time.LocalDateTime
 
 @Schema(title = "更新插件概览数据")
 data class UpdateAtomOverviewDataPO(
-    @Schema(title = "主键ID")
+    @get:Schema(title = "主键ID")
     val id: Long,
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "插件标识")
+    @get:Schema(title = "插件标识")
     val atomCode: String,
-    @Schema(title = "成功率")
+    @get:Schema(title = "成功率")
     var successRate: BigDecimal,
-    @Schema(title = "平均耗时，单位：毫秒")
+    @get:Schema(title = "平均耗时，单位：毫秒")
     var avgCostTime: Long,
-    @Schema(title = "总执行次数")
+    @get:Schema(title = "总执行次数")
     var totalExecuteCount: Long,
-    @Schema(title = "成功执行次数")
+    @get:Schema(title = "成功执行次数")
     var successExecuteCount: Long,
-    @Schema(title = "失败执行次数")
+    @get:Schema(title = "失败执行次数")
     var failExecuteCount: Long,
-    @Schema(title = "修改人")
+    @get:Schema(title = "修改人")
     var modifier: String,
-    @Schema(title = "更新时间")
+    @get:Schema(title = "更新时间")
     var updateTime: LocalDateTime
 )

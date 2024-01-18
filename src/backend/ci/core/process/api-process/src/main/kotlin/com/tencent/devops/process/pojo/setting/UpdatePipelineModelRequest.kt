@@ -31,6 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "更新流水线模型请求报文")
 data class UpdatePipelineModelRequest(
-    @Schema(title = "流水线模型版本集合", required = true)
+    @get:Schema(title = "流水线模型版本集合", required = true)
     val pipelineModelVersionList: List<PipelineModelVersion>
 )

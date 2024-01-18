@@ -35,6 +35,6 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "模板id")
 data class TemplateId(
-    @Schema(title = "模板id", required = false)
+    @get:Schema(title = "模板id", required = false)
     val id: String
 )

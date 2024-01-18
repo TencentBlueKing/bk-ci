@@ -32,18 +32,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "DockerIpUpdateVO")
 data class DockerIpUpdateVO(
-    @Schema(title = "主键ID")
+    @get:Schema(title = "主键ID")
     val id: Long,
-    @Schema(title = "构建机IP")
+    @get:Schema(title = "构建机IP")
     val dockerIp: String,
-    @Schema(title = "构建机PORT")
+    @get:Schema(title = "构建机PORT")
     val dockerHostPort: Int,
-    @Schema(title = "构建机是否可用")
+    @get:Schema(title = "构建机是否可用")
     val enable: Boolean,
-    @Schema(title = "是否为灰度节点")
+    @get:Schema(title = "是否为灰度节点")
     val grayEnv: Boolean,
-    @Schema(title = "是否为专用机独占")
+    @get:Schema(title = "是否为专用机独占")
     val specialOn: Boolean,
-    @Schema(title = "构建集群", required = false)
+    @get:Schema(title = "构建集群", required = false)
     val clusterType: DockerHostClusterType = DockerHostClusterType.COMMON
 )

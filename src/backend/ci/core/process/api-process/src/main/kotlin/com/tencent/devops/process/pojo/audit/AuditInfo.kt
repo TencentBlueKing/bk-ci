@@ -31,21 +31,21 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "审计模型-Audit")
 data class AuditInfo(
-    @Schema(title = "状态", required = true)
+    @get:Schema(title = "状态", required = true)
     val status: String,
-    @Schema(title = "资源类型", required = true)
+    @get:Schema(title = "资源类型", required = true)
     val resourceType: String,
-    @Schema(title = "资源ID", required = true)
+    @get:Schema(title = "资源ID", required = true)
     val resourceId: String,
-    @Schema(title = "资源名称", required = true)
+    @get:Schema(title = "资源名称", required = true)
     val resourceName: String,
-    @Schema(title = "操作人", required = true)
+    @get:Schema(title = "操作人", required = true)
     val userId: String,
-    @Schema(title = "操作时间", required = true)
+    @get:Schema(title = "操作时间", required = true)
     val updatedTime: Long,
-    @Schema(title = "操作", required = true)
+    @get:Schema(title = "操作", required = true)
     val action: String,
-    @Schema(title = "操作内容", required = true)
+    @get:Schema(title = "操作内容", required = true)
     val actionContent: String
 ) {
     companion object {

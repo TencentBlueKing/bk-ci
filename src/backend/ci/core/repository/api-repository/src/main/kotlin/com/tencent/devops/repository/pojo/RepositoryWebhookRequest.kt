@@ -5,24 +5,24 @@ import java.time.LocalDateTime
 
 @Schema(title = "代码库webhook请求")
 data class RepositoryWebhookRequest(
-    @Schema(title = "请求ID")
+    @get:Schema(title = "请求ID")
     var requestId: String,
-    @Schema(title = "事件源,工蜂-工蜂ID,github-github id,svn-svn path,p4-p4port")
+    @get:Schema(title = "事件源,工蜂-工蜂ID,github-github id,svn-svn path,p4-p4port")
     val externalId: String,
-    @Schema(title = "事件类型")
+    @get:Schema(title = "事件类型")
     val eventType: String,
-    @Schema(title = "代码库类型")
+    @get:Schema(title = "代码库类型")
     val repositoryType: String,
-    @Schema(title = "触发人")
+    @get:Schema(title = "触发人")
     val triggerUser: String,
-    @Schema(title = "事件信息")
+    @get:Schema(title = "事件信息")
     val eventMessage: String,
-    @Schema(title = "请求头")
+    @get:Schema(title = "请求头")
     val requestHeader: Map<String, String>? = null,
-    @Schema(title = "请求参数")
+    @get:Schema(title = "请求参数")
     val requestParam: Map<String, String>? = null,
-    @Schema(title = "请求体")
+    @get:Schema(title = "请求体")
     val requestBody: String,
-    @Schema(title = "事件时间")
+    @get:Schema(title = "事件时间")
     val createTime: LocalDateTime
 )

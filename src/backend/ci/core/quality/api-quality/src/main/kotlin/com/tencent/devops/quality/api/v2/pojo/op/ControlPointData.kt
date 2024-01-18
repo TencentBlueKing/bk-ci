@@ -33,18 +33,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @Schema(title = "质量红线-控制点列表信息")
 data class ControlPointData(
-    @Schema(title = "ID")
+    @get:Schema(title = "ID")
     val id: Long,
-    @Schema(title = "原子的ClassType")
+    @get:Schema(title = "原子的ClassType")
     val elementType: String?,
-    @Schema(title = "控制点名称(原子名称)")
+    @get:Schema(title = "控制点名称(原子名称)")
     val name: String?,
-    @Schema(title = "研发阶段")
+    @get:Schema(title = "研发阶段")
     val stage: String?,
-    @Schema(title = "支持红线位置(准入-BEFORE, 准出-AFTER)")
+    @get:Schema(title = "支持红线位置(准入-BEFORE, 准出-AFTER)")
     val availablePosition: String?,
-    @Schema(title = "默认红线位置")
+    @get:Schema(title = "默认红线位置")
     val defaultPosition: String?,
-    @Schema(title = "是否启用")
+    @get:Schema(title = "是否启用")
     val enable: Boolean?
 )

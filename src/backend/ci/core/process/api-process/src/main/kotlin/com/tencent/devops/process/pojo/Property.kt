@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "属性")
 data class Property(
-    @Schema(title = "健", required = false)
+    @get:Schema(title = "健", required = false)
     val key: String,
-    @Schema(title = "值", required = false)
+    @get:Schema(title = "值", required = false)
     val value: String
 )

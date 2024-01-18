@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件开发语言相关的环境变量")
 data class AtomDevLanguageEnvVar(
-    @Schema(title = "环境变量key值", required = true)
+    @get:Schema(title = "环境变量key值", required = true)
     val envKey: String,
-    @Schema(title = "环境变量value值", required = true)
+    @get:Schema(title = "环境变量value值", required = true)
     val envValue: String,
-    @Schema(title = "开发语言", required = true)
+    @get:Schema(title = "开发语言", required = true)
     val language: String,
-    @Schema(title = "适用构建机类型", required = true)
+    @get:Schema(title = "适用构建机类型", required = true)
     val buildHostType: String,
-    @Schema(title = "适用构建机操作系统", required = true)
+    @get:Schema(title = "适用构建机操作系统", required = true)
     val buildHostOs: String
 )

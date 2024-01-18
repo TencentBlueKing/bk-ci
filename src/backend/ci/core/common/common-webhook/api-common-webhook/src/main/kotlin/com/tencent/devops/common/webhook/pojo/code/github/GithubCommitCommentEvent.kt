@@ -75,13 +75,13 @@ data class GithubCommitCommentEvent(
 data class GithubReviewCommentEvent(
     override val action: String,
     @JsonProperty("pull_request")
-    @Schema(title = "Issues相关信息")
+    @get:Schema(title = "Issues相关信息")
     val pullRequest: GithubPullRequest,
-    @Schema(title = "Github仓库相关信息")
+    @get:Schema(title = "Github仓库相关信息")
     override val repository: GithubRepository,
-    @Schema(title = "操作人信息")
+    @get:Schema(title = "操作人信息")
     override val sender: GithubUser,
-    @Schema(title = "Review会话信息")
+    @get:Schema(title = "Review会话信息")
     override val comment: GithubReviewComment
 ) : GithubCommentEvent(
     action = action,
@@ -112,10 +112,10 @@ data class GithubReviewComment(
     override val createdAt: String?,
     @JsonProperty("updated_at")
     override val updatedAt: String?,
-    @Schema(title = "Github PR Review Id")
+    @get:Schema(title = "Github PR Review Id")
     @JsonProperty("pull_request_review_id")
     val pullRequestReviewId: Long,
-    @Schema(title = "Github PR Review会话对应的文件")
+    @get:Schema(title = "Github PR Review会话对应的文件")
     val path: String
 ) : GithubComment(
     id = id,
@@ -156,24 +156,24 @@ data class GithubIssueCommentEvent(
 @Suppress("LongParameterList")
 @Schema(title = "Github 评论信息父类")
 abstract class GithubComment(
-    @Schema(title = "评论ID")
+    @get:Schema(title = "评论ID")
     override val id: Long,
-    @Schema(title = "评论链接[API链接]")
+    @get:Schema(title = "评论链接[API链接]")
     override val url: String?,
     @JsonProperty("html_url")
-    @Schema(title = "评论链接[网页链接]")
+    @get:Schema(title = "评论链接[网页链接]")
     override val htmlUrl: String?,
     @JsonProperty("node_id")
     override val nodeId: String,
-    @Schema(title = "评论内容")
+    @get:Schema(title = "评论内容")
     open val body: String,
-    @Schema(title = "评论的用户")
+    @get:Schema(title = "评论的用户")
     open val user: GithubUser,
     @JsonProperty("created_at")
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     override val createdAt: String?, // 2022-06-21T08:45:41Z
     @JsonProperty("updated_at")
-    @Schema(title = "修改时间")
+    @get:Schema(title = "修改时间")
     override val updatedAt: String? // 2022-06-21T08:45:41Z
 ) : GithubBaseInfo(
     id = id,
@@ -199,7 +199,7 @@ open class GithubCommitComment(
     @JsonProperty("updated_at")
     override val updatedAt: String?,
     @JsonProperty("commit_id")
-    @Schema(title = "commit sha")
+    @get:Schema(title = "commit sha")
     val commitId: String
 ) : GithubComment(
     id = id,
@@ -227,7 +227,7 @@ data class GithubIssueComment(
     @JsonProperty("updated_at")
     override val updatedAt: String?,
     @JsonProperty("issue_url")
-    @Schema(title = "评论链接[API链接]")
+    @get:Schema(title = "评论链接[API链接]")
     val issueUrl: String
 ) : GithubComment(
     id = id,

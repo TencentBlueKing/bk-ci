@@ -34,10 +34,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "第三方平台度量概览")
 data class ThirdPlatformOverviewInfoVO(
-    @Schema(title = "CodeCC度量信息")
+    @get:Schema(title = "CodeCC度量信息")
     val codeCheckInfo: CodeCheckInfoDO,
-    @Schema(title = "质量红线度量信息")
+    @get:Schema(title = "质量红线度量信息")
     val qualityInfo: QualityInfoDO,
-    @Schema(title = "编译加速度量信息")
+    @get:Schema(title = "编译加速度量信息")
     val turboInfo: TurboInfoDO
 )

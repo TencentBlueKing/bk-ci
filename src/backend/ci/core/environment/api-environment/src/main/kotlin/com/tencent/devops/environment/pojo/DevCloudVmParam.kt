@@ -32,14 +32,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "DevCloud虚拟机参数")
 data class DevCloudVmParam(
-    @Schema(title = "镜像Id", required = true)
+    @get:Schema(title = "镜像Id", required = true)
     val imageId: String,
-    @Schema(title = "机型", required = true)
+    @get:Schema(title = "机型", required = true)
     val modelId: String,
-    @Schema(title = "数量", required = true)
+    @get:Schema(title = "数量", required = true)
     val instanceCount: Int,
-    @Schema(title = "区域", required = true)
+    @get:Schema(title = "区域", required = true)
     val zone: Zone,
-    @Schema(title = "有效期", required = true)
+    @get:Schema(title = "有效期", required = true)
     val validity: Int?
 )

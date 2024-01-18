@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "虚拟机主机-创建任务")
 data class TaskCreate(
-    @Schema(title = "用户id", required = true)
+    @get:Schema(title = "用户id", required = true)
     val userid: String,
-    @Schema(title = "任务名", required = true)
+    @get:Schema(title = "任务名", required = true)
     val name: String,
-    @Schema(title = "任务脚本", required = false)
+    @get:Schema(title = "任务脚本", required = false)
     var script: String,
-    @Schema(title = "机器列表", required = true)
+    @get:Schema(title = "机器列表", required = true)
     val vmList: List<Int>
 )

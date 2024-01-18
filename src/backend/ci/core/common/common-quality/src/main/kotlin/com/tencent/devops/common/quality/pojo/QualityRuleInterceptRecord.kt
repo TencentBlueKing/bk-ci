@@ -32,24 +32,24 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "质量红线-拦截规则拦截记录")
 data class QualityRuleInterceptRecord(
-    @Schema(title = "指标ID", required = true)
+    @get:Schema(title = "指标ID", required = true)
     val indicatorId: String,
-    @Schema(title = "指标名称", required = true)
+    @get:Schema(title = "指标名称", required = true)
     val indicatorName: String,
-    @Schema(title = "指标插件类型", required = false)
+    @get:Schema(title = "指标插件类型", required = false)
     val indicatorType: String?,
-    @Schema(title = "关系", required = true)
+    @get:Schema(title = "关系", required = true)
     val operation: QualityOperation,
-    @Schema(title = "阈值值大小", required = true)
+    @get:Schema(title = "阈值值大小", required = true)
     val value: String?,
-    @Schema(title = "实际值", required = true)
+    @get:Schema(title = "实际值", required = true)
     val actualValue: String?,
-    @Schema(title = "控制点", required = true)
+    @get:Schema(title = "控制点", required = true)
     val controlPoint: String,
-    @Schema(title = "是否通过", required = true)
+    @get:Schema(title = "是否通过", required = true)
     val pass: Boolean,
-    @Schema(title = "指标详情", required = true)
+    @get:Schema(title = "指标详情", required = true)
     val detail: String?,
-    @Schema(title = "指标日志输出详情", required = false)
+    @get:Schema(title = "指标日志输出详情", required = false)
     var logPrompt: String?
 )

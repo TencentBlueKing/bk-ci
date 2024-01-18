@@ -33,11 +33,11 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "指标列表页面响应")
 data class IndicatorListResponse(
-    @Schema(title = "脚本指标")
+    @get:Schema(title = "脚本指标")
     val scriptIndicators: List<IndicatorListItem>,
-    @Schema(title = "系统指标")
+    @get:Schema(title = "系统指标")
     val systemIndicators: List<IndicatorListItem>,
-    @Schema(title = "研发商店指标")
+    @get:Schema(title = "研发商店指标")
     val marketIndicators: List<IndicatorListItem>
 ) {
     data class IndicatorListItem(

@@ -30,8 +30,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "下架镜像")
 data class OfflineMarketImageReq(
-    @Schema(title = "镜像要下架的版本号", required = true)
+    @get:Schema(title = "镜像要下架的版本号", required = true)
     val version: String,
-    @Schema(title = "镜像下架原因", required = true)
+    @get:Schema(title = "镜像下架原因", required = true)
     val reason: String
 )

@@ -36,20 +36,20 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "日志查询模型")
 data class QueryLogs(
-    @Schema(title = "构建ID", required = true)
+    @get:Schema(title = "构建ID", required = true)
     val buildId: String,
-    @Schema(title = "是否结束", required = true)
+    @get:Schema(title = "是否结束", required = true)
     var finished: Boolean,
-    @Schema(title = "是否有后续日志", required = false)
+    @get:Schema(title = "是否有后续日志", required = false)
     var hasMore: Boolean? = false,
-    @Schema(title = "日志列表", required = true)
+    @get:Schema(title = "日志列表", required = true)
     var logs: MutableList<LogLine> = mutableListOf(),
-    @Schema(title = "所用时间", required = false)
+    @get:Schema(title = "所用时间", required = false)
     var timeUsed: Long = 0,
-    @Schema(title = "日志查询状态", required = false)
+    @get:Schema(title = "日志查询状态", required = false)
     var status: Int = LogStatus.SUCCEED.status,
-    @Schema(title = "日志子tag列表", required = false)
+    @get:Schema(title = "日志子tag列表", required = false)
     var subTags: List<String>? = null,
-    @Schema(title = "错误信息", required = false)
+    @get:Schema(title = "错误信息", required = false)
     var message: String? = null
 )

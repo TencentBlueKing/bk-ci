@@ -33,13 +33,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "关联镜像请求报文体")
 data class MarketImageRelRequest(
-    @Schema(title = "项目编码", required = true)
+    @get:Schema(title = "项目编码", required = true)
     val projectCode: String,
-    @Schema(title = "镜像名称", required = true)
+    @get:Schema(title = "镜像名称", required = true)
     @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
     val imageName: String,
-    @Schema(title = "镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = true)
+    @get:Schema(title = "镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = true)
     val imageSourceType: ImageType,
-    @Schema(title = "ticket身份ID", required = false)
+    @get:Schema(title = "ticket身份ID", required = false)
     val ticketId: String?
 )

@@ -32,16 +32,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件市场-归档插件包请求报文体")
 data class ArchiveAtomRequest(
-    @Schema(title = "项目编码", required = true)
+    @get:Schema(title = "项目编码", required = true)
     val projectCode: String,
-    @Schema(title = "插件代码", required = true)
+    @get:Schema(title = "插件代码", required = true)
     val atomCode: String,
-    @Schema(title = "插件版本号", required = true)
+    @get:Schema(title = "插件版本号", required = true)
     val version: String,
-    @Schema(title = "发布类型", required = false)
+    @get:Schema(title = "发布类型", required = false)
     val releaseType: ReleaseTypeEnum?,
-    @Schema(title = "支持的操作系统", required = false)
+    @get:Schema(title = "支持的操作系统", required = false)
     val os: String?,
-    @Schema(title = "重新上传标识", required = true)
+    @get:Schema(title = "重新上传标识", required = true)
     val reUploadFlag: Boolean = false
 )

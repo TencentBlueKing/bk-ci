@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema
 data class ManageOrganizationDTO(
-    @Schema(title = "名称")
+    @get:Schema(title = "名称")
     val name: String,
-    @Schema(title = "组织Id")
+    @get:Schema(title = "组织Id")
     val organizationId: Int,
-    @Schema(title = "组织层级, 1--BG  2--部门  3--中心")
+    @get:Schema(title = "组织层级, 1--BG  2--部门  3--中心")
     val level: Int,
-    @Schema(title = "策略Id")
+    @get:Schema(title = "策略Id")
     val strategyId: Int,
-    @Schema(title = "父组织Id")
+    @get:Schema(title = "父组织Id")
     val parentOrgId: List<Int>
 )

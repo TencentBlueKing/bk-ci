@@ -32,50 +32,50 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "")
 data class TemplateListModel(
-    @Schema(title = "项目id", required = false)
+    @get:Schema(title = "项目id", required = false)
     val projectId: String,
-    @Schema(title = "是否有操作权限", required = false)
+    @get:Schema(title = "是否有操作权限", required = false)
     val hasPermission: Boolean, // 是否有操作权限，当前只有管理员才有操作权限
-    @Schema(title = "模型", required = false)
+    @get:Schema(title = "模型", required = false)
     val models: List<TemplateModel>,
-    @Schema(title = "数量", required = false)
+    @get:Schema(title = "数量", required = false)
     val count: Int,
-    @Schema(title = "是否有创建模板权限", required = false)
+    @get:Schema(title = "是否有创建模板权限", required = false)
     val hasCreatePermission: Boolean? = null,
-    @Schema(title = "是否开启模板权限", required = false)
+    @get:Schema(title = "是否开启模板权限", required = false)
     val enableTemplatePermissionManage: Boolean? = null
 )
 
 @Schema(title = "模板模型")
 data class TemplateModel(
-    @Schema(title = "模版名称", required = true)
+    @get:Schema(title = "模版名称", required = true)
     val name: String,
-    @Schema(title = "模版ID", required = true)
+    @get:Schema(title = "模版ID", required = true)
     val templateId: String,
-    @Schema(title = "版本ID", required = true)
+    @get:Schema(title = "版本ID", required = true)
     val version: Long,
-    @Schema(title = "最新版本号", required = true)
+    @get:Schema(title = "最新版本号", required = true)
     val versionName: String,
-    @Schema(title = "模板类型", required = true)
+    @get:Schema(title = "模板类型", required = true)
     val templateType: String,
-    @Schema(title = "模板类型描述", required = true)
+    @get:Schema(title = "模板类型描述", required = true)
     val templateTypeDesc: String,
-    @Schema(title = "模版logo", required = true)
+    @get:Schema(title = "模版logo", required = true)
     val logoUrl: String,
-    @Schema(title = "是否关联到市场", required = true)
+    @get:Schema(title = "是否关联到市场", required = true)
     val storeFlag: Boolean,
-    @Schema(title = "关联的代码库", required = true)
+    @get:Schema(title = "关联的代码库", required = true)
     val associateCodes: List<String>,
-    @Schema(title = "关联的流水线", required = true)
+    @get:Schema(title = "关联的流水线", required = true)
     val associatePipelines: List<PipelineId>,
-    @Schema(title = "是否有可更新实例", required = true)
+    @get:Schema(title = "是否有可更新实例", required = true)
     val hasInstance2Upgrade: Boolean,
-    @Schema(title = "是否有模版操作权限", required = true)
+    @get:Schema(title = "是否有模版操作权限", required = true)
     val hasPermission: Boolean,
-    @Schema(title = "是否有模版查看权限", required = true)
+    @get:Schema(title = "是否有模版查看权限", required = true)
     val canView: Boolean? = null,
-    @Schema(title = "是否有模版编辑权限", required = true)
+    @get:Schema(title = "是否有模版编辑权限", required = true)
     val canEdit: Boolean? = null,
-    @Schema(title = "是否有模版删除权限", required = true)
+    @get:Schema(title = "是否有模版删除权限", required = true)
     val canDelete: Boolean? = null
 )

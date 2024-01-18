@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "数据库表分片配置")
 data class TableShardingConfig(
-    @Schema(title = "集群名称")
+    @get:Schema(title = "集群名称")
     @field:BkField(minLength = 1, maxLength = 64)
     val clusterName: String,
-    @Schema(title = "模块标识")
+    @get:Schema(title = "模块标识")
     val moduleCode: SystemModuleEnum,
-    @Schema(title = "数据库表名称")
+    @get:Schema(title = "数据库表名称")
     @field:BkField(minLength = 1, maxLength = 128)
     val tableName: String,
-    @Schema(title = "分表数量")
+    @get:Schema(title = "分表数量")
     val shardingNum: Int
 )

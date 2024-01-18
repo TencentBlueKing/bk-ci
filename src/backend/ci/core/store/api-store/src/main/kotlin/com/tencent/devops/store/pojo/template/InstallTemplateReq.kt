@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "安装模板到项目请求报文")
 data class InstallTemplateReq(
-    @Schema(title = "项目标识", required = true)
+    @get:Schema(title = "项目标识", required = true)
     val projectCodeList: ArrayList<String>,
-    @Schema(title = "模板代码", required = true)
+    @get:Schema(title = "模板代码", required = true)
     val templateCode: String
 )

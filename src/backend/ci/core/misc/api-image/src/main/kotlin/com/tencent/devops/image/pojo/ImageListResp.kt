@@ -31,6 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "镜像列表返回报文")
 data class ImageListResp(
-    @Schema(title = "数据集合", required = false)
+    @get:Schema(title = "数据集合", required = false)
     val imageList: List<ImageItem>
 )

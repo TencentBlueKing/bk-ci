@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "错误码合规信息")
 data class ComplianceInfoDO(
-    @Schema(title = "失败执行次数")
+    @get:Schema(title = "失败执行次数")
     val failExecuteCount: Int,
-    @Schema(title = "失败合规次数")
+    @get:Schema(title = "失败合规次数")
     val failComplianceCount: Int
 )

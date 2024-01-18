@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "安装插件到项目请求报文")
 data class InstallAtomReq(
-    @Schema(title = "项目标识", required = true)
+    @get:Schema(title = "项目标识", required = true)
     val projectCode: ArrayList<String>,
-    @Schema(title = "插件标识", required = true)
+    @get:Schema(title = "插件标识", required = true)
     val atomCode: String
 )

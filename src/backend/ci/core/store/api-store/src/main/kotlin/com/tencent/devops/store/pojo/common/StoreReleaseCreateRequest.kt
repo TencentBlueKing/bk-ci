@@ -33,12 +33,12 @@ import java.time.LocalDateTime
 
 @Schema(title = "store组件发布升级新增请求报文体")
 data class StoreReleaseCreateRequest(
-    @Schema(title = "store组件代码", required = true)
+    @get:Schema(title = "store组件代码", required = true)
     val storeCode: String,
-    @Schema(title = "store组件类型", required = true)
+    @get:Schema(title = "store组件类型", required = true)
     val storeType: StoreTypeEnum,
-    @Schema(title = "最近升级人", required = true)
+    @get:Schema(title = "最近升级人", required = true)
     val latestUpgrader: String,
-    @Schema(title = "最近升级时间", required = true)
+    @get:Schema(title = "最近升级时间", required = true)
     val latestUpgradeTime: LocalDateTime
 )

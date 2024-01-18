@@ -32,9 +32,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "工蜂会话信息")
 data class GitSession(
     val id: String,
-    @Schema(title = "邮箱地址")
+    @get:Schema(title = "邮箱地址")
     val email: String,
-    @Schema(title = "用户名")
+    @get:Schema(title = "用户名")
     val username: String,
     @JsonProperty("private_token")
     val privateToken: String

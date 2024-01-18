@@ -33,11 +33,11 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "组策略")
 data class IamGroupPoliciesVo(
-    @Schema(title = "操作")
+    @get:Schema(title = "操作")
     val action: String,
-    @Schema(title = "操作名")
+    @get:Schema(title = "操作名")
     @BkFieldI18n
     val actionName: String,
-    @Schema(title = "是否该action操作权限")
+    @get:Schema(title = "是否该action操作权限")
     val permission: Boolean
 )

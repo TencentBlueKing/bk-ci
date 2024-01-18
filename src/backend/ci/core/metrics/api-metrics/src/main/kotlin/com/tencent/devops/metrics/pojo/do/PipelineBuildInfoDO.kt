@@ -31,20 +31,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线构建信息")
 data class PipelineBuildInfoDO(
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "流水线ID")
+    @get:Schema(title = "流水线ID")
     val pipelineId: String,
-    @Schema(title = "流水线名称")
+    @get:Schema(title = "流水线名称")
     val pipelineName: String,
-    @Schema(title = "渠道代码")
+    @get:Schema(title = "渠道代码")
     val channelCode: String,
-    @Schema(title = "域名")
+    @get:Schema(title = "域名")
     val domain: String,
-    @Schema(title = "构建ID")
+    @get:Schema(title = "构建ID")
     val buildId: String,
-    @Schema(title = "构建序号")
+    @get:Schema(title = "构建序号")
     val buildNum: Int,
-    @Schema(title = "构建代码库分支")
+    @get:Schema(title = "构建代码库分支")
     val branch: String?
 )

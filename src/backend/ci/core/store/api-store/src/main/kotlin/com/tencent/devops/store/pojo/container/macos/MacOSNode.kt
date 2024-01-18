@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "macos构建机资源")
 data class MacOSNode(
-    @Schema(title = "macos构建资源名")
+    @get:Schema(title = "macos构建资源名")
     val id: String,
-    @Schema(title = "macos构建资源名")
+    @get:Schema(title = "macos构建资源名")
     val name: String
 )

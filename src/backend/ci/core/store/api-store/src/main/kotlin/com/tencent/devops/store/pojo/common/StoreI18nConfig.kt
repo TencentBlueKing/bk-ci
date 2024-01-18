@@ -31,20 +31,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "研发商店组件国际化配置")
 data class StoreI18nConfig(
-    @Schema(title = "项目标识")
+    @get:Schema(title = "项目标识")
     val projectCode: String,
-    @Schema(title = "组件标识")
+    @get:Schema(title = "组件标识")
     val storeCode: String,
-    @Schema(title = "资源文件目录")
+    @get:Schema(title = "资源文件目录")
     val fileDir: String,
-    @Schema(title = "国际化目录")
+    @get:Schema(title = "国际化目录")
     val i18nDir: String,
-    @Schema(title = "map字段在properties中key的前缀")
+    @get:Schema(title = "map字段在properties中key的前缀")
     val propertiesKeyPrefix: String? = null,
-    @Schema(title = "map字段在db中key的前缀")
+    @get:Schema(title = "map字段在db中key的前缀")
     val dbKeyPrefix: String? = null,
-    @Schema(title = "代码库哈希ID")
+    @get:Schema(title = "代码库哈希ID")
     val repositoryHashId: String? = null,
-    @Schema(title = "代码库分支")
+    @get:Schema(title = "代码库分支")
     val branch: String? = null
 )

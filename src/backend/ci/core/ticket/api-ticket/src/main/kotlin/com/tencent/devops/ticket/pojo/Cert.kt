@@ -31,18 +31,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "证书-证书详细内容")
 data class Cert(
-    @Schema(title = "证书ID", required = true)
+    @get:Schema(title = "证书ID", required = true)
     val certId: String,
-    @Schema(title = "证书类型", required = true)
+    @get:Schema(title = "证书类型", required = true)
     val certType: String,
-    @Schema(title = "创建者", required = true)
+    @get:Schema(title = "创建者", required = true)
     val creator: String,
-    @Schema(title = "证书描述", required = true)
+    @get:Schema(title = "证书描述", required = true)
     val certRemark: String,
-    @Schema(title = "创建时间", required = true)
+    @get:Schema(title = "创建时间", required = true)
     val createTime: Long,
-    @Schema(title = "过期时间", required = true)
+    @get:Schema(title = "过期时间", required = true)
     val expireTime: Long,
-    @Schema(title = "凭据ID", required = true)
+    @get:Schema(title = "凭据ID", required = true)
     val credentialId: String?
 )

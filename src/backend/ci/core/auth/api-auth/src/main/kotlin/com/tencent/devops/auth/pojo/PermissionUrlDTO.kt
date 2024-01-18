@@ -34,10 +34,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "")
 data class PermissionUrlDTO(
-    @Schema(title = "权限类型")
+    @get:Schema(title = "权限类型")
     val actionId: AuthPermission,
-    @Schema(title = "资源类型")
+    @get:Schema(title = "资源类型")
     val resourceId: AuthResourceType,
-    @Schema(title = "实例列表")
+    @get:Schema(title = "实例列表")
     val instanceId: List<Instance>?
 )

@@ -31,11 +31,11 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "状态")
 data class SimpleResult(
-    @Schema(title = "是否成功", required = true)
+    @get:Schema(title = "是否成功", required = true)
     val success: Boolean,
-    @Schema(title = "错误信息", required = false)
+    @get:Schema(title = "错误信息", required = false)
     val message: String? = null,
-    @Schema(title = "错误码信息", required = false)
+    @get:Schema(title = "错误码信息", required = false)
     val error: Error? = null
 )
 

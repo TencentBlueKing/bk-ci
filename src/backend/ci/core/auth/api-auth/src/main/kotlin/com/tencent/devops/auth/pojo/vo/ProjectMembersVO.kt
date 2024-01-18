@@ -5,8 +5,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "项目成员列表返回")
 data class ProjectMembersVO(
-    @Schema(title = "数量")
+    @get:Schema(title = "数量")
     val count: Int,
-    @Schema(title = "成员信息列表")
+    @get:Schema(title = "成员信息列表")
     val results: Set<MemberInfo>
 )

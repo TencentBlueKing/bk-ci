@@ -32,6 +32,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线汇总信息视图")
 data class PipelineSumInfoVO(
-    @Schema(title = "流水线汇总信息")
+    @get:Schema(title = "流水线汇总信息")
     val pipelineSumInfoDO: PipelineSumInfoDO?
 )

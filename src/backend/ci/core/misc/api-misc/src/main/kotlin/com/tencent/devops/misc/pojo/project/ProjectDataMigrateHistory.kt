@@ -32,22 +32,22 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "项目数据迁移历史记录")
 data class ProjectDataMigrateHistory(
-    @Schema(title = "主键Id", required = true)
+    @get:Schema(title = "主键Id", required = true)
     val id: String,
-    @Schema(title = "项目Id", required = true)
+    @get:Schema(title = "项目Id", required = true)
     val projectId: String,
-    @Schema(title = "流水线Id", required = false)
+    @get:Schema(title = "流水线Id", required = false)
     val pipelineId: String? = null,
-    @Schema(title = "模块标识", required = true)
+    @get:Schema(title = "模块标识", required = true)
     val moduleCode: SystemModuleEnum,
-    @Schema(title = "被迁移集群名称", required = true)
+    @get:Schema(title = "被迁移集群名称", required = true)
     val sourceClusterName: String,
-    @Schema(title = "被迁移数据源名称", required = true)
+    @get:Schema(title = "被迁移数据源名称", required = true)
     val sourceDataSourceName: String,
-    @Schema(title = "迁移集群名称", required = true)
+    @get:Schema(title = "迁移集群名称", required = true)
     val targetClusterName: String,
-    @Schema(title = "迁移数据源名称", required = true)
+    @get:Schema(title = "迁移数据源名称", required = true)
     val targetDataSourceName: String,
-    @Schema(title = "迁移数据源标签", required = false)
+    @get:Schema(title = "迁移数据源标签", required = false)
     val targetDataTag: String? = null
 )

@@ -54,13 +54,13 @@ OWNER = 50
 
 @Schema(title = "git成员模型")
 data class GitMember(
-    @Schema(title = "成员id")
+    @get:Schema(title = "成员id")
     val id: Int,
-    @Schema(title = "用户名")
+    @get:Schema(title = "用户名")
     val username: String,
-    @Schema(title = "状态")
+    @get:Schema(title = "状态")
     val state: String,
-    @Schema(title = "权限级别", description = "access_level")
+    @get:Schema(title = "权限级别", description = "access_level")
     @JsonProperty("access_level")
     val accessLevel: Int
 )

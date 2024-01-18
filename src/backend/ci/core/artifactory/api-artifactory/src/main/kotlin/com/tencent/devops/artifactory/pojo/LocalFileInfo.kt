@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "本地目录下文件信息")
 data class LocalFileInfo(
-    @Schema(title = "文件所在相对路径列表", required = true)
+    @get:Schema(title = "文件所在相对路径列表", required = true)
     val relativePath: String,
-    @Schema(title = "是否是静态文件", required = false)
+    @get:Schema(title = "是否是静态文件", required = false)
     val staticFlag: Boolean = true
 )

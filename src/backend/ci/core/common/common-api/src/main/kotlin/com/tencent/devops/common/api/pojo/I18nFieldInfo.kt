@@ -33,18 +33,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.lang.reflect.Field
 
 data class I18nFieldInfo(
-    @Schema(title = "字段")
+    @get:Schema(title = "字段")
     val field: Field,
-    @Schema(title = "字段所属对象")
+    @get:Schema(title = "字段所属对象")
     val entity: Any,
-    @Schema(title = "翻译信息来源")
+    @get:Schema(title = "翻译信息来源")
     val source: I18nSourceEnum = I18nSourceEnum.PROPERTIES,
-    @Schema(title = "翻译类型")
+    @get:Schema(title = "翻译类型")
     val translateType: I18nTranslateTypeEnum = I18nTranslateTypeEnum.NAME,
-    @Schema(title = "字段前缀名称")
+    @get:Schema(title = "字段前缀名称")
     val keyPrefixName: String = "",
-    @Schema(title = "是否复用接口定义的公共前缀")
+    @get:Schema(title = "是否复用接口定义的公共前缀")
     val reusePrefixFlag: Boolean = true,
-    @Schema(title = "字段转换名称")
+    @get:Schema(title = "字段转换名称")
     val convertName: String = ""
 )

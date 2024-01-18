@@ -32,9 +32,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "代码库流水线引用请求")
 data class RepoPipelineRefRequest(
-    @Schema(title = "action", required = true)
+    @get:Schema(title = "action", required = true)
     val action: String,
-    @Schema(title = "pipelineId", required = true)
+    @get:Schema(title = "pipelineId", required = true)
     val pipelineId: String,
     val pipelineRefInfos: List<RepoPipelineRefInfo>
 )

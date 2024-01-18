@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "版本仓库-搜索元数据")
 data class SearchProps(
-    @Schema(title = "匹配文件列表(支持模糊匹配)", required = true)
+    @get:Schema(title = "匹配文件列表(支持模糊匹配)", required = true)
     val fileNames: List<String>?,
-    @Schema(title = "元数据列表", required = true)
+    @get:Schema(title = "元数据列表", required = true)
     val props: Map<String, String>
 )

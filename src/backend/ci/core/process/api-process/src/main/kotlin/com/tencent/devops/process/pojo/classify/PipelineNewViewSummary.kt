@@ -31,24 +31,24 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "")
 data class PipelineNewViewSummary(
-    @Schema(title = "视图id", required = false)
+    @get:Schema(title = "视图id", required = false)
     val id: String,
-    @Schema(title = "项目id", required = false)
+    @get:Schema(title = "项目id", required = false)
     val projectId: String,
-    @Schema(title = "视图名称", required = false)
+    @get:Schema(title = "视图名称", required = false)
     val name: String,
-    @Schema(title = "是否项目", required = false)
+    @get:Schema(title = "是否项目", required = false)
     val projected: Boolean,
-    @Schema(title = "创建时间", required = false)
+    @get:Schema(title = "创建时间", required = false)
     val createTime: Long,
-    @Schema(title = "更新时间", required = false)
+    @get:Schema(title = "更新时间", required = false)
     val updateTime: Long,
-    @Schema(title = "创建者", required = false)
+    @get:Schema(title = "创建者", required = false)
     val creator: String,
-    @Schema(title = "是否置顶", required = false)
+    @get:Schema(title = "是否置顶", required = false)
     val top: Boolean = false,
-    @Schema(title = "流水线组类型,1--动态,2--静态", required = true)
+    @get:Schema(title = "流水线组类型,1--动态,2--静态", required = true)
     val viewType: Int,
-    @Schema(title = "流水线个数", required = true)
+    @get:Schema(title = "流水线个数", required = true)
     val pipelineCount: Int
 )

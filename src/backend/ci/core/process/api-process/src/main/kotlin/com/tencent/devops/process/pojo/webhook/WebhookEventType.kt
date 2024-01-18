@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "WEBHOOK-事件类型")
 data class WebhookEventType(
-    @Schema(title = "eventType", required = true)
+    @get:Schema(title = "eventType", required = true)
     val eventType: String,
-    @Schema(title = "eventTypeName", required = true)
+    @get:Schema(title = "eventTypeName", required = true)
     val eventTypeName: String
 )

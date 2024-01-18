@@ -32,18 +32,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "凭据-凭据内容")
 data class CredentialInfo(
-    @Schema(title = "Base64编码的加密公钥", required = true)
+    @get:Schema(title = "Base64编码的加密公钥", required = true)
     val publicKey: String,
-    @Schema(title = "凭据类型", required = true)
+    @get:Schema(title = "凭据类型", required = true)
     val credentialType: CredentialType,
-    @Schema(title = "加密后经过Base64编码的凭据", required = true)
+    @get:Schema(title = "加密后经过Base64编码的凭据", required = true)
     val v1: String,
-    @Schema(title = "加密后经过Base64编码的凭据", required = true)
+    @get:Schema(title = "加密后经过Base64编码的凭据", required = true)
     val v2: String? = null,
-    @Schema(title = "加密后经过Base64编码的凭据", required = true)
+    @get:Schema(title = "加密后经过Base64编码的凭据", required = true)
     val v3: String? = null,
-    @Schema(title = "加密后经过Base64编码的凭据", required = true)
+    @get:Schema(title = "加密后经过Base64编码的凭据", required = true)
     val v4: String? = null,
-    @Schema(title = "当前凭证是否允许跨项目使用")
+    @get:Schema(title = "当前凭证是否允许跨项目使用")
     val allowAcrossProject: Boolean = false
 )

@@ -31,17 +31,17 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "用户-信息模型")
 data class UserVO(
-    @Schema(title = "中文名")
+    @get:Schema(title = "中文名")
 //    @JsonProperty("chinese_name")
     var chineseName: String,
-    @Schema(title = "头像URL")
+    @get:Schema(title = "头像URL")
 //    @JsonProperty("avatar_url")
     val avatarUrl: String?,
-    @Schema(title = "bkpaas用户ID")
+    @get:Schema(title = "bkpaas用户ID")
 //    @JsonProperty("bkpaas_user_id")
     val bkpaasUserId: String?,
-    @Schema(title = "用户名")
+    @get:Schema(title = "用户名")
     var username: String,
-    @Schema(title = "权限")
+    @get:Schema(title = "权限")
     val permissions: String?
 )

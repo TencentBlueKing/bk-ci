@@ -32,12 +32,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "Github 基础信息")
 open class GithubBaseInfo(
-    @Schema(title = "ID")
+    @get:Schema(title = "ID")
     open val id: Long,
-    @Schema(title = "链接[API链接]")
+    @get:Schema(title = "链接[API链接]")
     open val url: String? = "",
     @JsonProperty("html_url")
-    @Schema(title = "链接[网页链接]")
+    @get:Schema(title = "链接[网页链接]")
     open val htmlUrl: String? = "",
     @JsonProperty("node_id")
     open val nodeId: String,

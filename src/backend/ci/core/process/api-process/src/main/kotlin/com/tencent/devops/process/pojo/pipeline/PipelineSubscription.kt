@@ -32,12 +32,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线-消息订阅")
 data class PipelineSubscription(
-    @Schema(title = "流水线ID", required = true)
+    @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(title = "订阅用户RTX", required = true)
+    @get:Schema(title = "订阅用户RTX", required = true)
     val username: String,
-    @Schema(title = "订阅消息的发送类型(email, rtx)", required = true)
+    @get:Schema(title = "订阅消息的发送类型(email, rtx)", required = true)
     val subscriptionTypes: List<PipelineSubscriptionType>,
-    @Schema(title = "订阅类型", required = false)
+    @get:Schema(title = "订阅类型", required = false)
     val type: SubscriptionType?
 )

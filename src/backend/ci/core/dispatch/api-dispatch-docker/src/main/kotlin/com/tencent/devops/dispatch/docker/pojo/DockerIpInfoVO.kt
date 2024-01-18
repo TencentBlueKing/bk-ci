@@ -32,32 +32,32 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "DockerIpInfoVO")
 data class DockerIpInfoVO(
-    @Schema(title = "主键ID")
+    @get:Schema(title = "主键ID")
     val id: Long,
-    @Schema(title = "构建机IP")
+    @get:Schema(title = "构建机IP")
     val dockerIp: String,
-    @Schema(title = "构建机PORT")
+    @get:Schema(title = "构建机PORT")
     val dockerHostPort: Int,
-    @Schema(title = "构建机容量")
+    @get:Schema(title = "构建机容量")
     val capacity: Int,
-    @Schema(title = "构建机已使用量")
+    @get:Schema(title = "构建机已使用量")
     val usedNum: Int,
-    @Schema(title = "构建机CPU负载")
+    @get:Schema(title = "构建机CPU负载")
     val averageCpuLoad: Int,
-    @Schema(title = "构建机内存负载")
+    @get:Schema(title = "构建机内存负载")
     val averageMemLoad: Int,
-    @Schema(title = "构建机硬盘负载")
+    @get:Schema(title = "构建机硬盘负载")
     val averageDiskLoad: Int,
-    @Schema(title = "构建机硬盘IO负载")
+    @get:Schema(title = "构建机硬盘IO负载")
     val averageDiskIOLoad: Int,
-    @Schema(title = "构建机是否可用")
+    @get:Schema(title = "构建机是否可用")
     val enable: Boolean,
-    @Schema(title = "是否为灰度节点", required = false)
+    @get:Schema(title = "是否为灰度节点", required = false)
     val grayEnv: Boolean?,
-    @Schema(title = "是否为专用机独占", required = false)
+    @get:Schema(title = "是否为专用机独占", required = false)
     val specialOn: Boolean?,
-    @Schema(title = "创建时间", required = false)
+    @get:Schema(title = "创建时间", required = false)
     val createTime: String?,
-    @Schema(title = "构建集群", required = false)
+    @get:Schema(title = "构建集群", required = false)
     val clusterType: DockerHostClusterType? = DockerHostClusterType.COMMON
 )

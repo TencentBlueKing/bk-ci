@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线插件替换记录回滚")
 data class AtomReplaceRollBack(
-    @Schema(title = "插件替换基本信息ID", required = true)
+    @get:Schema(title = "插件替换基本信息ID", required = true)
     val baseId: String,
-    @Schema(title = "插件替换项信息ID", required = false)
+    @get:Schema(title = "插件替换项信息ID", required = false)
     val itemId: String? = null
 )

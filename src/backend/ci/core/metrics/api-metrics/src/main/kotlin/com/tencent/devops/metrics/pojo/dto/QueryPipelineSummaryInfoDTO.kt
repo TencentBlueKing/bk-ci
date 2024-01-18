@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "查询第三方汇总信息传输对象")
 data class QueryPipelineSummaryInfoDTO(
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "userId")
+    @get:Schema(title = "userId")
     val userId: String,
-    @Schema(title = "开始时间", required = true)
+    @get:Schema(title = "开始时间", required = true)
     val startTime: String,
-    @Schema(title = "结束时间", required = true)
+    @get:Schema(title = "结束时间", required = true)
     val endTime: String
 )

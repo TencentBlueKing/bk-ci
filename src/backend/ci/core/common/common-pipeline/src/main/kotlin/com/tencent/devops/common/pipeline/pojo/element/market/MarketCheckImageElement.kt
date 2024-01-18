@@ -32,15 +32,15 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "验证镜像合法性", description = MarketCheckImageElement.classType)
 data class MarketCheckImageElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "验证镜像合法性",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "用户名", required = false)
+    @get:Schema(title = "用户名", required = false)
     val registryUser: String? = null,
-    @Schema(title = "密码", required = false)
+    @get:Schema(title = "密码", required = false)
     val registryPwd: String? = null
 ) : Element(name, id, status) {
 

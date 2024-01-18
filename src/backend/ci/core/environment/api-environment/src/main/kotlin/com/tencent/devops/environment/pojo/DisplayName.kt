@@ -31,6 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "显示名称")
 data class DisplayName(
-    @Schema(title = "显示名称", required = true)
+    @get:Schema(title = "显示名称", required = true)
     val displayName: String
 )

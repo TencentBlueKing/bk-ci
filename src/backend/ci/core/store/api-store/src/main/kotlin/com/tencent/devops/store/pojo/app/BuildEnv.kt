@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线模型-构建机环境变量")
 data class BuildEnv(
-    @Schema(title = "名称")
+    @get:Schema(title = "名称")
     val name: String,
-    @Schema(title = "版本")
+    @get:Schema(title = "版本")
     val version: String,
-    @Schema(title = "路径")
+    @get:Schema(title = "路径")
     val binPath: String,
-    @Schema(title = "Home 变量")
+    @get:Schema(title = "Home 变量")
     val env: Map<String/*Name*/, String/*Path*/>
 )

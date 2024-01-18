@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件替换请求报文")
 data class AtomReplaceRequest(
-    @Schema(title = "被替换插件代码", required = true)
+    @get:Schema(title = "被替换插件代码", required = true)
     val fromAtomCode: String,
-    @Schema(title = "替换插件代码", required = true)
+    @get:Schema(title = "替换插件代码", required = true)
     val toAtomCode: String,
-    @Schema(title = "插件版本替换信息集合", required = true)
+    @get:Schema(title = "插件版本替换信息集合", required = true)
     val versionInfoList: List<AtomVersionReplaceInfo>,
-    @Schema(title = "需替换的流水线ID集合", required = false)
+    @get:Schema(title = "需替换的流水线ID集合", required = false)
     val pipelineIdList: List<String>? = null
 )

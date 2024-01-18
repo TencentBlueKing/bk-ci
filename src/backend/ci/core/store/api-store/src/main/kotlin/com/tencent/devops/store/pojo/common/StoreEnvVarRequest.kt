@@ -33,25 +33,25 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "store组件环境变量请求报文体")
 data class StoreEnvVarRequest(
-    @Schema(title = "store组件代码", required = true)
+    @get:Schema(title = "store组件代码", required = true)
     @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
     val storeCode: String,
-    @Schema(title = "store组件类型", required = true)
+    @get:Schema(title = "store组件类型", required = true)
     @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
     val storeType: String,
-    @Schema(title = "变量名", required = true)
+    @get:Schema(title = "变量名", required = true)
     @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
     val varName: String,
-    @Schema(title = "变量值", required = true)
+    @get:Schema(title = "变量值", required = true)
     @field:BkField(patternStyle = BkStyleEnum.COMMON_STYLE)
     val varValue: String,
-    @Schema(title = "描述", required = false)
+    @get:Schema(title = "描述", required = false)
     @field:BkField(patternStyle = BkStyleEnum.NOTE_STYLE, required = false)
     val varDesc: String?,
-    @Schema(title = "变量值是否加密", required = true)
+    @get:Schema(title = "变量值是否加密", required = true)
     @field:BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE)
     val encryptFlag: Boolean,
-    @Schema(title = "适用范围 TEST：测试 PRD：正式 ALL：所有", required = true)
+    @get:Schema(title = "适用范围 TEST：测试 PRD：正式 ALL：所有", required = true)
     @field:BkField(patternStyle = BkStyleEnum.SCOPE_STYLE)
     val scope: String
 )

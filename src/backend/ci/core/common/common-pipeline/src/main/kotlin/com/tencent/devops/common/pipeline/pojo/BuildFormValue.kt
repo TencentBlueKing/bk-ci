@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "构建模型-下拉框表单元素值")
 data class BuildFormValue(
-    @Schema(title = "元素值ID-标识符", required = true)
+    @get:Schema(title = "元素值ID-标识符", required = true)
     val key: String,
-    @Schema(title = "元素值名称-显示用", required = true)
+    @get:Schema(title = "元素值名称-显示用", required = true)
     val value: String
 )

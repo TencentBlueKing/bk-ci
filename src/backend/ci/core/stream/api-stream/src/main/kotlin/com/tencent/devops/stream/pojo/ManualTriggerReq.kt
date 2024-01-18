@@ -31,18 +31,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "手动触发请求")
 data class ManualTriggerReq(
-    @Schema(title = "蓝盾项目ID(带前缀 如git_xxx)")
+    @get:Schema(title = "蓝盾项目ID(带前缀 如git_xxx)")
     val projectId: String,
-    @Schema(title = "分支")
+    @get:Schema(title = "分支")
     val branch: String,
-    @Schema(title = "Custom commit message")
+    @get:Schema(title = "Custom commit message")
     val customCommitMsg: String,
-    @Schema(title = "用户选择的触发CommitId")
+    @get:Schema(title = "用户选择的触发CommitId")
     val commitId: String? = null,
-    @Schema(title = "yaml")
+    @get:Schema(title = "yaml")
     val yaml: String,
-    @Schema(title = "输入参数(json对象)")
+    @get:Schema(title = "输入参数(json对象)")
     val inputs: Map<String, Any?>?,
-    @Schema(title = "是否使用commitId进行手动触发")
+    @get:Schema(title = "是否使用commitId进行手动触发")
     val useCommitId: Boolean
 )

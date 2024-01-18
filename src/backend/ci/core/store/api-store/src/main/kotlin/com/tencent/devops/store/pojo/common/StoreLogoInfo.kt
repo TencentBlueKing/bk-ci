@@ -31,6 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "store组件logo信息")
 data class StoreLogoInfo(
-    @Schema(title = "logo地址", required = false)
+    @get:Schema(title = "logo地址", required = false)
     val logoUrl: String?
 )

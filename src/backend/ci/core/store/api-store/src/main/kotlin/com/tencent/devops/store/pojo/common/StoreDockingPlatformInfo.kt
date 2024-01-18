@@ -31,30 +31,30 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "store组件对接平台信息")
 data class StoreDockingPlatformInfo(
-    @Schema(title = "环境变量ID", required = true)
+    @get:Schema(title = "环境变量ID", required = true)
     val id: String,
-    @Schema(title = "平台代码", required = true)
+    @get:Schema(title = "平台代码", required = true)
     val platformCode: String,
-    @Schema(title = "平台名称", required = true)
+    @get:Schema(title = "平台名称", required = true)
     val platformName: String,
-    @Schema(title = "网址", required = false)
+    @get:Schema(title = "网址", required = false)
     val website: String?,
-    @Schema(title = "简介", required = true)
+    @get:Schema(title = "简介", required = true)
     val summary: String,
-    @Schema(title = "负责人", required = true)
+    @get:Schema(title = "负责人", required = true)
     val principal: String,
-    @Schema(title = "平台logo地址", required = false)
+    @get:Schema(title = "平台logo地址", required = false)
     val logoUrl: String?,
-    @Schema(title = "标签", required = false)
+    @get:Schema(title = "标签", required = false)
     val labels: List<String>? = null,
-    @Schema(title = "所属机构名称", required = true)
+    @get:Schema(title = "所属机构名称", required = true)
     val ownerDeptName: String,
-    @Schema(title = "添加用户", required = true)
+    @get:Schema(title = "添加用户", required = true)
     val creator: String,
-    @Schema(title = "修改用户", required = true)
+    @get:Schema(title = "修改用户", required = true)
     val modifier: String,
-    @Schema(title = "添加时间", required = true)
+    @get:Schema(title = "添加时间", required = true)
     val createTime: String,
-    @Schema(title = "修改时间", required = true)
+    @get:Schema(title = "修改时间", required = true)
     val updateTime: String
 )

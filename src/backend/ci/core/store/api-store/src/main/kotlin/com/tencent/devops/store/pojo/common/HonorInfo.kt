@@ -33,16 +33,16 @@ import java.time.LocalDateTime
 
 @Schema(title = "荣誉信息")
 data class HonorInfo(
-    @Schema(title = "荣誉ID")
+    @get:Schema(title = "荣誉ID")
     val honorId: String,
-    @Schema(title = "荣誉头衔")
+    @get:Schema(title = "荣誉头衔")
     @BkField(maxLength = 4)
     val honorTitle: String,
-    @Schema(title = "荣誉名称")
+    @get:Schema(title = "荣誉名称")
     @BkField(maxLength = 40)
     val honorName: String,
-    @Schema(title = "是否佩戴")
+    @get:Schema(title = "是否佩戴")
     val mountFlag: Boolean,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: LocalDateTime
 )

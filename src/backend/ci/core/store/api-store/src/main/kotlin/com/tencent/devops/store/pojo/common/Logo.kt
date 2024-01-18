@@ -31,22 +31,22 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "logo信息")
 data class Logo(
-    @Schema(title = "logoID", required = true)
+    @get:Schema(title = "logoID", required = true)
     val id: String,
-    @Schema(title = "logo链接", required = true)
+    @get:Schema(title = "logo链接", required = true)
     val logoUrl: String,
-    @Schema(title = "类别 ATOM:原子 TEMPLATE:模板 BANNER:banner", required = true)
+    @get:Schema(title = "类别 ATOM:原子 TEMPLATE:模板 BANNER:banner", required = true)
     val logoType: String,
-    @Schema(title = "展示顺序", required = true)
+    @get:Schema(title = "展示顺序", required = true)
     val order: Int,
-    @Schema(title = "点击logo后的跳转链接")
+    @get:Schema(title = "点击logo后的跳转链接")
     val link: String?,
-    @Schema(title = "创建日期")
+    @get:Schema(title = "创建日期")
     val createTime: String,
-    @Schema(title = "更新日期")
+    @get:Schema(title = "更新日期")
     val updateTime: String,
-    @Schema(title = "创建人", required = true)
+    @get:Schema(title = "创建人", required = true)
     val creator: String,
-    @Schema(title = "最近修改人", required = true)
+    @get:Schema(title = "最近修改人", required = true)
     val modifier: String
 )

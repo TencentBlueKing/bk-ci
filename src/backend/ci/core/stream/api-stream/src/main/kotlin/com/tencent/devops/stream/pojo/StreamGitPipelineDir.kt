@@ -31,15 +31,15 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线文件路径模型")
 data class StreamGitPipelineDir(
-    @Schema(title = "当前流水线文件子路径", required = false)
+    @get:Schema(title = "当前流水线文件子路径", required = false)
     val currentPath: String?,
-    @Schema(title = "所有子路径", required = false)
+    @get:Schema(title = "所有子路径", required = false)
     var allPath: List<AllPathPair>?
 )
 
 data class AllPathPair(
-    @Schema(title = "子路径", required = true)
+    @get:Schema(title = "子路径", required = true)
     val path: String,
-    @Schema(title = "文件夹名字", required = true)
+    @get:Schema(title = "文件夹名字", required = true)
     val name: String
 )

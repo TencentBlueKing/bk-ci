@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "store组件构建信息")
 data class StoreBuildInfo(
-    @Schema(title = "store组件Id", required = true)
+    @get:Schema(title = "store组件Id", required = true)
     val storeId: String,
-    @Schema(title = "流水线Id", required = true)
+    @get:Schema(title = "流水线Id", required = true)
     val pipelineId: String,
-    @Schema(title = "构建Id", required = true)
+    @get:Schema(title = "构建Id", required = true)
     val buildId: String,
-    @Schema(title = "调试项目标识", required = true)
+    @get:Schema(title = "调试项目标识", required = true)
     val projectCode: String
 )

@@ -36,19 +36,19 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "日志模型")
 data class LogMessage(
-    @Schema(title = "日志内容信息")
+    @get:Schema(title = "日志内容信息")
     var message: String,
-    @Schema(title = "时间戳")
+    @get:Schema(title = "时间戳")
     val timestamp: Long,
-    @Schema(title = "标签")
+    @get:Schema(title = "标签")
     val tag: String = "",
-    @Schema(title = "job id")
+    @get:Schema(title = "job id")
     val jobId: String = "",
-    @Schema(title = "日志类型")
+    @get:Schema(title = "日志类型")
     val logType: LogType = LogType.LOG,
-    @Schema(title = "执行次数")
+    @get:Schema(title = "执行次数")
     val executeCount: Int? = null,
-    @Schema(title = "子标签")
+    @get:Schema(title = "子标签")
     val subTag: String? = null
 ) {
     override fun toString(): String {

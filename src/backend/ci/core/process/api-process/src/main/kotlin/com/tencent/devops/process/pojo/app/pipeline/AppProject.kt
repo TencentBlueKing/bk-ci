@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "手机侧项目模型")
 data class AppProject(
-    @Schema(title = "项目id", required = false)
+    @get:Schema(title = "项目id", required = false)
     val projectId: String,
-    @Schema(title = "激活的流水线数量", required = false)
+    @get:Schema(title = "激活的流水线数量", required = false)
     val activePipelineCount: Int,
-    @Schema(title = "项目名称", required = false)
+    @get:Schema(title = "项目名称", required = false)
     val projectName: String,
-    @Schema(title = "项目logo", required = false)
+    @get:Schema(title = "项目logo", required = false)
     val projectLogo: String,
-    @Schema(title = "项目是否已审核，作废字段", required = false)
+    @get:Schema(title = "项目是否已审核，作废字段", required = false)
     val approvalStatus: String
 )

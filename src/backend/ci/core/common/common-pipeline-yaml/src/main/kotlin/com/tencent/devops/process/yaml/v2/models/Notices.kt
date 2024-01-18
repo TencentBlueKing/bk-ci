@@ -53,10 +53,10 @@ class GitNotices(
     val title: String?,
     val content: String?,
     val ccs: Set<String>?,
-    @Schema(title = "if")
+    @get:Schema(title = "if")
     @JsonProperty("if")
     val ifField: String?,
-    @Schema(title = "chat-id")
+    @get:Schema(title = "chat-id")
     @JsonProperty("chat-id")
     val chatId: Set<String>?
 ) : Notices(type, receivers)

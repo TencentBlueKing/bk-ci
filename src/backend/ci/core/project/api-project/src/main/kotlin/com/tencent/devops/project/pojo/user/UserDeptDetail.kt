@@ -37,30 +37,30 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "用户部门信息")
 data class UserDeptDetail(
-    @Schema(title = "bg名称")
+    @get:Schema(title = "bg名称")
     val bgName: String,
-    @Schema(title = "bgID")
+    @get:Schema(title = "bgID")
     val bgId: String,
-    @Schema(title = "业务线名称")
+    @get:Schema(title = "业务线名称")
     val businessLineName: String? = null,
-    @Schema(title = "业务线ID")
+    @get:Schema(title = "业务线ID")
     val businessLineId: String? = null,
-    @Schema(title = "部门名称")
+    @get:Schema(title = "部门名称")
     val deptName: String,
-    @Schema(title = "部门ID")
+    @get:Schema(title = "部门ID")
     val deptId: String,
-    @Schema(title = "中心名称")
+    @get:Schema(title = "中心名称")
     val centerName: String,
-    @Schema(title = "中心ID")
+    @get:Schema(title = "中心ID")
     val centerId: String,
-    @Schema(title = "组ID")
+    @get:Schema(title = "组ID")
     val groupId: String,
-    @Schema(title = "组名称")
+    @get:Schema(title = "组名称")
     val groupName: String,
-    @Schema(title = "用户ID")
+    @get:Schema(title = "用户ID")
     val userId: String? = null,
-    @Schema(title = "用户名称")
+    @get:Schema(title = "用户名称")
     val name: String? = null,
-    @Schema(title = "部门及以上层级")
+    @get:Schema(title = "部门及以上层级")
     val deptInfos: List<DeptInfo>? = emptyList()
 )

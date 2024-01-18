@@ -30,18 +30,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "DB分片路由规则")
 data class ShardingRoutingRule(
-    @Schema(title = "集群名称")
+    @get:Schema(title = "集群名称")
     val clusterName: String,
-    @Schema(title = "模块标识")
+    @get:Schema(title = "模块标识")
     val moduleCode: SystemModuleEnum,
-    @Schema(title = "数据源名称")
+    @get:Schema(title = "数据源名称")
     val dataSourceName: String,
-    @Schema(title = "数据库表名称")
+    @get:Schema(title = "数据库表名称")
     val tableName: String? = null,
-    @Schema(title = "规则类型")
+    @get:Schema(title = "规则类型")
     val type: ShardingRuleTypeEnum,
-    @Schema(title = "路由规则名称")
+    @get:Schema(title = "路由规则名称")
     val routingName: String,
-    @Schema(title = "路由规则值")
+    @get:Schema(title = "路由规则值")
     val routingRule: String
 )

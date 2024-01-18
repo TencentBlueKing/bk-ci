@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "商店组件-版本信息")
 data class VersionInfo(
-    @Schema(title = "版本名称", required = true)
+    @get:Schema(title = "版本名称", required = true)
     val versionName: String,
-    @Schema(title = "版本值", required = true)
+    @get:Schema(title = "版本值", required = true)
     val versionValue: String
 )

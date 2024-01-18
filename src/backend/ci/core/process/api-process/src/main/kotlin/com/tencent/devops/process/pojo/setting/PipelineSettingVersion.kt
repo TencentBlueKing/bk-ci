@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "")
 data class PipelineSettingVersion(
-    @Schema(title = "项目id", required = false)
+    @get:Schema(title = "项目id", required = false)
     val projectId: String = "",
-    @Schema(title = "流水线id", required = false)
+    @get:Schema(title = "流水线id", required = false)
     val pipelineId: String = "",
-    @Schema(title = "订阅成功", required = false)
+    @get:Schema(title = "订阅成功", required = false)
     var successSubscription: Subscription = Subscription(),
-    @Schema(title = "订阅失败", required = false)
+    @get:Schema(title = "订阅失败", required = false)
     var failSubscription: Subscription = Subscription(),
-    @Schema(title = "版本", required = false)
+    @get:Schema(title = "版本", required = false)
     var version: Int = 0
 )

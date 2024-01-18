@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "DockerRunPortBinding")
 data class DockerRunPortBinding(
-    @Schema(title = "构建机IP", required = true)
+    @get:Schema(title = "构建机IP", required = true)
     val hostIp: String,
-    @Schema(title = "容器Port", required = true)
+    @get:Schema(title = "容器Port", required = true)
     val containerPort: Int,
-    @Schema(title = "构建机Port", required = true)
+    @get:Schema(title = "构建机Port", required = true)
     val hostPort: Int
 )

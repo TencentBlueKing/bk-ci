@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "红线报告消息类型")
 data class QualityReportMessage(
 
-    @Schema(title = "项目id")
+    @get:Schema(title = "项目id")
     var projectId: String = "",
-    @Schema(title = "流水线id")
+    @get:Schema(title = "流水线id")
     var pipelineId: String = "",
-    @Schema(title = "构建id")
+    @get:Schema(title = "构建id")
     var buildId: String = ""
 )

@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "评论回复信息请求报文体")
 data class StoreCommentReplyRequest(
-    @Schema(title = "回复内容", required = true)
+    @get:Schema(title = "回复内容", required = true)
     val replyContent: String,
-    @Schema(title = "被回复者（如果评论的回复被其它人回复则需要传该字段）", required = true)
+    @get:Schema(title = "被回复者（如果评论的回复被其它人回复则需要传该字段）", required = true)
     val replyToUser: String
 )

@@ -32,22 +32,22 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "第三方构建信息模型")
 data class ThirdPartyBuildWithStatus(
-    @Schema(title = "项目id")
+    @get:Schema(title = "项目id")
     val projectId: String,
-    @Schema(title = "构建id")
+    @get:Schema(title = "构建id")
     val buildId: String,
-    @Schema(title = "构建环境id")
+    @get:Schema(title = "构建环境id")
     val vmSeqId: String,
-    @Schema(title = "工作空间")
+    @get:Schema(title = "工作空间")
     val workspace: String,
-    @Schema(title = "流水线id")
+    @get:Schema(title = "流水线id")
     val pipelineId: String?,
-    @Schema(title = "是否成功")
+    @get:Schema(title = "是否成功")
     val success: Boolean,
-    @Schema(title = "message信息")
+    @get:Schema(title = "message信息")
     val message: String?,
-    @Schema(title = "错误信息")
+    @get:Schema(title = "错误信息")
     val error: Error?,
-    @Schema(title = "流水线执行次数")
+    @get:Schema(title = "流水线执行次数")
     val executeCount: Int?
 )

@@ -33,11 +33,11 @@ import java.time.LocalDate
 
 @Schema(title = "插件基本趋势信息")
 data class AtomBaseTrendInfoDO(
-    @Schema(title = "成功率")
+    @get:Schema(title = "成功率")
     val successRate: Double? = null,
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @Schema(title = "统计时间")
+    @get:Schema(title = "统计时间")
     val statisticsTime: LocalDate,
-    @Schema(title = "平均耗时")
+    @get:Schema(title = "平均耗时")
     val avgCostTime: Double? = null
 )

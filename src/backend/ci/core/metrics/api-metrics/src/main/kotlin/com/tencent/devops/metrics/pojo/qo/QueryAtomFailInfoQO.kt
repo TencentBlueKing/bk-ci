@@ -34,19 +34,19 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件失败信息查询条件对象")
 class QueryAtomFailInfoQO(
-    @Schema(title = "项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(title = "基本查询条件", required = true)
+    @get:Schema(title = "基本查询条件", required = true)
     val baseQueryReq: BaseQueryReqVO,
-    @Schema(title = "错误类型", required = false)
+    @get:Schema(title = "错误类型", required = false)
     val errorTypes: List<Int>?,
-    @Schema(title = "错误码", required = false)
+    @get:Schema(title = "错误码", required = false)
     val errorCodes: List<Int>?,
-    @Schema(title = "插件code", required = false)
+    @get:Schema(title = "插件code", required = false)
     val atomCodes: List<String>?,
-    @Schema(title = "页码", required = false)
+    @get:Schema(title = "页码", required = false)
     val page: Int = 1,
-    @Schema(title = "页数", required = false)
+    @get:Schema(title = "页数", required = false)
     @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
     val pageSize: Int = 10
 )

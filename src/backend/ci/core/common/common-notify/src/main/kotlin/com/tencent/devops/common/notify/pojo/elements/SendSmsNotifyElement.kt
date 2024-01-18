@@ -32,17 +32,17 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "发送短信通知", description = SendSmsNotifyElement.classType)
 data class SendSmsNotifyElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "发送Sms短信通知",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "接收人集合", required = true)
+    @get:Schema(title = "接收人集合", required = true)
     val receivers: Set<String> = setOf(),
-    @Schema(title = "通知内容", required = true)
+    @get:Schema(title = "通知内容", required = true)
     val body: String = "",
-    @Schema(title = "通知内容带上流水线详情连接", required = true)
+    @get:Schema(title = "通知内容带上流水线详情连接", required = true)
     val detailFlag: Boolean?
 
 ) : Element(name, id, status) {

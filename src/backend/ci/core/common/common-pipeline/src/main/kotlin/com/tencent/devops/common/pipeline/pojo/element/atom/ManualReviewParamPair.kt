@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "人工审核-自定义参数-下拉框列表剑")
 data class ManualReviewParamPair(
-    @Schema(title = "参数名", required = true)
+    @get:Schema(title = "参数名", required = true)
     val key: String,
-    @Schema(title = "参数内容", required = true)
+    @get:Schema(title = "参数内容", required = true)
     val value: String
 )

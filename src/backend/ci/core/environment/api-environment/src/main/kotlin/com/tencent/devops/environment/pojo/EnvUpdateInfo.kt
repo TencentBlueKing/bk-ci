@@ -32,12 +32,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "环境基本信息")
 data class EnvUpdateInfo(
-    @Schema(title = "环境名称", required = true)
+    @get:Schema(title = "环境名称", required = true)
     val name: String,
-    @Schema(title = "环境描述", required = true)
+    @get:Schema(title = "环境描述", required = true)
     val desc: String,
-    @Schema(title = "环境类型（构建环境{BUILD}|部署-开发/测试环境{DEV}|部署-生产环境{PROD}|）", required = true)
+    @get:Schema(title = "环境类型（构建环境{BUILD}|部署-开发/测试环境{DEV}|部署-生产环境{PROD}|）", required = true)
     val envType: EnvType,
-    @Schema(title = "环境变量", required = false)
+    @get:Schema(title = "环境变量", required = false)
     val envVars: List<EnvVar>?
 )

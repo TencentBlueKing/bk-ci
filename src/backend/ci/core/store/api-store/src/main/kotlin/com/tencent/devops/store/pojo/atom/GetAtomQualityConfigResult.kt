@@ -31,9 +31,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "获取并解析插件配置quality.json的返回数据")
 data class GetAtomQualityConfigResult(
-    @Schema(title = "状态码", required = true)
+    @get:Schema(title = "状态码", required = true)
     val errorCode: String,
-    @Schema(title = "参数", required = true)
+    @get:Schema(title = "参数", required = true)
     val errorParams: Array<String>
 ) {
     override fun equals(other: Any?): Boolean {

@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "安装的证书类型")
 enum class CertType constructor(val value: String) {
-    @Schema(title = "自定义证书安装")
+    @get:Schema(title = "自定义证书安装")
     PERSONAL("PERSONAL"),
-    @Schema(title = "企业证书安装")
+    @get:Schema(title = "企业证书安装")
     ENTERPRISE("ENTERPRISE");
 }

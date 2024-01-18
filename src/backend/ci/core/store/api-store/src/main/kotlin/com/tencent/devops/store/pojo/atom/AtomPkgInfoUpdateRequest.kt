@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线-插件执行包相关信息修改请求报文体")
 data class AtomPkgInfoUpdateRequest(
-    @Schema(title = "插件代码", required = true)
+    @get:Schema(title = "插件代码", required = true)
     val atomCode: String,
-    @Schema(title = "插件版本号", required = true)
+    @get:Schema(title = "插件版本号", required = true)
     val version: String,
-    @Schema(title = "插件环境信息", required = false)
+    @get:Schema(title = "插件环境信息", required = false)
     val atomEnvRequests: List<AtomEnvRequest>,
-    @Schema(title = "task.json参数", required = false)
+    @get:Schema(title = "task.json参数", required = false)
     val taskDataMap: Map<String, Any>,
-    @Schema(title = "重新上传标识", required = true)
+    @get:Schema(title = "重新上传标识", required = true)
     val reUploadFlag: Boolean = false
 )

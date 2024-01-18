@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "模板实例模型")
 data class TemplateInstances(
-    @Schema(title = "项目id", required = false)
+    @get:Schema(title = "项目id", required = false)
     val projectId: String,
-    @Schema(title = "模型id", required = false)
+    @get:Schema(title = "模型id", required = false)
     val templateId: String,
-    @Schema(title = "实例列表", required = false)
+    @get:Schema(title = "实例列表", required = false)
     val instances: List<TemplatePipeline>,
-    @Schema(title = "最新版本", required = false)
+    @get:Schema(title = "最新版本", required = false)
     val latestVersion: TemplateVersion
 )

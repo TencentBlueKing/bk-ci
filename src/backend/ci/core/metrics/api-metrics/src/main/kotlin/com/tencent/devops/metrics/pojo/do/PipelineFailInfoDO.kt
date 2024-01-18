@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线错误统计信息")
 data class PipelineFailInfoDO(
-    @Schema(title = "错误类型名称")
+    @get:Schema(title = "错误类型名称")
     val name: String?,
-    @Schema(title = "错误类型标识")
+    @get:Schema(title = "错误类型标识")
     val errorType: Int,
-    @Schema(title = "错误次数")
+    @get:Schema(title = "错误次数")
     val errorCount: Long
 )

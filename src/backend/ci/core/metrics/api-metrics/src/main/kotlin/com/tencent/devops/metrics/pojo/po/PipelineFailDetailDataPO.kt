@@ -32,36 +32,36 @@ import java.time.LocalDateTime
 
 @Schema(title = "流水线失败明细持久化对象")
 data class PipelineFailDetailDataPO(
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "流水线ID")
+    @get:Schema(title = "流水线ID")
     val pipelineId: String,
-    @Schema(title = "流水线名称")
+    @get:Schema(title = "流水线名称")
     val pipelineName: String,
-    @Schema(title = "渠道代码")
+    @get:Schema(title = "渠道代码")
     val channelCode: String,
-    @Schema(title = "构建ID")
+    @get:Schema(title = "构建ID")
     val buildId: String,
-    @Schema(title = "构建序号")
+    @get:Schema(title = "构建序号")
     val buildNum: Int,
-    @Schema(title = "触发代码库地址")
+    @get:Schema(title = "触发代码库地址")
     val repoUrl: String?,
-    @Schema(title = "构建代码库分支")
+    @get:Schema(title = "构建代码库分支")
     val branch: String?,
-    @Schema(title = "启动用户")
+    @get:Schema(title = "启动用户")
     val startUser: String,
-    @Schema(title = "启动时间")
+    @get:Schema(title = "启动时间")
     val startTime: LocalDateTime,
-    @Schema(title = "结束时间")
+    @get:Schema(title = "结束时间")
     val endTime: LocalDateTime,
-    @Schema(title = "错误的类型标识")
+    @get:Schema(title = "错误的类型标识")
     val errorType: Int?,
-    @Schema(title = "错误类型名称")
+    @get:Schema(title = "错误类型名称")
     val errorTypeName: String?,
-    @Schema(title = "错误的标识码")
+    @get:Schema(title = "错误的标识码")
     val errorCode: Int?,
-    @Schema(title = "错误描述")
+    @get:Schema(title = "错误描述")
     val errorMsg: String?,
-    @Schema(title = "统计时间")
+    @get:Schema(title = "统计时间")
     val statisticsTime: LocalDateTime
 )

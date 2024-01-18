@@ -30,8 +30,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "安装镜像到项目请求报文")
 data class InstallImageReq(
-    @Schema(title = "项目标识", required = true)
+    @get:Schema(title = "项目标识", required = true)
     val projectCodeList: ArrayList<String>,
-    @Schema(title = "镜像代码", required = true)
+    @get:Schema(title = "镜像代码", required = true)
     val imageCode: String
 )

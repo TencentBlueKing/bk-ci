@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "元素基本信息")
 data class ElementBaseInfo(
-    @Schema(title = "元素ID", required = true)
+    @get:Schema(title = "元素ID", required = true)
     val elementId: String,
-    @Schema(title = "元素名称", required = true)
+    @get:Schema(title = "元素名称", required = true)
     val elementName: String,
-    @Schema(title = "插件代码", required = true)
+    @get:Schema(title = "插件代码", required = true)
     val atomCode: String,
-    @Schema(title = "插件版本号", required = true)
+    @get:Schema(title = "插件版本号", required = true)
     val version: String,
-    @Schema(title = "元素在job中的位置")
+    @get:Schema(title = "元素在job中的位置")
     val elementJobIndex: Int
 )

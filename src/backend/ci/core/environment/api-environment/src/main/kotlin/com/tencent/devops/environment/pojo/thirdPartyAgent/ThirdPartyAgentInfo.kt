@@ -31,18 +31,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "第三方接入机-信息")
 data class ThirdPartyAgentInfo(
-    @Schema(title = "Agent Hash ID", required = true)
+    @get:Schema(title = "Agent Hash ID", required = true)
     val agentId: String,
-    @Schema(title = "项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(title = "状态")
+    @get:Schema(title = "状态")
     val status: String,
-    @Schema(title = "主机名", required = true)
+    @get:Schema(title = "主机名", required = true)
     val hostname: String,
-    @Schema(title = "IP地址", required = true)
+    @get:Schema(title = "IP地址", required = true)
     val ip: String,
-    @Schema(title = "节点名", required = true)
+    @get:Schema(title = "节点名", required = true)
     val displayName: String,
-    @Schema(title = "详细名称", required = false)
+    @get:Schema(title = "详细名称", required = false)
     val detailName: String? = null
 )

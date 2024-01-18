@@ -33,14 +33,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "新增指标请求报文体")
 data class StoreIndexPipelineInitRequest(
-    @Schema(title = "指标代码", required = true)
+    @get:Schema(title = "指标代码", required = true)
     val indexCode: String,
-    @Schema(title = "指标对应的插件件代码", required = true)
+    @get:Schema(title = "指标对应的插件件代码", required = true)
     val atomCode: String,
-    @Schema(title = "指标对应的插件版本", required = true)
+    @get:Schema(title = "指标对应的插件版本", required = true)
     val atomVersion: String = "1.*",
-    @Schema(title = "指标执行时机类型", required = true)
+    @get:Schema(title = "指标执行时机类型", required = true)
     val executeTimeType: IndexExecuteTimeTypeEnum,
-    @Schema(title = "store组件类型", required = true)
+    @get:Schema(title = "store组件类型", required = true)
     val storeType: StoreTypeEnum
 )

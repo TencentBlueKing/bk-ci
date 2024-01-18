@@ -32,60 +32,60 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "服务-显示模型")
 data class ServiceVO(
-    @Schema(title = "主键ID")
+    @get:Schema(title = "主键ID")
     val id: Long,
-    @Schema(title = "名称")
+    @get:Schema(title = "名称")
     val name: String,
-    @Schema(title = "链接")
+    @get:Schema(title = "链接")
     val link: String,
-    @Schema(title = "新链接", description = "link_new")
+    @get:Schema(title = "新链接", description = "link_new")
     @JsonProperty("link_new")
     val linkNew: String,
-    @Schema(title = "状态")
+    @get:Schema(title = "状态")
     val status: String,
-    @Schema(title = "注入类型", description = "inject_type")
+    @get:Schema(title = "注入类型", description = "inject_type")
     @JsonProperty("inject_type")
     val injectType: String,
-    @Schema(title = "框架URL", description = "iframe_url")
+    @get:Schema(title = "框架URL", description = "iframe_url")
     @JsonProperty("iframe_url")
     val iframeUrl: String,
-    @Schema(title = "grayIframeUrl")
+    @get:Schema(title = "grayIframeUrl")
     val grayIframeUrl: String?,
-    @Schema(title = "cssURL", description = "css_url")
+    @get:Schema(title = "cssURL", description = "css_url")
     @JsonProperty("css_url")
     val cssUrl: String,
-    @Schema(title = "jsURL", description = "js_url")
+    @get:Schema(title = "jsURL", description = "js_url")
     @JsonProperty("js_url")
     val jsUrl: String,
-    @Schema(title = "grayCssURL", description = "gray_css_url")
+    @get:Schema(title = "grayCssURL", description = "gray_css_url")
     @JsonProperty("gray_css_url")
     val grayCssUrl: String,
-    @Schema(title = "grayJsURL", description = "gray_js_url")
+    @get:Schema(title = "grayJsURL", description = "gray_js_url")
     @JsonProperty("gray_js_url")
     val grayJsUrl: String,
-    @Schema(title = "显示项目列表", description = "show_project_list")
+    @get:Schema(title = "显示项目列表", description = "show_project_list")
     @JsonProperty("show_project_list")
     val showProjectList: Boolean,
-    @Schema(title = "显示导航", description = "show_nav")
+    @get:Schema(title = "显示导航", description = "show_nav")
     @JsonProperty("show_nav")
     val showNav: Boolean,
-    @Schema(title = "项目ID类型", description = "project_id_type")
+    @get:Schema(title = "项目ID类型", description = "project_id_type")
     @JsonProperty("project_id_type")
     val projectIdType: String,
-    @Schema(title = "是否收藏")
+    @get:Schema(title = "是否收藏")
     val collected: Boolean,
-    @Schema(title = "权重")
+    @get:Schema(title = "权重")
     val weigHt: Int,
-    @Schema(title = "logo地址")
+    @get:Schema(title = "logo地址")
     val logoUrl: String?,
-    @Schema(title = "支持webSocket的页面")
+    @get:Schema(title = "支持webSocket的页面")
     val webSocket: String?,
-    @Schema(title = "是否可见")
+    @get:Schema(title = "是否可见")
     val hidden: Boolean? = false,
-    @Schema(title = "new_window")
+    @get:Schema(title = "new_window")
     val newWindow: Boolean? = false,
-    @Schema(title = "new_window_url")
+    @get:Schema(title = "new_window_url")
     val newWindowUrl: String? = null,
-    @Schema(title = "集群类型")
+    @get:Schema(title = "集群类型")
     val clusterType: String = ""
 )

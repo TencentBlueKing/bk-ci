@@ -30,8 +30,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "卸载插件原因")
 data class UnInstallReason(
-    @Schema(title = "原因ID")
+    @get:Schema(title = "原因ID")
     val reasonId: String,
-    @Schema(title = "原因说明")
+    @get:Schema(title = "原因说明")
     val note: String?
 )

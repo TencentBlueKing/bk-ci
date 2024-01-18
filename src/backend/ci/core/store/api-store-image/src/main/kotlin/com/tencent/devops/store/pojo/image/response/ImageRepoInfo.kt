@@ -39,27 +39,27 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "镜像详情")
 data class ImageRepoInfo(
 
-    @Schema(title = "镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = true)
+    @get:Schema(title = "镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = true)
     val sourceType: ImageType,
 
-    @Schema(title = "镜像仓库地址", required = true)
+    @get:Schema(title = "镜像仓库地址", required = true)
     val repoUrl: String,
 
-    @Schema(title = "镜像在仓库中的路径", required = true)
+    @get:Schema(title = "镜像在仓库中的路径", required = true)
     val repoName: String,
 
-    @Schema(title = "镜像Tag", required = true)
+    @get:Schema(title = "镜像Tag", required = true)
     val repoTag: String,
 
-    @Schema(title = "凭证Id", required = true)
+    @get:Schema(title = "凭证Id", required = true)
     val ticketId: String,
 
-    @Schema(title = "初始化凭证的项目", required = true)
+    @get:Schema(title = "初始化凭证的项目", required = true)
     val ticketProject: String,
 
-    @Schema(title = "是否为公共镜像 true：是 false：否", required = true)
+    @get:Schema(title = "是否为公共镜像 true：是 false：否", required = true)
     val publicFlag: Boolean,
 
-    @Schema(title = "研发来源")
+    @get:Schema(title = "研发来源")
     val rdType: ImageRDTypeEnum
 )

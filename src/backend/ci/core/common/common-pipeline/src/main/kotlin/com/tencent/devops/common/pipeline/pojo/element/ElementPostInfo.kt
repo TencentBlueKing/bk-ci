@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "元素post信息")
 data class ElementPostInfo(
-    @Schema(title = "入口参数")
+    @get:Schema(title = "入口参数")
     val postEntryParam: String,
-    @Schema(title = "执行条件")
+    @get:Schema(title = "执行条件")
     val postCondition: String,
-    @Schema(title = "父元素ID")
+    @get:Schema(title = "父元素ID")
     var parentElementId: String,
-    @Schema(title = "父元素名称")
+    @get:Schema(title = "父元素名称")
     val parentElementName: String,
-    @Schema(title = "父元素在job中的位置")
+    @get:Schema(title = "父元素在job中的位置")
     val parentElementJobIndex: Int
 )

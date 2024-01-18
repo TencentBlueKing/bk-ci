@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema
 data class TokenInfo(
-    @Schema(title = "用户id")
+    @get:Schema(title = "用户id")
     val userId: String?,
-    @Schema(title = "过期时间戳")
+    @get:Schema(title = "过期时间戳")
     val expirationTime: Long,
-    @Schema(title = "用户token")
+    @get:Schema(title = "用户token")
     var accessToken: String?
 )

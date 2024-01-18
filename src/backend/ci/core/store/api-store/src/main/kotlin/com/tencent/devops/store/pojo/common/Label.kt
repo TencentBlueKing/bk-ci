@@ -31,17 +31,17 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "标签信息")
 data class Label(
-    @Schema(title = "标签ID", required = true)
+    @get:Schema(title = "标签ID", required = true)
     val id: String,
-    @Schema(title = "标签代码", required = true)
+    @get:Schema(title = "标签代码", required = true)
     val labelCode: String,
-    @Schema(title = "标签名称", required = true)
+    @get:Schema(title = "标签名称", required = true)
     val labelName: String,
-    @Schema(title = "类别 ATOM:插件 TEMPLATE:模板 IMAGE:镜像 IDE_ATOM:IDE插件", required = true)
+    @get:Schema(title = "类别 ATOM:插件 TEMPLATE:模板 IMAGE:镜像 IDE_ATOM:IDE插件", required = true)
     val labelType: String,
-    @Schema(title = "创建日期")
+    @get:Schema(title = "创建日期")
     val createTime: Long = 0,
-    @Schema(title = "更新日期")
+    @get:Schema(title = "更新日期")
     val updateTime: Long = 0
 
 )

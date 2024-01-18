@@ -32,10 +32,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "人工审核-自定义参数审核体")
 data class StageReviewRequest(
-    @Schema(title = "审核参数", required = true)
+    @get:Schema(title = "审核参数", required = true)
     val reviewParams: List<ManualReviewParam>,
-    @Schema(title = "审核组ID", required = false)
+    @get:Schema(title = "审核组ID", required = false)
     val id: String?,
-    @Schema(title = "审核建议", required = false)
+    @get:Schema(title = "审核建议", required = false)
     var suggest: String? = ""
 )

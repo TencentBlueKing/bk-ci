@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "证书-证书权限")
 data class CertPermissions(
-    @Schema(title = "删除权限", required = true)
+    @get:Schema(title = "删除权限", required = true)
     val delete: Boolean,
-    @Schema(title = "编辑权限", required = true)
+    @get:Schema(title = "编辑权限", required = true)
     val edit: Boolean,
-    @Schema(title = "使用权限", required = true)
+    @get:Schema(title = "使用权限", required = true)
     val use: Boolean
 )

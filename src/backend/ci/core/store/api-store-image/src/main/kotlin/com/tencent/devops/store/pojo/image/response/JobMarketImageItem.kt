@@ -37,96 +37,96 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "镜像详情")
 data class JobMarketImageItem(
 
-    @Schema(title = "镜像ID", required = true)
+    @get:Schema(title = "镜像ID", required = true)
     val imageId: String,
 
-    @Schema(title = "镜像ID（兼容多种解析方式）", required = true)
+    @get:Schema(title = "镜像ID（兼容多种解析方式）", required = true)
     val id: String,
 
-    @Schema(title = "镜像代码", required = true)
+    @get:Schema(title = "镜像代码", required = true)
     val imageCode: String,
 
-    @Schema(title = "镜像代码（兼容多种解析方式）", required = true)
+    @get:Schema(title = "镜像代码（兼容多种解析方式）", required = true)
     val code: String,
 
-    @Schema(title = "镜像名称", required = true)
+    @get:Schema(title = "镜像名称", required = true)
     val imageName: String,
 
-    @Schema(title = "镜像名称（兼容多种解析方式）", required = true)
+    @get:Schema(title = "镜像名称（兼容多种解析方式）", required = true)
     val name: String,
 
-    @Schema(title = "研发来源")
+    @get:Schema(title = "研发来源")
     val rdType: String,
 
-    @Schema(title = "镜像适用的Agent类型")
+    @get:Schema(title = "镜像适用的Agent类型")
     var agentTypeScope: List<ImageAgentTypeEnum>,
 
-    @Schema(title = "当前Agent类型下是否可用")
+    @get:Schema(title = "当前Agent类型下是否可用")
     val availableFlag: Boolean,
 
-    @Schema(title = "镜像logo", required = true)
+    @get:Schema(title = "镜像logo", required = true)
     val logoUrl: String,
 
-    @Schema(title = "镜像图标", required = true)
+    @get:Schema(title = "镜像图标", required = true)
     val icon: String,
 
-    @Schema(title = "镜像简介", required = true)
+    @get:Schema(title = "镜像简介", required = true)
     val summary: String,
 
-    @Schema(title = "镜像说明文档链接", required = false)
+    @get:Schema(title = "镜像说明文档链接", required = false)
     val docsLink: String?,
 
-    @Schema(title = "权重", required = true)
+    @get:Schema(title = "权重", required = true)
     val weight: Int,
 
-    @Schema(title = "镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = true)
+    @get:Schema(title = "镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = true)
     val imageSourceType: String,
 
-    @Schema(title = "镜像仓库Url", required = true)
+    @get:Schema(title = "镜像仓库Url", required = true)
     val imageRepoUrl: String,
 
-    @Schema(title = "镜像仓库名称", required = true)
+    @get:Schema(title = "镜像仓库名称", required = true)
     val imageRepoName: String,
 
-    @Schema(title = "镜像tag", required = true)
+    @get:Schema(title = "镜像tag", required = true)
     val imageTag: String,
 
-    @Schema(title = "dockerFile类型", required = true)
+    @get:Schema(title = "dockerFile类型", required = true)
     val dockerFileType: String,
 
-    @Schema(title = "dockerFile内容", required = true)
+    @get:Schema(title = "dockerFile内容", required = true)
     val dockerFileContent: String,
 
-    @Schema(title = "逗号分隔的Label名称", required = true)
+    @get:Schema(title = "逗号分隔的Label名称", required = true)
     val labelNames: String,
 
-    @Schema(title = "范畴code", required = true)
+    @get:Schema(title = "范畴code", required = true)
     val category: String,
 
-    @Schema(title = "范畴名称", required = true)
+    @get:Schema(title = "范畴名称", required = true)
     val categoryName: String,
 
-    @Schema(title = "发布者", required = true)
+    @get:Schema(title = "发布者", required = true)
     val publisher: String,
 
-    @Schema(title = "是否为公共镜像 true：是 false：否", required = true)
+    @get:Schema(title = "是否为公共镜像 true：是 false：否", required = true)
     val publicFlag: Boolean,
 
-    @Schema(title = "是否可安装 true：可以 false：不可以", required = true)
+    @get:Schema(title = "是否可安装 true：可以 false：不可以", required = true)
     val flag: Boolean,
 
-    @Schema(title = "是否推荐 true：推荐 false：不推荐", required = true)
+    @get:Schema(title = "是否推荐 true：推荐 false：不推荐", required = true)
     val recommendFlag: Boolean,
 
-    @Schema(title = "是否官方认证 true：是 false：否", required = true)
+    @get:Schema(title = "是否官方认证 true：是 false：否", required = true)
     val certificationFlag: Boolean,
 
-    @Schema(title = "是否已安装", required = true)
+    @get:Schema(title = "是否已安装", required = true)
     var installedFlag: Boolean? = null,
 
-    @Schema(title = "最近修改人", required = true)
+    @get:Schema(title = "最近修改人", required = true)
     val modifier: String,
 
-    @Schema(title = "最近修改时间", required = true)
+    @get:Schema(title = "最近修改时间", required = true)
     val updateTime: Long
 )

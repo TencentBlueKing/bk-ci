@@ -31,20 +31,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件市场插件信息")
 data class MarketAtomItem(
-    @Schema(title = "插件名称")
+    @get:Schema(title = "插件名称")
     val atomName: String,
-    @Schema(title = "插件标识")
+    @get:Schema(title = "插件标识")
     val atomCode: String,
-    @Schema(title = "logo链接")
+    @get:Schema(title = "logo链接")
     val logoUrl: String?,
-    @Schema(title = "发布者")
+    @get:Schema(title = "发布者")
     val publisher: String,
-    @Schema(title = "下载量")
+    @get:Schema(title = "下载量")
     val downloads: Int?,
-    @Schema(title = "评分")
+    @get:Schema(title = "评分")
     val score: Double?,
-    @Schema(title = "简介")
+    @get:Schema(title = "简介")
     val summary: String?,
-    @Schema(title = "是否可安装标识")
+    @get:Schema(title = "是否可安装标识")
     val flag: Boolean
 )

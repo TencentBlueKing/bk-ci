@@ -4,6 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "p4服务端信息")
 data class P4ServerInfo(
-    @Schema(title = "区别大小写")
+    @get:Schema(title = "区别大小写")
     val caseSensitive: Boolean
 )

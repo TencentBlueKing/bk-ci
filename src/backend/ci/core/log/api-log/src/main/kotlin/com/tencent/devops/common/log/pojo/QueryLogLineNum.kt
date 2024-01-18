@@ -35,10 +35,10 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "日志行号查询模型")
 data class QueryLogLineNum(
-    @Schema(title = "构建ID", required = true)
+    @get:Schema(title = "构建ID", required = true)
     val buildId: String,
-    @Schema(title = "是否结束", required = true)
+    @get:Schema(title = "是否结束", required = true)
     var finished: Boolean,
-    @Schema(title = "日志存储状态", required = false)
+    @get:Schema(title = "日志存储状态", required = false)
     var lastLineNum: Long
 )

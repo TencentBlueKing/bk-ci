@@ -31,26 +31,26 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "第三方构建机流水线引用信息")
 data class AgentPipelineRef(
-    @Schema(title = "Node ID", required = true)
+    @get:Schema(title = "Node ID", required = true)
     val nodeId: Long? = null,
-    @Schema(title = "Node Hash ID", required = true)
+    @get:Schema(title = "Node Hash ID", required = true)
     val nodeHashId: String? = null,
-    @Schema(title = "Agent ID", required = true)
+    @get:Schema(title = "Agent ID", required = true)
     val agentId: Long? = null,
-    @Schema(title = "Agent Hash ID", required = true)
+    @get:Schema(title = "Agent Hash ID", required = true)
     val agentHashId: String? = null,
-    @Schema(title = "项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(title = "流水线ID", required = true)
+    @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(title = "流水线名称", required = true)
+    @get:Schema(title = "流水线名称", required = true)
     val pipelineName: String,
-    @Schema(title = "Vm Seq ID", required = true)
+    @get:Schema(title = "Vm Seq ID", required = true)
     val vmSeqId: String?,
-    @Schema(title = "Job ID", required = true)
+    @get:Schema(title = "Job ID", required = true)
     val jobId: String?,
-    @Schema(title = "Job Name", required = true)
+    @get:Schema(title = "Job Name", required = true)
     val jobName: String,
-    @Schema(title = "上次构建时间", required = false)
+    @get:Schema(title = "上次构建时间", required = false)
     val lastBuildTime: String? = ""
 )

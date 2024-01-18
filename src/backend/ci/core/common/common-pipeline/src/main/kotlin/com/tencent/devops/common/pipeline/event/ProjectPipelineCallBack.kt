@@ -31,16 +31,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "项目的流水线回调配置")
 data class ProjectPipelineCallBack(
-    @Schema(title = "流水线id", required = false)
+    @get:Schema(title = "流水线id", required = false)
     val id: Long? = null,
-    @Schema(title = "项目id", required = false)
+    @get:Schema(title = "项目id", required = false)
     val projectId: String,
-    @Schema(title = "回调url地址", required = false)
+    @get:Schema(title = "回调url地址", required = false)
     val callBackUrl: String,
-    @Schema(title = "事件", required = false)
+    @get:Schema(title = "事件", required = false)
     val events: String,
-    @Schema(title = "密钥", required = false)
+    @get:Schema(title = "密钥", required = false)
     val secretToken: String?,
-    @Schema(title = "回调是否启用", required = false)
+    @get:Schema(title = "回调是否启用", required = false)
     val enable: Boolean? = true
 )

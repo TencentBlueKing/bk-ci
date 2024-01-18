@@ -31,6 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "github url模型")
 data class GithubAppUrl(
-    @Schema(title = "url 地址", required = false)
+    @get:Schema(title = "url 地址", required = false)
     val url: String
 )

@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "第三方接入机-创建")
 data class ThirdPartyAgentCreate(
-    @Schema(title = "名称", required = true)
+    @get:Schema(title = "名称", required = true)
     val name: String,
-    @Schema(title = "IP地址", required = true)
+    @get:Schema(title = "IP地址", required = true)
     val ip: String,
-    @Schema(title = "工作空间", required = true)
+    @get:Schema(title = "工作空间", required = true)
     val workspace: String
 )

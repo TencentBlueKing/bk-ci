@@ -32,9 +32,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线视图-通过创建者过滤", description = PipelineViewFilterByCreator.classType)
 data class PipelineViewFilterByCreator(
-    @Schema(title = "条件", required = false)
+    @get:Schema(title = "条件", required = false)
     val condition: Condition,
-    @Schema(title = "用户id 列表", required = false)
+    @get:Schema(title = "用户id 列表", required = false)
     val userIds: List<String>
 ) : PipelineViewFilter() {
     companion object {

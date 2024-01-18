@@ -35,21 +35,21 @@ import java.net.URLEncoder
 
 @Schema(title = "脚本任务（windows环境）", description = WindowsScriptElement.classType)
 data class WindowsScriptElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "执行Windows的bat脚本",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "用户自定义ID", required = false)
+    @get:Schema(title = "用户自定义ID", required = false)
     override var stepId: String? = null,
-    @Schema(title = "FAQ url链接", required = false)
+    @get:Schema(title = "FAQ url链接", required = false)
     val errorFAQUrl: String? = null,
-    @Schema(title = "脚本内容", required = true)
+    @get:Schema(title = "脚本内容", required = true)
     val script: String,
-    @Schema(title = "脚本类型", required = true)
+    @get:Schema(title = "脚本类型", required = true)
     val scriptType: BuildScriptType,
-    @Schema(title = "字符集类型", required = false)
+    @get:Schema(title = "字符集类型", required = false)
     val charsetType: CharsetType? = null
 ) : Element(name, id, status) {
 

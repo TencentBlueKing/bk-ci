@@ -35,11 +35,11 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class ThirdPartyDevCloudDispatchType(
     @JsonProperty("value")
-    @Schema(title = "展示名称", required = false)
+    @get:Schema(title = "展示名称", required = false)
     var displayName: String,
-    @Schema(title = "工作空间", required = false)
+    @get:Schema(title = "工作空间", required = false)
     var workspace: String?,
-    @Schema(title = "agent类型", required = false)
+    @get:Schema(title = "agent类型", required = false)
     val agentType: AgentType = AgentType.NAME
 ) : DispatchType(
     displayName

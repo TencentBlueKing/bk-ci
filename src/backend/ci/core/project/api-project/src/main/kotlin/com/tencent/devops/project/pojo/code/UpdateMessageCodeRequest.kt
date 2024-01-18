@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "返回码更新请求报文体")
 data class UpdateMessageCodeRequest(
-    @Schema(title = "中文简体描述信息", required = true)
+    @get:Schema(title = "中文简体描述信息", required = true)
     var messageDetailZhCn: String,
-    @Schema(title = "中文繁体描述信息", required = true)
+    @get:Schema(title = "中文繁体描述信息", required = true)
     var messageDetailZhTw: String,
-    @Schema(title = "英文描述信息", required = true)
+    @get:Schema(title = "英文描述信息", required = true)
     var messageDetailEn: String
 )

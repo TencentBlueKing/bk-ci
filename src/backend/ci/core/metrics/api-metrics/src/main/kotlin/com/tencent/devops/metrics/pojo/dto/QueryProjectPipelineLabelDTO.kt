@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "获取项目下流水线标签信息传输对象")
 data class QueryProjectPipelineLabelDTO(
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "流水线ID")
+    @get:Schema(title = "流水线ID")
     val pipelineIds: List<String>?,
-    @Schema(title = "页码")
+    @get:Schema(title = "页码")
     val page: Int,
-    @Schema(title = "页数")
+    @get:Schema(title = "页数")
     val pageSize: Int,
-    @Schema(title = "搜索关键字")
+    @get:Schema(title = "搜索关键字")
     val keyword: String?
 )

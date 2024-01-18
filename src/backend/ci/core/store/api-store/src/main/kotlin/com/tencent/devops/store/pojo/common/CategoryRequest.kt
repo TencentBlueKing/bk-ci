@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "范畴信息请求报文体")
 data class CategoryRequest(
-    @Schema(title = "范畴代码", required = true)
+    @get:Schema(title = "范畴代码", required = true)
     val categoryCode: String,
-    @Schema(title = "范畴名称", required = true)
+    @get:Schema(title = "范畴名称", required = true)
     val categoryName: String,
-    @Schema(title = "icon地址", required = false)
+    @get:Schema(title = "icon地址", required = false)
     val iconUrl: String?
 )

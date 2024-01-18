@@ -31,16 +31,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "项目的JOB状态")
 data class JobQuotaStatus(
-    @Schema(title = "项目JOB数量配额", required = true)
+    @get:Schema(title = "项目JOB数量配额", required = true)
     val jobQuota: Int,
-    @Schema(title = "已运行JOB数量", required = true)
+    @get:Schema(title = "已运行JOB数量", required = true)
     val runningJobCount: Int,
-    @Schema(title = "JOB告警阈值，百分比0-100", required = true)
+    @get:Schema(title = "JOB告警阈值，百分比0-100", required = true)
     val jobThreshold: Int,
-    @Schema(title = "项目job时间配额，单位：小时", required = true)
+    @get:Schema(title = "项目job时间配额，单位：小时", required = true)
     val timeQuota: Long,
-    @Schema(title = "当月已运行JOB时间, 单位：毫秒", required = true)
+    @get:Schema(title = "当月已运行JOB时间, 单位：毫秒", required = true)
     val runningJobTime: Long,
-    @Schema(title = "时间告警阈值，百分比0-100", required = true)
+    @get:Schema(title = "时间告警阈值，百分比0-100", required = true)
     val timeThreshold: Int
 )

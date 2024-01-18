@@ -33,8 +33,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @Schema(title = "质量红线-原子名称下拉列表键值对")
 data class ElementNameData(
-    @Schema(title = "原子的ClassType")
+    @get:Schema(title = "原子的ClassType")
     val elementType: String?,
-    @Schema(title = "原子中文名称")
+    @get:Schema(title = "原子中文名称")
     val elementName: String?
 )

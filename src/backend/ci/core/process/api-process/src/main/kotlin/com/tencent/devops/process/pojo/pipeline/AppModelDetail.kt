@@ -33,46 +33,46 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "APP-构建详情-构建信息")
 data class AppModelDetail(
-    @Schema(title = "ID", required = true)
+    @get:Schema(title = "ID", required = true)
     val buildId: String,
-    @Schema(title = "启动用户", required = true)
+    @get:Schema(title = "启动用户", required = true)
     val userId: String,
-    @Schema(title = "触发条件", required = true)
+    @get:Schema(title = "触发条件", required = true)
     val trigger: String,
-    @Schema(title = "Start time", required = true)
+    @get:Schema(title = "Start time", required = true)
     val startTime: Long,
-    @Schema(title = "End time", required = false)
+    @get:Schema(title = "End time", required = false)
     val endTime: Long?,
-    @Schema(title = "Build status", required = true)
+    @get:Schema(title = "Build status", required = true)
     val status: String,
-    @Schema(title = "服务器当前时间戳", required = true)
+    @get:Schema(title = "服务器当前时间戳", required = true)
     val currentTimestamp: Long,
-    @Schema(title = "构建号", required = true)
+    @get:Schema(title = "构建号", required = true)
     val buildNum: Int,
-    @Schema(title = "取消构建的用户", required = false)
+    @get:Schema(title = "取消构建的用户", required = false)
     val cancelUserId: String?,
-    @Schema(title = "归档文件个数", required = false)
+    @get:Schema(title = "归档文件个数", required = false)
     val fileCount: Int,
-    @Schema(title = "包的版本(多个分号分隔)", required = false)
+    @get:Schema(title = "包的版本(多个分号分隔)", required = false)
     val packageVersion: String,
-    @Schema(title = "流水线Id", required = false)
+    @get:Schema(title = "流水线Id", required = false)
     val pipelineId: String,
-    @Schema(title = "流水线版本", required = false)
+    @get:Schema(title = "流水线版本", required = false)
     val pipelineVersion: Int,
-    @Schema(title = "流水线名字", required = false)
+    @get:Schema(title = "流水线名字", required = false)
     var pipelineName: String,
-    @Schema(title = "项目Id", required = false)
+    @get:Schema(title = "项目Id", required = false)
     val projectId: String,
-    @Schema(title = "是否收藏", required = false)
+    @get:Schema(title = "是否收藏", required = false)
     val hasCollect: Boolean,
-    @Schema(title = "编排文件", required = true)
+    @get:Schema(title = "编排文件", required = true)
     val model: Model,
-    @Schema(title = "原材料", required = false)
+    @get:Schema(title = "原材料", required = false)
     val material: List<PipelineBuildMaterial>? = null,
-    @Schema(title = "备注", required = false)
+    @get:Schema(title = "备注", required = false)
     val remark: String? = null,
-    @Schema(title = "运行耗时(毫秒，不包括人工审核时间)", required = false)
+    @get:Schema(title = "运行耗时(毫秒，不包括人工审核时间)", required = false)
     val executeTime: Long? = null,
-    @Schema(title = "构建信息", required = false)
+    @get:Schema(title = "构建信息", required = false)
     var buildMsg: String? = null
 )

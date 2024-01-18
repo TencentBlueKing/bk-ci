@@ -35,8 +35,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "版本详情返回包装模型")
 data class PackageVersionInfo(
-    @Schema(title = "基础信息")
+    @get:Schema(title = "基础信息")
     val basic: BasicInfo,
-    @Schema(title = "元数据信息")
+    @get:Schema(title = "元数据信息")
     val metadata: List<Map<String, Any>>
 )

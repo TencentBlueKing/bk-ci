@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "stage准入准出-质量红线触发")
 data class StageQualityRequest(
-    @Schema(title = "准入准出标识", required = true)
+    @get:Schema(title = "准入准出标识", required = true)
     val position: String,
-    @Schema(title = "把关是否通过", required = true)
+    @get:Schema(title = "把关是否通过", required = true)
     val pass: Boolean,
-    @Schema(title = "第几次检查", required = true)
+    @get:Schema(title = "第几次检查", required = true)
     val checkTimes: Int
 )

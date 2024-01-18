@@ -31,13 +31,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "组件版本信息")
 data class StoreVersion(
-    @Schema(title = "组件代码", required = true)
+    @get:Schema(title = "组件代码", required = true)
     var storeCode: String,
-    @Schema(title = "组件名称", required = true)
+    @get:Schema(title = "组件名称", required = true)
     var storeName: String,
-    @Schema(title = "版本号", required = true)
+    @get:Schema(title = "版本号", required = true)
     var version: String,
-    @Schema(title = "是否是旧版本", required = true)
+    @get:Schema(title = "是否是旧版本", required = true)
     var historyFlag: Boolean
 ) {
     override fun equals(other: Any?): Boolean {

@@ -32,17 +32,17 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "归档构件", description = SingleArchiveElement.classType)
 data class SingleArchiveElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "python文件编译",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "待上传文件路径（单个路径，不支持**匹配，文件夹必须斜杠/结尾）", required = true)
+    @get:Schema(title = "待上传文件路径（单个路径，不支持**匹配，文件夹必须斜杠/结尾）", required = true)
     val filePath: String = "",
-    @Schema(title = "上传到的目标路径（仅在自定义归档选择才用到）", required = false)
+    @get:Schema(title = "上传到的目标路径（仅在自定义归档选择才用到）", required = false)
     val destPath: String = "",
-    @Schema(title = "是否自定义归档", required = true)
+    @get:Schema(title = "是否自定义归档", required = true)
     val customize: Boolean
 ) : Element(name, id, status) {
 

@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "版本仓库-文件摘要")
 data class FileChecksums(
-    @Schema(title = "sha256", required = true)
+    @get:Schema(title = "sha256", required = true)
     val sha256: String?,
-    @Schema(title = "sha1", required = true)
+    @get:Schema(title = "sha1", required = true)
     val sha1: String,
-    @Schema(title = "md5", required = true)
+    @get:Schema(title = "md5", required = true)
     val md5: String
 )

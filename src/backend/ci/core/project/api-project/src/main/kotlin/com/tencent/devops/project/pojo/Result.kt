@@ -33,16 +33,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "数据返回包装模型")
 data class Result<out T>(
-    @Schema(title = "状态码", required = true)
+    @get:Schema(title = "状态码", required = true)
     val code: Int,
-    @Schema(title = "错误信息", required = false)
+    @get:Schema(title = "错误信息", required = false)
     val message: String? = null,
-    @Schema(title = "数据", required = false)
+    @get:Schema(title = "数据", required = false)
     val data: T? = null,
-    @Schema(title = "请求ID", required = false, description = "request_id")
+    @get:Schema(title = "请求ID", required = false, description = "request_id")
     @JsonProperty("request_id")
     val requestId: String? = null,
-    @Schema(title = "请求结果", required = false)
+    @get:Schema(title = "请求结果", required = false)
     val result: Boolean? = null
 ) {
     constructor(data: T) : this(0, null, data)

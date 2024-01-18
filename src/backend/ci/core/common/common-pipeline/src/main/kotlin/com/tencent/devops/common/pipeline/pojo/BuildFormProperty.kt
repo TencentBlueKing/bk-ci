@@ -33,42 +33,42 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "构建模型-表单元素属性")
 data class BuildFormProperty(
-    @Schema(title = "元素ID-标识符", required = true)
+    @get:Schema(title = "元素ID-标识符", required = true)
     var id: String,
-    @Schema(title = "是否必须", required = true)
+    @get:Schema(title = "是否必须", required = true)
     var required: Boolean,
-    @Schema(title = "元素类型", required = true)
+    @get:Schema(title = "元素类型", required = true)
     val type: BuildFormPropertyType,
-    @Schema(title = "默认值", required = true)
+    @get:Schema(title = "默认值", required = true)
     var defaultValue: Any,
-    @Schema(title = "下拉框列表", required = false)
+    @get:Schema(title = "下拉框列表", required = false)
     var options: List<BuildFormValue>?,
-    @Schema(title = "描述", required = false)
+    @get:Schema(title = "描述", required = false)
     var desc: String?,
 
     // 针对 SVN_TAG 新增字段
-    @Schema(title = "repoHashId", required = false)
+    @get:Schema(title = "repoHashId", required = false)
     val repoHashId: String?,
-    @Schema(title = "relativePath", required = false)
+    @get:Schema(title = "relativePath", required = false)
     val relativePath: String?,
-    @Schema(title = "代码库类型下拉", required = false)
+    @get:Schema(title = "代码库类型下拉", required = false)
     val scmType: ScmType?,
-    @Schema(title = "构建机类型下拉", required = false)
+    @get:Schema(title = "构建机类型下拉", required = false)
     val containerType: BuildContainerType?,
 
-    @Schema(title = "自定义仓库通配符", required = false)
+    @get:Schema(title = "自定义仓库通配符", required = false)
     val glob: String?,
-    @Schema(title = "文件元数据", required = false)
+    @get:Schema(title = "文件元数据", required = false)
     val properties: Map<String, String>?,
-    @Schema(title = "元素标签", required = false)
+    @get:Schema(title = "元素标签", required = false)
     var label: String? = null,
-    @Schema(title = "元素placeholder", required = false)
+    @get:Schema(title = "元素placeholder", required = false)
     var placeholder: String? = null,
     // 区分构建信息、构建版本和流水线参数
-    @Schema(title = "元素模块", required = false)
+    @get:Schema(title = "元素模块", required = false)
     var propertyType: String? = null,
 
-    @Schema(title = "搜索url, 当是下拉框选项时，列表值从url获取不再从option获取", required = false)
+    @get:Schema(title = "搜索url, 当是下拉框选项时，列表值从url获取不再从option获取", required = false)
     var searchUrl: String? = null,
     /**
      * 替换搜索url中的搜素关键字
@@ -76,8 +76,8 @@ data class BuildFormProperty(
      * 如searchUrl是aaa/bbb?search={key}, replaceKey的值是{key},则前端在搜索的时候会把{key}替换成用户输入的值.
      * 假设用户输入aaa，那么前端请求就是aaa/bbb?search=aaa
      */
-    @Schema(title = "替换搜索url中的搜素关键字", required = false)
+    @get:Schema(title = "替换搜索url中的搜素关键字", required = false)
     var replaceKey: String? = null,
-    @Schema(title = "是否只读", required = false)
+    @get:Schema(title = "是否只读", required = false)
     val readOnly: Boolean? = false
 )

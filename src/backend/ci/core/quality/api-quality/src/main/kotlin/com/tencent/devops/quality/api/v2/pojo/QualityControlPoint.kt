@@ -31,22 +31,22 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "质量红线-控制点v2")
 data class QualityControlPoint(
-    @Schema(title = "控制点HashId", required = true)
+    @get:Schema(title = "控制点HashId", required = true)
     val hashId: String,
-    @Schema(title = "原子的ClassType", required = true)
+    @get:Schema(title = "原子的ClassType", required = true)
     val type: String,
-    @Schema(title = "控制点名称", required = true)
+    @get:Schema(title = "控制点名称", required = true)
     val name: String,
-    @Schema(title = "研发阶段", required = true)
+    @get:Schema(title = "研发阶段", required = true)
     val stage: String,
-    @Schema(title = "支持红线位置(准入-BEFORE, 准出-AFTER)", required = true)
+    @get:Schema(title = "支持红线位置(准入-BEFORE, 准出-AFTER)", required = true)
     val availablePos: List<ControlPointPosition>,
-    @Schema(title = "默认红线位置", required = true)
+    @get:Schema(title = "默认红线位置", required = true)
     val defaultPos: ControlPointPosition,
-    @Schema(title = "是否启用", required = true)
+    @get:Schema(title = "是否启用", required = true)
     val enable: Boolean,
-    @Schema(title = "对应有质量红线输出的版本", required = true)
+    @get:Schema(title = "对应有质量红线输出的版本", required = true)
     val atomVersion: String,
-    @Schema(title = "对应有质量红线测试项目", required = true)
+    @get:Schema(title = "对应有质量红线测试项目", required = true)
     val testProject: String = ""
 )

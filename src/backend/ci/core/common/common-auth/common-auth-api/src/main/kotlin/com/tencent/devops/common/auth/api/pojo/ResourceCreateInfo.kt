@@ -32,12 +32,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "资源创建信息")
 data class ResourceCreateInfo(
-    @Schema(title = "是否需要审批")
+    @get:Schema(title = "是否需要审批")
     val needApproval: Boolean? = false,
-    @Schema(title = "资源最大授权范围,目前只有rbac需要使用")
+    @get:Schema(title = "资源最大授权范围,目前只有rbac需要使用")
     val subjectScopes: List<SubjectScopeInfo>,
-    @Schema(title = "资源描述")
+    @get:Schema(title = "资源描述")
     val description: String? = null,
-    @Schema(title = "是否私有资源")
+    @get:Schema(title = "是否私有资源")
     val authSecrecy: Boolean = false
 )

@@ -4,8 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "代码库项目app安装结果")
 data class AppInstallationResult(
-    @Schema(title = "状态")
+    @get:Schema(title = "状态")
     val status: Boolean,
-    @Schema(title = "url地址")
+    @get:Schema(title = "url地址")
     val url: String = ""
 )

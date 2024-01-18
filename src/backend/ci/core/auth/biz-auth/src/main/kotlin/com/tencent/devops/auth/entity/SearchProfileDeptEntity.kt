@@ -33,7 +33,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema
 @Suppress("ConstructorParameterNaming")
 data class SearchProfileDeptEntity(
-    @Schema(title = "用户 ID")
+    @get:Schema(title = "用户 ID")
     val id: String,
     val with_family: Boolean,
     override var bk_app_code: String,

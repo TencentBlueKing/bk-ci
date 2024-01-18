@@ -6,16 +6,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "项目-资源创建模型")
 data class AuthProjectCreateInfo(
-    @Schema(title = "用户id")
+    @get:Schema(title = "用户id")
     val userId: String,
-    @Schema(title = "accessToken")
+    @get:Schema(title = "accessToken")
     val accessToken: String?,
-    @Schema(title = "用户部门详细")
+    @get:Schema(title = "用户部门详细")
     val userDeptDetail: UserDeptDetail?,
-    @Schema(title = "iamSubjectScopes")
+    @get:Schema(title = "iamSubjectScopes")
     val subjectScopes: List<SubjectScopeInfo>,
-    @Schema(title = "projectCreateInfo")
+    @get:Schema(title = "projectCreateInfo")
     val projectCreateInfo: ProjectCreateInfo,
-    @Schema(title = "审批状态")
+    @get:Schema(title = "审批状态")
     val approvalStatus: Int
 )

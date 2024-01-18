@@ -31,20 +31,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "VM虚拟机配额")
 data class ProjectInfo(
-    @Schema(title = "允许使用BCS虚拟机功能", required = true)
+    @get:Schema(title = "允许使用BCS虚拟机功能", required = true)
     val bcsVmEnabled: Boolean,
-    @Schema(title = "BCS虚拟机配额", required = true)
+    @get:Schema(title = "BCS虚拟机配额", required = true)
     val bcsVmQuota: Int,
-    @Schema(title = "BCS虚拟机已用数量", required = true)
+    @get:Schema(title = "BCS虚拟机已用数量", required = true)
     val bcsVmUsedCount: Int,
-    @Schema(title = "BCS虚拟机可用数量", required = true)
+    @get:Schema(title = "BCS虚拟机可用数量", required = true)
     val bcsVmRestCount: Int,
-    @Schema(title = "导入服务器配额", required = true)
+    @get:Schema(title = "导入服务器配额", required = true)
     val importQuota: Int,
-    @Schema(title = "允许使用DevCloud虚拟机功能", required = true)
+    @get:Schema(title = "允许使用DevCloud虚拟机功能", required = true)
     val devCloudVmEnabled: Boolean,
-    @Schema(title = "DevCloud虚拟机配额", required = true)
+    @get:Schema(title = "DevCloud虚拟机配额", required = true)
     val devCloudVmQuota: Int,
-    @Schema(title = "DevCloud虚拟机已用数量", required = true)
+    @get:Schema(title = "DevCloud虚拟机已用数量", required = true)
     val devCloudVmUsedCount: Int
 )

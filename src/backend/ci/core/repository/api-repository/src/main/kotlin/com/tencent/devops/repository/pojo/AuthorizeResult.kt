@@ -32,10 +32,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "根据用户获取项目返回模型")
 data class AuthorizeResult(
-    @Schema(title = "状态")
+    @get:Schema(title = "状态")
     val status: Int,
-    @Schema(title = "url地址")
+    @get:Schema(title = "url地址")
     val url: String = "",
-    @Schema(title = "项目列表")
+    @get:Schema(title = "项目列表")
     val project: MutableList<Project> = mutableListOf()
 )

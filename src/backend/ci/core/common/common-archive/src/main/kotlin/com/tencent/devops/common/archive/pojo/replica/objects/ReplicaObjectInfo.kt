@@ -32,16 +32,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "同步对象信息")
 data class ReplicaObjectInfo(
-    @Schema(title = "本地仓库")
+    @get:Schema(title = "本地仓库")
     val localRepoName: String,
-    @Schema(title = "远程项目")
+    @get:Schema(title = "远程项目")
     val remoteProjectId: String?,
-    @Schema(title = "远程仓库")
+    @get:Schema(title = "远程仓库")
     val remoteRepoName: String?,
-    @Schema(title = "仓库类型")
+    @get:Schema(title = "仓库类型")
     val repoType: RepositoryType,
-    @Schema(title = "包限制条件")
+    @get:Schema(title = "包限制条件")
     val packageConstraints: List<PackageConstraint>?,
-    @Schema(title = "路径限制条件")
+    @get:Schema(title = "路径限制条件")
     val pathConstraints: List<PathConstraint>?
 )

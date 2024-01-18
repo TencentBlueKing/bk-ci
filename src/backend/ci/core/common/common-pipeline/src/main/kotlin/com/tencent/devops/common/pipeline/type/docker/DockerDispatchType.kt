@@ -36,29 +36,29 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class DockerDispatchType(
     @JsonProperty("value")
-    @Schema(title = "docker构建版本", required = false)
+    @get:Schema(title = "docker构建版本", required = false)
     override var dockerBuildVersion: String?,
-    @Schema(title = "镜像类型", required = false)
+    @get:Schema(title = "镜像类型", required = false)
     override var imageType: ImageType? = ImageType.BKDEVOPS,
-    @Schema(title = "凭证id", required = false)
+    @get:Schema(title = "凭证id", required = false)
     override var credentialId: String? = "",
-    @Schema(title = "凭证项目id", required = false)
+    @get:Schema(title = "凭证项目id", required = false)
     override var credentialProject: String? = "",
-    @Schema(title = "商店镜像代码", required = false)
+    @get:Schema(title = "商店镜像代码", required = false)
     // 商店镜像代码
     override var imageCode: String? = "",
-    @Schema(title = "商店镜像版本", required = false)
+    @get:Schema(title = "商店镜像版本", required = false)
     // 商店镜像版本
     override var imageVersion: String? = "",
-    @Schema(title = "商店镜像名称", required = false)
+    @get:Schema(title = "商店镜像名称", required = false)
     // 商店镜像名称
     override var imageName: String? = "",
-    @Schema(title = "docker资源配置ID", required = false)
+    @get:Schema(title = "docker资源配置ID", required = false)
     // docker资源配置ID
     var performanceConfigId: Int = 0,
-    @Schema(title = "镜像仓库用户名", required = false)
+    @get:Schema(title = "镜像仓库用户名", required = false)
     var imageRepositoryUserName: String = "",
-    @Schema(title = "镜像仓库密码", required = false)
+    @get:Schema(title = "镜像仓库密码", required = false)
     var imageRepositoryPassword: String = ""
 ) : StoreDispatchType(dockerBuildVersion = if (dockerBuildVersion.isNullOrBlank()) {
     imageCode

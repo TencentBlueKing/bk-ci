@@ -33,20 +33,20 @@ import org.jooq.DSLContext
 
 @Schema(title = "删除迁移数据参数")
 data class DeleteMigrationDataParam(
-    @Schema(title = "jooq上下文", required = true)
+    @get:Schema(title = "jooq上下文", required = true)
     val dslContext: DSLContext,
-    @Schema(title = "项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(title = "迁移集群名称", required = true)
+    @get:Schema(title = "迁移集群名称", required = true)
     val targetClusterName: String,
-    @Schema(title = "迁移数据源名称", required = true)
+    @get:Schema(title = "迁移数据源名称", required = true)
     val targetDataSourceName: String,
-    @Schema(title = "流水线ID", required = false)
+    @get:Schema(title = "流水线ID", required = false)
     val pipelineId: String? = null,
-    @Schema(title = "迁移锁", required = false)
+    @get:Schema(title = "迁移锁", required = false)
     val migrationLock: MigrationLock? = null,
-    @Schema(title = "广播表删除标识", required = false)
+    @get:Schema(title = "广播表删除标识", required = false)
     val broadcastTableDeleteFlag: Boolean? = true,
-    @Schema(title = "归档流水线标识", required = false)
+    @get:Schema(title = "归档流水线标识", required = false)
     val archivePipelineFlag: Boolean? = null
 )

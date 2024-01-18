@@ -116,93 +116,93 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitCodeProjectInfo(
     @JsonProperty("id")
-    @Schema(title = "id")
+    @get:Schema(title = "id")
     val id: Long?,
     @JsonProperty("public")
-    @Schema(title = "public")
+    @get:Schema(title = "public")
     val public: Boolean?,
     @JsonProperty("archived")
-    @Schema(title = "archived")
+    @get:Schema(title = "archived")
     val archived: Boolean?,
     @JsonProperty("visibility_level")
-    @Schema(title = "visibility_level")
+    @get:Schema(title = "visibility_level")
     val visibilityLevel: Long?,
     @JsonProperty("public_visibility")
-    @Schema(title = "public_visibility")
+    @get:Schema(title = "public_visibility")
     val publicVisibility: Long?,
     @JsonProperty("name")
-    @Schema(title = "name")
+    @get:Schema(title = "name")
     val name: String?,
     @JsonProperty("name_with_namespace")
-    @Schema(title = "name_with_namespace")
+    @get:Schema(title = "name_with_namespace")
     val nameWithNamespace: String?,
     @JsonProperty("path")
-    @Schema(title = "path")
+    @get:Schema(title = "path")
     val path: String?,
     @JsonProperty("path_with_namespace")
-    @Schema(title = "path_with_namespace")
+    @get:Schema(title = "path_with_namespace")
     val pathWithNamespace: String?,
     @JsonProperty("default_branch")
-    @Schema(title = "default_branch")
+    @get:Schema(title = "default_branch")
     val defaultBranch: String?,
     @JsonProperty("ssh_url_to_repo")
-    @Schema(title = "ssh_url_to_repo")
+    @get:Schema(title = "ssh_url_to_repo")
     val sshUrlToRepo: String?,
     @JsonProperty("http_url_to_repo")
-    @Schema(title = "http_url_to_repo")
+    @get:Schema(title = "http_url_to_repo")
     val httpUrlToRepo: String?,
     @JsonProperty("https_url_to_repo")
-    @Schema(title = "https_url_to_repo")
+    @get:Schema(title = "https_url_to_repo")
     val httpsUrlToRepo: String?,
     @JsonProperty("web_url")
-    @Schema(title = "web_url")
+    @get:Schema(title = "web_url")
     val webUrl: String?,
-    @Schema(title = "issues_enabled")
+    @get:Schema(title = "issues_enabled")
     @JsonProperty("issues_enabled")
     val issuesEnabled: Boolean?,
     @JsonProperty("merge_requests_enabled")
-    @Schema(title = "merge_requests_enabled")
+    @get:Schema(title = "merge_requests_enabled")
     val mergeRequestsEnabled: Boolean?,
     @JsonProperty("wiki_enabled")
-    @Schema(title = "wiki_enabled")
+    @get:Schema(title = "wiki_enabled")
     val wikiEnabled: Boolean?,
     @JsonProperty("snippets_enabled")
-    @Schema(title = "snippets_enabled")
+    @get:Schema(title = "snippets_enabled")
     val snippetsEnabled: Boolean?,
     @JsonProperty("review_enabled")
-    @Schema(title = "review_enabled")
+    @get:Schema(title = "review_enabled")
     val reviewEnabled: Boolean?,
     @JsonProperty("fork_enabled")
-    @Schema(title = "fork_enabled")
+    @get:Schema(title = "fork_enabled")
     val forkEnabled: Boolean?,
     @JsonProperty("tag_create_push_level")
-    @Schema(title = "tag_create_push_level")
+    @get:Schema(title = "tag_create_push_level")
     val tagCreatePushLevel: Long?,
     @JsonProperty("created_at")
-    @Schema(title = "created_at")
+    @get:Schema(title = "created_at")
     val createdAt: String?,
     @JsonProperty("last_activity_at")
-    @Schema(title = "last_activity_at")
+    @get:Schema(title = "last_activity_at")
     val lastActivityAt: String?,
     @JsonProperty("creator_id")
-    @Schema(title = "creator_id")
+    @get:Schema(title = "creator_id")
     val creatorId: String?,
     @JsonProperty("avatar_url")
-    @Schema(title = "avatar_url")
+    @get:Schema(title = "avatar_url")
     val avatarUrl: String?,
     @JsonProperty("watchs_count")
-    @Schema(title = "watchs_count")
+    @get:Schema(title = "watchs_count")
     val watchsCount: Long?,
     @JsonProperty("stars_count")
-    @Schema(title = "stars_count")
+    @get:Schema(title = "stars_count")
     val starsCount: Long?,
     @JsonProperty("forks_count")
-    @Schema(title = "forks_count")
+    @get:Schema(title = "forks_count")
     val forksCount: Long?,
     @JsonProperty("push_reset_enabled")
-    @Schema(title = "push_reset_enabled")
+    @get:Schema(title = "push_reset_enabled")
     val pushResetEnabled: Boolean?,
     @JsonProperty("description")
-    @Schema(title = "description")
+    @get:Schema(title = "description")
     val description: String?
 )

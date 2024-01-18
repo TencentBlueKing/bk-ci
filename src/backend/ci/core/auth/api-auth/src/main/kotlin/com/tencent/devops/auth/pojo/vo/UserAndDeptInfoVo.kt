@@ -7,20 +7,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "用户和组织信息返回实体")
 data class UserAndDeptInfoVo(
-    @Schema(title = "id")
+    @get:Schema(title = "id")
     val id: Int,
-    @Schema(title = "名称")
+    @get:Schema(title = "名称")
     val name: String,
-    @Schema(title = "信息类型")
+    @get:Schema(title = "信息类型")
     val type: ManagerScopesEnum,
-    @Schema(title = "是否拥有子级")
+    @get:Schema(title = "是否拥有子级")
     val hasChild: Boolean? = false,
-    @Schema(title = "用户部门详细信息")
+    @get:Schema(title = "用户部门详细信息")
     val deptInfo: List<BkUserDeptInfo>? = null,
-    @Schema(title = "用户额外详细信息")
+    @get:Schema(title = "用户额外详细信息")
     val extras: BkUserExtras? = null,
-    @Schema(title = "水印信息")
+    @get:Schema(title = "水印信息")
     val waterMark: String? = null,
-    @Schema(title = "是否是项目成员")
+    @get:Schema(title = "是否是项目成员")
     val belongProjectMember: Boolean? = null
 )

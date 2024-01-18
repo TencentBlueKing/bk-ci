@@ -31,20 +31,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线模型-质量红线-列表信息")
 data class QualityPipeline(
-    @Schema(title = "项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(title = "流水线ID", required = true)
+    @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(title = "流水线名称", required = true)
+    @get:Schema(title = "流水线名称", required = true)
     var pipelineName: String,
-    @Schema(title = "流水线描述", required = false)
+    @get:Schema(title = "流水线描述", required = false)
     var pipelineDesc: String?,
-    @Schema(title = "流水线任务数量", required = true)
+    @get:Schema(title = "流水线任务数量", required = true)
     val taskCount: Int,
-    @Schema(title = "构建次数", required = true)
+    @get:Schema(title = "构建次数", required = true)
     val buildCount: Long,
-    @Schema(title = "最后构建启动时间", required = false)
+    @get:Schema(title = "最后构建启动时间", required = false)
     val latestBuildStartTime: Long?,
-    @Schema(title = "最后构建结束时间", required = false)
+    @get:Schema(title = "最后构建结束时间", required = false)
     val latestBuildEndTime: Long?
 )

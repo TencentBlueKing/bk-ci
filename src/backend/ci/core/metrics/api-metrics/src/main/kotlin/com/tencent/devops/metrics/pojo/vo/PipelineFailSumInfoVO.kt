@@ -32,6 +32,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线错误统计信息视图")
 data class PipelineFailSumInfoVO(
-    @Schema(title = "流水线错误统计信息")
+    @get:Schema(title = "流水线错误统计信息")
     val pipelineFailInfoList: List<PipelineFailInfoDO>
 )

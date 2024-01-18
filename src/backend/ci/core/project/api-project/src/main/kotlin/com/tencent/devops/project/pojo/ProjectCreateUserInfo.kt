@@ -32,14 +32,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema
 data class ProjectCreateUserInfo(
-    @Schema(title = "操作人")
+    @get:Schema(title = "操作人")
     val createUserId: String,
-    @Schema(title = "待分配的角色名称")
+    @get:Schema(title = "待分配的角色名称")
     val roleName: String?,
-    @Schema(title = "角色Id")
+    @get:Schema(title = "角色Id")
     val roleId: Int?,
-    @Schema(title = "组ID")
+    @get:Schema(title = "组ID")
     val groupId: Int?,
-    @Schema(title = "目标用户")
+    @get:Schema(title = "目标用户")
     val userIds: List<String>? = emptyList()
 )

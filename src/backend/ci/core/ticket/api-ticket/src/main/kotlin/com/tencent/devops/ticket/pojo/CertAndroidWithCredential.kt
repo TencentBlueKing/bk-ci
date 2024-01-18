@@ -32,20 +32,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "证书-android证书加密内容")
 data class CertAndroidWithCredential(
-    @Schema(title = "Base64编码的加密公钥", required = true)
+    @get:Schema(title = "Base64编码的加密公钥", required = true)
     val publicKey: String,
-    @Schema(title = "Android证书类型", required = true)
+    @get:Schema(title = "Android证书类型", required = true)
     val type: CertAndroidType,
-    @Schema(title = "证书名", required = true)
+    @get:Schema(title = "证书名", required = true)
     val fileName: String,
-    @Schema(title = "Base64编码的加密后的证书内容", required = true)
+    @get:Schema(title = "Base64编码的加密后的证书内容", required = true)
     val fileContent: String,
-    @Schema(title = "证书内容sha1", required = true)
+    @get:Schema(title = "证书内容sha1", required = true)
     val fileSha1: String,
-    @Schema(title = "Base64编码的加密后的证书密码", required = false)
+    @get:Schema(title = "Base64编码的加密后的证书密码", required = false)
     val credential: String,
-    @Schema(title = "证书别名", required = false)
+    @get:Schema(title = "证书别名", required = false)
     val alias: String,
-    @Schema(title = "Base64编码的加密后的证书别名密码", required = false)
+    @get:Schema(title = "Base64编码的加密后的证书别名密码", required = false)
     val aliasCredential: String
 )

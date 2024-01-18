@@ -31,18 +31,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线标签")
 data class PipelineLabel(
-    @Schema(title = "标签id", required = false)
+    @get:Schema(title = "标签id", required = false)
     val id: String,
-    @Schema(title = "流水线id", required = false)
+    @get:Schema(title = "流水线id", required = false)
     val groupId: String,
-    @Schema(title = "标签名称", required = false)
+    @get:Schema(title = "标签名称", required = false)
     val name: String,
-    @Schema(title = "创建时间", required = false)
+    @get:Schema(title = "创建时间", required = false)
     val createTime: Long,
-    @Schema(title = "更新时间", required = false)
+    @get:Schema(title = "更新时间", required = false)
     val uptimeTime: Long,
-    @Schema(title = "创建者", required = false)
+    @get:Schema(title = "创建者", required = false)
     val createUser: String,
-    @Schema(title = "更新者", required = false)
+    @get:Schema(title = "更新者", required = false)
     val updateUser: String
 )

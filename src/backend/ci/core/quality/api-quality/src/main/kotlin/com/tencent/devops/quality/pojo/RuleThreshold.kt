@@ -32,12 +32,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "质量红线-拦截规则阈值")
 data class RuleThreshold(
-    @Schema(title = "指标ID", required = true)
+    @get:Schema(title = "指标ID", required = true)
     val metadataId: String,
-    @Schema(title = "指标名称", required = true)
+    @get:Schema(title = "指标名称", required = true)
     val metadataName: String,
-    @Schema(title = "关系", required = true)
+    @get:Schema(title = "关系", required = true)
     val operation: QualityOperation,
-    @Schema(title = "阈值值大小", required = true)
+    @get:Schema(title = "阈值值大小", required = true)
     val value: String
 )

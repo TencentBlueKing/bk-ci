@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "心跳信息")
 data class HeartBeatInfo(
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "构建ID")
+    @get:Schema(title = "构建ID")
     val buildId: String,
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val vmSeqId: String,
-    @Schema(title = "取消的task任务的id集合")
+    @get:Schema(title = "取消的task任务的id集合")
     val cancelTaskIds: Set<String>? = null
 )

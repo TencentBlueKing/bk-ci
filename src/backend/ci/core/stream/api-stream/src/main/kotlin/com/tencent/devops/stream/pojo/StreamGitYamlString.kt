@@ -31,6 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "Yaml内容")
 data class StreamGitYamlString(
-    @Schema(title = "YAML文件内容")
+    @get:Schema(title = "YAML文件内容")
     val yaml: String
 )

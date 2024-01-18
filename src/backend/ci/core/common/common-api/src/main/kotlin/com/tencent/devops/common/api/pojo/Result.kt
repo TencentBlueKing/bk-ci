@@ -37,11 +37,11 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "数据返回包装模型")
 data class Result<out T>(
-    @Schema(title = "状态码", required = true)
+    @get:Schema(title = "状态码", required = true)
     val status: Int,
-    @Schema(title = "错误信息", required = false)
+    @get:Schema(title = "错误信息", required = false)
     val message: String? = null,
-    @Schema(title = "数据", required = false)
+    @get:Schema(title = "数据", required = false)
     @BkFieldI18n
     val data: T? = null
 ) {

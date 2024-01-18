@@ -29,8 +29,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "语言信息")
 data class LanguageInfo(
-    @Schema(title = "语言")
+    @get:Schema(title = "语言")
     val language: String,
-    @Schema(title = "语言名称")
+    @get:Schema(title = "语言名称")
     val name: String
 )

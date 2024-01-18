@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线标签模型")
 data class PipelineGroupLabels(
-    @Schema(title = "流水线名字", required = false)
+    @get:Schema(title = "流水线名字", required = false)
     val groupName: String,
-    @Schema(title = "标签名字", required = false)
+    @get:Schema(title = "标签名字", required = false)
     val labelName: MutableList<String/*labelName*/>
 )

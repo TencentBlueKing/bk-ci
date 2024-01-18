@@ -31,15 +31,15 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线运行锁定方式")
 enum class PipelineRunLockType {
-    @Schema(title = "可同时运行多个构建任务（默认）")
+    @get:Schema(title = "可同时运行多个构建任务（默认）")
     MULTIPLE,
-    @Schema(title = "同一时间最多只能运行一个构建任务")
+    @get:Schema(title = "同一时间最多只能运行一个构建任务")
     SINGLE,
-    @Schema(title = "最多只能运行一个构建任务，且失败时锁定")
+    @get:Schema(title = "最多只能运行一个构建任务，且失败时锁定")
     SINGLE_LOCK,
-    @Schema(title = "锁定流水线，任何触发方式都无法运行")
+    @get:Schema(title = "锁定流水线，任何触发方式都无法运行")
     LOCK,
-    @Schema(title = "并发组锁定，项目级别，同一组的构建为SINGLE模式")
+    @get:Schema(title = "并发组锁定，项目级别，同一组的构建为SINGLE模式")
     GROUP_LOCK;
 
     companion object {

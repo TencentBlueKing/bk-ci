@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件市场-申请成为插件协作者请求报文体")
 data class AtomCollaboratorCreateResp(
-    @Schema(title = "申请人", required = true)
+    @get:Schema(title = "申请人", required = true)
     val applicant: String,
-    @Schema(title = "申请状态", required = true)
+    @get:Schema(title = "申请状态", required = true)
     val approveStatus: String
 )

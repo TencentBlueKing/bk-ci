@@ -32,8 +32,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件配置信息")
 data class AtomConfigInfo(
-    @Schema(title = "前端UI渲染方式", required = true)
+    @get:Schema(title = "前端UI渲染方式", required = true)
     val frontendType: FrontendTypeEnum = FrontendTypeEnum.NORMAL,
-    @Schema(title = "是否为默认插件", required = true)
+    @get:Schema(title = "是否为默认插件", required = true)
     val defaultFlag: Boolean = false
 )

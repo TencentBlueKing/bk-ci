@@ -30,14 +30,14 @@ package com.tencent.devops.store.pojo.atom
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class AtomPipelineExecInfo(
-    @Schema(title = "流水线ID", required = true)
+    @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(title = "流水线名称", required = true)
+    @get:Schema(title = "流水线名称", required = true)
     var pipelineName: String,
-    @Schema(title = "项目标识", required = true)
+    @get:Schema(title = "项目标识", required = true)
     val projectCode: String,
-    @Schema(title = "拥有者", required = true)
+    @get:Schema(title = "拥有者", required = true)
     val owner: String,
-    @Schema(title = "最近执行时间", required = true)
+    @get:Schema(title = "最近执行时间", required = true)
     val latestExecTime: String
 )

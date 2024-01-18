@@ -30,6 +30,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "镜像市场-镜像特性信息新增请求报文体")
 data class ImageFeatureCreateRequest(
-    @Schema(title = "镜像代码", required = true)
+    @get:Schema(title = "镜像代码", required = true)
     val imageCode: String
 )

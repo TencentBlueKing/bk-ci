@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件参数替换信息")
 data class AtomParamReplaceInfo(
-    @Schema(title = "被替换插件参数名称", required = true)
+    @get:Schema(title = "被替换插件参数名称", required = true)
     val fromParamName: String,
-    @Schema(title = "替换插件参数名称", required = true)
+    @get:Schema(title = "替换插件参数名称", required = true)
     val toParamName: String,
-    @Schema(title = "替换插件参数值，不传默认用被替换插件参数值替换", required = false)
+    @get:Schema(title = "替换插件参数值，不传默认用被替换插件参数值替换", required = false)
     val toParamValue: Any? = null,
-    @Schema(title = "参数自定义转换接口url地址，接口参数结构需统一", required = false)
+    @get:Schema(title = "参数自定义转换接口url地址，接口参数结构需统一", required = false)
     val paramConvertUrl: String? = null
 )

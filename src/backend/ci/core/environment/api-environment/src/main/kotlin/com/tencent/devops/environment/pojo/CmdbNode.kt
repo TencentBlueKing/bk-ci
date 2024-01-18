@@ -31,20 +31,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "CMDB节点信息")
 data class CmdbNode(
-    @Schema(title = "节点名称", required = true)
+    @get:Schema(title = "节点名称", required = true)
     val name: String,
-    @Schema(title = "责任人", required = true)
+    @get:Schema(title = "责任人", required = true)
     val operator: String,
-    @Schema(title = "备份责任人", required = true)
+    @get:Schema(title = "备份责任人", required = true)
     val bakOperator: String,
-    @Schema(title = "节点IP", required = true)
+    @get:Schema(title = "节点IP", required = true)
     val ip: String,
-    @Schema(title = "显示IP", required = true)
+    @get:Schema(title = "显示IP", required = true)
     val displayIp: String,
-    @Schema(title = "Agent状态", required = true)
+    @get:Schema(title = "Agent状态", required = true)
     val agentStatus: Boolean,
-    @Schema(title = "操作系统", required = true)
+    @get:Schema(title = "操作系统", required = true)
     val osName: String,
-    @Schema(title = "所属业务")
+    @get:Schema(title = "所属业务")
     val bizId: Long = -1
 )

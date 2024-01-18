@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "OP-模版列表")
 data class OpTemplateResp(
-    @Schema(title = "总记录数")
+    @get:Schema(title = "总记录数")
     val count: Int,
-    @Schema(title = "当前页码值")
+    @get:Schema(title = "当前页码值")
     val page: Int?,
-    @Schema(title = "每页记录大小")
+    @get:Schema(title = "每页记录大小")
     val pageSize: Int?,
-    @Schema(title = "数据集合")
+    @get:Schema(title = "数据集合")
     val records: List<OpTemplateItem?>
 )

@@ -34,128 +34,128 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Suppress("ALL")
 @Schema(title = "项目-显示模型")
 data class ProjectVO(
-    @Schema(title = "主键ID")
+    @get:Schema(title = "主键ID")
     val id: Long,
-    @Schema(title = "项目ID（很少使用）")
+    @get:Schema(title = "项目ID（很少使用）")
     val projectId: String,
-    @Schema(title = "项目名称")
+    @get:Schema(title = "项目名称")
     val projectName: String,
-    @Schema(title = "项目代码（蓝盾项目Id）")
+    @get:Schema(title = "项目代码（蓝盾项目Id）")
     val projectCode: String,
-    @Schema(title = "项目类型")
+    @get:Schema(title = "项目类型")
     val projectType: Int?,
-    @Schema(title = "审批状态")
+    @get:Schema(title = "审批状态")
     val approvalStatus: Int?,
-    @Schema(title = "审批时间")
+    @get:Schema(title = "审批时间")
     val approvalTime: String?,
-    @Schema(title = "审批人")
+    @get:Schema(title = "审批人")
     val approver: String?,
-    @Schema(title = "cc业务ID")
+    @get:Schema(title = "cc业务ID")
     val ccAppId: Long?,
-    @Schema(title = "cc业务名称")
+    @get:Schema(title = "cc业务名称")
     val ccAppName: String?,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createdAt: String?,
-    @Schema(title = "创建人")
+    @get:Schema(title = "创建人")
     val creator: String?,
-    @Schema(title = "数据ID")
+    @get:Schema(title = "数据ID")
     val dataId: Long?,
-    @Schema(title = "部署类型")
+    @get:Schema(title = "部署类型")
     val deployType: String?,
-    @Schema(title = "事业群ID")
+    @get:Schema(title = "事业群ID")
     val bgId: String?,
-    @Schema(title = "事业群名字")
+    @get:Schema(title = "事业群名字")
     val bgName: String?,
-    @Schema(title = "中心ID")
+    @get:Schema(title = "中心ID")
     val centerId: String?,
-    @Schema(title = "中心名称")
+    @get:Schema(title = "中心名称")
     val centerName: String?,
-    @Schema(title = "部门ID")
+    @get:Schema(title = "部门ID")
     val deptId: String?,
-    @Schema(title = "部门名称")
+    @get:Schema(title = "部门名称")
     val deptName: String?,
-    @Schema(title = "业务线ID")
+    @get:Schema(title = "业务线ID")
     val businessLineId: String?,
-    @Schema(title = "业务线名称")
+    @get:Schema(title = "业务线名称")
     val businessLineName: String?,
-    @Schema(title = "描述")
+    @get:Schema(title = "描述")
     val description: String?,
-    @Schema(title = "英文缩写")
+    @get:Schema(title = "英文缩写")
     val englishName: String,
-    @Schema(title = "extra")
+    @get:Schema(title = "extra")
     val extra: String?,
-    @Schema(title = "是否离线")
+    @get:Schema(title = "是否离线")
     val offlined: Boolean?,
-    @Schema(title = "是否保密")
+    @get:Schema(title = "是否保密")
     val secrecy: Boolean?,
-    @Schema(title = "是否启用图表激活")
+    @get:Schema(title = "是否启用图表激活")
     val helmChartEnabled: Boolean?,
-    @Schema(title = "kind")
+    @get:Schema(title = "kind")
     val kind: Int?,
-    @Schema(title = "logo地址")
+    @get:Schema(title = "logo地址")
     val logoAddr: String?,
-    @Schema(title = "评论")
+    @get:Schema(title = "评论")
     val remark: String?,
-    @Schema(title = "修改时间")
+    @get:Schema(title = "修改时间")
     val updatedAt: String?,
-    @Schema(title = "修改人")
+    @get:Schema(title = "修改人")
     val updator: String?,
-    @Schema(title = "useBK")
+    @get:Schema(title = "useBK")
     val useBk: Boolean?,
-    @Schema(title = "启用")
+    @get:Schema(title = "启用")
     val enabled: Boolean?,
-    @Schema(title = "是否灰度")
+    @get:Schema(title = "是否灰度")
     val gray: Boolean,
-    @Schema(title = "混合云CC业务ID")
+    @get:Schema(title = "混合云CC业务ID")
     val hybridCcAppId: Long?,
-    @Schema(title = "支持构建机访问外网")
+    @get:Schema(title = "支持构建机访问外网")
     val enableExternal: Boolean?,
-    @Schema(title = "支持IDC构建机")
+    @get:Schema(title = "支持IDC构建机")
     val enableIdc: Boolean? = false,
-    @Schema(title = "流水线数量上限")
+    @get:Schema(title = "流水线数量上限")
     val pipelineLimit: Int? = 500,
     @Deprecated("即将作废，兼容插件中被引用到的旧的字段命名，请用hybridCcAppId代替")
-    @Schema(title = "混合云CC业务ID(即将作废，兼容插件中被引用到的旧的字段命名，请用hybridCcAppId代替)")
+    @get:Schema(title = "混合云CC业务ID(即将作废，兼容插件中被引用到的旧的字段命名，请用hybridCcAppId代替)")
     val hybrid_cc_app_id: Long?,
     @Deprecated("即将作废，兼容插件中被引用到的旧的字段命名，请用projectId代替")
-    @Schema(title = "项目ID(即将作废，兼容插件中被引用到的旧的字段命名，请用projectId代替)")
+    @get:Schema(title = "项目ID(即将作废，兼容插件中被引用到的旧的字段命名，请用projectId代替)")
     val project_id: String?,
     @Deprecated("即将作废，兼容插件中被引用到的旧的字段命名，请用projectName代替")
-    @Schema(title = "旧版项目名称(即将作废，兼容插件中被引用到的旧的字段命名，请用projectName代替)")
+    @get:Schema(title = "旧版项目名称(即将作废，兼容插件中被引用到的旧的字段命名，请用projectName代替)")
     val project_name: String?,
     @Deprecated("即将作废，兼容插件中被引用到的旧的字段命名，请用projectCode代替")
-    @Schema(title = "旧版项目代码(即将作废，兼容插件中被引用到的旧的字段命名，请用projectCode代替)")
+    @get:Schema(title = "旧版项目代码(即将作废，兼容插件中被引用到的旧的字段命名，请用projectCode代替)")
     val project_code: String?,
     @Deprecated("即将作废，兼容插件中被引用到的旧的字段命名，请用ccAppId代替")
-    @Schema(title = "旧版cc业务ID(即将作废，兼容插件中被引用到的旧的字段命名，请用ccAppId代替)")
+    @get:Schema(title = "旧版cc业务ID(即将作废，兼容插件中被引用到的旧的字段命名，请用ccAppId代替)")
     val cc_app_id: Long?,
-    @Schema(title = "旧版cc业务名称(即将作废，兼容插件中被引用到的旧的字段命名，请用ccAppName代替)")
+    @get:Schema(title = "旧版cc业务名称(即将作废，兼容插件中被引用到的旧的字段命名，请用ccAppName代替)")
     @Deprecated("即将作废，兼容插件中被引用到的旧的字段命名，请用ccAppName代替")
     val cc_app_name: String?,
-    @Schema(title = "项目路由指向")
+    @get:Schema(title = "项目路由指向")
     val routerTag: String?,
-    @Schema(title = "关联系统Id")
+    @get:Schema(title = "关联系统Id")
     val relationId: String?,
-    @Schema(title = "项目其他配置")
+    @get:Schema(title = "项目其他配置")
     val properties: ProjectProperties?,
-    @Schema(title = "项目最大可授权人员范围")
+    @get:Schema(title = "项目最大可授权人员范围")
     val subjectScopes: List<SubjectScopeInfo>?,
-    @Schema(title = "是否权限私密")
+    @get:Schema(title = "是否权限私密")
     val authSecrecy: Int?,
-    @Schema(title = "项目提示状态,0-不展示,1-展示创建成功,2-展示编辑成功")
+    @get:Schema(title = "项目提示状态,0-不展示,1-展示创建成功,2-展示编辑成功")
     val tipsStatus: Int? = ProjectTipsStatus.NOT_SHOW.status,
-    @Schema(title = "项目审批message")
+    @get:Schema(title = "项目审批message")
     val approvalMsg: String? = "",
-    @Schema(title = "是否拥有新版权限中心项目管理权限")
+    @get:Schema(title = "是否拥有新版权限中心项目管理权限")
     val managePermission: Boolean? = null,
-    @Schema(title = "是否展示用户管理图标")
+    @get:Schema(title = "是否展示用户管理图标")
     val showUserManageIcon: Boolean? = null,
-    @Schema(title = "渠道")
+    @get:Schema(title = "渠道")
     val channelCode: String? = null,
-    @Schema(title = "运营产品ID")
+    @get:Schema(title = "运营产品ID")
     val productId: Int? = null,
-    @Schema(title = "是否可以查看")
+    @get:Schema(title = "是否可以查看")
     val canView: Boolean? = null,
-    @Schema(title = "安装模板权限")
+    @get:Schema(title = "安装模板权限")
     val pipelineTemplateInstallPerm: Boolean? = null
 )

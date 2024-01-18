@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线task组件公共配置信息")
 data class TaskComponentCommonSetting(
-    @Schema(title = "组件类型", required = true)
+    @get:Schema(title = "组件类型", required = true)
     val componentType: String,
-    @Schema(title = "组件大小最大值（单位：字符）", required = true)
+    @get:Schema(title = "组件大小最大值（单位：字符）", required = true)
     val maxSize: Int
 )

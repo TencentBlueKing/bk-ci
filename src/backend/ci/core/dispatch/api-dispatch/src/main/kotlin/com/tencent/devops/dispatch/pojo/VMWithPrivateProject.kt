@@ -31,16 +31,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "VM-专机信息")
 data class VMWithPrivateProject(
-    @Schema(title = "VM ID", required = true)
+    @get:Schema(title = "VM ID", required = true)
     val id: Long,
-    @Schema(title = "VM 对应母机ID", required = true)
+    @get:Schema(title = "VM 对应母机ID", required = true)
     val machineId: Int,
-    @Schema(title = "VM 类型ID", required = true)
+    @get:Schema(title = "VM 类型ID", required = true)
     val typeId: Int,
-    @Schema(title = "VM IP地址", required = true)
+    @get:Schema(title = "VM IP地址", required = true)
     val ip: String,
-    @Schema(title = "VM 名称", required = true)
+    @get:Schema(title = "VM 名称", required = true)
     val name: String,
-    @Schema(title = "工程ID", required = true)
+    @get:Schema(title = "工程ID", required = true)
     val projectId: String
 )

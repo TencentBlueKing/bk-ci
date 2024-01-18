@@ -32,10 +32,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema
 data class WebhookMatchResult(
-    @Schema(title = "是否匹配")
+    @get:Schema(title = "是否匹配")
     val isMatch: Boolean,
-    @Schema(title = "匹配时输出的变量")
+    @get:Schema(title = "匹配时输出的变量")
     val extra: Map<String, String> = mapOf(),
-    @Schema(title = "匹配失败原因")
+    @get:Schema(title = "匹配失败原因")
     val reason: String? = null
 )

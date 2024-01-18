@@ -32,20 +32,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "设置-订阅消息")
 data class SubscriptionResponse(
-    @Schema(title = "通知人员", required = false)
+    @get:Schema(title = "通知人员", required = false)
     val users: String = "",
-    @Schema(title = "通知方式(email, rtx)", required = true)
+    @get:Schema(title = "通知方式(email, rtx)", required = true)
     val types: List<PipelineSubscriptionType> = listOf(),
-    @Schema(title = "分组id", required = false)
+    @get:Schema(title = "分组id", required = false)
     val groups: List<String> = listOf(),
-    @Schema(title = "企业微信群通知开关", required = false)
+    @get:Schema(title = "企业微信群通知开关", required = false)
     val wechatGroupFlag: Boolean = false,
-    @Schema(title = "企业微信群通知群ID", required = false)
+    @get:Schema(title = "企业微信群通知群ID", required = false)
     val wechatGroup: String = "",
-    @Schema(title = "企业微信群通知转为Markdown格式开关", required = false)
+    @get:Schema(title = "企业微信群通知转为Markdown格式开关", required = false)
     val wechatGroupMarkDownFlag: Boolean = false,
-    @Schema(title = "通知内容带上流水线详情连接", required = false)
+    @get:Schema(title = "通知内容带上流水线详情连接", required = false)
     val detailFlag: Boolean = false,
-    @Schema(title = "自定义通知内容", required = false)
+    @get:Schema(title = "自定义通知内容", required = false)
     val content: String = ""
 )

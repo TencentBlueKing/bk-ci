@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "项目-新增管理员")
 data class AddManagerRequest(
-    @Schema(title = "项目英文名")
+    @get:Schema(title = "项目英文名")
     val projectCode: String,
-    @Schema(title = "管理员列表")
+    @get:Schema(title = "管理员列表")
     val managerList: List<String>
 )

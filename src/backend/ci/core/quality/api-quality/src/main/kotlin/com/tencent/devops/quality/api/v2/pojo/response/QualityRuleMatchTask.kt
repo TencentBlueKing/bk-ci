@@ -33,40 +33,40 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "质量红线-匹配拦截规则原子v2")
 data class QualityRuleMatchTask(
-    @Schema(title = "原子ID", required = true)
+    @get:Schema(title = "原子ID", required = true)
     val taskId: String,
-    @Schema(title = "原子名称", required = true)
+    @get:Schema(title = "原子名称", required = true)
     val taskName: String,
-    @Schema(title = "原子控制阶段", required = true)
+    @get:Schema(title = "原子控制阶段", required = true)
     val controlStage: ControlPointPosition,
-    @Schema(title = "规则列表", required = true)
+    @get:Schema(title = "规则列表", required = true)
     val ruleList: List<RuleMatchRule>,
-    @Schema(title = "阈值列表", required = false)
+    @get:Schema(title = "阈值列表", required = false)
     val thresholdList: List<RuleThreshold>?,
-    @Schema(title = "审核用户列表", required = false)
+    @get:Schema(title = "审核用户列表", required = false)
     val auditUserList: Set<String>?
 ) {
-    @Schema(title = "质量红线-拦截规则v2")
+    @get:Schema(title = "质量红线-拦截规则v2")
     data class RuleMatchRule(
-        @Schema(title = "规则ID", required = true)
+        @get:Schema(title = "规则ID", required = true)
         val ruleHashId: String,
-        @Schema(title = "规则名称", required = true)
+        @get:Schema(title = "规则名称", required = true)
         val ruleName: String,
-        @Schema(title = "红线匹配的id", required = false)
+        @get:Schema(title = "红线匹配的id", required = false)
         val gatewayId: String?
     )
 
-    @Schema(title = "质量红线-拦截规则阈值v2")
+    @get:Schema(title = "质量红线-拦截规则阈值v2")
     data class RuleThreshold(
-        @Schema(title = "指标ID", required = true)
+        @get:Schema(title = "指标ID", required = true)
         val indicatorId: String,
-        @Schema(title = "指标名称", required = true)
+        @get:Schema(title = "指标名称", required = true)
         val indicatorName: String,
-        @Schema(title = "元数据DATA_ID", required = true)
+        @get:Schema(title = "元数据DATA_ID", required = true)
         val metadataIds: List<String>,
-        @Schema(title = "关系", required = true)
+        @get:Schema(title = "关系", required = true)
         val operation: QualityOperation,
-        @Schema(title = "阈值值大小", required = true)
+        @get:Schema(title = "阈值值大小", required = true)
         val value: String
     )
 }

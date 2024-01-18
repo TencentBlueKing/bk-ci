@@ -31,6 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "版本仓库-构建曲线")
 data class TrendInfoDto(
-    @Schema(title = "曲线图谱")
+    @get:Schema(title = "曲线图谱")
     var trendData: Map<String, List<ArtifactoryInfo>>
 )

@@ -32,34 +32,34 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "手机侧流水线构建历史模型")
 data class AppPipelineHistory(
-    @Schema(title = "项目id", required = false)
+    @get:Schema(title = "项目id", required = false)
     val projectId: String,
-    @Schema(title = "流水线id", required = false)
+    @get:Schema(title = "流水线id", required = false)
     val pipelineId: String,
-    @Schema(title = "构建号id", required = false)
+    @get:Schema(title = "构建号id", required = false)
     val buildId: String,
-    @Schema(title = "用户id", required = false)
+    @get:Schema(title = "用户id", required = false)
     val userId: String,
-    @Schema(title = "启动构建类型", required = false)
+    @get:Schema(title = "启动构建类型", required = false)
     val trigger: StartType,
-    @Schema(title = "构建次数", required = false)
+    @get:Schema(title = "构建次数", required = false)
     val buildNum: Int?,
-    @Schema(title = "启动时间", required = false)
+    @get:Schema(title = "启动时间", required = false)
     val startTime: Long?,
-    @Schema(title = "结束时间", required = false)
+    @get:Schema(title = "结束时间", required = false)
     val endTime: Long?,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     val status: String,
-    @Schema(title = "当前服务器时间戳", required = false)
+    @get:Schema(title = "当前服务器时间戳", required = false)
     val curTimestamp: Long,
-    @Schema(title = "流水线版本", required = false)
+    @get:Schema(title = "流水线版本", required = false)
     val pipelineVersion: Int,
-    @Schema(title = "文件数量", required = false)
+    @get:Schema(title = "文件数量", required = false)
     var fileCount: Int = 0,
-    @Schema(title = "所有文件总大小", required = false)
+    @get:Schema(title = "所有文件总大小", required = false)
     var allFileSize: Long = 0,
-    @Schema(title = "包版本", required = false)
+    @get:Schema(title = "包版本", required = false)
     val packageVersion: String?,
-    @Schema(title = "是否使用移动端构建", required = false)
+    @get:Schema(title = "是否使用移动端构建", required = false)
     var isMobileStart: Boolean = false
 )

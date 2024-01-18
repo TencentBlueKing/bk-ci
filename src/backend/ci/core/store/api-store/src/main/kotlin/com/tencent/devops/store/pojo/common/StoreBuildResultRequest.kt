@@ -32,10 +32,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "store组件内置流水线构建结果请求报文体")
 data class StoreBuildResultRequest(
-    @Schema(title = "用户ID", required = true)
+    @get:Schema(title = "用户ID", required = true)
     val userId: String,
-    @Schema(title = "流水线构建状态", required = true)
+    @get:Schema(title = "流水线构建状态", required = true)
     val buildStatus: BuildStatus,
-    @Schema(title = "组件ID", required = true)
+    @get:Schema(title = "组件ID", required = true)
     val storeId: String
 )

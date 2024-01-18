@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "")
 data class ReportListDTO(
-    @Schema(title = "用户id", required = false)
+    @get:Schema(title = "用户id", required = false)
     val userId: String,
-    @Schema(title = "项目id", required = false)
+    @get:Schema(title = "项目id", required = false)
     val projectId: String,
-    @Schema(title = "流水线id", required = false)
+    @get:Schema(title = "流水线id", required = false)
     val pipelineId: String,
-    @Schema(title = "构建id", required = false)
+    @get:Schema(title = "构建id", required = false)
     val buildId: String,
-    @Schema(title = "是否有操作权限", required = false)
+    @get:Schema(title = "是否有操作权限", required = false)
     val needPermission: Boolean
 )

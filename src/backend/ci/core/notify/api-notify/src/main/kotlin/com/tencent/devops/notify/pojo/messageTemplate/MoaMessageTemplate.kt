@@ -30,14 +30,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "模板配置信息")
 data class MoaMessageTemplate(
-    @Schema(title = "模板ID", required = true)
+    @get:Schema(title = "模板ID", required = true)
     val id: String,
-    @Schema(title = "标题", required = false)
+    @get:Schema(title = "标题", required = false)
     var title: String?,
-    @Schema(title = "内容", required = true)
+    @get:Schema(title = "内容", required = true)
     var body: String,
-    @Schema(title = "回调地址", required = false)
+    @get:Schema(title = "回调地址", required = false)
     val callbackUrl: String?,
-    @Schema(title = "流程名称: 单据所属的业务流程名称，由业务传入", required = true)
+    @get:Schema(title = "流程名称: 单据所属的业务流程名称，由业务传入", required = true)
     val processName: String
 )

@@ -36,36 +36,36 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件发布部署模型")
 data class ReleaseInfo(
-    @Schema(title = "项目编码", required = true)
+    @get:Schema(title = "项目编码", required = true)
     var projectId: String = "",
-    @Schema(title = "插件名称", required = true)
+    @get:Schema(title = "插件名称", required = true)
     @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
     var name: String,
-    @Schema(title = "开发语言", required = true)
+    @get:Schema(title = "开发语言", required = true)
     @field:BkField(patternStyle = BkStyleEnum.LANGUAGE_STYLE)
     var language: String,
-    @Schema(title = "插件logo地址", required = true)
+    @get:Schema(title = "插件logo地址", required = true)
     @field:BkField(maxLength = 1024)
     var logoUrl: String,
-    @Schema(title = "支持的操作系统", required = true)
+    @get:Schema(title = "支持的操作系统", required = true)
     val os: ArrayList<String>,
-    @Schema(title = "插件配置信息", required = true)
+    @get:Schema(title = "插件配置信息", required = true)
     val configInfo: AtomConfigInfo,
-    @Schema(title = "插件所属范畴", required = true)
+    @get:Schema(title = "插件所属范畴", required = true)
     val category: AtomCategoryEnum,
-    @Schema(title = "所属插件分类代码", required = true)
+    @get:Schema(title = "所属插件分类代码", required = true)
     val classifyCode: String,
-    @Schema(title = "适用Job类型", required = true)
+    @get:Schema(title = "适用Job类型", required = true)
     val jobType: JobTypeEnum,
     @JsonProperty(value = "labelCodes", required = false)
-    @Schema(title = "标签标识集合", description = "labelCodes")
+    @get:Schema(title = "标签标识集合", description = "labelCodes")
     val labelCodes: ArrayList<String>? = null,
-    @Schema(title = "版本信息", required = true)
+    @get:Schema(title = "版本信息", required = true)
     val versionInfo: VersionInfo,
-    @Schema(title = "插件简介", required = true)
+    @get:Schema(title = "插件简介", required = true)
     @field:BkField(maxLength = 256)
     val summary: String,
-    @Schema(title = "插件描述", required = true)
+    @get:Schema(title = "插件描述", required = true)
     @field:BkField(maxLength = 65535)
     var description: String
 )

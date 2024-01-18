@@ -32,32 +32,32 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "版本仓库-文件信息-APP")
 data class AppFileInfo(
-    @Schema(title = "文件名", required = true)
+    @get:Schema(title = "文件名", required = true)
     val name: String,
-    @Schema(title = "文件全名", required = true)
+    @get:Schema(title = "文件全名", required = true)
     val fullName: String,
-    @Schema(title = "文件路径", required = true)
+    @get:Schema(title = "文件路径", required = true)
     val path: String,
-    @Schema(title = "文件全路径", required = true)
+    @get:Schema(title = "文件全路径", required = true)
     val fullPath: String,
-    @Schema(title = "文件大小(byte)", required = true)
+    @get:Schema(title = "文件大小(byte)", required = true)
     val size: Long,
-    @Schema(title = "是否文件夹", required = true)
+    @get:Schema(title = "是否文件夹", required = true)
     val folder: Boolean,
-    @Schema(title = "更新时间", required = true)
+    @get:Schema(title = "更新时间", required = true)
     var modifiedTime: Long,
-    @Schema(title = "仓库类型", required = true)
+    @get:Schema(title = "仓库类型", required = true)
     val artifactoryType: ArtifactoryType,
-    @Schema(title = "是否显示", required = true)
+    @get:Schema(title = "是否显示", required = true)
     val show: Boolean,
-    @Schema(title = "是否可下载", required = true)
+    @get:Schema(title = "是否可下载", required = true)
     val canDownload: Boolean,
-    @Schema(title = "版本信息", required = true)
+    @get:Schema(title = "版本信息", required = true)
     val version: String? = null,
-    @Schema(title = "logo链接", required = false)
+    @get:Schema(title = "logo链接", required = false)
     val logoUrl: String? = null,
-    @Schema(title = "版本体验BundleIdentifier", required = true)
+    @get:Schema(title = "版本体验BundleIdentifier", required = true)
     val bundleIdentifier: String? = null,
-    @Schema(title = "MD5", required = false)
+    @get:Schema(title = "MD5", required = false)
     var md5: String? = null
 )

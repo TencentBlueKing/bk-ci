@@ -33,8 +33,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @Schema(title = "质量红线-(模板/指标集)配置更新模型")
 data class TemplateUpdateData(
-    @Schema(title = "指标详情", required = true)
+    @get:Schema(title = "指标详情", required = true)
     val templateUpdate: TemplateUpdate,
-    @Schema(title = "指标详情")
+    @get:Schema(title = "指标详情")
     val indicatorDetail: List<TemplateIndicatorMapUpdate>?
 )

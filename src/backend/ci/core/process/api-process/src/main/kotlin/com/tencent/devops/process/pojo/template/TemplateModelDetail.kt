@@ -33,28 +33,28 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "")
 data class TemplateModelDetail(
-    @Schema(title = "版本列表", required = false)
+    @get:Schema(title = "版本列表", required = false)
     val versions: List<TemplateVersion>,
-    @Schema(title = "当前版本", required = false)
+    @get:Schema(title = "当前版本", required = false)
     val currentVersion: TemplateVersion,
-    @Schema(title = "最新版本", required = false)
+    @get:Schema(title = "最新版本", required = false)
     val latestVersion: TemplateVersion,
-    @Schema(title = "模板名称", required = false)
+    @get:Schema(title = "模板名称", required = false)
     val templateName: String,
-    @Schema(title = "解释说明", required = false)
+    @get:Schema(title = "解释说明", required = false)
     val description: String,
-    @Schema(title = "创建者", required = false)
+    @get:Schema(title = "创建者", required = false)
     val creator: String,
-    @Schema(title = "模板模型", required = false)
+    @get:Schema(title = "模板模型", required = false)
     val template: Model,
-    @Schema(title = "模板类型", required = false)
+    @get:Schema(title = "模板类型", required = false)
     val templateType: String,
-    @Schema(title = "logo的url地址", required = false)
+    @get:Schema(title = "logo的url地址", required = false)
     val logoUrl: String,
-    @Schema(title = "是否有操作权限", required = false)
+    @get:Schema(title = "是否有操作权限", required = false)
     val hasPermission: Boolean,
-    @Schema(title = "参数列表", required = false)
+    @get:Schema(title = "参数列表", required = false)
     val params: List<BuildFormProperty>,
-    @Schema(title = "模板参数构建", required = false)
+    @get:Schema(title = "模板参数构建", required = false)
     val templateParams: List<BuildFormProperty>? = null
 )

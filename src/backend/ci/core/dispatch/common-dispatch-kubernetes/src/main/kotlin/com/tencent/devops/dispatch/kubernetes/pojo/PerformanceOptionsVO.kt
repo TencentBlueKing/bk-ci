@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "构建机性能基础选项配置")
 data class PerformanceOptionsVO(
-    @Schema(title = "CPU")
+    @get:Schema(title = "CPU")
     val cpu: Double,
-    @Schema(title = "内存")
+    @get:Schema(title = "内存")
     val memory: String,
-    @Schema(title = "磁盘")
+    @get:Schema(title = "磁盘")
     val disk: String,
-    @Schema(title = "描述")
+    @get:Schema(title = "描述")
     val description: String
 )

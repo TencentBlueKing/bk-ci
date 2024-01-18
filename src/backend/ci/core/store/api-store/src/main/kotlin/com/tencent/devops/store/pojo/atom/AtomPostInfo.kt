@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件post信息")
 data class AtomPostInfo(
-    @Schema(title = "插件代码")
+    @get:Schema(title = "插件代码")
     val atomCode: String,
-    @Schema(title = "插件版本号")
+    @get:Schema(title = "插件版本号")
     val version: String,
-    @Schema(title = "入口参数")
+    @get:Schema(title = "入口参数")
     val postEntryParam: String,
-    @Schema(title = "执行条件")
+    @get:Schema(title = "执行条件")
     val postCondition: String
 )

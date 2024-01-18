@@ -33,22 +33,22 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "项目的JOB配额")
 data class JobQuotaProject(
-    @Schema(title = "项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(title = "构建机类型", required = true)
+    @get:Schema(title = "构建机类型", required = true)
     val vmType: JobQuotaVmType,
-    @Schema(title = "构建来源，默认BS", required = true)
+    @get:Schema(title = "构建来源，默认BS", required = true)
     val channelCode: String = ChannelCode.BS.name,
-    @Schema(title = "项目最大并发JOB数， 默认50", required = false)
+    @get:Schema(title = "项目最大并发JOB数， 默认50", required = false)
     val runningJobMax: Int,
-    @Schema(title = "项目单JOB最大执行时间，默认8小时", required = false)
+    @get:Schema(title = "项目单JOB最大执行时间，默认8小时", required = false)
     val runningTimeJobMax: Int,
-    @Schema(title = "项目所有JOB最大执行时间，默认40小时/月", required = false)
+    @get:Schema(title = "项目所有JOB最大执行时间，默认40小时/月", required = false)
     val runningTimeProjectMax: Int,
-    @Schema(title = "创建时间", required = false)
+    @get:Schema(title = "创建时间", required = false)
     val createdTime: Long?,
-    @Schema(title = "修改时间", required = false)
+    @get:Schema(title = "修改时间", required = false)
     val updatedTime: Long?,
-    @Schema(title = "操作人", required = false)
+    @get:Schema(title = "操作人", required = false)
     val operator: String?
 )

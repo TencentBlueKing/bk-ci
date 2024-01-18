@@ -32,10 +32,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "查询流水线stage趋势信息")
 data class QueryPipelineOverviewDTO(
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "userId")
+    @get:Schema(title = "userId")
     val userId: String,
-    @Schema(title = "查询条件信息")
+    @get:Schema(title = "查询条件信息")
     val baseQueryReq: BaseQueryReqVO
 )

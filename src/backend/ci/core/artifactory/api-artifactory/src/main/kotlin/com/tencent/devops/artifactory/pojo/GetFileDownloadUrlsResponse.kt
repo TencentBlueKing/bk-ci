@@ -31,6 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "获取文件下载路径响应报文体")
 data class GetFileDownloadUrlsResponse(
-    @Schema(title = "文件下载路径列表", required = false)
+    @get:Schema(title = "文件下载路径列表", required = false)
     val fileUrlList: List<String>
 )

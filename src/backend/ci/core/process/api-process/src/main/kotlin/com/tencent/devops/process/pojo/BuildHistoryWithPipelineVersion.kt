@@ -32,10 +32,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "历史构建模型-最新版本号-下载权限")
 data class BuildHistoryWithPipelineVersion(
-    @Schema(title = "构建历史", required = true)
+    @get:Schema(title = "构建历史", required = true)
     val history: SQLPage<BuildHistory>,
-    @Schema(title = "是否拥有下载构建的权限", required = true)
+    @get:Schema(title = "是否拥有下载构建的权限", required = true)
     val hasDownloadPermission: Boolean,
-    @Schema(title = "最新的编排版本号", required = true)
+    @get:Schema(title = "最新的编排版本号", required = true)
     val pipelineVersion: Int
 )

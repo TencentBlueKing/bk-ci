@@ -30,12 +30,12 @@ package com.tencent.devops.image.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class CheckDockerImageRequest(
-    @Schema(title = "镜像名称", required = true)
+    @get:Schema(title = "镜像名称", required = true)
     val imageName: String,
-    @Schema(title = "镜像仓库", required = true)
+    @get:Schema(title = "镜像仓库", required = true)
     val registryHost: String,
-    @Schema(title = "用户名", required = false)
+    @get:Schema(title = "用户名", required = false)
     val registryUser: String?,
-    @Schema(title = "密码", required = false)
+    @get:Schema(title = "密码", required = false)
     val registryPwd: String?
 )

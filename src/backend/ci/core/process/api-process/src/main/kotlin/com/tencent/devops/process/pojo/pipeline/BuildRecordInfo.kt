@@ -32,8 +32,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "执行次数记录")
 data class BuildRecordInfo(
-    @Schema(title = "触发人", required = true)
+    @get:Schema(title = "触发人", required = true)
     val startUser: String,
-    @Schema(title = "耗时详情", required = true)
+    @get:Schema(title = "耗时详情", required = true)
     val timeCost: BuildRecordTimeCost?
 )

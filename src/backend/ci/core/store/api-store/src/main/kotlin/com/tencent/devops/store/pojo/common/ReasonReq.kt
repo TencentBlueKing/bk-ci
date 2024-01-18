@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "新增修改原因请求")
 data class ReasonReq(
-    @Schema(title = "原因", required = true)
+    @get:Schema(title = "原因", required = true)
     val content: String,
-    @Schema(title = "顺序", required = true)
+    @get:Schema(title = "顺序", required = true)
     val order: Int
 )

@@ -31,10 +31,10 @@ import org.apache.commons.lang3.StringUtils
 
 @Schema(title = "代码库授权信息")
 data class RepoAuthInfo(
-    @Schema(title = "授权类型", required = true)
+    @get:Schema(title = "授权类型", required = true)
     val authType: String,
-    @Schema(title = "授权凭证ID", required = true)
+    @get:Schema(title = "授权凭证ID", required = true)
     val credentialId: String,
-    @Schema(title = "SVN类型", required = false)
+    @get:Schema(title = "SVN类型", required = false)
     val svnType: String? = StringUtils.EMPTY
 )

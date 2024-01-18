@@ -32,14 +32,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "模板详情")
 data class TemplateDetailInfo(
-    @Schema(title = "模板代码", required = true)
+    @get:Schema(title = "模板代码", required = true)
     val templateCode: String,
-    @Schema(title = "模板名称", required = false)
+    @get:Schema(title = "模板名称", required = false)
     val templateName: String?,
-    @Schema(title = "模板模型", required = false)
+    @get:Schema(title = "模板模型", required = false)
     val templateModel: Model?,
-    @Schema(title = "模板版本号", required = true)
+    @get:Schema(title = "模板版本号", required = true)
     val templateVersion: Long = 0,
-    @Schema(title = "模板版本名称", required = false)
+    @get:Schema(title = "模板版本名称", required = false)
     val templateVersionName: String = "init"
 )

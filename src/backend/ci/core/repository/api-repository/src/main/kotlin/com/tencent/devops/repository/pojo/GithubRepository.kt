@@ -33,21 +33,21 @@ import io.swagger.v3.oas.annotations.media.Schema
 @SuppressWarnings("ObjectPropertyNaming")
 @Schema(title = "代码库模型-GitHub代码库")
 data class GithubRepository(
-    @Schema(title = "代码库别名", required = true)
+    @get:Schema(title = "代码库别名", required = true)
     override val aliasName: String,
-    @Schema(title = "URL", required = true)
+    @get:Schema(title = "URL", required = true)
     override val url: String,
-    @Schema(title = "用户名", required = true)
+    @get:Schema(title = "用户名", required = true)
     override var userName: String = "",
-    @Schema(title = "github项目名称", example = "Tencent/bkci", required = true)
+    @get:Schema(title = "github项目名称", example = "Tencent/bkci", required = true)
     override val projectName: String,
-    @Schema(title = "项目id", required = true)
+    @get:Schema(title = "项目id", required = true)
     override val projectId: String = "",
-    @Schema(title = "仓库hash id", required = false)
+    @get:Schema(title = "仓库hash id", required = false)
     override val repoHashId: String?,
-    @Schema(title = "Git仓库ID", required = false)
+    @get:Schema(title = "Git仓库ID", required = false)
     val gitProjectId: Long? = null,
-    @Schema(title = "仓库凭证ID", required = false, hidden = true, nullable = true)
+    @get:Schema(title = "仓库凭证ID", required = false, hidden = true, nullable = true)
     override val credentialId: String = ""
 ) : Repository {
     companion object {

@@ -33,9 +33,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "关联模板请求报文体")
 data class MarketTemplateRelRequest(
-    @Schema(title = "项目编码", required = true)
+    @get:Schema(title = "项目编码", required = true)
     val projectCode: String,
-    @Schema(title = "模板名称", required = true)
+    @get:Schema(title = "模板名称", required = true)
     @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
     val templateName: String
 )

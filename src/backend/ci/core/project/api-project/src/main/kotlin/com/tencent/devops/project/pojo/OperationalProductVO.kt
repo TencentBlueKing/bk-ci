@@ -5,10 +5,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "运营产品")
 data class OperationalProductVO(
-    @Schema(title = "产品ID")
+    @get:Schema(title = "产品ID")
     @JsonProperty(value = "ProductId", required = true)
     val productId: Int,
-    @Schema(title = "产品ID")
+    @get:Schema(title = "产品ID")
     @JsonProperty(value = "ProductName", required = true)
     val productName: String
 )

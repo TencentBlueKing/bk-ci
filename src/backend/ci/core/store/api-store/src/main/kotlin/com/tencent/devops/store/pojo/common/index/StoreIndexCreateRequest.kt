@@ -36,27 +36,27 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "新增指标请求报文体")
 data class StoreIndexCreateRequest(
-    @Schema(title = "指标代码", required = true)
+    @get:Schema(title = "指标代码", required = true)
     @BkField(maxLength = 10, patternStyle = BkStyleEnum.CODE_STYLE)
     val indexCode: String,
-    @Schema(title = "指标名称", required = true)
+    @get:Schema(title = "指标名称", required = true)
     @BkField(maxLength = 64)
     val indexName: String,
-    @Schema(title = "指标描述", required = true)
+    @get:Schema(title = "指标描述", required = true)
     @BkField(maxLength = 256)
     val description: String,
-    @Schema(title = "等级信息", required = true)
+    @get:Schema(title = "等级信息", required = true)
     val levelInfos: List<StoreIndexLevelInfo>,
-    @Schema(title = "运算类型", required = true)
+    @get:Schema(title = "运算类型", required = true)
     val operationType: IndexOperationTypeEnum,
-    @Schema(title = "指标对应的插件件代码", required = false)
+    @get:Schema(title = "指标对应的插件件代码", required = false)
     val atomCode: String? = null,
-    @Schema(title = "指标对应的插件版本", required = false)
+    @get:Schema(title = "指标对应的插件版本", required = false)
     val atomVersion: String? = null,
-    @Schema(title = "指标执行时机类型", required = true)
+    @get:Schema(title = "指标执行时机类型", required = true)
     val executeTimeType: IndexExecuteTimeTypeEnum,
-    @Schema(title = "store组件类型", required = true)
+    @get:Schema(title = "store组件类型", required = true)
     val storeType: StoreTypeEnum,
-    @Schema(title = "指标展示权重", required = true)
+    @get:Schema(title = "指标展示权重", required = true)
     val weight: Int
 )

@@ -32,10 +32,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件市场初始化流水线报文响应体")
 data class AtomMarketInitPipelineResp(
-    @Schema(title = "流水线ID", required = true)
+    @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(title = "构建ID", required = false)
+    @get:Schema(title = "构建ID", required = false)
     val buildId: String?,
-    @Schema(title = "构建状态", required = true)
+    @get:Schema(title = "构建状态", required = true)
     val atomBuildStatus: AtomStatusEnum
 )

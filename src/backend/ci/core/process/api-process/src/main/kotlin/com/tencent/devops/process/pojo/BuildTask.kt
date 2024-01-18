@@ -32,32 +32,32 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线模型-构建任务")
 data class BuildTask(
-    @Schema(title = "构建ID", required = true)
+    @get:Schema(title = "构建ID", required = true)
     val buildId: String,
-    @Schema(title = "构建环境ID", required = true)
+    @get:Schema(title = "构建环境ID", required = true)
     val vmSeqId: String,
-    @Schema(title = "任务状态", required = true)
+    @get:Schema(title = "任务状态", required = true)
     val status: BuildTaskStatus,
-    @Schema(title = "任务ID", required = true)
+    @get:Schema(title = "任务ID", required = true)
     val taskId: String? = null,
     @Deprecated("原本用于标识上下文但统一传了taskId，现废弃")
-    @Schema(title = "插件ID", required = true)
+    @get:Schema(title = "插件ID", required = true)
     val elementId: String? = null,
-    @Schema(title = "标识上下文的插件ID", required = true)
+    @get:Schema(title = "标识上下文的插件ID", required = true)
     val stepId: String? = null,
-    @Schema(title = "插件名字", required = true)
+    @get:Schema(title = "插件名字", required = true)
     val elementName: String? = null,
-    @Schema(title = "插件版本号", required = false)
+    @get:Schema(title = "插件版本号", required = false)
     var elementVersion: String? = null,
-    @Schema(title = "任务类型", required = false)
+    @get:Schema(title = "任务类型", required = false)
     val type: String? = null,
-    @Schema(title = "任务参数", required = false)
+    @get:Schema(title = "任务参数", required = false)
     val params: Map<String, String>? = null,
-    @Schema(title = "环境参数", required = false)
+    @get:Schema(title = "环境参数", required = false)
     val buildVariable: Map<String, String>? = null,
-    @Schema(title = "容器类型", required = false)
+    @get:Schema(title = "容器类型", required = false)
     val containerType: String? = null,
-    @Schema(title = "签名token", required = false)
+    @get:Schema(title = "签名token", required = false)
     val signToken: String? = null
 ) {
 

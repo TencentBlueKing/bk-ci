@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "虚拟机类型")
 data class VMType(
-    @Schema(title = "类型ID", required = true)
+    @get:Schema(title = "类型ID", required = true)
     val id: Int,
-    @Schema(title = "类型名称", required = true)
+    @get:Schema(title = "类型名称", required = true)
     val typeName: String,
-    @Schema(title = "创建时间", required = true)
+    @get:Schema(title = "创建时间", required = true)
     val createdTime: Long,
-    @Schema(title = "修改时间", required = true)
+    @get:Schema(title = "修改时间", required = true)
     val updatedTime: Long
 )

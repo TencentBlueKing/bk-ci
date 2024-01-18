@@ -32,16 +32,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Suppress("UnnecessaryAbstractClass")
 @Schema(title = "stream 项目基类")
 abstract class StreamBaseRepository(
-    @Schema(title = "stream 项目ID")
+    @get:Schema(title = "stream 项目ID")
     open val gitProjectId: Long?,
-    @Schema(title = "stream 项目名")
+    @get:Schema(title = "stream 项目名")
     open val name: String?,
-    @Schema(title = "stream 项目url")
+    @get:Schema(title = "stream 项目url")
     open val url: String?,
-    @Schema(title = "homepage")
+    @get:Schema(title = "homepage")
     open val homepage: String?,
-    @Schema(title = "gitHttpUrl")
+    @get:Schema(title = "gitHttpUrl")
     open val gitHttpUrl: String?,
-    @Schema(title = "gitSshUrl")
+    @get:Schema(title = "gitSshUrl")
     open val gitSshUrl: String?
 )

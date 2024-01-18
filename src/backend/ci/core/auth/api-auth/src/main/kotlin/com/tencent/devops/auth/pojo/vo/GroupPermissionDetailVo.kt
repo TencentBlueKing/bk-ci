@@ -6,11 +6,11 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "组权限详情")
 data class GroupPermissionDetailVo(
-    @Schema(title = "操作id")
+    @get:Schema(title = "操作id")
     val actionId: String,
-    @Schema(title = "操作名")
+    @get:Schema(title = "操作名")
     @BkFieldI18n(convertName = "actionName")
     val name: String,
-    @Schema(title = "关联资源")
+    @get:Schema(title = "关联资源")
     val relatedResourceInfo: RelatedResourceInfo
 )

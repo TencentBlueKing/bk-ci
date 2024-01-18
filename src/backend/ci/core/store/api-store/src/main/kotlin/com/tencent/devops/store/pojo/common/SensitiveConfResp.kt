@@ -31,22 +31,22 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "敏感数据返回")
 data class SensitiveConfResp(
-    @Schema(title = "字段ID", required = true)
+    @get:Schema(title = "字段ID", required = true)
     val fieldId: String,
-    @Schema(title = "字段名称", required = true)
+    @get:Schema(title = "字段名称", required = true)
     val fieldName: String,
-    @Schema(title = "字段值", required = true)
+    @get:Schema(title = "字段值", required = true)
     val fieldValue: String,
-    @Schema(title = "字段类型 BACKEND:后端使用，FRONTEND:前端使用，ALL:前后端使用", required = true)
+    @get:Schema(title = "字段类型 BACKEND:后端使用，FRONTEND:前端使用，ALL:前后端使用", required = true)
     val fieldType: String,
-    @Schema(title = "字段描述", required = false)
+    @get:Schema(title = "字段描述", required = false)
     val fieldDesc: String?,
-    @Schema(title = "创建人")
+    @get:Schema(title = "创建人")
     val creator: String,
-    @Schema(title = "修改人")
+    @get:Schema(title = "修改人")
     val modifier: String,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: String,
-    @Schema(title = "修改时间")
+    @get:Schema(title = "修改时间")
     val updateTime: String
 )

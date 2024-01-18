@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件错误码统计信息")
 data class AtomErrorCodeStatisticsInfoDO(
-    @Schema(title = "错误码信息")
+    @get:Schema(title = "错误码信息")
     val errorCodeInfo: ErrorCodeInfoDO,
-    @Schema(title = "错误次数")
+    @get:Schema(title = "错误次数")
     val errorCount: Long
 )

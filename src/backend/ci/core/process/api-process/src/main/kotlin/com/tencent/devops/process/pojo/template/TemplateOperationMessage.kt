@@ -31,13 +31,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "")
 data class TemplateOperationMessage constructor(
-    @Schema(title = "成功的流水线", required = false)
+    @get:Schema(title = "成功的流水线", required = false)
     val successPipelines: List<String>,
-    @Schema(title = "失败的流水线", required = false)
+    @get:Schema(title = "失败的流水线", required = false)
     val failurePipelines: List<String>,
-    @Schema(title = "失败信息", required = false)
+    @get:Schema(title = "失败信息", required = false)
     val failureMessages: Map<String/*PipelineName*/, String/*Message*/>,
-    @Schema(title = "成功的流水线id", required = false)
+    @get:Schema(title = "成功的流水线id", required = false)
     val successPipelinesId: List<String>
 ) {
     constructor(

@@ -33,13 +33,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "版本信息")
 data class VersionInfo(
-    @Schema(title = "发布者", required = true)
+    @get:Schema(title = "发布者", required = true)
     var publisher: String,
-    @Schema(title = "发布类型", required = true)
+    @get:Schema(title = "发布类型", required = true)
     var releaseType: ReleaseTypeEnum,
-    @Schema(title = "插件版本", required = true)
+    @get:Schema(title = "插件版本", required = true)
     var version: String,
-    @Schema(title = "版本日志内容", required = true)
+    @get:Schema(title = "版本日志内容", required = true)
     @field:BkField(maxLength = 65535)
     val versionContent: String
 )

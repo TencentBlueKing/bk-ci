@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线标签信息")
 class PipelineLabelInfo(
-    @Schema(title = "标签ID")
+    @get:Schema(title = "标签ID")
     val labelId: Long,
-    @Schema(title = "标签名称")
+    @get:Schema(title = "标签名称")
     val labelName: String
 )

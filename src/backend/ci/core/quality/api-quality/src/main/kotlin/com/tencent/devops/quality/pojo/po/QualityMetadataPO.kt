@@ -32,30 +32,30 @@ import java.time.LocalDateTime
 
 @Schema(title = "质量红线基础数据PO")
 data class QualityMetadataPO(
-    @Schema(title = "ID")
+    @get:Schema(title = "ID")
     val id: Long,
-    @Schema(title = "数据ID")
+    @get:Schema(title = "数据ID")
     val dataId: String?,
-    @Schema(title = "基础数据名称")
+    @get:Schema(title = "基础数据名称")
     var dataName: String?,
-    @Schema(title = "原子的classType")
+    @get:Schema(title = "原子的classType")
     val elementType: String?,
-    @Schema(title = "产出原子")
+    @get:Schema(title = "产出原子")
     var elementName: String?,
-    @Schema(title = "工具/原子子类")
+    @get:Schema(title = "工具/原子子类")
     val elementDetail: String?,
-    @Schema(title = "数值类型")
+    @get:Schema(title = "数值类型")
     val valueType: String?,
-    @Schema(title = "说明")
+    @get:Schema(title = "说明")
     var desc: String?,
-    @Schema(title = "额外的一些字段")
+    @get:Schema(title = "额外的一些字段")
     val extra: String?,
-    @Schema(title = "创建用户")
+    @get:Schema(title = "创建用户")
     val createUser: String?,
-    @Schema(title = "更新用户")
+    @get:Schema(title = "更新用户")
     val updateUser: String?,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: LocalDateTime?,
-    @Schema(title = "更新时间")
+    @get:Schema(title = "更新时间")
     val updateTime: LocalDateTime?
 )

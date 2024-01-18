@@ -34,95 +34,95 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线模型-列表信息")
 data class Pipeline(
-    @Schema(title = "项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(title = "流水线ID", required = true)
+    @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(title = "流水线名称", required = true)
+    @get:Schema(title = "流水线名称", required = true)
     var pipelineName: String,
-    @Schema(title = "流水线描述", required = false)
+    @get:Schema(title = "流水线描述", required = false)
     var pipelineDesc: String? = null,
-    @Schema(title = "流水线任务数量", required = true)
+    @get:Schema(title = "流水线任务数量", required = true)
     val taskCount: Int,
-    @Schema(title = "构建次数", required = true)
+    @get:Schema(title = "构建次数", required = true)
     var buildCount: Long = 0,
-    @Schema(title = "运行锁定", required = false)
+    @get:Schema(title = "运行锁定", required = false)
     var lock: Boolean = false,
-    @Schema(title = "是否可手工启动", required = true)
+    @get:Schema(title = "是否可手工启动", required = true)
     val canManualStartup: Boolean,
-    @Schema(title = "最后构建启动时间", required = false)
+    @get:Schema(title = "最后构建启动时间", required = false)
     var latestBuildStartTime: Long? = null,
-    @Schema(title = "最后构建结束时间", required = false)
+    @get:Schema(title = "最后构建结束时间", required = false)
     var latestBuildEndTime: Long? = null,
-    @Schema(title = "最后构建状态", required = false)
+    @get:Schema(title = "最后构建状态", required = false)
     var latestBuildStatus: BuildStatus? = null,
-    @Schema(title = "最后构建版本号", required = false)
+    @get:Schema(title = "最后构建版本号", required = false)
     var latestBuildNum: Int? = null,
-    @Schema(title = "最后构建任务名称", required = false)
+    @get:Schema(title = "最后构建任务名称", required = false)
     @Deprecated("无用.不再提供任何信息")
     var latestBuildTaskName: String? = null,
-    @Schema(title = "最后任务预计执行时间（毫秒）", required = false)
+    @get:Schema(title = "最后任务预计执行时间（毫秒）", required = false)
     val latestBuildEstimatedExecutionSeconds: Long?,
-    @Schema(title = "最后构建实例ID", required = false)
+    @get:Schema(title = "最后构建实例ID", required = false)
     var latestBuildId: String? = null,
-    @Schema(title = "部署时间", required = true)
+    @get:Schema(title = "部署时间", required = true)
     val deploymentTime: Long,
-    @Schema(title = "流水线创建时间", required = true)
+    @get:Schema(title = "流水线创建时间", required = true)
     val createTime: Long = deploymentTime,
-    @Schema(title = "更新时间", required = true)
+    @get:Schema(title = "更新时间", required = true)
     val updateTime: Long,
-    @Schema(title = "编排文件版本号", required = true)
+    @get:Schema(title = "编排文件版本号", required = true)
     val pipelineVersion: Int,
-    @Schema(title = "服务器当前时间戳", required = true)
+    @get:Schema(title = "服务器当前时间戳", required = true)
     val currentTimestamp: Long,
-    @Schema(title = "当前运行的构建的个数", required = true)
+    @get:Schema(title = "当前运行的构建的个数", required = true)
     var runningBuildCount: Int = 0,
-    @Schema(title = "是否有list权限", required = true)
+    @get:Schema(title = "是否有list权限", required = true)
     val hasPermission: Boolean,
-    @Schema(title = "是否被收藏", required = true)
+    @get:Schema(title = "是否被收藏", required = true)
     val hasCollect: Boolean,
-    @Schema(title = "最后执行人id", required = false)
+    @get:Schema(title = "最后执行人id", required = false)
     var latestBuildUserId: String = "",
-    @Schema(title = "是否从模板中实例化出来的", required = false)
+    @get:Schema(title = "是否从模板中实例化出来的", required = false)
     var instanceFromTemplate: Boolean? = null,
-    @Schema(title = "模板ID", required = false)
+    @get:Schema(title = "模板ID", required = false)
     var templateId: String? = null,
-    @Schema(title = "版本名称", required = false)
+    @get:Schema(title = "版本名称", required = false)
     var versionName: String? = null,
-    @Schema(title = "版本", required = false)
+    @get:Schema(title = "版本", required = false)
     var version: Long? = null,
-    @Schema(title = "流水线更新人", required = false)
+    @get:Schema(title = "流水线更新人", required = false)
     val updater: String,
-    @Schema(title = "流水线创建人", required = false)
+    @get:Schema(title = "流水线创建人", required = false)
     val creator: String,
-    @Schema(title = "流水线分组和标签", required = false)
+    @get:Schema(title = "流水线分组和标签", required = false)
     var groupLabel: List<PipelineGroupLabels>? = null,
-    @Schema(title = "最后自定义构建版本号", required = false)
+    @get:Schema(title = "最后自定义构建版本号", required = false)
     var latestBuildNumAlias: String? = null,
-    @Schema(title = "自定义构建号规则", required = false)
+    @get:Schema(title = "自定义构建号规则", required = false)
     var buildNumRule: String? = null,
-    @Schema(title = "编排详情", required = false)
+    @get:Schema(title = "编排详情", required = false)
     var model: Model? = null,
-    @Schema(title = "流水线组名称列表", required = false)
+    @get:Schema(title = "流水线组名称列表", required = false)
     var viewNames: List<String>? = null,
-    @Schema(title = "最后一次构建的构建信息", required = false)
+    @get:Schema(title = "最后一次构建的构建信息", required = false)
     var lastBuildMsg: String? = null,
-    @Schema(title = "最后一次构建所有的任务个数", required = false)
+    @get:Schema(title = "最后一次构建所有的任务个数", required = false)
     var lastBuildTotalCount: Int? = null,
-    @Schema(title = "最后一次构建已完成的任务个数", required = false)
+    @get:Schema(title = "最后一次构建已完成的任务个数", required = false)
     var lastBuildFinishCount: Int? = null,
-    @Schema(title = "触发方式", required = false)
+    @get:Schema(title = "触发方式", required = false)
     var trigger: String? = null,
-    @Schema(title = "webhook仓库别名", required = false)
+    @get:Schema(title = "webhook仓库别名", required = false)
     var webhookAliasName: String? = null,
-    @Schema(title = "webhook提交信息", required = false)
+    @get:Schema(title = "webhook提交信息", required = false)
     var webhookMessage: String? = null,
-    @Schema(title = "webhook仓库地址", required = false)
+    @get:Schema(title = "webhook仓库地址", required = false)
     var webhookRepoUrl: String? = null,
-    @Schema(title = "webhook类型", required = false)
+    @get:Schema(title = "webhook类型", required = false)
     var webhookType: String? = null,
-    @Schema(title = "是否已删除", required = false)
+    @get:Schema(title = "是否已删除", required = false)
     var delete: Boolean? = false,
-    @Schema(title = "流水线权限", required = false)
+    @get:Schema(title = "流水线权限", required = false)
     val permissions: PipelinePermissions? = null
 )

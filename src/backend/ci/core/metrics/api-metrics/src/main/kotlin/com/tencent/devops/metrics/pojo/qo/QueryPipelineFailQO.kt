@@ -34,15 +34,15 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线错误信息查询条件信息对象")
 data class QueryPipelineFailQO(
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "查询条件请求信息")
+    @get:Schema(title = "查询条件请求信息")
     val baseQueryReq: BaseQueryReqVO,
-    @Schema(title = "错误类型")
+    @get:Schema(title = "错误类型")
     val errorTypes: List<Int>?,
-    @Schema(title = "页码")
+    @get:Schema(title = "页码")
     val page: Int = 1,
-    @Schema(title = "页数")
+    @get:Schema(title = "页数")
     @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
     val pageSize: Int = 10
 )

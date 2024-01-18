@@ -37,37 +37,37 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class StreamCommitInfo(
     @JsonProperty("author_email")
-    @Schema(title = "author_email")
+    @get:Schema(title = "author_email")
     val authorEmail: String?,
     @JsonProperty("author_name")
-    @Schema(title = "author_name")
+    @get:Schema(title = "author_name")
     val authorName: String?,
     @JsonProperty("authored_date")
-    @Schema(title = "authored_date")
+    @get:Schema(title = "authored_date")
     val authoredDate: String?,
     @JsonProperty("committed_date")
-    @Schema(title = "committed_date")
+    @get:Schema(title = "committed_date")
     val committedDate: String?,
     @JsonProperty("committer_email")
-    @Schema(title = "committer_email")
+    @get:Schema(title = "committer_email")
     val committerEmail: String?,
     @JsonProperty("committer_name")
-    @Schema(title = "committer_name")
+    @get:Schema(title = "committer_name")
     val committerName: String?,
     @JsonProperty("created_at")
-    @Schema(title = "created_at")
+    @get:Schema(title = "created_at")
     val createdAt: String,
     val id: String,
     val message: String?,
     @JsonProperty("parent_ids")
-    @Schema(title = "parent_ids")
+    @get:Schema(title = "parent_ids")
     val parentIds: List<String>?,
     @JsonProperty("short_id")
-    @Schema(title = "short_id")
+    @get:Schema(title = "short_id")
     val shortId: String?,
     val title: String?,
     @JsonProperty("scroll_object_id")
-    @Schema(title = "scroll_object_id")
+    @get:Schema(title = "scroll_object_id")
     val scrollObjectId: Any?
 ) {
     constructor(c: Commit) : this(

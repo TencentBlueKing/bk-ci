@@ -31,33 +31,33 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "工作台模板列表项")
 data class MyTemplateItem(
-    @Schema(title = "模板ID", required = true)
+    @get:Schema(title = "模板ID", required = true)
     val templateId: String,
-    @Schema(title = "模板代码", required = true)
+    @get:Schema(title = "模板代码", required = true)
     val templateCode: String,
-    @Schema(title = "模板名称", required = true)
+    @get:Schema(title = "模板名称", required = true)
     val templateName: String,
-    @Schema(title = "模板logo", required = false)
+    @get:Schema(title = "模板logo", required = false)
     val logoUrl: String?,
-    @Schema(title = "版本号", required = false)
+    @get:Schema(title = "版本号", required = false)
     val version: String,
-    @Schema(title =
+    @get:Schema(title =
         "模板状态，INIT：初始化|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGED：已下架",
         required = true
     )
     val templateStatus: String,
-    @Schema(title = "模板所属项目代码", required = false)
+    @get:Schema(title = "模板所属项目代码", required = false)
     val projectCode: String,
-    @Schema(title = "模板所属项目名称", required = false)
+    @get:Schema(title = "模板所属项目名称", required = false)
     val projectName: String?,
-    @Schema(title = "是否有处于上架状态的模板版本", required = true)
+    @get:Schema(title = "是否有处于上架状态的模板版本", required = true)
     val releaseFlag: Boolean,
-    @Schema(title = "创建人", required = true)
+    @get:Schema(title = "创建人", required = true)
     val creator: String,
-    @Schema(title = "创建时间", required = true)
+    @get:Schema(title = "创建时间", required = true)
     val createTime: Long,
-    @Schema(title = "修改人", required = true)
+    @get:Schema(title = "修改人", required = true)
     val modifier: String,
-    @Schema(title = "修改时间", required = true)
+    @get:Schema(title = "修改时间", required = true)
     val updateTime: Long
 )

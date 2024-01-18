@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "敏感API名称信息")
 data class SensitiveApiNameInfo(
-    @Schema(title = "敏感API名")
+    @get:Schema(title = "敏感API名")
     val apiName: String,
-    @Schema(title = "敏感API别名,不同语言SDK中敏感API对应的方法名")
+    @get:Schema(title = "敏感API别名,不同语言SDK中敏感API对应的方法名")
     val aliasName: String
 )

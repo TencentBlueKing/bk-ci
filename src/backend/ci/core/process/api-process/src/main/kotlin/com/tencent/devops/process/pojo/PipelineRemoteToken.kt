@@ -31,6 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "远程执行token")
 data class PipelineRemoteToken(
-    @Schema(title = "token字符串", required = false)
+    @get:Schema(title = "token字符串", required = false)
     val token: String
 )

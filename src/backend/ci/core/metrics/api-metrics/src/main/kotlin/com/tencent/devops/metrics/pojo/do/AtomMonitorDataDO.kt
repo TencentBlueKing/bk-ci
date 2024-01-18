@@ -30,10 +30,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件监控数据")
 data class AtomMonitorDataDO(
-    @Schema(title = "插件标识", required = true)
+    @get:Schema(title = "插件标识", required = true)
     val atomCode: String,
-    @Schema(title = "错误类型", required = false)
+    @get:Schema(title = "错误类型", required = false)
     val errorType: Int? = null,
-    @Schema(title = "执行总次数", required = true)
+    @get:Schema(title = "执行总次数", required = true)
     val totalExecuteCount: Int = 0
 )

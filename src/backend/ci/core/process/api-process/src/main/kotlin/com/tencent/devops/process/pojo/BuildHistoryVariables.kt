@@ -31,24 +31,24 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "历史构建变量")
 data class BuildHistoryVariables(
-    @Schema(title = "构建ID", required = true)
+    @get:Schema(title = "构建ID", required = true)
     val id: String,
-    @Schema(title = "启动用户", required = true)
+    @get:Schema(title = "启动用户", required = true)
     val userId: String,
-    @Schema(title = "触发条件", required = true)
+    @get:Schema(title = "触发条件", required = true)
     val trigger: String,
-    @Schema(title = "流水线名称", required = true)
+    @get:Schema(title = "流水线名称", required = true)
     val pipelineName: String,
-    @Schema(title = "构建号", required = true)
+    @get:Schema(title = "构建号", required = true)
     val buildNum: Int,
-    @Schema(title = "编排文件版本号", required = true)
+    @get:Schema(title = "编排文件版本号", required = true)
     val pipelineVersion: Int,
-    @Schema(title = "开始时间", required = true)
+    @get:Schema(title = "开始时间", required = true)
     val startTime: Long,
-    @Schema(title = "结束时间", required = true)
+    @get:Schema(title = "结束时间", required = true)
     val endTime: Long?,
-    @Schema(title = "状态", required = true)
+    @get:Schema(title = "状态", required = true)
     val status: String,
-    @Schema(title = "构建变量集合", required = true)
+    @get:Schema(title = "构建变量集合", required = true)
     val variables: Map<String, String>
 )

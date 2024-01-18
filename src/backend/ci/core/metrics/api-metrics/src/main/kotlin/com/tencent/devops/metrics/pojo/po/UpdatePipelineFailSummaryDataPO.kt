@@ -32,14 +32,14 @@ import java.time.LocalDateTime
 
 @Schema(title = "更新流水线失败汇总数据")
 data class UpdatePipelineFailSummaryDataPO(
-    @Schema(title = "主键ID")
+    @get:Schema(title = "主键ID")
     val id: Long,
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "错误次数")
+    @get:Schema(title = "错误次数")
     val errorCount: Int,
-    @Schema(title = "修改人")
+    @get:Schema(title = "修改人")
     val modifier: String,
-    @Schema(title = "更新时间")
+    @get:Schema(title = "更新时间")
     val updateTime: LocalDateTime
 )

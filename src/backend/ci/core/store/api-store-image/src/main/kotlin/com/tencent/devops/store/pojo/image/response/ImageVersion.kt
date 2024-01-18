@@ -36,35 +36,35 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "镜像版本")
 data class ImageVersion(
 
-    @Schema(title = "镜像Id", required = true)
+    @get:Schema(title = "镜像Id", required = true)
     val imageId: String,
 
-    @Schema(title = "镜像代码", required = true)
+    @get:Schema(title = "镜像代码", required = true)
     val imageCode: String,
 
-    @Schema(title = "镜像名称", required = true)
+    @get:Schema(title = "镜像名称", required = true)
     val imageName: String,
 
-    @Schema(title = "镜像所属范畴，TRIGGER：触发器类镜像 TASK：任务类镜像", required = true)
+    @get:Schema(title = "镜像所属范畴，TRIGGER：触发器类镜像 TASK：任务类镜像", required = true)
     val category: String,
 
-    @Schema(title = "版本号", required = true)
+    @get:Schema(title = "版本号", required = true)
     val version: String,
 
-    @Schema(title = "镜像状态，INIT：初始化|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|" +
+    @get:Schema(title = "镜像状态，INIT：初始化|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|" +
         "GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGED：已下架", required = true)
     val imageStatus: String,
 
-    @Schema(title = "创建人", required = true)
+    @get:Schema(title = "创建人", required = true)
     val creator: String,
 
-    @Schema(title = "修改人", required = true)
+    @get:Schema(title = "修改人", required = true)
     val modifier: String,
 
-    @Schema(title = "创建时间", required = true)
+    @get:Schema(title = "创建时间", required = true)
     val createTime: Long,
 
-    @Schema(title = "修改时间", required = true)
+    @get:Schema(title = "修改时间", required = true)
     val updateTime: Long
 
 )

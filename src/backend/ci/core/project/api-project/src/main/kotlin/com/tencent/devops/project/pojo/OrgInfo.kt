@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "公司组织数据")
 data class OrgInfo(
-    @Schema(title = "组织ID")
+    @get:Schema(title = "组织ID")
     val orgId: String,
-    @Schema(title = "组织级别")
+    @get:Schema(title = "组织级别")
     val orgLevel: Int
 )

@@ -34,26 +34,26 @@ import java.time.LocalDateTime
 
 @Schema(title = "组件荣誉管理信息")
 data class StoreHonorManageInfo(
-    @Schema(title = "storeName", required = true)
+    @get:Schema(title = "storeName", required = true)
     val storeName: String,
-    @Schema(title = "storeCode", required = true)
+    @get:Schema(title = "storeCode", required = true)
     val storeCode: String,
-    @Schema(title = "ID", required = true)
+    @get:Schema(title = "ID", required = true)
     val honorId: String,
-    @Schema(title = "荣誉头衔", required = true)
+    @get:Schema(title = "荣誉头衔", required = true)
     @BkField(maxLength = 4)
     val honorTitle: String,
-    @Schema(title = "荣誉名称", required = true)
+    @get:Schema(title = "荣誉名称", required = true)
     @BkField(maxLength = 40)
     val honorName: String,
-    @Schema(title = "组件范畴", required = true)
+    @get:Schema(title = "组件范畴", required = true)
     val storeType: StoreTypeEnum,
-    @Schema(title = "创建者", required = true)
+    @get:Schema(title = "创建者", required = true)
     val creator: String,
-    @Schema(title = "修改者", required = true)
+    @get:Schema(title = "修改者", required = true)
     val modifier: String,
-    @Schema(title = "更新时间", required = true)
+    @get:Schema(title = "更新时间", required = true)
     val updateTime: LocalDateTime,
-    @Schema(title = "创建时间", required = true)
+    @get:Schema(title = "创建时间", required = true)
     val createTime: LocalDateTime
 )

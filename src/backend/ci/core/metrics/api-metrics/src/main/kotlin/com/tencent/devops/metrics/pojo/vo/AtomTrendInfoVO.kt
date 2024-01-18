@@ -32,6 +32,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件趋势信息视图")
 data class AtomTrendInfoVO(
-    @Schema(title = "趋势信息列表")
+    @get:Schema(title = "趋势信息列表")
     val atomTrendInfos: List<AtomTrendInfoDO>
 )

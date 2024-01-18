@@ -32,18 +32,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "itsm回调信息")
 data class AuthItsmCallbackInfo(
-    @Schema(title = "权限中心申请单ID")
+    @get:Schema(title = "权限中心申请单ID")
     val applyId: Int,
-    @Schema(title = "itsm 审批单号")
+    @get:Schema(title = "itsm 审批单号")
     val sn: String,
-    @Schema(title = "项目id")
+    @get:Schema(title = "项目id")
     val projectId: String,
-    @Schema(title = "权限中心回调id")
+    @get:Schema(title = "权限中心回调id")
     val callbackId: String,
-    @Schema(title = "申请人")
+    @get:Schema(title = "申请人")
     val applicant: String,
-    @Schema(title = "审批人")
+    @get:Schema(title = "审批人")
     val approver: String?,
-    @Schema(title = "审批结果")
+    @get:Schema(title = "审批结果")
     val approveResult: Boolean?
 )

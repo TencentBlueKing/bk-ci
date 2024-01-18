@@ -31,6 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "白名单请求包体")
 data class GithubWhitelistRequest(
-    @Schema(title = "Github代码库链接")
+    @get:Schema(title = "Github代码库链接")
     val url: String = ""
 )

@@ -31,20 +31,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线信息")
 data class AtomPipeline(
-    @Schema(title = "流水线ID", required = true)
+    @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(title = "流水线名称", required = true)
+    @get:Schema(title = "流水线名称", required = true)
     var pipelineName: String,
-    @Schema(title = "流水线使用的插件版本")
+    @get:Schema(title = "流水线使用的插件版本")
     var atomVersion: String,
-    @Schema(title = "项目标识", required = true)
+    @get:Schema(title = "项目标识", required = true)
     val projectCode: String,
-    @Schema(title = "所属项目")
+    @get:Schema(title = "所属项目")
     val projectName: String,
-    @Schema(title = "所属BG")
+    @get:Schema(title = "所属BG")
     val bgName: String,
-    @Schema(title = "所属部门")
+    @get:Schema(title = "所属部门")
     val deptName: String,
-    @Schema(title = "所属中心")
+    @get:Schema(title = "所属中心")
     val centerName: String
 )

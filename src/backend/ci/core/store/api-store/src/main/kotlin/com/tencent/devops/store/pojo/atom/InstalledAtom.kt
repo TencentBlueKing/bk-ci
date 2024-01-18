@@ -33,37 +33,37 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "已安装插件")
 data class InstalledAtom(
-    @Schema(title = "插件ID")
+    @get:Schema(title = "插件ID")
     val atomId: String,
-    @Schema(title = "插件标识")
+    @get:Schema(title = "插件标识")
     val atomCode: String,
-    @Schema(title = "插件版本")
+    @get:Schema(title = "插件版本")
     val version: String,
-    @Schema(title = "插件名称")
+    @get:Schema(title = "插件名称")
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val name: String,
-    @Schema(title = "logo地址")
+    @get:Schema(title = "logo地址")
     val logoUrl: String?,
-    @Schema(title = "插件分类code")
+    @get:Schema(title = "插件分类code")
     val classifyCode: String?,
-    @Schema(title = "插件分类名称")
+    @get:Schema(title = "插件分类名称")
     val classifyName: String?,
-    @Schema(title = "插件范畴")
+    @get:Schema(title = "插件范畴")
     val category: String?,
-    @Schema(title = "插件简介")
+    @get:Schema(title = "插件简介")
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val summary: String?,
-    @Schema(title = "发布者")
+    @get:Schema(title = "发布者")
     @BkFieldI18n(source = I18nSourceEnum.DB, keyPrefixName = "versionInfo")
     val publisher: String?,
-    @Schema(title = "安装者")
+    @get:Schema(title = "安装者")
     val installer: String,
-    @Schema(title = "安装时间")
+    @get:Schema(title = "安装时间")
     val installTime: String,
-    @Schema(title = "安装类型")
+    @get:Schema(title = "安装类型")
     val installType: String,
-    @Schema(title = "流水线个数")
+    @get:Schema(title = "流水线个数")
     val pipelineCnt: Int,
-    @Schema(title = "是否有卸载权限")
+    @get:Schema(title = "是否有卸载权限")
     val hasPermission: Boolean
 )

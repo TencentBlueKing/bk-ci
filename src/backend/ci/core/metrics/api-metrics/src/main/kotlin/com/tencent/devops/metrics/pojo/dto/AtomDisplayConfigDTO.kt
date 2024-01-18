@@ -32,10 +32,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "项目下展示插件配置传输对象")
 data class AtomDisplayConfigDTO(
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "userId")
+    @get:Schema(title = "userId")
     val userId: String,
-    @Schema(title = "插件基本信息列表")
+    @get:Schema(title = "插件基本信息列表")
     val atomBaseInfos: List<AtomBaseInfoDO>
 )

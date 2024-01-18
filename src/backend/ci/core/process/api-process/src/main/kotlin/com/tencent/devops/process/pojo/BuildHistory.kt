@@ -35,62 +35,62 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "历史构建模型")
 data class BuildHistory(
-    @Schema(title = "构建ID", required = true)
+    @get:Schema(title = "构建ID", required = true)
     val id: String,
-    @Schema(title = "启动用户", required = true)
+    @get:Schema(title = "启动用户", required = true)
     val userId: String,
-    @Schema(title = "触发条件", required = true)
+    @get:Schema(title = "触发条件", required = true)
     val trigger: String,
-    @Schema(title = "构建号", required = true)
+    @get:Schema(title = "构建号", required = true)
     val buildNum: Int?,
-    @Schema(title = "编排文件版本号", required = true)
+    @get:Schema(title = "编排文件版本号", required = true)
     val pipelineVersion: Int,
-    @Schema(title = "流水线的执行开始时间", required = true)
+    @get:Schema(title = "流水线的执行开始时间", required = true)
     val startTime: Long,
-    @Schema(title = "流水线的执行结束时间", required = true)
+    @get:Schema(title = "流水线的执行结束时间", required = true)
     val endTime: Long?,
-    @Schema(title = "状态", required = true)
+    @get:Schema(title = "状态", required = true)
     val status: String,
-    @Schema(title = "各阶段状态", required = true)
+    @get:Schema(title = "各阶段状态", required = true)
     val stageStatus: List<BuildStageStatus>?,
-    @Schema(title = "服务器当前时间戳", required = true)
+    @get:Schema(title = "服务器当前时间戳", required = true)
     val currentTimestamp: Long,
-    @Schema(title = "是否是手机启动", required = false)
+    @get:Schema(title = "是否是手机启动", required = false)
     val isMobileStart: Boolean = false,
-    @Schema(title = "原材料", required = false)
+    @get:Schema(title = "原材料", required = false)
     val material: List<PipelineBuildMaterial>?,
-    @Schema(title = "排队于（毫秒时间戳）", required = false)
+    @get:Schema(title = "排队于（毫秒时间戳）", required = false)
     val queueTime: Long?,
-    @Schema(title = "构件列表", required = false)
+    @get:Schema(title = "构件列表", required = false)
     val artifactList: List<FileInfo>?,
-    @Schema(title = "备注", required = false)
+    @get:Schema(title = "备注", required = false)
     val remark: String?,
-    @Schema(title = "总耗时(毫秒)", required = false)
+    @get:Schema(title = "总耗时(毫秒)", required = false)
     val totalTime: Long?,
-    @Schema(title = "运行耗时(毫秒，不包括人工审核时间)", required = false)
+    @get:Schema(title = "运行耗时(毫秒，不包括人工审核时间)", required = false)
     val executeTime: Long?,
-    @Schema(title = "启动参数", required = false)
+    @get:Schema(title = "启动参数", required = false)
     val buildParameters: List<BuildParameters>?,
-    @Schema(title = "WebHookType", required = false)
+    @get:Schema(title = "WebHookType", required = false)
     val webHookType: String?,
-    @Schema(title = "webhookInfo", required = false)
+    @get:Schema(title = "webhookInfo", required = false)
     val webhookInfo: WebhookInfo?,
-    @Schema(title = "启动类型(新)", required = false)
+    @get:Schema(title = "启动类型(新)", required = false)
     val startType: String?,
-    @Schema(title = "推荐版本号", required = false)
+    @get:Schema(title = "推荐版本号", required = false)
     val recommendVersion: String?,
-    @Schema(title = "是否重试", required = false)
+    @get:Schema(title = "是否重试", required = false)
     val retry: Boolean = false,
-    @Schema(title = "流水线任务执行错误", required = false)
+    @get:Schema(title = "流水线任务执行错误", required = false)
     var errorInfoList: List<ErrorInfo>?,
-    @Schema(title = "构建信息", required = false)
+    @get:Schema(title = "构建信息", required = false)
     var buildMsg: String?,
-    @Schema(title = "自定义构建版本号", required = false)
+    @get:Schema(title = "自定义构建版本号", required = false)
     val buildNumAlias: String? = null,
-    @Schema(title = "流水线编排的最后更新时间", required = false)
+    @get:Schema(title = "流水线编排的最后更新时间", required = false)
     val updateTime: Long? = null,
-    @Schema(title = "并发时,设定的group", required = false)
+    @get:Schema(title = "并发时,设定的group", required = false)
     var concurrencyGroup: String? = null,
-    @Schema(title = "构建执行次数（重试次数-1）", required = false)
+    @get:Schema(title = "构建执行次数（重试次数-1）", required = false)
     val executeCount: Int?
 )

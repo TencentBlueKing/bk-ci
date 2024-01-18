@@ -32,24 +32,24 @@ import java.time.LocalDateTime
 
 @Schema(title = "更新流水线概览数据")
 data class UpdatePipelineOverviewDataPO(
-    @Schema(title = "主键ID")
+    @get:Schema(title = "主键ID")
     val id: Long,
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "总平均耗时，单位：毫秒")
+    @get:Schema(title = "总平均耗时，单位：毫秒")
     val totalAvgCostTime: Long,
-    @Schema(title = "成功平均耗时，单位：毫秒")
+    @get:Schema(title = "成功平均耗时，单位：毫秒")
     val successAvgCostTime: Long? = null,
-    @Schema(title = "失败平均耗时，单位：毫秒")
+    @get:Schema(title = "失败平均耗时，单位：毫秒")
     val failAvgCostTime: Long? = null,
-    @Schema(title = "总执行次数")
+    @get:Schema(title = "总执行次数")
     val totalExecuteCount: Long,
-    @Schema(title = "成功执行次数")
+    @get:Schema(title = "成功执行次数")
     val successExecuteCount: Long,
-    @Schema(title = "失败执行次数")
+    @get:Schema(title = "失败执行次数")
     val failExecuteCount: Long,
-    @Schema(title = "修改人")
+    @get:Schema(title = "修改人")
     val modifier: String,
-    @Schema(title = "更新时间")
+    @get:Schema(title = "更新时间")
     val updateTime: LocalDateTime
 )

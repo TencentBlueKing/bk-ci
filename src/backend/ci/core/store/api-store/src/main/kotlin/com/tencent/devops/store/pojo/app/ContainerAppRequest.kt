@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "容器编译环境请求实体")
 data class ContainerAppRequest(
-    @Schema(title = "编译环境请求实体", required = true)
+    @get:Schema(title = "编译环境请求实体", required = true)
     val containerApp: ContainerAppCreate,
-    @Schema(title = "编译环境变量集合", required = false)
+    @get:Schema(title = "编译环境变量集合", required = false)
     val containerAppEnvList: List<ContainerAppEnvCreate>?,
-    @Schema(title = "编译环境版本信息集合", required = false)
+    @get:Schema(title = "编译环境版本信息集合", required = false)
     val containerAppVersionList: List<ContainerAppVersionCreate>?
 )

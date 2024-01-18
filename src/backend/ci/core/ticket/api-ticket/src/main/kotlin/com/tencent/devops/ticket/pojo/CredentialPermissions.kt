@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "凭证-凭证权限")
 data class CredentialPermissions(
-    @Schema(title = "删除权限", required = true)
+    @get:Schema(title = "删除权限", required = true)
     val delete: Boolean,
-    @Schema(title = "查看权限", required = true)
+    @get:Schema(title = "查看权限", required = true)
     val view: Boolean,
-    @Schema(title = "编辑权限", required = true)
+    @get:Schema(title = "编辑权限", required = true)
     val edit: Boolean,
-    @Schema(title = "使用权限", required = true)
+    @get:Schema(title = "使用权限", required = true)
     val use: Boolean? = null
 )

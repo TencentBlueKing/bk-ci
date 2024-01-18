@@ -32,14 +32,14 @@ import java.time.LocalDateTime
 
 @Schema(title = "镜像状态信息修改请求报文体")
 data class ImageStatusInfoUpdateRequest(
-    @Schema(title = "镜像状态", required = false)
+    @get:Schema(title = "镜像状态", required = false)
     val imageStatus: ImageStatusEnum? = null,
-    @Schema(title = "镜像状态描述", required = false)
+    @get:Schema(title = "镜像状态描述", required = false)
     val imageStatusMsg: String? = null,
-    @Schema(title = "镜像发布时间", required = false)
+    @get:Schema(title = "镜像发布时间", required = false)
     val pubTime: LocalDateTime? = null,
-    @Schema(title = "镜像tag", required = false)
+    @get:Schema(title = "镜像tag", required = false)
     val imageTag: String? = null,
-    @Schema(title = "是否为最新版本镜像", required = false)
+    @get:Schema(title = "是否为最新版本镜像", required = false)
     val latestFlag: Boolean? = null
 )

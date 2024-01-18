@@ -32,48 +32,48 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "Git和Stream项目详细信息")
 data class StreamProjectCIInfo(
-    @Schema(title = "Git项目ID")
+    @get:Schema(title = "Git项目ID")
     val id: Long,
-    @Schema(title = "蓝盾项目id")
+    @get:Schema(title = "蓝盾项目id")
     val projectCode: String?,
-    @Schema(title = "是否为stream 公共项目")
+    @get:Schema(title = "是否为stream 公共项目")
     val public: Boolean?,
-    @Schema(title = "stream 项目名称")
+    @get:Schema(title = "stream 项目名称")
     val name: String?,
-    @Schema(title = "stream 项目名称带有路径")
+    @get:Schema(title = "stream 项目名称带有路径")
     val nameWithNamespace: String?,
-    @Schema(title = "https-git链接")
+    @get:Schema(title = "https-git链接")
     val httpsUrlToRepo: String?,
-    @Schema(title = "项目网页链接")
+    @get:Schema(title = "项目网页链接")
     val webUrl: String?,
-    @Schema(title = "项目头像")
+    @get:Schema(title = "项目头像")
     val avatarUrl: String?,
-    @Schema(title = "项目描述")
+    @get:Schema(title = "项目描述")
     val description: String?,
-    @Schema(title = "是否开启CI功能")
+    @get:Schema(title = "是否开启CI功能")
     val enableCI: Boolean?,
-    @Schema(title = "Build pushed branches")
+    @get:Schema(title = "Build pushed branches")
     val buildPushedBranches: Boolean?,
-    @Schema(title = "Build pushed pull request")
+    @get:Schema(title = "Build pushed pull request")
     val buildPushedPullRequest: Boolean?,
-    @Schema(title = "是否开启Mr锁定")
+    @get:Schema(title = "是否开启Mr锁定")
     val enableMrBlock: Boolean?,
-    @Schema(title = "当前授权人")
+    @get:Schema(title = "当前授权人")
     val authUserId: String?,
-    @Schema(title = "CI相关信息")
+    @get:Schema(title = "CI相关信息")
     val ciInfo: StreamCIInfo?
 )
 
 @Schema(title = "CI相关信息")
 data class StreamCIInfo(
-    @Schema(title = "是否开启STREAM")
+    @get:Schema(title = "是否开启STREAM")
     val enableCI: Boolean,
-    @Schema(title = "最后一次构建信息")
+    @get:Schema(title = "最后一次构建信息")
     val lastBuildMessage: String?,
-    @Schema(title = "最后一次构建状态")
+    @get:Schema(title = "最后一次构建状态")
     val lastBuildStatus: BuildStatus?,
-    @Schema(title = "流水线ID")
+    @get:Schema(title = "流水线ID")
     val lastBuildPipelineId: String?,
-    @Schema(title = "构建ID")
+    @get:Schema(title = "构建ID")
     val lastBuildId: String?
 )

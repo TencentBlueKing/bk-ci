@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "VM TASK DETAIL-分页-基本信息")
 data class TaskWithPage(
-    @Schema(title = "VM DETAIL总数", required = true)
+    @get:Schema(title = "VM DETAIL总数", required = true)
     val total: Int,
-    @Schema(title = "VM DETAIL列表", required = true)
+    @get:Schema(title = "VM DETAIL列表", required = true)
     val data: List<Task>
 )

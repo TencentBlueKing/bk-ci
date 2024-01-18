@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "指标等级信息")
 data class StoreIndexLevelInfo(
-    @Schema(title = "等级名称", required = true)
+    @get:Schema(title = "等级名称", required = true)
     val levelName: String,
-    @Schema(title = "图标URL", required = true)
+    @get:Schema(title = "图标URL", required = true)
     val iconUrl: String
 )

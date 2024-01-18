@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "DockerRunResponse")
 data class DockerRunResponse(
-    @Schema(title = "容器Id", required = true)
+    @get:Schema(title = "容器Id", required = true)
     val containerId: String,
-    @Schema(title = "容器启动时间戳", required = true)
+    @get:Schema(title = "容器启动时间戳", required = true)
     val startTimeStamp: Int,
-    @Schema(title = "端口绑定列表", required = false)
+    @get:Schema(title = "端口绑定列表", required = false)
     val dockerRunPortBindings: List<DockerRunPortBinding>?
 )

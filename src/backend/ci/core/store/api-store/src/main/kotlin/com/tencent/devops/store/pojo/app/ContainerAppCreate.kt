@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "容器环境变量列表-创建")
 data class ContainerAppCreate(
-    @Schema(title = "编译环境名称", required = true)
+    @get:Schema(title = "编译环境名称", required = true)
     val name: String,
-    @Schema(title = "操作系统", required = true)
+    @get:Schema(title = "操作系统", required = true)
     val os: String,
-    @Schema(title = "执行所在路径", required = false)
+    @get:Schema(title = "执行所在路径", required = false)
     val binPath: String?
 )

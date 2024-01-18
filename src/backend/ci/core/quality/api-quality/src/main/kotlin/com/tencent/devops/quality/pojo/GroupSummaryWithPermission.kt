@@ -31,22 +31,22 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "质量红线-用户组摘要信息")
 data class GroupSummaryWithPermission(
-    @Schema(title = "体验组HashID", required = true)
+    @get:Schema(title = "体验组HashID", required = true)
     val groupHashId: String,
-    @Schema(title = "体验组名称", required = true)
+    @get:Schema(title = "体验组名称", required = true)
     val name: String,
-    @Schema(title = "内部人员", required = true)
+    @get:Schema(title = "内部人员", required = true)
     val innerUsersCount: Int,
-    @Schema(title = "外部人员", required = true)
+    @get:Schema(title = "外部人员", required = true)
     val outerUsersCount: Int,
-    @Schema(title = "内部人员")
+    @get:Schema(title = "内部人员")
     val innerUsers: Set<String>,
-    @Schema(title = "外部人员")
+    @get:Schema(title = "外部人员")
     val outerUsers: String,
-    @Schema(title = "创建者", required = true)
+    @get:Schema(title = "创建者", required = true)
     val creator: String,
-    @Schema(title = "描述", required = true)
+    @get:Schema(title = "描述", required = true)
     val remark: String,
-    @Schema(title = "权限", required = true)
+    @get:Schema(title = "权限", required = true)
     val permissions: GroupPermission
 )

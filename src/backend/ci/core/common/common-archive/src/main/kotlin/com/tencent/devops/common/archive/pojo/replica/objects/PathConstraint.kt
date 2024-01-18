@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "路径限制")
 data class PathConstraint(
-    @Schema(title = "路径")
+    @get:Schema(title = "路径")
     val path: String? = null,
-    @Schema(title = "路径正则匹配规则")
+    @get:Schema(title = "路径正则匹配规则")
     val pathRegex: List<String>? = null
 )

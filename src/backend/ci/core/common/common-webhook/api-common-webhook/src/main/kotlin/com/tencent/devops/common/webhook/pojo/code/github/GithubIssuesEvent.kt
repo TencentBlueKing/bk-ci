@@ -33,13 +33,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "Github Issues 事件")
 data class GithubIssuesEvent(
     val action: String,
-    @Schema(title = "Issues相关信息")
+    @get:Schema(title = "Issues相关信息")
     val issue: GithubIssue,
-    @Schema(title = "Github仓库相关信息")
+    @get:Schema(title = "Github仓库相关信息")
     val repository: GithubRepository,
-    @Schema(title = "操作人信息")
+    @get:Schema(title = "操作人信息")
     override val sender: GithubUser,
-    @Schema(title = "受理人")
+    @get:Schema(title = "受理人")
     val assignees: List<GithubUser>?
 ) : GithubEvent(sender) {
     companion object {
@@ -58,9 +58,9 @@ data class GithubIssuesEvent(
 data class GithubIssue(
     override val url: String?,
     @JsonProperty("html_url")
-    @Schema(title = "Issue/Pull Request链接[网页链接]")
+    @get:Schema(title = "Issue/Pull Request链接[网页链接]")
     override val htmlUrl: String?,
-    @Schema(title = "Issue ID")
+    @get:Schema(title = "Issue ID")
     override val id: Long,
     @JsonProperty("node_id")
     override val nodeId: String,
@@ -68,25 +68,25 @@ data class GithubIssue(
     override val createdAt: String?, // 2022-06-21T08:45:41Z
     @JsonProperty("updated_at")
     override val updatedAt: String?, // 2022-06-21T08:45:41Z
-    @Schema(title = "Issue/Pull Request编号")
+    @get:Schema(title = "Issue/Pull Request编号")
     val number: Long,
-    @Schema(title = "Issue/Pull Request标题信息")
+    @get:Schema(title = "Issue/Pull Request标题信息")
     val title: String,
-    @Schema(title = "Issue/Pull Request创建用户")
+    @get:Schema(title = "Issue/Pull Request创建用户")
     val user: GithubUser,
-    @Schema(title = "Issue/Pull Request标签信息")
+    @get:Schema(title = "Issue/Pull Request标签信息")
     val labels: List<GithubLabel>,
-    @Schema(title = "issues/Pull Request 状态信息")
+    @get:Schema(title = "issues/Pull Request 状态信息")
     val state: String,
     val locked: String,
-    @Schema(title = "issues/Pull Request 受理人")
+    @get:Schema(title = "issues/Pull Request 受理人")
     val assignees: List<GithubUser>?,
     @JsonProperty("closed_at")
     val closedAt: String?,
     @JsonProperty("Issues/Pull Request 描述信息")
     val body: String?,
     @JsonProperty("pull_request")
-    @Schema(title = "issues 关联的pull request信息，为空时代表仅在issue上操作")
+    @get:Schema(title = "issues 关联的pull request信息，为空时代表仅在issue上操作")
     val pullRequest: GithubPullRequestUrl?,
     val milestone: GithubMilestone?
 ) : GithubBaseInfo(
@@ -101,13 +101,13 @@ data class GithubIssue(
 data class GithubPullRequestUrl(
     val url: String,
     @JsonProperty("html_url")
-    @Schema(title = "Pull Request链接[网页链接]")
+    @get:Schema(title = "Pull Request链接[网页链接]")
     val htmlUrl: String,
     @JsonProperty("diff_url")
-    @Schema(title = "Pull Request 修改内容链接[raw]")
+    @get:Schema(title = "Pull Request 修改内容链接[raw]")
     val diffUrl: String,
     @JsonProperty("patch_url")
-    @Schema(title = "Pull Request 补丁链接[raw]")
+    @get:Schema(title = "Pull Request 补丁链接[raw]")
     val patchUrl: String
 )
 
@@ -119,21 +119,21 @@ enum class GithubIssuesState(val value: String) {
 
 @Schema(title = "Github Issue 操作")
 enum class GithubIssuesAction(val value: String) {
-    @Schema(title = "重新打开")
+    @get:Schema(title = "重新打开")
     REOPENED("reopened"),
 
-    @Schema(title = "关闭")
+    @get:Schema(title = "关闭")
     CLOSED("closed"),
 
-    @Schema(title = "创建")
+    @get:Schema(title = "创建")
     OPENED("opened"),
 
-    @Schema(title = "指派受理人")
+    @get:Schema(title = "指派受理人")
     ASSIGNED("assigned"),
 
-    @Schema(title = "标记")
+    @get:Schema(title = "标记")
     LABELED("labeled"),
 
-    @Schema(title = "修改")
+    @get:Schema(title = "修改")
     EDITED("edited"),
 }

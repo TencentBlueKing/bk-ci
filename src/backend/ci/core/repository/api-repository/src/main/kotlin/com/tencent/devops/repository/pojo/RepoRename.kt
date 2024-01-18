@@ -32,8 +32,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "代码库重命名")
 data class RepoRename(
-    @Schema(title = "代码库修改后的名称", required = true)
+    @get:Schema(title = "代码库修改后的名称", required = true)
     val name: String,
-    @Schema(title = "代码库修改前的名称", required = false)
+    @get:Schema(title = "代码库修改前的名称", required = false)
     val oldName: String = ""
 )

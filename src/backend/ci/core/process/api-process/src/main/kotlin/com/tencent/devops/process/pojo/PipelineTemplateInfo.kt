@@ -31,30 +31,30 @@ import com.tencent.devops.common.pipeline.container.Stage
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class PipelineTemplateInfo(
-    @Schema(title = "模版名称", required = true)
+    @get:Schema(title = "模版名称", required = true)
     val name: String,
-    @Schema(title = "模版ID", required = true)
+    @get:Schema(title = "模版ID", required = true)
     val templateId: String,
-    @Schema(title = "项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(title = "当前模板版本ID", required = true)
+    @get:Schema(title = "当前模板版本ID", required = true)
     val version: Long,
-    @Schema(title = "父模板版本ID", required = true)
+    @get:Schema(title = "父模板版本ID", required = true)
     val srcTemplateVersion: Long,
-    @Schema(title = "最新版本号", required = true)
+    @get:Schema(title = "最新版本号", required = true)
     val versionName: String,
-    @Schema(title = "模板类型", required = true)
+    @get:Schema(title = "模板类型", required = true)
     val templateType: String,
-    @Schema(title = "模板类型描述", required = true)
+    @get:Schema(title = "模板类型描述", required = true)
     val templateTypeDesc: String,
-    @Schema(title = "应用范畴", required = true)
+    @get:Schema(title = "应用范畴", required = true)
     val category: List<String?>,
-    @Schema(title = "模版logo", required = true)
+    @get:Schema(title = "模版logo", required = true)
     val logoUrl: String,
-    @Schema(title = "阶段集合", required = true)
+    @get:Schema(title = "阶段集合", required = true)
     val stages: List<Stage>,
-    @Schema(title = "模版名称，兼容老代码", required = true)
+    @get:Schema(title = "模版名称，兼容老代码", required = true)
     val templateName: String,
-    @Schema(title = "父模板ID", required = true)
+    @get:Schema(title = "父模板ID", required = true)
     val srcTemplateId: String
 )

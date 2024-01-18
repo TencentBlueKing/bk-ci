@@ -31,17 +31,17 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "环境信息-Node数量")
 data class EnvWithNodeCount(
-    @Schema(title = "环境 HashId", required = true)
+    @get:Schema(title = "环境 HashId", required = true)
     val envHashId: String,
-    @Schema(title = "环境名称", required = true)
+    @get:Schema(title = "环境名称", required = true)
     val name: String,
-    @Schema(title = "正常节点数量", required = true)
+    @get:Schema(title = "正常节点数量", required = true)
     val normalNodeCount: Int,
-    @Schema(title = "异常节点数量", required = true)
+    @get:Schema(title = "异常节点数量", required = true)
     val abnormalNodeCount: Int,
-    @Schema(title = "源项目", required = false)
+    @get:Schema(title = "源项目", required = false)
     val sharedProjectId: String?,
-    @Schema(title = "分享人", required = false)
+    @get:Schema(title = "分享人", required = false)
     val sharedUserId: String?
 
 )

@@ -32,8 +32,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "查询流水线概览数据查询条件信息对象")
 data class QueryPipelineOverviewQO(
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "查询条件信息")
+    @get:Schema(title = "查询条件信息")
     val baseQueryReq: BaseQueryReqVO
 )

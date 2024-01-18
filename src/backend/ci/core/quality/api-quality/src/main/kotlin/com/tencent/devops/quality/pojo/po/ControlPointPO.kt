@@ -32,34 +32,34 @@ import java.time.LocalDateTime
 
 @Schema(title = "质量红线控制点PO")
 data class ControlPointPO(
-    @Schema(title = "ID")
+    @get:Schema(title = "ID")
     val id: Long,
-    @Schema(title = "原子的ClassType")
+    @get:Schema(title = "原子的ClassType")
     val elementType: String,
-    @Schema(title = "控制点名称(原子名称)")
+    @get:Schema(title = "控制点名称(原子名称)")
     var name: String,
-    @Schema(title = "研发阶段")
+    @get:Schema(title = "研发阶段")
     var stage: String,
-    @Schema(title = "支持红线位置(准入-BEFORE, 准出-AFTER)")
+    @get:Schema(title = "支持红线位置(准入-BEFORE, 准出-AFTER)")
     val availablePosition: String,
-    @Schema(title = "默认红线位置")
+    @get:Schema(title = "默认红线位置")
     val defaultPosition: String,
-    @Schema(title = "是否启用")
+    @get:Schema(title = "是否启用")
     val enable: Boolean,
-    @Schema(title = "创建用户")
+    @get:Schema(title = "创建用户")
     val createUser: String,
-    @Schema(title = "更新用户")
+    @get:Schema(title = "更新用户")
     val updateUser: String,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: LocalDateTime,
-    @Schema(title = "更新时间")
+    @get:Schema(title = "更新时间")
     val updateTime: LocalDateTime,
-    @Schema(title = "更新时间")
+    @get:Schema(title = "更新时间")
     val atomVersion: String = "1.0.0",
-    @Schema(title = "更新时间")
+    @get:Schema(title = "更新时间")
     val testProject: String = "",
-    @Schema(title = "更新时间")
+    @get:Schema(title = "更新时间")
     val tag: String? = null,
-    @Schema(title = "更新时间")
+    @get:Schema(title = "更新时间")
     val controlPointHashId: String? = null
 )

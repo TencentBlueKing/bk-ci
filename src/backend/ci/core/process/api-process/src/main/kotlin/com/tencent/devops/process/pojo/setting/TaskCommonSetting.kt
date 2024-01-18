@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线task公共配置信息")
 data class TaskCommonSetting(
-    @Schema(title = "最大输入参数个数", required = true)
+    @get:Schema(title = "最大输入参数个数", required = true)
     val maxInputNum: Int,
-    @Schema(title = "最大输出参数个数", required = true)
+    @get:Schema(title = "最大输出参数个数", required = true)
     val maxOutputNum: Int,
-    @Schema(title = "输入参数组件配置", required = true)
+    @get:Schema(title = "输入参数组件配置", required = true)
     val inputComponentCommonSettings: List<TaskComponentCommonSetting>,
-    @Schema(title = "输出参数组件配置", required = true)
+    @get:Schema(title = "输出参数组件配置", required = true)
     val outputComponentCommonSettings: List<TaskComponentCommonSetting>
 )

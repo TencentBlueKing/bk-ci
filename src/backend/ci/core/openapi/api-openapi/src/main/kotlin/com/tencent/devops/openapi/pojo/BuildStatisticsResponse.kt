@@ -30,18 +30,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线构建统计数据响应消息体")
 data class BuildStatisticsResponse(
-    @Schema(title = "流水线执行次数")
+    @get:Schema(title = "流水线执行次数")
     val buildCount: Long,
-    @Schema(title = "流水线成功次数")
+    @get:Schema(title = "流水线成功次数")
     val successCount: Long,
-    @Schema(title = "流水线失败次数")
+    @get:Schema(title = "流水线失败次数")
     val failCount: Long,
-    @Schema(title = "流水线排队超时次数")
+    @get:Schema(title = "流水线排队超时次数")
     val queueTimeoutCount: Long,
-    @Schema(title = "流水线取消次数")
+    @get:Schema(title = "流水线取消次数")
     val cancelCount: Long,
-    @Schema(title = "流水线成功率")
+    @get:Schema(title = "流水线成功率")
     val successRate: Float,
-    @Schema(title = "流水线失败率")
+    @get:Schema(title = "流水线失败率")
     val failRate: Float
 )

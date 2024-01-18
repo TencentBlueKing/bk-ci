@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "容器编译环境接口响应信息")
 data class ContainerAppResp(
-    @Schema(title = "编译环境基本信息", required = true)
+    @get:Schema(title = "编译环境基本信息", required = true)
     val containerApp: ContainerApp,
-    @Schema(title = "编译环境变量信息", required = true)
+    @get:Schema(title = "编译环境变量信息", required = true)
     val containerAppEnvList: List<ContainerAppEnv>,
-    @Schema(title = "编译环境版本信息", required = true)
+    @get:Schema(title = "编译环境版本信息", required = true)
     val containerAppVersionList: List<ContainerAppVersion>
 )

@@ -32,18 +32,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "项目其他配置")
 data class ProjectProperties(
-    @Schema(title = "YAML流水线功能设置")
+    @get:Schema(title = "YAML流水线功能设置")
     val pipelineAsCodeSettings: PipelineAsCodeSettings = PipelineAsCodeSettings(
         enable = false
     ),
-    @Schema(title = "是否启用云研发", required = false)
+    @get:Schema(title = "是否启用云研发", required = false)
     val remotedev: Boolean? = false,
-    @Schema(title = "可申请的云桌面数", required = false)
+    @get:Schema(title = "可申请的云桌面数", required = false)
     val cloudDesktopNum: Int = 0,
-    @Schema(title = "云研发管理员，多人用分号分隔", required = false)
+    @get:Schema(title = "云研发管理员，多人用分号分隔", required = false)
     val remotedevManager: String? = null,
-    @Schema(title = "是否开启流水线模板管理", required = false)
+    @get:Schema(title = "是否开启流水线模板管理", required = false)
     var enableTemplatePermissionManage: Boolean? = null,
-    @Schema(title = "数据标签，创建项目时会为该项目分配指定标签的db")
+    @get:Schema(title = "数据标签，创建项目时会为该项目分配指定标签的db")
     val dataTag: String? = null
 )

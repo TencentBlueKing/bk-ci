@@ -32,28 +32,28 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "第三方接入机")
 data class ThirdPartyAgent(
-    @Schema(title = "Agent Hash ID", required = true)
+    @get:Schema(title = "Agent Hash ID", required = true)
     val agentId: String,
-    @Schema(title = "项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(title = "节点ID", required = false)
+    @get:Schema(title = "节点ID", required = false)
     val nodeId: String?,
-    @Schema(title = "状态")
+    @get:Schema(title = "状态")
     val status: AgentStatus,
-    @Schema(title = "主机名", required = true)
+    @get:Schema(title = "主机名", required = true)
     val hostname: String,
-    @Schema(title = "系统", required = true)
+    @get:Schema(title = "系统", required = true)
     val os: String,
-    @Schema(title = "IP地址", required = true)
+    @get:Schema(title = "IP地址", required = true)
     val ip: String,
-    @Schema(title = "Secret KEY", required = true)
+    @get:Schema(title = "Secret KEY", required = true)
     val secretKey: String,
-    @Schema(title = "创建用户", required = true)
+    @get:Schema(title = "创建用户", required = true)
     val createUser: String,
-    @Schema(title = "创建时间", required = true)
+    @get:Schema(title = "创建时间", required = true)
     val createTime: Long,
-    @Schema(title = "并行执行的个数", required = false)
+    @get:Schema(title = "并行执行的个数", required = false)
     val parallelTaskCount: Int? = 4,
-    @Schema(title = "Docker构建机并行执行的个数", required = false)
+    @get:Schema(title = "Docker构建机并行执行的个数", required = false)
     val dockerParallelTaskCount: Int? = 4
 )

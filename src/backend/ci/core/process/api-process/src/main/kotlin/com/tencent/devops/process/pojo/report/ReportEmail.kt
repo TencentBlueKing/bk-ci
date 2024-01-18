@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "自定义产出物报告-发送邮件")
 data class ReportEmail(
-    @Schema(title = "接收人列表", required = false)
+    @get:Schema(title = "接收人列表", required = false)
     val receivers: Set<String>,
-    @Schema(title = "标题", required = false)
+    @get:Schema(title = "标题", required = false)
     val title: String,
-    @Schema(title = "html地址", required = false)
+    @get:Schema(title = "html地址", required = false)
     val html: String
 )

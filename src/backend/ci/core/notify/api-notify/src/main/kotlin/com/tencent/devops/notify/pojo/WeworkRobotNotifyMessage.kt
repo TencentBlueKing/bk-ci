@@ -32,14 +32,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "企业微信机器人消息")
 data class WeworkRobotNotifyMessage(
-    @Schema(title = "接收人Id", required = true)
+    @get:Schema(title = "接收人Id", required = true)
     val receivers: String,
-    @Schema(title = "接收人类型", required = true)
+    @get:Schema(title = "接收人类型", required = true)
     val receiverType: WeworkReceiverType,
-    @Schema(title = "文本内容类型", required = true)
+    @get:Schema(title = "文本内容类型", required = true)
     var textType: WeworkTextType,
-    @Schema(title = "文本内容", required = true)
+    @get:Schema(title = "文本内容", required = true)
     var message: String,
-    @Schema(title = "attachments消息事件", required = false)
+    @get:Schema(title = "attachments消息事件", required = false)
     var attachments: WeworkMarkdownAttachment? = null
 )

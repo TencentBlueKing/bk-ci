@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "质量红线度量信息")
 data class QualityInfoDO(
-    @Schema(title = "质量红线拦截比例")
+    @get:Schema(title = "质量红线拦截比例")
     val qualityInterceptionRate: Double?,
-    @Schema(title = "使用质量红线的流水线执行被拦截次数")
+    @get:Schema(title = "使用质量红线的流水线执行被拦截次数")
     val interceptionCount: Int?,
-    @Schema(title = "使用质量红线的流水线执行总次数")
+    @get:Schema(title = "使用质量红线的流水线执行总次数")
     val totalExecuteCount: Int?
 )

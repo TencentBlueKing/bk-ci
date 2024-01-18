@@ -34,16 +34,16 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "DockerHostZone")
 data class DockerHostZone(
-    @Schema(title = "hostIp", required = true)
+    @get:Schema(title = "hostIp", required = true)
     val hostIp: String,
-    @Schema(title = "zone", required = true)
+    @get:Schema(title = "zone", required = true)
     val zone: String,
-    @Schema(title = "enable", required = true)
+    @get:Schema(title = "enable", required = true)
     val enable: Boolean,
-    @Schema(title = "remark", required = true)
+    @get:Schema(title = "remark", required = true)
     val remark: String?,
-    @Schema(title = "createTime", required = true)
+    @get:Schema(title = "createTime", required = true)
     val createTime: Long,
-    @Schema(title = "updateTime", required = true)
+    @get:Schema(title = "updateTime", required = true)
     val updateTime: Long
 )

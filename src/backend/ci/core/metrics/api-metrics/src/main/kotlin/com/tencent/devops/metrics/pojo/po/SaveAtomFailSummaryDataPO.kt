@@ -32,36 +32,36 @@ import java.time.LocalDateTime
 
 @Schema(title = "保存插件失败汇总数据")
 data class SaveAtomFailSummaryDataPO(
-    @Schema(title = "主键ID")
+    @get:Schema(title = "主键ID")
     val id: Long,
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "流水线ID")
+    @get:Schema(title = "流水线ID")
     val pipelineId: String,
-    @Schema(title = "流水线名称")
+    @get:Schema(title = "流水线名称")
     val pipelineName: String,
-    @Schema(title = "渠道代码")
+    @get:Schema(title = "渠道代码")
     val channelCode: String,
-    @Schema(title = "插件代码")
+    @get:Schema(title = "插件代码")
     val atomCode: String,
-    @Schema(title = "插件名称")
+    @get:Schema(title = "插件名称")
     val atomName: String,
-    @Schema(title = "插件分类代码")
+    @get:Schema(title = "插件分类代码")
     val classifyCode: String,
-    @Schema(title = "插件分类名称")
+    @get:Schema(title = "插件分类名称")
     val classifyName: String,
-    @Schema(title = "错误类型")
+    @get:Schema(title = "错误类型")
     val errorType: Int,
-    @Schema(title = "错误次数")
+    @get:Schema(title = "错误次数")
     val errorCount: Int,
-    @Schema(title = "统计时间")
+    @get:Schema(title = "统计时间")
     val statisticsTime: LocalDateTime,
-    @Schema(title = "创建人")
+    @get:Schema(title = "创建人")
     val creator: String,
-    @Schema(title = "修改人")
+    @get:Schema(title = "修改人")
     val modifier: String,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: LocalDateTime,
-    @Schema(title = "更新时间")
+    @get:Schema(title = "更新时间")
     val updateTime: LocalDateTime
 )

@@ -34,39 +34,39 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线模型-阶段")
 data class Stage(
-    @Schema(title = "容器集合", required = true)
+    @get:Schema(title = "容器集合", required = true)
     val containers: List<Container> = listOf(),
-    @Schema(title = "阶段ID", required = false)
+    @get:Schema(title = "阶段ID", required = false)
     var id: String?,
-    @Schema(title = "阶段名称", required = true)
+    @get:Schema(title = "阶段名称", required = true)
     var name: String? = "",
-    @Schema(title = "阶段标签", required = false, readOnly = true)
+    @get:Schema(title = "阶段标签", required = false, readOnly = true)
     var tag: List<String>? = null,
-    @Schema(title = "阶段状态", required = false, readOnly = true)
+    @get:Schema(title = "阶段状态", required = false, readOnly = true)
     var status: String? = null,
-    @Schema(title = "阶段启动时间", required = false, readOnly = true)
+    @get:Schema(title = "阶段启动时间", required = false, readOnly = true)
     @Deprecated("即将被timeCost代替")
     var startEpoch: Long? = null,
-    @Schema(title = "容器运行时间", required = false, readOnly = true)
+    @get:Schema(title = "容器运行时间", required = false, readOnly = true)
     @Deprecated("即将被timeCost代替")
     var elapsed: Long? = null,
-    @Schema(title = "用户自定义环境变量", required = false)
+    @get:Schema(title = "用户自定义环境变量", required = false)
     val customBuildEnv: Map<String, String>? = null,
-    @Schema(title = "是否启用容器失败快速终止阶段", required = false)
+    @get:Schema(title = "是否启用容器失败快速终止阶段", required = false)
     val fastKill: Boolean? = false,
-    @Schema(title = "标识是否为FinallyStage，每个Model只能包含一个FinallyStage，并且处于最后位置", required = false)
+    @get:Schema(title = "标识是否为FinallyStage，每个Model只能包含一个FinallyStage，并且处于最后位置", required = false)
     val finally: Boolean = false,
-    @Schema(title = "当前Stage是否能重试", required = false)
+    @get:Schema(title = "当前Stage是否能重试", required = false)
     var canRetry: Boolean? = null,
-    @Schema(title = "流程控制选项", required = true)
+    @get:Schema(title = "流程控制选项", required = true)
     var stageControlOption: StageControlOption? = null, // 为了兼容旧数据，所以定义为可空以及var
-    @Schema(title = "stage准入配置", required = false)
+    @get:Schema(title = "stage准入配置", required = false)
     var checkIn: StagePauseCheck? = null, // stage准入配置
-    @Schema(title = "stage准出配置", required = false)
+    @get:Schema(title = "stage准出配置", required = false)
     var checkOut: StagePauseCheck? = null, // stage准出配置
-    @Schema(title = "步骤运行次数", required = false, readOnly = true)
+    @get:Schema(title = "步骤运行次数", required = false, readOnly = true)
     var executeCount: Int? = null,
-    @Schema(title = "各项耗时", required = true)
+    @get:Schema(title = "各项耗时", required = true)
     var timeCost: BuildRecordTimeCost? = null
 ) {
     /**

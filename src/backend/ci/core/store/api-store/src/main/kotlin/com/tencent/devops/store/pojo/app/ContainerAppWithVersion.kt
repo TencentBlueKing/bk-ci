@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "容器环境变量列表及版本列表")
 data class ContainerAppWithVersion(
-    @Schema(title = "name", required = true)
+    @get:Schema(title = "name", required = true)
     val name: String,
-    @Schema(title = "versions", required = true)
+    @get:Schema(title = "versions", required = true)
     val versions: List<String>,
-    @Schema(title = "bin路径", required = false)
+    @get:Schema(title = "bin路径", required = false)
     val binPath: String?,
-    @Schema(title = "Home 变量")
+    @get:Schema(title = "Home 变量")
     val env: List<BuildEnvParameters>
 )

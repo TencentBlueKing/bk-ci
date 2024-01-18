@@ -31,16 +31,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线-阶段标签信息")
 data class PipelineStageTag(
-    @Schema(title = "阶段标签ID", required = true)
+    @get:Schema(title = "阶段标签ID", required = true)
     val id: String,
-    @Schema(title = "阶段标签名称", required = true)
+    @get:Schema(title = "阶段标签名称", required = true)
     val stageTagName: String,
-    @Schema(title = "阶段标签权重", required = true)
+    @get:Schema(title = "阶段标签权重", required = true)
     val weight: Int,
-    @Schema(title = "是否为默认标签", required = true)
+    @get:Schema(title = "是否为默认标签", required = true)
     val defaultFlag: Boolean,
-    @Schema(title = "创建日期")
+    @get:Schema(title = "创建日期")
     val createTime: Long = 0,
-    @Schema(title = "更新日期")
+    @get:Schema(title = "更新日期")
     val updateTime: Long = 0
 )

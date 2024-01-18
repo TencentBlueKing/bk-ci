@@ -33,22 +33,22 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @Schema(title = "质量红线-基础数据列表展示信息")
 data class QualityMetaData(
-    @Schema(title = "ID")
+    @get:Schema(title = "ID")
     val id: Long,
-    @Schema(title = "数据ID")
+    @get:Schema(title = "数据ID")
     val dataId: String?,
-    @Schema(title = "基础数据名称")
+    @get:Schema(title = "基础数据名称")
     val dataName: String?,
-    @Schema(title = "原子的ClassType")
+    @get:Schema(title = "原子的ClassType")
     val elementType: String?,
-    @Schema(title = "产出原子")
+    @get:Schema(title = "产出原子")
     val elementName: String?,
-    @Schema(title = "工具/原子子类")
+    @get:Schema(title = "工具/原子子类")
     val elementDetail: String?,
-    @Schema(title = "数值类型")
+    @get:Schema(title = "数值类型")
     val valueType: String?,
-    @Schema(title = "说明")
+    @get:Schema(title = "说明")
     val desc: String?,
-    @Schema(title = "备注")
+    @get:Schema(title = "备注")
     var extra: String?
 )

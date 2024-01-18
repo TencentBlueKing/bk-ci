@@ -33,23 +33,23 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "原因信息")
 data class Reason(
-    @Schema(title = "原因ID", required = true)
+    @get:Schema(title = "原因ID", required = true)
     val id: String,
-    @Schema(title = "原因类型", required = true)
+    @get:Schema(title = "原因类型", required = true)
     val type: String,
-    @Schema(title = "原因内容", required = true)
+    @get:Schema(title = "原因内容", required = true)
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val content: String,
-    @Schema(title = "创建人")
+    @get:Schema(title = "创建人")
     val creator: String,
-    @Schema(title = "修改人")
+    @get:Schema(title = "修改人")
     val modifier: String,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: String,
-    @Schema(title = "修改时间")
+    @get:Schema(title = "修改时间")
     val updateTime: String,
-    @Schema(title = "是否启用")
+    @get:Schema(title = "是否启用")
     val enable: Boolean,
-    @Schema(title = "显示顺序")
+    @get:Schema(title = "显示顺序")
     val order: Int
 )

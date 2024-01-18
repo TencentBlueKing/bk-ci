@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "构建模型-ID")
 data class BuildId(
-    @Schema(title = "构建ID", required = true)
+    @get:Schema(title = "构建ID", required = true)
     val id: String,
-    @Schema(title = "当前执行次数")
+    @get:Schema(title = "当前执行次数")
     val executeCount: Int = 1,
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String? = null,
-    @Schema(title = "流水线ID")
+    @get:Schema(title = "流水线ID")
     val pipelineId: String? = null,
-    @Schema(title = "构建编号")
+    @get:Schema(title = "构建编号")
     val num: Int? = null
 )

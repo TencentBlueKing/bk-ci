@@ -38,47 +38,47 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "GitLab仓库代码提交触发", description = CodeGitlabWebHookTriggerElement.classType)
 data class CodeGitlabWebHookTriggerElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "Gitlab变更触发",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "仓库ID", required = true)
+    @get:Schema(title = "仓库ID", required = true)
     val repositoryHashId: String?,
-    @Schema(title = "分支名称", required = false)
+    @get:Schema(title = "分支名称", required = false)
     val branchName: String?,
-    @Schema(title = "新版的gitlab原子的类型")
+    @get:Schema(title = "新版的gitlab原子的类型")
     val repositoryType: RepositoryType? = null,
-    @Schema(title = "新版的gitlab代码库名")
+    @get:Schema(title = "新版的gitlab代码库名")
     val repositoryName: String? = null,
-    @Schema(title = "事件类型", required = false)
+    @get:Schema(title = "事件类型", required = false)
     val eventType: CodeEventType? = CodeEventType.PUSH,
-    @Schema(title = "用于排除的分支名", required = false)
+    @get:Schema(title = "用于排除的分支名", required = false)
     val excludeBranchName: String?,
-    @Schema(title = "路径过滤类型", required = true)
+    @get:Schema(title = "路径过滤类型", required = true)
     val pathFilterType: PathFilterType? = PathFilterType.NamePrefixFilter,
-    @Schema(title = "用于包含的路径", required = false)
+    @get:Schema(title = "用于包含的路径", required = false)
     val includePaths: String?,
-    @Schema(title = "用于排除的路径", required = false)
+    @get:Schema(title = "用于排除的路径", required = false)
     val excludePaths: String?,
-    @Schema(title = "用于包含的user id", required = false)
+    @get:Schema(title = "用于包含的user id", required = false)
     val includeUsers: List<String>? = null,
-    @Schema(title = "用于排除的user id", required = false)
+    @get:Schema(title = "用于排除的user id", required = false)
     val excludeUsers: List<String>?,
-    @Schema(title = "是否为block", required = false)
+    @get:Schema(title = "是否为block", required = false)
     val block: Boolean?,
-    @Schema(title = "tag名称", required = false)
+    @get:Schema(title = "tag名称", required = false)
     val tagName: String? = null,
-    @Schema(title = "用于排除的tag名称", required = false)
+    @get:Schema(title = "用于排除的tag名称", required = false)
     val excludeTagName: String? = null,
-    @Schema(title = "用于排除的源分支名称", required = false)
+    @get:Schema(title = "用于排除的源分支名称", required = false)
     val excludeSourceBranchName: String? = null,
-    @Schema(title = "用于包含的源分支名称", required = false)
+    @get:Schema(title = "用于包含的源分支名称", required = false)
     val includeSourceBranchName: String? = null,
-    @Schema(title = "用于包含的提交信息", required = false)
+    @get:Schema(title = "用于包含的提交信息", required = false)
     val includeCommitMsg: String? = null,
-    @Schema(title = "用于排除的提交信息", required = false)
+    @get:Schema(title = "用于排除的提交信息", required = false)
     val excludeCommitMsg: String? = null
 ) : WebHookTriggerElement(name, id, status) {
     companion object {

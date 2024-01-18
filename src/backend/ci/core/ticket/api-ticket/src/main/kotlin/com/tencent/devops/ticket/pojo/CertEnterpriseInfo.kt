@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "证书-ios企业证书")
 data class CertEnterpriseInfo(
-    @Schema(title = "证书ID", required = true)
+    @get:Schema(title = "证书ID", required = true)
     val certId: String,
-    @Schema(title = "mobileProvision描述文件名", required = true)
+    @get:Schema(title = "mobileProvision描述文件名", required = true)
     val mobileProvisionFileName: String,
-    @Schema(title = "备注", required = false)
+    @get:Schema(title = "备注", required = false)
     val remark: String?
 )

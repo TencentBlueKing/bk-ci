@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "质量红线-单条规则拦截结果")
 data class RuleCheckSingleResult(
-    @Schema(title = "规则名称", required = true)
+    @get:Schema(title = "规则名称", required = true)
     val ruleName: String,
-    @Schema(title = "失败信息", required = true)
+    @get:Schema(title = "失败信息", required = true)
     val messagePairs: List<Triple<String, String/*detail*/, Boolean>>
 )

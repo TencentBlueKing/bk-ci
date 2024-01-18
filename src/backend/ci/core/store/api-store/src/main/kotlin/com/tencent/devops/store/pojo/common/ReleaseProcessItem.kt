@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "发布进度")
 data class ReleaseProcessItem(
-    @Schema(title = "步骤名称", required = true)
+    @get:Schema(title = "步骤名称", required = true)
     var name: String,
-    @Schema(title = "步骤代码", required = true)
+    @get:Schema(title = "步骤代码", required = true)
     var code: String,
-    @Schema(title = "步骤号", required = true)
+    @get:Schema(title = "步骤号", required = true)
     val step: Int,
-    @Schema(title = "状态", required = true)
+    @get:Schema(title = "状态", required = true)
     var status: String
 )

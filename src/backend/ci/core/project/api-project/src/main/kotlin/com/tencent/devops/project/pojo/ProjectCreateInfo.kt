@@ -33,46 +33,46 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "项目-新增模型")
 data class ProjectCreateInfo(
-    @Schema(title = "项目名称")
+    @get:Schema(title = "项目名称")
     val projectName: String,
-    @Schema(title = "英文缩写")
+    @get:Schema(title = "英文缩写")
     val englishName: String,
-    @Schema(title = "项目类型")
+    @get:Schema(title = "项目类型")
     val projectType: Int = 0,
-    @Schema(title = "描述")
+    @get:Schema(title = "描述")
     val description: String,
-    @Schema(title = "BGID")
+    @get:Schema(title = "BGID")
     val bgId: Long = 0,
-    @Schema(title = "BG名称")
+    @get:Schema(title = "BG名称")
     val bgName: String = "",
-    @Schema(title = "业务线ID")
+    @get:Schema(title = "业务线ID")
     val businessLineId: Long? = null,
-    @Schema(title = "业务线名称")
+    @get:Schema(title = "业务线名称")
     val businessLineName: String? = "",
-    @Schema(title = "部门ID")
+    @get:Schema(title = "部门ID")
     val deptId: Long = 0,
-    @Schema(title = "部门名称")
+    @get:Schema(title = "部门名称")
     val deptName: String = "",
-    @Schema(title = "中心ID")
+    @get:Schema(title = "中心ID")
     val centerId: Long = 0,
-    @Schema(title = "中心名称")
+    @get:Schema(title = "中心名称")
     val centerName: String = "",
-    @Schema(title = "是否保密")
+    @get:Schema(title = "是否保密")
     var secrecy: Boolean = false,
-    @Schema(title = "kind")
+    @get:Schema(title = "kind")
     val kind: Int = 0,
-    @Schema(title = "项目相关配置")
+    @get:Schema(title = "项目相关配置")
     val properties: ProjectProperties? = null,
-    @Schema(title = "项目最大可授权人员范围")
+    @get:Schema(title = "项目最大可授权人员范围")
     var subjectScopes: List<SubjectScopeInfo>? = emptyList(),
-    @Schema(title = "logo地址")
+    @get:Schema(title = "logo地址")
     val logoAddress: String? = null,
-    @Schema(title = "项目性质")
+    @get:Schema(title = "项目性质")
     val authSecrecy: Int? = ProjectAuthSecrecyStatus.PUBLIC.value,
-    @Schema(title = "是否可用")
+    @get:Schema(title = "是否可用")
     val enabled: Boolean = true,
-    @Schema(title = "运营产品ID")
+    @get:Schema(title = "运营产品ID")
     val productId: Int? = null,
-    @Schema(title = "运营产品名称")
+    @get:Schema(title = "运营产品名称")
     val productName: String? = null
 )

@@ -32,18 +32,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "Token模型")
 data class GitToken(
-    @Schema(title = "鉴权token", description = "access_token")
+    @get:Schema(title = "鉴权token", description = "access_token")
     @JsonProperty("access_token")
     var accessToken: String = "",
-    @Schema(title = "刷新token", description = "refresh_token")
+    @get:Schema(title = "刷新token", description = "refresh_token")
     @JsonProperty("refresh_token")
     var refreshToken: String = "",
-    @Schema(title = "token类型", description = "token_type")
+    @get:Schema(title = "token类型", description = "token_type")
     @JsonProperty("token_type")
     val tokenType: String = "",
-    @Schema(title = "过期时间", description = "expires_in")
+    @get:Schema(title = "过期时间", description = "expires_in")
     @JsonProperty("expires_in")
     val expiresIn: Long = 0L,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: Long? = 0L
 )

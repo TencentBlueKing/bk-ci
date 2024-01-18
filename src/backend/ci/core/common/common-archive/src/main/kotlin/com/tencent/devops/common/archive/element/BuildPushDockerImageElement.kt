@@ -32,19 +32,19 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "构建并推送Docker镜像", description = BuildPushDockerImageElement.classType)
 data class BuildPushDockerImageElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "执行脚本",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "镜像名称", required = true)
+    @get:Schema(title = "镜像名称", required = true)
     val imageName: String = "",
-    @Schema(title = "镜像TAG", required = false)
+    @get:Schema(title = "镜像TAG", required = false)
     val imageTag: String? = "latest",
-    @Schema(title = "build目录", required = false)
+    @get:Schema(title = "build目录", required = false)
     val buildDir: String? = ".",
-    @Schema(title = "Dockerfile位置", required = false)
+    @get:Schema(title = "Dockerfile位置", required = false)
     val dockerFile: String? = "Dockerfile"
 ) : Element(name, id, status) {
 

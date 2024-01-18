@@ -31,24 +31,24 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线名称与Id")
 data class PipelineDetailInfo(
-    @Schema(title = "流水线Id")
+    @get:Schema(title = "流水线Id")
     val pipelineId: String,
-    @Schema(title = "流水线名称")
+    @get:Schema(title = "流水线名称")
     val pipelineName: String,
-    @Schema(title = "是否收藏")
+    @get:Schema(title = "是否收藏")
     val hasCollect: Boolean,
-    @Schema(title = "canManualStartup")
+    @get:Schema(title = "canManualStartup")
     val canManualStartup: Int,
-    @Schema(title = "是否关联模板")
+    @get:Schema(title = "是否关联模板")
     val instanceFromTemplate: Boolean,
-    @Schema(title = "流水线版本")
+    @get:Schema(title = "流水线版本")
     val pipelineVersion: String,
-    @Schema(title = "部署时间")
+    @get:Schema(title = "部署时间")
     val deploymentTime: String,
-    @Schema(title = "是否有编辑权限")
+    @get:Schema(title = "是否有编辑权限")
     val hasPermission: Boolean,
-    @Schema(title = "关联模板ID", required = false)
+    @get:Schema(title = "关联模板ID", required = false)
     var templateId: String? = null,
-    @Schema(title = "关联模板版本", required = false)
+    @get:Schema(title = "关联模板版本", required = false)
     var templateVersion: Long? = null
 )

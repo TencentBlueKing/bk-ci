@@ -31,16 +31,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "repo hook 构建信息")
 data class GitRequestRepoEvent(
-    @Schema(title = "EVENT_ID")
+    @get:Schema(title = "EVENT_ID")
     val eventId: Long,
-    @Schema(title = "流水线id")
+    @get:Schema(title = "流水线id")
     val pipelineId: String,
-    @Schema(title = "构建id")
+    @get:Schema(title = "构建id")
     val buildId: String?,
-    @Schema(title = "流水线主库projectId")
+    @get:Schema(title = "流水线主库projectId")
     val targetGitProjectId: Long,
-    @Schema(title = "触发库projectId")
+    @get:Schema(title = "触发库projectId")
     val sourceGitProjectId: Long,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: Long?
 )

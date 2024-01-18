@@ -32,16 +32,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "子流水线参数键值对")
 data class TemplateInfo(
-    @Schema(title = "模板ID", required = true)
+    @get:Schema(title = "模板ID", required = true)
     val templateId: String,
-    @Schema(title = "模板名称", required = true)
+    @get:Schema(title = "模板名称", required = true)
     val templateName: String,
-    @Schema(title = "版本号", required = true)
+    @get:Schema(title = "版本号", required = true)
     val version: Long,
-    @Schema(title = "版本名称", required = true)
+    @get:Schema(title = "版本名称", required = true)
     val versionName: String,
-    @Schema(title = "关联模式", required = true)
+    @get:Schema(title = "关联模式", required = true)
     val instanceType: PipelineInstanceTypeEnum,
-    @Schema(title = "版本描述", required = true)
+    @get:Schema(title = "版本描述", required = true)
     val desc: String? = null
 )

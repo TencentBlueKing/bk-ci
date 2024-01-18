@@ -32,6 +32,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "模版发布进度信息")
 data class TemplateProcessInfo(
-    @Schema(title = "发布进度信息", required = true)
+    @get:Schema(title = "发布进度信息", required = true)
     val processInfos: List<ReleaseProcessItem>
 )

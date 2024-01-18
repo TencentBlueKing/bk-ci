@@ -6,6 +6,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class GithubOauthCallback(
     val userId: String,
     val email: String? = "",
-    @Schema(title = "回调后跳转的界面")
+    @get:Schema(title = "回调后跳转的界面")
     val redirectUrl: String
 )

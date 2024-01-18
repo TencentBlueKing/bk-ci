@@ -38,9 +38,9 @@ import java.net.URLEncoder
  */
 class RepositoryConfig(
     val repositoryHashId: String?,
-    @Schema(title = "新版的git代码库名")
+    @get:Schema(title = "新版的git代码库名")
     val repositoryName: String?,
-    @Schema(title = "新版的git插件的类型")
+    @get:Schema(title = "新版的git插件的类型")
     val repositoryType: RepositoryType
 ) {
     @JsonIgnore

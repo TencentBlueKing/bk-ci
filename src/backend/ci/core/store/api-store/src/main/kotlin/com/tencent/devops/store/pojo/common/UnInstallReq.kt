@@ -30,6 +30,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "卸载插件请求包体")
 data class UnInstallReq(
-    @Schema(title = "原因列表")
+    @get:Schema(title = "原因列表")
     val reasonList: List<UnInstallReason?>
 )

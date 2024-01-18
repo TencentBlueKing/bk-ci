@@ -31,6 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "Agent任务")
 data class AgentTask(
-    @Schema(title = "Task状态", required = true)
+    @get:Schema(title = "Task状态", required = true)
     val status: String
 )

@@ -40,32 +40,32 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Suppress("ALL")
 @Schema(title = "流水线模型-创建信息")
 data class Model(
-    @Schema(title = "名称", required = true)
+    @get:Schema(title = "名称", required = true)
     var name: String,
-    @Schema(title = "描述", required = false)
+    @get:Schema(title = "描述", required = false)
     var desc: String?,
-    @Schema(title = "阶段集合", required = true)
+    @get:Schema(title = "阶段集合", required = true)
     val stages: List<Stage>,
-    @Schema(title = "标签", required = false)
+    @get:Schema(title = "标签", required = false)
     var labels: List<String> = emptyList(),
-    @Schema(title = "是否从模板中实例化出来的", required = false)
+    @get:Schema(title = "是否从模板中实例化出来的", required = false)
     val instanceFromTemplate: Boolean? = null,
-    @Schema(title = "创建人", required = false)
+    @get:Schema(title = "创建人", required = false)
     var pipelineCreator: String? = null,
-    @Schema(title = "当前模板对应的被复制的模板或安装的研发商店的模板对应的ID", required = false)
+    @get:Schema(title = "当前模板对应的被复制的模板或安装的研发商店的模板对应的ID", required = false)
     var srcTemplateId: String? = null,
-    @Schema(title = "当前模板的ID", required = false)
+    @get:Schema(title = "当前模板的ID", required = false)
     var templateId: String? = null,
-    @Schema(title = "提示", required = false)
+    @get:Schema(title = "提示", required = false)
     var tips: String? = null,
-    @Schema(title = "流水线事件回调", required = false)
+    @get:Schema(title = "流水线事件回调", required = false)
     var events: Map<String, PipelineCallbackEvent>? = emptyMap(),
-    @Schema(title = "静态流水线组", required = false)
+    @get:Schema(title = "静态流水线组", required = false)
     var staticViews: List<String> = emptyList(),
-    @Schema(title = "各项耗时", required = true)
+    @get:Schema(title = "各项耗时", required = true)
     var timeCost: BuildRecordTimeCost? = null
 ) {
-    @Schema(title = "提交时流水线最新版本号", required = false)
+    @get:Schema(title = "提交时流水线最新版本号", required = false)
     var latestVersion: Int = 0
 
     /**

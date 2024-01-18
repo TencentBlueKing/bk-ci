@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "容器构建资源")
 data class ContainerResourceItem(
-    @Schema(title = "ID", required = true)
+    @get:Schema(title = "ID", required = true)
     val id: String,
-    @Schema(title = "名称", required = true)
+    @get:Schema(title = "名称", required = true)
     val name: String
 )

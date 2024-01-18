@@ -38,91 +38,91 @@ import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class AtomVersion(
-    @Schema(title = "插件ID")
+    @get:Schema(title = "插件ID")
     val atomId: String,
-    @Schema(title = "插件标识")
+    @get:Schema(title = "插件标识")
     val atomCode: String,
-    @Schema(title = "插件名称")
+    @get:Schema(title = "插件名称")
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val name: String,
-    @Schema(title = "logo地址")
+    @get:Schema(title = "logo地址")
     val logoUrl: String?,
-    @Schema(title = "插件分类code")
+    @get:Schema(title = "插件分类code")
     val classifyCode: String?,
-    @Schema(title = "插件分类名称")
+    @get:Schema(title = "插件分类名称")
     val classifyName: String?,
-    @Schema(title = "插件范畴")
+    @get:Schema(title = "插件范畴")
     val category: String?,
-    @Schema(title = "插件说明文档链接")
+    @get:Schema(title = "插件说明文档链接")
     val docsLink: String?,
-    @Schema(title = "前端渲染模板版本（1.0代表历史存量插件渲染模板版本）")
+    @get:Schema(title = "前端渲染模板版本（1.0代表历史存量插件渲染模板版本）")
     val htmlTemplateVersion: String,
-    @Schema(title = "插件类型")
+    @get:Schema(title = "插件类型")
     val atomType: String?,
-    @Schema(title = "适用Job类型")
+    @get:Schema(title = "适用Job类型")
     val jobType: String?,
-    @Schema(title = "操作系统")
+    @get:Schema(title = "操作系统")
     val os: List<String>?,
-    @Schema(title = "插件简介")
+    @get:Schema(title = "插件简介")
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val summary: String?,
-    @Schema(title = "插件描述")
+    @get:Schema(title = "插件描述")
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val description: String?,
-    @Schema(title = "版本号")
+    @get:Schema(title = "版本号")
     val version: String?,
-    @Schema(title = "插件状态", required = true)
+    @get:Schema(title = "插件状态", required = true)
     val atomStatus: String,
-    @Schema(title = "发布类型")
+    @get:Schema(title = "发布类型")
     val releaseType: String?,
-    @Schema(title = "版本日志")
+    @get:Schema(title = "版本日志")
     @BkFieldI18n(source = I18nSourceEnum.DB, keyPrefixName = "versionInfo")
     val versionContent: String?,
-    @Schema(title = "开发语言")
+    @get:Schema(title = "开发语言")
     val language: String?,
-    @Schema(title = "代码库链接")
+    @get:Schema(title = "代码库链接")
     val codeSrc: String?,
-    @Schema(title = "发布者")
+    @get:Schema(title = "发布者")
     @BkFieldI18n(source = I18nSourceEnum.DB, keyPrefixName = "versionInfo")
     val publisher: String?,
-    @Schema(title = "创建人")
+    @get:Schema(title = "创建人")
     val creator: String,
-    @Schema(title = "修改人")
+    @get:Schema(title = "修改人")
     val modifier: String,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: String,
-    @Schema(title = "修改时间")
+    @get:Schema(title = "修改时间")
     val updateTime: String,
-    @Schema(title = "是否为默认插件（默认插件默认所有项目可见）true：默认插件 false：普通插件")
+    @get:Schema(title = "是否为默认插件（默认插件默认所有项目可见）true：默认插件 false：普通插件")
     val defaultFlag: Boolean?,
-    @Schema(title = "是否可安装标识")
+    @get:Schema(title = "是否可安装标识")
     val flag: Boolean?,
-    @Schema(title = "插件代码库授权者")
+    @get:Schema(title = "插件代码库授权者")
     val repositoryAuthorizer: String?,
-    @Schema(title = "插件的调试项目")
+    @get:Schema(title = "插件的调试项目")
     val projectCode: String?,
-    @Schema(title = "插件的初始化项目")
+    @get:Schema(title = "插件的初始化项目")
     val initProjectCode: String?,
-    @Schema(title = "标签列表", required = false)
+    @get:Schema(title = "标签列表", required = false)
     val labelList: List<Label>?,
-    @Schema(title = "用户评论信息")
+    @get:Schema(title = "用户评论信息")
     val userCommentInfo: StoreUserCommentInfo,
-    @Schema(title = "项目可视范围,PRIVATE:私有 LOGIN_PUBLIC:登录用户开源")
+    @get:Schema(title = "项目可视范围,PRIVATE:私有 LOGIN_PUBLIC:登录用户开源")
     val visibilityLevel: String?,
-    @Schema(title = "插件代码库不开源原因")
+    @get:Schema(title = "插件代码库不开源原因")
     val privateReason: String?,
-    @Schema(title = "是否推荐标识 true：推荐，false：不推荐", required = false)
+    @get:Schema(title = "是否推荐标识 true：推荐，false：不推荐", required = false)
     val recommendFlag: Boolean? = null,
-    @Schema(title = "前端UI渲染方式", required = false)
+    @get:Schema(title = "前端UI渲染方式", required = false)
     val frontendType: FrontendTypeEnum?,
-    @Schema(title = "yaml可用标识 true：是，false：否")
+    @get:Schema(title = "yaml可用标识 true：是，false：否")
     val yamlFlag: Boolean? = null,
-    @Schema(title = "是否可编辑")
+    @get:Schema(title = "是否可编辑")
     val editFlag: Boolean? = null,
-    @Schema(title = "每日统计信息列表")
+    @get:Schema(title = "每日统计信息列表")
     val dailyStatisticList: List<StoreDailyStatistic>? = null,
-    @Schema(title = "荣誉信息", required = false)
+    @get:Schema(title = "荣誉信息", required = false)
     val honorInfos: List<HonorInfo>? = null,
-    @Schema(title = "指标信息列表")
+    @get:Schema(title = "指标信息列表")
     val indexInfos: List<StoreIndexInfo>? = null
 )

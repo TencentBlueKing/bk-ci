@@ -31,16 +31,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "文本引用文件下载请求")
 data class TextReferenceFileDownloadRequest(
-    @Schema(title = "项目代码", required = true)
+    @get:Schema(title = "项目代码", required = true)
     val projectCode: String,
-    @Schema(title = "组件标识")
+    @get:Schema(title = "组件标识")
     val storeCode: String,
-    @Schema(title = "引用文件名列表")
+    @get:Schema(title = "引用文件名列表")
     val fileNames: Set<String>,
-    @Schema(title = "插件包文件路径", required = true)
+    @get:Schema(title = "插件包文件路径", required = true)
     val fileDir: String,
-    @Schema(title = "仓库哈希ID", required = false)
+    @get:Schema(title = "仓库哈希ID", required = false)
     val repositoryHashId: String? = null,
-    @Schema(title = "分支", required = false)
+    @get:Schema(title = "分支", required = false)
     val branch: String? = null
 )

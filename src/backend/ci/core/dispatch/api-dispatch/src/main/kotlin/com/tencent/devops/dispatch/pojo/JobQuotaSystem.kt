@@ -33,28 +33,28 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "系统默认JOB配额")
 data class JobQuotaSystem(
-    @Schema(title = "构建机类型", required = true)
+    @get:Schema(title = "构建机类型", required = true)
     val vmType: JobQuotaVmType,
-    @Schema(title = "构建来源，默认BS", required = true)
+    @get:Schema(title = "构建来源，默认BS", required = true)
     val channelCode: String = ChannelCode.BS.name,
-    @Schema(title = "蓝盾系统最大并发JOB数，默认5000", required = false)
+    @get:Schema(title = "蓝盾系统最大并发JOB数，默认5000", required = false)
     val runningJobMaxSystem: Int,
-    @Schema(title = "单项目默认最大并发JOB数， 默认500", required = false)
+    @get:Schema(title = "单项目默认最大并发JOB数， 默认500", required = false)
     val runningJobMaxProject: Int,
-    @Schema(title = "系统默认所有单个JOB最大执行时间，默认24小时", required = false)
+    @get:Schema(title = "系统默认所有单个JOB最大执行时间，默认24小时", required = false)
     val runningTimeJobMax: Int,
-    @Schema(title = "默认单项目所有JOB最大执行时间，默认5000小时/月", required = false)
+    @get:Schema(title = "默认单项目所有JOB最大执行时间，默认5000小时/月", required = false)
     val runningTimeJobMaxProject: Int,
-    @Schema(title = "项目执行job数量告警阈值，百分比，默认80", required = false)
+    @get:Schema(title = "项目执行job数量告警阈值，百分比，默认80", required = false)
     val projectRunningJobThreshold: Int,
-    @Schema(title = "项目执行job时间告警阈值，百分比，默认80", required = false)
+    @get:Schema(title = "项目执行job时间告警阈值，百分比，默认80", required = false)
     val projectRunningTimeThreshold: Int,
-    @Schema(title = "系统执行job数量告警阈值，百分比，默认80", required = false)
+    @get:Schema(title = "系统执行job数量告警阈值，百分比，默认80", required = false)
     val systemRunningJobThreshold: Int,
-    @Schema(title = "创建时间", required = false)
+    @get:Schema(title = "创建时间", required = false)
     val createdTime: String,
-    @Schema(title = "修改时间", required = false)
+    @get:Schema(title = "修改时间", required = false)
     val updatedTime: String,
-    @Schema(title = "操作人", required = false)
+    @get:Schema(title = "操作人", required = false)
     val operator: String
 )

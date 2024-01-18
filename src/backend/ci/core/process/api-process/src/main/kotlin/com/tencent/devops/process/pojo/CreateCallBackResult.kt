@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "项目的流水线回调创建结果")
 data class CreateCallBackResult(
-    @Schema(title = "成功事件列表", required = false)
+    @get:Schema(title = "成功事件列表", required = false)
     val successEvents: List<String>,
-    @Schema(title = "失败事件列表", required = false)
+    @get:Schema(title = "失败事件列表", required = false)
     val failureEvents: Map<String, String>
 )

@@ -32,10 +32,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "研发商店错误码信息")
 data class StoreErrorCodeInfo(
-    @Schema(title = "store代码")
+    @get:Schema(title = "store代码")
     val storeCode: String?,
-    @Schema(title = "store组件类型")
+    @get:Schema(title = "store组件类型")
     val storeType: StoreTypeEnum?,
-    @Schema(title = "错误码集合")
+    @get:Schema(title = "错误码集合")
     val errorCodes: Set<Int>
 )

@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件插件市场-插件插件特性信息更新报文体")
 data class AtomFeatureUpdateRequest(
-    @Schema(title = "插件插件代码库地址", required = false)
+    @get:Schema(title = "插件插件代码库地址", required = false)
     val repositoryUrl: String? = null,
-    @Schema(title = "默认插件", required = false)
+    @get:Schema(title = "默认插件", required = false)
     val defaultFlag: Boolean? = null
 )

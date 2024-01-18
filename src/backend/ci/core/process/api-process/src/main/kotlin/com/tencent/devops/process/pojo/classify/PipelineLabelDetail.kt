@@ -30,6 +30,6 @@ package com.tencent.devops.process.pojo.classify
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class PipelineLabelDetail(
-    @Schema(title = "流水线标签信息", required = false)
+    @get:Schema(title = "流水线标签信息", required = false)
     val pipelineLabelInfo: List<PipelineGroupLabels>?
 )

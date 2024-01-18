@@ -32,10 +32,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "系统的JOB运行数量")
 data class JobRunningCountSystem(
-    @Schema(title = "构建机类型", required = true)
+    @get:Schema(title = "构建机类型", required = true)
     val vmType: JobQuotaVmType,
-    @Schema(title = "系统当前并发JOB数", required = true)
+    @get:Schema(title = "系统当前并发JOB数", required = true)
     val runningJob: Int,
-    @Schema(title = "工蜂CI当前并发JOB数量", required = true)
+    @get:Schema(title = "工蜂CI当前并发JOB数量", required = true)
     val runningJobMaxGitCiSystem: Int
 )

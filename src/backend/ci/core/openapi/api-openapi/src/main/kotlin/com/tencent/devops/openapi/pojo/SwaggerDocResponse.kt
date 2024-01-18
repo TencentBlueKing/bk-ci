@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "swagger文档")
 data class SwaggerDocResponse(
-    @Schema(title = "请求path")
+    @get:Schema(title = "请求path")
     val path: String,
-    @Schema(title = "请求方法")
+    @get:Schema(title = "请求方法")
     val httpMethod: String,
-    @Schema(title = "markdown文档")
+    @get:Schema(title = "markdown文档")
     val markdown: String?,
-    @Schema(title = "原始数据")
+    @get:Schema(title = "原始数据")
     val metaData: List<MarkdownElement>?
 )

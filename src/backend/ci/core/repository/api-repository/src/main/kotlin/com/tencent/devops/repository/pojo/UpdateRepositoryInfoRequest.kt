@@ -32,14 +32,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "代码库模型-基本信息")
 data class UpdateRepositoryInfoRequest(
-    @Schema(title = "用户ID", required = false)
+    @get:Schema(title = "用户ID", required = false)
     val userId: String? = null,
-    @Schema(title = "仓库名称", required = false)
+    @get:Schema(title = "仓库名称", required = false)
     val projectName: String? = null,
-    @Schema(title = "凭证ID", required = false)
+    @get:Schema(title = "凭证ID", required = false)
     val credentialId: String? = null,
-    @Schema(title = "svn认证类型", required = false)
+    @get:Schema(title = "svn认证类型", required = false)
     val svnType: String? = null,
-    @Schema(title = "git认证类型", required = false)
+    @get:Schema(title = "git认证类型", required = false)
     val authType: RepoAuthType? = null
 )
