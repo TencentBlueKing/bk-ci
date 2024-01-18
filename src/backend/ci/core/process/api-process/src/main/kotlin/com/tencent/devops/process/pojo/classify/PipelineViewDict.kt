@@ -9,7 +9,7 @@ data class PipelineViewDict(
     @get:Schema(title = "项目流水线列表")
     val projectViewList: List<ViewInfo>
 ) {
-    @get:Schema(title = "流水线组信息")
+    @Schema(title = "流水线组信息")
     data class ViewInfo(
         @get:Schema(title = "流水线组ID")
         val viewId: String,
@@ -18,7 +18,7 @@ data class PipelineViewDict(
         @get:Schema(title = "流水线列表")
         val pipelineList: List<PipelineInfo>
     ) {
-        @get:Schema(title = "流水线信息")
+        @Schema(title = "流水线信息")
         data class PipelineInfo(
             @get:Schema(title = "流水线ID")
             val pipelineId: String,

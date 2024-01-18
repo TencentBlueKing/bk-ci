@@ -46,7 +46,7 @@ data class QualityRuleMatchTask(
     @get:Schema(title = "审核用户列表", required = false)
     val auditUserList: Set<String>?
 ) {
-    @get:Schema(title = "质量红线-拦截规则v2")
+    @Schema(title = "质量红线-拦截规则v2")
     data class RuleMatchRule(
         @get:Schema(title = "规则ID", required = true)
         val ruleHashId: String,
@@ -56,7 +56,7 @@ data class QualityRuleMatchTask(
         val gatewayId: String?
     )
 
-    @get:Schema(title = "质量红线-拦截规则阈值v2")
+    @Schema(title = "质量红线-拦截规则阈值v2")
     data class RuleThreshold(
         @get:Schema(title = "指标ID", required = true)
         val indicatorId: String,

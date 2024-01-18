@@ -62,7 +62,7 @@ open class WechatNotifyMessage : BaseMessage() {
         return receivers.toSet()
     }
 
-    @get:Schema(hidden = true)
+    @Schema(hidden = true)
     fun isReceiversEmpty(): Boolean {
         if (receivers.size == 0) return true
         return false

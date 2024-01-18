@@ -9,7 +9,7 @@ data class PipelineViewMatchDynamic(
     @get:Schema(title = "标签列表")
     val labels: List<LabelInfo>
 ) {
-    @get:Schema(title = "标签信息")
+    @Schema(title = "标签信息")
     data class LabelInfo(
         @get:Schema(title = "标签分组id", required = false)
         val groupId: String,
