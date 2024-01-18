@@ -83,6 +83,8 @@ data class AgentService @Autowired constructor(
         private const val DEFAULT_INSTALL_AGENT_JOB_TYPE = "REINSTALL_AGENT"
         private const val DEFAULT_INSTALL_AGENT_AP_ID = 1 // 节点管理预发布/正式环境 apId均固定为1
         private const val DEFAULT_INSTALL_AGENT_PORT = "36000"
+        private const val DEFAULT_IS_MANUAL = false
+        private const val DEFAULT_CLOUD_ID = 0
     }
 
     fun installAgent(
@@ -97,33 +99,25 @@ data class AgentService @Autowired constructor(
             hosts = installAgentReq.hosts.map {
                 AgentHostForInstallAgent(
                     bkBizId = bkBizScopeId,
-                    bkCloudId = it.bkCloudId,
-                    bkHostId = it.bkHostId,
-                    bkAddressing = it.bkAddressing,
+                    bkCloudId = it.bkCloudId ?: DEFAULT_CLOUD_ID,
+                    bkHostId = null, bkAddressing = null,
                     apId = DEFAULT_INSTALL_AGENT_AP_ID,
                     installChannelId = if (it.isAutoChooseInstallChannelId) {
                         chooseAgentInstallChannelIdService.autoChooseAgentInstallChannelId(
-                            it.innerIp ?: it.innerIpv6 ?: ""
+                            it.innerIp ?: ""
                         )
                     } else it.installChannelId,
-                    innerIp = it.innerIp,
-                    outerIp = it.outerIp,
-                    loginIp = it.loginIp,
-                    dataIp = it.dataIp,
-                    innerIpv6 = it.innerIpv6,
-                    outerIpv6 = it.outerIpv6,
+                    innerIp = it.innerIp, outerIp = null, loginIp = null, dataIp = null,
+                    innerIpv6 = null, outerIpv6 = null,
                     osType = it.osType,
                     authType = it.authType,
                     account = it.account,
                     password = it.password,
                     port = DEFAULT_INSTALL_AGENT_PORT,
                     key = if ("KEY" == it.authType) fileService.convertFileContentToString(keyFile) else it.key,
-                    isManual = it.isManual,
-                    retention = it.retention,
-                    peerExchangeSwitchForAgent = it.peerExchangeSwitchForAgent,
-                    btSpeedLimit = it.btSpeedLimit,
-                    enableCompression = it.enableCompression,
-                    dataPath = it.dataPath
+                    isManual = DEFAULT_IS_MANUAL,
+                    retention = null, peerExchangeSwitchForAgent = null, btSpeedLimit = null,
+                    enableCompression = null, dataPath = null
                 )
             },
             replaceHostId = installAgentReq.replaceHostId,

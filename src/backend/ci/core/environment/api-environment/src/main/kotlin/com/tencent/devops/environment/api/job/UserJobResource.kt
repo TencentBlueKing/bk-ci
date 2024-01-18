@@ -143,6 +143,7 @@ interface UserJobResource {
         @FormDataParam("keyFile")
         keyFile: InputStream?,
         @ApiParam(value = "安装agent的请求信息", required = true)
+        @FormDataParam("installAgentReq")
         installAgentReq: InstallAgentReq
     ): AgentResult<InstallAgentResult>
 

@@ -300,7 +300,8 @@ class NodeService @Autowired constructor(
                 lastModifyUser = it.lastModifyUser ?: "",
                 agentStatus = getAgentStatus(it),
                 agentVersion = it.agentVersion,
-                agentHashId = HashUtil.encodeLongId(thirdPartyAgent?.id ?: 0L)
+                agentHashId = HashUtil.encodeLongId(thirdPartyAgent?.id ?: 0L),
+                cloudAreaId = it.cloudAreaId
             )
         }
     }
@@ -388,7 +389,8 @@ class NodeService @Autowired constructor(
                 lastModifyUser = it.lastModifyUser ?: "",
                 agentStatus = getAgentStatus(it),
                 agentVersion = it.agentVersion,
-                agentHashId = HashUtil.encodeLongId(thirdPartyAgent?.id ?: 0L)
+                agentHashId = HashUtil.encodeLongId(thirdPartyAgent?.id ?: 0L),
+                cloudAreaId = it.cloudAreaId
             )
         }
     }
@@ -441,7 +443,8 @@ class NodeService @Autowired constructor(
                 },
                 agentStatus = getAgentStatus(it),
                 agentVersion = it.agentVersion,
-                lastModifyUser = it.lastModifyUser ?: ""
+                lastModifyUser = it.lastModifyUser ?: "",
+                cloudAreaId = it.cloudAreaId
             )
         }
     }
@@ -618,7 +621,8 @@ class NodeService @Autowired constructor(
                     ""
                 } else {
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastBuildTime)
-                }
+                },
+                cloudAreaId = it.cloudAreaId
             )
         }
     }

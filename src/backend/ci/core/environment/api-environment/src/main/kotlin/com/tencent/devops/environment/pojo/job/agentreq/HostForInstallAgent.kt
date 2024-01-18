@@ -32,28 +32,14 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("安装agent的请求信息中的 host信息")
 data class HostForInstallAgent(
-    @ApiModelProperty(value = "管控区域ID", required = true)
-    val bkCloudId: Int,
-    @ApiModelProperty(value = "主机ID")
-    val bkHostId: Int?,
-    @ApiModelProperty(value = "寻址方式，1: 0，静态 2: 1，动态")
-    val bkAddressing: String?,
+    @ApiModelProperty(value = "管控区域ID")
+    val bkCloudId: Int?,
     @ApiModelProperty(value = "是否自动选择安装通道，true-自动选择，false-读取installChannelId字段", required = true)
     val isAutoChooseInstallChannelId: Boolean = true,
     @ApiModelProperty(value = "安装通道ID")
     val installChannelId: Int?,
     @ApiModelProperty(value = "内网IPV4地址，inner_ip和inner_ipv6必选其一")
     val innerIp: String?,
-    @ApiModelProperty(value = "外网IP")
-    val outerIp: String?,
-    @ApiModelProperty(value = "登录IP")
-    val loginIp: String?,
-    @ApiModelProperty(value = "数据IP")
-    val dataIp: String?,
-    @ApiModelProperty(value = "内网IPv6")
-    val innerIpv6: String?,
-    @ApiModelProperty(value = "外网IPv6")
-    val outerIpv6: String?,
     @ApiModelProperty(value = "操作系统，1：LINUX 2：WINDOWS 3：AIX 4：SOLARIS")
     val osType: String?,
     @ApiModelProperty(value = "认证类型，1：PASSWORD，密码认证 2: KEY，秘钥认证 3：TJJ_PASSWORD，默认为密码认证")
@@ -63,17 +49,5 @@ data class HostForInstallAgent(
     @ApiModelProperty(value = "密码")
     val password: String?,
     @ApiModelProperty(value = "密钥")
-    val key: String?,
-    @ApiModelProperty(value = "是否手动模式")
-    val isManual: Boolean?,
-    @ApiModelProperty(value = "密码保留天数，默认保留一天")
-    val retention: Int?,
-    @ApiModelProperty(value = "加速设置，默认为0")
-    val peerExchangeSwitchForAgent: Int?,
-    @ApiModelProperty(value = "传输限速")
-    val btSpeedLimit: String?,
-    @ApiModelProperty(value = "数据压缩开关，默认是关闭")
-    val enableCompression: Boolean?,
-    @ApiModelProperty(value = "数据文件路径")
-    val dataPath: String?
+    val key: String?
 )
