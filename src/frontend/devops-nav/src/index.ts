@@ -16,7 +16,6 @@ import eventBus from '@/utils/eventBus'
 import iframeUtil from '@/utils/iframeUtil'
 import App from '@/views/App.vue'
 import { BkciDocs } from '../../common-lib/docs'
-import { actionMap, resourceMap, resourceTypeMap } from '../../common-lib/permission-conf'
 
 import createLocale from '../../locale'
 
@@ -51,8 +50,6 @@ declare module 'vue/types/vue' {
 
 Vue.use(bkMagic)
 Vue.use(PermissionDirective(handleProjectNoPermission))
-// @ts-ignore
-Vue.use(VueCompositionAPI)
 Vue.component('AsideNav', AsideNav)
 Vue.component('ContentHeader', ContentHeader)
 Vue.component('Logo', Logo)
