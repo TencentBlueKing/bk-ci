@@ -55,6 +55,7 @@ enum class ComputerStatusEnum(val status: Int, val message: String) {
 
 data class ComputerUserData(
     var value: Int,
+    val names: MutableMap<String, List<String>>?,
     val type: ComputerUserEnum
 )
 

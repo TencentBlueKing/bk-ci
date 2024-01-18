@@ -34,10 +34,10 @@ import com.tencent.devops.remotedev.service.WorkspaceXlsxExportService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.Executors
 import javax.ws.rs.core.Response
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL")
 @RestResource
@@ -179,7 +179,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         userId: String,
         data: ProjectWorkspaceFetchData
     ): Result<Page<ProjectWorkspace>> {
-        return Result(workspaceService.getProjectWorkspaceList4Op(data))
+        return Result(workspaceService.getProjectWorkspaceList4Op(userId, data))
     }
 
     override fun fetchOwnerAndAdmin(
