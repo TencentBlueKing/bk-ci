@@ -2,6 +2,7 @@ package com.tencent.devops.dispatch.devcloud.listener
 
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.dispatch.devcloud.client.DispatchDevCloudClient
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildDao
 import com.tencent.devops.dispatch.devcloud.pojo.Action
@@ -17,6 +18,7 @@ import java.time.LocalDateTime
 
 @Component
 class ContainerStatusUpdateJob @Autowired constructor(
+    private val bkTag: BkTag,
     private val dslContext: DSLContext,
     private val devCloudBuildDao: DevCloudBuildDao,
     private val redisOperation: RedisOperation,
@@ -33,7 +35,7 @@ class ContainerStatusUpdateJob @Autowired constructor(
     @Scheduled(cron = "0 0 2 * * ?")
     fun run() {
         logger.info("ContainerStatusUpdateJob start")
-        val redisLock = RedisLock(redisOperation, jobLockKey, 3600L)
+        val redisLock = getContainerClearJobLock()
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
@@ -49,7 +51,7 @@ class ContainerStatusUpdateJob @Autowired constructor(
 
     @Scheduled(cron = "0 0/30 * * * ?")
     fun runDebugRecycling() {
-        val redisLock = RedisLock(redisOperation, debugLockKey, 3600L)
+        val redisLock = getContainerDebugLock()
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
@@ -60,6 +62,22 @@ class ContainerStatusUpdateJob @Autowired constructor(
             logger.error("ContainerStatusUpdateJob runDebugRecycling exception", e)
         } finally {
             redisLock.unlock()
+        }
+    }
+
+    private fun getContainerClearJobLock(): RedisLock {
+        return if (bkTag.getLocalTag().contains("auto")) {
+            RedisLock(redisOperation, jobLockKey + "auto", 3600L)
+        } else {
+            RedisLock(redisOperation, jobLockKey, 3600L)
+        }
+    }
+
+    private fun getContainerDebugLock(): RedisLock {
+        return if (bkTag.getLocalTag().contains("auto")) {
+            RedisLock(redisOperation, debugLockKey + "auto", 3600L)
+        } else {
+            RedisLock(redisOperation, debugLockKey, 3600L)
         }
     }
 
