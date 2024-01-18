@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "NOC告警通知用户信息")
 data class NocNoticeUserInfo(
-    @Schema(title = "用户名", required = true, description = "username")
+    @get:Schema(title = "用户名", required = true, description = "username")
     @JsonProperty("username")
     val username: String,
-    @Schema(title = "手机号", required = false, description = "mobile_phone")
+    @get:Schema(title = "手机号", required = false, description = "mobile_phone")
     @JsonProperty("mobile_phone")
     val mobilePhone: String? = null
 )

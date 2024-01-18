@@ -37,7 +37,7 @@ class VirtualMachineInfo(var id: Int = 0) {
     var ip: String? = ""
     var userName: String? = ""
     var password: String? = ""
-    @Schema(title = "母机ip", required = true)
+    @get:Schema(title = "母机ip", required = true)
     var motherMachineIp: String? = ""
     var status: String? = ""
     var vmTypeId: Int? = 0

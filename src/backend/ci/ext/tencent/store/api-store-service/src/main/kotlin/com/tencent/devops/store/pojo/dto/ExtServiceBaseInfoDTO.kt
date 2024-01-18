@@ -32,16 +32,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "扩展服务基本信息")
 data class ExtServiceBaseInfoDTO(
-    @Schema(title = "扩展服务Id", required = true)
+    @get:Schema(title = "扩展服务Id", required = true)
     val serviceId: String,
-    @Schema(title = "扩展服务代码", required = true)
+    @get:Schema(title = "扩展服务代码", required = true)
     val serviceCode: String,
-    @Schema(title = "扩展服务版本号", required = true)
+    @get:Schema(title = "扩展服务版本号", required = true)
     val version: String,
-    @Schema(title = "扩展服务镜像信息", required = true)
+    @get:Schema(title = "扩展服务镜像信息", required = true)
     val extServiceImageInfo: ExtServiceImageInfoDTO,
-    @Schema(title = "扩展服务部署信息", required = true)
+    @get:Schema(title = "扩展服务部署信息", required = true)
     val extServiceDeployInfo: DeployApp,
-    @Schema(title = "分支", required = false)
+    @get:Schema(title = "分支", required = false)
     val branch: String? = null
 )

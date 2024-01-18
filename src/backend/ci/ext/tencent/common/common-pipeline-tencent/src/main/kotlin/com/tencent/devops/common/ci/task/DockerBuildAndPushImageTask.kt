@@ -35,11 +35,11 @@ import java.net.URLEncoder.encode
 
 @Schema(title = "构建并推送Docker镜像")
 data class DockerBuildAndPushImageTask(
-    @Schema(title = "displayName", required = false)
+    @get:Schema(title = "displayName", required = false)
     override var displayName: String?,
-    @Schema(title = "入参", required = true)
+    @get:Schema(title = "入参", required = true)
     override val inputs: DockerBuildAndPushImageInput,
-    @Schema(title = "执行条件", required = true)
+    @get:Schema(title = "执行条件", required = true)
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
 

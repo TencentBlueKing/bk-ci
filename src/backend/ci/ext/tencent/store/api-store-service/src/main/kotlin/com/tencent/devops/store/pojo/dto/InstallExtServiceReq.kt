@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "安装扩展服务到项目")
 data class InstallExtServiceReq(
-    @Schema(title = "项目标识", required = true)
+    @get:Schema(title = "项目标识", required = true)
     val projectCodeList: ArrayList<String>,
-    @Schema(title = "扩展服务编码", required = true)
+    @get:Schema(title = "扩展服务编码", required = true)
     val serviceCode: String
 )

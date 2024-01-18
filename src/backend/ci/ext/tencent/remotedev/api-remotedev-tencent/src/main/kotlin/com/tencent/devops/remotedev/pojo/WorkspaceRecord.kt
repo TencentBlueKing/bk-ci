@@ -68,67 +68,67 @@ interface WorkspaceRecordInf {
 
 @Schema(title = "工作空间信息")
 data class WorkspaceRecord(
-    @Schema(title = "工作空间ID<只读>")
+    @get:Schema(title = "工作空间ID<只读>")
     override val workspaceId: Long,
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     override val projectId: String,
-    @Schema(title = "工作空间名称")
+    @get:Schema(title = "工作空间名称")
     override val workspaceName: String,
-    @Schema(title = "工作空间备注名称")
+    @get:Schema(title = "工作空间备注名称")
     override val displayName: String,
-    @Schema(title = "工作空间模板ID")
+    @get:Schema(title = "工作空间模板ID")
     override val templateId: Int?,
-    @Schema(title = "远程开发仓库地址")
+    @get:Schema(title = "远程开发仓库地址")
     override val repositoryUrl: String?,
-    @Schema(title = "仓库分支")
+    @get:Schema(title = "仓库分支")
     override val branch: String?,
-    @Schema(title = "devfile 内容")
+    @get:Schema(title = "devfile 内容")
     override val yaml: String?,
-    @Schema(title = "devfile配置路径")
+    @get:Schema(title = "devfile配置路径")
     override val devFilePath: String?,
-    @Schema(title = "依赖镜像的DockerFile内容")
+    @get:Schema(title = "依赖镜像的DockerFile内容")
     override val dockerFile: String,
-    @Schema(title = "镜像地址")
+    @get:Schema(title = "镜像地址")
     override val imagePath: String,
-    @Schema(title = "工作空间操作路径")
+    @get:Schema(title = "工作空间操作路径")
     override val workPath: String?,
-    @Schema(title = "工作空间默认打开工程相对路径，默认根目录")
+    @get:Schema(title = "工作空间默认打开工程相对路径，默认根目录")
     override val workspaceFolder: String?,
-    @Schema(title = "工作空间对应的IP")
+    @get:Schema(title = "工作空间对应的IP")
     override val hostName: String?,
     override val gpu: Int,
     override val cpu: Int,
     override val memory: Int,
-    @Schema(title = "已使用时间,单位:s（容器结束时更新）")
+    @get:Schema(title = "已使用时间,单位:s（容器结束时更新）")
     override val usageTime: Int,
-    @Schema(title = "休眠时间<只读>")
+    @get:Schema(title = "休眠时间<只读>")
     override val sleepingTime: Int,
     override val disk: Int,
-    @Schema(title = "工作空间创建人")
+    @get:Schema(title = "工作空间创建人")
     override val createUserId: String,
-    @Schema(title = "所在事业群，用作度量统计")
+    @get:Schema(title = "所在事业群，用作度量统计")
     override val creatorBgName: String,
-    @Schema(title = "所在部门，用作度量统计")
+    @get:Schema(title = "所在部门，用作度量统计")
     override val creatorDeptName: String,
-    @Schema(title = "所在中心，用作度量统计")
+    @get:Schema(title = "所在中心，用作度量统计")
     override val creatorCenterName: String,
-    @Schema(title = "所在组，用作度量统计")
+    @get:Schema(title = "所在组，用作度量统计")
     override val creatorGroupName: String,
-    @Schema(title = "工作空间状态<只读>")
+    @get:Schema(title = "工作空间状态<只读>")
     override val status: WorkspaceStatus,
-    @Schema(title = "工作空间状态<只读>")
+    @get:Schema(title = "工作空间状态<只读>")
     override val createTime: LocalDateTime,
-    @Schema(title = "工作空间状态<只读>")
+    @get:Schema(title = "工作空间状态<只读>")
     override val updateTime: LocalDateTime,
-    @Schema(title = "工作空间状态<只读>")
+    @get:Schema(title = "工作空间状态<只读>")
     override val lastStatusUpdateTime: LocalDateTime?,
-    @Schema(title = "preci go-agent id")
+    @get:Schema(title = "preci go-agent id")
     override val preciAgentId: String?,
-    @Schema(title = "挂载平台类型")
+    @get:Schema(title = "挂载平台类型")
     override val workspaceMountType: WorkspaceMountType,
-    @Schema(title = "操作系统类型")
+    @get:Schema(title = "操作系统类型")
     override val workspaceSystemType: WorkspaceSystemType,
-    @Schema(title = "工作空间归属")
+    @get:Schema(title = "工作空间归属")
     override val ownerType: WorkspaceOwnerType
 ) : WorkspaceRecordInf
 
@@ -136,68 +136,68 @@ data class WorkspaceRecord(
  * 需要与WorkspaceRecord同步修改
  */
 data class WorkspaceRecordWithDetail(
-    @Schema(title = "工作空间ID<只读>")
+    @get:Schema(title = "工作空间ID<只读>")
     override val workspaceId: Long,
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     override val projectId: String,
-    @Schema(title = "工作空间名称")
+    @get:Schema(title = "工作空间名称")
     override val workspaceName: String,
-    @Schema(title = "工作空间备注名称")
+    @get:Schema(title = "工作空间备注名称")
     override val displayName: String,
-    @Schema(title = "工作空间模板ID")
+    @get:Schema(title = "工作空间模板ID")
     override val templateId: Int?,
-    @Schema(title = "远程开发仓库地址")
+    @get:Schema(title = "远程开发仓库地址")
     override val repositoryUrl: String?,
-    @Schema(title = "仓库分支")
+    @get:Schema(title = "仓库分支")
     override val branch: String?,
-    @Schema(title = "devfile 内容")
+    @get:Schema(title = "devfile 内容")
     override val yaml: String?,
-    @Schema(title = "devfile配置路径")
+    @get:Schema(title = "devfile配置路径")
     override val devFilePath: String?,
-    @Schema(title = "依赖镜像的DockerFile内容")
+    @get:Schema(title = "依赖镜像的DockerFile内容")
     override val dockerFile: String,
-    @Schema(title = "镜像地址")
+    @get:Schema(title = "镜像地址")
     override val imagePath: String,
-    @Schema(title = "工作空间操作路径")
+    @get:Schema(title = "工作空间操作路径")
     override val workPath: String?,
-    @Schema(title = "工作空间默认打开工程相对路径，默认根目录")
+    @get:Schema(title = "工作空间默认打开工程相对路径，默认根目录")
     override val workspaceFolder: String?,
-    @Schema(title = "工作空间对应的IP")
+    @get:Schema(title = "工作空间对应的IP")
     override val hostName: String?,
     override val gpu: Int,
     override val cpu: Int,
     override val memory: Int,
-    @Schema(title = "已使用时间,单位:s（容器结束时更新）")
+    @get:Schema(title = "已使用时间,单位:s（容器结束时更新）")
     override val usageTime: Int,
-    @Schema(title = "休眠时间<只读>")
+    @get:Schema(title = "休眠时间<只读>")
     override val sleepingTime: Int,
     override val disk: Int,
-    @Schema(title = "工作空间创建人")
+    @get:Schema(title = "工作空间创建人")
     override val createUserId: String,
-    @Schema(title = "所在事业群，用作度量统计")
+    @get:Schema(title = "所在事业群，用作度量统计")
     override val creatorBgName: String,
-    @Schema(title = "所在部门，用作度量统计")
+    @get:Schema(title = "所在部门，用作度量统计")
     override val creatorDeptName: String,
-    @Schema(title = "所在中心，用作度量统计")
+    @get:Schema(title = "所在中心，用作度量统计")
     override val creatorCenterName: String,
-    @Schema(title = "所在组，用作度量统计")
+    @get:Schema(title = "所在组，用作度量统计")
     override val creatorGroupName: String,
-    @Schema(title = "工作空间状态<只读>")
+    @get:Schema(title = "工作空间状态<只读>")
     override val status: WorkspaceStatus,
-    @Schema(title = "工作空间状态<只读>")
+    @get:Schema(title = "工作空间状态<只读>")
     override val createTime: LocalDateTime,
-    @Schema(title = "工作空间状态<只读>")
+    @get:Schema(title = "工作空间状态<只读>")
     override val updateTime: LocalDateTime,
-    @Schema(title = "工作空间状态<只读>")
+    @get:Schema(title = "工作空间状态<只读>")
     override val lastStatusUpdateTime: LocalDateTime?,
-    @Schema(title = "preci go-agent id")
+    @get:Schema(title = "preci go-agent id")
     override val preciAgentId: String?,
-    @Schema(title = "挂载平台类型")
+    @get:Schema(title = "挂载平台类型")
     override val workspaceMountType: WorkspaceMountType,
-    @Schema(title = "操作系统类型")
+    @get:Schema(title = "操作系统类型")
     override val workspaceSystemType: WorkspaceSystemType,
-    @Schema(title = "工作空间归属")
+    @get:Schema(title = "工作空间归属")
     override val ownerType: WorkspaceOwnerType,
-    @Schema(title = " 工作空间详情")
+    @get:Schema(title = " 工作空间详情")
     val workSpaceDetail: String
 ) : WorkspaceRecordInf

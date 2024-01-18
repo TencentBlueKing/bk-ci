@@ -31,16 +31,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "工蜂项目配置")
 data class GitProjectConf(
-    @Schema(title = "工蜂项目ID")
+    @get:Schema(title = "工蜂项目ID")
     val gitProjectId: Long,
-    @Schema(title = "工蜂项目名")
+    @get:Schema(title = "工蜂项目名")
     val name: String,
-    @Schema(title = "工蜂项目url")
+    @get:Schema(title = "工蜂项目url")
     val url: String,
-    @Schema(title = "是否可以启用CI")
+    @get:Schema(title = "是否可以启用CI")
     val enable: Boolean,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: Long?,
-    @Schema(title = "修改时间")
+    @get:Schema(title = "修改时间")
     val updateTime: Long?
 )

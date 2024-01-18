@@ -31,20 +31,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "start客户端工作空间详情")
 data class WorkspaceStartCloudDetail(
-    @Schema(title = "ip地址")
+    @get:Schema(title = "ip地址")
     val ip: String,
-    @Schema(title = "start客户端所需唯一索引")
+    @get:Schema(title = "start客户端所需唯一索引")
     val curLaunchId: Int,
-    @Schema(title = "云区域ID")
+    @get:Schema(title = "云区域ID")
     val regionId: Int? = null,
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String? = null,
-    @Schema(title = "工作空间名称")
+    @get:Schema(title = "工作空间名称")
     val name: String? = null,
-    @Schema(title = "创建人")
+    @get:Schema(title = "创建人")
     val creator: String? = null,
-    @Schema(title = "拥有者")
+    @get:Schema(title = "拥有者")
     val owner: String? = null,
-    @Schema(title = "resourceId")
+    @get:Schema(title = "resourceId")
     val resourceId: String? = null
 )

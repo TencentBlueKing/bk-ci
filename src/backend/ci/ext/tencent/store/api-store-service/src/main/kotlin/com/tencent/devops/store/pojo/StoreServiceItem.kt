@@ -30,16 +30,16 @@ package com.tencent.devops.store.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class StoreServiceItem(
-    @Schema(title = "扩展项目根Id", required = true)
+    @get:Schema(title = "扩展项目根Id", required = true)
     val parentItemId: String,
-    @Schema(title = "扩展项目根code", required = true)
+    @get:Schema(title = "扩展项目根code", required = true)
     val parentItemCode: String,
-    @Schema(title = "扩展项目根名称", required = true)
+    @get:Schema(title = "扩展项目根名称", required = true)
     val parentItemName: String,
-    @Schema(title = "扩展项目二级Id", required = true)
+    @get:Schema(title = "扩展项目二级Id", required = true)
     val childItemId: String,
-    @Schema(title = "扩展项目二级code", required = true)
+    @get:Schema(title = "扩展项目二级code", required = true)
     val childItemCode: String,
-    @Schema(title = "扩展项目二级名称", required = true)
+    @get:Schema(title = "扩展项目二级名称", required = true)
     val childItemName: String
 )

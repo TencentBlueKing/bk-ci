@@ -31,18 +31,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "故障")
 data class Incident(
-    @Schema(title = "id", required = true)
+    @get:Schema(title = "id", required = true)
     val id: Long?,
-    @Schema(title = "发生时间（时间戳，毫秒）", required = true)
+    @get:Schema(title = "发生时间（时间戳，毫秒）", required = true)
     val dayTime: Long,
-    @Schema(title = "模块", required = true)
+    @get:Schema(title = "模块", required = true)
     val moduleName: String,
-    @Schema(title = "级别", required = true)
+    @get:Schema(title = "级别", required = true)
     val level: String,
-    @Schema(title = "持续时间(毫秒)", required = true)
+    @get:Schema(title = "持续时间(毫秒)", required = true)
     val duringTime: Long,
-    @Schema(title = "当前状态", required = true)
+    @get:Schema(title = "当前状态", required = true)
     val status: IncidentStatus,
-    @Schema(title = "时间", required = false)
+    @get:Schema(title = "时间", required = false)
     val message: String?
 )

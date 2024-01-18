@@ -31,23 +31,23 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "扩展版本列表")
 data class ServiceVersionListItem(
-    @Schema(title = "扩展服务ID")
+    @get:Schema(title = "扩展服务ID")
     val serviceId: String,
-    @Schema(title = "扩展服务标识")
+    @get:Schema(title = "扩展服务标识")
     val serviceCode: String,
-    @Schema(title = "名称")
+    @get:Schema(title = "名称")
     val serviceName: String,
-    @Schema(title = "版本号")
+    @get:Schema(title = "版本号")
     val version: String,
-    @Schema(title = "版本内容")
+    @get:Schema(title = "版本内容")
     val versionContent: String?,
-    @Schema(title =
+    @get:Schema(title =
         "扩展服务状态，INIT：初始化|COMMITTING：提交中|BUILDING：构建中|BUILD_FAIL：构建失败|TESTING：测试中|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGING：下架中|UNDERCARRIAGED：已下架",
         required = true
     )
     val serviceStatus: String,
-    @Schema(title = "创建人")
+    @get:Schema(title = "创建人")
     val creator: String,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: String
 )

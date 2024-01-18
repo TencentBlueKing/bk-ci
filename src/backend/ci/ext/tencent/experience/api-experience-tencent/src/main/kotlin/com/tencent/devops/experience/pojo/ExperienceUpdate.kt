@@ -31,30 +31,30 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "版本体验-更新发布信息")
 data class ExperienceUpdate(
-    @Schema(title = "版本名称", required = false)
+    @get:Schema(title = "版本名称", required = false)
     val name: String?,
-    @Schema(title = "描述", required = false)
+    @get:Schema(title = "描述", required = false)
     val remark: String?,
-    @Schema(title = "截止日期", required = false)
+    @get:Schema(title = "截止日期", required = false)
     val expireDate: Long?,
-    @Schema(title = "体验组", required = false)
+    @get:Schema(title = "体验组", required = false)
     val experienceGroups: Set<String>?,
-    @Schema(title = "内部名单", required = false)
+    @get:Schema(title = "内部名单", required = false)
     val innerUsers: Set<String>?,
-    @Schema(title = "外部名单", required = false)
+    @get:Schema(title = "外部名单", required = false)
     val outerUsers: Set<String>?,
-    @Schema(title = "通知类型", required = false)
+    @get:Schema(title = "通知类型", required = false)
     val notifyTypes: Set<NotifyType>?,
-    @Schema(title = "是否开启企业微信群", required = false)
+    @get:Schema(title = "是否开启企业微信群", required = false)
     val enableWechatGroups: Boolean?,
-    @Schema(title = "企业微信群ID(逗号分隔)", required = false)
+    @get:Schema(title = "企业微信群ID(逗号分隔)", required = false)
     val wechatGroups: String?,
-    @Schema(title = "体验名称", required = false)
+    @get:Schema(title = "体验名称", required = false)
     var experienceName: String?,
-    @Schema(title = "版本标题", required = false)
+    @get:Schema(title = "版本标题", required = false)
     val versionTitle: String?,
-    @Schema(title = "产品类别", required = false)
+    @get:Schema(title = "产品类别", required = false)
     val categoryId: Int?,
-    @Schema(title = "产品负责人", required = false)
+    @get:Schema(title = "产品负责人", required = false)
     val productOwner: List<String>?
 )

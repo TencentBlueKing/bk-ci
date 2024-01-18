@@ -32,8 +32,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "接受者")
 data class Receiver(
-    @Schema(title = "接受者类型")
+    @get:Schema(title = "接受者类型")
     val type: ReceiverType,
-    @Schema(title = "会话ID/用户ID/rtx号")
+    @get:Schema(title = "会话ID/用户ID/rtx号")
     val id: String
 )

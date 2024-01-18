@@ -31,30 +31,30 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "版本体验-首页-APP信息")
 data class IndexAppInfoVO(
-    @Schema(title = "类型", required = true)
+    @get:Schema(title = "类型", required = true)
     val type: Int,
-    @Schema(title = "版本体验ID", required = false)
+    @get:Schema(title = "版本体验ID", required = false)
     val experienceHashId: String,
-    @Schema(title = "体验名称", required = true)
+    @get:Schema(title = "体验名称", required = true)
     val experienceName: String,
-    @Schema(title = "创建时间", required = true)
+    @get:Schema(title = "创建时间", required = true)
     val createTime: Long,
-    @Schema(title = "大小(byte)", required = false)
+    @get:Schema(title = "大小(byte)", required = false)
     val size: Long,
-    @Schema(title = "logo链接", required = true)
+    @get:Schema(title = "logo链接", required = true)
     val logoUrl: String,
-    @Schema(title = "版本体验BundleIdentifier", required = true)
+    @get:Schema(title = "版本体验BundleIdentifier", required = true)
     val bundleIdentifier: String,
-    @Schema(title = "应用Scheme", required = false)
+    @get:Schema(title = "应用Scheme", required = false)
     val appScheme: String,
-    @Schema(title = "是否过期", required = true)
+    @get:Schema(title = "是否过期", required = true)
     val expired: Boolean,
-    @Schema(title = "上次下载的体验ID", required = true)
+    @get:Schema(title = "上次下载的体验ID", required = true)
     val lastDownloadHashId: String,
-    @Schema(title = "外部链接", required = false)
+    @get:Schema(title = "外部链接", required = false)
     val externalUrl: String,
-    @Schema(title = "版本体验版本号", required = true)
+    @get:Schema(title = "版本体验版本号", required = true)
     val version: String,
-    @Schema(title = "下载次数", required = true)
+    @get:Schema(title = "下载次数", required = true)
     val downloadTime: Int
 )

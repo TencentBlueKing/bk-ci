@@ -32,33 +32,33 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "作业平台-构件分发")
 data class JobDevOpsFastPushFileElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "JOB快速执行脚本",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "源类型", required = false)
+    @get:Schema(title = "源类型", required = false)
     val srcType: String = "",
-    @Schema(title = "源路径", required = false)
+    @get:Schema(title = "源路径", required = false)
     val srcPath: String = "",
-    @Schema(title = "源节点id", required = false)
+    @get:Schema(title = "源节点id", required = false)
     val srcNodeId: String = "",
-    @Schema(title = "源服务器账户", required = false)
+    @get:Schema(title = "源服务器账户", required = false)
     val srcAccount: String = "",
-    @Schema(title = "目标路径", required = false)
+    @get:Schema(title = "目标路径", required = false)
     val targetPath: String = "",
-    @Schema(title = "目标账户", required = false)
+    @get:Schema(title = "目标账户", required = false)
     val targetAccount: String = "",
-    @Schema(title = "目标节点id列表", required = false)
+    @get:Schema(title = "目标节点id列表", required = false)
     val targetNodeId: List<String>?,
-    @Schema(title = "目标环境id列表", required = false)
+    @get:Schema(title = "目标环境id列表", required = false)
     val targetEnvId: List<String>?,
-    @Schema(title = "目标环境名称列表", required = false)
+    @get:Schema(title = "目标环境名称列表", required = false)
     val targetEnvName: List<String>?,
-    @Schema(title = "目标环境类型", required = false)
+    @get:Schema(title = "目标环境类型", required = false)
     val targetEnvType: String = "",
-    @Schema(title = "超时时间", required = true)
+    @get:Schema(title = "超时时间", required = true)
     val timeout: Int? = 600
 ) : Element(name, id, status) {
     companion object {

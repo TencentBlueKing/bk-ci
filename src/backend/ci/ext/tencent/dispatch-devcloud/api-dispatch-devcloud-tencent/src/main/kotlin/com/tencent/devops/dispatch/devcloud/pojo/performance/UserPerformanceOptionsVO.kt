@@ -4,11 +4,11 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "devcloud性能用户选项配置")
 data class UserPerformanceOptionsVO(
-    @Schema(title = "默认选项")
+    @get:Schema(title = "默认选项")
     val default: String,
-    @Schema(title = "是否展示")
+    @get:Schema(title = "是否展示")
     val needShow: Boolean,
-    @Schema(title = "性能配置")
+    @get:Schema(title = "性能配置")
     val performanceMaps: List<PerformanceMap>
 )
 

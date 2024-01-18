@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "ktlint reporter")
 data class KtlintReporter(
-    @Schema(title = "reporter", required = true)
+    @get:Schema(title = "reporter", required = true)
     val reporter: KtlintReporterType,
-    @Schema(title = "报告保存路径", required = false)
+    @get:Schema(title = "报告保存路径", required = false)
     val reportOutput: String?,
-    @Schema(title = "报告在构件详情中显示的名字", required = false)
+    @get:Schema(title = "报告在构件详情中显示的名字", required = false)
     val reportName: String?
 )

@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "接受者类型")
 enum class ReceiverType(private val type: String) {
-    @Schema(title = "个人")
+    @get:Schema(title = "个人")
     single("single"),
-    @Schema(title = "企业微信群")
+    @get:Schema(title = "企业微信群")
     group("group"),
 }

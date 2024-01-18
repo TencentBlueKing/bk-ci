@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "蓝盾-服务简要信息")
 class ExtServiceEntity(
-    @Schema(title = "主键ID")
+    @get:Schema(title = "主键ID")
     val id: String,
-    @Schema(title = "名称")
+    @get:Schema(title = "名称")
     val name: String,
-    @Schema(title = "编码")
+    @get:Schema(title = "编码")
     val code: String
 )

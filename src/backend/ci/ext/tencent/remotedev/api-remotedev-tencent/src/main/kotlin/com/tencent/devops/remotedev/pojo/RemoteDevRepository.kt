@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "仓库信息")
 data class RemoteDevRepository(
-    @Schema(title = "git项目全路径")
+    @get:Schema(title = "git项目全路径")
     val pathWithNamespace: String?,
-    @Schema(title = "仓库Url")
+    @get:Schema(title = "仓库Url")
     val url: String?
 )

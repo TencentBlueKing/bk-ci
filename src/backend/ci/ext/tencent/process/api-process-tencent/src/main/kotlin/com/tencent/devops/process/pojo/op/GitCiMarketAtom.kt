@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "工蜂CI支持的插件")
 data class GitCiMarketAtom(
-    @Schema(title = "记录ID", required = true)
+    @get:Schema(title = "记录ID", required = true)
     val id: Int,
-    @Schema(title = "插件code", required = true)
+    @get:Schema(title = "插件code", required = true)
     val atomCode: String,
-    @Schema(title = "描述")
+    @get:Schema(title = "描述")
     val desc: String?,
-    @Schema(title = "更新时间", required = true)
+    @get:Schema(title = "更新时间", required = true)
     val updateTime: String,
-    @Schema(title = "更新人", required = true)
+    @get:Schema(title = "更新人", required = true)
     val modifyUser: String
 )

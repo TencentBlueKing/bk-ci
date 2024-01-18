@@ -32,8 +32,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "扩展服务可见范围")
 data class ExtsionServiceVisibleDeptReq(
-    @Schema(title = "扩展服务编码", required = true)
+    @get:Schema(title = "扩展服务编码", required = true)
     val serviceCode: String,
-    @Schema(title = "机构列表", required = true)
+    @get:Schema(title = "机构列表", required = true)
     val deptInfos: List<DeptInfo>
 )

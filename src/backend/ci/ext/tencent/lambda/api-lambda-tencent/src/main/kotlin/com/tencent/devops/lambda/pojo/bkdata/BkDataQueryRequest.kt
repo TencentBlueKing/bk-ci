@@ -35,21 +35,21 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class BkDataQueryRequest(
     @JsonProperty("bkdata_authentication_method")
-    @Schema(title = "校验方法", required = true, description =  "bkdata_authentication_method")
+    @get:Schema(title = "校验方法", required = true, description =  "bkdata_authentication_method")
     override val authenticationMethod: String,
     @JsonProperty("bkdata_data_token")
-    @Schema(title = "token", required = true, description =  "bkdata_data_token")
+    @get:Schema(title = "token", required = true, description =  "bkdata_data_token")
     override val dataToken: String,
     @JsonProperty("bk_app_code")
-    @Schema(title = "蓝鲸应用编码", required = true, description =  "bk_app_code")
+    @get:Schema(title = "蓝鲸应用编码", required = true, description =  "bk_app_code")
     override val bkAppCode: String,
     @JsonProperty("bk_app_secret")
-    @Schema(title = "蓝鲸应用私密key", required = true, description =  "bk_app_secret")
+    @get:Schema(title = "蓝鲸应用私密key", required = true, description =  "bk_app_secret")
     override val bkAppSecret: String,
     @JsonProperty("sql")
-    @Schema(title = "查询SQL", required = true, description =  "sql")
+    @get:Schema(title = "查询SQL", required = true, description =  "sql")
     val sql: String,
     @JsonProperty("prefer_storage")
-    @Schema(title = "查询引擎", required = false, description =  "prefer_storage")
+    @get:Schema(title = "查询引擎", required = false, description =  "prefer_storage")
     var preferStorage: String? = null
 ) : BkDataBaseRequest(authenticationMethod, dataToken, bkAppCode, bkAppSecret)

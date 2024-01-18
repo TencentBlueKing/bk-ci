@@ -31,26 +31,26 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "WebIDE实例状态")
 data class IDEInfo(
-    @Schema(title = "Web IDE实例状态")
+    @get:Schema(title = "Web IDE实例状态")
     val ideInstanceStatus: Int,
-    @Schema(title = "Agent实例状态")
+    @get:Schema(title = "Agent实例状态")
     var agentInstanceStatus: Int,
-    @Schema(title = "机器IP地址")
+    @get:Schema(title = "机器IP地址")
     val ip: String,
-    @Schema(title = "ide实例的http服务url")
+    @get:Schema(title = "ide实例的http服务url")
     val ideURL: String,
-    @Schema(title = "web ide 版本")
+    @get:Schema(title = "web ide 版本")
     val ideVersion: String,
-    @Schema(title = "机器类型")
+    @get:Schema(title = "机器类型")
     val serverType: String,
-    @Schema(title = "服务器创建时间")
+    @get:Schema(title = "服务器创建时间")
     val serverCreateTime: Long
 )
 
 @Schema(title = "IDEAgent请求")
 data class IDEAgentReq(
-    @Schema(title = "项目名称", required = true)
+    @get:Schema(title = "项目名称", required = true)
     val projectId: String,
-    @Schema(title = "devcloud服务器IP", required = true)
+    @get:Schema(title = "devcloud服务器IP", required = true)
     val ip: String
 )

@@ -30,32 +30,32 @@ package com.tencent.devops.project.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class PaasCCProjectForCreate(
-    @Schema(title = "项目名称")
+    @get:Schema(title = "项目名称")
     val project_name: String,
-    @Schema(title = "英文缩写")
+    @get:Schema(title = "英文缩写")
     val english_name: String,
-    @Schema(title = "项目类型")
+    @get:Schema(title = "项目类型")
     val project_type: Int,
-    @Schema(title = "描述")
+    @get:Schema(title = "描述")
     val description: String,
-    @Schema(title = "事业群ID")
+    @get:Schema(title = "事业群ID")
     val bg_id: Long,
-    @Schema(title = "事业群名字")
+    @get:Schema(title = "事业群名字")
     val bg_name: String,
-    @Schema(title = "部门ID")
+    @get:Schema(title = "部门ID")
     val dept_id: Long,
-    @Schema(title = "部门名称")
+    @get:Schema(title = "部门名称")
     val dept_name: String,
-    @Schema(title = "中心ID")
+    @get:Schema(title = "中心ID")
     val center_id: Long,
-    @Schema(title = "中心名称")
+    @get:Schema(title = "中心名称")
     val center_name: String,
-    @Schema(title = "是否保密")
+    @get:Schema(title = "是否保密")
     val is_secrecy: Boolean,
-    @Schema(title = "kind")
+    @get:Schema(title = "kind")
     val kind: Int,
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val project_id: String,
-    @Schema(title = "创建人")
+    @get:Schema(title = "创建人")
     val creator: String
 )

@@ -33,19 +33,19 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "ktlint代码静态检查")
 class KtlintStyleElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "执行Linux脚本",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "代码存放路径", required = false)
+    @get:Schema(title = "代码存放路径", required = false)
     val path: String? = null,
-    @Schema(title = "ktlint要检查的文件pattern", required = false)
+    @get:Schema(title = "ktlint要检查的文件pattern", required = false)
     val patterns: String?,
-    @Schema(title = "ktlint命令行参数", required = false)
+    @get:Schema(title = "ktlint命令行参数", required = false)
     val flags: String?,
-    @Schema(title = "ktlint reporters", required = false)
+    @get:Schema(title = "ktlint reporters", required = false)
     val reporters: List<KtlintReporter>?
 ) : Element(name, id, status) {
 

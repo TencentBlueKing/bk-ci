@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "用户1password模型")
 data class UserOnePassword(
-    @Schema(title = "用户名")
+    @get:Schema(title = "用户名")
     val userId: String,
-    @Schema(title = "工作空间（审计）")
+    @get:Schema(title = "工作空间（审计）")
     val workspaceName: String
 )

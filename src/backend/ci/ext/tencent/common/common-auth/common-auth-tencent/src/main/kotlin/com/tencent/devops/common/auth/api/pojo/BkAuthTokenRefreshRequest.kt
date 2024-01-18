@@ -32,12 +32,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class BkAuthTokenRefreshRequest(
     @JsonProperty("env_name")
-    @Schema(title = "env_name")
+    @get:Schema(title = "env_name")
     val envName: String,
     @JsonProperty("app_code")
-    @Schema(title = "app_code")
+    @get:Schema(title = "app_code")
     val appCode: String,
     @JsonProperty("refresh_token")
-    @Schema(title = "refresh_token")
+    @get:Schema(title = "refresh_token")
     val refreshToken: String
 )

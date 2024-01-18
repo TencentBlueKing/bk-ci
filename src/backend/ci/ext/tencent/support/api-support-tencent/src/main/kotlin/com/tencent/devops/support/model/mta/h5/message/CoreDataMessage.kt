@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "应用历史趋势查询消息")
 data class CoreDataMessage(
-    @Schema(title = "开始日期(时间戳形式毫秒)")
+    @get:Schema(title = "开始日期(时间戳形式毫秒)")
     var startDate: Long,
-    @Schema(title = "结束日期(时间戳形式毫秒)")
+    @get:Schema(title = "结束日期(时间戳形式毫秒)")
     var endDate: Long
 )

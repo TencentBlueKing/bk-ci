@@ -31,6 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "重装工作空间系统接口请求")
 data class WorkspaceRebuildReq(
-    @Schema(title = "工作空间镜像地址")
+    @get:Schema(title = "工作空间镜像地址")
     val imageCosFile: String
 )

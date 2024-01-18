@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "远程开发配置")
 data class RemoteDevFile(
-    @Schema(title = "文件id")
+    @get:Schema(title = "文件id")
     val id: Long?,
-    @Schema(title = "md5 32位")
+    @get:Schema(title = "md5 32位")
     val md5: String?,
-    @Schema(title = "文件路径")
+    @get:Schema(title = "文件路径")
     val path: String,
-    @Schema(title = "文件内容")
+    @get:Schema(title = "文件内容")
     val content: String
 )

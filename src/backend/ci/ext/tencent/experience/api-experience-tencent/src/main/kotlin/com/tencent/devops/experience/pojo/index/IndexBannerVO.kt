@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "版本体验-首页-Banner")
 data class IndexBannerVO(
-    @Schema(title = "版本体验ID", required = true)
+    @get:Schema(title = "版本体验ID", required = true)
     val experienceHashId: String,
-    @Schema(title = "BannerUrl", required = true)
+    @get:Schema(title = "BannerUrl", required = true)
     val bannerUrl: String,
-    @Schema(title = "类型", required = true)
+    @get:Schema(title = "类型", required = true)
     val type: Int,
-    @Schema(title = "外部链接", required = false)
+    @get:Schema(title = "外部链接", required = false)
     val externalUrl: String
 )

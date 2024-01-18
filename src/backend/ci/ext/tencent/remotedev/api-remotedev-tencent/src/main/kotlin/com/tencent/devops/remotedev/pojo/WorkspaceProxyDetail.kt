@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "workspaceProxy依赖的工作空间信息")
 data class WorkspaceProxyDetail(
-    @Schema(title = "工作空间名称")
+    @get:Schema(title = "工作空间名称")
     val workspaceName: String,
-    @Schema(title = "工作空间名称")
+    @get:Schema(title = "工作空间名称")
     val podIp: String,
-    @Schema(title = "工作空间关联秘钥")
+    @get:Schema(title = "工作空间关联秘钥")
     val sshKey: String,
-    @Schema(title = "工作空间Host")
+    @get:Schema(title = "工作空间Host")
     val environmentHost: String
 )

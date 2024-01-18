@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "k8s标签信息")
 data class KubernetesLabel(
-    @Schema(title = "标签key", required = true)
+    @get:Schema(title = "标签key", required = true)
     val labelKey: String,
-    @Schema(title = "标签value", required = true)
+    @get:Schema(title = "标签value", required = true)
     val labelValue: String
 )

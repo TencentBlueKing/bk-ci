@@ -34,10 +34,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "图片消息")
 data class ImageMessage(
-    @Schema(title = "接收者")
+    @get:Schema(title = "接收者")
     val receiver: Receiver,
-    @Schema(title = "消息类型")
+    @get:Schema(title = "消息类型")
     val msgtype: MsgType = MsgType.image,
-    @Schema(title = "文本")
+    @get:Schema(title = "文本")
     val image: Image
 )

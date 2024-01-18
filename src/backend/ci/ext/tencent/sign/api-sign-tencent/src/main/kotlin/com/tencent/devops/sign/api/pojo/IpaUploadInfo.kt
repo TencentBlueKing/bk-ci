@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "IpaUploadInfo-IPA包签名信息")
 data class IpaUploadInfo(
-    @Schema(title = "项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     var projectId: String = "",
-    @Schema(title = "流水线ID", required = true)
+    @get:Schema(title = "流水线ID", required = true)
     var pipelineId: String = "",
-    @Schema(title = "构建ID", required = true)
+    @get:Schema(title = "构建ID", required = true)
     var buildId: String = "",
-    @Schema(title = "鉴权token", required = true)
+    @get:Schema(title = "鉴权token", required = true)
     var token: String = ""
 )

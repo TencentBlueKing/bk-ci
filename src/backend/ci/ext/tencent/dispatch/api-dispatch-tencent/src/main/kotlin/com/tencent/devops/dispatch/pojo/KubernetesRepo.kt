@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "k8s仓库信息")
 data class KubernetesRepo(
-    @Schema(title = "仓库地址", required = true)
+    @get:Schema(title = "仓库地址", required = true)
     val registryUrl: String,
-    @Schema(title = "用户名", required = true)
+    @get:Schema(title = "用户名", required = true)
     val username: String,
-    @Schema(title = "密码", required = true)
+    @get:Schema(title = "密码", required = true)
     val password: String,
-    @Schema(title = "邮箱", required = false)
+    @get:Schema(title = "邮箱", required = false)
     val email: String?
 )

@@ -31,37 +31,37 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "WINDOWS GPU资源配置表")
 data class WindowsResourceTypeConfig(
-    @Schema(title = "Id")
+    @get:Schema(title = "Id")
     val id: Long?,
-    @Schema(title = "是否可用")
+    @get:Schema(title = "是否可用")
     val available: Boolean?,
-    @Schema(title = "资源类型：M，L，XL，S")
+    @get:Schema(title = "资源类型：M，L，XL，S")
     val size: String,
-    @Schema(title = "GPU卡类型")
+    @get:Schema(title = "GPU卡类型")
     val type: String? = null,
-    @Schema(title = "GPU")
+    @get:Schema(title = "GPU")
     val gpu: Int,
-    @Schema(title = "vGPU")
+    @get:Schema(title = "vGPU")
     val vgpu: String? = "",
-    @Schema(title = "CPU")
+    @get:Schema(title = "CPU")
     val cpu: Int,
-    @Schema(title = "vCPU")
+    @get:Schema(title = "vCPU")
     val vcpu: String? = "",
-    @Schema(title = "内存")
+    @get:Schema(title = "内存")
     val memory: Int,
-    @Schema(title = "独享内存")
+    @get:Schema(title = "独享内存")
     val vmemory: String? = "",
-    @Schema(title = "数据盘，本地SSD盘")
+    @get:Schema(title = "数据盘，本地SSD盘")
     val disk: String,
-    @Schema(title = "云SSD盘")
+    @get:Schema(title = "云SSD盘")
     val hdisk: String,
-    @Schema(title = "系统盘，本地SSD")
+    @get:Schema(title = "系统盘，本地SSD")
     val sdisk: String,
-    @Schema(title = "权重，用于页面展示先后顺序")
+    @get:Schema(title = "权重，用于页面展示先后顺序")
     val weight: Int? = 0,
-    @Schema(title = "描述")
+    @get:Schema(title = "描述")
     val description: String,
-    @Schema(title = "是否是特殊机型")
+    @get:Schema(title = "是否是特殊机型")
     val specModel: Boolean = false
 ) {
 

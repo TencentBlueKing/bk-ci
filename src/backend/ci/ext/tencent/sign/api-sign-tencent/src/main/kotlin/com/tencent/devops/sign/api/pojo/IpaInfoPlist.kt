@@ -31,16 +31,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "IPA Info Plist内容信息")
 data class IpaInfoPlist(
-    @Schema(title = "bundleId", required = true)
+    @get:Schema(title = "bundleId", required = true)
     var bundleIdentifier: String = "",
-    @Schema(title = "应用标题", required = true)
+    @get:Schema(title = "应用标题", required = true)
     var appTitle: String = "",
-    @Schema(title = "应用版本", required = true)
+    @get:Schema(title = "应用版本", required = true)
     var bundleVersion: String = "",
-    @Schema(title = "应用构建版本", required = true)
+    @get:Schema(title = "应用构建版本", required = true)
     var bundleVersionFull: String = "",
-    @Schema(title = "应用scheme", required = true)
+    @get:Schema(title = "应用scheme", required = true)
     var scheme: String = "",
-    @Schema(title = "应用名称", required = true)
+    @get:Schema(title = "应用名称", required = true)
     var appName: String = ""
 )

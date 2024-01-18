@@ -33,21 +33,21 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "bugly符号表上传")
 data class BuglyElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "bugly异常上报",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "版本号", required = false)
+    @get:Schema(title = "版本号", required = false)
     val versionId: String = "",
-    @Schema(title = "待上传给bugly的符号表文件夹(选择了安卓平台才显示，只能填一个路径，不支持正则匹配)", required = false)
+    @get:Schema(title = "待上传给bugly的符号表文件夹(选择了安卓平台才显示，只能填一个路径，不支持正则匹配)", required = false)
     val buglyFolder: String = "",
-    @Schema(title = "App所在的文件夹", required = false)
+    @get:Schema(title = "App所在的文件夹", required = false)
     val appFolder: String = "",
-    @Schema(title = "凭证id", required = true)
+    @get:Schema(title = "凭证id", required = true)
     val credId: String = "",
-    @Schema(title = "平台类型（ANDROID或者IPHONE）", required = true)
+    @get:Schema(title = "平台类型（ANDROID或者IPHONE）", required = true)
     val platform: Platform
 ) : Element(name, id, status) {
     companion object {

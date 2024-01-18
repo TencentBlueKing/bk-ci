@@ -37,13 +37,13 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "wetest响应信息")
 data class WetestResponse(
-    @Schema(title = "任务id，失败则不返回", required = false, description = "taskid")
+    @get:Schema(title = "任务id，失败则不返回", required = false, description = "taskid")
     @JsonProperty("taskid", required = false, defaultValue = "")
     val taskId: String?,
-    @Schema(title = "请求结果，0为成功", description = "ret")
+    @get:Schema(title = "请求结果，0为成功", description = "ret")
     @JsonProperty("ret")
     val ret: String,
-    @Schema(title = "提示信息", description = "msg")
+    @get:Schema(title = "提示信息", description = "msg")
     @JsonProperty("msg")
     val msg: String
 )

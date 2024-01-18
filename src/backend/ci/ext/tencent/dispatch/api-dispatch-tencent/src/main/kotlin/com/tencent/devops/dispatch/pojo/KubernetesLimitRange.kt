@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "k8s资源限制信息")
 data class KubernetesLimitRange(
-    @Schema(title = "默认cpu限额", required = true)
+    @get:Schema(title = "默认cpu限额", required = true)
     val defaultCpu: String,
-    @Schema(title = "默认内存限额", required = true)
+    @get:Schema(title = "默认内存限额", required = true)
     val defaultMemory: String,
-    @Schema(title = "默认请求cpu限额", required = true)
+    @get:Schema(title = "默认请求cpu限额", required = true)
     val defaultRequestCpu: String,
-    @Schema(title = "默认请求内存限额", required = true)
+    @get:Schema(title = "默认请求内存限额", required = true)
     val defaultRequestMemory: String,
-    @Schema(title = "限制资源类型", required = true)
+    @get:Schema(title = "限制资源类型", required = true)
     val limitType: String
 )

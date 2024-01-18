@@ -31,32 +31,32 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "扩展服务首页信息")
 data class ExtServiceItem(
-    @Schema(title = "ID")
+    @get:Schema(title = "ID")
     val id: String,
-    @Schema(title = "名称")
+    @get:Schema(title = "名称")
     val name: String,
-    @Schema(title = "标识")
+    @get:Schema(title = "标识")
     val code: String,
-    @Schema(title = "分类")
+    @get:Schema(title = "分类")
     val classifyCode: String?,
-    @Schema(title = "logo链接")
+    @get:Schema(title = "logo链接")
     val logoUrl: String?,
-    @Schema(title = "发布者")
+    @get:Schema(title = "发布者")
     val publisher: String,
-    @Schema(title = "下载量")
+    @get:Schema(title = "下载量")
     val downloads: Int?,
-    @Schema(title = "评分")
+    @get:Schema(title = "评分")
     val score: Double?,
-    @Schema(title = "简介")
+    @get:Schema(title = "简介")
     val summary: String?,
-    @Schema(title = "是否有权限安装标识")
+    @get:Schema(title = "是否有权限安装标识")
     val flag: Boolean,
-    @Schema(title = "是否公共标识")
+    @get:Schema(title = "是否公共标识")
     val publicFlag: Boolean,
-    @Schema(title = "修改人")
+    @get:Schema(title = "修改人")
     val modifier: String,
-    @Schema(title = "修改时间")
+    @get:Schema(title = "修改时间")
     val updateTime: String,
-    @Schema(title = "是否推荐标识 true：推荐，false：不推荐", required = false)
+    @get:Schema(title = "是否推荐标识 true：推荐，false：不推荐", required = false)
     val recommendFlag: Boolean? = null
 )

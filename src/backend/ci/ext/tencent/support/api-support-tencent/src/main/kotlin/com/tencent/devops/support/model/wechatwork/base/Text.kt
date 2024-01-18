@@ -31,6 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "文本")
 data class Text(
-    @Schema(title = "文本内容")
+    @get:Schema(title = "文本内容")
     val content: String
 )

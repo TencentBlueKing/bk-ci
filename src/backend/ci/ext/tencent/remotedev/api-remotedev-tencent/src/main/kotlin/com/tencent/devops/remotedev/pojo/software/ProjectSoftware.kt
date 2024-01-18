@@ -31,24 +31,24 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "项目下软件信息")
 data class ProjectSoftware(
-    @Schema(title = "ID")
+    @get:Schema(title = "ID")
     val id: Long,
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "软件名称")
+    @get:Schema(title = "软件名称")
     val name: String,
-    @Schema(title = "软件logo")
+    @get:Schema(title = "软件logo")
     val logo: String,
-    @Schema(title = "版本")
+    @get:Schema(title = "版本")
     val version: String,
-    @Schema(title = "来源")
+    @get:Schema(title = "来源")
     val source: String,
-    @Schema(title = "状态")
+    @get:Schema(title = "状态")
     val status: Int,
-    @Schema(title = "分类")
+    @get:Schema(title = "分类")
     val classification: String,
-    @Schema(title = "安装方式")
+    @get:Schema(title = "安装方式")
     val installMethod: String,
-    @Schema(title = "创建人")
+    @get:Schema(title = "创建人")
     val creator: String
 )

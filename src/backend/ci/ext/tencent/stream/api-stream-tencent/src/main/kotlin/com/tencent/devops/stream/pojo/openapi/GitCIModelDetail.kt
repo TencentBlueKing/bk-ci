@@ -33,13 +33,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "工蜂构建详情模型")
 data class GitCIModelDetail(
-    @Schema(title = "Stream流水线信息", required = true)
+    @get:Schema(title = "Stream流水线信息", required = true)
     val gitProjectPipeline: GitProjectPipeline?,
-    @Schema(title = "工蜂Event事件", required = true)
+    @get:Schema(title = "工蜂Event事件", required = true)
     val gitRequestEvent: StreamGitRequestEventReq,
-    @Schema(title = "构建详情-构建信息", required = true)
+    @get:Schema(title = "构建详情-构建信息", required = true)
     val modelDetail: ModelDetail,
-    @Schema(title = "构建历史-备注信息")
+    @get:Schema(title = "构建历史-备注信息")
     val buildHistoryRemark: String? = null
 ) {
     init {

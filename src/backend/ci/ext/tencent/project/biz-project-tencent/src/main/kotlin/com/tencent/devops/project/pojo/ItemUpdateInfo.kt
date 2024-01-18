@@ -31,18 +31,18 @@ import com.tencent.devops.project.api.pojo.enums.HtmlComponentTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class ItemUpdateInfo(
-    @Schema(title = "扩展点名称")
+    @get:Schema(title = "扩展点名称")
     val itemName: String?,
-    @Schema(title = "蓝盾服务id")
+    @get:Schema(title = "蓝盾服务id")
     val serviceId: String?,
-    @Schema(title = "UI组件类型")
+    @get:Schema(title = "UI组件类型")
     val UIType: HtmlComponentTypeEnum?,
-    @Schema(title = "页面路径")
+    @get:Schema(title = "页面路径")
     val htmlPath: String?,
-    @Schema(title = "icon地址")
+    @get:Schema(title = "icon地址")
     val iconUrl: String?,
-    @Schema(title = "提示信息")
+    @get:Schema(title = "提示信息")
     val tooltip: String?,
-    @Schema(title = "自定义扩展点前端表单属性配置Json串")
+    @get:Schema(title = "自定义扩展点前端表单属性配置Json串")
     val props: String?
 )

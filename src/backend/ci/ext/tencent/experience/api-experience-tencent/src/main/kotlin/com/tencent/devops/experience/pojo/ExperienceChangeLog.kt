@@ -31,30 +31,30 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "版本体验-更新日志")
 data class ExperienceChangeLog(
-    @Schema(title = "版本体验ID", required = true)
+    @get:Schema(title = "版本体验ID", required = true)
     val experienceHashId: String,
-    @Schema(title = "版本号", required = true)
+    @get:Schema(title = "版本号", required = true)
     val version: String,
-    @Schema(title = "创建人", required = true)
+    @get:Schema(title = "创建人", required = true)
     val creator: String,
-    @Schema(title = "创建时间", required = true)
+    @get:Schema(title = "创建时间", required = true)
     val createDate: Long,
-    @Schema(title = "更新日志", required = true)
+    @get:Schema(title = "更新日志", required = true)
     val changelog: String,
-    @Schema(title = "体验名称", required = true)
+    @get:Schema(title = "体验名称", required = true)
     val experienceName: String,
-    @Schema(title = "文件大小(byte)", required = true)
+    @get:Schema(title = "文件大小(byte)", required = true)
     val size: Long,
-    @Schema(title = "logo链接", required = true)
+    @get:Schema(title = "logo链接", required = true)
     val logoUrl: String,
-    @Schema(title = "版本体验BundleIdentifier", required = true)
+    @get:Schema(title = "版本体验BundleIdentifier", required = true)
     val bundleIdentifier: String,
-    @Schema(title = "应用Scheme", required = false)
+    @get:Schema(title = "应用Scheme", required = false)
     val appScheme: String,
-    @Schema(title = "是否过期", required = true)
+    @get:Schema(title = "是否过期", required = true)
     val expired: Boolean,
-    @Schema(title = "上次下载的体验ID", required = true)
+    @get:Schema(title = "上次下载的体验ID", required = true)
     val lastDownloadHashId: String,
-    @Schema(title = "版本标题", required = true)
+    @get:Schema(title = "版本标题", required = true)
     val versionTitle: String
 )

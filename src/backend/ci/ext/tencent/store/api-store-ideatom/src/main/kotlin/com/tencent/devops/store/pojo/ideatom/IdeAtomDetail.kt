@@ -35,66 +35,66 @@ import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomStatusEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class IdeAtomDetail(
-    @Schema(title = "插件ID")
+    @get:Schema(title = "插件ID")
     val atomId: String,
-    @Schema(title = "插件标识")
+    @get:Schema(title = "插件标识")
     val atomCode: String,
-    @Schema(title = "插件名称")
+    @get:Schema(title = "插件名称")
     val atomName: String,
-    @Schema(title = "logo地址")
+    @get:Schema(title = "logo地址")
     val logoUrl: String?,
-    @Schema(title = "插件分类code")
+    @get:Schema(title = "插件分类code")
     val classifyCode: String?,
-    @Schema(title = "插件分类名称")
+    @get:Schema(title = "插件分类名称")
     val classifyName: String?,
-    @Schema(title = "下载量", required = true)
+    @get:Schema(title = "下载量", required = true)
     val downloads: Int,
-    @Schema(title = "星级评分", required = false)
+    @get:Schema(title = "星级评分", required = false)
     val score: Double?,
-    @Schema(title = "范畴列表")
+    @get:Schema(title = "范畴列表")
     val categoryList: List<Category>?,
-    @Schema(title = "插件类型")
+    @get:Schema(title = "插件类型")
     val atomType: String?,
-    @Schema(title = "插件简介")
+    @get:Schema(title = "插件简介")
     val summary: String?,
-    @Schema(title = "插件描述")
+    @get:Schema(title = "插件描述")
     val description: String?,
-    @Schema(title = "版本号")
+    @get:Schema(title = "版本号")
     val version: String?,
-    @Schema(title = "插件状态")
+    @get:Schema(title = "插件状态")
     val atomStatus: IdeAtomStatusEnum,
-    @Schema(title = "发布类型")
+    @get:Schema(title = "发布类型")
     val releaseType: String?,
-    @Schema(title = "版本日志")
+    @get:Schema(title = "版本日志")
     val versionContent: String?,
-    @Schema(title = "代码库链接")
+    @get:Schema(title = "代码库链接")
     val codeSrc: String?,
-    @Schema(title = "发布者")
+    @get:Schema(title = "发布者")
     val publisher: String?,
-    @Schema(title = "发布时间")
+    @get:Schema(title = "发布时间")
     val pubTime: String?,
-    @Schema(title = "是否为最新版本插件 true：最新 false：非最新")
+    @get:Schema(title = "是否为最新版本插件 true：最新 false：非最新")
     val latestFlag: Boolean,
-    @Schema(title = "是否为公共插件 true：公共插件 false：普通插件")
+    @get:Schema(title = "是否为公共插件 true：公共插件 false：普通插件")
     val publicFlag: Boolean,
-    @Schema(title = "是否推荐， TRUE：是 FALSE：不是")
+    @get:Schema(title = "是否推荐， TRUE：是 FALSE：不是")
     val recommendFlag: Boolean,
-    @Schema(title = "是否可安装标识 true：可以 false：不可以")
+    @get:Schema(title = "是否可安装标识 true：可以 false：不可以")
     val flag: Boolean?,
-    @Schema(title = "标签列表")
+    @get:Schema(title = "标签列表")
     val labelList: List<Label>?,
-    @Schema(title = "用户评论信息")
+    @get:Schema(title = "用户评论信息")
     val userCommentInfo: StoreUserCommentInfo,
-    @Schema(title = "项目可视范围,PRIVATE:私有 LOGIN_PUBLIC:登录用户开源")
+    @get:Schema(title = "项目可视范围,PRIVATE:私有 LOGIN_PUBLIC:登录用户开源")
     val visibilityLevel: VisibilityLevelEnum?,
-    @Schema(title = "插件代码库不开源原因")
+    @get:Schema(title = "插件代码库不开源原因")
     val privateReason: String?,
-    @Schema(title = "创建人")
+    @get:Schema(title = "创建人")
     val creator: String,
-    @Schema(title = "修改人")
+    @get:Schema(title = "修改人")
     val modifier: String,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: String,
-    @Schema(title = "修改时间")
+    @get:Schema(title = "修改时间")
     val updateTime: String
 )

@@ -32,21 +32,21 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "扩展服务构建部署")
 data class ExtServiceBuildDeployElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "扩展服务发布归档",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "扩展服务标识", required = true)
+    @get:Schema(title = "扩展服务标识", required = true)
     val serviceCode: String = "\${serviceCode}",
-    @Schema(title = "扩展服务版本号", required = true)
+    @get:Schema(title = "扩展服务版本号", required = true)
     val serviceVersion: String = "\${version}",
-    @Schema(title = "扩展服务发布包名称", required = true)
+    @get:Schema(title = "扩展服务发布包名称", required = true)
     val packageName: String = "\${packageName}",
-    @Schema(title = "扩展服务发布包所在相对路径", required = true)
+    @get:Schema(title = "扩展服务发布包所在相对路径", required = true)
     val filePath: String = "\${filePath}",
-    @Schema(title = "目标", required = false)
+    @get:Schema(title = "目标", required = false)
     val destPath: String = "\${serviceCode}/\${version}/\${packageName}"
 ) : Element(name, id, status) {
 

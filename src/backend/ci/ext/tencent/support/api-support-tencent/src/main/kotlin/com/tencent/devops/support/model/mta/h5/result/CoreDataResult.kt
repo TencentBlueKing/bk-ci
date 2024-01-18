@@ -32,10 +32,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "MTA的H5接口请求返回结果")
 data class CoreDataResult(
-    @Schema(title = "状态码")
+    @get:Schema(title = "状态码")
     val code: Int,
-    @Schema(title = "消息")
+    @get:Schema(title = "消息")
     val info: String,
-    @Schema(title = "内容")
+    @get:Schema(title = "内容")
     val data: Map<String, IdxResult>?
 )

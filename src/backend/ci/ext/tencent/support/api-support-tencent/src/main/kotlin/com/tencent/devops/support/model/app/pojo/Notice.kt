@@ -31,20 +31,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "公告")
 data class Notice(
-    @Schema(title = "ID")
+    @get:Schema(title = "ID")
     val id: Long = 0,
-    @Schema(title = "公告标题")
+    @get:Schema(title = "公告标题")
     val noticeTitle: String = "",
-    @Schema(title = "生效日期")
+    @get:Schema(title = "生效日期")
     val effectDate: Long = 0,
-    @Schema(title = "失效日期")
+    @get:Schema(title = "失效日期")
     val invalidDate: Long = 0,
-    @Schema(title = "创建日期")
+    @get:Schema(title = "创建日期")
     val createDate: Long = 0,
-    @Schema(title = "更新日期")
+    @get:Schema(title = "更新日期")
     val updateDate: Long = 0,
-    @Schema(title = "公告内容")
+    @get:Schema(title = "公告内容")
     val noticeContent: String = "",
-    @Schema(title = "跳转地址")
+    @get:Schema(title = "跳转地址")
     val redirectUrl: String = ""
 )

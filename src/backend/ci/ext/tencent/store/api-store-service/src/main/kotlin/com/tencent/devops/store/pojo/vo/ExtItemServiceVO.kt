@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "扩展点对应的扩展服务信息")
 data class ExtItemServiceVO(
-    @Schema(title = "扩展点Id", required = true)
+    @get:Schema(title = "扩展点Id", required = true)
     val itemId: String,
-    @Schema(title = "扩展服务列表", required = false)
+    @get:Schema(title = "扩展服务列表", required = false)
     val extServiceList: List<ExtServiceVO>?
 )

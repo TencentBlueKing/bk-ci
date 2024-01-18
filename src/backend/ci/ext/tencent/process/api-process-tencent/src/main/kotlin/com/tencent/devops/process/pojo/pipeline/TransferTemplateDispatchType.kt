@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "迁移模板构建资源")
 data class TransferTemplateDispatchType(
-    @Schema(title = "要迁移的项目ID", required = true)
+    @get:Schema(title = "要迁移的项目ID", required = true)
     val projectId: String,
-    @Schema(title = "要迁移的模板ID列表，为空表示所有模板", required = false, hidden = true)
+    @get:Schema(title = "要迁移的模板ID列表，为空表示所有模板", required = false, hidden = true)
     val templateIds: List<String> = mutableListOf(),
-    @Schema(title = "源Dispatch Type, 默认为DOCKER，表示从Docker On VM迁移", required = false, hidden = true)
+    @get:Schema(title = "源Dispatch Type, 默认为DOCKER，表示从Docker On VM迁移", required = false, hidden = true)
     val sourceDispatchType: String = "DOCKER",
-    @Schema(title = "目标Dispatch Type, 默认为PUBLIC_DEVCLOUD，表示迁移到DevCloud公共构建机", required = false, hidden = true)
+    @get:Schema(title = "目标Dispatch Type, 默认为PUBLIC_DEVCLOUD，表示迁移到DevCloud公共构建机", required = false, hidden = true)
     val targetDispatchType: String = "PUBLIC_DEVCLOUD",
-    @Schema(title = "storeFlag是否关联到商店，true/false", required = false, hidden = true)
+    @get:Schema(title = "storeFlag是否关联到商店，true/false", required = false, hidden = true)
     val storeFlag: Boolean = false
 )

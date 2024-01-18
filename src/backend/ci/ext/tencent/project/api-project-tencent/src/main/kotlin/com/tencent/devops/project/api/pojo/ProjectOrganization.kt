@@ -33,33 +33,33 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "项目组织信息")
 data class ProjectOrganization(
     @JsonProperty(value = "project_id", required = true)
-    @Schema(title = "项目ID", description = "project_id")
+    @get:Schema(title = "项目ID", description = "project_id")
     val projectId: String,
-    @Schema(title = "项目名称", description = "project_name")
+    @get:Schema(title = "项目名称", description = "project_name")
     @JsonProperty(value = "project_name", required = true)
     val projectName: String,
     @JsonProperty(value = "english_name", required = true)
-    @Schema(title = "项目英文简称", description = "english_name")
+    @get:Schema(title = "项目英文简称", description = "english_name")
     val projectEnglishName: String,
     @JsonProperty(value = "bg_id", required = true)
-    @Schema(title = "项目所属一级机构ID", description = "bg_id")
+    @get:Schema(title = "项目所属一级机构ID", description = "bg_id")
     val bgId: Long,
     @JsonProperty(value = "bg_name", required = true)
-    @Schema(title = "项目所属一级机构名称", description = "bg_name")
+    @get:Schema(title = "项目所属一级机构名称", description = "bg_name")
     val bgName: String,
     @JsonProperty(value = "dept_id", required = true)
-    @Schema(title = "项目所属二级机构ID", description = "dept_id")
+    @get:Schema(title = "项目所属二级机构ID", description = "dept_id")
     val deptId: Long,
     @JsonProperty(value = "dept_name", required = true)
-    @Schema(title = "项目所属二级机构名称", description = "dept_name")
+    @get:Schema(title = "项目所属二级机构名称", description = "dept_name")
     val deptName: String,
     @JsonProperty(value = "center_id", required = true)
-    @Schema(title = "项目所属三级机构ID", description = "center_id")
+    @get:Schema(title = "项目所属三级机构ID", description = "center_id")
     val centerId: Long,
     @JsonProperty(value = "center_name", required = true)
-    @Schema(title = "项目所属三级机构名称", description = "center_name")
+    @get:Schema(title = "项目所属三级机构名称", description = "center_name")
     val centerName: String,
     @JsonProperty(value = "project_type", required = false)
-    @Schema(title = "项目类型", description = "project_type")
+    @get:Schema(title = "项目类型", description = "project_type")
     val projectType: Int?
 )

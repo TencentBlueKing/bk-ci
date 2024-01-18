@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "tcm模板类型")
 data class TcmTemplate(
-    @Schema(title = "模板所在目录")
+    @get:Schema(title = "模板所在目录")
     val templateCategory: String,
-    @Schema(title = "模板名称")
+    @get:Schema(title = "模板名称")
     val templateName: String,
-    @Schema(title = "模板id")
+    @get:Schema(title = "模板id")
     val templateId: String
 )

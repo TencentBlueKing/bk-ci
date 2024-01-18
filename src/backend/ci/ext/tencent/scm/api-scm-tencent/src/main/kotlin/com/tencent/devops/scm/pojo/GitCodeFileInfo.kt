@@ -48,27 +48,27 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitCodeFileInfo(
     @JsonProperty("file_name")
-    @Schema(title = "file_name")
+    @get:Schema(title = "file_name")
     val fileName: String,
     @JsonProperty("file_path")
-    @Schema(title = "file_path")
+    @get:Schema(title = "file_path")
     val filePath: String,
     @JsonProperty("size")
-    @Schema(title = "size")
+    @get:Schema(title = "size")
     val size: Int,
     @JsonProperty("ref")
-    @Schema(title = "ref")
+    @get:Schema(title = "ref")
     val ref: String,
     @JsonProperty("blob_id")
-    @Schema(title = "blob_id")
+    @get:Schema(title = "blob_id")
     val blobId: String,
     @JsonProperty("commit_id")
-    @Schema(title = "commit_id")
+    @get:Schema(title = "commit_id")
     val commitId: String,
     @JsonProperty("content")
-    @Schema(title = "content")
+    @get:Schema(title = "content")
     val content: String,
     @JsonProperty("encoding")
-    @Schema(title = "encoding")
+    @get:Schema(title = "encoding")
     val encoding: String
 )

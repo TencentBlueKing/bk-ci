@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "IPA包签名请求")
 data class IpaCustomizedSignRequest(
-    @Schema(title = "keystore应用ID", required = false)
+    @get:Schema(title = "keystore应用ID", required = false)
     var appId: String? = null,
-    @Schema(title = "拓展应用名和对应的描述文件ID", required = false)
+    @get:Schema(title = "拓展应用名和对应的描述文件ID", required = false)
     var appexSignInfo: List<AppexSignInfo>? = null
 )

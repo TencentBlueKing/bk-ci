@@ -32,8 +32,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "上传临时素材返回结果")
 data class UploadMediaResult(
-    @Schema(title = "临时素材的类型")
+    @get:Schema(title = "临时素材的类型")
     val mediaType: UploadMediaType,
-    @Schema(title = "临时素材的ID")
+    @get:Schema(title = "临时素材的ID")
     val mediaID: String
 )

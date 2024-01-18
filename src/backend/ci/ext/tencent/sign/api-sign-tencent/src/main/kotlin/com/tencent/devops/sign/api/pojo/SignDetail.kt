@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "签名状态查询结果")
 data class SignDetail(
-    @Schema(title = "签名ID", required = true)
+    @get:Schema(title = "签名ID", required = true)
     val resignId: String,
-    @Schema(title = "是否完成", required = true)
+    @get:Schema(title = "是否完成", required = true)
     val status: String,
-    @Schema(title = "描述信息", required = true)
+    @get:Schema(title = "描述信息", required = true)
     val message: String
 )

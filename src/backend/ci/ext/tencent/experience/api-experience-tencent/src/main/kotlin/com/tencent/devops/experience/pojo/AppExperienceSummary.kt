@@ -33,28 +33,28 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "版本体验-发布摘要")
 data class AppExperienceSummary(
-    @Schema(title = "发布HashId", required = true)
+    @get:Schema(title = "发布HashId", required = true)
     val experienceHashId: String,
-    @Schema(title = "版本名称", required = true)
+    @get:Schema(title = "版本名称", required = true)
     val name: String,
-    @Schema(title = "平台", required = true)
+    @get:Schema(title = "平台", required = true)
     val platform: PlatformEnum,
-    @Schema(title = "版本号", required = true)
+    @get:Schema(title = "版本号", required = true)
     val version: String,
-    @Schema(title = "描述", required = false)
+    @get:Schema(title = "描述", required = false)
     val remark: String?,
-    @Schema(title = "截止日期", required = true)
+    @get:Schema(title = "截止日期", required = true)
     val expireDate: Long,
-    @Schema(title = "来源", required = true)
+    @get:Schema(title = "来源", required = true)
     val source: Source,
-    @Schema(title = "logo链接", required = true)
+    @get:Schema(title = "logo链接", required = true)
     val logoUrl: String,
-    @Schema(title = "创建者", required = true)
+    @get:Schema(title = "创建者", required = true)
     val creator: String,
-    @Schema(title = "是否已过期", required = true)
+    @get:Schema(title = "是否已过期", required = true)
     val expired: Boolean,
-    @Schema(title = "是否可体验", required = true)
+    @get:Schema(title = "是否可体验", required = true)
     val canExperience: Boolean,
-    @Schema(title = "是否在线", required = true)
+    @get:Schema(title = "是否在线", required = true)
     val online: Boolean
 )

@@ -32,16 +32,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "校验codecc扫描结果请求报文体")
 data class StoreValidateCodeccResultRequest(
-    @Schema(title = "项目代码", required = true)
+    @get:Schema(title = "项目代码", required = true)
     val projectCode: String,
-    @Schema(title = "用户ID", required = true)
+    @get:Schema(title = "用户ID", required = true)
     val userId: String,
-    @Schema(title = "构建ID", required = true)
+    @get:Schema(title = "构建ID", required = true)
     val buildId: String,
-    @Schema(title = "组件代码", required = true)
+    @get:Schema(title = "组件代码", required = true)
     val storeCode: String,
-    @Schema(title = "组件类型", required = true)
+    @get:Schema(title = "组件类型", required = true)
     val storeType: StoreTypeEnum,
-    @Schema(title = "开发语言", required = true)
+    @get:Schema(title = "开发语言", required = true)
     val language: String
 )

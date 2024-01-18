@@ -31,26 +31,26 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "IDE插件市场首页单项信息")
 data class ExternalIdeAtomItem(
-    @Schema(title = "插件ID", required = true)
+    @get:Schema(title = "插件ID", required = true)
     val atomId: String,
-    @Schema(title = "插件名称", required = true)
+    @get:Schema(title = "插件名称", required = true)
     val atomName: String,
-    @Schema(title = "插件代码", required = true)
+    @get:Schema(title = "插件代码", required = true)
     val atomCode: String,
-    @Schema(title = "版本号", required = true)
+    @get:Schema(title = "版本号", required = true)
     val version: String,
-    @Schema(title = "插件logo地址", required = false)
+    @get:Schema(title = "插件logo地址", required = false)
     val logoUrl: String?,
-    @Schema(title = "插件简介", required = false)
+    @get:Schema(title = "插件简介", required = false)
     val summary: String?,
-    @Schema(title = "发布者", required = true)
+    @get:Schema(title = "发布者", required = true)
     val publisher: String,
-    @Schema(title = "下载量")
+    @get:Schema(title = "下载量")
     val downloads: Int?,
-    @Schema(title = "评分")
+    @get:Schema(title = "评分")
     val score: Double?,
-    @Schema(title = "代码库链接")
+    @get:Schema(title = "代码库链接")
     val codeSrc: String?,
-    @Schema(title = "权重")
+    @get:Schema(title = "权重")
     val weight: Int?
 )

@@ -31,31 +31,31 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "scm调用工蜂addCommitCheckStatus接口的状态上报")
 data class AddCommitCheckStatus(
-    @Schema(title = "请求时间(时间戳，毫秒)", required = true)
+    @get:Schema(title = "请求时间(时间戳，毫秒)", required = true)
     val requestTime: Long,
-    @Schema(title = "响应时间(时间戳，毫秒)", required = true)
+    @get:Schema(title = "响应时间(时间戳，毫秒)", required = true)
     val responseTime: Long,
-    @Schema(title = "耗时(毫秒)", required = true)
+    @get:Schema(title = "耗时(毫秒)", required = true)
     val elapseTime: Long,
-    @Schema(title = "http状态码", required = false)
+    @get:Schema(title = "http状态码", required = false)
     val statusCode: String?,
-    @Schema(title = "状态码对应的错误信息", required = false)
+    @get:Schema(title = "状态码对应的错误信息", required = false)
     val statusMessage: String?,
-    @Schema(title = "错误类型", required = true)
+    @get:Schema(title = "错误类型", required = true)
     val errorType: String? = null,
-    @Schema(title = "蓝盾错误码", required = true)
+    @get:Schema(title = "蓝盾错误码", required = true)
     @InfluxTag
     val errorCode: String,
-    @Schema(title = "错误信息", required = false)
+    @get:Schema(title = "错误信息", required = false)
     val errorMsg: String?,
-    @Schema(title = "工蜂项目名", required = false)
+    @get:Schema(title = "工蜂项目名", required = false)
     val projectName: String,
-    @Schema(title = "commitId", required = false)
+    @get:Schema(title = "commitId", required = false)
     val commitId: String,
-    @Schema(title = "block", required = false)
+    @get:Schema(title = "block", required = false)
     val block: Boolean? = null,
-    @Schema(title = "详情url", required = false)
+    @get:Schema(title = "详情url", required = false)
     val targetUrl: String? = null,
-    @Schema(title = "渠道", required = false)
+    @get:Schema(title = "渠道", required = false)
     val channel: String? = null
 )

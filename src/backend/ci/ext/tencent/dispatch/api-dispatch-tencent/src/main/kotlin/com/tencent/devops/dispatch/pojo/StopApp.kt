@@ -30,20 +30,20 @@ package com.tencent.devops.dispatch.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class StopApp(
-    @Schema(title = "bcs请求路径", required = true)
+    @get:Schema(title = "bcs请求路径", required = true)
     val bcsUrl: String,
-    @Schema(title = "请求token", required = true)
+    @get:Schema(title = "请求token", required = true)
     val token: String,
-    @Schema(title = "k8s灰度命名空间名称", required = true)
+    @get:Schema(title = "k8s灰度命名空间名称", required = true)
     val grayNamespaceName: String,
-    @Schema(title = "灰度host", required = true)
+    @get:Schema(title = "灰度host", required = true)
     val grayHost: String,
-    @Schema(title = "k8s命名空间名称", required = true)
+    @get:Schema(title = "k8s命名空间名称", required = true)
     val namespaceName: String,
-    @Schema(title = "host", required = true)
+    @get:Schema(title = "host", required = true)
     val host: String,
-    @Schema(title = "deployment名称", required = true)
+    @get:Schema(title = "deployment名称", required = true)
     val deploymentName: String,
-    @Schema(title = "应用deployment", required = true)
+    @get:Schema(title = "应用deployment", required = true)
     val serviceName: String
 )

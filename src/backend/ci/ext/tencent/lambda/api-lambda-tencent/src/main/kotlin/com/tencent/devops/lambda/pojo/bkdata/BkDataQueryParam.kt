@@ -30,8 +30,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "数据平台查询接口参数")
 data class BkDataQueryParam(
-    @Schema(title = "查询SQL", required = true)
+    @get:Schema(title = "查询SQL", required = true)
     val sql: String,
-    @Schema(title = "查询引擎", required = false)
+    @get:Schema(title = "查询引擎", required = false)
     var preferStorage: String? = null
 )

@@ -36,11 +36,11 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "创建DevCloud容器（GIT_CI工蜂专用）")
 data class ServiceJobDevCloudTask(
-    @Schema(title = "displayName", required = false)
+    @get:Schema(title = "displayName", required = false)
     override var displayName: String?,
-    @Schema(title = "入参", required = true)
+    @get:Schema(title = "入参", required = true)
     override val inputs: ServiceJobDevCloudInput,
-    @Schema(title = "执行条件", required = true)
+    @get:Schema(title = "执行条件", required = true)
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
     companion object {
@@ -64,14 +64,14 @@ data class ServiceJobDevCloudTask(
 @Schema(title = "创建DevCloud容器")
 data class ServiceJobDevCloudInput(
     val image: String,
-    @Schema(title = "镜像仓库地址", required = false)
+    @get:Schema(title = "镜像仓库地址", required = false)
     val registryHost: String?,
-    @Schema(title = "登录镜像仓库使用的用户名", required = false)
+    @get:Schema(title = "登录镜像仓库使用的用户名", required = false)
     val registryUsername: String?,
-    @Schema(title = "镜像仓库密码", required = false)
+    @get:Schema(title = "镜像仓库密码", required = false)
     val registryPassword: String?,
-    @Schema(title = "参数", required = false)
+    @get:Schema(title = "参数", required = false)
     val params: String?,
-    @Schema(title = "服务环境变量", required = false)
+    @get:Schema(title = "服务环境变量", required = false)
     val serviceEnv: String?
 ) : AbstractInput()

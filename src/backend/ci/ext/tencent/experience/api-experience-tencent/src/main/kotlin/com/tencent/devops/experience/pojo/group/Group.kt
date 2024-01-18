@@ -31,16 +31,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "版本体验-体验组信息")
 data class Group(
-    @Schema(title = "体验组HashID", required = true)
+    @get:Schema(title = "体验组HashID", required = true)
     val groupHashId: String,
-    @Schema(title = "体验组名称", required = true)
+    @get:Schema(title = "体验组名称", required = true)
     val name: String,
-    @Schema(title = "内部人员")
+    @get:Schema(title = "内部人员")
     val innerUsers: Set<String>,
-    @Schema(title = "外部人员")
+    @get:Schema(title = "外部人员")
     val outerUsers: Set<String>,
-    @Schema(title = "组织架构")
+    @get:Schema(title = "组织架构")
     val depts: Set<String>,
-    @Schema(title = "描述")
+    @get:Schema(title = "描述")
     val remark: String?
 )

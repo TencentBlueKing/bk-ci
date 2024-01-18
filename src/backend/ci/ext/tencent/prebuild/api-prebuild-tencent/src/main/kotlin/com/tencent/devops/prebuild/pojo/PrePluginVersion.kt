@@ -32,14 +32,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "prebuild插件版本")
 data class PrePluginVersion(
-    @Schema(title = "插件版本")
+    @get:Schema(title = "插件版本")
     val version: String,
-    @Schema(title = "插件更新时间")
+    @get:Schema(title = "插件更新时间")
     val updateTime: String,
-    @Schema(title = "插件更新人")
+    @get:Schema(title = "插件更新人")
     val modifyUser: String,
-    @Schema(title = "插件更新内容")
+    @get:Schema(title = "插件更新内容")
     val desc: String,
-    @Schema(title = "插件类型")
+    @get:Schema(title = "插件类型")
     val pluginType: PreBuildPluginType
 )

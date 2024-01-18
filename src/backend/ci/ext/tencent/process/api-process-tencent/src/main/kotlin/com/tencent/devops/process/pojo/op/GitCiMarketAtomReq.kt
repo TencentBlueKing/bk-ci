@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "工蜂CI支持的插件,新增接口参数")
 data class GitCiMarketAtomReq(
-    @Schema(title = "插件code", required = true)
+    @get:Schema(title = "插件code", required = true)
     val atomCodeList: List<String>,
-    @Schema(title = "描述")
+    @get:Schema(title = "描述")
     val desc: String?
 )

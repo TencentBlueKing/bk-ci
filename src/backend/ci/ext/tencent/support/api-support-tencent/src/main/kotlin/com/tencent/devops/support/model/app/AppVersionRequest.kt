@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "App版本日志请求体")
 data class AppVersionRequest(
-    @Schema(title = "版本号")
+    @get:Schema(title = "版本号")
     val versionId: String = "",
-    @Schema(title = "发布日志")
+    @get:Schema(title = "发布日志")
     val releaseDate: Long = 0,
-    @Schema(title = "发布内容")
+    @get:Schema(title = "发布内容")
     val releaseContent: String = "",
-    @Schema(title = "渠道类型（1:\"安卓\", 2:\"IOS\"）")
+    @get:Schema(title = "渠道类型（1:\"安卓\", 2:\"IOS\"）")
     val channelType: Byte = 1,
-    @Schema(title = "更新类型(1:强更新 , 2:软更新)")
+    @get:Schema(title = "更新类型(1:强更新 , 2:软更新)")
     val updateType: Int = 1
 )

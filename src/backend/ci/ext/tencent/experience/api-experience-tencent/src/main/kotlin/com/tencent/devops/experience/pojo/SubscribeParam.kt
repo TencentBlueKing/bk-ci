@@ -31,6 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "订阅参数")
 data class SubscribeParam(
-    @Schema(title = "experienceHashId", required = true)
+    @get:Schema(title = "experienceHashId", required = true)
     val experienceHashId: String
 )

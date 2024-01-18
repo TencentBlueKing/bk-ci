@@ -31,6 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "创建VM镜像请求报文")
 data class MakeWorkspaceImageReq(
-    @Schema(title = "imageName")
+    @get:Schema(title = "imageName")
     val imageName: String
 )

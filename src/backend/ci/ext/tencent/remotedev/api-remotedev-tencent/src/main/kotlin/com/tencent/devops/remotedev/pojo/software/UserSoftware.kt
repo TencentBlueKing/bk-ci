@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "用户安装软件")
 data class UserSoftware(
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "用户")
+    @get:Schema(title = "用户")
     val user: String,
-    @Schema(title = "软件ID")
+    @get:Schema(title = "软件ID")
     val softwareId: Long
 )

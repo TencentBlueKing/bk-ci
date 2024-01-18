@@ -31,28 +31,28 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "project接口，users接口的状态上报")
 data class UsersStatus(
-    @Schema(title = "蓝盾项目ID", required = false)
+    @get:Schema(title = "蓝盾项目ID", required = false)
     val projectId: String?,
-    @Schema(title = "流水线ID", required = false)
+    @get:Schema(title = "流水线ID", required = false)
     val pipelineId: String?,
-    @Schema(title = "构建ID", required = false)
+    @get:Schema(title = "构建ID", required = false)
     val buildId: String?,
-    @Schema(title = "vmSeqId", required = false)
+    @get:Schema(title = "vmSeqId", required = false)
     val vmSeqId: String?,
-    @Schema(title = "channelCode", required = false)
+    @get:Schema(title = "channelCode", required = false)
     val channelCode: ChannelCode?,
-    @Schema(title = "请求时间(时间戳，毫秒)", required = true)
+    @get:Schema(title = "请求时间(时间戳，毫秒)", required = true)
     val requestTime: Long,
-    @Schema(title = "响应时间(时间戳，毫秒)", required = true)
+    @get:Schema(title = "响应时间(时间戳，毫秒)", required = true)
     val responseTime: Long,
-    @Schema(title = "耗时(毫秒)", required = true)
+    @get:Schema(title = "耗时(毫秒)", required = true)
     val elapseTime: Long,
-    @Schema(title = "Http状态码", required = false)
+    @get:Schema(title = "Http状态码", required = false)
     val statusCode: String?,
-    @Schema(title = "状态码对应的错误信息", required = false)
+    @get:Schema(title = "状态码对应的错误信息", required = false)
     val statusMessage: String?,
-    @Schema(title = "蓝盾错误码", required = true)
+    @get:Schema(title = "蓝盾错误码", required = true)
     val errorCode: String,
-    @Schema(title = "错误信息", required = false)
+    @get:Schema(title = "错误信息", required = false)
     val errorMsg: String?
 )

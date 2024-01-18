@@ -33,8 +33,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "扩展服务扩展点--该对象可能会要调整")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ExtsionInfoReq(
-    @Schema(title = "页面服务模块")
+    @get:Schema(title = "页面服务模块")
     val serviceModel: String,
-    @Schema(title = "页面动作")
+    @get:Schema(title = "页面动作")
     val serviceEvent: String
 )

@@ -31,16 +31,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "Stream起始页内容-属性")
 data class V1GitYamlProperty(
-    @Schema(title = "Yaml的文件名")
+    @get:Schema(title = "Yaml的文件名")
     val name: String,
-    @Schema(title = "Yaml的描述")
+    @get:Schema(title = "Yaml的描述")
     val description: String,
-    @Schema(title = "显示的icon图标名")
+    @get:Schema(title = "显示的icon图标名")
     val iconName: String,
-    @Schema(title = "分类标识")
+    @get:Schema(title = "分类标识")
     val categories: List<String>?,
-    @Schema(title = "Yaml的文件名")
+    @get:Schema(title = "Yaml的文件名")
     var yamlUrl: String? = "",
-    @Schema(title = "显示的icon路径")
+    @get:Schema(title = "显示的icon路径")
     var iconUrl: String? = ""
 )

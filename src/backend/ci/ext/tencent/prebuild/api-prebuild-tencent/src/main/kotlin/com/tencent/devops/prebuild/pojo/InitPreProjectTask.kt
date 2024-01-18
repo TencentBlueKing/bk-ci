@@ -32,24 +32,24 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "初始化项目任务")
 data class InitPreProjectTask(
-    @Schema(title = "任务ID")
+    @get:Schema(title = "任务ID")
     val taskId: String,
-    @Schema(title = "用户prebuild项目ID")
+    @get:Schema(title = "用户prebuild项目ID")
     val preProjectId: String,
-    @Schema(title = "用户项目ID")
+    @get:Schema(title = "用户项目ID")
     val projectId: String,
-    @Schema(title = "工作空间")
+    @get:Schema(title = "工作空间")
     val workspace: String,
-    @Schema(title = "rsync账号")
+    @get:Schema(title = "rsync账号")
     val account: String,
-    @Schema(title = "password")
+    @get:Schema(title = "password")
     var password: String,
-    @Schema(title = "IP")
+    @get:Schema(title = "IP")
     var ip: String,
-    @Schema(title = "taskStatus")
+    @get:Schema(title = "taskStatus")
     var taskStatus: TaskStatus,
-    @Schema(title = "logs")
+    @get:Schema(title = "logs")
     var logs: List<String>,
-    @Schema(title = "userId")
+    @get:Schema(title = "userId")
     val userId: String
 )

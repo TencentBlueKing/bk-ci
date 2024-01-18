@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "安装IDE插件请求报文")
 data class InstallIdeAtomReq(
-    @Schema(title = "插件标识", required = true)
+    @get:Schema(title = "插件标识", required = true)
     val atomCode: String,
-    @Schema(title = "安装用户", required = false)
+    @get:Schema(title = "安装用户", required = false)
     val userName: String
 )

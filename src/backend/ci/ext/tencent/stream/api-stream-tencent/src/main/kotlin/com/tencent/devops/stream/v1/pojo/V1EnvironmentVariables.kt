@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "环境变量")
 data class V1EnvironmentVariables(
-    @Schema(title = "name")
+    @get:Schema(title = "name")
     val name: String,
-    @Schema(title = "value")
+    @get:Schema(title = "value")
     val value: String,
-    @Schema(title = "branch")
+    @get:Schema(title = "branch")
     val branch: String?,
-    @Schema(title = "display value in build log")
+    @get:Schema(title = "display value in build log")
     val display: Boolean
 )

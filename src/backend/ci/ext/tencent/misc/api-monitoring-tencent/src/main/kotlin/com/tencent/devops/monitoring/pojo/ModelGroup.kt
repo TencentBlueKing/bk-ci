@@ -30,8 +30,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "模块可用性")
 data class ModelGroup(
-    @Schema(title = "模块名", required = true)
+    @get:Schema(title = "模块名", required = true)
     val modelName: String,
-    @Schema(title = "详情", required = true)
+    @get:Schema(title = "详情", required = true)
     val detail: List<Incident>
 )

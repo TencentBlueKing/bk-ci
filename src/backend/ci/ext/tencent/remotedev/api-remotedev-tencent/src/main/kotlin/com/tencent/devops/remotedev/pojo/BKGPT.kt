@@ -5,9 +5,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "bk-chat")
 data class BKGPT(
-    @Schema(title = "插件透传")
+    @get:Schema(title = "插件透传")
     val data: Any,
-    @Schema(title = "插件透传")
+    @get:Schema(title = "插件透传")
     val config: Any,
     @JsonProperty("bkdata_authentication_method")
     var method: String?,

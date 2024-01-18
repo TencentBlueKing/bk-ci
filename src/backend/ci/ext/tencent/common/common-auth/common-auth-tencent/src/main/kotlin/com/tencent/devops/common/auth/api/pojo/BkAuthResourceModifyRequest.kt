@@ -32,18 +32,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class BkAuthResourceModifyRequest(
     @JsonProperty("project_Code")
-    @Schema(title = "project_Code")
+    @get:Schema(title = "project_Code")
     val projectCode: String,
     @JsonProperty("service_code")
-    @Schema(title = "service_code")
+    @get:Schema(title = "service_code")
     val serviceCode: String,
     @JsonProperty("resource_code")
-    @Schema(title = "resource_code")
+    @get:Schema(title = "resource_code")
     val resourceCode: String,
     @JsonProperty("resource_name")
-    @Schema(title = "resource_name")
+    @get:Schema(title = "resource_name")
     val resourceName: String,
     @JsonProperty("resource_type")
-    @Schema(title = "resource_type")
+    @get:Schema(title = "resource_type")
     val resourceType: String
 )

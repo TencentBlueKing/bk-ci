@@ -30,20 +30,20 @@ package com.tencent.devops.store.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class ExtServiceEnvCreateInfo(
-    @Schema(title = "扩展服务Id")
+    @get:Schema(title = "扩展服务Id")
     val serviceId: String,
-    @Schema(title = "扩展服务开发语言")
+    @get:Schema(title = "扩展服务开发语言")
     val language: String? = "",
-    @Schema(title = "扩展服务执行包路径")
+    @get:Schema(title = "扩展服务执行包路径")
     val pkgPath: String? = "",
-    @Schema(title = "扩展服务执行包SHA签名串")
+    @get:Schema(title = "扩展服务执行包SHA签名串")
     val pkgShaContent: String? = "",
-    @Schema(title = "dockefile内容")
+    @get:Schema(title = "dockefile内容")
     val dockerFileContent: String? = "",
-    @Schema(title = "扩展服务镜像路径")
+    @get:Schema(title = "扩展服务镜像路径")
     val imagePath: String? = null,
-    @Schema(title = "添加用户")
+    @get:Schema(title = "添加用户")
     val creatorUser: String,
-    @Schema(title = "修改用户")
+    @get:Schema(title = "修改用户")
     val modifierUser: String
 )

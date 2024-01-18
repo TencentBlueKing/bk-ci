@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "tcm应用类型")
 data class TcmApp(
-    @Schema(title = "应用id")
+    @get:Schema(title = "应用id")
     val buid: String,
-    @Schema(title = "应用名称")
+    @get:Schema(title = "应用名称")
     val buname: String
 )

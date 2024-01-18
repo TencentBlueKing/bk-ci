@@ -36,16 +36,16 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "流水线与模板统计数据")
 data class PipelineAndTemplateStatistic(
-    @Schema(title = "流水线总数", required = true)
+    @get:Schema(title = "流水线总数", required = true)
     val pipelineNum: Int,
-    @Schema(title = "实例化流水线总数", required = true)
+    @get:Schema(title = "实例化流水线总数", required = true)
     val instancedPipelineNum: Int,
-    @Schema(title = "模板总数", required = true)
+    @get:Schema(title = "模板总数", required = true)
     val templateNum: Int,
-    @Schema(title = "实例化模板总数", required = true)
+    @get:Schema(title = "实例化模板总数", required = true)
     val instancedTemplateNum: Int,
-    @Schema(title = "原始模板总数", required = true)
+    @get:Schema(title = "原始模板总数", required = true)
     val srcTemplateNum: Int,
-    @Schema(title = "实例化原始模板总数", required = true)
+    @get:Schema(title = "实例化原始模板总数", required = true)
     val instancedSrcTemplateNum: Int
 )

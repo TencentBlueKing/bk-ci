@@ -31,16 +31,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "企业内测环境的证书和描述文件列表")
 data class IosProfile(
-    @Schema(title = "证书ID", required = true)
+    @get:Schema(title = "证书ID", required = true)
     val id: String,
-    @Schema(title = "证书对应的Bundle ID", required = true)
+    @get:Schema(title = "证书对应的Bundle ID", required = true)
     val bundleId: String,
-    @Schema(title = "证书类型", required = true)
+    @get:Schema(title = "证书类型", required = true)
     val category: String,
-    @Schema(title = "证书名称", required = true)
+    @get:Schema(title = "证书名称", required = true)
     val cerName: String,
-    @Schema(title = "证书环境", required = true)
+    @get:Schema(title = "证书环境", required = true)
     val environment: String,
-    @Schema(title = "证书文件名", required = true)
+    @get:Schema(title = "证书文件名", required = true)
     val filename: String
 )

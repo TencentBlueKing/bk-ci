@@ -32,16 +32,16 @@ import com.tencent.devops.common.api.pojo.OS
 
 @Schema(title = "启动构建参数")
 data class StartUpReq(
-    @Schema(title = "workspace", required = true)
+    @get:Schema(title = "workspace", required = true)
     val workspace: String,
-    @Schema(title = "yaml", required = true)
+    @get:Schema(title = "yaml", required = true)
     val yaml: String,
-    @Schema(title = "os", required = true)
+    @get:Schema(title = "os", required = true)
     val os: OS,
-    @Schema(title = "ip", required = true)
+    @get:Schema(title = "ip", required = true)
     val ip: String,
-    @Schema(title = "hostname", required = true)
+    @get:Schema(title = "hostname", required = true)
     val hostname: String,
-    @Schema(title = "extraParam", required = false)
+    @get:Schema(title = "extraParam", required = false)
     val extraParam: ExtraParam?
 )

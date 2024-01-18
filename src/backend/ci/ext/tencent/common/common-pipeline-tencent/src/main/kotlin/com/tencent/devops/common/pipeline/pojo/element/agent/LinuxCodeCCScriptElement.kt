@@ -34,31 +34,31 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Suppress("UNUSED")
 @Schema(title = "CodeCC代码检查任务(service端)")
 open class LinuxCodeCCScriptElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override var name: String = "执行Linux脚本",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "脚本类型", required = true)
+    @get:Schema(title = "脚本类型", required = true)
     open var scriptType: BuildScriptType = BuildScriptType.SHELL,
-    @Schema(title = "脚本内容", required = true)
+    @get:Schema(title = "脚本内容", required = true)
     open var script: String = "",
-    @Schema(title = "CodeCC Task Name", required = false, hidden = true)
+    @get:Schema(title = "CodeCC Task Name", required = false, hidden = true)
     open var codeCCTaskName: String? = null,
-    @Schema(title = "CodeCC Task CN Name", required = false, hidden = true)
+    @get:Schema(title = "CodeCC Task CN Name", required = false, hidden = true)
     open var codeCCTaskCnName: String? = null,
-    @Schema(title = "工程语言", required = true)
+    @get:Schema(title = "工程语言", required = true)
     open var languages: List<ProjectLanguage> = listOf(),
-    @Schema(title = "是否异步", required = false)
+    @get:Schema(title = "是否异步", required = false)
     open var asynchronous: Boolean? = false,
-    @Schema(title = "扫描类型（0：全量, 1：增量）", required = false)
+    @get:Schema(title = "扫描类型（0：全量, 1：增量）", required = false)
     open var scanType: String? = "",
-    @Schema(title = "代码存放路径", required = false)
+    @get:Schema(title = "代码存放路径", required = false)
     open var path: String? = null,
-    @Schema(title = "codecc原子执行环境，例如WINDOWS，LINUX，MACOS等", required = true)
+    @get:Schema(title = "codecc原子执行环境，例如WINDOWS，LINUX，MACOS等", required = true)
     var compilePlat: String? = null,
-    @Schema(title =
+    @get:Schema(title =
         "JSONArray格式的字符串\n" +
             "eg：\"[\"COVERITY\",\"CPPLINT\",\"PYLINT\",\"TSCLUA\",\"CCN\",\"DUPC\",\"ESLINT\",\"GOML\"" +
             ",\"KLOCWORK\"]\"，其中\n COVERITY：Coverity工具\n" +
@@ -73,24 +73,24 @@ open class LinuxCodeCCScriptElement(
             "STYLECOP: STYLECOP工具", required = true
     )
     var tools: List<String>? = null,
-    @Schema(title =
+    @get:Schema(title =
         "非必填，当tools列表中有PYLINT时必填；值类型有且仅有两种：“py2”、“py3”，\n" +
             "其中“py2”表示使用python2版本，“py3”表示使用python3版本", required = false
     )
     var pyVersion: String? = null,
-    @Schema(title = "eslint项目框架, React, Vue, Other", required = false)
+    @get:Schema(title = "eslint项目框架, React, Vue, Other", required = false)
     var eslintRc: String? = null,
-    @Schema(title = "PHP标准", required = false)
+    @get:Schema(title = "PHP标准", required = false)
     var phpcsStandard: String? = null,
-    @Schema(title = "go语言WORKSPACE下相对路径", required = false)
+    @get:Schema(title = "go语言WORKSPACE下相对路径", required = false)
     var goPath: String? = null,
-    @Schema(title = "spotbugs相关参数", required = false)
+    @get:Schema(title = "spotbugs相关参数", required = false)
     var projectBuildType: String? = null,
-    @Schema(title = "spotbugs相关参数", required = false)
+    @get:Schema(title = "spotbugs相关参数", required = false)
     var projectBuildCommand: String? = null,
-    @Schema(title = "圈复杂度阈值", required = false)
+    @get:Schema(title = "圈复杂度阈值", required = false)
     var ccnThreshold: String? = null,
-    @Schema(title = "是否隐藏代码内容，字符串的false和true", required = false)
+    @get:Schema(title = "是否隐藏代码内容，字符串的false和true", required = false)
     var needCodeContent: String? = null,
     var coverityToolSetId: String? = null,
     var klocworkToolSetId: String? = null,

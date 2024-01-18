@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "prebuild项目")
 data class PreProject(
-    @Schema(title = "prebuild项目ID")
+    @get:Schema(title = "prebuild项目ID")
     val preProjectId: String,
-    @Schema(title = "用户项目ID")
+    @get:Schema(title = "用户项目ID")
     val projectId: String,
-    @Schema(title = "工作空间")
+    @get:Schema(title = "工作空间")
     val workspace: String,
-    @Schema(title = "account")
+    @get:Schema(title = "account")
     val account: String,
-    @Schema(title = "password")
+    @get:Schema(title = "password")
     val password: String
 )

@@ -32,9 +32,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class BkAuthProjectCodeAndId(
     @JsonProperty("project_code", required = true)
-    @Schema(title = "project_code")
+    @get:Schema(title = "project_code")
     val projectCode: String,
     @JsonProperty("project_id", required = true)
-    @Schema(title = "project_id")
+    @get:Schema(title = "project_id")
     val projectId: String
 )

@@ -31,22 +31,22 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "金刚扫面任务结果")
 data class JinGangAppResultReponse(
-    @Schema(title = "任务结果Id")
+    @get:Schema(title = "任务结果Id")
     val id: Long,
-    @Schema(title = "构建Id")
+    @get:Schema(title = "构建Id")
     val buildId: String,
-    @Schema(title = "包名称")
+    @get:Schema(title = "包名称")
     val fileName: String,
-    @Schema(title = "版本号")
+    @get:Schema(title = "版本号")
     val version: String,
-    @Schema(title = "文件MD5")
+    @get:Schema(title = "文件MD5")
     val fileMD5: String,
-    @Schema(title = "任务Id")
+    @get:Schema(title = "任务Id")
     val taskId: Long,
-    @Schema(title = "扫描结果的html地址")
+    @get:Schema(title = "扫描结果的html地址")
     val scanUrl: String,
-    @Schema(title = "上传者")
+    @get:Schema(title = "上传者")
     val responseuser: String,
-    @Schema(title = "扫描结果")
+    @get:Schema(title = "扫描结果")
     val result: Map<String, Any>
 )

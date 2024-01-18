@@ -31,13 +31,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "数据平台查询接口结果对象模型")
 data class BkDataQueryData(
-    @Schema(title = "总记录数", required = true)
+    @get:Schema(title = "总记录数", required = true)
     val totalRecords: Int,
-    @Schema(title = "耗费时间", required = true)
+    @get:Schema(title = "耗费时间", required = true)
     val timetaken: Double,
-    @Schema(title = "数据集合", required = false)
+    @get:Schema(title = "数据集合", required = false)
     val list: List<Map<String, String?>>?,
     @JsonProperty("select_fields_order")
-    @Schema(title = "查询字段集合", required = true)
+    @get:Schema(title = "查询字段集合", required = true)
     val selectFieldsOrder: List<String>
 )

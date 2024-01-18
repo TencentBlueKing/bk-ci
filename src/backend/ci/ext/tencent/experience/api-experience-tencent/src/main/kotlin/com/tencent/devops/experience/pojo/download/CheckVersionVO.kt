@@ -31,16 +31,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "版本体验-检查更新出参")
 data class CheckVersionVO(
-    @Schema(title = "版本体验ID", required = true)
+    @get:Schema(title = "版本体验ID", required = true)
     val experienceHashId: String,
-    @Schema(title = "文件大小(byte)", required = true)
+    @get:Schema(title = "文件大小(byte)", required = true)
     val size: Long,
-    @Schema(title = "logo链接", required = true)
+    @get:Schema(title = "logo链接", required = true)
     val logoUrl: String,
-    @Schema(title = "体验名称", required = true)
+    @get:Schema(title = "体验名称", required = true)
     val experienceName: String,
-    @Schema(title = "创建时间", required = true)
+    @get:Schema(title = "创建时间", required = true)
     val createTime: Long,
-    @Schema(title = "版本体验BundleIdentifier", required = true)
+    @get:Schema(title = "版本体验BundleIdentifier", required = true)
     val bundleIdentifier: String
 )

@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "扩展服务镜像信息")
 data class ExtServiceImageInfoDTO(
-    @Schema(title = "镜像名称", required = true)
+    @get:Schema(title = "镜像名称", required = true)
     val imageName: String,
-    @Schema(title = "镜像TAG", required = true)
+    @get:Schema(title = "镜像TAG", required = true)
     val imageTag: String,
-    @Schema(title = "镜像仓库地址", required = true)
+    @get:Schema(title = "镜像仓库地址", required = true)
     val repoAddr: String,
-    @Schema(title = "镜像仓库用户名", required = true)
+    @get:Schema(title = "镜像仓库用户名", required = true)
     val username: String,
-    @Schema(title = "镜像仓库密码", required = true)
+    @get:Schema(title = "镜像仓库密码", required = true)
     val password: String
 )

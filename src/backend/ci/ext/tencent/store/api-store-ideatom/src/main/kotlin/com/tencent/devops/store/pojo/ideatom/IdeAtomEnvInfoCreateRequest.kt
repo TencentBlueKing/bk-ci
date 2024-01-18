@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "IDE插件环境信息添加请求报文体")
 data class IdeAtomEnvInfoCreateRequest(
-    @Schema(title = "插件ID", required = true)
+    @get:Schema(title = "插件ID", required = true)
     val atomId: String,
-    @Schema(title = "插件安装包路径", required = true)
+    @get:Schema(title = "插件安装包路径", required = true)
     val pkgPath: String
 )

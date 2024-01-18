@@ -32,15 +32,15 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件运行环境准备")
 data class AtomRunEnvPrepareElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "插件运行环境准备",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "开发语言", required = true)
+    @get:Schema(title = "开发语言", required = true)
     val language: String = "\${language}",
-    @Schema(title = "运行时环境版本", required = false)
+    @get:Schema(title = "运行时环境版本", required = false)
     val runtimeVersion: String? = "\${runtimeVersion}"
 ) : Element(name, id, status) {
 

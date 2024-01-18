@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "版本体验-发布权限")
 data class ExperiencePermission(
-    @Schema(title = "是否可体验", required = true)
+    @get:Schema(title = "是否可体验", required = true)
     val canExperience: Boolean,
-    @Schema(title = "是否可编辑", required = true)
+    @get:Schema(title = "是否可编辑", required = true)
     val canEdit: Boolean,
-    @Schema(title = "是否可下架", required = true)
+    @get:Schema(title = "是否可下架", required = true)
     val canDelete: Boolean
 )

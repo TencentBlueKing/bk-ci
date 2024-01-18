@@ -39,34 +39,34 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "ESB创建微信审批单参数")
 open class CreateEsbWechatApproveParam(
-    @Schema(title = "app标识", required = true, description = "app_code")
+    @get:Schema(title = "app标识", required = true, description = "app_code")
     @JsonProperty("app_code")
     val appCode: String = "",
-    @Schema(title = "app私密key", required = true, description = "app_secret")
+    @get:Schema(title = "app私密key", required = true, description = "app_secret")
     @JsonProperty("app_secret")
     val appSecret: String = "",
-    @Schema(title = "用户access_token", required = false, description = "access_token")
+    @get:Schema(title = "用户access_token", required = false, description = "access_token")
     @JsonProperty("access_token")
     var accessToken: String? = null,
-    @Schema(title = "内部版用户登录态", required = false, description = "bk_ticket")
+    @get:Schema(title = "内部版用户登录态", required = false, description = "bk_ticket")
     @JsonProperty("bk_ticket")
     var bkTicket: String? = null,
-    @Schema(title = "操作者RTX英文名", required = false, description = "operator")
+    @get:Schema(title = "操作者RTX英文名", required = false, description = "operator")
     @JsonProperty("operator")
     var operator: String? = null,
-    @Schema(title = "蓝鲸APP名称", required = true, description = "app_name")
+    @get:Schema(title = "蓝鲸APP名称", required = true, description = "app_name")
     @JsonProperty("app_name")
     val appName: String,
-    @Schema(title = "审批人，多个以逗号分隔", required = true, description = "verifier")
+    @get:Schema(title = "审批人，多个以逗号分隔", required = true, description = "verifier")
     @JsonProperty("verifier")
     val verifier: String,
-    @Schema(title = "消息内容", required = true, description = "message")
+    @get:Schema(title = "消息内容", required = true, description = "message")
     @JsonProperty("message")
     val message: String,
-    @Schema(title = "任务ID", required = true, description = "taskid")
+    @get:Schema(title = "任务ID", required = true, description = "taskid")
     @JsonProperty("taskid")
     val taskId: String,
-    @Schema(title = "回调URL", required = false, description = "url")
+    @get:Schema(title = "回调URL", required = false, description = "url")
     @JsonProperty("url")
     val url: String? = null
 )

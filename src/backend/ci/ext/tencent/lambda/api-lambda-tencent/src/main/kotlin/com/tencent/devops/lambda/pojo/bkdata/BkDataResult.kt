@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "数据平台结果对象模型")
 data class BkDataResult<out T>(
-    @Schema(title = "状态码", required = true)
+    @get:Schema(title = "状态码", required = true)
     val code: Int,
-    @Schema(title = "是否成功", required = true)
+    @get:Schema(title = "是否成功", required = true)
     val result: Boolean,
-    @Schema(title = "返回信息", required = false)
+    @get:Schema(title = "返回信息", required = false)
     val message: String? = null,
-    @Schema(title = "错误信息", required = false)
+    @get:Schema(title = "错误信息", required = false)
     val errors: String? = null,
-    @Schema(title = "返回结果", required = false)
+    @get:Schema(title = "返回结果", required = false)
     val data: T? = null
 )

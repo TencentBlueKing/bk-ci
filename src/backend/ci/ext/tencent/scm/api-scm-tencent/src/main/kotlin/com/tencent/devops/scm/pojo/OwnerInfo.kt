@@ -33,18 +33,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class OwnerInfo(
     val id: Int,
     @JsonProperty("username")
-    @Schema(title = "username")
+    @get:Schema(title = "username")
     val userName: String,
     @JsonProperty("web_url")
-    @Schema(title = "web_url")
+    @get:Schema(title = "web_url")
     val webUrl: String,
     val name: String,
     val state: String,
     @JsonProperty("avatar_url")
-    @Schema(title = "avatar_url")
+    @get:Schema(title = "avatar_url")
     val avatarUrl: String,
     @JsonProperty("access_level")
-    @Schema(title = "access_level")
+    @get:Schema(title = "access_level")
 /*GUEST = 10 FOLLOWER = 15 REPORTER = 20 DEVELOPER = 30 MASTER = 40 OWNER = 50*/
     val accessLevel: Int?
 )

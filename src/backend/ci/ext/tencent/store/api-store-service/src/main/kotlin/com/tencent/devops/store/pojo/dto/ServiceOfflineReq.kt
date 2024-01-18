@@ -30,8 +30,8 @@ package com.tencent.devops.store.pojo.dto
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class ServiceOfflineReq(
-    @Schema(title = "下架缓冲期，单位：天")
+    @get:Schema(title = "下架缓冲期，单位：天")
     val bufferDay: Byte,
-    @Schema(title = "下架原因")
+    @get:Schema(title = "下架原因")
     val reason: String?
 )

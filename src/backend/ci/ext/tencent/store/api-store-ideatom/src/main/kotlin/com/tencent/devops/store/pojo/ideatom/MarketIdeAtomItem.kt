@@ -32,44 +32,44 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "IDE插件市场首页单项信息")
 data class MarketIdeAtomItem(
-    @Schema(title = "插件ID", required = true)
+    @get:Schema(title = "插件ID", required = true)
     val id: String,
-    @Schema(title = "插件名称", required = true)
+    @get:Schema(title = "插件名称", required = true)
     val name: String,
-    @Schema(title = "插件代码", required = true)
+    @get:Schema(title = "插件代码", required = true)
     val code: String,
-    @Schema(title = "插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = true)
+    @get:Schema(title = "插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = true)
     val rdType: IdeAtomTypeEnum?,
-    @Schema(title = "所属分类代码", required = true)
+    @get:Schema(title = "所属分类代码", required = true)
     val classifyCode: String?,
-    @Schema(title = "插件logo地址", required = false)
+    @get:Schema(title = "插件logo地址", required = false)
     val logoUrl: String?,
-    @Schema(title = "插件简介", required = false)
+    @get:Schema(title = "插件简介", required = false)
     val summary: String?,
-    @Schema(title = "发布者", required = true)
+    @get:Schema(title = "发布者", required = true)
     val publisher: String,
-    @Schema(title = "发布时间", required = true)
+    @get:Schema(title = "发布时间", required = true)
     val pubTime: String?,
-    @Schema(title = "是否为最新版本插件 true：最新 false：非最新", required = true)
+    @get:Schema(title = "是否为最新版本插件 true：最新 false：非最新", required = true)
     val latestFlag: Boolean,
-    @Schema(title = "是否为公共插件 true：公共插件 false：普通插件", required = true)
+    @get:Schema(title = "是否为公共插件 true：公共插件 false：普通插件", required = true)
     val publicFlag: Boolean,
-    @Schema(title = "是否推荐， TRUE：是 FALSE：不是", required = true)
+    @get:Schema(title = "是否推荐， TRUE：是 FALSE：不是", required = true)
     val recommendFlag: Boolean,
-    @Schema(title = "是否有权限安装标识")
+    @get:Schema(title = "是否有权限安装标识")
     val flag: Boolean,
-    @Schema(title = "创建人", required = true)
+    @get:Schema(title = "创建人", required = true)
     val creator: String,
-    @Schema(title = "创建时间", required = true)
+    @get:Schema(title = "创建时间", required = true)
     val createTime: String,
-    @Schema(title = "修改人", required = true)
+    @get:Schema(title = "修改人", required = true)
     val modifier: String,
-    @Schema(title = "修改时间", required = true)
+    @get:Schema(title = "修改时间", required = true)
     val updateTime: String,
-    @Schema(title = "下载量")
+    @get:Schema(title = "下载量")
     val downloads: Int?,
-    @Schema(title = "评分")
+    @get:Schema(title = "评分")
     val score: Double?,
-    @Schema(title = "权重")
+    @get:Schema(title = "权重")
     val weight: Int?
 )

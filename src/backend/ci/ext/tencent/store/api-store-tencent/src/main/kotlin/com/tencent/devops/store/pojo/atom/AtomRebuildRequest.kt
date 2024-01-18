@@ -31,6 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件重新构建请求报文体")
 data class AtomRebuildRequest(
-    @Schema(title = "插件字段校验确认标识", required = false)
+    @get:Schema(title = "插件字段校验确认标识", required = false)
     val fieldCheckConfirmFlag: Boolean? = false
 )

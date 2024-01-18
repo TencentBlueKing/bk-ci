@@ -31,11 +31,11 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "共享工作空间")
 data class ShareWorkspace(
-    @Schema(title = "workspaceName")
+    @get:Schema(title = "workspaceName")
     val workspaceName: String,
-    @Schema(title = "共享用户")
+    @get:Schema(title = "共享用户")
     val sharedUser: List<String>,
-    @Schema(title = "操作类型，新增或删除")
+    @get:Schema(title = "操作类型，新增或删除")
     val opType: OpType
 ) {
     enum class OpType {

@@ -31,28 +31,28 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "Stream服务配置")
 data class GitCIServicesConf(
-    @Schema(title = "ID")
+    @get:Schema(title = "ID")
     val id: Long,
-    @Schema(title = "镜像名称")
+    @get:Schema(title = "镜像名称")
     val imageName: String,
-    @Schema(title = "镜像标签")
+    @get:Schema(title = "镜像标签")
     val imageTag: String,
-    @Schema(title = "镜像仓库地址")
+    @get:Schema(title = "镜像仓库地址")
     val repoUrl: String,
-    @Schema(title = "镜像仓库登录用户")
+    @get:Schema(title = "镜像仓库登录用户")
     val repoUsername: String?,
-    @Schema(title = "镜像仓库登录密码")
+    @get:Schema(title = "镜像仓库登录密码")
     val repoPwd: String?,
-    @Schema(title = "是否启用")
+    @get:Schema(title = "是否启用")
     val enable: Boolean,
-    @Schema(title = "环境变量")
+    @get:Schema(title = "环境变量")
     val env: String?,
-    @Schema(title = "创建者")
+    @get:Schema(title = "创建者")
     val createUser: String?,
-    @Schema(title = "修改者")
+    @get:Schema(title = "修改者")
     val updateUser: String?,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: String?,
-    @Schema(title = "修改时间")
+    @get:Schema(title = "修改时间")
     val updateTime: String?
 )

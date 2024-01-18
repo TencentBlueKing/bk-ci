@@ -32,16 +32,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "工程仓库模型-Svn-创建类型")
 @Suppress("MaxLineLength")
 class ScmSvnCreate(
-    @Schema(title = "repo url", required = true)
+    @get:Schema(title = "repo url", required = true)
     val url: String,
-    @Schema(title = "repo addition path", required = false)
+    @get:Schema(title = "repo addition path", required = false)
     val additionPath: String?,
-    @Schema(title = "用户名", required = true)
+    @get:Schema(title = "用户名", required = true)
     val username: String,
-    @Schema(title = "密码", required = false)
+    @get:Schema(title = "密码", required = false)
     val password: String?,
-    @Schema(title = "用户访问私钥(明文)", required = false)
+    @get:Schema(title = "用户访问私钥(明文)", required = false)
     val privateKey: String?, // Just need one from [password, privateKey]. If protocol is svn+ssh, it's privateKey, otherwise it's password
-    @Schema(title = "Private Key Passphrase", required = false)
+    @get:Schema(title = "Private Key Passphrase", required = false)
     val passPhrase: String?
 )

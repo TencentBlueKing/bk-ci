@@ -31,16 +31,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "团队工作空间信息-创建")
 data class ProjectWorkspaceCreate(
-    @Schema(title = "云桌面 配置")
+    @get:Schema(title = "云桌面 配置")
     val windowsType: String,
-    @Schema(title = "云桌面 地域")
+    @get:Schema(title = "云桌面 地域")
     val windowsZone: String,
-    @Schema(title = "基础镜像Id")
+    @get:Schema(title = "基础镜像Id")
     val baseImageId: Int,
-    @Schema(title = "创建实例的数量")
+    @get:Schema(title = "创建实例的数量")
     val count: Int,
-    @Schema(title = "自定义镜像路径")
+    @get:Schema(title = "自定义镜像路径")
     val imageCosFile: String = "",
-    @Schema(title = "镜像id")
+    @get:Schema(title = "镜像id")
     val imageId: String = ""
 )

@@ -32,20 +32,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "store代码扫描信息")
 data class StoreCodeccInfo(
-    @Schema(title = "store组件ID", required = true)
+    @get:Schema(title = "store组件ID", required = true)
     val storeId: String,
-    @Schema(title = "store组件编码", required = true)
+    @get:Schema(title = "store组件编码", required = true)
     val storeCode: String,
-    @Schema(title = "组件类型", required = true)
+    @get:Schema(title = "组件类型", required = true)
     val storeType: StoreTypeEnum,
-    @Schema(title = "构建ID", required = true)
+    @get:Schema(title = "构建ID", required = true)
     val buildId: String,
-    @Schema(title = "代码扫描任务ID", required = true)
+    @get:Schema(title = "代码扫描任务ID", required = true)
     val taskId: String,
-    @Schema(title = "代码规范评分", required = true)
+    @get:Schema(title = "代码规范评分", required = true)
     val codeStyleScore: Double,
-    @Schema(title = "代码安全评分", required = true)
+    @get:Schema(title = "代码安全评分", required = true)
     val codeSecurityScore: Double,
-    @Schema(title = "代码度量和检查评分", required = true)
+    @get:Schema(title = "代码度量和检查评分", required = true)
     val codeMeasureScore: Double
 )

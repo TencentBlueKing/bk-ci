@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "安装IDE插件返回报文")
 data class InstallIdeAtomResp(
-    @Schema(title = "devnet环境插件包路径", required = false)
+    @get:Schema(title = "devnet环境插件包路径", required = false)
     val atomFileDevnetUrl: String?,
-    @Schema(title = "idc环境插件包路径", required = false)
+    @get:Schema(title = "idc环境插件包路径", required = false)
     val atomFileIdcUrl: String?
 )

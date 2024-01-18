@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "分页-基本信息")
 data class GitProjectConfWithPage(
-    @Schema(title = "总数", required = true)
+    @get:Schema(title = "总数", required = true)
     val total: Int,
-    @Schema(title = "列表", required = true)
+    @get:Schema(title = "列表", required = true)
     val data: List<GitProjectConf>
 )

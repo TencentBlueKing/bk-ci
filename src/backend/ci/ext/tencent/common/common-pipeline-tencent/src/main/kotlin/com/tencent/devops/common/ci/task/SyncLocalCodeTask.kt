@@ -36,11 +36,11 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "同步本地代码")
 data class SyncLocalCodeTask(
-    @Schema(title = "displayName", required = false)
+    @get:Schema(title = "displayName", required = false)
     override var displayName: String?,
-    @Schema(title = "入参", required = true)
+    @get:Schema(title = "入参", required = true)
     override var inputs: SyncLocalCodeInput?,
-    @Schema(title = "执行条件", required = true)
+    @get:Schema(title = "执行条件", required = true)
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
     companion object {
@@ -71,12 +71,12 @@ data class SyncLocalCodeTask(
 
 @Schema(title = "同步本地代码入参")
 data class SyncLocalCodeInput(
-    @Schema(title = "agentId", required = true)
+    @get:Schema(title = "agentId", required = true)
     var agentId: String?,
-    @Schema(title = "工作目录", required = true)
+    @get:Schema(title = "工作目录", required = true)
     var workspace: String?,
-    @Schema(title = "是否使用Delete", required = false)
+    @get:Schema(title = "是否使用Delete", required = false)
     var useDelete: Boolean?,
-    @Schema(title = "是否同步.git文件夹", required = false)
+    @get:Schema(title = "是否同步.git文件夹", required = false)
     var syncGitRepository: Boolean?
 ) : AbstractInput()

@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "指标列表")
 enum class IdxType(private val type: String) {
-    @Schema(title = "浏览量")
+    @get:Schema(title = "浏览量")
     pv("pv"),
-    @Schema(title = "独立访客")
+    @get:Schema(title = "独立访客")
     uv("uv"),
-    @Schema(title = "访问次数")
+    @get:Schema(title = "访问次数")
     vv("vv"),
-    @Schema(title = "独立IP")
+    @get:Schema(title = "独立IP")
     iv("iv");
 }

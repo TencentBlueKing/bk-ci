@@ -31,6 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "扩展点服务的开发者信息")
 data class ExtServiceVendorVO(
-    @Schema(title = "开发者名称", required = true)
+    @get:Schema(title = "开发者名称", required = true)
     val name: String
 )

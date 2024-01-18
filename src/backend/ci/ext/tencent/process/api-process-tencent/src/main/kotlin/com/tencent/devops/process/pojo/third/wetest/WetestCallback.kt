@@ -31,28 +31,28 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "wetest 回调模型")
 data class WetestCallback(
-    @Schema(title = "相当于projectId", required = true)
+    @get:Schema(title = "相当于projectId", required = true)
     val productID: String,
-    @Schema(title = "wetest的jobID", required = true)
+    @get:Schema(title = "wetest的jobID", required = true)
     val jobID: String,
-    @Schema(title = "buildID", required = true)
+    @get:Schema(title = "buildID", required = true)
     val buildID: String,
-    @Schema(title = "wetest的taskID", required = true)
+    @get:Schema(title = "wetest的taskID", required = true)
     val taskID: String,
-    @Schema(title = "wetest的sodaID，相当于pipelineId,", required = true)
+    @get:Schema(title = "wetest的sodaID，相当于pipelineId,", required = true)
     val sodaId: String,
-    @Schema(title = "result_quality", required = false)
+    @get:Schema(title = "result_quality", required = false)
     val resultQuality: String,
-    @Schema(title = "result_devnum", required = false)
+    @get:Schema(title = "result_devnum", required = false)
     val resultDevNum: String,
-    @Schema(title = "result_Rate", required = false)
+    @get:Schema(title = "result_Rate", required = false)
     val resultRate: String,
-    @Schema(title = "result_Problems", required = false)
+    @get:Schema(title = "result_Problems", required = false)
     val resultProblems: String,
-    @Schema(title = "result_Serious", required = false)
+    @get:Schema(title = "result_Serious", required = false)
     val resultSerious: String,
-    @Schema(title = "starttime", required = false)
+    @get:Schema(title = "starttime", required = false)
     val startTime: String,
-    @Schema(title = "endtime", required = false)
+    @get:Schema(title = "endtime", required = false)
     val endTime: String
 )

@@ -4,8 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "体验组--组织架构")
 data class GroupDeptFullName(
-    @Schema(title = "名称")
+    @get:Schema(title = "名称")
     val name: String,
-    @Schema(title = "组织架构")
+    @get:Schema(title = "组织架构")
     val deptFullName: String
 )

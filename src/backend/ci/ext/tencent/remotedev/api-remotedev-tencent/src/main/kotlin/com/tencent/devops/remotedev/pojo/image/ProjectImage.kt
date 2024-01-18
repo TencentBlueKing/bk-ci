@@ -31,32 +31,32 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "自定义镜像")
 data class ProjectImage(
-    @Schema(title = "ID")
+    @get:Schema(title = "ID")
     val id: Long,
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "镜像ID")
+    @get:Schema(title = "镜像ID")
     val imageId: String,
-    @Schema(title = "镜像名称")
+    @get:Schema(title = "镜像名称")
     val imageName: String,
-    @Schema(title = "路径")
+    @get:Schema(title = "路径")
     val imageCosFile: String,
-    @Schema(title = "size")
+    @get:Schema(title = "size")
     val size: String,
-    @Schema(title = "镜像关联cgsId")
+    @get:Schema(title = "镜像关联cgsId")
     val sourceCgsId: String,
-    @Schema(title = "镜像关联cgsType")
+    @get:Schema(title = "镜像关联cgsType")
     val sourceCgsType: String,
-    @Schema(title = "区域")
+    @get:Schema(title = "区域")
     val sourceCgsZone: String,
-    @Schema(title = "展示区域")
+    @get:Schema(title = "展示区域")
     val sourceCgsZoneName: String,
-    @Schema(title = "区域简写")
+    @get:Schema(title = "区域简写")
     val sourceCgsZoneShortName: String,
-    @Schema(title = "状态")
+    @get:Schema(title = "状态")
     val status: ImageStatus,
-    @Schema(title = "创建人")
+    @get:Schema(title = "创建人")
     val creator: String,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createdTime: Long
 )

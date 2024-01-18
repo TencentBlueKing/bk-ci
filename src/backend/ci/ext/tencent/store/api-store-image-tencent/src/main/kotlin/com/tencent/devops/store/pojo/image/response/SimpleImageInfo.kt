@@ -36,15 +36,15 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "镜像详情")
 data class SimpleImageInfo(
-    @Schema(title = "镜像代码", required = true)
+    @get:Schema(title = "镜像代码", required = true)
     val code: String,
 
-    @Schema(title = "镜像名称", required = true)
+    @get:Schema(title = "镜像名称", required = true)
     val name: String,
 
-    @Schema(title = "镜像版本", required = true)
+    @get:Schema(title = "镜像版本", required = true)
     val version: String,
 
-    @Schema(title = "是否推荐", required = true)
+    @get:Schema(title = "是否推荐", required = true)
     val recommendFlag: Boolean
 )

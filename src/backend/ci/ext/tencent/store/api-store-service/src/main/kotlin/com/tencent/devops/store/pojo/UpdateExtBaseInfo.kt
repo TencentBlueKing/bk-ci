@@ -33,20 +33,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class UpdateExtBaseInfo(
-    @Schema(title = "扩展服务Name")
+    @get:Schema(title = "扩展服务Name")
     val serviceName: String?,
-    @Schema(title = "扩展点")
+    @get:Schema(title = "扩展点")
     val itemIds: Set<String>?,
-    @Schema(title = "标签")
+    @get:Schema(title = "标签")
     val labels: List<String>?,
-    @Schema(title = "简介")
+    @get:Schema(title = "简介")
     val summary: String? = null,
-    @Schema(title = "LOGO url")
+    @get:Schema(title = "LOGO url")
     val logoUrl: String?,
-    @Schema(title = "icon图标base64字符串", required = false)
+    @get:Schema(title = "icon图标base64字符串", required = false)
     val iconData: String?,
-    @Schema(title = "扩展服务描述")
+    @get:Schema(title = "扩展服务描述")
     val description: String? = null,
-    @Schema(title = "描述录入类型")
+    @get:Schema(title = "描述录入类型")
     val descInputType: DescInputTypeEnum? = DescInputTypeEnum.MANUAL
 )

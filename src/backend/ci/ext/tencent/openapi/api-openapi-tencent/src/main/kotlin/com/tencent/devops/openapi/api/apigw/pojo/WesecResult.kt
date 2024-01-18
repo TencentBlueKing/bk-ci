@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "IEG安全团队标准输出")
 data class WesecResult(
-    @Schema(title = "操作结果: true表示成功;false表示失败")
+    @get:Schema(title = "操作结果: true表示成功;false表示失败")
     val result: Boolean,
-    @Schema(title = "0为成功;其它为失败")
+    @get:Schema(title = "0为成功;其它为失败")
     val code: Int,
-    @Schema(title = "失败原因")
+    @get:Schema(title = "失败原因")
     val message: String?,
-    @Schema(title = "数据")
+    @get:Schema(title = "数据")
     val data: Any? = null
 )

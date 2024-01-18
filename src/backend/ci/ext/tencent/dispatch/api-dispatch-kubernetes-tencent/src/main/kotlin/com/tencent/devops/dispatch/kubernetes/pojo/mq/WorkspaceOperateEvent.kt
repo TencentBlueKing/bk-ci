@@ -40,9 +40,9 @@ data class WorkspaceOperateEvent(
     override val userId: String,
     override val traceId: String = TraceTag.buildBiz(),
     val type: UpdateEventType,
-    @Schema(title = "用户设置里云开发的环境变量")
+    @get:Schema(title = "用户设置里云开发的环境变量")
     val settingEnvs: Map<String, String> = emptyMap(),
-    @Schema(title = "包含了创建者 ssh key 的字符串")
+    @get:Schema(title = "包含了创建者 ssh key 的字符串")
     val sshKeys: String = "",
     val bkTicket: String? = null,
     val cgsId: String? = null,

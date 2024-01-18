@@ -4,30 +4,30 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "远程开发用户配置")
 data class RemoteDevUserSettings(
-    @Schema(title = "用户信息，用于OP页面操作")
+    @get:Schema(title = "用户信息，用于OP页面操作")
     var userId: String? = null,
-    @Schema(title = "设置是否仅使用云端IDE")
+    @get:Schema(title = "设置是否仅使用云端IDE")
     var onlyCloudIDE: Boolean = false,
-    @Schema(title = "最大运行数")
+    @get:Schema(title = "最大运行数")
     var maxRunningCount: Int = 2,
-    @Schema(title = "最大创建个数")
+    @get:Schema(title = "最大创建个数")
     var maxHavingCount: Int = 5,
-    @Schema(title = "是否允许复制")
+    @get:Schema(title = "是否允许复制")
     var allowedCopy: Boolean = true,
-    @Schema(title = "是否允许下载")
+    @get:Schema(title = "是否允许下载")
     var allowedDownload: Boolean = true,
-    @Schema(title = "是否需要数字水印")
+    @get:Schema(title = "是否需要数字水印")
     var needWatermark: Boolean = true,
-    @Schema(title = "自动销毁连续空闲时间")
+    @get:Schema(title = "自动销毁连续空闲时间")
     var autoDeletedDays: Int = 14,
-    @Schema(title = "设置linux构建集群类型")
+    @get:Schema(title = "设置linux构建集群类型")
     var mountType: WorkspaceMountType? = null,
-    @Schema(title = "云桌面剩余体验时长")
+    @get:Schema(title = "云桌面剩余体验时长")
     var remainExperienceDuration: Int? = null,
-    @Schema(title = "START云桌面体验时长")
+    @get:Schema(title = "START云桌面体验时长")
     var startCloudExperienceDuration: Int? = null,
-    @Schema(title = "是否加入client白名单")
+    @get:Schema(title = "是否加入client白名单")
     var clientWhiteList: Boolean? = true,
-    @Schema(title = "是否加入START云桌面白名单")
+    @get:Schema(title = "是否加入START云桌面白名单")
     var startWhiteList: Boolean? = false
 )

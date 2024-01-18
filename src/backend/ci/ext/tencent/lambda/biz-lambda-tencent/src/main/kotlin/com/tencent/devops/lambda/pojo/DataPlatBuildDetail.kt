@@ -31,42 +31,42 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "构建详情")
 data class DataPlatBuildDetail(
-    @Schema(title = "清洗时间", required = false)
+    @get:Schema(title = "清洗时间", required = false)
     val washTime: String,
-    @Schema(title = "构建ID", required = true)
+    @get:Schema(title = "构建ID", required = true)
     val buildId: String,
-    @Schema(title = "模板ID", required = true)
+    @get:Schema(title = "模板ID", required = true)
     val templateId: String,
-    @Schema(title = "事业群名称", required = true)
+    @get:Schema(title = "事业群名称", required = true)
     val bgName: String,
-    @Schema(title = "部门名称", required = true)
+    @get:Schema(title = "部门名称", required = true)
     val deptName: String,
-    @Schema(title = "中心名称", required = true)
+    @get:Schema(title = "中心名称", required = true)
     val centerName: String,
-    @Schema(title = "项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @Schema(title = "流水线ID", required = true)
+    @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @Schema(title = "构建号", required = false)
+    @get:Schema(title = "构建号", required = false)
     val buildNum: Int?,
-    @Schema(title = "是否保密项目", required = false)
+    @get:Schema(title = "是否保密项目", required = false)
     val isSecrecy: Boolean?,
-    @Schema(title = "构建详情", required = true)
+    @get:Schema(title = "构建详情", required = true)
     val model: String,
-    @Schema(title = "构建触发人", required = false)
+    @get:Schema(title = "构建触发人", required = false)
     val startUser: String?,
-    @Schema(title = "出发方式", required = false)
+    @get:Schema(title = "出发方式", required = false)
     val trigger: String?,
-    @Schema(title = "启动时间", required = false)
+    @get:Schema(title = "启动时间", required = false)
     val startTime: String,
-    @Schema(title = "结束时间", required = false)
+    @get:Schema(title = "结束时间", required = false)
     val endTime: String?,
-    @Schema(title = "构建状态", required = false)
+    @get:Schema(title = "构建状态", required = false)
     val status: String?,
-    @Schema(title = "事业群ID", required = false)
+    @get:Schema(title = "事业群ID", required = false)
     val bgId: String,
-    @Schema(title = "部门ID", required = false)
+    @get:Schema(title = "部门ID", required = false)
     val deptId: String,
-    @Schema(title = "中心ID", required = false)
+    @get:Schema(title = "中心ID", required = false)
     val centerId: String
 )

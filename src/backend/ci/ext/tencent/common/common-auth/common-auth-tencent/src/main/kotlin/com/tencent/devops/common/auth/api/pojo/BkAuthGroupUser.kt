@@ -32,18 +32,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class BkAuthGroupUser(
     @JsonProperty("display_name")
-    @Schema(title = "display_name")
+    @get:Schema(title = "display_name")
     val displayName: String,
-    @Schema(title = "role_id")
+    @get:Schema(title = "role_id")
     @JsonProperty("role_id")
     val roleId: Int,
     @JsonProperty("role_name")
-    @Schema(title = "role_name")
+    @get:Schema(title = "role_name")
     val roleName: String,
     @JsonProperty("user_id")
-    @Schema(title = "user_id")
+    @get:Schema(title = "user_id")
     val userId: String,
     @JsonProperty("user_type")
-    @Schema(title = "user_type")
+    @get:Schema(title = "user_type")
     val userType: String
 )

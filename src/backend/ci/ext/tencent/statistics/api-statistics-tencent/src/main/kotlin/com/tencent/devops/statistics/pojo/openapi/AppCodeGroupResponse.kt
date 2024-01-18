@@ -30,28 +30,28 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "AppCode所属组织架构信息-response")
 data class AppCodeGroupResponse(
-    @Schema(title = "ID")
+    @get:Schema(title = "ID")
     val id: Long,
-    @Schema(title = "appCode")
+    @get:Schema(title = "appCode")
     val appCode: String,
-    @Schema(title = "事业群ID")
+    @get:Schema(title = "事业群ID")
     val bgId: Int?,
-    @Schema(title = "事业群名字")
+    @get:Schema(title = "事业群名字")
     val bgName: String?,
-    @Schema(title = "部门ID")
+    @get:Schema(title = "部门ID")
     val deptId: Int?,
-    @Schema(title = "部门名字")
+    @get:Schema(title = "部门名字")
     val deptName: String?,
-    @Schema(title = "中心ID")
+    @get:Schema(title = "中心ID")
     val centerId: Int?,
-    @Schema(title = "中心名字")
+    @get:Schema(title = "中心名字")
     val centerName: String?,
-    @Schema(title = "创建人")
+    @get:Schema(title = "创建人")
     val creator: String?,
-    @Schema(title = "创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: Long?,
-    @Schema(title = "更新人")
+    @get:Schema(title = "更新人")
     val updater: String?,
-    @Schema(title = "更新时间")
+    @get:Schema(title = "更新时间")
     val updateTime: Long?
 )

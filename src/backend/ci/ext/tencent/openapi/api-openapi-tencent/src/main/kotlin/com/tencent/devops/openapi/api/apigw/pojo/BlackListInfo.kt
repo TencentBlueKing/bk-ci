@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema
 data class BlackListInfo(
-    @Schema(title = "disable:冻结; enable:解冻")
+    @get:Schema(title = "disable:冻结; enable:解冻")
     val method: String,
-    @Schema(title = "员工英文名称")
+    @get:Schema(title = "员工英文名称")
     val username: String
 )

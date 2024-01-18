@@ -31,34 +31,34 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "获取指定工作空间详情model")
 data class WorkspaceDetail(
-    @Schema(title = "工作空间ID")
+    @get:Schema(title = "工作空间ID")
     val workspaceId: Long,
-    @Schema(title = "工作空间名称")
+    @get:Schema(title = "工作空间名称")
     val workspaceName: String,
-    @Schema(title = "工作空间备注名称")
+    @get:Schema(title = "工作空间备注名称")
     val displayName: String?,
-    @Schema(title = "工作空间状态")
+    @get:Schema(title = "工作空间状态")
     val status: WorkspaceStatus,
-    @Schema(title = "最近状态修改时间")
+    @get:Schema(title = "最近状态修改时间")
     val lastUpdateTime: Long,
-    @Schema(title = "计费时间（秒）")
+    @get:Schema(title = "计费时间（秒）")
     val chargeableTime: Long,
-    @Schema(title = "使用时间（秒）")
+    @get:Schema(title = "使用时间（秒）")
     val usageTime: Long,
-    @Schema(title = "休眠时间（秒）")
+    @get:Schema(title = "休眠时间（秒）")
     val sleepingTime: Long,
-    @Schema(title = "CPU 核心数")
+    @get:Schema(title = "CPU 核心数")
     val cpu: Int,
-    @Schema(title = "内存大小（MB）")
+    @get:Schema(title = "内存大小（MB）")
     val memory: Int,
-    @Schema(title = "存储空间大小（GB）")
+    @get:Schema(title = "存储空间大小（GB）")
     val disk: Int,
-    @Schema(title = "yaml 配置内容")
+    @get:Schema(title = "yaml 配置内容")
     val yaml: String?,
-    @Schema(title = "操作系统类型")
+    @get:Schema(title = "操作系统类型")
     val systemType: WorkspaceSystemType,
-    @Schema(title = "挂载平台类型")
+    @get:Schema(title = "挂载平台类型")
     val workspaceMountType: WorkspaceMountType,
-    @Schema(title = "工作空间归属")
+    @get:Schema(title = "工作空间归属")
     val ownerType: WorkspaceOwnerType
 )

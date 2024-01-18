@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "项目DB分片信息")
 data class ProjectShardingInfo(
-    @Schema(title = "主键Id", required = true)
+    @get:Schema(title = "主键Id", required = true)
     val id: Long,
-    @Schema(title = "项目Id", required = true)
+    @get:Schema(title = "项目Id", required = true)
     val projectId: String,
-    @Schema(title = "项目渠道", required = true)
+    @get:Schema(title = "项目渠道", required = true)
     val channel: String,
-    @Schema(title = "DB路由规则", required = false)
+    @get:Schema(title = "DB路由规则", required = false)
     val routingRule: String?
 )

@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "指标列表结果")
 data class IdxResult(
-    @Schema(title = "pv")
+    @get:Schema(title = "pv")
     val pv: String,
-    @Schema(title = "uv")
+    @get:Schema(title = "uv")
     val uv: String,
-    @Schema(title = "vv")
+    @get:Schema(title = "vv")
     val vv: String,
-    @Schema(title = "iv")
+    @get:Schema(title = "iv")
     val iv: String
 )

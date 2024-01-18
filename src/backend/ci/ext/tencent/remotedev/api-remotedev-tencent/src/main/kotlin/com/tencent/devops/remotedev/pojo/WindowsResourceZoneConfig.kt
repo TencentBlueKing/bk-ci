@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "WINDOWS 地域表")
 data class WindowsResourceZoneConfig(
-    @Schema(title = "Id")
+    @get:Schema(title = "Id")
     val id: Long?,
-    @Schema(title = "是否可用")
+    @get:Schema(title = "是否可用")
     val available: Boolean?,
-    @Schema(title = "区域，深圳，南京等")
+    @get:Schema(title = "区域，深圳，南京等")
     val zone: String,
-    @Schema(title = "区域简称，SZ,NJ")
+    @get:Schema(title = "区域简称，SZ,NJ")
     var zoneShortName: String,
-    @Schema(title = "描述")
+    @get:Schema(title = "描述")
     val description: String
 )

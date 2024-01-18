@@ -33,47 +33,47 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "TriggerBuild请求")
 data class V1TriggerBuildReq(
-    @Schema(title = "工蜂项目ID")
+    @get:Schema(title = "工蜂项目ID")
     override val gitProjectId: Long,
-    @Schema(title = "工蜂项目名")
+    @get:Schema(title = "工蜂项目名")
     override val name: String?,
-    @Schema(title = "工蜂项目url")
+    @get:Schema(title = "工蜂项目url")
     override val url: String?,
-    @Schema(title = "homepage")
+    @get:Schema(title = "homepage")
     override val homepage: String?,
-    @Schema(title = "gitHttpUrl")
+    @get:Schema(title = "gitHttpUrl")
     override val gitHttpUrl: String?,
-    @Schema(title = "gitSshUrl")
+    @get:Schema(title = "gitSshUrl")
     override val gitSshUrl: String?,
-    @Schema(title = "分支")
+    @get:Schema(title = "分支")
     val branch: String,
-    @Schema(title = "Custom commit message")
+    @get:Schema(title = "Custom commit message")
     val customCommitMsg: String?,
-    @Schema(title = "yaml")
+    @get:Schema(title = "yaml")
     val yaml: String?,
-    @Schema(title = "描述")
+    @get:Schema(title = "描述")
     val description: String?,
-    @Schema(title = "用户选择的触发CommitId")
+    @get:Schema(title = "用户选择的触发CommitId")
     val commitId: String? = null,
-    @Schema(title = "事件请求体")
+    @get:Schema(title = "事件请求体")
     val payload: String? = null,
-    @Schema(title = "模拟代码库类型")
+    @get:Schema(title = "模拟代码库类型")
     val scmType: ScmType = ScmType.CODE_GIT,
-    @Schema(title = "模拟代码事件类型")
+    @get:Schema(title = "模拟代码事件类型")
     val eventType: String? = null,
     val objectKind: String = StreamGitObjectKind.OBJECT_KIND_MANUAL
 ) : StreamBaseRepository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)
 
 @Schema(title = "V2AppTriggerBuild请求")
 data class V2AppTriggerBuildReq(
-    @Schema(title = "分支")
+    @get:Schema(title = "分支")
     val branch: String,
-    @Schema(title = "Custom commit message")
+    @get:Schema(title = "Custom commit message")
     val customCommitMsg: String?,
-    @Schema(title = "yaml")
+    @get:Schema(title = "yaml")
     val yaml: String?,
-    @Schema(title = "描述")
+    @get:Schema(title = "描述")
     val description: String?,
-    @Schema(title = "用户选择的触发CommitId")
+    @get:Schema(title = "用户选择的触发CommitId")
     val commitId: String? = null
 )

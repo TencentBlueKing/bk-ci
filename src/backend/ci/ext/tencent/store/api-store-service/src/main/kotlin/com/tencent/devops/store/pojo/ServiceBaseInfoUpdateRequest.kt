@@ -32,26 +32,26 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "扩展服务基本信息修改请求报文体")
 data class ServiceBaseInfoUpdateRequest(
-    @Schema(title = "扩展名称", required = false)
+    @get:Schema(title = "扩展名称", required = false)
     val serviceName: String? = null,
-    @Schema(title = "所属分类代码", required = false)
+    @get:Schema(title = "所属分类代码", required = false)
     val classifyCode: String? = null,
-    @Schema(title = "插件简介", required = false)
+    @get:Schema(title = "插件简介", required = false)
     val summary: String? = null,
-    @Schema(title = "扩展描述", required = false)
+    @get:Schema(title = "扩展描述", required = false)
     val description: String? = null,
-    @Schema(title = "扩展logo", required = false)
+    @get:Schema(title = "扩展logo", required = false)
     val logoUrl: String? = null,
-    @Schema(title = "icon图标base64字符串", required = false)
+    @get:Schema(title = "icon图标base64字符串", required = false)
     val iconData: String? = null,
-    @Schema(title = "发布者", required = false)
+    @get:Schema(title = "发布者", required = false)
     val publisher: String? = null,
-    @Schema(title = "原子标签列表", required = false)
+    @get:Schema(title = "原子标签列表", required = false)
     val labelIdList: ArrayList<String>? = null,
-    @Schema(title = "扩展点列表", required = false)
+    @get:Schema(title = "扩展点列表", required = false)
     val extensionItemIdList: Set<String>? = null,
-    @Schema(title = "媒体信息列表", required = false)
+    @get:Schema(title = "媒体信息列表", required = false)
     val mediaList: List<UpdateMediaInfo>? = null,
-    @Schema(title = "描述录入类型")
+    @get:Schema(title = "描述录入类型")
     val descInputType: DescInputTypeEnum? = DescInputTypeEnum.MANUAL
 )

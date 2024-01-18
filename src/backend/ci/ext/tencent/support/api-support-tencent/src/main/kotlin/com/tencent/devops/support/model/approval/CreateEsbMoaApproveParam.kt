@@ -39,37 +39,37 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "ESB创建MOA审批单参数")
 open class CreateEsbMoaApproveParam(
-    @Schema(title = "app标识", required = true, description = "app_code")
+    @get:Schema(title = "app标识", required = true, description = "app_code")
     @JsonProperty("app_code")
     val appCode: String = "",
-    @Schema(title = "app私密key", required = true, description = "app_secret")
+    @get:Schema(title = "app私密key", required = true, description = "app_secret")
     @JsonProperty("app_secret")
     val appSecret: String = "",
-    @Schema(title = "用户access_token", required = false, description = "access_token")
+    @get:Schema(title = "用户access_token", required = false, description = "access_token")
     @JsonProperty("access_token")
     var accessToken: String? = null,
-    @Schema(title = "内部版用户登录态", required = false, description = "bk_ticket")
+    @get:Schema(title = "内部版用户登录态", required = false, description = "bk_ticket")
     @JsonProperty("bk_ticket")
     var bkTicket: String? = null,
-    @Schema(title = "操作者RTX英文名", required = false, description = "operator")
+    @get:Schema(title = "操作者RTX英文名", required = false, description = "operator")
     @JsonProperty("operator")
     var operator: String? = null,
-    @Schema(title = "审批人，多个以逗号分隔", required = true, description = "verifier")
+    @get:Schema(title = "审批人，多个以逗号分隔", required = true, description = "verifier")
     @JsonProperty("verifier")
     val verifier: String,
-    @Schema(title = "消息内容", required = true, description = "title")
+    @get:Schema(title = "消息内容", required = true, description = "title")
     @JsonProperty("title")
     val title: String,
-    @Schema(title = "任务ID", required = true, description = "taskid")
+    @get:Schema(title = "任务ID", required = true, description = "taskid")
     @JsonProperty("taskid")
     val taskId: String,
-    @Schema(title = "申请时间", required = true, description = "start_date")
+    @get:Schema(title = "申请时间", required = true, description = "start_date")
     @JsonProperty("start_date")
     val startDate: String,
-    @Schema(title = "回调URL", required = true, description = "back_url")
+    @get:Schema(title = "回调URL", required = true, description = "back_url")
     @JsonProperty("back_url")
     val backUrl: String,
-    @Schema(title = "系统URL，用于用户审核时跳转系统查看", required = false, description = "sys_url")
+    @get:Schema(title = "系统URL，用于用户审核时跳转系统查看", required = false, description = "sys_url")
     @JsonProperty("sys_url")
     val sysUrl: String? = null
 )

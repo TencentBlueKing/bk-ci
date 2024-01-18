@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "工作空间时间轴（分页）")
 data class WorkspaceOpHistory(
-    @Schema(title = "操作时间")
+    @get:Schema(title = "操作时间")
     val createdTime: Long,
-    @Schema(title = "操作人")
+    @get:Schema(title = "操作人")
     val operator: String,
-    @Schema(title = "操作类型")
+    @get:Schema(title = "操作类型")
     val action: WorkspaceAction,
-    @Schema(title = "操作描述")
+    @get:Schema(title = "操作描述")
     val actionMessage: String
 )

@@ -30,42 +30,42 @@ package com.tencent.devops.store.pojo.vo
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class ExtServiceRespItem(
-    @Schema(title = "扩展服务ID", required = true)
+    @get:Schema(title = "扩展服务ID", required = true)
     val serviceId: String,
-    @Schema(title = "扩展服务名称", required = true)
+    @get:Schema(title = "扩展服务名称", required = true)
     val serviceName: String,
-    @Schema(title = "扩展服务代码", required = true)
+    @get:Schema(title = "扩展服务代码", required = true)
     val serviceCode: String,
-    @Schema(title = "开发语言", required = true)
+    @get:Schema(title = "开发语言", required = true)
     val language: String?,
-    @Schema(title = "扩展服务所属范畴，TRIGGER：触发器类扩展服务 TASK：任务类扩展服务", required = true)
+    @get:Schema(title = "扩展服务所属范畴，TRIGGER：触发器类扩展服务 TASK：任务类扩展服务", required = true)
     val category: String,
-    @Schema(title = "logo链接")
+    @get:Schema(title = "logo链接")
     val logoUrl: String? = null,
-    @Schema(title = "版本号", required = true)
+    @get:Schema(title = "版本号", required = true)
     val version: String,
-    @Schema(title = "微扩展服务状态", required = true)
+    @get:Schema(title = "微扩展服务状态", required = true)
     val serviceStatus: String,
-    @Schema(title = "项目", required = true)
+    @get:Schema(title = "项目", required = true)
     val projectName: String,
-    @Schema(title = "是否有处于上架状态的扩展服务扩展服务版本", required = true)
+    @get:Schema(title = "是否有处于上架状态的扩展服务扩展服务版本", required = true)
     val releaseFlag: Boolean,
-    @Schema(title = "发布者", required = true)
+    @get:Schema(title = "发布者", required = true)
     val publisher: String,
-    @Schema(title = "发布时间", required = true)
+    @get:Schema(title = "发布时间", required = true)
     val publishTime: String,
-    @Schema(title = "创建人", required = true)
+    @get:Schema(title = "创建人", required = true)
     val creator: String,
-    @Schema(title = "扩展点Id", required = true)
+    @get:Schema(title = "扩展点Id", required = true)
     val itemIds: Set<String>,
-    @Schema(title = "扩展点", required = true)
+    @get:Schema(title = "扩展点", required = true)
     val itemName: List<String>,
-    @Schema(title = "是否可卸载标签")
+    @get:Schema(title = "是否可卸载标签")
     val isUninstall: Boolean? = false,
-    @Schema(title = "修改人", required = true)
+    @get:Schema(title = "修改人", required = true)
     val modifier: String,
-    @Schema(title = "创建时间", required = true)
+    @get:Schema(title = "创建时间", required = true)
     val createTime: String,
-    @Schema(title = "创建时间", required = true)
+    @get:Schema(title = "创建时间", required = true)
     val updateTime: String
 )

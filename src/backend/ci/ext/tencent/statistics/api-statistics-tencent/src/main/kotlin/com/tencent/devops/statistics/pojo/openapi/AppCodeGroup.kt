@@ -30,16 +30,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "AppCode所属组织架构信息")
 data class AppCodeGroup(
-    @Schema(title = "事业群ID")
+    @get:Schema(title = "事业群ID")
     val bgId: Int?,
-    @Schema(title = "事业群名字")
+    @get:Schema(title = "事业群名字")
     val bgName: String?,
-    @Schema(title = "部门ID")
+    @get:Schema(title = "部门ID")
     val deptId: Int?,
-    @Schema(title = "部门名字")
+    @get:Schema(title = "部门名字")
     val deptName: String?,
-    @Schema(title = "中心ID")
+    @get:Schema(title = "中心ID")
     val centerId: Int?,
-    @Schema(title = "中心名字")
+    @get:Schema(title = "中心名字")
     val centerName: String?
 )

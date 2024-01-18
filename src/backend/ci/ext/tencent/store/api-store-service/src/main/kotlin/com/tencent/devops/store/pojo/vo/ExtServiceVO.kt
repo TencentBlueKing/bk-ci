@@ -31,20 +31,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "扩展点对应的扩展服务信息")
 data class ExtServiceVO(
-    @Schema(title = "扩展服务Id", required = true)
+    @get:Schema(title = "扩展服务Id", required = true)
     val serviceId: String,
-    @Schema(title = "扩展服务名称", required = true)
+    @get:Schema(title = "扩展服务名称", required = true)
     val serviceName: String,
-    @Schema(title = "扩展服务code", required = true)
+    @get:Schema(title = "扩展服务code", required = true)
     val serviceCode: String,
-    @Schema(title = "版本", required = true)
+    @get:Schema(title = "版本", required = true)
     val version: String,
-    @Schema(title = "扩展服务简介", required = false)
+    @get:Schema(title = "扩展服务简介", required = false)
     val summary: String?,
-    @Schema(title = "扩展服务开发者信息", required = true)
+    @get:Schema(title = "扩展服务开发者信息", required = true)
     val vendor: ExtServiceVendorVO,
-    @Schema(title = "扩展服务访问路径前缀", required = true)
+    @get:Schema(title = "扩展服务访问路径前缀", required = true)
     val baseUrl: String,
-    @Schema(title = "自扩展服务前端针对该扩展点的配置信息Json串", required = false)
+    @get:Schema(title = "自扩展服务前端针对该扩展点的配置信息Json串", required = false)
     val props: Map<String, Any>?
 )

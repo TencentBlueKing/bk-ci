@@ -32,16 +32,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class VersionLog(
-    @Schema(title = "日志id", required = true)
+    @get:Schema(title = "日志id", required = true)
     val logId: String,
-    @Schema(title = "扩展服务id", required = true)
+    @get:Schema(title = "扩展服务id", required = true)
     val serviceId: String,
-    @Schema(title = "发布类型，0：新上架 1：非兼容性升级 2：兼容性功能更新 3：兼容性问题修正 ", required = true)
+    @get:Schema(title = "发布类型，0：新上架 1：非兼容性升级 2：兼容性功能更新 3：兼容性问题修正 ", required = true)
     val releaseType: String,
-    @Schema(title = "版本日志内容", required = true)
+    @get:Schema(title = "版本日志内容", required = true)
     val content: String,
-    @Schema(title = "添加人")
+    @get:Schema(title = "添加人")
     val createUser: String,
-    @Schema(title = "添加时间")
+    @get:Schema(title = "添加时间")
     val createTime: String
 )

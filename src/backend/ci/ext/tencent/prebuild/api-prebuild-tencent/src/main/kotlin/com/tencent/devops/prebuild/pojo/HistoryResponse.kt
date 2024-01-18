@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "执行历史响应")
 data class HistoryResponse(
-    @Schema(title = "构建ID", required = true)
+    @get:Schema(title = "构建ID", required = true)
     val buildId: String,
-    @Schema(title = "构建号", required = true)
+    @get:Schema(title = "构建号", required = true)
     val buildNum: Int?,
-    @Schema(title = "开始时间", required = true)
+    @get:Schema(title = "开始时间", required = true)
     val startTime: Long,
-    @Schema(title = "结束时间", required = true)
+    @get:Schema(title = "结束时间", required = true)
     val endTime: Long?,
-    @Schema(title = "状态", required = true)
+    @get:Schema(title = "状态", required = true)
     val status: String
 )

@@ -32,27 +32,27 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "推送镜像到第三方仓库")
 data class PushImageToThirdRepoElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "推送镜像到第三方仓库",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "源镜像名称", required = true)
+    @get:Schema(title = "源镜像名称", required = true)
     val srcImageName: String,
-    @Schema(title = "源镜像tag", required = true)
+    @get:Schema(title = "源镜像tag", required = true)
     val srcImageTag: String,
-    @Schema(title = "第三方仓库地址", required = false)
+    @get:Schema(title = "第三方仓库地址", required = false)
     val repoAddress: String?,
-    @Schema(title = "凭证ID", required = true)
+    @get:Schema(title = "凭证ID", required = true)
     val ticketId: String = "",
-    @Schema(title = "镜像名称", required = true)
+    @get:Schema(title = "镜像名称", required = true)
     val targetImageName: String,
-    @Schema(title = "镜像tag", required = true)
+    @get:Schema(title = "镜像tag", required = true)
     val targetImageTag: String,
-    @Schema(title = "镜像关联的cmdb的ID", required = false)
+    @get:Schema(title = "镜像关联的cmdb的ID", required = false)
     val cmdbId: String?,
-    @Schema(title = "启用oa验证", required = false)
+    @get:Schema(title = "启用oa验证", required = false)
     val verifyByOa: Boolean?
 
 ) : Element(name, id, status) {

@@ -31,13 +31,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "SLA--CodeCC--统计数据")
 data class SlaCodeccResponseData(
-    @Schema(title = "执行次数")
+    @get:Schema(title = "执行次数")
     val count: Int,
-    @Schema(title = "耗时")
+    @get:Schema(title = "耗时")
     val costTime: Long,
-    @Schema(title = "成功率")
+    @get:Schema(title = "成功率")
     val successRate: Double,
-    @Schema(title = "错误码分布")
+    @get:Schema(title = "错误码分布")
     val errorPie: List<ErrorPie>
 ) {
     companion object {
@@ -52,10 +52,10 @@ data class SlaCodeccResponseData(
 
 @Schema(title = "SLA--CodeCC--错误码分布")
 data class ErrorPie(
-    @Schema(title = "错误码")
+    @get:Schema(title = "错误码")
     val code: String?,
-    @Schema(title = "错误信息")
+    @get:Schema(title = "错误信息")
     val message: String?,
-    @Schema(title = "次数")
+    @get:Schema(title = "次数")
     val count: Int
 )

@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "DevCloud制作镜像参数")
 data class DevCloudImageParam(
-    @Schema(title = "镜像名", required = true)
+    @get:Schema(title = "镜像名", required = true)
     val name: String,
-    @Schema(title = "镜像TAG", required = true)
+    @get:Schema(title = "镜像TAG", required = true)
     val tag: String,
-    @Schema(title = "描述", required = true)
+    @get:Schema(title = "描述", required = true)
     val description: String?
 )

@@ -32,24 +32,24 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "蓝盾工蜂项目用户校验结果")
 data class GitUserValidateResult(
-    @Schema(title = "工蜂项目ID")
+    @get:Schema(title = "工蜂项目ID")
     override val gitProjectId: Long,
-    @Schema(title = "工蜂项目名")
+    @get:Schema(title = "工蜂项目名")
     override val name: String,
-    @Schema(title = "工蜂项目url")
+    @get:Schema(title = "工蜂项目url")
     override val url: String,
-    @Schema(title = "homepage")
+    @get:Schema(title = "homepage")
     override val homepage: String,
-    @Schema(title = "gitHttpUrl")
+    @get:Schema(title = "gitHttpUrl")
     override val gitHttpUrl: String,
-    @Schema(title = "gitSshUrl")
+    @get:Schema(title = "gitSshUrl")
     override val gitSshUrl: String,
-    @Schema(title = "蓝盾项目ID")
+    @get:Schema(title = "蓝盾项目ID")
     val projectCode: String,
-    @Schema(title = "蓝盾项目名")
+    @get:Schema(title = "蓝盾项目名")
     val projectName: String,
-    @Schema(title = "Stream授权人")
+    @get:Schema(title = "Stream授权人")
     val authUserId: String,
-    @Schema(title = "是否开启CI功能")
+    @get:Schema(title = "是否开启CI功能")
     val enableCi: Boolean
 ) : StreamBaseRepository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)

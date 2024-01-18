@@ -39,11 +39,11 @@ import org.apache.tools.ant.types.Commandline
  */
 @Schema(title = "Docker通用插件")
 data class DockerRunDevCloudTask(
-    @Schema(title = "displayName", required = false)
+    @get:Schema(title = "displayName", required = false)
     override var displayName: String?,
-    @Schema(title = "入参", required = true)
+    @get:Schema(title = "入参", required = true)
     override val inputs: DockerRunInput,
-    @Schema(title = "执行条件", required = true)
+    @get:Schema(title = "执行条件", required = true)
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
     companion object {
@@ -109,14 +109,14 @@ data class DockerRunDevCloudInput(
 
 @Schema(title = "Docker通用插件参数")
 data class DockerRunInput(
-    @Schema(title = "镜像名", required = true)
+    @get:Schema(title = "镜像名", required = true)
     val image: String,
-    @Schema(title = "仓库信息", required = false)
+    @get:Schema(title = "仓库信息", required = false)
     val userName: String? = null,
-    @Schema(title = "password", required = false)
+    @get:Schema(title = "password", required = false)
     val password: String? = null,
-    @Schema(title = "pullType", required = true)
+    @get:Schema(title = "pullType", required = true)
     val cmd: String,
-    @Schema(title = "env", required = false)
+    @get:Schema(title = "env", required = false)
     val env: Map<String, String>?
 ) : AbstractInput()

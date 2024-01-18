@@ -30,20 +30,20 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "grafana监控webhook回调通知消息")
 data class GrafanaNotification(
-    @Schema(title = "标题", required = true)
+    @get:Schema(title = "标题", required = true)
     val title: String,
-    @Schema(title = "规则Id", required = true)
+    @get:Schema(title = "规则Id", required = true)
     val ruleId: Int,
-    @Schema(title = "规则名称", required = true)
+    @get:Schema(title = "规则名称", required = true)
     var ruleName: String,
-    @Schema(title = "规则url", required = true)
+    @get:Schema(title = "规则url", required = true)
     var ruleUrl: String,
-    @Schema(title = "状态", required = true)
+    @get:Schema(title = "状态", required = true)
     var state: String,
-    @Schema(title = "图片url", required = false)
+    @get:Schema(title = "图片url", required = false)
     var imageUrl: String?,
-    @Schema(title = "告警消息", required = true)
+    @get:Schema(title = "告警消息", required = true)
     var message: String,
-    @Schema(title = "grafana监控规则匹配信息", required = false)
+    @get:Schema(title = "grafana监控规则匹配信息", required = false)
     val evalMatches: List<GrafanaEvalMatche>?
 )

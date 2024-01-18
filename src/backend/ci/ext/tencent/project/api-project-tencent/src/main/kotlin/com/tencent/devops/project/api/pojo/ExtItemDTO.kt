@@ -30,8 +30,8 @@ package com.tencent.devops.project.api.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class ExtItemDTO(
-    @Schema(title = "")
+    @get:Schema(title = "")
     val extServiceItem: ExtServiceEntity,
-    @Schema(title = "项目子集")
+    @get:Schema(title = "项目子集")
     val childItem: List<ExtServiceEntity>
 )

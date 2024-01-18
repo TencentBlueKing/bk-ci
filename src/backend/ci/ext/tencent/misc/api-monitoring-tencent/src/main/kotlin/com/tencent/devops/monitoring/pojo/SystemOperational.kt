@@ -30,10 +30,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "系统可用性")
 data class SystemOperational(
-    @Schema(title = "模块可用性", required = true)
+    @get:Schema(title = "模块可用性", required = true)
     val currentStatus: ModelGroup,
-//    @Schema(title = "指标", required = false)
+//    @get:Schema(title = "指标", required = false)
 //    val metrics: String,
-    @Schema(title = "历史故障", required = false)
+    @get:Schema(title = "历史故障", required = false)
     val pastIncidents: List<Incident>
 )

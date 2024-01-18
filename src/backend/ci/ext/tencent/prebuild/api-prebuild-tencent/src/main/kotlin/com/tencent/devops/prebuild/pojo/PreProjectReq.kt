@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "PreProject请求")
 data class PreProjectReq(
-    @Schema(title = "项目名称", required = true)
+    @get:Schema(title = "项目名称", required = true)
     val preProjectId: String,
-    @Schema(title = "工作空间", required = true)
+    @get:Schema(title = "工作空间", required = true)
     val workspace: String
 )

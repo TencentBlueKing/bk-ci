@@ -31,18 +31,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "更新redis缓存值请求报文体")
 data class UpdateRedisValueRequest(
-    @Schema(title = "更新方法名称", required = true)
+    @get:Schema(title = "更新方法名称", required = true)
     val methodName: String,
-    @Schema(title = "key", required = true)
+    @get:Schema(title = "key", required = true)
     val key: String,
-    @Schema(title = "值", required = true)
+    @get:Schema(title = "值", required = true)
     val value: String,
-    @Schema(title = "hashKey", required = false)
+    @get:Schema(title = "hashKey", required = false)
     val hashKey: String? = null,
-    @Schema(title = "超时时间", required = false)
+    @get:Schema(title = "超时时间", required = false)
     val expiredInSecond: Long? = null,
-    @Schema(title = "是否超时", required = false)
+    @get:Schema(title = "是否超时", required = false)
     val expired: Boolean? = true,
-    @Schema(title = "是否区分集群", required = false)
+    @get:Schema(title = "是否区分集群", required = false)
     val isDistinguishCluster: Boolean? = false
 )

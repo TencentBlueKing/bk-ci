@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "TCLS 环境")
 data class TclsEnv(
-    @Schema(title = "环境 ID", required = true)
+    @get:Schema(title = "环境 ID", required = true)
     val envId: String,
-    @Schema(title = "环境名称", required = true)
+    @get:Schema(title = "环境名称", required = true)
     val envName: String
 )

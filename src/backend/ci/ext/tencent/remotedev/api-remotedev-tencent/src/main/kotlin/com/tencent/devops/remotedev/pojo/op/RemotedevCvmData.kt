@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.Parameter
 
 data class RemotedevCvmData(
-    @Schema(title = "ID")
+    @get:Schema(title = "ID")
     val id: Int?,
     @Parameter(description = "项目ID", required = true)
     val projectId: String,

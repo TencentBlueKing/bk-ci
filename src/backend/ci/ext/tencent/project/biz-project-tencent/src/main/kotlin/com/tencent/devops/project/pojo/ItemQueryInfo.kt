@@ -32,14 +32,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "查询扩展点请求对象")
 data class ItemQueryInfo(
-    @Schema(title = "所属服务Id", required = false)
+    @get:Schema(title = "所属服务Id", required = false)
     val serviceId: String? = null,
-    @Schema(title = "扩展点名称", required = false)
+    @get:Schema(title = "扩展点名称", required = false)
     val itemName: String? = null,
-    @Schema(title = "扩展点状态", required = false)
+    @get:Schema(title = "扩展点状态", required = false)
     val itemStatusList: List<ServiceItemStatusEnum>?,
-    @Schema(title = "页数", required = false)
+    @get:Schema(title = "页数", required = false)
     val page: Int? = 1,
-    @Schema(title = "每页条数", required = false)
+    @get:Schema(title = "每页条数", required = false)
     val pageSize: Int? = 10
 )

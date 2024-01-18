@@ -31,6 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "蓝盾工蜂项目用户校验请求")
 data class GitUserValidateRequest(
-    @Schema(title = "工蜂项目url")
+    @get:Schema(title = "工蜂项目url")
     val url: String
 )

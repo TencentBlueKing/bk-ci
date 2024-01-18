@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "用户PreBuild节点")
 data class UserNode(
-    @Schema(title = "IP")
+    @get:Schema(title = "IP")
     val ip: String,
-    @Schema(title = "密码")
+    @get:Schema(title = "密码")
     val pwd: String
 )

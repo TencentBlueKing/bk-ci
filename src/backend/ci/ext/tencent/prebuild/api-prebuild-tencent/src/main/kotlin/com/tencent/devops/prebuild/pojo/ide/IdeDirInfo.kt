@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "ide打开的目录情况")
 data class IdeDirInfo(
-    @Schema(title = "目录路径", required = true)
+    @get:Schema(title = "目录路径", required = true)
     val dirPath: String,
-    @Schema(title = "server id", required = true)
+    @get:Schema(title = "server id", required = true)
     val serverId: String
 )

@@ -33,14 +33,14 @@ import java.time.LocalDateTime
 
 @Schema(title = "IDE插件基本信息修改请求报文体")
 data class IdeAtomBaseInfoUpdateRequest(
-    @Schema(title = "插件状态", required = false)
+    @get:Schema(title = "插件状态", required = false)
     val atomStatus: IdeAtomStatusEnum? = null,
-    @Schema(title = "插件状态描述", required = false)
+    @get:Schema(title = "插件状态描述", required = false)
     val atomStatusMsg: String? = null,
-    @Schema(title = "插件发布时间", required = false)
+    @get:Schema(title = "插件发布时间", required = false)
     val pubTime: LocalDateTime? = null,
-    @Schema(title = "IDE插件代码库tag", required = false)
+    @get:Schema(title = "IDE插件代码库tag", required = false)
     val repositoryTag: String? = null,
-    @Schema(title = "是否为最新课件版本IDE插件", required = false)
+    @get:Schema(title = "是否为最新课件版本IDE插件", required = false)
     val latestFlag: Boolean? = null
 )

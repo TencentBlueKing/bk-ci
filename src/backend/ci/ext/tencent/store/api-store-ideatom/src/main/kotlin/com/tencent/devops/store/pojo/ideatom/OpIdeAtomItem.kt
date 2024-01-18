@@ -34,50 +34,50 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "IDE插件信息")
 data class OpIdeAtomItem(
-    @Schema(title = "插件ID", required = true)
+    @get:Schema(title = "插件ID", required = true)
     val atomId: String,
-    @Schema(title = "插件名称", required = true)
+    @get:Schema(title = "插件名称", required = true)
     val atomName: String,
-    @Schema(title = "插件代码", required = true)
+    @get:Schema(title = "插件代码", required = true)
     val atomCode: String,
-    @Schema(title = "插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = false)
+    @get:Schema(title = "插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = false)
     val atomType: IdeAtomTypeEnum?,
-    @Schema(title = "版本号", required = true)
+    @get:Schema(title = "版本号", required = true)
     val atomVersion: String,
-    @Schema(title = "插件状态，INIT：初始化|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGED：已下架", required = false)
+    @get:Schema(title = "插件状态，INIT：初始化|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGED：已下架", required = false)
     val atomStatus: IdeAtomStatusEnum,
-    @Schema(title = "需管理员操作的最新插件ID", required = false)
+    @get:Schema(title = "需管理员操作的最新插件ID", required = false)
     var opAtomId: String? = null,
-    @Schema(title = "需管理员操作的最新插件版本号", required = false)
+    @get:Schema(title = "需管理员操作的最新插件版本号", required = false)
     var opAtomVersion: String? = null,
-    @Schema(title = "需管理员操作的最新插件状态，INIT：初始化|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGED：已下架", required = false)
+    @get:Schema(title = "需管理员操作的最新插件状态，INIT：初始化|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGED：已下架", required = false)
     var opAtomStatus: IdeAtomStatusEnum? = null,
-    @Schema(title = "所属分类代码", required = false)
+    @get:Schema(title = "所属分类代码", required = false)
     val classifyCode: String?,
-    @Schema(title = "所属分类名称", required = false)
+    @get:Schema(title = "所属分类名称", required = false)
     val classifyName: String?,
-    @Schema(title = "范畴列表", required = false)
+    @get:Schema(title = "范畴列表", required = false)
     val categoryList: List<Category>?,
-    @Schema(title = "发布者", required = true)
+    @get:Schema(title = "发布者", required = true)
     val publisher: String,
-    @Schema(title = "发布时间", required = false)
+    @get:Schema(title = "发布时间", required = false)
     val pubTime: String?,
-    @Schema(title = "是否为最新版本插件 true：最新 false：非最新", required = true)
+    @get:Schema(title = "是否为最新版本插件 true：最新 false：非最新", required = true)
     val latestFlag: Boolean,
-    @Schema(title = "是否为公共插件 true：公共插件 false：普通插件", required = false)
+    @get:Schema(title = "是否为公共插件 true：公共插件 false：普通插件", required = false)
     val publicFlag: Boolean?,
-    @Schema(title = "是否推荐， TRUE：是 FALSE：不是", required = false)
+    @get:Schema(title = "是否推荐， TRUE：是 FALSE：不是", required = false)
     val recommendFlag: Boolean?,
-    @Schema(title = "权重（数值越大代表权重越高）", required = false)
+    @get:Schema(title = "权重（数值越大代表权重越高）", required = false)
     val weight: Int?,
-    @Schema(title = "插件安装包名称", required = false)
+    @get:Schema(title = "插件安装包名称", required = false)
     val pkgName: String?,
-    @Schema(title = "创建人", required = true)
+    @get:Schema(title = "创建人", required = true)
     val creator: String,
-    @Schema(title = "创建时间", required = true)
+    @get:Schema(title = "创建时间", required = true)
     val createTime: String,
-    @Schema(title = "修改人", required = true)
+    @get:Schema(title = "修改人", required = true)
     val modifier: String,
-    @Schema(title = "修改时间", required = true)
+    @get:Schema(title = "修改时间", required = true)
     val updateTime: String
 )

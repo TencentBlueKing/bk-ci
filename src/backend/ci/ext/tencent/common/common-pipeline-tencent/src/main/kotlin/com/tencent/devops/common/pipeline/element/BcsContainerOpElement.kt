@@ -35,49 +35,49 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "BCS容器部署-研发、测试")
 data class BcsContainerOpElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "执行job作业",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "关联CC业务Id", required = true)
+    @get:Schema(title = "关联CC业务Id", required = true)
     val ccAppId: String = "",
-    @Schema(title = "操作类型(包括：create,recreate,scale,rollingupdate,delete)", required = true)
+    @get:Schema(title = "操作类型(包括：create,recreate,scale,rollingupdate,delete)", required = true)
     val opType: String = "",
         // 其他操作参数
-    @Schema(title = "对象类型(包含k8s: DaemonSet/Job/Deployment/StatefulSet/,mesos: Application/Deployment)", required = false)
+    @get:Schema(title = "对象类型(包含k8s: DaemonSet/Job/Deployment/StatefulSet/,mesos: Application/Deployment)", required = false)
     val category: String?,
-    @Schema(title = "超时时间(minutes)", required = false)
+    @get:Schema(title = "超时时间(minutes)", required = false)
     val timeout: Int = 8,
 
         // 创建类参数
-    @Schema(title = "集群ID", required = false)
+    @get:Schema(title = "集群ID", required = false)
     val clusterId: String?,
-    @Schema(title = "模板ID", required = false)
+    @get:Schema(title = "模板ID", required = false)
     val musterId: String?,
-    @Schema(title = "版本ID", required = false)
+    @get:Schema(title = "版本ID", required = false)
     val versionId: String?,
-    @Schema(title = "展示的版本ID", required = false)
+    @get:Schema(title = "展示的版本ID", required = false)
     val showVersionId: String?,
-    @Schema(title = "展示版本名称", required = false)
+    @get:Schema(title = "展示版本名称", required = false)
     val showVersionName: String?,
-    @Schema(title = "模板详细信息", required = false)
+    @get:Schema(title = "模板详细信息", required = false)
     val instanceEntity: String?,
-    @Schema(title = "模板详细信息", required = false)
+    @get:Schema(title = "模板详细信息", required = false)
     val namespaceVar: List<BcsNamespaceVar>?,
 
-    @Schema(title = "应用实例名称", required = false)
+    @get:Schema(title = "应用实例名称", required = false)
     val bcsAppInstName: String?,
-    @Schema(title = "应用实例ID", required = false)
+    @get:Schema(title = "应用实例ID", required = false)
     val bcsInstNum: Int?,
-    @Schema(title = "应用实例名称", required = false)
+    @get:Schema(title = "应用实例名称", required = false)
     val instVersionId: String?,
-    @Schema(title = "应用实例ID", required = false)
+    @get:Schema(title = "应用实例ID", required = false)
     val bcsAppInstId: String?,
 
         // 公共参数
-    @Schema(title = "命名空间以及变量", required = false)
+    @get:Schema(title = "命名空间以及变量", required = false)
     val instVar: List<KeyValue>?
 
 ) : Element(name, id, status) {

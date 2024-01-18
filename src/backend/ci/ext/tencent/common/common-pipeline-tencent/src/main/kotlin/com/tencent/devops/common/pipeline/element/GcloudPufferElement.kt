@@ -32,37 +32,37 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "GCloud-puffer-动态资源更新(IEG专用)")
 data class GcloudPufferElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "GCLOUD-创建APP原子",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "环境配置id", required = true)
+    @get:Schema(title = "环境配置id", required = true)
     var configId: String,
-    @Schema(title = "游戏ID", required = true)
+    @get:Schema(title = "游戏ID", required = true)
     var gameId: String,
-    @Schema(title = "accessId && accessKey 的ticket id", required = true)
+    @get:Schema(title = "accessId && accessKey 的ticket id", required = true)
     var ticketId: String,
-    @Schema(title = "上传文件的accessId && accessKey 的ticket id", required = false)
+    @get:Schema(title = "上传文件的accessId && accessKey 的ticket id", required = false)
     var fileTicketId: String?,
-    @Schema(title = "渠道 ID", required = true)
+    @get:Schema(title = "渠道 ID", required = true)
     var productId: String,
-    @Schema(title = "资源版本号，格式同 IPv4 点分十进制格式，如 3.3.3.3", required = true)
+    @get:Schema(title = "资源版本号，格式同 IPv4 点分十进制格式，如 3.3.3.3", required = true)
     var resourceVersion: String,
-    @Schema(title = "资源名称", required = true)
+    @get:Schema(title = "资源名称", required = true)
     var resourceName: String,
-    @Schema(title = "CDN 是否使用 HTTPS, 可选值 0/1", required = false)
+    @get:Schema(title = "CDN 是否使用 HTTPS, 可选值 0/1", required = false)
     var https: String?,
-    @Schema(title = "文件路径，支持正则表达式(不支持逗号分隔多个文件)", required = true)
+    @get:Schema(title = "文件路径，支持正则表达式(不支持逗号分隔多个文件)", required = true)
     var filePath: String,
-    @Schema(title = "文件来源（PIPELINE-流水线仓库、CUSTOMIZE-自定义仓库）", required = true)
+    @get:Schema(title = "文件来源（PIPELINE-流水线仓库、CUSTOMIZE-自定义仓库）", required = true)
     var fileSource: String,
-    @Schema(title = "版本标签(0: 不可用，1：正式版本, 2：审核版本）", required = true)
+    @get:Schema(title = "版本标签(0: 不可用，1：正式版本, 2：审核版本）", required = true)
     var versionType: String,
-    @Schema(title = "版本描述", required = false)
+    @get:Schema(title = "版本描述", required = false)
     var versionDes: String?,
-    @Schema(title = "自定义字符串", required = false)
+    @get:Schema(title = "自定义字符串", required = false)
     var customStr: String?
 ) : Element(name, id, status) {
     companion object {

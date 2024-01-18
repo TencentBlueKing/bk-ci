@@ -32,13 +32,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "敏感信息检查")
 data class SensitiveScanElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "执行脚本",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "扫描需要排除的路径，多个以分号分隔", required = false)
+    @get:Schema(title = "扫描需要排除的路径，多个以分号分隔", required = false)
     val excludePath: String? = ""
 ) : Element(name, id, status) {
 

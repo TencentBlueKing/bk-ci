@@ -31,18 +31,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "工作空间模板配置")
 data class UserSoftwareInstalledRecord(
-    @Schema(title = "项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "用户")
+    @get:Schema(title = "用户")
     val user: String,
-    @Schema(title = "任务ID")
+    @get:Schema(title = "任务ID")
     val taskId: Long,
-    @Schema(title = "软件名称")
+    @get:Schema(title = "软件名称")
     val softwareName: String,
-    @Schema(title = "云桌面ID")
+    @get:Schema(title = "云桌面ID")
     val workspaceName: String,
-    @Schema(title = "安装状态")
+    @get:Schema(title = "安装状态")
     val status: SoftwareInstallStatus,
-    @Schema(title = "安装时间")
+    @get:Schema(title = "安装时间")
     val installTime: String
 )

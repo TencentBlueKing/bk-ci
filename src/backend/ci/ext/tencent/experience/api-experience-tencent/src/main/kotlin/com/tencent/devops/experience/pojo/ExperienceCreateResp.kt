@@ -4,8 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "版本体验--创建体验--出参")
 data class ExperienceCreateResp(
-    @Schema(title = "体验详情分享页面", required = true)
+    @get:Schema(title = "体验详情分享页面", required = true)
     val url: String,
-    @Schema(title = "体验ID", required = true)
+    @get:Schema(title = "体验ID", required = true)
     val experienceHashId: String
 )

@@ -31,26 +31,26 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "获取用户工作空间详情model")
 data class WorkspaceUserDetail(
-    @Schema(title = "运行中容器数量")
+    @get:Schema(title = "运行中容器数量")
     val runningCount: Int,
-    @Schema(title = "已休眠容器数量")
+    @get:Schema(title = "已休眠容器数量")
     val sleepingCount: Int,
-    @Schema(title = "已销毁容器数量")
+    @get:Schema(title = "已销毁容器数量")
     val deleteCount: Int,
-    @Schema(title = "计费时间（秒）")
+    @get:Schema(title = "计费时间（秒）")
     val chargeableTime: Long,
-    @Schema(title = "使用时间（秒）")
+    @get:Schema(title = "使用时间（秒）")
     val usageTime: Long,
-    @Schema(title = "休眠时间（秒）")
+    @get:Schema(title = "休眠时间（秒）")
     val sleepingTime: Long,
-    @Schema(title = "免费时间（秒）")
+    @get:Schema(title = "免费时间（秒）")
     val discountTime: Long,
-    @Schema(title = "CPU 核心数")
+    @get:Schema(title = "CPU 核心数")
     val cpu: Int,
-    @Schema(title = "内存大小（MB）")
+    @get:Schema(title = "内存大小（MB）")
     val memory: Int,
-    @Schema(title = "存储空间大小（GB）")
+    @get:Schema(title = "存储空间大小（GB）")
     val disk: Int,
-    @Schema(title = "windows-gpu体验剩余时长(秒)")
+    @get:Schema(title = "windows-gpu体验剩余时长(秒)")
     val winUsageTimeLeft: Int
 )

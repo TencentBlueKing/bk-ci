@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "版本体验-下载统计")
 data class ExperienceCount(
-    @Schema(title = "用户数", required = true)
+    @get:Schema(title = "用户数", required = true)
     val downloadUsers: Long,
-    @Schema(title = "下载数", required = true)
+    @get:Schema(title = "下载数", required = true)
     val downloadTimes: Long
 )

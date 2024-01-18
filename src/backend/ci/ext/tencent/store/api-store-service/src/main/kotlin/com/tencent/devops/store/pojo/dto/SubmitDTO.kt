@@ -34,36 +34,36 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class SubmitDTO(
-    @Schema(title = "扩展服务id", required = true)
+    @get:Schema(title = "扩展服务id", required = true)
     val serviceId: String,
-    @Schema(title = "扩展服务Code")
+    @get:Schema(title = "扩展服务Code")
     val serviceCode: String,
-    @Schema(title = "扩展服务Name")
+    @get:Schema(title = "扩展服务Name")
     val serviceName: String,
-    @Schema(title = "所属分类")
+    @get:Schema(title = "所属分类")
     val classify: String? = null,
-    @Schema(title = "插件标签列表")
+    @get:Schema(title = "插件标签列表")
     val labelIdList: List<String>?,
-    @Schema(title = "服务版本")
+    @get:Schema(title = "服务版本")
     val version: String,
-    @Schema(title = "LOGO url")
+    @get:Schema(title = "LOGO url")
     val logoUrl: String?,
-    @Schema(title = "icon图标base64字符串", required = false)
+    @get:Schema(title = "icon图标base64字符串", required = false)
     val iconData: String?,
-    @Schema(title = "扩展服务简介")
+    @get:Schema(title = "扩展服务简介")
     val summary: String? = null,
-    @Schema(title = "扩展服务描述")
+    @get:Schema(title = "扩展服务描述")
     val description: String? = null,
-    @Schema(title = "扩展服务发布者")
+    @get:Schema(title = "扩展服务发布者")
     val publisher: String?,
-    @Schema(title = "是否是最后版本")
+    @get:Schema(title = "是否是最后版本")
     val latestFlag: Int? = 0,
-    @Schema(title = "描述录入类型")
+    @get:Schema(title = "描述录入类型")
     val descInputType: DescInputTypeEnum? = DescInputTypeEnum.MANUAL,
-    @Schema(title = "发布类型，NEW：新上架 INCOMPATIBILITY_UPGRADE：非兼容性升级 COMPATIBILITY_UPGRADE：兼容性功能更新 COMPATIBILITY_FIX：兼容性问题修正", required = true)
+    @get:Schema(title = "发布类型，NEW：新上架 INCOMPATIBILITY_UPGRADE：非兼容性升级 COMPATIBILITY_UPGRADE：兼容性功能更新 COMPATIBILITY_FIX：兼容性问题修正", required = true)
     val releaseType: ReleaseTypeEnum? = ReleaseTypeEnum.NEW,
-    @Schema(title = "版本日志内容", required = true)
+    @get:Schema(title = "版本日志内容", required = true)
     val versionContent: String? = "",
-    @Schema(title = "扩展点列表")
+    @get:Schema(title = "扩展点列表")
     val extensionItemList: Set<String>
 )

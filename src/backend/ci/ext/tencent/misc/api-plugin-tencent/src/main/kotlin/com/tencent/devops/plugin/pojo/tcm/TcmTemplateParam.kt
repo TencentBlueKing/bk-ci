@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "tcm模板参数类型")
 data class TcmTemplateParam(
-    @Schema(title = "参数序号，顺序从1开始")
+    @get:Schema(title = "参数序号，顺序从1开始")
     val seq: String,
-    @Schema(title = "模板参数名称")
+    @get:Schema(title = "模板参数名称")
     val paramName: String
 )

@@ -33,29 +33,29 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Suppress("UNUSED")
 @Schema(title = "CodeCC代码检查任务")
 data class LinuxPaasCodeCCScriptElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override var name: String = "执行Linux脚本",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "脚本类型", required = true)
+    @get:Schema(title = "脚本类型", required = true)
     override var scriptType: BuildScriptType = BuildScriptType.SHELL,
-    @Schema(title = "脚本内容", required = true)
+    @get:Schema(title = "脚本内容", required = true)
     override var script: String = "",
-    @Schema(title = "CodeCC Task Name", required = false, hidden = true)
+    @get:Schema(title = "CodeCC Task Name", required = false, hidden = true)
     override var codeCCTaskName: String? = null,
-    @Schema(title = "CodeCC Task CN Name", required = false, hidden = true)
+    @get:Schema(title = "CodeCC Task CN Name", required = false, hidden = true)
     override var codeCCTaskCnName: String? = null,
-    @Schema(title = "CodeCC Task Id", required = false, hidden = true)
+    @get:Schema(title = "CodeCC Task Id", required = false, hidden = true)
     var codeCCTaskId: String? = null,
-    @Schema(title = "是否异步", required = false)
+    @get:Schema(title = "是否异步", required = false)
     override var asynchronous: Boolean? = false,
-    @Schema(title = "扫描类型（0：全量, 1：增量）", required = false)
+    @get:Schema(title = "扫描类型（0：全量, 1：增量）", required = false)
     override var scanType: String? = null,
-    @Schema(title = "代码存放路径", required = false)
+    @get:Schema(title = "代码存放路径", required = false)
     override var path: String? = null,
-    @Schema(title = "工程语言", required = true)
+    @get:Schema(title = "工程语言", required = true)
     override var languages: List<ProjectLanguage> = listOf()
 ) : LinuxCodeCCScriptElement(
     name,

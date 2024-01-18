@@ -35,11 +35,11 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "CodeCC代码检查任务(离线版)")
 open class CodeCCScanTask(
-    @Schema(title = "displayName", required = false)
+    @get:Schema(title = "displayName", required = false)
     override var displayName: String?,
-    @Schema(title = "入参", required = true)
+    @get:Schema(title = "入参", required = true)
     override val inputs: CodeCCScanInput,
-    @Schema(title = "执行条件", required = true)
+    @get:Schema(title = "执行条件", required = true)
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
 
@@ -101,14 +101,14 @@ open class CodeCCScanTask(
 
 @Schema(title = "CodeCC代码检查任务(客户端)")
 open class CodeCCScanInput(
-    @Schema(title = "扫描类型（0：全量, 1：增量）", required = false)
+    @get:Schema(title = "扫描类型（0：全量, 1：增量）", required = false)
     open var scanType: Int? = 0,
-    @Schema(title = "工具包,多个之间逗号分隔：ccn,dupc,sensitive,checkstyle,cpplint,detekt,eslint,goml,occheck,phpcs,pylint,styecop", required = true)
+    @get:Schema(title = "工具包,多个之间逗号分隔：ccn,dupc,sensitive,checkstyle,cpplint,detekt,eslint,goml,occheck,phpcs,pylint,styecop", required = true)
     var tools: String,
-    @Schema(title = "要扫描的代码路径，默认为整个workspace", required = false)
+    @get:Schema(title = "要扫描的代码路径，默认为整个workspace", required = false)
     var path: String?,
-    @Schema(title = "规则集,分隔", required = false)
+    @get:Schema(title = "规则集,分隔", required = false)
     var rules: String?,
-    @Schema(title = "排除的目录,分隔", required = false)
+    @get:Schema(title = "排除的目录,分隔", required = false)
     var skipPath: String?
 ) : AbstractInput()

@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "查询扩展点请求对象")
 class ItemListVO(
-    @Schema(title = "总记录数", required = true)
+    @get:Schema(title = "总记录数", required = true)
     val count: Int,
-    @Schema(title = "当前页码值", required = false)
+    @get:Schema(title = "当前页码值", required = false)
     val page: Int?,
-    @Schema(title = "每页记录大小", required = false)
+    @get:Schema(title = "每页记录大小", required = false)
     val pageSize: Int?,
-    @Schema(title = "每页记录大小", required = false)
+    @get:Schema(title = "每页记录大小", required = false)
     val itemList: List<ServiceItem>
 )

@@ -32,15 +32,15 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "Android证书安装")
 data class AndroidCertInstallElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "Android证书安装",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "用户在上传证书时指定的ID号", required = false)
+    @get:Schema(title = "用户在上传证书时指定的ID号", required = false)
     val certId: String = "",
-    @Schema(title = "目标路径", required = false)
+    @get:Schema(title = "目标路径", required = false)
     val destPath: String = ""
 ) : Element(name, id, status) {
     companion object {

@@ -31,18 +31,18 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "工作空间接口返回")
 data class WorkspaceResponse(
-    @Schema(title = "工作空间名称")
+    @get:Schema(title = "工作空间名称")
     val workspaceName: String,
-    @Schema(title = "工作空间HOST")
+    @get:Schema(title = "工作空间HOST")
     val workspaceHost: String? = null,
-    @Schema(title = "工作空间状态")
+    @get:Schema(title = "工作空间状态")
     val status: WorkspaceAction,
-    @Schema(title = "错误信息")
+    @get:Schema(title = "错误信息")
     val errorMsg: String? = null,
-    @Schema(title = "系统类型")
+    @get:Schema(title = "系统类型")
     val systemType: WorkspaceSystemType? = null,
-    @Schema(title = "挂载平台类型")
+    @get:Schema(title = "挂载平台类型")
     val workspaceMountType: WorkspaceMountType? = null,
-    @Schema(title = "工作空间归属")
+    @get:Schema(title = "工作空间归属")
     val ownerType: WorkspaceOwnerType? = null
 )

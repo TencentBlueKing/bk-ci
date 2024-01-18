@@ -31,40 +31,40 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "noc语音告警通知请求体")
 data class NocNoticeRequest(
-    @Schema(title = "app标识", required = true, description = "app_code")
+    @get:Schema(title = "app标识", required = true, description = "app_code")
     @JsonProperty("app_code")
     val appCode: String,
-    @Schema(title = "app私密key", required = true, description = "app_secret")
+    @get:Schema(title = "app私密key", required = true, description = "app_secret")
     @JsonProperty("app_secret")
     val appSecret: String,
-    @Schema(title = "操作者RTX英文名", required = true, description = "operator")
+    @get:Schema(title = "操作者RTX英文名", required = true, description = "operator")
     @JsonProperty("operator")
     var operator: String,
-    @Schema(title = "父流程的ProcessName", required = false, description = "parent_process_name")
+    @get:Schema(title = "父流程的ProcessName", required = false, description = "parent_process_name")
     @JsonProperty("parent_process_name")
     val parentProcessName: String? = null,
-    @Schema(title = "父流程的InstanceId", required = false, description = "parent_instance_id")
+    @get:Schema(title = "父流程的InstanceId", required = false, description = "parent_instance_id")
     @JsonProperty("parent_instance_id")
     val parentInstanceId: String? = null,
-    @Schema(title = "自动语音读字信息", required = false, description = "auto_read_message")
+    @get:Schema(title = "自动语音读字信息", required = false, description = "auto_read_message")
     @JsonProperty("auto_read_message")
     val autoReadMessage: String? = null,
-    @Schema(title = "自动语音电话自定义回复选项", required = false, description = "key_options")
+    @get:Schema(title = "自动语音电话自定义回复选项", required = false, description = "key_options")
     @JsonProperty("key_options")
     val keyOptions: Map<String, String>? = null,
-    @Schema(title = "任务头描述", required = false, description = "head_desc")
+    @get:Schema(title = "任务头描述", required = false, description = "head_desc")
     @JsonProperty("head_desc")
     val headDesc: String? = null,
-    @Schema(title = "需要展示的业务故障数据", required = true, description = "busi_data_list")
+    @get:Schema(title = "需要展示的业务故障数据", required = true, description = "busi_data_list")
     @JsonProperty("busi_data_list")
     val busiDataList: List<NocNoticeBusData>,
-    @Schema(title = "待通知的用户列表", required = true, description = "user_list_information")
+    @get:Schema(title = "待通知的用户列表", required = true, description = "user_list_information")
     @JsonProperty("user_list_information")
     val userInfoList: List<NocNoticeUserInfo>,
-    @Schema(title = "具体通知给用户的信息", required = false, description = "notice_information")
+    @get:Schema(title = "具体通知给用户的信息", required = false, description = "notice_information")
     @JsonProperty("notice_information")
     val noticeInformation: String? = null,
-    @Schema(title = "任务最下方提供的附加注解信息", required = false, description = "append_comment")
+    @get:Schema(title = "任务最下方提供的附加注解信息", required = false, description = "append_comment")
     @JsonProperty("append_comment")
     val appendComment: String? = null
 )

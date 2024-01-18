@@ -31,22 +31,22 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "DevCloud持久化容器构建信息")
 data class PersistenceBuildInfo(
-    @Schema(title = "项目id")
+    @get:Schema(title = "项目id")
     val projectId: String,
-    @Schema(title = "构建id")
+    @get:Schema(title = "构建id")
     val buildId: String,
-    @Schema(title = "构建机编排序号")
+    @get:Schema(title = "构建机编排序号")
     val vmSeqId: String,
-    @Schema(title = "工作空间")
+    @get:Schema(title = "工作空间")
     val workspace: String,
-    @Schema(title = "流水线ID")
+    @get:Schema(title = "流水线ID")
     val pipelineId: String?,
-    @Schema(title = "agentId")
+    @get:Schema(title = "agentId")
     val agentId: String,
-    @Schema(title = "secretKey")
+    @get:Schema(title = "secretKey")
     val secretKey: String,
-    @Schema(title = "流水线执行次数")
+    @get:Schema(title = "流水线执行次数")
     val executeCount: Int?,
-    @Schema(title = "容器hashId日志使用")
+    @get:Schema(title = "容器hashId日志使用")
     val containerHashId: String?
 )

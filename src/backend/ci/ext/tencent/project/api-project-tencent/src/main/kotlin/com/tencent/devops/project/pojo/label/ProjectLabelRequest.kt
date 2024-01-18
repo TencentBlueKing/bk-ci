@@ -30,6 +30,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "项目标签请求实体")
 data class ProjectLabelRequest(
-    @Schema(title = "标签名称")
+    @get:Schema(title = "标签名称")
     val labelName: String
 )

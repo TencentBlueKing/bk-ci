@@ -33,17 +33,17 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "作业平台-作业执行")
 data class JobDevOpsExecuteTaskExtElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "执行job作业",
-    @Schema(title = "id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "作业ID", required = true)
+    @get:Schema(title = "作业ID", required = true)
     val taskId: Int,
-    @Schema(title = "全局参数", required = true)
+    @get:Schema(title = "全局参数", required = true)
     val globalVar: Map<String, String> = mapOf(),
-    @Schema(title = "超时时间(s)", required = true)
+    @get:Schema(title = "超时时间(s)", required = true)
     val timeout: Int
 ) : Element(name, id, status) {
     companion object {

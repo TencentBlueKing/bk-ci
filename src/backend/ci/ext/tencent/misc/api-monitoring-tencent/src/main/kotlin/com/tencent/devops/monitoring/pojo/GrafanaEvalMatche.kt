@@ -30,10 +30,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "grafana监控规则匹配信息")
 data class GrafanaEvalMatche(
-    @Schema(title = "监控对象", required = true)
+    @get:Schema(title = "监控对象", required = true)
     val metric: String,
-    @Schema(title = "监控对象数值", required = true)
+    @get:Schema(title = "监控对象数值", required = true)
     val value: String,
-    @Schema(title = "标签", required = false)
+    @get:Schema(title = "标签", required = false)
     var tags: Map<String, Any>?
 )

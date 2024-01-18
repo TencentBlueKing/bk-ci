@@ -32,10 +32,10 @@ import java.time.LocalDateTime
 
 @Schema(title = "团队工作空间信息-分配")
 data class ProjectWorkspaceAssign(
-    @Schema(title = "用户id")
+    @get:Schema(title = "用户id")
     val userId: String,
-    @Schema(title = "分配类型")
+    @get:Schema(title = "分配类型")
     val type: WorkspaceShared.AssignType,
-    @Schema(title = "分享过期时间")
+    @get:Schema(title = "分享过期时间")
     val expiration: LocalDateTime?
 )

@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "grafana消息")
 data class GrafanaMessage(
-    @Schema(title = "通知类型", required = false)
+    @get:Schema(title = "通知类型", required = false)
     val notifyType: GrafanaNotifyTypeEnum?,
-    @Schema(title = "接收者", required = false)
+    @get:Schema(title = "接收者", required = false)
     val notifyReceivers: MutableSet<String>?,
-    @Schema(title = "消息内容", required = true)
+    @get:Schema(title = "消息内容", required = true)
     val notifyMessage: String
 )

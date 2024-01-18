@@ -31,15 +31,15 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "金刚扫面任务分页列表")
 data class JinGangAppResponse(
-    @Schema(title = "任务总数")
+    @get:Schema(title = "任务总数")
     val count: Int,
-    @Schema(title = "当前页数")
+    @get:Schema(title = "当前页数")
     val page: Int,
-    @Schema(title = "每页数量")
+    @get:Schema(title = "每页数量")
     val pageSize: Int,
-    @Schema(title = "金刚扫面任务列表")
+    @get:Schema(title = "金刚扫面任务列表")
     val records: List<JinGangApp>,
-    @Schema(title = "总页数")
+    @get:Schema(title = "总页数")
     val totalPages: Int
 
 )

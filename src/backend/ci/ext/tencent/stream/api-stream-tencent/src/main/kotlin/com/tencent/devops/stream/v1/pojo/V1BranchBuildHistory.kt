@@ -32,12 +32,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "分支构建列表")
 data class V1BranchBuildHistory(
-    @Schema(title = "分支名")
+    @get:Schema(title = "分支名")
     val branchName: String,
-    @Schema(title = "构建总次数")
+    @get:Schema(title = "构建总次数")
     val buildTotal: Long,
-    @Schema(title = "分支类型(Default、Active、Inactive)")
+    @get:Schema(title = "分支类型(Default、Active、Inactive)")
     val branchType: V1BranchType,
-    @Schema(title = "buildHistory")
+    @get:Schema(title = "buildHistory")
     val buildHistory: List<V1GitCIBuildHistory>
 )

@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "APPEX拓展信息")
 data class AppexSignInfo(
-    @Schema(title = "appex拓展应用名", required = true)
+    @get:Schema(title = "appex拓展应用名", required = true)
     val appexName: String,
-    @Schema(title = "扩展App对应描述文件ID", required = true)
+    @get:Schema(title = "扩展App对应描述文件ID", required = true)
     val mobileProvisionId: String
 )

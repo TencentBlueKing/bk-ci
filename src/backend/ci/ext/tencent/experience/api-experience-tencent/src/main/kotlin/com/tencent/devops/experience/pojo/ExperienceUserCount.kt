@@ -31,10 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "版本体验-用户下载统计")
 data class ExperienceUserCount(
-    @Schema(title = "用户名", required = true)
+    @get:Schema(title = "用户名", required = true)
     val userId: String,
-    @Schema(title = "下载次数", required = true)
+    @get:Schema(title = "下载次数", required = true)
     val times: Int,
-    @Schema(title = "最近下载时间", required = true)
+    @get:Schema(title = "最近下载时间", required = true)
     val latestTime: Long
 )

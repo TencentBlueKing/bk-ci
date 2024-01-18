@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "动态参数键值对")
 data class ParameterListInfo(
-    @Schema(title = "参数名", required = true)
+    @get:Schema(title = "参数名", required = true)
     val id: String,
-    @Schema(title = "参数值", required = true)
+    @get:Schema(title = "参数值", required = true)
     val name: String
 )

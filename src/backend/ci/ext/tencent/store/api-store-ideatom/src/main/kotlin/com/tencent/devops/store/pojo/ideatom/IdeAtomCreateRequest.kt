@@ -33,32 +33,32 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "新增IDE插件请求报文体")
 data class IdeAtomCreateRequest(
-    @Schema(title = "插件名称", required = true)
+    @get:Schema(title = "插件名称", required = true)
     val atomName: String,
-    @Schema(title = "插件代码", required = true)
+    @get:Schema(title = "插件代码", required = true)
     val atomCode: String,
-    @Schema(title = "所属分类代码", required = true)
+    @get:Schema(title = "所属分类代码", required = true)
     val classifyCode: String,
-    @Schema(title = "版本号", required = true)
+    @get:Schema(title = "版本号", required = true)
     val version: String,
-    @Schema(title = "发布类型，NEW：新上架 INCOMPATIBILITY_UPGRADE：非兼容性升级 COMPATIBILITY_UPGRADE：兼容性功能更新 COMPATIBILITY_FIX：兼容性问题修正", required = true)
+    @get:Schema(title = "发布类型，NEW：新上架 INCOMPATIBILITY_UPGRADE：非兼容性升级 COMPATIBILITY_UPGRADE：兼容性功能更新 COMPATIBILITY_FIX：兼容性问题修正", required = true)
     val releaseType: ReleaseTypeEnum,
-    @Schema(title = "版本日志内容", required = true)
+    @get:Schema(title = "版本日志内容", required = true)
     val versionContent: String,
-    @Schema(title = "插件logo地址", required = false)
+    @get:Schema(title = "插件logo地址", required = false)
     val logoUrl: String?,
-    @Schema(title = "插件简介", required = false)
+    @get:Schema(title = "插件简介", required = false)
     val summary: String?,
-    @Schema(title = "插件描述", required = false)
+    @get:Schema(title = "插件描述", required = false)
     val description: String?,
-    @Schema(title = "发布者", required = true)
+    @get:Schema(title = "发布者", required = true)
     val publisher: String,
-    @Schema(title = "插件标签列表", required = false)
+    @get:Schema(title = "插件标签列表", required = false)
     val labelIdList: ArrayList<String>?,
-    @Schema(title = "应用范畴列表", required = true)
+    @get:Schema(title = "应用范畴列表", required = true)
     val categoryIdList: ArrayList<String>,
-    @Schema(title = "插件项目可视范围", required = true)
+    @get:Schema(title = "插件项目可视范围", required = true)
     val visibilityLevel: VisibilityLevelEnum = VisibilityLevelEnum.LOGIN_PUBLIC,
-    @Schema(title = "插件代码库不开源原因", required = false)
+    @get:Schema(title = "插件代码库不开源原因", required = false)
     val privateReason: String?
 )

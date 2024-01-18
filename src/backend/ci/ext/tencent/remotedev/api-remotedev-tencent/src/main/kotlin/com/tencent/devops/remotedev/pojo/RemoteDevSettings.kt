@@ -31,30 +31,30 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "远程开发配置")
 data class RemoteDevSettings(
-    @Schema(title = "默认shell")
+    @get:Schema(title = "默认shell")
     val defaultShell: String = "shell",
-    @Schema(title = "客户端使用，后台只管存的信息")
+    @get:Schema(title = "客户端使用，后台只管存的信息")
     val basicSetting: Map<String, String> = emptyMap(),
-    @Schema(title = "是否连接工蜂")
+    @get:Schema(title = "是否连接工蜂")
     val gitAttached: Boolean = false,
-    @Schema(title = "是否连接合作版工蜂")
+    @get:Schema(title = "是否连接合作版工蜂")
     val tGitAttached: Boolean = false,
-    @Schema(title = "是否连接TAPD")
+    @get:Schema(title = "是否连接TAPD")
     val tapdAttached: Boolean = false,
-    @Schema(title = "是否连接GitHub")
+    @get:Schema(title = "是否连接GitHub")
     val githubAttached: Boolean = false,
-    @Schema(title = "远程开发环境变量配置")
+    @get:Schema(title = "远程开发环境变量配置")
     val envsForVariable: Map<String, String> = emptyMap(),
-    @Schema(title = "远程开发文件配置")
+    @get:Schema(title = "远程开发文件配置")
     val envsForFile: List<RemoteDevFile> = emptyList(),
-    @Schema(title = "dotfiles仓库路径")
+    @get:Schema(title = "dotfiles仓库路径")
     val dotfileRepo: String = "",
-    @Schema(title = "项目Id")
+    @get:Schema(title = "项目Id")
     var projectId: String = "",
-    @Schema(title = "用户名称")
+    @get:Schema(title = "用户名称")
     var userName: String = "",
-    @Schema(title = "公司名称")
+    @get:Schema(title = "公司名称")
     var companyName: String = "",
-    @Schema(title = "平台维护的用户管理设置")
+    @get:Schema(title = "平台维护的用户管理设置")
     val userSetting: RemoteDevUserSettings = RemoteDevUserSettings()
 )

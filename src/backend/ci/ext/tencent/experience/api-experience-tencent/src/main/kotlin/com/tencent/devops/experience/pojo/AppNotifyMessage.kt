@@ -33,28 +33,28 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 open class AppNotifyMessage {
 
-    @Schema(title = "消息id")
+    @get:Schema(title = "消息id")
     var messageId: Long = 0
 
-    @Schema(title = "experienceHashId")
+    @get:Schema(title = "experienceHashId")
     var experienceHashId: String = ""
 
-    @Schema(title = "通知接收者")
+    @get:Schema(title = "通知接收者")
     var receiver: String = ""
 
-    @Schema(title = "设备token")
+    @get:Schema(title = "设备token")
     var token: String = ""
 
-    @Schema(title = "通知内容")
+    @get:Schema(title = "通知内容")
     var body: String = ""
 
-    @Schema(title = "通知标题")
+    @get:Schema(title = "通知标题")
     var title: String = ""
 
-    @Schema(title = "跳转路径")
+    @get:Schema(title = "跳转路径")
     var url: String = ""
 
-    @Schema(title = "平台")
+    @get:Schema(title = "平台")
     var platform: String = ""
     override fun toString(): String {
         return String.format(

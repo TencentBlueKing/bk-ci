@@ -31,8 +31,8 @@ import com.tencent.devops.store.pojo.common.enums.MediaTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class UpdateMediaInfo(
-    @Schema(title = "媒体url", required = true)
+    @get:Schema(title = "媒体url", required = true)
     val mediaUrl: String,
-    @Schema(title = "媒体类型", required = true)
+    @get:Schema(title = "媒体类型", required = true)
     val mediaType: MediaTypeEnum
 )

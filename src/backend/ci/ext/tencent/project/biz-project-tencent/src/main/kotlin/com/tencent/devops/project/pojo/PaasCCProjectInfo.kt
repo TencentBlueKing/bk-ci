@@ -31,38 +31,38 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class PaasCCProjectInfo(
-    @Schema(title = "项目名称", description = "project_name")
+    @get:Schema(title = "项目名称", description = "project_name")
     @JsonProperty("project_name")
     val projectName: String,
-    @Schema(title = "英文缩写", description = "english_name")
+    @get:Schema(title = "英文缩写", description = "english_name")
     @JsonProperty("english_name")
     val englishName: String,
-    @Schema(title = "项目类型", description = "project_type")
+    @get:Schema(title = "项目类型", description = "project_type")
     @JsonProperty("project_type")
     val projectType: Int,
-    @Schema(title = "描述")
+    @get:Schema(title = "描述")
     val description: String,
-    @Schema(title = "一级部门ID", description = "bg_id")
+    @get:Schema(title = "一级部门ID", description = "bg_id")
     @JsonProperty("bg_id")
     val bgId: Long,
-    @Schema(title = "一级部门名字", description = "bg_name")
+    @get:Schema(title = "一级部门名字", description = "bg_name")
     @JsonProperty("bg_name")
     val bgName: String,
-    @Schema(title = "二级部门ID", description = "dept_id")
+    @get:Schema(title = "二级部门ID", description = "dept_id")
     @JsonProperty("dept_id")
     val deptId: Long,
-    @Schema(title = "二级部门名称", description = "dept_name")
+    @get:Schema(title = "二级部门名称", description = "dept_name")
     @JsonProperty("dept_name")
     val deptName: String,
-    @Schema(title = "三级部门ID", description = "center_id")
+    @get:Schema(title = "三级部门ID", description = "center_id")
     @JsonProperty("center_id")
     val centerId: Long,
-    @Schema(title = "三级部门名称", description = "center_name")
+    @get:Schema(title = "三级部门名称", description = "center_name")
     @JsonProperty("center_name")
     val centerName: String,
-    @Schema(title = "是否保密", description = "is_secrecy")
+    @get:Schema(title = "是否保密", description = "is_secrecy")
     @get:JsonProperty("is_secrecy")
     var secrecy: Boolean = false,
-    @Schema(title = "kind")
+    @get:Schema(title = "kind")
     val kind: Int = 0
 )

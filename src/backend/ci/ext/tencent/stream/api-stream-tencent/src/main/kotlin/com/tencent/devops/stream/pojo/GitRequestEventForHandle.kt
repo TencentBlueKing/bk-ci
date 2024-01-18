@@ -31,16 +31,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "工蜂触发请求-封装给流水线执行库处理使用")
 data class GitRequestEventForHandle(
-    @Schema(title = "Git Request Event ID")
+    @get:Schema(title = "Git Request Event ID")
     val id: Long?,
-    @Schema(title = "流水线所在工蜂项目ID")
+    @get:Schema(title = "流水线所在工蜂项目ID")
     val gitProjectId: Long,
-    @Schema(title = "流水线所在分支名")
+    @get:Schema(title = "流水线所在分支名")
     val branch: String,
-    @Schema(title = "触发用户")
+    @get:Schema(title = "触发用户")
     val userId: String,
-    @Schema(title = "是否为远程仓库触发")
+    @get:Schema(title = "是否为远程仓库触发")
     val checkRepoTrigger: Boolean = false,
-    @Schema(title = "工蜂触发的请求内容")
+    @get:Schema(title = "工蜂触发的请求内容")
     val gitRequestEvent: GitRequestEvent
 )

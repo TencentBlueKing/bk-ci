@@ -31,45 +31,45 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "项目-型")
 data class DataPlatProjectInfo(
-    @Schema(title = "项目名称")
+    @get:Schema(title = "项目名称")
 //    @JsonProperty("project_name")
     val projectName: String,
-    @Schema(title = "项目类型")
+    @get:Schema(title = "项目类型")
 //    @JsonProperty("project_type")
     val projectType: Int = 0,
-    @Schema(title = "事业群ID")
+    @get:Schema(title = "事业群ID")
 //    @JsonProperty("bg_id")
     val bgId: Long = 0,
-    @Schema(title = "事业群名字")
+    @get:Schema(title = "事业群名字")
 //    @JsonProperty("bg_name")
     val bgName: String = "",
-    @Schema(title = "中心ID")
+    @get:Schema(title = "中心ID")
 //    @JsonProperty("center_id")
     val centerId: Long = 0,
-    @Schema(title = "中心名称")
+    @get:Schema(title = "中心名称")
 //    @JsonProperty("center_name")
     val centerName: String = "",
-    @Schema(title = "部门ID")
+    @get:Schema(title = "部门ID")
 //    @JsonProperty("dept_id")
     val deptId: Long = 0,
-    @Schema(title = "部门名称")
+    @get:Schema(title = "部门名称")
 //    @JsonProperty("dept_name")
     val deptName: String = "",
-    @Schema(title = "描述")
+    @get:Schema(title = "描述")
     val description: String,
-    @Schema(title = "英文缩写")
+    @get:Schema(title = "英文缩写")
 //    @JsonProperty("english_name")
     val englishName: String = "",
-    @Schema(title = "cc app id")
+    @get:Schema(title = "cc app id")
 //    @JsonProperty("cc_app_id")
     val ccAppId: Long?,
-    @Schema(title = "cc app name")
+    @get:Schema(title = "cc app name")
 //    @JsonProperty("cc_app_name")
     var ccAppName: String?, // APP name 通过调用CC接口同步
-    @Schema(title = "容器选择， 0 是不选， 1 是k8s, 2 是mesos")
+    @get:Schema(title = "容器选择， 0 是不选， 1 是k8s, 2 是mesos")
     val kind: Int?,
-    @Schema(title = "是否保密")
+    @get:Schema(title = "是否保密")
     var secrecy: Boolean = false,
-    @Schema(title = "清洗时间")
+    @get:Schema(title = "清洗时间")
     val washTime: String
 )

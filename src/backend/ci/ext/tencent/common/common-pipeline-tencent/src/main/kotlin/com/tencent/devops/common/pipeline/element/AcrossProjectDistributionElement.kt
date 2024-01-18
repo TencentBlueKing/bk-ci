@@ -32,19 +32,19 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "版本仓库-跨项目构件分发")
 data class AcrossProjectDistributionElement(
-    @Schema(title = "任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "跨项目构件分发",
-    @Schema(title = "id", required = false, hidden = true)
+    @get:Schema(title = "id", required = false, hidden = true)
     override var id: String? = null,
-    @Schema(title = "状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @Schema(title = "路径", required = true)
+    @get:Schema(title = "路径", required = true)
     val path: String = "",
-    @Schema(title = "是否自定义仓库", required = true)
+    @get:Schema(title = "是否自定义仓库", required = true)
     val customized: Boolean,
-    @Schema(title = "目标项目", required = true)
+    @get:Schema(title = "目标项目", required = true)
     val targetProjectId: String = "",
-    @Schema(title = "目标路径", required = true)
+    @get:Schema(title = "目标路径", required = true)
     val targetPath: String = ""
 ) : Element(name, id, status) {
     companion object {
