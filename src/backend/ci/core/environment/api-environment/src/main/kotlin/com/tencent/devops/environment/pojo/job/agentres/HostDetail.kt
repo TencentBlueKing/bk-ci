@@ -33,29 +33,29 @@ import io.swagger.annotations.ApiModelProperty
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class HostDetail(
     @ApiModelProperty(value = "是否存在过滤的主机")
-    val filterHost: Boolean,
+    val filterHost: Boolean?,
     @ApiModelProperty(value = "主机ID")
-    val bkHostId: Int,
+    val bkHostId: Int?,
     @ApiModelProperty(value = "主机IP地址")
     val ip: String,
     @ApiModelProperty(value = "主机内网IPV4地址")
-    val innerIp: String,
+    val innerIp: String?,
     @ApiModelProperty(value = "实例ID")
-    val instanceId: String,
+    val instanceId: String?,
     @ApiModelProperty(value = "主机内网IPV6地址")
-    val innerIpv6: String,
+    val innerIpv6: String?,
     @ApiModelProperty(value = "管控区域ID")
-    val bkCloudId: Int,
+    val bkCloudId: Int?,
     @ApiModelProperty(value = "管控区域名称")
-    val bkCloudName: String,
+    val bkCloudName: String?,
     @ApiModelProperty(value = "业务ID")
-    val bkBizId: Int,
+    val bkBizId: Int?,
     @ApiModelProperty(value = "业务名称")
-    val bkBizName: String,
+    val bkBizName: String?,
     @ApiModelProperty(value = "任务ID")
-    val jobId: Int,
+    val jobId: Int?,
     @ApiModelProperty(value = "任务执行状态")
-    val status: String,
+    val status: String?,
     @ApiModelProperty(value = "任务执行状态名称")
-    val statusDisplay: String
+    val statusDisplay: String?
 )
