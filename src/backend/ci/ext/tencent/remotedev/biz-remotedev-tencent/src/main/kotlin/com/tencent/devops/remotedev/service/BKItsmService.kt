@@ -59,22 +59,22 @@ class BKItsmService @Autowired constructor(
         val resp = try {
             OkhttpUtils.doHttp(request).use { response ->
                 val data = response.body!!.string()
-                logger.debug("createTicket｜req|{}|response code|{}|content|{}", body, response.code, data)
+                logger.debug("createTicket｜$url|$body|${response.code}|$data")
                 if (!response.isSuccessful) {
-                    logger.error("createTicket｜req|{}|response code|{}|content|{}", body, response.code, data)
+                    logger.error("createTicket｜$url|$body|${response.code}|$data")
                     // TODO: 创建单据失败错误
                     throw ErrorCodeException(
-                        errorCode = "0",
+                        errorCode = "1",
                         errorType = ErrorType.USER
                     )
                 }
 
                 val resp = objectMapper.readValue<BKItsmCreateTicketResp<BKItsmCreateTicketRespData>>(data)
                 if (!resp.result) {
-                    logger.error("createTicket｜req|{}|response code|{}|content|{}", body, response.code, data)
+                    logger.error("createTicket｜$url|$body|${response.code}|$data")
                     // TODO: 创建单据失败错误
                     throw ErrorCodeException(
-                        errorCode = "0",
+                        errorCode = "1",
                         errorType = ErrorType.USER
                     )
                 }
@@ -86,7 +86,7 @@ class BKItsmService @Autowired constructor(
             logger.error("createTicket request error", e)
             // TODO: 创建单据失败错误
             throw ErrorCodeException(
-                errorCode = "0",
+                errorCode = "1",
                 errorType = ErrorType.USER
             )
         }
