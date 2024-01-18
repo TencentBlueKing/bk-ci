@@ -38,7 +38,7 @@ data class BuildRecordTimeLine(
     @get:Schema(title = "排队耗时（流水线并发和Job互斥）时刻，计算结果需成对", required = false)
     var queueCostMoments: MutableList<Moment> = mutableListOf()
 ) {
-    @get:Schema(title = "时间戳对")
+    @Schema(title = "时间戳对")
     data class Moment(
         @get:Schema(title = "开始时间")
         val startTime: Long,

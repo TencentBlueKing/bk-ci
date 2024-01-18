@@ -31,14 +31,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "项目道代码")
 enum class ProjectChannelCode {
-    @get:Schema(title = "蓝盾")
+    @Schema(title = "蓝盾")
     BS,
-    @get:Schema(title = "PREBULD")
+    @Schema(title = "PREBULD")
     PREBUILD,
-    @get:Schema(title = "CODECC")
+    @Schema(title = "CODECC")
     CODECC,
-    @get:Schema(title = "GITCI")
+    @Schema(title = "GITCI")
     GITCI,
-    @get:Schema(title = "自动化集群项目，区分于CODECC项目")
+    @Schema(title = "自动化集群项目，区分于CODECC项目")
     AUTO
 }

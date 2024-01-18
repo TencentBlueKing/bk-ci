@@ -35,42 +35,42 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "流水线触发类型")
 enum class PipelineTriggerType {
     // WEB_HOOK 触发
-    @get:Schema(title = "SVN 代码库")
+    @Schema(title = "SVN 代码库")
     CODE_SVN,
 
-    @get:Schema(title = "GIT 代码库")
+    @Schema(title = "GIT 代码库")
     CODE_GIT,
 
-    @get:Schema(title = "Gitlab 代码库")
+    @Schema(title = "Gitlab 代码库")
     CODE_GITLAB,
 
-    @get:Schema(title = "Github 代码库")
+    @Schema(title = "Github 代码库")
     GITHUB,
 
-    @get:Schema(title = "TGIT 代码库")
+    @Schema(title = "TGIT 代码库")
     CODE_TGIT,
 
-    @get:Schema(title = "P4 代码库")
+    @Schema(title = "P4 代码库")
     CODE_P4,
 
     // 手动触发
-    @get:Schema(title = "手动触发")
+    @Schema(title = "手动触发")
     MANUAL,
 
     // 定时触发
-    @get:Schema(title = "定时触发")
+    @Schema(title = "定时触发")
     TIME_TRIGGER,
 
     // 服务触发
-    @get:Schema(title = "服务触发")
+    @Schema(title = "服务触发")
     OPENAPI,
 
     // 流水线触发
-    @get:Schema(title = "流水线触发")
+    @Schema(title = "流水线触发")
     PIPELINE,
 
     // 远程触发
-    @get:Schema(title = "远程触发")
+    @Schema(title = "远程触发")
     REMOTE;
 
     companion object {

@@ -24,7 +24,7 @@ data class SendVoiceReq(
 ) : ApiReq(
     bk_app_code, bk_app_secret, bk_token, bk_username
 ) {
-    @get:Schema(title = "用户信息")
+    @Schema(title = "用户信息")
     data class UserListInformation(
         @get:Schema(title = "被通知人")
         var username: String,

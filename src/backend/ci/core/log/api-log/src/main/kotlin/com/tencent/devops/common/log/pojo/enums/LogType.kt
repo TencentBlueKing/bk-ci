@@ -31,12 +31,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "日志类型")
 enum class LogType {
-    @get:Schema(title = "提醒日志")
+    @Schema(title = "提醒日志")
     WARN,
-    @get:Schema(title = "错误日志")
+    @Schema(title = "错误日志")
     ERROR,
-    @get:Schema(title = "调试日志")
+    @Schema(title = "调试日志")
     DEBUG,
-    @get:Schema(title = "普通的日志")
+    @Schema(title = "普通的日志")
     LOG
 }

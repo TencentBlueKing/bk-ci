@@ -63,7 +63,7 @@ open class RtxNotifyMessage : BaseMessage() {
         receivers.clear()
     }
 
-    @get:Schema(hidden = true)
+    @Schema(hidden = true)
     @JsonIgnore
     fun isReceiversEmpty(): Boolean {
         if (receivers.size == 0) return true

@@ -26,7 +26,7 @@ open class VoiceNotifyMessage : BaseMessage() {
     @get:Schema(title = "企业微信提醒")
     var textNotify = TextNotify.DEFAULT
 
-    @get:Schema(title = "语音信息--企业微信提醒")
+    @Schema(title = "语音信息--企业微信提醒")
     data class TextNotify(
         @get:Schema(title = "是否开启企业微信提醒")
         val enabled: Boolean = false,

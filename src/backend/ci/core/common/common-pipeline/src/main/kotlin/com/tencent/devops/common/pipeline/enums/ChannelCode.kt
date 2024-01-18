@@ -31,19 +31,19 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "渠道代码")
 enum class ChannelCode {
-    @get:Schema(title = "蓝鲸持续集成平台")
+    @Schema(title = "蓝鲸持续集成平台")
     BS,
-    @get:Schema(title = "蓝鲸流水线插件市场")
+    @Schema(title = "蓝鲸流水线插件市场")
     AM,
-    @get:Schema(title = "蓝鲸代码检查平台")
+    @Schema(title = "蓝鲸代码检查平台")
     CODECC,
-    @get:Schema(title = "GCloud")
+    @Schema(title = "GCloud")
     GCLOUD,
-    @get:Schema(title = "工蜂")
+    @Schema(title = "工蜂")
     GIT,
-    @get:Schema(title = "开源扫描")
+    @Schema(title = "开源扫描")
     GONGFENGSCAN,
-    @get:Schema(title = "codecc回迁")
+    @Schema(title = "codecc回迁")
     CODECC_EE;
 
     companion object {

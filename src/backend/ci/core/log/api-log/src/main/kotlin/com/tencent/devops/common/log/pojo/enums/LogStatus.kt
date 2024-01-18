@@ -32,15 +32,15 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "日志状态")
 enum class LogStatus(val status: Int) {
-    @get:Schema(title = "查询成功")
+    @Schema(title = "查询成功")
     SUCCEED(0),
-    @get:Schema(title = "日志为空")
+    @Schema(title = "日志为空")
     EMPTY(1),
-    @get:Schema(title = "日志已过期")
+    @Schema(title = "日志已过期")
     CLEAN(2),
-    @get:Schema(title = "日志已清理")
+    @Schema(title = "日志已清理")
     CLOSED(3),
-    @get:Schema(title = "查询异常")
+    @Schema(title = "查询异常")
     FAIL(999);
 
     @JsonValue
