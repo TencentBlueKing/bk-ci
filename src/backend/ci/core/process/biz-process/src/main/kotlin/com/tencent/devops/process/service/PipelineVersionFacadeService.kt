@@ -214,6 +214,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             desc = request.description ?: "",
             pipelineAsCodeSettings = PipelineAsCodeSettings(enabled)
         )
+        var targetUrl: String? = null
         val (versionStatus, branchName) = if (
             enabled && request.targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE
         ) {
@@ -250,7 +251,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             }
             val targetAction = request.targetAction ?: CodeTargetAction.PUSH_BRANCH_AND_REQUEST_MERGE
             // #8161 如果调用代码库同步失败则有报错或提示
-            pipelineYamlFacadeService.pushYamlFile(
+            val pushResult = pipelineYamlFacadeService.pushYamlFile(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -263,6 +264,7 @@ class PipelineVersionFacadeService @Autowired constructor(
                 filePath = filePath,
                 targetAction = targetAction
             )
+            targetUrl = pushResult.mrUrl
         }
         val model = draftVersion.model.copy(staticViews = request.staticViews)
         val savedSetting = pipelineSettingFacadeService.saveSetting(
@@ -315,7 +317,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             pipelineName = draftVersion.model.name,
             version = result.version,
-            versionName = result.versionName
+            versionName = result.versionName,
+            targetUrl = targetUrl
         )
     }
 
