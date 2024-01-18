@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.constant.HTTP_403
 import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.constant.HTTP_405
 import com.tencent.devops.common.api.constant.HTTP_422
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.prometheus.BkTimedAspect
@@ -402,25 +401,6 @@ open class GitApi {
         }
     }
 
-    private fun callMethod(operation: String, request: Request): Map<String, Any> {
-        val sample = Timer.start(SpringContextUtil.getBean(MeterRegistry::class.java))
-        var exceptionClass = BkTimedAspect.DEFAULT_EXCEPTION_TAG_VALUE
-        try {
-            return OkhttpUtils.doRedirectHttp(request) { response ->
-                if (!response.isSuccessful) {
-                    handleApiException(operation, response.code, response.body?.string() ?: "")
-                }
-                JsonUtil.toMap(response.body!!.string())
-            }
-        } catch (err: Exception) {
-            exceptionClass = err.javaClass.simpleName
-            throw err
-        } finally {
-            val tags = Tags.of("operation", operation)
-            record("bk_tgit_api_time", tags, "工蜂接口耗时度量", sample, exceptionClass)
-        }
-    }
-
     fun record(
         metricName: String,
         tags: Iterable<Tag>,
@@ -703,94 +683,5 @@ open class GitApi {
             return null
         }
         return JsonUtil.getObjectMapper().readValue(responseBody)
-    }
-
-    /**
-     * 获取项目下保护分支所属规则组ID
-     */
-    fun getProtectBranchRuleId(
-        host: String,
-        token: String,
-        projectName: String,
-        branch: String
-    ): Int? {
-        val url = "projects/${URLEncoder.encode(projectName, "UTF8")}/repository/branches/$branch/protect"
-        logger.info("getProtectDetail request url: $url")
-        val request = get(host, token, url, "")
-        val responseMap = callMethod(getMessageByLocale(CommonMessageCode.GET_PROTECT_BRANCH_RULE), request)
-        return responseMap["rule_id"] as? Int
-    }
-
-    /**
-     * 创建项目下保护分支规则组
-     */
-    fun createProtectBranchRules(
-        host: String,
-        token: String,
-        projectName: String,
-        ruleMap: Map<String, Any>
-    ): Int {
-        if (ruleMap.isEmpty()) throw ErrorCodeException(
-            errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
-            params = arrayOf("ruleMap")
-        )
-        val url = "projects/${URLEncoder.encode(projectName, "UTF8")}/protected_branch_rules"
-        val request = post(host, token, url, JsonUtil.toJson(ruleMap))
-        val responseMap = callMethod(CommonMessageCode.UPDATE_PROTECT_BRANCH_RULE, request)
-        return responseMap["id"] as Int
-    }
-
-    /**
-     * 将分支变为保护分支
-     */
-    fun setupProtectBranch(
-        host: String,
-        token: String,
-        projectName: String,
-        branch: String,
-        ruleId: Int
-    ): Boolean {
-        val url = "projects/${URLEncoder.encode(projectName, "UTF8")}/protected_branch_rules" +
-                "/$ruleId/branches?branch=$branch"
-        val request = post(host, token, url, "{}")
-        callMethod(CommonMessageCode.UPDATE_PROTECT_BRANCH_RULE, request)
-        return true
-    }
-
-    /**
-     * 修改项目下保护分支规则组规则
-     */
-    fun updateProtectBranchRule(
-        host: String,
-        token: String,
-        projectName: String,
-        ruleId: Int,
-        ruleMap: Map<String, Any>
-    ): Boolean {
-        if (ruleMap.isEmpty()) throw ErrorCodeException(
-            errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
-            params = arrayOf("ruleMap")
-        )
-        val url = "projects/${URLEncoder.encode(projectName, "UTF8")}/protected_branch_rules/$ruleId"
-        val request = put(host, token, url, JsonUtil.toJson(ruleMap))
-        callMethod(CommonMessageCode.UPDATE_PROTECT_BRANCH_RULE, request)
-        return true
-    }
-
-    /**
-     * 修改项目组用户权限等级
-     */
-    fun updateProjectUserAccessLevel(
-        userId: Int,
-        host: String,
-        token: String,
-        projectName: String,
-        accessLevel: Int
-    ): Boolean {
-        val url = "projects/${URLEncoder.encode(projectName, "UTF8")}/members/$userId"
-        val handle = mapOf<String, Any>("access_level" to accessLevel)
-        val request = put(host, token, url, JsonUtil.toJson(handle))
-        callMethod(CommonMessageCode.UPDATE_PROJECT_USER_ACCESS_LEVEL, request)
-        return true
     }
 }

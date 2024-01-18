@@ -28,15 +28,12 @@
 package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.DEFAULT_PROTECTION_BRANCH_RULE_NAME
-import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
@@ -46,15 +43,12 @@ import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.constant.RepositoryMessageCode
-import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
 import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_CREATE_PEM_ERROR
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
@@ -1148,98 +1142,8 @@ class RepositoryService @Autowired constructor(
         )
     }
 
-    fun setProjectProtectionBranchDefaultRules(
-        userId: String,
-        repositoryHashId: String,
-        ruleMap: Map<String, Any>
-    ): Result<Boolean> {
-        try {
-            val accessToken = gitOauthService.getAccessToken(userId) ?: throw OauthForbiddenException(
-                message = MessageUtil.getMessageByLocale(NOT_AUTHORIZED_BY_OAUTH, I18nUtil.getLanguage(userId))
-            )
-            val repoId = serviceGet(
-                "",
-                RepositoryConfigUtils.buildConfig(repositoryHashId, RepositoryType.ID)
-            ).projectName
-            var ruleId = gitService.getProtectBranchRuleId(
-                token = accessToken.accessToken,
-                gitProjectId = repoId,
-                tokenType = TokenTypeEnum.OAUTH,
-                branch = MASTER
-            ).data
-            // 设置保护分支规则组默认规则
-            if (ruleId == null) {
-                val newRuleMap = mutableMapOf<String, Any>()
-                newRuleMap.putAll(ruleMap)
-                newRuleMap["name"] = DEFAULT_PROTECTION_BRANCH_RULE_NAME
-                // 设置保护分支
-                ruleId = gitService.createProtectBranchRules(
-                    token = accessToken.accessToken,
-                    gitProjectId = repoId,
-                    tokenType = TokenTypeEnum.OAUTH,
-                    ruleMap = newRuleMap
-                ).data!!
-                gitService.setupProtectBranch(
-                    token = accessToken.accessToken,
-                    gitProjectId = repoId,
-                    tokenType = TokenTypeEnum.OAUTH,
-                    ruleId = ruleId,
-                    branch = MASTER
-                )
-            } else {
-                gitService.updateProtectBranchRule(
-                    token = accessToken.accessToken,
-                    gitProjectId = repoId,
-                    tokenType = TokenTypeEnum.OAUTH,
-                    ruleId = ruleId,
-                    ruleMap = ruleMap
-                )
-            }
-            // 获取项目组管理员列表
-            val groupAllMembers = gitService.getProjectGroupMembersAll(
-                token = accessToken.accessToken,
-                gitProjectGroupId = DEFAULT_PROJECT_GROUP_NAME,
-                page = PageUtil.DEFAULT_PAGE,
-                pageSize = PageUtil.DEFAULT_PAGE_SIZE,
-                tokenType = TokenTypeEnum.OAUTH
-            ).data?.filter { it.accessLevel >= GitAccessLevelEnum.MASTER.level } ?: emptyList()
-            val groupAllMemberNames = groupAllMembers.map { it.username }
-            // 获取项目有权限的成员列表
-            var page = PageUtil.DEFAULT_PAGE
-            do {
-                val repoAllMembers = gitService.getMembers(
-                    token = accessToken.accessToken,
-                    gitProjectId = repoId,
-                    page = page,
-                    pageSize = PageUtil.DEFAULT_PAGE_SIZE,
-                    tokenType = TokenTypeEnum.OAUTH,
-                    search = null
-                ).data
-                if (!repoAllMembers.isNullOrEmpty()) {
-                    // 设置项目有MASTER权限的成员默认权限级别为DEVELOP
-                    repoAllMembers.filter { !(groupAllMemberNames.contains(it.username)) }.forEach {
-                        if (it.accessLevel == GitAccessLevelEnum.MASTER.level) {
-                            gitService.updateProjectUserAccessLevel(
-                                userId = it.id,
-                                gitProjectId = repoId,
-                                tokenType = TokenTypeEnum.OAUTH,
-                                token = accessToken.accessToken,
-                                accessLevel = GitAccessLevelEnum.DEVELOPER.level
-                            )
-                        }
-                    }
-                }
-                page++
-            } while (repoAllMembers?.size == PageUtil.DEFAULT_PAGE_SIZE)
-        } catch (ignore: Throwable) {
-            logger.warn("update atom project protection branch default rules fail,repoId[$repositoryHashId]", ignore)
-        }
-        return Result(true)
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(RepositoryService::class.java)
         const val MAX_ALIAS_LENGTH = 255
-        const val DEFAULT_PROJECT_GROUP_NAME = "bkdevops-plugins-test"
     }
 }
