@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "description": "",
   "dependencies": {
-    "vue": "2.6.12",
+    "vue": "~2.7.16",
     "vuex-class": "^0.3.0"
   },
   "private": true,

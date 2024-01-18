@@ -71,7 +71,7 @@
     "bk-permission": "^0.0.24",
     "bluebird": "^3.5.1",
     "js-cookie": "^3.0.1",
-    "vue": "~2.7.0",
+    "vue": "~2.7.16",
     "vue-class-component": "^6.2.0",
     "vue-i18n": "^8.18.1",
     "vue-property-decorator": "^6.0.0",

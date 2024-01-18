@@ -5,7 +5,7 @@
   "private": true,
   "dependencies": {
     "echarts": "^5.3.2",
-    "vue": "~2.7.0",
+    "vue": "~2.7.16",
     "vue-echarts": "^6.0.2",
     "vuex-class": "^0.3.0"
   },

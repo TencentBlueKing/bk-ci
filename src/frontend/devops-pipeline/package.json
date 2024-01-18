@@ -36,7 +36,7 @@
                 "uuid": "^8.1.0",
                 "vee-validate": "^2.0.3",
                 "vue-echarts": "^6.0.2",
-                "vue": "~2.7.0",
+                "vue": "~2.7.16",
                 "vue-i18n": "^8.18.1",
                 "vue-json-viewer": "^2.2.5",
                 "vue-router": "3.6.5",

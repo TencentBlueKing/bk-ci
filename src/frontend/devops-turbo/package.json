@@ -53,6 +53,6 @@
   },
   "dependencies": {
     "@blueking/bkcharts": "^2.0.10",
-    "vue": "~2.7.0"
+    "vue": "~2.7.16"
   }
 }
