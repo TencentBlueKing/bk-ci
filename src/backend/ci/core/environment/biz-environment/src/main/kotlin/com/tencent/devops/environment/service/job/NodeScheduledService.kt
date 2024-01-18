@@ -230,7 +230,7 @@ class NodeScheduledService @Autowired constructor(
         }
     }
 
-    private fun taskWithRedisLock(lockKey: String, operation: () -> Unit) {
+    fun taskWithRedisLock(lockKey: String, operation: () -> Unit) {
         val redisLock = RedisLock(redisOperation, lockKey, EXPIRATION_TIME_OF_THE_LOCK)
         try {
             val lockSuccess = redisLock.tryLock()

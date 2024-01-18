@@ -22,7 +22,7 @@ class TencentNodeScheduledService @Autowired constructor(
     private val tencentQueryFromCmdbService: TencentQueryFromCmdbService,
     private val queryFromCCService: QueryFromCCService,
     private val cmdbNodeService: CmdbNodeService,
-    private val redisOperation: RedisOperation
+    private val nodeScheduledService: NodeScheduledService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(TencentNodeScheduledService::class.java)
@@ -30,7 +30,6 @@ class TencentNodeScheduledService @Autowired constructor(
         private const val SCHEDULED_WRITE_HOST_ID_CLOUD_AREA_ID_TIMEOUT_LOCK_KEY =
             "scheduled_write_host_id_and_cloud_area_id_timeout_lock"
         private const val SCHEDULED_ADD_NODE_TO_CC_TIMEOUT_LOCK_KEY = "scheduled_add_node_to_cc_timeout_lock"
-        private const val EXPIRATION_TIME_OF_THE_LOCK = 200L
         private const val DEFAULT_PAGE_SIZE = 100
         private const val DEFAULT_CLOUD_AREA_ID = 0L
     }
@@ -42,7 +41,7 @@ class TencentNodeScheduledService @Autowired constructor(
      */
     @Scheduled(cron = "0 2 11 * * 1-5")
     fun scheduledAddNodeToCC() {
-        taskWithRedisLockTencent(SCHEDULED_ADD_NODE_TO_CC_TIMEOUT_LOCK_KEY, ::addNodeToCC)
+        nodeScheduledService.taskWithRedisLock(SCHEDULED_ADD_NODE_TO_CC_TIMEOUT_LOCK_KEY, ::addNodeToCC)
     }
 
     /**
@@ -52,7 +51,7 @@ class TencentNodeScheduledService @Autowired constructor(
      */
     @Scheduled(cron = "0 45 15 * * 1-5")
     fun scheduledWriteHostIdAndCloudAreaId() {
-        taskWithRedisLockTencent(SCHEDULED_WRITE_HOST_ID_CLOUD_AREA_ID_TIMEOUT_LOCK_KEY, ::writeHostIdAndCloudAreaId)
+        nodeScheduledService.taskWithRedisLock(SCHEDULED_WRITE_HOST_ID_CLOUD_AREA_ID_TIMEOUT_LOCK_KEY, ::writeHostIdAndCloudAreaId)
     }
 
     /**
@@ -62,7 +61,7 @@ class TencentNodeScheduledService @Autowired constructor(
      */
     @Scheduled(cron = "0 0 9 * * ?")
     fun scheduledCheckNodeInCmdb() {
-        taskWithRedisLockTencent(CHECK_NODE_IN_CMDB_TIMEROUT_LOCK_KEY, ::checkNodeInCmdb)
+        nodeScheduledService.taskWithRedisLock(CHECK_NODE_IN_CMDB_TIMEROUT_LOCK_KEY, ::checkNodeInCmdb)
     }
 
     private fun addNodeToCC() {
@@ -190,23 +189,6 @@ class TencentNodeScheduledService @Autowired constructor(
                 nodeDao.updateNodeInCCByIp(dslContext, inCCIpList) // 在CC-改为NORMAL
             if (notInCCIpList.isNotEmpty())
                 nodeDao.updateNodeNotInCCByIp(dslContext, notInCCIpList) // 不在CC-改为NOT_IN_CC
-        }
-    }
-
-    private fun taskWithRedisLockTencent(lockKey: String, operation: () -> Unit) {
-        val redisLock = RedisLock(redisOperation, lockKey, EXPIRATION_TIME_OF_THE_LOCK)
-        try {
-            val lockSuccess = redisLock.tryLock()
-            if (lockSuccess) {
-                if (logger.isDebugEnabled) logger.debug("[taskWithRedisLockTencent]Locked.")
-                operation()
-            } else {
-                if (logger.isDebugEnabled) logger.debug("[taskWithRedisLockTencent]Lock failed.")
-            }
-        } catch (e: Throwable) {
-            logger.error("[taskWithRedisLockTencent]exception: ", e)
-        } finally {
-            redisLock.unlock()
         }
     }
 }
