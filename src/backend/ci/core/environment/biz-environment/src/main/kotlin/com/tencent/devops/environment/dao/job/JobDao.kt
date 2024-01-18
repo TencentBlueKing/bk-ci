@@ -1,7 +1,6 @@
 package com.tencent.devops.environment.dao.job
 
 import com.tencent.devops.model.environment.tables.TProjectJob
-import com.tencent.devops.model.environment.tables.records.TProjectJobRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
