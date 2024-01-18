@@ -172,15 +172,6 @@
                             }
                         }
                     },
-                    ...(this.isDraftEdit
-                        ? []
-                        : [
-                            {
-                                name: 'auth',
-                                label: this.$t('settings.auth'),
-                                component: 'AuthorityTab'
-                            }
-                        ]),
                     {
                         name: 'baseSetting',
                         label: this.$t('editPage.baseSetting'),

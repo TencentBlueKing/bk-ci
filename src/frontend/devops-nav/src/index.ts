@@ -50,6 +50,7 @@ declare module 'vue/types/vue' {
 
 Vue.use(bkMagic)
 Vue.use(PermissionDirective(handleProjectNoPermission))
+
 Vue.component('AsideNav', AsideNav)
 Vue.component('ContentHeader', ContentHeader)
 Vue.component('Logo', Logo)

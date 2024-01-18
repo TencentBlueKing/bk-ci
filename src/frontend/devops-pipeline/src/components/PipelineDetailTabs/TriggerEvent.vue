@@ -132,8 +132,15 @@
                         }]
             }
         },
-        created () {
-            this.init()
+        watch: {
+            '$route.params.pipelineId': {
+                handler (val) {
+                    this.$nextTick(() => {
+                        this.$refs.infiniteScroll?.updateList?.()
+                    })
+                },
+                immediate: true
+            }
         },
         methods: {
             ...mapActions('pipelines', [

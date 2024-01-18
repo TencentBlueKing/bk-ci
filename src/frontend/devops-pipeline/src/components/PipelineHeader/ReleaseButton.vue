@@ -1,8 +1,8 @@
 <template>
-    <div style="height: 100%" @click="showReleaseSlider">
+    <div style="height: 100%">
         <span :class="['publish-pipeline-btn', {
             'publish-diabled': !canRelease
-        }]">
+        }]" @click="showReleaseSlider">
             <i class="devops-icon icon-check-small" />
             {{ $t('release') }}
         </span>

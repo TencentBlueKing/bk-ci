@@ -3,7 +3,7 @@
         <div class="pipeline-subpages-header">
             <router-view name="header"></router-view>
         </div>
-        <router-view class="biz-content" v-bkloading="{ isLoading }"></router-view>
+        <router-view class="biz-content"></router-view>
         <portal-target name="artifactory-popup"></portal-target>
     </div>
 </template>
