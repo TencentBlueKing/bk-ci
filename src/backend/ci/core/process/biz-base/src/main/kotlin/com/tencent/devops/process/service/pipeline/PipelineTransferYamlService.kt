@@ -180,6 +180,7 @@ class PipelineTransferYamlService @Autowired constructor(
                         projectCode = projectId,
                         pipelineInfo = pipelineInfo,
                         yaml = pYml,
+                        asCodeSettings = data.modelAndSetting?.setting?.pipelineAsCodeSettings,
                         aspectWrapper = PipelineTransferAspectWrapper(aspects ?: defaultAspects)
                     )
                     val model = modelTransfer.yaml2Model(input)
