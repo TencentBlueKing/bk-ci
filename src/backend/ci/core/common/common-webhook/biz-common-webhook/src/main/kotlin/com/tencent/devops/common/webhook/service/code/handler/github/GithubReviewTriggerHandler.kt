@@ -126,14 +126,17 @@ class GithubReviewTriggerHandler @Autowired constructor(
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
         with(webHookParams) {
-            eventCacheService.getPrInfo(
-                githubRepoName = event.repository.fullName,
-                pullNumber = event.pullRequest.number.toString(),
-                repo = repository,
-                projectId = projectId
-            )?.run {
-                event.pullRequest.mergeable = this.mergeable
-                event.pullRequest.mergeableState = this.mergeableState
+            // 非[拒绝]和[要求修改]才调用详情接口，更新事件状态
+            if (event.convertState() != "change_required" || event.convertState() != "change_denied") {
+                eventCacheService.getPrInfo(
+                    githubRepoName = event.repository.fullName,
+                    pullNumber = event.pullRequest.number.toString(),
+                    repo = repository,
+                    projectId = projectId
+                )?.run {
+                    event.pullRequest.mergeable = this.mergeable
+                    event.pullRequest.mergeableState = this.mergeableState
+                }
             }
             logger.info("github review event[$event]")
             val urlFilter = GitUrlFilter(
