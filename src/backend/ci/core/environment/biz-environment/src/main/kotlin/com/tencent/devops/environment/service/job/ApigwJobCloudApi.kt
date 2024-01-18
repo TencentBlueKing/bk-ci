@@ -34,16 +34,6 @@ class ApigwJobCloudApi {
     companion object {
         private const val LOG_OUTPUT_MAX_LENGTH = 4000
 
-        private const val QUERY_JOB_INSTANCE_STATUS_URL_SUFFIX =
-            "/?bk_scope_type=%s&bk_scope_id=%s&job_instance_id=%s&return_ip_result=%s"
-        private const val GET_ACCOUNT_LIST_URL_SUFFIX =
-            "/?bk_scope_type=%s&bk_scope_id=%s&category=%s&account=%s&alias=%s&start=%s&length=%s"
-        private const val GET_STEP_INSTANCE_DETAIL =
-            "/?bk_scope_type=%s&bk_scope_id=%s&job_instance_id=%s&step_instance_id=%s"
-        private const val GET_STEP_INSTANCE_STATUS =
-            "/?bk_scope_type=%s&bk_scope_id=%s&job_instance_id=%s&step_instance_id=%s&execute_count=%s" +
-                "&batch=%s&max_host_num_per_group=%s&keyword=%s&search_ip=%s&status=%s&tag=%s"
-
         private val postPathMap = mapOf(
             "executeScript" to "/api/v3/fast_execute_script",
             "distributeFile" to "/api/v3/fast_transfer_file",
@@ -57,20 +47,28 @@ class ApigwJobCloudApi {
             "getStepInstanceStatus" to "/api/v3/get_step_instance_status",
             "queryAgentStatusFromJob" to "/api/v3/query_agent_info"
         )
+        private val suffix = mapOf(
+            "queryJobInstanceStatus" to "/?bk_scope_type=%s&bk_scope_id=%s&job_instance_id=%s&return_ip_result=%s",
+            "getAccountList" to "/?bk_scope_type=%s&bk_scope_id=%s&category=%s&account=%s&alias=%s&start=%s&length=%s",
+            "getStepInstanceDetail" to "/?bk_scope_type=%s&bk_scope_id=%s&job_instance_id=%s&step_instance_id=%s",
+            "getStepInstanceStatus" to "/?bk_scope_type=%s&bk_scope_id=%s&job_instance_id=%s&step_instance_id=%s" +
+                "&execute_count=%s&batch=%s&max_host_num_per_group=%s&keyword=%s&search_ip=%s&status=%s&tag=%s"
+        )
 
         private val logger = LoggerFactory.getLogger(ApigwJobCloudApi::class.java)
 
-        private val threadLocal = ThreadLocal<String>()
-        fun setThreadLocal(value: String) {
-            threadLocal.set(value)
+        private val jobOperationName = ThreadLocal<String>()
+
+        fun setJobOperationName(value: String) {
+            jobOperationName.set(value)
         }
 
-        fun getThreadLocal(): String? {
-            return threadLocal.get()
+        fun getJobOperationName(): String? {
+            return jobOperationName.get()
         }
 
-        fun removeThreadLocal() {
-            threadLocal.remove()
+        fun removeJobOperationName() {
+            jobOperationName.remove()
         }
     }
 
@@ -85,11 +83,10 @@ class ApigwJobCloudApi {
     private fun getJobCloudAuthReq(): JobCloudAuthenticationReq {
         val bkAuthorization = "{\"bk_app_code\": \"${bkAppCode}\", " +
             "\"bk_app_secret\": \"${bkAppSecret}\", \"bk_username\": \"$AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE\"}"
-        val operationName = getThreadLocal()
+        val operationName = getJobOperationName()
         if (logger.isDebugEnabled) logger.debug("[getJobCloudAuthReq] operationName: $operationName")
         val url = jobCloudApiBaseUrl + postPathMap[operationName]
         if (logger.isDebugEnabled) logger.debug("[getJobCloudAuthReq] url: $url")
-        val bkScopeId = bkScopeId
         return JobCloudAuthenticationReq(
             url = url,
             bkAuthorization = bkAuthorization,
@@ -113,24 +110,20 @@ class ApigwJobCloudApi {
         val requestContent = jacksonObjectMapper().writeValueAsString(jobCloud)
         if (logger.isDebugEnabled)
             logger.debug(
-                "[${getThreadLocal()}] headers: $headers, url: ${jobCloudAuthenticationReq.url}, body: $requestContent"
+                "[${getJobOperationName()}]url: ${jobCloudAuthenticationReq.url}, body: $requestContent"
             )
         return getResultFromRes(OkhttpUtils.doPost(jobCloudAuthenticationReq.url, requestContent, headers), classOfU)
     }
 
     fun <T, U> executeGetRequest(classOfT: Class<T>, vararg args: U): JobCloudResult<T> {
-        val operationName = getThreadLocal()
+        val operationName = getJobOperationName()
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq = getJobCloudAuthReq()
         val headers = getAuthHeaderMap(jobCloudAuthenticationReq.bkAuthorization)
-        val suffix = when (operationName) {
-            "queryJobInstanceStatus" -> QUERY_JOB_INSTANCE_STATUS_URL_SUFFIX
-            "getAccountList" -> GET_ACCOUNT_LIST_URL_SUFFIX
-            "getStepInstanceDetail" -> GET_STEP_INSTANCE_DETAIL
-            "getStepInstanceStatus" -> GET_STEP_INSTANCE_STATUS
-            else -> ""
-        }
         val url = jobCloudAuthenticationReq.url + String.format(
-            suffix, jobCloudAuthenticationReq.bkScopeType, jobCloudAuthenticationReq.bkScopeId, *args
+            suffix[operationName] ?: "",
+            jobCloudAuthenticationReq.bkScopeType,
+            jobCloudAuthenticationReq.bkScopeId,
+            *args
         )
         if (logger.isDebugEnabled)
             logger.debug("[$operationName] headers: ${logWithLengthLimit(headers.toString())}, url: $url")
@@ -138,8 +131,8 @@ class ApigwJobCloudApi {
     }
 
     private fun <T> getResultFromRes(response: Response, classOfT: Class<T>): JobCloudResult<T> {
-        val operationName = getThreadLocal()
-        removeThreadLocal()
+        val operationName = getJobOperationName()
+        removeJobOperationName()
         try {
             val responseBody = response.body?.string()
             if (logger.isDebugEnabled) {

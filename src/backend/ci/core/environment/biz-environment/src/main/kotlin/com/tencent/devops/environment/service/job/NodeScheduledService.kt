@@ -42,9 +42,9 @@ class NodeScheduledService @Autowired constructor(
 
     /**
      * 定时任务：agent状态/版本 轮询 + 差量更新
-     * 分组执行，每次遍历1000条记录
-     * 每小时执行一次。
-     * 条件：NODE_TYPE为cmdb的，查询该节点的agent安装状态以及版本，并对比差异更新
+     * 条件：NODE_TYPE为cmdb的，查询该节点的agent安装状态以及版本，并对比差异更新。
+     * 分组执行，每次遍历1000条记录。
+     * cron：每小时执行一次。
      */
     @Scheduled(cron = "0 * * * * 1-5")
     fun scheduledUpdateAgent() {
@@ -52,9 +52,9 @@ class NodeScheduledService @Autowired constructor(
     }
 
     /**
-     * 定时任务：执行一次就行。
-     * 分组执行，每次遍历100条记录。
      * display_name为空的：拼接节点类型、node hash值、nodeId这三个字段，写入display_name。
+     * 分组执行，每次遍历100条记录。
+     * cron：执行一次就行。
      */
     @Scheduled(cron = "0 10 10 * * 1-5")
     fun scheduledWriteDisplayName() {
@@ -62,9 +62,9 @@ class NodeScheduledService @Autowired constructor(
     }
 
     /**
-     * 后台定时轮询机器状态，看机器是否在CC中（T_NODE表中host_id字段：为空 - 不在，不为空 - 在）
-     * 遍历T_NODE表中 host_id不为空 且 NODE_TYPE为"部署"的记录。部署：CMDB("CMDB")，UNKNOWN("未知")，OTHER("其他")
-     * 用host_id 调用find_host_biz_relations接口，看能否得到对应记录：能-不操作，不能-对应记录host_id和云区域id置为null
+     * 后台定时轮询机器状态，看机器是否在CC中（表现之一为：T_NODE表中 host_id和云区域id字段：都为空 - 不在，都不为空 - 在）
+     * 条件：遍历T_NODE表中 host_id不为空 且 NODE_TYPE为"部署"的记录。部署：CMDB("CMDB")，UNKNOWN("未知")，OTHER("其他")
+     * 用host_id 调用find_host_biz_relations接口，看能否得到对应记录（包括host_id和云区域id）
      * cron：每天上午10点执行。
      */
     @Scheduled(cron = "0 0 10 * * 1-5")
@@ -174,7 +174,7 @@ class NodeScheduledService @Autowired constructor(
     private fun checkNodeInCC() {
         val countHostIdNotNullRecord = nodeDao.countNodesWhoseHostIdNotNull(dslContext)
         if (logger.isDebugEnabled) logger.debug("[checkNodeInCC]countHostIdNotNullRecord:$countHostIdNotNullRecord.")
-        if (0 < countHostIdNotNullRecord) {
+        countHostIdNotNullRecord.takeIf { it > 0 }.run { // 在CC中的记录数 > 0
             val totalPagesHostIdNotNull = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countHostIdNotNullRecord.toLong())
             for (pageHostIdNotNull in 1..totalPagesHostIdNotNull) {
                 val nodeRecords = nodeDao.getNodesWhoseHostIdNotNullLimit(
@@ -192,10 +192,10 @@ class NodeScheduledService @Autowired constructor(
         }
         // T_NODE表中 NODE_STATUS字段 为NOT_IN_CC的记录，再去查在不在cc中：
         // 不在CC中 - 不处理；在CC中 - 将host_id和云区域id 写回T_NODE表中，NODE_STATUS字段 改成 NORMAL
-        val countNodesNotInCC = nodeDao.countNodesNotInCC(dslContext)
-        if (logger.isDebugEnabled) logger.debug("[checkNodeInCC]countNodesNotInCC:$countNodesNotInCC.")
-        if (0 < countNodesNotInCC) {
-            val totalPagesNodesNotInCC = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countNodesNotInCC.toLong())
+        val notInCCNodesCount = nodeDao.countNodesNotInCC(dslContext)
+        if (logger.isDebugEnabled) logger.debug("[checkNodeInCC]notInCCNodesCount:$notInCCNodesCount.")
+        notInCCNodesCount.takeIf { it > 0 }.run {
+            val totalPagesNodesNotInCC = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, notInCCNodesCount.toLong())
             for (pageNodesNotInCC in 1..totalPagesNodesNotInCC) {
                 val nodeIpsNotInCC = nodeDao.getNodeIpsNotInCC(
                     dslContext, pageNodesNotInCC - 1, DEFAULT_PAGE_SIZE
@@ -212,8 +212,8 @@ class NodeScheduledService @Autowired constructor(
     }
 
     private fun batchUpdateByCCInfo(inCCInfoList: List<CCInfo>?) {
-        if (!inCCInfoList.isNullOrEmpty()) {
-            val inCCIpToCCInfoMap = inCCInfoList.associateBy { it.bkHostInnerip }
+        inCCInfoList.takeIf { !inCCInfoList.isNullOrEmpty() }.run {
+            val inCCIpToCCInfoMap = inCCInfoList!!.associateBy { it.bkHostInnerip }
             val inCCIpList = inCCInfoList.mapNotNull { it.bkHostInnerip }.distinct()
             val inCCRecord = nodeDao.getInCmdbNodesByIp(dslContext, inCCIpList)
             if (logger.isDebugEnabled) logger.debug("[batchUpdateByCCInfo]inCCRecord:$inCCRecord.")

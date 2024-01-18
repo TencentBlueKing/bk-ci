@@ -18,8 +18,10 @@ class ParseHashListService @Autowired constructor(
     }
 
     fun getAllHostList(projectId: String, executeTarget: ExecuteTarget): List<Host> {
-        val hostListFromEnvHash: List<Host> = getHostFromEnvList(projectId, executeTarget.envHashIdList)
-        val hostListFromNodeHash: List<Host> = getHostFromNodeList(projectId, executeTarget.nodeHashIdList)
+        val hostListFromEnvHash: List<Host> = getHostFromEnvList(projectId, executeTarget.envHashIdList) ?: emptyList()
+        val hostListFromNodeHash: List<Host> = getHostFromNodeList(
+            projectId, executeTarget.nodeHashIdList
+        ) ?: emptyList()
         val hostListByHostId: List<Host>? = executeTarget.hostIdList?.map { Host(bkHostId = it) }
         val hostListByIp: List<Host>? = executeTarget.ipList?.map { Host(bkCloudId = it.bkCloudId, ip = it.ip) }
         return if (!hostListByHostId.isNullOrEmpty()) {
@@ -31,10 +33,10 @@ class ParseHashListService @Autowired constructor(
         }
     }
 
-    fun getHostFromEnvList(projectId: String, envHashIdList: List<String>?/*环境hashId列表*/): List<Host> {
-        if (!envHashIdList.isNullOrEmpty()) {
+    fun getHostFromEnvList(projectId: String, envHashIdList: List<String>?/*环境hashId列表*/): List<Host>? {
+        return envHashIdList.takeIf { !it.isNullOrEmpty() }.run {
             val envRecord = nodeDao.getEnvsByEnvHashIdList(
-                dslContext, projectId, envHashIdList
+                dslContext, projectId, envHashIdList!!
             )
             val envIdList = envRecord.map { it.value1() }
 
@@ -54,17 +56,14 @@ class ParseHashListService @Autowired constructor(
                 )
             }
             if (logger.isDebugEnabled) logger.debug("[getHostFromEnvList] nodeHostList: $nodeHostList")
-            return nodeHostList
-        } else {
-            logger.warn("[getHostFromEnvList] envHashIdList is null or empty.")
-            return emptyList()
+            nodeHostList
         }
     }
 
-    fun getHostFromNodeList(projectId: String, nodeHashIdList: List<String>?/*节点hashId列表*/): List<Host> {
-        if (!nodeHashIdList.isNullOrEmpty()) {
+    fun getHostFromNodeList(projectId: String, nodeHashIdList: List<String>?/*节点hashId列表*/): List<Host>? {
+        return nodeHashIdList.takeIf { !it.isNullOrEmpty() }.run {
             val nodeRecord = nodeDao.getNodesByNodeHashIdList(
-                dslContext, projectId, nodeHashIdList
+                dslContext, projectId, nodeHashIdList!!
             )
             if (logger.isDebugEnabled) logger.debug("[getHostFromNodeList] nodeRecord: $nodeRecord")
             val hostList = nodeRecord.map {
@@ -75,10 +74,7 @@ class ParseHashListService @Autowired constructor(
                 )
             }
             if (logger.isDebugEnabled) logger.debug("[getHostFromNodeList] hostList: $hostList")
-            return hostList
-        } else {
-            logger.warn("[getHostFromNodeList] nodeHashIdList is null or empty.")
-            return emptyList()
+            hostList
         }
     }
 }

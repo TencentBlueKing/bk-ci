@@ -42,7 +42,7 @@ import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentStatusFromNode
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentreq.TerminateAgentInstallTaskReq
-import com.tencent.devops.environment.pojo.job.agentres.AgentAgentResult
+import com.tencent.devops.environment.pojo.job.agentres.AgentOriginalResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentInstallAgentChannel
 import com.tencent.devops.environment.pojo.job.agentres.AgentInstallAgentResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentStatusFromNodemanResult
@@ -75,7 +75,7 @@ import java.io.InputStream
 
 @Service("AgentService")
 data class AgentService @Autowired constructor(
-    private val agentApi: AgentApi,
+    private val nodeManApi: NodeManApi,
     private val chooseAgentInstallChannelIdService: ChooseAgentInstallChannelIdService,
     private val fileService: FileService
 ) {
@@ -96,7 +96,7 @@ data class AgentService @Autowired constructor(
         keyFile: InputStream?,
         installAgentReqString: String
     ): AgentResult<InstallAgentResult> {
-        AgentApi.setThreadLocal("installAgent")
+        NodeManApi.setNodemanOperationName("installAgent")
         val installAgentJson = JSONObject(installAgentReqString)
         val installAgentReq = jacksonObjectMapper().readValue<InstallAgentReq>(installAgentJson.toString())
         val installAgentRequest = AgentInstallAgentReq(
@@ -128,7 +128,7 @@ data class AgentService @Autowired constructor(
             replaceHostId = installAgentReq.replaceHostId,
             isInstallLatestPlugins = installAgentReq.isInstallLatestPlugins
         )
-        val agentInstallAgentRes: AgentAgentResult<AgentInstallAgentResult> = agentApi.executePostRequest(
+        val agentInstallAgentRes: AgentOriginalResult<AgentInstallAgentResult> = nodeManApi.executePostRequest(
             installAgentRequest, AgentInstallAgentResult::class.java
         )
         val installAgentRes: AgentResult<InstallAgentResult> = AgentResult(
@@ -166,13 +166,13 @@ data class AgentService @Autowired constructor(
         jobId: Int,
         queryAgentTaskStatusReq: QueryAgentTaskStatusReq
     ): AgentResult<QueryAgentTaskStatusResult> {
-        AgentApi.setThreadLocal("queryAgentTaskStatus")
+        NodeManApi.setNodemanOperationName("queryAgentTaskStatus")
         val queryAgentTaskStatusRequest = AgentQueryAgentTaskStatusReq(
             page = queryAgentTaskStatusReq.page,
             pageSize = queryAgentTaskStatusReq.pageSize
         )
-        val agentQueryAgentTaskStatusRes: AgentAgentResult<AgentQueryAgentTaskStatusResult> =
-            agentApi.executePostRequest(
+        val agentQueryAgentTaskStatusRes: AgentOriginalResult<AgentQueryAgentTaskStatusResult> =
+            nodeManApi.executePostRequest(
                 queryAgentTaskStatusRequest, AgentQueryAgentTaskStatusResult::class.java, jobId
             )
         val queryAgentTaskStatusRes: AgentResult<QueryAgentTaskStatusResult> = AgentResult(
@@ -237,7 +237,7 @@ data class AgentService @Autowired constructor(
     fun queryAgentStatusFromNodeman(
         queryAgentStatusFromNodemanReq: QueryAgentStatusFromNodemanReq
     ): AgentResult<QueryAgentStatusFromNodemanResult> {
-        AgentApi.setThreadLocal("queryAgentStatusFromNodeman")
+        NodeManApi.setNodemanOperationName("queryAgentStatusFromNodeman")
         val queryAgentStatusFromNodemanRequest = AgentQueryAgentStatusFromNodemanReq(
             bkHostId = queryAgentStatusFromNodemanReq.bkHostId,
             conditions = queryAgentStatusFromNodemanReq.conditions?.map {
@@ -249,8 +249,8 @@ data class AgentService @Autowired constructor(
             onlyIp = queryAgentStatusFromNodemanReq.onlyIp,
             runningCount = queryAgentStatusFromNodemanReq.runningCount
         )
-        val agentQueryAgentStatusRes: AgentAgentResult<AgentQueryAgentStatusFromNodemanResult> =
-            agentApi.executePostRequest(
+        val agentQueryAgentStatusRes: AgentOriginalResult<AgentQueryAgentStatusFromNodemanResult> =
+            nodeManApi.executePostRequest(
                 queryAgentStatusFromNodemanRequest, AgentQueryAgentStatusFromNodemanResult::class.java
             )
         val queryAgentStatusRes: AgentResult<QueryAgentStatusFromNodemanResult> = AgentResult(
@@ -328,8 +328,8 @@ data class AgentService @Autowired constructor(
         jobId: Int,
         instanceId: String
     ): AgentResult<QueryAgentTaskLogResult> {
-        AgentApi.setThreadLocal("queryAgentTaskLog")
-        val agentQueryAgentTaskLogRes: AgentAgentResult<Array<AgentQueryAgentTaskLog>> = agentApi.executeGetRequest(
+        NodeManApi.setNodemanOperationName("queryAgentTaskLog")
+        val agentQueryAgentTaskLogRes: AgentOriginalResult<Array<AgentQueryAgentTaskLog>> = nodeManApi.executeGetRequest(
             Array<AgentQueryAgentTaskLog>::class.java, jobId, instanceId
         )
         val queryAgentTaskLogRes: AgentResult<QueryAgentTaskLogResult> = AgentResult(
@@ -360,12 +360,12 @@ data class AgentService @Autowired constructor(
         jobId: Int,
         terminateAgentInstallTaskReq: TerminateAgentInstallTaskReq
     ): AgentResult<TerminalAgentInstallTaskResult> {
-        AgentApi.setThreadLocal("terminalAgentInstallTask")
+        NodeManApi.setNodemanOperationName("terminalAgentInstallTask")
         val terminalAgentInstallTaskRequest = AgentTerminateAgentInstallTaskReq(
             instanceIdList = terminateAgentInstallTaskReq.instanceIdList
         )
-        val agentTrmAgentInstallTaskRes: AgentAgentResult<AgentTerminalAgentInstallTaskResult> =
-            agentApi.executePostRequest(
+        val agentTrmAgentInstallTaskRes: AgentOriginalResult<AgentTerminalAgentInstallTaskResult> =
+            nodeManApi.executePostRequest(
                 terminalAgentInstallTaskRequest, AgentTerminalAgentInstallTaskResult::class.java, jobId
             )
         val termAgentInstallTaskRes: AgentResult<TerminalAgentInstallTaskResult> = AgentResult(
@@ -388,12 +388,12 @@ data class AgentService @Autowired constructor(
         jobId: Int,
         retryAgentInstallTaskReq: RetryAgentInstallTaskReq
     ): AgentResult<RetryAgentInstallTaskResult> {
-        AgentApi.setThreadLocal("retryAgentInstallTask")
+        NodeManApi.setNodemanOperationName("retryAgentInstallTask")
         val retryAgentInstallTaskRequest = AgentRetryAgentInstallTaskReq(
             instanceIdList = retryAgentInstallTaskReq.instanceIdList
         )
-        val agentRetryAgentInstallTaskRes: AgentAgentResult<AgentRetryAgentInstallTaskResult> =
-            agentApi.executePostRequest(
+        val agentRetryAgentInstallTaskRes: AgentOriginalResult<AgentRetryAgentInstallTaskResult> =
+            nodeManApi.executePostRequest(
                 retryAgentInstallTaskRequest, AgentRetryAgentInstallTaskResult::class.java, jobId
             )
         val retryAgentInstallTaskRes: AgentResult<RetryAgentInstallTaskResult> = AgentResult(
@@ -415,9 +415,9 @@ data class AgentService @Autowired constructor(
         projectId: String,
         withHidden: Boolean
     ): AgentResult<QueryAgentInstallChannelResult> {
-        AgentApi.setThreadLocal("queryAgentInstallChannel")
-        val agentQueryAgentInsChannelRes: AgentAgentResult<Array<AgentInstallAgentChannel>> =
-            agentApi.executeGetRequest(
+        NodeManApi.setNodemanOperationName("queryAgentInstallChannel")
+        val agentQueryAgentInsChannelRes: AgentOriginalResult<Array<AgentInstallAgentChannel>> =
+            nodeManApi.executeGetRequest(
                 Array<AgentInstallAgentChannel>::class.java, -1, withHidden
             )
         val queryAgentInsChannelRes: AgentResult<QueryAgentInstallChannelResult> = AgentResult(

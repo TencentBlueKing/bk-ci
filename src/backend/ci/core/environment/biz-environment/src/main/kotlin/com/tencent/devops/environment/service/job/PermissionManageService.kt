@@ -27,15 +27,9 @@ class PermissionManageService @Autowired constructor(
     }
 
     fun isJobInsBelongToProj(projectId: String, jobInstanceId: Long): Boolean {
-        val jobProjRecord = jobDao.getProjIdFromJobInsIdList(dslContext, projectId, jobInstanceId)
-        if (logger.isDebugEnabled) logger.debug("[getProjIdFromJob] jobProjRecord: $jobProjRecord")
-        return if (!jobProjRecord.isEmpty()) {
-            val projectIdFromTable = jobProjRecord.map { it.projectId }
-            projectId == projectIdFromTable[0]
-        } else {
-            if (logger.isDebugEnabled) logger.debug("[getProjIdFromJob] no record.")
-            false
-        }
+        val jobProjRecordExist = jobDao.isJobInsExist(dslContext, projectId, jobInstanceId)
+        if (logger.isDebugEnabled) logger.debug("[isJobInsBelongToProj] jobProjRecordExist: $jobProjRecordExist")
+        return jobProjRecordExist
     }
 
     fun recordJobInsToProj(projectId: String, jobInstanceId: Long, createUser: String) {

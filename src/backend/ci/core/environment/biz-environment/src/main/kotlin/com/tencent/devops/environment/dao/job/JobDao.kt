@@ -8,16 +8,17 @@ import java.time.LocalDateTime
 
 @Repository
 class JobDao {
-    fun getProjIdFromJobInsIdList(
+    fun isJobInsExist(
         dslContext: DSLContext,
         projectId: String,
         jobInstanceId: Long
-    ): List<TProjectJobRecord> {
+    ): Boolean {
         with(TProjectJob.T_PROJECT_JOB) {
-            return dslContext.selectFrom(this)
+            return dslContext.selectCount().from(this)
                 .where(JOB_INSTANCE_ID.eq(jobInstanceId))
+                .and(PROJECT_ID.eq(projectId))
                 .orderBy(JOB_INSTANCE_ID.desc())
-                .fetch()
+                .fetchOne(0, Long::class.java)!! > 0
         }
     }
 

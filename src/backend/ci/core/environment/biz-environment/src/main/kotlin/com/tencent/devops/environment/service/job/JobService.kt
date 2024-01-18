@@ -103,7 +103,7 @@ class JobService @Autowired constructor(
             ),
             bkUsername = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
         )
-        ApigwJobCloudApi.setThreadLocal(::executeScript.name)
+        ApigwJobCloudApi.setJobOperationName(::executeScript.name)
 
         val jobCloudScriptExecuteRes: JobCloudResult<JobCloudScriptExecuteResult> = apigwJobCloudApi.executePostRequest(
             jobCloudScriptExecuteReq, JobCloudScriptExecuteResult::class.java
@@ -165,7 +165,7 @@ class JobService @Autowired constructor(
             timeout = fileDistributeReq.timeout,
             bkUsername = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
         )
-        ApigwJobCloudApi.setThreadLocal(::distributeFile.name)
+        ApigwJobCloudApi.setJobOperationName(::distributeFile.name)
 
         val jobCloudFileDistributeRes: JobCloudResult<JobCloudFileDistributeResult> =
             apigwJobCloudApi.executePostRequest(
@@ -192,7 +192,7 @@ class JobService @Autowired constructor(
             operationCode = taskTerminateReq.operationCode,
             bkUsername = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
         )
-        ApigwJobCloudApi.setThreadLocal(::terminateTask.name)
+        ApigwJobCloudApi.setJobOperationName(::terminateTask.name)
 
         val jobCloudTaskTerminateRes: JobCloudResult<JobCloudTaskTerminateResult> = apigwJobCloudApi.executePostRequest(
             jobCloudTaskTerminateReq, JobCloudTaskTerminateResult::class.java
@@ -224,7 +224,7 @@ class JobService @Autowired constructor(
             hostIdList = queryJobInstanceLogsReq.hostIdList,
             bkUsername = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
         )
-        ApigwJobCloudApi.setThreadLocal(::queryJobInstanceLogs.name)
+        ApigwJobCloudApi.setJobOperationName(::queryJobInstanceLogs.name)
         val jobCloudQueryJobInstanceLogsRes: JobCloudResult<JobCloudQueryJobInstanceLogsResult> =
             apigwJobCloudApi.executePostRequest(
                 jobCloudQueryJobInstanceLogsReq, JobCloudQueryJobInstanceLogsResult::class.java
@@ -290,7 +290,7 @@ class JobService @Autowired constructor(
             description = createAccountReq.description,
             bkUsername = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
         )
-        ApigwJobCloudApi.setThreadLocal(::createAccount.name)
+        ApigwJobCloudApi.setJobOperationName(::createAccount.name)
 
         val jobCloudCreateAccountRes: JobCloudResult<JobCloudCreateAccountResult> = apigwJobCloudApi.executePostRequest(
             jobCloudCreateAccountReq, JobCloudCreateAccountResult::class.java
@@ -327,7 +327,7 @@ class JobService @Autowired constructor(
             id = deleteAccountReq.id,
             bkUsername = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
         )
-        ApigwJobCloudApi.setThreadLocal(::deleteAccount.name)
+        ApigwJobCloudApi.setJobOperationName(::deleteAccount.name)
 
         val jobCloudDeleteAccountRes: JobCloudResult<JobCloudDeleteAccountResult> = apigwJobCloudApi.executePostRequest(
             jobCloudDeleteAccountReq, JobCloudDeleteAccountResult::class.java
@@ -364,7 +364,7 @@ class JobService @Autowired constructor(
         jobInstanceId: Long,
         returnIpResult: Boolean?
     ): JobResult<QueryJobInstanceStatusResult> {
-        ApigwJobCloudApi.setThreadLocal("queryJobInstanceStatus")
+        ApigwJobCloudApi.setJobOperationName("queryJobInstanceStatus")
         val jobCloudQueryJobInstanceStatusRes: JobCloudResult<JobCloudQueryJobInstanceStatusResult> =
             apigwJobCloudApi.executeGetRequest(
                 JobCloudQueryJobInstanceStatusResult::class.java, jobInstanceId, returnIpResult ?: ""
@@ -431,7 +431,7 @@ class JobService @Autowired constructor(
         start: Int?,
         length: Int?
     ): JobResult<GetAccountListResult> {
-        ApigwJobCloudApi.setThreadLocal("getAccountList")
+        ApigwJobCloudApi.setJobOperationName("getAccountList")
         val jobCloudGetAccountListRes: JobCloudResult<JobCloudGetAccountListResult> =
             apigwJobCloudApi.executeGetRequest(
                 JobCloudGetAccountListResult::class.java,
@@ -476,7 +476,7 @@ class JobService @Autowired constructor(
         jobInstanceId: Long,
         stepInstanceId: Long
     ): JobResult<GetStepInstanceDetailResult> {
-        ApigwJobCloudApi.setThreadLocal("getStepInstanceDetail")
+        ApigwJobCloudApi.setJobOperationName("getStepInstanceDetail")
         val jobCloudGetStepInstanceDetailRes: JobCloudResult<JobCloudGetStepInstanceDetailResult> =
             apigwJobCloudApi.executeGetRequest(
                 JobCloudGetStepInstanceDetailResult::class.java, jobInstanceId, stepInstanceId
@@ -622,7 +622,7 @@ class JobService @Autowired constructor(
         status: Int?,
         tag: String?
     ): JobResult<GetStepInstanceStatusResult> {
-        ApigwJobCloudApi.setThreadLocal("getStepInstanceStatus")
+        ApigwJobCloudApi.setJobOperationName("getStepInstanceStatus")
         val jobCloudGetStepInstanceStatusRes: JobCloudResult<JobCloudGetStepInstanceStatusResult> =
             apigwJobCloudApi.executeGetRequest(
                 JobCloudGetStepInstanceStatusResult::class.java,
@@ -678,7 +678,7 @@ class JobService @Autowired constructor(
     fun queryAgentStatusFromJob(
         queryAgentStatusFromJobReq: QueryAgentStatusFromJobReq
     ): JobResult<QueryAgentStatusFromJobResult> {
-        ApigwJobCloudApi.setThreadLocal(::queryAgentStatusFromJob.name)
+        ApigwJobCloudApi.setJobOperationName(::queryAgentStatusFromJob.name)
         val queryAgentStatusFromJobRequest = JobCloudQueryAgentStatusFromJobReq(
             hostIdList = queryAgentStatusFromJobReq.hostIdList,
             bkUsername = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE

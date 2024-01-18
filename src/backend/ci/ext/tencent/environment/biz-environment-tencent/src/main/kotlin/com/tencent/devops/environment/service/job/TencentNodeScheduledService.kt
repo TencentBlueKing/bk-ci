@@ -29,15 +29,14 @@ class TencentNodeScheduledService @Autowired constructor(
             "scheduled_write_host_id_and_cloud_area_id_timeout_lock"
         private const val SCHEDULED_ADD_NODE_TO_CC_TIMEOUT_LOCK_KEY = "scheduled_add_node_to_cc_timeout_lock"
         private const val DEFAULT_PAGE_SIZE = 100
-        private const val DEFAULT_CLOUD_AREA_ID = 0L
     }
 
     /**
      * 定时任务：执行一次就行。
      * 分组执行，每次遍历100条记录。
-     * 将不在CC中的 类型为CMDB 的节点，添加到CC中，并返回host_id，将host_id写入表中，并将 云区域id 设为0
+     * 将不在CC中的 类型为CMDB 的节点，添加到CC中，并返回host_id和云区域id，将host_id和云区域id写入表中
      */
-    @Scheduled(cron = "0 2 11 * * 1-5")
+    @Scheduled(cron = "0 0 11 * * 1-5")
     fun scheduledAddNodeToCC() {
         nodeScheduledService.taskWithRedisLock(SCHEDULED_ADD_NODE_TO_CC_TIMEOUT_LOCK_KEY, ::addNodeToCC)
     }
@@ -45,11 +44,13 @@ class TencentNodeScheduledService @Autowired constructor(
     /**
      * 定时任务：执行一次就行。
      * 分组执行，每次遍历100条记录。
-     * 对于 nodeType 为 CMDB 的机器，写入host_id(CC中查到的)，并将云区域ID设为0。
+     * 对于 nodeType 为 CMDB 的机器，写入host_id和云区域ID(都是CC中查到的)。
      */
-    @Scheduled(cron = "0 45 15 * * 1-5")
+    @Scheduled(cron = "0 0 10 * * 1-5")
     fun scheduledWriteHostIdAndCloudAreaId() {
-        nodeScheduledService.taskWithRedisLock(SCHEDULED_WRITE_HOST_ID_CLOUD_AREA_ID_TIMEOUT_LOCK_KEY, ::writeHostIdAndCloudAreaId)
+        nodeScheduledService.taskWithRedisLock(
+            SCHEDULED_WRITE_HOST_ID_CLOUD_AREA_ID_TIMEOUT_LOCK_KEY, ::writeHostIdAndCloudAreaId
+        )
     }
 
     /**
@@ -57,7 +58,7 @@ class TencentNodeScheduledService @Autowired constructor(
      * 只轮询T_NODE表中 NODE_TYPE=="CMDB"的记录，用ip 调用get_query_info接口，看能否得到对应记录：能-不操作，不能-对应节点的 NODE_STATUS字段 改成 NOT_IN_CMDB
      * cron：每天上午9点执行。
      */
-    @Scheduled(cron = "0 0 9 * * ?")
+    @Scheduled(cron = "0 0 9 * * 1-5")
     fun scheduledCheckNodeInCmdb() {
         nodeScheduledService.taskWithRedisLock(CHECK_NODE_IN_CMDB_TIMEROUT_LOCK_KEY, ::checkNodeInCmdb)
     }
@@ -98,7 +99,7 @@ class TencentNodeScheduledService @Autowired constructor(
                 HostIdAndCloudAreaIdInfo(
                     nodeId = nodeIpToNodesRecords[svrIdToCmdbInfoMap[notInCCSvrIdList[index]]?.SvrIp]
                         ?.value2(),
-                    bkCloudId = DEFAULT_CLOUD_AREA_ID,
+                    bkCloudId = null,
                     bkHostId = value
                 )
             }
@@ -135,7 +136,7 @@ class TencentNodeScheduledService @Autowired constructor(
                         .map {
                             HostIdAndCloudAreaIdInfo(
                                 nodeId = it.value1(),
-                                bkCloudId = DEFAULT_CLOUD_AREA_ID,
+                                bkCloudId = null,
                                 bkHostId = ipToCCInfoMap[it.value3()]?.bkHostId
                             )
                         }
