@@ -1406,12 +1406,18 @@ class PipelineBuildFacadeService(
                 arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_DETAIL))
             )
         )
-        val buildId = pipelineRuntimeService.getBuildIdByBuildNum(projectId, pipelineId, buildNo, debugVersion)
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                params = arrayOf("buildNo=$buildNo")
-            )
+        // 如果请求的参数是草稿版本的版本号，则用该版本查询调试记录，否则正常调用普通构建
+        val targetDebugVersion = debugVersion?.takeIf {
+            val draftVersion = pipelineRepositoryService.getDraftVersionResource(projectId, pipelineId)
+            draftVersion?.version == debugVersion
+        }
+        val buildId = pipelineRuntimeService.getBuildIdByBuildNum(
+            projectId, pipelineId, buildNo, targetDebugVersion
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+            params = arrayOf("buildNo=$buildNo")
+        )
         return getBuildDetail(
             projectId = projectId, pipelineId = pipelineId, buildId = buildId, channelCode = channelCode
         )
@@ -1437,12 +1443,18 @@ class PipelineBuildFacadeService(
                 arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_DETAIL))
             )
         )
-        val buildId = pipelineRuntimeService.getBuildIdByBuildNum(projectId, pipelineId, buildNum, debugVersion)
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                params = arrayOf("buildNum=$buildNum")
-            )
+        // 如果请求的参数是草稿版本的版本号，则用该版本查询调试记录，否则正常调用普通构建
+        val targetDebugVersion = debugVersion?.takeIf {
+            val draftVersion = pipelineRepositoryService.getDraftVersionResource(projectId, pipelineId)
+            draftVersion?.version == debugVersion
+        }
+        val buildId = pipelineRuntimeService.getBuildIdByBuildNum(
+            projectId, pipelineId, buildNum, targetDebugVersion
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+            params = arrayOf("buildNum=$buildNum")
+        )
         return getBuildRecord(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -1815,9 +1827,13 @@ class PipelineBuildFacadeService(
                     )
                 )
             }
-
+            // 如果请求的参数是草稿版本的版本号，则用该版本查询调试记录，否则正常调用普通构建
+            val targetDebugVersion = debugVersion?.takeIf {
+                val draftVersion = pipelineRepositoryService.getDraftVersionResource(projectId, pipelineId)
+                draftVersion?.version == debugVersion
+            }
             val newTotalCount = pipelineRuntimeService.getPipelineBuildHistoryCount(
-                projectId = projectId, pipelineId = pipelineId, debugVersion = debugVersion
+                projectId = projectId, pipelineId = pipelineId, debugVersion = targetDebugVersion
             )
             val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
                 projectId = projectId,
@@ -1917,6 +1933,12 @@ class PipelineBuildFacadeService(
                     permission = AuthPermission.VIEW
                 )
             }
+            // 如果请求的参数是草稿版本的版本号，则用该版本查询调试记录，否则正常调用普通构建
+            val targetDebugVersion = debugVersion?.takeIf {
+                val draftVersion = pipelineRepositoryService.getDraftVersionResource(projectId, pipelineId)
+                draftVersion?.version == debugVersion
+            }
+
             val newTotalCount = pipelineRuntimeService.getPipelineBuildHistoryCount(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -1941,7 +1963,7 @@ class PipelineBuildFacadeService(
                 buildMsg = buildMsg,
                 startUser = startUser,
                 queryDslContext = queryDslContext,
-                debugVersion = debugVersion
+                debugVersion = targetDebugVersion
             )
 
             val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
@@ -1971,7 +1993,7 @@ class PipelineBuildFacadeService(
                 startUser = startUser,
                 updateTimeDesc = updateTimeDesc,
                 queryDslContext = queryDslContext,
-                debugVersion = debugVersion
+                debugVersion = targetDebugVersion
             )
             val buildHistories = mutableListOf<BuildHistory>()
             buildHistories.addAll(newHistoryBuilds)
@@ -2066,7 +2088,12 @@ class PipelineBuildFacadeService(
                 arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_BUILD_HISTORY))
             )
         )
-        return pipelineRuntimeService.getHistoryConditionRepo(projectId, pipelineId, debugVersion)
+        // 如果请求的参数是草稿版本的版本号，则用该版本查询调试记录，否则正常调用普通构建
+        val targetDebugVersion = debugVersion?.takeIf {
+            val draftVersion = pipelineRepositoryService.getDraftVersionResource(projectId, pipelineId)
+            draftVersion?.version == debugVersion
+        }
+        return pipelineRuntimeService.getHistoryConditionRepo(projectId, pipelineId, targetDebugVersion)
     }
 
     fun getHistoryConditionBranch(
@@ -2087,7 +2114,14 @@ class PipelineBuildFacadeService(
                 arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_BUILD_HISTORY))
             )
         )
-        return pipelineRuntimeService.getHistoryConditionBranch(projectId, pipelineId, alias, debugVersion)
+        // 如果请求的参数是草稿版本的版本号，则用该版本查询调试记录，否则正常调用普通构建
+        val targetDebugVersion = debugVersion?.takeIf {
+            val draftVersion = pipelineRepositoryService.getDraftVersionResource(projectId, pipelineId)
+            draftVersion?.version == debugVersion
+        }
+        return pipelineRuntimeService.getHistoryConditionBranch(
+            projectId, pipelineId, alias, targetDebugVersion
+        )
     }
 
     fun serviceBuildBasicInfo(projectId: String, buildId: String): BuildBasicInfo {
