@@ -51,6 +51,7 @@ import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.remotedev.EnableBkRepoData
+import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.remotedev.ProjectRemoteDevService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -71,13 +72,15 @@ class OpProjectServiceImpl @Autowired constructor(
     private val paasCCService: ProjectPaasCCService,
     private val bkAuthProjectApi: AuthProjectApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
-    private val projectRemoteDevService: ProjectRemoteDevService
+    private val projectRemoteDevService: ProjectRemoteDevService,
+    private val projectService: ProjectService
 ) : AbsOpProjectServiceImpl(
     dslContext = dslContext,
     projectDao = projectDao,
     projectLabelRelDao = projectLabelRelDao,
     redisOperation = redisOperation,
-    projectDispatcher = projectDispatcher
+    projectDispatcher = projectDispatcher,
+    projectService = projectService
 ) {
 
     private final val redisProjectKey = "BK:PROJECT:INFO:"

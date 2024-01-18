@@ -89,7 +89,7 @@ class RbacPipelinePermissionService constructor(
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to check pipeline permission|" +
-                    "$userId|$projectId|$pipelineId|$permission|$authResourceType"
+                        "$userId|$projectId|$pipelineId|$permission|$authResourceType"
             )
         }
     }

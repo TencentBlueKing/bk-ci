@@ -28,24 +28,29 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.TokenForbiddenException
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.open.OpenProjectResource
+import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.service.ProjectService
+import org.slf4j.LoggerFactory
 
 @RestResource
 class OpenProjectResourceImpl constructor(
-    private val projectService: ProjectService
+    private val projectService: ProjectService,
+    private val clientTokenService: ClientTokenService
 ) : OpenProjectResource {
     override fun get(
         token: String,
         projectId: String
     ): Result<ProjectVO> {
+        check(token)
         return Result(
-            projectService.getByEnglishNameByOpen(
-                englishName = projectId,
-                token = token
+            projectService.getByEnglishNameWithoutPerm(
+                englishName = projectId
             ) ?: throw OperationException("project $projectId not found")
         )
     }
@@ -54,11 +59,28 @@ class OpenProjectResourceImpl constructor(
         token: String,
         projectCodes: Set<String>
     ): Result<List<ProjectVO>> {
+        check(token)
         return Result(
-            projectService.listByOpen(
-                token = token,
-                projectCodes = projectCodes
+            projectService.list(
+                projectCodes = projectCodes,
+                enabled = null
             )
         )
+    }
+
+    override fun getOperationalProducts(token: String): Result<List<OperationalProductVO>> {
+        check(token)
+        return Result(projectService.getOperationalProducts())
+    }
+
+    private fun check(token: String) {
+        if (token != clientTokenService.getSystemToken()) {
+            logger.warn("auth token fail: $token")
+            throw TokenForbiddenException("token check fail")
+        }
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(OpenProjectResourceImpl::class.java)
     }
 }

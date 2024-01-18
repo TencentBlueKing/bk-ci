@@ -41,7 +41,7 @@ dependencies {
     api(project(":ext:tencent:process:api-process-tencent"))
     api(project(":core:project:api-project"))
     api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":ext:tencent:monitoring:api-monitoring-tencent"))
+    api(project(":ext:tencent:misc:api-monitoring-tencent"))
     api(project(":core:stream:api-stream"))
     api(project(":ext:tencent:stream:api-stream-tencent"))
     api(project(":ext:tencent:sign:api-sign-tencent"))

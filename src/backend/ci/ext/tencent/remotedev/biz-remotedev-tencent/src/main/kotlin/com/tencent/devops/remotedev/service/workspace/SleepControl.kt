@@ -75,7 +75,8 @@ class SleepControl @Autowired constructor(
     private val client: Client,
     private val dispatcher: RemoteDevDispatcher,
     private val redisHeartBeat: RedisHeartBeat,
-    private val workspaceCommon: WorkspaceCommon
+    private val workspaceCommon: WorkspaceCommon,
+    private val notifyControl: NotifyControl
 ) {
 
     companion object {
@@ -139,7 +140,7 @@ class SleepControl @Autowired constructor(
             )
 
             // 发送给用户
-            workspaceCommon.dispatchWebsocketPushEvent(
+            notifyControl.dispatchWebsocketPushEvent(
                 userId = userId,
                 workspaceName = workspaceName,
                 workspaceHost = null,
@@ -255,7 +256,7 @@ class SleepControl @Autowired constructor(
             )
 
             // 发送给用户
-            workspaceCommon.dispatchWebsocketPushEvent(
+            notifyControl.dispatchWebsocketPushEvent(
                 userId = Constansts.ADMIN_NAME,
                 workspaceName = workspaceName,
                 workspaceHost = null,
@@ -339,7 +340,7 @@ class SleepControl @Autowired constructor(
 
         workspaceCommon.statisticalData(workspace, operator)
 
-        workspaceCommon.dispatchWebsocketPushEvent(
+        notifyControl.dispatchWebsocketPushEvent(
             userId = operator,
             workspaceName = workspaceName,
             workspaceHost = null,
