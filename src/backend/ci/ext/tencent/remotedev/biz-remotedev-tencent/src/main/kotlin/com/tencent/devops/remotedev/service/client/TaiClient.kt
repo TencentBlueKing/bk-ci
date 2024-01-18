@@ -29,6 +29,7 @@ class TaiClient @Autowired constructor(
     val apiUrl: String = ""
 
     fun taiUserInfo(params: TaiUserInfoRequest): List<TaiUserInfo> {
+        if (params.usernames.isEmpty()) return emptyList()
         val authorization = """{"bk_app_code":"${bkConfig.appCode}","bk_app_secret":"${bkConfig.appSecret}"}"""
         val requestBody = JsonUtil.toJson(bean = params, formatted = false)
         val request = Request.Builder()

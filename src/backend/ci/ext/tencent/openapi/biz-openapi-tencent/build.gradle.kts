@@ -35,6 +35,7 @@ dependencies {
     api(project(":ext:tencent:repository:api-repository-tencent"))
     api(project(":ext:tencent:environment:api-environment-tencent"))
     api(project(":ext:tencent:remotedev:api-remotedev-tencent"))
+    api(project(":ext:tencent:auth:api-auth-tencent"))
     api(project(":core:common:common-client"))
     api("io.jsonwebtoken:jjwt-api")
     implementation(project(mapOf("path" to ":ext:tencent:remotedev:api-remotedev-tencent")))

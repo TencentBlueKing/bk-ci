@@ -8,8 +8,12 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ClientVersionDao
 import com.tencent.devops.remotedev.filter.ApiFilter
+import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
+import com.tencent.devops.remotedev.service.workspace.NotifyControl
+import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.CLIENT_VERSION_WARNING_NOTIFY
+import java.util.concurrent.TimeUnit
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.PreMatching
 import javax.ws.rs.core.MediaType
@@ -18,7 +22,6 @@ import javax.ws.rs.ext.Provider
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import java.util.concurrent.TimeUnit
 
 @Provider
 @PreMatching
@@ -26,7 +29,8 @@ import java.util.concurrent.TimeUnit
 class ClientVersionFilter constructor(
     private val cacheService: RedisCacheService,
     private val clientVersionDao: ClientVersionDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val notifyControl: NotifyControl
 ) : ApiFilter {
     companion object {
         private val logger = LoggerFactory.getLogger(ClientVersionFilter::class.java)
@@ -38,7 +42,12 @@ class ClientVersionFilter constructor(
     @Value("\${remoteDev.clientVersionLimit:0.3.0}")
     val clientVersionLimit: String = "0.3.0"
 
+    @Value("\${remoteDev.clientVersionWarning:0.3.0}")
+    val clientVersionWarning: String = "0.3.0"
+
     lateinit var clientVersionLimitList: List<Int>
+
+    lateinit var clientVersionWarningList: List<Int>
 
     lateinit var clientVersion: MutableMap<String, String>
 
@@ -66,6 +75,7 @@ class ClientVersionFilter constructor(
         }
     }
 
+    @Suppress("ComplexMethod")
     override fun verify(requestContext: ContainerRequestContext): Boolean {
         // path为为空的时候，直接退出
         val path = requestContext.uriInfo.requestUri.path
@@ -83,14 +93,28 @@ class ClientVersionFilter constructor(
             )
             return false
         }
+        val user = requestContext.headers[AUTH_HEADER_USER_ID]?.get(0).toString()
         kotlin.runCatching {
             recordClientVersion(
                 requestContext.headers[HEADER_IP]?.get(0).toString(),
-                requestContext.headers[AUTH_HEADER_USER_ID]?.get(0).toString(),
+                user,
                 version.toString(),
                 requestContext.headers[HEADER_MAC_ADDRESS]?.get(0).toString()
             )
         }.onFailure { logger.warn("recordClientVersion error ${it.message}", it) }
+
+        if (checkClientVersionWarning(split = split, user = user, version = version)) {
+            notifyControl.notify4User(
+                userIds = mutableSetOf(user),
+                workspaceName = "",
+                notifyTemplateCode = CLIENT_VERSION_WARNING_NOTIFY,
+                notifyType = mutableSetOf(RemoteDevNotifyType.CLIENT_PUSH, RemoteDevNotifyType.EMAIL),
+                bodyParams = mapOf(
+                    "version" to version
+                )
+            )
+        }
+
         if (!this::clientVersionLimitList.isInitialized) {
             clientVersionLimitList = clientVersionLimit.split(".").map { it.toInt() }
         }
@@ -107,6 +131,32 @@ class ClientVersionFilter constructor(
             }
         }
         return true
+    }
+
+    /*
+    * 检查是否需要告警
+    * true： 告警
+    * false： 不告警
+    * */
+    private fun checkClientVersionWarning(split: List<String>, user: String, version: String): Boolean {
+        if (!this::clientVersionWarningList.isInitialized) {
+            clientVersionWarningList = clientVersionWarning.split(".").map { it.toInt() }
+        }
+        kotlin.run {
+            clientVersionWarningList.forEachIndexed { index, s ->
+                if (split.lastIndex < index) {
+                    return true
+                }
+                val v = split[index].toIntOrNull()
+                when {
+                    v == null -> return true
+                    v < s -> return true
+                    v == s -> return@forEachIndexed
+                    v > s -> return false
+                }
+            }
+        }
+        return false
     }
 
     private fun recordClientVersion(ip: String, user: String, version: String, macAddress: String) {

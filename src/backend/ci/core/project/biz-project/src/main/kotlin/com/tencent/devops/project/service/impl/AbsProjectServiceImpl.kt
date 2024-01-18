@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
-import com.tencent.devops.common.api.exception.TokenForbiddenException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
@@ -340,14 +339,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return projectVO
     }
 
-    override fun getByEnglishNameByOpen(
-        englishName: String,
-        token: String
-    ): ProjectVO? {
-        if (token != clientTokenService.getSystemToken()) {
-            logger.warn("auth token fail: $token")
-            throw TokenForbiddenException("token check fail")
-        }
+    override fun getByEnglishNameWithoutPerm(englishName: String): ProjectVO? {
         val record = projectDao.getByEnglishName(
             dslContext = dslContext,
             englishName = englishName
@@ -357,7 +349,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun show(userId: String, englishName: String, accessToken: String?): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
-        val projectInfo = ProjectUtils.packagingBean(record)
+        val rightProjectOrganization = fixProjectOrganization(tProjectRecord = record)
+        val projectInfo = ProjectUtils.packagingBean(
+            tProjectRecord = record,
+            projectOrganizationInfo = rightProjectOrganization
+        )
         val approvalStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
         if (approvalStatus.isCreatePending() && record.creator != userId) {
             throw ErrorCodeException(
@@ -403,7 +399,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     override fun diff(userId: String, englishName: String, accessToken: String?): ProjectDiffVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
         val projectApprovalInfo = projectApprovalService.get(englishName)
-        return ProjectUtils.packagingBean(record, projectApprovalInfo)
+        val rightProjectOrganization = fixProjectOrganization(tProjectRecord = record)
+        return ProjectUtils.packagingBean(
+            tProjectRecord = record,
+            projectApprovalInfo = projectApprovalInfo,
+            projectOrganizationInfo = rightProjectOrganization
+        )
     }
 
     override fun getByEnglishName(englishName: String): ProjectVO? {
@@ -763,20 +764,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             projectJmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
         }
-    }
-
-    override fun listByOpen(
-        token: String,
-        projectCodes: Set<String>
-    ): List<ProjectVO> {
-        if (token != clientTokenService.getSystemToken()) {
-            logger.warn("auth token fail: $token")
-            throw TokenForbiddenException("token check fail")
-        }
-        return list(
-            projectCodes = projectCodes,
-            enabled = null
-        )
     }
 
     override fun listOnlyByProjectCode(projectCodes: Set<String>): List<ProjectVO> {

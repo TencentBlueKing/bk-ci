@@ -207,7 +207,8 @@ class RbacPermissionMigrateService constructor(
             resourceType != null
         val projectInfoList = client.get(ServiceProjectResource::class).listByProjectCode(projectCodes.toSet())
             .data!!.filter {
-                it.routerTag != null && it.routerTag!!.contains(AuthSystemType.RBAC_AUTH_TYPE.value)
+                it.routerTag != null && (
+                    it.routerTag!!.contains(AuthSystemType.RBAC_AUTH_TYPE.value) || it.routerTag!!.contains("devx"))
             }
         val traceId = MDC.get(TraceTag.BIZID)
         projectInfoList.forEach {
