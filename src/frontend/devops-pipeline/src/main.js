@@ -43,7 +43,7 @@ import { handlePipelineNoPermission, RESOURCE_ACTION } from '@/utils/permission'
 import bkMagic from '@tencent/bk-magic-vue'
 import BkPipeline from 'bkui-pipeline'
 // 权限指令
-import VueCompositionAPI from '@vue/composition-api'
+// import VueCompositionAPI from '@vue/composition-api'
 import { BkPermission, PermissionDirective } from 'bk-permission'
 import 'bk-permission/dist/main.css'
 import { pipelineDocs } from '../../common-lib/docs'
@@ -64,7 +64,6 @@ Vue.use(PermissionDirective(handlePipelineNoPermission))
 Vue.use(BkPermission, {
     i18n
 })
-Vue.use(VueCompositionAPI)
 
 Vue.use(VeeValidate, {
     i18nRootKey: 'validations', // customize the root path for validation messages.

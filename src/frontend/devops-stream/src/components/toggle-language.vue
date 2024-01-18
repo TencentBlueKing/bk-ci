@@ -15,7 +15,7 @@
     import {
         defineComponent,
         getCurrentInstance
-    } from '@vue/composition-api'
+    } from 'vue'
     import {
         setCookie,
         getSubdomain

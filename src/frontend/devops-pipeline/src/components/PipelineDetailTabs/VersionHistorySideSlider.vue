@@ -6,6 +6,8 @@
         :is-show="showVersionSideslider"
         :before-close="handleClose"
         @shown="handleShown"
+        ext-cls="pipeline-version-sideslider"
+        :transfer="false"
     >
         <main slot="content" class="pipeline-version-history" v-bkloading="{ isLoading }">
             <header class="pipeline-version-history-header">
@@ -249,6 +251,9 @@
 
 <style lang="scss">
     @import "@/scss/select-dark-theme.scss";
+    .pipeline-version-sideslider {
+        z-index: 2036 !important;
+    }
     .pipeline-version-history {
         padding: 24px;
         display: flex;

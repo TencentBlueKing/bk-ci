@@ -104,7 +104,7 @@
             grid-template-columns: min-content 1fr;
             color: #979BA5;
             overflow: hidden;
-            > {
+            >svg {
                 flex-shrink: 0;
             }
             &-link {

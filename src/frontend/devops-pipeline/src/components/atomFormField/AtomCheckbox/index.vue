@@ -28,10 +28,6 @@
                 type: String,
                 default: ''
             },
-            title: {
-                type: String,
-                default: ''
-            },
             disabled: {
                 type: Boolean,
                 default: false

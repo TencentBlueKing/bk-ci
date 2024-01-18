@@ -680,6 +680,9 @@
                 deep: true,
                 handler: function (errors, old) {
                     // this.setContainerValidate()
+                    if (!this.editable) {
+                        return
+                    }
                     const isError = errors.any()
                     this.handleContainerChange('isError', isError)
                 }
@@ -911,6 +914,9 @@
                 )
             },
             setContainerValidate (addErrors, removeErrors) {
+                if (!this.editable) {
+                    return
+                }
                 const { errors } = this
 
                 if (addErrors && addErrors.length) {

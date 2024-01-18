@@ -49,16 +49,18 @@
             right: 24px;
         }
         &.with-variable-open {
+
             .bk-sideslider-wrapper {
                 right: 504px;
                 top: 72px;
-                height: calc(100vh - 105px);
+                height: calc(100vh - 96px);
             }
         }
     }
 }
 .bkci-property-panel {
-
+    background-color: rgba($color: #000000, $alpha: 0.5);
+    z-index: 2012 !important;
     .bk-sideslider-wrapper {
         top: 48px;
         height: calc(100vh - 48px);

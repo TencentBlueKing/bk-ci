@@ -4,6 +4,7 @@
         :width="800"
         @showen="showReleaseSlider"
         @hidden="hideReleaseSlider"
+        :transfer="false"
         ext-cls="release-pipeline-side-slider"
     >
         <header slot="header" class="release-pipeline-side-slider-header">
@@ -716,6 +717,9 @@
 
 <style lang="scss">
 @import "@/scss/conf";
+.release-pipeline-side-slider {
+    z-index: 2036 !important;
+}
 .release-pipeline-side-slider-header {
   display: flex;
   align-items: center;
