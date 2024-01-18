@@ -61,7 +61,7 @@
         },
         props: {
             params: {
-                type: Object,
+                type: Array,
                 required: true
             },
             updateContainerParams: {

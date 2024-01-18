@@ -73,7 +73,11 @@
             errors: {
                 deep: true,
                 handler: function (errors, old) {
+                    if (!this.editable) {
+                        return
+                    }
                     const isError = errors.any()
+
                     this.handleStageChange('isError', isError)
                 }
             }

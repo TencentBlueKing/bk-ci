@@ -140,7 +140,7 @@
 @import "@/scss/mixins/ellipsis.scss";
 @import "@/scss/mixins/scroller.scss";
 .variable-entry {
-  z-index: 3030;
+  z-index: 2020;
   position: absolute;
   right: 460px;
   top: calc(50% - 50px);
@@ -166,7 +166,7 @@
   }
 }
 .variable-version-container {
-  z-index: 3000;
+  z-index: 2018;
   width: 480px;
   position: absolute;
   top: 0;
