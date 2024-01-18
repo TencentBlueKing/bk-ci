@@ -3,5 +3,5 @@ package com.tencent.devops.remotedev.pojo.gitproxy
 data class CallbackLinktgitData(
     val userId: String,
     val projectId: String,
-    val urls: Set<String>
+    val urls: String
 )
