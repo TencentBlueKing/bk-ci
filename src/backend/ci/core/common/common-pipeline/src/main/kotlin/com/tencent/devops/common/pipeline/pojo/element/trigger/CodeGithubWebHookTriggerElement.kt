@@ -76,8 +76,6 @@ data class CodeGithubWebHookTriggerElement(
     val includeCrTypes: List<String>? = null,
     @ApiModelProperty("是否启用回写")
     val enableCheck: Boolean? = true,
-    @ApiModelProperty("mr事件action")
-    val includeMrAction: List<String>? = null,
     @ApiModelProperty("push事件action")
     val includePushAction: List<String>? = null,
     @ApiModelProperty("是否启用第三方过滤")
