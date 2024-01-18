@@ -2,7 +2,6 @@ package com.tencent.devops.environment.api.job
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.environment.pojo.job.agentreq.InstallAgentReq
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.req.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
@@ -144,7 +143,7 @@ interface UserJobResource {
         keyFile: InputStream?,
         @ApiParam(value = "安装agent的请求信息", required = true)
         @FormDataParam("installAgentReq")
-        installAgentReq: InstallAgentReq
+        installAgentReq: String
     ): AgentResult<InstallAgentResult>
 
     @ApiOperation("查询agent任务状态的接口")

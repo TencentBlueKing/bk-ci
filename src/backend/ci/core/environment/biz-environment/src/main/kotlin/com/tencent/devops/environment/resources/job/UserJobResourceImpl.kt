@@ -4,7 +4,6 @@ import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.UserJobResource
-import com.tencent.devops.environment.pojo.job.agentreq.InstallAgentReq
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.req.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
@@ -90,7 +89,7 @@ class UserJobResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         keyFile: InputStream?,
-        installAgentReq: InstallAgentReq
+        installAgentReq: String
     ): AgentResult<InstallAgentResult> {
         checkParamBlank(userId, projectId)
         return agentService.installAgent(userId, projectId, keyFile, installAgentReq)

@@ -27,6 +27,8 @@
 
 package com.tencent.devops.environment.service.job
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.environment.pojo.job.agentreq.AgentCondition
 import com.tencent.devops.environment.pojo.job.agentreq.AgentHostForInstallAgent
 import com.tencent.devops.environment.pojo.job.agentreq.AgentInstallAgentReq
@@ -65,6 +67,7 @@ import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskStatusResu
 import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.agentres.Statistics
 import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
+import org.json.JSONObject
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -91,9 +94,11 @@ data class AgentService @Autowired constructor(
         userId: String,
         projectId: String,
         keyFile: InputStream?,
-        installAgentReq: InstallAgentReq
+        installAgentReqString: String
     ): AgentResult<InstallAgentResult> {
         AgentApi.setThreadLocal("installAgent")
+        val installAgentJson = JSONObject(installAgentReqString)
+        val installAgentReq = jacksonObjectMapper().readValue<InstallAgentReq>(installAgentJson.toString())
         val installAgentRequest = AgentInstallAgentReq(
             jobType = DEFAULT_INSTALL_AGENT_JOB_TYPE,
             hosts = installAgentReq.hosts.map {
