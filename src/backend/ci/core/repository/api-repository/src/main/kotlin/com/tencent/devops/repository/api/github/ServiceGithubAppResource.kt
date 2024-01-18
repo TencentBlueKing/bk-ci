@@ -2,10 +2,10 @@ package com.tencent.devops.repository.api.github
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GITHUB_TOKEN
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.sdk.github.request.GetAppInstallationForOrgRequest
-import com.tencent.devops.common.sdk.github.request.GetAppInstallationForRepoRequest
-import com.tencent.devops.common.sdk.github.response.GetAppInstallationResponse
 import com.tencent.devops.repository.pojo.AppInstallationResult
+import com.tencent.devops.repository.sdk.github.request.GetAppInstallationForOrgRequest
+import com.tencent.devops.repository.sdk.github.request.GetAppInstallationForRepoRequest
+import com.tencent.devops.repository.sdk.github.response.GetAppInstallationResponse
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
