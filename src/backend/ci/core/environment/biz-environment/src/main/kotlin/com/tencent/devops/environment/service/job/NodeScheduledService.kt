@@ -75,7 +75,7 @@ class NodeScheduledService @Autowired constructor(
     private fun updateAgent() {
         val countCmdbNodes = nodeDao.countCmdbNodes(dslContext)
         if (logger.isDebugEnabled) logger.debug("[updateAgent]countCmdbNodes:$countCmdbNodes.")
-        if (0 < countCmdbNodes) {
+        countCmdbNodes.takeIf { it > 0 }?.run {
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countCmdbNodes.toLong())
             for (page in 1..totalPages) {
                 val cmdbNodesRecords = nodeDao.getCmdbNodes(dslContext, page - 1, DEFAULT_PAGE_SIZE)
@@ -108,8 +108,6 @@ class NodeScheduledService @Autowired constructor(
                     batchUpdateAgent(cmdbNodesRecords, agentUpdateList)
                 }
             }
-        } else {
-            if (logger.isDebugEnabled) logger.debug("[updateAgent] There is no cmdb node.")
         }
     }
 

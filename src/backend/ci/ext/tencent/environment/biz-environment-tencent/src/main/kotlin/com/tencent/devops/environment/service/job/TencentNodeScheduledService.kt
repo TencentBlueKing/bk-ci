@@ -1,8 +1,6 @@
 package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.pojo.job.HostIdAndCloudAreaIdInfo
 import com.tencent.devops.environment.service.CmdbNodeService
@@ -67,7 +65,7 @@ class TencentNodeScheduledService @Autowired constructor(
     private fun addNodeToCC() {
         val countCmdbNodes = nodeDao.countCmdbNodes(dslContext)
         if (logger.isDebugEnabled) logger.debug("[addNodeToCC]countCmdbNodes:$countCmdbNodes")
-        if (0 < countCmdbNodes) {
+        countCmdbNodes.takeIf { it > 0 }?.run {
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countCmdbNodes.toLong())
             for (page in 1..totalPages) {
                 addNodeToCCByPage(page)
@@ -113,7 +111,7 @@ class TencentNodeScheduledService @Autowired constructor(
     private fun writeHostIdAndCloudAreaId() {
         val countCmdbNodes = nodeDao.countCmdbNodes(dslContext)
         if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId]countCmdbNodes:$countCmdbNodes")
-        if (0 < countCmdbNodes) {
+        countCmdbNodes.takeIf { it > 0 }?.run {
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countCmdbNodes.toLong())
             for (page in 1..totalPages) {
                 val cmdbNodesRecords =
@@ -144,8 +142,6 @@ class TencentNodeScheduledService @Autowired constructor(
                     nodeDao.updateHostIdAndCloudAreaIdByNodeId(dslContext, nodeHostIdAndCloudAreaIdInfoList)
                 }
             }
-        } else {
-            if (logger.isDebugEnabled) logger.debug("[writeHostIdAndCloudAreaId] There is no cmdb node.")
         }
     }
 
