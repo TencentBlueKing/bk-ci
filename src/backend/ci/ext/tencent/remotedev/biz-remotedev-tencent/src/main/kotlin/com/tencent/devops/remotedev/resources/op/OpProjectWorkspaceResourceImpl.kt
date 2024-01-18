@@ -198,7 +198,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun exportProjectWorkspaceList(userId: String, data: ProjectWorkspaceFetchData): Response {
-        return xlsxExportService.exportProjectWorkspaceListOp(data)
+        return xlsxExportService.exportProjectWorkspaceListOp(userId, data)
     }
 
     companion object {

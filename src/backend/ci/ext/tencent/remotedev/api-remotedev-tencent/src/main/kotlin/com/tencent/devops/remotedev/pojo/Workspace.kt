@@ -93,7 +93,7 @@ data class Workspace(
     override val memory: Int = 32,
     override val disk: Int = 100,
     @ApiModelProperty("当前登陆者信息")
-    override var currentLoginUsers: List<String>,
+    override var currentLoginUsers: List<String> = emptyList(),
     @ApiModelProperty("windows 地域配置")
     val zoneConfig: WindowsResourceZoneConfig? = null,
     @ApiModelProperty("远程开发仓库地址")
