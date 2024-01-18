@@ -299,20 +299,14 @@ class WorkspaceDao {
      */
     fun fetchWorkspaceUser(
         dslContext: DSLContext,
-        workspaceName: String,
-        assignType: WorkspaceShared.AssignType? = null
+        workspaceName: String
     ): List<String> {
         val shared = TWorkspaceShared.T_WORKSPACE_SHARED
-        val conditions = mutableListOf<Condition>()
-        conditions.add(shared.WORKSPACE_NAME.eq(workspaceName))
-        if (assignType != null) {
-            conditions.add(shared.ASSIGN_TYPE.eq(assignType.name))
-        }
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.select(CREATOR).from(this)
                 .where(NAME.eq(workspaceName)).unionAll(
                     DSL.select(shared.SHARED_USER).from(shared).where(
-                        conditions
+                        shared.WORKSPACE_NAME.eq(workspaceName)
                     )
                 ).fetch(0, String::class.java)
         }
@@ -455,7 +449,8 @@ class WorkspaceDao {
         mountType: WorkspaceMountType? = null,
         projectIds: Set<String>? = null,
         ip: String? = null,
-        assignType: WorkspaceShared.AssignType? = null
+        assignType: WorkspaceShared.AssignType? = null,
+        workspaceName: String? = null
     ): Result<out Record>? {
         val t1 = TWorkspace.T_WORKSPACE.`as`("t1")
         val t2 = TWorkspaceShared.T_WORKSPACE_SHARED.`as`("t2")
@@ -471,6 +466,9 @@ class WorkspaceDao {
         }
         mountType?.let {
             conditions.add(t1.WORKSPACE_MOUNT_TYPE.eq(mountType.name))
+        }
+        workspaceName?.let {
+            conditions.add(t1.NAME.eq(it))
         }
 
         if (!projectIds.isNullOrEmpty()) {

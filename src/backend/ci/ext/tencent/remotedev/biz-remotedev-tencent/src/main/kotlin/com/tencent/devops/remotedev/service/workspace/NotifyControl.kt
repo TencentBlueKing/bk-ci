@@ -258,7 +258,12 @@ class NotifyControl @Autowired constructor(
 
     private fun getWebSocketUsers(operator: String, workspaceName: String): Set<String> {
         return if (operator == ADMIN_NAME) {
-            workspaceDao.fetchWorkspaceUser(dslContext, workspaceName, WorkspaceShared.AssignType.OWNER).toSet()
+            val result = workspaceDao.fetchWorkspaceWithOwner(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                assignType = WorkspaceShared.AssignType.OWNER
+            ) ?: emptyList()
+            result.map { it["SHARED_USER"] as String }.toSet()
         } else {
             setOf(operator)
         }
