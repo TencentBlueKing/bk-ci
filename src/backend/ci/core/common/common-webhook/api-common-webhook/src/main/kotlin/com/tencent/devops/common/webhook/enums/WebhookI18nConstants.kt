@@ -128,6 +128,9 @@ object WebhookI18nConstants {
     // issues操作类型不匹配
     const val ISSUES_ACTION_NOT_MATCH = "bkRepoTriggerIssueActionNotMatch"
 
+    // Github Pr操作类型不匹配
+    const val PR_ACTION_NOT_MATCH = "bkRepoTriggerPrActionNotMatch"
+
     // 事件回放
     const val EVENT_REPLAY_DESC = "bkEventReplayDesc"
 }

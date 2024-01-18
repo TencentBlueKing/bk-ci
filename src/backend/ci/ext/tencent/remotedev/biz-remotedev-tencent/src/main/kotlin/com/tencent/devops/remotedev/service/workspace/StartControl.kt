@@ -86,7 +86,8 @@ class StartControl @Autowired constructor(
     private val redisHeartBeat: RedisHeartBeat,
     private val remoteDevBillingDao: RemoteDevBillingDao,
     private val bkTicketServie: BkTicketService,
-    private val workspaceCommon: WorkspaceCommon
+    private val workspaceCommon: WorkspaceCommon,
+    private val notifyControl: NotifyControl
 ) {
 
     companion object {
@@ -195,7 +196,7 @@ class StartControl @Autowired constructor(
                     )
 
                     // 发送给用户
-                    workspaceCommon.dispatchWebsocketPushEvent(
+                    notifyControl.dispatchWebsocketPushEvent(
                         userId = userId,
                         workspaceName = workspaceName,
                         workspaceHost = null,
@@ -356,7 +357,7 @@ class StartControl @Autowired constructor(
         }
 
         // 分发到WS
-        workspaceCommon.dispatchWebsocketPushEvent(
+        notifyControl.dispatchWebsocketPushEvent(
             userId = operator,
             workspaceName = workspaceName,
             workspaceHost = environmentHost,

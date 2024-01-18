@@ -93,7 +93,8 @@ class DeleteControl @Autowired constructor(
     private val redisCache: RedisCacheService,
     private val remoteDevSettingService: RemoteDevSettingService,
     private val workspaceCommon: WorkspaceCommon,
-    private val bkccService: BKCCService
+    private val bkccService: BKCCService,
+    private val notifyControl: NotifyControl
 ) {
 
     companion object {
@@ -160,7 +161,7 @@ class DeleteControl @Autowired constructor(
             )
 
             // 发送给用户
-            workspaceCommon.dispatchWebsocketPushEvent(
+            notifyControl.dispatchWebsocketPushEvent(
                 userId = userId,
                 workspaceName = workspaceName,
                 workspaceHost = null,
@@ -300,7 +301,7 @@ class DeleteControl @Autowired constructor(
                 )
             )
 
-            workspaceCommon.dispatchWebsocketPushEvent(
+            notifyControl.dispatchWebsocketPushEvent(
                 userId = workspace.createUserId,
                 workspaceName = workspace.workspaceName,
                 workspaceHost = null,
@@ -439,7 +440,7 @@ class DeleteControl @Autowired constructor(
             bkccService.updateHostName("VM-${hostIdSub.joinToString("-")}", workspaceName)
         }
 
-        workspaceCommon.dispatchWebsocketPushEvent(
+        notifyControl.dispatchWebsocketPushEvent(
             userId = ADMIN_NAME,
             workspaceName = workspaceName,
             workspaceHost = null,

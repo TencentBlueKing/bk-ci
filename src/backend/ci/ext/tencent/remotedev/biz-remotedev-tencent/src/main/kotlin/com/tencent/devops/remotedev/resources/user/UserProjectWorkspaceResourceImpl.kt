@@ -39,12 +39,14 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
+import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
 import com.tencent.devops.remotedev.pojo.windows.ComputerStatusResp
 import com.tencent.devops.remotedev.pojo.windows.TimeScope
 import com.tencent.devops.remotedev.pojo.windows.UserLoginTimeResp
 import com.tencent.devops.remotedev.service.BKBaseService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.StartWorkspaceService
+import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceXlsxExportService
 import com.tencent.devops.remotedev.service.projectworkspace.MakeWorkspaceImageHandler
@@ -73,7 +75,8 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     private val makeWorkspaceImageHandler: MakeWorkspaceImageHandler,
     private val startWorkspaceService: StartWorkspaceService,
     private val bkBaseService: BKBaseService,
-    private val xlsxExportService: WorkspaceXlsxExportService
+    private val xlsxExportService: WorkspaceXlsxExportService,
+    private val windowsResourceConfigService: WindowsResourceConfigService
 ) : UserProjectWorkspaceResource {
     @AuditEntry(actionId = ActionId.CGS_CREATE)
     override fun createWorkspace(
@@ -194,5 +197,9 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         rebuildWorkspaceHandler.rebuildWorkspace(userId, projectId, workspaceName, rebuildReq)
         return Result(true)
+    }
+
+    override fun fetchSpec(userId: String, projectId: String?, machineType: String?, page: Int?, pageSize: Int?): Result<Page<WindowsSpecResInfo>> {
+        return Result(windowsResourceConfigService.fetchSpec(projectId, machineType, page, pageSize))
     }
 }
