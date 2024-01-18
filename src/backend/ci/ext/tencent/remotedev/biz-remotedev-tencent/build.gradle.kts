@@ -26,10 +26,9 @@
  */
 
 dependencies {
-    api(project(":ext:tencent:dispatch-kubernetes:api-dispatch-kubernetes-tencent"))
+    api(project(":ext:tencent:dispatch:api-dispatch-kubernetes-tencent"))
     api(project(":ext:tencent:remotedev:api-remotedev-tencent"))
     api(project(":ext:tencent:remotedev:model-remotedev-tencent"))
-
     api(project(":core:common:common-service"))
     api(project(":core:common:common-web"))
     api(project(":core:common:common-client"))
@@ -38,5 +37,8 @@ dependencies {
     api(project(":core:common:common-websocket"))
     api(project(":core:notify:api-notify"))
     api(project(":core:auth:api-auth"))
+    implementation("org.apache.poi:poi")
+    implementation("org.apache.poi:poi-ooxml")
+    api(project(":core:common:common-audit"))
     testImplementation(project(":core:common:common-test"))
 }

@@ -38,7 +38,9 @@ import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import org.glassfish.jersey.server.ChunkedOutput
 import javax.ws.rs.Consumes
+import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -48,7 +50,6 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.HttpHeaders
 import javax.ws.rs.core.MediaType
-import org.glassfish.jersey.server.ChunkedOutput
 
 @Api(tags = ["USER_WORKSPACE"], description = "用户-工作空间,apiType:内网传user，离岸传desktop")
 @Path("/{apiType:user|desktop}/remotedev")
@@ -129,7 +130,11 @@ interface UserRemoteDevResource {
     @Path("/get_all_windows_resource_config")
     fun getAllWindowsResourceConfig(
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
+        userId: String,
+        @ApiParam(value = "是否包含不可用机型", required = false)
+        @QueryParam("withUnavailable")
+        @DefaultValue("false")
+        withUnavailable: Boolean? = false
     ): Result<List<WindowsResourceTypeConfig>>
 
     @ApiOperation("获取所有的WINDOWS GPU资源地域信息")
@@ -145,6 +150,61 @@ interface UserRemoteDevResource {
     @Path("/get_all_windows_resource_quota")
     fun allWindowsQuota(
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
+        userId: String,
+        @QueryParam("searchCustom")
+        searchCustom: Boolean?
     ): Result<Map<String, Map<String, Int>>>
+
+    @ApiOperation("获取用户1Password")
+    @GET
+    @Path("/1Password")
+    fun onePassword(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "工作空间ID", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<String>
+
+    @ApiOperation("一键认领求助问题")
+    @GET
+    @Path("/addExpSup")
+    fun addExpSup(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "工单id", required = true)
+        @QueryParam("id")
+        id: Long,
+        @ApiParam(value = "工作空间ID", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @ApiOperation("获取兔小巢用户登录态token")
+    @GET
+    @Path("/txc/token")
+    fun getTxcToken(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("用户唯一标识", required = true)
+        @QueryParam("openId")
+        openId: String,
+        @ApiParam("用户昵称", required = true)
+        @QueryParam("nickName")
+        nickName: String,
+        @ApiParam("用户头像", required = true)
+        @QueryParam("avatar")
+        avatar: String
+    ): Result<String>
+
+    @ApiOperation("一键查询CGS密码")
+    @GET
+    @Path("/queryCgsPwd")
+    fun queryCgsPwd(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "cgsId", required = true)
+        @QueryParam("cgsId")
+        cgsId: String
+    ): Result<Boolean>
 }

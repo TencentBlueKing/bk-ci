@@ -102,22 +102,26 @@ class OPProjectResourceImpl @Autowired constructor(
         codeCCGrayFlag: Boolean,
         repoGrayFlag: Boolean,
         remoteDevFlag: Boolean,
+        productId: Int?,
         request: HttpServletRequest
     ): Result<Map<String, Any?>?> {
-        return projectTagService.getProjectListByFlag(
-            projectName = projectName,
-            englishName = englishName,
-            projectType = projectType,
-            isSecrecy = isSecrecy,
-            creator = creator,
-            approver = approver,
-            approvalStatus = approvalStatus,
-            offset = offset,
-            limit = limit,
-            grayFlag = grayFlag,
-            codeCCGrayFlag = codeCCGrayFlag,
-            repoGrayFlag = repoGrayFlag,
-            remoteDevFlag = remoteDevFlag
+        return Result(
+            opProjectService.getProjectListByFlag(
+                projectName = projectName,
+                englishName = englishName,
+                projectType = projectType,
+                isSecrecy = isSecrecy,
+                creator = creator,
+                approver = approver,
+                approvalStatus = approvalStatus,
+                offset = offset,
+                limit = limit,
+                grayFlag = grayFlag,
+                codeCCGrayFlag = codeCCGrayFlag,
+                repoGrayFlag = repoGrayFlag,
+                remoteDevFlag = remoteDevFlag,
+                productId = productId
+            )
         )
     }
 
@@ -135,5 +139,30 @@ class OPProjectResourceImpl @Autowired constructor(
         properties: ProjectProperties
     ): Result<Boolean> {
         return Result(opProjectService.updateProjectProperties(userId, projectCode, properties))
+    }
+
+    override fun enable(
+        enabled: Boolean,
+        englishNames: List<String>
+    ): Result<Boolean> {
+        englishNames.forEach {
+            projectService.updateUsableStatus(
+                englishName = it,
+                enabled = enabled,
+                checkPermission = false
+            )
+        }
+        return Result(true)
+    }
+
+    override fun updateProjectProductId(
+        projectCode: String,
+        productName: String
+    ): Result<Boolean> {
+        projectService.updateProjectProductId(
+            englishName = projectCode,
+            productName = productName
+        )
+        return Result(true)
     }
 }

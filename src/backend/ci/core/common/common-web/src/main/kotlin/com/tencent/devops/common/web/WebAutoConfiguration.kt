@@ -35,6 +35,7 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.interceptor.BkWriterInterceptor
 import com.tencent.devops.common.web.jasypt.DefaultEncryptor
 import com.tencent.devops.common.web.runner.BkServiceInstanceApplicationRunner
+import com.tencent.devops.common.web.task.AccessLogCleanupTask
 import io.micrometer.core.instrument.binder.jersey.server.JerseyTagsProvider
 import io.undertow.UndertowOptions
 import org.slf4j.LoggerFactory
@@ -72,6 +73,9 @@ import org.springframework.core.env.Environment
 @EnableConfigurationProperties(SwaggerProperties::class)
 @DependsOn("globalProxyConfiguration")
 class WebAutoConfiguration {
+
+    @Value("\${server.undertow.accesslog.dir}")
+    private val undertowAccessLogDir: String = ""
 
     @Bean
     @Profile("prod")
@@ -116,8 +120,7 @@ class WebAutoConfiguration {
     ) = BkServiceInstanceApplicationRunner(
         compositeDiscoveryClient = compositeDiscoveryClient,
         bkTag = bkTag,
-        redisOperation = redisOperation,
-        rabbitAdmin = rabbitAdmin
+        redisOperation = redisOperation
     )
 
     @Bean
@@ -139,6 +142,9 @@ class WebAutoConfiguration {
         }
         return factory
     }
+
+    @Bean
+    fun accessLogCleanUpTask() = AccessLogCleanupTask(undertowAccessLogDir)
 
     private val logger = LoggerFactory.getLogger(WebAutoConfiguration::class.java)
 }

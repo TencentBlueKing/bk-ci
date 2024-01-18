@@ -283,19 +283,37 @@ class MigrateResourceService @Autowired constructor(
         )
     }
 
-    fun migrateMonitorResource(projectCode: String) {
-        val projectInfo = authResourceService.get(
-            projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode
-        )
-        // 注册分级管理员监控权限资源
-        permissionGradeManagerService.modifyGradeManager(
-            gradeManagerId = projectInfo.relationId,
-            projectCode = projectCode,
-            projectName = projectInfo.resourceName,
-            registerMonitorPermission = true
-        )
+    fun migrateProjectResource(
+        projectCode: String,
+        projectName: String,
+        gradeManagerId: String,
+        registerMonitorPermission: Boolean,
+        migrateManagerGroup: Boolean,
+        migrateOtherGroup: Boolean = true
+    ) {
+        logger.info("migrate project resources:$projectCode|$projectName|$gradeManagerId")
+        if (migrateManagerGroup) {
+            permissionGradeManagerService.modifyGradeManager(
+                gradeManagerId = gradeManagerId,
+                projectCode = projectCode,
+                projectName = projectName,
+                registerMonitorPermission = registerMonitorPermission
+            )
+        }
+        if (migrateOtherGroup) {
+            migrateProjectOtherGroup(
+                projectCode = projectCode,
+                projectName = projectName,
+                registerMonitorPermission = registerMonitorPermission
+            )
+        }
+    }
+
+    fun migrateProjectOtherGroup(
+        projectCode: String,
+        projectName: String,
+        registerMonitorPermission: Boolean
+    ) {
         val defaultGroupConfigs = authResourceGroupConfigDao.get(
             dslContext = dslContext,
             resourceType = AuthResourceType.PROJECT.value,
@@ -313,12 +331,13 @@ class MigrateResourceService @Autowired constructor(
             permissionGroupPoliciesService.grantGroupPermission(
                 authorizationScopesStr = groupConfig.authorizationScopes,
                 projectCode = projectCode,
-                projectName = projectInfo.resourceName,
+                projectName = projectName,
                 resourceType = groupConfig.resourceType,
                 groupCode = groupConfig.groupCode,
                 iamResourceCode = projectCode,
-                resourceName = projectInfo.resourceName,
-                iamGroupId = resourceGroupInfo.relationId.toInt()
+                resourceName = projectName,
+                iamGroupId = resourceGroupInfo.relationId.toInt(),
+                registerMonitorPermission = registerMonitorPermission
             )
         }
     }

@@ -30,10 +30,8 @@ package com.tencent.devops.openapi.api.apigw.v3
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
-import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
-import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLogDetail
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -72,42 +70,8 @@ interface ApigwPipelineWebhookResourceV3 {
         @ApiParam("页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页大小", required = false)
+        @ApiParam("每页条数(默认20, 最大100)", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<PipelineWebhook>>
-
-    @ApiOperation(
-        "获取流水线的webhook构建日志列表",
-        tags = ["v3_user_pipeline_webhook_build_log", "v3_app_pipeline_webhook_build_log"]
-    )
-    @GET
-    @Path("/buildLog")
-    fun listPipelineWebhookBuildLog(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
-        @PathParam("apigwType")
-        apigwType: String?,
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @PathParam("projectId")
-        projectId: String,
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("仓库名", required = false)
-        @QueryParam("repoName")
-        repoName: String?,
-        @ApiParam("commitId", required = false)
-        @QueryParam("commitId")
-        commitId: String?,
-        @ApiParam("页码", required = false)
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页大小", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<SQLPage<PipelineWebhookBuildLogDetail>?>
 }

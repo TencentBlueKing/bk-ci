@@ -7,5 +7,9 @@ data class ProjectWorkspaceFetchData(
     val ips: List<String>?,
     val page: Int?,
     val pageSize: Int?,
-    val owner: String?
+    val owner: String?,
+    val status: WorkspaceStatus?,
+    val zoneId: String?,
+    val machineType: String?,
+    val expertSupId: Long?
 )

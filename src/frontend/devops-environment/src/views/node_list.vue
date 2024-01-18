@@ -1,10 +1,43 @@
 <template>
     <div class="node-list-wrapper">
         <content-header class="env-header">
+            <<<<<<< HEAD
             <div slot="left">{{ $t('environment.node') }}</div>
             <div slot="right">
-                <template v-if="isExtendTx">
+                =======
+                <div slot="left">
+                    <span>{{ $t('environment.node') }}</span>
+                    <span v-if="isEnableDashboard" class="dashboard-entry ml5">
+                        <i class="devops-icon icon-tiaozhuan jump-icon"></i>
+                        <a :href="jumpDashboardUrl" target="_blank">{{ $t('environment.查看构建机监控') }}</a>
+                    </span>
+                </div>
+                <div slot="right" v-if="nodeList.length > 0">
+                    >>>>>>> 1d7f22e8e1e7e97eea1a32dc7f228c18d913bdf5
+                    <template v-if="isExtendTx">
+                        <bk-button
+                            v-perm="{
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: NODE_RESOURCE_TYPE,
+                                    resourceCode: projectId,
+                                    action: NODE_RESOURCE_ACTION.CREATE
+                                }
+                            }"
+                            theme="primary" @click="toImportNode('cmdb')" key="idcTestMachine">{{ $t('environment.nodeInfo.idcTestMachine') }}</bk-button>
+                        <bk-button
+                            v-perm="{
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: NODE_RESOURCE_TYPE,
+                                    resourceCode: projectId,
+                                    action: NODE_RESOURCE_ACTION.CREATE
+                                }
+                            }"
+                            theme="primary" @click="toImportNode('construct')" key="thirdPartyBuildMachine">{{ $t('environment.thirdPartyBuildMachine') }}</bk-button>
+                    </template>
                     <bk-button
+                        v-else
                         v-perm="{
                             permissionData: {
                                 projectId: projectId,
@@ -13,34 +46,12 @@
                                 action: NODE_RESOURCE_ACTION.CREATE
                             }
                         }"
-                        theme="primary" @click="toImportNode('cmdb')" key="idcTestMachine">{{ $t('environment.nodeInfo.idcTestMachine') }}</bk-button>
-                    <bk-button
-                        v-perm="{
-                            permissionData: {
-                                projectId: projectId,
-                                resourceType: NODE_RESOURCE_TYPE,
-                                resourceCode: projectId,
-                                action: NODE_RESOURCE_ACTION.CREATE
-                            }
-                        }"
-                        theme="primary" @click="toImportNode('construct')" key="thirdPartyBuildMachine">{{ $t('environment.thirdPartyBuildMachine') }}</bk-button>
-                </template>
-                <bk-button
-                    v-else
-                    v-perm="{
-                        permissionData: {
-                            projectId: projectId,
-                            resourceType: NODE_RESOURCE_TYPE,
-                            resourceCode: projectId,
-                            action: NODE_RESOURCE_ACTION.CREATE
-                        }
-                    }"
-                    theme="primary"
-                    @click="toImportNode('construct')">
-                    {{ $t('environment.nodeInfo.importNode') }}
-                </bk-button>
-            </div>
-        </content-header>
+                        theme="primary"
+                        @click="toImportNode('construct')">
+                        {{ $t('environment.nodeInfo.importNode') }}
+                    </bk-button>
+                </div>
+            </div></content-header>
         <section class="sub-view-port" v-bkloading="{
             isLoading: loading.isLoading,
             title: loading.title
@@ -524,6 +535,8 @@
                         }
                     ]
                 },
+                isEnableDashboard: false,
+                bizId: 0,
                 selectedTableColumn: [],
                 tableSize: 'small',
                 searchValue: [],
@@ -588,6 +601,9 @@
                     UNKNOWN: this.$t('environment.部署'),
                     OTHER: this.$t('environment.部署')
                 }
+            },
+            jumpDashboardUrl () {
+                return `https://bkm.woa.com/?bizId=${this.bizId}#/grafana/d/bT8qy3NVa`
             }
         },
         watch: {
@@ -688,6 +704,7 @@
         },
         async mounted () {
             await this.init()
+            await this.getEnableDashboard()
         },
         methods: {
             async init () {
@@ -744,6 +761,19 @@
                     this.tableLoading = false
                 }
             },
+            async getEnableDashboard () {
+                try {
+                    const res = await this.$store.dispatch('environment/checkEnableDashboard', {
+                        projectId: this.projectId
+                    })
+                    if (res) {
+                        this.isEnableDashboard = res.result
+                        this.bizId = res.bizId
+                    }
+                } catch (e) {
+                    console.err(e)
+                }
+            },
             changeProject () {
                 this.$toggleProjectMenu(true)
             },
@@ -760,7 +790,8 @@
                     this.$router.push({
                         name: 'nodeDetail',
                         params: {
-                            nodeHashId: node.nodeHashId
+                            nodeHashId: node.nodeHashId,
+                            enableDashboard: this.enableDashboard
                         }
                     })
                 }
@@ -1280,6 +1311,19 @@
             .devops-icon {
                 margin-right: 4px;
             }
+        }
+        .dashboard-entry {
+            color: #3c96ff;
+            cursor: pointer;
+            a {
+                font-size: 14px;
+                color: #3c96ff;
+            }
+        }
+        .jump-icon {
+            font-size: 18px;
+            position: relative;
+            top: 2px;
         }
 
         .edit-operator {

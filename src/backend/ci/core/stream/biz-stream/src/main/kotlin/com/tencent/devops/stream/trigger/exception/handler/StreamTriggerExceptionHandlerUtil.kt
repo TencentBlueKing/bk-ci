@@ -29,6 +29,7 @@ package com.tencent.devops.stream.trigger.exception.handler
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OauthForbiddenException
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.exception.StreamTriggerBaseException
@@ -46,12 +47,22 @@ object StreamTriggerExceptionHandlerUtil {
                 is OauthForbiddenException -> {
                     throw e
                 }
+
                 is ErrorCodeException -> {
-                    Pair(ErrorCodeEnum.MANUAL_TRIGGER_THIRD_PARTY_ERROR, e.defaultMessage)
+                    Pair(
+                        ErrorCodeEnum.MANUAL_TRIGGER_THIRD_PARTY_ERROR, I18nUtil.getCodeLanMessage(
+                            messageCode = e.errorCode,
+                            params = e.params,
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                            defaultMessage = e.defaultMessage
+                        )
+                    )
                 }
+
                 is StreamTriggerThirdException -> {
                     Pair(ErrorCodeEnum.MANUAL_TRIGGER_THIRD_PARTY_ERROR, e.message?.format(e.messageParams))
                 }
+
                 is StreamTriggerBaseException -> {
                     val (reason, realReasonDetail) = getReason(e)
                     if (reason == TriggerReason.UNKNOWN_ERROR.name) {
@@ -60,12 +71,14 @@ object StreamTriggerExceptionHandlerUtil {
                         Pair(ErrorCodeEnum.MANUAL_TRIGGER_USER_ERROR, realReasonDetail)
                     }
                 }
+
                 else -> {
                     Pair(ErrorCodeEnum.MANUAL_TRIGGER_SYSTEM_ERROR, e.message)
                 }
             }
             throw ErrorCodeException(
                 errorCode = errorCode.errorCode.toString(),
+                params = arrayOf(message ?: "None"),
                 defaultMessage = message
             )
         }
@@ -85,6 +98,7 @@ object StreamTriggerExceptionHandlerUtil {
 
                 )
             }
+
             is StreamTriggerThirdException -> {
                 val error = try {
                     val code = triggerE.errorCode.toInt()
@@ -109,6 +123,7 @@ object StreamTriggerExceptionHandlerUtil {
                     )
                 }
             }
+
             else -> Pair("", "")
         }
     }

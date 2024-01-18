@@ -30,6 +30,7 @@ package com.tencent.devops.remotedev.service
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
@@ -40,18 +41,20 @@ import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import com.tencent.devops.remotedev.service.client.TaiClient
+import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys
-import com.tencent.devops.remotedev.service.transfer.GithubTransferService
 import com.tencent.devops.remotedev.service.transfer.GitTransferService
+import com.tencent.devops.remotedev.service.transfer.GithubTransferService
 import com.tencent.devops.remotedev.service.transfer.TGitTransferService
+import java.time.Duration
+import java.time.LocalDateTime
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.Duration
-import java.time.LocalDateTime
 
 @Service
 class RemoteDevSettingService @Autowired constructor(
@@ -64,7 +67,8 @@ class RemoteDevSettingService @Autowired constructor(
     private val tGitTransferService: TGitTransferService,
     private val githubTransferService: GithubTransferService,
     private val redisCacheService: RedisCacheService,
-    private val whiteListService: WhiteListService
+    private val whiteListService: WhiteListService,
+    private val taiClient: TaiClient
 ) {
 
     companion object {
@@ -73,7 +77,7 @@ class RemoteDevSettingService @Autowired constructor(
 
     fun getRemoteDevSettings(userId: String): RemoteDevSettings {
         logger.info("$userId get remote dev setting")
-        val setting = remoteDevSettingDao.fetchAnySetting(dslContext, userId)
+        val setting = remoteDevSettingDao.fetchOneSetting(dslContext, userId)
 
         if (setting.projectId.isBlank()) {
             kotlin.runCatching {
@@ -146,6 +150,30 @@ class RemoteDevSettingService @Autowired constructor(
         return true
     }
 
+    fun renewalExperienceDuration(userId: String, time: Int): Boolean {
+        logger.info("$userId renewalExperienceDuration")
+        val setting = remoteDevSettingDao.fetchAnyUserSetting(dslContext, userId)
+        val data = OPUserSetting(
+            userIds = listOf(userId),
+            maxRunningCount = setting.maxRunningCount,
+            maxHavingCount = setting.maxHavingCount,
+            onlyCloudIDE = setting.onlyCloudIDE,
+            allowedDownload = setting.allowedDownload,
+            needWatermark = setting.needWatermark,
+            autoDeletedDays = setting.autoDeletedDays,
+            mountType = setting.mountType,
+            startCloudExperienceDuration = setting.startCloudExperienceDuration?.plus(time),
+            allowedCopy = setting.allowedCopy,
+            clientWhiteList = setting.clientWhiteList,
+            grayFlag = false,
+            startWhiteList = setting.startWhiteList
+        )
+
+        remoteDevSettingDao.createOrUpdateSetting4OP(dslContext, userId, data)
+
+        return true
+    }
+
     fun updateSetting4Op(data: OPUserSetting) {
         logger.info("updateSettingByOp $data")
         data.userIds.forEach { userId ->
@@ -161,7 +189,7 @@ class RemoteDevSettingService @Autowired constructor(
 
             data.startWhiteList?.let { isEnabled ->
                 if (isEnabled) {
-                    whiteListService.addGPUWhiteListUser(userId = ADMIN_NAME, whiteListUser = userId)
+                    whiteListService.addGPUWhiteListUser(userId = ADMIN_NAME, whiteListUser = userId, override = true)
                 } else {
                     whiteListService.removeGPUWhiteListUser(userId = ADMIN_NAME, whiteListUser = userId)
                 }
@@ -207,5 +235,33 @@ class RemoteDevSettingService @Autowired constructor(
             page = pageNotNull, pageSize = pageSizeNotNull, count = count,
             records = settings
         )
+    }
+
+    /**
+     * op接口使用，批量更新太湖账号信息
+     */
+    fun updateAllTaiUserInfo(userIds: List<String> = emptyList()) {
+        var page = 1
+        val pageSize = 50
+        while (true) {
+            val taiUsers = remoteDevSettingDao.fetchTaiUserInfo(
+                dslContext = dslContext,
+                limit = PageUtil.convertPageSizeToSQLLimit(page, pageSize),
+                userIds = userIds.filter { UserUtil.isTaiUser(it) }.toSet().ifEmpty { null }
+            )
+            val notInit = taiUsers.filter { it.value.first.isBlank() || it.value.second.isBlank() }
+            val taiInfos = taiClient.taiUserInfo(TaiUserInfoRequest(usernames = notInit.keys))
+                .associateBy({
+                    it.username
+                }, { user ->
+                    Pair(
+                        user.accountName,
+                        user.companyTags.joinToString(",") { it.tagName }
+                    )
+                })
+            remoteDevSettingDao.updateTaiUserInfo(dslContext, taiInfos)
+            if (taiUsers.size < pageSize) return
+            page++
+        }
     }
 }

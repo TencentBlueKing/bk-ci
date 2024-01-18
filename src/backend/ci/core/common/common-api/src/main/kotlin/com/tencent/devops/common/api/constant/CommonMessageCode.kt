@@ -172,6 +172,8 @@ object CommonMessageCode {
     const val ERROR_YAML_FORMAT_EXCEPTION_ENV_VARIABLE_LENGTH_LIMIT_EXCEEDED = "2100121"
     const val ERROR_PROJECT_API_ACCESS_NO_PERMISSION = "2100122" // 项目[{0}]没有接口[{1}]的访问权限
     const val ERROR_INTERFACE_RETRY_NUM_EXCEEDED = "2100123" // 接口连续重试次数超过{0}次，请稍后再试
+    const val ERROR_PIPELINE_API_ACCESS_NO_PERMISSION = "2100124" // 流水线[{0}]没有接口[{1}]的访问权限
+    const val TEMPLATE_PLUGIN_NOT_ALLOWED_USE = "2100125" // 模板中插件【{0}】的【{1}】版本的状态是【{2}】，不允许使用
 
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" // 创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" // 创建失败，异常信息
@@ -220,6 +222,7 @@ object CommonMessageCode {
 
     const val GET_PROJECT_INFO = "bkGetProjectInfo" // 获取项目详情
     const val GET_COMMIT_REVIEW_INFO = "bkGetCommitReviewInfo" // 获取Commit Review详情
+    const val GET_SESSION_INFO = "bkGetSessionInfo" // 获取会话详情
 
     const val OPERATION_BRANCH = "bkOperationBranch" // 拉分支
     const val OPERATION_TAG = "bkOperationTag" // 拉标签

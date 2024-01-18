@@ -31,7 +31,7 @@ class ApigwAuthGrantResourceV3Impl @Autowired constructor(
                 userId = userId,
                 projectCode = projectId,
                 grantInstance = grantInstance,
-                token = tokenService.getSystemToken(null)!!
+                token = tokenService.getSystemToken()!!
             ).data ?: false
         )
     }

@@ -27,7 +27,13 @@
 
 package com.tencent.devops.remotedev.service.projectworkspace
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
@@ -52,16 +58,17 @@ import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
+import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import java.time.Duration
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.Duration
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @Service
 class StartWorkspaceHandler @Autowired constructor(
@@ -75,7 +82,8 @@ class StartWorkspaceHandler @Autowired constructor(
     private val remoteDevBillingDao: RemoteDevBillingDao,
     private val workspaceCommon: WorkspaceCommon,
     private val workspaceHistoryDao: WorkspaceHistoryDao,
-    private val workspaceOpHistoryDao: WorkspaceOpHistoryDao
+    private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
+    private val notifyControl: NotifyControl
 ) {
 
     companion object {
@@ -83,14 +91,40 @@ class StartWorkspaceHandler @Autowired constructor(
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CGS_START,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS,
+            instanceNames = "#workspaceName",
+            instanceIds = "#workspaceName"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CGS_START_CONTENT
+    )
     fun startWorkspace(userId: String, projectId: String, workspaceName: String): WorkspaceResponse {
         logger.info("$userId start project workspace $workspaceName")
         permissionService.checkUserManager(userId, projectId)
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
             expiredTimeInSeconds
         ).tryLock().use {
+            if (workspaceCommon.notOk2doNextAction(workspace)) {
+                logger.info("${workspace.workspaceName} is ${workspace.status}, return error.")
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
+                    params = arrayOf(
+                        workspace.workspaceName,
+                        "status is already ${workspace.status}, can't start now"
+                    )
+                )
+            }
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
@@ -112,7 +146,7 @@ class StartWorkspaceHandler @Autowired constructor(
                 action = WorkspaceAction.START,
                 actionMessage = String.format(
                     workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                    WorkspaceStatus.STARTING,
+                    workspace.status,
                     WorkspaceStatus.STARTING.name
                 )
             )
@@ -129,13 +163,13 @@ class StartWorkspaceHandler @Autowired constructor(
                         ).toSet()
                     ),
                     workspaceName = workspaceName,
-                    settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable,
+                    settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
                     bkTicket = "",
                     mountType = WorkspaceMountType.START
                 )
             )
 
-            workspaceCommon.dispatchWebsocketPushEvent(
+            notifyControl.dispatchWebsocketPushEvent(
                 userId = userId,
                 workspaceName = workspaceName,
                 workspaceHost = null,
@@ -232,7 +266,7 @@ class StartWorkspaceHandler @Autowired constructor(
         }
 
         // 分发到WS
-        workspaceCommon.dispatchWebsocketPushEvent(
+        notifyControl.dispatchWebsocketPushEvent(
             userId = event.userId,
             workspaceName = event.workspaceName,
             workspaceHost = "",

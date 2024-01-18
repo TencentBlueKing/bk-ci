@@ -39,6 +39,11 @@ data class GitMergeRequestEvent(
 ) : GitEvent() {
     companion object {
         const val classType = "merge_request"
+        const val ACTION_CREATED = "open"
+        const val ACTION_UPDATED = "update"
+        const val ACTION_CLOSED = "close"
+        const val ACTION_REOPENED = "reopen"
+        const val ACTION_MERGED = "merge"
     }
 }
 

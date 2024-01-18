@@ -11,7 +11,9 @@
                         v-for="(filter, index) in tagGroupList"
                         :key="index">
                         <label class="group-title">{{filter.name}}</label>
-                        <bk-select :value="labelValues[index]"
+                        <bk-select
+                            ext-cls="setting-select"
+                            :value="labelValues[index]"
                             @selected="handleLabelSelect(index, arguments)"
                             @clear="handleLabelSelect(index, [[]])"
                             multiple
@@ -112,7 +114,23 @@
             </form-field>
 
             <div class="handle-btn" style="margin-left: 146px;">
-                <bk-button @click="savePipelineSetting()" theme="primary" :disabled="isDisabled || noPermission">{{ $t('save') }}</bk-button>
+                <bk-button
+                    v-if="isEnabledPermission"
+                    @click="savePipelineSetting()"
+                    theme="primary"
+                    v-perm="{
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: 'pipeline_template',
+                            resourceCode: templateId,
+                            action: TEMPLATE_RESOURCE_ACTION.EDIT
+                        }
+                    }"
+                    key="saveBtn"
+                >
+                    {{ $t('save') }}
+                </bk-button>
+                <bk-button v-else @click="savePipelineSetting()" theme="primary" :disabled="isDisabled || noPermission">{{ $t('save') }}</bk-button>
                 <bk-button @click="exit">{{ $t('cancel') }}</bk-button>
             </div>
         </div>
@@ -127,6 +145,9 @@
     import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
     import RunningLock from '@/components/pipelineSetting/RunningLock'
     import { mapActions, mapGetters, mapState } from 'vuex'
+    import {
+        TEMPLATE_RESOURCE_ACTION
+    } from '@/utils/permission'
     export default {
         components: {
             FormField,
@@ -139,7 +160,8 @@
             isDisabled: {
                 type: Boolean,
                 default: false
-            }
+            },
+            isEnabledPermission: Boolean
         },
         data () {
             return {
@@ -153,8 +175,9 @@
                 ],
                 curNavTab: { label: this.$t('settings.buildSuc'), name: 'success' },
                 noticeList: [
-                    { id: 1, name: this.$t('settings.rtxNotice'), value: 'RTX' }
-                    // { id: 4, name: this.$t('settings.emailNotice'), value: 'EMAIL' }
+                    { id: 4, name: this.$t('settings.emailNotice'), value: 'EMAIL' },
+                    { id: 1, name: this.$t('settings.rtxNotice'), value: 'RTX' },
+                    { id: 5, name: this.$t('settings.voice'), value: 'VOICE' }
                     // { id: 2, name: this.$t('settings.wechatNotice'), value: 'WECHAT' },
                     // { id: 3, name: this.$t('settings.smsNotice'), value: 'SMS' }
                 ],
@@ -248,6 +271,9 @@
                         }
                     ]
                 }
+            },
+            TEMPLATE_RESOURCE_ACTION () {
+                return TEMPLATE_RESOURCE_ACTION
             }
         },
         watch: {
@@ -439,6 +465,9 @@
              & .bk-form-content .bk-form-radio{
                 display: block;
              }
+             .bk-form-control {
+                line-height: inherit;
+             }
         }
         .notice-tab {
             padding: 10px 0px 0px;
@@ -467,6 +496,9 @@
                 height: 0;
                 width: 0;
                 clear: both;
+            }
+            .setting-select {
+                background: #fff;
             }
             .group-inline  {
                 float: left;

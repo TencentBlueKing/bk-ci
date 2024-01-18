@@ -40,11 +40,13 @@ import com.tencent.devops.scm.pojo.GitFileInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
+import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_SCM_GIT"], description = "Service Code GIT resource")
@@ -98,6 +100,26 @@ interface ServiceTGitResource {
         @QueryParam("ref")
         ref: String
     ): Result<String>
+
+    @ApiOperation("下载git原始文件内容")
+    @GET
+    @Path("/downloadGitFile")
+    fun downloadGitFile(
+        @ApiParam(value = "仓库名字")
+        @QueryParam("repoId")
+        repoId: String,
+        @ApiParam(value = "文件路径")
+        @QueryParam("filePath")
+        filePath: String,
+        @ApiParam(value = "认证方式")
+        @QueryParam("authType")
+        authType: RepoAuthType?,
+        @ApiParam(value = "提交id 或者 分支")
+        @QueryParam("ref")
+        ref: String,
+        @Context
+        response: HttpServletResponse
+    )
 
     @ApiOperation("获取用户所有git项目，分页方式获取")
     @GET

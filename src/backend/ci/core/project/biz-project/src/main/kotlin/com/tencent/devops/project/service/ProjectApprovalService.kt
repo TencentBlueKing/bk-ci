@@ -164,12 +164,6 @@ class ProjectApprovalService @Autowired constructor(
                 logoAddress = logoAddr
             )
         }
-        // 兼容旧版权限中心，如果旧版权限中心创建成功,则使用旧版权限中心projectId
-        val authProjectId = projectExtService.createOldAuthProject(
-            userId = applicant,
-            accessToken = null,
-            projectCreateInfo = projectCreateInfo
-        ) ?: projectInfo.projectId
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             projectApprovalDao.updateApprovalStatusByCallback(
@@ -185,14 +179,7 @@ class ProjectApprovalService @Autowired constructor(
                 approver = approver,
                 approvalStatus = ProjectApproveStatus.APPROVED.status
             )
-            if (authProjectId.isNotEmpty() && projectInfo.projectId != authProjectId) {
-                projectDao.updateAuthProjectId(
-                    dslContext = context,
-                    englishName = projectId,
-                    projectId = authProjectId
-                )
-            }
-            createExtProjectInfo(applicant, authProjectId, projectCreateInfo, projectInfo, projectId)
+            createExtProjectInfo(applicant, projectInfo.projectId, projectCreateInfo, projectInfo, projectId)
         }
     }
 
@@ -275,6 +262,8 @@ class ProjectApprovalService @Autowired constructor(
                 description = description ?: "",
                 bgId = bgId?.toLong() ?: 0L,
                 bgName = bgName ?: "",
+                businessLineId = businessLineId,
+                businessLineName = businessLineName,
                 deptId = deptId?.toLong() ?: 0L,
                 deptName = deptName ?: "",
                 centerId = centerId?.toLong() ?: 0L,
@@ -285,7 +274,8 @@ class ProjectApprovalService @Autowired constructor(
                 ccAppId = projectInfo.ccAppId,
                 ccAppName = projectInfo.ccAppName,
                 kind = projectInfo.kind,
-                projectType = projectType ?: 0
+                projectType = projectType ?: 0,
+                productId = projectApprovalInfo.productId
             )
         }
         val logoAddress = projectUpdateInfo.logoAddress

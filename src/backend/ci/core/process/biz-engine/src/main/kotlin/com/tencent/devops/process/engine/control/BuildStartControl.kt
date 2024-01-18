@@ -93,10 +93,10 @@ import com.tencent.devops.process.utils.PipelineVarUtil
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import java.time.LocalDateTime
+import kotlin.math.max
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import kotlin.math.max
 
 /**
  * 构建控制器
@@ -321,6 +321,26 @@ class BuildStartControl @Autowired constructor(
                         params = arrayOf(concurrencyGroup)
                     )
                 )
+                if (setting.concurrencyCancelInProgress) {
+                    val detailUrl = pipelineUrlBean.genBuildDetailUrl(
+                        projectCode = projectId,
+                        pipelineId = buildInfo.pipelineId,
+                        buildId = buildInfo.buildId,
+                        position = null,
+                        stageId = null,
+                        needShortUrl = false
+                    )
+                    concurrencyGroupRunning.forEach { (pipelineId, buildId) ->
+                        pipelineRuntimeService.concurrencyCancelBuildPipeline(
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            buildId = buildId,
+                            userId = buildInfo.startUser,
+                            groupName = concurrencyGroup,
+                            detailUrl = detailUrl
+                        )
+                    }
+                }
                 val detailUrl = pipelineUrlBean.genBuildDetailUrl(
                     projectCode = projectId,
                     pipelineId = concurrencyGroupRunning.first().first,
@@ -506,16 +526,17 @@ class BuildStartControl @Autowired constructor(
             ),
             startTime = LocalDateTime.now(), endTime = null
         )
+        val nowMills = now.timestampmilli()
+        val stageElapsed = max(0, nowMills - buildInfo.queueTime)
+        stage.elapsed = stageElapsed
+        stage.status = BuildStatus.SUCCEED.name
         stageRecordService.updateStageRecord(
             projectId = buildInfo.projectId, pipelineId = buildInfo.pipelineId, buildId = buildInfo.buildId,
             stageId = stage.id!!, executeCount = executeCount, buildStatus = BuildStatus.SUCCEED,
             stageVar = mutableMapOf(
-                Stage::elapsed.name to max(0, System.currentTimeMillis() - buildInfo.queueTime)
+                Stage::elapsed.name to stageElapsed
             )
         )
-        val nowMills = now.timestampmilli()
-        stage.status = BuildStatus.SUCCEED.name
-        stage.elapsed = max(0, nowMills - buildInfo.queueTime)
         container.status = BuildStatus.SUCCEED.name
         container.startEpoch = nowMills
         container.systemElapsed = stage.elapsed // 修复可能导致负数的情况

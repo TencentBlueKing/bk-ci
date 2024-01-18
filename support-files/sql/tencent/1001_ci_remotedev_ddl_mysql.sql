@@ -55,9 +55,12 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_WINDOWS` (
 	`WIN_CONFIG_ID` int(11) NULL COMMENT 'windows资源配置id',
     `RESOURCE_ID` varchar(32) NOT NULL DEFAULT '' COMMENT '最长32位字符串， 用于后续调度时传给start sdk',
     `HOST_IP` varchar(64) NOT NULL DEFAULT '' COMMENT '云桌面IP',
+    `MAC_ADDRESS` varchar(64) NOT NULL DEFAULT '' COMMENT 'mac地址',
+    `IMAGE_ID` varchar(32) default '' not null comment '镜像唯一标识',
     PRIMARY KEY (`ID`),
     UNIQUE `ukey`(`WORKSPACE_NAME`),
-    KEY `ipKey`(`HOST_IP`)
+    KEY `ipKey`(`HOST_IP`),
+    KEY `imageKey`(`IMAGE_ID`)
     ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='windows工作空间详情数据';
 
 
@@ -116,7 +119,9 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_HISTORY` (
 -- Table structure for T_REMOTE_DEV_SETTINGS
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS `T_REMOTE_DEV_SETTINGS` (
-    `USER_ID` varchar(64) NOT NULL DEFAULT '' COMMENT '用户',
+    `USER_ID` varchar(64) NOT NULL DEFAULT '' COMMENT '用户ID',
+    `USER_NAME` varchar(64) NOT NULL DEFAULT '' COMMENT '用户中文名',
+    `COMPANY_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '公司名称',
     `DEFAULT_SHELL` varchar(10) NOT NULL DEFAULT '' COMMENT '默认shell: zsh | bash',
     `BASIC_SETTING` mediumtext NOT NULL COMMENT '客户端使用，后台只管存的信息',
     `GIT_ATTACHED` boolean NOT NULL DEFAULT 0 COMMENT '是否连接git',
@@ -134,7 +139,9 @@ CREATE TABLE IF NOT EXISTS `T_REMOTE_DEV_SETTINGS` (
     `USER_SETTING` mediumtext NOT NULL COMMENT '用户设置，统一维护一个json字符串',
     `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
     `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    PRIMARY KEY (`USER_ID`)
+    PRIMARY KEY (`USER_ID`),
+    KEY `uni_1` (`USER_NAME`),
+    KEY `uni_2` (`COMPANY_NAME`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '用户远程开发配置表';
 
 -- ----------------------------
@@ -148,10 +155,12 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_SHARED` (
     `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
 	`ASSIGN_TYPE` varchar(32) NOT NULL DEFAULT 'VIEWER' COMMENT '分享人所属类型（OWNER、VIEWER）',
     `RESOURCE_ID` varchar(32) NOT NULL DEFAULT '' COMMENT '最长32位字符串， 用于后续调度时传给start sdk',
+    `EXPIRATION` TIMESTAMP NULL COMMENT '过期时间',
     PRIMARY KEY (`ID`),
     KEY `uni_1` (`WORKSPACE_NAME`),
     KEY `uni_2` (`SHARED_USER`),
-    KEY `uni_3` (`OPERATOR`)
+    KEY `uni_3` (`OPERATOR`),
+    KEY `EXPIRATION_IDX` (`EXPIRATION`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '工作空间共享记录表';
 
 -- ----------------------------
@@ -253,15 +262,19 @@ CREATE TABLE IF NOT EXISTS `T_WINDOWS_RESOURCE_TYPE` (
     `ID` bigint(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
     `SIZE` varchar(10) NOT NULL DEFAULT '' COMMENT '资源类型：M，L，XL，S',
     `TYPE` varchar(32) NOT NULL DEFAULT '3080' COMMENT 'GPU卡类型',
-    `GPU` int(11) NOT NULL DEFAULT '16' COMMENT 'vGPU',
+    `GPU` int(11) NOT NULL DEFAULT '16' COMMENT 'vGPU,备注：后续要删掉',
+    `VGPU` varchar(32) NOT NULL DEFAULT '1' COMMENT 'vGPU',
     `CPU` int(11) NOT NULL DEFAULT '16' COMMENT 'CPU',
+    `VCPU` varchar(128) NOT NULL DEFAULT '' COMMENT '主频跟核数配置',
     `MEMORY` int(11) NOT NULL DEFAULT '32768' COMMENT '内存',
+    `VMEMORY` varchar(32) NOT NULL DEFAULT '' COMMENT '内存配置，可独享',
     `SDISK` varchar(32) NOT NULL DEFAULT '200' COMMENT '系统盘，本地SSD盘，单位GB',
     `DISK` varchar(32) NOT NULL DEFAULT '200' COMMENT '本地SSD盘，单位GB',
     `HDISK` varchar(32) NOT NULL DEFAULT '1' COMMENT '云SSD盘，单位TB',
     `AVAILABLED` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否可用，默认可见',
     `WEIGHT` int(11) NOT NULL DEFAULT '0' COMMENT '权重，用于控制台页面展示先后顺序',
     `DESCRIPTION` varchar(256) NOT NULL DEFAULT '' COMMENT '描述',
+    `SPEC_MODEL` bit(1) DEFAULT b'0' NOT NULL COMMENT '是否是特殊机型',
     `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
     PRIMARY KEY (`ID`),
@@ -390,5 +403,119 @@ CREATE TABLE IF NOT EXISTS `T_WHITE_LIST` (
     PRIMARY KEY (`ID`),
     UNIQUE `ukey`(`NAME`,`TYPE`)
     ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='白名单控制';
+
+-- ----------------------------
+-- Table structure for T_CLIENT_VERSION 客户端版本控制
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_CLIENT_VERSION` (
+    `IP` varchar(32) NOT NULL DEFAULT '' COMMENT '客户端ip地址',
+    `USER` varchar(128) NOT NULL DEFAULT '' COMMENT '用户',
+    `VERSION` varchar(16) NOT NULL COMMENT '客户端版本',
+    `LAST_UPDATE_TIME` timestamp NULL COMMENT '最近版本更新时间',
+    `LAST_VERSION` varchar(16) NULL COMMENT '上次的版本',
+    `MAC_ADDRESS` varchar(64) NULL COMMENT 'MAC地址',
+    `UPDATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NULL COMMENT '最近更新时间',
+    UNIQUE `ukey`(`IP`,`USER`),
+    KEY `idx_version` (`VERSION`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客户端版本控制';
+
+-- ----------------------------
+-- Table structure for T_REMOTEDEV_CVM 云研发CVM
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_CVM` (
+    `ID` bigint(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+    `PROJECT_ID` varchar(64) NOT NULL DEFAULT '' COMMENT '蓝盾项目ID',
+    `IP` varchar(32) NOT NULL DEFAULT '' COMMENT '内网IP',
+    `ZONE` varchar(32) NOT NULL COMMENT '区域，深圳，南京等',
+    `AVAILABLE_REGION` varchar(32) NOT NULL COMMENT '可用区',
+    `CPU` int(11) NOT NULL DEFAULT '8' COMMENT 'CPU(核)',
+    `MEMORY` int(11) NOT NULL DEFAULT '16' COMMENT '内存(G)',
+    `SUBNET` varchar(128) NOT NULL DEFAULT '' COMMENT '子网',
+    `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`ID`),
+    UNIQUE `ukey`(`IP`,`PROJECT_ID`,`ZONE`),
+    KEY `idx_version` (`AVAILABLE_REGION`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='云研发CVM';
+
+-- ----------------------------
+-- Table structure for T_REMOTE_CODE_PROXY CODE—PROXY数据
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_REMOTE_CODE_PROXY` (
+	`ID` bigint(11) AUTO_INCREMENT NOT NULL,
+    `PROJECT_ID` varchar(64) NOT NULL COMMENT '蓝盾项目ID',
+	`NAME` varchar(255)  NOT NULL COMMENT 'proxy名称',
+	`TYPE` varchar(32)  NOT NULL COMMENT 'proxy类型',
+	`URL` varchar(1024)  NOT NULL COMMENT 'proxy地址',
+	`CONF` json NOT NULL COMMENT 'proxy配置',
+	`DESC` varchar(1024) NULL COMMENT 'proxy 描述',
+	`CREATOR` varchar(100) NOT NULL COMMENT 'proxy创建人',
+    `ENABLE_LFS` BIT(1) NOT NULL COMMENT '是否开启lfs',
+	`UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '修改时间',
+	`CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    PRIMARY KEY (`ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------
+-- Table structure for T_REMOTEDEV_EXPERT_SUPPORT 专家支持通知表
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_EXPERT_SUPPORT` (
+	`ID` bigint(11) AUTO_INCREMENT NOT NULL,
+	`PROJECT_ID` varchar(64)  NOT NULL COMMENT '蓝盾项目ID',
+    `HOST_IP` varchar(64) NOT NULL COMMENT '云桌面IP',
+    `WORKSPACE_NAME` varchar(128) NOT NULL COMMENT '工作空间名称，唯一性',
+	`CREATOR` varchar(32)  NOT NULL COMMENT '创建人',
+	`SUPPORTER` varchar(256)  NULL COMMENT '协助人',
+	`STATUS` varchar(16) NOT NULL COMMENT '单据状态',
+	`CONTENT` varchar(256)  NOT NULL COMMENT '单据内容',
+    `CITY` varchar(32) NOT NULL COMMENT '城市',
+    `MACHINE_TYPE` varchar(16) NOT NULL COMMENT '机型',
+	`CREATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+	`UPDATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '修改时间',
+    PRIMARY KEY (`ID`),
+    KEY `idx_project_id` (`PROJECT_ID`),
+    KEY `idx_host_ip` (`HOST_IP`),
+    KEY `idx_workspace_name` (`WORKSPACE_NAME`),
+    KEY `idx_creator` (`CREATOR`),
+    KEY `idx_status` (`STATUS`),
+    KEY `idx_content` (`CONTENT`)
+) ENGINE=InnoDB AUTO_INCREMENT=10000 DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------
+-- Table structure for T_REMOTEDEV_EXPERT_SUPPORT_CONFIG 专家支持配置表
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_EXPERT_SUPPORT_CONFIG` (
+	`ID` bigint(11) AUTO_INCREMENT NOT NULL,
+	`TYPE` varchar(16)  NOT NULL COMMENT '配置类型',
+	`CONTENT` varchar(256)  NOT NULL COMMENT '配置内容',
+    PRIMARY KEY (`ID`),
+    KEY `idx_type` (`TYPE`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------
+-- Table structure for T_DAILY_CGS_DATA 统计每天云桌面的数据快照
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_DAILY_CGS_DATA` (
+    `ID` bigint(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+    `DATE` varchar(64) NOT NULL DEFAULT '' COMMENT '日期',
+    `OWNER_TYPE` varchar(32) NOT NULL DEFAULT 'PERSONAL' COMMENT '工作空间所属（PERSONAL、PROJECT）',
+    `NUMBER` int(11) NOT NULL DEFAULT '0' COMMENT '云桌面数',
+    `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`ID`),
+    UNIQUE `ukey`(`DATE`,`OWNER_TYPE`),
+    KEY `idx_date` (`DATE`),
+    KEY `idx_type` (`OWNER_TYPE`)
+    ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COMMENT='统计每天云桌面的数据快照';
+
+-- ----------------------------
+-- Table structure for T_WINDOWS_SPEC_RESOURCE windows特殊机型配额表
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_WINDOWS_SPEC_RESOURCE` (
+	`PROJECT_ID` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT '' NOT NULL COMMENT '项目ID',
+	`SIZE` varchar(10) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT '' NOT NULL COMMENT '资源类型',
+	`QUOTA` INT NOT NULL COMMENT '配额',
+    PRIMARY KEY (`PROJECT_ID`, `SIZE`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='windows特殊机型配额表';
+
 
 SET FOREIGN_KEY_CHECKS = 1;

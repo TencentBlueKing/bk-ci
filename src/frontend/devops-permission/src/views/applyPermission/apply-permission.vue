@@ -159,9 +159,8 @@ const handleSearchProject = (val) => {
   pageInfo.value.page = 1;
   pageInfo.value.projectName = val;
   projectList.value = [];
-  getAllProjectList(val);
+  return getAllProjectList(val);
 }
-
 const getAllProjectList = async (name = '') => {
   if (pageInfo.value.loadEnd || scrollLoading.value) {
     return

@@ -64,14 +64,21 @@ class PipelinePermissionServiceImpl @Autowired constructor(
      * @param userId userId
      * @param projectId projectId
      * @param permission 权限
+     * @param authResourceType 资源类型
      * @return 有权限返回true
      */
-    override fun checkPipelinePermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
+    override fun checkPipelinePermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission,
+        authResourceType: AuthResourceType?
+    ): Boolean {
         return checkPipelinePermission(
             userId = userId,
             projectId = projectId,
             pipelineId = "*",
-            permission = permission
+            permission = permission,
+            authResourceType = authResourceType
         )
     }
 
@@ -81,23 +88,26 @@ class PipelinePermissionServiceImpl @Autowired constructor(
      * @param projectId projectId
      * @param pipelineId pipelineId
      * @param permission 权限
+     * @param authResourceType 资源类型
      * @return 有权限返回true
      */
     override fun checkPipelinePermission(
         userId: String,
         projectId: String,
         pipelineId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        authResourceType: AuthResourceType?
     ): Boolean {
         // 优先判断普通角色是否有权限
         if (authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = pipelineAuthServiceCode,
-                resourceType = resourceType,
+                resourceType = authResourceType ?: resourceType,
                 projectCode = projectId,
                 resourceCode = pipelineId,
                 permission = permission
-            )) {
+            )
+        ) {
             return true
         }
 
@@ -105,7 +115,7 @@ class PipelinePermissionServiceImpl @Autowired constructor(
         return managerService.isManagerPermission(
             userId = userId,
             projectId = projectId,
-            resourceType = resourceType,
+            resourceType = authResourceType ?: resourceType,
             authPermission = permission
         )
     }

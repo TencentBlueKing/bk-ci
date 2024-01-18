@@ -27,10 +27,19 @@
 
 package com.tencent.devops.remotedev.service.projectworkspace
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ImageManageDao
@@ -39,13 +48,13 @@ import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
+import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
-import com.tencent.devops.remotedev.pojo.WorkspaceStatus
-import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
-import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.pojo.image.ImageStatus
@@ -54,7 +63,9 @@ import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
+import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import java.util.concurrent.TimeUnit
 import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -62,10 +73,10 @@ import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 class MakeWorkspaceImageHandler @Autowired constructor(
+    private val client: Client,
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
@@ -76,7 +87,8 @@ class MakeWorkspaceImageHandler @Autowired constructor(
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val workspaceCommon: WorkspaceCommon,
-    private val imageManageDao: ImageManageDao
+    private val imageManageDao: ImageManageDao,
+    private val notifyControl: NotifyControl
 ) {
 
     companion object {
@@ -84,6 +96,17 @@ class MakeWorkspaceImageHandler @Autowired constructor(
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CGS_MAKE_IMAGE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CGS,
+            instanceNames = "#workspaceName",
+            instanceIds = "#workspaceName"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CGS_MAKE_IMAGE_CONTENT
+    )
     fun makeWorkspaceImage(
         userId: String,
         projectId: String,
@@ -92,11 +115,27 @@ class MakeWorkspaceImageHandler @Autowired constructor(
     ): WorkspaceResponse {
         logger.info("$userId make image ${makeImageReq.imageName} workspace $workspaceName")
         permissionService.checkUserManager(userId, projectId)
+
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
             expiredTimeInSeconds
         ).tryLock().use {
+            if (workspaceCommon.notOk2doNextAction(workspace)) {
+                logger.info("${workspace.workspaceName} is ${workspace.status}, return error.")
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
+                    params = arrayOf(
+                        workspace.workspaceName,
+                        "status is already ${workspace.status}, can't make image now"
+                    )
+                )
+            }
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
@@ -112,7 +151,7 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                 action = WorkspaceAction.MAKE_IMAGE,
                 actionMessage = String.format(
                     workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                    WorkspaceStatus.STOPPING.name,
+                    workspace.status,
                     WorkspaceStatus.MAKING_IMAGE.name
                 )
             )
@@ -130,6 +169,7 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                 projectId = projectId,
                 imageId = imageId,
                 imageName = makeImageReq.imageName,
+                userId = userId,
                 imageStatus = ImageStatus.BUILDING,
                 dslContext = dslContext
             )
@@ -146,7 +186,7 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                         ).toSet()
                     ),
                     workspaceName = workspaceName,
-                    settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable,
+                    settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
                     bkTicket = "",
                     cgsId = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)?.hostIp ?: "",
                     imageId = imageId,
@@ -154,7 +194,7 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                 )
             )
 
-            workspaceCommon.dispatchWebsocketPushEvent(
+            notifyControl.dispatchWebsocketPushEvent(
                 userId = userId,
                 workspaceName = workspaceName,
                 workspaceHost = null,
@@ -187,12 +227,21 @@ class MakeWorkspaceImageHandler @Autowired constructor(
             params = arrayOf(event.workspaceName)
         )
 
+        val workspaceInfo = client.get(ServiceRemoteDevResource::class)
+            .getWorkspaceInfo(event.userId, event.workspaceName, event.mountType).data!!
+
+        val workspaceStatus = if (workspaceInfo.status == EnvStatusEnum.running) {
+            WorkspaceStatus.RUNNING
+        } else {
+            WorkspaceStatus.STOPPED
+        }
+
         if (event.status) {
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
                 workspaceDao.updateWorkspaceStatus(
                     workspaceName = event.workspaceName,
-                    status = WorkspaceStatus.STOPPED,
+                    status = workspaceStatus,
                     dslContext = transactionContext
                 )
 
@@ -204,7 +253,7 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                     actionMessage = String.format(
                         workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
                         workspace.status.name,
-                        WorkspaceStatus.STOPPED.name
+                        workspaceStatus.name
                     )
                 )
 
@@ -229,7 +278,7 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                 dslContext = dslContext,
                 workspaceName = event.workspaceName,
                 operator = event.userId,
-                action = WorkspaceAction.STOP,
+                action = WorkspaceAction.MAKE_IMAGE,
                 actionMessage = String.format(
                     workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
                     workspace.status.name,
@@ -247,14 +296,14 @@ class MakeWorkspaceImageHandler @Autowired constructor(
         }
 
         // 分发到WS
-        workspaceCommon.dispatchWebsocketPushEvent(
+        notifyControl.dispatchWebsocketPushEvent(
             userId = event.userId,
             workspaceName = event.workspaceName,
             workspaceHost = "",
             errorMsg = event.errorMsg,
             type = WebSocketActionType.WORKSPACE_MAKE_IMAGE,
             status = event.status,
-            action = WorkspaceAction.STOP,
+            action = WorkspaceAction.MAKE_IMAGE,
             systemType = workspace.workspaceSystemType,
             workspaceMountType = workspace.workspaceMountType,
             ownerType = workspace.ownerType,

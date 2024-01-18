@@ -49,7 +49,7 @@ class CodeCCDispatchListener @Autowired constructor(
     }
 
     override fun getVmType(): JobQuotaVmType? {
-        return JobQuotaVmType.OTHER
+        return JobQuotaVmType.DOCKER_DEVCLOUD
     }
 
     override fun onShutdown(event: PipelineAgentShutdownEvent) {
@@ -69,7 +69,10 @@ class CodeCCDispatchListener @Autowired constructor(
     override fun onStartup(dispatchMessage: DispatchMessage) {
         logger.info("CodeCC dispatcher startUp dispatchMessage: $dispatchMessage")
 
-        val codeccDispatchMessage = JsonUtil.to(dispatchMessage.dispatchMessage, CodeccDispatchMessage::class.java)
+        val codeccDispatchMessage = JsonUtil.to(
+            json = dispatchMessage.event.dispatchType.value,
+            type = CodeccDispatchMessage::class.java
+        )
 
         // 判断是否为devcloud构建，-101(pcg开源扫描)，-3(闭源扫描)
         if (codeccDispatchMessage.codeccTaskId == -101L || codeccDispatchMessage.codeccTaskId == -3L) {
@@ -80,7 +83,7 @@ class CodeCCDispatchListener @Autowired constructor(
                 credential = Credential("", "")
             )
 
-            with(dispatchMessage) {
+            with(dispatchMessage.event) {
                 pipelineEventDispatcher.dispatch(
                     PipelineAgentStartupEvent(
                         source = "vmStartupTaskAtom",
@@ -94,7 +97,6 @@ class CodeCCDispatchListener @Autowired constructor(
                         taskName = "",
                         os = "",
                         vmNames = vmNames,
-                        startTime = System.currentTimeMillis(),
                         channelCode = channelCode,
                         dispatchType = PublicDevCloudDispathcType(
                             image = JsonUtil.toJson(containerPool),
@@ -106,7 +108,8 @@ class CodeCCDispatchListener @Autowired constructor(
                         routeKeySuffix = DispatchRouteKeySuffix.DEVCLOUD.routeKeySuffix,
                         containerId = containerId,
                         containerHashId = containerHashId,
-                        customBuildEnv = customBuildEnv
+                        customBuildEnv = customBuildEnv,
+                        jobId = jobId
                     )
                 )
             }
@@ -115,7 +118,7 @@ class CodeCCDispatchListener @Autowired constructor(
         }
 
         // 记录构建历史
-        with(dispatchMessage) {
+        with(dispatchMessage.event) {
             pipelineDockerBuildDao.startBuild(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -141,7 +144,6 @@ class CodeCCDispatchListener @Autowired constructor(
                     taskName = "",
                     os = "",
                     vmNames = vmNames,
-                    startTime = System.currentTimeMillis(),
                     channelCode = channelCode,
                     dispatchType = DockerDispatchType(
                         dockerBuildVersion = DEFAULT_IMAGE,
@@ -152,7 +154,8 @@ class CodeCCDispatchListener @Autowired constructor(
                     routeKeySuffix = DispatchRouteKeySuffix.DOCKER_VM.routeKeySuffix,
                     containerId = containerId,
                     containerHashId = containerHashId,
-                    customBuildEnv = customBuildEnv
+                    customBuildEnv = customBuildEnv,
+                    jobId = jobId
                 )
             )
         }
@@ -168,11 +171,11 @@ class CodeCCDispatchListener @Autowired constructor(
         try {
             log(
                 buildLogPrinter,
-                dispatchMessage.buildId,
-                dispatchMessage.containerHashId,
-                dispatchMessage.vmSeqId,
+                dispatchMessage.event.buildId,
+                dispatchMessage.event.containerHashId,
+                dispatchMessage.event.vmSeqId,
                 message,
-                dispatchMessage.executeCount
+                dispatchMessage.event.executeCount
             )
         } catch (e: Throwable) {
             // 日志有问题就不打日志了，不能影响正常流程

@@ -63,7 +63,7 @@ class GitAuthProjectApi @Autowired constructor(
         group: BkAuthGroup?
     ): List<String> {
         return client.get(ServiceProjectAuthResource::class).getProjectUsers(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             projectCode = projectCode,
             group = group
         ).data ?: emptyList()
@@ -74,7 +74,7 @@ class GitAuthProjectApi @Autowired constructor(
         projectCode: String
     ): List<BkAuthGroupAndUserList> {
         return client.get(ServiceProjectAuthResource::class).getProjectGroupAndUserList(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             projectCode = projectCode
         ).data ?: emptyList()
     }
@@ -85,7 +85,7 @@ class GitAuthProjectApi @Autowired constructor(
         supplier: (() -> List<String>)?
     ): List<String> {
         return client.get(ServiceProjectAuthResource::class).getUserProjects(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId
         ).data ?: emptyList()
     }
@@ -94,7 +94,8 @@ class GitAuthProjectApi @Autowired constructor(
         serviceCode: AuthServiceCode,
         userId: String,
         permission: AuthPermission,
-        supplier: (() -> List<String>)?
+        supplier: (() -> List<String>)?,
+        resourceType: String?
     ): List<String> {
         return emptyList()
     }
@@ -114,7 +115,7 @@ class GitAuthProjectApi @Autowired constructor(
         group: BkAuthGroup?
     ): Boolean {
         return client.get(ServiceProjectAuthResource::class).isProjectUser(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             projectCode = projectCode,
             group = group
@@ -123,7 +124,7 @@ class GitAuthProjectApi @Autowired constructor(
 
     override fun checkProjectUser(user: String, serviceCode: AuthServiceCode, projectCode: String): Boolean {
         return client.get(ServiceProjectAuthResource::class).isProjectUser(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = user,
             projectCode = projectCode
         ).data ?: false
@@ -131,7 +132,7 @@ class GitAuthProjectApi @Autowired constructor(
 
     override fun checkProjectManager(userId: String, serviceCode: AuthServiceCode, projectCode: String): Boolean {
         return client.get(ServiceProjectAuthResource::class).checkProjectManager(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectCode
         ).data ?: false

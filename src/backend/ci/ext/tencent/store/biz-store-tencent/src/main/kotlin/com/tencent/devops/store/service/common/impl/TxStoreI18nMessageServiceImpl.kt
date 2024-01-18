@@ -30,13 +30,11 @@ package com.tencent.devops.store.service.common.impl
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
-import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import java.net.URLEncoder
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.net.URLEncoder
 
 @Service
 class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
@@ -48,20 +46,20 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         private val logger = LoggerFactory.getLogger(TxStoreI18nMessageServiceImpl::class.java)
     }
 
-    override fun getPropertiesFileStr(
+    override fun getFileStr(
         projectCode: String,
         fileDir: String,
-        i18nDir: String,
         fileName: String,
         repositoryHashId: String?,
         branch: String?
     ): String? {
+        logger.info("getFileStr repositoryHashId:$repositoryHashId")
         return if (!repositoryHashId.isNullOrBlank()) {
             // 从工蜂拉取文件
             try {
                 client.get(ServiceGitRepositoryResource::class).getFileContent(
                     repoId = repositoryHashId,
-                    filePath = "$i18nDir/$fileName",
+                    filePath = fileName,
                     reversion = null,
                     branch = branch,
                     repositoryType = null
@@ -71,42 +69,20 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
                 null
             }
         } else {
-            // 直接从仓库拉取文件
-            val filePath =
-                URLEncoder.encode("$projectCode/$fileDir/$i18nDir/$fileName", Charsets.UTF_8.name())
-            return client.get(ServiceArtifactoryResource::class).getFileContent(
-                userId = BKREPO_DEFAULT_USER,
-                projectId = bkrepoStoreProjectId,
-                repoName = BkRepoEnum.PLUGIN.repoName,
-                filePath = filePath
-            ).data
-        }
-    }
-
-    override fun getPropertiesFileNames(
-        projectCode: String,
-        fileDir: String,
-        i18nDir: String,
-        repositoryHashId: String?,
-        branch: String?
-    ): List<String>? {
-        return if (!repositoryHashId.isNullOrBlank()) {
-            val gitRepositoryDirItems = client.get(ServiceGitRepositoryResource::class).getGitRepositoryTreeInfo(
-                userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
-                repoId = repositoryHashId,
-                refName = branch,
-                path = i18nDir,
-                tokenType = TokenTypeEnum.PRIVATE_KEY
-            ).data
-            gitRepositoryDirItems?.filter { it.type != "tree" }?.map { it.name }
-        } else {
-            val filePath = URLEncoder.encode("$projectCode/$fileDir/$i18nDir", Charsets.UTF_8.name())
-            client.get(ServiceArtifactoryResource::class).listFileNamesByPath(
-                userId = BKREPO_DEFAULT_USER,
-                projectId = bkrepoStoreProjectId,
-                repoName = BkRepoEnum.PLUGIN.repoName,
-                filePath = filePath
-            ).data
+            try {
+                // 直接从仓库拉取文件
+                val filePath =
+                    URLEncoder.encode("$projectCode/$fileDir/$fileName", Charsets.UTF_8.name())
+                return client.get(ServiceArtifactoryResource::class).getFileContent(
+                    userId = BKREPO_DEFAULT_USER,
+                    projectId = bkrepoStoreProjectId,
+                    repoName = BkRepoEnum.PLUGIN.repoName,
+                    filePath = filePath
+                ).data
+            } catch (ignored: Throwable) {
+                logger.warn("getPropertiesFileStr ffilePath:${"$projectCode/$fileDir/$fileName"} error", ignored)
+                null
+            }
         }
     }
 }

@@ -205,7 +205,7 @@ interface ApigwBuildResourceV3 {
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @ApiParam("每页条数(默认20, 最大100)", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
         @ApiParam(
@@ -213,7 +213,10 @@ interface ApigwBuildResourceV3 {
             required = false, defaultValue = "null"
         )
         @QueryParam("updateTimeDesc")
-        updateTimeDesc: Boolean? = null
+        updateTimeDesc: Boolean? = null,
+        @ApiParam("是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @ApiOperation("获取流水线手动启动参数", tags = ["v3_app_build_startInfo", "v3_user_build_startInfo"])

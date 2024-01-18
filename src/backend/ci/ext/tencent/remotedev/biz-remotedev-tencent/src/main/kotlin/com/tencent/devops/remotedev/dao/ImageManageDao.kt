@@ -21,6 +21,8 @@ class ImageManageDao {
         return with(TProjectImages.T_PROJECT_IMAGES) {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
+                .and(STATUS.notEqual(ImageStatus.DELETED.ordinal))
+                .orderBy(CREATE_TIME.desc())
                 .fetch()
         }
     }
@@ -32,6 +34,7 @@ class ImageManageDao {
         projectId: String,
         imageId: String,
         imageName: String,
+        userId: String,
         imageStatus: ImageStatus,
         dslContext: DSLContext
     ) {
@@ -41,11 +44,13 @@ class ImageManageDao {
                 PROJECT_ID,
                 IMAGE_ID,
                 IMAGE_NAME,
+                CREATOR,
                 STATUS
             ).values(
                 projectId,
                 imageId,
                 imageName,
+                userId,
                 imageStatus.ordinal
             ).execute()
         }
@@ -81,6 +86,21 @@ class ImageManageDao {
     ) {
         with(TProjectImages.T_PROJECT_IMAGES) {
             dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(IMAGE_ID.eq(imageId))
+                .execute()
+        }
+    }
+
+    fun updateWorkspaceImageStatus(
+        projectId: String,
+        imageId: String,
+        imageStatus: ImageStatus,
+        dslContext: DSLContext
+    ) {
+        with(TProjectImages.T_PROJECT_IMAGES) {
+            dslContext.update(this)
+                .set(STATUS, imageStatus.ordinal)
                 .where(PROJECT_ID.eq(projectId))
                 .and(IMAGE_ID.eq(imageId))
                 .execute()

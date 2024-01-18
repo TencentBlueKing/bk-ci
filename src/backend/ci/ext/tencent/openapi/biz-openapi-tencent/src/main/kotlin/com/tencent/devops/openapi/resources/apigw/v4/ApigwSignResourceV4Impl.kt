@@ -34,6 +34,7 @@ import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwSignResourceV4
 import com.tencent.devops.openapi.service.IndexService
+import com.tencent.devops.openapi.utils.ApigwParamUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.sign.api.pojo.IpaUploadInfo
 import com.tencent.devops.sign.api.pojo.SignDetail
@@ -62,8 +63,8 @@ class ApigwSignResourceV4Impl @Autowired constructor(
             userId = userId,
             startTime = startTime,
             endTime = endTime,
-            page = page,
-            pageSize = pageSize
+            page = page ?: 1,
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20
         )
     }
 

@@ -61,7 +61,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwPipelineResource {
 
-    @ApiOperation("新建流水线编排")
+    @ApiOperation("新建流水线编排", tags = ["v1_app_pipelines_create"])
     @POST
     @Path("/{projectId}/")
     fun create(
@@ -84,7 +84,7 @@ interface ApigwPipelineResource {
         channelCode: ChannelCode?
     ): Result<PipelineId>
 
-    @ApiOperation("编辑流水线编排")
+    @ApiOperation("编辑流水线编排", tags = ["v1_app_pipelines_edit"])
     @PUT
     @Path("/{projectId}/{pipelineId}/")
     fun edit(
@@ -110,7 +110,7 @@ interface ApigwPipelineResource {
         channelCode: ChannelCode?
     ): Result<Boolean>
 
-    @ApiOperation("获取流水线编排")
+    @ApiOperation("获取流水线编排", tags = ["v1_app_pipelines_get"])
     @GET
     @Path("/{projectId}/{pipelineId}/")
     fun get(
@@ -131,7 +131,7 @@ interface ApigwPipelineResource {
         pipelineId: String
     ): Result<Model>
 
-    @ApiOperation("删除流水线编排")
+    @ApiOperation("删除流水线编排", tags = ["v1_app_pipelines_delete"])
     @DELETE
     @Path("/{projectId}/{pipelineId}/")
     fun delete(
@@ -152,7 +152,7 @@ interface ApigwPipelineResource {
         pipelineId: String
     ): Result<Boolean>
 
-    @ApiOperation("获取项目的流水线列表")
+    @ApiOperation("获取项目的流水线列表", tags = ["v1_app_pipelines_getListByUser"])
     @GET
     @Path("/{projectId}")
     fun getListByUser(
@@ -171,12 +171,12 @@ interface ApigwPipelineResource {
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int? = null,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @ApiParam("每页条数(默认20, 最大100)", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int? = null
     ): Result<Page<Pipeline>>
 
-    @ApiOperation("获取流水线状态")
+    @ApiOperation("获取流水线状态", tags = ["v1_app_pipelines_status"])
     @GET
     @Path("/{projectId}/{pipelineId}/status")
     fun status(
@@ -197,7 +197,7 @@ interface ApigwPipelineResource {
         pipelineId: String
     ): Result<Pipeline?>
 
-    @ApiOperation("安装插件到项目")
+    @ApiOperation("安装插件到项目", tags = ["v1_app_pipelines_installAtom"])
     @POST
     @Path("/atom/install")
     fun installAtom(
@@ -217,7 +217,7 @@ interface ApigwPipelineResource {
         installAtomReq: InstallAtomReq
     ): Result<Boolean>
 
-    @ApiOperation("流水线重命名")
+    @ApiOperation("流水线重命名", tags = ["v1_app_pipelines_rename"])
     @POST
     @Path("/{pipelineId}/projects/{projectId}/rename")
     fun rename(
@@ -240,7 +240,7 @@ interface ApigwPipelineResource {
         name: PipelineName
     ): Result<Boolean>
 
-    @ApiOperation("还原流水线编排")
+    @ApiOperation("还原流水线编排", tags = ["v1_app_pipelines_restore"])
     @PUT
     @Path("/{pipelineId}/projects/{projectId}/restore")
     fun restore(

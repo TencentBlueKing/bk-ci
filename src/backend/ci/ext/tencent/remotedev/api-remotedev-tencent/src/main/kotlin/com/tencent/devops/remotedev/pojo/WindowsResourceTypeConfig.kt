@@ -40,12 +40,18 @@ data class WindowsResourceTypeConfig(
     val size: String,
     @ApiModelProperty("GPU卡类型")
     val type: String? = null,
-    @ApiModelProperty("vGPU")
+    @ApiModelProperty("GPU")
     val gpu: Int,
+    @ApiModelProperty("vGPU")
+    val vgpu: String? = "",
     @ApiModelProperty("CPU")
     val cpu: Int,
+    @ApiModelProperty("vCPU")
+    val vcpu: String? = "",
     @ApiModelProperty("内存")
     val memory: Int,
+    @ApiModelProperty("独享内存")
+    val vmemory: String? = "",
     @ApiModelProperty("数据盘，本地SSD盘")
     val disk: String,
     @ApiModelProperty("云SSD盘")
@@ -55,7 +61,9 @@ data class WindowsResourceTypeConfig(
     @ApiModelProperty("权重，用于页面展示先后顺序")
     val weight: Int? = 0,
     @ApiModelProperty("描述")
-    val description: String
+    val description: String,
+    @ApiModelProperty("是否是特殊机型")
+    val specModel: Boolean = false
 ) {
 
     companion object {

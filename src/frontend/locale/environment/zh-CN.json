@@ -267,6 +267,8 @@
         "NOT_INSTALLED": "未安装"
     },
     "newPool": "创建",
+    "查看构建机监控": "查看构建机监控",
+    "查看更多指标监控": "查看更多指标监控",
     "nodeSearchTips": "IP/别名/创建人/最近修改人",
     "alias": "别名",
     "lastModifier": "最近修改人",

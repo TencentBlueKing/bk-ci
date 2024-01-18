@@ -27,10 +27,12 @@
 
 package com.tencent.devops.ticket.resources
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.ticket.api.ServiceCertResource
@@ -73,16 +75,22 @@ class ServiceCertResourceImpl @Autowired constructor(
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
 
+    @AuditEntry(
+        actionId = ActionId.CERT_VIEW,
+        subActionIds = [ActionId.CREDENTIAL_VIEW]
+    )
     override fun getAndroid(projectId: String, certId: String, publicKey: String): Result<CertAndroidWithCredential> {
         checkParams(projectId, certId)
         return Result(certService.queryAndroidByProject(projectId, certId, publicKey))
     }
 
+    @AuditEntry(actionId = ActionId.CERT_VIEW)
     override fun getTls(projectId: String, certId: String, publicKey: String): Result<CertTls> {
         checkParams(projectId, certId)
         return Result(certService.queryTlsByProject(projectId, certId, publicKey))
     }
 
+    @AuditEntry(actionId = ActionId.CERT_VIEW)
     override fun getEnterprise(projectId: String, certId: String, publicKey: String): Result<CertEnterprise> {
         checkParams(projectId, certId)
         return Result(certService.queryEnterpriseByProject(projectId, certId, publicKey))

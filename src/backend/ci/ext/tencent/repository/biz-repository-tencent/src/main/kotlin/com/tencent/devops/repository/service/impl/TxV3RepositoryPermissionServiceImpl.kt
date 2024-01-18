@@ -63,7 +63,7 @@ class TxV3RepositoryPermissionServiceImpl @Autowired constructor(
     override fun filterRepository(userId: String, projectId: String, authPermission: AuthPermission): List<Long> {
         val managerIds = mutableListOf<Long>()
         val resourceCodeList = client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             resourceType = AuthResourceType.CODE_REPERTORY.value,
@@ -94,7 +94,7 @@ class TxV3RepositoryPermissionServiceImpl @Autowired constructor(
         }
 
         val permissionResourcesMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             action = actions,
@@ -137,7 +137,7 @@ class TxV3RepositoryPermissionServiceImpl @Autowired constructor(
         }
 
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken(null)!!,
+            token = tokenService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
             resourceType = resourceType,

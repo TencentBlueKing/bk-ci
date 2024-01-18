@@ -29,8 +29,8 @@ package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
+import com.tencent.devops.model.project.tables.records.TUserRecord
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectUserDao
 import com.tencent.devops.project.dao.UserDao
@@ -52,6 +52,15 @@ class ProjectUserService @Autowired constructor(
 ) {
     fun getUserDept(userId: String): UserDeptDetail? {
         val userRecord = userDao.get(dslContext, userId) ?: return null
+        return packagingBean(userRecord)
+    }
+
+    fun getPublicAccount(userId: String): UserDeptDetail? {
+        val userRecord = userDao.getPublicType(dslContext, userId) ?: return null
+        return packagingBean(userRecord)
+    }
+
+    fun packagingBean(userRecord: TUserRecord): UserDeptDetail {
         return UserDeptDetail(
             bgName = userRecord!!.bgName,
             bgId = userRecord!!.bgId?.toString() ?: "",
@@ -107,18 +116,6 @@ class ProjectUserService @Autowired constructor(
             res[project.englishName] = projectProperties.remotedevManager?.split(";")
                 ?.filter { it.isNotBlank() }
                 ?.toMutableSet() ?: mutableSetOf()
-        }
-
-        // 获取项目的权限管理员
-        res.forEach { (projectId, members) ->
-            val auths = try {
-                authProjectApi.getProjectUsers(projectServiceCode, projectId, BkAuthGroup.MANAGER)
-            } catch (e: Exception) {
-                logger.warn("getRemoteDevAdmin request getProjectUsers error", e)
-                null
-            } ?: return@forEach
-
-            members.addAll(auths.filter { it.isNotBlank() })
         }
 
         return res

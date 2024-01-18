@@ -266,6 +266,78 @@
           }
         ]
       }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "cgs_instance",
+        "name": "云桌面",
+        "name_en": "Cgs",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          },
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "cgs"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "image_instance",
+        "name": "镜像",
+        "name_en": "Image",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          },
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "image"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "code_proxy_instance",
+        "name": "代理仓库",
+        "name_en": "Code Proxy",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          },
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "code_proxy"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "pipeline_template_instance",
+        "name": "流水线模板",
+        "name_en": "Pipeline Template",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          },
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "pipeline_template"
+          }
+        ]
+      }
     }
   ]
 }

@@ -40,7 +40,16 @@ dependencies {
 
 var moduleNames = when (val moduleName = name.split("-")[1]) {
     "misc" -> {
-        listOf("process", "project", "repository", "dispatch", "plugin", "quality", "artifactory", "environment")
+        listOf(
+            "process",
+            "project",
+            "repository",
+            "dispatch",
+            "plugin",
+            "quality",
+            "artifactory",
+            "environment"
+        )
     }
 
     "statistics" -> {
@@ -51,12 +60,14 @@ var moduleNames = when (val moduleName = name.split("-")[1]) {
         listOf("process", "project", "lambda", "store")
     }
 
+    "dispatch" -> {
+        listOf("dispatch", "dispatch_kubernetes")
+    }
+
     else -> listOf(moduleName)
 }
 
-if (name == "model-dispatch-kubernetes") {
-    moduleNames = listOf("dispatch_kubernetes")
-} else if (name == "model-dispatch-devcloud-tencent") {
+if (name == "model-dispatch-devcloud-tencent") {
     moduleNames = listOf("dispatch_devcloud", "dispatch_macos", "dispatch_windows", "dispatch_codecc")
 }
 

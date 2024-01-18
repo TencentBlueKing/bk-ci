@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwTemplateInstanceResourceV4
+import com.tencent.devops.openapi.utils.ApigwParamUtil
 import com.tencent.devops.process.api.template.ServiceTemplateInstanceResource
 import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
@@ -42,6 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ApigwTemplateInstanceResourceV4Impl @Autowired constructor(private val client: Client) :
     ApigwTemplateInstanceResourceV4 {
+
     override fun createTemplateInstances(
         appCode: String?,
         apigwType: String?,
@@ -135,7 +137,7 @@ class ApigwTemplateInstanceResourceV4Impl @Autowired constructor(private val cli
             projectId = projectId,
             templateId = templateId,
             page = page ?: 1,
-            pageSize = pageSize ?: 30,
+            pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
             searchKey = searchKey,
             sortType = sortType,
             desc = desc

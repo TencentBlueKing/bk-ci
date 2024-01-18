@@ -45,6 +45,8 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.OkhttpUtils.stringLimit
 import com.tencent.devops.common.api.util.script.CommonScriptUtils
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
@@ -79,6 +81,7 @@ import com.tencent.devops.scm.constant.ScmMessageCode.USER_CREATE_GIT_CODE_REPOS
 import com.tencent.devops.scm.constant.ScmMessageCode.USER_DELETE_GIT_CODE_REPOSITORY_MEMBER_FAIL
 import com.tencent.devops.scm.constant.ScmMessageCode.USER_GIT_REPOSITORY_MOVE_GROUP_FAIL
 import com.tencent.devops.scm.constant.ScmMessageCode.USER_UPDATE_GIT_CODE_REPOSITORY_FAIL
+import com.tencent.devops.scm.constant.SteamGitTokenConstant
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.enums.GitProjectsOrderBy
 import com.tencent.devops.scm.enums.GitSortAscOrDesc
@@ -111,15 +114,6 @@ import com.tencent.devops.scm.utils.RetryUtils
 import com.tencent.devops.scm.utils.RetryUtils.doRetryHttp
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
-import java.io.File
-import java.net.URLDecoder
-import java.net.URLEncoder
-import java.nio.file.Files
-import java.time.LocalDateTime
-import java.util.Base64
-import java.util.concurrent.Executors
-import javax.servlet.http.HttpServletResponse
-import javax.ws.rs.core.Response
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -129,19 +123,31 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.FileSystemUtils
 import org.springframework.util.StringUtils
+import java.io.File
+import java.net.HttpRetryException
+import java.net.URLDecoder
+import java.net.URLEncoder
+import java.nio.file.Files
+import java.time.LocalDateTime
+import java.util.Base64
+import java.util.concurrent.Executors
+import javax.servlet.http.HttpServletResponse
+import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
 class GitService @Autowired constructor(
     private val gitConfig: GitConfig,
     private val objectMapper: ObjectMapper,
-    private val sampleProjectGitFileService: SampleProjectGitFileService
+    private val sampleProjectGitFileService: SampleProjectGitFileService,
+    private val redisOperation: RedisOperation
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(GitService::class.java)
         private val gitOauthApi = GitOauthApi()
         private const val MAX_FILE_SIZE = 1 * 1024 * 1024
+        private const val SLEEP_MILLS_FOR_RETRY = 3000L
     }
 
     @Value("\${gitCI.clientId}")
@@ -480,6 +486,47 @@ class GitService @Autowired constructor(
         }
     }
 
+    fun getTokenFromCache(gitProjectId: String, notGetFromCache: Boolean = false): String {
+        if (notGetFromCache) {
+            val updateLock = RedisLock(redisOperation, SteamGitTokenConstant.getGitTokenLockKey(gitProjectId), 10)
+            updateLock.use {
+                updateLock.lock()
+                val newToken = getToken(gitProjectId).accessToken
+                logger.info("getTokenFromCache|notGetFromCache|$gitProjectId|newToken=$newToken")
+                redisOperation.set(
+                    SteamGitTokenConstant.getGitTokenKey(gitProjectId),
+                    newToken,
+                    SteamGitTokenConstant.validTime
+                )
+                return newToken
+            }
+        }
+
+        val token = redisOperation.get(SteamGitTokenConstant.getGitTokenKey(gitProjectId))
+        if (!token.isNullOrBlank()) {
+            return token
+        }
+
+        val updateLock = RedisLock(redisOperation, SteamGitTokenConstant.getGitTokenLockKey(gitProjectId), 10)
+        updateLock.use {
+            updateLock.lock()
+            // 锁住后再拿一次看看可能存在并发锁场景
+            val token2 = redisOperation.get(SteamGitTokenConstant.getGitTokenKey(gitProjectId))
+            if (!token2.isNullOrBlank()) {
+                return token2
+            }
+            val newToken = getToken(gitProjectId).accessToken
+            logger.info("getTokenFromCache|$gitProjectId|newToken=$newToken")
+            redisOperation.set(
+                SteamGitTokenConstant.getGitTokenKey(gitProjectId),
+                newToken,
+                SteamGitTokenConstant.validTime
+            )
+            return newToken
+        }
+    }
+
+    // 除了特定的一定需要获取新的 token 的，例如 worker 中使用 ci.token 其他都应该从 getTokenFromCache 中获取
     @BkTimed(extraTags = ["operation", "TOKEN"], value = "bk_tgit_api_time")
     fun getToken(gitProjectId: String): GitToken {
         logger.info("Start to get the token for git project($gitProjectId)")
@@ -556,10 +603,10 @@ class GitService @Autowired constructor(
         useAccessToken: Boolean = true
     ): Boolean {
         try {
-            val superToken = getToken(gitProjectId)
+            val accessToken = getTokenFromCache(gitProjectId)
             val url =
                 "$gitCIUrl/api/v3/projects/$gitProjectId/members/all/$userId?" + if (useAccessToken) {
-                    "access_token=${superToken.accessToken}"
+                    "access_token=$accessToken"
                 } else {
                     "private_token=$privateToken"
                 }
@@ -587,8 +634,8 @@ class GitService @Autowired constructor(
     @BkTimed(extraTags = ["operation", "GIT_CI_USER"], value = "bk_tgit_api_time")
     fun getGitCIUserId(rtxId: String, gitProjectId: String): String? {
         try {
-            val token = getToken(gitProjectId)
-            val url = "$gitCIUrl/api/v3/users/$rtxId?access_token=${token.accessToken}"
+            val accessToken = getTokenFromCache(gitProjectId)
+            val url = "$gitCIUrl/api/v3/users/$rtxId?access_token=$accessToken"
 
             logger.info("[$rtxId]|[$gitProjectId]| Get gitUserId: $url")
             val request = Request.Builder()
@@ -903,9 +950,11 @@ class GitService @Autowired constructor(
         val authParams = JsonUtil.toMap(authParamDecodeJsonStr)
         val type = authParams["redirectUrlType"] as? String
         val specRedirectUrl = authParams["redirectUrl"] as? String
+        val resetType = authParams["resetType"] as? String
+        val userId = authParams["userId"] as? String
         return when (RedirectUrlTypeEnum.getRedirectUrlType(type ?: "")) {
             RedirectUrlTypeEnum.SPEC -> specRedirectUrl!!
-            RedirectUrlTypeEnum.DEFAULT -> redirectUrl
+            RedirectUrlTypeEnum.DEFAULT -> "$redirectUrl?resetType=$resetType&userId=$userId"
             else -> {
                 val projectId = authParams["projectId"] as String
                 val repoId = authParams["repoId"] as String
@@ -1700,7 +1749,12 @@ class GitService @Autowired constructor(
                     )
                 }
                 val data = it.body!!.string()
-                JsonUtil.to(data, GitMrChangeInfo::class.java)
+                JsonUtil.to(data, GitMrChangeInfo::class.java).also { info ->
+                    // 工蜂变更文件多的时候，初始计算较久，有可能返回为null，这时候需要重试直到拿到files。
+                    if (info.files == null) {
+                        throw HttpRetryException(it.message, it.code)
+                    }
+                }
             }
         }
     }
@@ -1719,16 +1773,33 @@ class GitService @Autowired constructor(
         sha: String?,
         token: String,
         tokenType: TokenTypeEnum,
+        filePath: String? = null,
+        format: String? = "zip",
+        isProjectPathWrapped: Boolean,
         response: HttpServletResponse
     ) {
-        logger.info("downloadGitRepoFile repoName is:$repoName,sha is:$sha,tokenType is:$tokenType")
+        logger.info(
+            "downloadGitRepoFile repoName is:$repoName,sha is:$sha,tokenType is:$tokenType filePath is $filePath"
+        )
         val encodeProjectName = URLEncoder.encode(repoName, "utf-8")
         val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/repository/archive")
         setToken(tokenType, url, token)
         if (!sha.isNullOrBlank()) {
             url.append("&sha=$sha")
         }
-        OkhttpUtils.downloadFile(url.toString(), response)
+        if (!filePath.isNullOrBlank()) {
+            url.append("&file_paths=$filePath")
+        }
+        url.append("&format=$format")
+        url.append("&is_project_path_wrapped=$isProjectPathWrapped")
+        response.contentType = "application/$format"
+        response.setHeader("Content-Disposition", "attachment; filename=$repoName.$format")
+        com.tencent.devops.common.service.utils.RetryUtils.execute(
+            action = object : com.tencent.devops.common.service.utils.RetryUtils.Action<Unit> {
+            override fun execute() {
+                OkhttpUtils.downloadFile(url.toString(), response)
+            }
+        }, retryTime = 5, retryPeriodMills = SLEEP_MILLS_FOR_RETRY)
     }
 
     @BkTimed(extraTags = ["operation", "add_commit_check"], value = "bk_tgit_api_time")

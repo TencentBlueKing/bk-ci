@@ -30,8 +30,8 @@ package com.tencent.devops.common.db.pojo
 data class TableRuleConfig(
     val index: Int, // 序号
     val name: String, // 表名
-    val shardingNum: Int = 1, // 分表数量
+    var shardingNum: Int = 1, // 分表数量
     val broadcastFlag: Boolean? = null, // 是否为广播表
     val databaseShardingStrategy: DatabaseShardingStrategyEnum? = null, // 分库策略
-    val tableShardingStrategy: TableShardingStrategyEnum? = null // 分表策略
+    var tableShardingStrategy: TableShardingStrategyEnum? = null // 分表策略
 )

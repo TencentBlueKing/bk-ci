@@ -30,18 +30,22 @@ package com.tencent.devops.remotedev.dao
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.service.utils.ByteUtils
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
 import com.tencent.devops.model.remotedev.tables.records.TRemoteDevSettingsRecord
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
+import com.tencent.devops.remotedev.service.client.TaiClient
+import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class RemoteDevSettingDao {
@@ -51,6 +55,7 @@ class RemoteDevSettingDao {
         setting: RemoteDevSettings,
         userId: String
     ) {
+        val userInfo = userNameAndCompany(userId)
         with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
             dslContext.insertInto(
                 this,
@@ -60,7 +65,9 @@ class RemoteDevSettingDao {
                 TAPD_ATTACHED,
                 ENVS_FOR_VARIABLE,
                 DOTFILE_REPO,
-                USER_SETTING
+                USER_SETTING,
+                USER_NAME,
+                COMPANY_NAME
             )
                 .values(
                     userId,
@@ -69,7 +76,9 @@ class RemoteDevSettingDao {
                     ByteUtils.bool2Byte(setting.tapdAttached),
                     JsonUtil.toJson(setting.envsForVariable, false),
                     setting.dotfileRepo,
-                    JsonUtil.toJson(RemoteDevUserSettings(), false)
+                    JsonUtil.toJson(RemoteDevUserSettings(), false),
+                    userInfo.value?.accountName ?: "",
+                    userInfo.value?.companyTags?.joinToString(",") { it.tagName } ?: ""
                 ).onDuplicateKeyUpdate()
                 .set(DEFAULT_SHELL, setting.defaultShell)
                 .set(BASIC_SETTING, JsonUtil.toJson(setting.basicSetting, false))
@@ -84,7 +93,7 @@ class RemoteDevSettingDao {
     fun fetchAnySetting(
         dslContext: DSLContext,
         userId: String
-    ): RemoteDevSettings {
+    ): RemoteDevSettings? {
         return with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
             dslContext.selectFrom(this).where(USER_ID.eq(userId)).fetchAny()?.let {
                 RemoteDevSettings(
@@ -105,11 +114,60 @@ class RemoteDevSettingDao {
                     projectId = it.projectId ?: "",
                     userSetting = JsonUtil.toOrNull(
                         it.userSetting, RemoteDevUserSettings::class.java
-                    ) ?: RemoteDevUserSettings()
+                    ) ?: RemoteDevUserSettings(),
+                    userName = it.userName,
+                    companyName = it.companyName
                 )
-            } ?: run {
-                createOrUpdateSetting(dslContext, RemoteDevSettings(), userId)
-                return RemoteDevSettings()
+            }
+        }
+    }
+
+    fun fetchOneSetting(
+        dslContext: DSLContext,
+        userId: String
+    ): RemoteDevSettings {
+        return fetchAnySetting(dslContext, userId) ?: run {
+            createOrUpdateSetting(dslContext, RemoteDevSettings(), userId)
+            return RemoteDevSettings()
+        }
+    }
+
+    fun fetchTaiUserInfo(
+        dslContext: DSLContext,
+        limit: SQLLimit? = null,
+        userIds: Set<String>? = null
+    ): Map<String, Pair<String, String>> {
+        return with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
+            dslContext.select(USER_ID, USER_NAME, COMPANY_NAME).from(this)
+                .let {
+                    if (userIds != null) {
+                        it.where(USER_ID.`in`(userIds))
+                    } else {
+                        it.where(USER_ID.like("%@tai"))
+                    }
+                }
+                .let {
+                    if (limit != null) it.limit(limit.limit).offset(limit.offset) else it
+                }
+                .skipCheck()
+                .fetch {
+                    it.value1() to Pair(it.value2(), it.value3())
+                }.toMap()
+        }
+    }
+
+    fun updateTaiUserInfo(
+        dslContext: DSLContext,
+        userInfo: Map<String, Pair<String, String>>
+    ) {
+        with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
+            dslContext.batched { c ->
+                userInfo.forEach { (t, u) ->
+                    c.dsl().update(this).set(USER_NAME, u.first)
+                        .set(COMPANY_NAME, u.second)
+                        .where(USER_ID.eq(t))
+                        .execute()
+                }
             }
         }
     }
@@ -132,6 +190,7 @@ class RemoteDevSettingDao {
                 .fetch()
         }
     }
+
     fun countAllUserSettings(
         dslContext: DSLContext,
         queryUser: String?
@@ -167,20 +226,8 @@ class RemoteDevSettingDao {
             dslContext.select(CUMULATIVE_USAGE_TIME, CUMULATIVE_BILLING_TIME).from(this)
                 .where(USER_ID.eq(userId))
                 .fetchAny()?.let { it.value1() to it.value2() } ?: run {
-                createOrUpdateSetting(dslContext, RemoteDevSettings(), userId)
                 return 0 to 0
             }
-        }
-    }
-
-    fun fetchSingleUserWsCount(
-        dslContext: DSLContext,
-        userId: String
-    ): Pair<Int?, Int?> {
-        return with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
-            dslContext.select(WORKSPACE_MAX_RUNNING_COUNT, WORKSPACE_MAX_HAVING_COUNT).from(this)
-                .where(USER_ID.eq(userId))
-                .fetchAny()?.let { it.value1() to it.value2() } ?: (null to null)
         }
     }
 
@@ -238,6 +285,7 @@ class RemoteDevSettingDao {
             autoDeletedDays = opSetting?.autoDeletedDays ?: autoDeletedDays
             mountType = opSetting?.mountType ?: mountType
         }
+        val userInfo = userNameAndCompany(userId)
         with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
             dslContext.insertInto(
                 this,
@@ -249,7 +297,9 @@ class RemoteDevSettingDao {
                 DOTFILE_REPO,
                 WORKSPACE_MAX_RUNNING_COUNT,
                 WORKSPACE_MAX_HAVING_COUNT,
-                USER_SETTING
+                USER_SETTING,
+                USER_NAME,
+                COMPANY_NAME
             )
                 .values(
                     userId,
@@ -260,7 +310,9 @@ class RemoteDevSettingDao {
                     setting.dotfileRepo,
                     userSetting.maxRunningCount,
                     userSetting.maxHavingCount,
-                    JsonUtil.toJson(userSetting, false)
+                    JsonUtil.toJson(userSetting, false),
+                    userInfo.value?.username ?: "",
+                    userInfo.value?.companyTags?.joinToString(",") { it.tagName } ?: ""
                 ).onDuplicateKeyUpdate()
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(
@@ -269,5 +321,12 @@ class RemoteDevSettingDao {
                 )
                 .execute()
         }
+    }
+
+    private fun userNameAndCompany(userId: String) = lazy {
+        if (UserUtil.isTaiUser(userId)) {
+            val taiClient = SpringContextUtil.getBean(TaiClient::class.java)
+            taiClient.taiUserInfo(TaiUserInfoRequest(setOf(userId))).first()
+        } else null
     }
 }

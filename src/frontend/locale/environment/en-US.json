@@ -272,6 +272,8 @@
         "NOT_INSTALLED": "Not installed"
     },
     "newPool": "New Pool",
+    "查看构建机监控": "View build machine monitoring",
+    "查看更多指标监控": "View more metric monitoring",
     "nodeSearchTips": "IP / Alias / Creator / Last Modifier",
     "alias": "Alias",
     "lastModifier": "Last Modifier",

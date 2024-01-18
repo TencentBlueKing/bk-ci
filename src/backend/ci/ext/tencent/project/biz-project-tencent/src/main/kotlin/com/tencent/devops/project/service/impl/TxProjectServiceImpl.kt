@@ -35,6 +35,7 @@ import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -52,14 +53,20 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.AuthProjectForList
+import com.tencent.devops.project.pojo.ObsBaseDictDTO
+import com.tencent.devops.project.pojo.ObsOperationalProductResponse
+import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
+import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
@@ -70,6 +77,7 @@ import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectApprovalService
+import com.tencent.devops.project.service.ProjectExtOrganizationService
 import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.ProjectExtService
 import com.tencent.devops.project.service.ProjectPaasCCService
@@ -87,24 +95,16 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
 
-@Suppress("ALL")
+@Suppress("ALL", "IMPLICIT_CAST_TO_ANY")
 @Service
 class TxProjectServiceImpl @Autowired constructor(
-    projectPermissionService: ProjectPermissionService,
-    dslContext: DSLContext,
-    projectDao: ProjectDao,
     private val tofService: TOFService,
     private val bkRepoClient: BkRepoClient,
     private val projectPaasCCService: ProjectPaasCCService,
     private val authProjectApi: AuthProjectApi,
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
-    projectJmxApi: ProjectJmxApi,
-    redisOperation: RedisOperation,
-    client: Client,
+    private val config: CommonConfig,
     private val projectDispatcher: ProjectDispatcher,
-    authPermissionApi: AuthPermissionApi,
-    projectAuthServiceCode: ProjectAuthServiceCode,
-    shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
     private val managerService: ManagerService,
     private val tokenService: ClientTokenService,
     private val bsAuthTokenApi: BSAuthTokenApi,
@@ -112,9 +112,20 @@ class TxProjectServiceImpl @Autowired constructor(
     private val projectTagService: ProjectTagService,
     private val bkTag: BkTag,
     private val profile: Profile,
+    private val organizationService: ProjectExtOrganizationService,
+    authPermissionApi: AuthPermissionApi,
+    projectAuthServiceCode: ProjectAuthServiceCode,
+    shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
     objectMapper: ObjectMapper,
     projectExtService: ProjectExtService,
-    projectApprovalService: ProjectApprovalService
+    projectApprovalService: ProjectApprovalService,
+    projectPermissionService: ProjectPermissionService,
+    dslContext: DSLContext,
+    projectDao: ProjectDao,
+    projectJmxApi: ProjectJmxApi,
+    redisOperation: RedisOperation,
+    client: Client,
+    clientTokenService: ClientTokenService
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -128,7 +139,9 @@ class TxProjectServiceImpl @Autowired constructor(
     shardingRoutingRuleAssignService = shardingRoutingRuleAssignService,
     objectMapper = objectMapper,
     projectExtService = projectExtService,
-    projectApprovalService = projectApprovalService
+    projectApprovalService = projectApprovalService,
+    clientTokenService = clientTokenService,
+    profile = profile
 ) {
 
     @Value("\${iam.v0.url:#{null}}")
@@ -148,6 +161,12 @@ class TxProjectServiceImpl @Autowired constructor(
 
     @Value("\${tag.devx:#{null}}")
     private var devxTag: String = ""
+
+    @Value("\${obs.url:#{null}}")
+    private var obsUrl: String = ""
+
+    @Value("\${obs.token:#{null}}")
+    private var obsToken: String = ""
 
     override fun getByEnglishName(
         userId: String,
@@ -238,7 +257,11 @@ class TxProjectServiceImpl @Autowired constructor(
         userId: String?,
         accessToken: String?
     ): List<String> {
-        val iamV0List = getV0UserProject(userId, accessToken)
+        val iamV0List = projectDao.list(
+            dslContext = dslContext,
+            englishNameList = getV0UserProject(userId, accessToken).toSet(),
+            routerTag = AuthSystemType.RBAC_AUTH_TYPE.value
+        ).map { it.englishName }
         logger.info("$userId V0 project: $iamV0List")
         val projectList = mutableSetOf<String>()
         projectList.addAll(iamV0List)
@@ -255,7 +278,8 @@ class TxProjectServiceImpl @Autowired constructor(
     override fun getProjectFromAuth(
         userId: String,
         accessToken: String?,
-        permission: AuthPermission
+        permission: AuthPermission,
+        resourceType: String?
     ): List<String>? {
         if (rbacTag.isBlank()) {
             return emptyList()
@@ -263,8 +287,9 @@ class TxProjectServiceImpl @Autowired constructor(
         return bkTag.invokeByTag(rbacTag) {
             client.getGateway(ServiceProjectAuthResource::class).getUserProjectsByPermission(
                 userId = userId,
-                token = tokenService.getSystemToken(null)!!,
-                action = permission.value
+                token = tokenService.getSystemToken()!!,
+                action = permission.value,
+                resourceType = resourceType
             ).data
         }
     }
@@ -376,6 +401,9 @@ class TxProjectServiceImpl @Autowired constructor(
         val bgName = projectCreateInfo.bgName.ifEmpty { userDeptDetail.bgName }
         val deptName = projectCreateInfo.deptName.ifEmpty { userDeptDetail.deptName }
         val centerName = projectCreateInfo.centerName.ifEmpty { userDeptDetail.centerName }
+        val businessLineName = projectCreateInfo.businessLineName?.takeIf { it.isNotEmpty() }
+            ?: userDeptDetail.businessLineName
+        val businessLineId = projectCreateInfo.businessLineId ?: userDeptDetail.businessLineId?.toLong()
 
         return projectCreateInfo.copy(
             bgId = bgId,
@@ -383,7 +411,9 @@ class TxProjectServiceImpl @Autowired constructor(
             centerId = centerId,
             centerName = centerName,
             deptId = deptId,
-            deptName = deptName
+            deptName = deptName,
+            businessLineId = businessLineId,
+            businessLineName = businessLineName
         )
     }
 
@@ -463,7 +493,7 @@ class TxProjectServiceImpl @Autowired constructor(
             val iamProjectList = bkTag.invokeByTag(tag) {
                 client.getGateway(ServiceProjectAuthResource::class).getUserProjects(
                     userId = userId,
-                    token = tokenService.getSystemToken(null)!!
+                    token = tokenService.getSystemToken()!!
                 ).data
             }
             if (iamProjectList != null) {
@@ -496,13 +526,54 @@ class TxProjectServiceImpl @Autowired constructor(
     override fun updateProjectRouterTag(englishName: String) {
         try {
             val tag = bkTag.getLocalTag()
-            // rbac环境创建的项目,需要指定到rbac集群
-            if (tag.contains(rbacTag)) {
-                projectTagService.updateTagByProject(projectCode = englishName, tag = rbacTag)
+            val finalTag = when {
+                tag.contains(rbacTag) -> rbacTag
+                tag.contains(devxTag) -> devxTag
+                else -> null
+            }
+            if (finalTag != null) {
+                projectTagService.updateTagByProject(projectCode = englishName, tag = finalTag)
             }
         } catch (ignore: Exception) {
             logger.warn("Failed to update project router tag", ignore)
         }
+    }
+
+    override fun getOperationalProducts(): List<OperationalProductVO> {
+        return try {
+            val obsBaseDictDTO = ObsBaseDictDTO(
+                jsonrpc = "2.0",
+                id = "0",
+                method = "getObsBaseDict",
+                params = mapOf(
+                    "DeptId" to "2",
+                    "StaffName" to "xx",
+                    "DictType" to "4"
+                )
+            )
+            val requestBody = objectMapper.writeValueAsString(obsBaseDictDTO)
+            OkhttpUtils.doPost(
+                url = "${config.devopsHostGateway}$obsUrl",
+                jsonParam = requestBody,
+                headers = mapOf("Authorization" to "Bearer $obsToken")
+            ).use {
+                if (!it.isSuccessful) {
+                    logger.warn("request obs products failed,response:($it)")
+                    throw RemoteServiceException("request failed, response:($it)")
+                }
+                val responseStr = it.body!!.string()
+                objectMapper.readValue(responseStr, ObsOperationalProductResponse::class.java)
+            }.result.data
+        } catch (ignore: Exception) {
+            logger.warn("get obs products fail!${ignore.message}")
+            emptyList()
+        }
+    }
+
+    override fun fixProjectOrganization(tProjectRecord: TProjectRecord): ProjectOrganizationInfo {
+        return organizationService.getRightProjectOrganization(
+            tProjectRecord = tProjectRecord
+        )
     }
 
     companion object {

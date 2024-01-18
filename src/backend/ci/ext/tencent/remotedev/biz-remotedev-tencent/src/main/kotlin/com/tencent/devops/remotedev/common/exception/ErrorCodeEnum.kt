@@ -146,10 +146,10 @@ enum class ErrorCodeEnum(
         errorCode = "2132027",
         formatErrorMessage = "The cloud desktop resources under the current project are insufficient, currently {0}"
     ),
-    NEED_UPDATED(
+    CLIENT_NEED_UPDATED(
         errorType = ErrorType.USER,
         errorCode = "2132028",
-        formatErrorMessage = "Client needs to be updated"
+        formatErrorMessage = "Please install the latest version of the client: \n {0}"
     ),
     DELIVERING_FAILED(
         errorType = ErrorType.THIRD_PARTY,
@@ -160,6 +160,31 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.THIRD_PARTY,
         errorCode = "2132030",
         formatErrorMessage = "update BkCC fail."
+    ),
+    REAPPLY_EXPERT_SUPPORT_ERROR(
+        errorType = ErrorType.USER,
+        errorCode = "2132031",
+        formatErrorMessage = "Please do not submit duplicate issue requests within 1 hour[{0}]."
+    ),
+    ZONE_VM_RESOURCE_NOT_ENOUGH(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = "2132032",
+        formatErrorMessage = "zone {0} machine {1} free {2} less than the {3} units that currently need to be produced."
+    ),
+    PROJECT_ACCESS_DEVICE_PERMISSION(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = "2132033",
+        formatErrorMessage = "req project_access_device_permissions error {0}"
+    ),
+    CODEPROXY_EXIST_ERROR(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = "2132034",
+        formatErrorMessage = "project {0} code proxy {1} already exists"
+    ),
+    PROJECT_DESKTOP_SPEC_RESOURCES_INSUFFICIENT(
+        errorType = ErrorType.USER,
+        errorCode = "2132035",
+        formatErrorMessage = "{0} is a special model, project quota is insufficient.Quota is {1}, and {2} are available"
     );
 
     fun getErrorMessage(): String {

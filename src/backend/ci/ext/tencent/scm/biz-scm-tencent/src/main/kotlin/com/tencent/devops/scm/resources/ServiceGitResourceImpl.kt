@@ -243,7 +243,8 @@ class ServiceGitResourceImpl @Autowired constructor(
     }
 
     override fun getToken(gitProjectId: Long): Result<GitToken> {
-        return Result(gitService.getToken(gitProjectId.toString()))
+        val token = gitService.getTokenFromCache(gitProjectId.toString())
+        return Result(GitToken(accessToken = token))
     }
 
     override fun getUserInfoByToken(
@@ -429,9 +430,21 @@ class ServiceGitResourceImpl @Autowired constructor(
         sha: String?,
         token: String,
         tokenType: TokenTypeEnum,
+        filePath: String?,
+        format: String?,
+        isProjectPathWrapped: Boolean?,
         response: HttpServletResponse
     ) {
-        return gitService.downloadGitRepoFile(repoName, sha, token, tokenType, response)
+        gitService.downloadGitRepoFile(
+            repoName = repoName,
+            sha = sha,
+            token = token,
+            tokenType = tokenType,
+            filePath = filePath,
+            format = format,
+            isProjectPathWrapped = isProjectPathWrapped ?: false,
+            response = response
+        )
     }
 
     override fun getMergeRequestReviewersInfo(

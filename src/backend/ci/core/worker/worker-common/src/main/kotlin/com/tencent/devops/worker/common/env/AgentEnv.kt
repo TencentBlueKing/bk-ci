@@ -115,25 +115,12 @@ object AgentEnv {
     }
 
     fun getEnv(): Env {
-        if (env == null) {
-            synchronized(this) {
-                if (env == null) {
-                    val landunEnv = System.getProperty(AGENT_ENV)
-                    env = if (!landunEnv.isNullOrEmpty()) {
-                        Env.parse(landunEnv)
-                    } else {
-                        // Get it from .agent.property
-                        try {
-                            Env.parse(PropertyUtil.getPropertyValue(AGENT_ENV, "/$AGENT_PROPERTIES_FILE_NAME"))
-                        } catch (t: Throwable) {
-                            logger.warn("Fail to get the agent env, use prod as default", t)
-                            Env.PROD
-                        }
-                    }
-                }
-            }
+        return try {
+            Env.parse(PropertyUtil.getPropertyValue(AGENT_ENV, "/$AGENT_PROPERTIES_FILE_NAME"))
+        } catch (t: Throwable) {
+            logger.warn("Fail to get the agent env, use prod as default", t)
+            Env.PROD
         }
-        return env!!
     }
 
     @Suppress("UNUSED")

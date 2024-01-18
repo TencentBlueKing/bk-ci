@@ -28,7 +28,6 @@
 
 package com.tencent.devops.auth.config
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
@@ -40,9 +39,11 @@ import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceTypeDao
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
+import com.tencent.devops.auth.service.AuthProjectUserMetricsService
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.service.AuthResourceNameConverter
 import com.tencent.devops.auth.service.AuthResourceService
+import com.tencent.devops.auth.service.BkHttpRequestService
 import com.tencent.devops.auth.service.ItsmService
 import com.tencent.devops.auth.service.PermissionGradeManagerService
 import com.tencent.devops.auth.service.PermissionGroupPoliciesService
@@ -66,14 +67,16 @@ class RbacServiceConfiguration {
         authActionDao: AuthActionDao,
         iamV2PolicyService: PolicyService,
         iamConfiguration: IamConfiguration,
-        authResourceGroupConfigDao: AuthResourceGroupConfigDao
+        authResourceGroupConfigDao: AuthResourceGroupConfigDao,
+        authProjectUserMetricsService: AuthProjectUserMetricsService
     ) = RbacCacheService(
         dslContext = dslContext,
         authResourceTypeDao = authResourceTypeDao,
         authActionDao = authActionDao,
         policyService = iamV2PolicyService,
         iamConfiguration = iamConfiguration,
-        authResourceGroupConfigDao = authResourceGroupConfigDao
+        authResourceGroupConfigDao = authResourceGroupConfigDao,
+        authUserDailyService = authProjectUserMetricsService
     )
 
     @Bean
@@ -144,8 +147,8 @@ class RbacServiceConfiguration {
     )
 
     @Bean
-    fun itsmService(objectMapper: ObjectMapper) = ItsmService(
-        objectMapper = objectMapper
+    fun itsmService(bkHttpRequestService: BkHttpRequestService) = ItsmService(
+        bkHttpRequestService = bkHttpRequestService
     )
 
     @Bean

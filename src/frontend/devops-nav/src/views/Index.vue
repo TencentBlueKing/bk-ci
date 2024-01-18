@@ -75,14 +75,13 @@
 
 <script lang="ts">
     import Vue from 'vue'
-    import Header from '../components/Header/index.vue'
+    import { Component, Watch } from 'vue-property-decorator'
+    import { Action, Getter, State } from 'vuex-class'
+    import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
     import ExtensionAsidePanel from '../components/ExtensionAsidePanel/index.vue'
     import ExtensionDialog from '../components/ExtensionDialog/index.vue'
-    import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
-    import { Component, Watch } from 'vue-property-decorator'
-    import { State, Getter, Action } from 'vuex-class'
+    import Header from '../components/Header/index.vue'
     import eventBus from '../utils/eventBus'
-    import { mapDocumnetTitle } from '@/utils/constants'
 
     Component.registerHooks([
         'beforeRouteEnter',
@@ -180,8 +179,6 @@
         }
 
         created () {
-            const model = location.href.split('/')[4]
-            document.title = this.$t(mapDocumnetTitle(model)) as string
             eventBus.$on('update-project-id', projectId => {
                 this.$router.replace({
                     params: {

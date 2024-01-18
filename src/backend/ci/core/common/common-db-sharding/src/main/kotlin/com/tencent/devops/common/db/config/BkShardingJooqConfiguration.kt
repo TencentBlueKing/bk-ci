@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.db.config
 
+import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.db.pojo.MIGRATING_SHARDING_DSL_CONTEXT
 import org.jooq.DSLContext
 import org.jooq.ExecuteListenerProvider
@@ -42,6 +43,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Import
+import org.springframework.context.annotation.Primary
 import javax.sql.DataSource
 
 @Configuration
@@ -50,6 +52,8 @@ import javax.sql.DataSource
 class BkShardingJooqConfiguration {
 
     @Bean
+    @Primary
+    @ConditionalOnProperty(prefix = "sharding", name = ["defaultFlag"], havingValue = "Y", matchIfMissing = true)
     fun shardingDslContext(
         @Qualifier("shardingDataSource")
         shardingDataSource: DataSource,
@@ -66,6 +70,16 @@ class BkShardingJooqConfiguration {
         executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
     ): DSLContext {
         return createDslContext(migratingShardingDataSource, executeListenerProviders)
+    }
+
+    @Bean(name = [ARCHIVE_SHARDING_DSL_CONTEXT])
+    @ConditionalOnProperty(prefix = "sharding", name = ["archiveFlag"], havingValue = "Y")
+    fun archiveShardingDslContext(
+        @Qualifier("archiveShardingDataSource")
+        archiveShardingDataSource: DataSource,
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
+    ): DSLContext {
+        return createDslContext(archiveShardingDataSource, executeListenerProviders)
     }
 
     private fun createDslContext(

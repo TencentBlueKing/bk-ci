@@ -56,7 +56,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwCallBackResourceV2 {
 
-    @ApiOperation("创建callback回调")
+    @ApiOperation("创建callback回调", tags = ["v2_app_callbacks_create"])
     @POST
     @Path("/projects/{projectId}")
     fun create(
@@ -86,7 +86,7 @@ interface ApigwCallBackResourceV2 {
         secretToken: String?
     ): Result<Boolean>
 
-    @ApiOperation("callback回调列表")
+    @ApiOperation("callback回调列表", tags = ["v2_app_callbacks_list"])
     @GET
     @Path("/projects/{projectId}")
     fun list(
@@ -105,12 +105,12 @@ interface ApigwCallBackResourceV2 {
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @ApiParam("每页条数(默认20, 最大100)", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<ProjectPipelineCallBack>>
 
-    @ApiOperation("callback回调移除")
+    @ApiOperation("callback回调移除", tags = ["v2_app_callbacks_delete"])
     @DELETE
     @Path("/projects/{projectId}/{id}")
     fun remove(
@@ -131,7 +131,7 @@ interface ApigwCallBackResourceV2 {
         id: Long
     ): Result<Boolean>
 
-    @ApiOperation("callback回调执行历史记录")
+    @ApiOperation("callback回调执行历史记录", tags = ["v2_app_callbacks_history"])
     @GET
     @Path("/history/{projectId}")
     fun listHistory(
@@ -162,12 +162,12 @@ interface ApigwCallBackResourceV2 {
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @ApiParam("每页条数(默认20, 最大100)", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<ProjectPipelineCallBackHistory>>
 
-    @ApiOperation("callback回调重试")
+    @ApiOperation("callback回调重试", tags = ["v2_app_callbacks_retry"])
     @POST
     @Path("/history/{projectId}/{id}/retry")
     fun retry(

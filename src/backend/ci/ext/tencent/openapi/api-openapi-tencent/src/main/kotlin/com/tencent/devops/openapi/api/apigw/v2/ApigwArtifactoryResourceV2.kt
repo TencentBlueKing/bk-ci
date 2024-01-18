@@ -54,7 +54,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwArtifactoryResourceV2 {
-    @ApiOperation("获取文件第三方下载链接")
+    @ApiOperation("获取文件第三方下载链接", tags = ["v2_app_artifactory_thirdPartyDownloadUrl"])
     @Path("/projects/{projectId}/thirdPartyDownloadUrl")
     @GET
     fun getThirdPartyDownloadUrl(
@@ -84,7 +84,7 @@ interface ApigwArtifactoryResourceV2 {
         ttl: Int?
     ): Result<List<String>>
 
-    @ApiOperation("获取用户下载链接")
+    @ApiOperation("获取用户下载链接", tags = ["v2_app_artifactory_userDownloadUrl"])
     @Path("/projects/{projectId}/userDownloadUrl")
     @GET
     fun getUserDownloadUrl(
@@ -108,7 +108,7 @@ interface ApigwArtifactoryResourceV2 {
         path: String
     ): Result<Url>
 
-    @ApiOperation("根据元数据获取文件")
+    @ApiOperation("根据元数据获取文件", tags = ["v2_app_artifactory_search"])
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/search")
     @GET
     fun search(

@@ -126,6 +126,18 @@ interface OpRemoteDevResource {
         data: List<OPUserSetting>
     ): Result<Boolean>
 
+    @ApiOperation("续期体验时长")
+    @POST
+    @Path("/renewal_time")
+    fun renewalExperienceDuration(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "续期时长", required = true)
+        @QueryParam("renewalTime")
+        renewalTime: Int
+    ): Result<Boolean>
+
     @ApiOperation("获取用户设置")
     @GET
     @Path("/get_user_setting")
@@ -256,4 +268,14 @@ interface OpRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<CgsResourceConfig>
+
+    @ApiOperation("初始话太湖账号信息")
+    @POST
+    @Path("/init_tai_user_info")
+    fun initTaiUserInfo(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        taiUsers: List<String>
+    ): Result<Boolean>
 }

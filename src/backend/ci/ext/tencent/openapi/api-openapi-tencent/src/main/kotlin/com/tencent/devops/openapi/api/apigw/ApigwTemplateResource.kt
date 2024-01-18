@@ -55,7 +55,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwTemplateResource {
 
-    @ApiOperation("获取所有种类流水线模板列表")
+    @ApiOperation("获取所有种类流水线模板列表", tags = ["v1_app_templates_allTemplates"])
     @GET
     @Path("/projects/{projectId}/allTemplates")
     fun listAllTemplate(
@@ -75,13 +75,13 @@ interface ApigwTemplateResource {
         @QueryParam("page")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         page: Int?,
-        @ApiParam("每页数量", required = false)
+        @ApiParam("每页条数(默认20, 最大100)", required = false)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         pageSize: Int?
     ): Result<OptionalTemplateList>
 
-    @ApiOperation("获取流水线模板详情")
+    @ApiOperation("获取流水线模板详情", tags = ["v1_app_templates_get"])
     @GET
     @Path("/projects/{projectId}/templates/{templateId}")
     fun getTemplate(
@@ -105,7 +105,7 @@ interface ApigwTemplateResource {
         version: Long?
     ): Result<TemplateModelDetail>
 
-    @ApiOperation("模版管理-获取模版列表")
+    @ApiOperation("模版管理-获取模版列表", tags = ["v1_app_templates_list"])
     @GET
     @Path("/projects/{projectId}/templates")
     fun listTemplate(
@@ -131,7 +131,7 @@ interface ApigwTemplateResource {
         @QueryParam("page")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         page: Int?,
-        @ApiParam("每页数量", required = false)
+        @ApiParam("每页条数(默认20, 最大100)", required = false)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         pageSize: Int?

@@ -27,7 +27,7 @@
 
 dependencies {
     api(project(":core:store:api-store"))
-    api(project(":ext:tencent:dispatch:api-dispatch-bcs"))
+    api(project(":ext:tencent:dispatch:api-dispatch-tencent"))
 }
 
 plugins {

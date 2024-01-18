@@ -607,7 +607,6 @@
                 this.groupSideslider.visible = false
             },
             cancelFn () {
-                console.log(1111, this.groupSideslider)
                 if (!this.groupSideslider.isLoading) {
                     this.groupSideslider.visible = false
                 }

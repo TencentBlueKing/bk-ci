@@ -28,7 +28,7 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.user.UserProjectOrganizationResource
+import com.tencent.devops.project.api.service.user.UserProjectOrganizationResource
 import com.tencent.devops.project.pojo.OrganizationInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.OrganizationType

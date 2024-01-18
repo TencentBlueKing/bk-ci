@@ -30,7 +30,7 @@ package com.tencent.devops.dispatch.configuration
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
-import com.tencent.devops.dispatch.listener.ThirdPartyAgentListener
+import com.tencent.devops.dispatch.listener.ThirdPartyBuildListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
@@ -59,7 +59,7 @@ class DispatchMQConfiguration @Autowired constructor() {
      * 第三方构建机启动交换机
      */
     @Bean
-    fun thirdAgentDispatchExchange(): DirectExchange {
+    fun dispatchExchange(): DirectExchange {
         val directExchange = DirectExchange(MQ.EXCHANGE_AGENT_LISTENER_DIRECT, true, false)
         directExchange.isDelayed = true
         return directExchange
@@ -71,9 +71,9 @@ class DispatchMQConfiguration @Autowired constructor() {
     @Bean
     fun thirdAgentDispatchStartQueueBind(
         @Autowired thirdAgentDispatchStartQueue: Queue,
-        @Autowired thirdAgentDispatchExchange: DirectExchange
+        @Autowired dispatchExchange: DirectExchange
     ): Binding {
-        return BindingBuilder.bind(thirdAgentDispatchStartQueue).to(thirdAgentDispatchExchange)
+        return BindingBuilder.bind(thirdAgentDispatchStartQueue).to(dispatchExchange)
             .with(MQ.ROUTE_AGENT_STARTUP)
     }
 
@@ -82,12 +82,12 @@ class DispatchMQConfiguration @Autowired constructor() {
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired thirdAgentDispatchStartQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired thirdPartyAgentListener: ThirdPartyAgentListener,
+        @Autowired thirdPartyBuildListener: ThirdPartyBuildListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
         val adapter = MessageListenerAdapter(
-            thirdPartyAgentListener,
-            thirdPartyAgentListener::listenAgentStartUpEvent.name
+            thirdPartyBuildListener,
+            thirdPartyBuildListener::handleStartup.name
         )
         adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
@@ -109,9 +109,9 @@ class DispatchMQConfiguration @Autowired constructor() {
     @Bean
     fun thirdAgentDispatchShutdownQueueBind(
         @Autowired thirdAgentDispatchShutdownQueue: Queue,
-        @Autowired thirdAgentDispatchExchange: DirectExchange
+        @Autowired dispatchExchange: DirectExchange
     ): Binding {
-        return BindingBuilder.bind(thirdAgentDispatchShutdownQueue).to(thirdAgentDispatchExchange)
+        return BindingBuilder.bind(thirdAgentDispatchShutdownQueue).to(dispatchExchange)
             .with(MQ.ROUTE_AGENT_SHUTDOWN)
     }
 
@@ -120,12 +120,12 @@ class DispatchMQConfiguration @Autowired constructor() {
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired thirdAgentDispatchShutdownQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired thirdPartyAgentListener: ThirdPartyAgentListener,
+        @Autowired thirdPartyBuildListener: ThirdPartyBuildListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
         val adapter = MessageListenerAdapter(
-            thirdPartyAgentListener,
-            thirdPartyAgentListener::listenAgentShutdownEvent.name)
+            thirdPartyBuildListener,
+            thirdPartyBuildListener::handleShutdownMessage.name)
         adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
             connectionFactory = connectionFactory,

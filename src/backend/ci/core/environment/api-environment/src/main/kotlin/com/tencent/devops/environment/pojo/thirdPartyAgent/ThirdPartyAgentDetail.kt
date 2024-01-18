@@ -88,5 +88,7 @@ data class ThirdPartyAgentDetail(
     @ApiModelProperty("当前Worker版本", required = false)
     val currentWorkerVersion: String? = "",
     @ApiModelProperty("心跳信息", required = false)
-    var heartbeatInfo: NewHeartbeatInfo? = null
+    var heartbeatInfo: NewHeartbeatInfo? = null,
+    @ApiModelProperty("错误退出信息", required = false)
+    val exitErrorMsg: String? = null
 )

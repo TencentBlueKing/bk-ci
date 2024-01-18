@@ -37,27 +37,20 @@ data class ProjectDiffVO(
     @ApiModelProperty("主键ID")
     val id: Long,
     @ApiModelProperty("项目ID")
-    // @JsonProperty("project_id")
     val projectId: String,
     @ApiModelProperty("项目名称")
-    // @JsonProperty("project_name")
     val projectName: String,
     @ApiModelProperty("审批中项目名称")
-    // @JsonProperty("project_name")
     val afterProjectName: String,
     @ApiModelProperty("项目代码")
-    // @JsonProperty("project_code")
     val projectCode: String,
     @ApiModelProperty("审批状态")
-    // @JsonProperty("approval_status")
     val approvalStatus: Int?,
     @ApiModelProperty("审批时间")
-    // @JsonProperty("approval_time")
     val approvalTime: String?,
     @ApiModelProperty("审批人")
     val approver: String?,
     @ApiModelProperty("创建时间")
-    // @JsonProperty("created_at")
     val createdAt: String?,
     @ApiModelProperty("创建人")
     val creator: String?,
@@ -69,6 +62,14 @@ data class ProjectDiffVO(
     val bgName: String?,
     @ApiModelProperty("审批中事业群名字")
     val afterBgName: String?,
+    @ApiModelProperty("事业线ID")
+    val businessLineId: String?,
+    @ApiModelProperty("审批中事业线ID")
+    val afterBusinessLineId: Long?,
+    @ApiModelProperty("事业线名称")
+    val businessLineName: String?,
+    @ApiModelProperty("审批中事业线名称")
+    val afterBusinessLineName: String?,
     @ApiModelProperty("中心ID")
     val centerId: String?,
     @ApiModelProperty("审批中中心ID")
@@ -98,7 +99,6 @@ data class ProjectDiffVO(
     @ApiModelProperty("评论")
     val remark: String?,
     @ApiModelProperty("修改时间")
-    // @JsonProperty("updated_at")
     val updatedAt: String?,
     @ApiModelProperty("修改人")
     val updator: String?,
@@ -113,5 +113,9 @@ data class ProjectDiffVO(
     @ApiModelProperty("项目类型")
     val projectType: Int?,
     @ApiModelProperty("审批中项目类型")
-    val afterProjectType: Int?
+    val afterProjectType: Int?,
+    @ApiModelProperty("运营产品ID")
+    val productId: Int? = null,
+    @ApiModelProperty("审批中运营产品ID")
+    val afterProductId: Int? = null
 )

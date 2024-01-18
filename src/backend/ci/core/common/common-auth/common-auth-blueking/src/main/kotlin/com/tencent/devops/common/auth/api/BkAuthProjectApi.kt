@@ -187,7 +187,8 @@ class BkAuthProjectApi constructor(
         serviceCode: AuthServiceCode,
         userId: String,
         permission: AuthPermission,
-        supplier: (() -> List<String>)?
+        supplier: (() -> List<String>)?,
+        resourceType: String?
     ): List<String> {
         return emptyList()
     }

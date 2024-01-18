@@ -56,7 +56,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwBuildResource {
 
-    @ApiOperation("启动构建")
+    @ApiOperation("启动构建", tags = ["v1_app_builds_start"])
     @POST
     @Path("/{projectId}/{pipelineId}/start")
     fun start(
@@ -79,7 +79,7 @@ interface ApigwBuildResource {
         values: Map<String, String>
     ): Result<BuildId>
 
-    @ApiOperation("停止构建")
+    @ApiOperation("停止构建", tags = ["v1_app_builds_stop"])
     @POST
     @Path("/{projectId}/{pipelineId}/{buildId}/stop")
     fun stop(
@@ -103,7 +103,7 @@ interface ApigwBuildResource {
         buildId: String
     ): Result<Boolean>
 
-    @ApiOperation("查看构建状态信息")
+    @ApiOperation("查看构建状态信息", tags = ["v1_app_builds_status"])
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/status")
     fun getStatus(
@@ -127,7 +127,7 @@ interface ApigwBuildResource {
         buildId: String
     ): Result<BuildHistoryWithVars>
 
-    @ApiOperation("获取流水线构建历史")
+    @ApiOperation("获取流水线构建历史", tags = ["v1_app_builds_history"])
     @GET
     @Path("/{projectId}/{pipelineId}/history")
     fun getHistoryBuild(
@@ -149,12 +149,12 @@ interface ApigwBuildResource {
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @ApiParam("每页条数(默认20, 最大100)", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<BuildHistoryPage<BuildHistory>>
 
-    @ApiOperation("获取流水线手动启动参数")
+    @ApiOperation("获取流水线手动启动参数", tags = ["v1_app_builds_manualStartupInfo"])
     @GET
     @Path("/{projectId}/{pipelineId}/manualStartupInfo")
     fun manualStartupInfo(

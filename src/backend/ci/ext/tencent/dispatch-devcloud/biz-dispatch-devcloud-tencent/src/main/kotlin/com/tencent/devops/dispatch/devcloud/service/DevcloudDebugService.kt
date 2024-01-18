@@ -7,6 +7,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.devcloud.client.DispatchDevCloudClient
 import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_BUILD_MACHINE_FAILS_START
@@ -25,6 +26,7 @@ import com.tencent.devops.dispatch.devcloud.pojo.TaskStatus
 import com.tencent.devops.dispatch.devcloud.pojo.persistence.PersistenceContainerStatus
 import com.tencent.devops.dispatch.devcloud.utils.RedisUtils
 import com.tencent.devops.model.dispatch.devcloud.tables.records.TDevcloudBuildHisRecord
+import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -34,6 +36,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class DevcloudDebugService @Autowired constructor(
+    private val client: Client,
     private val dslContext: DSLContext,
     private val redisUtils: RedisUtils,
     private val dispatchDevCloudClient: DispatchDevCloudClient,
@@ -51,6 +54,12 @@ class DevcloudDebugService @Autowired constructor(
 
     @Value("\${devCloud.sleepEntrypoint}")
     val entrypoint: String = "sleep.sh"
+
+    @Value("\${atom.fuse.container.label}")
+    val fuseContainerLabel: String? = null
+
+    @Value("\${atom.fuse.atom-code}")
+    val fuseAtomCode: String? = null
 
     companion object {
         private val logger = LoggerFactory.getLogger(DevcloudDebugService::class.java)
@@ -71,7 +80,7 @@ class DevcloudDebugService @Autowired constructor(
             devCloudBuildHisDao.getLatestBuildHistory(dslContext, pipelineId, vmSeqId)
         } else {
             // 精确查找
-            devCloudBuildHisDao.get(dslContext, buildId, vmSeqId)[0]
+            devCloudBuildHisDao.get(dslContext, buildId, vmSeqId)
         }
 
         val containerName: String
@@ -280,6 +289,24 @@ class DevcloudDebugService @Autowired constructor(
         vmSeqId: String,
         containerName: String
     ) {
+        val mapData = client.get(ServicePipelineTaskResource::class).list(projectId, listOf(pipelineId)).data
+        val atomCodeList = (mapData?.get(pipelineId) ?: emptyList()).map { it.atomCode }
+        val containerLabels = mutableMapOf(
+            "projectId" to projectId,
+            "pipelineId" to pipelineId,
+            "buildId" to (buildId ?: ""),
+            "vmSeqId" to vmSeqId
+        )
+
+        // 针对fuse插件优化
+        fuseAtomCode?.split(",")?.forEach {
+            if (it in atomCodeList) {
+                val (key, value) = fuseContainerLabel!!.split(":")
+                containerLabels[key] = value
+                return@forEach
+            }
+        }
+
         val devCloudTaskId = dispatchDevCloudClient.operateContainer(
             projectId,
             pipelineId,
@@ -289,19 +316,14 @@ class DevcloudDebugService @Autowired constructor(
             containerName,
             Action.START,
             Params(
-                mapOf(
+                env = mapOf(
                     "projectId" to projectId,
                     "pipelineId" to pipelineId,
                     "TERM" to "xterm-256color",
                     SLAVE_ENVIRONMENT to "DevCloud"
                 ),
-                listOf("/bin/sh", entrypoint),
-                mapOf(
-                    "projectId" to projectId,
-                    "pipelineId" to pipelineId,
-                    "buildId" to (buildId ?: ""),
-                    "vmSeqId" to vmSeqId
-                )
+                command = listOf("/bin/sh", entrypoint),
+                labels = containerLabels
             )
         )
 

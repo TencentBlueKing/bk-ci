@@ -94,6 +94,7 @@ import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.expression.SpecialFunctions
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.service.CIKeywordsService
 import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskFactory
@@ -267,7 +268,8 @@ open class MarketAtomTask : ITask() {
                 atomData = atomData,
                 atomTmpSpace = atomTmpSpace,
                 workspace = workspace,
-                projectId = projectId
+                projectId = projectId,
+                buildId = buildTask.buildId
             )
             // 检查插件包的完整性
             checkSha1(atomExecuteFile, atomData.shaContent!!)
@@ -397,7 +399,8 @@ open class MarketAtomTask : ITask() {
         atomData: AtomEnv,
         atomTmpSpace: File,
         workspace: File,
-        projectId: String
+        projectId: String,
+        buildId: String
     ): File {
         // 取插件文件名
         val atomFilePath = atomData.pkgPath!!
@@ -416,8 +419,9 @@ open class MarketAtomTask : ITask() {
             // 如果是第三方构建机，插件包缓存放入构建机的公共区域
             System.getProperty("user.dir")
         } else {
-            // 如果是公共构建机，插件包缓存放入流水线的工作空间中
-            workspace.absolutePath
+            // 如果是公共构建机，插件包缓存放入流水线的工作空间上一级目录中
+            // 如果workspace路径是相对路径.，workspace.parentFile会为空，故需用file对象包装一下
+            File(workspace.parentFile, "").absolutePath
         }
         val fileCacheDir = "$cacheDirPrefix${File.separator}$atomExecuteFileDir"
         // 获取构建机缓存文件区域大小
@@ -447,9 +451,10 @@ open class MarketAtomTask : ITask() {
                         AtomStatusEnum.TESTING.name,
                         AtomStatusEnum.CODECCING.name,
                         AtomStatusEnum.AUDITING.name
-                    )
+                    ) && !fileCacheDir.contains(buildId)
                 ) {
-                    // 无需鉴权的插件包且插件包内容是完整的才放入缓存中(未发布的插件版本内容可能会变化故也不存入缓存)
+                    // 无需鉴权的插件包且插件包内容是完整的才放入缓存中
+                    // 未发布的插件版本内容可能会变化故也不存入缓存、工作空间如果以构建ID为维度没法实现资源复用故也不存入缓存
                     bkDiskLruFileCache.put(fileCacheKey, atomExecuteFile)
                 }
             } else {
@@ -476,7 +481,8 @@ open class MarketAtomTask : ITask() {
                 val customReplacement = EnvReplacementParser.getCustomExecutionContextByMap(
                     variables = variables,
                     extendNamedValueMap = listOf(
-                        CredentialUtils.CredentialRuntimeNamedValue(targetProjectId = acrossInfo?.targetProjectId)
+                        CredentialUtils.CredentialRuntimeNamedValue(targetProjectId = acrossInfo?.targetProjectId),
+                        CIKeywordsService.CIKeywordsRuntimeNamedValue()
                     )
                 )
                 inputMap.forEach { (name, value) ->

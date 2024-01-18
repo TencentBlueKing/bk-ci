@@ -1,34 +1,35 @@
 <script setup lang="ts">
+import ProjectForm from '@/components/project-form.vue';
+import http from '@/http/api';
 import {
-  ref,
+  RESOURCE_ACTION,
+  RESOURCE_TYPE,
+  handleProjectManageNoPermission,
+} from '@/utils/permission.js';
+import { InfoBox, Message, Popover } from 'bkui-vue';
+import {
   onMounted,
+  ref,
 } from 'vue';
+import { useI18n } from 'vue-i18n';
 import {
   useRoute,
   useRouter,
 } from 'vue-router';
-import http from '@/http/api';
-import { useI18n } from 'vue-i18n';
-import { InfoBox, Message, Popover } from 'bkui-vue';
-import ProjectForm from '@/components/project-form.vue';
-import {
-  handleProjectManageNoPermission,
-  RESOURCE_ACTION,
-  RESOURCE_TYPE,
-} from '@/utils/permission.js'
 
 const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
 
 const { projectCode } = route.params;
-const projectData = ref<any>({});
+const projectData = ref<any>(null);
 const projectForm = ref(null);
 const isLoading = ref(false);
 const isChange = ref(false);
 const isToBeApproved = ref(false);
 const btnLoading = ref(false);
-const hasPermission = ref(true)
+const hasPermission = ref(true);
+const operationalList = ref({});
 const statusDisabledTips = {
   1: t('新建项目申请审批中，暂不可修改'),
   4: t('更新项目信息审批中，暂不可修改'),
@@ -38,20 +39,22 @@ const fetchProjectData = async () => {
   isLoading.value = true;
   await http.requestProjectData({
     englishName: projectCode,
-  }).then((res) => {
-    projectData.value = res;
-    if (projectData.value.centerId === '0') projectData.value.centerId = ''
-    if (projectData.value.projectType === 0) projectData.value.projectType = ''
-  }).catch((err) => {
-    if (err.code === 403) {
-      hasPermission.value = false
-    } else {
-      Message({
-        theme: 'error',
-        message: err.message || err,
-      })
-    }
-  });
+  })
+    .then((res) => {
+      projectData.value = res;
+      if (projectData.value.centerId === '0') projectData.value.centerId = '';
+      if (projectData.value.projectType === 0) projectData.value.projectType = '';
+    })
+    .catch((err) => {
+      if (err.code === 403) {
+        hasPermission.value = false;
+      } else {
+        Message({
+          theme: 'error',
+          message: err.message || err,
+        });
+      }
+    });
   isLoading.value = false;
 };
 
@@ -96,11 +99,15 @@ const handleApprovedChange = (val: boolean) => {
 const infoBoxInstance = ref();
 
 const updateProject = async () => {
-  infoBoxInstance.value?.hide()
+  infoBoxInstance.value?.hide();
   btnLoading.value = true;
+  productIdChange({
+    id: projectData.value?.productId,
+    list: operationalList.value,
+  });
   const result = await http
     .requestUpdateProject({
-      projectId: projectData.value.englishName,
+      projectId: projectData.value?.englishName,
       projectData: projectData.value,
     })
     .catch((err) => {
@@ -109,12 +116,12 @@ const updateProject = async () => {
           action: RESOURCE_ACTION.EDIT,
           projectId: projectCode,
           resourceCode: projectCode,
-        })
+        });
       }
       Message({
         theme: 'error',
         message: err.message || err,
-      })
+      });
     })
     .finally(() => {
       btnLoading.value = false;
@@ -128,8 +135,20 @@ const updateProject = async () => {
       path: 'show',
     });
   }
-  return Promise.resolve(false)
+  return Promise.resolve(false);
 };
+
+const fetchOperationalList = async () => {
+  await http.getOperationalList().then((res) => {
+    operationalList.value = res.map(i => ({
+      ...i,
+      value: i.ProductId,
+      label: i.ProductName,
+      id: i.ProductId,
+    }));
+  });
+};
+
 const showNeedApprovedTips = () => {
   infoBoxInstance.value = InfoBox({
     isShow: true,
@@ -155,7 +174,7 @@ const handleUpdate = async () => {
   } else {
     projectForm.value?.validate().then(async () => {
       await updateProject();
-    })
+    });
   };
 };
 
@@ -163,16 +182,21 @@ const initProjectForm = (value) => {
   projectForm.value = value;
 };
 
+const productIdChange = ({ id, list }) => {
+  projectData.value.productName = list.find(i => i.ProductId === id)?.ProductName;
+};
+
 const handleNoPermission = () => {
   handleProjectManageNoPermission({
     action: RESOURCE_ACTION.VIEW,
     projectId: projectCode,
     resourceCode: projectCode,
-  })
+  });
 };
 
 onMounted(() => {
   fetchProjectData();
+  fetchOperationalList();
 });
 </script>
 
@@ -180,7 +204,7 @@ onMounted(() => {
   <bk-loading class="edit-project-content" :loading="isLoading">
     <section class="edit-project-form" v-if="hasPermission">
       <project-form
-        v-if="!isLoading"
+        v-if="!isLoading && projectData"
         class="edit-form"
         type="edit"
         :is-change="isChange"
