@@ -100,6 +100,9 @@
                 getPipelineSubscriptions: 'atom/getPipelineSubscriptions',
                 draftVersionName: 'atom/getDraftVersionName'
             }),
+            pipelineId () {
+                return this.$route.params.pipelineId
+            },
             pipelineType () {
                 return this.$route.params.type
             },
@@ -169,6 +172,11 @@
             },
             releaseVersion (version) {
                 this.activePipelineVersion = version
+                this.$nextTick(() => {
+                    this.init()
+                })
+            },
+            pipelineId (id) {
                 this.$nextTick(() => {
                     this.init()
                 })
