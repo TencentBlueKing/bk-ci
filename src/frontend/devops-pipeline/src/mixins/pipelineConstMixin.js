@@ -47,7 +47,7 @@ const pipelineConstMixin = {
                 },
                 executeTime: {
                     index: 7,
-                    prop: 'executeTime',
+                    id: 'executeTime',
                     label: this.$t('details.totalCost')
                 },
                 artifactList: {

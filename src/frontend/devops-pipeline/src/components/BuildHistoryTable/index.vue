@@ -9,7 +9,7 @@
             type="empty"
         >
             <div class="no-build-history-box">
-                <span>{{ $t('noBuildHistory') }}</span>
+                <span>{{ $t(isDebug ? 'noDebugRecords' : 'noBuildHistory') }}</span>
                 <div v-if="!isReleasePipeline" class="no-build-history-box-tip">
                     <p>{{ $t('onlyDraftBuildHistoryTips') }}</p>
                     <p>{{ $t('onlyDraftBuildHistoryIdTips') }}</p>
@@ -23,7 +23,7 @@
                     <p>{{ $t('buildHistoryIdTips') }}</p>
                     <span v-if="canManualStartup">
                         <bk-button @click="buildNow" theme="primary" size="large">
-                            {{$t('buildNow')}}
+                            {{$t(isDebug ? 'debugNow' : 'buildNow')}}
                         </bk-button>
                     </span>
                 </div>
@@ -596,6 +596,7 @@
                 'resetHistoryFilterCondition'
             ]),
             handleTableSettingChange ({ fields: selectedFields, size }) {
+                debugger
                 Object.assign(this.tableSetting, {
                     selectedFields,
                     size
