@@ -703,17 +703,6 @@ class PipelineRuntimeService @Autowired constructor(
                     }
                     stage.executeCount?.let { count -> stage.executeCount = count + 1 }
                 }
-                // record表需要记录被跳过的记录
-                if (stage.stageControlOption?.enable == false) {
-                    stageBuildRecords.addRecords(
-                        stage = stage,
-                        context = context,
-                        stageIndex = index,
-                        buildStatus = BuildStatus.SKIP,
-                        containerBuildRecords = containerBuildRecords,
-                        taskBuildRecords = taskBuildRecords
-                    )
-                }
                 return@nextStage
             }
 
@@ -743,25 +732,11 @@ class PipelineRuntimeService @Autowired constructor(
                 } else if (container is NormalContainer) {
                     if (!ContainerUtils.isNormalContainerEnable(container)) {
                         context.containerSeq++
-                        containerBuildRecords.addRecords(
-                            stageId = stage.id!!,
-                            container = container,
-                            context = context,
-                            buildStatus = BuildStatus.SKIP,
-                            taskBuildRecords = taskBuildRecords
-                        )
                         return@nextContainer
                     }
                 } else if (container is VMBuildContainer) {
                     if (!ContainerUtils.isVMBuildContainerEnable(container)) {
                         context.containerSeq++
-                        containerBuildRecords.addRecords(
-                            stageId = stage.id!!,
-                            container = container,
-                            context = context,
-                            buildStatus = BuildStatus.SKIP,
-                            taskBuildRecords = taskBuildRecords
-                        )
                         return@nextContainer
                     }
                 }
