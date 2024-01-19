@@ -106,7 +106,6 @@ data class BKItsmCreateTicketReq(
     val bkAppSecret: String,
     @JsonProperty("service_id")
     val serviceId: Int,
-    @JsonProperty("bkdata_data_token")
     val creator: String,
     // [{"key": "title", "value": "d" }]
     val fields: List<Map<String, String>>
