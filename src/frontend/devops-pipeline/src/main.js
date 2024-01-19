@@ -41,14 +41,17 @@ import createLocale from '../../locale'
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
 
+import {
+    handlePipelineNoPermission,
+    RESOURCE_ACTION
+} from '@/utils/permission'
 import bkMagic from 'bk-magic-vue'
 import BkPipeline from 'bkui-pipeline'
 import { pipelineDocs } from '../../common-lib/docs'
-import {
-    actionMap,
-    resourceMap,
-    resourceTypeMap
-} from '../../common-lib/permission-conf'
+// 权限指令
+// import VueCompositionAPI from '@vue/composition-api'
+import { BkPermission, PermissionDirective } from 'bk-permission'
+import 'bk-permission/dist/main.css'
 
 // 全量引入 bk-magic-vue 样式
 require('bk-magic-vue/dist/bk-magic-vue.min.css')
@@ -64,6 +67,10 @@ Vue.use(enStyle)
 Vue.use(bkMagic)
 Vue.use(PortalVue)
 Vue.use(mavonEditor)
+Vue.use(PermissionDirective(handlePipelineNoPermission))
+Vue.use(BkPermission, {
+    i18n
+})
 
 Vue.use(VeeValidate, {
     i18nRootKey: 'validations', // customize the root path for validation messages.
@@ -82,9 +89,7 @@ Vue.use(BkPipeline, {
 })
 
 Vue.prototype.$setLocale = setLocale
-Vue.prototype.$permissionActionMap = actionMap
-Vue.prototype.$permissionResourceMap = resourceMap
-Vue.prototype.$permissionResourceTypeMap = resourceTypeMap
+Vue.prototype.$permissionResourceAction = RESOURCE_ACTION
 Vue.prototype.$pipelineDocs = pipelineDocs
 Vue.prototype.$bkMessage = function (config) {
     config.ellipsisLine = config.ellipsisLine || 3
@@ -95,48 +100,22 @@ Vue.prototype.$bkMessage = function (config) {
 String.prototype.isBkVar = function () {
     return /\$\{{2}([\w\_\.\s-]+)\}{2}/g.test(this) || /\$\{([\w\_\.\s-]+)\}/g.test(this)
 }
-
 /* eslint-disable */
 
 Vue.mixin({
     methods: {
-        // handleError (e, permissionAction, instance, projectId, resourceMap = this.$permissionResourceMap.pipeline) {
-        handleError(e, noPermissionList) {
-            if (e.code === 403) {
-                // 没有权限编辑
-                // this.setPermissionConfig(resourceMap, permissionAction, instance ? [instance] : [], projectId)
-                this.$showAskPermissionDialog({
-                    noPermissionList,
-                });
+        handleError (e, data) {
+            if (e.code === 403) { // 没有权限编辑
+                handlePipelineNoPermission(data)
             } else {
                 this.$showTips({
                     message: e.message || e,
-                    theme: "error",
-                });
+                    theme: 'error'
+                })
             }
         },
-        /**
-         * 设置权限弹窗的参数
-         */
-        setPermissionConfig(
-            resourceId,
-            actionId,
-            instanceId = [],
-            projectId = this.$route.params.projectId
-        ) {
-            this.$showAskPermissionDialog({
-                noPermissionList: [
-                    {
-                        actionId,
-                        resourceId,
-                        instanceId,
-                        projectId,
-                    },
-                ],
-            });
-        },
-    },
-});
+    }
+})
 
 if (!isInIframe) {
     // 只能以iframe形式嵌入
@@ -149,8 +128,7 @@ global.pipelineVue = new Vue({
     i18n,
     store,
     components: {
-        App,
+        App
     },
-    template: "<App/>",
-});
-
+    template: '<App/>'
+})

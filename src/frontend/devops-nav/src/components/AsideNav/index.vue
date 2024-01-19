@@ -23,7 +23,7 @@
         <div slot="menu">
             <bk-navigation-menu
                 ref="menu"
-                :default-active="$route.name"
+                :default-active="$route.meta.activeName || $route.name"
                 v-bind="navTheme"
                 :toggle-active="nav.toggle"
             >

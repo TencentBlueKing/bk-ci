@@ -22,7 +22,7 @@
         </div>
         <ul v-if="!readOnly" class="yaml-error-summary">
             <li
-                v-for="(item, index) in errors"
+                v-for="(item, index) in errorList"
                 :key="index"
             >
                 <i class="devops-icon icon-close-circle-fill"></i>
@@ -75,7 +75,7 @@
             return {
                 // editor: null,
                 isLoading: false,
-                errors: [],
+                errorList: [],
                 style: {
                     height: '100%',
                     width: '100%'
@@ -113,7 +113,7 @@
                 readOnly: this.readOnly
             })
             this.monaco.editor.onDidChangeMarkers(() => {
-                this.errors = this.monaco.editor.getModelMarkers({
+                this.errorList = this.monaco.editor.getModelMarkers({
                     resource: this.monaco.Uri.parse(this.yamlUri)
                 })
             })
@@ -149,7 +149,7 @@
                     const doc = YAML.parse(this.value)
                     const jobs = Object.values(doc.stages[stageIndex].jobs)
 
-                    jobs[containerIndex].steps[elementIndex] = YAML.parse(text)
+                    jobs[containerIndex].steps[elementIndex] = text
                     const result = YAML.stringify(doc)
                     this.emitChange(result)
                 } catch (error) {
@@ -158,7 +158,7 @@
             },
             emitChange (value) {
                 this.$emit('change', value)
-                this.$emit('update:hasError', this.errors.length > 0)
+                this.$emit('update:hasError', this.errorList.length > 0)
                 this.$emit('input', value, this.editor)
             },
             format () {

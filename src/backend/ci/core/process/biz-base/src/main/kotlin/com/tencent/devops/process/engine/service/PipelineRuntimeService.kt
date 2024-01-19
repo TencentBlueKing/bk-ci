@@ -80,6 +80,7 @@ import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_PARAMS
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.common.Timeout
+import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildNumAliasLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
@@ -105,6 +106,7 @@ import com.tencent.devops.process.engine.service.record.PipelineBuildRecordServi
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.engine.utils.ContainerUtils
+import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildId
@@ -127,6 +129,7 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask.Companion
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.util.BuildMsgUtils
+import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.DependOnUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM_ALIAS
@@ -135,15 +138,16 @@ import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
+import java.time.Duration
+import java.time.LocalDateTime
+import java.util.Date
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.Duration
-import java.time.LocalDateTime
-import java.util.Date
 
 /**
  * 流水线运行时相关的服务
@@ -732,6 +736,8 @@ class PipelineRuntimeService @Autowired constructor(
                         buildStatus = null,
                         taskBuildRecords = taskBuildRecords
                     )
+                    // 清理options变量
+                    container.params = PipelineUtils.cleanOptions(container.params)
                     return@nextContainer
                 } else if (container is NormalContainer) {
                     if (!ContainerUtils.isNormalContainerEnable(container)) {
@@ -1011,7 +1017,8 @@ class PipelineRuntimeService @Autowired constructor(
             id = context.buildId,
             executeCount = context.executeCount,
             projectId = context.projectId,
-            pipelineId = context.pipelineId
+            pipelineId = context.pipelineId,
+            num = context.buildNum
         )
     }
 
@@ -1601,7 +1608,7 @@ class PipelineRuntimeService @Autowired constructor(
         }
         with(latestRunningBuild) {
             val executeTime = try {
-                timeCost?.executeCost ?: getExecuteTime(latestRunningBuild.projectId, buildId)
+                timeCost?.totalCost ?: getExecuteTime(latestRunningBuild.projectId, buildId)
             } catch (ignored: Throwable) {
                 logger.warn("[$pipelineId]|getExecuteTime-$buildId exception:", ignored)
                 0L
@@ -1853,5 +1860,63 @@ class PipelineRuntimeService @Autowired constructor(
             buildId = buildId,
             buildParameters = buildParameters
         )
+    }
+
+    fun concurrencyCancelBuildPipeline(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        userId: String,
+        groupName: String,
+        detailUrl: String
+    ) {
+        val redisLock = BuildIdLock(redisOperation = redisOperation, buildId = buildId)
+        try {
+            redisLock.lock()
+            val buildInfo = getBuildInfo(projectId, pipelineId, buildId)
+            val tasks = pipelineTaskService.getRunningTask(projectId, buildId)
+            tasks.forEach { task ->
+                val taskId = task["taskId"]?.toString() ?: ""
+                logger.info("build($buildId) shutdown by $userId, taskId: $taskId, status: ${task["status"] ?: ""}")
+                val containerId = task["containerId"]?.toString() ?: ""
+                // #7599 兼容短时间取消状态异常优化
+                val cancelTaskSetKey = TaskUtils.getCancelTaskIdRedisKey(buildId, containerId, false)
+                redisOperation.addSetValue(cancelTaskSetKey, taskId)
+                redisOperation.expire(cancelTaskSetKey, TimeUnit.DAYS.toSeconds(Timeout.MAX_JOB_RUN_DAYS))
+                buildLogPrinter.addYellowLine(
+                    buildId = buildId,
+                    message = "[concurrency] Canceling since <a target='_blank' href='$detailUrl'>" +
+                            "a higher priority waiting request</a> for group($groupName) exists",
+                    tag = taskId,
+                    jobId = task["containerId"]?.toString() ?: "",
+                    executeCount = task["executeCount"] as? Int ?: 1
+                )
+            }
+            if (tasks.isEmpty()) {
+                buildLogPrinter.addRedLine(
+                    buildId = buildId,
+                    message = "[concurrency] Canceling all since <a target='_blank' href='$detailUrl'>" +
+                            "a higher priority waiting request</a> for group($groupName) exists",
+                    tag = "QueueInterceptor",
+                    jobId = "",
+                    executeCount = 1
+                )
+            }
+            try {
+                cancelBuild(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    userId = userId,
+                    executeCount = buildInfo?.executeCount ?: 1,
+                    buildStatus = BuildStatus.CANCELED
+                )
+                logger.info("Cancel the pipeline($pipelineId) of instance($buildId) by the user($userId)")
+            } catch (t: Throwable) {
+                logger.warn("Fail to shutdown the build($buildId) of pipeline($pipelineId)", t)
+            }
+        } finally {
+            redisLock.unlock()
+        }
     }
 }

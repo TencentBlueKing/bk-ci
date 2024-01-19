@@ -6,6 +6,8 @@
         :is-show="showVersionSideslider"
         :before-close="handleClose"
         @shown="handleShown"
+        ext-cls="pipeline-version-sideslider"
+        :transfer="false"
     >
         <main slot="content" class="pipeline-version-history" v-bkloading="{ isLoading }">
             <header class="pipeline-version-history-header">
@@ -22,13 +24,16 @@
                     height="100%"
                     :data="pipelineVersionList"
                     :pagination="pagination"
+                    size="small"
                 >
+                    <empty-exception :type="emptyType" slot="empty" @clear="clearFilter"></empty-exception>
                     <bk-table-column v-for="column in columns" :key="column.prop" v-bind="column">
                         <template v-if="column.prop === 'versionName'" v-slot="{ row }">
                             <div :class="['pipeline-version-name-cell', {
                                 'active-version-name': row.version === releaseVersion
                             }]">
                                 <i class="devops-icon icon-draft" v-if="row.status === 'COMMITTING'" />
+                                <logo v-else-if="row.isBranchVersion" name="branch" size="14" />
                                 <i v-else class="devops-icon icon-check-circle" />
                                 {{ row.versionName }}
                                 <!-- <span>
@@ -40,7 +45,10 @@
                     <bk-table-column width="300" :label="$t('operate')">
                         <template slot-scope="props">
                             <rollback-entry
+                                v-if="props.row.canRollback"
                                 :version="props.row.version"
+                                :version-name="props.row.versionName"
+                                :draft-version-name="draftVersionName"
                             />
                             <bk-button
                                 text
@@ -52,8 +60,9 @@
                                 {{ $t('delete') }}
                             </bk-button>
                             <version-diff-entry
+                                v-if="props.row.version !== releaseVersion"
                                 :version="props.row.version"
-                                :release-version="releaseVersion"
+                                :latest-version="releaseVersion"
                                 :current-yaml="currentYaml"
                             />
                         </template>
@@ -66,17 +75,20 @@
 
 <script>
     import SearchSelect from '@blueking/search-select'
-    import { mapActions, mapState } from 'vuex'
-    import { convertTime, navConfirm } from '@/utils/util'
+    import { mapActions, mapState, mapGetters } from 'vuex'
+    import { convertTime, navConfirm, generateDisplayName } from '@/utils/util'
     import VersionDiffEntry from './VersionDiffEntry'
     import RollbackEntry from './RollbackEntry'
-
+    import EmptyException from '@/components/common/exception'
+    import Logo from '@/components/Logo'
     import '@blueking/search-select/dist/styles/index.css'
     export default {
         components: {
             SearchSelect,
             VersionDiffEntry,
-            RollbackEntry
+            RollbackEntry,
+            EmptyException,
+            Logo
         },
         props: {
             showVersionSideslider: Boolean,
@@ -99,15 +111,19 @@
         },
         computed: {
             ...mapState('atom', ['pipelineInfo']),
+            ...mapGetters({
+                draftVersionName: 'atom/getDraftVersionName'
+            }),
             releaseVersion () {
-                return this.pipelineInfo?.version
+                return this.pipelineInfo?.releaseVersion
             },
             columns () {
                 return [{
                     prop: 'versionName',
-                    label: this.$t('versionNum')
+                    label: this.$t('versionNum'),
+                    width: 360
                 }, {
-                    prop: 'desc',
+                    prop: 'description',
                     label: this.$t('versionDesc')
                 }, {
                     prop: 'createTime',
@@ -140,7 +156,16 @@
                     query[item.id] = item.values.map(value => value.id).join(',')
                     return query
                 }, {})
+            },
+            emptyType () {
+                return this.filterKeys.length > 0 ? 'search-empty' : 'empty'
             }
+        },
+        mounted () {
+            window.__bk_zIndex_manager.zIndex = 2050
+        },
+        beforeDestroy () {
+            window.__bk_zIndex_manager.zIndex = 2000
         },
         methods: {
             ...mapActions('pipelines', [
@@ -182,7 +207,14 @@
                     limit: res.pageSize,
                     count: res.count
                 })
-                this.pipelineVersionList = res.records
+                this.pipelineVersionList = res.records.map(item => {
+                    return {
+                        ...item,
+                        canRollback: item.version !== this.releaseVersion && item.status !== 'COMMITTING',
+                        isBranchVersion: item.status === 'BRANCH',
+                        versionName: item.versionName || this.$t('editPage.draftVersion', [generateDisplayName(item.baseVersion, item.baseVersionName)])
+                    }
+                })
             },
             deleteVersion (row) {
                 if (this.pipelineInfo?.hasPermission && this.releaseVersion !== row.version) {
@@ -198,7 +230,7 @@
                                 pipelineId,
                                 version: row.version
                             }).then(() => {
-                                this.getPipelineVersions(1)
+                                this.init(1)
                                 this.$showTips({
                                     message: this.$t('delete') + this.$t('version') + this.$t('success'),
                                     theme: 'success'
@@ -215,7 +247,12 @@
             },
             handleClose () {
                 this.$emit('close')
+                this.clearFilter(false)
                 return true
+            },
+            clearFilter (refresh = true) {
+                this.filterKeys = []
+                refresh && this.queryVersionList()
             }
         }
     }
@@ -247,6 +284,7 @@
                 display: flex;
                 align-items: center;
                 grid-gap: 6px;
+
                 .icon-check-circle {
                     font-size: 16px;
                 }

@@ -10,7 +10,15 @@
         >
             <div class="no-build-history-box">
                 <span>{{ $t('noBuildHistory') }}</span>
-                <div class="no-build-history-box-tip">
+                <div v-if="!isReleasePipeline" class="no-build-history-box-tip">
+                    <p>{{ $t('onlyDraftBuildHistoryTips') }}</p>
+                    <p>{{ $t('onlyDraftBuildHistoryIdTips') }}</p>
+                    <p>{{ $t('buildHistoryIdTips') }}</p>
+                    <bk-button @click="goEdit" theme="primary" size="large">
+                        {{$t('goEdit')}}
+                    </bk-button>
+                </div>
+                <div v-else class="no-build-history-box-tip">
                     <p v-if="canManualStartup">{{ $t('noBuildHistoryTips')}}</p>
                     <p>{{ $t('buildHistoryIdTips') }}</p>
                     <span v-if="canManualStartup">
@@ -41,8 +49,9 @@
                             <router-link
                                 :class="{ [props.row.status]: true }"
                                 :to="getArchiveUrl(props.row)"
-                            >{{ getBuildNumHtml(props.row) }}</router-link
                             >
+                                {{ getBuildNumHtml(props.row) }}
+                            </router-link>
                             <logo
                                 v-if="props.row.status === 'STAGE_SUCCESS'"
                                 v-bk-tooltips="$t('details.statusMap.STAGE_SUCCESS')"
@@ -118,7 +127,7 @@
                                             <i class="devops-icon icon-qrcode" />
                                         </bk-button>
                                         <div class="build-qrcode-popup" slot="content">
-                                            <span v-html="$t('使用蓝盾 APP<br/>扫码查看构件列表')"></span>
+                                            <span v-html="$t('scanQRCodeView')"></span>
                                             <qrcode
                                                 v-if="props.row.shortUrl"
                                                 :text="props.row.shortUrl"
@@ -248,7 +257,7 @@
                         <span v-else>--</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column v-if="!isDebug" :label="$t('操作')" fixed="right" width="80">
+                <bk-table-column v-if="!isDebug" :label="$t('operate')" fixed="right" width="80">
                     <template v-slot="props">
                         <bk-button
                             v-if="retryable(props.row)"
@@ -269,34 +278,11 @@
                         @setting-change="handleTableSettingChange">
                     </bk-table-setting-content>
                 </bk-table-column>
-                <bk-exception
-                    slot="empty"
-                    type="search-empty"
-                    scene="part"
-                >
-                    <span>{{ $t('newlist.filterEmptyTitle') }}</span>
-                </bk-exception>
+
+                <empty-exception slot="empty" type="search-empty" @clear="clearFilter" />
             </bk-table>
         </div>
-        <bk-dialog
-            v-model="isShowMoreMaterial"
-            render-directive="if"
-            :width="640"
-            header-position="left"
-            :title="`#${activeBuild && activeBuild.buildNum} - ${$t('editPage.material')}`"
-            @cancel="hideMoreMaterial"
-        >
-            <template v-if="activeBuild">
-                <div class="all-build-material-row" v-for="material in activeBuild.material" :key="material.aliasName">
-                    <MaterialItem :is-fit-content="false" :material="material" :show-more="false" />
-                </div>
-            </template>
-            <footer slot="footer">
-                <bk-button @click="hideMoreMaterial">
-                    {{$t('close')}}
-                </bk-button>
-            </footer>
-        </bk-dialog>
+
         <bk-dialog
             v-model="isShowMoreArtifactories"
             render-directive="if"
@@ -411,6 +397,7 @@
     import StageSteps from '@/components/StageSteps'
     import MaterialItem from '@/components/ExecDetail/MaterialItem'
     import FilterBar from '@/components/BuildHistoryTable/FilterBar'
+    import EmptyException from '@/components/common/exception'
 
     const LS_COLUMNS_KEYS = 'shownColumns'
     export default {
@@ -420,7 +407,8 @@
             qrcode,
             StageSteps,
             MaterialItem,
-            FilterBar
+            FilterBar,
+            EmptyException
         },
         mixins: [pipelineConstMixin],
         props: {
@@ -454,7 +442,8 @@
         },
         computed: {
             ...mapGetters({
-                historyPageStatus: 'pipelines/getHistoryPageStatus'
+                historyPageStatus: 'pipelines/getHistoryPageStatus',
+                isReleasePipeline: 'atom/isReleasePipeline'
             }),
             ...mapState('atom', [
                 'pipelineInfo'
@@ -603,7 +592,8 @@
             ...mapActions('pipelines', [
                 'updateBuildRemark',
                 'requestPipelinesHistory',
-                'setHistoryPageStatus'
+                'setHistoryPageStatus',
+                'resetHistoryFilterCondition'
             ]),
             handleTableSettingChange ({ fields: selectedFields, size }) {
                 Object.assign(this.tableSetting, {
@@ -620,7 +610,6 @@
                         projectId,
                         pipelineId
                     } = this
-                    console.log(this.isDebug)
                     const res = await this.requestPipelinesHistory({
                         projectId,
                         pipelineId,
@@ -827,12 +816,11 @@
                     })
                     window.open(res.url, '_self')
                 } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$showTips({
-                        message,
-                        theme
+                    const { projectId, pipelineId } = this.$route.params
+                    this.handleError(err, {
+                        projectId,
+                        resourceCode: pipelineId,
+                        action: this.$permissionResourceAction.DOWNLOAD
                     })
                 }
             },
@@ -889,19 +877,12 @@
                         theme = 'error'
                     }
                 } catch (err) {
-                    this.handleError(err, [
-                        {
-                            actionId: this.$permissionActionMap.execute,
-                            resourceId: this.$permissionResourceMap.pipeline,
-                            instanceId: [
-                                {
-                                    id: this.$route.params.pipelineId,
-                                    name: this.$route.params.pipelineId
-                                }
-                            ],
-                            projectId: this.$route.params.projectId
-                        }
-                    ])
+                    const { projectId, pipelineId } = this.$route.params
+                    this.handleError(err, {
+                        projectId,
+                        resourceCode: pipelineId,
+                        action: this.$permissionResourceAction.EXECUTE
+                    })
                 } finally {
                     delete this.retryingMap[buildId]
                     message
@@ -927,6 +908,21 @@
                         ...this.$route.params,
                         version: this.pipelineInfo?.version
                     }
+                })
+            },
+            goEdit () {
+                this.$router.push({
+                    name: 'pipelinesEdit',
+                    params: {
+                        ...this.$route.params,
+                        version: this.pipelineInfo?.version
+                    }
+                })
+            },
+            clearFilter () {
+                this.resetHistoryFilterCondition()
+                this.$nextTick(() => {
+                    this.requestHistory()
                 })
             }
         }

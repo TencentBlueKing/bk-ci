@@ -42,6 +42,8 @@ const val PROFILE_PRODUCTION = "prod"
 const val PROFILE_TEST = "test"
 const val PROFILE_STREAM = "stream"
 const val PROFILE_AUTO = "auto"
+const val PROFILE_DEVX = "devx"
+const val PROFILE_RBAC = "rbac"
 
 @Component
 class Profile(private val environment: Environment) {
@@ -82,6 +84,24 @@ class Profile(private val environment: Environment) {
     fun isAuto(): Boolean {
         activeProfiles.forEach { activeProfile ->
             if (activeProfile.contains(PROFILE_AUTO)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    fun isDevx(): Boolean {
+        activeProfiles.forEach { activeProfile ->
+            if (activeProfile.contains(PROFILE_DEVX)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    fun isRbac(): Boolean {
+        activeProfiles.forEach { activeProfile ->
+            if (activeProfile.contains(PROFILE_RBAC)) {
                 return true
             }
         }

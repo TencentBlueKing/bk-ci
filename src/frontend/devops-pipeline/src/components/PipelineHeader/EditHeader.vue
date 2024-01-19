@@ -11,12 +11,28 @@
                 outline
                 theme="primary"
                 @click="saveDraft"
+                v-perm="{
+                    permissionData: {
+                        projectId: $route.params.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: $route.params.pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    }
+                }"
             >
                 {{ $t("saveDraft") }}
             </bk-button>
             <bk-button
                 :disabled="!canDebug"
                 :loading="executeStatus"
+                v-perm="{
+                    permissionData: {
+                        projectId: $route.params.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: $route.params.pipelineId,
+                        action: RESOURCE_ACTION.EXECUTE
+                    }
+                }"
                 @click="exec(true)"
             >
                 <span class="debug-pipeline-draft-btn">
@@ -31,36 +47,29 @@
                 </span>
             </bk-button>
             <!-- <more-actions /> -->
-            <span :class="['publish-pipeline-btn', {
-                'publish-diabled': !canRelease || isEditing
-            }]" @click="showReleaseSlider">
-                <i class="devops-icon icon-check-small" />
-                {{ $t('release') }}
-            </span>
+            <release-button
+                :can-release="canRelease && !isEditing"
+            />
         </aside>
-        <ReleasePipelineSideSlider
-            :version="currentVersion"
-            :base-version-name="baseVersionName"
-            :version-name="versionName"
-            v-model="isReleaseSliderShow"
-        />
     </div>
 </template>
 
 <script>
     import { mapActions, mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
-    // import MoreActions from './MoreActions.vue'
+    import ReleaseButton from './ReleaseButton'
     import ModeSwitch from '@/components/ModeSwitch'
-    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
-    import ReleasePipelineSideSlider from './ReleasePipelineSideSlider'
+    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
+    import {
+        RESOURCE_ACTION
+    } from '@/utils/permission'
+
     export default {
         components: {
             PipelineBreadCrumb,
-            // MoreActions,
-            ModeSwitch,
-            ReleasePipelineSideSlider
+            ReleaseButton,
+            ModeSwitch
         },
         data () {
             return {
@@ -79,6 +88,7 @@
                 'pipelineYaml',
                 'pipelineInfo'
             ]),
+
             ...mapState('pipelines', ['executeStatus', 'isManage']),
             ...mapGetters({
                 isCurPipelineLocked: 'atom/isCurPipelineLocked',
@@ -86,7 +96,13 @@
                 checkPipelineInvalid: 'atom/checkPipelineInvalid'
             }),
             canDebug () {
-                return (this.pipelineInfo?.canDebug ?? false) && !this.saveStatus
+                return (this.pipelineInfo?.canDebug ?? false) && !this.saveStatus && !this.isCurPipelineLocked
+            },
+            RESOURCE_ACTION () {
+                return RESOURCE_ACTION
+            },
+            btnDisabled () {
+                return this.saveStatus || this.executeStatus
             },
             canRelease () {
                 return (this.pipelineInfo?.canRelease ?? false) && !this.saveStatus
@@ -197,19 +213,13 @@
                         message: this.$t('editPage.saveDraftSuccess', [pipelineSetting.pipelineName])
                     })
                 } catch (e) {
-                    this.handleError(e, [
-                        {
-                            actionId: this.$permissionActionMap.edit,
-                            resourceId: this.$permissionResourceMap.pipeline,
-                            instanceId: [
-                                {
-                                    id: this.pipeline.pipelineId,
-                                    name: this.pipeline.name
-                                }
-                            ],
-                            projectId: this.$route.params.projectId
-                        }
-                    ])
+                    const { projectId, pipelineId } = this.$route.params
+
+                    this.handleError(e, {
+                        projectId,
+                        resourceCode: pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    })
                     return {
                         code: e.code,
                         message: e.message
@@ -226,11 +236,6 @@
                     `/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/saveSetting`,
                     pipelineSetting
                 )
-            },
-            showReleaseSlider () {
-                if (this.canRelease && !this.isEditing) {
-                    this.isReleaseSliderShow = true
-                }
             },
             goDraftDebugRecord () {
                 if (this.canDebug) {
@@ -275,27 +280,6 @@
     grid-auto-flow: column;
     height: 100%;
     align-items: center;
-    .publish-pipeline-btn {
-        height: 100%;
-        display: flex;
-        align-items: center;
-        color: white;
-        background: $primaryColor;
-        font-size: 14px;
-        padding: 0 20px;
-        cursor: pointer;
-        &.publish-diabled {
-            background: #DCDEE5;
-            cursor: not-allowed;
-        }
-        .icon-check-small {
-            font-size: 18px;
-        }
-        &.disabled {
-            background: #DCDEE5;
-            cursor: not-allowed;
-        }
-    }
   }
 }
 

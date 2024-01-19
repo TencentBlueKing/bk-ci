@@ -9,16 +9,35 @@
             />
         </div>
         <aside class="pipeline-history-right-aside">
-            <router-link :to="editRouteName">
-                <bk-button>{{ $t("edit") }}</bk-button>
-            </router-link>
+            <bk-button
+                v-perm="{
+                    permissionData: {
+                        projectId: $route.params.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: $route.params.pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    }
+                }"
+                @click="goEdit"
+            >
+                {{ $t("edit") }}
+            </bk-button>
             <span v-bk-tooltips="tooltip">
                 <bk-button
-                    theme="primary"
                     :disabled="!executable"
+                    theme="primary"
+                    v-perm="{
+                        permissionData: {
+                            projectId: $route.params.projectId,
+                            resourceType: 'pipeline',
+                            resourceCode: $route.params.pipelineId,
+                            action: RESOURCE_ACTION.EXECUTE
+                        }
+                    }"
                     @click="goExecPreview"
                 >
                     {{ $t("exec") }}
+
                 </bk-button>
             </span>
             <more-actions />
@@ -28,8 +47,11 @@
 
 <script>
     import { mapGetters, mapState } from 'vuex'
-    import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
+    import {
+        RESOURCE_ACTION
+    } from '@/utils/permission'
     import MoreActions from './MoreActions.vue'
+    import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
     import PacTag from '@/components/PacTag.vue'
     import Badge from '@/components/Badge.vue'
 
@@ -63,24 +85,26 @@
                         disabled: true
                     }
                     : {
-                        content: this.$t(this.isCurPipelineLocked ? 'pipelineLockTips' : 'pipelineManualDisable'),
+                        content: this.$t(!this.isReleasePipeline ? 'draftPipelineExecTips' : this.isCurPipelineLocked ? 'pipelineLockTips' : 'pipelineManualDisable'),
                         delay: [300, 0]
                     }
             },
-            editRouteName () {
-                return {
-                    name: 'pipelinesEdit',
-                    params: this.$route.params
-                }
+            RESOURCE_ACTION () {
+                return RESOURCE_ACTION
             }
         },
         methods: {
+            goEdit () {
+                this.$router.push({
+                    name: 'pipelinesEdit'
+                })
+            },
             goExecPreview () {
                 this.$router.push({
                     name: 'executePreview',
                     params: {
                         ...this.$route.params,
-                        version: this.pipelineInfo?.version
+                        version: this.pipelineInfo?.releaseVersion
                     }
                 })
             }

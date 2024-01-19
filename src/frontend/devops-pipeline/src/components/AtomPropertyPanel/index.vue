@@ -6,6 +6,8 @@
         :width="640"
         :quick-close="true"
         :before-close="handleBeforeClose"
+        :z-index="2016"
+        show-mask
     >
         <header class="property-panel-header" slot="header">
             <div class="atom-name-edit">
@@ -168,7 +170,7 @@
                 @include ellipsis();
             }
             > .bk-form-input {
-                width: 450px;
+                width: 420px;
             }
             .icon-edit {
                 cursor: pointer;

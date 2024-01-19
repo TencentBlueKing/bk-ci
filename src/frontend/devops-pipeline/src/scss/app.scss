@@ -30,7 +30,7 @@
 @import './mixins/scroller.scss';
 @import '@/scss/dialog-position';
 
-@include scroller(#a5a5a5, 9px);
+@include scroller(#DCDEE5, 9px);
 html,
 body {
     position: fixed;
@@ -491,6 +491,13 @@ table tr:hover {
 
 .biz-simaple-table {
 	width: 100%;
+}
+
+.draft-tag {
+    padding: 0 4px;
+    line-height: 16px;
+    height: 16px;
+    flex-shrink: 0;
 }
 
 .biz-tab-content {

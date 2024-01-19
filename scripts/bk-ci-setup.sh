@@ -170,7 +170,7 @@ setup_ci__ms_service_env (){
   env_line_append "$service_env" "CLASSPATH" ".:lib/*"
   env_line_append "$service_env" "SPRING_CONFIG_LOCATION" "file:./application.yml"
   env_line_append "$service_env" "SPRING_CLOUD_CONFIG_ENABLED" false
-  env_line_append "$service_env" "JAVA_TOOL_OPTIONS" "-Djava.security.egd=file:/dev/urandom -Dcertificate.file= -Dservice.log.dir=./logs/ -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=utf8 -XX:NewRatio=1 -XX:SurvivorRatio=8 -XX:+UseConcMarkSweepGC"
+  env_line_append "$service_env" "JAVA_TOOL_OPTIONS" "-Dspring.main.allow-circular-references=true -Djava.security.egd=file:/dev/urandom -Dcertificate.file= -Dservice.log.dir=./logs/ -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=utf8 -XX:NewRatio=1 -XX:SurvivorRatio=8 -XX:+UseConcMarkSweepGC"
 }
 
 # 微服务启动env.
@@ -307,6 +307,7 @@ setup_ci_gateway (){
   # prod目录指向agent-package.
   # 预期200: curl -I bk-ci.service.consul/static/files/jar/worker-agent.jar
   update_link_to_target "$gateway_data_dir/files/prod" "$BK_CI_HOME/agent-package"
+  cp -f "$gateway_data_dir/files/prod/script/docker_init.sh" "$gateway_data_dir/files/prod/"
   # 在全部 ci-gateway 节点上注册主入口域名: bk-ci.service.consul, 用于在集群内提供web服务.
   if [ -x $CTRL_DIR/bin/reg_consul_svc ]; then
     check_empty_var LAN_IP || return 15

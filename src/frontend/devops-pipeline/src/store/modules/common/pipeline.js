@@ -150,6 +150,10 @@ export const actions = {
     requestPipelineTemplate: async ({ commit }, { projectId }) => {
         try {
             const response = await request.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/allTemplates`)
+            for (const key in (response?.data?.templates ?? {})) {
+                const item = response.data.templates[key]
+                item.isStore = item.templateType === 'CONSTRAINT'
+            }
             commit(PIPELINE_TEMPLATE_MUTATION, {
                 pipelineTemplateMap: (response.data || {}).templates
             })
@@ -342,5 +346,8 @@ export const actions = {
         } catch (e) {
             console.log(e)
         }
+    },
+    getPACRepoCiDirList: (_, { projectId, repoHashId }) => {
+        return request.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repoHashId}/ciSubDir`)
     }
 }

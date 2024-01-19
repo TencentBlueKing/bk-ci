@@ -6,7 +6,9 @@
                 <build-num-switcher v-bind="buildNumConf" />
             </span>
         </pipeline-bread-crumb>
-        <aside class="pipeline-detail-right-aside">
+        <aside :class="['pipeline-detail-right-aside', {
+            'is-debug-exec-detail': isDebugExec
+        }]">
             <bk-button
                 v-if="isRunning"
                 :disabled="loading"
@@ -22,38 +24,71 @@
                     :disabled="loading || isCurPipelineLocked || !canManualStartup"
                     :icon="loading ? 'loading' : ''"
                     outline
+                    v-perm="{
+                        permissionData: {
+                            projectId: $route.params.projectId,
+                            resourceType: 'pipeline',
+                            resourceCode: $route.params.pipelineId,
+                            action: RESOURCE_ACTION.EXECUTE
+                        }
+                    }"
                     @click="handleClick"
                 >
                     {{ $t("history.reBuild") }}
                 </bk-button>
                 <span class="exec-deatils-operate-divider"></span>
             </template>
-            <router-link :to="editRouteName">
-                <bk-button>{{ $t("edit") }}</bk-button>
-            </router-link>
+            <bk-button
+                v-perm="{
+                    permissionData: {
+                        projectId: $route.params.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: $route.params.pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    }
+                }"
+                key="edit"
+                @click="goEdit"
+            >
+                {{ $t("edit") }}
+            </bk-button>
             <bk-button
                 theme="primary"
                 :loading="executeStatus"
+                v-perm="{
+                    permissionData: {
+                        projectId: $route.params.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: $route.params.pipelineId,
+                        action: RESOURCE_ACTION.EXECUTE
+                    }
+                }"
                 @click="goExecPreview"
             >
                 {{ $t(isDebugExec ? "debug" : "exec") }}
             </bk-button>
-            <more-actions />
+            <release-button
+                v-if="isDebugExec"
+                :can-release="canRelease"
+            />
         </aside>
     </div>
 </template>
 
 <script>
+    import {
+        RESOURCE_ACTION
+    } from '@/utils/permission'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import BuildNumSwitcher from './BuildNumSwitcher'
-    import MoreActions from './MoreActions.vue'
+    import ReleaseButton from './ReleaseButton'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
 
     export default {
         components: {
             PipelineBreadCrumb,
             BuildNumSwitcher,
-            MoreActions
+            ReleaseButton
         },
         data () {
             return {
@@ -61,13 +96,19 @@
             }
         },
         computed: {
-            ...mapState('atom', ['execDetail', 'pipelineInfo']),
+            ...mapState('atom', ['execDetail', 'pipelineInfo', 'saveStatus']),
             ...mapGetters({
                 isCurPipelineLocked: 'atom/isCurPipelineLocked'
             }),
             ...mapState('pipelines', ['executeStatus']),
+            RESOURCE_ACTION () {
+                return RESOURCE_ACTION
+            },
             isRunning () {
                 return ['RUNNING', 'QUEUE'].indexOf(this.execDetail?.status) > -1
+            },
+            canRelease () {
+                return (this.pipelineInfo?.canRelease ?? false) && !this.saveStatus
             },
             canManualStartup () {
                 return this.pipelineInfo?.canManualStartup ?? false
@@ -76,17 +117,11 @@
                 return {
                     latestBuildNum: this.execDetail?.latestBuildNum ?? 1,
                     currentBuildNum: this.execDetail?.buildNum ?? 1,
-                    version: this.pipelineInfo?.version
+                    version: this.pipelineInfo?.[this.isDebugExec ? 'version' : 'releaseVersion']
                 }
             },
             isDebugExec () {
                 return this.execDetail?.debug ?? false
-            },
-            editRouteName () {
-                return {
-                    name: 'pipelinesEdit',
-                    params: this.$route.params
-                }
             }
         },
         watch: {
@@ -112,19 +147,11 @@
                         await this.retry(this.execDetail?.id)
                     }
                 } catch (err) {
-                    this.handleError(err, [
-                        {
-                            actionId: this.$permissionActionMap.execute,
-                            resourceId: this.$permissionResourceMap.pipeline,
-                            instanceId: [
-                                {
-                                    id: this.$route.params.pipelineId,
-                                    name: this.pipelineInfo.pipelineName
-                                }
-                            ],
-                            projectId: this.$route.params.projectId
-                        }
-                    ])
+                    this.handleError(err, {
+                        projectId: this.$route.params.projectId,
+                        resourceCode: this.$route.params.pipelineId,
+                        action: this.$permissionResourceAction.EXECUTE
+                    })
                     this.loading = false
                 }
             },
@@ -187,6 +214,11 @@
                         version: this.pipelineInfo?.version
                     }
                 })
+            },
+            goEdit () {
+                this.$router.push({
+                    name: 'pipelinesEdit'
+                })
             }
         }
     }
@@ -198,7 +230,8 @@
   width: 100%;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px 0 14px;
+  padding: 0 0 0 14px;
+  height: 100%;
   .exec-deatils-operate-divider {
     display: block;
     margin: 0 6px;
@@ -215,6 +248,11 @@
     display: grid;
     grid-gap: 10px;
     grid-auto-flow: column;
+    height: 100%;
+    align-items:center;
+    &:not(.is-debug-exec-detail) {
+        padding-right: 24px;
+    }
   }
 }
 </style>

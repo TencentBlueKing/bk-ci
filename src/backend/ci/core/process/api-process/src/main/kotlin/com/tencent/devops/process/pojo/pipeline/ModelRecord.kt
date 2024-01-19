@@ -86,8 +86,11 @@ data class ModelRecord(
     val triggerReviewers: List<String>? = null,
     @ApiModelProperty("当前查询的执行次数", required = false)
     val executeCount: Int,
+    @Deprecated("信息已在recordList中存在")
     @ApiModelProperty("历史重试执行人列表（有序）", required = true)
     val startUserList: List<String>,
+    @ApiModelProperty("历史重试人列表（有序）", required = true)
+    val recordList: List<BuildRecordInfo>,
     @ApiModelProperty("构建信息", required = false)
     var buildMsg: String?,
     @ApiModelProperty("原材料", required = false)
@@ -95,5 +98,7 @@ data class ModelRecord(
     @ApiModelProperty("备注", required = false)
     val remark: String?,
     @ApiModelProperty("触发信息（包括代码库等）", required = false)
-    val webhookInfo: WebhookInfo?
+    val webhookInfo: WebhookInfo?,
+    @ApiModelProperty("约束模式下的模板信息", required = false)
+    var templateInfo: TemplateInfo? = null
 )

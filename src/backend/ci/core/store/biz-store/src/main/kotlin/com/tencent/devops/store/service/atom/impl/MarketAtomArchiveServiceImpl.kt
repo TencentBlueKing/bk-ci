@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
@@ -45,19 +46,23 @@ import com.tencent.devops.store.pojo.atom.AtomConfigInfo
 import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.atom.ReleaseInfo
+import com.tencent.devops.store.pojo.common.StoreI18nConfig
 import com.tencent.devops.store.pojo.common.KEY_CONFIG
 import com.tencent.devops.store.pojo.common.KEY_EXECUTION
 import com.tencent.devops.store.pojo.common.KEY_INPUT
 import com.tencent.devops.store.pojo.common.KEY_INPUT_GROUPS
+import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
 import com.tencent.devops.store.pojo.common.KEY_OUTPUT
 import com.tencent.devops.store.pojo.common.KEY_RELEASE_INFO
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
+import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomArchiveService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.common.StoreI18nMessageService
 import com.tencent.devops.store.utils.StoreUtils
+import java.io.File
 import java.net.URLEncoder
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -102,6 +107,25 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         return taskJsonStr!!
     }
 
+    override fun downloadFile(
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        fileName: String,
+        file: File
+    ) {
+        logger.info("downloadFile params:[$projectCode|$atomCode|$version|$fileName")
+        val filePath = URLEncoder.encode("$projectCode/$atomCode/$version/$fileName", "UTF-8")
+        val url = client.getServiceUrl(ServiceArchiveAtomResource::class) +
+                "/service/artifactories/atom/file/content?filePath=$filePath"
+        val response = OkhttpUtils.doPost(url, "")
+        if (response.isSuccessful) {
+            OkhttpUtils.downloadFile(response, file)
+        } else {
+            logger.warn("downloadFile file [$fileName] fail,code:${response.code} | message: ${response.message}")
+        }
+    }
+
     @Suppress("UNCHECKED_CAST")
     override fun verifyAtomPackageByUserId(
         userId: String,
@@ -140,7 +164,11 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         if (null != releaseType) {
             val osList = JsonUtil.getObjectMapper().readValue(os, ArrayList::class.java) as ArrayList<String>
             val validateAtomVersionResult = marketAtomCommonService.validateAtomVersion(
-                atomRecord = atomRecord,
+                atomRecord = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
+                    atomRecord
+                } else {
+                    atomDao.getMaxVersionAtomByCode(dslContext, atomCode)!!
+                },
                 releaseType = releaseType,
                 osList = osList,
                 version = version
@@ -228,10 +256,27 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
     override fun updateAtomPkgInfo(
         userId: String,
         atomId: String,
+        projectCode: String,
         atomPkgInfoUpdateRequest: AtomPkgInfoUpdateRequest
     ): Result<Boolean> {
-        val taskDataMap = atomPkgInfoUpdateRequest.taskDataMap
+        var taskDataMap = atomPkgInfoUpdateRequest.taskDataMap
         val executionInfoMap = taskDataMap[KEY_EXECUTION] as Map<String, Any>
+        val atomLanguage = executionInfoMap[KEY_LANGUAGE].toString()
+        val i18nDir = StoreUtils.getStoreI18nDir(atomLanguage, PackageSourceTypeEnum.UPLOAD)
+        val atomCode = atomPkgInfoUpdateRequest.atomCode
+        val version = atomPkgInfoUpdateRequest.version
+        taskDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
+            userId = userId,
+            jsonMap = taskDataMap.toMutableMap(),
+            storeI18nConfig = StoreI18nConfig(
+                projectCode = projectCode,
+                storeCode = atomCode,
+                fileDir = "$atomCode/$version",
+                i18nDir = i18nDir,
+                dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version)
+            ),
+            version = version
+        )
         val propsMap = mutableMapOf<String, Any?>()
         val releaseInfoMap = taskDataMap[KEY_RELEASE_INFO] as? Map<String, Any>
         val configInfoMap = releaseInfoMap?.get(ReleaseInfo::configInfo.name) as? Map<String, Any>

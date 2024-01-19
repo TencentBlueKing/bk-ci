@@ -147,8 +147,10 @@ export default {
     },
     requestTemplate: async ({ commit, dispatch }, { projectId, templateId, version }) => {
         try {
-            const url = version ? `/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}?version=${version}` : `/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}`
-            const response = await request.get(url)
+            const url = `/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}`
+            const response = await request.get(url, {
+                params: version ? { version } : {}
+            })
             dispatch('setPipeline', response.data.template)
             commit(SET_TEMPLATE, {
                 template: response.data
@@ -174,7 +176,9 @@ export default {
         try {
             const [pipelineRes, atomPropRes] = await Promise.all([
                 request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version ?? ''}`),
-                request.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/projects/${projectId}/pipelines/${pipelineId}/atom/prop/list`)
+                request.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/projects/${projectId}/pipelines/${pipelineId}/atom/prop/list`, {
+                    params: version ? { version } : {}
+                })
             ])
             const { setting, model } = pipelineRes.data.modelAndSetting
             const atomProp = atomPropRes.data
@@ -244,17 +248,24 @@ export default {
                     actionType
                 }
             })
+            if (data.yamlInvalidMsg) {
+                throw new Error(data.yamlInvalidMsg)
+            }
             switch (actionType) {
                 case 'FULL_YAML2MODEL':
-                    commit(SET_PIPELINE, data?.modelAndSetting?.model)
-                    commit(SET_PIPELINE_WITHOUT_TRIGGER, {
-                        ...(data?.modelAndSetting?.model ?? {}),
-                        stages: data?.modelAndSetting?.model.stages.slice(1)
-                    })
-                    commit(PIPELINE_SETTING_MUTATION, data?.modelAndSetting?.setting)
+                    if (data?.modelAndSetting?.model) {
+                        commit(SET_PIPELINE, data?.modelAndSetting?.model)
+                        commit(SET_PIPELINE_WITHOUT_TRIGGER, {
+                            ...(data?.modelAndSetting?.model ?? {}),
+                            stages: data?.modelAndSetting?.model.stages.slice(1)
+                        })
+                        commit(PIPELINE_SETTING_MUTATION, data?.modelAndSetting?.setting)
+                    }
                     break
                 case 'FULL_MODEL2YAML':
-                    commit(SET_PIPELINE_YAML, data?.newYaml)
+                    if (data?.newYaml) {
+                        commit(SET_PIPELINE_YAML, data?.newYaml)
+                    }
                     break
             }
             return data
@@ -288,7 +299,9 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    setPipeline: actionCreator(SET_PIPELINE),
+    setPipeline: ({ commit }, payload = null) => {
+        commit(SET_PIPELINE, payload)
+    },
     setPipelineWithoutTrigger: actionCreator(SET_PIPELINE_WITHOUT_TRIGGER),
     setPipelineYaml: actionCreator(SET_PIPELINE_YAML),
     updatePipelineSetting: PipelineEditActionCreator(UPDATE_PIPELINE_SETTING_MUNTATION),
@@ -662,7 +675,7 @@ export default {
     // 第一次拉取日志
 
     getInitLog ({ commit }, { projectId, pipelineId, buildId, tag, jobId, currentExe, subTag, debug }) {
-        return request.get(`/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}`, {
+        return request.get(`${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}`, {
             params: {
                 tag,
                 jobId,
@@ -675,7 +688,7 @@ export default {
 
     // 后续拉取日志
     getAfterLog ({ commit }, { projectId, pipelineId, buildId, tag, jobId, currentExe, lineNo, subTag, debug }) {
-        return request.get(`/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after`, {
+        return request.get(`${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after`, {
             params: {
                 start: lineNo,
                 executeCount: currentExe,
@@ -692,7 +705,7 @@ export default {
     },
 
     getLogStatus ({ commit }, { projectId, pipelineId, buildId, tag, jobId, executeCount }) {
-        return request.get(`/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/mode`, { params: { tag, jobId, executeCount } })
+        return request.get(`${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/mode`, { params: { tag, jobId, executeCount } })
     },
 
     getDownloadLogFromArtifactory ({ commit }, { projectId, pipelineId, buildId, tag, executeCount }) {

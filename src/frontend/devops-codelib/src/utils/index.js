@@ -34,32 +34,29 @@ export function parsePathAlias (type, path, authType, svnType) {
     switch (true) {
         case isGithub(type):
             reg = /^https\:\/\/(github)(\.com)\/([\w\W\.\-\_\/\+]+)\.git$/i
-            msg = `${codelibLocaleObj.githubRule}${type}${codelibLocaleObj.address}`
+            msg = `${codelibLocaleObj.githubRule}`
             break
         case isSvn(type) && svnType === 'ssh':
             reg = /^svn\+ssh\:\/\/([\@\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)$/i
             msg = `${codelibLocaleObj.svnSshRule}${type}${codelibLocaleObj.address}`
+            aliasIndex = 3
             break
         case isSvn(type) && svnType === 'http':
-            reg = /^(http|svn)\:\/\/([\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)$/i
+            reg = /^(http|https|svn)\:\/\/([\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)$/i
             msg = `${codelibLocaleObj.httpRule}${type}${codelibLocaleObj.address}`
+            aliasIndex = 4
             break
         case isGitLab(type) && authType === 'HTTP':
             reg = /^https?\:\/\/([\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)\.git$/i
-            msg = `${codelibLocaleObj.httpOrHttpsRule}${type}${codelibLocaleObj.address}`
+            msg = `${codelibLocaleObj.httpOrHttpsRule}`
             break
         case isGitLab(type) && authType === 'SSH':
             reg = /^(git@)([\-\.a-z0-9A-Z]+)\:(.*).git$/i
-            msg = `${codelibLocaleObj.gitlabSshRule}${type}${codelibLocaleObj.address}`
-            break
-        case (authType === 'T_GIT_OAUTH') || (isTGit(type) && authType === 'HTTPS'):
-            reg = /^https\:\/\/([\-\.a-z0-9A-Z]+)[\:|\/](.*)\.git$/
-            msg = `${codelibLocaleObj.tgitHttpRule}${type}${codelibLocaleObj.address}`
-            aliasIndex = 2
+            msg = `${codelibLocaleObj.gitlabSshRule}`
             break
         case isTGit(type):
-            reg = /^git@([\-\.a-z0-9A-Z]+)[\:|\/](.*)\.git$/
-            msg = `${codelibLocaleObj.tgitRule}${type}${codelibLocaleObj.address}`
+            reg = /^https\:\/\/([\-\.a-z0-9A-Z]+)[\:|\/](.*)\.git$/
+            msg = `${codelibLocaleObj.tgitHttpRule}`
             aliasIndex = 2
             break
     }
@@ -102,4 +99,43 @@ export function firstUpperCase (str) {
 
 export function queryStringify (query) {
     return Object.keys(query).map(key => query[key] ? `${key}=${query[key]}` : key).join('&')
+}
+
+export function getOffset (target) {
+    let totalLeft = null
+    let totalTop = null
+    let par = target.offsetParent
+    totalLeft += target.offsetLeft
+    totalTop += target.offsetTop
+    while (par) {
+        if (navigator.userAgent.indexOf('MSIE 8.0') === -1) {
+            // 不是IE8我们才进行累加父级参照物的边框
+            totalTop += par.clientTop
+            totalLeft += par.clientLeft
+        }
+        totalTop += par.offsetTop
+        totalLeft += par.offsetLeft
+        par = par.offsetParent
+    }
+    return { left: totalLeft, top: totalTop }
+}
+
+export const prettyDateTimeFormat = (target) => {
+    if (!target) {
+        return ''
+    }
+    const formatStr = (str) => {
+        if (String(str).length === 1) {
+            return `0${str}`
+        }
+        return str
+    }
+    const d = new Date(target)
+    const year = d.getFullYear()
+    const month = formatStr(d.getMonth() + 1)
+    const date = formatStr(d.getDate())
+    const hours = formatStr(d.getHours())
+    const minutes = formatStr(d.getMinutes())
+    const seconds = formatStr(d.getSeconds())
+    return `${year}-${month}-${date} ${hours}:${minutes}:${seconds}`
 }

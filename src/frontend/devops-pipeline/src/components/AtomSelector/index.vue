@@ -14,7 +14,7 @@
                         read-only
                     />
                 </div>
-                <temaplte v-else>
+                <template v-else>
                     <header class="atom-selector-header">
                         <h3>{{ $t('editPage.chooseAtom') }}<i @click="freshAtomList(searchKey)" class="devops-icon icon-refresh atom-fresh" :class="fetchingAtomList ? &quot;spin-icon&quot; : &quot;&quot;" /></h3>
                         <bk-input class="atom-search-input" ref="searchStr" :clearable="true" :placeholder="$t('editPage.searchTips')" right-icon="icon-search" :value="searchKey" @input="handleClear" @enter="handleSearch"></bk-input>
@@ -47,13 +47,13 @@
                             <div class="empty-atom-list" v-if="curTabList.length <= 0 && !fetchingAtomList">
                                 <empty-tips type="no-result"></empty-tips>
                             </div>
+
                         </bk-tab-panel>
                     </bk-tab>
                     <section v-else class="search-result" ref="searchResult" v-bkloading="{ isLoading: fetchingAtomList }">
                         <h3 v-if="installArr.length" class="search-title">{{ $t('newlist.installed') }}（{{installArr.length}}）</h3>
                         <atom-card v-for="atom in installArr"
                             :key="atom.atomCode"
-                            :disabled="atom.disabled"
                             :atom="atom"
                             :container="container"
                             :element-index="elementIndex"
@@ -69,7 +69,6 @@
                         <h3 v-if="uninstallArr.length" class="search-title gap-border">{{ $t('editPage.notInstall') }}（{{uninstallArr.length}}）</h3>
                         <atom-card v-for="atom in uninstallArr"
                             :key="atom.atomCode"
-                            :disabled="atom.disabled"
                             :atom="atom"
                             :container="container"
                             :element-index="elementIndex"
@@ -86,7 +85,7 @@
                             <empty-tips type="no-result"></empty-tips>
                         </div>
                     </section>
-                </temaplte>
+                </template>
             </div>
         </transition>
     </portal>
@@ -95,8 +94,8 @@
 <script>
     import { mapGetters, mapActions, mapState } from 'vuex'
     import YamlEditor from '@/components/YamlEditor'
-    import atomCard from './atomCard'
     import EmptyTips from '../common/empty'
+    import atomCard from './atomCard'
 
     const RD_STORE_CODE = 'rdStore'
 

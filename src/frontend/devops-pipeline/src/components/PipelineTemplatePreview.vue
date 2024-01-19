@@ -16,19 +16,16 @@
             <mode-switch
                 :is-yaml-support="isYamlSupport"
                 :yaml-invalid-msg="yamlInvalidMsg"
+                read-only
             />
             <YamlEditor
                 v-if="isCodeMode"
-                style="margin-top: 20px;"
+                style="margin-top: 20px"
                 :value="templateYaml"
                 read-only
                 :highlight-ranges="highlightMarkList"
             />
-            <bk-tab
-                v-else
-                v-model="activePanel"
-                type="unborder-card"
-            >
+            <bk-tab v-else v-model="activePanel" type="unborder-card">
                 <bk-tab-panel
                     v-for="panel in panels"
                     :key="panel.name"
@@ -62,7 +59,6 @@
             NotifyTab,
             BaseSettingTab,
             YamlEditor
-
         },
         props: {
             isShow: Boolean,
@@ -92,7 +88,10 @@
                 getPipelineSubscriptions: 'atom/getPipelineSubscriptions'
             }),
             title () {
-                return this.$t('templatePreivewHeader', [this.templatePipeline?.name ?? '', this.previewSettingType])
+                return this.$t('templatePreivewHeader', [
+        this.templatePipeline?.name ?? '',
+        this.previewSettingType
+                ])
             },
             highlightType () {
                 const conf = {
@@ -198,39 +197,38 @@
 </script>
 
 <style lang="scss">
-    .pipeline-template-preivew {
-        height: 100%;
-        .bk-dialog {
-            top: 2vh;
-            height: 96vh;
-            .bk-dialog-content {
-                height: 100%;
-                display: flex;
-                flex-direction: column;
-                overflow: hidden;
-                .bk-dialog-body {
-                    flex: 1;
-                    overflow: auto;
-                    display: flex;
-                    flex-direction: column;
-                    .bk-tab {
-                        flex: 1;
-                        display: flex;
-                        flex-direction: column;
-                        .bk-tab-header {
-                            flex-shrink: 0;
-                        }
-                        .bk-tab-section {
-                            flex: 1;
-                            overflow: hidden;
-                            .bk-tab-content {
-                                height: 100%;
-                            }
-                        }
-                    }
-                }
+.pipeline-template-preivew {
+  height: 100%;
+  .bk-dialog {
+    top: 2vh;
+    height: 96vh;
+    .bk-dialog-content {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      .bk-dialog-body {
+        flex: 1;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        .bk-tab {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          .bk-tab-header {
+            flex-shrink: 0;
+          }
+          .bk-tab-section {
+            flex: 1;
+            overflow: hidden;
+            .bk-tab-content {
+              height: 100%;
             }
+          }
         }
+      }
     }
-
+  }
+}
 </style>

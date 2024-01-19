@@ -9,8 +9,7 @@
     "vee-validate": "^2.0.3",
     "vue-file-upload": "^0.1.12",
     "vue-property-decorator": "^6.0.0",
-    "vue-template-compiler": "2.6.12",
-    "vue": "2.6.12",
+    "vue": "~2.7.0",
     "vuex-class": "^0.3.0"
   },
   "devDependencies": {
@@ -41,7 +40,6 @@
     "eslint-friendly-formatter": "~4.0.1",
     "eslint-loader": "^2.1.2",
     "eslint-plugin-import": "^2.25.3",
-    "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^5.1.1",
     "eslint-plugin-standard": "^5.0.0",
     "eslint-plugin-vue": "6.2.2",
@@ -51,9 +49,8 @@
     "sass-loader": "^12.1.0",
     "style-loader": "^3.3.1",
     "terser-webpack-plugin": "^5.3.6",
-    "vue-loader": "15.9.8",
+    "vue-loader": "^15.10.0",
     "vue-property-decorator": "^6.0.0",
-    "vue-template-compiler": "2.6.12",
     "webpack": "^5.58.1"
   },
   "scripts": {

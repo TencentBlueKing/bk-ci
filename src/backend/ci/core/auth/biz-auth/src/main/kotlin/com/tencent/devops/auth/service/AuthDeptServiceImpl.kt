@@ -54,14 +54,14 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.EsbBaseReq
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
-import java.util.Optional
-import java.util.concurrent.TimeUnit
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import java.util.Optional
+import java.util.concurrent.TimeUnit
 
 class AuthDeptServiceImpl @Autowired constructor(
     val redisOperation: RedisOperation,
@@ -89,7 +89,7 @@ class AuthDeptServiceImpl @Autowired constructor(
 
     private val userInfoCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
-        .expireAfterWrite(1, TimeUnit.HOURS)
+        .expireAfterWrite(24, TimeUnit.HOURS)
         .build<String/*userId*/, Optional<UserAndDeptInfoVo>>()
 
     override fun getDeptByLevel(level: Int, accessToken: String?, userId: String): DeptInfoVo {
@@ -138,8 +138,8 @@ class AuthDeptServiceImpl @Autowired constructor(
             accessToken = accessToken
         )
         val userSearch = SearchUserAndDeptEntity(
-            bk_app_code = appCode!!,
-            bk_app_secret = appSecret!!,
+            bk_app_code = appCode,
+            bk_app_secret = appSecret,
             bk_username = userId,
             fields = USER_LABLE,
             lookupField = USERNAME,
@@ -163,7 +163,9 @@ class AuthDeptServiceImpl @Autowired constructor(
                         UserAndDeptInfoVo(
                             id = it.id,
                             name = it.username,
-                            type = ManagerScopesEnum.USER
+                            type = ManagerScopesEnum.USER,
+                            deptInfo = it.departments,
+                            extras = it.extras
                         )
                     )
                 }
@@ -188,12 +190,14 @@ class AuthDeptServiceImpl @Autowired constructor(
                         UserAndDeptInfoVo(
                             id = it.id,
                             name = it.username,
-                            type = ManagerScopesEnum.USER
+                            type = ManagerScopesEnum.USER,
+                            deptInfo = it.departments,
+                            extras = it.extras
                         )
                     )
                 }
-                val depteInfos = getDeptInfo(deptSearch)
-                depteInfos.results.forEach {
+                val deptInfos = getDeptInfo(deptSearch)
+                deptInfos.results.forEach {
                     userAndDeptInfos.add(
                         UserAndDeptInfoVo(
                             id = it.id,
@@ -205,7 +209,6 @@ class AuthDeptServiceImpl @Autowired constructor(
                 }
             }
         }
-
         return userAndDeptInfos
     }
 
@@ -267,7 +270,7 @@ class AuthDeptServiceImpl @Autowired constructor(
             userId = userId,
             type = ManagerScopesEnum.USER,
             exactLookups = true
-        ).firstOrNull().also { if (it != null) userInfoCache.put(name, Optional.ofNullable(it)) }
+        ).firstOrNull().also { if (it != null) userInfoCache.put(name, Optional.of(it)) }
     }
 
     private fun getUserDeptFamily(userId: String): String {
@@ -296,12 +299,12 @@ class AuthDeptServiceImpl @Autowired constructor(
 
     private fun getDeptInfo(searchDeptEnity: SearchUserAndDeptEntity): DeptInfoVo {
         val responseDTO = callUserCenter(LIST_DEPARTMENTS, searchDeptEnity)
-        return objectMapper.readValue<DeptInfoVo>(responseDTO)
+        return objectMapper.readValue(responseDTO)
     }
 
     private fun getUserInfo(searchUserEntity: SearchUserAndDeptEntity): BkUserInfoVo {
         val responseDTO = callUserCenter(USER_INFO, searchUserEntity)
-        return objectMapper.readValue<BkUserInfoVo>(responseDTO)
+        return objectMapper.readValue(responseDTO)
     }
 
     private fun callUserCenter(url: String, searchEntity: EsbBaseReq): String {
@@ -337,7 +340,8 @@ class AuthDeptServiceImpl @Autowired constructor(
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(
                         messageCode = AuthMessageCode.USER_NOT_EXIST
-                    ))
+                    )
+                )
             }
             logger.info("user center response：${objectMapper.writeValueAsString(responseDTO.data)}")
             return objectMapper.writeValueAsString(responseDTO.data)

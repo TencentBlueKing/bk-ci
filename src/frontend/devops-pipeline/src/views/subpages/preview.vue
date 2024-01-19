@@ -105,15 +105,15 @@
                         this.setExecuteStep(2)
                     }
                 } catch (err) {
-                    this.handleError(err, [{
-                        actionId: this.$permissionActionMap.execute,
-                        resourceId: this.$permissionResourceMap.pipeline,
-                        instanceId: [{
-                            id: this.pipelineId,
-                            name: this.pipelineId
-                        }],
-                        projectId: this.projectId
-                    }])
+                    this.handleError(
+                        err,
+                        {
+                            projectId: this.projectId,
+                            resourceCode: this.pipelineId,
+                            action: this.$permissionResourceAction.EXECUTE
+                        }
+                    )
+                    this.$router.back()
                 } finally {
                     this.isLoading = false
                 }
@@ -153,15 +153,11 @@
                         theme = 'error'
                     }
                 } catch (err) {
-                    this.handleError(err, [{
-                        actionId: this.$permissionActionMap.execute,
-                        resourceId: this.$permissionResourceMap.pipeline,
-                        instanceId: [{
-                            id: this.pipelineId,
-                            name: this.pipelineInfo?.pipelineName ?? '--'
-                        }],
-                        projectId: this.projectId
-                    }])
+                    this.handleError(err, {
+                        projectId: this.$route.params.projectId,
+                        resourceCode: this.$route.params.pipelineId,
+                        action: this.$permissionResourceAction.EXECUTE
+                    })
                 } finally {
                     this.setExecuteStatus(false)
 

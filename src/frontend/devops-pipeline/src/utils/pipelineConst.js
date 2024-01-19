@@ -27,6 +27,7 @@ export const semverVersionKeySet = new Set(allVersionKeyList)
 export const NAME_FILTER_TYPE = 'filterByName'
 export const CREATOR_FILTER_TYPE = 'filterByCreator'
 export const FILTER_BY_LABEL = 'filterByLabel'
+export const FILTER_BY_PAC_REPO = 'filterByPacRepo'
 export const FILTER_BY_VIEW_ID = 'filterByViewIds'
 
 export const FILTER_BY_DELETER = 'filterByViewIds'
@@ -56,7 +57,7 @@ export const BUILD_HISTORY_TABLE_DEFAULT_COLUMNS = [
     'startType',
     'startTime',
     'endTime',
-    'totalTime',
+    'executeTime',
     'artifactList',
     'pipelineVersion',
     'remark',
@@ -123,7 +124,8 @@ export const repoTypeMap = {
 }
 export const repoTypeNameMap = {
     CUSTOM_DIR: 'custom',
-    PIPELINE: 'pipeline'
+    PIPELINE: 'pipeline',
+    IMAGE: 'image'
 }
 export const fileExtIconMap = {
     txt: ['.json', '.txt', '.md'],

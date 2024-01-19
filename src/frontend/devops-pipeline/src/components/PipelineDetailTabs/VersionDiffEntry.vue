@@ -14,6 +14,8 @@
             render-directive="if"
             v-model="showVersionDiffDialog"
             header-position="left"
+            :draggable="false"
+            ext-cls="diff-version-dialog"
             width="90%"
             :title="$t('diff')"
         >
@@ -62,6 +64,7 @@
 <script>
     import { mapActions } from 'vuex'
     import YamlDiff from '@/components/YamlDiff'
+    import { generateDisplayName } from '@/utils/util'
     export default {
         components: {
             YamlDiff
@@ -97,6 +100,7 @@
                 return this.pipelineVersionList.find(item => item.version === this.latestVersion)?.versionName ?? '--'
             }
         },
+
         methods: {
             ...mapActions('atom', [
                 'fetchPipelineByVersion'
@@ -119,7 +123,12 @@
                     this.page = res.page
                     this.hasNext = res.count > res.page * pageSize
                     if (res.records.length > 0) {
-                        this.pipelineVersionList.push(...res.records)
+                        this.pipelineVersionList.push(...res.records.map(item => {
+                            return {
+                                ...item,
+                                versionName: item.versionName || this.$t('editPage.draftVersion', [generateDisplayName(item.baseVersion, item.baseVersionName)])
+                            }
+                        }))
                     }
                 } catch (error) {
                     console.log(error)
@@ -128,14 +137,13 @@
                 }
             },
             async diffVersion (version) {
-                console.log(version)
                 try {
                     this.isLoadYaml = true
                     this.showVersionDiffDialog = true
                     this.loadMore(this.page)
                     this.activeVersion = version
 
-                    const [{ yamlPreview }, current] = await Promise.all([
+                    const [activePipeline, current] = await Promise.all([
                         this.fetchPipelineByVersion({
                             projectId: this.$route.params.projectId,
                             pipelineId: this.$route.params.pipelineId,
@@ -147,10 +155,20 @@
                             version: this.latestVersion
                         })
                     ])
-                    this.activeYaml = yamlPreview.yaml
-                    this.currentYaml = current.yamlPreview.yaml
+
+                    if (activePipeline?.yamlSupported && current?.yamlSupported) {
+                        this.activeYaml = activePipeline.yamlPreview.yaml
+                        this.currentYaml = current.yamlPreview.yaml
+                        return
+                    }
+                    console.log(activePipeline, current, 'hahaha')
+                    throw new Error(activePipeline?.yamlInvalidMsg || current?.yamlInvalidMsg)
                 } catch (error) {
                     console.log(error)
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message
+                    })
                 } finally {
                     this.isLoadYaml = false
                 }
@@ -161,4 +179,14 @@
 
 <style lang="scss">
     @import "@/scss/select-dark-theme.scss";
+    .diff-version-dialog.bk-dialog-wrapper {
+        transition: none;
+        .bk-dialog {
+            transition: all .3s;
+            margin: 0;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    }
 </style>

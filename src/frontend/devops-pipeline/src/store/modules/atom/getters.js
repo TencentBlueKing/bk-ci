@@ -30,18 +30,23 @@ export default {
     isCurPipelineLocked: state => {
         return state.pipelineInfo?.runLockType === 'LOCK'
     },
-    isDraftPipeline: state => {
-        return state.pipelineInfo?.baseVersionStatus === 'COMMITTING'
+    hasDraftPipeline: state => {
+        return state.pipelineInfo?.version !== state.pipelineInfo?.releaseVesrion
+    },
+    getDraftVersionName: (state, getters) => {
+        console.log(state.pipelineInfo, state.pipelineInfo?.versionName, 'kfdjsafdsafdas')
+        return getters.hasDraftPipeline ? `V${state.pipelineInfo?.baseVersion} (${state.pipelineInfo?.baseVersionName})` : ''
     },
     isBranchVersion: state => {
         return state.pipelineInfo?.baseVersionStatus === 'BRANCH'
     },
     isReleasePipeline: state => {
-        return state.pipelineInfo?.baseVersionStatus === 'RELEASED'
+        return !state.pipelineInfo?.onlyDraft
     },
     pacEnabled: state => {
         return state.pipelineInfo?.pipelineAsCodeSettings?.enable ?? false
     },
+
     yamlInfo: state => {
         return state.pipelineInfo?.yamlInfo
     },

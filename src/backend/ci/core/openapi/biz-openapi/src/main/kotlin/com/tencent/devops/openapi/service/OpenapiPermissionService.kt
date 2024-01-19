@@ -77,7 +77,7 @@ class OpenapiPermissionService(
         val hasViewPermission = kotlin.runCatching {
             client.get(ServiceProjectAuthResource::class)
                 .isProjectUser(
-                    token = clientTokenService.getSystemToken(null) ?: "",
+                    token = clientTokenService.getSystemToken() ?: "",
                     type = null,
                     userId = userId,
                     projectCode = projectId
@@ -119,7 +119,7 @@ class OpenapiPermissionService(
         val hasViewPermission = kotlin.runCatching {
             client.get(ServiceProjectAuthResource::class)
                 .checkManager(
-                    token = clientTokenService.getSystemToken(null) ?: "",
+                    token = clientTokenService.getSystemToken() ?: "",
                     userId = userId,
                     projectId = projectId
                 ).data

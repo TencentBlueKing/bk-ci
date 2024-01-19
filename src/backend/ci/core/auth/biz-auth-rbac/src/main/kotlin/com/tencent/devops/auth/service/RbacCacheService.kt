@@ -32,7 +32,8 @@ class RbacCacheService constructor(
     private val authActionDao: AuthActionDao,
     private val policyService: PolicyService,
     private val iamConfiguration: IamConfiguration,
-    private val authResourceGroupConfigDao: AuthResourceGroupConfigDao
+    private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
+    private val authUserDailyService: AuthProjectUserMetricsService
 ) {
 
     companion object {
@@ -164,7 +165,7 @@ class RbacCacheService constructor(
         return groupConfigActionsCache.getIfPresent(resourceType)!!.sortedByDescending { it.id }
     }
 
-    private fun validateUserProjectPermission(
+    fun validateUserProjectPermission(
         userId: String,
         projectCode: String,
         permission: AuthPermission
@@ -193,7 +194,11 @@ class RbacCacheService constructor(
                 .resources(listOf(resourceNode))
                 .build()
 
-            return policyService.verifyPermissions(queryPolicyDTO)
+            val result = policyService.verifyPermissions(queryPolicyDTO)
+            if (result) {
+                authUserDailyService.save(projectId = projectCode, userId = userId)
+            }
+            return result
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to validate user project permission"

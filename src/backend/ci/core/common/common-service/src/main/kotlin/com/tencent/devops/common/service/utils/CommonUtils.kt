@@ -66,26 +66,32 @@ object CommonUtils {
 
     private val twCnLanList = listOf(ZH_TW, "ZH-TW", ZH_HK, "ZH-HK")
 
+    private var innerIp: String? = null
+
     private val logger = LoggerFactory.getLogger(CommonUtils::class.java)
 
     fun getInnerIP(): String {
+        if (!innerIp.isNullOrBlank()) {
+            // 从本地缓存中取到的服务器IP不为空则直接返回
+            return innerIp.toString()
+        }
         val ipMap = getMachineIP()
-        var innerIp = ipMap["eth1"]
-        if (StringUtils.isBlank(innerIp)) {
-            logger.error("eth1 NIC IP is empty, therefore, get eth0's NIC IP")
+        innerIp = ipMap["eth1"]
+        if (innerIp.isNullOrBlank()) {
+            logger.info("eth1 NIC IP is empty, therefore, get eth0's NIC IP")
             innerIp = ipMap["eth0"]
         }
-        if (StringUtils.isBlank(innerIp)) {
+        if (innerIp.isNullOrBlank()) {
             val ipSet = ipMap.entries
             for ((_, value) in ipSet) {
                 innerIp = value
-                if (!StringUtils.isBlank(innerIp)) {
+                if (!innerIp.isNullOrBlank()) {
                     break
                 }
             }
         }
-
-        return if (StringUtils.isBlank(innerIp) || null == innerIp) "" else innerIp
+        innerIp = if (!innerIp.isNullOrBlank()) innerIp else ""
+        return innerIp.toString()
     }
 
     private fun getMachineIP(): Map<String, String> {
@@ -137,11 +143,11 @@ object CommonUtils {
         serviceUrlPrefix: String,
         file: File,
         fileChannelType: String,
-        logo: Boolean = false,
+        staticFlag: Boolean = false,
         language: String
     ): Result<String?> {
         val serviceUrl = "$serviceUrlPrefix/service/artifactories/file/upload" +
-                "?userId=$userId&fileChannelType=$fileChannelType&logo=$logo"
+                "?userId=$userId&fileChannelType=$fileChannelType&staticFlag=$staticFlag"
         logger.info("the serviceUrl is:$serviceUrl")
         OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
             val responseContent = response.body!!.string()

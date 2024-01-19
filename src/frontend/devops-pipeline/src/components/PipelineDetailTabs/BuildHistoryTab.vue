@@ -9,7 +9,10 @@
     import BuildHistoryTable from '@/components/BuildHistoryTable/'
     import emptyTips from '@/components/devops/emptyTips'
     import { mapGetters, mapActions, mapState } from 'vuex'
-    import { AUTH_URL_PREFIX } from '@/store/constants'
+    import {
+        handlePipelineNoPermission,
+        RESOURCE_ACTION
+    } from '@/utils/permission'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import webSocketMessage from '@/utils/webSocketMessage'
 
@@ -35,7 +38,9 @@
 
         computed: {
             ...mapGetters({
-                historyPageStatus: 'pipelines/getHistoryPageStatus'
+                historyPageStatus: 'pipelines/getHistoryPageStatus',
+                isReleasePipeline: 'atom/isReleasePipeline',
+                isCurPipelineLocked: 'atom/isCurPipelineLocked'
             }),
             ...mapState('atom', [
                 'isPropertyPanelVisible',
@@ -57,6 +62,7 @@
                 const { hasNoPermission } = this
                 const title = hasNoPermission ? this.$t('noPermission') : this.$t('history.noBuildRecords')
                 const desc = hasNoPermission ? this.$t('history.noPermissionTips') : this.$t('history.buildEmptyDesc')
+
                 const btns = hasNoPermission
                     ? [{
                         theme: 'primary',
@@ -75,18 +81,26 @@
                         disabled: this.executeStatus,
                         loading: this.executeStatus,
                         handler: () => {
-                            !this.executeStatus && this.$router.push({
+                            const params = {
+                                ...this.$route.params,
+                                version: this.pipelineInfo?.version
+                            }
+                            if (this.isReleasePipeline) {
+                                return this.$router.push({
+                                    name: 'pipelinesEdit',
+                                    params
+                                })
+                            }
+                            !this.executeStatus && !this.isCurPipelineLocked && this.$router.push({
                                 name: 'executePreview',
                                 query: {
                                     ...(this.isDebug ? { debug: '' } : {})
                                 },
-                                params: {
-                                    ...this.$route.params,
-                                    version: this.pipelineInfo?.version
-                                }
+                                params
+
                             })
                         },
-                        text: this.$t('history.startBuildTips')
+                        text: this.$t(this.isReleasePipeline ? 'goEdit' : 'history.startBuildTips')
                     }]
                 return {
                     title,
@@ -139,29 +153,10 @@
             },
             async toApplyPermission () {
                 try {
-                    const { projectId } = this.$route.params
-                    const redirectUrl = await this.$ajax.post(`${AUTH_URL_PREFIX}/user/auth/permissionUrl`, [{
-                        actionId: this.$permissionActionMap.view,
-                        resourceId: this.$permissionResourceMap.pipeline,
-                        instanceId: [{
-                            id: projectId,
-                            type: this.$permissionResourceTypeMap.PROJECT
-                        }, {
-                            id: this.pipelineId,
-                            name: this.pipelineId,
-                            type: this.$permissionResourceTypeMap.PIPELINE_DEFAULT
-                        }]
-                    }])
-                    console.log('redirectUrl', redirectUrl)
-                    window.open(redirectUrl, '_blank')
-                    this.$bkInfo({
-                        title: this.$t('permissionRefreshtitle'),
-                        subTitle: this.$t('permissionRefreshSubtitle'),
-                        okText: this.$t('permissionRefreshOkText'),
-                        cancelText: this.$t('close'),
-                        confirmFn: () => {
-                            location.reload()
-                        }
+                    handlePipelineNoPermission({
+                        projectId: this.projectId,
+                        resourceCode: this.pipelineId,
+                        action: RESOURCE_ACTION.VIEW
                     })
                 } catch (e) {
                     console.error(e)

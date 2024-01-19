@@ -9,6 +9,7 @@
         </header>
         <div class="setting-content-wrapper">
             <setting-base
+                :is-enabled-permission="isEnabledPermission"
                 @setState="setState"
                 @cancel="exit"
             ></setting-base>
@@ -24,12 +25,16 @@
         components: {
             SettingBase
         },
+        props: {
+            isEnabledPermission: Boolean
+        },
         data () {
             return {
                 isEditing: false,
                 isLoading: true,
                 confirmMsg: this.$t('editPage.confirmMsg'),
-                confirmTitle: this.$t('editPage.confirmTitle')
+                confirmTitle: this.$t('editPage.confirmTitle'),
+                cancelText: this.$t('cancel')
             }
         },
         computed: {
@@ -56,7 +61,7 @@
             },
             leaveConfirm (to, from, next) {
                 if (this.isEditing) {
-                    navConfirm({ content: this.confirmMsg, type: 'warning' })
+                    navConfirm({ content: this.confirmMsg, type: 'warning', cancelText: this.cancelText })
                         .then(next)
                         .catch(() => next(false))
                 } else {

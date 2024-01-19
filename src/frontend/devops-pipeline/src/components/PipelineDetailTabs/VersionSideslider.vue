@@ -8,8 +8,10 @@
                 <bk-spin v-if="isLoading" size="mini"></bk-spin>
                 <template v-else>
                     <i v-if="isActiveDraft" class="devops-icon icon-draft" />
+                    <logo v-else-if="isActiveBranchVersion" name="branch" size="14" />
                     <i v-else class="devops-icon icon-check-circle" />
-                    <span>
+                    <span v-if="isActiveDraft">{{ $t('editPage.draftVersion', [draftBaseVersionName]) }}</span>
+                    <span v-else>
                         {{ activeVersionName }}
                     </span>
                     <i class="devops-icon icon-shift" />
@@ -39,6 +41,7 @@
                     >
                         <p>
                             <i v-if="item.isDraft" class="devops-icon icon-draft" style="font-size: 14px" />
+                            <logo v-else-if="item.isBranchVersion" name="branch" size="14" />
                             <i v-else class="devops-icon icon-check-circle" />
                             <span class="pipeline-version-name">
                                 {{ item.displayName }}
@@ -72,12 +75,14 @@
 </template>
 <script>
     import { mapState, mapActions } from 'vuex'
-    import { convertTime } from '@/utils/util'
+    import { convertTime, generateDisplayName } from '@/utils/util'
     import VersionHistorySideSlider from './VersionHistorySideSlider'
+    import Logo from '@/components/Logo'
     export default {
         name: 'versionSideslider',
         emit: ['input', 'update:value', 'change'],
         components: {
+            Logo,
             VersionHistorySideSlider
         },
         props: {
@@ -124,11 +129,20 @@
             },
             isActiveDraft () {
                 return this.activeVersion?.isDraft ?? false
+            },
+            isActiveBranchVersion () {
+                return this.activeVersion?.isBranchVersion ?? false
+            },
+            draftBaseVersionName () {
+                return generateDisplayName(this.activeVersion?.baseVersion, this.activeVersion?.baseVersionName)
             }
         },
         watch: {
             value (val) {
                 this.activeVersion = this.versionList.find(item => item.version === val)
+            },
+            pipelineId () {
+                this.handlePipelineVersionList()
             }
         },
         created () {
@@ -139,7 +153,11 @@
             ...mapActions('pipelines', [
                 'requestPipelineVersionList'
             ]),
+            ...mapActions('atom', [
+                'setShowVariable'
+            ]),
             showVersionSideSlider () {
+                this.setShowVariable(false)
                 this.showVersionSideslider = true
             },
             handlePaginationChange ({ current = 1, limit = this.pagination.limit } = {}) {
@@ -157,14 +175,19 @@
                     versionName: this.searchKeyword
                 }).then(({ records, count }) => {
                     this.versionList = records.map(item => {
+                        const isDraft = item.status === 'COMMITTING'
+                        const displayName = generateDisplayName(item.version, item.versionName)
                         return {
                             ...item,
-                            displayName: `V${item.version} (${item.versionName})`,
-                            isDraft: item.status === 'COMMITTING',
+                            displayName: isDraft ? this.$t('draft') : displayName,
+                            description: isDraft ? this.$t('baseOn', [generateDisplayName(item.baseVersion, item.baseVersionName)]) : (item.description || '--'),
+                            isBranchVersion: item.status === 'BRANCH',
+                            isDraft,
                             isRelease: item.status === 'RELEASED'
                         }
                     })
-                    this.activeVersion = this.versionList.find(item => item.version === this.value)
+                    const activeVersion = this.versionList.find(item => item.version === this.value)
+                    this.switchVersion(activeVersion)
                 }).catch(err => {
                     this.$showTips({
                         message: err.message || err,
@@ -174,14 +197,13 @@
                     this.isLoading = false
                 })
             },
-            getDraftVersion () {
-                return this.versionList.find(item => item.isDraft)?.versionName ?? ''
-            },
             switchVersion (version) {
-                this.activeVersion = version
-                this.$emit('change', version.version, version)
-                this.$emit('input', version.version, version)
-                this.$emit('update:value', version.version, version)
+                if (version) {
+                    this.activeVersion = version
+                    this.$emit('change', version.version, version)
+                    this.$emit('input', version.version, version)
+                    this.$emit('update:value', version.version, version)
+                }
             },
             isCurrentVersion (version) {
                 return version?.version === this.pipelineInfo?.releaseVersion
@@ -227,7 +249,8 @@
     cursor: pointer;
 }
 .pipeline-version-dropmenu-content {
-    width: 360px;
+    width: 100%;
+    min-width: 360px;
     display: flex;
     flex-direction: column;
     max-height: 360px;

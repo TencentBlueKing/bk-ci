@@ -28,6 +28,7 @@
 package com.tencent.devops.common.webhook.pojo.code.git
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitTagPushActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitTagPushOperationKind
 
@@ -46,6 +47,8 @@ data class GitTagPushEvent(
     val total_commits_count: Int,
     val operation_kind: String?,
     val create_from: String? = null,
+    @JsonProperty("push_timestamp")
+    val pushTimestamp: String?,
     val message: String?
 ) : GitEvent() {
     companion object {
