@@ -1,5 +1,6 @@
 <template>
     <bk-permission
+        :key="resourceCode"
         :resource-type="resourceType"
         :resource-code="resourceCode"
         :project-code="projectCode"

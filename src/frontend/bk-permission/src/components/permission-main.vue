@@ -46,8 +46,7 @@
   </article>
 </template>
 
-<script>
-import NoEnablePermission from './children/no-enable-permission/no-enable-permission.vue';
+<script>import NoEnablePermission from './children/no-enable-permission/no-enable-permission.vue';
 import NoPermission from './children/no-permission/no-permission.vue';
 import PermissionManage from './children/permission-manage/permission-manage.vue';
 import ajax from '../ajax/index';
@@ -92,8 +91,23 @@ export default {
       hasPermission: false,
       isLoading: true,
       isApprover: false,
-      errorCode: ''
+      errorCode: '',
     };
+  },
+
+  computed: {
+    permissionResource() {
+      return `${this.projectCode}/${this.resourceType}/${this.resourceCode}`;
+    },
+  },
+
+  watch: {
+    permissionResource() {
+      this.$nextTick(() => {
+        this.initStatus();
+      });
+    },
+
   },
 
   created() {
@@ -112,10 +126,10 @@ export default {
           this.isEnablePermission = isEnableData?.data;
           this.hasPermission = hasManagerData?.data;
         })
-        .catch(err => {
+        .catch((err) => {
           if ([404, 403, 2119042].includes(err.code)) {
-              this.isApprover = true;
-              this.errorCode = err.code;
+            this.isApprover = true;
+            this.errorCode = err.code;
           }
         })
         .finally(() => {

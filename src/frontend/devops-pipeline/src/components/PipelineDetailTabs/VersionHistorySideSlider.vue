@@ -44,6 +44,7 @@
                     <bk-table-column width="300" :label="$t('operate')">
                         <template slot-scope="props">
                             <rollback-entry
+                                v-if="props.row.canRollback"
                                 :version="props.row.version"
                                 :version-name="props.row.versionName"
                                 :draft-version-name="draftVersionName"
@@ -206,6 +207,7 @@
                 this.pipelineVersionList = res.records.map(item => {
                     return {
                         ...item,
+                        canRollback: item.version !== this.releaseVersion && item.status !== 'COMMITTING',
                         versionName: item.versionName || this.$t('editPage.draftVersion', [generateDisplayName(item.baseVersion, item.baseVersionName)])
                     }
                 })
