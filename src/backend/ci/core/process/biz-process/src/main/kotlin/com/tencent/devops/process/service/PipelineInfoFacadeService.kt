@@ -732,7 +732,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 pipelineId = null,
                 actionType = TransferActionType.FULL_YAML2MODEL,
                 data = TransferBody(oldYaml = yaml),
-                aspects = aspects
+                aspects = aspects ?: LinkedList()
             )
             if (result.modelAndSetting == null) {
                 logger.warn("TRANSFER_YAML|$projectId|$userId|$isDefaultBranch|yml=\n$yaml")

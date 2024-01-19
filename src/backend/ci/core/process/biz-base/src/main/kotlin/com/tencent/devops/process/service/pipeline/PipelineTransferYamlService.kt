@@ -48,6 +48,8 @@ import com.tencent.devops.common.pipeline.pojo.transfer.TransferResponse
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
+import com.tencent.devops.process.yaml.pojo.TemplatePath
+import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.transfer.ElementTransfer
 import com.tencent.devops.process.yaml.transfer.ModelTransfer
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
@@ -59,8 +61,6 @@ import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectWra
 import com.tencent.devops.process.yaml.transfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.transfer.schema.CodeSchemaCheck
-import com.tencent.devops.process.yaml.pojo.TemplatePath
-import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v3.models.ITemplateFilter
 import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplate
@@ -68,11 +68,11 @@ import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplateConf
 import com.tencent.devops.process.yaml.v3.parsers.template.models.GetTemplateParam
 import com.tencent.devops.process.yaml.v3.utils.ScriptYmlUtils
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import java.util.LinkedList
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.LinkedList
 
 @Suppress("ALL")
 @Service
@@ -108,22 +108,30 @@ class PipelineTransferYamlService @Autowired constructor(
         pipelineId: String?,
         actionType: TransferActionType,
         data: TransferBody,
-        aspects: LinkedList<IPipelineTransferAspect>? = null
+        aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
     ): TransferResponse {
         val watcher = Watcher(id = "yaml and model transfer watcher")
         try {
+            if (aspects.isEmpty()) {
+                val defaultAspects = PipelineTransferAspectLoader.initByDefaultTriggerOn(
+                    {
+                        getRepoAliasName(projectId = projectId, pipelineId)
+                    }
+                )
+                aspects.addAll(defaultAspects)
+            }
             when (actionType) {
                 TransferActionType.FULL_MODEL2YAML -> {
                     watcher.start("step_1|FULL_MODEL2YAML start")
                     val invalidElement = mutableListOf<String>()
-                    val defaultAspects = PipelineTransferAspectLoader.checkInvalidElement(invalidElement)
+                    aspects.addAll(PipelineTransferAspectLoader.checkInvalidElement(invalidElement))
                     val response = modelTransfer.model2yaml(
                         ModelTransferInput(
                             userId = userId,
                             model = data.modelAndSetting!!.model,
                             setting = data.modelAndSetting!!.setting,
                             version = YamlVersion.Version.V3_0,
-                            aspectWrapper = PipelineTransferAspectWrapper(aspects ?: defaultAspects)
+                            aspectWrapper = PipelineTransferAspectWrapper(aspects)
                         )
                     )
                     val newYaml = TransferMapper.mergeYaml(data.oldYaml, TransferMapper.toYaml(response))
@@ -152,11 +160,6 @@ class PipelineTransferYamlService @Autowired constructor(
                             templateId = null
                         )
                     }
-                    val defaultAspects = PipelineTransferAspectLoader.initByDefaultTriggerOn(
-                        {
-                            getRepoAliasName(projectId = projectId, pipelineId)
-                        }
-                    )
                     val pYml = TransferMapper.getObjectMapper()
                         .readValue(data.oldYaml, object : TypeReference<IPreTemplateScriptBuildYaml>() {})
                     watcher.start("step_2|parse template")
@@ -181,7 +184,7 @@ class PipelineTransferYamlService @Autowired constructor(
                         pipelineInfo = pipelineInfo,
                         yaml = pYml,
                         asCodeSettings = data.modelAndSetting?.setting?.pipelineAsCodeSettings,
-                        aspectWrapper = PipelineTransferAspectWrapper(aspects ?: defaultAspects)
+                        aspectWrapper = PipelineTransferAspectWrapper(aspects)
                     )
                     val model = modelTransfer.yaml2Model(input)
                     val setting = modelTransfer.yaml2Setting(input)

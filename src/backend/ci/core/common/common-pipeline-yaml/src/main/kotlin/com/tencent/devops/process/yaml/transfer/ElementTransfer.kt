@@ -112,6 +112,9 @@ class ElementTransfer @Autowired(required = false) constructor(
     fun baseTriggers2yaml(elements: List<Element>, aspectWrapper: PipelineTransferAspectWrapper): TriggerOn? {
         val triggerOn = lazy { TriggerOn() }
         val schedules = mutableListOf<SchedulesRule>()
+        triggerOn.value.manual = ManualRule(
+            enable = false
+        )
         elements.forEach { element ->
             aspectWrapper.setModelElement4Model(
                 element,
