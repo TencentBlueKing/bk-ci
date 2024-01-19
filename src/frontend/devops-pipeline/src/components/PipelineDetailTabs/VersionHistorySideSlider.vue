@@ -33,6 +33,7 @@
                                 'active-version-name': row.version === releaseVersion
                             }]">
                                 <i class="devops-icon icon-draft" v-if="row.status === 'COMMITTING'" />
+                                <logo v-else-if="row.isBranchVersion" name="branch" size="14" />
                                 <i v-else class="devops-icon icon-check-circle" />
                                 {{ row.versionName }}
                                 <!-- <span>
@@ -79,13 +80,15 @@
     import VersionDiffEntry from './VersionDiffEntry'
     import RollbackEntry from './RollbackEntry'
     import EmptyException from '@/components/common/exception'
+    import Logo from '@/components/Logo'
     import '@blueking/search-select/dist/styles/index.css'
     export default {
         components: {
             SearchSelect,
             VersionDiffEntry,
             RollbackEntry,
-            EmptyException
+            EmptyException,
+            Logo
         },
         props: {
             showVersionSideslider: Boolean,
@@ -208,6 +211,7 @@
                     return {
                         ...item,
                         canRollback: item.version !== this.releaseVersion && item.status !== 'COMMITTING',
+                        isBranchVersion: item.status === 'BRANCH',
                         versionName: item.versionName || this.$t('editPage.draftVersion', [generateDisplayName(item.baseVersion, item.baseVersionName)])
                     }
                 })
