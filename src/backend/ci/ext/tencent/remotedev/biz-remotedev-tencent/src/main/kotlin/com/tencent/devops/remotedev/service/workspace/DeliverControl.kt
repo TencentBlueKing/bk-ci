@@ -41,7 +41,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode
-import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
@@ -160,6 +159,7 @@ class DeliverControl @Autowired constructor(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
+        val clientNotifyUser = mutableListOf<String>()
         val assign2Owner = assigns.firstOrNull { it.type == WorkspaceShared.AssignType.OWNER }
         val alreadyExist = sharedDao.fetchWorkspaceSharedInfo(dslContext, workspaceName)
         val existOwner = alreadyExist.firstOrNull { it.type == WorkspaceShared.AssignType.OWNER }
@@ -168,6 +168,7 @@ class DeliverControl @Autowired constructor(
             .addAttribute(ASSIGNS_TEMPLATE, assigns.joinToString(",") { it.userId })
         when {
             existOwner == null && assign2Owner != null -> {
+                clientNotifyUser.add(assign2Owner.userId)
                 logger.info("assignUser2Workspace|$userId|${assign2Owner.userId}")
                 workspaceCommon.shareWorkspace(
                     workspaceName = workspaceName,
@@ -193,6 +194,7 @@ class DeliverControl @Autowired constructor(
                     assignType = WorkspaceShared.AssignType.OWNER
                 )
                 if (assign2Owner != null) {
+                    clientNotifyUser.add(assign2Owner.userId)
                     workspaceCommon.shareWorkspace(
                         workspaceName = workspaceName,
                         operator = userId,
@@ -212,6 +214,7 @@ class DeliverControl @Autowired constructor(
             .filter { it.type == WorkspaceShared.AssignType.VIEWER }.map { m -> m.sharedUser }
         val add = assigns.filter { it.type == WorkspaceShared.AssignType.VIEWER && it.userId !in em }
         if (add.isNotEmpty()) {
+            clientNotifyUser.addAll(add.map { it.userId })
             workspaceCommon.shareWorkspace(
                 workspaceName = workspaceName,
                 operator = userId,
@@ -232,19 +235,22 @@ class DeliverControl @Autowired constructor(
         }
 
         // 分配完机器后通知客户端，刷新列表
-        notifyControl.dispatchWebsocketPushEvent(
-            userId = Constansts.ADMIN_NAME,
-            workspaceName = workspaceName,
-            workspaceHost = null,
-            errorMsg = null,
-            type = WebSocketActionType.WORKSPACE_ASSIGN,
-            status = true,
-            action = WorkspaceAction.ASSIGN,
-            systemType = workspace.workspaceSystemType,
-            workspaceMountType = workspace.workspaceMountType,
-            ownerType = workspace.ownerType,
-            projectId = workspace.projectId
-        )
+        logger.info("clientNotifyUser|$clientNotifyUser")
+        clientNotifyUser.forEach {
+            notifyControl.dispatchWebsocketPushEvent(
+                userId = it,
+                workspaceName = workspaceName,
+                workspaceHost = null,
+                errorMsg = null,
+                type = WebSocketActionType.WORKSPACE_ASSIGN,
+                status = true,
+                action = WorkspaceAction.ASSIGN,
+                systemType = workspace.workspaceSystemType,
+                workspaceMountType = workspace.workspaceMountType,
+                ownerType = workspace.ownerType,
+                projectId = workspace.projectId
+            )
+        }
     }
 
     fun softwareInstallationCompleteCallback(
