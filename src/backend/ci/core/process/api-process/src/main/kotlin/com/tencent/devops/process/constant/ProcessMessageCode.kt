@@ -321,6 +321,9 @@ object ProcessMessageCode {
     const val YAML_VIEW_CANNOT_BULK_REMOVE = "2101203" // 由开启 PAC 模式自动创建，删除流水线请前往代码库操作
     const val ERROR_GET_COMMIT_INFO = "2101204" // 获取commit信息失败
     const val ERROR_DELETE_YAML_PIPELINE_IN_DEFAULT_BRANCH = "2101205" // 已开启PAC模式,不能删除默认分支yaml关联的流水线
+    const val ERROR_YAML_CONTENT_IS_EMPTY = "2101206" // yaml文件内容不能为空
+    const val ERROR_YAML_FILE_NAME_FORMAT = "2101207" // yaml文件名格式错误,仅支持yaml、yml后缀和一级子目录
+    const val ERROR_YAML_BOUND_PIPELINE = "2101208" // yaml文件已绑定流水线{0},不能重复绑定
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

@@ -48,6 +48,7 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.webhook.WebhookEventFactory
 import com.tencent.devops.process.yaml.actions.EventActionFactory
+import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.actions.data.PacRepoSetting
 import com.tencent.devops.process.yaml.actions.data.YamlTriggerPipeline
 import com.tencent.devops.process.yaml.actions.internal.event.PipelineYamlManualEvent
@@ -293,6 +294,27 @@ class PipelineYamlFacadeService @Autowired constructor(
             errorCode = ProcessMessageCode.GIT_NOT_FOUND,
             params = arrayOf(repoHashId)
         )
+        if (content.isBlank()) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_YAML_CONTENT_IS_EMPTY,
+                params = arrayOf(repoHashId)
+            )
+        }
+        if (!GitActionCommon.checkYamlPipelineFile(filePath)) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_YAML_FILE_NAME_FORMAT
+            )
+        }
+        pipelineYamlService.getPipelineYamlInfo(
+            projectId = projectId, repoHashId = repoHashId, filePath = filePath
+        )?.let {
+            if (it.pipelineId != pipelineId) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_YAML_BOUND_PIPELINE,
+                    params = arrayOf(it.pipelineId)
+                )
+            }
+        }
         if (targetAction != CodeTargetAction.COMMIT_TO_MASTER && versionName.isNullOrBlank()) {
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_NULL,
