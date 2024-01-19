@@ -284,7 +284,7 @@ class PipelineYamlFacadeService @Autowired constructor(
         commitMessage: String,
         targetAction: CodeTargetAction
     ): PushPipelineResult {
-        logger.info("upload yaml file|$userId|$projectId|$repoHashId|$scmType|$version|$versionName")
+        logger.info("upload yaml file|$userId|$projectId|$pipelineId|$repoHashId|$scmType|$version|$versionName")
         val repository = client.get(ServiceRepositoryResource::class).get(
             projectId = projectId,
             repositoryId = repoHashId,

@@ -196,6 +196,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             yamlFileName = yamlFile.yamlPath.removePrefix(".ci/"),
             branchName = branch,
             isDefaultBranch = branch == action.data.context.defaultBranch,
+            description = action.data.eventCommon.commit.commitMsg,
             aspects = PipelineTransferAspectLoader.initByDefaultTriggerOn(defaultRepo = {
                 action.data.setting.aliasName
             })
@@ -306,6 +307,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             yamlFileName = yamlFile.yamlPath.removePrefix(".ci/"),
             branchName = branch,
             isDefaultBranch = branch == action.data.context.defaultBranch,
+            description = action.data.eventCommon.commit.commitMsg,
             aspects = PipelineTransferAspectLoader.initByDefaultTriggerOn(defaultRepo = {
                 action.data.setting.aliasName
             })
