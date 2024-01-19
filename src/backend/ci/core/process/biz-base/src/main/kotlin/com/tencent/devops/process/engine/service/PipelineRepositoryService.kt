@@ -918,7 +918,32 @@ class PipelineRepositoryService constructor(
                             version = activeBranchVersion.version
                         }
                     }
-                    // 3 正式版本保存 —— 寻找当前草稿，存在草稿版本则报错，不存在则直接取最新VERSION+1，同时更新INFO、RESOURCE表
+                    // TODO #8161 3 通过分支发布 ——
+                    VersionStatus.BRANCH_RELEASE -> {
+//                        // 查询同名分支的最新active版本，存在则更新，否则新增一个版本
+//                        branchName?.let { versionName = branchName }
+//                        val activeBranchVersion = pipelineResourceVersionDao.getVersionResource(
+//                            dslContext = transactionContext,
+//                            projectId = projectId,
+//                            pipelineId = pipelineId,
+//                            branchName = branchName
+//                        )
+//                        if (activeBranchVersion == null) {
+//                            // 创建
+//                            branchAction = BranchVersionAction.ACTIVE
+//                            operationLogType = OperationLogType.CREATE_BRANCH_VERSION
+//                            operationLogParams = versionName
+//                            version = latestVersion.version + 1
+//                        } else {
+//                            // 更新
+//                            operationLogType = OperationLogType.UPDATE_BRANCH_VERSION
+//                            operationLogParams = activeBranchVersion.versionName
+//                                ?: activeBranchVersion.version.toString()
+//                            branchAction = BranchVersionAction.ACTIVE
+//                            version = activeBranchVersion.version
+//                        }
+                    }
+                    // 4 正式版本保存 —— 寻找当前草稿，存在草稿版本则报错，不存在则直接取最新VERSION+1，同时更新INFO、RESOURCE表
                     else -> {
                         watcher.start("getOriginModel")
                         val draftVersion = pipelineResourceVersionDao.getDraftVersionResource(
