@@ -82,6 +82,7 @@
                         <bk-form-item required property="repoHashId">
                             <bk-select
                                 id="yamlCodelib"
+                                :disabled="pacEnabled"
                                 searchable
                                 enable-scroll-load
                                 v-model="releaseParams.repoHashId"
@@ -122,7 +123,7 @@
                             />
                         </label>
                         <bk-form-item required property="filePath">
-                            <bk-input v-model="releaseParams.filePath" id="yamlFilePath">
+                            <bk-input :disabled="pacEnabled" v-model="releaseParams.filePath" id="yamlFilePath">
                                 <span class="group-text" slot="prepend">{{ filePathDir }}</span>
                             </bk-input>
                         </bk-form-item>
