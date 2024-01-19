@@ -1,5 +1,6 @@
 package com.tencent.devops.process.pojo.trigger
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import io.swagger.annotations.ApiModel
@@ -17,5 +18,6 @@ import io.swagger.annotations.ApiModel
 )
 @ApiModel("流水线触发事件原因详情-基类")
 abstract class PipelineTriggerReasonDetail {
+    @JsonIgnore
     abstract fun getReasonDetailList() : List<String>?
 }
