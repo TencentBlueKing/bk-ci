@@ -16,7 +16,7 @@ class OpCodeProxyResourceImpl @Autowired constructor(
             gitProxyTGitService.linkTGit(
                 userId = data.userId,
                 projectId = data.projectId,
-                urls = data.urls.split(";").filter { it.isNotBlank() }.toSet()
+                urls = data.urls.split("\n").filter { it.isNotBlank() }.toSet()
             )
         )
     }

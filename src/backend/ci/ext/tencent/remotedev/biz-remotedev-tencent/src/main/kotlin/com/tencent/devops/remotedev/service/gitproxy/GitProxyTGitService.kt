@@ -119,7 +119,7 @@ class GitProxyTGitService @Autowired constructor(
                         return@urls
                     }
                     val level = GitAccessLevelEnum.MASTER.level
-                    result[projectUrl.removeHttpPrefix()] = when {
+                    result[url.removeHttpPrefix()] = when {
                         (project.permissions?.projectAccess?.accessLevel ?: 0) >= level -> true
                         (project.permissions?.shareGroupAccess?.accessLevel ?: 0) >= level -> true
                         (project.permissions?.groupAccess?.accessLevel ?: 0) >= level -> true
