@@ -2,22 +2,34 @@ package com.tencent.devops.remotedev.service.gitproxy
 
 import com.sun.org.slf4j.internal.LoggerFactory
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.remotedev.dao.ProjectTGitLinkDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.QueryType
+import com.tencent.devops.remotedev.service.BKBaseService
 import com.tencent.devops.remotedev.service.BKItsmService
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import okhttp3.Dns
+import okhttp3.OkHttpClient
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.net.InetAddress
 import java.net.URLEncoder
+import java.security.cert.CertificateException
+import java.util.concurrent.TimeUnit
+import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLSocketFactory
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
 
 @Suppress("ALL")
 @Service
@@ -34,6 +46,9 @@ class GitProxyTGitService @Autowired constructor(
 
     @Value("\${tgit.svnUrl:}")
     private val tSvnUrl: String = ""
+
+    @Value("\${tgit.ip:}")
+    private val tGitIp: String = ""
 
     // 校验当前凭据的用户是否拥有连接项目的 master 及以上权限
     fun checkUserPermission(
@@ -200,7 +215,64 @@ class GitProxyTGitService @Autowired constructor(
 
     private fun String.removeHttpPrefix() = this.removePrefix("https://").removePrefix("http://")
 
+    private val myCustomDns = Dns { hostname ->
+        if (hostname == "my.special.domain") {
+            // 返回特殊的IP地址
+            listOf(InetAddress.getByName("123.123.123.123"))
+        } else {
+            // 对于其他主机名使用系统默认的DNS解析
+            Dns.SYSTEM.lookup(hostname)
+        }
+    }
+
+
     companion object {
         private val logger = LoggerFactory.getLogger(GitProxyTGitService::class.java)
+        private fun sslSocketFactory(): SSLSocketFactory {
+            try {
+                val sslContext = SSLContext.getInstance("SSL")
+                sslContext.init(null, trustAllCerts, java.security.SecureRandom())
+                return sslContext.socketFactory
+            } catch (ingored: Exception) {
+                throw RemoteServiceException(ingored.message!!)
+            }
+        }
+
+        private val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
+            @Throws(CertificateException::class)
+            override fun checkClientTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
+            }
+
+            @Throws(CertificateException::class)
+            override fun checkServerTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
+            }
+
+            override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> {
+                return arrayOf()
+            }
+        })
+
+        private val okHttpClient = OkHttpClient.Builder()
+            .connectTimeout(5, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
+            .hostnameVerifier { _, _ -> true }
+            .dns()
+            .build()
     }
+}
+
+class TGitDns:Dns{
+    override fun lookup(hostname: String): List<InetAddress> {
+        if (hostname == "my.special.domain") {
+            // 返回特殊的IP地址
+            listOf(InetAddress.getByName("123.123.123.123"))
+        } else {
+            // 对于其他主机名使用系统默认的DNS解析
+            Dns.SYSTEM.lookup(hostname)
+        }
+
+    }
+
 }
