@@ -56,6 +56,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
@@ -525,6 +526,19 @@ class WorkspaceCommon @Autowired constructor(
                     )
                 )
             }
+            notifyControl.dispatchWebsocketPushEvent(
+                userId = it.userId,
+                workspaceName = workspaceName,
+                workspaceHost = null,
+                errorMsg = null,
+                type = WebSocketActionType.WORKSPACE_ASSIGN,
+                status = true,
+                action = WorkspaceAction.ASSIGN,
+                systemType = null,
+                workspaceMountType = mountType,
+                ownerType = null,
+                projectId = ""
+            )
         }
     }
 
