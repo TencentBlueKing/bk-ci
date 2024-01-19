@@ -1,13 +1,13 @@
 <template>
     <div class="variable-container">
-        <bk-alert type="info" :title="$t('可通过表达式 ${{ variables.<var_name> }} 引用变量')" closable></bk-alert>
+        <bk-alert type="info" :title="$t('newui.pipelineParam.useTips')" closable></bk-alert>
         <div class="operate-row">
-            <bk-button class="var-btn" :disabled="!editable" @click="handleAdd">{{$t('添加变量')}}</bk-button>
-            <bk-button class="var-btn" :disabled="!editable" @click="handleAdd('constant')">{{$t('添加常量')}}</bk-button>
+            <bk-button class="var-btn" v-enStyle="'min-width:100px'" :disabled="!editable" @click="handleAdd">{{$t('newui.pipelineParam.addVar')}}</bk-button>
+            <bk-button class="var-btn" v-enStyle="'min-width:100px'" :disabled="!editable" @click="handleAdd('constant')">{{$t('newui.pipelineParam.addConst')}}</bk-button>
             <bk-input
                 v-model="searchStr"
                 :clearable="true"
-                :placeholder="'变量名/变量别名/变量描述'"
+                :placeholder="$t('newui.pipelineParam.searchPipelineVar')"
                 :right-icon="'bk-icon icon-search'"
             />
         </div>
@@ -39,7 +39,7 @@
             </div>
             <div class="edit-var-footer" slot="footer">
                 <bk-button theme="primary" @click="handleSaveVar">
-                    {{ editIndex === -1 ? $t('添加') : $t('确定') }}
+                    {{ editIndex === -1 ? $t('editPage.append') : $t('confirm') }}
                 </bk-button>
                 <bk-button style="margin-left: 8px;" @click="hideSlider">
                     {{ $t('cancel') }}
@@ -50,6 +50,7 @@
 </template>
 
 <script>
+    import { deepCopy } from '@/utils/util'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import ParamGroup from './children/param-group'
     import PipelineParamForm from './pipeline-param-form'
@@ -101,23 +102,23 @@
                 return [
                     {
                         key: 'requiredParam',
-                        title: '入参',
+                        title: this.$t('newui.pipelineParam.buildParam'),
                         list: this.renderParams.filter(item => !item.constant && item.required)
                     },
                     {
                         key: 'constantParam',
-                        title: '常量',
+                        title: this.$t('newui.const'),
                         list: this.renderParams.filter(item => item.constant === true)
                     },
                     {
                         key: 'otherParam',
-                        title: '其它变量',
+                        title: this.$t('newui.pipelineParam.otherVar'),
                         list: this.renderParams.filter(item => !item.constant && !item.required)
                     }
                 ]
             },
             sliderTitle () {
-                return `${this.editIndex === -1 ? this.$t('添加') : this.$t('编辑')}${this.paramType === 'constant' ? this.$t('常量') : this.$t('变量')}`
+                return `${this.editIndex === -1 ? this.$t('editPage.append') : this.$t('edit')}${this.paramType === 'constant' ? this.$t('newui.pipelineParam.constTitle') : this.$t('newui.pipelineParam.varTitle')}`
             }
         },
         methods: {
@@ -137,7 +138,7 @@
                 if (!this.editable) return
                 this.showSlider = true
                 this.editIndex = this.globalParams.findIndex(item => item.id === paramId)
-                this.sliderEditItem = this.globalParams.find(item => item.id === paramId) || {}
+                this.sliderEditItem = deepCopy(this.globalParams.find(item => item.id === paramId) || {})
                 this.paramType = this.sliderEditItem?.constant === true ? 'constant' : 'var'
             },
             handleSaveVar () {
@@ -155,7 +156,6 @@
             },
             updateEditItem (name, value) {
                 Object.assign(this.sliderEditItem, { [name]: value })
-                console.log(this.sliderEditItem, 'editing')
             },
             resetEditItem (param = {}) {
                 this.sliderEditItem = param
@@ -183,7 +183,6 @@
             align-items: center;
             justify-content: space-between;
             .var-btn {
-                width: 88px;
                 min-width: 88px;
                 margin-right: 8px;
             }

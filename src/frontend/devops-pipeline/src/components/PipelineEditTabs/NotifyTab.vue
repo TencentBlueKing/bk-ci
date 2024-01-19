@@ -5,7 +5,7 @@
                 <div slot="header" class="item-header">
                     <span class="notify-title">{{card.name}}</span>
                     <bk-link v-if="editable" theme="primary" icon="bk-icon icon-plus" @click.stop="handleEdit(card.type, -1)">
-                        新增通知
+                        {{$t('newui.addNotice')}}
                     </bk-link>
                 </div>
                 <div class="item-content-area">
@@ -27,7 +27,7 @@
                             </template>
                             <div class="item-info" v-if="item.wechatGroupFlag && item.wechatGroup && item.types && item.types.includes('WEWORK')">
                                 <div class="info-label">
-                                    企业微信群ID
+                                    {{$t('wechatGroupID')}}
                                 </div>
                                 <div class="info-content">
                                     {{item.wechatGroup}}
@@ -52,10 +52,10 @@
             </div>
             <div class="edit-notify-footer" slot="footer">
                 <bk-button theme="primary" @click="handleSaveNotify">
-                    新增
+                    {{$t('new')}}
                 </bk-button>
                 <bk-button style="margin-left: 4px;" @click="hideSlider">
-                    取消
+                    {{$t('cancel')}}
                 </bk-button>
             </div>
         </bk-sideslider>
@@ -121,26 +121,26 @@
                 renderFields: [
                     {
                         col: 'types',
-                        label: '通知方式'
+                        label: this.$t('settings.noticeType')
                     },
                     {
                         col: 'groups',
-                        label: '通知组'
+                        label: this.$t('settings.noticeGroup')
                     },
                     {
                         col: 'users',
-                        label: '通知人'
+                        label: this.$t('settings.additionUser')
                     },
                     {
                         col: 'content',
-                        label: '通知内容'
+                        label: this.$t('settings.noticeContent')
                     }
                 ]
             }
         },
         computed: {
             slideTitle () {
-                const actionType = this.editIndex > -1 ? this.$t('settings.编辑通知') : this.$t('settings.新增通知')
+                const actionType = this.editIndex > -1 ? this.$t('newui.editNotice') : this.$t('newui.addNotice')
                 const targetType = this.editType === 'failSubscriptionList' ? this.$t('settings.whenFail') : this.$t('settings.whenSuc')
                 return actionType + ' - ' + targetType
             }

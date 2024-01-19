@@ -6,7 +6,7 @@
             @click="toggleOpenVar"
         >
             <i class="bk-icon icon-angle-double-right"></i>
-            变量
+            {{$t('newui.variable')}}
         </div>
         <div v-if="showVariable" class="variable-version-container">
             <div class="select-tab-container">
@@ -14,6 +14,7 @@
                     <div
                         v-for="(panel, index) in panels"
                         class="tab-item"
+                        v-enStyle="'margin-right: 28px'"
                         :key="index"
                         :class="{ actived: active === panel.name }"
                         @click="selectTab(panel.name)"
@@ -74,10 +75,10 @@
         data () {
             return {
                 panels: [
-                    { name: 'pipeline', label: this.$t('流水线变量') },
-                    { name: 'atomOutput', label: this.$t('插件输出变量') },
-                    { name: 'system', label: this.$t('系统变量') },
-                    { name: 'version', label: this.$t('推荐版本号') }
+                    { name: 'pipeline', label: this.$t('newui.pipelineVar') },
+                    { name: 'atomOutput', label: this.$t('newui.atomVar') },
+                    { name: 'system', label: this.$t('newui.sysVar') },
+                    { name: 'version', label: this.$t('newui.versions') }
                 ],
                 active: 'pipeline'
             }

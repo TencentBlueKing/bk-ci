@@ -13,19 +13,20 @@
                 <request-selector
                     v-if="param.payload && param.payload.type === 'remote'"
                     v-bind="remoteParamOption"
+                    v-validate.initial="{ required: valueRequired }"
                     :popover-min-width="250"
                     :disabled="disabled"
                     name="defaultValue"
-                    v-validate.initial="{ required: valueRequired }"
+                    :multi-select="isMultipleParam(param.type)"
                     :data-vv-scope="'pipelineParam'"
-                    :value="param.defaultValue"
-                    :handle-change="(name, value) => handleUpdateParam(name, value)"
+                    :value="selectDefautVal"
+                    :handle-change="(name, value) => handleUpdateSelectorVal(name, value)"
                 >
                 </request-selector>
                 <selector
                     v-else
                     :popover-min-width="250"
-                    :handle-change="(name, value) => handleUpdateParam(name, value)"
+                    :handle-change="(name, value) => handleUpdateSelectorVal(name, value)"
                     :list="optionList"
                     :multi-select="isMultipleParam(param.type)"
                     name="defaultValue"
@@ -320,12 +321,11 @@
                 if (typeof this.param.defaultValue === 'string' && (isMultipleParam(this.param.type) || isEnumParam(this.param.type))) { // 选项清除时，修改对应的默认值
                     const dv = this.param.defaultValue.split(',').filter(v => this.param.options.map(k => k.key).includes(v))
                     if (isMultipleParam(this.param.type)) {
-                        this.handleUpdateParam('defaultValue', dv.join(','))
                         this.selectDefautVal = dv
                     } else {
-                        this.handleUpdateParam('defaultValue', dv.join(','))
                         this.selectDefautVal = dv.join(',')
                     }
+                    this.handleUpdateParam('defaultValue', dv.join(','))
                 }
             },
             transformOpt (opts) {
@@ -341,39 +341,6 @@
                     }).map(opt => ({ id: opt.key, name: opt.value }))
                     : []
                 this.optionList = final
-            },
-            editOption (name, value, index) {
-                try {
-                    let opts = []
-                    if (value && typeof value === 'string') {
-                        opts = value.split('\n').map(opt => {
-                            const v = opt.trim()
-                            const res = v.match(/^([\w\.\-\\\/]+)=([\S\s]+)$/) || [v, v, v]
-                            const [, key, value] = res
-                            return {
-                                key,
-                                value
-                            }
-                        })
-                    }
-
-                    this.handleUpdateParam(name, opts, index)
-                    const param = this.renderParams[index]
-                    if (typeof param.defaultValue === 'string' && (isMultipleParam(param.type) || isEnumParam(param.type))) { // 选项清除时，修改对应的默认值
-                        const dv = param.defaultValue.split(',').filter(v => param.options.map(k => k.key).includes(v))
-                        if (isMultipleParam(param.type)) {
-                            this.handleUpdateParam('defaultValue', dv, index)
-                        } else {
-                            this.handleUpdateParam('defaultValue', dv.join(','), index)
-                        }
-                    }
-                } catch (e) {
-                    this.$showTips({
-                        message: e.message,
-                        theme: 'error'
-                    })
-                    return []
-                }
             },
 
             getBuildResourceUrl ({ os, buildType }) {
@@ -400,7 +367,6 @@
                 }
             },
             handleResetDefaultVal () {
-                console.log('enter reset')
                 if (isMultipleParam(this.param.type)) {
                     this.selectDefautVal = []
                 } else {
@@ -416,13 +382,16 @@
                 const { param } = this
                 if (typeof param.defaultValue === 'string' && (isMultipleParam(param.type) || isEnumParam(param.type))) { // 选项清除时，修改对应的默认值
                     const dv = param.defaultValue.split(',').filter(v => param.options.map(k => k.key).includes(v))
-                    if (isMultipleParam(param.type)) {
-                        this.handleUpdateParam('defaultValue', dv)
-                    } else {
-                        this.handleUpdateParam('defaultValue', dv.join(','))
-                    }
+                    this.handleUpdateParam('defaultValue', dv.join(','))
                 }
                 this.setSelectorDefaultVal(this.param)
+            },
+            handleUpdateSelectorVal (key, value) {
+                this.selectDefautVal = value
+                if (isMultipleParam(this.param.type)) {
+                    value = value.join(',')
+                }
+                this.handleUpdateParam(key, value)
             },
             handleUpdateParam (key, value) {
                 console.log(key, value, 'inner')

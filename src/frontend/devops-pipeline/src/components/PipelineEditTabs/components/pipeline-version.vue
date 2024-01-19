@@ -4,7 +4,7 @@
             <section>
                 <atom-checkbox
                     :disabled="disabled"
-                    :text="$t('开启推荐版本号')"
+                    :text="$t('newui.enableVersions')"
                     :value="showVersions"
                     :handle-change="(name, value) => toggleVersions(name, value)"
                 />
@@ -13,13 +13,13 @@
                     v-if="showVersions"
                     :disabled="disabled"
                     name="required"
-                    :text="$t('是否入参')"
+                    :text="$t('newui.isBuildParam')"
                     :value="execuVisible"
                     :handle-change="handleBuildNoChange"
                 />
             </section>
-            <bk-button v-if="showVersions" :disabled="disabled" @click="editVersions">
-                {{$t('编辑版本号')}}
+            <bk-button :disabled="disabled" v-if="showVersions" @click="editVersions">
+                {{$t('newui.editVersions')}}
             </bk-button>
         </div>
 
@@ -29,7 +29,7 @@
                 <div class="version-con">
                     <div class="version-names">
                         <span>{{ param.id }}</span>
-                        <span>({{ param.desc }})</span>
+                        <span>({{ param.id === 'BK_CI_BUILD_NO' ? param.desc : $t(param.desc) }})</span>
                     </div>
                     <div class="value-row">
                         <span class="default-value">
@@ -49,15 +49,15 @@
         <div v-if="showEditVersion" class="current-edit-param-item">
             <div class="edit-var-header">
                 <bk-icon style="font-size: 28px;" type="arrows-left" class="back-icon" @click="cancelEditVersion" />
-                {{$t('编辑版本号')}}
+                {{$t('newui.editVersions')}}
             </div>
             <div class="edit-var-content">
                 <bk-form form-type="vertical" :label-width="400" class="new-ui-form">
                     <bk-form-item>
                         <div class="layout-label">
                             <label class="ui-inner-label">
-                                <span class="bk-label-text">{{ $t('版本号') }}</span>
-                                <span class="bk-label-text desc-text">（{{ $t('主版本.特性版本.修正版本') }}）</span>
+                                <span class="bk-label-text">{{ $t('versionNum') }}</span>
+                                <span class="bk-label-text desc-text">{{ $t('mainMinorPatch') }}</span>
                             </label>
                         </div>
                         <div class="version-options">
@@ -97,10 +97,10 @@
                 </bk-form>
             </div>
             <div class="edit-var-footer" slot="footer">
-                <bk-button theme="primary" @click="handleSaveVersion">
-                    {{ $t('确定') }}
+                <bk-button theme="primary" :disabled="disabled" @click="handleSaveVersion">
+                    {{ $t('confirm') }}
                 </bk-button>
-                <bk-button style="margin-left: 8px;" @click="cancelEditVersion">
+                <bk-button style="margin-left: 8px;" :disabled="disabled" @click="cancelEditVersion">
                     {{ $t('cancel') }}
                 </bk-button>
             </div>
@@ -174,7 +174,7 @@
                     ...this.versions,
                     {
                         id: 'BK_CI_BUILD_NO',
-                        desc: '构建号'
+                        desc: this.$t('buildNo')
                     }
                 ]
             },
@@ -212,7 +212,7 @@
             },
             handleBuildNoChange (name, value) {
                 this.updateContainerParams('buildNo', {
-                    ...this.buildNo,
+                    ...this.renderBuildNo,
                     [name]: value
                 })
             },
