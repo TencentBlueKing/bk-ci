@@ -42,7 +42,8 @@ class StartCloudClient @Autowired constructor(
             StartCloudComputerStatusReqBody(
                 appName = appName,
                 cgsIds = cgsIds
-            ), false
+            ),
+                false
         )
         logger.debug("User $userId request url: $url, body: $body")
         val request = Request.Builder()
