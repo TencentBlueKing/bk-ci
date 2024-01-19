@@ -491,10 +491,18 @@ class ScmProxyService @Autowired constructor(
         val repo = getRepo(projectId, repositoryConfig) as? CodeSvnRepository
             ?: throw ErrorCodeException(errorCode = ProcessMessageCode.SVN_INVALID)
         val credential = getCredential(projectId, repo)
-        val (privateKey, passPhrase) = if (repo.svnType == CodeSvnRepository.SVN_TYPE_HTTP) {
-            credential.username to credential.password
+        val (privateKey, passPhrase, username) = if (repo.svnType == CodeSvnRepository.SVN_TYPE_HTTP) {
+            Triple(
+                credential.username,
+                credential.password,
+                credential.username
+            )
         } else {
-            credential.privateKey to credential.passPhrase
+            Triple(
+                credential.privateKey,
+                credential.passPhrase,
+                repo.userName
+            )
         }
         client.get(ServiceScmResource::class).addWebHook(
             projectName = repo.projectName,
@@ -504,7 +512,7 @@ class ScmProxyService @Autowired constructor(
             passPhrase = passPhrase,
             token = credential.token,
             region = repo.region,
-            userName = credential.username,
+            userName = username,
             event = null
         )
         return repo
