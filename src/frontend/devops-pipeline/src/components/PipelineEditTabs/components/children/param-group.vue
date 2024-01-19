@@ -24,12 +24,12 @@
                             </div>
                             <div class="value-operate-row" style="justify-content: space-between;">
                                 <div class="param-value">
-                                    <span v-if="param.readOnly" class="read-only">{{$t('只读')}}</span>
+                                    <span v-if="param.readOnly" class="read-only">{{$t('readOnly')}}</span>
                                     <span class="default-value">{{ param.defaultValue || '--' }}</span>
                                 </div>
                                 <div v-if="editable" class="var-operate">
                                     <div class="operate-btns">
-                                        <i @click.stop="handleCopy(bkVarWrapper(param.id))" class="bk-icon icon-copy" style="margin-right: 12px;"></i>
+                                        <i @click.stop="handleCopy(bkVarWrapper('variables.' + param.id))" class="bk-icon icon-copy" style="margin-right: 12px;"></i>
                                         <i @click.stop="handleDelete(param.id)" class="bk-icon icon-minus-circle"></i>
                                     </div>
                                 </div>

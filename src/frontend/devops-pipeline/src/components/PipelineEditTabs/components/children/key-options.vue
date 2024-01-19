@@ -2,23 +2,18 @@
     <section class="key-options">
         <div class="key-item" v-for="(option, index) in options" :key="option.key">
             <span class="key-index">{{index + 1}}</span>
-            <!-- <vuex-input class="key-val" name="key" :value="option.key" :handle-change="(name, value) => handleEdit(value, index)"></vuex-input> -->
             <bk-input class="key-val" :value="option.key" @blur="(val) => handleEdit(val, index)" />
             <span class="key-del"><i @click.stop="handleDelete(index)" class="bk-icon icon-minus-circle hover-click" v-if="!disabled" /></span>
         </div>
         <a class="key-add" v-if="!disabled" @click.stop="handleAdd">
             <i class="devops-icon icon-plus-circle" />
-            <span>{{$t('添加选项')}}</span>
+            <span>{{$t('newui.pipelineParam.addItem')}}</span>
         </a>
     </section>
 </template>
 
 <script>
-    // import VuexInput from '@/components/atomFormField/VuexInput'
     export default {
-        components: {
-            // VuexInput
-        },
         props: {
             disabled: {
                 type: Boolean,
@@ -43,10 +38,8 @@
         },
         methods: {
             handleEdit (val, index) {
-                console.log(val, index, 633)
                 const item = { key: val, value: val }
                 this.list.splice(index, 1, item)
-                console.log(this.list, 5522)
                 this.handleChangeOptions('options', this.list)
             },
             handleAdd () {

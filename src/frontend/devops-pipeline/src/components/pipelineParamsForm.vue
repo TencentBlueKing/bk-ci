@@ -109,7 +109,9 @@
                         if (isRemoteType(param)) {
                             restParam = {
                                 ...restParam,
-                                ...param.payload
+                                ...param.payload,
+                                multiSelect: param.type === 'MULTIPLE',
+                                value: param.type === 'MULTIPLE' ? param.value.split(',') : param.value
                             }
                         } else {
                             restParam = {
