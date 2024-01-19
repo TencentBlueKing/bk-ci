@@ -1729,6 +1729,9 @@ class PipelineBuildDao {
                     buildParameters = t.buildParameters?.let { self ->
                         JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters>
                     },
+                    artifactList = t.artifactInfo?.let { self ->
+                        JsonUtil.getObjectMapper().readValue(self) as List<FileInfo>
+                    },
                     retryFlag = t.isRetry,
                     executeCount = t.executeCount,
                     executeTime = t.executeTime ?: 0,
