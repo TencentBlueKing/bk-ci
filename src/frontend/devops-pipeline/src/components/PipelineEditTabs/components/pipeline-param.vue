@@ -50,6 +50,7 @@
 </template>
 
 <script>
+    import { deepCopy } from '@/utils/util'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import ParamGroup from './children/param-group'
     import PipelineParamForm from './pipeline-param-form'
@@ -137,7 +138,7 @@
                 if (!this.editable) return
                 this.showSlider = true
                 this.editIndex = this.globalParams.findIndex(item => item.id === paramId)
-                this.sliderEditItem = this.globalParams.find(item => item.id === paramId) || {}
+                this.sliderEditItem = deepCopy(this.globalParams.find(item => item.id === paramId) || {})
                 this.paramType = this.sliderEditItem?.constant === true ? 'constant' : 'var'
             },
             handleSaveVar () {

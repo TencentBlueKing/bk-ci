@@ -136,6 +136,13 @@
                 })
             },
             deleteTriggerAtom (index) {
+                if (this.triggerList.length <= 1) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: '至少保留一个触发器'
+                    })
+                    return
+                }
                 this.deleteAtom({
                     container: this.container,
                     atomIndex: index
