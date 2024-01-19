@@ -68,7 +68,7 @@ object TGitApiClient {
         )
         val request = Request.Builder()
             .url(url)
-            .post(JsonUtil.toJson(body).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .put(JsonUtil.toJson(body).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
         try {
             doRetryHttp(request).use { response ->
