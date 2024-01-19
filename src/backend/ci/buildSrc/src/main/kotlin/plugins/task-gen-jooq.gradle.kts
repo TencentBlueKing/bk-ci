@@ -25,9 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 import nu.studer.gradle.jooq.JooqGenerate
-
-val commonScriptUrl = javaClass.getResource("/common.gradle.kts")
-apply(from = commonScriptUrl)
+import utils.DatabaseUtil
+import utils.ModuleUtil
 
 plugins {
     id("nu.studer.jooq")
@@ -41,15 +40,13 @@ dependencies {
     api("org.jooq:jooq")
 }
 
-val getDatabaseName = extra["getDatabaseName"] as (String) -> String
-val getBkModuleName = extra["getBkModuleName"] as () -> String
-val getBkActualModuleNames = extra["getBkActualModuleNames"] as (String) -> List<String>
-var moduleNames = getBkActualModuleNames(getBkModuleName())
+val bkModuleName = ModuleUtil.getBkModuleName(project.name, project.findProperty("i18n.module.name")?.toString())
+val moduleNames = ModuleUtil.getBkActualModuleNames(bkModuleName)
 
 jooq {
     configurations {
         moduleNames.forEach { moduleName ->
-            val databaseName = getDatabaseName(moduleName)
+            val databaseName = DatabaseUtil.getDatabaseName(bkModuleName, project.extra["DB_PREFIX"].toString())
 
             val specialModule = moduleNames.size != 1
             val taskName = if (specialModule) "${moduleName}Genenrate" else "genenrate"
@@ -61,8 +58,12 @@ jooq {
             create(taskName) {
                 jooqConfiguration.apply {
                     jdbc.apply {
-                        val getMysqlInfo = extra["getMysqlInfo"] as (String) -> Triple<String, String, String>
-                        var (mysqlURL, mysqlUser, mysqlPasswd) = getMysqlInfo(moduleName)
+                        var (mysqlURL, mysqlUser, mysqlPasswd) = DatabaseUtil.getMysqlInfo(
+                            moduleName = moduleName,
+                            defaultMysqlURL = project.extra["DB_HOST"]?.toString(),
+                            defaultMysqlUser = project.extra["DB_USERNAME"]?.toString(),
+                            defaultMysqlPasswd = project.extra["DB_PASSWORD"]?.toString()
+                        )
 
                         println("moduleName : $moduleName")
                         println("mysqlURL : $mysqlURL")

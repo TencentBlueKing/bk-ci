@@ -24,12 +24,10 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+import utils.ModuleUtil
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.util.Properties
-
-val commonScriptUrl = javaClass.getResource("/common.gradle.kts")
-apply(from = commonScriptUrl)
 
 val i18nPath = joinPath(
     rootDir.absolutePath.replace("${File.separator}src${File.separator}backend${File.separator}ci", ""),
@@ -37,13 +35,13 @@ val i18nPath = joinPath(
     "i18n"
 )
 logger.debug("rootDir is: {}, i18nPath is: {}, projectName is: {}", rootDir, i18nPath, project.name)
-val getBkModuleName = extra["getBkModuleName"] as () -> String
 if (File(i18nPath).isDirectory) {
     logger.debug("i18n load register , Path is $i18nPath")
     // 编入i18n文件
     val i18nTask = tasks.register("i18n") {
         doLast {
-            val moduleName = getBkModuleName()
+            val moduleName =
+                ModuleUtil.getBkModuleName(project.name, project.findProperty("i18n.module.name")?.toString())
             val moduleFileNames = getFileNames(joinPath(i18nPath, moduleName))
 
             logger.debug("copy i18n into {} classpath... , moduleFileNames is : {}", moduleName, moduleFileNames)
