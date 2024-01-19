@@ -43,7 +43,7 @@ class BKItsmService @Autowired constructor(
                 ),
                 mapOf(
                     "key" to "url",
-                    "value" to urls.joinToString { "\n" }
+                    "value" to urls.joinToString("\n")
                 ),
                 mapOf(
                     "key" to "userId",

@@ -106,17 +106,17 @@ class GitProxyTGitService @Autowired constructor(
             }
 
             // 过滤项目信息
-            projects.forEach { project ->
+            projects.forEach projects@{ project ->
                 projectUrls.forEach urls@{ projectUrl ->
                     if (project.httpsUrlToRepo.isNullOrBlank() && project.httpUrlToRepo.isNullOrBlank()) {
                         logger.warn("filterUrlPermission|httpsUrl is null $project")
-                        return@urls
+                        return@projects
                     }
                     val url = project.httpsUrlToRepo ?: project.httpUrlToRepo
                     if (url?.removeHttpPrefix() != projectUrl &&
                         url?.removeHttpPrefix()?.startsWith(projectUrl) != true
                     ) {
-                        return@forEach
+                        return@urls
                     }
                     val level = GitAccessLevelEnum.MASTER.level
                     result[projectUrl.removeHttpPrefix()] = when {
