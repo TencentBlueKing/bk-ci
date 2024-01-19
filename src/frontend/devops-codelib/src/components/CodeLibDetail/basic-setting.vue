@@ -543,6 +543,13 @@
                 }
             }
         },
+        created () {
+            if (this.syncStatus === 'SUCCEED') {
+                this.fetchPacPipelineCount()
+            } else if (this.syncStatus === 'SYNC') {
+                this.fetchYamlSyncStatus()
+            }
+        },
         methods: {
             ...mapActions('codelib', [
                 'editRepo',
