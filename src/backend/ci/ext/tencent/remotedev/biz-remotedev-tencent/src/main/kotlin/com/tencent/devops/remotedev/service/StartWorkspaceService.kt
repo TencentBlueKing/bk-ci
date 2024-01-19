@@ -77,11 +77,13 @@ class StartWorkspaceService @Autowired constructor(
         userId: String,
         cgsIds: Set<String>
     ): Map<String, List<String>> {
-        return computerStatus(
-            userId,
-            null,
-            cgsIds.toMutableSet()
-        ).users.find { it.type == ComputerUserEnum.LOGIN }?.names ?: emptyMap()
+        return kotlin.runCatching {
+            computerStatus(
+                userId,
+                null,
+                cgsIds.toMutableSet()
+            ).users.find { it.type == ComputerUserEnum.LOGIN }?.names
+        }.getOrNull() ?: emptyMap()
     }
 
     companion object {
