@@ -122,7 +122,7 @@ class PipelineTriggerEventDao {
                 triggerDetail.buildId,
                 triggerDetail.buildNum,
                 triggerDetail.reason,
-                triggerDetail.reasonDetail?.let { JsonUtil.toJson(it) },
+                triggerDetail.reasonDetail?.let { JsonUtil.toJson(it, true) },
                 LocalDateTime.now()
             ).execute()
         }
