@@ -34,7 +34,6 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.MANUAL_START_EVENT_DESC
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.OPENAPI_START_EVENT_DESC
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.PIPELINE_START_EVENT_DESC
@@ -47,7 +46,10 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailBuilder
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventBuilder
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedErrorCode
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMsg
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
@@ -160,7 +162,7 @@ class PipelineTriggerEventAspect(
                 eventId = triggerEvent.eventId!!,
                 result = result,
                 exception = exception,
-                failedReason = null
+                reasonDetail = null
             )
             triggerEventService.saveEvent(
                 triggerEvent = triggerEvent,
@@ -181,7 +183,7 @@ class PipelineTriggerEventAspect(
             var pipelineInfo: PipelineInfo? = null
             var buildId: BuildId? = null
             var eventId: Long? = null
-            var failedReason: String? = null
+            var reasonDetail: PipelineTriggerReasonDetail? = null
             for (index in parameterValue.indices) {
                 when (parameterNames[index]) {
                     "eventId" -> eventId = parameterValue[index] as Long
@@ -192,7 +194,7 @@ class PipelineTriggerEventAspect(
                 val webhookBuildResult = result as WebhookBuildResult
                 buildId = webhookBuildResult.buildId
                 pipelineInfo = webhookBuildResult.pipelineInfo
-                failedReason = webhookBuildResult.failedReason
+                reasonDetail = webhookBuildResult.reasonDetail
             }
             if (pipelineInfo == null || eventId == null) {
                 return
@@ -203,7 +205,7 @@ class PipelineTriggerEventAspect(
                 eventId = eventId,
                 result = buildId,
                 exception = exception,
-                failedReason = failedReason
+                reasonDetail = reasonDetail
             )
             triggerEventService.saveTriggerDetail(triggerDetail)
         } catch (ignored: Throwable) {
@@ -334,7 +336,7 @@ class PipelineTriggerEventAspect(
         eventId: Long,
         result: Any?,
         exception: Throwable?,
-        failedReason: String?
+        reasonDetail: PipelineTriggerReasonDetail?
     ): PipelineTriggerDetail {
         val triggerDetailBuilder = PipelineTriggerDetailBuilder()
         triggerDetailBuilder.eventId(eventId)
@@ -351,25 +353,24 @@ class PipelineTriggerEventAspect(
                 triggerDetailBuilder.buildNum(buildId.num?.toString() ?: "")
             }
 
-            failedReason != null -> {
-                triggerDetailBuilder.status(PipelineTriggerStatus.FAILED.name)
-                triggerDetailBuilder.reason(PipelineTriggerReason.TRIGGER_FAILED.name)
-                triggerDetailBuilder.reasonDetail(failedReason)
-            }
-
-            exception != null -> {
-                val reasonDetail = when (exception) {
-                    is ErrorCodeException -> I18nUtil.getCodeLanMessage(
-                        messageCode = exception.errorCode,
-                        params = exception.params,
-                        defaultMessage = exception.defaultMessage
-                    )
-
-                    else -> exception.message ?: "unknown error"
-                }
+            reasonDetail != null -> {
                 triggerDetailBuilder.status(PipelineTriggerStatus.FAILED.name)
                 triggerDetailBuilder.reason(PipelineTriggerReason.TRIGGER_FAILED.name)
                 triggerDetailBuilder.reasonDetail(reasonDetail)
+            }
+
+            exception != null -> {
+                val exceptionReasonDetail = when (exception) {
+                    is ErrorCodeException -> PipelineTriggerFailedErrorCode(
+                        errorCode = exception.errorCode,
+                        params = exception.params?.toList()
+                    )
+
+                    else -> PipelineTriggerFailedMsg(exception.message ?: "unknown error")
+                }
+                triggerDetailBuilder.status(PipelineTriggerStatus.FAILED.name)
+                triggerDetailBuilder.reason(PipelineTriggerReason.TRIGGER_FAILED.name)
+                triggerDetailBuilder.reasonDetail(exceptionReasonDetail)
             }
         }
         return triggerDetailBuilder.build()

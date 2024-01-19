@@ -55,9 +55,11 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.code.WebhookBuildResult
 import com.tencent.devops.process.pojo.code.WebhookCommit
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailBuilder
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatchElement
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatch
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMsg
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.webhook.WebhookTriggerPipeline
 import com.tencent.devops.process.service.builds.PipelineBuildCommitService
@@ -215,6 +217,7 @@ class PipelineBuildWebhookService @Autowired constructor(
             variables[param.id] = param.defaultValue.toString()
         }
 
+        val failedMatchElements = mutableListOf<PipelineTriggerFailedMatchElement>()
         // 寻找代码触发原子
         container.elements.forEach elements@{ element ->
             if (!element.isElementEnable() || element !is WebHookTriggerElement) {
@@ -302,21 +305,23 @@ class PipelineBuildWebhookService @Autowired constructor(
                 )
                 if (!matchResult.reason.isNullOrBlank()) {
                     builder.eventSource(eventSource = repo.repoHashId!!)
-                        .reasonDetail(JsonUtil.toJson(
-                            PipelineTriggerReasonDetail(
-                                elementId = element.id,
-                                elementName = element.name,
-                                elementAtomCode = element.getAtomCode(),
-                                reasonMsg = matchResult.reason!!
-                            )
-                        ))
+                    failedMatchElements.add(
+                        PipelineTriggerFailedMatchElement(
+                            elementId = element.id,
+                            elementName = element.name,
+                            elementAtomCode = element.getAtomCode(),
+                            reasonMsg = matchResult.reason!!
+                        )
+                    )
                 }
             }
         }
 
         // 历史原因,webhook表没有记录eventType,所以查找出来的订阅者可能因为事件类型不匹配,事件不需要记录
         if (!builder.getEventSource().isNullOrBlank()) {
-            builder.status(PipelineTriggerStatus.FAILED.name).reason(PipelineTriggerReason.TRIGGER_NOT_MATCH.name)
+            builder.status(PipelineTriggerStatus.FAILED.name)
+                .reason(PipelineTriggerReason.TRIGGER_NOT_MATCH.name)
+                .reasonDetail(PipelineTriggerFailedMatch(failedMatchElements))
         }
         return false
     }
@@ -342,14 +347,20 @@ class PipelineBuildWebhookService @Autowired constructor(
         eventId: Long
     ): WebhookBuildResult {
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId = projectId, pipelineId = pipelineId)
-            ?: return WebhookBuildResult(result = false, failedReason = "pipeline is not found")
+            ?: return WebhookBuildResult(
+                result = false,
+                reasonDetail = PipelineTriggerFailedMsg("pipeline is not found")
+            )
 
         val model = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId, pipelineId = pipelineId, version = version
         )?.model
         if (model == null) {
             logger.warn("[$pipelineId]| Fail to get the model")
-            return WebhookBuildResult(result = false, failedReason = "pipeline model is not found")
+            return WebhookBuildResult(
+                result = false,
+                reasonDetail = PipelineTriggerFailedMsg("pipeline model is not found")
+            )
         }
         val repository = try {
             client.get(ServiceRepositoryResource::class).get(
@@ -362,7 +373,10 @@ class PipelineBuildWebhookService @Autowired constructor(
         }
         if (repository == null) {
             logger.warn("repository does not exist|$projectId|$repoHashId")
-            return WebhookBuildResult(result = false, failedReason = "repository is not found")
+            return WebhookBuildResult(
+                result = false,
+                reasonDetail = PipelineTriggerFailedMsg("repository is not found")
+            )
         }
         val userId = pipelineInfo.lastModifyUser
         val variables = mutableMapOf<String, String>()
@@ -375,7 +389,7 @@ class PipelineBuildWebhookService @Autowired constructor(
             container.elements.filterIsInstance<WebHookTriggerElement>()
                 .filter { it.isElementEnable() }
                 .associateBy { it.id }
-        val reasonDetailList = mutableListOf<PipelineTriggerReasonDetail>()
+        val failedMatchElements = mutableListOf<PipelineTriggerFailedMatchElement>()
         taskIds.forEach { taskId ->
             val triggerElement = triggerElementMap[taskId] ?: return@forEach
             val webHookParams = WebhookElementParamsRegistrar.getService(triggerElement)
@@ -424,13 +438,13 @@ class PipelineBuildWebhookService @Autowired constructor(
                     return WebhookBuildResult(
                         result = false,
                         pipelineInfo = pipelineInfo,
-                        failedReason = ignore.message
+                        reasonDetail = PipelineTriggerFailedMsg(ignore.message ?: "trigger failed")
                     )
                 }
             } else {
                 logger.info("webhook trigger match unSuccess|$projectId|$pipelineId|$taskId)")
-                reasonDetailList.add(
-                    PipelineTriggerReasonDetail(
+                failedMatchElements.add(
+                    PipelineTriggerFailedMatchElement(
                         elementId = triggerElement.id,
                         elementName = triggerElement.name,
                         elementAtomCode = triggerElement.getAtomCode(),
@@ -442,7 +456,7 @@ class PipelineBuildWebhookService @Autowired constructor(
         return WebhookBuildResult(
             result = false,
             pipelineInfo = pipelineInfo,
-            failedReason = JsonUtil.toJson(reasonDetailList)
+            reasonDetail = PipelineTriggerFailedMatch(elements = failedMatchElements)
         )
     }
 
