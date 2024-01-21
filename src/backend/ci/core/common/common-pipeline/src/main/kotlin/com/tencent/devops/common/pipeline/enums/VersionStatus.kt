@@ -32,6 +32,14 @@ enum class VersionStatus(val statusName: String) {
     COMMITTING("草稿版本"),
     BRANCH("分支版本"),
     BRANCH_RELEASE("通过分支版本发布（中间态）");
+
+    fun fix(): VersionStatus {
+        return if (this == BRANCH_RELEASE) {
+            BRANCH_RELEASE
+        } else {
+            this
+        }
+    }
 }
 
 enum class BranchVersionAction(val statusName: String) {
