@@ -903,47 +903,45 @@ class PipelineRepositoryService constructor(
                             pipelineId = pipelineId,
                             branchName = branchName
                         )
-                        if (activeBranchVersion == null) {
+                        version = if (activeBranchVersion == null) {
                             // 创建
                             branchAction = BranchVersionAction.ACTIVE
                             operationLogType = OperationLogType.CREATE_BRANCH_VERSION
                             operationLogParams = versionName
-                            version = latestVersion.version + 1
+                            latestVersion.version + 1
                         } else {
                             // 更新
                             operationLogType = OperationLogType.UPDATE_BRANCH_VERSION
                             operationLogParams = activeBranchVersion.versionName
                                 ?: activeBranchVersion.version.toString()
                             branchAction = BranchVersionAction.ACTIVE
-                            version = activeBranchVersion.version
+                            activeBranchVersion.version
                         }
                     }
-                    // TODO #8161 3 通过分支发布 ——
+                    // 3 通过分支发布 —— 将要发布的草稿直接更新为分支版本，如果存在旧的同名分支版本标记为不活跃
                     VersionStatus.BRANCH_RELEASE -> {
-//                        // 查询同名分支的最新active版本，存在则更新，否则新增一个版本
-//                        branchName?.let { versionName = branchName }
-//                        val activeBranchVersion = pipelineResourceVersionDao.getVersionResource(
-//                            dslContext = transactionContext,
-//                            projectId = projectId,
-//                            pipelineId = pipelineId,
-//                            branchName = branchName
-//                        )
-//                        if (activeBranchVersion == null) {
-//                            // 创建
-//                            branchAction = BranchVersionAction.ACTIVE
-//                            operationLogType = OperationLogType.CREATE_BRANCH_VERSION
-//                            operationLogParams = versionName
-//                            version = latestVersion.version + 1
-//                        } else {
-//                            // 更新
-//                            operationLogType = OperationLogType.UPDATE_BRANCH_VERSION
-//                            operationLogParams = activeBranchVersion.versionName
-//                                ?: activeBranchVersion.version.toString()
-//                            branchAction = BranchVersionAction.ACTIVE
-//                            version = activeBranchVersion.version
-//                        }
+                        // 查询同名分支的最新active版本，存在则更新，否则新增一个版本
+                        branchName?.let { versionName = branchName }
+                        // 更新旧的同名分支版本
+                        pipelineResourceVersionDao.updateBranchVersion(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            branchName = branchName,
+                            branchVersionAction = BranchVersionAction.INACTIVE
+                        )
+                        val draftVersion = pipelineResourceVersionDao.getDraftVersionResource(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId
+                        ) ?: throw ErrorCodeException(
+                            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_DRAFT_EXISTS
+                        )
+                        operationLogType = OperationLogType.UPDATE_BRANCH_VERSION
+                        operationLogParams = draftVersion.version.toString()
+                        version = draftVersion.version
                     }
-                    // 4 正式版本保存 —— 寻找当前草稿，存在草稿版本则报错，不存在则直接取最新VERSION+1，同时更新INFO、RESOURCE表
+                    // 4 正式版本保存 —— 寻找当前草稿，存在草稿版本则报错，不存在则直接取最新VERSION+1同时更新INFO、RESOURCE表
                     else -> {
                         watcher.start("getOriginModel")
                         val draftVersion = pipelineResourceVersionDao.getDraftVersionResource(
