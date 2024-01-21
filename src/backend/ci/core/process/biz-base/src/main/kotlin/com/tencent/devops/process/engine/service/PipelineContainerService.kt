@@ -529,9 +529,6 @@ class PipelineContainerService @Autowired constructor(
                         )
                     )
                     needUpdateContainer = true
-                } else if (container.matrixGroupFlag == true && BuildStatus.parse(container.status).isFinish()) {
-                    // 构建矩阵没有对应的重试插件，单独进行重试判断
-                    needUpdateContainer = true
                 }
             }
 
@@ -540,6 +537,12 @@ class PipelineContainerService @Autowired constructor(
                 needStartVM = true
             }
         }
+
+        // 构建矩阵没有对应的重试插件，单独增加重试记录
+        if (container.matrixGroupFlag == true) {
+            needUpdateContainer = true
+        }
+
         // 填入: 构建机或无编译环境的环境处理，需要启动和结束构建机/环境的插件任务
         if (needStartVM) {
             supplyVMTask(

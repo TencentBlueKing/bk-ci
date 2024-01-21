@@ -133,41 +133,6 @@ class TaskBuildRecordService(
         )
     }
 
-    // TODO #7983 暂时保留和detail一致的方法，后续简化为updateTaskStatus
-    fun taskPause(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        stageId: String,
-        containerId: String,
-        taskId: String,
-        executeCount: Int
-    ) {
-        taskBuildDetailService.taskPause(
-            projectId = projectId,
-            buildId = buildId,
-            stageId = stageId,
-            containerId = containerId,
-            taskId = taskId,
-            buildStatus = BuildStatus.PAUSE
-        )
-        updateTaskRecord(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            taskId = taskId,
-            executeCount = executeCount,
-            buildStatus = BuildStatus.PAUSE,
-            taskVar = emptyMap(),
-            operation = "taskPause#$taskId",
-            timestamps = mapOf(
-                BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to BuildRecordTimeStamp(
-                    LocalDateTime.now().timestampmilli(), null
-                )
-            )
-        )
-    }
-
     fun taskStart(
         projectId: String,
         pipelineId: String,
@@ -254,6 +219,59 @@ class TaskBuildRecordService(
                 )
             }
         }
+    }
+
+    fun taskPause(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        containerId: String,
+        taskId: String,
+        executeCount: Int
+    ) {
+        taskBuildDetailService.taskPause(
+            projectId = projectId,
+            buildId = buildId,
+            stageId = stageId,
+            containerId = containerId,
+            taskId = taskId,
+            buildStatus = BuildStatus.PAUSE
+        )
+        updateTaskRecord(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId,
+            executeCount = executeCount,
+            buildStatus = BuildStatus.PAUSE,
+            taskVar = mapOf(
+                TASK_PAUSE_TAG_VAR to true
+            ),
+            operation = "taskPause#$taskId",
+            timestamps = mapOf(
+                BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to BuildRecordTimeStamp(
+                    LocalDateTime.now().timestampmilli(), null
+                )
+            )
+        )
+    }
+
+    fun taskAlreadyPause(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String,
+        executeCount: Int
+    ): Boolean {
+        val record = getTaskBuildRecord(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId,
+            executeCount = executeCount
+        )
+        return record?.taskVar?.get(TASK_PAUSE_TAG_VAR) == true
     }
 
     fun taskPauseCancel(
@@ -393,6 +411,8 @@ class TaskBuildRecordService(
                         )
                     )
                 }
+                // 重置暂停任务暂停状态位
+                recordTask.taskVar.remove(TASK_PAUSE_TAG_VAR)
                 if (errorType != null) {
                     taskVar[Element::errorType.name] = errorType.name
                     taskBuildEndParam.errorCode?.let { taskVar[Element::errorCode.name] = it }
@@ -482,7 +502,7 @@ class TaskBuildRecordService(
         }
     }
 
-    fun getTaskInfo(
+    fun getTaskBuildRecord(
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -501,5 +521,6 @@ class TaskBuildRecordService(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TaskBuildRecordService::class.java)
+        private const val TASK_PAUSE_TAG_VAR = "taskPause"
     }
 }
