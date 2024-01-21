@@ -167,21 +167,11 @@ class PipelineResourceVersionDao {
         projectId: String,
         pipelineId: String,
         version: Int? = null,
-        includeDraft: Boolean? = null,
-        branchName: String? = null
+        includeDraft: Boolean? = null
     ): PipelineResourceVersion? {
         with(T_PIPELINE_RESOURCE_VERSION) {
             val query = dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
-            // 如果传入分支名称则一定是取最新的分支版本
-            branchName?.let {
-                query.and(STATUS.eq(VersionStatus.BRANCH.name))
-                    .and(
-                        BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
-                            .or(BRANCH_ACTION.isNull)
-                    )
-                    .and(VERSION_NAME.eq(branchName))
-            }
             if (version != null) {
                 query.and(VERSION.eq(version))
             } else {
@@ -190,6 +180,27 @@ class PipelineResourceVersionDao {
                 query.orderBy(VERSION.desc()).limit(1)
             }
             return query.fetchAny(mapper)
+        }
+    }
+
+    fun getBranchVersionResource(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        branchName: String
+    ): PipelineResourceVersion? {
+        // 一定是取最新的分支版本
+        with(T_PIPELINE_RESOURCE_VERSION) {
+            return dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .and(STATUS.eq(VersionStatus.BRANCH.name))
+                .and(
+                    BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
+                        .or(BRANCH_ACTION.isNull)
+                )
+                .and(VERSION_NAME.eq(branchName))
+                .orderBy(VERSION.desc()).limit(1)
+                .fetchAny(mapper)
         }
     }
 
@@ -487,7 +498,10 @@ class PipelineResourceVersionDao {
                         .and(PROJECT_ID.eq(projectId))
                         .and(STATUS.eq(VersionStatus.BRANCH.name))
                         // 只有非活跃的分支可以被修改状态
-                        .and(BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name))
+                        .and(
+                            BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
+                                .or(BRANCH_ACTION.isNull)
+                        )
                 )
             branchName?.let { update.and(VERSION_NAME.eq(branchName)) }
             return update.execute()
