@@ -1031,7 +1031,7 @@ class PipelineRepositoryService constructor(
                     pipelineVersion = pipelineVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion,
-                    versionStatus = versionStatus,
+                    versionStatus = versionStatus?.fix(),
                     branchAction = branchAction,
                     description = description,
                     baseVersion = realBaseVersion ?: (version - 1)
