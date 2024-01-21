@@ -35,7 +35,7 @@ enum class VersionStatus(val statusName: String) {
 
     fun fix(): VersionStatus {
         return if (this == BRANCH_RELEASE) {
-            BRANCH_RELEASE
+            BRANCH
         } else {
             this
         }
