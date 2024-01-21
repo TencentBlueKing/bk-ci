@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
@@ -896,8 +897,12 @@ class PipelineRepositoryService constructor(
                     // 2 分支版本保存 —— 取当前流水线的最新VERSION+1，不关心其他草稿和正式版本
                     VersionStatus.BRANCH -> {
                         // 查询同名分支的最新active版本，存在则更新，否则新增一个版本
-                        branchName?.let { versionName = branchName }
-                        val activeBranchVersion = pipelineResourceVersionDao.getVersionResource(
+                        if (branchName.isNullOrBlank()) throw ErrorCodeException(
+                            errorCode = CommonMessageCode.PARAMETER_VALIDATE_ERROR,
+                            params = arrayOf("branchName")
+                        )
+                        versionName = branchName
+                        val activeBranchVersion = pipelineResourceVersionDao.getBranchVersionResource(
                             dslContext = transactionContext,
                             projectId = projectId,
                             pipelineId = pipelineId,
@@ -920,16 +925,26 @@ class PipelineRepositoryService constructor(
                     }
                     // 3 通过分支发布 —— 将要发布的草稿直接更新为分支版本，如果存在旧的同名分支版本标记为不活跃
                     VersionStatus.BRANCH_RELEASE -> {
-                        // 查询同名分支的最新active版本，存在则更新，否则新增一个版本
-                        branchName?.let { versionName = branchName }
+                        if (branchName.isNullOrBlank()) throw ErrorCodeException(
+                            errorCode = CommonMessageCode.PARAMETER_VALIDATE_ERROR,
+                            params = arrayOf("branchName")
+                        )
+                        versionName = branchName
                         // 更新旧的同名分支版本
-//                        pipelineResourceVersionDao.updateBranchVersion(
-//                            dslContext = transactionContext,
-//                            projectId = projectId,
-//                            pipelineId = pipelineId,
-//                            branchName = branchName,
-//                            branchVersionAction = BranchVersionAction.INACTIVE
-//                        )
+                        pipelineResourceVersionDao.getBranchVersionResource(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            branchName = branchName
+                        )?.let {
+                            pipelineResourceVersionDao.updateBranchVersion(
+                                dslContext = transactionContext,
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                branchName = branchName,
+                                branchVersionAction = BranchVersionAction.INACTIVE
+                            )
+                        }
                         val draftVersion = pipelineResourceVersionDao.getDraftVersionResource(
                             dslContext = transactionContext,
                             projectId = projectId,
