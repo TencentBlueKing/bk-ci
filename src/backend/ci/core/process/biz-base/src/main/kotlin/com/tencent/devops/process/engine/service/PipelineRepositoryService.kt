@@ -923,13 +923,13 @@ class PipelineRepositoryService constructor(
                         // 查询同名分支的最新active版本，存在则更新，否则新增一个版本
                         branchName?.let { versionName = branchName }
                         // 更新旧的同名分支版本
-                        pipelineResourceVersionDao.updateBranchVersion(
-                            dslContext = transactionContext,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            branchName = branchName,
-                            branchVersionAction = BranchVersionAction.INACTIVE
-                        )
+//                        pipelineResourceVersionDao.updateBranchVersion(
+//                            dslContext = transactionContext,
+//                            projectId = projectId,
+//                            pipelineId = pipelineId,
+//                            branchName = branchName,
+//                            branchVersionAction = BranchVersionAction.INACTIVE
+//                        )
                         val draftVersion = pipelineResourceVersionDao.getDraftVersionResource(
                             dslContext = transactionContext,
                             projectId = projectId,
