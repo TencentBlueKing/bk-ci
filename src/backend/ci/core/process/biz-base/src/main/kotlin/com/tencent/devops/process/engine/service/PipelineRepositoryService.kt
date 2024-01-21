@@ -930,21 +930,21 @@ class PipelineRepositoryService constructor(
                             params = arrayOf("branchName")
                         )
                         versionName = branchName
-                        // 更新旧的同名分支版本
-                        pipelineResourceVersionDao.getBranchVersionResource(
-                            dslContext = transactionContext,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            branchName = branchName
-                        )?.let {
-                            pipelineResourceVersionDao.updateBranchVersion(
-                                dslContext = transactionContext,
-                                projectId = projectId,
-                                pipelineId = pipelineId,
-                                branchName = branchName,
-                                branchVersionAction = BranchVersionAction.INACTIVE
-                            )
-                        }
+                        // TODO #8161 更新旧的同名分支版本为不活跃
+//                        pipelineResourceVersionDao.getBranchVersionResource(
+//                            dslContext = transactionContext,
+//                            projectId = projectId,
+//                            pipelineId = pipelineId,
+//                            branchName = branchName
+//                        )?.let {
+//                            pipelineResourceVersionDao.updateBranchVersion(
+//                                dslContext = transactionContext,
+//                                projectId = projectId,
+//                                pipelineId = pipelineId,
+//                                branchName = branchName,
+//                                branchVersionAction = BranchVersionAction.INACTIVE
+//                            )
+//                        }
                         val draftVersion = pipelineResourceVersionDao.getDraftVersionResource(
                             dslContext = transactionContext,
                             projectId = projectId,
