@@ -58,9 +58,7 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
-import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.pojo.RevisionInfo
-import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -701,23 +699,9 @@ class ScmProxyService @Autowired constructor(
         // 凭证数据 to 凭证数据列表(v1,v2,v3等)
         val (credentialInfo, credentialList) = credentialService.getCredentialInfo(
             projectId = projectId,
-            credentialId = repository.credentialId
+            repository = repository,
+            tryGetSession = tryGetSession(repository)
         )
-        // username+password 关联的git代码库
-        if ((repository is CodeGitRepository || repository is CodeTGitRepository || repository is CodeSvnRepository) &&
-            (credentialInfo.credentialType == CredentialType.USERNAME_PASSWORD.name)
-        ) {
-            // USERNAME_PASSWORD v1 = username, v2 = password
-            val session = client.get(ServiceScmResource::class).getSession(
-                RepoSessionRequest(
-                    type = repository.getScmType(),
-                    username = credentialInfo.username,
-                    password = credentialInfo.password,
-                    url = repository.url
-                )
-            ).data
-            credentialInfo.token = session?.privateToken ?: ""
-        }
         // 兼容旧数据以及特殊数据，非特殊情况直接使用credentialInfo
         return CredentialUtils.getCredential(
             repository = repository,
@@ -744,4 +728,8 @@ class ScmProxyService @Autowired constructor(
             ?: throw NotFoundException("cannot find github oauth accessToekn for user($userName)")
         return accessToken.accessToken
     }
+
+    private fun tryGetSession(repository: Repository) = repository is CodeGitRepository ||
+            repository is CodeTGitRepository ||
+            repository is CodeSvnRepository
 }
