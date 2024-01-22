@@ -531,7 +531,7 @@ class PipelineResourceVersionDao {
                     versionName = record.versionName,
                     createTime = record.createTime,
                     updateTime = record.updateTime,
-                    releaseVersion = record.releaseVersion,
+                    releaseVersion = record.releaseVersion ?: record.version,
                     pipelineVersion = record.pipelineVersion,
                     triggerVersion = record.triggerVersion,
                     settingVersion = record.settingVersion,
