@@ -67,6 +67,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_HISTORY
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_STATUS
@@ -133,6 +134,7 @@ import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
+import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -170,7 +172,8 @@ class PipelineBuildFacadeService(
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
     private val pipelineRedisService: PipelineRedisService,
     private val pipelineRetryFacadeService: PipelineRetryFacadeService,
-    private val webhookBuildParameterService: WebhookBuildParameterService
+    private val webhookBuildParameterService: WebhookBuildParameterService,
+    private val pipelineYamlService: PipelineYamlService
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -642,6 +645,10 @@ class PipelineBuildFacadeService(
             }
 
             val paramMap = buildParamCompatibilityTransformer.parseTriggerParam(triggerContainer.params, values)
+            // 如果是PAC流水线,需要加上代码库hashId,给checkout:self使用
+            pipelineYamlService.getPipelineYamlInfo(projectId, pipelineId)?.let {
+                paramMap[BK_REPO_WEBHOOK_HASH_ID] = BuildParameters(BK_REPO_WEBHOOK_HASH_ID, it.repoHashId)
+            }
 
             return pipelineBuildService.startPipeline(
                 userId = userId,
