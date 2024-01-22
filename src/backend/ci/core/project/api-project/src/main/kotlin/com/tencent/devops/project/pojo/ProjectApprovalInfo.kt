@@ -48,6 +48,10 @@ data class ProjectApprovalInfo(
     val bgId: String?,
     @ApiModelProperty("事业群名字")
     val bgName: String?,
+    @ApiModelProperty("业务线ID")
+    val businessLineId: Long? = null,
+    @ApiModelProperty("业务线名称")
+    val businessLineName: String? = "",
     @ApiModelProperty("中心ID")
     val centerId: String?,
     @ApiModelProperty("中心名称")
