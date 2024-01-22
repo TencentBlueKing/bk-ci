@@ -21,4 +21,12 @@ class ApigwTXEnvironmentResourceV4Impl @Autowired constructor(
     ): Result<AddCmdbNodesRes> {
         return client.get(ServiceCmdbNodeResource::class).addCmdbNodes(userId, projectId, nodeIps)
     }
+
+    override fun checkDeployNodesInCmdb(userId: String) {
+        client.get(ServiceCmdbNodeResource::class).checkDeployNodesInCmdb(userId)
+    }
+
+    override fun addNodesToCC(userId: String) {
+        client.get(ServiceCmdbNodeResource::class).addNodesToCC(userId)
+    }
 }

@@ -262,4 +262,31 @@ interface ServiceJobResource {
         @ApiParam(value = "op操作请求信息", required = true)
         opOperateReq: OpOperateReq
     ): OpOperateResult
+
+    @ApiOperation("批量写入display_name的接口")
+    @POST
+    @Path("/stock_data_update/write_display_name")
+    fun writeDisplayName(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    )
+
+    @ApiOperation("agent状态版本更新接口")
+    @POST
+    @Path("/stock_data_update/agent_update")
+    fun agentUpdate(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    )
+
+    @ApiOperation("部署节点cc状态轮询接口")
+    @POST
+    @Path("/stock_data_update/check_deploy_nodes_in_cc")
+    fun checkDeployNodesInCC(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    )
 }

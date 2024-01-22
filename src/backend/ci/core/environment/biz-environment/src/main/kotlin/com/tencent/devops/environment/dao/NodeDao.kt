@@ -41,6 +41,7 @@ import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Record2
 import org.jooq.Record3
+import org.jooq.Record5
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -76,6 +77,27 @@ class NodeDao {
         }
     }
 
+    fun getDeployNodesLimit(dslContext: DSLContext, offset: Int, limit: Int): Result<Record5<Long, String, String, Long, Long>> {
+        with(TNode.T_NODE) {
+            return dslContext.select(NODE_ID, NODE_TYPE, NODE_IP, HOST_ID, CLOUD_AREA_ID).from(this)
+                .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
+                .orderBy(NODE_ID.desc())
+                .limit(limit).offset(offset)
+                .fetch()
+        }
+    }
+
+    fun getDeployNodesInCmdbLimit(dslContext: DSLContext, offset: Int, limit: Int): Result<Record5<Long, String, String, Long, Long>> {
+        with(TNode.T_NODE) {
+            return dslContext.select(NODE_ID, NODE_TYPE, NODE_IP, HOST_ID, CLOUD_AREA_ID).from(this)
+                .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
+                .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
+                .orderBy(NODE_ID.desc())
+                .limit(limit).offset(offset)
+                .fetch()
+        }
+    }
+
     fun getCmdbNodesByNodeIdList(dslContext: DSLContext, nodeIdList: List<Long>): Result<TNodeRecord> {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)
@@ -90,6 +112,25 @@ class NodeDao {
             return dslContext.selectCount()
                 .from(TNode.T_NODE)
                 .where(NODE_TYPE.eq(NodeType.CMDB.name))
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun countDeployNodes(dslContext: DSLContext): Int {
+        with(TNode.T_NODE) {
+            return dslContext.selectCount()
+                .from(TNode.T_NODE)
+                .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun countDeployNodesInCmdb(dslContext: DSLContext): Int {
+        with(TNode.T_NODE) {
+            return dslContext.selectCount()
+                .from(TNode.T_NODE)
+                .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
+                .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -137,11 +178,17 @@ class NodeDao {
     }
 
     fun updateNodeNotInCCByIp(dslContext: DSLContext, notInCCIpList: List<String>) {
+        val hostIdDefault: Long? = null
+        val cloudAreaIdDefault: Long? = null
         with(TNode.T_NODE) {
             dslContext.update(this)
                 .set(NODE_STATUS, NodeStatus.NOT_IN_CC.name)
                 .set(LAST_MODIFY_TIME, LocalDateTime.now())
+                .set(HOST_ID, hostIdDefault)
+                .set(CLOUD_AREA_ID, cloudAreaIdDefault)
                 .where(NODE_IP.`in`(notInCCIpList))
+                .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
+                .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CC.name))
                 .execute()
         }
     }
@@ -152,41 +199,24 @@ class NodeDao {
                 .set(NODE_STATUS, NodeStatus.NORMAL.name)
                 .set(LAST_MODIFY_TIME, LocalDateTime.now())
                 .where(NODE_IP.`in`(inCCIpList))
+                .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
+                .and(NODE_STATUS.notEqual(NodeStatus.NORMAL.name))
                 .execute()
         }
     }
 
-    fun batchUpdateNodeHostIdByIp(dslContext: DSLContext, ccInfoRecord: List<TNodeRecord>) {
-        if (ccInfoRecord.isEmpty()) {
-            return
-        }
-        dslContext.batchUpdate(ccInfoRecord).execute()
-    }
-
-    fun getInCmdbNodesByIp(dslContext: DSLContext, ipList: List<String>): MutableList<TNodeRecord> {
-        with(TNode.T_NODE) {
-            return dslContext.selectFrom(this)
-                .where(NODE_IP.`in`(ipList))
-                .and(NODE_TYPE.eq(NodeType.CMDB.name))
-                .fetch()
-        }
-    }
-
-    fun getNotInCmdbNodes(dslContext: DSLContext, ipList: List<String>): Result<Record1<String>> {
-        with(TNode.T_NODE) {
-            return dslContext.select(NODE_IP).from(this)
-                .where(NODE_IP.`in`(ipList))
-                .and(NODE_STATUS.eq(NodeStatus.NOT_IN_CMDB.name))
-                .fetch()
-        }
-    }
-
     fun updateNodeNotInCmdb(dslContext: DSLContext, ipList: List<String>) {
+        val hostIdDefault: Long? = null
+        val cloudAreaIdDefault: Long? = null
         with(TNode.T_NODE) {
             dslContext.update(this)
                 .set(NODE_STATUS, NodeStatus.NOT_IN_CMDB.name)
                 .set(LAST_MODIFY_TIME, LocalDateTime.now())
+                .set(HOST_ID, hostIdDefault)
+                .set(CLOUD_AREA_ID, cloudAreaIdDefault)
                 .where(NODE_IP.`in`(ipList))
+                .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
+                .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
                 .execute()
         }
     }
@@ -194,59 +224,8 @@ class NodeDao {
     fun getCmdbNodesHostIdNullLimit(dslContext: DSLContext, offset: Int, limit: Int): Result<Record2<String, Long>> {
         with(TNode.T_NODE) {
             return dslContext.select(NODE_IP, NODE_ID).from(this)
-                .where(NODE_TYPE.eq(NodeType.CMDB.name))
+                .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .and(HOST_ID.isNull)
-                .limit(limit).offset(offset)
-                .fetch()
-        }
-    }
-
-    fun updateNodeNotInCC(dslContext: DSLContext, hostIdList: List<Long>) {
-        val hostIdDefault: Long? = null
-        val cloudAreaIdDefault: Long? = null
-        with(TNode.T_NODE) {
-            dslContext.update(this)
-                .set(HOST_ID, hostIdDefault)
-                .set(CLOUD_AREA_ID, cloudAreaIdDefault)
-                .set(NODE_STATUS, NodeStatus.NOT_IN_CC.name)
-                .set(LAST_MODIFY_TIME, LocalDateTime.now())
-                .where(HOST_ID.`in`(hostIdList))
-                .execute()
-        }
-    }
-
-    fun countNodesNotInCC(dslContext: DSLContext): Int {
-        with(TNode.T_NODE) {
-            return dslContext.selectCount()
-                .from(TNode.T_NODE)
-                .where(NODE_STATUS.eq(NodeStatus.NOT_IN_CC.name))
-                .fetchOne(0, Int::class.java)!!
-        }
-    }
-
-    fun getNodeIpsNotInCC(dslContext: DSLContext, offset: Int, limit: Int): Result<Record1<String>> {
-        with(TNode.T_NODE) {
-            return dslContext.select(NODE_IP).from(this)
-                .where(NODE_STATUS.eq(NodeStatus.NOT_IN_CC.name))
-                .limit(limit).offset(offset)
-                .fetch()
-        }
-    }
-
-    fun countNodesWhoseHostIdNotNull(dslContext: DSLContext): Int {
-        with(TNode.T_NODE) {
-            return dslContext.selectCount()
-                .from(TNode.T_NODE)
-                .where(HOST_ID.isNotNull)
-                .fetchOne(0, Int::class.java)!!
-        }
-    }
-
-    fun getNodesWhoseHostIdNotNullLimit(dslContext: DSLContext, offset: Int, limit: Int): Result<Record1<Long>> {
-        with(TNode.T_NODE) {
-            return dslContext.select(HOST_ID).from(this)
-                .where(HOST_ID.isNotNull)
-                .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .limit(limit).offset(offset)
                 .fetch()
         }

@@ -156,4 +156,16 @@ class ApigwJobResourceV4Impl @Autowired constructor(
     override fun operateOpProject(userId: String, opOperateReq: OpOperateReq): OpOperateResult {
         return client.get(ServiceJobResource::class).operateOpProject(userId, opOperateReq)
     }
+
+    override fun writeDisplayName(userId: String) {
+        client.get(ServiceJobResource::class).writeDisplayName(userId)
+    }
+
+    override fun agentUpdate(userId: String) {
+        client.get(ServiceJobResource::class).agentUpdate(userId)
+    }
+
+    override fun checkDeployNodesInCC(userId: String) {
+        client.get(ServiceJobResource::class).checkDeployNodesInCC(userId)
+    }
 }

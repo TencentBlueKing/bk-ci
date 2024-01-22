@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service
 
 @Service
 @Primary
-class TencentQueryFromCmdbService : QueryOperatorService {
+class TencentQueryFromCmdbService : IQueryOperatorService {
     @Value("\${job.bkAppCode:}")
     private val bkAppCode = ""
 

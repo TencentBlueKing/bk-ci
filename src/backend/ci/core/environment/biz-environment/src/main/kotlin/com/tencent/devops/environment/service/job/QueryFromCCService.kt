@@ -27,7 +27,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class QueryFromCCService : QueryOperatorService {
+class QueryFromCCService : IQueryOperatorService {
     @Value("\${job.bkAppCode:}")
     private val bkAppCode = ""
 

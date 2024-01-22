@@ -52,17 +52,20 @@ import com.tencent.devops.environment.pojo.job.resp.ScriptExecuteResult
 import com.tencent.devops.environment.pojo.job.resp.TaskTerminateResult
 import com.tencent.devops.environment.service.job.AgentService
 import com.tencent.devops.environment.service.job.JobService
+import com.tencent.devops.environment.service.job.NodeScheduledService
 import com.tencent.devops.environment.service.job.OpService
 import com.tencent.devops.environment.service.job.PermissionManageService
+import com.tencent.devops.environment.service.job.StockDataUpdateService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceJobResourceImpl @Autowired constructor(
     private val jobService: JobService,
-    private val agentService: AgentService,
     private val opService: OpService,
-    private val permissionManageService: PermissionManageService
+    private val permissionManageService: PermissionManageService,
+    private val stockDataUpdateService: StockDataUpdateService,
+    private val nodeScheduledService: NodeScheduledService
 ) : ServiceJobResource {
     companion object {
         private val logger = LoggerFactory.getLogger(ServiceJobResourceImpl::class.java)
@@ -190,6 +193,21 @@ class ServiceJobResourceImpl @Autowired constructor(
     override fun operateOpProject(userId: String, opOperateReq: OpOperateReq): OpOperateResult {
         if (userId.isBlank()) throw ParamBlankException("userId is blank.")
         return opService.operateOpProject(userId, opOperateReq)
+    }
+
+    override fun writeDisplayName(userId: String) {
+        if (userId.isBlank()) throw ParamBlankException("userId is blank.")
+        stockDataUpdateService.writeDisplayNameOnce()
+    }
+
+    override fun agentUpdate(userId: String) {
+        if (userId.isBlank()) throw ParamBlankException("userId is blank.")
+        stockDataUpdateService.scheduledUpdateAgent()
+    }
+
+    override fun checkDeployNodesInCC(userId: String) {
+        if (userId.isBlank()) throw ParamBlankException("userId is blank.")
+        stockDataUpdateService.checkDeployNodes()
     }
 
     private fun checkParamBlank(userId: String, projectId: String) {
