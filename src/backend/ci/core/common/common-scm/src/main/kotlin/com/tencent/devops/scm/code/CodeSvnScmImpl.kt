@@ -160,7 +160,7 @@ class CodeSvnScmImpl constructor(
                     host = "",
                     token = token,
                     projectName = projectName,
-                    path = "/",
+                    path = getSubDirPath(),
                     revision = "HEAD"
                 )
             }

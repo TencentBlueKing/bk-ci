@@ -201,7 +201,7 @@ class CodeSvnRepositoryService @Autowired constructor(
                     type = ScmType.CODE_SVN,
                     privateKey = repoCredentialInfo.privateKey,
                     passPhrase = repoCredentialInfo.passPhrase,
-                    token = "",
+                    token = repoCredentialInfo.token,
                     region = repository.region,
                     userName = repository.userName
                 )
