@@ -298,16 +298,6 @@ class CodeGitRepositoryService @Autowired constructor(
         val repoCredentialInfo = getCredentialInfo(projectId = projectId, repository = repository)
         // 若授权类型不为OAUTH则需要检查Token
         if (repository.authType != RepoAuthType.OAUTH) {
-            // 授权凭证信息
-            if (repoCredentialInfo.credentialType == CredentialType.USERNAME_PASSWORD.name) {
-                logger.info("using credential of type [USERNAME_PASSWORD],loginUser[${repoCredentialInfo.username}]")
-                repoCredentialInfo.token = scmService.getGitSession(
-                    type = ScmType.CODE_GIT,
-                    username = repoCredentialInfo.username,
-                    password = repoCredentialInfo.password,
-                    url = repository.url
-                )?.privateToken ?: ""
-            }
             val checkResult = checkToken(
                 repoCredentialInfo = repoCredentialInfo,
                 repository = repository
@@ -332,7 +322,8 @@ class CodeGitRepositoryService @Autowired constructor(
         } else {
             credentialService.getCredentialInfo(
                 projectId = projectId,
-                repository = repository
+                repository = repository,
+                tryGetSession = true
             )
         }
     }

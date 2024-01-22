@@ -255,7 +255,8 @@ class CodeSvnRepositoryService @Autowired constructor(
         // 凭证信息
         return credentialService.getCredentialInfo(
             projectId = projectId,
-            repository = repository
+            repository = repository,
+            tryGetSession = true
         )
     }
 
