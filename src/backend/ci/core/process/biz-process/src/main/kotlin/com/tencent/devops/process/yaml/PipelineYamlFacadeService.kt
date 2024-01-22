@@ -36,7 +36,10 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -389,5 +392,34 @@ class PipelineYamlFacadeService @Autowired constructor(
                 )
             }
         }
+    }
+
+    /**
+     * 构建yaml流水线触发变量
+     */
+    fun buildYamlManualParamMap(userId: String, projectId: String, pipelineId: String): Map<String, BuildParameters>? {
+        val pipelineYamlInfo = pipelineYamlInfoDao.get(
+            dslContext = dslContext, projectId = projectId, pipelineId = pipelineId
+        ) ?: return null
+        val repoHashId = pipelineYamlInfo.repoHashId
+        val repository = client.get(ServiceRepositoryResource::class).get(
+            projectId = projectId,
+            repositoryId = repoHashId,
+            repositoryType = RepositoryType.ID
+        ).data ?: return null
+        val setting = PacRepoSetting(repository = repository)
+        val event = PipelineYamlManualEvent(
+            userId = userId,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            scmType = repository.getScmType()
+        )
+        val action = eventActionFactory.loadManualEvent(setting = setting, event = event)
+        return mutableMapOf(
+            BK_REPO_WEBHOOK_HASH_ID to BuildParameters(BK_REPO_WEBHOOK_HASH_ID, repoHashId),
+            PIPELINE_WEBHOOK_BRANCH to BuildParameters(
+                PIPELINE_WEBHOOK_BRANCH, action.data.context.defaultBranch ?: ""
+            )
+        )
     }
 }
