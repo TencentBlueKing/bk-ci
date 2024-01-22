@@ -42,7 +42,8 @@ class StartCloudClient @Autowired constructor(
             StartCloudComputerStatusReqBody(
                 appName = appName,
                 cgsIds = cgsIds
-            ), false
+            ),
+                false
         )
         logger.debug("User $userId request url: $url, body: $body")
         val request = Request.Builder()
@@ -54,8 +55,8 @@ class StartCloudClient @Autowired constructor(
         val resp = doRequest(request).resolveResponse<StartCloudComputerStatusResp>()
         if (resp.code != 0) {
             throw RemoteServiceException(
-                "request api[${request.url.toUrl()}] error ${resp.message}",
-                resp.code
+                errorMessage = "request api[${request.url.toUrl()}] error ${resp.message}",
+                errorCode = resp.code
             )
         }
 

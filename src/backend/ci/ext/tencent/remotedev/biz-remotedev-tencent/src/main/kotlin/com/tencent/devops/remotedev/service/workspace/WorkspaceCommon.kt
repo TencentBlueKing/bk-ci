@@ -56,6 +56,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
@@ -293,7 +294,9 @@ class WorkspaceCommon @Autowired constructor(
                     workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
                     LocalDateTime.now()
                 ).seconds < DEFAULT_WAIT_TIME
-                ) || workspace.status.checkDeleted() || workspace.status.workspaceInitializing()
+                ) ||
+            workspace.status.checkDeleted() || workspace.status.workspaceInitializing() ||
+            workspace.status.checkInProcess()
     }
 
     fun updateStatusAndCreateHistory(
@@ -525,6 +528,19 @@ class WorkspaceCommon @Autowired constructor(
                     )
                 )
             }
+            notifyControl.dispatchWebsocketPushEvent(
+                userId = it.userId,
+                workspaceName = workspaceName,
+                workspaceHost = null,
+                errorMsg = null,
+                type = WebSocketActionType.WORKSPACE_ASSIGN,
+                status = true,
+                action = WorkspaceAction.ASSIGN,
+                systemType = null,
+                workspaceMountType = mountType,
+                ownerType = null,
+                projectId = ""
+            )
         }
     }
 
@@ -566,8 +582,11 @@ class WorkspaceCommon @Autowired constructor(
     private fun checkUserNeedUnShare(ws: List<WorkspaceShared>, assignType: WorkspaceShared.AssignType): Boolean {
         var res = false
         ws.forEach {
-            if (it.type != assignType) return false
-            else res = true
+            if (it.type != assignType) {
+                return false
+            } else {
+                res = true
+            }
         }
         return res
     }
@@ -579,8 +598,8 @@ class WorkspaceCommon @Autowired constructor(
     }
 
     /*
-    * 工作空间进入不使用状态，对数据进行统计和闭合处理
-    * */
+     * 工作空间进入不使用状态，对数据进行统计和闭合处理
+     * */
     fun statisticalData(
         workspace: WorkspaceRecord,
         operator: String
