@@ -258,6 +258,15 @@ BEGIN
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_PIPELINE_RESOURCE_VERSION'
+                    AND COLUMN_NAME = 'RELEASE_VERSION') THEN
+    ALTER TABLE `T_PIPELINE_RESOURCE_VERSION`
+        ADD COLUMN `RELEASE_VERSION` int(11) DEFAULT NULL COMMENT '流水线发布版本';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_RESOURCE_VERSION'
                     AND COLUMN_NAME = 'PIPELINE_VERSION') THEN
     ALTER TABLE `T_PIPELINE_RESOURCE_VERSION`
         ADD COLUMN `PIPELINE_VERSION` int(11) DEFAULT '1' COMMENT '流水线模型版本';
