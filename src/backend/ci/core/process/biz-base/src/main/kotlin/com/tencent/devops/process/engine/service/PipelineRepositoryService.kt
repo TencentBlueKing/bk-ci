@@ -623,7 +623,7 @@ class PipelineRepositoryService constructor(
         pipelineAsCodeSettings: PipelineAsCodeSettings?
     ): DeployPipelineResult {
         val modelVersion = 1
-        val releaseVersion = 1
+        val versionNum = 1
         val pipelineVersion = 1
         val triggerVersion = 1
         val settingVersion = 1
@@ -774,7 +774,7 @@ class PipelineRepositoryService constructor(
                     model = model,
                     yamlStr = yamlStr,
                     versionName = versionName,
-                    releaseVersion = releaseVersion,
+                    versionNum = versionNum,
                     pipelineVersion = modelVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion
@@ -790,7 +790,7 @@ class PipelineRepositoryService constructor(
                     yaml = yamlStr,
                     baseVersion = baseVersion,
                     versionName = versionName ?: "",
-                    releaseVersion = releaseVersion,
+                    versionNum = versionNum,
                     pipelineVersion = modelVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion,
@@ -874,7 +874,7 @@ class PipelineRepositoryService constructor(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID
                 )
-                var releaseVersion = releaseResource?.version ?: latestVersion.version
+                var versionNum = releaseResource?.version ?: latestVersion.version
                 watcher.start("updatePipelineInfo")
                 // 旧逻辑 bak —— 写入INFO表后进行了version的自动+1
                 // 新逻辑 #8161
@@ -963,7 +963,7 @@ class PipelineRepositoryService constructor(
                         pipelineVersion = releaseResource?.pipelineVersion ?: 1
                         triggerVersion = releaseResource?.triggerVersion ?: 1
                         // 数据分离：发布记录的版本自增，旧数据保留和版本表中version一致，后续单独用于前端展示
-                        releaseVersion += 1
+                        versionNum += 1
                         releaseResource?.let {
                             pipelineVersion = PipelineVersionUtils.getPipelineVersion(
                                 pipelineVersion, it.model, model
@@ -1025,7 +1025,7 @@ class PipelineRepositoryService constructor(
                         model = model,
                         yamlStr = yamlStr,
                         versionName = versionName,
-                        releaseVersion = releaseVersion,
+                        versionNum = versionNum,
                         pipelineVersion = pipelineVersion,
                         triggerVersion = triggerVersion,
                         settingVersion = settingVersion
@@ -1042,7 +1042,7 @@ class PipelineRepositoryService constructor(
                     model = model,
                     yaml = yamlStr,
                     versionName = versionName,
-                    releaseVersion = releaseVersion,
+                    versionNum = versionNum,
                     pipelineVersion = pipelineVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion,
@@ -1296,7 +1296,7 @@ class PipelineRepositoryService constructor(
             val now = LocalDateTime.now()
             val newDraft = targetVersion.copy(
                 version = latestResource.version + 1,
-                releaseVersion = releaseResource.version + 1,
+                versionNum = releaseResource.version + 1,
                 pipelineVersion = null,
                 triggerVersion = null,
                 versionName = null,
@@ -1315,7 +1315,7 @@ class PipelineRepositoryService constructor(
                 model = newDraft.model,
                 baseVersion = targetVersion.version.takeIf { ignoreBase != true },
                 yaml = newDraft.yaml,
-                releaseVersion = newDraft.releaseVersion,
+                versionNum = newDraft.versionNum,
                 pipelineVersion = newDraft.pipelineVersion,
                 triggerVersion = newDraft.triggerVersion,
                 settingVersion = newDraft.settingVersion,
