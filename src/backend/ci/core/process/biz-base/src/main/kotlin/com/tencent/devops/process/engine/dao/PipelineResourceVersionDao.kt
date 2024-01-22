@@ -58,10 +58,11 @@ class PipelineResourceVersionDao {
         pipelineId: String,
         creator: String,
         version: Int,
-        versionName: String,
+        versionName: String?,
         model: Model,
         baseVersion: Int?,
         yaml: String?,
+        releaseVersion: Int?,
         pipelineVersion: Int?,
         triggerVersion: Int?,
         settingVersion: Int?,
@@ -79,6 +80,7 @@ class PipelineResourceVersionDao {
             modelStr = JsonUtil.toJson(model, formatted = false),
             yamlStr = yaml,
             baseVersion = baseVersion,
+            releaseVersion = releaseVersion,
             pipelineVersion = pipelineVersion,
             triggerVersion = triggerVersion,
             settingVersion = settingVersion,
@@ -94,10 +96,11 @@ class PipelineResourceVersionDao {
         pipelineId: String,
         creator: String,
         version: Int,
-        versionName: String,
+        versionName: String?,
         modelStr: String,
         baseVersion: Int?,
         yamlStr: String?,
+        releaseVersion: Int?,
         pipelineVersion: Int?,
         triggerVersion: Int?,
         settingVersion: Int?,
@@ -115,6 +118,7 @@ class PipelineResourceVersionDao {
                 .set(YAML, yamlStr)
                 .set(CREATOR, creator)
                 .set(CREATE_TIME, LocalDateTime.now())
+                .set(RELEASE_VERSION, releaseVersion)
                 .set(PIPELINE_VERSION, pipelineVersion)
                 .set(TRIGGER_VERSION, triggerVersion)
                 .set(SETTING_VERSION, settingVersion)
@@ -527,6 +531,7 @@ class PipelineResourceVersionDao {
                     versionName = record.versionName,
                     createTime = record.createTime,
                     updateTime = record.updateTime,
+                    releaseVersion = record.releaseVersion,
                     pipelineVersion = record.pipelineVersion,
                     triggerVersion = record.triggerVersion,
                     settingVersion = record.settingVersion,
@@ -554,6 +559,7 @@ class PipelineResourceVersionDao {
                     versionName = record.versionName ?: "init",
                     referFlag = record.referFlag,
                     referCount = record.referCount,
+                    releaseVersion = record.releaseVersion ?: record.version ?: 1,
                     pipelineVersion = record.pipelineVersion,
                     triggerVersion = record.triggerVersion,
                     settingVersion = record.settingVersion,
