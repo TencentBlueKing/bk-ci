@@ -79,9 +79,14 @@ class DockerResourceApi : AbstractBuildResourceApi(), DockerSDKApi {
         val headMap = mapOf(AUTH_HEADER_USER_ID to userId)
         val request = buildPost(path, body, headMap)
         val responseContent = request(
-            request,
-            MessageUtil.getMessageByLocale(CHECK_DOCKER_IMAGE_INFO_FAILED, AgentEnv.getLocaleLanguage())
+            request = request,
+            errorMessage = MessageUtil.getMessageByLocale(CHECK_DOCKER_IMAGE_INFO_FAILED, AgentEnv.getLocaleLanguage()),
+            readTimeoutInSec = IMAGE_READ_TIMEOUT_IN_SEC
         )
         return objectMapper.readValue(responseContent)
+    }
+
+    companion object {
+        const val IMAGE_READ_TIMEOUT_IN_SEC = 700L
     }
 }
