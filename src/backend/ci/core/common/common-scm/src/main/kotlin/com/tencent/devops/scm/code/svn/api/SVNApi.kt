@@ -267,7 +267,7 @@ object SVNApi {
         token: String,
         eventType: SvnHookEventType,
         path: String
-    ) {
+    ): SvnHook {
         val fullName = URLEncoder.encode(projectName, "UTF-8")
         val param = mutableMapOf<String, Any>(
             "path" to path,
@@ -290,12 +290,7 @@ object SVNApi {
             .build()
         val body = getBody(request)
         logger.info("Get the add hook response $body")
-
-        val hookResponse: HookResponse = JsonUtil.getObjectMapper().readValue(body)
-        if (hookResponse.status != "200") {
-            logger.info("Fail to add the hook. ${hookResponse.message}")
-            throw ScmException("add Svn Webhook fail，cause：${hookResponse.message}", ScmType.CODE_SVN.name)
-        }
+        return JsonUtil.getObjectMapper().readValue(body)
     }
 
     fun getFileList(
