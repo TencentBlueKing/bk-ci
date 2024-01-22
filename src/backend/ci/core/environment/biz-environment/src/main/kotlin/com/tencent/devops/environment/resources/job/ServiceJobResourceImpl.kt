@@ -50,7 +50,6 @@ import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.resp.ScriptExecuteResult
 import com.tencent.devops.environment.pojo.job.resp.TaskTerminateResult
-import com.tencent.devops.environment.service.job.AgentService
 import com.tencent.devops.environment.service.job.JobService
 import com.tencent.devops.environment.service.job.NodeScheduledService
 import com.tencent.devops.environment.service.job.OpService
@@ -64,8 +63,7 @@ class ServiceJobResourceImpl @Autowired constructor(
     private val jobService: JobService,
     private val opService: OpService,
     private val permissionManageService: PermissionManageService,
-    private val stockDataUpdateService: StockDataUpdateService,
-    private val nodeScheduledService: NodeScheduledService
+    private val stockDataUpdateService: StockDataUpdateService
 ) : ServiceJobResource {
     companion object {
         private val logger = LoggerFactory.getLogger(ServiceJobResourceImpl::class.java)

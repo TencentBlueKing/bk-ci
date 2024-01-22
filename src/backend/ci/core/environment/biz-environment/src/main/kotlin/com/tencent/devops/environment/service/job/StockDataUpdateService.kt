@@ -67,6 +67,7 @@ class StockDataUpdateService @Autowired constructor(
         private const val SCHEDULED_WRITE_DISPLAY_NAME_TIMEOUT_LOCK_KEY = "scheduled_write_display_name_timeout_lock"
         private const val SCHEDULED_UPDATE_AGENT_TIMEOUT_LOCK_KEY = "scheduled_update_agent_timeout_lock"
     }
+
     /**
      * checkDeployNodesIsInCC:
      * 后台定时轮询机器状态，看机器是否在CC中
@@ -96,7 +97,7 @@ class StockDataUpdateService @Autowired constructor(
      * 分组执行，每次遍历100条记录。
      * 执行一次就行。提供apigw接口。
      */
-    fun writeDisplayNameOnce(){
+    fun writeDisplayNameOnce() {
         taskWithRedisLock(SCHEDULED_WRITE_DISPLAY_NAME_TIMEOUT_LOCK_KEY, ::writeDisplayName)
     }
 

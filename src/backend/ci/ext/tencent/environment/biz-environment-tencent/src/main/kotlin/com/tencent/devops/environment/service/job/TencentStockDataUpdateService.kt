@@ -34,7 +34,6 @@ import com.tencent.devops.environment.service.CmdbNodeService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 
 @Service("TencentStockDataUpdateService")
@@ -113,7 +112,7 @@ class TencentStockDataUpdateService @Autowired constructor(
             val addToCCResp = queryFromCCService.addHostToCiBiz(notInCCSvrIdList)
             if (logger.isDebugEnabled) logger.debug("[addNodeToCC]addToCCResp:$addToCCResp")
             val ccHostIdList = addToCCResp.data?.bkHostIds
-            val (svrIdQueryCCRes,_,_) = cmdbNodeService.checkNodeInCCBySvrId(notInCCSvrIdList)
+            val (svrIdQueryCCRes, _, _) = cmdbNodeService.checkNodeInCCBySvrId(notInCCSvrIdList)
             val svrIdQueryCCList = svrIdQueryCCRes.data?.info // 所有刚添加到cc中的节点 cc信息
             val hostIdToCCinfo = svrIdQueryCCList?.associateBy { it.bkHostId }
             val addToCCInfoList = ccHostIdList?.mapIndexed { index, value ->

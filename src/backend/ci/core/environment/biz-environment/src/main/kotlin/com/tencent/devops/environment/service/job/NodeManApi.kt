@@ -65,7 +65,7 @@ class NodeManApi {
             "terminalAgentInstallTask" to "/job/%s/revoke",
             "retryAgentInstallTask" to "/job/%s/retry",
             "queryAgentStatusFromNodeman" to "/host/search",
-            "queryAgentInstallChannel" to "/install_channel",
+            "queryAgentInstallChannel" to "/install_channel"
         )
         private val suffix = mapOf(
             "queryAgentTaskLog" to "/?instance_id=%s",
