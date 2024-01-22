@@ -1296,7 +1296,7 @@ class PipelineRepositoryService constructor(
             val now = LocalDateTime.now()
             val newDraft = targetVersion.copy(
                 version = latestResource.version + 1,
-                releaseVersion = null,
+                releaseVersion = releaseResource.version + 1,
                 pipelineVersion = null,
                 triggerVersion = null,
                 versionName = null,
