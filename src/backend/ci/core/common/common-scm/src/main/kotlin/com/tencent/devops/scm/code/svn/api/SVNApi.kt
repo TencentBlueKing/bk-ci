@@ -304,7 +304,7 @@ object SVNApi {
         val queryParam = "path=$path&revision=$revision"
         val request = request(
             host = host,
-            url = "/api/v3/svn/projects/$fullName/tree?&queryParam=$queryParam",
+            url = "/api/v3/svn/projects/$fullName/tree?$queryParam",
             token = token
         ).get().build()
         val body = getBody(request)
