@@ -156,5 +156,4 @@ class TencentStockDataUpdateService @Autowired constructor(
         val invalidIpList = nodeIpList.filterNot { ipToCmdbInfoMap?.containsKey(it) ?: false }
         nodeDao.updateNodeNotInCmdb(dslContext, invalidIpList)
     }
-
 }

@@ -233,8 +233,8 @@ class StockDataUpdateService @Autowired constructor(
                 nodeDao.updateNodeInCCByIp(dslContext, inCCIpList)
                 // 4. CC中信息（host_id和云区域id）改变 - 更新信息，不变 - 不操作
                 val nodeUpdateInfoList = nodeRecords.filterNot {
-                    it.value4() == ipToCCInfoMap!![it.value3()]?.bkHostId
-                        && it.value5() == ipToCCInfoMap!![it.value3()]?.bkCloudId?.toLong()
+                    it.value4() == ipToCCInfoMap!![it.value3()]?.bkHostId &&
+                        it.value5() == ipToCCInfoMap!![it.value3()]?.bkCloudId?.toLong()
                 }.takeIf { it.isNotEmpty() }!!.map {
                     HostIdAndCloudAreaIdInfo(
                         nodeId = it.value1(),

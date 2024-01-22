@@ -51,7 +51,6 @@ import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.resp.ScriptExecuteResult
 import com.tencent.devops.environment.pojo.job.resp.TaskTerminateResult
 import com.tencent.devops.environment.service.job.JobService
-import com.tencent.devops.environment.service.job.NodeScheduledService
 import com.tencent.devops.environment.service.job.OpService
 import com.tencent.devops.environment.service.job.PermissionManageService
 import com.tencent.devops.environment.service.job.StockDataUpdateService
