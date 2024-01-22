@@ -616,7 +616,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             versionName = resource.versionName ?: "init",
             referFlag = resource.referFlag,
             referCount = resource.referCount,
-            releaseVersion = resource.releaseVersion,
+            versionNum = resource.versionNum,
             pipelineVersion = resource.pipelineVersion,
             triggerVersion = resource.triggerVersion,
             settingVersion = resource.settingVersion,
