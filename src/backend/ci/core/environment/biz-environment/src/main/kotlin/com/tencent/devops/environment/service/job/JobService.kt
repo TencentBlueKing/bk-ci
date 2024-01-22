@@ -54,6 +54,8 @@ import com.tencent.devops.environment.pojo.job.resp.JobResult
 import com.tencent.devops.environment.pojo.job.resp.JobStepInstance
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentStatusFromJobResult
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudIpInfo
+import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudHostInRes
+import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudVariableServer
 import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.resp.ScriptExcuteLog
@@ -235,35 +237,29 @@ class JobService @Autowired constructor(
             jobRequestId = jobCloudQueryJobInstanceLogsRes.jobRequestId,
             data = jobCloudQueryJobInstanceLogsRes.data?.let {
                 QueryJobInstanceLogsResult(
-                    jobInstanceId = it.jobInstanceId, stepInstanceId = it.stepInstanceId, logType = it.logType,
+                    jobInstanceId = it.jobInstanceId,
+                    stepInstanceId = it.stepInstanceId,
+                    logType = it.logType,
                     scriptTaskLogs = it.scriptTaskLogs?.map { scriptTaskLog ->
                         ScriptExcuteLog(
-                            bkCloudId = scriptTaskLog.bkCloudId, ip = scriptTaskLog.ip,
-                            bkHostId = scriptTaskLog.bkHostId, ipv6 = scriptTaskLog.ipv6,
+                            ip = scriptTaskLog.ip,
+                            ipv6 = scriptTaskLog.ipv6,
+                            bkHostId = scriptTaskLog.bkHostId,
+                            bkCloudId = scriptTaskLog.bkCloudId,
                             logContent = scriptTaskLog.logContent
                         )
                     },
                     fileTaskLogs = it.fileTaskLogs?.map { fileTaskLog ->
                         FileDistributeLog(
-                            bkCloudId = fileTaskLog.bkCloudId, ip = fileTaskLog.ip, bkHostId = fileTaskLog.bkHostId,
+                            ip = fileTaskLog.ip,
+                            bkCloudId = fileTaskLog.bkCloudId,
+                            bkHostId = fileTaskLog.bkHostId,
                             fileLogList = fileTaskLog.jobCloudFileLogList.map { jobCloudFileLog ->
                                 FileLog(
                                     mode = jobCloudFileLog.mode,
-                                    srcHost = jobCloudFileLog.srcHost.let { srcHost ->
-                                        HostInRes(
-                                            ip = srcHost.ip, ipv6 = srcHost.ipv6, bkCloudName = srcHost.bkCloudName,
-                                            bkCloudId = srcHost.bkCloudId, bkHostId = srcHost.bkHostId,
-                                            bkAgentId = srcHost.bkAgentId, alive = srcHost.alive
-                                        )
-                                    },
+                                    srcHost = parseHostInRes(jobCloudFileLog.srcHost),
                                     srcPath = jobCloudFileLog.srcPath,
-                                    destHost = jobCloudFileLog.destHost?.let { destHost ->
-                                        HostInRes(
-                                            ip = destHost.ip, ipv6 = destHost.ipv6, bkCloudName = destHost.bkCloudName,
-                                            bkCloudId = destHost.bkCloudId, bkHostId = destHost.bkHostId,
-                                            bkAgentId = destHost.bkAgentId, alive = destHost.alive
-                                        )
-                                    },
+                                    destHost = jobCloudFileLog.destHost?.let { destHost -> parseHostInRes(destHost) },
                                     destPath = jobCloudFileLog.destPath,
                                     status = jobCloudFileLog.status,
                                     logContent = jobCloudFileLog.logContent,
@@ -278,6 +274,18 @@ class JobService @Autowired constructor(
             }
         )
         return queryJobInstanceLogsRes
+    }
+
+    private fun parseHostInRes(host: JobCloudHostInRes): HostInRes {
+        return HostInRes(
+            ip = host.ip,
+            ipv6 = host.ipv6,
+            bkCloudName = host.bkCloudName,
+            bkCloudId = host.bkCloudId,
+            bkHostId = host.bkHostId,
+            bkAgentId = host.bkAgentId,
+            alive = host.alive
+        )
     }
 
     fun createAccount(createAccountReq: CreateAccountReq): JobResult<CreateAccountResult> {
@@ -507,24 +515,7 @@ class JobService @Autowired constructor(
                                         alias = jobCloudAccount.alias
                                     )
                                 },
-                                server = jobCloudScriptStepInfo.server.let { jobCloudVariableServer ->
-                                    VariableServer(
-                                        variable = jobCloudVariableServer.variable,
-                                        hostList = jobCloudVariableServer.jobCloudHostList?.map {
-                                            HostIpv6(
-                                                ip = it.ip, ipv6 = it.ipv6, bkHostId = it.bkHostId,
-                                                bkCloudId = it.bkCloudId, bkCloudName = it.bkCloudName,
-                                                bkAgentId = it.bkAgentId, alive = it.alive
-                                            )
-                                        },
-                                        topoNodeList = jobCloudVariableServer.jobCloudTopoNodeList?.map {
-                                            TopoNode(nodeType = it.nodeType, id = it.id)
-                                        },
-                                        dynamicGroupList = jobCloudVariableServer.jobCloudDynamicGroupList?.map {
-                                            DynamicGroup(id = it.id)
-                                        }
-                                    )
-                                },
+                                server = parseVariableServer(jobCloudScriptStepInfo.server),
                                 isParamSensitive = jobCloudScriptStepInfo.isParamSensitive,
                                 isIgnoreError = jobCloudScriptStepInfo.isIgnoreError
                             )
@@ -535,23 +526,8 @@ class JobService @Autowired constructor(
                                 FileSource(
                                     fileType = jobCloudFileSource.fileType,
                                     fileList = jobCloudFileSource.fileList,
-                                    server = jobCloudFileSource.server.let { jobCloudVariableServer ->
-                                        VariableServer(
-                                            variable = jobCloudVariableServer?.variable,
-                                            hostList = jobCloudVariableServer?.jobCloudHostList?.map {
-                                                HostIpv6(
-                                                    ip = it.ip, ipv6 = it.ipv6, bkHostId = it.bkHostId,
-                                                    bkCloudId = it.bkCloudId, bkCloudName = it.bkCloudName,
-                                                    bkAgentId = it.bkAgentId, alive = it.alive
-                                                )
-                                            },
-                                            topoNodeList = jobCloudVariableServer?.jobCloudTopoNodeList?.map {
-                                                TopoNode(nodeType = it.nodeType, id = it.id)
-                                            },
-                                            dynamicGroupList = jobCloudVariableServer?.jobCloudDynamicGroupList?.map {
-                                                DynamicGroup(id = it.id)
-                                            }
-                                        )
+                                    server = jobCloudFileSource.server?.let { jobCloudVariableServer ->
+                                        parseVariableServer(jobCloudVariableServer)
                                     },
                                     account = jobCloudFileSource.account.let { jobCloudAccount ->
                                         Account(
@@ -574,24 +550,7 @@ class JobService @Autowired constructor(
                                             alias = jobCloudAccount.alias
                                         )
                                     },
-                                    server = jobCloudFileDestination.server.let { jobCloudVariableServer ->
-                                        VariableServer(
-                                            variable = jobCloudVariableServer.variable,
-                                            hostList = jobCloudVariableServer.jobCloudHostList?.map {
-                                                HostIpv6(
-                                                    ip = it.ip, ipv6 = it.ipv6, bkHostId = it.bkHostId,
-                                                    bkCloudId = it.bkCloudId, bkCloudName = it.bkCloudName,
-                                                    bkAgentId = it.bkAgentId, alive = it.alive
-                                                )
-                                            },
-                                            topoNodeList = jobCloudVariableServer.jobCloudTopoNodeList?.map {
-                                                TopoNode(nodeType = it.nodeType, id = it.id)
-                                            },
-                                            dynamicGroupList = jobCloudVariableServer.jobCloudDynamicGroupList?.map {
-                                                DynamicGroup(id = it.id)
-                                            }
-                                        )
-                                    }
+                                    server = parseVariableServer(jobCloudFileDestination.server)
                                 )
                             },
                             timeout = jobCloudFileStepInfo.timeout,
@@ -608,6 +567,32 @@ class JobService @Autowired constructor(
             }
         )
         return getStepInstanceDetailRes
+    }
+
+    private fun parseVariableServer(jobCloudVariableServer: JobCloudVariableServer): VariableServer {
+        return VariableServer(
+            variable = jobCloudVariableServer.variable,
+            hostList = jobCloudVariableServer.jobCloudHostList?.map {
+                HostIpv6(
+                    ip = it.ip,
+                    ipv6 = it.ipv6,
+                    bkHostId = it.bkHostId,
+                    bkCloudId = it.bkCloudId,
+                    bkCloudName = it.bkCloudName,
+                    bkAgentId = it.bkAgentId,
+                    alive = it.alive
+                )
+            },
+            topoNodeList = jobCloudVariableServer.jobCloudTopoNodeList?.map {
+                TopoNode(
+                    nodeType = it.nodeType,
+                    id = it.id
+                )
+            },
+            dynamicGroupList = jobCloudVariableServer.jobCloudDynamicGroupList?.map {
+                DynamicGroup(id = it.id)
+            }
+        )
     }
 
     fun getStepInstanceStatus(

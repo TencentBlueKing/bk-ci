@@ -86,7 +86,7 @@ class StockDataUpdateService @Autowired constructor(
      * 分组执行，每次遍历1000条记录。
      * cron：每小时执行一次。
      */
-    @Scheduled(cron = "0 * * * * 1-5")
+    @Scheduled(cron = "0 * * * * ?")
     fun scheduledUpdateAgent() {
         taskWithRedisLock(SCHEDULED_UPDATE_AGENT_TIMEOUT_LOCK_KEY, ::updateAgent)
     }
