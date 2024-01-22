@@ -274,10 +274,11 @@ object SVNApi {
             "url" to hookUrl
         ).let {
             it[eventType.value] = true
+            it
         }
         val request = request(
             host = host,
-            url = "/api/v3/svn/projects/$fullName/hooks",
+            url = "api/v3/svn/projects/$fullName/hooks",
             token = token
         )
             .post(
