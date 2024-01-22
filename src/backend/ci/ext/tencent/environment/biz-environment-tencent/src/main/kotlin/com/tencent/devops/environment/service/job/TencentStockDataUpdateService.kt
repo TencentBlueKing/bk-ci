@@ -34,9 +34,11 @@ import com.tencent.devops.environment.service.CmdbNodeService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
 @Service("TencentStockDataUpdateService")
+@Primary
 class TencentStockDataUpdateService @Autowired constructor(
     private val dslContext: DSLContext,
     private val nodeDao: NodeDao,
