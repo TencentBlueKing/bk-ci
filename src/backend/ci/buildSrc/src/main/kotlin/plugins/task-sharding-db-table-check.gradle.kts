@@ -48,7 +48,7 @@ val shardingDbTableCheckTask = tasks.register("shardingDbTableCheck") {
                 archiveDbUrls = normalDbUrls
             }
             if ((!normalDbUrls.isEmpty() && normalDbUrls.size > 1) || archiveDbUrls?.isEmpty() == false) {
-                val databaseName = DatabaseUtil.getDatabaseName(bkModuleName, project.extra["DB_PREFIX"].toString())
+                val databaseName = DatabaseUtil.getDatabaseName(moduleName, project.extra["DB_PREFIX"].toString())
                 // 各普通DB的表进行比较
                 val referNormalDb = doCompareDatabasesBus(
                     dbUrls = normalDbUrls,

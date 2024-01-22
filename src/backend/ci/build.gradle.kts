@@ -129,6 +129,7 @@ allprojects {
             dependency("com.tencent.bk.sdk:iam-java-sdk:${Versions.iam}")
             dependency("com.tencent.bk.sdk:spring-boot-bk-audit-starter:${Versions.audit}")
             dependency("com.jakewharton:disklrucache:${Versions.disklrucache}")
+            dependency("com.mysql:mysql-connector-j:${Versions.MysqlDriver}")
         }
     }
 

@@ -27,8 +27,6 @@
 
 package utils
 
-import org.gradle.kotlin.dsl.extra
-
 object ModuleUtil {
 
     fun getBkModuleName(projectName: String, moduleName: String? = null): String {

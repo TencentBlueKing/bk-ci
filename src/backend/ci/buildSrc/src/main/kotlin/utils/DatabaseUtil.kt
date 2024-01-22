@@ -27,8 +27,6 @@
 
 package utils
 
-import org.gradle.kotlin.dsl.extra
-
 object DatabaseUtil {
 
     fun getMysqlInfo(

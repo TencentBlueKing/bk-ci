@@ -36,7 +36,7 @@ val jooqGenerator by configurations
 val api by configurations
 
 dependencies {
-    jooqGenerator("mysql:mysql-connector-java:8.0.28")
+    jooqGenerator("com.mysql:mysql-connector-j")
     api("org.jooq:jooq")
 }
 
@@ -46,7 +46,7 @@ val moduleNames = ModuleUtil.getBkActualModuleNames(bkModuleName)
 jooq {
     configurations {
         moduleNames.forEach { moduleName ->
-            val databaseName = DatabaseUtil.getDatabaseName(bkModuleName, project.extra["DB_PREFIX"].toString())
+            val databaseName = DatabaseUtil.getDatabaseName(moduleName, project.extra["DB_PREFIX"].toString())
 
             val specialModule = moduleNames.size != 1
             val taskName = if (specialModule) "${moduleName}Genenrate" else "genenrate"
