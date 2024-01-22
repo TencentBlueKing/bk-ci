@@ -38,18 +38,22 @@ object ModuleUtil {
             } else {
                 parts.size
             }
-            val projectNameSb = StringBuilder()
-            for (i in 1 until num) {
-                if (i != num - 1) {
-                    projectNameSb.append(parts[i]).append("-")
-                } else {
-                    projectNameSb.append(parts[i])
-                }
-            }
-            projectNameSb.toString().let { if (it == "engine") "process" else it }
+            doGenerateModuleNameBus(num, parts)
         } else {
             moduleName
         }
+    }
+
+    private fun doGenerateModuleNameBus(num: Int, parts: List<String>): String {
+        val projectNameSb = StringBuilder()
+        for (i in 1 until num) {
+            if (i != num - 1) {
+                projectNameSb.append(parts[i]).append("-")
+            } else {
+                projectNameSb.append(parts[i])
+            }
+        }
+        return projectNameSb.toString().let { if (it == "engine") "process" else it }
     }
 
     fun getBkActualModuleNames(moduleName: String): List<String> {
