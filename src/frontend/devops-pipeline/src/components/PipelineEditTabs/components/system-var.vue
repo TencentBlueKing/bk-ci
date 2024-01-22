@@ -75,19 +75,28 @@
                 }
             }
         },
-        async created () {
-            this.sysParamList.splice(0, 0, ...this.commonParams)
-
-            if (this.atomCodeList.length) {
-                this.triggerParams = await this.requestTriggerParams(this.atomCodeList)
-                this.sysParamList.splice(1, 0, ...this.triggerParams)
+        watch: {
+            atomCodeList () {
+                this.$nextTick(this.initData)
             }
-            this.sysParamList[0] && (this.sysParamList[0].isOpen = true)
+        },
+        created () {
+            this.initData()
         },
         methods: {
             ...mapActions('atom', [
                 'requestTriggerParams'
-            ])
+            ]),
+            async initData () {
+                this.sysParamList = []
+                this.sysParamList.splice(0, 0, ...this.commonParams)
+
+                if (this.atomCodeList.length) {
+                    this.triggerParams = await this.requestTriggerParams(this.atomCodeList)
+                    this.sysParamList.splice(1, 0, ...this.triggerParams)
+                }
+                this.sysParamList[0] && (this.sysParamList[0].isOpen = true)
+            }
         }
     }
 </script>

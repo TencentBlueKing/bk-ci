@@ -220,7 +220,7 @@
 
 <style lang="scss">
     .step-pop-confirm {
-        z-index: 2017 !important;
+        z-index: 2019 !important;
     }
     .disabled-confirm-button.bk-popconfirm-content .popconfirm-operate button[type=button].primary {
         pointer-events: none;

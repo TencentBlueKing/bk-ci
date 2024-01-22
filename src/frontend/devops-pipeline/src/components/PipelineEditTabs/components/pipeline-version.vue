@@ -191,6 +191,14 @@
                 return this.buildNo && this.buildNo.required ? this.buildNo.required : false
             }
         },
+        watch: {
+            '$route.params.pipelineId' () {
+                this.$nextTick(() => {
+                    this.renderBuildNo = this.buildNo
+                    this.showVersions = this.versions.length !== 0
+                })
+            }
+        },
         created () {
             this.renderBuildNo = this.buildNo
             this.showVersions = this.versions.length !== 0
@@ -211,9 +219,9 @@
                 Object.assign(this.editBuildNo, { [name]: value })
             },
             handleBuildNoChange (name, value) {
+                Object.assign(this.renderBuildNo, { [name]: value })
                 this.updateContainerParams('buildNo', {
-                    ...this.renderBuildNo,
-                    [name]: value
+                    ...this.renderBuildNo
                 })
             },
             getLabelByBuildType (type) {

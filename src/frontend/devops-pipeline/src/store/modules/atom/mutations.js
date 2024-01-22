@@ -151,7 +151,6 @@ export default {
         Object.assign(state.pipeline, pipeline)
     },
     [SET_PIPELINE_WITHOUT_TRIGGER]: (state, pipeline = null) => {
-        console.log(pipeline, 'pipeline', JSON.stringify(pipeline), JSON.stringify(state.pipelineWithoutTrigger))
         Vue.set(state, 'pipelineWithoutTrigger', pipeline)
         return state
     },
