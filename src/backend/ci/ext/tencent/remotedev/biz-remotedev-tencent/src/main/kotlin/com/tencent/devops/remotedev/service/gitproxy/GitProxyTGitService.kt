@@ -4,14 +4,12 @@ import com.sun.org.slf4j.internal.LoggerFactory
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.remotedev.dao.ProjectTGitLinkDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.QueryType
-import com.tencent.devops.remotedev.service.BKBaseService
 import com.tencent.devops.remotedev.service.BKItsmService
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
@@ -108,8 +106,9 @@ class GitProxyTGitService @Autowired constructor(
         while (true) {
             val projects = if (projectUrls.isNotEmpty()) {
                 TGitApiClient.getProjectList(
-                    accessToken = token.accessToken,
+                    client = okHttpClient,
                     gitUrl = tGitUrl,
+                    accessToken = token.accessToken,
                     page = page,
                     pageSize = pageSize,
                     search = null,
@@ -194,7 +193,13 @@ class GitProxyTGitService @Autowired constructor(
                 "UTF8"
             )
 
-            val ok = TGitApiClient.addProjectAclIp(tGitUrl, token.accessToken, fullPath, ips)
+            val ok = TGitApiClient.addProjectAclIp(
+                client = okHttpClient,
+                gitUrl = tGitUrl,
+                accessToken = token.accessToken,
+                projectId = fullPath,
+                ips = ips
+            )
             if (!ok) {
                 result[url] = false
                 return@forEach
@@ -214,17 +219,6 @@ class GitProxyTGitService @Autowired constructor(
     }
 
     private fun String.removeHttpPrefix() = this.removePrefix("https://").removePrefix("http://")
-
-    private val myCustomDns = Dns { hostname ->
-        if (hostname == "my.special.domain") {
-            // 返回特殊的IP地址
-            listOf(InetAddress.getByName("123.123.123.123"))
-        } else {
-            // 对于其他主机名使用系统默认的DNS解析
-            Dns.SYSTEM.lookup(hostname)
-        }
-    }
-
 
     companion object {
         private val logger = LoggerFactory.getLogger(GitProxyTGitService::class.java)
@@ -251,28 +245,29 @@ class GitProxyTGitService @Autowired constructor(
                 return arrayOf()
             }
         })
-
-        private val okHttpClient = OkHttpClient.Builder()
-            .connectTimeout(5, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
-            .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
-            .hostnameVerifier { _, _ -> true }
-            .dns()
-            .build()
     }
+
+    private val okHttpClient = OkHttpClient.Builder()
+        .connectTimeout(5, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
+        .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
+        .hostnameVerifier { _, _ -> true }
+        .dns(TGitDns(tGitUrl.removeHttpPrefix(), tGitIp.split(";").filter { it.isNotBlank() }.toSet()))
+        .build()
 }
 
-class TGitDns:Dns{
+class TGitDns(
+    private val url: String,
+    private val ips: Set<String>
+) : Dns {
     override fun lookup(hostname: String): List<InetAddress> {
-        if (hostname == "my.special.domain") {
+        return if (hostname == url) {
             // 返回特殊的IP地址
-            listOf(InetAddress.getByName("123.123.123.123"))
+            ips.map { InetAddress.getByName(it) }
         } else {
             // 对于其他主机名使用系统默认的DNS解析
             Dns.SYSTEM.lookup(hostname)
         }
-
     }
-
 }

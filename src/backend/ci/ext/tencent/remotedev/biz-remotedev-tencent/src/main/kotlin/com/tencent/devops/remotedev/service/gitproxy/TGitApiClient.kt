@@ -5,10 +5,10 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.type.TypeReference
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.util.HttpRetryUtils
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
@@ -18,8 +18,9 @@ object TGitApiClient {
     private val logger = LoggerFactory.getLogger(TGitApiClient::class.java)
 
     fun getProjectList(
-        accessToken: String,
+        client: OkHttpClient,
         gitUrl: String,
+        accessToken: String,
         page: Int,
         pageSize: Int,
         search: String?,
@@ -39,7 +40,7 @@ object TGitApiClient {
             .get()
             .build()
         try {
-            doRetryHttp(request).use { response ->
+            doRetryHttp(client, request).use { response ->
                 val data = response.body!!.string()
                 if (!response.isSuccessful) {
                     logger.error("getProjectList fail|{}|{}", response.code, data)
@@ -57,6 +58,7 @@ object TGitApiClient {
     }
 
     fun addProjectAclIp(
+        client: OkHttpClient,
         gitUrl: String,
         accessToken: String,
         projectId: String,
@@ -71,7 +73,7 @@ object TGitApiClient {
             .put(JsonUtil.toJson(body).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
         try {
-            doRetryHttp(request).use { response ->
+            doRetryHttp(client, request).use { response ->
                 val data = response.body!!.string()
                 if (!response.isSuccessful) {
                     logger.error("addProjectAclIp fail|{}|{}", response.code, data)
@@ -87,9 +89,9 @@ object TGitApiClient {
 
     private val RETRY_CODE = listOf(429, 500)
 
-    private fun doRetryHttp(request: Request): okhttp3.Response {
+    private fun doRetryHttp(client: OkHttpClient, request: Request): okhttp3.Response {
         return HttpRetryUtils.retry(retryPeriodMills = 2000) {
-            val response = OkhttpUtils.doHttp(request)
+            val response = client.newCall(request).execute()
             if (RETRY_CODE.contains(response.code)) {
                 logger.info("tgit request will be retry |${response.code}|${request.url.toUrl()}")
                 throw HttpRetryException(response.message, response.code)
