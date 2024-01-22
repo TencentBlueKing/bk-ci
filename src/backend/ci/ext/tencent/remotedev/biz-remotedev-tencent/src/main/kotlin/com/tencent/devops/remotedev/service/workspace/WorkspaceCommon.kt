@@ -294,7 +294,7 @@ class WorkspaceCommon @Autowired constructor(
                     workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
                     LocalDateTime.now()
                 ).seconds < DEFAULT_WAIT_TIME
-                ) || workspace.status.checkDeleted() || workspace.status.workspaceInitializing()
+                ) || workspace.status.checkDeleted() || workspace.status.workspaceInitializing() || workspace.status.checkInProcess()
     }
 
     fun updateStatusAndCreateHistory(
