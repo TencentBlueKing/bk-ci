@@ -41,7 +41,7 @@ dependencies {
     api(project(":core:common:common-webhook:biz-common-webhook"))
     api(project(":core:store:api-store"))
     api(project(":core:project:api-project"))
-    api(project(":core:plugin:api-plugin"))
+    api(project(":core:misc:api-plugin"))
     api(project(":core:quality:api-quality"))
     api(project(":core:auth:api-auth"))
     api(project(":core:common:common-codecc"))

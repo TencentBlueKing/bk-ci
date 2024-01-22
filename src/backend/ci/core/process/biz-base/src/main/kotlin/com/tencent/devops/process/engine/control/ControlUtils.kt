@@ -95,8 +95,8 @@ object ControlUtils {
     }
 
     // 需要暂停，且没有暂停过
-    fun pauseBeforeExec(additionalOptions: ElementAdditionalOptions?, alreadyPauseFlag: String?): Boolean {
-        return pauseFlag(additionalOptions) && alreadyPauseFlag.isNullOrEmpty()
+    fun pauseBeforeExec(additionalOptions: ElementAdditionalOptions?, alreadyPauseFlag: Boolean): Boolean {
+        return pauseFlag(additionalOptions) && !alreadyPauseFlag
     }
 
     // 暂停标识位

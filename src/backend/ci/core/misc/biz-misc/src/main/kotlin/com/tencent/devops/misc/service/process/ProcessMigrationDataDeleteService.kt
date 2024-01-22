@@ -79,7 +79,7 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                 targetDataSourceName = deleteMigrationDataParam.targetDataSourceName
             )
             // 判断是否能删除db中数据
-            if (projectDataMigrateHistoryService.isDataCanMigrate(queryParam)) {
+            if (projectDataMigrateHistoryService.isDataCanDelete(queryParam)) {
                 deleteProcessRelData(deleteMigrationDataParam)
             } else {
                 throw ErrorCodeException(
@@ -286,7 +286,7 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                 targetDataSourceName = targetDataSourceName
             )
             // 判断是否能删除db中数据
-            if (projectDataMigrateHistoryService.isDataCanMigrate(queryParam)) {
+            if (projectDataMigrateHistoryService.isDataCanDelete(queryParam)) {
                 deleteProjectRelData(dslContext, projectId)
             } else {
                 throw ErrorCodeException(

@@ -27,15 +27,7 @@ config = {
         http_port = __BKCI_CONSUL_PORT__,
         domain = "__BKCI_CONSUL_DOMAIN__",
         tag = "__BKCI_CONSUL_TAG__",
-        suffix = "",
-        nodes_url = "/v1/catalog/nodes"
-    },
-    ns_devnet = {
-        ip = { "127.0.0.1" },
-        port = __BKCI_CONSUL_DNS_PORT__,
-        http_port = __BKCI_CONSUL_PORT__,
-        domain = "__BKCI_CONSUL_DOMAIN__",
-        tag = "__BKCI_CONSUL_TAG__",
+        codecc_tag = "__BKCI_CODECC_CONSUL_TAG__",
         suffix = "",
         nodes_url = "/v1/catalog/nodes"
     },
