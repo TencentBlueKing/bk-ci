@@ -97,21 +97,10 @@ class RbacPermissionResourceMemberService constructor(
         departments: List<String>?
     ): Boolean {
         // 校验用户组是否属于该项目
-        val managerId = authResourceService.get(
+        verifyGroupBelongToProject(
             projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode
-        ).relationId
-        val isGroupBelongToProject = getGroupInfoList(
-            resourceType = AuthResourceType.PROJECT.value,
-            managerId = managerId
-        ).map { it.id }.contains(iamGroupId)
-        if (!isGroupBelongToProject) {
-            throw ErrorCodeException(
-                errorCode = ProjectMessageCode.ERROR_GROUP_NOT_BELONG_TO_PROJECT,
-                defaultMessage = "The group($iamGroupId) does not belong to the project($projectCode)!"
-            )
-        }
+            iamGroupId = iamGroupId
+        )
         val userType = ManagerScopesEnum.getType(ManagerScopesEnum.USER)
         val deptType = ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)
         val pageInfoDTO = V2PageInfoDTO().apply {
@@ -125,10 +114,9 @@ class RbacPermissionResourceMemberService constructor(
             it.type == userType
         }.associateBy { it.id }
         val iamMemberInfos = mutableListOf<ManagerMember>()
-        // 预期的过期天数
+        // 校验是否将用户加入组，如果用户已经在用户组,并且过期时间超过30天,则不再添加
         val expectExpiredAt = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(VALID_EXPIRED_AT)
         members?.forEach {
-            // 如果用户已经在用户组,并且过期时间超过30天,则不再添加
             if (groupMemberMap.containsKey(it) && groupMemberMap[it]!!.expiredAt > expectExpiredAt) {
                 return@forEach
             }
@@ -150,6 +138,49 @@ class RbacPermissionResourceMemberService constructor(
             val managerMemberGroup =
                 ManagerMemberGroupDTO.builder().members(iamMemberInfos).expiredAt(expiredTime).build()
             iamV2ManagerService.createRoleGroupMemberV2(iamGroupId, managerMemberGroup)
+        }
+        return true
+    }
+
+    private fun verifyGroupBelongToProject(
+        projectCode: String,
+        iamGroupId: Int
+    ) {
+        val managerId = authResourceService.get(
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode
+        ).relationId
+        val isGroupBelongToProject = getGroupInfoList(
+            resourceType = AuthResourceType.PROJECT.value,
+            managerId = managerId
+        ).map { it.id }.contains(iamGroupId)
+        if (!isGroupBelongToProject) {
+            throw ErrorCodeException(
+                errorCode = ProjectMessageCode.ERROR_GROUP_NOT_BELONG_TO_PROJECT,
+                defaultMessage = "The group($iamGroupId) does not belong to the project($projectCode)!"
+            )
+        }
+    }
+
+    override fun batchDeleteResourceGroupMembers(
+        userId: String,
+        projectCode: String,
+        iamGroupId: Int,
+        members: List<String>?,
+        departments: List<String>?
+    ): Boolean {
+        verifyGroupBelongToProject(
+            projectCode = projectCode,
+            iamGroupId = iamGroupId
+        )
+        val userType = ManagerScopesEnum.getType(ManagerScopesEnum.USER)
+        val deptType = ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)
+        if (!members.isNullOrEmpty()) {
+            iamV2ManagerService.deleteRoleGroupMemberV2(iamGroupId, userType, members.joinToString(","))
+        }
+        if (!departments.isNullOrEmpty()) {
+            iamV2ManagerService.deleteRoleGroupMemberV2(iamGroupId, deptType, departments.joinToString(","))
         }
         return true
     }

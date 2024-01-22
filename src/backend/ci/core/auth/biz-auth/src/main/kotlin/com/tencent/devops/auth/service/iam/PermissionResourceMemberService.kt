@@ -27,6 +27,14 @@ interface PermissionResourceMemberService {
         departments: List<String>? = emptyList()
     ): Boolean
 
+    fun batchDeleteResourceGroupMembers(
+        userId: String,
+        projectCode: String,
+        iamGroupId: Int,
+        members: List<String>? = emptyList(),
+        departments: List<String>? = emptyList()
+    ): Boolean
+
     fun roleCodeToIamGroupId(
         projectCode: String,
         roleCode: String

@@ -8,10 +8,12 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
+import com.tencent.devops.project.pojo.ProjectDeleteUserInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -102,5 +104,25 @@ interface ApigwAuthProjectResourceV4 {
         projectId: String,
         @ApiParam("添加信息", required = true)
         createInfo: ProjectCreateUserInfo
+    ): Result<Boolean>
+
+    @DELETE
+    @Path("/batch_delete_resource_group_members")
+    @ApiOperation("用户组批量删除成员", tags = ["v4_app_batch_delete_resource_group_members"])
+    fun batchDeleteResourceGroupMembers(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam("userId")
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String?,
+        @ApiParam(value = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("删除信息", required = true)
+        deleteInfo: ProjectDeleteUserInfo
     ): Result<Boolean>
 }

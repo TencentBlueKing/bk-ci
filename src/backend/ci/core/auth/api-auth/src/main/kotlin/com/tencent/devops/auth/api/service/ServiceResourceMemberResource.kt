@@ -7,10 +7,12 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
+import com.tencent.devops.project.pojo.ProjectDeleteUserInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -84,5 +86,22 @@ interface ServiceResourceMemberResource {
         projectCode: String,
         @ApiParam("用户组添加成员请求体", required = true)
         projectCreateUserInfo: ProjectCreateUserInfo
+    ): Result<Boolean>
+
+    @DELETE
+    @Path("/{projectCode}/batchDeleteResourceGroupMembers/")
+    @ApiOperation("用户组删除成员")
+    fun batchDeleteResourceGroupMembers(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectCode")
+        @ApiParam("项目Code", required = true)
+        projectCode: String,
+        @ApiParam("用户组删除成员请求体", required = true)
+        projectDeleteUserInfo: ProjectDeleteUserInfo
     ): Result<Boolean>
 }

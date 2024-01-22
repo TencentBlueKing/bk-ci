@@ -11,6 +11,7 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwAuthProjectResourceV4
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
+import com.tencent.devops.project.pojo.ProjectDeleteUserInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -66,6 +67,22 @@ class ApigwAuthProjectResourceV4Impl @Autowired constructor(
             userId = createInfo.createUserId,
             projectCode = projectId,
             projectCreateUserInfo = createInfo
+        )
+    }
+
+    override fun batchDeleteResourceGroupMembers(
+        appCode: String?,
+        apigwType: String?,
+        userId: String?,
+        projectId: String,
+        deleteInfo: ProjectDeleteUserInfo
+    ): Result<Boolean> {
+        logger.info("deleteProjectUser v4 |$appCode|$userId|$projectId|$deleteInfo")
+        return client.get(ServiceResourceMemberResource::class).batchDeleteResourceGroupMembers(
+            token = tokenService.getSystemToken(),
+            userId = deleteInfo.operator,
+            projectCode = projectId,
+            projectDeleteUserInfo = deleteInfo
         )
     }
 }
