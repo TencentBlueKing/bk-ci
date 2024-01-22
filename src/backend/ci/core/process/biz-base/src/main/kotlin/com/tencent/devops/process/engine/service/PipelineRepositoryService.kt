@@ -923,38 +923,30 @@ class PipelineRepositoryService constructor(
                             activeBranchVersion.version
                         }
                     }
-                    // 3 通过分支发布 —— 将要发布的草稿直接更新为分支版本，如果存在旧的同名分支版本标记为不活跃
+                    // 3 通过分支发布 —— 将要通过分支发布的草稿直接删除草稿，由代码库提供分支版本管理
                     VersionStatus.BRANCH_RELEASE -> {
                         if (branchName.isNullOrBlank()) throw ErrorCodeException(
                             errorCode = CommonMessageCode.PARAMETER_VALIDATE_ERROR,
                             params = arrayOf("branchName")
                         )
-                        versionName = branchName
-                        // TODO #8161 更新旧的同名分支版本为不活跃
-//                        pipelineResourceVersionDao.getBranchVersionResource(
-//                            dslContext = transactionContext,
-//                            projectId = projectId,
-//                            pipelineId = pipelineId,
-//                            branchName = branchName
-//                        )?.let {
-//                            pipelineResourceVersionDao.updateBranchVersion(
-//                                dslContext = transactionContext,
-//                                projectId = projectId,
-//                                pipelineId = pipelineId,
-//                                branchName = branchName,
-//                                branchVersionAction = BranchVersionAction.INACTIVE
-//                            )
-//                        }
-                        val draftVersion = pipelineResourceVersionDao.getDraftVersionResource(
+                        val activeBranchVersion = pipelineResourceVersionDao.getBranchVersionResource(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            branchName = branchName
+                        )
+                        operationLogParams = versionName
+                        operationLogType = if (activeBranchVersion == null) {
+                            OperationLogType.CREATE_BRANCH_VERSION
+                        } else {
+                            OperationLogType.UPDATE_DRAFT_VERSION
+                        }
+                        pipelineResourceVersionDao.clearDraftVersion(
                             dslContext = transactionContext,
                             projectId = projectId,
                             pipelineId = pipelineId
-                        ) ?: throw ErrorCodeException(
-                            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_DRAFT_EXISTS
                         )
-                        operationLogType = OperationLogType.UPDATE_BRANCH_VERSION
-                        operationLogParams = draftVersion.version.toString()
-                        version = draftVersion.version
+                        return@transaction
                     }
                     // 4 正式版本保存 —— 寻找当前草稿，存在草稿版本则报错，不存在则直接取最新VERSION+1同时更新INFO、RESOURCE表
                     else -> {
