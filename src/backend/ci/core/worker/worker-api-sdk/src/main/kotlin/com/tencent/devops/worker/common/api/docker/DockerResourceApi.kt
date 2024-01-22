@@ -87,6 +87,6 @@ class DockerResourceApi : AbstractBuildResourceApi(), DockerSDKApi {
     }
 
     companion object {
-        const val IMAGE_READ_TIMEOUT_IN_SEC = 700L
+        const val IMAGE_READ_TIMEOUT_IN_SEC = 900L
     }
 }
