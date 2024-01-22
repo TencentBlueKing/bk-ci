@@ -40,10 +40,10 @@ class PermissionManageService @Autowired constructor(
     fun isUserHasAllPermission(userId: String, projectId: String, allHostList: List<Host>) {
         // 用户有使用该节点的权限
         val nodeRecords = getNodesFromHostList(dslContext, projectId, allHostList).toSet() // 所有host对应的T_NODE表中的记录
-        val getRecordByHostIdList = mutableListOf<Host>()
+        val recordByHostIdList = mutableListOf<Host>()
         val getRecordByIpAndBkCloudId = mutableListOf<Host>()
         allHostList.map {
-            if (null != it.bkHostId) getRecordByHostIdList.add(it)
+            if (null != it.bkHostId) recordByHostIdList.add(it)
             else getRecordByIpAndBkCloudId.add(it)
         }
         if (logger.isDebugEnabled) logger.debug("[isUserHasAllPermission] allHostList: $allHostList")
@@ -71,13 +71,13 @@ class PermissionManageService @Autowired constructor(
         projectId: String,
         hostList: List<Host>
     ): List<TNodeRecord> {
-        val getRecordByHostIdList = mutableListOf<Host>()
+        val recordByHostIdList = mutableListOf<Host>()
         val getRecordByIpAndBkCloudId = mutableListOf<Host>()
         hostList.map {
-            if (null != it.bkHostId) getRecordByHostIdList.add(it)
+            if (null != it.bkHostId) recordByHostIdList.add(it)
             else getRecordByIpAndBkCloudId.add(it)
         }
-        return nodeDao.getNodesFromHostListByBkHostId(dslContext, projectId, getRecordByHostIdList).plus(
+        return nodeDao.getNodesFromHostListByBkHostId(dslContext, projectId, recordByHostIdList).plus(
             nodeDao.getNodesFromHostListByIpAndBkCloudId(dslContext, projectId, getRecordByIpAndBkCloudId)
         )
     }
