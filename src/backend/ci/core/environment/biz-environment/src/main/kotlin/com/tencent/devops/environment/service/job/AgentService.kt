@@ -329,9 +329,10 @@ data class AgentService @Autowired constructor(
         instanceId: String
     ): AgentResult<QueryAgentTaskLogResult> {
         NodeManApi.setNodemanOperationName("queryAgentTaskLog")
-        val agentQueryAgentTaskLogRes: AgentOriginalResult<Array<AgentQueryAgentTaskLog>> = nodeManApi.executeGetRequest(
-            Array<AgentQueryAgentTaskLog>::class.java, jobId, instanceId
-        )
+        val agentQueryAgentTaskLogRes: AgentOriginalResult<Array<AgentQueryAgentTaskLog>> =
+            nodeManApi.executeGetRequest(
+                Array<AgentQueryAgentTaskLog>::class.java, jobId, instanceId
+            )
         val queryAgentTaskLogRes: AgentResult<QueryAgentTaskLogResult> = AgentResult(
             code = agentQueryAgentTaskLogRes.code,
             result = agentQueryAgentTaskLogRes.result,

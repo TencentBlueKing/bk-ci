@@ -66,17 +66,6 @@ class NodeDao {
         }
     }
 
-    fun getCmdbNodesWhoseHostIdNullLimit(dslContext: DSLContext, offset: Int, limit: Int): Result<Record3<Long, String, String>> {
-        with(TNode.T_NODE) {
-            return dslContext.select(NODE_ID, NODE_TYPE, NODE_IP).from(this)
-                .where(NODE_TYPE.eq(NodeType.CMDB.name))
-                .and(HOST_ID.isNull)
-                .orderBy(NODE_ID.desc())
-                .limit(limit).offset(offset)
-                .fetch()
-        }
-    }
-
     fun getDeployNodesLimit(dslContext: DSLContext, offset: Int, limit: Int): Result<Record5<Long, String, String, Long, Long>> {
         with(TNode.T_NODE) {
             return dslContext.select(NODE_ID, NODE_TYPE, NODE_IP, HOST_ID, CLOUD_AREA_ID).from(this)

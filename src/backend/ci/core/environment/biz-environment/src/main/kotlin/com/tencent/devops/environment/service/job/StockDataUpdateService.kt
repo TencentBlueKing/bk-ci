@@ -220,7 +220,9 @@ class StockDataUpdateService @Autowired constructor(
         // cc记录
         val nodeCCInfoList = nodeIpList.takeIf { it.isNotEmpty() }.run {
             queryFromCCService.queryCCListHostWithoutBizByInRules(
-                listOf(QueryFromCCService.FIELD_BK_HOST_ID, QueryFromCCService.FIELD_BK_HOST_INNERIP), nodeIpList, QueryFromCCService.FIELD_BK_HOST_INNERIP
+                listOf(QueryFromCCService.FIELD_BK_HOST_ID, QueryFromCCService.FIELD_BK_HOST_INNERIP),
+                nodeIpList,
+                QueryFromCCService.FIELD_BK_HOST_INNERIP
             ).data?.info
         }
         var ipToCCInfoMap: Map<String?, CCInfo>?
