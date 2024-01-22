@@ -129,6 +129,7 @@ allprojects {
             dependency("com.jakewharton:disklrucache:${Versions.disklrucache}")
             dependency("org.apache.poi:poi:${Versions.apachepoi}")
             dependency("org.apache.poi:poi-ooxml:${Versions.apachepoi}")
+            dependency("com.tencentcloudapi:tencentcloud-sdk-java-cfs:${Versions.tencentcloudsdkcfs}")
         }
     }
 

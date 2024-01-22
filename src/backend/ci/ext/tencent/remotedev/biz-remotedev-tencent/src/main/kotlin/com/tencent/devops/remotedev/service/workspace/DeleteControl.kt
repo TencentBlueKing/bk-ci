@@ -66,6 +66,7 @@ import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
+import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
@@ -93,7 +94,8 @@ class DeleteControl @Autowired constructor(
     private val remoteDevSettingService: RemoteDevSettingService,
     private val workspaceCommon: WorkspaceCommon,
     private val bkccService: BKCCService,
-    private val notifyControl: NotifyControl
+    private val notifyControl: NotifyControl,
+    private val tCloudCfsService: TCloudCfsService
 ) {
 
     companion object {
@@ -416,8 +418,8 @@ class DeleteControl @Autowired constructor(
 
         // 删除时给 cmdb 去掉字段方便监控检索
         val hostIdSub = detail?.environmentIP?.split(".")
-        if (!hostIdSub.isNullOrEmpty() && workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
-            val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+        val ip = hostIdSub?.subList(1, hostIdSub.size)?.joinToString(separator = ".")
+        if (!ip.isNullOrBlank() && workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
             bkccService.updateHostMonitor(
                 regionId = null,
                 workspaceName = workspaceName,
@@ -427,6 +429,11 @@ class DeleteControl @Autowired constructor(
 
             // 删除 cmdb 的机器别名
             bkccService.updateHostName("VM-${hostIdSub.joinToString("-")}", workspaceName)
+        }
+
+        // 删除cfs的权限组规则
+        if (!ip.isNullOrBlank()) {
+            tCloudCfsService.addOrRemoveCfsPermissionRule(projectId, ip, true)
         }
 
         notifyControl.dispatchWebsocketPushEvent(
