@@ -362,7 +362,7 @@ class CodeSvnScmImpl constructor(
         }
         if (existHook == null) {
             SVNApi.addWebhooksByToken(
-                host = "",
+                host = svnConfig.apiUrlOa,
                 projectName = projectName,
                 hookUrl = hookUrl,
                 token = token,
