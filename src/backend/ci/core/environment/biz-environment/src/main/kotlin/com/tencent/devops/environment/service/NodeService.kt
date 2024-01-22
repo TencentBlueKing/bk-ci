@@ -220,20 +220,15 @@ class NodeService @Autowired constructor(
             authPermission = AuthPermission.VIEW
         ).map { it.nodeId }
 
-        val canUseNodeIds = if (permissionMap.containsKey(AuthPermission.USE)) {
+        val canUseNodeIds = permissionMap.takeIf { it.containsKey(AuthPermission.USE) }.run {
             permissionMap[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
-        } else {
-            emptyList()
         }
-        val canEditNodeIds = if (permissionMap.containsKey(AuthPermission.EDIT)) {
+
+        val canEditNodeIds = permissionMap.takeIf { it.containsKey(AuthPermission.EDIT) }.run {
             permissionMap[AuthPermission.EDIT]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
-        } else {
-            emptyList()
         }
-        val canDeleteNodeIds = if (permissionMap.containsKey(AuthPermission.DELETE)) {
+        val canDeleteNodeIds = permissionMap.takeIf { it.containsKey(AuthPermission.DELETE) }.run {
             permissionMap[AuthPermission.DELETE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
-        } else {
-            emptyList()
         }
         val thirdPartyAgentNodeIds = nodeRecordList.filter { it.nodeType == NodeType.THIRDPARTY.name }.map { it.nodeId }
         val thirdPartyAgentMap =
@@ -244,9 +239,7 @@ class NodeService @Autowired constructor(
             val thirdPartyAgent = thirdPartyAgentMap[it.nodeId]
             val gatewayShowName = if (thirdPartyAgent != null) {
                 slaveGatewayService.getShowName(thirdPartyAgent.gateway)
-            } else {
-                ""
-            }
+            } else ""
 
             // 如果是构建机类型，则取蓝盾Node状态，否则取gseAgent状态
             val nodeStatus =
