@@ -55,6 +55,8 @@ data class PipelineResourceVersion(
     val createTime: LocalDateTime,
     @ApiModelProperty("版本修改时间", required = true)
     val updateTime: LocalDateTime?,
+    @ApiModelProperty("发布版本号", required = false)
+    val releaseVersion: Int?,
     @ApiModelProperty("编排版本号", required = false)
     val pipelineVersion: Int?,
     @ApiModelProperty("触发器版本号", required = false)
