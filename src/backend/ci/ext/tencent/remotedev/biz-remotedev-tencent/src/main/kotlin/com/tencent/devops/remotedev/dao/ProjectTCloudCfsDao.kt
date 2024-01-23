@@ -13,18 +13,21 @@ class ProjectTCloudCfsDao {
         dslContext: DSLContext,
         projectId: String,
         cfsId: String,
-        region: String
+        region: String,
+        pgId: String
     ) {
         with(TProjectTcloudCfs.T_PROJECT_TCLOUD_CFS) {
             dslContext.insertInto(
                 this,
                 PROJECT_ID,
                 CFS_ID,
-                REGION
+                REGION,
+                PG_ID
             ).values(
                 projectId,
                 cfsId,
-                region
+                region,
+                pgId
             ).execute()
         }
     }

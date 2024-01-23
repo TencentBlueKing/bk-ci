@@ -2,6 +2,10 @@ package com.tencent.devops.remotedev.service.tcloud
 
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.remotedev.dao.ProjectTCloudCfsDao
+import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
+import com.tencent.devops.remotedev.pojo.WorkspaceSearch
+import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import com.tencent.devops.remotedev.pojo.common.QueryType
 import com.tencent.devops.remotedev.pojo.tcloud.ProjectCfsData
 import com.tencentcloudapi.cfs.v20190719.CfsClient
 import com.tencentcloudapi.cfs.v20190719.models.CreateCfsRuleRequest
@@ -16,12 +20,14 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
 
 @Suppress("ALL")
 @Service
 class TCloudCfsService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val projectTCloudCfsDao: ProjectTCloudCfsDao
+    private val projectTCloudCfsDao: ProjectTCloudCfsDao,
+    private val workspaceJoinDao: WorkspaceJoinDao
 ) {
     @Value("\${tcloud.apiSecretId:}")
     val secretId = ""
@@ -42,7 +48,7 @@ class TCloudCfsService @Autowired constructor(
 
         val cred = Credential(secretId, secretKey)
         val profile = HttpProfile().apply {
-            this.endpoint = "cfs.internal.tencentcloudapi.com"
+            this.endpoint = TCLOUD_DOMAIN
         }
         val client = CfsClient(
             cred, record.region,
@@ -53,21 +59,7 @@ class TCloudCfsService @Autowired constructor(
 
         var pgId = record.pgId
         if (pgId == null) {
-            val resp = try {
-                client.DescribeCfsFileSystems(
-                    DescribeCfsFileSystemsRequest().apply {
-                        this.fileSystemId = record.cfsId
-                    }
-                )
-            } catch (e: Exception) {
-                logger.error("fetchCfsLinkCfsPermission|DescribeCfsFileSystems error", e)
-                return
-            }
-            if (resp.totalCount < 1 || resp.fileSystems.firstOrNull() == null) {
-                logger.error("fetchCfsLinkCfsPermission|DescribeCfsFileSystems 0|${resp.requestId}")
-                return
-            }
-            pgId = resp.fileSystems.first().pGroup.pGroupId
+            pgId = getPGId(client, record.cfsId) ?: return
             projectTCloudCfsDao.updatePGId(dslContext, projectId, record.cfsId, pgId)
         }
 
@@ -112,12 +104,84 @@ class TCloudCfsService @Autowired constructor(
         }
     }
 
+    private fun getPGId(
+        client: CfsClient,
+        cfsId: String
+    ): String? {
+        val resp = try {
+            client.DescribeCfsFileSystems(
+                DescribeCfsFileSystemsRequest().apply {
+                    this.fileSystemId = cfsId
+                }
+            )
+        } catch (e: Exception) {
+            logger.error("fetchCfsLinkCfsPermission|DescribeCfsFileSystems error", e)
+            return null
+        }
+        if (resp.totalCount < 1 || resp.fileSystems.firstOrNull() == null) {
+            logger.error("fetchCfsLinkCfsPermission|DescribeCfsFileSystems 0|${resp.requestId}")
+            return null
+        }
+        return resp.fileSystems.first().pGroup.pGroupId
+    }
+
+    private val executor = Executors.newCachedThreadPool()
+
     fun addProjectCfsId(
         projectId: String,
         cfsId: String,
         region: String
     ) {
-        projectTCloudCfsDao.add(dslContext, projectId, cfsId, region)
+        executor.execute {
+            val cred = Credential(secretId, secretKey)
+            val profile = HttpProfile().apply {
+                this.endpoint = TCLOUD_DOMAIN
+            }
+            val client = CfsClient(
+                cred, region,
+                ClientProfile().apply {
+                    this.httpProfile = profile
+                }
+            )
+
+            val pgId = getPGId(client, cfsId) ?: throw RuntimeException("获取权限组ID失败")
+            projectTCloudCfsDao.add(dslContext, projectId, cfsId, region, pgId)
+
+            // 将所有这个项目下的ip都添加到权限组
+            val ips = workspaceJoinDao.limitFetchProjectWorkspace(
+                dslContext = dslContext,
+                null,
+                queryType = QueryType.WEB,
+                search = WorkspaceSearch(
+                    projectId = listOf(projectId),
+                    workspaceSystemType = listOf(WorkspaceSystemType.WINDOWS_GPU),
+                    onFuzzyMatch = false
+                )
+            )?.filter { !it.hostName.isNullOrBlank() }?.map {
+                it.hostName?.split(".")?.let { host ->
+                    host.subList(1, host.size).joinToString(separator = ".")
+                }!!
+            }?.toSet() ?: return@execute
+
+            ips.forEach { ip ->
+                try {
+                    client.CreateCfsRule(
+                        CreateCfsRuleRequest().apply {
+                            this.pGroupId = pgId
+                            this.authClientIp = ip
+                            this.priority = 1
+                            this.rwPermission = "rw"
+                            this.userPermission = "no_root_squash"
+                        }
+                    )
+                } catch (e: Exception) {
+                    logger.error("fetchCfsLinkCfsPermission|CreateCfsRule error", e)
+                    return@execute
+                }
+                // 中间休眠下，防止快速操作腾讯云报错
+                Thread.sleep(1000)
+            }
+        }
     }
 
     fun projectCfsList(
@@ -143,5 +207,6 @@ class TCloudCfsService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TCloudCfsService::class.java)
+        private const val TCLOUD_DOMAIN = "cfs.internal.tencentcloudapi.com"
     }
 }
