@@ -153,6 +153,13 @@
             @close="handleCloseEditCount"
             @done="refresh"
         />
+        <disable-dialog
+            v-model="pipelineActionState.isDisableDialogShow"
+            v-bind="pipelineActionState.activePipeline"
+            @close="closeDisableDialog"
+            :pac-enabled="pacEnabled"
+            @done="refresh"
+        />
     </main>
 </template>
 <script>
@@ -166,7 +173,8 @@
     import AddToGroupDialog from '@/views/PipelineList/AddToGroupDialog'
     import PipelineGroupEditDialog from '@/views/PipelineList/PipelineGroupEditDialog'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
-    import { mapActions, mapState } from 'vuex'
+    import DisableDialog from '@/components/PipelineActionDialog/DisableDialog'
+    import { mapActions, mapGetters, mapState } from 'vuex'
 
     import Logo from '@/components/Logo'
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
@@ -196,7 +204,8 @@
             PipelineTableView,
             PipelineSearcher,
             ImportPipelinePopup,
-            PipelineGroupEditDialog
+            PipelineGroupEditDialog,
+            DisableDialog
         },
         mixins: [piplineActionMixin],
         data () {
@@ -228,6 +237,9 @@
                 'pipelineActionState',
                 'isManage'
             ]),
+            ...mapGetters({
+                pacEnabled: 'atom/pacEnabled'
+            }),
             projectId () {
                 return this.$route.params.projectId
             },
@@ -523,7 +535,9 @@
         @include ellipsis();
         flex-shrink: 0;
         max-width: 100px;
-        cursor: pointer;
+        &.pipeline-group-more-tag {
+            cursor: pointer;
+        }
     }
     .pipeline-list-box {
         flex: 1;

@@ -32,12 +32,22 @@
                     return ''
                 }
                 return `${BADGE_URL_PREFIX}/process/api/external/pipelines/projects/${projectId}/${pipelineId}/badge?X-DEVOPS-PROJECT-ID=${projectId}`
+            },
+            markdownLinkUrl () {
+                const { projectId, pipelineId } = this
+                if (!projectId || !pipelineId) {
+                    return ''
+                }
+
+                return `[![BK Pipelines Status](${this.badgeImageUrl})](${location.origin}/process/api-html/user/builds/projects/${projectId}/pipelines/${pipelineId}/latestFinished?X-DEVOPS-PROJECT-ID=${projectId})`
             }
         },
+
         methods: {
             copy (ref) {
                 try {
-                    window.navigator.clipboard.writeText(this.badgeImageUrl)
+                    const copyUrl = ref === 'markdownLink' ? this.markdownLinkUrl : this.badgeImageUrl
+                    window.navigator.clipboard.writeText(copyUrl)
                     this.$bkMessage({
                         theme: 'success',
                         message: this.$t('copySuc')

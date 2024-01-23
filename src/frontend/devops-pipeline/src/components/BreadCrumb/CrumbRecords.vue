@@ -66,7 +66,7 @@
 <style lang="scss">
     @import '../../scss/mixins/ellipsis';
     @import "../../scss/conf";
-    
+
     .record-list {
         position: absolute;
         background: white;

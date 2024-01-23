@@ -7,6 +7,14 @@
                         class="pipeline-cell-link"
                         :to="pipeline.historyRoute"
                         v-bk-overflow-tips
+                        v-perm="{
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: pipeline.pipelineId,
+                                action: RESOURCE_ACTION.EDIT
+                            }
+                        }"
                     >
                         {{pipeline.pipelineName}}
                     </router-link>
@@ -207,7 +215,7 @@
         },
         methods: {
             exec () {
-                if (this.pipeline.disabled) return
+                if (this.pipeline?.disabled || this.pipeine?.onlyDraft) return
                 this.execPipeline(this.pipeline)
             },
             applyPermission (pipeline) {

@@ -18,7 +18,7 @@
                 </template>
             </div>
             <ul v-bkloading="{ isLoading }" class="pipeline-version-dropmenu-content" slot="dropdown-content">
-                <p @click.stop="">
+                <p @click.stop="" class="pipeline-version-search-box">
                     <bk-input
                         v-model.trim="searchKeyword"
                         ref="versionSearchInput"
@@ -176,7 +176,7 @@
                 }).then(({ records, count }) => {
                     this.versionList = records.map(item => {
                         const isDraft = item.status === 'COMMITTING'
-                        const displayName = generateDisplayName(item.version, item.versionName)
+                        const displayName = generateDisplayName(item.versionNum, item.versionName)
                         return {
                             ...item,
                             displayName: isDraft ? this.$t('draft') : displayName,
@@ -255,16 +255,22 @@
     flex-direction: column;
     max-height: 360px;
     overflow: auto;
-    .pipeline-version-search {
-        padding: 0 12px;
-    }
     .pipeline-version-empty-indicator {
         display: flex;
         align-items: center;
         justify-content: center;
         height: 360px;
     }
+    >.pipeline-version-search-box {
+        position: sticky;
+        padding: 0 12px;
+        background: white;
+        top: 0;
+    }
     >.show-all-pipeline-version-entry {
+        position: sticky;
+        bottom: 0;
+        background: white;
         color: $primaryColor;
         display: flex;
         align-items: center;

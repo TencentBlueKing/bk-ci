@@ -75,7 +75,8 @@ export default {
             'deletePipeline',
             'copyPipeline',
             'restorePipeline',
-            'requestHasCreatePermission'
+            'requestHasCreatePermission',
+            'lockPipeline'
         ]),
         async checkHasTemplatePermission () {
             this.hasTemplatePermission = await this.requestTemplatePermission(this.$route.params.projectId)
@@ -208,6 +209,16 @@ export default {
             const isDynamicGroup = this.currentGroup?.viewType === 1
             return [
                 {
+                    text: this.$t(pipeline.lock ? 'enable' : 'disabled'),
+                    handler: this.lockPipelineHandler,
+                    permissionData: {
+                        projectId: pipeline.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: pipeline.pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    }
+                },
+                {
                     text: this.$t('addTo'),
                     handler: this.addToHandler
                 },
@@ -302,6 +313,12 @@ export default {
                 })
             }
         },
+        lockPipelineHandler (pipeline) {
+            this.updatePipelineActionState({
+                isDisableDialogShow: true,
+                activePipeline: pipeline
+            })
+        },
         addToHandler (pipeline) {
             this.updatePipelineActionState({
                 addToDialogShow: true,
@@ -332,6 +349,12 @@ export default {
                 confirmType: 'delete',
                 isConfirmShow: true,
                 activePipelineList: [pipeline]
+            })
+        },
+        closeDisableDialog () {
+            this.updatePipelineActionState({
+                isDisableDialogShow: false,
+                activePipeline: null
             })
         },
         closeCopyDialog () {
@@ -368,12 +391,12 @@ export default {
                 }
             })
         },
-        execPipeline ({ pipelineId, disabled }) {
+        execPipeline ({ projectId, pipelineId, disabled }) {
             if (disabled) return
             this.$router.push({
-                name: 'pipelinesPreview',
+                name: 'executePreview',
                 params: {
-                    projectId: this.$route.params.projectId,
+                    projectId,
                     pipelineId
                 }
             })

@@ -91,13 +91,14 @@
             async init () {
                 try {
                     this.isLoading = true
+                    const params = {
+                        projectId: this.projectId,
+                        pipelineId: this.pipelineId,
+                        version: this.$route.params.version ?? this.pipelineInfo?.[this.isDebugPipeline ? 'version' : 'releaseVersion']
+                    }
                     const [res, pipelineRes] = await Promise.all([
-                        this.requestStartupInfo({
-                            projectId: this.projectId,
-                            pipelineId: this.pipelineId,
-                            version: this.$route.params.version ?? this.pipelineInfo?.[this.isDebugPipeline ? 'version' : 'releaseVersion']
-                        }),
-                        this.fetchPipelineByVersion(this.$route.params)
+                        this.requestStartupInfo(params),
+                        this.fetchPipelineByVersion(params)
                     ])
                     this.pipelineModel = pipelineRes?.modelAndSetting?.model
                     this.startupInfo = res
