@@ -30,6 +30,7 @@ package com.tencent.devops.environment.service.job
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.environment.dao.job.NetworkAreaDao
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.net.InetAddress
@@ -41,6 +42,8 @@ class ChooseAgentInstallChannelIdService @Autowired constructor(
     private val networkAreaDao: NetworkAreaDao
 ) {
     companion object {
+        private val logger = LoggerFactory.getLogger(ChooseAgentInstallChannelIdService::class.java)
+
         private const val NETWORK_AREA_SUPPORTING = 4
         private const val NETWORK_AREA_OSS = 5
         private const val NETWORK_AREA_DEVNET = 6
@@ -76,6 +79,7 @@ class ChooseAgentInstallChannelIdService @Autowired constructor(
         val ipAddr: InetAddress = try {
             InetAddress.getByName(ip)
         } catch (e: UnknownHostException) {
+            logger.info("[ipInRange]UnknownHostException: ${e.message}, ip:$ip")
             return false
         }
         for (range in ranges) {
@@ -84,6 +88,7 @@ class ChooseAgentInstallChannelIdService @Autowired constructor(
             val subnetAddr: InetAddress = try {
                 InetAddress.getByName(subnet)
             } catch (e: UnknownHostException) {
+                logger.info("[ipInRange]UnknownHostException: ${e.message}")
                 return false
             }
             val prefixLength = parts[1].toInt()
