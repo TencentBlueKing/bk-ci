@@ -70,7 +70,7 @@ data class ModelRecord(
     @ApiModelProperty("本次执行的编排版本号", required = true)
     val curVersion: Int,
     @ApiModelProperty("发布版本号", required = false)
-    val versionNum: Int,
+    val versionNum: Int?,
     @ApiModelProperty("流水线当前最新版本号", required = true)
     val latestVersion: Int,
     @ApiModelProperty("最新一次的构建buildNo", required = true)

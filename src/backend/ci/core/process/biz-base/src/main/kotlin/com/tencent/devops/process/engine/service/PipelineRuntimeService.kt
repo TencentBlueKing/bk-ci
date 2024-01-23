@@ -470,8 +470,7 @@ class PipelineRuntimeService @Autowired constructor(
                 ),
                 buildNum = buildNum,
                 pipelineVersion = version,
-                // TODO #8161
-                versionNum = version,
+                versionNum = versionNum?.takeIf { !debug },
                 startTime = startTime ?: 0L,
                 endTime = endTime,
                 status = status.name,
