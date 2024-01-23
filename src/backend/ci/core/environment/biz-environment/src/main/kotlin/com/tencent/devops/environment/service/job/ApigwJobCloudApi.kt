@@ -28,7 +28,7 @@ class ApigwJobCloudApi {
     @Value("\${environment.cc.bkScopeId:#{null}}")
     val bkScopeId: String = ""
 
-    @Value("\${job.jobCloudApiBaseUrl:#{null}}")
+    @Value("\${environment.job.jobCloudApiBaseUrl:#{null}}")
     val jobCloudApiBaseUrl: String? = null
 
     companion object {
