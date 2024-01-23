@@ -29,26 +29,27 @@
 package com.tencent.devops.process.yaml.exception.hanlder
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedErrorCode
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMsg
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.yaml.exception.YamlTriggerException
 
 object YamlTriggerExceptionUtil {
-
-    fun getReason(exception: Exception): Pair<String, String> {
+    fun getReasonDetail(exception: Exception): Pair<String, PipelineTriggerReasonDetail> {
         return when (exception) {
             is YamlTriggerException -> Pair(
                 PipelineTriggerStatus.FAILED.name,
-                I18Variable(code = exception.errorCode, params = exception.params?.toList()).toJsonStr()
+                PipelineTriggerFailedErrorCode(errorCode = exception.errorCode, params = exception.params?.toList())
             )
             is ErrorCodeException -> Pair(
                 PipelineTriggerStatus.FAILED.name,
-                I18Variable(code = exception.errorCode, params = exception.params?.toList()).toJsonStr()
+                PipelineTriggerFailedErrorCode(errorCode = exception.errorCode, params = exception.params?.toList())
             )
             else -> Pair(
                 PipelineTriggerReason.UNKNOWN_ERROR.name,
-                exception.message ?: PipelineTriggerReason.UNKNOWN_ERROR.detail
+                PipelineTriggerFailedMsg(exception.message ?: PipelineTriggerReason.UNKNOWN_ERROR.detail)
             )
         }
     }

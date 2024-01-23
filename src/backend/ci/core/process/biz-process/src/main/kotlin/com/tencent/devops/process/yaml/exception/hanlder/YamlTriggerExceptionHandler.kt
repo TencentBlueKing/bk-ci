@@ -74,7 +74,7 @@ class YamlTriggerExceptionHandler(
         val yamlFile = action.data.context.yamlFile!!
         val pipeline = action.data.context.pipeline
         val eventId = action.data.context.eventId
-        val (reason, reasonDetail) = YamlTriggerExceptionUtil.getReason(exception = exception)
+        val (reason, reasonDetail) = YamlTriggerExceptionUtil.getReasonDetail(exception = exception)
         val (pipelineId, pipelineName) = if (pipeline != null && pipeline.pipelineId.isNotBlank()) {
             val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
                 projectId = pipeline.projectId,
