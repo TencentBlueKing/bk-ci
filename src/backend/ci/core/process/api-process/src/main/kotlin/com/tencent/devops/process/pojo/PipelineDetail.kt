@@ -73,7 +73,9 @@ data class PipelineDetail(
     @ApiModelProperty("更新时间")
     val updateTime: Long = 0,
     @ApiModelProperty("流水线组名称列表", required = false)
-    var viewNames: List<String>? = null,
+    var viewNames: List<String>?,
+    @ApiModelProperty("流水线权限", required = false)
+    val permissions: PipelinePermissions?,
     @ApiModelProperty("Lock 类型", required = false)
     val runLockType: PipelineRunLockType? = null,
     @ApiModelProperty("仅存在草稿", required = false)

@@ -58,13 +58,12 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRepositoryVersionService
 import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
-import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
-import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
+import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
@@ -150,6 +149,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         } else null
         val version = draftVersion?.version ?: releaseVersion!!.version
         val versionName = draftVersion?.versionName ?: releaseVersion!!.versionName
+        val permissions = pipelineListFacadeService.getPipelinePermissions(userId, projectId, pipelineId)
         pipelineRecentUseService.record(userId, projectId, pipelineId)
         return PipelineDetail(
             pipelineId = detailInfo.pipelineId,
@@ -167,6 +167,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             viewNames = detailInfo.viewNames,
             onlyDraft = detailInfo.onlyDraft == true,
             runLockType = releaseSetting.runLockType,
+            permissions = permissions,
             version = version,
             versionName = versionName,
             releaseVersion = releaseVersion?.version,
@@ -210,9 +211,6 @@ class PipelineVersionFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )
-        // TODO #8161 最先进行静态分组编辑操作，如果鉴权失败直接放弃后续操作
-        val bulkAdd = PipelineViewBulkAdd(pipelineIds = listOf(pipelineId), viewIds = request.staticViews)
-        pipelineViewGroupService.bulkAdd(userId, projectId, bulkAdd)
         // 根据项目PAC状态进行接口调用
         val enabled = originSetting.pipelineAsCodeSettings?.enable == true || request.enablePac
         val targetSettings = originSetting.copy(
@@ -272,7 +270,6 @@ class PipelineVersionFacadeService @Autowired constructor(
             targetUrl = pushResult.mrUrl
         }
         val model = draftVersion.model
-//            .copy(staticViews = request.staticViews) // TODO #8161 是否将结果更新model里的静态组（前端是否有取值展示）
         val savedSetting = pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,
@@ -311,6 +308,13 @@ class PipelineVersionFacadeService @Autowired constructor(
             userId = userId,
             creator = userId,
             pipelineName = savedSetting.pipelineName
+        )
+        // 添加到静态流水线组
+        pipelineViewGroupService.bulkAddStatic(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            staticViewIds = request.staticViews
         )
         // #8164 发布后的流水将调试信息清空为0，重新计数，同时删除所有该版本的调试记录
         pipelineBuildSummaryDao.resetDebugInfo(dslContext, projectId, pipelineId)
@@ -426,12 +430,14 @@ class PipelineVersionFacadeService @Autowired constructor(
             )
             Triple(true, response, null)
         } catch (e: PipelineTransferException) {
-            Triple(false, null, I18nUtil.getCodeLanMessage(
-                messageCode = e.errorCode,
-                params = e.params,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                defaultMessage = e.defaultMessage
-            ))
+            Triple(
+                false, null, I18nUtil.getCodeLanMessage(
+                    messageCode = e.errorCode,
+                    params = e.params,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                    defaultMessage = e.defaultMessage
+                )
+            )
         }
         return PipelineModelWithYaml(
             modelAndSetting = modelAndSetting,
@@ -596,6 +602,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             records = pipelines
         )
     }
+
     fun rollbackDraftFromVersion(
         userId: String,
         projectId: String,
