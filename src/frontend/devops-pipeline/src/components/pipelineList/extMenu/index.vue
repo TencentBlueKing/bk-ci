@@ -119,7 +119,7 @@
     }
 
     .tippy-tooltip.dot-menu-theme {
-        padding: 0;
+        padding: 0 !important;
     }
     .dot-menu-trigger {
         display: flex;

@@ -90,7 +90,7 @@
                                                 v-model="props.row.userIds"
                                             />
                                         </bk-form-item>
-                                        
+
                                         <bk-form-item v-else-if="props.row.id === FILTER_BY_PAC_REPO" v-bind="getDynamicFilterConf(props.row.id)">
                                             <div class="pac-repo-filter-value-area">
                                                 <bk-select
@@ -122,7 +122,7 @@
                                         </bk-form-item>
                                         <bk-form-item v-else v-bind="getDynamicFilterConf(props.row.id)">
                                             <bk-select
-                                                
+
                                                 v-model="props.row.labelIds"
                                                 :multiple="true"
                                             >
@@ -621,7 +621,7 @@
                     projectId: this.$route.params.projectId,
                     id: group.id
                 }
-                
+
                 const [groupDetail, { dict, pipelineGroupMap }] = await Promise.all([
                     this.requestPipelineGroup(params),
                     this.requestGroupListsDict(params),
@@ -664,7 +664,7 @@
                         children
                     }
                 }, [])
-                
+
                 this.pipelineGroupMap = pipelineGroupMap
                 this.preview.reservePipelineInfos = groupDetail.pipelineIds.map(pipelineId => this.generatePreviewPipeline({
                     pipelineId
@@ -805,7 +805,7 @@
                     id: filterId,
                     key: filterKey
                 }
-                
+
                 switch (filterId) {
                     case NAME_FILTER_TYPE:
                         filter.condition = VIEW_CONDITION.LIKE
@@ -822,6 +822,7 @@
                         break
                     default:
                         filter['@type'] = FILTER_BY_LABEL
+                        filter.condition = VIEW_CONDITION.LIKE
                         filter.groupId = filterId
                         filter.labelIds = []
                 }
@@ -1014,7 +1015,7 @@
                         .group-filter-value-cell {
                             display: flex;
                             align-items: center;
-                            
+
                             .group-filter-value-input {
                                 flex: 1;
                                 margin-right: 8px;

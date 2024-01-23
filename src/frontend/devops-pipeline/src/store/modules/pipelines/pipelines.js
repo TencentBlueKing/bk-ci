@@ -51,7 +51,8 @@ const state = {
         activePipelineList: [],
         isSaveAsTemplateShow: false,
         isCopyDialogShow: false,
-        addToDialogShow: false
+        addToDialogShow: false,
+        isDisableDialogShow: false
     }
 }
 

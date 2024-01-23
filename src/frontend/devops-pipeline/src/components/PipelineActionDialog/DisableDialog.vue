@@ -3,6 +3,7 @@
         width="400"
         render-directive="if"
         v-model="value"
+        footer-position="center"
         @cancel="handleCancel"
     >
         <div class="disable-pipeline-dialog">
@@ -11,10 +12,10 @@
             <p>
                 {{ $t(pacEnabled ? 'disablePacPipelineConfirmDesc' : 'disablePipelineConfirmDesc') }}
             </p>
-            <pre class="disable-pac-code" v-if="pacEnabled">{{ disablePipelineYaml }}<copyIcon :text="disablePipelineYaml" /></pre>
+            <pre class="disable-pac-code" v-if="pacEnabled">{{ disablePipelineYaml }}<copy-icon :value="disablePipelineYaml" /></pre>
         </div>
         <footer slot="footer">
-            <bk-button :loading="disabling" theme="primary" @click="disablePipeline">
+            <bk-button v-if="!pacEnabled" :loading="disabling" theme="primary" @click="disablePipeline">
                 {{ $t('disable') }}
             </bk-button>
             <bk-button @click="handleCancel">
@@ -36,7 +37,8 @@
             pipelineId: String,
             pipelineName: String,
             value: Boolean,
-            pacEnabled: Boolean
+            pacEnabled: Boolean,
+            lock: Boolean
         },
         data () {
             return {
@@ -53,7 +55,7 @@
                     await this.lockPipeline({
                         projectId: this.$route.params.projectId,
                         pipelineId: this.pipelineId,
-                        enable: false
+                        enable: this.lock
                     })
                     this.$bkMessage({
                         theme: 'success',
@@ -61,6 +63,7 @@
                     })
                     this.$nextTick(() => {
                         this.handleCancel()
+                        this.$emit('done')
                     })
                 } catch (error) {
                     this.$bkMessage({
@@ -73,6 +76,7 @@
             },
             handleCancel () {
                 this.$emit('input', false)
+                this.$emit('close')
             }
         }
     }

@@ -138,8 +138,7 @@
                     this.$nextTick(() => {
                         this.$refs.infiniteScroll?.updateList?.()
                     })
-                },
-                immediate: true
+                }
             }
         },
         methods: {
@@ -200,6 +199,7 @@
                 }, new Map())
                 const list = []
                 dateMap.forEach((events, date) => {
+                    console.log(events)
                     list.push({
                         tag: date,
                         content: this.$createElement(TriggerEventChildren, {

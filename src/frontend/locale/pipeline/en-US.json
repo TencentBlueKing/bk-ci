@@ -1254,7 +1254,7 @@
   "removedPipelineError": "Failure to move out of the line",
   "groupNameTooLong": "Pipeline group names cannot exceed 16 characters in length",
   "groupNameNotAllowEmpty": "The pipeline group name cannot be empty",
-  "pipelineLockTips": "Execute is disabled; You can go to Basic Settings to restore it",
+  "pipelineLockTips": "The pipeline has been disabled. It cannot be triggered in any way",
   "pipelineManualDisable": "This pipeline is not configured for manual trigger",
   "userGroupName": "User Group",
   "applicationPeriod": "ApplicationPeriod",

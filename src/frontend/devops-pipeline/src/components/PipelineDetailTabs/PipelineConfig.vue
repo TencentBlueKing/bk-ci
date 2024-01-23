@@ -10,6 +10,8 @@
             <RollbackEntry
                 v-if="canRollBack"
                 :version="activePipelineVersion"
+                :pipeline-id="pipelineId"
+                :project-id="projectId"
                 :version-name="activePipelineVersionName"
                 :draft-version-name="draftVersionName"
             >
@@ -100,6 +102,9 @@
                 getPipelineSubscriptions: 'atom/getPipelineSubscriptions',
                 draftVersionName: 'atom/getDraftVersionName'
             }),
+            projectId () {
+                return this.$route.params.projectId
+            },
             pipelineId () {
                 return this.$route.params.pipelineId
             },
