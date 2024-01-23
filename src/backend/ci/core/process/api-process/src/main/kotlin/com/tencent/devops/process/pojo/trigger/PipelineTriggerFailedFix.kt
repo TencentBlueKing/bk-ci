@@ -9,7 +9,7 @@ import io.swagger.annotations.ApiModel
 @ApiModel("流水线触发事件原因详情-兼容历史数据")
 class PipelineTriggerFailedFix(
     private val reasonDetailList: List<String>?
-) : PipelineTriggerReasonDetail() {
+) : PipelineTriggerReasonDetail {
 
     companion object {
         const val classType = "fix"

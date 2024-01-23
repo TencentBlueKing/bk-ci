@@ -1347,7 +1347,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             val setting = pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId)
             if (setting.pipelineAsCodeSettings?.enable == true) {
                 // 检查yaml是否已经在默认分支删除
-                yamlFacadeService.deleteBeforeCheck(userId, projectId, pipelineId)
+                yamlFacadeService.deleteYamlPipelineCheck(userId, projectId, pipelineId)
                 pipelineSettingFacadeService.saveSetting(
                     userId, projectId, pipelineId,
                     setting.copy(
@@ -1378,6 +1378,18 @@ class PipelineInfoFacadeService @Autowired constructor(
             pipelineBean.delete(success)
             processJmxApi.execute(ProcessJmxApi.NEW_PIPELINE_DELETE, watcher.totalTimeMillis)
             logger.info("DEL_PIPELINE|$pipelineId|$channelCode|p=$checkPermission|u=$userId|del=$delete")
+        }
+    }
+
+    fun deletePipelineCheck(
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ) {
+        val setting = pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId)
+        if (setting.pipelineAsCodeSettings?.enable == true) {
+            // 检查yaml是否已经在默认分支删除
+            yamlFacadeService.deleteYamlPipelineCheck(userId, projectId, pipelineId)
         }
     }
 
