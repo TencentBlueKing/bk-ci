@@ -479,11 +479,12 @@ class PipelineBuildWebhookService @Autowired constructor(
             ?: throw IllegalArgumentException("Pipeline($pipelineId) not found")
         checkPermission(pipelineInfo.lastModifyUser, projectId = projectId, pipelineId = pipelineId)
 
-        val model = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)?.model
-        if (model == null) {
+        val resource = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)
+        if (resource == null) {
             logger.warn("[$pipelineId]| Fail to get the model")
             return null
         }
+        val model = resource.model
 
         // 兼容从旧v1版本下发过来的请求携带旧的变量命名
         val params = mutableMapOf<String, Any>()
@@ -511,7 +512,9 @@ class PipelineBuildWebhookService @Autowired constructor(
                 isMobile = false,
                 model = model,
                 signPipelineVersion = version ?: pipelineInfo.version,
-                frequencyLimit = false
+                frequencyLimit = false,
+                versionNum = resource.versionNum,
+                versionName = resource.versionName
             )
             pipelineWebHookQueueService.onWebHookTrigger(
                 projectId = projectId,

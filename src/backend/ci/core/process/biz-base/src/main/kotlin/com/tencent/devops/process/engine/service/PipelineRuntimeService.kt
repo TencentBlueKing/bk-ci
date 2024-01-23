@@ -1212,6 +1212,8 @@ class PipelineRuntimeService @Autowired constructor(
                 pipelineId = buildInfo.pipelineId,
                 projectId = buildInfo.projectId,
                 resourceVersion = buildInfo.version,
+                versionNum = buildInfo.versionNum,
+                versionName = buildInfo.versionName,
                 executeCount = executeCount,
                 firstTaskId = buildInfo.firstTaskId,
                 actionType = ActionType.START,

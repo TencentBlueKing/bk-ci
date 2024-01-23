@@ -471,6 +471,15 @@ BEGIN
         ADD COLUMN `VERSION_NUM` int(11) DEFAULT NULL COMMENT '正式发布版本号';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY'
+                    AND COLUMN_NAME = 'VERSION_NAME') THEN
+    ALTER TABLE `T_PIPELINE_BUILD_HISTORY`
+        ADD COLUMN  `VERSION_NAME` varchar(64) DEFAULT NULL COMMENT '正式版本名称';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

@@ -126,7 +126,9 @@ class PipelineBuildService(
         handlePostFlag: Boolean = true,
         webHookStartParam: MutableMap<String, BuildParameters> = mutableMapOf(),
         triggerReviewers: List<String>? = null,
-        debug: Boolean? = false
+        debug: Boolean? = false,
+        versionNum: Int? = null,
+        versionName: String? = null
     ): BuildId {
 
         var acquire = false
@@ -138,17 +140,19 @@ class PipelineBuildService(
                 params = arrayOf(projectVO.englishName)
             )
         }
+
         val setting = if (debug == true) {
-            pipelineRepositoryService.getDraftVersionResource(pipeline.projectId, pipeline.pipelineId)
-                ?.settingVersion?.let {
-                    pipelineSettingVersionService.getPipelineSetting(
-                        userId = userId,
-                        projectId = pipeline.pipelineId,
-                        pipelineId = pipeline.pipelineId,
-                        detailInfo = null,
-                        version = it
-                    )
-                } ?: pipelineRepositoryService.getSetting(pipeline.projectId, pipeline.pipelineId)
+            pipelineRepositoryService.getDraftVersionResource(
+                pipeline.projectId, pipeline.pipelineId
+            )?.settingVersion?.let {
+                pipelineSettingVersionService.getPipelineSetting(
+                    userId = userId,
+                    projectId = pipeline.pipelineId,
+                    pipelineId = pipeline.pipelineId,
+                    detailInfo = null,
+                    version = it
+                )
+            }
         } else {
             pipelineRepositoryService.getSetting(pipeline.projectId, pipeline.pipelineId)
         }
@@ -208,7 +212,9 @@ class PipelineBuildService(
                 triggerReviewers = triggerReviewers,
                 pipelineParamMap = pipelineParamMap,
                 webHookStartParam = webHookStartParam,
-                debug = debug ?: false
+                debug = debug ?: false,
+                versionNum = versionNum,
+                versionName = versionName
             )
 
             val interceptResult = pipelineInterceptorChain.filter(
