@@ -126,10 +126,10 @@ class StockDataUpdateService @Autowired constructor(
                 }.associate {
                     it[T_NODE_NODE_ID] as Long to
                         AgentVersion(
-                            ip = it[T_NODE_NODE_IP] as String,
-                            bkHostId = it[T_NODE_HOST_ID] as Long,
+                            ip = it[T_NODE_NODE_IP] as? String,
+                            bkHostId = it[T_NODE_HOST_ID] as? Long,
                             installedTag = NodeStatus.NOT_INSTALLED.name != it[T_NODE_NODE_STATUS] as String,
-                            version = it[T_NODE_AGENT_VERSION] as String,
+                            version = it[T_NODE_AGENT_VERSION] as? String,
                             status = if (it[T_NODE_AGENT_STATUS] as Boolean) 1 else 0
                         )
                 }
@@ -252,7 +252,7 @@ class StockDataUpdateService @Autowired constructor(
                 nodeDao.updateNodeInCCByIp(dslContext, inCCIpList)
                 // 4. CC中信息（host_id和云区域id）改变 - 更新信息，不变 - 不操作
                 val nodeUpdateInfoList = nodeRecords.filterNot {
-                    it[T_NODE_HOST_ID] as Long == ipToCCInfoMap!![it[T_NODE_NODE_IP] as String]?.bkHostId &&
+                    it[T_NODE_HOST_ID] as? Long == ipToCCInfoMap!![it[T_NODE_NODE_IP] as String]?.bkHostId &&
                         it[T_NODE_CLOUD_AREA_ID] as Long == ipToCCInfoMap!![it[T_NODE_NODE_IP] as String]
                         ?.bkCloudId?.toLong()
                 }.takeIf { it.isNotEmpty() }!!.map {

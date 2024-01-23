@@ -55,7 +55,7 @@ class ParseHashListService @Autowired constructor(
             )
             val nodeHostList = nodeRecord.map {
                 Host(
-                    bkHostId = it[T_NODE_HOST_ID] as Long,
+                    bkHostId = it[T_NODE_HOST_ID] as? Long,
                     bkCloudId = it[T_NODE_CLOUD_AREA_ID] as Long,
                     ip = it[T_NODE_NODE_IP] as String
                 )
@@ -73,7 +73,7 @@ class ParseHashListService @Autowired constructor(
             if (logger.isDebugEnabled) logger.debug("[getHostFromNodeList] nodeRecord: $nodeRecord")
             val hostList = nodeRecord.map {
                 Host(
-                    bkHostId = it[T_NODE_HOST_ID] as Long,
+                    bkHostId = it[T_NODE_HOST_ID] as? Long,
                     bkCloudId = it[T_NODE_CLOUD_AREA_ID] as Long,
                     ip = it[T_NODE_NODE_IP] as String
                 )

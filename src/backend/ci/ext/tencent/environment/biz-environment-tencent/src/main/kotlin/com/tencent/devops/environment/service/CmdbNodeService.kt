@@ -168,7 +168,7 @@ class CmdbNodeService @Autowired constructor(
                 NodeAgent(
                     nodeIp = it[T_NODE_NODE_IP] as String,
                     nodesAgentStatus = if (it[T_NODE_AGENT_STATUS] as Boolean) 1 else 0,
-                    nodesAgentVersion = it[T_NODE_AGENT_VERSION] as String
+                    nodesAgentVersion = it[T_NODE_AGENT_VERSION] as? String
                 )
             },
             agentAbnormalNodesCount = nodeRecords.filterNot { it[T_NODE_AGENT_STATUS] as Boolean }.size,
