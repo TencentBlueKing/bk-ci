@@ -27,7 +27,6 @@
 
 package com.tencent.devops.dispatch.kubernetes.startcloud.dao
 
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.service.utils.ByteUtils
@@ -92,7 +91,7 @@ class WindowsGpuResourceDao {
                     it.image ?: "",
                     it.cpu ?: "",
                     it.mem ?: "",
-                    it.registerCgsTime?.let { time -> DateTimeUtil.stringToLocalDateTime(time) }
+                    it.registerCgsTime
                 ).onDuplicateKeyUpdate()
                     .set(STATUS, it.status)
             }

@@ -27,7 +27,6 @@
 
 package com.tencent.devops.dispatch.kubernetes.startcloud.service
 
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
@@ -154,7 +153,7 @@ class StartCloudInterfaceService @Autowired constructor(
                     mem = it.basic?.memoryLimit,
                     registerCgsTime = ZonedDateTime.parse(
                         it.basic?.registeCgsTime, DateTimeFormatter.ISO_OFFSET_DATE_TIME
-                    ).toString()
+                    ).toLocalDateTime()
                 )
             )
         }
@@ -200,7 +199,7 @@ class StartCloudInterfaceService @Autowired constructor(
                 image = it.image,
                 cpu = it.cpu,
                 mem = it.memory,
-                registerCgsTime = DateTimeUtil.toDateTime(it.registerTime)
+                registerCgsTime = it.registerTime
             )
         }
     }
