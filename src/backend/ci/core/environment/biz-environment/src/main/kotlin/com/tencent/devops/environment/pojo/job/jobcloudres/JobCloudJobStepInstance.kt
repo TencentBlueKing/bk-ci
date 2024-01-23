@@ -1,10 +1,12 @@
 package com.tencent.devops.environment.pojo.job.jobcloudres
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("作业步骤详细信息")
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class JobCloudJobStepInstance(
     @ApiModelProperty(value = "作业步骤实例ID", required = true)
     @JsonProperty("step_instance_id")

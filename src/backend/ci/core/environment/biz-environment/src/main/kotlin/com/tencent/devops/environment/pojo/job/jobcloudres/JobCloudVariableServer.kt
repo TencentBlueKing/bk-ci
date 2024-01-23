@@ -1,8 +1,10 @@
 package com.tencent.devops.environment.pojo.job.jobcloudres
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class JobCloudVariableServer(
     @ApiModelProperty(value = "引用的全局变量名称")
     val variable: String?,

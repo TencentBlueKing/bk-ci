@@ -27,9 +27,11 @@
 
 package com.tencent.devops.environment.pojo.job.jobcloudres
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class JobCloudAgentInfo(
     @ApiModelProperty(value = "主机ID")
     @JsonProperty("bk_host_id")

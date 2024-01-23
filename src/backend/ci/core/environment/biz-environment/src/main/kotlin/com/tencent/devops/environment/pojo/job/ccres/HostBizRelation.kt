@@ -1,8 +1,10 @@
 package com.tencent.devops.environment.pojo.job.ccres
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class HostBizRelation(
     @ApiModelProperty(value = "业务ID", required = true)
     @JsonProperty("bk_biz_id")

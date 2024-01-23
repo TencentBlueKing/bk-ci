@@ -27,9 +27,11 @@
 
 package com.tencent.devops.environment.pojo.job.agentres
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class AgentJobResultForFilterHostInfo(
     @ApiModelProperty(value = "实例ID")
     @JsonProperty("instance_id")

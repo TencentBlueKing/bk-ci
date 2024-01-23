@@ -27,9 +27,11 @@
 
 package com.tencent.devops.environment.pojo.job.jobcloudres
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class JobCloudStepResultGroup(
     @ApiModelProperty(value = "分组类型", required = true)
     @JsonProperty("result_type")

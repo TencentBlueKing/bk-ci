@@ -27,8 +27,10 @@
 
 package com.tencent.devops.environment.pojo.job.agentres
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.annotations.ApiModelProperty
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class AgentTerminalAgentInstallTaskResult(
     @ApiModelProperty(value = "任务ID列表。task_id是更具体的任务队列，一个job_id对应多个task。")
     val taskIdList: List<Int>

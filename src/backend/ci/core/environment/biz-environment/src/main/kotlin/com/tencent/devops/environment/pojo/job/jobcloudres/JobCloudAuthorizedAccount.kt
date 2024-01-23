@@ -1,10 +1,12 @@
 package com.tencent.devops.environment.pojo.job.jobcloudres
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("有权限账号")
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class JobCloudAuthorizedAccount(
     @ApiModelProperty(value = "帐号ID", required = true)
     val id: Long,

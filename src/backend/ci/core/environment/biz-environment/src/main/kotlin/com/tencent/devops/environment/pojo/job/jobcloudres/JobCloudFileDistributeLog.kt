@@ -1,10 +1,12 @@
 package com.tencent.devops.environment.pojo.job.jobcloudres
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("文件分发任务日志")
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class JobCloudFileDistributeLog(
     @ApiModelProperty(value = "云区域ID")
     @JsonProperty("bk_cloud_id")
