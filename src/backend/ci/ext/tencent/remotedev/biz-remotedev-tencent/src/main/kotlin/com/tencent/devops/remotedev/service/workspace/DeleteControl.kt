@@ -431,7 +431,7 @@ class DeleteControl @Autowired constructor(
             bkccService.updateHostName("VM-${hostIdSub.joinToString("-")}", workspaceName)
 
             // 删除cfs的权限组规则
-            tCloudCfsService.addOrRemoveCfsPermissionRule(projectId, ip, true)
+            tCloudCfsService.addOrRemoveCfsPermissionRule(workspace.projectId, ip, true)
         }
 
         notifyControl.dispatchWebsocketPushEvent(
