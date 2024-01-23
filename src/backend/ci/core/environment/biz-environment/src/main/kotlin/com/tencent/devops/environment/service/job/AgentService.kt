@@ -88,6 +88,7 @@ data class AgentService @Autowired constructor(
         private const val DEFAULT_INSTALL_AGENT_PORT = "36000"
         private const val DEFAULT_IS_MANUAL = false
         private const val DEFAULT_CLOUD_ID = 0
+        private const val DEFAULT_PLACE_HOLDER = -1
     }
 
     fun installAgent(
@@ -419,7 +420,7 @@ data class AgentService @Autowired constructor(
         NodeManApi.setNodemanOperationName("queryAgentInstallChannel")
         val agentQueryAgentInsChannelRes: AgentOriginalResult<Array<AgentInstallAgentChannel>> =
             nodeManApi.executeGetRequest(
-                Array<AgentInstallAgentChannel>::class.java, -1, withHidden
+                Array<AgentInstallAgentChannel>::class.java, DEFAULT_PLACE_HOLDER, withHidden
             )
         val queryAgentInsChannelRes: AgentResult<QueryAgentInstallChannelResult> = AgentResult(
             code = agentQueryAgentInsChannelRes.code,
