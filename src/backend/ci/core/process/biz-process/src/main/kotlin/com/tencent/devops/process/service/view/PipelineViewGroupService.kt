@@ -777,7 +777,6 @@ class PipelineViewGroupService @Autowired constructor(
         return viewRecords.filter { it.isProject || it.createUser == userId }.map { record2Summary(it) }
     }
 
-
     fun listPermissionStaticViews(userId: String, projectId: String, pipelineId: String): List<PipelineNewViewSummary> {
         val viewGroupRecords = pipelineViewGroupDao.listByProjectIdFilterPipelineId(dslContext, projectId, pipelineId)
         val viewRecords = pipelineViewDao.list(
