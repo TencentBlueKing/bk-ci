@@ -256,7 +256,7 @@ interface ServiceJobResource {
     @POST
     @Path("/operate_op_project")
     fun operateOpProject(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @ApiParam(value = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "op操作请求信息", required = true)
