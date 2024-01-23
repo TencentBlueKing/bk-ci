@@ -264,10 +264,11 @@ class PipelineResourceVersionDao {
     fun clearActiveBranchVersion(
         dslContext: DSLContext,
         projectId: String,
-        pipelineId: String
-    ): Int? {
-        return with(T_PIPELINE_RESOURCE_VERSION) {
-            dslContext.update(this)
+        pipelineId: String,
+        branchName: String? = null
+    ): Int {
+        with(T_PIPELINE_RESOURCE_VERSION) {
+            val update = dslContext.update(this)
                 .set(BRANCH_ACTION, BranchVersionAction.INACTIVE.name)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .and(STATUS.eq(VersionStatus.BRANCH.name))
@@ -275,7 +276,8 @@ class PipelineResourceVersionDao {
                     BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
                         .or(BRANCH_ACTION.isNull)
                 )
-                .execute()
+            branchName?.let { update.and(VERSION_NAME.eq(branchName)) }
+            return update.execute()
         }
     }
 
