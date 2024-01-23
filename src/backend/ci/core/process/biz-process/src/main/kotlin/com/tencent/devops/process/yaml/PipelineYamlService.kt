@@ -208,7 +208,7 @@ class PipelineYamlService(
         val status = when {
             branchList.isEmpty() -> PipelineYamlStatus.DELETED.name
             branchList.size == 1 && branchList.contains(defaultBranch) -> PipelineYamlStatus.OK.name
-            branchList.isNotEmpty() && branchList.contains(defaultBranch) ->  PipelineYamlStatus.UN_MERGED.name
+            branchList.isNotEmpty() && branchList.contains(defaultBranch) -> PipelineYamlStatus.UN_MERGED.name
             else -> null
         }
         if (status != null && pipelineYamlInfo.status != status) {
