@@ -150,6 +150,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         } else null
         val version = draftVersion?.version ?: releaseVersion!!.version
         val versionName = draftVersion?.versionName ?: releaseVersion!!.versionName
+        val permissions = pipelineListFacadeService.getPipelinePermissions(userId, projectId, pipelineId)
         pipelineRecentUseService.record(userId, projectId, pipelineId)
         return PipelineDetail(
             pipelineId = detailInfo.pipelineId,
@@ -167,6 +168,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             viewNames = detailInfo.viewNames,
             onlyDraft = detailInfo.onlyDraft == true,
             runLockType = releaseSetting.runLockType,
+            permissions = permissions,
             version = version,
             versionName = versionName,
             releaseVersion = releaseVersion?.version,

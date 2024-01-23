@@ -798,6 +798,36 @@ class PipelineListFacadeService @Autowired constructor(
         }
     }
 
+    fun getPipelinePermissions(
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): PipelinePermissions {
+        val permissionToListMap = pipelinePermissionService.filterPipelines(
+            userId = userId,
+            projectId = projectId,
+            authPermissions = setOf(
+                AuthPermission.MANAGE,
+                AuthPermission.VIEW,
+                AuthPermission.DELETE,
+                AuthPermission.SHARE,
+                AuthPermission.EDIT,
+                AuthPermission.DOWNLOAD,
+                AuthPermission.EXECUTE
+            ),
+            pipelineIds = listOf(pipelineId)
+        )
+        return PipelinePermissions(
+            canManage = permissionToListMap[AuthPermission.MANAGE]?.contains(pipelineId) ?: false,
+            canDelete = permissionToListMap[AuthPermission.DELETE]?.contains(pipelineId) ?: false,
+            canView = permissionToListMap[AuthPermission.VIEW]?.contains(pipelineId) ?: false,
+            canEdit = permissionToListMap[AuthPermission.EDIT]?.contains(pipelineId) ?: false,
+            canExecute = permissionToListMap[AuthPermission.EXECUTE]?.contains(pipelineId) ?: false,
+            canDownload = permissionToListMap[AuthPermission.DOWNLOAD]?.contains(pipelineId) ?: false,
+            canShare = permissionToListMap[AuthPermission.SHARE]?.contains(pipelineId) ?: false
+        )
+    }
+
     fun getCount(userId: String, projectId: String): PipelineCount {
         val authPipelines = pipelinePermissionService.getResourceByPermission(
             userId = userId, projectId = projectId, permission = AuthPermission.LIST
@@ -1773,6 +1803,8 @@ class PipelineListFacadeService @Autowired constructor(
                 )
             )
         }
+        // 获取view信息
+        val pipelineViewNames = pipelineViewGroupService.getViewNameMap(projectId, mutableSetOf(pipelineId)).get(pipelineId)
         val hasEditPermission = pipelinePermissionService.checkPipelinePermission(
             userId = userId,
             projectId = projectId,
@@ -1812,7 +1844,7 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineDesc = pipelineInfo.pipelineDesc,
             createTime = pipelineInfo.createTime,
             updateTime = pipelineInfo.updateTime,
-            viewNames = pipelineInfo.viewNames,
+            viewNames = pipelineViewNames,
             onlyDraft = pipelineInfo.onlyDraft == true
         )
     }
