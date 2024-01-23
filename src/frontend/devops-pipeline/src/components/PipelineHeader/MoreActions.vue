@@ -48,11 +48,13 @@
             @close="closeRemoveConfirmDialog"
         />
         <export-dialog :is-show.sync="showExportDialog"></export-dialog>
-        <DisableDialog
-            v-model="showDisableDialog"
+        <disable-dialog
+            :value="showDisableDialog"
             :pipeline-id="$route.params.pipelineId"
             :pipeline-name="pipelineName"
+            :lock="isCurPipelineLocked"
             :pac-enabled="pacEnabled"
+            @close="closeDisablePipeline"
         />
     </div>
 </template>
@@ -63,6 +65,7 @@
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import { mapActions, mapState, mapGetters } from 'vuex'
     import DisableDialog from '@/components/PipelineActionDialog/DisableDialog'
+
     import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
@@ -89,7 +92,7 @@
         computed: {
             ...mapState('atom', ['pipelineInfo']),
             ...mapState('pipelines', ['pipelineActionState']),
-            ...mapGetters('atom', ['pacEnabled']),
+            ...mapGetters('atom', ['pacEnabled', 'isCurPipelineLocked']),
             isTemplatePipeline () {
                 return this.pipelineInfo?.instanceFromTemplate ?? false
             },
@@ -177,8 +180,14 @@
                     ],
                     [
                         {
-                            label: 'disable',
-                            handler: () => this.disablePipeline()
+                            label: this.isCurPipelineLocked ? 'enable' : 'disable',
+                            handler: () => this.disablePipeline(),
+                            permissionData: {
+                                projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: pipeline.pipelineId,
+                                action: RESOURCE_ACTION.EDIT
+                            }
                         },
                         {
                             label: 'delete',
@@ -202,6 +211,9 @@
             },
             disablePipeline () {
                 this.showDisableDialog = true
+            },
+            closeDisablePipeline () {
+                this.showDisableDialog = false
             },
             importModifyPipeline () {
                 this.showImportDialog = true

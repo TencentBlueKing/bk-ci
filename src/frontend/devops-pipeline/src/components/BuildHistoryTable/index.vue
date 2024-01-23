@@ -373,7 +373,7 @@
             <ul class="error-info-list" v-if="activeBuild">
                 <li v-for="item in activeBuild.errorInfoList" :key="item.errCode">
                     <logo :name="item.icon" size="18" />
-                    <span>
+                    <span v-bk-overflow-tips>
                         {{ $t(item.title) }} (<b>{{ item.errCode }}</b>): {{ item.errorMsg }}
                     </span>
                 </li>

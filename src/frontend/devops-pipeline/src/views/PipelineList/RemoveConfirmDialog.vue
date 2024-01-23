@@ -51,7 +51,6 @@
                 <span>{{ pipeline.name }}</span>
                 <div v-if="!isRemoveType" class="belongs-pipeline-group" ref="belongsGroupBox">
                     <bk-tag
-
                         ext-cls="pipeline-group-name-tag"
                         v-for="name in pipeline.groups"
                         :key="name"
@@ -62,7 +61,7 @@
                     <bk-popover
                         v-if="pipeline.showMoreTag"
                         ref="groupNameMore"
-                        class="pipeline-group-name-tag"
+                        class="pipeline-group-name-tag pipeline-group-more-tag"
                         :content="pipeline.hiddenGroups"
                     >
                         <bk-tag>

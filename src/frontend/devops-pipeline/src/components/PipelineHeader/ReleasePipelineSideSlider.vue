@@ -482,7 +482,7 @@
                         ...rest
                     } = this.releaseParams
                     const {
-                        data: { version, versionName }
+                        data: { version, versionName, versionNum }
                     } = await this.releaseDraftPipeline({
                         projectId,
                         pipelineId,
@@ -508,6 +508,7 @@
                         version,
                         versionName,
                         releaseVersion: version,
+                        versionNum,
                         releaseVersionName: versionName,
                         canDebug: false,
                         canRelease: false
@@ -536,7 +537,7 @@
                                 },
                                 domProps: {
                                     innerHTML: this.$t(isPacMR ? 'pacMRRelaseSuc' : 'relaseSucTips', [
-                                        generateDisplayName(version, versionName)
+                                        generateDisplayName(versionNum, versionName)
                                     ])
                                 }
                             }),

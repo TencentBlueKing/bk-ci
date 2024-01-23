@@ -9,10 +9,10 @@
 </template>
 
 <script>
-    import { mapActions, mapGetters, mapState } from 'vuex'
     import ExecuteParams from '@/components/Preview/ExecuteParams'
-    import OptionalExecute from '@/components/Preview/OptionalExecute'
-    import { bus } from '@/utils/bus'
+import OptionalExecute from '@/components/Preview/OptionalExecute'
+import { bus } from '@/utils/bus'
+import { mapActions, mapGetters, mapState } from 'vuex'
     export default {
         components: {
             ExecuteParams,
@@ -85,15 +85,14 @@
             async init () {
                 try {
                     this.isLoading = true
+                    const params = {
+                        projectId: this.projectId,
+                        pipelineId: this.pipelineId,
+                        version: this.$route.params.version ?? this.pipelineInfo?.[this.isDebugPipeline ? 'version' : 'releaseVersion']
+                    }
                     const [res, pipelineRes] = await Promise.all([
-                        this.requestStartupInfo({
-                            projectId: this.projectId,
-                            pipelineId: this.pipelineId,
-                            version:
-                                this.$route.params.version
-                                ?? this.pipelineInfo?.[this.isDebugPipeline ? 'version' : 'releaseVersion']
-                        }),
-                        this.fetchPipelineByVersion(this.$route.params)
+                        this.requestStartupInfo(params),
+                        this.fetchPipelineByVersion(params)
                     ])
                     this.pipelineModel = pipelineRes?.modelAndSetting?.model
                     this.startupInfo = res

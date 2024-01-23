@@ -19,6 +19,7 @@
 
 import { buildEnvMap, jobConst, semverVersionKeySet } from '@/utils/pipelineConst'
 import Vue from 'vue'
+import { generateDisplayName } from '../../../utils/util'
 import { getAtomModalKey, isCodePullAtom, isNewAtomTemplate, isNormalContainer, isTriggerContainer, isVmContainer } from './atomUtil'
 import { buildNoRules, defaultBuildNo, platformList } from './constants'
 
@@ -34,8 +35,7 @@ export default {
         return state.pipelineInfo?.version !== state.pipelineInfo?.releaseVesrion
     },
     getDraftVersionName: (state, getters) => {
-        console.log(state.pipelineInfo, state.pipelineInfo?.versionName, 'kfdjsafdsafdas')
-        return getters.hasDraftPipeline ? `V${state.pipelineInfo?.baseVersion} (${state.pipelineInfo?.baseVersionName})` : ''
+        return getters.hasDraftPipeline ? generateDisplayName(state.pipelineInfo?.baseVersion, state.pipelineInfo?.baseVersionName) : ''
     },
     isBranchVersion: state => {
         return state.pipelineInfo?.baseVersionStatus === 'BRANCH'

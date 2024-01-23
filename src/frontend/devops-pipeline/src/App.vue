@@ -80,7 +80,8 @@
                     activePipelineList: [],
                     isSaveAsTemplateShow: false,
                     isCopyDialogShow: false,
-                    addToDialogShow: false
+                    addToDialogShow: false,
+                    isDisableDialogShow: false
                 })
                 this.$router.replace({
                     name: 'PipelineManageList',
