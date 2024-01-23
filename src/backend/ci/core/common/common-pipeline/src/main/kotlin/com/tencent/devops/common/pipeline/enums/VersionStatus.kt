@@ -30,7 +30,16 @@ package com.tencent.devops.common.pipeline.enums
 enum class VersionStatus(val statusName: String) {
     RELEASED("已发布版本"),
     COMMITTING("草稿版本"),
-    BRANCH("分支版本");
+    BRANCH("分支版本"),
+    BRANCH_RELEASE("通过分支版本发布（中间态）");
+
+    fun fix(): VersionStatus {
+        return if (this == BRANCH_RELEASE) {
+            BRANCH
+        } else {
+            this
+        }
+    }
 }
 
 enum class BranchVersionAction(val statusName: String) {

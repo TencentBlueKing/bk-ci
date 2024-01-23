@@ -677,8 +677,7 @@ class PipelineBuildFacadeService(
         if (version == null) {
             val defaultVersion = pipelineRepositoryService.getPipelineResourceVersion(
                 projectId = projectId,
-                pipelineId = pipelineId,
-                includeDraft = true
+                pipelineId = pipelineId
             ) ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,

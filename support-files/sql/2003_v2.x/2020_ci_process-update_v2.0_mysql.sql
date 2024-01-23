@@ -186,6 +186,15 @@ BEGIN
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_PIPELINE_RESOURCE'
+                    AND COLUMN_NAME = 'VERSION_NUM') THEN
+    ALTER TABLE `T_PIPELINE_RESOURCE`
+        ADD COLUMN `VERSION_NUM` int(11) DEFAULT NULL COMMENT '流水线发布版本';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_RESOURCE'
                     AND COLUMN_NAME = 'PIPELINE_VERSION') THEN
     ALTER TABLE `T_PIPELINE_RESOURCE`
         ADD COLUMN `PIPELINE_VERSION` int(11) DEFAULT '1' COMMENT '流水线模型版本';
@@ -243,6 +252,15 @@ BEGIN
                     AND COLUMN_NAME = 'YAML') THEN
     ALTER TABLE `T_PIPELINE_RESOURCE_VERSION`
         ADD COLUMN `YAML` mediumtext COMMENT 'YAML编排';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_RESOURCE_VERSION'
+                    AND COLUMN_NAME = 'VERSION_NUM') THEN
+    ALTER TABLE `T_PIPELINE_RESOURCE_VERSION`
+        ADD COLUMN `VERSION_NUM` int(11) DEFAULT NULL COMMENT '流水线发布版本';
     END IF;
 
     IF NOT EXISTS(SELECT 1

@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
@@ -622,6 +623,7 @@ class PipelineRepositoryService constructor(
         pipelineAsCodeSettings: PipelineAsCodeSettings?
     ): DeployPipelineResult {
         val modelVersion = 1
+        val versionNum = 1
         val pipelineVersion = 1
         val triggerVersion = 1
         val settingVersion = 1
@@ -772,6 +774,7 @@ class PipelineRepositoryService constructor(
                     model = model,
                     yamlStr = yamlStr,
                     versionName = versionName,
+                    versionNum = versionNum,
                     pipelineVersion = modelVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion
@@ -787,6 +790,7 @@ class PipelineRepositoryService constructor(
                     yaml = yamlStr,
                     baseVersion = baseVersion,
                     versionName = versionName ?: "",
+                    versionNum = versionNum,
                     pipelineVersion = modelVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion,
@@ -859,7 +863,7 @@ class PipelineRepositoryService constructor(
                 var pipelineVersion = 1
                 var triggerVersion = 1
                 val settingVersion = setting?.version ?: 1
-                val releaseVersion = pipelineResourceDao.getReleaseVersionResource(
+                val releaseResource = pipelineResourceDao.getReleaseVersionResource(
                     transactionContext, projectId, pipelineId
                 )
                 val latestVersion = pipelineResourceVersionDao.getLatestVersionResource(
@@ -870,6 +874,7 @@ class PipelineRepositoryService constructor(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID
                 )
+                var versionNum = releaseResource?.version ?: latestVersion.version
                 watcher.start("updatePipelineInfo")
                 // 旧逻辑 bak —— 写入INFO表后进行了version的自动+1
                 // 新逻辑 #8161
@@ -885,7 +890,7 @@ class PipelineRepositoryService constructor(
                             // 创建
                             operationLogType = OperationLogType.CREATE_DRAFT_VERSION
                             operationLogParams = latestVersion.versionName ?: latestVersion.version.toString()
-                            realBaseVersion = realBaseVersion ?: releaseVersion?.version
+                            realBaseVersion = realBaseVersion ?: releaseResource?.version
                             latestVersion.version + 1
                         } else {
                             // 更新
@@ -896,29 +901,58 @@ class PipelineRepositoryService constructor(
                     // 2 分支版本保存 —— 取当前流水线的最新VERSION+1，不关心其他草稿和正式版本
                     VersionStatus.BRANCH -> {
                         // 查询同名分支的最新active版本，存在则更新，否则新增一个版本
-                        branchName?.let { versionName = branchName }
-                        val activeBranchVersion = pipelineResourceVersionDao.getVersionResource(
+                        if (branchName.isNullOrBlank()) throw ErrorCodeException(
+                            errorCode = CommonMessageCode.PARAMETER_VALIDATE_ERROR,
+                            params = arrayOf("branchName")
+                        )
+                        versionName = branchName
+                        val activeBranchVersion = pipelineResourceVersionDao.getBranchVersionResource(
                             dslContext = transactionContext,
                             projectId = projectId,
                             pipelineId = pipelineId,
                             branchName = branchName
                         )
-                        if (activeBranchVersion == null) {
+                        version = if (activeBranchVersion == null) {
                             // 创建
                             branchAction = BranchVersionAction.ACTIVE
                             operationLogType = OperationLogType.CREATE_BRANCH_VERSION
                             operationLogParams = versionName
-                            version = latestVersion.version + 1
+                            latestVersion.version + 1
                         } else {
                             // 更新
                             operationLogType = OperationLogType.UPDATE_BRANCH_VERSION
                             operationLogParams = activeBranchVersion.versionName
                                 ?: activeBranchVersion.version.toString()
                             branchAction = BranchVersionAction.ACTIVE
-                            version = activeBranchVersion.version
+                            activeBranchVersion.version
                         }
                     }
-                    // 3 正式版本保存 —— 寻找当前草稿，存在草稿版本则报错，不存在则直接取最新VERSION+1，同时更新INFO、RESOURCE表
+                    // 3 通过分支发布 —— 将要通过分支发布的草稿直接删除草稿，由代码库提供分支版本管理
+                    VersionStatus.BRANCH_RELEASE -> {
+                        if (branchName.isNullOrBlank()) throw ErrorCodeException(
+                            errorCode = CommonMessageCode.PARAMETER_VALIDATE_ERROR,
+                            params = arrayOf("branchName")
+                        )
+                        val activeBranchVersion = pipelineResourceVersionDao.getBranchVersionResource(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            branchName = branchName
+                        )
+                        operationLogParams = versionName
+                        operationLogType = if (activeBranchVersion == null) {
+                            OperationLogType.CREATE_BRANCH_VERSION
+                        } else {
+                            OperationLogType.UPDATE_DRAFT_VERSION
+                        }
+                        pipelineResourceVersionDao.clearDraftVersion(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId
+                        )
+                        return@transaction
+                    }
+                    // 4 正式版本保存 —— 寻找当前草稿，存在草稿版本则报错，不存在则直接取最新VERSION+1同时更新INFO、RESOURCE表
                     else -> {
                         watcher.start("getOriginModel")
                         val draftVersion = pipelineResourceVersionDao.getDraftVersionResource(
@@ -926,9 +960,11 @@ class PipelineRepositoryService constructor(
                             projectId = projectId,
                             pipelineId = pipelineId
                         )
-                        pipelineVersion = releaseVersion?.pipelineVersion ?: 1
-                        triggerVersion = releaseVersion?.triggerVersion ?: 1
-                        releaseVersion?.let {
+                        pipelineVersion = releaseResource?.pipelineVersion ?: 1
+                        triggerVersion = releaseResource?.triggerVersion ?: 1
+                        // 数据分离：发布记录的版本自增，旧数据保留和版本表中version一致，后续单独用于前端展示
+                        versionNum += 1
+                        releaseResource?.let {
                             pipelineVersion = PipelineVersionUtils.getPipelineVersion(
                                 pipelineVersion, it.model, model
                             )
@@ -945,7 +981,7 @@ class PipelineRepositoryService constructor(
                         version = if (draftVersion == null) {
                             // 没有已有草稿保存正式版本时，直接增加正式版本，基准为上一个发布版本
                             // 创建
-                            realBaseVersion = realBaseVersion ?: releaseVersion?.version ?: 0
+                            realBaseVersion = realBaseVersion ?: releaseResource?.version ?: 0
                             latestVersion.version + 1
                         } else {
                             // 更新
@@ -954,7 +990,6 @@ class PipelineRepositoryService constructor(
                             )
                             draftVersion.version
                         }
-
                         pipelineInfoDao.update(
                             dslContext = transactionContext,
                             projectId = projectId,
@@ -990,12 +1025,14 @@ class PipelineRepositoryService constructor(
                         model = model,
                         yamlStr = yamlStr,
                         versionName = versionName,
+                        versionNum = versionNum,
                         pipelineVersion = pipelineVersion,
                         triggerVersion = triggerVersion,
                         settingVersion = settingVersion
                     )
                 }
                 // 对于新保存的版本如果没有指定基准版本则默认为上一个版本
+                watcher.start("updatePipelineResourceVersion")
                 pipelineResourceVersionDao.create(
                     dslContext = transactionContext,
                     projectId = projectId,
@@ -1005,50 +1042,15 @@ class PipelineRepositoryService constructor(
                     model = model,
                     yaml = yamlStr,
                     versionName = versionName,
+                    versionNum = versionNum,
                     pipelineVersion = pipelineVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion,
-                    versionStatus = versionStatus,
+                    versionStatus = versionStatus?.fix(),
                     branchAction = branchAction,
                     description = description,
                     baseVersion = realBaseVersion ?: (version - 1)
                 )
-                // 此前先增后删是为了保证没有产生历史版本的数据能记录最后一个编排
-                // 针对新增version表做的数据迁移，双写后已经不需要
-//                watcher.start("updatePipelineResourceVersion")
-//                val lastVersionRecord = pipelineResourceVersionDao.getVersionResource(
-//                    dslContext = transactionContext,
-//                    projectId = projectId,
-//                    pipelineId = pipelineId,
-//                    version = version - 1
-//                )
-//                if (version > 1 && lastVersionRecord == null) {
-//                    // 当ResVersion表中缺失上一个有效版本时需从Res表迁移数据（版本间流水线模型对比有用）
-//                    val lastVersionModelStr = pipelineResourceDao.getVersionModelString(
-//                        dslContext = dslContext,
-//                        projectId = projectId,
-//                        pipelineId = pipelineId,
-//                        version = version - 1
-//                    )
-//                    if (!lastVersionModelStr.isNullOrEmpty()) {
-//                        pipelineResourceVersionDao.create(
-//                            dslContext = transactionContext,
-//                            projectId = projectId,
-//                            pipelineId = pipelineId,
-//                            creator = userId,
-//                            version = version - 1,
-//                            modelStr = lastVersionModelStr,
-//                            yamlStr = yamlStr,
-//                            versionName = null,
-//                            pipelineVersion = null,
-//                            triggerVersion = null,
-//                            settingVersion = null,
-//                            versionStatus = VersionStatus.RELEASED,
-//                            description = description,
-//                            baseVersion = (version - 1).coerceAtLeast(0)
-//                        )
-//                    }
-//                }
                 watcher.start("deleteEarlyVersion")
                 pipelineModelTaskDao.deletePipelineTasks(
                     dslContext = transactionContext,
@@ -1254,8 +1256,8 @@ class PipelineRepositoryService constructor(
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
 
-            // 获取最新的版本用于比较差异
-            val latestVersion = pipelineResourceDao.getReleaseVersionResource(
+            // 获取发布的版本用于比较差异
+            val releaseResource = pipelineResourceDao.getReleaseVersionResource(
                 dslContext = context,
                 projectId = projectId,
                 pipelineId = pipelineId
@@ -1264,7 +1266,20 @@ class PipelineRepositoryService constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                 params = arrayOf(version.toString())
             )
-
+            // 删除草稿并获取最新版本用于版本计算
+            pipelineResourceVersionDao.clearDraftVersion(
+                dslContext = context,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
+            val latestResource = pipelineResourceVersionDao.getLatestVersionResource(
+                dslContext = context,
+                projectId = projectId,
+                pipelineId = pipelineId
+            ) ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID
+            )
             // 获取目标的版本用于更新草稿
             val targetVersion = pipelineResourceVersionDao.getVersionResource(
                 dslContext = context,
@@ -1278,51 +1293,35 @@ class PipelineRepositoryService constructor(
             )
 
             // 计算版本号
-            val pipelineVersion = PipelineVersionUtils.getPipelineVersion(
-                currVersion = latestVersion.pipelineVersion ?: 1,
-                originModel = latestVersion.model,
-                newModel = targetVersion.model
-            )
-            val triggerVersion = PipelineVersionUtils.getTriggerVersion(
-                currVersion = latestVersion.pipelineVersion ?: 1,
-                originModel = latestVersion.model,
-                newModel = targetVersion.model
-            )
             val now = LocalDateTime.now()
-            val versionName = PipelineVersionUtils.getVersionName(
-                pipelineVersion, triggerVersion, targetVersion.settingVersion
-            )
-            val newVersion = targetVersion.copy(
-                version = latestVersion.version + 1,
-                pipelineVersion = pipelineVersion,
-                triggerVersion = triggerVersion,
+            val newDraft = targetVersion.copy(
+                version = latestResource.version + 1,
+                versionNum = releaseResource.version + 1,
+                pipelineVersion = null,
+                triggerVersion = null,
+                versionName = null,
                 settingVersion = targetVersion.settingVersion,
                 createTime = now,
-                updateTime = now,
-                versionName = versionName
+                updateTime = now
             )
-            resultVersion = newVersion
-            pipelineResourceVersionDao.clearDraftVersion(
-                dslContext = context,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )
+            resultVersion = newDraft
             pipelineResourceVersionDao.create(
                 dslContext = context,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 creator = userId,
-                version = newVersion.version,
-                versionName = versionName,
-                model = newVersion.model,
+                version = newDraft.version,
+                versionName = null,
+                model = newDraft.model,
                 baseVersion = targetVersion.version.takeIf { ignoreBase != true },
-                yaml = newVersion.yaml,
-                pipelineVersion = newVersion.pipelineVersion,
-                triggerVersion = triggerVersion,
-                settingVersion = newVersion.settingVersion,
+                yaml = newDraft.yaml,
+                versionNum = newDraft.versionNum,
+                pipelineVersion = newDraft.pipelineVersion,
+                triggerVersion = newDraft.triggerVersion,
+                settingVersion = newDraft.settingVersion,
                 versionStatus = VersionStatus.COMMITTING,
                 branchAction = null,
-                description = newVersion.description
+                description = newDraft.description
             )
         }
         return resultVersion!!

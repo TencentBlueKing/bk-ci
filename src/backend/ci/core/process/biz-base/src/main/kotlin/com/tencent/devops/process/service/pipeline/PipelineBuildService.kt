@@ -87,6 +87,7 @@ import org.springframework.stereotype.Service
 class PipelineBuildService(
     private val pipelineInterceptorChain: PipelineInterceptorChain,
     private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineSettingVersionService: PipelineSettingVersionService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineElementService: PipelineElementService,
     private val projectCacheService: ProjectCacheService,
@@ -137,8 +138,20 @@ class PipelineBuildService(
                 params = arrayOf(projectVO.englishName)
             )
         }
-
-        val setting = pipelineRepositoryService.getSetting(pipeline.projectId, pipeline.pipelineId)
+        val setting = if (debug == true) {
+            pipelineRepositoryService.getDraftVersionResource(pipeline.projectId, pipeline.pipelineId)
+                ?.settingVersion?.let {
+                    pipelineSettingVersionService.getPipelineSetting(
+                        userId = userId,
+                        projectId = pipeline.pipelineId,
+                        pipelineId = pipeline.pipelineId,
+                        detailInfo = null,
+                        version = it
+                    )
+                } ?: pipelineRepositoryService.getSetting(pipeline.projectId, pipeline.pipelineId)
+        } else {
+            pipelineRepositoryService.getSetting(pipeline.projectId, pipeline.pipelineId)
+        }
         val bucketSize = setting!!.maxConRunningQueueSize
         val lockKey = "PipelineRateLimit:${pipeline.pipelineId}"
         try {
