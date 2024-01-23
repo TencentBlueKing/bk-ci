@@ -50,4 +50,5 @@ object Versions {
     const val disklrucache = "2.0.2"
     const val BkCrypto = "1.1.3"
     const val audit = "1.0.8"
+    const val MysqlDriver = "8.0.33"
 }
