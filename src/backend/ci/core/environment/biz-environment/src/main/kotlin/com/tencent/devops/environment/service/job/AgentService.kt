@@ -79,7 +79,7 @@ data class AgentService @Autowired constructor(
     private val chooseAgentInstallChannelIdService: ChooseAgentInstallChannelIdService,
     private val fileService: FileService
 ) {
-    @Value("\${job.bkBizScopeId:#{null}}")
+    @Value("\${environment.cc.bkBizScopeId:#{null}}")
     val bkBizScopeId: Int = 0
 
     companion object {

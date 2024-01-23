@@ -16,16 +16,16 @@ import org.springframework.stereotype.Component
 
 @Component("ApigwJobCloudApi")
 class ApigwJobCloudApi {
-    @Value("\${job.bkAppCode:}")
+    @Value("\${environment.apigw.bkAppCode:}")
     private val bkAppCode = ""
 
-    @Value("\${job.bkAppSecret:}")
+    @Value("\${environment.apigw.bkAppSecret:}")
     private val bkAppSecret = ""
 
-    @Value("\${job.bkScopeType:#{null}}")
+    @Value("\${environment.cc.bkScopeType:#{null}}")
     val bkScopeType: String = ""
 
-    @Value("\${job.bkScopeId:#{null}}")
+    @Value("\${environment.cc.bkScopeId:#{null}}")
     val bkScopeId: String = ""
 
     @Value("\${job.jobCloudApiBaseUrl:#{null}}")

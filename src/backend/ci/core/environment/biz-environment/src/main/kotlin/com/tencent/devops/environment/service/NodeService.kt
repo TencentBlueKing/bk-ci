@@ -86,7 +86,7 @@ class NodeService @Autowired constructor(
     private val slaveGatewayDao: SlaveGatewayDao,
     private val queryFromCCService: QueryFromCCService
 ) {
-    @Value("\${job.bkBizScopeId:}")
+    @Value("\${environment.cc.bkBizScopeId:}")
     private val bkBizScopeId = ""
 
     companion object {

@@ -20,13 +20,13 @@ import org.springframework.stereotype.Service
 @Service
 @Primary
 class TencentQueryFromCmdbService : IQueryOperatorService {
-    @Value("\${job.bkAppCode:}")
+    @Value("\${environment.apigw.bkAppCode:}")
     private val bkAppCode = ""
 
-    @Value("\${job.bkAppSecret:}")
+    @Value("\${environment.apigw.bkAppSecret:}")
     private val bkAppSecret = ""
 
-    @Value("\${job.cmdbGetQueryInfoBaseUrl:}")
+    @Value("\${environment.cmdb.cmdbGetQueryInfoBaseUrl:}")
     private val cmdbGetQueryInfoBaseUrl = ""
 
     @Value("\${job.cmdbGetQueryInfoPath:#{\"/get_query_info\"}}")
