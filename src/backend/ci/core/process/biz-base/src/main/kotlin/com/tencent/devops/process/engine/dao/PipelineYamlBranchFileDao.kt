@@ -99,6 +99,21 @@ class PipelineYamlBranchFileDao {
         }
     }
 
+    fun listBranch(
+        dslContext: DSLContext,
+        projectId: String,
+        repoHashId: String,
+        filePath: String
+    ): List<String> {
+        return with(TPipelineYamlBranchFile.T_PIPELINE_YAML_BRANCH_FILE) {
+            dslContext.select(BRANCH).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPO_HASH_ID.eq(repoHashId))
+                .and(FILE_PATH_MD5.eq(DigestUtils.md5Hex(filePath)))
+                .fetch(0, String::class.java)
+        }
+    }
+
     fun deleteFile(
         dslContext: DSLContext,
         projectId: String,

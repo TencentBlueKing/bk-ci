@@ -357,7 +357,7 @@ class PipelineYamlFacadeService @Autowired constructor(
         )
     }
 
-    fun deleteBeforeCheck(
+    fun deleteYamlPipelineCheck(
         userId: String,
         projectId: String,
         pipelineId: String

@@ -10,7 +10,7 @@ import io.swagger.annotations.ApiModelProperty
 data class PipelineTriggerFailedMatch(
     @ApiModelProperty("匹配失败的插件")
     val elements: List<PipelineTriggerFailedMatchElement>
-) : PipelineTriggerReasonDetail() {
+) : PipelineTriggerReasonDetail {
     companion object {
         const val classType = "match"
     }

@@ -541,7 +541,7 @@ class PipelineViewService @Autowired constructor(
                 filter.userIds.contains(creator)
             } else if (filter is PipelineViewFilterByLabel) {
                 pipelineGroupService.getViewLabelToPipelinesMap(
-                    pipelineView.projectId,
+                    pipelineView.projectId ?: projectId,
                     filter.labelIds
                 ).values.asSequence().flatten().contains(pipelineId)
             } else if (filter is PipelineViewFilterByPacRepo) {

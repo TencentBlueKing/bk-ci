@@ -7,7 +7,7 @@ import io.swagger.annotations.ApiModel
 data class PipelineTriggerFailedErrorCode(
     val errorCode: String,
     val params: List<String>? = null
-) : PipelineTriggerReasonDetail() {
+) : PipelineTriggerReasonDetail {
     companion object {
         const val classType = "errorCode"
     }
