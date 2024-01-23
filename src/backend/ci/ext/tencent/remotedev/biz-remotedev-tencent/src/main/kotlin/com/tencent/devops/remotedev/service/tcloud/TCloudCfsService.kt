@@ -9,6 +9,8 @@ import com.tencentcloudapi.cfs.v20190719.models.DeleteCfsRuleRequest
 import com.tencentcloudapi.cfs.v20190719.models.DescribeCfsFileSystemsRequest
 import com.tencentcloudapi.cfs.v20190719.models.DescribeCfsRulesRequest
 import com.tencentcloudapi.common.Credential
+import com.tencentcloudapi.common.profile.ClientProfile
+import com.tencentcloudapi.common.profile.HttpProfile
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -34,12 +36,20 @@ class TCloudCfsService @Autowired constructor(
     ) {
         val record = projectTCloudCfsDao.fetchAny(dslContext, projectId)
         if (record == null) {
-            logger.warn("fetchCfsLinkCfsPermission $projectId no cfs")
+            logger.debug("fetchCfsLinkCfsPermission $projectId no cfs")
             return
         }
 
         val cred = Credential(secretId, secretKey)
-        val client = CfsClient(cred, record.region)
+        val profile = HttpProfile().apply {
+            this.endpoint = "cfs.internal.tencentcloudapi.com"
+        }
+        val client = CfsClient(
+            cred, record.region,
+            ClientProfile().apply {
+                this.httpProfile = profile
+            }
+        )
 
         var pgId = record.pgId
         if (pgId == null) {
@@ -68,6 +78,7 @@ class TCloudCfsService @Autowired constructor(
                 logger.error("fetchCfsLinkCfsPermission|DescribeCfsRules error", e)
                 return
             }
+            logger.debug("fetchCfsLinkCfsPermission|willdelete|${gpResp.ruleList}|$ip")
             gpResp.ruleList.forEach {
                 if (it.authClientIp == ip) {
                     try {

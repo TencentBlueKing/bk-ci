@@ -67,15 +67,15 @@ import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
-import java.time.Duration
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.Duration
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("LongMethod")
@@ -242,7 +242,7 @@ class DeleteControl @Autowired constructor(
             MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
             logger.info(
                 "workspace ${it.workspaceName} last active is ${
-                    it.updateTime
+                it.updateTime
                 } ready to delete"
             )
             kotlin.runCatching { heartBeatDeleteWS(it) }.onFailure { i ->
@@ -329,7 +329,7 @@ class DeleteControl @Autowired constructor(
                 EnvStatusEnum.deleted -> event.status = true
                 else -> logger.warn(
                     "delete workspace callback with error|" +
-                            "${event.workspaceName}|${workspaceInfo.status}"
+                        "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }
@@ -355,11 +355,11 @@ class DeleteControl @Autowired constructor(
         if (status) {
             // 删除环境管理第三方构建机记录
             if (!workspace.preciAgentId.isNullOrBlank() && client.get(ServiceNodeResource::class)
-                    .deleteThirdPartyNode(workspace.createUserId, projectId, workspace.preciAgentId!!).data == false
+                .deleteThirdPartyNode(workspace.createUserId, projectId, workspace.preciAgentId!!).data == false
             ) {
                 logger.warn(
                     "delete workspace $workspaceName, but third party agent delete failed." +
-                            "|${workspace.createUserId}|$projectId|${detail?.environmentIP}|${workspace.preciAgentId}"
+                        "|${workspace.createUserId}|$projectId|${detail?.environmentIP}|${workspace.preciAgentId}"
                 )
             }
             // 清心跳
@@ -429,10 +429,8 @@ class DeleteControl @Autowired constructor(
 
             // 删除 cmdb 的机器别名
             bkccService.updateHostName("VM-${hostIdSub.joinToString("-")}", workspaceName)
-        }
 
-        // 删除cfs的权限组规则
-        if (!ip.isNullOrBlank()) {
+            // 删除cfs的权限组规则
             tCloudCfsService.addOrRemoveCfsPermissionRule(projectId, ip, true)
         }
 

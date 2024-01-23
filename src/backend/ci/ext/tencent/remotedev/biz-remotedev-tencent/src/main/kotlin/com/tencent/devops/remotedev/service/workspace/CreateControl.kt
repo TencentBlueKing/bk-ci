@@ -86,13 +86,13 @@ import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.utils.DevfileUtil
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
 
 @Service
 @Suppress("ALL")
@@ -131,7 +131,7 @@ class CreateControl @Autowired constructor(
         fun sumResourceVmFree(res: List<ResourceVmRespData>?, zoneShortName: String, size: String): Int? {
             return res?.filter {
                 it.zoneId.startsWith(zoneShortName) &&
-                        it.machineResources?.any { ma -> ma.machineType == size } == true
+                    it.machineResources?.any { ma -> ma.machineType == size } == true
             }?.sumOf {
                 it.machineResources
                     ?.filter { res -> res.machineType == size }
@@ -514,10 +514,8 @@ class CreateControl @Autowired constructor(
                 executor.execute {
                     workspaceCommon.makeDiskMount(ip, event.userId)
                 }
-            }
 
-            // 给有cfs的机器绑定权限组
-            if (!ip.isNullOrBlank()) {
+                // 给有cfs的机器绑定权限组
                 tCloudCfsService.addOrRemoveCfsPermissionRule(ws.projectId, ip, false)
             }
 
@@ -740,7 +738,7 @@ class CreateControl @Autowired constructor(
         if (yaml.isBlank()) {
             logger.warn(
                 "create workspace get devfile blank,return." +
-                        "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
+                    "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
             )
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
@@ -944,9 +942,9 @@ class CreateControl @Autowired constructor(
     private fun startCloudResourceCountCheck(type: String, zone: String) =
         workspaceCommon.syncStartCloudResourceList().count {
             it.status == 11 &&
-                    it.machineType == type &&
-                    it.zoneId.replace(Regex("\\d+"), "") == zone &&
-                    it.locked != true
+                it.machineType == type &&
+                it.zoneId.replace(Regex("\\d+"), "") == zone &&
+                it.locked != true
         }
 
     private fun doPreparing(workspace: Workspace) {
@@ -974,7 +972,7 @@ class CreateControl @Autowired constructor(
             userId
         }
         return subUserId.replace(Regex("[@_]"), "-") +
-                "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
+            "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
     }
 
     // 判断用户定义的镜像是否在默认镜像白名单列表中
