@@ -43,6 +43,7 @@ import com.tencent.devops.process.pojo.classify.PipelineViewFilterByPacRepo
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.enums.Condition
 import com.tencent.devops.process.pojo.classify.enums.Logic
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineYamlStatus
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookVersion
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
@@ -50,9 +51,9 @@ import com.tencent.devops.process.yaml.actions.BaseAction
 import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.common.Constansts
 import com.tencent.devops.process.yaml.git.pojo.PacGitPushResult
-import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectLoader
 import com.tencent.devops.process.yaml.pojo.PipelineYamlTriggerLock
 import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
+import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectLoader
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -189,13 +190,14 @@ class PipelineYamlRepositoryService @Autowired constructor(
         val userId = action.data.getUserId()
         val repoHashId = action.data.setting.repoHashId
         val directory = GitActionCommon.getCiDirectory(yamlFile.yamlPath)
+        val isDefaultBranch = branch == action.data.context.defaultBranch
         val deployPipelineResult = pipelineInfoFacadeService.createYamlPipeline(
             userId = action.data.setting.enableUser,
             projectId = projectId,
             yaml = yamlContent.content,
             yamlFileName = yamlFile.yamlPath.removePrefix(".ci/"),
             branchName = branch,
-            isDefaultBranch = branch == action.data.context.defaultBranch,
+            isDefaultBranch = isDefaultBranch,
             description = action.data.eventCommon.commit.commitMsg,
             aspects = PipelineTransferAspectLoader.initByDefaultTriggerOn(defaultRepo = {
                 action.data.setting.aliasName
@@ -213,6 +215,11 @@ class PipelineYamlRepositoryService @Autowired constructor(
             commitId = action.data.eventCommon.commit.commitId,
             ref = branch,
             pipelineId = pipelineId,
+            status = if (isDefaultBranch) {
+                PipelineYamlStatus.OK.name
+            } else {
+                PipelineYamlStatus.UN_MERGED.name
+            },
             version = version,
             userId = userId,
             webhooks = webhooks
@@ -299,6 +306,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
         logger.info("update yaml pipeline|$projectId|$yamlFile")
         val yamlContent = action.getYamlContent(yamlFile.yamlPath)
         val branch = action.data.eventCommon.branch
+        val defaultBranch = action.data.context.defaultBranch
         val deployPipelineResult = pipelineInfoFacadeService.updateYamlPipeline(
             userId = action.data.setting.enableUser,
             projectId = projectId,
@@ -306,7 +314,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             yaml = yamlContent.content,
             yamlFileName = yamlFile.yamlPath.removePrefix(".ci/"),
             branchName = branch,
-            isDefaultBranch = branch == action.data.context.defaultBranch,
+            isDefaultBranch = branch == defaultBranch,
             description = action.data.eventCommon.commit.commitMsg,
             aspects = PipelineTransferAspectLoader.initByDefaultTriggerOn(defaultRepo = {
                 action.data.setting.aliasName
@@ -322,6 +330,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             blobId = yamlFile.blobId!!,
             commitId = action.data.eventCommon.commit.commitId,
             ref = branch,
+            defaultBranch = defaultBranch,
             pipelineId = deployPipelineResult.pipelineId,
             version = deployPipelineResult.version,
             userId = action.data.getUserId(),
@@ -352,13 +361,19 @@ class PipelineYamlRepositoryService @Autowired constructor(
             if (yamlFile.ref.isNullOrBlank()) {
                 return
             }
+            pipelineYamlService.deleteBranchFile(
+                projectId = projectId,
+                repoHashId = repoHashId,
+                branch = yamlFile.ref,
+                filePath = filePath
+            )
             val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath
-            )
+            ) ?: return
             // 非默认分支删除yaml,需要将分支版本置为无效
-            if (pipelineYamlInfo != null && yamlFile.ref != defaultBranch) {
+            if (yamlFile.ref != defaultBranch) {
                 pipelineInfoFacadeService.updateBranchVersion(
                     userId = userId,
                     projectId = projectId,
@@ -366,13 +381,22 @@ class PipelineYamlRepositoryService @Autowired constructor(
                     branchName = yamlFile.ref,
                     branchVersionAction = BranchVersionAction.INACTIVE
                 )
+                if (defaultBranch != null) {
+                    pipelineYamlService.refreshPipelineYamlStatus(
+                        projectId = projectId,
+                        repoHashId = repoHashId,
+                        filePath = yamlFile.yamlPath,
+                        defaultBranch = defaultBranch
+                    )
+                }
+            } else {
+                pipelineYamlService.updatePipelineYamlStatus(
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    filePath = filePath,
+                    status = PipelineYamlStatus.DELETED.name
+                )
             }
-            pipelineYamlService.deleteBranchFile(
-                projectId = projectId,
-                repoHashId = repoHashId,
-                branch = yamlFile.ref,
-                filePath = filePath
-            )
         } catch (ignored: Exception) {
             logger.warn("Failed to delete pipeline yaml|$projectId|${action.format()}", ignored)
             throw ignored
@@ -409,7 +433,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 repoHashId = repoHashId,
                 filePath = filePath,
                 gitPushResult = gitPushResult,
-                gitProjectName = action.data.setting.projectName,
+                action = action,
                 webhooks = webhooks
             )
         }
@@ -423,17 +447,19 @@ class PipelineYamlRepositoryService @Autowired constructor(
         repoHashId: String,
         filePath: String,
         gitPushResult: PacGitPushResult,
-        gitProjectName: String,
+        action: BaseAction,
         webhooks: List<PipelineWebhookVersion>
     ) {
         val blobId = gitPushResult.blobId
         val branch = gitPushResult.branch
         val commitId = gitPushResult.lastCommitId
+        val gitProjectName = action.data.setting.projectName
         val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
             projectId = projectId,
             repoHashId = repoHashId,
             filePath = filePath
         )
+        val defaultBranch = action.data.context.defaultBranch
         if (pipelineYamlInfo == null) {
             val directory = GitActionCommon.getCiDirectory(filePath)
             pipelineYamlService.save(
@@ -442,6 +468,11 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 filePath = filePath,
                 directory = directory,
                 pipelineId = pipelineId,
+                status = if (gitPushResult.branch == defaultBranch) {
+                    PipelineYamlStatus.OK.name
+                } else {
+                    PipelineYamlStatus.UN_MERGED.name
+                },
                 userId = userId,
                 blobId = blobId,
                 commitId = commitId,
@@ -472,6 +503,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
                     blobId = blobId,
                     commitId = commitId,
                     ref = branch,
+                    defaultBranch = defaultBranch,
                     pipelineId = pipelineId,
                     version = version,
                     userId = userId,

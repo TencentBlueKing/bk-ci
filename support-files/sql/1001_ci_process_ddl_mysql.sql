@@ -1173,6 +1173,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_INFO`
     `DIRECTORY`    varchar(512) default '.ci'             not null comment 'yaml文件目录',
     `PIPELINE_ID`  varchar(64)                            NOT NULL DEFAULT '' COMMENT '流水线ID',
     `DELETE`       bit(1)       DEFAULT b'0' COMMENT '是否删除',
+    `STATUS`       varchar(10)  DEFAULT 'OK' COMMENT '状态',
     `CREATOR`      varchar(64)                            NOT NULL COMMENT '创建人',
     `MODIFIER`     varchar(64)                            NOT NULL COMMENT '修改人',
     `CREATE_TIME`  timestamp    default CURRENT_TIMESTAMP not null comment '创建时间',
@@ -1219,7 +1220,8 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_BRANCH_FILE`
     `FILE_PATH`    varchar(512) NOT NULL DEFAULT '' COMMENT '文件路径',
     `FILE_PATH_MD5`    varchar(64) NOT NULL DEFAULT '' COMMENT '文件路径MD5',
     `CREATE_TIME`  timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    PRIMARY KEY (`PROJECT_ID`, `REPO_HASH_ID`, `BRANCH`, `FILE_PATH_MD5`)
+    PRIMARY KEY (`PROJECT_ID`, `REPO_HASH_ID`, `BRANCH`, `FILE_PATH_MD5`),
+    INDEX IDX_PROJECT_REPO_FILE(`PROJECT_ID`, `REPO_HASH_ID`, `FILE_PATH_MD5`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='yaml分支文件';
 
 CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_VIEW`

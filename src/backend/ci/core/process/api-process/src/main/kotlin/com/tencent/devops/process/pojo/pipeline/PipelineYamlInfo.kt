@@ -41,6 +41,8 @@ data class PipelineYamlInfo(
     val filePath: String,
     @ApiModelProperty("流水线ID")
     val pipelineId: String,
+    @ApiModelProperty("yaml文件状态")
+    val status: String,
     @ApiModelProperty("流水线创建者")
     val creator: String
 )

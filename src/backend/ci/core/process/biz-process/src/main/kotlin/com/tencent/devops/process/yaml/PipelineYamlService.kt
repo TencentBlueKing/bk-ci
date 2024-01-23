@@ -43,6 +43,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineYamlInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlView
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineYamlStatus
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookVersion
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
@@ -74,6 +75,7 @@ class PipelineYamlService(
         filePath: String,
         directory: String,
         pipelineId: String,
+        status: String,
         userId: String,
         blobId: String,
         commitId: String,
@@ -90,6 +92,7 @@ class PipelineYamlService(
                 filePath = filePath,
                 directory = directory,
                 pipelineId = pipelineId,
+                status = status,
                 userId = userId
             )
             pipelineYamlVersionDao.save(
@@ -127,6 +130,7 @@ class PipelineYamlService(
         blobId: String,
         commitId: String,
         ref: String,
+        defaultBranch: String?,
         version: Int,
         webhooks: List<PipelineWebhookVersion>,
         needDeleteVersion: Boolean
@@ -173,6 +177,68 @@ class PipelineYamlService(
                 filePath = filePath
             )
         }
+        if (!defaultBranch.isNullOrBlank()) {
+            refreshPipelineYamlStatus(
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = filePath,
+                defaultBranch = defaultBranch
+            )
+        }
+    }
+
+    fun refreshPipelineYamlStatus(
+        projectId: String,
+        repoHashId: String,
+        filePath: String,
+        defaultBranch: String
+    ) {
+        val branchList = pipelineYamlBranchFileDao.listBranch(
+            dslContext = dslContext,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = filePath
+        )
+        val pipelineYamlInfo = pipelineYamlInfoDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = filePath
+        ) ?: return
+        val status = when {
+            branchList.isEmpty() -> PipelineYamlStatus.DELETED.name
+            branchList.size == 1 && branchList.contains(defaultBranch) -> PipelineYamlStatus.OK.name
+            branchList.isNotEmpty() && branchList.contains(defaultBranch) ->  PipelineYamlStatus.UN_MERGED.name
+            else -> null
+        }
+        if (status != null && pipelineYamlInfo.status != status) {
+            logger.info(
+                "update pipeline yaml status|" +
+                        "$projectId|$repoHashId|$filePath|from:${pipelineYamlInfo.status}|to:$status"
+            )
+            pipelineYamlInfoDao.updateStatus(
+                dslContext = dslContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = filePath,
+                status = status
+            )
+        }
+    }
+
+    fun updatePipelineYamlStatus(
+        projectId: String,
+        repoHashId: String,
+        filePath: String,
+        status: String
+    ) {
+        pipelineYamlInfoDao.updateStatus(
+            dslContext = dslContext,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = filePath,
+            status = status
+        )
     }
 
     fun getPipelineYamlInfo(
@@ -219,10 +285,11 @@ class PipelineYamlService(
         pipelineId: String,
         version: Int
     ): PipelineYamlVo? {
-        pipelineYamlInfoDao.get(dslContext = dslContext, projectId = projectId, pipelineId = pipelineId) ?: run {
-            logger.info("pipeline yaml not found|$projectId|$pipelineId")
-            return null
-        }
+        val pipelineYamlInfo =
+            pipelineYamlInfoDao.get(dslContext = dslContext, projectId = projectId, pipelineId = pipelineId) ?: run {
+                logger.info("pipeline yaml not found|$projectId|$pipelineId")
+                return null
+            }
         val pipelineYamlVersion = pipelineYamlVersionDao.getByPipelineId(
             dslContext = dslContext,
             projectId = projectId,
@@ -232,10 +299,11 @@ class PipelineYamlService(
             logger.info("pipeline yaml version not found|$projectId|$pipelineId|$version")
             return null
         }
-        return pipelineYamlVo(pipelineYamlVersion = pipelineYamlVersion)
+        return pipelineYamlVo(pipelineYamlInfo = pipelineYamlInfo, pipelineYamlVersion = pipelineYamlVersion)
     }
 
     private fun pipelineYamlVo(
+        pipelineYamlInfo: PipelineYamlInfo,
         pipelineYamlVersion: PipelineYamlVersion
     ): PipelineYamlVo? {
         with(pipelineYamlVersion) {
@@ -255,7 +323,8 @@ class PipelineYamlService(
                         pathWithNamespace = repository.projectName,
                         webUrl = homePage,
                         filePath = filePath,
-                        fileUrl = "$homePage/blob/$commitId/$filePath"
+                        fileUrl = "$homePage/blob/$commitId/$filePath",
+                        status = pipelineYamlInfo.status
                     )
                 }
 

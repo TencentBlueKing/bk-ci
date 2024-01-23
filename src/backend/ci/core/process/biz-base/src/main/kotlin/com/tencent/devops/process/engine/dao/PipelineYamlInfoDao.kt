@@ -48,6 +48,7 @@ class PipelineYamlInfoDao {
         filePath: String,
         directory: String,
         pipelineId: String,
+        status: String,
         userId: String
     ) {
         val now = LocalDateTime.now()
@@ -59,6 +60,7 @@ class PipelineYamlInfoDao {
                 FILE_PATH,
                 DIRECTORY,
                 PIPELINE_ID,
+                STATUS,
                 CREATOR,
                 MODIFIER,
                 CREATE_TIME,
@@ -69,6 +71,7 @@ class PipelineYamlInfoDao {
                 filePath,
                 directory,
                 pipelineId,
+                status,
                 userId,
                 userId,
                 now,
@@ -90,6 +93,23 @@ class PipelineYamlInfoDao {
             dslContext.update(this)
                 .set(MODIFIER, userId)
                 .set(UPDATE_TIME, now)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPO_HASH_ID.eq(repoHashId))
+                .and(FILE_PATH.eq(filePath))
+                .execute()
+        }
+    }
+
+    fun updateStatus(
+        dslContext: DSLContext,
+        projectId: String,
+        repoHashId: String,
+        filePath: String,
+        status: String
+    ) {
+        with(TPipelineYamlInfo.T_PIPELINE_YAML_INFO) {
+            dslContext.update(this)
+                .set(STATUS, status)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(FILE_PATH.eq(filePath))
@@ -216,6 +236,7 @@ class PipelineYamlInfoDao {
                 repoHashId = repoHashId,
                 filePath = filePath,
                 pipelineId = pipelineId,
+                status = status,
                 creator = creator
             )
         }
