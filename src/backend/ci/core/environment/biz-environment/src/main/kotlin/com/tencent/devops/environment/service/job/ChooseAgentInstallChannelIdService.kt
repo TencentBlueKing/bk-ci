@@ -46,7 +46,7 @@ class ChooseAgentInstallChannelIdService @Autowired constructor(
                 message = "innerIp or innerIpv6 must be selected."
             )
         }
-        val networkAreaRecord = networkAreaDao.getNetworkAreaList(dslContext)
+        val networkAreaRecord = networkAreaDao.getOssAndDevnetNetAreaList(dslContext)
         val networkAreaMap = networkAreaRecord.map {
             it.netArea to it.netSegment.split(",")
         }.toMap()

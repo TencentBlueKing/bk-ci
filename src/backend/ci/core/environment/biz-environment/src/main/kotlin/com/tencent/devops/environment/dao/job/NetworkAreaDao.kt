@@ -36,7 +36,7 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class NetworkAreaDao {
-    fun getNetworkAreaList(dslContext: DSLContext): Result<TNetworkAreaRecord> {
+    fun getOssAndDevnetNetAreaList(dslContext: DSLContext): Result<TNetworkAreaRecord> {
         with(TNetworkArea.T_NETWORK_AREA) {
             return dslContext.selectFrom(this)
                 .where(NET_AREA.`in`("OSS", "DEVNET"))
