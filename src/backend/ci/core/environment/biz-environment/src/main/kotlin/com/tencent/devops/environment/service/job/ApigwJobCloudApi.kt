@@ -112,6 +112,8 @@ class ApigwJobCloudApi {
             logger.debug(
                 "[${getJobOperationName()}]url: ${jobCloudAuthenticationReq.url}, body: $requestContent"
             )
+        logger.info("[${getJobOperationName()}]POST url: ${jobCloudAuthenticationReq.url}, " +
+                        "body: ${logWithLengthLimit(requestContent)}")
         return getResultFromRes(OkhttpUtils.doPost(jobCloudAuthenticationReq.url, requestContent, headers), classOfU)
     }
 
@@ -127,6 +129,7 @@ class ApigwJobCloudApi {
         )
         if (logger.isDebugEnabled)
             logger.debug("[$operationName] headers: ${logWithLengthLimit(headers.toString())}, url: $url")
+        logger.info("[$operationName]GET url: $url")
         return getResultFromRes(OkhttpUtils.doGet(url, headers), classOfT)
     }
 
@@ -135,11 +138,11 @@ class ApigwJobCloudApi {
         removeJobOperationName()
         try {
             val responseBody = response.body?.string()
+            val responseLog = logWithLengthLimit(responseBody.toString())
             if (logger.isDebugEnabled) {
-                val responseLog = logWithLengthLimit(responseBody.toString())
                 logger.debug("[$operationName] response body(origin): $responseLog")
             }
-
+            logger.info("[$operationName] response body(origin): $responseLog")
             val jobCloudResp = jacksonObjectMapper().readValue<JobCloudResp<T>>(responseBody!!)
             if (logger.isDebugEnabled)
                 logger.debug(

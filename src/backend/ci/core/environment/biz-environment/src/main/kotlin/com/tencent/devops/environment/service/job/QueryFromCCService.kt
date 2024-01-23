@@ -57,6 +57,8 @@ class QueryFromCCService : IQueryOperatorService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(QueryFromCCService::class.java)
+        private const val LOG_OUTPUT_MAX_LENGTH = 4000
+
         const val DEFAULT_PAGE_LIMIT = 500
         const val DEFAULT_PAGE_START = 0
         const val FIELD_BK_HOST_ID = "bk_host_id"
@@ -184,13 +186,14 @@ class QueryFromCCService : IQueryOperatorService {
     }
 
     private fun <T> executePostRequest(headers: Map<String, String>, url: String, req: T): String? {
-        if (logger.isDebugEnabled) logger.debug("[executePostRequest] url: $url")
         val requestContent = jacksonObjectMapper().writeValueAsString(req)
-        if (logger.isDebugEnabled) logger.debug("[executePostRequest] requestContent: $requestContent")
+        if (logger.isDebugEnabled) logger.debug("[executePostRequest]url: ${url}, body: $requestContent")
+        logger.info("[executePostRequest]POST url: ${url}, body: ${logWithLengthLimit(requestContent)}")
         val ccPostRes = OkhttpUtils.doPost(url, requestContent, headers)
         if (logger.isDebugEnabled) logger.debug("[executePostRequest] ccPostRes: $ccPostRes")
         val ccPostResBody = ccPostRes.body?.string()
         if (logger.isDebugEnabled) logger.debug("[executePostRequest] ccPostRes.body.string(): $ccPostResBody")
+        logger.info("[executePostRequest]POST res: ${logWithLengthLimit(ccPostResBody ?: "")}")
         return ccPostResBody
     }
 
@@ -204,5 +207,12 @@ class QueryFromCCService : IQueryOperatorService {
             .build()
         val ccDeleteRes = OkhttpUtils.doHttp(deleteReq)
         return ccDeleteRes.body?.string()
+    }
+
+    private fun logWithLengthLimit(logOrigin: String): String {
+        return if (logOrigin.length > LOG_OUTPUT_MAX_LENGTH)
+            logOrigin.substring(0, LOG_OUTPUT_MAX_LENGTH)
+        else
+            logOrigin
     }
 }

@@ -94,6 +94,7 @@ class NodeManApi {
         val requestContent = jacksonObjectMapper().writeValueAsString(req)
         if (logger.isDebugEnabled)
             logger.debug("[${getNodemanOperationName()}] headers: $headers, url: $url, body: $requestContent")
+        logger.info("[${getNodemanOperationName()}]POST url: $url, body: ${logWithLengthLimit(requestContent)}")
         val resultFromRes = getResultFromRes(OkhttpUtils.doPost(url, requestContent, headers), classOfU)
         if (logger.isDebugEnabled) logger.debug("[executePostRequest] resultFromRes: $resultFromRes")
         return resultFromRes
@@ -106,6 +107,7 @@ class NodeManApi {
         val urlWithSuffix = url + String.format(suffix[operationName] ?: "", *args)
         if (logger.isDebugEnabled)
             logger.debug("[$operationName] headers: ${logWithLengthLimit(headers.toString())}, url: $urlWithSuffix")
+        logger.info("[$operationName]GET url: $urlWithSuffix")
         return getResultFromRes(OkhttpUtils.doGet(urlWithSuffix, headers), classOfT)
     }
 
@@ -114,13 +116,13 @@ class NodeManApi {
         removeNodemanOperationName()
         try {
             val responseBody = response.body?.string()
+            val responseLog = logWithLengthLimit(responseBody.toString())
             if (logger.isDebugEnabled) {
-                val responseLog = logWithLengthLimit(responseBody.toString())
                 logger.debug("[$operationName] response: $response")
                 logger.debug("[$operationName] responseBody: $responseBody")
                 logger.debug("[$operationName] response body(origin): $responseLog")
             }
-
+            logger.info("[$operationName] response body(origin): $responseLog")
             val agentResp = jacksonObjectMapper().readValue<AgentOriginalResult<T>>(responseBody!!)
             if (logger.isDebugEnabled)
                 logger.debug(

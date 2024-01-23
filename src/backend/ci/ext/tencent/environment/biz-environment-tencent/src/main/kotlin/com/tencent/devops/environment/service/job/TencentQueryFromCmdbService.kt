@@ -11,6 +11,7 @@ import com.tencent.devops.environment.pojo.job.cmdbreq.CmdbKeyValues
 import com.tencent.devops.environment.pojo.job.cmdbreq.CmdbPagingInfo
 import com.tencent.devops.environment.pojo.job.cmdbres.CmdbDataIns
 import com.tencent.devops.environment.pojo.job.cmdbres.CmdbResp
+import com.tencent.devops.environment.service.job.api.ApigwJobCloudApi
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -34,6 +35,8 @@ class TencentQueryFromCmdbService : IQueryOperatorService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(TencentQueryFromCmdbService::class.java)
+        private const val LOG_OUTPUT_MAX_LENGTH = 4000
+
         const val PAGE_SIZE = 1000
         const val COLUMN_SVR_BAK_OPERATOR = "SvrBakOperator"
         const val COLUMN_SVR_OPERATOR = "SvrOperator"
@@ -110,11 +113,13 @@ class TencentQueryFromCmdbService : IQueryOperatorService {
     }
 
     private fun <T> executePostRequest(headers: Map<String, String>, url: String, req: T): String? {
-        if (logger.isDebugEnabled) logger.debug("[executePostRequest] url: $url")
         val requestContent = jacksonObjectMapper().writeValueAsString(req)
-        if (logger.isDebugEnabled) logger.debug("[executePostRequest] requestContent: $requestContent")
-        val ccPostRes = OkhttpUtils.doPost(url, requestContent, headers)
-        return ccPostRes.body?.string()
+        if (logger.isDebugEnabled) logger.debug("[executePostRequest] url: ${url}, body: $requestContent")
+        logger.info("[executePostRequest]POST url: ${url}, body: ${logWithLengthLimit(requestContent)}")
+        val ccPostResponse = OkhttpUtils.doPost(url, requestContent, headers)
+        val ccPostRes = ccPostResponse.body?.string()
+        logger.info("[executePostRequest]POST res: ${logWithLengthLimit(ccPostRes ?: "")}")
+        return ccPostRes
     }
 
     private fun getNodeIpToCmdbDataMap(responseBody: String?): Map<String, CmdbDataIns> {
@@ -123,5 +128,12 @@ class TencentQueryFromCmdbService : IQueryOperatorService {
         val cmdbData = cmdbResp.data.data
         val cmdbIpToCmdbDataMap: Map<String, CmdbDataIns> = cmdbData?.associateBy { it.SvrIp!! } ?: mapOf()
         return cmdbIpToCmdbDataMap
+    }
+
+    private fun logWithLengthLimit(logOrigin: String): String {
+        return if (logOrigin.length > LOG_OUTPUT_MAX_LENGTH)
+            logOrigin.substring(0, LOG_OUTPUT_MAX_LENGTH)
+        else
+            logOrigin
     }
 }
