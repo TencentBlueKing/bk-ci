@@ -40,6 +40,13 @@ class ChooseAgentInstallChannelIdService @Autowired constructor(
     private val dslContext: DSLContext,
     private val networkAreaDao: NetworkAreaDao
 ) {
+    companion object {
+        private const val NETWORK_AREA_SUPPORTING = 4
+        private const val NETWORK_AREA_OSS = 5
+        private const val NETWORK_AREA_DEVNET = 6
+        private const val NETWORK_AREA_DEFAULT = -1
+    }
+
     fun autoChooseAgentInstallChannelId(ip: String): Int {
         if (ip.isBlank()) {
             throw ParamBlankException(
@@ -58,10 +65,10 @@ class ChooseAgentInstallChannelIdService @Autowired constructor(
             }
         }
         return when (networkArea) {
-            "SUPPORTING" -> 4
-            "OSS" -> 5
-            "DEVNET" -> 6
-            else -> -1 // 实际走不到，5 6匹配不到就4了
+            "SUPPORTING" -> NETWORK_AREA_SUPPORTING
+            "OSS" -> NETWORK_AREA_OSS
+            "DEVNET" -> NETWORK_AREA_DEVNET
+            else -> NETWORK_AREA_DEFAULT // 实际走不到，默认SUPPORTING
         }
     }
 
