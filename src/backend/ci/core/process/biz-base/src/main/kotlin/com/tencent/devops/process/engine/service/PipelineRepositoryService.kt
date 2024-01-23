@@ -949,6 +949,8 @@ class PipelineRepositoryService constructor(
                         )
                         version = draftVersion.version
                         versionName = branchName
+                        branchAction = BranchVersionAction.ACTIVE
+
                         operationLogParams = versionName
                         operationLogType = if (count > 0) {
                             OperationLogType.UPDATE_DRAFT_VERSION
@@ -994,6 +996,7 @@ class PipelineRepositoryService constructor(
                             )
                             draftVersion.version
                         }
+                        watcher.start("updatePipelineResource")
                         pipelineInfoDao.update(
                             dslContext = transactionContext,
                             projectId = projectId,
@@ -1009,32 +1012,29 @@ class PipelineRepositoryService constructor(
                             onlyDraft = false
                         )
                         model.latestVersion = version
+                        pipelineResourceDao.deleteEarlyVersion(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            beforeVersion = version
+                        )
+                        pipelineResourceDao.create(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            creator = userId,
+                            version = version,
+                            model = model,
+                            yamlStr = yamlStr,
+                            versionName = versionName,
+                            versionNum = versionNum,
+                            pipelineVersion = pipelineVersion,
+                            triggerVersion = triggerVersion,
+                            settingVersion = settingVersion
+                        )
                     }
                 }
 
-                watcher.start("updatePipelineResource")
-                if (versionStatus == VersionStatus.RELEASED) {
-                    pipelineResourceDao.deleteEarlyVersion(
-                        dslContext = transactionContext,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        beforeVersion = version
-                    )
-                    pipelineResourceDao.create(
-                        dslContext = transactionContext,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        creator = userId,
-                        version = version,
-                        model = model,
-                        yamlStr = yamlStr,
-                        versionName = versionName,
-                        versionNum = versionNum,
-                        pipelineVersion = pipelineVersion,
-                        triggerVersion = triggerVersion,
-                        settingVersion = settingVersion
-                    )
-                }
                 // 对于新保存的版本如果没有指定基准版本则默认为上一个版本
                 watcher.start("updatePipelineResourceVersion")
                 pipelineResourceVersionDao.create(
