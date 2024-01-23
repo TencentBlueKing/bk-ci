@@ -43,7 +43,7 @@
                 @page-limit-change="handleLimitChange"
                 :size="tableSetting.size"
             >
-                <bk-table-column v-for="col in tableSetting.selectedFields" v-bind="col" :prop="col.id" :key="col.id">
+                <bk-table-column v-for="col in tableSetting.selectedFields" v-bind="col" :prop="col.id" :key="col.id" show-overflow-tooltip>
                     <template v-if="col.id === 'buildNum'" v-slot="props">
                         <span class="build-num-status">
                             <router-link
@@ -278,7 +278,6 @@
                         @setting-change="handleTableSettingChange">
                     </bk-table-setting-content>
                 </bk-table-column>
-
                 <empty-exception slot="empty" type="search-empty" @clear="clearFilter" />
             </bk-table>
         </div>
