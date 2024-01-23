@@ -522,7 +522,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
         @Test
         @DisplayName("项目流水线组 & 校验不通过")
         fun test_1() {
-            every { self["hasPermission"](any() as String, any() as String) } returns false
+            every { self["hasProjectPermission"](any() as String, any() as String) } returns false
             try {
                 self.invokePrivate<Unit>("checkPermission", "test", "test", true, "test")
             } catch (e: Throwable) {
@@ -715,8 +715,8 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
     inner class BulkAdd {
         @BeforeEach
         fun permissionFalse() {
-            every { self["hasPermission"]("false", any() as String) } returns false
-            every { self["hasPermission"]("true", any() as String) } returns true
+            every { self["hasProjectPermission"]("false", any() as String) } returns false
+            every { self["hasProjectPermission"]("true", any() as String) } returns true
         }
 
         private val ba = PipelineViewBulkAdd(
@@ -784,8 +784,8 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
 
         @BeforeEach
         fun permissionFalse() {
-            every { self["hasPermission"]("false", any() as String) } returns false
-            every { self["hasPermission"]("true", any() as String) } returns true
+            every { self["hasProjectPermission"]("false", any() as String) } returns false
+            every { self["hasProjectPermission"]("true", any() as String) } returns true
         }
 
         @Test
@@ -856,7 +856,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
     }
 
     @Nested
-    inner class HasPermission {
+    inner class HasProjectPermission {
         @BeforeEach
         fun beforeEach() {
             every { clientTokenService.getSystemToken() } returns ""
@@ -868,7 +868,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             every {
                 client.mockGet(ServiceProjectAuthResource::class).checkManager(any(), any(), any())
             } returns Result(true)
-            self.hasPermission("test", "test").let {
+            self.hasProjectPermission("test", "test").let {
                 Assertions.assertEquals(true, it)
             }
         }
@@ -879,7 +879,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             every {
                 client.mockGet(ServiceProjectAuthResource::class).checkManager(any(), any(), any())
             } returns Result(false)
-            self.hasPermission("test", "test").let {
+            self.hasProjectPermission("test", "test").let {
                 Assertions.assertEquals(false, it)
             }
         }

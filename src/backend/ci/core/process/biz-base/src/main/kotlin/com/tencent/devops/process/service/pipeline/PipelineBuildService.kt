@@ -87,6 +87,7 @@ import org.springframework.stereotype.Service
 class PipelineBuildService(
     private val pipelineInterceptorChain: PipelineInterceptorChain,
     private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineSettingVersionService: PipelineSettingVersionService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineElementService: PipelineElementService,
     private val projectCacheService: ProjectCacheService,
@@ -125,7 +126,9 @@ class PipelineBuildService(
         handlePostFlag: Boolean = true,
         webHookStartParam: MutableMap<String, BuildParameters> = mutableMapOf(),
         triggerReviewers: List<String>? = null,
-        debug: Boolean? = false
+        debug: Boolean? = false,
+        versionNum: Int? = null,
+        versionName: String? = null
     ): BuildId {
 
         var acquire = false
@@ -138,7 +141,21 @@ class PipelineBuildService(
             )
         }
 
-        val setting = pipelineRepositoryService.getSetting(pipeline.projectId, pipeline.pipelineId)
+        val setting = if (debug == true) {
+            pipelineRepositoryService.getDraftVersionResource(
+                pipeline.projectId, pipeline.pipelineId
+            )?.settingVersion?.let {
+                pipelineSettingVersionService.getPipelineSetting(
+                    userId = userId,
+                    projectId = pipeline.pipelineId,
+                    pipelineId = pipeline.pipelineId,
+                    detailInfo = null,
+                    version = it
+                )
+            }
+        } else {
+            pipelineRepositoryService.getSetting(pipeline.projectId, pipeline.pipelineId)
+        }
         val bucketSize = setting!!.maxConRunningQueueSize
         val lockKey = "PipelineRateLimit:${pipeline.pipelineId}"
         try {
@@ -195,7 +212,9 @@ class PipelineBuildService(
                 triggerReviewers = triggerReviewers,
                 pipelineParamMap = pipelineParamMap,
                 webHookStartParam = webHookStartParam,
-                debug = debug ?: false
+                debug = debug ?: false,
+                versionNum = versionNum,
+                versionName = versionName
             )
 
             val interceptResult = pipelineInterceptorChain.filter(

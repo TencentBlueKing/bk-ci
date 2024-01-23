@@ -276,7 +276,7 @@ class PipelineViewDao {
     fun list(
         dslContext: DSLContext,
         projectId: String? = null,
-        viewIds: Set<Long>,
+        viewIds: Collection<Long>,
         viewType: Int? = null
     ): Result<TPipelineViewRecord> {
         with(TPipelineView.T_PIPELINE_VIEW) {

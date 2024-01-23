@@ -28,14 +28,13 @@
 
 package com.tencent.devops.process.yaml
 
-import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
 import com.tencent.devops.process.engine.dao.PipelineYamlSyncDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlSyncInfo
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
 import com.tencent.devops.repository.api.ServiceRepositoryPacResource
 import com.tencent.devops.repository.pojo.enums.RepoYamlSyncStatusEnum
@@ -107,13 +106,13 @@ class PipelineYamlSyncService @Autowired constructor(
         repoHashId: String,
         filePath: String,
         reason: String,
-        reasonDetail: String
+        reasonDetail: PipelineTriggerReasonDetail
     ) {
         val syncFileInfo = PipelineYamlSyncInfo(
             filePath = filePath,
             syncStatus = RepoYamlSyncStatusEnum.FAILED,
             reason = reason,
-            reasonDetail = reasonDetail
+            reasonDetail = JsonUtil.toJson(reasonDetail)
         )
         updateYamlSyncStatus(projectId = projectId, repoHashId = repoHashId, syncFileInfo = syncFileInfo)
     }
@@ -134,7 +133,8 @@ class PipelineYamlSyncService @Autowired constructor(
                 reason = it.reason,
                 reasonDetail = it.reasonDetail?.let { detail ->
                     try {
-                        JsonUtil.to(detail, I18Variable::class.java).getCodeLanMessage()
+                        // 同步错误原因只会有一条
+                        JsonUtil.to(detail, PipelineTriggerReasonDetail::class.java).getReasonDetailList()?.get(0)
                     } catch (ignored: Throwable) {
                         detail
                     }

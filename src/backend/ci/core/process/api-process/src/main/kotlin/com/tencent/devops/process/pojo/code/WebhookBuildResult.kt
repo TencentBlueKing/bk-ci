@@ -30,6 +30,7 @@ package com.tencent.devops.process.pojo.code
 
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -42,5 +43,5 @@ data class WebhookBuildResult(
     @ApiModelProperty("触发buildId")
     val buildId: BuildId? = null,
     @ApiModelProperty("触发失败原因")
-    val failedReason: String? = null
+    val reasonDetail: PipelineTriggerReasonDetail? = null
 )

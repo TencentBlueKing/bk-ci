@@ -36,7 +36,10 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -48,6 +51,7 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.webhook.WebhookEventFactory
 import com.tencent.devops.process.yaml.actions.EventActionFactory
+import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.actions.data.PacRepoSetting
 import com.tencent.devops.process.yaml.actions.data.YamlTriggerPipeline
 import com.tencent.devops.process.yaml.actions.internal.event.PipelineYamlManualEvent
@@ -284,7 +288,7 @@ class PipelineYamlFacadeService @Autowired constructor(
         commitMessage: String,
         targetAction: CodeTargetAction
     ): PushPipelineResult {
-        logger.info("upload yaml file|$userId|$projectId|$repoHashId|$scmType|$version|$versionName")
+        logger.info("upload yaml file|$userId|$projectId|$pipelineId|$repoHashId|$scmType|$version|$versionName")
         val repository = client.get(ServiceRepositoryResource::class).get(
             projectId = projectId,
             repositoryId = repoHashId,
@@ -293,6 +297,27 @@ class PipelineYamlFacadeService @Autowired constructor(
             errorCode = ProcessMessageCode.GIT_NOT_FOUND,
             params = arrayOf(repoHashId)
         )
+        if (content.isBlank()) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_YAML_CONTENT_IS_EMPTY,
+                params = arrayOf(repoHashId)
+            )
+        }
+        if (!GitActionCommon.checkYamlPipelineFile(filePath)) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_YAML_FILE_NAME_FORMAT
+            )
+        }
+        pipelineYamlService.getPipelineYamlInfo(
+            projectId = projectId, repoHashId = repoHashId, filePath = filePath
+        )?.let {
+            if (it.pipelineId != pipelineId) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_YAML_BOUND_PIPELINE,
+                    params = arrayOf(it.pipelineId)
+                )
+            }
+        }
         if (targetAction != CodeTargetAction.COMMIT_TO_MASTER && versionName.isNullOrBlank()) {
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_NULL,
@@ -367,5 +392,34 @@ class PipelineYamlFacadeService @Autowired constructor(
                 )
             }
         }
+    }
+
+    /**
+     * 构建yaml流水线触发变量
+     */
+    fun buildYamlManualParamMap(userId: String, projectId: String, pipelineId: String): Map<String, BuildParameters>? {
+        val pipelineYamlInfo = pipelineYamlInfoDao.get(
+            dslContext = dslContext, projectId = projectId, pipelineId = pipelineId
+        ) ?: return null
+        val repoHashId = pipelineYamlInfo.repoHashId
+        val repository = client.get(ServiceRepositoryResource::class).get(
+            projectId = projectId,
+            repositoryId = repoHashId,
+            repositoryType = RepositoryType.ID
+        ).data ?: return null
+        val setting = PacRepoSetting(repository = repository)
+        val event = PipelineYamlManualEvent(
+            userId = userId,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            scmType = repository.getScmType()
+        )
+        val action = eventActionFactory.loadManualEvent(setting = setting, event = event)
+        return mutableMapOf(
+            BK_REPO_WEBHOOK_HASH_ID to BuildParameters(BK_REPO_WEBHOOK_HASH_ID, repoHashId),
+            PIPELINE_WEBHOOK_BRANCH to BuildParameters(
+                PIPELINE_WEBHOOK_BRANCH, action.data.context.defaultBranch ?: ""
+            )
+        )
     }
 }

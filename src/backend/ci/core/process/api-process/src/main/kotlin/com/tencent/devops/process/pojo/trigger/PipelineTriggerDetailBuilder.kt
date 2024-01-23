@@ -39,7 +39,7 @@ class PipelineTriggerDetailBuilder {
     private var buildId: String? = null
     private var buildNum: String? = null
     private var reason: String? = null
-    private var reasonDetailList: MutableList<String>? = null
+    private var reasonDetail: PipelineTriggerReasonDetail? = null
 
     fun projectId(projectId: String) = apply {
         this.projectId = projectId
@@ -79,12 +79,8 @@ class PipelineTriggerDetailBuilder {
         this.reason = reason
     }
 
-    fun reasonDetail(reasonDetail: String) = apply {
-        if (reasonDetailList == null) {
-            reasonDetailList = mutableListOf(reasonDetail)
-        } else {
-            reasonDetailList!!.add(reasonDetail)
-        }
+    fun reasonDetail(reasonDetail: PipelineTriggerReasonDetail) = apply {
+        this.reasonDetail = reasonDetail
     }
 
     fun buildNum(buildNum: String) = apply {
@@ -102,10 +98,10 @@ class PipelineTriggerDetailBuilder {
             buildId = buildId,
             buildNum = buildNum,
             reason = reason,
-            reasonDetailList = if (status == PipelineTriggerStatus.SUCCEED.name) {
+            reasonDetail = if (status == PipelineTriggerStatus.SUCCEED.name) {
                 null
             } else {
-                reasonDetailList
+                reasonDetail
             }
         )
     }

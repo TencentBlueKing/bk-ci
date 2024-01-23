@@ -26,15 +26,7 @@ object GitActionCommon {
         cred: PacGitCred? = null
     ): MutableList<Pair<String, String?>> {
         // 获取指定目录下所有yml文件
-        val yamlPathList = getCIYamlList(action, gitProjectId, ref, cred).toMutableList()
-
-        // 兼容旧的根目录yml文件
-        val (isCIYamlExist, blobId) = isCIYamlExist(action, gitProjectId, ref, cred)
-
-        if (isCIYamlExist) {
-            yamlPathList.add(Pair(Constansts.ciFileName, blobId))
-        }
-        return yamlPathList
+        return getCIYamlList(action, gitProjectId, ref, cred).toMutableList()
     }
 
     /**
@@ -53,13 +45,13 @@ object GitActionCommon {
             ref = ref?.let { getTriggerBranch(it) },
             recursive = true,
             retry = ApiRequestRetryInfo(true)
-        ).filter { (it.type == "blob") && checkStreamPipelineFile(it.name) && !checkStreamTemplateFile(it.name) }
+        ).filter { (it.type == "blob") && checkYamlPipelineFile(it.name) && !checkYamlTemplateFile(it.name) }
         return ciFileList.map {
             Pair(Constansts.ciFileDirectoryName + File.separator + it.name, getBlobId(it))
         }.toList()
     }
 
-    private fun checkStreamPipelineFile(fileName: String): Boolean =
+    fun checkYamlPipelineFile(fileName: String): Boolean =
         (
             fileName.endsWith(Constansts.ciFileExtensionYml) ||
                 fileName.endsWith(Constansts.ciFileExtensionYaml)
@@ -67,12 +59,12 @@ object GitActionCommon {
             // 加以限制：最多仅限一级子目录
             (fileName.count { it == '/' } <= 1)
 
-    private fun checkStreamTemplateFile(fileName: String): Boolean = fileName.startsWith("templates/")
+    private fun checkYamlTemplateFile(fileName: String): Boolean = fileName.startsWith("templates/")
 
     fun checkStreamPipelineAndTemplateFile(fullPath: String): Boolean =
         if (fullPath.startsWith(Constansts.ciFileDirectoryName)) {
             val removePrefix = fullPath.removePrefix(Constansts.ciFileDirectoryName + "/")
-            checkStreamPipelineFile(removePrefix) || checkStreamTemplateFile(removePrefix)
+            checkYamlPipelineFile(removePrefix) || checkYamlTemplateFile(removePrefix)
         } else false
 
     private fun getBlobId(f: PacGitTreeFileInfo?): String? {
@@ -81,26 +73,6 @@ object GitActionCommon {
         } else {
             null
         }
-    }
-
-    /**
-     * @return isExist,blobId
-     */
-    private fun isCIYamlExist(
-        action: BaseAction,
-        gitProjectId: String,
-        ref: String?,
-        cred: PacGitCred?
-    ): Pair<Boolean, String?> {
-        val ciFileList = action.api.getFileTree(
-            gitProjectId = gitProjectId,
-            cred = cred ?: action.getGitCred(),
-            path = "",
-            ref = ref?.let { getTriggerBranch(it) },
-            recursive = false,
-            retry = ApiRequestRetryInfo(true)
-        ).filter { it.name == Constansts.ciFileName }
-        return Pair(ciFileList.isNotEmpty(), getBlobId(ciFileList.ifEmpty { null }?.first()))
     }
 
     fun getTriggerBranch(branch: String): String {
