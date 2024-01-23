@@ -422,7 +422,7 @@ class PipelineViewGroupService @Autowired constructor(
 
     private fun checkPermission(userId: String, projectId: String, isProject: Boolean, creator: String? = null) {
         if (isProject) {
-            if (!hasPermission(userId, projectId)) {
+            if (!hasProjectPermission(userId, projectId)) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_VIEW_GROUP_NO_PERMISSION,
                     defaultMessage = "user:$userId has no permission to edit view group, project:$projectId"
@@ -647,7 +647,7 @@ class PipelineViewGroupService @Autowired constructor(
     }
 
     fun bulkAdd(userId: String, projectId: String, bulkAdd: PipelineViewBulkAdd): Boolean {
-        val isProjectManager = hasPermission(userId, projectId)
+        val isProjectManager = hasProjectPermission(userId, projectId)
         val viewIds = pipelineViewDao.list(
             dslContext = dslContext,
             projectId = projectId,
@@ -703,7 +703,7 @@ class PipelineViewGroupService @Autowired constructor(
             projectId = projectId,
             viewId = viewId
         ) ?: return false
-        val isProjectManager = hasPermission(userId, projectId)
+        val isProjectManager = hasProjectPermission(userId, projectId)
         if (isProjectManager && !view.isProject && view.createUser != userId) {
             logger.warn("bulkRemove , $userId is ProjectManager , but can`t remove other view")
             throw ErrorCodeException(
@@ -727,7 +727,7 @@ class PipelineViewGroupService @Autowired constructor(
         return true
     }
 
-    fun hasPermission(userId: String, projectId: String) =
+    fun hasProjectPermission(userId: String, projectId: String) =
         client.get(ServiceProjectAuthResource::class)
             .checkManager(clientTokenService.getSystemToken()!!, userId, projectId).data ?: false
 
@@ -774,19 +774,26 @@ class PipelineViewGroupService @Autowired constructor(
             viewIds = viewGroupRecords.map { it.viewId }.toSet(),
             viewType = viewType
         )
-        return viewRecords.filter { it.isProject || it.createUser == userId }.map {
-            PipelineNewViewSummary(
-                id = HashUtil.encodeLongId(it.id),
-                projectId = it.projectId,
-                name = it.name,
-                projected = it.isProject,
-                createTime = it.createTime.timestamp(),
-                updateTime = it.updateTime.timestamp(),
-                creator = it.createUser,
-                viewType = it.viewType,
-                pipelineCount = 0
-            )
-        }
+        return viewRecords.filter { it.isProject || it.createUser == userId }.map { record2Summary(it) }
+    }
+
+
+    fun listPermissionStaticViews(userId: String, projectId: String, pipelineId: String): List<PipelineNewViewSummary> {
+        val viewGroupRecords = pipelineViewGroupDao.listByProjectIdFilterPipelineId(dslContext, projectId, pipelineId)
+        val viewRecords = pipelineViewDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            viewIds = viewGroupRecords.map { it.viewId }.toSet(),
+            viewType = PipelineViewType.STATIC
+        )
+        val projectPermission = hasProjectPermission(userId, projectId)
+        return viewRecords.filter {
+            if (it.isProject) {
+                projectPermission
+            } else {
+                it.createUser == userId
+            }
+        }.map { record2Summary(it) }
     }
 
     private fun sortViews2Summary(
@@ -877,6 +884,19 @@ class PipelineViewGroupService @Autowired constructor(
             projectId = projectId
         ).map { it.viewId }.toSet()
     }
+
+    private fun record2Summary(it: TPipelineViewRecord) =
+        PipelineNewViewSummary(
+            id = HashUtil.encodeLongId(it.id),
+            projectId = it.projectId,
+            name = it.name,
+            projected = it.isProject,
+            createTime = it.createTime.timestamp(),
+            updateTime = it.updateTime.timestamp(),
+            creator = it.createUser,
+            viewType = it.viewType,
+            pipelineCount = 0
+        )
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineViewGroupService::class.java)
