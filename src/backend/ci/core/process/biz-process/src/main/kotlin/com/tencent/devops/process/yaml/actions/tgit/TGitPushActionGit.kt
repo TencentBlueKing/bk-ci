@@ -126,10 +126,7 @@ class TGitPushActionGit(
                 ref = this.data.eventCommon.branch, blobId = blobId
             )
         }.toMutableList()
-        // 非默认分支删除流水线,需要删除分支版本
-        if (!data.context.deleteCiSet.isNullOrEmpty() &&
-            data.eventCommon.branch != data.context.defaultBranch
-        ) {
+        if (!data.context.deleteCiSet.isNullOrEmpty()) {
             val deleteYamlPathList = data.context.deleteCiSet?.map {
                 YamlPathListEntry(
                     yamlPath = it,
