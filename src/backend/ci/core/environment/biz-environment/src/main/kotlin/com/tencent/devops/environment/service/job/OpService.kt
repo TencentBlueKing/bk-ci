@@ -76,15 +76,21 @@ class OpService @Autowired constructor(
         const val KEY_NOT_EXIST_CODE = 10005
         const val KEY_NOT_EXIST_RESULT = false
         const val KEY_NOT_EXIST_MSG = "No gray projects."
+
+        private const val OPERATE_TAG_QUERY_ALL_GRAY_PROJS = 1
+        private const val OPERATE_TAG_QUERY_PROJS_GRAY_STATUS = 2
+        private const val OPERATE_TAG_SET_PROJS_GRAY_STATUS = 3
+        private const val OPERATE_TAG_CANCEL_PROJS_GRAY_STATUS = 4
+        private const val OPERATE_TAG_CLEAR_ALL_GRAY_PROJS = 5
     }
 
     fun operateOpProject(userId: String, opOperateReq: OpOperateReq): OpOperateResult {
         return when (opOperateReq.operateFlag) {
-            1 -> queryAllGrayProjs()
-            2 -> queryProjsGrayStatus(opOperateReq.projectCodeList)
-            3 -> setProjsGrayStatus(opOperateReq.projectCodeList)
-            4 -> cancelProjsGrayStatus(opOperateReq.projectCodeList)
-            5 -> clearAllGrayProjs()
+            OPERATE_TAG_QUERY_ALL_GRAY_PROJS -> queryAllGrayProjs()
+            OPERATE_TAG_QUERY_PROJS_GRAY_STATUS -> queryProjsGrayStatus(opOperateReq.projectCodeList)
+            OPERATE_TAG_SET_PROJS_GRAY_STATUS -> setProjsGrayStatus(opOperateReq.projectCodeList)
+            OPERATE_TAG_CANCEL_PROJS_GRAY_STATUS -> cancelProjsGrayStatus(opOperateReq.projectCodeList)
+            OPERATE_TAG_CLEAR_ALL_GRAY_PROJS -> clearAllGrayProjs()
             else -> {
                 OpOperateResult(
                     code = INVALID_OPERATION_TYPE_CODE,
