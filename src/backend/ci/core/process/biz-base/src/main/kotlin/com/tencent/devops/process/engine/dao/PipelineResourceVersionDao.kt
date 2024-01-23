@@ -515,6 +515,7 @@ class PipelineResourceVersionDao {
     class PipelineResourceVersionJooqMapper : RecordMapper<TPipelineResourceVersionRecord, PipelineResourceVersion> {
         override fun map(record: TPipelineResourceVersionRecord?): PipelineResourceVersion? {
             return record?.let {
+                val status = record.status?.let { VersionStatus.valueOf(it) } ?: VersionStatus.RELEASED
                 PipelineResourceVersion(
                     projectId = record.projectId,
                     pipelineId = record.pipelineId,
@@ -531,13 +532,13 @@ class PipelineResourceVersionDao {
                     versionName = record.versionName,
                     createTime = record.createTime,
                     updateTime = record.updateTime,
-                    versionNum = record.versionNum ?: record.version,
+                    versionNum = record.versionNum.takeIf { status == VersionStatus.RELEASED },
                     pipelineVersion = record.pipelineVersion,
                     triggerVersion = record.triggerVersion,
                     settingVersion = record.settingVersion,
                     referFlag = record.referFlag,
                     referCount = record.referCount,
-                    status = record.status?.let { VersionStatus.valueOf(it) },
+                    status = status,
                     branchAction = record.branchAction?.let { BranchVersionAction.valueOf(it) },
                     description = record.description,
                     debugBuildId = record.debugBuildId,
@@ -550,6 +551,7 @@ class PipelineResourceVersionDao {
     class PipelineVersionSimpleJooqMapper : RecordMapper<TPipelineResourceVersionRecord, PipelineVersionSimple> {
         override fun map(record: TPipelineResourceVersionRecord?): PipelineVersionSimple? {
             return record?.let {
+                val status = record.status?.let { VersionStatus.valueOf(it) }
                 PipelineVersionSimple(
                     pipelineId = record.pipelineId,
                     creator = record.creator ?: "unknown",
@@ -559,11 +561,12 @@ class PipelineResourceVersionDao {
                     versionName = record.versionName ?: "init",
                     referFlag = record.referFlag,
                     referCount = record.referCount,
-                    versionNum = record.versionNum ?: record.version ?: 1,
+                    versionNum = (record.versionNum ?: record.version ?: 1)
+                        .takeIf { status == VersionStatus.RELEASED },
                     pipelineVersion = record.pipelineVersion,
                     triggerVersion = record.triggerVersion,
                     settingVersion = record.settingVersion,
-                    status = record.status?.let { VersionStatus.valueOf(it) },
+                    status = status,
                     debugBuildId = record.debugBuildId,
                     baseVersion = record.baseVersion,
                     description = record.description

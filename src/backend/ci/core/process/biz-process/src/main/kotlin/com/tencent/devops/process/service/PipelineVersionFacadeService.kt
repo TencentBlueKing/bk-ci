@@ -210,6 +210,10 @@ class PipelineVersionFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )
+        // TODO #8161 最先进行静态分组编辑操作，如果鉴权失败直接放弃后续操作
+        val bulkAdd = PipelineViewBulkAdd(pipelineIds = listOf(pipelineId), viewIds = request.staticViews)
+        pipelineViewGroupService.bulkAdd(userId, projectId, bulkAdd)
+        // 根据项目PAC状态进行接口调用
         val enabled = originSetting.pipelineAsCodeSettings?.enable == true || request.enablePac
         val targetSettings = originSetting.copy(
             desc = request.description ?: "",
@@ -267,7 +271,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             )
             targetUrl = pushResult.mrUrl
         }
-        val model = draftVersion.model.copy(staticViews = request.staticViews)
+        val model = draftVersion.model
+//            .copy(staticViews = request.staticViews) // TODO #8161 是否将结果更新model里的静态组（前端是否有取值展示）
         val savedSetting = pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,
@@ -299,10 +304,6 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             labelIds = model.labels
         )
-
-        // 添加到静态分组
-        val bulkAdd = PipelineViewBulkAdd(pipelineIds = listOf(pipelineId), viewIds = model.staticViews)
-        pipelineViewGroupService.bulkAdd(userId, projectId, bulkAdd)
         // 添加到动态分组
         pipelineViewGroupService.updateGroupAfterPipelineUpdate(
             projectId = projectId,
