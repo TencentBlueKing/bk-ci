@@ -19,5 +19,5 @@ import io.swagger.annotations.ApiModel
 @ApiModel("流水线触发事件原因详情-基类")
 abstract class PipelineTriggerReasonDetail {
     @JsonIgnore
-    abstract fun getReasonDetailList() : List<String>?
+    abstract fun getReasonDetailList(): List<String>?
 }
