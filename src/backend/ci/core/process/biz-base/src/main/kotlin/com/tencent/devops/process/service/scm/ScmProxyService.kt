@@ -112,11 +112,7 @@ class ScmProxyService @Autowired constructor(
         when (repo) {
             is CodeSvnRepository -> {
                 val credential = getCredential(projectId, repo)
-                val (privateKey, passPhrase) = if (repo.svnType == CodeSvnRepository.SVN_TYPE_HTTP) {
-                    credential.username to credential.password
-                } else {
-                    credential.privateKey to credential.passPhrase
-                }
+                val (privateKey, passPhrase, username) = credential.getSvnCredential(repo)
                 return client.get(ServiceScmResource::class).getLatestRevision(
                     projectName = repo.projectName,
                     url = repo.url,
@@ -127,7 +123,7 @@ class ScmProxyService @Autowired constructor(
                     passPhrase = passPhrase,
                     token = credential.token,
                     region = repo.region,
-                    userName = credential.username
+                    userName = username
                 )
             }
             is CodeGitRepository -> {
@@ -232,11 +228,7 @@ class ScmProxyService @Autowired constructor(
         when (repo) {
             is CodeSvnRepository -> {
                 val credential = getCredential(projectId, repo)
-                val (privateKey, passPhrase) = if (repo.svnType == CodeSvnRepository.SVN_TYPE_HTTP) {
-                    credential.username to credential.password
-                } else {
-                    credential.privateKey to credential.passPhrase
-                }
+                val (privateKey, passPhrase, username) = credential.getSvnCredential(repo)
                 return client.get(ServiceScmResource::class).listBranches(
                     projectName = repo.projectName,
                     url = repo.url,
@@ -245,7 +237,7 @@ class ScmProxyService @Autowired constructor(
                     passPhrase = passPhrase,
                     token = credential.token,
                     region = repo.region,
-                    userName = credential.username,
+                    userName = username,
                     search = search
                 )
             }
@@ -489,19 +481,7 @@ class ScmProxyService @Autowired constructor(
         val repo = getRepo(projectId, repositoryConfig) as? CodeSvnRepository
             ?: throw ErrorCodeException(errorCode = ProcessMessageCode.SVN_INVALID)
         val credential = getCredential(projectId, repo)
-        val (privateKey, passPhrase, username) = if (repo.svnType == CodeSvnRepository.SVN_TYPE_HTTP) {
-            Triple(
-                credential.username,
-                credential.password,
-                credential.username
-            )
-        } else {
-            Triple(
-                credential.privateKey,
-                credential.passPhrase,
-                repo.userName
-            )
-        }
+        val (privateKey, passPhrase, username) = credential.getSvnCredential(repo)
         client.get(ServiceScmResource::class).addWebHook(
             projectName = repo.projectName,
             url = repo.url,
@@ -732,4 +712,20 @@ class ScmProxyService @Autowired constructor(
     private fun tryGetSession(repository: Repository) = repository is CodeGitRepository ||
             repository is CodeTGitRepository ||
             repository is CodeSvnRepository
+
+    private fun RepoCredentialInfo.getSvnCredential(
+        repository: CodeSvnRepository
+    ) = if (repository.svnType == CodeSvnRepository.SVN_TYPE_HTTP) {
+        Triple(
+            username,
+            password,
+            username
+        )
+    } else {
+        Triple(
+            privateKey,
+            passPhrase,
+            repository.userName
+        )
+    }
 }
