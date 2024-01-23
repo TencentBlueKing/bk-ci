@@ -25,11 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.utils
+package com.tencent.devops.remotedev.pojo
 
-object PauseRedisUtils {
-    private const val BS_PAUSE_TASK_REDIS_KEY = "_bkTaskPauseTag_"
-    fun getPauseRedisKey(buildId: String, taskId: String): String {
-        return "$BS_PAUSE_TASK_REDIS_KEY:$buildId:$taskId"
-    }
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("发送给kafka的云桌面信息")
+data class WorkspaceKafkaInfo(
+    @ApiModelProperty("工作空间名称")
+    val workspaceName: String,
+    @ApiModelProperty("项目ID")
+    val projectId: String,
+    @ApiModelProperty("云桌面IP")
+    val ip: String,
+    @ApiModelProperty("云区域")
+    val regionId: String
+)

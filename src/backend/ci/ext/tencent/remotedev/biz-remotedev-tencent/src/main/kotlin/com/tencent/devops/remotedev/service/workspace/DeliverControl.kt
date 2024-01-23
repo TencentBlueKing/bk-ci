@@ -41,7 +41,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode
-import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
@@ -230,21 +229,6 @@ class DeliverControl @Autowired constructor(
                 mountType = WorkspaceMountType.START
             )
         }
-
-        // 分配完机器后通知客户端，刷新列表
-        notifyControl.dispatchWebsocketPushEvent(
-            userId = Constansts.ADMIN_NAME,
-            workspaceName = workspaceName,
-            workspaceHost = null,
-            errorMsg = null,
-            type = WebSocketActionType.WORKSPACE_ASSIGN,
-            status = true,
-            action = WorkspaceAction.ASSIGN,
-            systemType = workspace.workspaceSystemType,
-            workspaceMountType = workspace.workspaceMountType,
-            ownerType = workspace.ownerType,
-            projectId = workspace.projectId
-        )
     }
 
     fun softwareInstallationCompleteCallback(
