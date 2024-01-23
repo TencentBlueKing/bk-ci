@@ -173,7 +173,7 @@ class NodeDao {
                 AGENT_STATUS.`as`(T_NODE_AGENT_STATUS),
                 AGENT_VERSION.`as`(T_NODE_AGENT_VERSION)
             ).from(this)
-                .where(NODE_TYPE.eq(NodeType.CMDB.name))
+                .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .and(NODE_ID.`in`(nodeIdList))
                 .fetch()
         }

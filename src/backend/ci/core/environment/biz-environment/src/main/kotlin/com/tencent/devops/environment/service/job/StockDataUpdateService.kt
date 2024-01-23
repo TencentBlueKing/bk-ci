@@ -205,6 +205,7 @@ class StockDataUpdateService @Autowired constructor(
                 val updateTNodeInfo = nodeRecords.map {
                     val nodeId = it[T_NODE_NODE_ID] as Long
                     UpdateTNodeInfo(
+                        nodeId = nodeId,
                         displayName = nodeIdToRecordMap[nodeId]?.displayName,
                         lastModifyTime = LocalDateTime.now()
                     )
