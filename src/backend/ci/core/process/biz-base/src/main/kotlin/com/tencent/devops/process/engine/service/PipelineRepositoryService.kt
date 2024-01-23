@@ -899,7 +899,7 @@ class PipelineRepositoryService constructor(
                         }
                     }
                     // 2 分支版本保存 —— 取当前流水线的最新VERSION+1，不关心其他草稿和正式版本
-                    VersionStatus.BRANCH-> {
+                    VersionStatus.BRANCH -> {
                         // 查询同名分支的最新active版本，存在则更新，否则新增一个版本
                         if (branchName.isNullOrBlank()) throw ErrorCodeException(
                             errorCode = CommonMessageCode.PARAMETER_VALIDATE_ERROR,
