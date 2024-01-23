@@ -50,6 +50,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 @Service("startcloudInterfaceService")
 class StartCloudInterfaceService @Autowired constructor(
@@ -150,7 +152,9 @@ class StartCloudInterfaceService @Autowired constructor(
                     image = it.basic?.image,
                     cpu = it.basic?.cpuCores.toString(),
                     mem = it.basic?.memoryLimit,
-                    registerCgsTime = it.basic?.registeCgsTime
+                    registerCgsTime = ZonedDateTime.parse(
+                        it.basic?.registeCgsTime, DateTimeFormatter.ISO_OFFSET_DATE_TIME
+                    ).toString()
                 )
             )
         }
