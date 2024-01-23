@@ -187,8 +187,8 @@ class QueryFromCCService : IQueryOperatorService {
 
     private fun <T> executePostRequest(headers: Map<String, String>, url: String, req: T): String? {
         val requestContent = jacksonObjectMapper().writeValueAsString(req)
-        if (logger.isDebugEnabled) logger.debug("[executePostRequest]url: ${url}, body: $requestContent")
-        logger.info("[executePostRequest]POST url: ${url}, body: ${logWithLengthLimit(requestContent)}")
+        if (logger.isDebugEnabled) logger.debug("[executePostRequest]url: $url, body: $requestContent")
+        logger.info("[executePostRequest]POST url: $url, body: ${logWithLengthLimit(requestContent)}")
         val ccPostRes = OkhttpUtils.doPost(url, requestContent, headers)
         if (logger.isDebugEnabled) logger.debug("[executePostRequest] ccPostRes: $ccPostRes")
         val ccPostResBody = ccPostRes.body?.string()
