@@ -51,7 +51,7 @@ data class PipelineTriggerDetail(
     @ApiModelProperty("原因")
     var reason: String? = null,
     @ApiModelProperty("原因详情", required = false)
-    var reasonDetailList: List<String>? = null,
+    var reasonDetail: PipelineTriggerReasonDetail? = null,
     @ApiModelProperty("创建时间", required = false)
     val createTime: Long? = null
 )

@@ -133,6 +133,7 @@ import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
+import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -170,7 +171,8 @@ class PipelineBuildFacadeService(
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
     private val pipelineRedisService: PipelineRedisService,
     private val pipelineRetryFacadeService: PipelineRetryFacadeService,
-    private val webhookBuildParameterService: WebhookBuildParameterService
+    private val webhookBuildParameterService: WebhookBuildParameterService,
+    private val pipelineYamlFacadeService: PipelineYamlFacadeService
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -642,6 +644,14 @@ class PipelineBuildFacadeService(
             }
 
             val paramMap = buildParamCompatibilityTransformer.parseTriggerParam(triggerContainer.params, values)
+            // 如果是PAC流水线,需要加上代码库hashId,给checkout:self使用
+            pipelineYamlFacadeService.buildYamlManualParamMap(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )?.let {
+                paramMap.putAll(it)
+            }
 
             return pipelineBuildService.startPipeline(
                 userId = userId,

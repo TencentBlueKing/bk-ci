@@ -55,6 +55,7 @@ import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.repository.service.scm.IScmOauthService
 import com.tencent.devops.repository.service.scm.IScmService
+import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
@@ -332,6 +333,29 @@ class CodeGitRepositoryService @Autowired constructor(
                 errorCode = RepositoryMessageCode.ERROR_MEMBER_LEVEL_LOWER_MASTER
             )
         }
+        // 初始化应该新增push和mr事件
+        scmOauthService.addWebHook(
+            projectName = gitProjectInfo.id.toString(),
+            url = repository.url,
+            type = ScmType.CODE_GIT,
+            privateKey = null,
+            passPhrase = null,
+            token = credentialInfo.token,
+            region = null,
+            userName = userId,
+            event = CodeGitWebhookEvent.PUSH_EVENTS.value
+        )
+        scmOauthService.addWebHook(
+            projectName = gitProjectInfo.id.toString(),
+            url = repository.url,
+            type = ScmType.CODE_GIT,
+            privateKey = null,
+            passPhrase = null,
+            token = credentialInfo.token,
+            region = null,
+            userName = userId,
+            event = CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
+        )
         // 重试不需要校验开启的pac仓库
         if (!retry) {
             getPacRepository(externalId = gitProjectInfo.id.toString())?.let {
