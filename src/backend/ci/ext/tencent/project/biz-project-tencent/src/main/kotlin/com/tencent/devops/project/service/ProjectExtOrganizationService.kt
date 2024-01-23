@@ -53,6 +53,8 @@ class ProjectExtOrganizationService constructor(
             }
             managerDeptInfos.add(userDeptDetail)
         }
+        if (managerDeptInfos.isEmpty())
+            return false
 
         val managerDeptIds = managerDeptInfos.map { it.deptId }
         val managerCenterIds = managerDeptInfos.map { it.centerId }
