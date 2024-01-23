@@ -25,21 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:dispatch:api-dispatch-kubernetes-tencent"))
-    api(project(":ext:tencent:remotedev:api-remotedev-tencent"))
-    api(project(":ext:tencent:remotedev:model-remotedev-tencent"))
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-redis"))
-    api(project(":core:common:common-db"))
-    api(project(":ext:tencent:common:common-kafka-tencent"))
-    api(project(":core:common:common-websocket"))
-    api(project(":core:notify:api-notify"))
-    api(project(":core:auth:api-auth"))
-    implementation("org.apache.poi:poi")
-    implementation("org.apache.poi:poi-ooxml")
-    api(project(":core:common:common-audit"))
-    testImplementation(project(":core:common:common-test"))
-}
+package com.tencent.devops.remotedev.pojo
+
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("发送给kafka的云桌面信息")
+data class WorkspaceKafkaInfo(
+    @ApiModelProperty("工作空间名称")
+    val workspaceName: String,
+    @ApiModelProperty("项目ID")
+    val projectId: String,
+    @ApiModelProperty("云桌面IP")
+    val ip: String,
+    @ApiModelProperty("云区域")
+    val regionId: String
+)
