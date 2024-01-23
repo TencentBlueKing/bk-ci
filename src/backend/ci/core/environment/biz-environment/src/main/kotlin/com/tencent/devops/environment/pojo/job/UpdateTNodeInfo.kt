@@ -32,7 +32,7 @@ import io.swagger.annotations.ApiModelProperty
 import java.time.LocalDateTime
 
 @ApiModel("对应T_NODE表同名字段")
-data class UpdateAgentInfo(
+data class UpdateTNodeInfo(
     @ApiModelProperty(value = "节点id")
     val nodeId: Long?,
     @ApiModelProperty(value = "节点状态")
@@ -41,6 +41,61 @@ data class UpdateAgentInfo(
     val agentStatus: Boolean?,
     @ApiModelProperty(value = "agent版本")
     val agentVersion: String?,
+    @ApiModelProperty(value = "节点名称")
+    val displayName: String?,
+    @ApiModelProperty(value = "节点CC host_id")
+    val hostId: Long?,
+    @ApiModelProperty(value = "节点CC 云区域id")
+    val cloudAreaId: Long?,
     @ApiModelProperty(value = "最后修改时间")
     val lastModifyTime: LocalDateTime?
-)
+) {
+    constructor(
+        nodeId: Long,
+        nodeStatus: String?,
+        agentStatus: Boolean,
+        agentVersion: String?,
+        lastModifyTime: LocalDateTime
+    ) : this(
+        nodeId = nodeId,
+        nodeStatus = nodeStatus,
+        agentStatus = agentStatus,
+        agentVersion = agentVersion,
+        lastModifyTime = lastModifyTime,
+        hostId = null,
+        cloudAreaId = null,
+        displayName = null
+    )
+
+    constructor(
+        nodeId: Long,
+        displayName: String?,
+        lastModifyTime: LocalDateTime
+    ) : this(
+        nodeId = nodeId,
+        displayName = displayName,
+        lastModifyTime = lastModifyTime,
+        nodeStatus = null,
+        agentStatus = null,
+        agentVersion = null,
+        hostId = null,
+        cloudAreaId = null
+    )
+
+    constructor(
+        nodeId: Long,
+        nodeStatus: String?,
+        hostId: Long?,
+        cloudAreaId: Long?,
+        lastModifyTime: LocalDateTime
+    ) : this(
+        nodeId = nodeId,
+        nodeStatus = nodeStatus,
+        hostId = hostId,
+        cloudAreaId = cloudAreaId,
+        lastModifyTime = lastModifyTime,
+        agentStatus = null,
+        agentVersion = null,
+        displayName = null
+    )
+}

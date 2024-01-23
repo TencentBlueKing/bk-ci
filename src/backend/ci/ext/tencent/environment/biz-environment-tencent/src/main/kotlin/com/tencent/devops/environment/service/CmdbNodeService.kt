@@ -34,6 +34,11 @@ import com.tencent.devops.common.environment.agent.client.EsbAgentClient
 import com.tencent.devops.common.environment.agent.pojo.agent.RawCmdbNode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
+import com.tencent.devops.environment.constant.T_NODE_AGENT_STATUS
+import com.tencent.devops.environment.constant.T_NODE_AGENT_VERSION
+import com.tencent.devops.environment.constant.T_NODE_NODE_ID
+import com.tencent.devops.environment.constant.T_NODE_NODE_IP
+import com.tencent.devops.environment.constant.T_NODE_NODE_STATUS
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.ProjectConfigDao
 import com.tencent.devops.environment.model.CreateNodeModel
@@ -45,6 +50,7 @@ import com.tencent.devops.environment.pojo.job.AddCmdbNodesRes
 import com.tencent.devops.environment.pojo.job.AgentVersion
 import com.tencent.devops.environment.pojo.job.NodeAgent
 import com.tencent.devops.environment.pojo.job.ReImportCmdbNodeInfo
+import com.tencent.devops.environment.pojo.job.UpdateTNodeInfo
 import com.tencent.devops.environment.pojo.job.ccres.CCInfo
 import com.tencent.devops.environment.pojo.job.ccres.CCResp
 import com.tencent.devops.environment.pojo.job.ccres.QueryCCListHostWithoutBizData
@@ -62,6 +68,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class CmdbNodeService @Autowired constructor(
@@ -145,23 +152,27 @@ class CmdbNodeService @Autowired constructor(
             nodeIdToCCInfoMap[it.nodeId] = queryCCIpToCCInfoMap[it.nodeIp]
         }
         val nodeRecords = nodeDao.getCmdbNodesByNodeIdList(dslContext, nodeIdList)
-        val updateNodeRecords = nodeRecords.map {
-            it.nodeStatus = NodeStatus.NORMAL.name
-            it.hostId = nodeIdToCCInfoMap[it.nodeId]?.bkHostId
-            it.cloudAreaId = nodeIdToCCInfoMap[it.nodeId]?.bkCloudId?.toLong()
-            it
+        val updateNodeInfo = nodeRecords.map {
+            val nodeId = it[T_NODE_NODE_ID] as Long
+            UpdateTNodeInfo(
+                nodeId = nodeId,
+                nodeStatus = NodeStatus.NORMAL.name,
+                hostId = nodeIdToCCInfoMap[nodeId]?.bkHostId,
+                cloudAreaId = nodeIdToCCInfoMap[nodeId]?.bkCloudId?.toLong(),
+                lastModifyTime = LocalDateTime.now()
+            )
         }
-        nodeDao.batchUpdateNodeRecords(dslContext, updateNodeRecords)
+        nodeDao.batchUpdateCCInfo(dslContext, updateNodeInfo)
         return AddCmdbNodesRes(
             nodeStatus = true,
-            nodesAgentList = updateNodeRecords.map {
+            nodesAgentList = nodeRecords.map {
                 NodeAgent(
-                    nodeIp = it.nodeIp,
-                    nodesAgentStatus = if (it.agentStatus) 1 else 0,
-                    nodesAgentVersion = it.agentVersion
+                    nodeIp = it[T_NODE_NODE_IP] as String,
+                    nodesAgentStatus = if (it[T_NODE_AGENT_STATUS] as Boolean) 1 else 0,
+                    nodesAgentVersion = it[T_NODE_AGENT_VERSION] as String
                 )
             },
-            agentAbnormalNodesCount = updateNodeRecords.filterNot { it.agentStatus }.size,
+            agentAbnormalNodesCount = nodeRecords.filterNot { it[T_NODE_AGENT_STATUS] as Boolean }.size,
             agentNotInstallNodesCount = 0
         )
     }

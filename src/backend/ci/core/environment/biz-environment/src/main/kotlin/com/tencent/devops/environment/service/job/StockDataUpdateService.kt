@@ -45,12 +45,10 @@ import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.job.AgentVersion
 import com.tencent.devops.environment.pojo.job.DisplayNameInfo
 import com.tencent.devops.environment.pojo.job.HostIdAndCloudAreaIdInfo
-import com.tencent.devops.environment.pojo.job.UpdateAgentInfo
+import com.tencent.devops.environment.pojo.job.UpdateTNodeInfo
 import com.tencent.devops.environment.pojo.job.ccres.CCInfo
 import com.tencent.devops.environment.pojo.job.req.OpOperateReq
 import org.jooq.DSLContext
-import org.jooq.Record7
-import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
@@ -165,7 +163,7 @@ class StockDataUpdateService @Autowired constructor(
         val agentUpdateRecords = existNodeIdToAgentVersionMap.filter { (key, value) ->
             agentUpdateIpList.contains(value.ip) || agentUpdateHostIdList.contains(value.bkHostId)
         }.map { (key, value) ->
-            UpdateAgentInfo(
+            UpdateTNodeInfo(
                 nodeId = key,
                 nodeStatus = if (AGENT_NOT_INSTALLED_TAG == ipToAgentUpdateList[value.ip]?.installedTag)
                     NodeStatus.NOT_INSTALLED.name
@@ -180,7 +178,7 @@ class StockDataUpdateService @Autowired constructor(
             )
         }
         if (logger.isDebugEnabled) logger.debug("[batchUpdateAgent]agentUpdateRecords:$agentUpdateRecords.")
-        nodeDao.batchUpdateNodeRecords(dslContext, agentUpdateRecords)
+        nodeDao.batchUpdateAgentInfo(dslContext, agentUpdateRecords)
     }
 
     private fun writeDisplayName() {
@@ -204,11 +202,14 @@ class StockDataUpdateService @Autowired constructor(
                 val nodeIdList = nodeDisplayNameInfoList.mapNotNull { it.nodeId }
                 val nodeIdToRecordMap = nodeDisplayNameInfoList.associateBy { it.nodeId }
                 val nodeRecords = nodeDao.getNodesByNodeId(dslContext, nodeIdList)
-                nodeRecords.forEach {
-                    it.displayName = nodeIdToRecordMap[it.nodeId]?.displayName
-                    it.lastModifyTime = LocalDateTime.now()
+                val updateTNodeInfo = nodeRecords.map {
+                    val nodeId = it[T_NODE_NODE_ID] as Long
+                    UpdateTNodeInfo(
+                        displayName = nodeIdToRecordMap[nodeId]?.displayName,
+                        lastModifyTime = LocalDateTime.now()
+                    )
                 }
-                nodeDao.batchUpdateNodeRecords(dslContext, nodeRecords)
+                nodeDao.batchUpdateDisplayName(dslContext, updateTNodeInfo)
             }
         } else {
             if (logger.isDebugEnabled) logger.debug("[writeDisplayName] There is no node with empty DisplayName.")
