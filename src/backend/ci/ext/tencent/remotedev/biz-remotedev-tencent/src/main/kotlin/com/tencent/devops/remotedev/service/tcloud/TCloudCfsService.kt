@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
+@Suppress("ALL")
 @Service
 class TCloudCfsService @Autowired constructor(
     private val dslContext: DSLContext,
