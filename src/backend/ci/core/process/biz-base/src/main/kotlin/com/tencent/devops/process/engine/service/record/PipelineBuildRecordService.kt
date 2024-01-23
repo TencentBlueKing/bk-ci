@@ -348,6 +348,7 @@ class PipelineBuildRecordService @Autowired constructor(
             buildNum = buildInfo.buildNum,
             cancelUserId = buildRecordModel?.cancelUser,
             curVersion = buildInfo.version,
+            versionNum = buildInfo.versionNum,
             latestVersion = pipelineInfo.version,
             latestBuildNum = if (buildInfo.debug) {
                 buildSummaryRecord?.debugBuildNum

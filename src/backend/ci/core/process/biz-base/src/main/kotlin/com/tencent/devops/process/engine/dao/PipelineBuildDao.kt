@@ -1703,6 +1703,7 @@ class PipelineBuildDao {
                     pipelineId = t.pipelineId,
                     buildId = t.buildId,
                     version = t.version,
+                    versionNum = t.versionNum ?: t.version,
                     buildNum = t.buildNum,
                     trigger = t.trigger,
                     status = BuildStatus.values()[t.status],
@@ -1763,6 +1764,7 @@ class PipelineBuildDao {
                     pipelineId = t.pipelineId,
                     buildId = t.buildId,
                     version = t.version,
+                    versionNum = null, // 草稿没有分配正式版本号
                     buildNum = t.buildNum,
                     trigger = t.trigger,
                     status = BuildStatus.values()[t.status],

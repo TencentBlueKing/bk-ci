@@ -50,7 +50,7 @@ data class PipelineVersionSimple(
     @ApiModelProperty("关联构建记录总数", required = false)
     val referCount: Int? = null,
     @ApiModelProperty("发布版本号", required = false)
-    val versionNum: Int,
+    val versionNum: Int?,
     @ApiModelProperty("编排版本号", required = false)
     val pipelineVersion: Int? = null,
     @ApiModelProperty("触发器版本号", required = false)
