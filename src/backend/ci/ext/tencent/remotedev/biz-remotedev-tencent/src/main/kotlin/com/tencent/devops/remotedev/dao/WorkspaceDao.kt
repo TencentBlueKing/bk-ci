@@ -45,6 +45,8 @@ import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import java.sql.Timestamp
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
@@ -56,8 +58,6 @@ import org.jooq.RecordMapper
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.sql.Timestamp
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -449,14 +449,16 @@ class WorkspaceDao {
         mountType: WorkspaceMountType? = null,
         projectIds: Set<String>? = null,
         ip: String? = null,
-        assignType: WorkspaceShared.AssignType? = null
+        assignType: WorkspaceShared.AssignType? = null,
+        workspaceName: String? = null
     ): Result<out Record>? {
         val t1 = TWorkspace.T_WORKSPACE.`as`("t1")
         val t2 = TWorkspaceShared.T_WORKSPACE_SHARED.`as`("t2")
         val t3 = TWorkspaceWindows.T_WORKSPACE_WINDOWS.`as`("t3")
         val conditions = mutableListOf<Condition>()
         conditions.add(
-            t1.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal).and(t1.STATUS.notEqual(WorkspaceStatus.PREPARING.ordinal))
+            t1.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal)
+                .and(t1.STATUS.notEqual(WorkspaceStatus.PREPARING.ordinal))
                 .and(t1.STATUS.notEqual(WorkspaceStatus.DELIVERING_FAILED.ordinal))
         )
 
@@ -465,6 +467,9 @@ class WorkspaceDao {
         }
         mountType?.let {
             conditions.add(t1.WORKSPACE_MOUNT_TYPE.eq(mountType.name))
+        }
+        workspaceName?.let {
+            conditions.add(t1.NAME.eq(it))
         }
 
         if (!projectIds.isNullOrEmpty()) {
@@ -479,9 +484,10 @@ class WorkspaceDao {
             conditions.add(
                 t1.NAME.`in`(
                     DSL.selectDistinct(t3.WORKSPACE_NAME).from(t3).where(
-                        t3.HOST_IP.like("%.$ip"))
+                        t3.HOST_IP.like("%.$ip")
                     )
                 )
+            )
         }
 
         return dslContext.selectDistinct(
@@ -527,8 +533,11 @@ class WorkspaceDao {
         val t1 = TWorkspace.T_WORKSPACE.`as`("t1")
         val t2 = TWorkspaceWindows.T_WORKSPACE_WINDOWS.`as`("t2")
         val conditions = mutableListOf<Condition>()
-        conditions.add(t1.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal).and(t1.STATUS.notEqual(WorkspaceStatus.PREPARING.ordinal))
-        .and(t1.STATUS.notEqual(WorkspaceStatus.DELIVERING_FAILED.ordinal)))
+        conditions.add(
+            t1.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal)
+                .and(t1.STATUS.notEqual(WorkspaceStatus.PREPARING.ordinal))
+                .and(t1.STATUS.notEqual(WorkspaceStatus.DELIVERING_FAILED.ordinal))
+        )
         status?.let {
             conditions.add(t1.STATUS.eq(it.ordinal))
         }
@@ -783,6 +792,24 @@ class WorkspaceDao {
         }
     }
 
+    fun fetchWorkspaceIpByNames(
+        dslContext: DSLContext,
+        workspaceNames: Set<String>
+    ): List<String> {
+        return with(TWorkspaceDetail.T_WORKSPACE_DETAIL) {
+            dslContext.select(
+                JooqUtils.jsonExtract(
+                    t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
+                    t2 = "\$.hostIP",
+                    lower = false,
+                    removeDoubleQuotes = true
+                ).`as`("IP")
+            ).from(TWorkspaceDetail.T_WORKSPACE_DETAIL)
+                .where(WORKSPACE_NAME.`in`(workspaceNames))
+                .fetch { it["IP"] as String? }
+        }
+    }
+
     class TWorkspaceRecordJooqMapper : RecordMapper<TWorkspaceRecord, WorkspaceRecord> {
         override fun map(record: TWorkspaceRecord?): WorkspaceRecord? {
             return record?.run {
@@ -892,7 +919,14 @@ class WorkspaceDao {
                 DSL.field("DATE_FORMAT(CURDATE(), '%Y-%m-%d')").`as`("CUR_DATE")
             ).from(this)
                 .where(SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name))
-                .and(STATUS.notIn(WorkspaceStatus.DELETED.ordinal, WorkspaceStatus.PREPARING.ordinal, WorkspaceStatus.DELIVERING.ordinal, WorkspaceStatus.DELIVERING_FAILED.ordinal))
+                .and(
+                    STATUS.notIn(
+                        WorkspaceStatus.DELETED.ordinal,
+                        WorkspaceStatus.PREPARING.ordinal,
+                        WorkspaceStatus.DELIVERING.ordinal,
+                        WorkspaceStatus.DELIVERING_FAILED.ordinal
+                    )
+                )
                 .groupBy(OWNER_TYPE)
                 .fetch()
         }

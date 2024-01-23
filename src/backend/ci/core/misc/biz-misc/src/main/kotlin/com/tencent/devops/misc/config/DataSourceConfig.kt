@@ -208,6 +208,29 @@ class DataSourceConfig {
         )
     }
 
+    @Bean
+    fun imageDataSource(
+        @Value("\${spring.datasource.image.url}")
+        datasourceUrl: String,
+        @Value("\${spring.datasource.image.username}")
+        datasourceUsername: String,
+        @Value("\${spring.datasource.image.password}")
+        datasourcePassword: String,
+        @Value("\${spring.datasource.image.initSql:#{null}}")
+        datasourceInitSql: String? = null,
+        @Value("\${spring.datasource.image.leakDetectionThreshold:#{0}}")
+        datasouceLeakDetectionThreshold: Long = 0
+    ): DataSource {
+        return hikariDataSource(
+            datasourcePoolName = "DBPool-image",
+            datasourceUrl = datasourceUrl,
+            datasourceUsername = datasourceUsername,
+            datasourcePassword = datasourcePassword,
+            datasourceInitSql = datasourceInitSql,
+            datasourceLeakDetectionThreshold = datasouceLeakDetectionThreshold
+        )
+    }
+
     private fun hikariDataSource(
         datasourcePoolName: String,
         datasourceUrl: String,

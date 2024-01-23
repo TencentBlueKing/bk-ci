@@ -109,6 +109,8 @@ class PermissionService @Autowired constructor(
             }
         )
 
+    fun getWorkspaceOwner(workspaceName: String): List<String> = workspaceOwnerCache.get(workspaceName)
+
     fun checkOwnerPermission(userId: String, workspaceName: String, projectId: String) {
         if (!enablePermission) return
 

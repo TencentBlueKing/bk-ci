@@ -40,6 +40,7 @@ import com.tencent.devops.project.pojo.AddManagerRequest
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserDTO
 import com.tencent.devops.project.pojo.ProjectDeptInfo
+import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
@@ -415,4 +416,12 @@ interface ServiceTxProjectResource {
         @QueryParam("desktopNum")
         addcloudDesktopNum: Int
     ): Result<Boolean>
+
+    @ApiOperation("按项目扩展系统设置consul Tag")
+    @PUT
+    @Path("/ext/system/setTagByProject")
+    fun setExtSystemTagByProject(
+        @ApiParam(value = "consulTag请求入参", required = true)
+        extSystemTagDTO: ProjectExtSystemTagDTO
+    ): com.tencent.devops.common.api.pojo.Result<Boolean>
 }

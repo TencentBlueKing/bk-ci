@@ -63,6 +63,7 @@ import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
+import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import java.util.concurrent.TimeUnit
 import org.apache.commons.lang3.RandomStringUtils
@@ -86,7 +87,8 @@ class MakeWorkspaceImageHandler @Autowired constructor(
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val workspaceCommon: WorkspaceCommon,
-    private val imageManageDao: ImageManageDao
+    private val imageManageDao: ImageManageDao,
+    private val notifyControl: NotifyControl
 ) {
 
     companion object {
@@ -192,7 +194,7 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                 )
             )
 
-            workspaceCommon.dispatchWebsocketPushEvent(
+            notifyControl.dispatchWebsocketPushEvent(
                 userId = userId,
                 workspaceName = workspaceName,
                 workspaceHost = null,
@@ -294,7 +296,7 @@ class MakeWorkspaceImageHandler @Autowired constructor(
         }
 
         // 分发到WS
-        workspaceCommon.dispatchWebsocketPushEvent(
+        notifyControl.dispatchWebsocketPushEvent(
             userId = event.userId,
             workspaceName = event.workspaceName,
             workspaceHost = "",

@@ -52,6 +52,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
+import com.tencent.devops.remotedev.pojo.WorkspaceKafkaInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
@@ -92,7 +93,8 @@ class DeleteControl @Autowired constructor(
     private val redisCache: RedisCacheService,
     private val remoteDevSettingService: RemoteDevSettingService,
     private val workspaceCommon: WorkspaceCommon,
-    private val bkccService: BKCCService
+    private val bkccService: BKCCService,
+    private val notifyControl: NotifyControl
 ) {
 
     companion object {
@@ -159,7 +161,7 @@ class DeleteControl @Autowired constructor(
             )
 
             // 发送给用户
-            workspaceCommon.dispatchWebsocketPushEvent(
+            notifyControl.dispatchWebsocketPushEvent(
                 userId = userId,
                 workspaceName = workspaceName,
                 workspaceHost = null,
@@ -299,7 +301,7 @@ class DeleteControl @Autowired constructor(
                 )
             )
 
-            workspaceCommon.dispatchWebsocketPushEvent(
+            notifyControl.dispatchWebsocketPushEvent(
                 userId = workspace.createUserId,
                 workspaceName = workspace.workspaceName,
                 workspaceHost = null,
@@ -380,6 +382,16 @@ class DeleteControl @Autowired constructor(
                     )
                 )
             }
+
+            // 删除成功后发送kafka消息给安全侧消费
+            workspaceCommon.sendCgsInfo2Kafka(
+                workspaceKafkaInfo = WorkspaceKafkaInfo(
+                    workspaceName = workspaceName,
+                    projectId = workspace.projectId,
+                    ip = detail?.environmentIP ?: "",
+                    regionId = (detail?.regionId ?: "").toString()
+                )
+            )
         } else {
             workspaceDao.updateWorkspaceStatus(
                 workspaceName = workspaceName,
@@ -428,7 +440,7 @@ class DeleteControl @Autowired constructor(
             bkccService.updateHostName("VM-${hostIdSub.joinToString("-")}", workspaceName)
         }
 
-        workspaceCommon.dispatchWebsocketPushEvent(
+        notifyControl.dispatchWebsocketPushEvent(
             userId = ADMIN_NAME,
             workspaceName = workspaceName,
             workspaceHost = null,

@@ -29,8 +29,10 @@ package com.tencent.devops.misc.config
 
 import com.mysql.jdbc.Driver
 import com.zaxxer.hikari.HikariDataSource
+import org.jooq.ExecuteListenerProvider
 import org.jooq.SQLDialect
 import org.jooq.impl.DefaultConfiguration
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -124,6 +126,49 @@ class ExtDataSourceConfig {
         configuration.set(SQLDialect.MYSQL)
         configuration.set(tsourceDataSource)
         configuration.settings().isRenderSchema = false
+        return configuration
+    }
+
+    @Bean
+    fun monitoringDataSource(
+        @Value("\${spring.datasource.monitoring.url}")
+        datasourceUrl: String,
+        @Value("\${spring.datasource.monitoring.username}")
+        datasourceUsername: String,
+        @Value("\${spring.datasource.monitoring.password}")
+        datasourcePassword: String,
+        @Value("\${spring.datasource.monitoring.initSql:#{null}}")
+        datasourceInitSql: String? = null,
+        @Value("\${spring.datasource.monitoring.leakDetectionThreshold:#{0}}")
+        datasourceLeakDetectionThreshold: Long = 0
+    ): DataSource {
+        return HikariDataSource().apply {
+            poolName = "DBPool-Process-monitoring"
+            jdbcUrl = datasourceUrl
+            username = datasourceUsername
+            password = datasourcePassword
+            driverClassName = Driver::class.java.name
+            minimumIdle = 1
+            maximumPoolSize = 5
+            idleTimeout = 60000
+            connectionInitSql = datasourceInitSql
+            leakDetectionThreshold = datasourceLeakDetectionThreshold
+        }
+    }
+
+    @Bean
+    fun monitoringJooqConfiguration(
+        @Qualifier("monitoringDataSource")
+        monitoringDataSource: DataSource,
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
+    ): DefaultConfiguration {
+        val configuration = DefaultConfiguration()
+        configuration.set(SQLDialect.MYSQL)
+        configuration.set(monitoringDataSource)
+        configuration.settings().isRenderSchema = false
+        configuration.set(*executeListenerProviders.stream().toArray { size ->
+            arrayOfNulls<ExecuteListenerProvider>(size)
+        })
         return configuration
     }
 }
