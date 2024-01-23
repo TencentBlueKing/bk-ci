@@ -25,20 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.constant
+package com.tencent.devops.environment.pojo.job
 
-const val THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL = 5L
-const val DEFAULT_SYTEM_USER = "devops"
-const val BK_PROJECT_NO_ENVIRONMENT = "bkProjectNoEnvironment" // 项目下无环境
-const val BK_PROJECT_NO_NODE = "bkProjectNoNode" // 项目下无节点
-const val T_NODE_NODE_IP = "nodeIp"
-const val T_NODE_HOST_ID = "hostId"
-const val T_NODE_NODE_ID = "nodeId"
-const val T_NODE_NODE_TYPE = "nodeType"
-const val T_NODE_CLOUD_AREA_ID = "cloudAreaId"
-const val T_NODE_NODE_HASH_ID = "nodeHashId"
-const val T_NODE_NODE_STATUS = "nodeStatus"
-const val T_NODE_AGENT_VERSION = "agentVersion"
-const val T_NODE_AGENT_STATUS = "agentStatus"
-const val T_NODE_PROJECT_ID = "projectId"
-const val T_ENV_ENV_ID = "envId"
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
+
+@ApiModel("对应T_NODE表同名字段")
+data class UpdateAgentInfo(
+    @ApiModelProperty(value = "节点id")
+    val nodeId: Long?,
+    @ApiModelProperty(value = "节点状态")
+    val nodeStatus: String?,
+    @ApiModelProperty(value = "agent状态")
+    val agentStatus: Boolean?,
+    @ApiModelProperty(value = "agent版本")
+    val agentVersion: String?,
+    @ApiModelProperty(value = "最后修改时间")
+    val lastModifyTime: LocalDateTime?
+)

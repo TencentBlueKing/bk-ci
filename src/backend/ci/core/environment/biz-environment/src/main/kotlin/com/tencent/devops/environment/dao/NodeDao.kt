@@ -29,6 +29,8 @@ package com.tencent.devops.environment.dao
 
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.environment.constant.T_ENV_ENV_ID
+import com.tencent.devops.environment.constant.T_NODE_AGENT_STATUS
+import com.tencent.devops.environment.constant.T_NODE_AGENT_VERSION
 import com.tencent.devops.environment.constant.T_NODE_CLOUD_AREA_ID
 import com.tencent.devops.environment.model.CreateNodeModel
 import com.tencent.devops.environment.pojo.enums.NodeStatus
@@ -52,7 +54,13 @@ import com.tencent.devops.environment.constant.T_NODE_NODE_IP
 import com.tencent.devops.environment.constant.T_NODE_HOST_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_HASH_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_ID
+import com.tencent.devops.environment.constant.T_NODE_NODE_STATUS
 import com.tencent.devops.environment.constant.T_NODE_NODE_TYPE
+import com.tencent.devops.environment.constant.T_NODE_PROJECT_ID
+import com.tencent.devops.environment.pojo.job.UpdateAgentInfo
+import org.jooq.Batch
+import org.jooq.Record6
+import org.jooq.Record7
 
 @Suppress("ALL")
 @Repository
@@ -62,14 +70,32 @@ class NodeDao {
         nodeHostIdAndCloudAreaIdInfoList: List<HostIdAndCloudAreaIdInfo>
     ) {
         with(TNode.T_NODE) {
-            nodeHostIdAndCloudAreaIdInfoList.map {
-                dslContext.update(this)
-                    .set(HOST_ID, it.bkHostId)
-                    .set(CLOUD_AREA_ID, it.bkCloudId)
-                    .set(LAST_MODIFY_TIME, LocalDateTime.now())
-                    .where(NODE_ID.eq(it.nodeId))
-                    .execute()
-            }
+            val batchUpdate = dslContext.batch(
+                nodeHostIdAndCloudAreaIdInfoList.map {
+                    dslContext.update(this)
+                        .set(HOST_ID, it.bkHostId)
+                        .set(CLOUD_AREA_ID, it.bkCloudId)
+                        .set(LAST_MODIFY_TIME, LocalDateTime.now())
+                        .where(NODE_ID.eq(it.nodeId))
+                }
+            )
+            batchUpdate.execute()
+        }
+    }
+
+    fun batchUpdateNodeRecords(dslContext: DSLContext, updateAgentInfo: List<UpdateAgentInfo>) {
+        with(TNode.T_NODE) {
+            val batchUpdate = dslContext.batch(
+                updateAgentInfo.map {
+                    dslContext.update(this)
+                        .set(NODE_STATUS, it.nodeStatus)
+                        .set(AGENT_STATUS, it.agentStatus)
+                        .set(AGENT_VERSION, it.agentVersion)
+                        .set(LAST_MODIFY_TIME, LocalDateTime.now())
+                        .where(NODE_ID.eq(it.nodeId))
+                }
+            )
+            batchUpdate.execute()
         }
     }
 
@@ -147,9 +173,17 @@ class NodeDao {
         dslContext: DSLContext,
         offset: Int,
         limit: Int
-    ): Result<TNodeRecord> {
+    ): Result<Record7<String, Long, String, String, Boolean, String, Long>> {
         with(TNode.T_NODE) {
-            return dslContext.selectFrom(this)
+            return dslContext.select(
+                NODE_IP.`as`(T_NODE_NODE_IP),
+                HOST_ID.`as`(T_NODE_HOST_ID),
+                NODE_STATUS.`as`(T_NODE_NODE_STATUS),
+                AGENT_VERSION.`as`(T_NODE_AGENT_VERSION),
+                AGENT_STATUS.`as`(T_NODE_AGENT_STATUS),
+                PROJECT_ID.`as`(T_NODE_PROJECT_ID),
+                NODE_ID.`as`(T_NODE_NODE_ID)
+            ).from(this)
                 .where(NODE_TYPE.eq(NodeType.CMDB.name))
                 .limit(limit).offset(offset)
                 .fetch()
@@ -586,13 +620,6 @@ class NodeDao {
                 .where(NODE_ID.eq(id))
                 .execute()
         }
-    }
-
-    fun batchUpdateNodeRecords(dslContext: DSLContext, nodeRecords: List<TNodeRecord>) {
-        if (nodeRecords.isEmpty()) {
-            return
-        }
-        dslContext.batchUpdate(nodeRecords).execute()
     }
 
     fun batchAddNode(dslContext: DSLContext, nodes: List<CreateNodeModel>) {
