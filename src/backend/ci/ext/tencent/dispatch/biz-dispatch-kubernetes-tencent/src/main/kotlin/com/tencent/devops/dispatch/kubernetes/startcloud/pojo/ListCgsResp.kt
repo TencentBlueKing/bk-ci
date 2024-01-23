@@ -39,7 +39,8 @@ data class ListCgsRespDataBasic(
     val node: String?,
     val image: String?,
     val cpuCores: Int?,
-    val memoryLimit: String?
+    val memoryLimit: String?,
+    val registerCgsTime: String?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

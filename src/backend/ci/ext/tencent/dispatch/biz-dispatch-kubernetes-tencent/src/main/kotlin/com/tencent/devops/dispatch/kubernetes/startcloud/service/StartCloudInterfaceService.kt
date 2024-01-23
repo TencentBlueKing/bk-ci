@@ -148,7 +148,8 @@ class StartCloudInterfaceService @Autowired constructor(
                     node = it.basic?.node,
                     image = it.basic?.image,
                     cpu = it.basic?.cpuCores.toString(),
-                    mem = it.basic?.memoryLimit
+                    mem = it.basic?.memoryLimit,
+                    registerCgsTime = it.basic?.registerCgsTime
                 )
             )
         }

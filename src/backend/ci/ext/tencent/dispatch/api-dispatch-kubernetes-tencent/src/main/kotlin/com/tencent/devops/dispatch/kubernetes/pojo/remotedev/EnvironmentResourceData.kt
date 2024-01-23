@@ -25,7 +25,8 @@ data class EnvironmentResourceData(
     val node: String?,
     val image: String?,
     val cpu: String?,
-    val mem: String?
+    val mem: String?,
+    val registerCgsTime: String?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
