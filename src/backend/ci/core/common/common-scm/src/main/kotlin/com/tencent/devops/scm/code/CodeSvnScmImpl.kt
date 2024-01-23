@@ -351,8 +351,7 @@ class CodeSvnScmImpl constructor(
             projectName = projectName,
             token = token!!
         )
-        // 统一设置路径到根目录，避免出现注册多个hook导致的流水线重复触发的情况
-        val subDirPath = "/"
+        val subDirPath = getSubDirPath()
         val existHook = if (hooks.isEmpty()) {
             null
         } else {
