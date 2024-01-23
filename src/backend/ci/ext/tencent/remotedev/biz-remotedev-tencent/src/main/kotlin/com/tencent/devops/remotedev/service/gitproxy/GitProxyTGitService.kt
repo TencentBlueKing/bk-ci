@@ -3,8 +3,8 @@ package com.tencent.devops.remotedev.service.gitproxy
 import com.sun.org.slf4j.internal.LoggerFactory
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ProjectTGitLinkDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
@@ -54,11 +54,10 @@ class GitProxyTGitService @Autowired constructor(
         projectId: String,
         codeProjectUrls: Set<String>
     ): Map<String, Boolean> {
-        // 获取操作者 oauth
-        // TODO: 返回一个特定的错误码返回前端用来做 oauth 认证
         val token = client.get(ServiceOauthResource::class).tGitGet(userId).data ?: throw ErrorCodeException(
-            errorCode = "0",
-            errorType = ErrorType.USER
+            errorCode = ErrorCodeEnum.NO_TGIT_OAUTH_ERROR.errorCode,
+            errorType = ErrorCodeEnum.NO_TGIT_OAUTH_ERROR.errorType,
+            params = arrayOf(userId, tGitUrl)
         )
 
         val urls = codeProjectUrls.filter { it.isNotBlank() }.map { it.trim() }.toSet()
@@ -83,7 +82,6 @@ class GitProxyTGitService @Autowired constructor(
             filterUrlPermission(urls, token, result, TGitProjectType.GIT, noGroup)
         }
 
-        // TODO: 如果没有符合的选项，则告知前端
         if (result.isEmpty()) {
             return emptyMap()
         }
@@ -132,13 +130,15 @@ class GitProxyTGitService @Autowired constructor(
                     ) {
                         return@urls
                     }
-                    val level = GitAccessLevelEnum.MASTER.level
-                    result[url.removeHttpPrefix()] = when {
-                        (project.permissions?.projectAccess?.accessLevel ?: 0) >= level -> true
-                        (project.permissions?.shareGroupAccess?.accessLevel ?: 0) >= level -> true
-                        (project.permissions?.groupAccess?.accessLevel ?: 0) >= level -> true
-                        else -> false
-                    }
+
+                    result[url.removeHttpPrefix()] = true
+//                    val level = GitAccessLevelEnum.MASTER.level
+//                    result[url.removeHttpPrefix()] = when {
+//                        (project.permissions?.projectAccess?.accessLevel ?: 0) >= level -> true
+//                        (project.permissions?.shareGroupAccess?.accessLevel ?: 0) >= level -> true
+//                        (project.permissions?.groupAccess?.accessLevel ?: 0) >= level -> true
+//                        else -> false
+//                    }
 
                     // 如果全都是项目判断那么只要项目判断完就可以退出
                     if (noGroup && projectUrls.subtract(result.keys).isEmpty()) {

@@ -185,6 +185,11 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.USER,
         errorCode = "2132035",
         formatErrorMessage = "{0} is a special model, project quota is insufficient.Quota is {1}, and {2} are available"
+    ),
+    NO_TGIT_OAUTH_ERROR(
+        errorType = ErrorType.USER,
+        errorCode = "2132036",
+        formatErrorMessage = "{0} No oauth authorization for {1}"
     );
 
     fun getErrorMessage(): String {
