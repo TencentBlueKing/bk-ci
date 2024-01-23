@@ -27,13 +27,21 @@
 
 package com.tencent.devops.scm.pojo
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("SVN仓库文件树信息")
 data class SvnTreeInfo(
     val count: Int,
-    val files: List<SvnFile>
+    val files: List<SvnTreeNodeInfo>
+)
+
+@ApiModel("SVN仓库文件树节点信息")
+data class SvnTreeNodeInfo(
+    val file: SvnFile,
+    @JsonProperty("file_lock")
+    val fileLock: Boolean? = false
 )
 
 @ApiModel("SVN仓库文件信息")

@@ -52,4 +52,7 @@ class SVNConfig {
 
     @Value("\${scm.svn.svnHookUrl:}")
     val svnHookUrl: String = ""
+
+    @Value("\${scm.svn.apiUrlOa:}")
+    val apiUrlOa: String = ""
 }

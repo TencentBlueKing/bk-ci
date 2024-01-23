@@ -34,7 +34,10 @@ import com.tencent.devops.common.api.util.DHKeyPair
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.repository.api.scm.ServiceScmResource
+import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
+import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -55,10 +58,30 @@ class CredentialService @Autowired constructor(
     /**
      * 获取凭证基础信息
      */
-    fun getCredentialInfo(projectId: String, credentialId: String): Pair<RepoCredentialInfo, List<String>> {
-        val (pair, credential: CredentialInfo) = get(projectId, credentialId)
+    fun getCredentialInfo(
+        projectId: String,
+        repository: Repository,
+        tryGetSession: Boolean = false
+    ): Pair<RepoCredentialInfo, List<String>> {
+        val (pair, credential: CredentialInfo) = get(projectId, repository.credentialId)
         val credentialInfo = buildRepoCredentialInfo(credential, credential.credentialType, pair)
         val credentialList = buildCredentialList(credential, pair)
+        // 尝试获取会话信息
+        if (tryGetSession && credentialInfo.credentialType == CredentialType.USERNAME_PASSWORD.name) {
+            credentialInfo.token = try {
+                client.get(ServiceScmResource::class).getSession(
+                    RepoSessionRequest(
+                        type = repository.getScmType(),
+                        username = credentialInfo.username,
+                        password = credentialInfo.password,
+                        url = repository.url
+                    )
+                ).data?.privateToken ?: ""
+            } catch (ignored: Exception) {
+                logger.warn("fail to get the session", ignored)
+                ""
+            }
+        }
         return credentialInfo to credentialList
     }
 

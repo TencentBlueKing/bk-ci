@@ -267,17 +267,18 @@ object SVNApi {
         token: String,
         eventType: SvnHookEventType,
         path: String
-    ) {
+    ): SvnHook {
         val fullName = URLEncoder.encode(projectName, "UTF-8")
         val param = mutableMapOf<String, Any>(
             "path" to path,
             "url" to hookUrl
         ).let {
             it[eventType.value] = true
+            it
         }
         val request = request(
             host = host,
-            url = "/api/v3/svn/projects/$fullName/hooks",
+            url = "api/v3/svn/projects/$fullName/hooks",
             token = token
         )
             .post(
@@ -289,12 +290,7 @@ object SVNApi {
             .build()
         val body = getBody(request)
         logger.info("Get the add hook response $body")
-
-        val hookResponse: HookResponse = JsonUtil.getObjectMapper().readValue(body)
-        if (hookResponse.status != "200") {
-            logger.info("Fail to add the hook. ${hookResponse.message}")
-            throw ScmException("add Svn Webhook fail，cause：${hookResponse.message}", ScmType.CODE_SVN.name)
-        }
+        return JsonUtil.getObjectMapper().readValue(body)
     }
 
     fun getFileList(
@@ -308,7 +304,7 @@ object SVNApi {
         val queryParam = "path=$path&revision=$revision"
         val request = request(
             host = host,
-            url = "/api/v3/svn/projects/$fullName/tree?&queryParam=$queryParam",
+            url = "api/v3/svn/projects/$fullName/tree?$queryParam",
             token = token
         ).get().build()
         val body = getBody(request)

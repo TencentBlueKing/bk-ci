@@ -123,7 +123,7 @@ class CodeSvnScmImpl constructor(
         try {
             if (!token.isNullOrBlank()) {
                 SVNApi.getFileList(
-                    host = "",
+                    host = svnConfig.apiUrlOa,
                     token = token,
                     projectName = projectName,
                     path = getSubDirPath(),
@@ -157,10 +157,10 @@ class CodeSvnScmImpl constructor(
         try {
             if (!token.isNullOrBlank()) {
                 SVNApi.getFileList(
-                    host = "",
+                    host = svnConfig.apiUrlOa,
                     token = token,
                     projectName = projectName,
-                    path = "/",
+                    path = getSubDirPath(),
                     revision = "HEAD"
                 )
             }
@@ -347,12 +347,11 @@ class CodeSvnScmImpl constructor(
      */
     private fun addWebhookByToken(hookUrl: String) {
         val hooks = SVNApi.getWebhooksByToken(
-            host = "",
+            host = svnConfig.apiUrlOa,
             projectName = projectName,
             token = token!!
         )
-        // 统一设置路径到根目录，避免出现注册多个hook导致的流水线重复触发的情况
-        val subDirPath = "/"
+        val subDirPath = getSubDirPath()
         val existHook = if (hooks.isEmpty()) {
             null
         } else {
@@ -362,7 +361,7 @@ class CodeSvnScmImpl constructor(
         }
         if (existHook == null) {
             SVNApi.addWebhooksByToken(
-                host = "",
+                host = svnConfig.apiUrlOa,
                 projectName = projectName,
                 hookUrl = hookUrl,
                 token = token,
@@ -401,11 +400,16 @@ class CodeSvnScmImpl constructor(
     }
 
     override fun getGitSession(): GitSession? {
-        return SVNApi.getSession(
-            host = "",
-            username = privateKey,
-            password = passphrase ?: ""
-        )
+        return try {
+            SVNApi.getSession(
+                host = svnConfig.apiUrlOa,
+                username = privateKey,
+                password = passphrase ?: ""
+            )
+        } catch (e: ScmException) {
+            logger.warn("fail get the svn session", e)
+            null
+        }
     }
 
     companion object {

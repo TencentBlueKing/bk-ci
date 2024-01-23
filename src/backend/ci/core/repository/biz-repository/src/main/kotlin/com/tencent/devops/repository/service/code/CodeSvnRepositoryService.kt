@@ -201,7 +201,7 @@ class CodeSvnRepositoryService @Autowired constructor(
                     type = ScmType.CODE_SVN,
                     privateKey = repoCredentialInfo.privateKey,
                     passPhrase = repoCredentialInfo.passPhrase,
-                    token = "",
+                    token = repoCredentialInfo.token,
                     region = repository.region,
                     userName = repository.userName
                 )
@@ -255,7 +255,8 @@ class CodeSvnRepositoryService @Autowired constructor(
         // 凭证信息
         return credentialService.getCredentialInfo(
             projectId = projectId,
-            repository = repository
+            repository = repository,
+            tryGetSession = true
         )
     }
 
