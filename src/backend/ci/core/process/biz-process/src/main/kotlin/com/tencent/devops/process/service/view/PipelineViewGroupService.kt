@@ -605,6 +605,47 @@ class PipelineViewGroupService @Autowired constructor(
         } ?: emptyList()
     }
 
+    fun bulkAddStatic(userId: String, projectId: String, pipelineId: String, staticViewIds: List<String>) {
+        if (staticViewIds.isEmpty()) {
+            logger.warn("bulkAddStatic , staticViewIds is empty")
+            return
+        }
+        val viewRecords = pipelineViewDao.list(
+            dslContext,
+            projectId,
+            staticViewIds.map { HashUtil.decodeIdToLong(it) },
+            PipelineViewType.STATIC
+        )
+        val viewIds2Add = mutableSetOf<Long>()
+        for (view in viewRecords) {
+            try {
+                checkPermission(userId, projectId, view.isProject, view.createUser)
+            } catch (e: Exception) {
+                logger.warn("view : ${view.id} , $userId has not permission", e)
+            }
+            viewIds2Add.add(view.id)
+        }
+        logger.info("bulkAddStatic , view ids : $viewIds2Add")
+        if (viewIds2Add.isEmpty()) {
+            return
+        }
+        PipelineViewGroupLock(redisOperation, projectId).lockAround {
+            for (viewId in viewIds2Add) {
+                try {
+                    pipelineViewGroupDao.create(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        viewId = viewId,
+                        userId = userId
+                    )
+                } catch (e: Exception) {
+                    logger.error("view : $viewId , add db error", e)
+                }
+            }
+        }
+    }
+
     fun bulkAdd(userId: String, projectId: String, bulkAdd: PipelineViewBulkAdd): Boolean {
         val isProjectManager = hasPermission(userId, projectId)
         val viewIds = pipelineViewDao.list(
