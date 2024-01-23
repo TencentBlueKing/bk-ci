@@ -24,6 +24,7 @@ import java.net.InetAddress
 import java.net.URLEncoder
 import java.security.cert.CertificateException
 import java.util.concurrent.TimeUnit
+import javax.annotation.PostConstruct
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManager
@@ -247,14 +248,24 @@ class GitProxyTGitService @Autowired constructor(
         })
     }
 
-    private val okHttpClient = OkHttpClient.Builder()
-        .connectTimeout(5, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
-        .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
-        .hostnameVerifier { _, _ -> true }
-        .dns(TGitDns(tGitUrl.removeHttpPrefix(), tGitIp.split(";").filter { it.isNotBlank() }.toSet()))
-        .build()
+    private lateinit var okHttpClient: OkHttpClient
+
+    @PostConstruct
+    private fun init() {
+        okHttpClient = OkHttpClient.Builder()
+            .connectTimeout(5, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
+            .hostnameVerifier { _, _ -> true }
+            .dns(
+                TGitDns(
+                    url = tGitUrl.removeHttpPrefix(),
+                    ips = tGitIp.split(";").filter { it.isNotBlank() }.toSet()
+                )
+            )
+            .build()
+    }
 }
 
 class TGitDns(
