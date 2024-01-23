@@ -30,6 +30,12 @@ package com.tencent.devops.environment.service.job
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.environment.constant.T_NODE_CLOUD_AREA_ID
+import com.tencent.devops.environment.constant.T_NODE_HOST_ID
+import com.tencent.devops.environment.constant.T_NODE_NODE_HASH_ID
+import com.tencent.devops.environment.constant.T_NODE_NODE_ID
+import com.tencent.devops.environment.constant.T_NODE_NODE_IP
+import com.tencent.devops.environment.constant.T_NODE_NODE_TYPE
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.job.AgentVersion
@@ -180,10 +186,11 @@ class StockDataUpdateService @Autowired constructor(
                     nodeDao.getNodesWhoseDisplayNameIsEmpty(dslContext, page - 1, DEFAULT_PAGE_SIZE)
                 val nodeDisplayNameInfoList = displayNameNullNodeRecords.map {
                     DisplayNameInfo(
-                        nodeId = it.value1(),
-                        nodeType = it.value2(),
-                        nodeHashId = it.value3(),
-                        displayName = it.value2() + "-" + it.value3() + "-" + it.value1().toString()
+                        nodeId = it[T_NODE_NODE_ID] as Long,
+                        nodeType = it[T_NODE_NODE_TYPE] as String,
+                        nodeHashId = it[T_NODE_NODE_HASH_ID] as String,
+                        displayName = it[T_NODE_NODE_TYPE] as String + "-" +
+                            it[T_NODE_NODE_HASH_ID] as String + "-" + it[T_NODE_NODE_ID].toString()
                     )
                 }
                 val nodeIdList = nodeDisplayNameInfoList.mapNotNull { it.nodeId }
@@ -216,7 +223,7 @@ class StockDataUpdateService @Autowired constructor(
         // 1. 节点record："部署"类型
         val nodeRecords = nodeDao.getDeployNodesInCmdbLimit(dslContext, page, DEFAULT_PAGE_SIZE)
         // 要判断在不在cc中的 所有节点ip
-        val nodeIpList = nodeRecords.map { it.value3() }.toSet()
+        val nodeIpList = nodeRecords.map { it[T_NODE_NODE_IP] as String }.toSet()
         // cc记录
         val nodeCCInfoList = nodeIpList.takeIf { it.isNotEmpty() }.run {
             queryFromCCService.queryCCListHostWithoutBizByInRules(
@@ -235,13 +242,14 @@ class StockDataUpdateService @Autowired constructor(
                 nodeDao.updateNodeInCCByIp(dslContext, inCCIpList)
                 // 4. CC中信息（host_id和云区域id）改变 - 更新信息，不变 - 不操作
                 val nodeUpdateInfoList = nodeRecords.filterNot {
-                    it.value4() == ipToCCInfoMap!![it.value3()]?.bkHostId &&
-                        it.value5() == ipToCCInfoMap!![it.value3()]?.bkCloudId?.toLong()
+                    it[T_NODE_HOST_ID] as Long == ipToCCInfoMap!![it[T_NODE_NODE_IP] as String]?.bkHostId &&
+                        it[T_NODE_CLOUD_AREA_ID] as Long == ipToCCInfoMap!![it[T_NODE_NODE_IP] as String]
+                        ?.bkCloudId?.toLong()
                 }.takeIf { it.isNotEmpty() }!!.map {
                     HostIdAndCloudAreaIdInfo(
-                        nodeId = it.value1(),
-                        bkCloudId = ipToCCInfoMap!![it.value3()]?.bkCloudId?.toLong(),
-                        bkHostId = ipToCCInfoMap!![it.value3()]?.bkHostId
+                        nodeId = it[T_NODE_NODE_ID] as Long,
+                        bkCloudId = ipToCCInfoMap!![it[T_NODE_NODE_IP] as String]?.bkCloudId?.toLong(),
+                        bkHostId = ipToCCInfoMap!![it[T_NODE_NODE_IP] as String]?.bkHostId
                     )
                 }
                 nodeDao.updateHostIdAndCloudAreaIdByNodeId(dslContext, nodeUpdateInfoList)

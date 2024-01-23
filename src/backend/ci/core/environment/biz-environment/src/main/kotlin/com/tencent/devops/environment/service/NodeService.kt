@@ -40,6 +40,7 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_DUPLICATE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
+import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.NodeDao
@@ -665,8 +666,8 @@ class NodeService @Autowired constructor(
                     val nodeSize = nodeRecords?.size
                     logger.debug("nodeSize:$nodeSize")
                     nodeRecords?.map {
-                        val id = it.value1()
-                        val hashId = HashUtil.encodeLongId(it.value1())
+                        val id = it[T_NODE_NODE_ID] as Long
+                        val hashId = HashUtil.encodeLongId(it[T_NODE_NODE_ID] as Long)
                         nodeDao.updateHashId(dslContext, id, hashId)
                     }
                     offset += limit

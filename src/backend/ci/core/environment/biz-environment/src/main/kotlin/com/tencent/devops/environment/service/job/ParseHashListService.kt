@@ -1,5 +1,10 @@
 package com.tencent.devops.environment.service.job
 
+import com.tencent.devops.environment.constant.T_ENV_ENV_ID
+import com.tencent.devops.environment.constant.T_NODE_CLOUD_AREA_ID
+import com.tencent.devops.environment.constant.T_NODE_HOST_ID
+import com.tencent.devops.environment.constant.T_NODE_NODE_ID
+import com.tencent.devops.environment.constant.T_NODE_NODE_IP
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.pojo.job.req.ExecuteTarget
 import com.tencent.devops.environment.pojo.job.req.Host
@@ -38,21 +43,21 @@ class ParseHashListService @Autowired constructor(
             val envRecord = nodeDao.getEnvsByEnvHashIdList(
                 dslContext, projectId, envHashIdList!!
             )
-            val envIdList = envRecord.map { it.value1() }
+            val envIdList = envRecord.map { it[T_ENV_ENV_ID] as Long }
 
             val envNodeRecord = nodeDao.getNodeIdsByEnvIdList(
                 dslContext, projectId, envIdList
             )
-            val nodeIdList = envNodeRecord.map { it.value1() }
+            val nodeIdList = envNodeRecord.map { it[T_NODE_NODE_ID] as Long }
 
             val nodeRecord = nodeDao.getNodesByNodeIdList(
                 dslContext, projectId, nodeIdList
             )
             val nodeHostList = nodeRecord.map {
                 Host(
-                    bkHostId = it.value2(),
-                    bkCloudId = it.value3(),
-                    ip = it.value1()
+                    bkHostId = it[T_NODE_HOST_ID] as Long,
+                    bkCloudId = it[T_NODE_CLOUD_AREA_ID] as Long,
+                    ip = it[T_NODE_NODE_IP] as String
                 )
             }
             if (logger.isDebugEnabled) logger.debug("[getHostFromEnvList] nodeHostList: $nodeHostList")
@@ -68,9 +73,9 @@ class ParseHashListService @Autowired constructor(
             if (logger.isDebugEnabled) logger.debug("[getHostFromNodeList] nodeRecord: $nodeRecord")
             val hostList = nodeRecord.map {
                 Host(
-                    bkHostId = it.value2(),
-                    bkCloudId = it.value3(),
-                    ip = it.value1()
+                    bkHostId = it[T_NODE_HOST_ID] as Long,
+                    bkCloudId = it[T_NODE_CLOUD_AREA_ID] as Long,
+                    ip = it[T_NODE_NODE_IP] as String
                 )
             }
             if (logger.isDebugEnabled) logger.debug("[getHostFromNodeList] hostList: $hostList")

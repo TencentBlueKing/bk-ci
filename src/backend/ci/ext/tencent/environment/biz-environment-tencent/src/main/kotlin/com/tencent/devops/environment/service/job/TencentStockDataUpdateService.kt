@@ -28,6 +28,8 @@
 package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.environment.constant.T_NODE_NODE_ID
+import com.tencent.devops.environment.constant.T_NODE_NODE_IP
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.pojo.job.HostIdAndCloudAreaIdInfo
 import com.tencent.devops.environment.service.CmdbNodeService
@@ -92,10 +94,10 @@ class TencentStockDataUpdateService @Autowired constructor(
             nodeDao.getCmdbNodesHostIdNullLimit(dslContext, page - 1, DEFAULT_PAGE_SIZE)
         if (logger.isDebugEnabled) logger.debug("[addNodeToCC]cmdbNodesRecords:$cmdbNodesRecords")
         // 所有"部署"节点 ip
-        val cmdbNodesIp = cmdbNodesRecords.map { it.value1() }.toSet()
+        val cmdbNodesIp = cmdbNodesRecords.map { it[T_NODE_NODE_IP] as String }.toSet()
         if (logger.isDebugEnabled) logger.debug("[addNodeToCC]cmdbNodesIp:$cmdbNodesIp.")
         // 所有"部署"节点 ip - record
-        val nodeIpToNodesRecords = cmdbNodesRecords.associateBy { it.value1() }
+        val nodeIpToNodesRecords = cmdbNodesRecords.associateBy { it[T_NODE_NODE_IP] as String }
         // 所有"部署"节点 ip - cmdb信息
         val ipToCmdbInfoMap = tencentQueryFromCmdbService.queryCmdbInfoFromIp(cmdbNodesIp)
         if (logger.isDebugEnabled) logger.debug("[addNodeToCC]ipToCmdbInfoMap:$ipToCmdbInfoMap.")
@@ -120,7 +122,7 @@ class TencentStockDataUpdateService @Autowired constructor(
             val addToCCInfoList = ccHostIdList?.mapIndexed { index, value ->
                 HostIdAndCloudAreaIdInfo(
                     nodeId = nodeIpToNodesRecords[svrIdToCmdbInfoMap[notInCCSvrIdList[index]]?.SvrIp]
-                        ?.value2(),
+                        ?.get(T_NODE_NODE_ID) as Long,
                     bkCloudId = hostIdToCCinfo?.get(value)?.bkCloudId?.toLong(),
                     bkHostId = value
                 )
@@ -149,7 +151,7 @@ class TencentStockDataUpdateService @Autowired constructor(
         // 1. 节点：类型为部署："CMDB"，"UNKNOW"，"OTHER"
         val cmdbNodesRecords = nodeDao.getDeployNodesLimit(dslContext, page, DEFAULT_PAGE_SIZE)
         // 节点ip
-        val nodeIpList = cmdbNodesRecords.map { it.value3() }.toSet()
+        val nodeIpList = cmdbNodesRecords.map { it[T_NODE_NODE_IP] as String }.toSet()
         // 节点：ip - cmdb record（从cmdb查到的，节点在cmdb中）
         val ipToCmdbInfoMap = tencentQueryFromCmdbService.queryCmdbInfoFromIp(nodeIpList)
         // 2.1 不在cmdb中，置空 host_id 和 云区域id, 对应节点的 NODE_STATUS字段 要改成 NOT_IN_CMDB

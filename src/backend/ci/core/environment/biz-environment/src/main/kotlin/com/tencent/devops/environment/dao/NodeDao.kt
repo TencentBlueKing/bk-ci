@@ -28,6 +28,8 @@
 package com.tencent.devops.environment.dao
 
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.environment.constant.T_ENV_ENV_ID
+import com.tencent.devops.environment.constant.T_NODE_CLOUD_AREA_ID
 import com.tencent.devops.environment.model.CreateNodeModel
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
@@ -46,6 +48,11 @@ import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
+import com.tencent.devops.environment.constant.T_NODE_NODE_IP
+import com.tencent.devops.environment.constant.T_NODE_HOST_ID
+import com.tencent.devops.environment.constant.T_NODE_NODE_HASH_ID
+import com.tencent.devops.environment.constant.T_NODE_NODE_ID
+import com.tencent.devops.environment.constant.T_NODE_NODE_TYPE
 
 @Suppress("ALL")
 @Repository
@@ -68,7 +75,13 @@ class NodeDao {
 
     fun getDeployNodesLimit(dslContext: DSLContext, offset: Int, limit: Int): Result<Record5<Long, String, String, Long, Long>> {
         with(TNode.T_NODE) {
-            return dslContext.select(NODE_ID, NODE_TYPE, NODE_IP, HOST_ID, CLOUD_AREA_ID).from(this)
+            return dslContext.select(
+                NODE_ID.`as`(T_NODE_NODE_ID),
+                NODE_TYPE.`as`(T_NODE_NODE_TYPE),
+                NODE_IP.`as`(T_NODE_NODE_IP),
+                HOST_ID.`as`(T_NODE_HOST_ID),
+                CLOUD_AREA_ID.`as`(T_NODE_CLOUD_AREA_ID)
+            ).from(this)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .orderBy(NODE_ID.desc())
                 .limit(limit).offset(offset)
@@ -78,7 +91,13 @@ class NodeDao {
 
     fun getDeployNodesInCmdbLimit(dslContext: DSLContext, offset: Int, limit: Int): Result<Record5<Long, String, String, Long, Long>> {
         with(TNode.T_NODE) {
-            return dslContext.select(NODE_ID, NODE_TYPE, NODE_IP, HOST_ID, CLOUD_AREA_ID).from(this)
+            return dslContext.select(
+                NODE_ID.`as`(T_NODE_NODE_ID),
+                NODE_TYPE.`as`(T_NODE_NODE_TYPE),
+                NODE_IP.`as`(T_NODE_NODE_IP),
+                HOST_ID.`as`(T_NODE_HOST_ID),
+                CLOUD_AREA_ID.`as`(T_NODE_CLOUD_AREA_ID)
+            ).from(this)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
                 .orderBy(NODE_ID.desc())
@@ -149,7 +168,11 @@ class NodeDao {
 
     fun getNodesWhoseDisplayNameIsEmpty(dslContext: DSLContext, offset: Int, limit: Int): Result<Record3<Long, String, String>> {
         with(TNode.T_NODE) {
-            return dslContext.select(NODE_ID, NODE_TYPE, NODE_HASH_ID).from(this)
+            return dslContext.select(
+                NODE_ID.`as`(T_NODE_NODE_ID),
+                NODE_TYPE.`as`(T_NODE_NODE_TYPE),
+                NODE_HASH_ID.`as`(T_NODE_NODE_HASH_ID)
+            ).from(this)
                 .where(DISPLAY_NAME.isNull)
                 .or(DISPLAY_NAME.eq(""))
                 .orderBy(NODE_ID.desc())
@@ -212,7 +235,10 @@ class NodeDao {
 
     fun getCmdbNodesHostIdNullLimit(dslContext: DSLContext, offset: Int, limit: Int): Result<Record2<String, Long>> {
         with(TNode.T_NODE) {
-            return dslContext.select(NODE_IP, NODE_ID).from(this)
+            return dslContext.select(
+                NODE_IP.`as`(T_NODE_NODE_IP),
+                NODE_ID.`as`(T_NODE_NODE_ID)
+            ).from(this)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .and(HOST_ID.isNull)
                 .limit(limit).offset(offset)
@@ -258,7 +284,11 @@ class NodeDao {
         nodeHashIdList: List<String>
     ): Result<Record3<String, Long, Long>> {
         with(TNode.T_NODE) {
-            return dslContext.select(NODE_IP, HOST_ID, CLOUD_AREA_ID).from(this)
+            return dslContext.select(
+                NODE_IP.`as`(T_NODE_NODE_IP),
+                HOST_ID.`as`(T_NODE_HOST_ID),
+                CLOUD_AREA_ID.`as`(T_NODE_CLOUD_AREA_ID)
+            ).from(this)
                 .where(NODE_HASH_ID.`in`(nodeHashIdList))
                 .and(PROJECT_ID.eq(projectId))
                 .fetch()
@@ -267,7 +297,7 @@ class NodeDao {
 
     fun getEnvsByEnvHashIdList(dslContext: DSLContext, projectId: String, envHashIdList: List<String>): Result<Record1<Long>> {
         with(TEnv.T_ENV) {
-            return dslContext.select(ENV_ID).from(this)
+            return dslContext.select(ENV_ID.`as`(T_ENV_ENV_ID)).from(this)
                 .where(ENV_HASH_ID.`in`(envHashIdList))
                 .and(PROJECT_ID.eq(projectId))
                 .fetch()
@@ -276,7 +306,7 @@ class NodeDao {
 
     fun getNodeIdsByEnvIdList(dslContext: DSLContext, projectId: String, envIdList: List<Long>): Result<Record1<Long>> {
         with(TEnvNode.T_ENV_NODE) {
-            return dslContext.select(NODE_ID).from(this)
+            return dslContext.select(NODE_ID.`as`(T_NODE_NODE_ID)).from(this)
                 .where(ENV_ID.`in`(envIdList))
                 .and(PROJECT_ID.eq(projectId))
                 .fetch()
@@ -285,7 +315,11 @@ class NodeDao {
 
     fun getNodesByNodeIdList(dslContext: DSLContext, projectId: String, nodeIdList: List<Long>): Result<Record3<String, Long, Long>> {
         with(TNode.T_NODE) {
-            return dslContext.select(NODE_IP, HOST_ID, CLOUD_AREA_ID).from(this)
+            return dslContext.select(
+                NODE_IP.`as`(T_NODE_NODE_IP),
+                HOST_ID.`as`(T_NODE_HOST_ID),
+                CLOUD_AREA_ID.`as`(T_NODE_CLOUD_AREA_ID)
+            ).from(this)
                 .where(NODE_ID.`in`(nodeIdList))
                 .and(PROJECT_ID.eq(projectId))
                 .fetch()
@@ -818,7 +852,7 @@ class NodeDao {
         offset: Int
     ): Result<Record1<Long>>? {
         with(TNode.T_NODE) {
-            return dslContext.select(NODE_ID).from(this)
+            return dslContext.select(NODE_ID.`as`(T_NODE_NODE_ID)).from(this)
                 .orderBy(CREATED_TIME.desc())
                 .limit(limit).offset(offset)
                 .fetch()
