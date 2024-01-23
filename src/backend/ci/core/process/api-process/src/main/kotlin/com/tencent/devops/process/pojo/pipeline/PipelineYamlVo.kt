@@ -47,5 +47,5 @@ data class PipelineYamlVo(
     @ApiModelProperty("yaml文件url", required = false)
     val fileUrl: String? = null,
     @ApiModelProperty("yaml文件状态", required = false)
-    val status: String
+    val status: String? = null
 )
