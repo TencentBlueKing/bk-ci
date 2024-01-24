@@ -34,10 +34,11 @@ class PipelineYamlTriggerLock(
     redisOperation: RedisOperation,
     projectId: String,
     repoHashId: String,
-    filePath: String
+    filePath: String,
+    expiredTimeInSeconds: Long = 60
 ) :
     RedisLock(
         redisOperation = redisOperation,
         lockKey = "lock:projectId:$projectId:repoHashId:$repoHashId:filePath:$filePath",
-        expiredTimeInSeconds = 60
+        expiredTimeInSeconds = expiredTimeInSeconds
     )
