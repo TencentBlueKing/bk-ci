@@ -55,6 +55,7 @@ import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.actions.data.PacRepoSetting
 import com.tencent.devops.process.yaml.actions.data.YamlTriggerPipeline
 import com.tencent.devops.process.yaml.actions.internal.event.PipelineYamlManualEvent
+import com.tencent.devops.process.yaml.common.Constansts
 import com.tencent.devops.process.yaml.mq.PipelineYamlEnableEvent
 import com.tencent.devops.process.yaml.mq.PipelineYamlTriggerEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
@@ -303,7 +304,9 @@ class PipelineYamlFacadeService @Autowired constructor(
                 params = arrayOf(repoHashId)
             )
         }
-        if (!GitActionCommon.checkYamlPipelineFile(filePath)) {
+        if (filePath.startsWith(Constansts.ciFileDirectoryName) &&
+            !GitActionCommon.checkYamlPipelineFile(filePath.substringAfter(".ci/"))
+        ) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_YAML_FILE_NAME_FORMAT
             )
@@ -332,21 +335,17 @@ class PipelineYamlFacadeService @Autowired constructor(
             scmType = scmType
         )
         val action = eventActionFactory.loadManualEvent(setting = setting, event = event)
-        val gitPushResult = action.pushYamlFile(
-            pipelineId = pipelineId,
-            filePath = filePath,
-            content = content,
-            commitMessage = commitMessage,
-            targetAction = targetAction,
-            versionName = versionName
-        )
-        pipelineYamlRepositoryService.releaseYamlPipeline(
+        val gitPushResult = pipelineYamlRepositoryService.releaseYamlPipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             version = version,
+            versionName = versionName,
             action = action,
-            gitPushResult = gitPushResult
+            filePath = filePath,
+            content = content,
+            commitMessage = commitMessage,
+            targetAction = targetAction
         )
         return PushPipelineResult(
             projectId = projectId,

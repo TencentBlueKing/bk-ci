@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
+import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
@@ -49,6 +50,7 @@ import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.yaml.actions.BaseAction
 import com.tencent.devops.process.yaml.actions.GitActionCommon
+import com.tencent.devops.process.yaml.actions.internal.PipelineYamlManualAction
 import com.tencent.devops.process.yaml.common.Constansts
 import com.tencent.devops.process.yaml.git.pojo.PacGitPushResult
 import com.tencent.devops.process.yaml.pojo.PipelineYamlTriggerLock
@@ -411,20 +413,32 @@ class PipelineYamlRepositoryService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         version: Int,
-        action: BaseAction,
-        gitPushResult: PacGitPushResult
-    ) {
+        versionName: String?,
+        action: PipelineYamlManualAction,
+        filePath: String,
+        content: String,
+        commitMessage: String,
+        targetAction: CodeTargetAction
+    ): PacGitPushResult {
         val repoHashId = action.data.setting.repoHashId
-        val filePath = gitPushResult.filePath
-
         val webhooks = getWebhooks(projectId = projectId, pipelineId = pipelineId, version = version)
         PipelineYamlTriggerLock(
             redisOperation = redisOperation,
             projectId = projectId,
             repoHashId = repoHashId,
-            filePath = filePath
+            filePath = filePath,
+            expiredTimeInSeconds = 180
         ).use {
             it.lock()
+            // 推送到工蜂必须在锁内，不然流水线版本会不一致
+            val gitPushResult = action.pushYamlFile(
+                pipelineId = pipelineId,
+                filePath = filePath,
+                content = content,
+                commitMessage = commitMessage,
+                targetAction = targetAction,
+                versionName = versionName
+            )
             createOrUpdateYamlPipeline(
                 userId = userId,
                 projectId = projectId,
@@ -436,6 +450,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 action = action,
                 webhooks = webhooks
             )
+            return gitPushResult
         }
     }
 
