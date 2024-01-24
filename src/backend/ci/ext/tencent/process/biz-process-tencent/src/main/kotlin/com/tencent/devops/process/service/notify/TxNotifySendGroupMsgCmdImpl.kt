@@ -34,6 +34,9 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WechatWorkService
@@ -48,8 +51,6 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextT
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextTextText
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextView
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextViewLink
-import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
-import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.notify.command.BuildNotifyContext
 import com.tencent.devops.process.notify.command.impl.BluekingNotifySendCmd
 import com.tencent.devops.process.notify.command.impl.NotifySendCmd
@@ -60,12 +61,12 @@ import java.util.regex.Pattern
 
 @Service
 class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
-    val client: Client,
+    client: Client,
     val bsAuthProjectApi: AuthProjectApi,
     val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     val wechatWorkService: WechatWorkService,
     val wechatWorkRobotService: WechatWorkRobotService
-) : NotifySendCmd() {
+) : NotifySendCmd(client) {
     override fun canExecute(commandContext: BuildNotifyContext): Boolean {
         return true
     }
@@ -108,29 +109,16 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                             }
                         }
                     }
-                    sendNotifyByTemplate(
-                        templateCode = getNotifyTemplateCode(shutdownType, successSubscription.detailFlag),
+                    sendNotify(
+                        shutdownType = shutdownType,
+                        subscription = successSubscription,
                         receivers = receivers,
-                        notifyType = successSubscription.types.map { it.name }.toMutableSet(),
-                        titleParams = params,
-                        bodyParams = params
+                        params = params,
+                        setting = setting,
+                        buildStatus = buildStatus,
+                        variables = commandContext.variables,
+                        content = "✔️$successContent"
                     )
-                    logger.info("send weworkGroup msg: ${setting.pipelineId}|$buildStatus")
-                    val group = EnvUtils.parseEnv(
-                        command = successSubscription.wechatGroup,
-                        data = commandContext.variables,
-                        replaceWithEmpty = true
-                    )
-                    val groups = group.split("[,;]".toRegex())
-                    val content = "❌ $successContent"
-                    val markDownFlag = successSubscription.wechatGroupMarkdownFlag
-                    val detailFlag = successSubscription.detailFlag
-                    logger.info("send weworkGroup msg: ${setting.pipelineId}|$groups|$markDownFlag|$content")
-                    try {
-                        sendWeworkGroup(groups, markDownFlag, content, params, detailFlag)
-                    } catch (e: Exception) {
-                        logger.warn("send weworkGroup msg fail: ${e.message}")
-                    }
                 }
             }
             buildStatus.isSuccess() -> {
@@ -161,32 +149,53 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                             }
                         }
                     }
-                    sendNotifyByTemplate(
-                        templateCode = getNotifyTemplateCode(shutdownType, failSubscription.detailFlag),
+                    sendNotify(
+                        shutdownType = shutdownType,
+                        subscription = failSubscription,
                         receivers = receivers,
-                        notifyType = failSubscription.types.map { it.name }.toMutableSet(),
-                        titleParams = params,
-                        bodyParams = params
+                        params = params,
+                        setting = setting,
+                        buildStatus = buildStatus,
+                        variables = commandContext.variables,
+                        content = "❌ $failContent"
                     )
-                    logger.info("send weworkGroup msg: ${setting.pipelineId}|$buildStatus")
-                    val group = EnvUtils.parseEnv(
-                        command = failSubscription.wechatGroup,
-                        data = commandContext.variables,
-                        replaceWithEmpty = true
-                    )
-                    val groups = group.split("[,;]".toRegex())
-                    val content = "❌ $failContent"
-                    val markDownFlag = failSubscription.wechatGroupMarkdownFlag
-                    val detailFlag = failSubscription.detailFlag
-                    logger.info("send weworkGroup msg: ${setting.pipelineId}|$groups|$markDownFlag|$content")
-                    try {
-                        sendWeworkGroup(groups, markDownFlag, content, params, detailFlag)
-                    } catch (e: Exception) {
-                        logger.warn("send weworkGroup msg fail: ${e.message}")
-                    }
                 }
             }
             else -> Result<Any>(0)
+        }
+    }
+
+    private fun sendNotify(
+        shutdownType: Int,
+        subscription: Subscription,
+        receivers: MutableSet<String>,
+        params: Map<String, String>,
+        setting: PipelineSetting,
+        buildStatus: BuildStatus,
+        variables: Map<String, String>,
+        content: String
+    ) {
+        sendNotifyByTemplate(
+            templateCode = getNotifyTemplateCode(shutdownType, subscription.detailFlag),
+            receivers = receivers,
+            notifyType = subscription.types.map { it.name }.toMutableSet(),
+            titleParams = params,
+            bodyParams = params
+        )
+        logger.info("send weworkGroup msg: ${setting.pipelineId}|$buildStatus")
+        val group = EnvUtils.parseEnv(
+            command = subscription.wechatGroup,
+            data = variables,
+            replaceWithEmpty = true
+        )
+        val groups = group.split("[,;]".toRegex())
+        val markDownFlag = subscription.wechatGroupMarkdownFlag
+        val detailFlag = subscription.detailFlag
+        logger.info("send weworkGroup msg: ${setting.pipelineId}|$groups|$markDownFlag|$content")
+        try {
+            sendWeworkGroup(groups, markDownFlag, content, params, detailFlag)
+        } catch (e: Exception) {
+            logger.warn("send weworkGroup msg fail: ${e.message}")
         }
     }
 
@@ -216,26 +225,6 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                 sendByRobot(it, content, markDownFlag, detailFlag, detailUrl!!)
             }
         }
-    }
-
-    private fun sendNotifyByTemplate(
-        templateCode: String,
-        receivers: Set<String>,
-        notifyType: Set<String>,
-        titleParams: Map<String, String>,
-        bodyParams: Map<String, String>
-    ) {
-        client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
-            SendNotifyMessageTemplateRequest(
-                templateCode = templateCode,
-                receivers = receivers as MutableSet<String>,
-                notifyType = notifyType as MutableSet<String>,
-                titleParams = titleParams,
-                bodyParams = bodyParams,
-                cc = null,
-                bcc = null
-            )
-        )
     }
 
     private fun sendByApp(

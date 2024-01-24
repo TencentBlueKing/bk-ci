@@ -36,21 +36,28 @@ import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.wechatwork.WechatWorkRobotService
+import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.notify.command.impl.BluekingNotifySendCmd
+import com.tencent.devops.process.notify.command.impl.NotifySendCmd
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.PipelinePermissionServiceImpl
 import com.tencent.devops.process.permission.StreamPipelinePermissionServiceImpl
 import com.tencent.devops.process.permission.V3PipelinePermissionServiceImpl
+import com.tencent.devops.process.service.notify.TxNotifySendGroupMsgCmdImpl
 import com.tencent.devops.process.websocket.page.DefaultRecordPageBuild
 import com.tencent.devops.process.ws.GitCIDetailPageBuild
 import com.tencent.devops.process.ws.GitCIHistoryPageBuild
 import com.tencent.devops.process.ws.GitCIStatusPageBuild
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 
 /**
@@ -134,5 +141,21 @@ class TxPipelineProcessConfiguration {
         pipelineInfoDao = pipelineInfoDao,
         dslContext = dslContext,
         checkTokenService = checkTokenService
+    )
+
+    @Bean
+    @Primary
+    fun notifySendCmd(
+        client: Client,
+        bsAuthProjectApi: AuthProjectApi,
+        bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
+        wechatWorkService: WechatWorkService,
+        wechatWorkRobotService: WechatWorkRobotService
+    ) = TxNotifySendGroupMsgCmdImpl(
+        client = client,
+        bsAuthProjectApi = bsAuthProjectApi,
+        bsPipelineAuthServiceCode = bsPipelineAuthServiceCode,
+        wechatWorkService = wechatWorkService,
+        wechatWorkRobotService = wechatWorkRobotService
     )
 }
