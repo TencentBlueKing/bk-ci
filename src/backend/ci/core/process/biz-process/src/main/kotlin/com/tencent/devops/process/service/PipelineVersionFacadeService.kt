@@ -346,7 +346,11 @@ class PipelineVersionFacadeService @Autowired constructor(
                                 elements = listOf(
                                     ManualTriggerElement(
                                         id = "T-1-1-1",
-                                        name = "manualTrigger"
+                                        name = I18nUtil.getCodeLanMessage(
+                                            CommonMessageCode.BK_MANUAL_TRIGGER,
+                                            language = I18nUtil.getLanguage(userId
+                                            )
+                                        )
                                     )
                                 )
                             )

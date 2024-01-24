@@ -15,10 +15,12 @@ import com.tencent.devops.process.notify.command.impl.NotifyUrlBuildCmd
 import com.tencent.devops.process.service.BuildVariableService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-abstract class PipelineNotifyService @Autowired constructor(
-    open val buildVariableService: BuildVariableService,
-    open val pipelineRepositoryService: PipelineRepositoryService
+@Service
+class PipelineNotifyService @Autowired constructor(
+    val buildVariableService: BuildVariableService,
+    val pipelineRepositoryService: PipelineRepositoryService
 ) {
 
     private val commandCache: LoadingCache<Class<out NotifyCmd>, NotifyCmd> = CacheBuilder.newBuilder()
