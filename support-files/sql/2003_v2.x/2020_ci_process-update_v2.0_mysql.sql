@@ -462,14 +462,6 @@ BEGIN
         ADD COLUMN `FAILURE_SUBSCRIPTION` text COMMENT '失败订阅设置';
     END IF;
 
-    IF NOT EXISTS(SELECT 1
-                  FROM information_schema.COLUMNS
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_PIPELINE_INFO'
-                    AND COLUMN_NAME = 'ONLY_DRAFT') THEN
-    ALTER TABLE `T_PIPELINE_INFO`
-        ADD COLUMN `ONLY_DRAFT` bit(1) DEFAULT b'0' COMMENT '是否存在草稿版本';
-    END IF;
 
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
