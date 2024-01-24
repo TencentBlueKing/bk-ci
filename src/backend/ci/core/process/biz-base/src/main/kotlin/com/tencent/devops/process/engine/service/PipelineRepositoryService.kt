@@ -896,8 +896,12 @@ class PipelineRepositoryService constructor(
                         version = if (draftVersion == null) {
                             // 创建
                             operationLogType = OperationLogType.CREATE_DRAFT_VERSION
-                            operationLogParams = latestVersion.versionName ?: latestVersion.version.toString()
                             realBaseVersion = realBaseVersion ?: releaseResource?.version
+                            operationLogParams = realBaseVersion?.let { base ->
+                                pipelineResourceVersionDao.getPipelineVersionSimple(
+                                    dslContext, projectId, pipelineId, base
+                                )?.versionName
+                            } ?: latestVersion.versionName ?: latestVersion.version.toString()
                             latestVersion.version + 1
                         } else {
                             // 更新
