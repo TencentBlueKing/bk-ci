@@ -127,5 +127,7 @@ data class Pipeline(
     @ApiModelProperty("仅存在草稿", required = false)
     var onlyDraft: Boolean? = false,
     @ApiModelProperty("流水线权限", required = false)
-    val permissions: PipelinePermissions? = null
+    val permissions: PipelinePermissions? = null,
+    @ApiModelProperty("流水线是否开启PAC", required = false)
+    var pac: Boolean? = false
 )

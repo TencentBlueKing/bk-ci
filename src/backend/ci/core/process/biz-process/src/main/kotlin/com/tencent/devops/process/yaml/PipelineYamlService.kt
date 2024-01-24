@@ -265,6 +265,17 @@ class PipelineYamlService(
         )
     }
 
+    fun listEnablePacPipelineMap(
+        projectId: String,
+        pipelineIds: List<String>
+    ): List<PipelineYamlInfo> {
+        return pipelineYamlInfoDao.listByPipelineIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineIds = pipelineIds
+        )
+    }
+
     fun getPipelineYamlVersion(
         projectId: String,
         repoHashId: String,
