@@ -113,7 +113,7 @@
                             <bk-input
                                 ref="pipelineName"
                                 :placeholder="$t('pipelineNameInputTips')"
-                                maxlength="40"
+                                maxlength="128"
                                 name="newPipelineName"
                                 v-model.trim="newPipelineName"
                                 v-validate.initial="'required'"
@@ -188,14 +188,14 @@
 </template>
 
 <script>
-    import { mapActions, mapState } from 'vuex'
-    import pipelineHeader from '@/components/devops/pipeline-header'
     import Logo from '@/components/Logo'
     import PipelineGroupSelector from '@/components/PipelineActionDialog/PipelineGroupSelector'
     import PipelineTemplatePreview from '@/components/PipelineTemplatePreview'
-    import { getCacheViewId } from '@/utils/util'
-    import { templateTypeEnum } from '@/utils/pipelineConst'
+    import pipelineHeader from '@/components/devops/pipeline-header'
     import { TEMPLATE_RESOURCE_ACTION } from '@/utils/permission'
+    import { templateTypeEnum } from '@/utils/pipelineConst'
+    import { getCacheViewId } from '@/utils/util'
+    import { mapActions, mapState } from 'vuex'
 
     export default {
         components: {
