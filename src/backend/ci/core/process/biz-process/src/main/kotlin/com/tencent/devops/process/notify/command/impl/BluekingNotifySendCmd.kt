@@ -3,17 +3,14 @@ package com.tencent.devops.process.notify.command.impl
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
-import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.notify.command.BuildNotifyContext
-import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class BluekingNotifySendCmd @Autowired constructor(
-    val client: Client
-) : NotifySendCmd() {
+    client: Client
+) : NotifySendCmd(client) {
     override fun canExecute(commandContext: BuildNotifyContext): Boolean {
         return true
     }
@@ -82,55 +79,6 @@ class BluekingNotifySendCmd @Autowired constructor(
             }
             else -> Result<Any>(0)
         }
-    }
-
-    private fun getNotifyTemplateCode(type: Int, detailFlag: Boolean): String {
-        return if (detailFlag) {
-            when (type) {
-                TYPE_STARTUP ->
-                    PipelineNotifyTemplateEnum.PIPELINE_STARTUP_NOTIFY_TEMPLATE_DETAIL.templateCode
-                TYPE_SHUTDOWN_SUCCESS ->
-                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE_DETAIL.templateCode
-                TYPE_SHUTDOWN_FAILURE ->
-                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE_DETAIL.templateCode
-                TYPE_SHUTDOWN_CANCEL ->
-                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE_DETAIL.templateCode
-                else ->
-                    throw IllegalArgumentException("Unknown type($type) of Notify")
-            }
-        } else {
-            when (type) {
-                TYPE_STARTUP -> PipelineNotifyTemplateEnum.PIPELINE_STARTUP_NOTIFY_TEMPLATE.templateCode
-                TYPE_SHUTDOWN_SUCCESS ->
-                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE.templateCode
-                TYPE_SHUTDOWN_FAILURE ->
-                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE.templateCode
-                TYPE_SHUTDOWN_CANCEL ->
-                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE.templateCode
-                else ->
-                    throw IllegalArgumentException("Unknown type($type) of Notify")
-            }
-        }
-    }
-
-    private fun sendNotifyByTemplate(
-        templateCode: String,
-        receivers: Set<String>,
-        notifyType: Set<String>,
-        titleParams: Map<String, String>,
-        bodyParams: Map<String, String>
-    ) {
-        client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
-            SendNotifyMessageTemplateRequest(
-                templateCode = templateCode,
-                receivers = receivers as MutableSet<String>,
-                notifyType = notifyType as MutableSet<String>,
-                titleParams = titleParams,
-                bodyParams = bodyParams,
-                cc = null,
-                bcc = null
-            )
-        )
     }
 
     companion object {

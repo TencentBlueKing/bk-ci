@@ -60,15 +60,9 @@ abstract class PipelineNotifyService @Autowired constructor(
             commandCache.get(NotifyPipelineCmd::class.java), // 构建流水线相关相关信息
             commandCache.get(NotifySendCmd::class.java) // 发送消息
         )
-        // 添加自定义扩展
-        if (addExtCmd() != null) {
-            commandList.addAll(addExtCmd()!!)
-        }
 
         NotifyCmdChain(commandList).doCommand(context)
     }
-
-    abstract fun addExtCmd(): MutableList<NotifyCmd>?
 
     companion object {
         val logger = LoggerFactory.getLogger(PipelineNotifyService::class.java)
