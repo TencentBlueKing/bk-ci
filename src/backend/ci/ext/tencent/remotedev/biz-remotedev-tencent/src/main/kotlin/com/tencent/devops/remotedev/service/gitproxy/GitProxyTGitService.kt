@@ -272,6 +272,11 @@ class GitProxyTGitService @Autowired constructor(
             projectId = fullPath,
             ips = emptySet()
         )
+
+        if (ok) {
+            projectTGitLinkDao.deleteUrl(dslContext, projectId, url)
+        }
+
         return ok
     }
 

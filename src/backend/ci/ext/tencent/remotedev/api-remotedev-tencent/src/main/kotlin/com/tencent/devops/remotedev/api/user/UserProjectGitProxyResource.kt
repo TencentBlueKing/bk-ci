@@ -102,7 +102,7 @@ interface UserProjectGitProxyResource {
     ): Result<List<TGitRepoData>>
 
     @ApiOperation("删除已经关联的仓库")
-    @GET
+    @DELETE
     @Path("/tgit/delete")
     fun deleteTgitRepo(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
