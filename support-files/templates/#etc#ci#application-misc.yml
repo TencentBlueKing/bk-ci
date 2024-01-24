@@ -59,8 +59,8 @@ server:
 build:
   data:
     clear:
-      switch: false
-      maxEveryProjectHandleNum: __BK_CI_BUILD_DATA_CLEAR_SWITCH__
+      switch: __BK_CI_BUILD_DATA_CLEAR_SWITCH__
+      maxEveryProjectHandleNum: 5
       monthRange: -1
       maxKeepNum: 10000  
       codeccDayRange: -14
