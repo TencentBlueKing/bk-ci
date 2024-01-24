@@ -35,20 +35,15 @@ object DatabaseUtil {
         defaultMysqlUser: String?,
         defaultMysqlPasswd: String?
     ): Triple<String, String, String> {
-        var mysqlURL = System.getProperty("${moduleName}MysqlURL") ?: System.getProperty("mysqlURL")
-        var mysqlUser = System.getProperty("${moduleName}MysqlUser") ?: System.getProperty("mysqlUser")
+        var mysqlURL = System.getenv("${moduleName}MysqlURL") ?: System.getProperty("${moduleName}MysqlURL") ?:
+        System.getProperty("mysqlURL") ?: System.getenv("mysqlURL")
+        var mysqlUser = System.getenv("${moduleName}MysqlUser") ?: System.getProperty("${moduleName}MysqlUser") ?:
+        System.getProperty("mysqlUser") ?: System.getenv("mysqlUser")
         var mysqlPasswd =
-            System.getProperty("${moduleName}MysqlPasswd") ?: System.getProperty("mysqlPasswd")
+            System.getenv("${moduleName}MysqlPasswd") ?: System.getProperty("${moduleName}MysqlPasswd") ?:
+            System.getProperty("mysqlPasswd") ?: System.getenv("mysqlPasswd")
 
-        if (mysqlURL == null) {
-            mysqlURL = System.getenv("${moduleName}MysqlURL") ?: System.getenv("mysqlURL")
-            mysqlUser =
-                System.getenv("${moduleName}MysqlUser") ?: System.getenv("mysqlUser")
-            mysqlPasswd =
-                System.getenv("${moduleName}MysqlPasswd") ?: System.getenv("mysqlPasswd")
-        }
-
-        if (mysqlURL == null) {
+        if (mysqlURL == null || mysqlUser == null || mysqlPasswd == null) {
             println("use default properties.")
             mysqlURL = defaultMysqlURL ?: ""
             mysqlUser = defaultMysqlUser ?: ""
