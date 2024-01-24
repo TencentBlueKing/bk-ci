@@ -506,6 +506,13 @@ const actions = {
     // 重新触发事件
     reTriggerEvent (_, { projectId, detailId }) {
         return ajax.post(`${triggerPrefix}/${projectId}/${detailId}/replay`)
+    },
+    getPipelinePacInfo (_, { projectId, pipelineIds }) {
+        return ajax.get(`${prefix}projects/${projectId}/pacInfo`, {
+            params: {
+                pipelineIds
+            }
+        })
     }
 }
 

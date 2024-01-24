@@ -778,5 +778,10 @@ export default {
                 column
             }
         })
+    },
+    listPermissionStaticViews ({ commit }, { projectId, pipelineId }) {
+        return request.get(`/${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/pipelines/${pipelineId}/listPermissionStaticViews`).then(response => {
+            return response.data
+        })
     }
 }

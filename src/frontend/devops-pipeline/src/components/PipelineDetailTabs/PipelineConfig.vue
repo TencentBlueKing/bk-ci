@@ -1,5 +1,19 @@
 <template>
     <div class="pipeline-config-wrapper" v-bkloading="{ isLoading }">
+        <bk-alert
+            v-if="isActiveDraft"
+            :title="
+                $t('draftInfoTips', [draftCreator, draftLastUpdateTime])
+            "
+        />
+        <bk-alert
+            v-if="hasUnResolveEvent"
+        >
+            <i class="bk-icon icon-info-circle" />
+            <i18n :path="unResolveEventTooltips" tag="p" slot="title">
+                <span class="text-link" @click="showVersionSideSlider">{{ $t('goVersionSideslider') }}</span>
+            </i18n>
+        </bk-alert>
         <header class="pipeline-config-header">
             <mode-switch read-only />
             <VersionSideslider
@@ -28,13 +42,6 @@
                 {{ $t("diff") }}
             </VersionDiffEntry>
         </header>
-        <bk-alert
-            v-if="isActiveDraft"
-            :title="
-                $t('draftInfoTips', [activePipelineVersionModel.creator, draftLastUpdateTime])
-            "
-        />
-
         <section class="pipeline-model-content">
             <YamlEditor
                 v-if="isCodeMode"
@@ -117,6 +124,19 @@
             releaseVersionName () {
                 return this.pipelineInfo?.releaseVersionName
             },
+            hasUnResolveEvent () {
+                return ['DELETED', 'UN_MERGED'].includes(this.pipelineInfo?.yamlInfo?.status)
+            },
+            unResolveEventTooltips () {
+                switch (this.pipelineInfo?.yamlInfo?.status) {
+                    case 'DELETED':
+                        return 'ymlDeletedTips'
+                    case 'UN_MERGED':
+                        return 'unMergedTips'
+                    default:
+                        return ''
+                }
+            },
             canRollBack () {
                 return (
                     this.activePipelineVersion !== this.pipelineInfo?.releaseVersion
@@ -131,6 +151,9 @@
             },
             draftLastUpdateTime () {
                 return convertTime(this.activePipelineVersionModel?.updateTime)
+            },
+            draftCreator () {
+                return this.activePipelineVersionModel?.creator ?? '--'
             },
             dynamicComponentConf () {
                 switch (this.pipelineType) {
@@ -246,6 +269,9 @@
                         this.init()
                     })
                 }
+            },
+            showVersionSideSlider () {
+                this.$refs.versionSideslider?.showVersionSideSlider?.()
             }
         }
     }

@@ -69,6 +69,7 @@
                         </bk-tag>
                     </bk-popover>
                 </div>
+                <span v-if="!pipeline.hasPermission || pipeline.pac" v-bk-tooltips="pipeline.tooltips" class="devops-icon icon-yaml"></span>
             </li>
         </ul>
         <footer slot="footer">
@@ -85,7 +86,7 @@
 </template>
 
 <script>
-    import { mapState, mapActions, mapGetters } from 'vuex'
+    import { mapActions, mapGetters } from 'vuex'
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
     import {
         handlePipelineNoPermission,
@@ -118,14 +119,11 @@
                 hideNoPermissionPipeline: false,
                 visibleTagCountList: [],
                 isBusy: false,
-                width: 480,
+                width: 600,
                 padding: 40
             }
         },
         computed: {
-            ...mapState('pipelines', [
-                'allPipelineGroup'
-            ]),
             ...mapGetters('pipelines', [
                 'groupMap'
             ]),
@@ -160,7 +158,15 @@
                         groups: viewNames.slice(0, visibleTagCount),
                         hiddenGroups: viewNames.slice(visibleTagCount).join(';'),
                         overflowCount,
-                        showMoreTag: this.visibleTagCountList[index] === undefined || (overflowCount > 0)
+                        showMoreTag: this.visibleTagCountList[index] === undefined || (overflowCount > 0),
+                        tooltips: (!pipeline.hasPermission || pipeline.pac)
+                            ? {
+                                content: this.$t(pipeline.pac ? '已开启PAC模式,请先删除代码库默认分支上的yaml文件,再删除流水线' : '无删除权限'),
+                                placement: 'top',
+                                delay: [300, 0],
+                                allowHTML: false
+                            }
+                            : null
                     }
                 })
             },
@@ -185,10 +191,27 @@
             ...mapActions('pipelines', [
                 'removePipelineFromGroup',
                 'patchDeletePipelines',
-                'requestGetGroupLists'
+                'requestGetGroupLists',
+                'getPipelinePacInfo'
             ]),
             removeNoPermissionPipeline () {
                 this.hideNoPermissionPipeline = true
+            },
+            async getPipelinePacInfo () {
+                const pipelineIds = this.hasPermissionPipelines.map(pipeline => pipeline.pipelineId)
+                try {
+                    const pipelinePacInfo = await this.getPipelinePacInfo({
+                        projectId: this.$route.params.projectId,
+                        pipelineIds
+                    })
+                    console.log(pipelinePacInfo)
+                } catch (error) {
+                    this.handleError(error, {
+                        projectId: this.$route.params.projectId,
+                        resourceCode: pipelineIds[0],
+                        action: this.$permissionResourceAction.VIEW
+                    })
+                }
             },
             async handleSubmit () {
                 if (this.isBusy) return
@@ -250,8 +273,9 @@
             },
             calcOverPos () {
                 const tagMargin = 6
-                const groupNameBoxWidth = 200
                 if (this.$refs.belongsGroupBox?.length > 0) {
+                    const { width = 266 } = getComputedStyle(this.$refs.belongsGroupBox[0])
+                    const groupNameBoxWidth = parseInt(width)
                     this.visibleTagCountList = this.$refs.belongsGroupBox?.map((_, index) => {
                         const groupNameLength = this.$refs[`groupName_${index}`]?.length ?? 0
                         const moreTag = this.$refs.groupNameMore?.[index]?.$el
@@ -323,9 +347,12 @@
             > li {
                 width: 100%;
                 height: 40px;
-                padding: 0 16px;
-                display: flex;
+                padding: 0 8px;
+                display: grid;
                 align-items: center;
+                justify-content: space-between;
+                grid-template-columns: 100px 1fr 24px;
+                grid-gap: 12px;
                 overflow: hidden;
                 text-align: left;
                 border-bottom: 1px solid #DCDEE5;
@@ -336,12 +363,10 @@
                     background: #FFF3E1;
                 }
                 > span {
-                    flex: 1;
                     @include ellipsis();
                 }
                 .belongs-pipeline-group {
                     vertical-align: top;
-                    width: 200px;
                     height: 22px;
                     overflow: hidden;
                 }

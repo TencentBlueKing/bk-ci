@@ -79,7 +79,6 @@
                 return this.pipelineInfo?.canManualStartup ?? true
             },
             tooltip () {
-                console.log(this.executable)
                 return this.executable
                     ? {
                         disabled: true

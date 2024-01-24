@@ -174,10 +174,11 @@
                     </header>
                     <PipelineGroupSelector
                         v-model="groupValue"
-                        :dynamic-group-editable="false"
+                        :dynamic-group-editable="!releaseParams.enablePac"
                         :pipeline-name="pipelineName"
                         ref="pipelineGroupSelector"
                         :has-manage-permission="isManage"
+                        :static-groups="staticGroups"
                     />
                 </div>
             </bk-form>
@@ -289,7 +290,8 @@
                 groupValue: {
                     labels: this.pipelineSetting?.labels || [],
                     staticViews: []
-                }
+                },
+                staticGroups: null
             }
         },
         computed: {
@@ -400,7 +402,7 @@
             window.__bk_zIndex_manager.zIndex = 2000
         },
         methods: {
-            ...mapActions('atom', ['releaseDraftPipeline', 'setSaveStatus']),
+            ...mapActions('atom', ['releaseDraftPipeline', 'setSaveStatus', 'listPermissionStaticViews']),
             ...mapActions('common', ['isPACOAuth', 'getSupportPacScmTypeList', 'getPACRepoList']),
             async init () {
                 if (this.releaseParams.enablePac) {
@@ -412,6 +414,10 @@
                         this.fetchPacEnableCodelibList(true)
                     })
                 }
+                this.staticGroups = await this.listPermissionStaticViews({
+                    projectId: this.$route.params.projectId,
+                    pipelineId: this.$route.params.pipelineId
+                })
             },
             async fetchPacEnableCodelibList (init = false) {
                 try {

@@ -1300,9 +1300,13 @@
   "copyBadgeMarkdownLink": "复制Markdown链接",
   "copyBadgePicLink": "复制图片链接",
   "disable": "Disable",
+  "enable": "Enable",
   "disablePipelineConfirmTips": "确定禁用此流水线吗？",
   "disablePacPipelineConfirmDesc": "PAC 模式下的流水线，请在yaml文件中添加禁用配置：",
   "disablePipelineConfirmDesc": "禁用后，将不能以任何触发方式触发此流水线",
+  "enablePipelineConfirmTips": "确定启用此流水线吗？",
+  "enablePacPipelineConfirmDesc": "PAC 模式下的流水线，请修改默认分支 YAML 中的禁用设置为 false，或去掉禁用设置",
+  "enablePipelineConfirmDesc": "启用后，满足触发条件时将运行流水线。",
   "continueOperate": "继续操作",
   "codeConfig": "配置代码",
   "goOutputs": "查看制品详情",
@@ -1412,6 +1416,7 @@
   "draftExecRecords": "调试纪录",
   "draftExecDetail": "调试详情",
   "disableSuc": "Disable [{0}] successfully",
+  "enableSuc": "Enable [{0}] successfully",
   "paramFill": "填写参数",
   "stepPreview": "预览步骤",
   "draftInfoTips": "当前草稿尚未发布，最近保存：{0} {1}",
@@ -1439,5 +1444,8 @@
   "filterByPacYamlDir": "所属路径",
   "notAllowPatchDeletePacPipelineTips": "Automatically created by enabling PAC mode, delete pipeline please go to the code repository operation",
   "clearFilterCondition": "Clear Search Conditions",
-  "clearFilterConditionTips": "You can try adjusting keywords or {0}"
+  "clearFilterConditionTips": "You can try adjusting keywords or {0}",
+  "ymlDeletedTips": "The YAML file on the default branch has been deleted, and the trigger such as timing, CR, issue, note, etc. based on the configuration on the default branch has been invalid",
+  "unMergedTips": "There are new branch versions that have not been merged into the default branch, you can go to the {0} to view the details",
+  "goVersionSideslider": "version history"
 }

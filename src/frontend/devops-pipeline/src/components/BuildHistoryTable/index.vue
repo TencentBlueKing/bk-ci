@@ -10,7 +10,7 @@
         >
             <div class="no-build-history-box">
                 <span>{{ $t(isDebug ? 'noDebugRecords' : 'noBuildHistory') }}</span>
-                <div v-if="!isReleasePipeline" class="no-build-history-box-tip">
+                <div v-if="!isReleasePipeline && !isDebug" class="no-build-history-box-tip">
                     <p>{{ $t('onlyDraftBuildHistoryTips') }}</p>
                     <p>{{ $t('onlyDraftBuildHistoryIdTips') }}</p>
                     <p>{{ $t('buildHistoryIdTips') }}</p>
@@ -21,8 +21,8 @@
                 <div v-else class="no-build-history-box-tip">
                     <p v-if="canManualStartup">{{ $t('noBuildHistoryTips')}}</p>
                     <p>{{ $t('buildHistoryIdTips') }}</p>
-                    <span v-if="canManualStartup">
-                        <bk-button @click="buildNow" theme="primary" size="large">
+                    <span v-bk-tooltips="tooltip">
+                        <bk-button :disabled="!executable" @click="buildNow" theme="primary" size="large">
                             {{$t(isDebug ? 'debugNow' : 'buildNow')}}
                         </bk-button>
                     </span>
@@ -121,7 +121,7 @@
                                     @click.stop="(e) => showArtifactoriesPopup(e, props.row.index)"
                                     v-html="`${$t('history.fileUnit', [props.row.artifactList.length])}<span>（${props.row.sumSize}）</span>`"
                                 />
-                                <div @click.stop="">
+                                <div v-if="props.row.shortUrl" @click.stop="">
                                     <bk-popover theme="light" trigger="click" placement="bottom-end">
                                         <bk-button text theme="primary">
                                             <i class="devops-icon icon-qrcode" />
@@ -129,7 +129,6 @@
                                         <div class="build-qrcode-popup" slot="content">
                                             <span v-html="$t('scanQRCodeView')"></span>
                                             <qrcode
-                                                v-if="props.row.shortUrl"
                                                 :text="props.row.shortUrl"
                                                 :size="76"
                                             >
@@ -442,7 +441,8 @@
         computed: {
             ...mapGetters({
                 historyPageStatus: 'pipelines/getHistoryPageStatus',
-                isReleasePipeline: 'atom/isReleasePipeline'
+                isReleasePipeline: 'atom/isReleasePipeline',
+                isCurPipelineLocked: 'atom/isCurPipelineLocked'
             }),
             ...mapState('atom', [
                 'pipelineInfo'
@@ -459,9 +459,21 @@
             canManualStartup () {
                 return this.pipelineInfo?.canManualStartup ?? true
             },
+            executable () {
+                return !this.isCurPipelineLocked && ((this.canManualStartup && this.isReleasePipeline) || this.isDebug)
+            },
+            tooltip () {
+                return this.executable
+                    ? {
+                        disabled: true
+                    }
+                    : {
+                        content: this.$t(!this.isReleasePipeline ? 'draftPipelineExecTips' : this.isCurPipelineLocked ? 'pipelineLockTips' : 'pipelineManualDisable'),
+                        delay: [300, 0]
+                    }
+            },
             versionToolTipsConf () {
                 return {
-                    allowHtml: true,
                     delay: 500,
                     content: '#app-version-tooltip-content'
                 }

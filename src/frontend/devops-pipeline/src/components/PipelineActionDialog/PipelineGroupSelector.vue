@@ -29,7 +29,7 @@
                 :value="dynamicGroup"
                 :loading="isMatching"
                 :placeholder="$t('pipelineDynamicMatchPlaceholder')"
-                
+
             >
                 <bk-option
                     v-for="group in dynamicPipelineGroups"
@@ -97,6 +97,9 @@
             staticGroupEditable: {
                 type: Boolean,
                 default: true
+            },
+            staticGroups: {
+                type: Array
             }
         },
         data () {
@@ -134,7 +137,8 @@
                         children: []
                     })
                 }
-                return this.staticPipelineGroups.reduce((acc, group) => {
+
+                return (this.staticGroups ?? this.staticPipelineGroups).reduce((acc, group) => {
                     const pos = group.projected ? 1 : 0
                     if (acc[pos]) {
                         acc[pos].children.push(group)
@@ -159,7 +163,7 @@
             }
         },
         created () {
-            if (this.allPipelineGroup.length === 0) {
+            if (this.allPipelineGroup.length === 0 && !Array.isArray(this.staticGroups)) {
                 this.requestGetGroupLists(this.$route.params)
             }
         },

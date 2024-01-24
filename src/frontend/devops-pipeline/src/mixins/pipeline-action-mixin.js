@@ -211,6 +211,8 @@ export default {
                 {
                     text: this.$t(pipeline.lock ? 'enable' : 'disabled'),
                     handler: this.lockPipelineHandler,
+                    hasPermission: pipeline.permissions.canEdit,
+                    disablePermissionApi: true,
                     permissionData: {
                         projectId: pipeline.projectId,
                         resourceType: 'pipeline',

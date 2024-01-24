@@ -67,7 +67,7 @@
                         </div>
                     </bk-popover>
 
-                    v.{{ execDetail.curVersion }}
+                    {{generateDisplayName(execDetail.versionNum, execDetail.versionName) }}
                 </div>
             </div>
             <div class="exec-remark-block">
@@ -117,6 +117,7 @@
     import Logo from '@/components/Logo'
     import { mapActions } from 'vuex'
     import MaterialItem from './MaterialItem'
+    import { generateDisplayName } from '@/utils/util'
     export default {
         components: {
             MaterialItem,
@@ -189,6 +190,7 @@
         },
         methods: {
             ...mapActions('pipelines', ['updateBuildRemark']),
+            generateDisplayName,
             showRemarkEdit () {
                 this.remarkEditable = true
             },
