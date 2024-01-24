@@ -36,16 +36,16 @@ object DatabaseUtil {
         defaultMysqlPasswd: String?
     ): Triple<String, String, String> {
         var mysqlURL = System.getenv("${moduleName}MysqlURL") ?: System.getProperty("${moduleName}MysqlURL")
-        mysqlURL?.let {
+        if (mysqlURL == null) {
             mysqlURL = System.getProperty("mysqlURL") ?: System.getenv("mysqlURL")
         }
         var mysqlUser = System.getenv("${moduleName}MysqlUser") ?: System.getProperty("${moduleName}MysqlUser")
-        mysqlUser?.let {
+        if (mysqlUser == null) {
             mysqlUser = System.getProperty("mysqlUser") ?: System.getenv("mysqlUser")
         }
         var mysqlPasswd =
             System.getenv("${moduleName}MysqlPasswd") ?: System.getProperty("${moduleName}MysqlPasswd")
-        mysqlPasswd?.let {
+        if (mysqlPasswd == null) {
             mysqlPasswd = System.getProperty("mysqlPasswd") ?: System.getenv("mysqlPasswd")
         }
         if (mysqlURL == null || mysqlUser == null || mysqlPasswd == null) {
