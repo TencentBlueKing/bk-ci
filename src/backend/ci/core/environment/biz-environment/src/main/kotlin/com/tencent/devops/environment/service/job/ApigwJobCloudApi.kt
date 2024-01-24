@@ -1,5 +1,6 @@
 package com.tencent.devops.environment.service.job.api
 
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
@@ -70,6 +71,10 @@ class ApigwJobCloudApi {
         fun removeJobOperationName() {
             jobOperationName.remove()
         }
+
+        private val mapper = jacksonObjectMapper().apply {
+            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        }
     }
 
     private fun getAuthHeaderMap(bkAuthorization: String): MutableMap<String, String> {
@@ -107,13 +112,15 @@ class ApigwJobCloudApi {
         jobCloud.bkScopeType = jobCloudAuthenticationReq.bkScopeType
         jobCloud.bkScopeId = jobCloudAuthenticationReq.bkScopeId
         val headers = getAuthHeaderMap(jobCloudAuthenticationReq.bkAuthorization)
-        val requestContent = jacksonObjectMapper().writeValueAsString(jobCloud)
+        val requestContent = mapper.writeValueAsString(jobCloud)
         if (logger.isDebugEnabled)
             logger.debug(
                 "[${getJobOperationName()}]url: ${jobCloudAuthenticationReq.url}, body: $requestContent"
             )
-        logger.info("[${getJobOperationName()}]POST url: ${jobCloudAuthenticationReq.url}, " +
-                        "body: ${logWithLengthLimit(requestContent)}")
+        logger.info(
+            "[${getJobOperationName()}]POST url: ${jobCloudAuthenticationReq.url}, " +
+                "body: ${logWithLengthLimit(requestContent)}"
+        )
         return getResultFromRes(OkhttpUtils.doPost(jobCloudAuthenticationReq.url, requestContent, headers), classOfU)
     }
 
@@ -143,7 +150,7 @@ class ApigwJobCloudApi {
                 logger.debug("[$operationName] response body(origin): $responseLog")
             }
             logger.info("[$operationName] response body(origin): $responseLog")
-            val jobCloudResp = jacksonObjectMapper().readValue<JobCloudResp<T>>(responseBody!!)
+            val jobCloudResp = mapper.readValue<JobCloudResp<T>>(responseBody!!)
             if (logger.isDebugEnabled)
                 logger.debug(
                     "[$operationName] response body(deserialized JobCloudResp<T>): " +
@@ -164,8 +171,8 @@ class ApigwJobCloudApi {
                 var jsonData = ""
                 val operationResult: T? =
                     if (null != jobCloudResp.data) {
-                        jsonData = jacksonObjectMapper().writeValueAsString(jobCloudResp.data)
-                        jacksonObjectMapper().readValue(jsonData, classOfT)
+                        jsonData = mapper.writeValueAsString(jobCloudResp.data)
+                        mapper.readValue(jsonData, classOfT)
                     } else {
                         null
                     }

@@ -1,11 +1,9 @@
 package com.tencent.devops.environment.pojo.job.jobcloudres
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("查询有权限账号列表")
-@JsonIgnoreProperties(ignoreUnknown = true)
 data class JobCloudGetAccountListResult(
     @ApiModelProperty(value = "有权限账号列表")
     val data: List<JobCloudAuthorizedAccount>?,

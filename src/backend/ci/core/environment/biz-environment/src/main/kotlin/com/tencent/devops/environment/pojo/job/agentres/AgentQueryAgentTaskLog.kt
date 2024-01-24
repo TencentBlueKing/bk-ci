@@ -27,11 +27,9 @@
 
 package com.tencent.devops.environment.pojo.job.agentres
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 data class AgentQueryAgentTaskLog(
     @ApiModelProperty(value = "节点名称")
     val step: String,

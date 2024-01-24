@@ -1,12 +1,10 @@
 package com.tencent.devops.environment.pojo.job.jobcloudres
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("主机任务执行结果")
-@JsonIgnoreProperties(ignoreUnknown = true)
 data class JobCloudStepHostResult(
     @ApiModelProperty(value = "IP地址", required = true)
     val ip: String,

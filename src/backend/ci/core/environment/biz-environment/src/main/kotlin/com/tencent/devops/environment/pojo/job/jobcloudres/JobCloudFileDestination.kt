@@ -1,10 +1,8 @@
 package com.tencent.devops.environment.pojo.job.jobcloudres
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.tencent.devops.environment.pojo.job.resp.Account
 import io.swagger.annotations.ApiModelProperty
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 data class JobCloudFileDestination(
     @ApiModelProperty(value = "目标路径")
     val path: String,

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.environment.service.job
 
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.environment.pojo.job.agentreq.AgentCondition
@@ -83,6 +84,10 @@ data class AgentService @Autowired constructor(
     val bkBizScopeId: Int = 0
 
     companion object {
+        private val mapper = jacksonObjectMapper().apply {
+            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        }
+
         private const val DEFAULT_INSTALL_AGENT_JOB_TYPE = "REINSTALL_AGENT"
         private const val DEFAULT_INSTALL_AGENT_AP_ID = 1 // 节点管理预发布/正式环境 apId均固定为1
         private const val DEFAULT_INSTALL_AGENT_PORT = "36000"
@@ -99,7 +104,7 @@ data class AgentService @Autowired constructor(
     ): AgentResult<InstallAgentResult> {
         NodeManApi.setNodemanOperationName("installAgent")
         val installAgentJson = JSONObject(installAgentReqString)
-        val installAgentReq = jacksonObjectMapper().readValue<InstallAgentReq>(installAgentJson.toString())
+        val installAgentReq = mapper.readValue<InstallAgentReq>(installAgentJson.toString())
         val installAgentRequest = AgentInstallAgentReq(
             jobType = DEFAULT_INSTALL_AGENT_JOB_TYPE,
             hosts = installAgentReq.hosts.map {

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.environment.service.job
 
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
@@ -86,12 +87,16 @@ class NodeManApi {
         fun removeNodemanOperationName() {
             nodemanOperationName.remove()
         }
+
+        private val mapper = jacksonObjectMapper().apply {
+            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        }
     }
 
     fun <T, U : Any> executePostRequest(req: T, classOfU: Class<U>, jobId: Int? = null): AgentOriginalResult<U> {
         val (bkAuthorization, url) = getAgentAuthReq(jobId)
         val headers = getAuthHeaderMap(bkAuthorization)
-        val requestContent = jacksonObjectMapper().writeValueAsString(req)
+        val requestContent = mapper.writeValueAsString(req)
         if (logger.isDebugEnabled)
             logger.debug("[${getNodemanOperationName()}] headers: $headers, url: $url, body: $requestContent")
         logger.info("[${getNodemanOperationName()}]POST url: $url, body: ${logWithLengthLimit(requestContent)}")
@@ -123,7 +128,7 @@ class NodeManApi {
                 logger.debug("[$operationName] response body(origin): $responseLog")
             }
             logger.info("[$operationName] response body(origin): $responseLog")
-            val agentResp = jacksonObjectMapper().readValue<AgentOriginalResult<T>>(responseBody!!)
+            val agentResp = mapper.readValue<AgentOriginalResult<T>>(responseBody!!)
             if (logger.isDebugEnabled)
                 logger.debug(
                     "[$operationName] response body(deserialized AgentResult<T>): " +
@@ -142,8 +147,8 @@ class NodeManApi {
                 var jsonData = ""
                 val operationResult: T? =
                     if (null != agentResp.data) {
-                        jsonData = jacksonObjectMapper().writeValueAsString(agentResp.data)
-                        jacksonObjectMapper().readValue(jsonData, classOfT)
+                        jsonData = mapper.writeValueAsString(agentResp.data)
+                        mapper.readValue(jsonData, classOfT)
                     } else {
                         null
                     }

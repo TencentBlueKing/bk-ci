@@ -1,10 +1,8 @@
 package com.tencent.devops.environment.pojo.job.jobcloudres
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 data class JobCloudGetStepInstanceStatusResult(
     @ApiModelProperty(
         value = "作业步骤状态码", notes = "1-未执行，2-正在执行，3-执行成功，4-执行失败，5-跳过，6-忽略错误，" +

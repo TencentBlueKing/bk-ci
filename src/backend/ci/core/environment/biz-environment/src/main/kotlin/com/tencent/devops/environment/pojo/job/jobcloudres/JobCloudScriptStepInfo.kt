@@ -1,10 +1,8 @@
 package com.tencent.devops.environment.pojo.job.jobcloudres
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 data class JobCloudScriptStepInfo(
     @ApiModelProperty(value = "脚本类型：1-本地脚本，2-引用业务脚本，3-引用公共脚本")
     @JsonProperty("script_type")

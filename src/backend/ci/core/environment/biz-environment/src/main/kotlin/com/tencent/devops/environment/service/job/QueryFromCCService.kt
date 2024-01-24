@@ -1,5 +1,6 @@
 package com.tencent.devops.environment.service.job
 
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
@@ -57,17 +58,20 @@ class QueryFromCCService : IQueryOperatorService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(QueryFromCCService::class.java)
-        private const val LOG_OUTPUT_MAX_LENGTH = 4000
+        private val mapper = jacksonObjectMapper().apply {
+            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        }
 
-        const val DEFAULT_PAGE_LIMIT = 500
-        const val DEFAULT_PAGE_START = 0
-        const val FIELD_BK_HOST_ID = "bk_host_id"
-        const val FIELD_BK_CLOUD_ID = "bk_cloud_id"
-        const val FIELD_BK_HOST_INNERIP = "bk_host_innerip"
-        const val FIELD_OPERATOR = "operator"
-        const val FIELD_BAK_OPERATOR = "bk_bak_operator"
-        const val AND_CONDITATION = "AND"
-        const val IN_OPERATION = "in"
+        private const val LOG_OUTPUT_MAX_LENGTH = 4000
+        private const val DEFAULT_PAGE_LIMIT = 500
+        private const val DEFAULT_PAGE_START = 0
+        private const val FIELD_BK_HOST_ID = "bk_host_id"
+        private const val FIELD_BK_CLOUD_ID = "bk_cloud_id"
+        private const val FIELD_BK_HOST_INNERIP = "bk_host_innerip"
+        private const val FIELD_OPERATOR = "operator"
+        private const val FIELD_BAK_OPERATOR = "bk_bak_operator"
+        private const val AND_CONDITATION = "AND"
+        private const val IN_OPERATION = "in"
     }
 
     /**
@@ -135,7 +139,7 @@ class QueryFromCCService : IQueryOperatorService {
             getcommonHeaders(), bkccQueryBaseUrl + bkccListHostWithoutBizPath, ccListHostWithoutBizReq
         )
         if (logger.isDebugEnabled) logger.debug("[queryCCListHostWithoutBizByInRules] resBody:$resBody")
-        return jacksonObjectMapper().readValue(resBody!!)
+        return mapper.readValue(resBody!!)
     }
 
     fun addHostToCiBiz(svrIdList: List<Long>): CCResp<CCBkHost> {
@@ -144,7 +148,7 @@ class QueryFromCCService : IQueryOperatorService {
             getAuthHeaders(), bkccExecuteBaseUrl + bkccAddHostToCiBizPath, ccAddHostReq
         )
         if (logger.isDebugEnabled) logger.debug("[addHostToCiBiz]resBody:$resBody")
-        val deserializedResBody = jacksonObjectMapper().readValue<CCResp<CCBkHost>>(resBody!!)
+        val deserializedResBody = mapper.readValue<CCResp<CCBkHost>>(resBody!!)
         if (logger.isDebugEnabled) logger.debug("[addHostToCiBiz]deserializedResBody:$deserializedResBody")
         return deserializedResBody
     }
@@ -155,7 +159,7 @@ class QueryFromCCService : IQueryOperatorService {
             getAuthHeaders(), bkccExecuteBaseUrl + bkccDeleteHostFromCiBizPath, ccDeleteHostReq
         )
         if (logger.isDebugEnabled) logger.debug("[deleteHostFromCiBiz]resBody:$resBody")
-        return jacksonObjectMapper().readValue(resBody!!)
+        return mapper.readValue(resBody!!)
     }
 
     fun queryCCFindHostBizRelations(hostIdList: List<Long>): CCResp<List<HostBizRelation>> {
@@ -168,7 +172,7 @@ class QueryFromCCService : IQueryOperatorService {
         val resBody = executePostRequest(
             getcommonHeaders(), bkccQueryBaseUrl + bkccFindHostBizRelationsPath, ccFindHostBizRelationsReq
         )
-        return jacksonObjectMapper().readValue(resBody!!)
+        return mapper.readValue(resBody!!)
     }
 
     private fun getcommonHeaders(): Map<String, String> {
@@ -186,7 +190,7 @@ class QueryFromCCService : IQueryOperatorService {
     }
 
     private fun <T> executePostRequest(headers: Map<String, String>, url: String, req: T): String? {
-        val requestContent = jacksonObjectMapper().writeValueAsString(req)
+        val requestContent = mapper.writeValueAsString(req)
         if (logger.isDebugEnabled) logger.debug("[executePostRequest]url: $url, body: $requestContent")
         logger.info("[executePostRequest]POST url: $url, body: ${logWithLengthLimit(requestContent)}")
         val ccPostRes = OkhttpUtils.doPost(url, requestContent, headers)
@@ -198,7 +202,7 @@ class QueryFromCCService : IQueryOperatorService {
     }
 
     private fun <T> executeDeleteRequest(headers: Map<String, String>, url: String, req: T): String? {
-        val requestContent = jacksonObjectMapper().writeValueAsString(req)
+        val requestContent = mapper.writeValueAsString(req)
         val requestBody = RequestBody.create("text/plain".toMediaTypeOrNull(), requestContent)
         val deleteReq: Request = Request.Builder()
             .url(url)

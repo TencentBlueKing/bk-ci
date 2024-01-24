@@ -1,12 +1,10 @@
 package com.tencent.devops.environment.pojo.job.jobcloudres
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("查询任务状态的结果")
-@JsonIgnoreProperties(ignoreUnknown = true)
 data class JobCloudQueryJobInstanceStatusResult(
     @ApiModelProperty(value = "作业是否结束", required = true)
     val finished: Boolean,
