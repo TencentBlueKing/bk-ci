@@ -129,12 +129,12 @@ class PipelineViewGroupDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String
-    ): List<Int> {
+    ): List<Long> {
         return with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
             dslContext.select(VIEW_ID).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-                .fetch(0, Int::class.java)
+                .fetch(0, Long::class.java)
         }
     }
 
