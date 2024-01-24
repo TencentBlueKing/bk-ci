@@ -62,16 +62,16 @@ class QueryFromCCService : IQueryOperatorService {
             configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         }
 
-        private const val LOG_OUTPUT_MAX_LENGTH = 4000
-        private const val DEFAULT_PAGE_LIMIT = 500
-        private const val DEFAULT_PAGE_START = 0
-        private const val FIELD_BK_HOST_ID = "bk_host_id"
-        private const val FIELD_BK_CLOUD_ID = "bk_cloud_id"
-        private const val FIELD_BK_HOST_INNERIP = "bk_host_innerip"
-        private const val FIELD_OPERATOR = "operator"
-        private const val FIELD_BAK_OPERATOR = "bk_bak_operator"
-        private const val AND_CONDITATION = "AND"
-        private const val IN_OPERATION = "in"
+        const val LOG_OUTPUT_MAX_LENGTH = 4000
+        const val DEFAULT_PAGE_LIMIT = 500
+        const val DEFAULT_PAGE_START = 0
+        const val FIELD_BK_HOST_ID = "bk_host_id"
+        const val FIELD_BK_CLOUD_ID = "bk_cloud_id"
+        const val FIELD_BK_HOST_INNERIP = "bk_host_innerip"
+        const val FIELD_OPERATOR = "operator"
+        const val FIELD_BAK_OPERATOR = "bk_bak_operator"
+        const val AND_CONDITATION = "AND"
+        const val IN_OPERATION = "in"
     }
 
     /**
