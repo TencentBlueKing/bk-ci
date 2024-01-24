@@ -91,12 +91,12 @@ class StockDataUpdateService @Autowired constructor(
 
     /**
      * updateAgent:
-     * 定时任务：agent状态/版本 轮询 + 差量更新
+     * 定时任务：gse agent状态/版本 轮询 + 差量更新
      * 条件：NODE_TYPE为cmdb的，查询该节点的agent安装状态以及版本，并对比差异更新。
      * 分组执行，每次遍历1000条记录。
      * cron：每小时执行一次。
      */
-    @Scheduled(cron = "0 * * * * ?")
+    @Scheduled(cron = "0 0 * * * ?")
     fun scheduledUpdateAgent() {
         taskWithRedisLock(SCHEDULED_UPDATE_AGENT_TIMEOUT_LOCK_KEY, ::updateAgent)
     }
