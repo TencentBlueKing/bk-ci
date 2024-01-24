@@ -69,16 +69,6 @@
                     </template>
                     <a
                         class="reset-bth"
-                        v-perm="{
-                            hasPermission: curRepo.canEdit,
-                            disablePermissionApi: true,
-                            permissionData: {
-                                projectId: projectId,
-                                resourceType: RESOURCE_TYPE,
-                                resourceCode: curRepo.repositoryHashId,
-                                action: RESOURCE_ACTION.EDIT
-                            }
-                        }"
                         @click="handleResetAuth"
                     >
                         {{ $t('codelib.resetAuth') }}
