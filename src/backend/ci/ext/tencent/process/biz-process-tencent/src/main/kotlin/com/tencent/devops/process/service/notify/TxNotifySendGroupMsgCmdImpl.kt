@@ -29,9 +29,11 @@ package com.tencent.devops.process.service.notify
 
 import com.tencent.bkrepo.common.api.util.toJsonString
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_VIEW_DETAILS
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WechatWorkService
@@ -46,8 +48,10 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextT
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextTextText
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextView
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextViewLink
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.notify.command.BuildNotifyContext
-import com.tencent.devops.process.notify.command.NotifyCmd
+import com.tencent.devops.process.notify.command.impl.BluekingNotifySendCmd
 import com.tencent.devops.process.notify.command.impl.NotifySendCmd
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -56,6 +60,7 @@ import java.util.regex.Pattern
 
 @Service
 class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
+    val client: Client,
     val bsAuthProjectApi: AuthProjectApi,
     val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     val wechatWorkService: WechatWorkService,
@@ -66,102 +71,123 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
     }
 
     override fun execute(commandContext: BuildNotifyContext) {
-        val setting = commandContext.pipelineSetting
-
         val replaceWithEmpty = true
-        // 内容为null的时候处理为空字符串
-        var successContent = setting.successSubscription.content
-        var failContent = setting.failSubscription.content
-
-        successContent = EnvUtils.parseEnv(successContent, commandContext.variables, replaceWithEmpty)
-        failContent = EnvUtils.parseEnv(failContent, commandContext.variables, replaceWithEmpty)
-
-        commandContext.notifyValue["successContent"] = successContent
-        commandContext.notifyValue["failContent"] = failContent
-        commandContext.notifyValue["emailSuccessContent"] = successContent
-        commandContext.notifyValue["emailFailContent"] = failContent
-
-        val users = mutableSetOf<String>()
-        val receivers = if (commandContext.buildStatus.isSuccess()) {
-            val successReceiver = EnvUtils.parseEnv(
-                command = commandContext.pipelineSetting.successSubscription.users,
-                data = commandContext.variables,
-                replaceWithEmpty = true)
-            users.addAll(successReceiver.split(",").toMutableSet())
-            if (!emptyGroup(commandContext.pipelineSetting.successSubscription.groups)) {
-                logger.info("success notify config group: ${commandContext.pipelineSetting.successSubscription.groups}")
-                val projectRoleUsers = bsAuthProjectApi.getProjectGroupAndUserList(
-                    serviceCode = bsPipelineAuthServiceCode,
-                    projectCode = commandContext.projectId)
-                projectRoleUsers.forEach {
-                    if (it.roleName in commandContext.pipelineSetting.successSubscription.groups) {
-                        users.addAll(it.userIdList)
-                    }
-                }
-            }
-            users
-        } else {
-            val failReceiver = EnvUtils.parseEnv(
-                command = commandContext.pipelineSetting.failSubscription.users,
-                data = commandContext.variables,
-                replaceWithEmpty = true)
-            users.addAll(failReceiver.split(",").toMutableSet())
-            if (!emptyGroup(commandContext.pipelineSetting.failSubscription.groups)) {
-                logger.info("fail notify config group: ${commandContext.pipelineSetting.failSubscription.groups}")
-                val projectRoleUsers = bsAuthProjectApi.getProjectGroupAndUserList(
-                    serviceCode = bsPipelineAuthServiceCode,
-                    projectCode = commandContext.projectId)
-                projectRoleUsers.forEach {
-                    if (it.roleName in commandContext.pipelineSetting.failSubscription.groups) {
-                        users.addAll(it.userIdList)
-                    }
-                }
-            }
-            users
-        }
-        commandContext.receivers = receivers
-
+        val setting = commandContext.pipelineSetting
         val buildStatus = commandContext.buildStatus
-        logger.info("send weworkGroup msg: ${setting.pipelineId}|${commandContext.buildStatus}")
-        var groups = mutableSetOf<String>()
-        var content = ""
-        var markerDownFlag = false
-        var detailFlag = false
-        if (buildStatus.isFailure()) {
-            if (emptyGroup(setting.failSubscription.wechatGroup) || !setting.failSubscription.wechatGroupFlag) {
-                return
-            }
-            val group = EnvUtils.parseEnv(
-                command = setting.failSubscription.wechatGroup,
-                data = commandContext.variables,
-                replaceWithEmpty = true
-            )
-            groups.addAll(group.split("[,;]".toRegex()))
-            content = "❌ " + commandContext.notifyValue["failContent"]!!
-            markerDownFlag = setting.failSubscription.wechatGroupMarkdownFlag
-            detailFlag = setting.failSubscription.detailFlag
-        } else if (buildStatus.isSuccess()) {
-            val successSubscription = setting.successSubscription
-            if (emptyGroup(successSubscription.wechatGroup) || !successSubscription.wechatGroupFlag) {
-                return
-            }
-            val group = EnvUtils.parseEnv(
-                command = successSubscription.wechatGroup,
-                data = commandContext.variables,
-                replaceWithEmpty = true
-            )
-            groups.addAll(group.split("[,;]".toRegex()))
-            content = "✔️" + commandContext.notifyValue["successContent"]!!
-            markerDownFlag = successSubscription.wechatGroupMarkdownFlag
-            detailFlag = successSubscription.detailFlag
+        val shutdownType = when {
+            buildStatus.isCancel() -> BluekingNotifySendCmd.TYPE_SHUTDOWN_CANCEL
+            buildStatus.isFailure() -> BluekingNotifySendCmd.TYPE_SHUTDOWN_FAILURE
+            else -> BluekingNotifySendCmd.TYPE_SHUTDOWN_SUCCESS
         }
-        logger.info("send weworkGroup msg: ${setting.pipelineId}|$groups|$markerDownFlag|$content")
-        try {
-            sendWeworkGroup(groups, markerDownFlag, content, commandContext.notifyValue, detailFlag)
-        } catch (e: Exception) {
-            logger.warn("sendweworkGroup msg fail: ${e.message}")
+        when {
+            buildStatus.isFailure() -> {
+                setting.successSubscriptionList?.forEach { successSubscription ->
+                    // 内容为null的时候处理为空字符串
+                    val successContent = EnvUtils.parseEnv(
+                        successSubscription.content, commandContext.variables, replaceWithEmpty
+                    )
+                    val params = mapOf(
+                        "successContent" to successContent,
+                        "emailSuccessContent" to successContent
+                    )
+                    val receivers = successSubscription.users.split(",").map {
+                        EnvUtils.parseEnv(
+                            command = it,
+                            data = commandContext.variables,
+                            replaceWithEmpty = true
+                        )
+                    }.toMutableSet()
+                    if (!emptyGroup(successSubscription.groups)) {
+                        logger.info("success notify config group: ${successSubscription.groups}")
+                        val projectRoleUsers = bsAuthProjectApi.getProjectGroupAndUserList(
+                            serviceCode = bsPipelineAuthServiceCode,
+                            projectCode = commandContext.projectId)
+                        projectRoleUsers.forEach {
+                            if (it.roleName in successSubscription.groups) {
+                                receivers.addAll(it.userIdList)
+                            }
+                        }
+                    }
+                    sendNotifyByTemplate(
+                        templateCode = getNotifyTemplateCode(shutdownType, successSubscription.detailFlag),
+                        receivers = receivers,
+                        notifyType = successSubscription.types.map { it.name }.toMutableSet(),
+                        titleParams = params,
+                        bodyParams = params
+                    )
+                    logger.info("send weworkGroup msg: ${setting.pipelineId}|$buildStatus")
+                    val group = EnvUtils.parseEnv(
+                        command = successSubscription.wechatGroup,
+                        data = commandContext.variables,
+                        replaceWithEmpty = true
+                    )
+                    val groups = group.split("[,;]".toRegex())
+                    val content = "❌ $successContent"
+                    val markDownFlag = successSubscription.wechatGroupMarkdownFlag
+                    val detailFlag = successSubscription.detailFlag
+                    logger.info("send weworkGroup msg: ${setting.pipelineId}|$groups|$markDownFlag|$content")
+                    try {
+                        sendWeworkGroup(groups, markDownFlag, content, params, detailFlag)
+                    } catch (e: Exception) {
+                        logger.warn("send weworkGroup msg fail: ${e.message}")
+                    }
+                }
+            }
+            buildStatus.isSuccess() -> {
+                setting.failSubscriptionList?.forEach { failSubscription ->
+                    // 内容为null的时候处理为空字符串
+                    val failContent = EnvUtils.parseEnv(
+                        failSubscription.content, commandContext.variables, replaceWithEmpty
+                    )
+                    val params = mapOf(
+                        "failContent" to failContent,
+                        "emailFailContent" to failContent
+                    )
+                    val receivers = failSubscription.users.split(",").map {
+                        EnvUtils.parseEnv(
+                            command = it,
+                            data = commandContext.variables,
+                            replaceWithEmpty = true
+                        )
+                    }.toMutableSet()
+                    if (!emptyGroup(failSubscription.groups)) {
+                        logger.info("fail notify config group: ${failSubscription.groups}")
+                        val projectRoleUsers = bsAuthProjectApi.getProjectGroupAndUserList(
+                            serviceCode = bsPipelineAuthServiceCode,
+                            projectCode = commandContext.projectId)
+                        projectRoleUsers.forEach {
+                            if (it.roleName in failSubscription.groups) {
+                                receivers.addAll(it.userIdList)
+                            }
+                        }
+                    }
+                    sendNotifyByTemplate(
+                        templateCode = getNotifyTemplateCode(shutdownType, failSubscription.detailFlag),
+                        receivers = receivers,
+                        notifyType = failSubscription.types.map { it.name }.toMutableSet(),
+                        titleParams = params,
+                        bodyParams = params
+                    )
+                    logger.info("send weworkGroup msg: ${setting.pipelineId}|$buildStatus")
+                    val group = EnvUtils.parseEnv(
+                        command = failSubscription.wechatGroup,
+                        data = commandContext.variables,
+                        replaceWithEmpty = true
+                    )
+                    val groups = group.split("[,;]".toRegex())
+                    val content = "❌ $failContent"
+                    val markDownFlag = failSubscription.wechatGroupMarkdownFlag
+                    val detailFlag = failSubscription.detailFlag
+                    logger.info("send weworkGroup msg: ${setting.pipelineId}|$groups|$markDownFlag|$content")
+                    try {
+                        sendWeworkGroup(groups, markDownFlag, content, params, detailFlag)
+                    } catch (e: Exception) {
+                        logger.warn("send weworkGroup msg fail: ${e.message}")
+                    }
+                }
+            }
+            else -> Result<Any>(0)
         }
-        return
     }
 
     private fun emptyGroup(groups: Set<String>): Boolean {
@@ -176,8 +202,8 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
     }
 
     private fun sendWeworkGroup(
-        weworkGroup: Set<String>,
-        markerDownFlag: Boolean,
+        weworkGroup: List<String>,
+        markDownFlag: Boolean,
         content: String,
         vars: Map<String, String>,
         detailFlag: Boolean
@@ -185,22 +211,42 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
         val detailUrl = vars["detailUrl"]
         weworkGroup.forEach {
             if (it.startsWith("ww")) { // 应用号逻辑
-                sendByApp(it, content, markerDownFlag, detailFlag, detailUrl!!)
+                sendByApp(it, content, markDownFlag, detailFlag, detailUrl!!)
             } else if (Pattern.matches(chatPatten, it)) { // 机器人逻辑
-                sendByRobot(it, content, markerDownFlag, detailFlag, detailUrl!!)
+                sendByRobot(it, content, markDownFlag, detailFlag, detailUrl!!)
             }
         }
+    }
+
+    private fun sendNotifyByTemplate(
+        templateCode: String,
+        receivers: Set<String>,
+        notifyType: Set<String>,
+        titleParams: Map<String, String>,
+        bodyParams: Map<String, String>
+    ) {
+        client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
+            SendNotifyMessageTemplateRequest(
+                templateCode = templateCode,
+                receivers = receivers as MutableSet<String>,
+                notifyType = notifyType as MutableSet<String>,
+                titleParams = titleParams,
+                bodyParams = bodyParams,
+                cc = null,
+                bcc = null
+            )
+        )
     }
 
     private fun sendByApp(
         chatId: String,
         content: String,
-        markerDownFlag: Boolean,
+        markDownFlag: Boolean,
         detailFlag: Boolean,
         detailUrl: String
     ) {
         logger.info("send group msg by app: $chatId")
-        if (markerDownFlag) {
+        if (markDownFlag) {
             wechatWorkService.sendMarkdownGroup(content!!.replace("\\n", "\n"), chatId)
         } else {
             val receiver = Receiver(ReceiverType.group, chatId)
