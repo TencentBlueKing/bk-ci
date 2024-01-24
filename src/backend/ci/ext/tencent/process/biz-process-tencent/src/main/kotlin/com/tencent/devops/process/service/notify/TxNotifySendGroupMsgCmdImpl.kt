@@ -30,6 +30,8 @@ package com.tencent.devops.process.service.notify
 import com.tencent.bkrepo.common.api.util.toJsonString
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_VIEW_DETAILS
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WechatWorkService
@@ -46,6 +48,7 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextV
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextViewLink
 import com.tencent.devops.process.notify.command.BuildNotifyContext
 import com.tencent.devops.process.notify.command.NotifyCmd
+import com.tencent.devops.process.notify.command.impl.NotifySendCmd
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -53,15 +56,71 @@ import java.util.regex.Pattern
 
 @Service
 class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
+    val bsAuthProjectApi: AuthProjectApi,
+    val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     val wechatWorkService: WechatWorkService,
     val wechatWorkRobotService: WechatWorkRobotService
-) : NotifyCmd {
+) : NotifySendCmd() {
     override fun canExecute(commandContext: BuildNotifyContext): Boolean {
         return true
     }
 
     override fun execute(commandContext: BuildNotifyContext) {
         val setting = commandContext.pipelineSetting
+
+        val replaceWithEmpty = true
+        // 内容为null的时候处理为空字符串
+        var successContent = setting.successSubscription.content
+        var failContent = setting.failSubscription.content
+
+        successContent = EnvUtils.parseEnv(successContent, commandContext.variables, replaceWithEmpty)
+        failContent = EnvUtils.parseEnv(failContent, commandContext.variables, replaceWithEmpty)
+
+        commandContext.notifyValue["successContent"] = successContent
+        commandContext.notifyValue["failContent"] = failContent
+        commandContext.notifyValue["emailSuccessContent"] = successContent
+        commandContext.notifyValue["emailFailContent"] = failContent
+
+        val users = mutableSetOf<String>()
+        val receivers = if (commandContext.buildStatus.isSuccess()) {
+            val successReceiver = EnvUtils.parseEnv(
+                command = commandContext.pipelineSetting.successSubscription.users,
+                data = commandContext.variables,
+                replaceWithEmpty = true)
+            users.addAll(successReceiver.split(",").toMutableSet())
+            if (!emptyGroup(commandContext.pipelineSetting.successSubscription.groups)) {
+                logger.info("success notify config group: ${commandContext.pipelineSetting.successSubscription.groups}")
+                val projectRoleUsers = bsAuthProjectApi.getProjectGroupAndUserList(
+                    serviceCode = bsPipelineAuthServiceCode,
+                    projectCode = commandContext.projectId)
+                projectRoleUsers.forEach {
+                    if (it.roleName in commandContext.pipelineSetting.successSubscription.groups) {
+                        users.addAll(it.userIdList)
+                    }
+                }
+            }
+            users
+        } else {
+            val failReceiver = EnvUtils.parseEnv(
+                command = commandContext.pipelineSetting.failSubscription.users,
+                data = commandContext.variables,
+                replaceWithEmpty = true)
+            users.addAll(failReceiver.split(",").toMutableSet())
+            if (!emptyGroup(commandContext.pipelineSetting.failSubscription.groups)) {
+                logger.info("fail notify config group: ${commandContext.pipelineSetting.failSubscription.groups}")
+                val projectRoleUsers = bsAuthProjectApi.getProjectGroupAndUserList(
+                    serviceCode = bsPipelineAuthServiceCode,
+                    projectCode = commandContext.projectId)
+                projectRoleUsers.forEach {
+                    if (it.roleName in commandContext.pipelineSetting.failSubscription.groups) {
+                        users.addAll(it.userIdList)
+                    }
+                }
+            }
+            users
+        }
+        commandContext.receivers = receivers
+
         val buildStatus = commandContext.buildStatus
         logger.info("send weworkGroup msg: ${setting.pipelineId}|${commandContext.buildStatus}")
         var groups = mutableSetOf<String>()
@@ -103,6 +162,17 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
             logger.warn("sendweworkGroup msg fail: ${e.message}")
         }
         return
+    }
+
+    private fun emptyGroup(groups: Set<String>): Boolean {
+        if (groups.isEmpty()) {
+            return true
+        } else {
+            if (groups.size == 1 && groups.first().isEmpty()) {
+                return true
+            }
+        }
+        return false
     }
 
     private fun sendWeworkGroup(
