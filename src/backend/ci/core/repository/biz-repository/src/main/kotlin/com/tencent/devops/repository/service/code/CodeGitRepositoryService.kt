@@ -40,6 +40,7 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_GET_GI
 import com.tencent.devops.repository.constant.RepositoryMessageCode.GIT_INVALID
 import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
 import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_AUTH_TYPE_ENABLED_PAC
+import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_DEFAULT_BRANCH_IS_EMPTY
 import com.tencent.devops.repository.constant.RepositoryMessageCode.REPO_TYPE_NO_NEED_CERTIFICATION
 import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_SECRET_EMPTY
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
@@ -317,6 +318,11 @@ class CodeGitRepositoryService @Autowired constructor(
         ) ?: throw ErrorCodeException(
             errorCode = ERROR_GET_GIT_PROJECT_ID, params = arrayOf(repository.url)
         )
+        if (gitProjectInfo.defaultBranch == null) {
+            throw ErrorCodeException(
+                errorCode = ERROR_DEFAULT_BRANCH_IS_EMPTY
+            )
+        }
         val member = gitService.getProjectMembersAll(
             gitProjectId = gitProjectInfo.id.toString(),
             page = 1,

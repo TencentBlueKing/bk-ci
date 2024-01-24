@@ -136,6 +136,11 @@ class PipelineYamlTriggerListener @Autowired constructor(
                 CheckType.NEED_DELETE ->
                     pipelineYamlRepositoryService.deleteYamlPipeline(projectId = projectId, action = action)
 
+                CheckType.MERGED ->
+                    pipelineYamlRepositoryService.deleteYamlPipeline(
+                        projectId = projectId, action = action, releaseBranch = true
+                    )
+
                 else -> Unit
             }
         }

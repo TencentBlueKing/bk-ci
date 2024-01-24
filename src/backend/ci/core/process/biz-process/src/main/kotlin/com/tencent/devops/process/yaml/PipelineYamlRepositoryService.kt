@@ -348,6 +348,8 @@ class PipelineYamlRepositoryService @Autowired constructor(
      * 2.如果是非默认分支删除
      *   - 当前流水线有正式版本,分支版本置为删除
      *   - 当前流水线没有正式版本，分支版本变为草稿版本
+     *
+     *  @param releaseBranch true-merge分支,false-删除分支或删除文件
      */
     fun deleteYamlPipeline(
         projectId: String,
@@ -478,6 +480,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
         )
         val defaultBranch = action.data.context.defaultBranch
         if (pipelineYamlInfo == null) {
+            logger.info("push yaml pipeline|create yaml|$projectId|$pipelineId|$version")
             val directory = GitActionCommon.getCiDirectory(filePath)
             pipelineYamlService.save(
                 projectId = projectId,
@@ -513,6 +516,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 blobId = blobId
             )
             if (pipelineYamlVersion == null) {
+                logger.info("push yaml pipeline|update yaml|$projectId|$pipelineId|$version")
                 pipelineYamlService.update(
                     projectId = projectId,
                     repoHashId = repoHashId,
