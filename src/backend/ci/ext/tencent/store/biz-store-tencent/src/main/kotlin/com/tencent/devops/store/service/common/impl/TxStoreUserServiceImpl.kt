@@ -69,7 +69,14 @@ class TxStoreUserServiceImpl : StoreUserService {
         return if (userInfo == null) {
             listOf(0, 0, 0, 0)
         } else {
-            listOf(userInfo.bgId.toInt(), userInfo.deptId.toInt(), userInfo.centerId.toInt(), userInfo.groupId.toInt())
+            val list = mutableListOf(
+                userInfo.bgId.toInt(),
+                userInfo.deptId.toInt(),
+                userInfo.centerId.toInt(),
+                userInfo.groupId.toInt()
+            )
+            userInfo.businessLineId?.let { list.add(it.toInt()) }
+            list
         }
     }
 
@@ -91,6 +98,9 @@ class TxStoreUserServiceImpl : StoreUserService {
         logger.info("$userId userDeptInfo is:$userDeptInfo")
         return if (null != userDeptInfo) {
             val commenterDept = StringBuilder(userDeptInfo.bgName) // 组装评论者的机构信息
+            if (
+                userDeptInfo.businessLineName.isNullOrBlank()
+            ) commenterDept.append("/").append(userDeptInfo.businessLineName)
             if (userDeptInfo.deptName.isNotEmpty()) commenterDept.append("/").append(userDeptInfo.deptName)
             if (userDeptInfo.centerName.isNotEmpty()) commenterDept.append("/").append(userDeptInfo.centerName)
             if (userDeptInfo.groupName.isNotEmpty()) commenterDept.append("/").append(userDeptInfo.groupName)
