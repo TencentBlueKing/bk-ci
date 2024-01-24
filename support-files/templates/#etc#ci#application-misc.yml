@@ -74,11 +74,12 @@ sharding:
   databaseShardingStrategy:
     algorithmClassName: "com.tencent.devops.misc.sharding.BkProcessDatabaseShardingAlgorithm"
     archiveAlgorithmClassName: "com.tencent.devops.misc.sharding.BkProcessArchiveDatabaseShardingAlgorithm"
+    shardingField: PROJECT_ID
   tableShardingStrategy:
     archiveAlgorithmClassName: "com.tencent.devops.misc.sharding.BkProcessArchiveTableShardingAlgorithm"
+    shardingField: PROJECT_ID
   archiveFlag: Y
   defaultFlag: N
-  shardingField: PROJECT_ID
 
 image:
   dockerCli:
