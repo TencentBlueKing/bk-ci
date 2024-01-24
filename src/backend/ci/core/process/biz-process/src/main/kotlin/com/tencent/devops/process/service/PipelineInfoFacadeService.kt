@@ -1396,18 +1396,6 @@ class PipelineInfoFacadeService @Autowired constructor(
         }
     }
 
-    fun deletePipelineCheck(
-        userId: String,
-        projectId: String,
-        pipelineId: String
-    ) {
-        val setting = pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId)
-        if (setting.pipelineAsCodeSettings?.enable == true) {
-            // 检查yaml是否已经在默认分支删除
-            yamlFacadeService.deleteYamlPipelineCheck(userId, projectId, pipelineId)
-        }
-    }
-
     fun isPipelineExist(
         projectId: String,
         pipelineId: String? = null,
