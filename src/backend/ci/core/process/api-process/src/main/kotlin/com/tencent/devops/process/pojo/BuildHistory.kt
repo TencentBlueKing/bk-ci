@@ -46,6 +46,8 @@ data class BuildHistory(
     val buildNum: Int?,
     @ApiModelProperty("编排文件版本号", required = true)
     val pipelineVersion: Int,
+    @ApiModelProperty("发布版本号（草稿没有值）", required = false)
+    val versionNum: Int?,
     @ApiModelProperty("流水线的执行开始时间", required = true)
     val startTime: Long,
     @ApiModelProperty("流水线的执行结束时间", required = true)

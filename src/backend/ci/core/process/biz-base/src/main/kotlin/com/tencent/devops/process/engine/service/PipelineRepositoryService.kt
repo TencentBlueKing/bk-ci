@@ -622,11 +622,18 @@ class PipelineRepositoryService constructor(
         description: String?,
         pipelineAsCodeSettings: PipelineAsCodeSettings?
     ): DeployPipelineResult {
+        val onlyDraft = versionStatus == VersionStatus.COMMITTING
         val modelVersion = 1
-        val versionNum = 1
-        val pipelineVersion = 1
-        val triggerVersion = 1
+        var versionNum = 1
+        var pipelineVersion = 1
+        var triggerVersion = 1
         val settingVersion = 1
+        // 如果是仅有草稿的状态，resource表的版本号先设为0作为基准
+        if (onlyDraft) {
+            versionNum = 0
+            pipelineVersion = 0
+            triggerVersion = 0
+        }
         val taskCount: Int = model.taskCount()
         val id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_INFO").data
         val lock = PipelineModelLock(redisOperation, pipelineId)
@@ -648,7 +655,7 @@ class PipelineRepositoryService constructor(
                     canElementSkip = canElementSkip,
                     taskCount = taskCount,
                     id = id,
-                    onlyDraft = versionStatus == VersionStatus.COMMITTING
+                    onlyDraft = onlyDraft
                 )
                 model.latestVersion = modelVersion
                 var savedSetting = PipelineSetting(
@@ -927,30 +934,36 @@ class PipelineRepositoryService constructor(
                             activeBranchVersion.version
                         }
                     }
-                    // 3 通过分支发布 —— 将要通过分支发布的草稿直接删除草稿，由代码库提供分支版本管理
+                    // 3 通过分支发布 —— 将要通过分支发布的草稿直接更新为分支版本
                     VersionStatus.BRANCH_RELEASE -> {
                         if (branchName.isNullOrBlank()) throw ErrorCodeException(
                             errorCode = CommonMessageCode.PARAMETER_VALIDATE_ERROR,
                             params = arrayOf("branchName")
                         )
-                        val activeBranchVersion = pipelineResourceVersionDao.getBranchVersionResource(
+                        // 将所有该发布分支的历史版本清理
+                        val count = pipelineResourceVersionDao.clearActiveBranchVersion(
                             dslContext = transactionContext,
                             projectId = projectId,
                             pipelineId = pipelineId,
                             branchName = branchName
                         )
-                        operationLogParams = versionName
-                        operationLogType = if (activeBranchVersion == null) {
-                            OperationLogType.CREATE_BRANCH_VERSION
-                        } else {
-                            OperationLogType.UPDATE_DRAFT_VERSION
-                        }
-                        pipelineResourceVersionDao.clearDraftVersion(
+                        val draftVersion = pipelineResourceVersionDao.getDraftVersionResource(
                             dslContext = transactionContext,
                             projectId = projectId,
                             pipelineId = pipelineId
+                        ) ?: throw ErrorCodeException(
+                            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_DRAFT_EXISTS
                         )
-                        return@transaction
+                        version = draftVersion.version
+                        versionName = branchName
+                        branchAction = BranchVersionAction.ACTIVE
+
+                        operationLogParams = versionName
+                        operationLogType = if (count > 0) {
+                            OperationLogType.UPDATE_DRAFT_VERSION
+                        } else {
+                            OperationLogType.CREATE_BRANCH_VERSION
+                        }
                     }
                     // 4 正式版本保存 —— 寻找当前草稿，存在草稿版本则报错，不存在则直接取最新VERSION+1同时更新INFO、RESOURCE表
                     else -> {
@@ -990,6 +1003,7 @@ class PipelineRepositoryService constructor(
                             )
                             draftVersion.version
                         }
+                        watcher.start("updatePipelineResource")
                         pipelineInfoDao.update(
                             dslContext = transactionContext,
                             projectId = projectId,
@@ -1002,35 +1016,33 @@ class PipelineRepositoryService constructor(
                             canElementSkip = canElementSkip,
                             taskCount = taskCount,
                             latestVersion = model.latestVersion,
+                            // 进行过至少一次发布版本后，才取消仅有草稿的状态
                             onlyDraft = false
                         )
                         model.latestVersion = version
+                        pipelineResourceDao.deleteEarlyVersion(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            beforeVersion = version
+                        )
+                        pipelineResourceDao.create(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            creator = userId,
+                            version = version,
+                            model = model,
+                            yamlStr = yamlStr,
+                            versionName = versionName,
+                            versionNum = versionNum,
+                            pipelineVersion = pipelineVersion,
+                            triggerVersion = triggerVersion,
+                            settingVersion = settingVersion
+                        )
                     }
                 }
 
-                watcher.start("updatePipelineResource")
-                if (versionStatus == VersionStatus.RELEASED) {
-                    pipelineResourceDao.deleteEarlyVersion(
-                        dslContext = transactionContext,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        beforeVersion = version
-                    )
-                    pipelineResourceDao.create(
-                        dslContext = transactionContext,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        creator = userId,
-                        version = version,
-                        model = model,
-                        yamlStr = yamlStr,
-                        versionName = versionName,
-                        versionNum = versionNum,
-                        pipelineVersion = pipelineVersion,
-                        triggerVersion = triggerVersion,
-                        settingVersion = settingVersion
-                    )
-                }
                 // 对于新保存的版本如果没有指定基准版本则默认为上一个版本
                 watcher.start("updatePipelineResourceVersion")
                 pipelineResourceVersionDao.create(

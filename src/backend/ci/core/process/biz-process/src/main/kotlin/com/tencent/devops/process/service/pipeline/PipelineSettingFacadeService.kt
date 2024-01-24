@@ -34,6 +34,7 @@ import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_DEFAULT
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
@@ -337,7 +338,8 @@ class PipelineSettingFacadeService @Autowired constructor(
         return oldSetting.copy(
             projectId = projectId,
             pipelineId = newPipelineId,
-            pipelineName = pipelineName
+            pipelineName = pipelineName,
+            pipelineAsCodeSettings = PipelineAsCodeSettings()
         )
     }
 
