@@ -248,6 +248,24 @@ BEGIN
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY'
+                    AND COLUMN_NAME = 'VERSION_NAME') THEN
+    ALTER TABLE `T_PIPELINE_BUILD_HISTORY`
+        ADD COLUMN `VERSION_NAME` varchar(64) DEFAULT NULL COMMENT '版本名称';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY'
+                    AND COLUMN_NAME = 'VERSION_NUM') THEN
+    ALTER TABLE `T_PIPELINE_BUILD_HISTORY`
+        ADD COLUMN `VERSION_NUM` int(11) DEFAULT NULL COMMENT '流水线发布版本';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_PIPELINE_RESOURCE_VERSION'
                     AND COLUMN_NAME = 'YAML') THEN
     ALTER TABLE `T_PIPELINE_RESOURCE_VERSION`
