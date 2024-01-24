@@ -116,7 +116,7 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                         setting = setting,
                         buildStatus = buildStatus,
                         variables = commandContext.variables,
-                        content = "✔️$successContent"
+                        content = "✔️ $successContent"
                     )
                 }
             }
