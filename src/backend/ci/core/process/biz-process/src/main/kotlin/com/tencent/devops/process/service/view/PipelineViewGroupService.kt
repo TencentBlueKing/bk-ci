@@ -778,7 +778,9 @@ class PipelineViewGroupService @Autowired constructor(
     }
 
     fun listPermissionStaticViews(userId: String, projectId: String, pipelineId: String): List<PipelineNewViewSummary> {
-        val viewGroupRecords = pipelineViewGroupDao.listByProjectIdFilterPipelineId(dslContext, projectId, pipelineId)
+        val allViewGroupRecords = pipelineViewGroupDao.listByProjectId(dslContext, projectId)
+        val viewIdByPipeline = pipelineViewGroupDao.listViewIdByPipelineId(dslContext, projectId, pipelineId).toSet()
+        val viewGroupRecords = allViewGroupRecords.filter { viewIdByPipeline.contains(it.viewId) }
         val viewRecords = pipelineViewDao.list(
             dslContext = dslContext,
             projectId = projectId,
