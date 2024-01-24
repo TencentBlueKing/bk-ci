@@ -207,7 +207,7 @@ object SVNApi {
         val fullName = URLEncoder.encode(projectName, "UTF-8")
         val request = request(
             host = host,
-            url = "/api/v3/svn/projects/$fullName/hooks",
+            url = "svn/projects/$fullName/hooks",
             token = token
         ).get().build()
         val body = getBody(request)
@@ -233,7 +233,7 @@ object SVNApi {
         }
         val request = request(
             host = host,
-            url = "api/v3/svn/projects/$fullName/hooks",
+            url = "svn/projects/$fullName/hooks",
             token = token
         )
             .post(
@@ -259,7 +259,7 @@ object SVNApi {
         val queryParam = "path=$path&revision=$revision"
         val request = request(
             host = host,
-            url = "api/v3/svn/projects/$fullName/tree?$queryParam",
+            url = "svn/projects/$fullName/tree?$queryParam",
             token = token
         ).get().build()
         val body = getBody(request)

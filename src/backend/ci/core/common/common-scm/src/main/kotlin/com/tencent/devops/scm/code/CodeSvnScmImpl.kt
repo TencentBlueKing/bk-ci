@@ -150,7 +150,6 @@ class CodeSvnScmImpl constructor(
     }
 
     override fun checkTokenAndUsername() {
-        // 检查私人令牌是否正确，后续凭证改为【TOKEN_USERNAME_PASSWORD】类型后，强制校验
         try {
             SVNApi.getFileList(
                 host = svnConfig.webhookApiUrl,
