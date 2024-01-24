@@ -1257,6 +1257,38 @@ class PipelineRepositoryService constructor(
         return resource
     }
 
+    fun getBranchVersionResource(
+        projectId: String,
+        pipelineId: String,
+        branchName: String
+    ): PipelineResourceVersion? {
+        val resource = pipelineResourceVersionDao.getBranchVersionResource(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            branchName = branchName
+        )
+        // 返回时将别名name补全为id
+        resource?.let {
+            (resource.model.stages[0].containers[0] as TriggerContainer).params.forEach { param ->
+                param.name = param.name ?: param.id
+            }
+        }
+        return resource
+    }
+
+    fun getActiveBranchVersionCount(
+        projectId: String,
+        pipelineId: String,
+        queryDslContext: DSLContext? = null
+    ): Int {
+        return pipelineResourceVersionDao.getActiveBranchVersionCount(
+            dslContext = queryDslContext ?: dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+    }
+
     fun rollbackDraftFromVersion(
         userId: String,
         projectId: String,
@@ -1323,7 +1355,7 @@ class PipelineRepositoryService constructor(
                 pipelineId = pipelineId,
                 creator = userId,
                 version = newDraft.version,
-                versionName = null,
+                versionName = "",
                 model = newDraft.model,
                 baseVersion = targetVersion.version.takeIf { ignoreBase != true },
                 yaml = newDraft.yaml,

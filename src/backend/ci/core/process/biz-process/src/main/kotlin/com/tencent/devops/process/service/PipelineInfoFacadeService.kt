@@ -668,25 +668,40 @@ class PipelineInfoFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         branchName: String,
-        branchVersionAction: BranchVersionAction
+        branchVersionAction: BranchVersionAction,
+        releaseBranch: Boolean? = false
     ) {
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
-            val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
-                projectId = projectId, pipelineId = pipelineId, queryDslContext = transactionContext
-            )
-            if (pipelineInfo?.onlyDraft == true) {
-                pipelineRepositoryService.rollbackDraftFromVersion(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    version = pipelineInfo.version,
-                    ignoreBase = true
-                )
-            } else {
+            if (releaseBranch == true || branchVersionAction != BranchVersionAction.INACTIVE) {
+                // 如果是发布分支版本则直接更新
                 pipelineRepositoryService.updatePipelineBranchVersion(
                     projectId, pipelineId, branchName, branchVersionAction, transactionContext
                 )
+            } else {
+                // 如果是删除分支版本则判断是否为最后一个版本
+                val branchVersion = pipelineRepositoryService.getBranchVersionResource(
+                    projectId, pipelineId, branchName
+                )
+                pipelineRepositoryService.updatePipelineBranchVersion(
+                    projectId, pipelineId, branchName, branchVersionAction, transactionContext
+                )
+                val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
+                    projectId = projectId, pipelineId = pipelineId, queryDslContext = transactionContext
+                )
+                if (pipelineInfo?.onlyDraft != true) return@transaction
+                val branchCount = pipelineRepositoryService.getActiveBranchVersionCount(
+                    projectId = projectId, pipelineId = pipelineId, queryDslContext = transactionContext
+                )
+                if (branchVersion != null && branchCount == 0) {
+                    pipelineRepositoryService.rollbackDraftFromVersion(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        version = branchVersion.version,
+                        ignoreBase = true
+                    )
+                }
             }
         }
     }

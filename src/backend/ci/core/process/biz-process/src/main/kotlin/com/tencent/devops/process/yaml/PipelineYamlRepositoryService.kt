@@ -351,7 +351,8 @@ class PipelineYamlRepositoryService @Autowired constructor(
      */
     fun deleteYamlPipeline(
         projectId: String,
-        action: BaseAction
+        action: BaseAction,
+        releaseBranch: Boolean? = false
     ) {
         val yamlFile = action.data.context.yamlFile!!
         val filePath = yamlFile.yamlPath
@@ -381,6 +382,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineYamlInfo.pipelineId,
                     branchName = yamlFile.ref,
+                    releaseBranch = releaseBranch,
                     branchVersionAction = BranchVersionAction.INACTIVE
                 )
                 if (defaultBranch != null) {

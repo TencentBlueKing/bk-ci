@@ -58,7 +58,7 @@ class PipelineResourceVersionDao {
         pipelineId: String,
         creator: String,
         version: Int,
-        versionName: String?,
+        versionName: String,
         model: Model,
         baseVersion: Int?,
         yaml: String?,
@@ -96,7 +96,7 @@ class PipelineResourceVersionDao {
         pipelineId: String,
         creator: String,
         version: Int,
-        versionName: String?,
+        versionName: String,
         modelStr: String,
         baseVersion: Int?,
         yamlStr: String?,
@@ -205,6 +205,25 @@ class PipelineResourceVersionDao {
                 .and(VERSION_NAME.eq(branchName))
                 .orderBy(VERSION.desc()).limit(1)
                 .fetchAny(mapper)
+        }
+    }
+
+    fun getActiveBranchVersionCount(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): Int {
+        // 一定是取最新的分支版本
+        with(T_PIPELINE_RESOURCE_VERSION) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .and(STATUS.eq(VersionStatus.BRANCH.name))
+                .and(
+                    BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
+                        .or(BRANCH_ACTION.isNull)
+                )
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
