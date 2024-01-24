@@ -60,6 +60,7 @@ import org.springframework.stereotype.Service
 import java.util.regex.Pattern
 
 @Service
+@Suppress("ComplexMethod", "NestedBlockDepth")
 class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
     client: Client,
     val bsAuthProjectApi: AuthProjectApi,
