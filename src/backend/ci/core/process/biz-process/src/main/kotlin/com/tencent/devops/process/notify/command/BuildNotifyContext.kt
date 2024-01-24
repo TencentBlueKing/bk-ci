@@ -13,7 +13,6 @@ data class BuildNotifyContext(
     val pipelineSetting: PipelineSetting,
     val notifyValue: MutableMap<String, String>,
     val buildStatus: BuildStatus,
-    var receivers: MutableSet<String> = mutableSetOf(),
     val projectId: String,
     val pipelineId: String,
     val buildId: String
