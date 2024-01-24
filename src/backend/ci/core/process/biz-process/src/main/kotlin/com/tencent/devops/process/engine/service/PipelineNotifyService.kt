@@ -10,7 +10,7 @@ import com.tencent.devops.process.notify.command.BuildNotifyContext
 import com.tencent.devops.process.notify.command.NotifyCmd
 import com.tencent.devops.process.notify.command.NotifyCmdChain
 import com.tencent.devops.process.notify.command.impl.NotifyPipelineCmd
-import com.tencent.devops.process.notify.command.impl.BluekingNotifySendCmd
+import com.tencent.devops.process.notify.command.impl.NotifySendCmd
 import com.tencent.devops.process.notify.command.impl.NotifyUrlBuildCmd
 import com.tencent.devops.process.service.BuildVariableService
 import org.slf4j.LoggerFactory
@@ -58,7 +58,7 @@ abstract class PipelineNotifyService @Autowired constructor(
         val commandList = mutableListOf(
             commandCache.get(NotifyUrlBuildCmd::class.java), // 构建发送url相关信息
             commandCache.get(NotifyPipelineCmd::class.java), // 构建流水线相关相关信息
-            commandCache.get(BluekingNotifySendCmd::class.java) // 发送消息
+            commandCache.get(NotifySendCmd::class.java) // 发送消息
         )
         // 添加自定义扩展
         if (addExtCmd() != null) {
