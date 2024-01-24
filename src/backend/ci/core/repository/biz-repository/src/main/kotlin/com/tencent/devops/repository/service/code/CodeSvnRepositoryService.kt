@@ -183,6 +183,11 @@ class CodeSvnRepositoryService @Autowired constructor(
                         message = I18nUtil.getCodeLanMessage(CommonMessageCode.PWD_EMPTY)
                     )
                 }
+                if (repoCredentialInfo.token.isEmpty()) {
+                    throw OperationException(
+                        message = I18nUtil.getCodeLanMessage(CommonMessageCode.SVN_TOKEN_EMPTY)
+                    )
+                }
                 scmService.checkUsernameAndPassword(
                     projectName = repository.projectName,
                     url = repository.getFormatURL(),
@@ -195,6 +200,11 @@ class CodeSvnRepositoryService @Autowired constructor(
                 )
             }
             SVN_TYPE_SSH -> {
+                if (repoCredentialInfo.token.isEmpty()) {
+                    throw OperationException(
+                        message = I18nUtil.getCodeLanMessage(CommonMessageCode.SVN_TOKEN_EMPTY)
+                    )
+                }
                 scmService.checkPrivateKeyAndToken(
                     projectName = repository.projectName,
                     url = repository.getFormatURL(),

@@ -81,6 +81,15 @@ object ScmFactory {
                         errorMsg = "The svn private key is null"
                     )
                 }
+                if (token == null) {
+                    throw ScmException(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = CommonMessageCode.SVN_TOKEN_EMPTY,
+                            language = DEFAULT_LOCALE_LANGUAGE
+                        ),
+                        ScmType.CODE_SVN.name
+                    )
+                }
                 val svnConfig = SpringContextUtil.getBean(SVNConfig::class.java)
                 CodeSvnScmImpl(
                     projectName = projectName,
