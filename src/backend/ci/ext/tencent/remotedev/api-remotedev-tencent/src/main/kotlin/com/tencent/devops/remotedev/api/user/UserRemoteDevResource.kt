@@ -166,7 +166,7 @@ interface UserRemoteDevResource {
         workspaceName: String
     ): Result<String>
 
-    @ApiOperation("申请专家协助")
+    @ApiOperation("一键认领求助问题")
     @GET
     @Path("/addExpSup")
     fun addExpSup(
@@ -178,5 +178,33 @@ interface UserRemoteDevResource {
         @ApiParam(value = "工作空间ID", required = true)
         @QueryParam("workspaceName")
         workspaceName: String
+    ): Result<Boolean>
+
+    @ApiOperation("获取兔小巢用户登录态token")
+    @GET
+    @Path("/txc/token")
+    fun getTxcToken(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("用户唯一标识", required = true)
+        @QueryParam("openId")
+        openId: String,
+        @ApiParam("用户昵称", required = true)
+        @QueryParam("nickName")
+        nickName: String,
+        @ApiParam("用户头像", required = true)
+        @QueryParam("avatar")
+        avatar: String
+    ): Result<String>
+
+    @ApiOperation("一键查询CGS密码")
+    @GET
+    @Path("/queryCgsPwd")
+    fun queryCgsPwd(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "cgsId", required = true)
+        @QueryParam("cgsId")
+        cgsId: String
     ): Result<Boolean>
 }

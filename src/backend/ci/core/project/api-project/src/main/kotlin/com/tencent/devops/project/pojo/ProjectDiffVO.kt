@@ -62,6 +62,14 @@ data class ProjectDiffVO(
     val bgName: String?,
     @ApiModelProperty("审批中事业群名字")
     val afterBgName: String?,
+    @ApiModelProperty("事业线ID")
+    val businessLineId: String?,
+    @ApiModelProperty("审批中事业线ID")
+    val afterBusinessLineId: Long?,
+    @ApiModelProperty("事业线名称")
+    val businessLineName: String?,
+    @ApiModelProperty("审批中事业线名称")
+    val afterBusinessLineName: String?,
     @ApiModelProperty("中心ID")
     val centerId: String?,
     @ApiModelProperty("审批中中心ID")

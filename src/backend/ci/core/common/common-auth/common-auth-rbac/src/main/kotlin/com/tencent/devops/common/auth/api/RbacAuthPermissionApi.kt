@@ -28,9 +28,11 @@
 
 package com.tencent.devops.common.auth.api
 
+import com.tencent.bk.sdk.iam.util.AuthCacheUtil
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.code.AuthServiceCode
+import com.tencent.devops.common.auth.utils.AuthCacheKeyUtil
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
@@ -46,16 +48,27 @@ class RbacAuthPermissionApi(
         projectCode: String,
         permission: AuthPermission
     ): Boolean {
-        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            token = tokenService.getSystemToken()!!,
+        val rbacResourceType = RbacAuthUtils.getRelationResourceType(
+            authPermission = permission,
+            authResourceType = resourceType
+        )
+        val action = RbacAuthUtils.buildAction(authResourceType = resourceType, authPermission = permission)
+        val cacheKey = AuthCacheKeyUtil.getCacheKey(
             userId = user,
-            action = RbacAuthUtils.buildAction(authResourceType = resourceType, authPermission = permission),
+            resourceType = rbacResourceType,
+            action = action,
             projectCode = projectCode,
-            resourceCode = RbacAuthUtils.getRelationResourceType(
-                authPermission = permission,
-                authResourceType = resourceType
-            )
-        ).data!!
+            resourceCode = projectCode
+        )
+        return AuthCacheUtil.cachePermission(cacheKey) {
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+                token = tokenService.getSystemToken()!!,
+                userId = user,
+                action = action,
+                projectCode = projectCode,
+                resourceCode = rbacResourceType
+            ).data!!
+        }
     }
 
     override fun validateUserResourcePermission(
@@ -67,15 +80,25 @@ class RbacAuthPermissionApi(
         permission: AuthPermission,
         relationResourceType: AuthResourceType?
     ): Boolean {
-        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken()!!,
+        val action = RbacAuthUtils.buildAction(authResourceType = resourceType, authPermission = permission)
+        val cacheKey = AuthCacheKeyUtil.getCacheKey(
             userId = user,
             resourceType = resourceType.value,
+            action = action,
             projectCode = projectCode,
-            action = RbacAuthUtils.buildAction(authResourceType = resourceType, authPermission = permission),
-            resourceCode = resourceCode,
-            relationResourceType = relationResourceType?.value
-        ).data!!
+            resourceCode = resourceCode
+        )
+        return AuthCacheUtil.cachePermission(cacheKey) {
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+                token = tokenService.getSystemToken()!!,
+                userId = user,
+                resourceType = resourceType.value,
+                projectCode = projectCode,
+                action = action,
+                resourceCode = resourceCode,
+                relationResourceType = relationResourceType?.value
+            ).data!!
+        }
     }
 
     override fun validateUserResourcePermission(
@@ -86,13 +109,23 @@ class RbacAuthPermissionApi(
         resource: AuthResourceInstance
     ): Boolean {
         val resourceType = RbacAuthUtils.getResourceTypeByStr(resource.resourceType)
-        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByInstance(
-            token = tokenService.getSystemToken()!!,
+        val action = RbacAuthUtils.buildAction(authResourceType = resourceType, authPermission = permission)
+        val cacheKey = AuthCacheKeyUtil.getCacheKey(
             userId = user,
+            resourceType = resourceType.value,
+            action = action,
             projectCode = projectCode,
-            action = RbacAuthUtils.buildAction(authResourceType = resourceType, authPermission = permission),
-            resource = resource
-        ).data!!
+            resourceCode = resource.resourceCode
+        )
+        return AuthCacheUtil.cachePermission(cacheKey) {
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByInstance(
+                token = tokenService.getSystemToken()!!,
+                userId = user,
+                projectCode = projectCode,
+                action = action,
+                resource = resource
+            ).data!!
+        }
     }
 
     override fun getUserResourceByPermission(

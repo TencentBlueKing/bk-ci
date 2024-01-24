@@ -47,6 +47,8 @@
                             <rollback-entry
                                 v-if="props.row.canRollback"
                                 :version="props.row.version"
+                                :pipeline-id="$route.params.pipelineId"
+                                :project-id="$route.params.projectId"
                                 :version-name="props.row.versionName"
                                 :draft-version-name="draftVersionName"
                             />

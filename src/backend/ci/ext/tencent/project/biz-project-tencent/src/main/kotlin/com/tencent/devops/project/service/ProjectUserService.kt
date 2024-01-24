@@ -30,6 +30,7 @@ package com.tencent.devops.project.service
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
+import com.tencent.devops.model.project.tables.records.TUserRecord
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectUserDao
 import com.tencent.devops.project.dao.UserDao
@@ -51,6 +52,15 @@ class ProjectUserService @Autowired constructor(
 ) {
     fun getUserDept(userId: String): UserDeptDetail? {
         val userRecord = userDao.get(dslContext, userId) ?: return null
+        return packagingBean(userRecord)
+    }
+
+    fun getPublicAccount(userId: String): UserDeptDetail? {
+        val userRecord = userDao.getPublicType(dslContext, userId) ?: return null
+        return packagingBean(userRecord)
+    }
+
+    fun packagingBean(userRecord: TUserRecord): UserDeptDetail {
         return UserDeptDetail(
             bgName = userRecord!!.bgName,
             bgId = userRecord!!.bgId?.toString() ?: "",

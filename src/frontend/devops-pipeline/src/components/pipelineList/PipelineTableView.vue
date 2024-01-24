@@ -48,7 +48,7 @@
         <bk-table-column v-if="allRenderColumnMap.pipelineName" :width="tableWidthMap.pipelineName" min-width="250" fixed="left" sortable="custom" :label="$t('pipelineName')" prop="pipelineName">
             <template slot-scope="props">
                 <!-- hack disabled event -->
-                <div class="pipeline-name-warpper" :key="props.row.pipelineName">
+                <div class="pipeline-name-wrapper" :key="props.row.pipelineName">
                     <div class="pipeline-name" v-bk-overflow-tips>
                         <span
                             v-if="props.row.permissions && !props.row.permissions.canView"
@@ -104,7 +104,7 @@
                         <div slot="content">
                             <bk-tag
                                 v-for="hiddenGroup in pipelineGroups[props.$index].hiddenGroups"
-                                ext-cls="pipeline-group-name-tag"
+                                ext-cls="pipeline-group-name-tag pipeline-group-more-tag"
                                 :key="hiddenGroup"
                                 v-bk-overflow-tips="{ delay: [500, 0], interactive: false }"
                                 @click="goGroup(hiddenGroup)"
@@ -227,28 +227,36 @@
                     @click="applyPermission(props.row)">
                     {{ $t('apply') }}
                 </bk-button>
-                <router-link
-                    v-else-if="props.row.onlyDraft"
-                    class="text-link"
-                    :to="{
-                        name: 'pipelinesEdit',
-                        params: {
-                            projectId: props.row.projectId,
-                            pipelineId: props.row.pipelineId
-                        }
-                    }"
-                >
-                    {{ $t('edit') }}
-                </router-link>
                 <template
                     v-else-if="props.row.hasPermission && !props.row.delete"
                 >
-                    <span v-bk-tooltips="props.row.tooltips">
+                    <router-link
+                        v-if="props.row.onlyDraft"
+                        class="text-link exec-pipeline-btn"
+                        :to="{
+                            name: 'pipelinesEdit',
+                            params: {
+                                projectId: props.row.projectId,
+                                pipelineId: props.row.pipelineId
+                            }
+                        }"
+                        v-perm="{
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: props.row.pipelineId,
+                                action: RESOURCE_ACTION.EDIT
+                            }
+                        }"
+                    >
+                        {{ $t('edit') }}
+                    </router-link>
+                    <span v-else v-bk-tooltips="props.row.tooltips">
                         <bk-button
                             text
                             theme="primary"
                             class="exec-pipeline-btn"
-                            :disabled="props.row.disabled || props.row.lock"
+                            :disabled="props.row.disabled"
                             v-perm="{
                                 hasPermission: props.row.permissions && props.row.permissions.canExecute,
                                 disablePermissionApi: true,
@@ -709,9 +717,10 @@
         ::-webkit-scrollbar {
             background-color: white;
         }
-        .pipeline-name-warpper {
+        .pipeline-name-wrapper {
             width: 100%;
             display: inline-flex;
+            align-items: center;
             white-space: nowrap;
             overflow: hidden;
         }

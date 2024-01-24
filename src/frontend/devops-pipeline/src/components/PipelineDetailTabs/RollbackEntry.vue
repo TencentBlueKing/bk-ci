@@ -30,6 +30,14 @@
             },
             draftVersionName: {
                 type: String
+            },
+            projectId: {
+                type: String,
+                required: true
+            },
+            pipelineId: {
+                type: String,
+                required: true
             }
         },
         data () {
@@ -82,9 +90,10 @@
                         })
                     }
                 } catch (error) {
-                    this.$showTips({
-                        message: error.message || error,
-                        theme: 'error'
+                    this.handleError(error, {
+                        projectId: this.projectId,
+                        resourceCode: this.pipelineId,
+                        action: this.$permissionResourceAction.EDIT
                     })
                 } finally {
                     this.loading = false

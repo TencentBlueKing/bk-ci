@@ -64,7 +64,7 @@
                             },
                         handleSelected: this.doSelectPipeline,
                         searching: this.pipelineListSearching,
-                        handleSearch: debounce(this.handleSearchPipeline, 300)
+                        handleSearch: debounce(this.handleSearchPipeline, 500)
                     }, ...(this.showRecordEntry
                     ? [{
                         selectedValue: this.$t('draftExecRecords'),
