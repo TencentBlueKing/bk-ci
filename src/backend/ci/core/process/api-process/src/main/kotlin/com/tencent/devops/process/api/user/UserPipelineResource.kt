@@ -339,16 +339,6 @@ interface UserPipelineResource {
         batchDeletePipeline: BatchDeletePipeline
     ): Result<Map<String, Boolean>>
 
-    @ApiOperation("检查是否能批量删除流水线编排")
-    @POST
-    @Path("/batchDeleteCheck")
-    fun batchDeleteCheck(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        batchDeletePipeline: BatchDeletePipeline
-    ): Result<Map<String, Boolean>>
-
     @ApiOperation("删除流水线版本")
     @DELETE
     @Path("/{projectId}/{pipelineId}/{version}/")
