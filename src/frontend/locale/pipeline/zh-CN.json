@@ -67,6 +67,7 @@
   "uncollectSuc": "取消收藏成功",
   "copySuc": "复制成功",
   "deleteSuc": "删除成功",
+  "deleteFail": "删除失败",
   "noData": "暂无数据",
   "searchEmpty": "搜索结果为空",
   "atom": "插件",
@@ -1234,7 +1235,7 @@
   "previewTime": "以下结果生成于 {0}",
   "pipelineGroupRepeatTips": "【{0}】已存在，请更换名称",
   "dynamicGroupRemoveDisableTips": "动态流水线组不可以手动移出",
-  "hasNoPermissionPipelineTips": "有 {0} 条流水线无权限删除",
+  "hasNoPermissionPipelineTips": "有 {0} 条流水线无权限删除，有 {1} 条PAC流水线默认分支仍在YAML中无法删除",
   "removeNoPermissionPipeline": "去除无权限流水线",
   "clearSelection": "清除选择",
   "selectedCount": "已选择 <b>{0}</b> 条，",
@@ -1448,5 +1449,7 @@
   "clearFilterConditionTips": "可以尝试 调整关键词 或 {0}",
   "ymlDeletedTips": "默认分支上的YAML文件已删除，以默认分支配置为准的定时、CR、issue、note等触发器已失效",
   "unMergedTips": "有新的分支版本尚未合并到默认分支，可{0}查看详情",
-  "goVersionSideslider": "前往版本历史"
+  "goVersionSideslider": "前往版本历史",
+  "pacModePipelineDeleteTips": "已开启PAC模式,请先删除代码库默认分支上的yaml文件,再删除流水线",
+  "noPermissionToDelete": "无权限删除"
 }

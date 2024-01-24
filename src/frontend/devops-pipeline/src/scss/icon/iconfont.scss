@@ -37,8 +37,10 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
-
-.devops-icon.icon-close-circle-fill:before {
+.devops-icon.icon-yaml:before {
+    content: "\e951";
+  }
+  .devops-icon.icon-close-circle-fill:before {
     content: "\e921";
   }
   .devops-icon.icon-jump-link:before {

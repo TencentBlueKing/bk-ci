@@ -67,6 +67,7 @@
   "uncollectSuc": "Cancel favorite successfully",
   "copySuc": "Duplicated successfully ",
   "deleteSuc": "Delete successfully ",
+  "deleteFail": "Delete Failed ",
   "noData": "No Data",
   "searchEmpty": "Search result is empty",
   "atom": "Plugin",
@@ -1237,7 +1238,7 @@
   "previewTime": "Generated at {0}",
   "pipelineGroupRepeatTips": "{0} already exists, please change the name",
   "dynamicGroupRemoveDisableTips": "Dynamic groups cannot be manually moved out of the pipeline",
-  "hasNoPermissionPipelineTips": "There are {0} pipelines without permission to delete",
+  "hasNoPermissionPipelineTips": "There are {0} pipelines without permission to delete, and {1} PAC pipelines default branch cannot be deleted in YAML",
   "removeNoPermissionPipeline": "Remove unprivileged pipeline",
   "clearSelection": "Clear",
   "selectedCount": "Selected <b>{0}</b> items, ",
@@ -1450,5 +1451,7 @@
   "clearFilterConditionTips": "You can try adjusting keywords or {0}",
   "ymlDeletedTips": "The YAML file on the default branch has been deleted, and the trigger such as timing, CR, issue, note, etc. based on the configuration on the default branch has been invalid",
   "unMergedTips": "There are new branch versions that have not been merged into the default branch, you can go to the {0} to view the details",
-  "goVersionSideslider": "version history"
+  "goVersionSideslider": "version history",
+  "pacModePipelineDeleteTips": "PAC mode is enabled, please delete the yaml file on the default branch of the code repository before deleting the pipeline",
+  "noPermissionToDelete": "No permission to delete"
 }

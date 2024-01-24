@@ -28,14 +28,18 @@
                     {{$t('deletePipelineConfirmDesc')}}
                 </p>
                 <bk-alert
-                    v-if="noPermissionPipelineLength > 0"
+                    v-if="canNotDeletePipelineLength > 0"
                     type="warning"
                     class="no-permission-pipeline-alert"
-                    :title="$t('hasNoPermissionPipelineTips', [noPermissionPipelineLength])"
-                    closable
-                    :close-text="$t('removeNoPermissionPipeline')"
-                    @close="removeNoPermissionPipeline"
                 >
+                    <div class="can-not-delete-tips" slot="title">
+                        <span>
+                            {{$t('hasNoPermissionPipelineTips', [noPermissionPipelineLength, pacPipelines.length])}}
+                        </span>
+                        <span class="text-link" @click="removeNoPermissionPipeline">
+                            {{$t('removeNoPermissionPipeline')}}
+                        </span>
+                    </div>
                 </bk-alert>
             </template>
         </template>
@@ -45,7 +49,7 @@
                 v-for="(pipeline, index) in removedPipelines"
                 :key="pipeline.pipelineId"
                 :class="{
-                    'no-permission-pipeline': isDeleteType && !pipeline.hasPermission
+                    'no-permission-pipeline': isDeleteType && (!pipeline.hasPermission || pipeline.pac)
                 }"
             >
                 <span>{{ pipeline.name }}</span>
@@ -69,7 +73,11 @@
                         </bk-tag>
                     </bk-popover>
                 </div>
-                <span v-if="!pipeline.hasPermission || pipeline.pac" v-bk-tooltips="pipeline.tooltips" class="devops-icon icon-yaml"></span>
+                <span
+                    v-if="!pipeline.hasPermission || pipeline.pac"
+                    v-bk-tooltips="pipeline.tooltips"
+                    :class="`devops-icon icon-${pipeline.pac ? 'yaml' : 'lock'}`"
+                />
             </li>
         </ul>
         <footer slot="footer">
@@ -116,7 +124,7 @@
         },
         data () {
             return {
-                hideNoPermissionPipeline: false,
+                hideCanNotDeletePipelines: false,
                 visibleTagCountList: [],
                 isBusy: false,
                 width: 600,
@@ -142,26 +150,34 @@
             hasPermissionPipelines () {
                 return this.pipelineList.filter(pipeline => pipeline.hasPermission)
             },
+            pacPipelines () {
+                return this.pipelineList.filter(pipeline => pipeline.pac)
+            },
+            canNotDeletePipelineLength () {
+                return this.noPermissionPipelineLength + this.pacPipelines.length
+            },
             noPermissionPipelineLength () {
                 return this.pipelineList.length - this.hasPermissionPipelines.length
             },
             removedPipelines () {
-                const list = this.hideNoPermissionPipeline ? this.hasPermissionPipelines : this.pipelineList
+                const list = this.pipelineList.filter(pipeline => !this.hideCanNotDeletePipelines || (pipeline.hasPermission && !pipeline.pac))
                 return list.map((pipeline, index) => {
                     const viewNames = pipeline.viewNames ?? []
                     const visibleTagCount = this.visibleTagCountList[index] ?? viewNames.length
                     const overflowCount = viewNames.length - visibleTagCount
 
                     return {
+                        id: pipeline.pipelineId,
                         name: pipeline.pipelineName,
                         hasPermission: pipeline.hasPermission,
                         groups: viewNames.slice(0, visibleTagCount),
                         hiddenGroups: viewNames.slice(visibleTagCount).join(';'),
                         overflowCount,
+                        pac: pipeline.pac,
                         showMoreTag: this.visibleTagCountList[index] === undefined || (overflowCount > 0),
                         tooltips: (!pipeline.hasPermission || pipeline.pac)
                             ? {
-                                content: this.$t(pipeline.pac ? '已开启PAC模式,请先删除代码库默认分支上的yaml文件,再删除流水线' : '无删除权限'),
+                                content: this.$t(pipeline.pac ? 'pacModePipelineDeleteTips' : 'noPermissionToDelete'),
                                 placement: 'top',
                                 delay: [300, 0],
                                 allowHTML: false
@@ -171,7 +187,7 @@
                 })
             },
             disDeletable () {
-                return this.isDeleteType && ((!this.hideNoPermissionPipeline && this.noPermissionPipelineLength > 0) || this.hasPermissionPipelines.length === 0)
+                return this.isDeleteType && ((!this.hideCanNotDeletePipelines && this.canNotDeletePipelineLength > 0) || this.hasPermissionPipelines.length === 0 || this.removedPipelines.length === 0)
             }
         },
         watch: {
@@ -191,37 +207,19 @@
             ...mapActions('pipelines', [
                 'removePipelineFromGroup',
                 'patchDeletePipelines',
-                'requestGetGroupLists',
-                'getPipelinePacInfo'
+                'requestGetGroupLists'
             ]),
             removeNoPermissionPipeline () {
-                this.hideNoPermissionPipeline = true
-            },
-            async getPipelinePacInfo () {
-                const pipelineIds = this.hasPermissionPipelines.map(pipeline => pipeline.pipelineId)
-                try {
-                    const pipelinePacInfo = await this.getPipelinePacInfo({
-                        projectId: this.$route.params.projectId,
-                        pipelineIds
-                    })
-                    console.log(pipelinePacInfo)
-                } catch (error) {
-                    this.handleError(error, {
-                        projectId: this.$route.params.projectId,
-                        resourceCode: pipelineIds[0],
-                        action: this.$permissionResourceAction.VIEW
-                    })
-                }
+                this.hideCanNotDeletePipelines = true
             },
             async handleSubmit () {
                 if (this.isBusy) return
 
                 try {
                     this.isBusy = true
-                    const list = this.isRemoveType ? this.pipelineList : this.hasPermissionPipelines
-                    let showNoPermissionDialog = false
-                    const pipelineIds = list.map(pipeline => pipeline.pipelineId)
-                    if (list.length === 0) {
+                    const pipelineIds = this.removedPipelines.map(pipeline => pipeline.id)
+                    const showNoPermissionDialog = false
+                    if (pipelineIds.length === 0) {
                         throw Error(this.$t('noDeletePipelines'))
                     }
                     const params = {
@@ -239,8 +237,9 @@
                         }
                     } else {
                         const { data } = await this.patchDeletePipelines(params)
-                        if (list.length === 1) {
-                            showNoPermissionDialog = !data[list[0].pipelineId]
+                        const hasErr = pipelineIds.some(id => !data[id])
+                        if (hasErr) {
+                            throw Error(this.$t('deleteFail'))
                         }
                     }
                     this.requestGetGroupLists(this.$route.params)
@@ -269,7 +268,7 @@
             },
             handleClose () {
                 this.$emit('close')
-                this.hideNoPermissionPipeline = false
+                this.hideCanNotDeletePipelines = false
             },
             calcOverPos () {
                 const tagMargin = 6
@@ -336,6 +335,18 @@
         }
         .no-permission-pipeline-alert {
             text-align: left;
+            .can-not-delete-tips {
+                display: flex;
+                align-items: center;
+                position: relative;
+                > .text-link {
+                    color: $primaryColor;
+                    cursor: pointer;
+                    position: absolute;
+                    right: 0;
+                    bottom: 0;
+                }
+            }
         }
         .operate-pipeline-list {
             border: 1px solid #DCDEE5;

@@ -107,7 +107,8 @@
                 const { projectId } = this.$route.params
                 const pipeline = {
                     ...(this.pipelineInfo ?? {}),
-                    projectId
+                    projectId,
+                    pac: this.pacEnabled
                 }
                 return [
                     [
