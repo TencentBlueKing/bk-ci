@@ -74,7 +74,6 @@ object RepositoryMessageCode {
     const val USER_NEED_PROJECT_X_PERMISSION = "2115025" // 用户（{0}）无（{1}）项目权限
     const val NOT_AUTHORIZED_BY_OAUTH = "2115026" // 用户[{0}]尚未进行OAUTH授权，请先授权。
     const val CAN_NOT_SWITCH_REPO_URL = "2115027" // 不可切换代码库地址
-    const val ERROR_REPO_REPEATEDLY_ENABLED_PAC = "2115027" // 代码库已开启PAC。
     const val ERROR_REPO_ENABLE_PAC_FAIL = "2115028" // 代码库开启PAC失败。
     const val ERROR_REPO_CI_DIR_EXISTS = "2115029" // 代码库关闭PAC失败，CI文件夹仍存在。
     const val ERROR_GET_GIT_PROJECT_ID = "2115030" // 获取工蜂仓库({0})信息失败
@@ -83,6 +82,8 @@ object RepositoryMessageCode {
     const val ERROR_AUTH_TYPE_ENABLED_PAC = "2115033" // pac模式需要使用oauth
     const val ERROR_MEMBER_NOT_FOUND = "2115034" // 仓库成员{0}不存在
     const val ERROR_MEMBER_LEVEL_LOWER_MASTER = "2115035" // 开启pac需要master以上权限
+    const val ERROR_DEFAULT_BRANCH_IS_EMPTY = "2115036" // 默认分支不能为空
+    const val ERROR_REPO_REPEATEDLY_ENABLED_PAC = "2115037" // 代码库已开启PAC。
 
     const val BK_REQUEST_FILE_SIZE_LIMIT = "bkRequestFileSizeLimit" // 请求文件不能超过1M
     const val OPERATION_ADD_CHECK_RUNS = "OperationAddCheckRuns" // 添加检测任务

@@ -41,6 +41,9 @@ enum class CheckType {
     // 需要删除
     NEED_DELETE,
 
+    // 已合并
+    MERGED,
+
     // 无需校验
     NO_NEED_CHECK,
 

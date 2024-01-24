@@ -163,7 +163,7 @@ class TGitMrActionGit(
                 ).map { filePath ->
                     YamlPathListEntry(
                         filePath,
-                        CheckType.NEED_DELETE,
+                        CheckType.MERGED,
                         event.object_attributes.source_branch,
                         null
                     )
