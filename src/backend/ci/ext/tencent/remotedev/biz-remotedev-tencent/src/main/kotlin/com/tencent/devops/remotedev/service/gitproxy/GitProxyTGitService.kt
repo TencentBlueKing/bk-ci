@@ -7,6 +7,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ProjectTGitLinkDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
+import com.tencent.devops.remotedev.pojo.TGitRepoDaoData
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.QueryType
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Service
 import java.net.InetAddress
 import java.net.URLEncoder
 import java.security.cert.CertificateException
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import javax.annotation.PostConstruct
 import javax.net.ssl.SSLContext
@@ -97,13 +99,14 @@ class GitProxyTGitService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             urls = result.map {
-                TGitRepoData(
+                TGitRepoDaoData(
                     url = it.key,
                     status = if (it.value) {
                         TGitRepoStatus.TO_BE_MIGRATED
                     } else {
                         TGitRepoStatus.ABNORMAL
-                    }
+                    },
+                    oauthUser = userId
                 )
             }
         )
@@ -166,6 +169,9 @@ class GitProxyTGitService @Autowired constructor(
         }
     }
 
+    /**
+     * OP回调链接工蜂acl
+     */
     fun linkTGit(
         userId: String,
         projectId: String,
@@ -221,7 +227,8 @@ class GitProxyTGitService @Autowired constructor(
                     TGitRepoStatus.AVAILABLE
                 } else {
                     TGitRepoStatus.ABNORMAL
-                }
+                },
+                oauthUser = userId
             )
         }
 
@@ -266,6 +273,68 @@ class GitProxyTGitService @Autowired constructor(
             ips = emptySet()
         )
         return ok
+    }
+
+    /**
+     * 创建和删除云桌面时同步
+     */
+    private val executor = Executors.newCachedThreadPool()
+    fun addOrRemoveAclIp(
+        projectId: String,
+        ip: String,
+        remove: Boolean
+    ) {
+        executor.execute {
+            val tokenMap = mutableMapOf<String, String>()
+            projectTGitLinkDao.fetch(dslContext, projectId)
+                .filter { it.status == TGitRepoStatus.AVAILABLE.name }
+                .forEach { repo ->
+                    val token = if (tokenMap[repo.oauthUser] != null) {
+                        tokenMap[repo.oauthUser]
+                    } else {
+                        val newToken = client.get(ServiceOauthResource::class).tGitGet(repo.oauthUser).data
+                        if (newToken == null) {
+                            logger.warn("addOrRemoveAclIp|get $projectId|${repo.oauthUser} token is null")
+                            return@forEach
+                        }
+                        tokenMap[repo.oauthUser] = newToken.accessToken
+                        newToken.accessToken
+                    }
+
+                    val fullPath = URLEncoder.encode(
+                        repo.url.removeHttpPrefix()
+                            .removePrefix(tGitUrl.removeHttpPrefix())
+                            .removePrefix(tSvnUrl.removeHttpPrefix())
+                            .removePrefix("/"),
+                        "UTF8"
+                    )
+
+                    val config = TGitApiClient.getProjectAcl(
+                        client = okHttpClient,
+                        gitUrl = tGitUrl,
+                        accessToken = token!!,
+                        projectId = fullPath
+                    )
+                    if (config == null) {
+                        logger.warn("addOrRemoveAclIp|get $projectId|$fullPath acl config error")
+                        return@forEach
+                    }
+
+                    val ips = config.allowIps.split(";").filter { it.isNotBlank() }.toMutableSet()
+                    if (remove) {
+                        ips.remove(ip)
+                    } else {
+                        ips.add(ip)
+                    }
+                    TGitApiClient.addProjectAclIp(
+                        client = okHttpClient,
+                        gitUrl = tGitUrl,
+                        accessToken = token,
+                        projectId = fullPath,
+                        ips = ips
+                    )
+                }
+        }
     }
 
     private fun String.removeHttpPrefix() = this.removePrefix("https://").removePrefix("http://")

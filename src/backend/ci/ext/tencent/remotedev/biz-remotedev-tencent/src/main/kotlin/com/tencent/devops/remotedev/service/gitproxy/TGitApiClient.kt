@@ -87,6 +87,32 @@ object TGitApiClient {
         }
     }
 
+    fun getProjectAcl(
+        client: OkHttpClient,
+        gitUrl: String,
+        accessToken: String,
+        projectId: String
+    ): TGitAclConfig? {
+        val url = "$gitUrl/api/v3/projects/$projectId/acl/config?access_token=$accessToken"
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .build()
+        try {
+            doRetryHttp(client, request).use { response ->
+                val data = response.body!!.string()
+                if (!response.isSuccessful) {
+                    logger.error("getProjectAcl fail|{}|{}", response.code, data)
+                    return null
+                }
+                return JsonUtil.to(data, object : TypeReference<TGitAclConfig>() {})
+            }
+        } catch (e: Exception) {
+            logger.error("getProjectList error", e)
+            return null
+        }
+    }
+
     private val RETRY_CODE = listOf(429, 500)
 
     private fun doRetryHttp(client: OkHttpClient, request: Request): okhttp3.Response {
@@ -139,3 +165,9 @@ data class TGitProjectInfoPermissionsAccess(
 enum class TGitProjectType {
     SVN, GIT
 }
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TGitAclConfig(
+    @JsonProperty("allow_ips")
+    val allowIps: String
+)

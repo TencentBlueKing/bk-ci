@@ -78,6 +78,7 @@ import com.tencent.devops.remotedev.service.BkTicketService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
+import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.redis.RedisKeys
@@ -116,7 +117,8 @@ class CreateControl @Autowired constructor(
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val deliverControl: DeliverControl,
     private val bkccService: BKCCService,
-    private val windowsSpecResourceDao: WindowsSpecResourceDao
+    private val windowsSpecResourceDao: WindowsSpecResourceDao,
+    private val gitProxyTGitService: GitProxyTGitService
 ) {
     private val executor = Executors.newCachedThreadPool()
     companion object {
@@ -510,6 +512,9 @@ class CreateControl @Autowired constructor(
                 executor.execute {
                     workspaceCommon.makeDiskMount(ip, event.userId)
                 }
+
+                // 关联tgit相关
+                gitProxyTGitService.addOrRemoveAclIp(ws.projectId, ip, false)
             }
             if (!ws.workspaceSystemType.afterCreateNeedWs(ws.ownerType)) {
                 // 直接return 不做websocket

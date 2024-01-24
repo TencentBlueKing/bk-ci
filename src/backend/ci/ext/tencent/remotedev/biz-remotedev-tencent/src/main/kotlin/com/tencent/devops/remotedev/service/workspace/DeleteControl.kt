@@ -61,6 +61,7 @@ import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.service.BKCCService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
+import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
@@ -92,7 +93,8 @@ class DeleteControl @Autowired constructor(
     private val redisCache: RedisCacheService,
     private val remoteDevSettingService: RemoteDevSettingService,
     private val workspaceCommon: WorkspaceCommon,
-    private val bkccService: BKCCService
+    private val bkccService: BKCCService,
+    private val gitProxyTGitService: GitProxyTGitService
 ) {
 
     companion object {
@@ -426,6 +428,9 @@ class DeleteControl @Autowired constructor(
 
             // 删除 cmdb 的机器别名
             bkccService.updateHostName("VM-${hostIdSub.joinToString("-")}", workspaceName)
+
+            // 关联tgit相关
+            gitProxyTGitService.addOrRemoveAclIp(workspace.projectId, ip, true)
         }
 
         workspaceCommon.dispatchWebsocketPushEvent(

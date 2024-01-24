@@ -190,6 +190,11 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.USER,
         errorCode = "2132036",
         formatErrorMessage = "{0} No oauth authorization for {1}"
+    ),
+    CREATE_ITSM_TICKET_ERROR(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = "2132037",
+        formatErrorMessage = "{0} {1} create itsm ticket error"
     );
 
     fun getErrorMessage(): String {

@@ -2,7 +2,7 @@ package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.model.remotedev.tables.TProjectTgitLink
 import com.tencent.devops.model.remotedev.tables.records.TProjectTgitLinkRecord
-import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
+import com.tencent.devops.remotedev.pojo.TGitRepoDaoData
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoStatus
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -14,20 +14,24 @@ class ProjectTGitLinkDao {
         dslContext: DSLContext,
         projectId: String,
         url: String,
-        status: TGitRepoStatus
+        status: TGitRepoStatus,
+        oauthUser: String
     ) {
         with(TProjectTgitLink.T_PROJECT_TGIT_LINK) {
             dslContext.insertInto(
                 this,
                 PROJECT_ID,
                 URL,
-                STATUS
+                STATUS,
+                OAUTH_USER
             ).values(
                 projectId,
                 url,
-                status.name
+                status.name,
+                oauthUser
             ).onDuplicateKeyUpdate()
                 .set(STATUS, status.name)
+                .set(OAUTH_USER, oauthUser)
                 .execute()
         }
     }
@@ -35,21 +39,25 @@ class ProjectTGitLinkDao {
     fun batchAdd(
         dslContext: DSLContext,
         projectId: String,
-        urls: List<TGitRepoData>
+        urls: List<TGitRepoDaoData>
     ) {
         with(TProjectTgitLink.T_PROJECT_TGIT_LINK) {
             dslContext.batch(
-                urls.map { url ->
+                urls.map {
                     dslContext.insertInto(
                         this,
                         PROJECT_ID,
                         URL,
-                        STATUS
+                        STATUS,
+                        OAUTH_USER
                     ).values(
                         projectId,
-                        url.url,
-                        url.status.name
-                    ).onDuplicateKeyIgnore()
+                        it.url,
+                        it.status.name,
+                        it.oauthUser
+                    ).onDuplicateKeyUpdate()
+                        .set(STATUS, it.status.name)
+                        .set(OAUTH_USER, it.oauthUser)
                 }
             ).execute()
         }

@@ -5,9 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.sun.org.slf4j.internal.LoggerFactory
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.BkConfig
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -62,20 +62,18 @@ class BKItsmService @Autowired constructor(
                 logger.debug("createTicket｜$url|$body|${response.code}|$data")
                 if (!response.isSuccessful) {
                     logger.error("createTicket｜$url|$body|${response.code}|$data")
-                    // TODO: 创建单据失败错误
                     throw ErrorCodeException(
-                        errorCode = "1",
-                        errorType = ErrorType.USER
+                        errorCode = ErrorCodeEnum.CREATE_ITSM_TICKET_ERROR.errorCode,
+                        params = arrayOf(projectId, userId)
                     )
                 }
 
                 val resp = objectMapper.readValue<BKItsmCreateTicketResp<BKItsmCreateTicketRespData>>(data)
                 if (!resp.result) {
                     logger.error("createTicket｜$url|$body|${response.code}|$data")
-                    // TODO: 创建单据失败错误
                     throw ErrorCodeException(
-                        errorCode = "1",
-                        errorType = ErrorType.USER
+                        errorCode = ErrorCodeEnum.CREATE_ITSM_TICKET_ERROR.errorCode,
+                        params = arrayOf(projectId, userId)
                     )
                 }
                 resp
@@ -84,10 +82,9 @@ class BKItsmService @Autowired constructor(
             throw e
         } catch (e: Exception) {
             logger.error("createTicket request error", e)
-            // TODO: 创建单据失败错误
             throw ErrorCodeException(
-                errorCode = "1",
-                errorType = ErrorType.USER
+                errorCode = ErrorCodeEnum.CREATE_ITSM_TICKET_ERROR.errorCode,
+                params = arrayOf(projectId, userId)
             )
         }
 
