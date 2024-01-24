@@ -87,10 +87,8 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                     val successContent = EnvUtils.parseEnv(
                         successSubscription.content, commandContext.variables, replaceWithEmpty
                     )
-                    val params = mapOf(
-                        "successContent" to successContent,
-                        "emailSuccessContent" to successContent
-                    )
+                    commandContext.notifyValue["successContent"] = successContent
+                    commandContext.notifyValue["emailSuccessContent"] = successContent
                     val receivers = successSubscription.users.split(",").map {
                         EnvUtils.parseEnv(
                             command = it,
@@ -113,7 +111,7 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                         shutdownType = shutdownType,
                         subscription = successSubscription,
                         receivers = receivers,
-                        params = params,
+                        params = commandContext.notifyValue,
                         setting = setting,
                         buildStatus = buildStatus,
                         variables = commandContext.variables,
@@ -127,10 +125,8 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                     val failContent = EnvUtils.parseEnv(
                         failSubscription.content, commandContext.variables, replaceWithEmpty
                     )
-                    val params = mapOf(
-                        "failContent" to failContent,
-                        "emailFailContent" to failContent
-                    )
+                    commandContext.notifyValue["failContent"] = failContent
+                    commandContext.notifyValue["emailFailContent"] = failContent
                     val receivers = failSubscription.users.split(",").map {
                         EnvUtils.parseEnv(
                             command = it,
@@ -153,7 +149,7 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                         shutdownType = shutdownType,
                         subscription = failSubscription,
                         receivers = receivers,
-                        params = params,
+                        params = commandContext.notifyValue,
                         setting = setting,
                         buildStatus = buildStatus,
                         variables = commandContext.variables,
