@@ -155,7 +155,6 @@ class PipelineRepositoryService constructor(
     private val pipelineInfoExtService: PipelineInfoExtService,
     private val operationLogService: PipelineOperationLogService,
     private val client: Client,
-    private val objectMapper: ObjectMapper,
     private val transferService: PipelineTransferYamlService,
     private val redisOperation: RedisOperation,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao
@@ -782,7 +781,7 @@ class PipelineRepositoryService constructor(
                     yamlStr = yamlStr,
                     versionName = versionName,
                     versionNum = versionNum,
-                    pipelineVersion = modelVersion,
+                    pipelineVersion = pipelineVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion
                 )
@@ -798,7 +797,7 @@ class PipelineRepositoryService constructor(
                     baseVersion = baseVersion,
                     versionName = versionName ?: "",
                     versionNum = versionNum,
-                    pipelineVersion = modelVersion,
+                    pipelineVersion = pipelineVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion,
                     versionStatus = versionStatus,
