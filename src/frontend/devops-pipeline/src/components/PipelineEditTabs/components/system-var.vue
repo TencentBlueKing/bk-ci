@@ -18,7 +18,7 @@
             >
                 <section slot="content">
                     <template v-for="env in group.params">
-                        <env-item :key="env.name" :name="env.name" :desc="env.desc" />
+                        <env-item :key="env.name" :name="env.name" :desc="env.desc" :editable="editable" />
                     </template>
                 </section>
             </param-group>
@@ -39,6 +39,10 @@
             container: {
                 type: Object,
                 default: () => ({})
+            },
+            editable: {
+                type: Boolean,
+                default: true
             }
         },
         data () {

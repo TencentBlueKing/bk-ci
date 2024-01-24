@@ -35,7 +35,7 @@
                     :editable="editable"
                     v-else-if="active === 'atomOutput'"
                 />
-                <system-var :container="container" v-else-if="active === 'system'" />
+                <system-var :container="container" :editable="editable" v-else-if="active === 'system'" />
                 <pipeline-version
                     v-else
                     :params="params"

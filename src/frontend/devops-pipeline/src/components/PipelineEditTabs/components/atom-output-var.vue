@@ -71,7 +71,11 @@
             </div>
             <section slot="content">
                 <template v-for="env in group.params">
-                    <env-item :key="env.name" :name="env.name" :desc="env.desc"
+                    <env-item
+                        :key="env.name"
+                        :name="env.name"
+                        :desc="env.desc"
+                        :editable="editable"
                         :copy-prefix="group.envPrefix"
                         :disabled-copy="!group.stepId || group.disableHeader"
                     />
