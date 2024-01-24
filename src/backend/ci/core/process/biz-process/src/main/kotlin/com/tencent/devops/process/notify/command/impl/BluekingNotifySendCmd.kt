@@ -21,71 +21,66 @@ class BluekingNotifySendCmd @Autowired constructor(
     override fun execute(commandContext: BuildNotifyContext) {
         val replaceWithEmpty = true
         val setting = commandContext.pipelineSetting
-
-        // 内容为null的时候处理为空字符串
-        var successContent = setting.successSubscription.content
-        var failContent = setting.failSubscription.content
-
-        successContent = EnvUtils.parseEnv(successContent, commandContext.variables, replaceWithEmpty)
-        failContent = EnvUtils.parseEnv(failContent, commandContext.variables, replaceWithEmpty)
-
-        commandContext.notifyValue["successContent"] = successContent
-        commandContext.notifyValue["failContent"] = failContent
-        commandContext.notifyValue["emailSuccessContent"] = successContent
-        commandContext.notifyValue["emailFailContent"] = failContent
-
-        if (commandContext.buildStatus.isFailure()) {
-            setting.failSubscription.users.split(",").forEach {
-                commandContext.receivers.add(EnvUtils.parseEnv(
-                    command = it,
-                    data = commandContext.variables,
-                    replaceWithEmpty = true))
-            }
-        } else if (commandContext.buildStatus.isSuccess()) {
-            setting.successSubscription.users.split(",").forEach {
-                commandContext.receivers.add(EnvUtils.parseEnv(
-                    command = it,
-                    data = commandContext.variables,
-                    replaceWithEmpty = true))
-            }
-        }
-
         val buildStatus = commandContext.buildStatus
         val shutdownType = when {
             buildStatus.isCancel() -> TYPE_SHUTDOWN_CANCEL
             buildStatus.isFailure() -> TYPE_SHUTDOWN_FAILURE
             else -> TYPE_SHUTDOWN_SUCCESS
         }
-
-        var templateCode = ""
-        var notifyType = mutableSetOf<String>()
-        val settingDetailFlag: Boolean
-        var sendMsg = false
-
         when {
             buildStatus.isFailure() -> {
-                settingDetailFlag = setting.failSubscription.detailFlag
-                templateCode = getNotifyTemplateCode(shutdownType, settingDetailFlag)
-                notifyType = setting.failSubscription.types.map { it.name }.toMutableSet()
-                sendMsg = true
+                setting.successSubscriptionList?.forEach { successSubscription ->
+                    // 内容为null的时候处理为空字符串
+                    val successContent = EnvUtils.parseEnv(
+                        successSubscription.content, commandContext.variables, replaceWithEmpty
+                    )
+                    val params = mapOf(
+                        "successContent" to successContent,
+                        "emailSuccessContent" to successContent
+                    )
+                    val receivers = successSubscription.users.split(",").map {
+                        EnvUtils.parseEnv(
+                            command = it,
+                            data = commandContext.variables,
+                            replaceWithEmpty = true
+                        )
+                    }.toSet()
+                    sendNotifyByTemplate(
+                        templateCode = getNotifyTemplateCode(shutdownType, successSubscription.detailFlag),
+                        receivers = receivers,
+                        notifyType = successSubscription.types.map { it.name }.toMutableSet(),
+                        titleParams = params,
+                        bodyParams = params
+                    )
+                }
             }
             buildStatus.isSuccess() -> {
-                settingDetailFlag = setting.successSubscription.detailFlag
-                templateCode = getNotifyTemplateCode(shutdownType, settingDetailFlag)
-                notifyType = setting.successSubscription.types.map { it.name }.toMutableSet()
-                sendMsg = true
+                setting.failSubscriptionList?.forEach { failSubscription ->
+                    // 内容为null的时候处理为空字符串
+                    val failContent = EnvUtils.parseEnv(
+                        failSubscription.content, commandContext.variables, replaceWithEmpty
+                    )
+                    val params = mapOf(
+                        "failContent" to failContent,
+                        "emailFailContent" to failContent
+                    )
+                    val receivers = failSubscription.users.split(",").map {
+                        EnvUtils.parseEnv(
+                            command = it,
+                            data = commandContext.variables,
+                            replaceWithEmpty = true
+                        )
+                    }.toSet()
+                    sendNotifyByTemplate(
+                        templateCode = getNotifyTemplateCode(shutdownType, failSubscription.detailFlag),
+                        receivers = receivers,
+                        notifyType = failSubscription.types.map { it.name }.toMutableSet(),
+                        titleParams = params,
+                        bodyParams = params
+                    )
+                }
             }
             else -> Result<Any>(0)
-        }
-
-        if (sendMsg) {
-            sendNotifyByTemplate(
-                templateCode = templateCode,
-                receivers = commandContext.receivers,
-                notifyType = notifyType,
-                titleParams = commandContext.notifyValue,
-                bodyParams = commandContext.notifyValue
-            )
         }
     }
 
