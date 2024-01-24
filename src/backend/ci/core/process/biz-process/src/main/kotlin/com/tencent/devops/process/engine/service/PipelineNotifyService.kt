@@ -53,7 +53,6 @@ class PipelineNotifyService @Autowired constructor(
             buildStatus = buildStatus,
             cmdFlowSeq = 0,
             pipelineSetting = setting,
-            receivers = mutableSetOf(),
             watcher = Watcher("buildNotify")
         )
 
