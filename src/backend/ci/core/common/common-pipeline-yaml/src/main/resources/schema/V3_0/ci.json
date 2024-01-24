@@ -281,7 +281,36 @@
                       "type" : "boolean"
                     },
                     "cron" : {
-                      "description" : "crontab 表达式，不支持秒级别的定时任务，定时计划以及对应的流水线编排均以 默认分支上的YAML为准",
+                      "description" : "crontab 表达式",
+                      "oneOf" : [ {
+                        "description" : "crontab 表达式",
+                        "type" : "array",
+                        "items" : {
+                          "description" : "crontab 表达式，不支持秒级别的定时任务，定时计划以及对应的流水线编排均以 默认分支上的YAML为准",
+                          "type" : "string"
+                        }
+                      }, {
+                        "description" : "crontab 表达式，不支持秒级别的定时任务，定时计划以及对应的流水线编排均以 默认分支上的YAML为准",
+                        "type" : "string"
+                      } ]
+                    },
+                    "interval" : {
+                      "description" : "定时触发规则",
+                      "type" : "object",
+                      "additionalProperties" : false,
+                      "properties" : {
+                        "week" : {
+                          "description" : "周几，枚举，可多选，可选值为：Mon / Tue / Wed / Thu / Fri / Sat / Sun",
+                          "type" : "array"
+                        },
+                        "time-points" : {
+                          "description" : "时间点，格式为 HH:MM，可指定多个时间点，比如09:30、10:00",
+                          "type" : "array"
+                        }
+                      }
+                    },
+                    "repo-name" : {
+                      "description" : "代码库别名",
                       "type" : "string"
                     },
                     "branches" : {
@@ -312,7 +341,36 @@
                     "type" : "boolean"
                   },
                   "cron" : {
-                    "description" : "crontab 表达式，不支持秒级别的定时任务，定时计划以及对应的流水线编排均以 默认分支上的YAML为准",
+                    "description" : "crontab 表达式",
+                    "oneOf" : [ {
+                      "description" : "crontab 表达式",
+                      "type" : "array",
+                      "items" : {
+                        "description" : "crontab 表达式，不支持秒级别的定时任务，定时计划以及对应的流水线编排均以 默认分支上的YAML为准",
+                        "type" : "string"
+                      }
+                    }, {
+                      "description" : "crontab 表达式，不支持秒级别的定时任务，定时计划以及对应的流水线编排均以 默认分支上的YAML为准",
+                      "type" : "string"
+                    } ]
+                  },
+                  "interval" : {
+                    "description" : "定时触发规则",
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "properties" : {
+                      "week" : {
+                        "description" : "周几，枚举，可多选，可选值为：Mon / Tue / Wed / Thu / Fri / Sat / Sun",
+                        "type" : "array"
+                      },
+                      "time-points" : {
+                        "description" : "时间点，格式为 HH:MM，可指定多个时间点，比如09:30、10:00",
+                        "type" : "array"
+                      }
+                    }
+                  },
+                  "repo-name" : {
+                    "description" : "代码库别名",
                     "type" : "string"
                   },
                   "branches" : {
@@ -761,7 +819,36 @@
                     "type" : "boolean"
                   },
                   "cron" : {
-                    "description" : "crontab 表达式，不支持秒级别的定时任务，定时计划以及对应的流水线编排均以 默认分支上的YAML为准",
+                    "description" : "crontab 表达式",
+                    "oneOf" : [ {
+                      "description" : "crontab 表达式",
+                      "type" : "array",
+                      "items" : {
+                        "description" : "crontab 表达式，不支持秒级别的定时任务，定时计划以及对应的流水线编排均以 默认分支上的YAML为准",
+                        "type" : "string"
+                      }
+                    }, {
+                      "description" : "crontab 表达式，不支持秒级别的定时任务，定时计划以及对应的流水线编排均以 默认分支上的YAML为准",
+                      "type" : "string"
+                    } ]
+                  },
+                  "interval" : {
+                    "description" : "定时触发规则",
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "properties" : {
+                      "week" : {
+                        "description" : "周几，枚举，可多选，可选值为：Mon / Tue / Wed / Thu / Fri / Sat / Sun",
+                        "type" : "array"
+                      },
+                      "time-points" : {
+                        "description" : "时间点，格式为 HH:MM，可指定多个时间点，比如09:30、10:00",
+                        "type" : "array"
+                      }
+                    }
+                  },
+                  "repo-name" : {
+                    "description" : "代码库别名",
                     "type" : "string"
                   },
                   "branches" : {
@@ -792,7 +879,36 @@
                   "type" : "boolean"
                 },
                 "cron" : {
-                  "description" : "crontab 表达式，不支持秒级别的定时任务，定时计划以及对应的流水线编排均以 默认分支上的YAML为准",
+                  "description" : "crontab 表达式",
+                  "oneOf" : [ {
+                    "description" : "crontab 表达式",
+                    "type" : "array",
+                    "items" : {
+                      "description" : "crontab 表达式，不支持秒级别的定时任务，定时计划以及对应的流水线编排均以 默认分支上的YAML为准",
+                      "type" : "string"
+                    }
+                  }, {
+                    "description" : "crontab 表达式，不支持秒级别的定时任务，定时计划以及对应的流水线编排均以 默认分支上的YAML为准",
+                    "type" : "string"
+                  } ]
+                },
+                "interval" : {
+                  "description" : "定时触发规则",
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "week" : {
+                      "description" : "周几，枚举，可多选，可选值为：Mon / Tue / Wed / Thu / Fri / Sat / Sun",
+                      "type" : "array"
+                    },
+                    "time-points" : {
+                      "description" : "时间点，格式为 HH:MM，可指定多个时间点，比如09:30、10:00",
+                      "type" : "array"
+                    }
+                  }
+                },
+                "repo-name" : {
+                  "description" : "代码库别名",
                   "type" : "string"
                 },
                 "branches" : {

@@ -112,19 +112,6 @@ class PipelineViewGroupDao {
         }
     }
 
-    fun listByProjectIdFilterPipelineId(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String
-    ): List<TPipelineViewGroupRecord> {
-        return with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
-            dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.ne(pipelineId))
-                .fetch()
-        }
-    }
-
     fun listByPipelineId(
         dslContext: DSLContext,
         projectId: String,
@@ -135,6 +122,19 @@ class PipelineViewGroupDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .fetch()
+        }
+    }
+
+    fun listViewIdByPipelineId(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): List<Long> {
+        return with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
+            dslContext.select(VIEW_ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .fetch(0, Long::class.java)
         }
     }
 
