@@ -9,6 +9,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateGitProxyData
 import com.tencent.devops.remotedev.pojo.gitproxy.FetchRepoResp
 import com.tencent.devops.remotedev.pojo.gitproxy.LinktgitData
+import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -98,5 +99,20 @@ interface UserProjectGitProxyResource {
         @ApiParam(value = "项目ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String
-    ): Result<Set<String>>
+    ): Result<List<TGitRepoData>>
+
+    @ApiOperation("删除已经关联的仓库")
+    @GET
+    @Path("/tgit/delete")
+    fun deleteTgitRepo(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
+        @ApiParam(value = "仓库链接", required = true)
+        @QueryParam("url")
+        url: String
+    ): Result<Boolean>
 }

@@ -10,6 +10,7 @@ import com.tencent.devops.remotedev.api.user.UserProjectGitProxyResource
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateGitProxyData
 import com.tencent.devops.remotedev.pojo.gitproxy.FetchRepoResp
 import com.tencent.devops.remotedev.pojo.gitproxy.LinktgitData
+import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import org.springframework.beans.factory.annotation.Autowired
@@ -51,7 +52,11 @@ class UserProjectGitProxyResourceImpl @Autowired constructor(
         return Result(gitProxyTGitService.checkUserPermission(userId, projectId, data.codeUrls))
     }
 
-    override fun tgitList(userId: String, projectId: String): Result<Set<String>> {
+    override fun tgitList(userId: String, projectId: String): Result<List<TGitRepoData>> {
         return Result(gitProxyTGitService.tgitLinkList(projectId))
+    }
+
+    override fun deleteTgitRepo(userId: String, projectId: String, url: String): Result<Boolean> {
+        return Result(gitProxyTGitService.deleteTgitLink(userId, projectId, url))
     }
 }

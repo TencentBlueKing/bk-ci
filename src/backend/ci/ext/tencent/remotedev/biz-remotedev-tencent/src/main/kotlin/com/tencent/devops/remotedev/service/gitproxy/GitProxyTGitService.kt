@@ -10,6 +10,8 @@ import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.QueryType
+import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
+import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoStatus
 import com.tencent.devops.remotedev.service.BKItsmService
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
@@ -90,6 +92,22 @@ class GitProxyTGitService @Autowired constructor(
         // 关联项目，不符合要求的自动踢出去
         bkitsmService.createTicket(projectId, userId, result.filter { it.value }.keys)
 
+        // 入库
+        projectTGitLinkDao.batchAdd(
+            dslContext = dslContext,
+            projectId = projectId,
+            urls = result.map {
+                TGitRepoData(
+                    url = it.key,
+                    status = if (it.value) {
+                        TGitRepoStatus.TO_BE_MIGRATED
+                    } else {
+                        TGitRepoStatus.ABNORMAL
+                    }
+                )
+            }
+        )
+
         return result
     }
 
@@ -133,13 +151,6 @@ class GitProxyTGitService @Autowired constructor(
                     }
 
                     result[url.removeHttpPrefix()] = true
-//                    val level = GitAccessLevelEnum.MASTER.level
-//                    result[url.removeHttpPrefix()] = when {
-//                        (project.permissions?.projectAccess?.accessLevel ?: 0) >= level -> true
-//                        (project.permissions?.shareGroupAccess?.accessLevel ?: 0) >= level -> true
-//                        (project.permissions?.groupAccess?.accessLevel ?: 0) >= level -> true
-//                        else -> false
-//                    }
 
                     // 如果全都是项目判断那么只要项目判断完就可以退出
                     if (noGroup && projectUrls.subtract(result.keys).isEmpty()) {
@@ -201,13 +212,17 @@ class GitProxyTGitService @Autowired constructor(
                 projectId = fullPath,
                 ips = ips
             )
-            if (!ok) {
-                result[url] = false
-                return@forEach
-            }
-
-            projectTGitLinkDao.add(dslContext, projectId, url)
-            result[url] = true
+            result[url] = ok
+            projectTGitLinkDao.add(
+                dslContext = dslContext,
+                projectId = projectId,
+                url = url,
+                status = if (ok) {
+                    TGitRepoStatus.AVAILABLE
+                } else {
+                    TGitRepoStatus.ABNORMAL
+                }
+            )
         }
 
         return result
@@ -215,8 +230,42 @@ class GitProxyTGitService @Autowired constructor(
 
     fun tgitLinkList(
         projectId: String
-    ): Set<String> {
-        return projectTGitLinkDao.fetchUrl(dslContext, projectId)
+    ): List<TGitRepoData> {
+        return projectTGitLinkDao.fetch(dslContext, projectId).map {
+            TGitRepoData(
+                url = it.url,
+                status = TGitRepoStatus.fromStr(it.status)
+            )
+        }
+    }
+
+    fun deleteTgitLink(
+        userId: String,
+        projectId: String,
+        url: String
+    ): Boolean {
+        val token = client.get(ServiceOauthResource::class).tGitGet(userId).data ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.NO_TGIT_OAUTH_ERROR.errorCode,
+            errorType = ErrorCodeEnum.NO_TGIT_OAUTH_ERROR.errorType,
+            params = arrayOf(userId, tGitUrl)
+        )
+
+        val fullPath = URLEncoder.encode(
+            url.removeHttpPrefix()
+                .removePrefix(tGitUrl.removeHttpPrefix())
+                .removePrefix(tSvnUrl.removeHttpPrefix())
+                .removePrefix("/"),
+            "UTF8"
+        )
+
+        val ok = TGitApiClient.addProjectAclIp(
+            client = okHttpClient,
+            gitUrl = tGitUrl,
+            accessToken = token.accessToken,
+            projectId = fullPath,
+            ips = emptySet()
+        )
+        return ok
     }
 
     private fun String.removeHttpPrefix() = this.removePrefix("https://").removePrefix("http://")
