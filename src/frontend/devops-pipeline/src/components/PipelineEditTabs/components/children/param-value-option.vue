@@ -50,7 +50,7 @@
                 :value="param.defaultValue">
             </enum-input>
             <vuex-input
-                v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isFileParam(param.type)"
+                v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isFileParam(param.type) || isArtifactoryParam(param.type)"
                 :disabled="disabled"
                 :handle-change="(name, value) => handleUpdateParam(name, value)"
                 name="defaultValue"
@@ -184,6 +184,7 @@
         isCodelibParam,
         isSvnParam,
         isGitParam,
+        isArtifactoryParam,
         isSubPipelineParam,
         isFileParam,
         getRepoOption,
@@ -285,6 +286,7 @@
             isGitParam,
             isCodelibParam,
             isBuildResourceParam,
+            isArtifactoryParam,
             isSubPipelineParam,
             isFileParam,
             getParamsDefaultValueLabel,

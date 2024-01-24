@@ -36,7 +36,7 @@
                             {{ param.id === 'BK_CI_BUILD_NO' ? `${renderBuildNo.buildNo}（${getLabelByBuildType(renderBuildNo.buildNoType)}）` : versionValues[param.id] }}
                         </span>
                         <div class="version-operate">
-                            <div class="operate-btns">
+                            <div class="operate-btns" v-if="!disabled">
                                 <i @click.stop="handleCopy(bkVarWrapper(param.id))" class="bk-icon icon-copy"></i>
                             </div>
                         </div>
@@ -191,6 +191,14 @@
                 return this.buildNo && this.buildNo.required ? this.buildNo.required : false
             }
         },
+        watch: {
+            versions () {
+                this.$nextTick(() => {
+                    this.renderBuildNo = this.buildNo
+                    this.showVersions = this.versions.length !== 0
+                })
+            }
+        },
         created () {
             this.renderBuildNo = this.buildNo
             this.showVersions = this.versions.length !== 0
@@ -211,9 +219,9 @@
                 Object.assign(this.editBuildNo, { [name]: value })
             },
             handleBuildNoChange (name, value) {
+                Object.assign(this.renderBuildNo, { [name]: value })
                 this.updateContainerParams('buildNo', {
-                    ...this.renderBuildNo,
-                    [name]: value
+                    ...this.renderBuildNo
                 })
             },
             getLabelByBuildType (type) {
@@ -252,7 +260,7 @@
                 this.showEditVersion = true
             },
             handleSaveVersion () {
-                this.$validator.validateAll().then((result) => {
+                this.$validator.validate('pipelineVersion.*').then((result) => {
                     if (result) {
                         const versionConfig = getVersionConfig()
                         const newVersions = allVersionKeyList.map(v => ({
