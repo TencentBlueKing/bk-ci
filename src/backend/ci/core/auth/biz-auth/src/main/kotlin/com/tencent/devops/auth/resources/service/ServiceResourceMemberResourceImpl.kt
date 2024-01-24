@@ -132,7 +132,7 @@ class ServiceResourceMemberResourceImpl constructor(
     ): Int {
         return groupId ?: permissionResourceMemberService.roleCodeToIamGroupId(
             projectCode = projectCode,
-            roleCode = (if (roleName != null) BkAuthGroup.roleNameToRoleId(roleName) else roleId!!).toString()
+            roleCode = roleName ?: BkAuthGroup.getByRoleId(roleId!!).value
         )
     }
 }
