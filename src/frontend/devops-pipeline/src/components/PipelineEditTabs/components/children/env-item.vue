@@ -6,7 +6,7 @@
                 v-bk-tooltips="{ content: desc, disabled: !desc, allowHTML: true }">
                 <span>{{ name }}</span>
             </div>
-            <div class="var-operate">
+            <div class="var-operate" v-if="editable">
                 <i
                     class="bk-icon icon-copy"
                     :class="{ 'disabled-copy': disabledCopy }"
@@ -32,6 +32,10 @@
             copyPrefix: {
                 type: String,
                 default: ''
+            },
+            editable: {
+                type: Boolean,
+                default: true
             },
             disabledCopy: {
                 type: Boolean,

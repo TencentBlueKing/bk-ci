@@ -28,14 +28,18 @@
                     {{$t('deletePipelineConfirmDesc')}}
                 </p>
                 <bk-alert
-                    v-if="noPermissionPipelineLength > 0"
+                    v-if="canNotDeletePipelineLength > 0"
                     type="warning"
                     class="no-permission-pipeline-alert"
-                    :title="$t('hasNoPermissionPipelineTips', [noPermissionPipelineLength])"
-                    closable
-                    :close-text="$t('removeNoPermissionPipeline')"
-                    @close="removeNoPermissionPipeline"
                 >
+                    <div class="can-not-delete-tips" slot="title">
+                        <span>
+                            {{$t('hasNoPermissionPipelineTips', [noPermissionPipelineLength, pacPipelines.length])}}
+                        </span>
+                        <span class="text-link" @click="removeNoPermissionPipeline">
+                            {{$t('removeNoPermissionPipeline')}}
+                        </span>
+                    </div>
                 </bk-alert>
             </template>
         </template>
@@ -45,7 +49,7 @@
                 v-for="(pipeline, index) in removedPipelines"
                 :key="pipeline.pipelineId"
                 :class="{
-                    'no-permission-pipeline': isDeleteType && !pipeline.hasPermission
+                    'no-permission-pipeline': isDeleteType && (!pipeline.hasPermission || pipeline.pac)
                 }"
             >
                 <span>{{ pipeline.name }}</span>
@@ -69,6 +73,11 @@
                         </bk-tag>
                     </bk-popover>
                 </div>
+                <span
+                    v-if="!pipeline.hasPermission || pipeline.pac"
+                    v-bk-tooltips="pipeline.tooltips"
+                    :class="`devops-icon icon-${pipeline.pac ? 'yaml' : 'lock'}`"
+                />
             </li>
         </ul>
         <footer slot="footer">
@@ -85,7 +94,7 @@
 </template>
 
 <script>
-    import { mapState, mapActions, mapGetters } from 'vuex'
+    import { mapActions, mapGetters } from 'vuex'
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
     import {
         handlePipelineNoPermission,
@@ -115,17 +124,14 @@
         },
         data () {
             return {
-                hideNoPermissionPipeline: false,
+                hideCanNotDeletePipelines: false,
                 visibleTagCountList: [],
                 isBusy: false,
-                width: 480,
+                width: 600,
                 padding: 40
             }
         },
         computed: {
-            ...mapState('pipelines', [
-                'allPipelineGroup'
-            ]),
             ...mapGetters('pipelines', [
                 'groupMap'
             ]),
@@ -144,28 +150,44 @@
             hasPermissionPipelines () {
                 return this.pipelineList.filter(pipeline => pipeline.hasPermission)
             },
+            pacPipelines () {
+                return this.pipelineList.filter(pipeline => pipeline.pac)
+            },
+            canNotDeletePipelineLength () {
+                return this.noPermissionPipelineLength + this.pacPipelines.length
+            },
             noPermissionPipelineLength () {
                 return this.pipelineList.length - this.hasPermissionPipelines.length
             },
             removedPipelines () {
-                const list = this.hideNoPermissionPipeline ? this.hasPermissionPipelines : this.pipelineList
+                const list = this.pipelineList.filter(pipeline => !this.hideCanNotDeletePipelines || (pipeline.hasPermission && !pipeline.pac))
                 return list.map((pipeline, index) => {
                     const viewNames = pipeline.viewNames ?? []
                     const visibleTagCount = this.visibleTagCountList[index] ?? viewNames.length
                     const overflowCount = viewNames.length - visibleTagCount
 
                     return {
+                        id: pipeline.pipelineId,
                         name: pipeline.pipelineName,
                         hasPermission: pipeline.hasPermission,
                         groups: viewNames.slice(0, visibleTagCount),
                         hiddenGroups: viewNames.slice(visibleTagCount).join(';'),
                         overflowCount,
-                        showMoreTag: this.visibleTagCountList[index] === undefined || (overflowCount > 0)
+                        pac: pipeline.pac,
+                        showMoreTag: this.visibleTagCountList[index] === undefined || (overflowCount > 0),
+                        tooltips: (!pipeline.hasPermission || pipeline.pac)
+                            ? {
+                                content: this.$t(pipeline.pac ? 'pacModePipelineDeleteTips' : 'noPermissionToDelete'),
+                                placement: 'top',
+                                delay: [300, 0],
+                                allowHTML: false
+                            }
+                            : null
                     }
                 })
             },
             disDeletable () {
-                return this.isDeleteType && ((!this.hideNoPermissionPipeline && this.noPermissionPipelineLength > 0) || this.hasPermissionPipelines.length === 0)
+                return this.isDeleteType && ((!this.hideCanNotDeletePipelines && this.canNotDeletePipelineLength > 0) || this.hasPermissionPipelines.length === 0 || this.removedPipelines.length === 0)
             }
         },
         watch: {
@@ -188,17 +210,16 @@
                 'requestGetGroupLists'
             ]),
             removeNoPermissionPipeline () {
-                this.hideNoPermissionPipeline = true
+                this.hideCanNotDeletePipelines = true
             },
             async handleSubmit () {
                 if (this.isBusy) return
 
                 try {
                     this.isBusy = true
-                    const list = this.isRemoveType ? this.pipelineList : this.hasPermissionPipelines
-                    let showNoPermissionDialog = false
-                    const pipelineIds = list.map(pipeline => pipeline.pipelineId)
-                    if (list.length === 0) {
+                    const pipelineIds = this.removedPipelines.map(pipeline => pipeline.id)
+                    const showNoPermissionDialog = false
+                    if (pipelineIds.length === 0) {
                         throw Error(this.$t('noDeletePipelines'))
                     }
                     const params = {
@@ -216,8 +237,9 @@
                         }
                     } else {
                         const { data } = await this.patchDeletePipelines(params)
-                        if (list.length === 1) {
-                            showNoPermissionDialog = !data[list[0].pipelineId]
+                        const hasErr = pipelineIds.some(id => !data[id])
+                        if (hasErr) {
+                            throw Error(this.$t('deleteFail'))
                         }
                     }
                     this.requestGetGroupLists(this.$route.params)
@@ -246,12 +268,13 @@
             },
             handleClose () {
                 this.$emit('close')
-                this.hideNoPermissionPipeline = false
+                this.hideCanNotDeletePipelines = false
             },
             calcOverPos () {
                 const tagMargin = 6
-                const groupNameBoxWidth = 200
                 if (this.$refs.belongsGroupBox?.length > 0) {
+                    const { width = 266 } = getComputedStyle(this.$refs.belongsGroupBox[0])
+                    const groupNameBoxWidth = parseInt(width)
                     this.visibleTagCountList = this.$refs.belongsGroupBox?.map((_, index) => {
                         const groupNameLength = this.$refs[`groupName_${index}`]?.length ?? 0
                         const moreTag = this.$refs.groupNameMore?.[index]?.$el
@@ -312,6 +335,18 @@
         }
         .no-permission-pipeline-alert {
             text-align: left;
+            .can-not-delete-tips {
+                display: flex;
+                align-items: center;
+                position: relative;
+                > .text-link {
+                    color: $primaryColor;
+                    cursor: pointer;
+                    position: absolute;
+                    right: 0;
+                    bottom: 0;
+                }
+            }
         }
         .operate-pipeline-list {
             border: 1px solid #DCDEE5;
@@ -323,9 +358,12 @@
             > li {
                 width: 100%;
                 height: 40px;
-                padding: 0 16px;
-                display: flex;
+                padding: 0 8px;
+                display: grid;
                 align-items: center;
+                justify-content: space-between;
+                grid-template-columns: 100px 1fr 24px;
+                grid-gap: 12px;
                 overflow: hidden;
                 text-align: left;
                 border-bottom: 1px solid #DCDEE5;
@@ -336,12 +374,10 @@
                     background: #FFF3E1;
                 }
                 > span {
-                    flex: 1;
                     @include ellipsis();
                 }
                 .belongs-pipeline-group {
                     vertical-align: top;
-                    width: 200px;
                     height: 22px;
                     overflow: hidden;
                 }

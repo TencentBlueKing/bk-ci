@@ -121,7 +121,7 @@ export function PipelineEditActionCreator (mutation) {
  */
 export function compareParam (param, originElement) {
     return Object.keys(param).some(key => {
-        return param[key] !== originElement[key] && key !== 'isError'
+        return (param[key] !== originElement[key] || typeof param[key] === 'object') && key !== 'isError'
     })
 }
 

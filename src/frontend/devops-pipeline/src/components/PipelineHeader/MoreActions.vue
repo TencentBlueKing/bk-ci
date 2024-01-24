@@ -55,6 +55,7 @@
             :lock="isCurPipelineLocked"
             :pac-enabled="pacEnabled"
             @close="closeDisablePipeline"
+            @done="afterDisablePipeline"
         />
     </div>
 </template>
@@ -106,7 +107,8 @@
                 const { projectId } = this.$route.params
                 const pipeline = {
                     ...(this.pipelineInfo ?? {}),
-                    projectId
+                    projectId,
+                    pac: this.pacEnabled
                 }
                 return [
                     [
@@ -119,6 +121,8 @@
                         {
                             label: 'newlist.exportPipelineJson',
                             handler: this.exportPipeline,
+                            hasPermission: pipeline.permissions?.canEdit,
+                            disablePermissionApi: true,
                             permissionData: {
                                 projectId,
                                 resourceType: 'pipeline',
@@ -130,6 +134,8 @@
                             label: 'newlist.importModifyPipelineJson',
                             handler: this.importModifyPipeline,
                             hidden: this.isTemplatePipeline,
+                            hasPermission: pipeline.permissions?.canEdit,
+                            disablePermissionApi: true,
                             permissionData: {
                                 projectId,
                                 resourceType: 'pipeline',
@@ -154,6 +160,8 @@
                         {
                             label: 'newlist.copyAs',
                             handler: () => this.copyAs(pipeline),
+                            hasPermission: pipeline.permissions?.canEdit,
+                            disablePermissionApi: true,
                             permissionData: {
                                 projectId,
                                 resourceType: 'pipeline',
@@ -182,6 +190,8 @@
                         {
                             label: this.isCurPipelineLocked ? 'enable' : 'disable',
                             handler: () => this.disablePipeline(),
+                            hasPermission: pipeline.permissions?.canEdit,
+                            disablePermissionApi: true,
                             permissionData: {
                                 projectId,
                                 resourceType: 'pipeline',
@@ -192,6 +202,8 @@
                         {
                             label: 'delete',
                             handler: () => this.deleteHandler(pipeline),
+                            hasPermission: pipeline.permissions?.canDelete,
+                            disablePermissionApi: true,
                             permissionData: {
                                 projectId,
                                 resourceType: 'pipeline',
@@ -224,6 +236,11 @@
                     this.$router.push({
                         name: 'pipelinesEdit'
                     })
+                })
+            },
+            afterDisablePipeline (enable) {
+                this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
+                    runLockType: enable ? 'MULTIPLE' : 'LOCK'
                 })
             },
 
