@@ -44,7 +44,8 @@ abstract class NotifySendCmd(val client: Client) : NotifyCmd {
             }
         } else {
             when (type) {
-                BluekingNotifySendCmd.TYPE_STARTUP -> PipelineNotifyTemplateEnum.PIPELINE_STARTUP_NOTIFY_TEMPLATE.templateCode
+                BluekingNotifySendCmd.TYPE_STARTUP ->
+                    PipelineNotifyTemplateEnum.PIPELINE_STARTUP_NOTIFY_TEMPLATE.templateCode
                 BluekingNotifySendCmd.TYPE_SHUTDOWN_SUCCESS ->
                     PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE.templateCode
                 BluekingNotifySendCmd.TYPE_SHUTDOWN_FAILURE ->
