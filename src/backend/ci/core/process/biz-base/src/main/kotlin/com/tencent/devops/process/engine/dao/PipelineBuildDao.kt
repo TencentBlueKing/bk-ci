@@ -100,7 +100,9 @@ class PipelineBuildDao {
                         WEBHOOK_INFO,
                         BUILD_MSG,
                         BUILD_NUM_ALIAS,
-                        CONCURRENCY_GROUP
+                        CONCURRENCY_GROUP,
+                        VERSION_NUM,
+                        VERSION_NAME
                     ).values(
                         startBuildContext.buildId,
                         startBuildContext.buildNum,
@@ -122,7 +124,9 @@ class PipelineBuildDao {
                         startBuildContext.webhookInfo?.let { self -> JsonUtil.toJson(self, formatted = false) },
                         startBuildContext.buildMsg,
                         startBuildContext.buildNumAlias,
-                        startBuildContext.concurrencyGroup
+                        startBuildContext.concurrencyGroup,
+                        startBuildContext.versionNum,
+                        startBuildContext.versionName
                     ).execute()
                 }
             } else {
@@ -1703,6 +1707,8 @@ class PipelineBuildDao {
                     pipelineId = t.pipelineId,
                     buildId = t.buildId,
                     version = t.version,
+                    versionNum = t.versionNum ?: t.version,
+                    versionName = t.versionName,
                     buildNum = t.buildNum,
                     trigger = t.trigger,
                     status = BuildStatus.values()[t.status],
@@ -1763,6 +1769,8 @@ class PipelineBuildDao {
                     pipelineId = t.pipelineId,
                     buildId = t.buildId,
                     version = t.version,
+                    versionNum = null, // 草稿没有分配正式版本号
+                    versionName = null,
                     buildNum = t.buildNum,
                     trigger = t.trigger,
                     status = BuildStatus.values()[t.status],

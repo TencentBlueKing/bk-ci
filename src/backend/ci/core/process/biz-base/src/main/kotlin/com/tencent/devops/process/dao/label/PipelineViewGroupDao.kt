@@ -112,6 +112,19 @@ class PipelineViewGroupDao {
         }
     }
 
+    fun listByProjectIdFilterPipelineId(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): List<TPipelineViewGroupRecord> {
+        return with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.ne(pipelineId))
+                .fetch()
+        }
+    }
+
     fun listByPipelineId(
         dslContext: DSLContext,
         projectId: String,

@@ -63,5 +63,5 @@ data class PipelineDetailInfo(
     @ApiModelProperty("仅存在草稿", required = false)
     var onlyDraft: Boolean? = false,
     @ApiModelProperty("流水线组名称列表", required = false)
-    var viewNames: List<String>? = null
+    var viewNames: List<String>?
 )

@@ -213,7 +213,9 @@ class SubPipelineStartUpService @Autowired constructor(
                 params = arrayOf(pipelineId),
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
-
+        if (readyToBuildPipelineInfo.onlyDraft == true) throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
+        )
         val parentPipelineInfo = pipelineRepositoryService.getPipelineInfo(
             projectId = parentProjectId,
             pipelineId = parentPipelineId
@@ -234,8 +236,13 @@ class SubPipelineStartUpService @Autowired constructor(
 
         val startEpoch = System.currentTimeMillis()
         try {
-
-            val model = getModel(projectId, pipelineId = pipelineId, version = readyToBuildPipelineInfo.version)
+            val resource = pipelineRepositoryService.getPipelineResourceVersion(
+                projectId, pipelineId, readyToBuildPipelineInfo.version
+            ) ?: throw ErrorCodeException(
+                    statusCode = Response.Status.NOT_FOUND.statusCode,
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
+                )
+            val model = resource.model
 
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
             // #6090 拨乱反正
@@ -287,7 +294,9 @@ class SubPipelineStartUpService @Autowired constructor(
                 channelCode = channelCode,
                 isMobile = isMobile,
                 model = model,
-                frequencyLimit = false
+                frequencyLimit = false,
+                versionNum = resource.versionNum,
+                versionName = resource.versionName
             ).id
             // 更新父流水线关联子流水线构建id
             pipelineTaskService.updateSubBuildId(

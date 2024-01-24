@@ -17,6 +17,7 @@ import io.swagger.annotations.ApiModel
     JsonSubTypes.Type(value = PipelineTriggerFailedFix::class, name = PipelineTriggerFailedFix.classType)
 )
 @ApiModel("流水线触发事件原因详情-基类")
+@Suppress("UnnecessaryAbstractClass")
 interface PipelineTriggerReasonDetail {
     @JsonIgnore
     fun getReasonDetailList(): List<String>?

@@ -117,6 +117,8 @@ class StartBuildContextTest : TestBase() {
             pipelineId = pipelineId,
             buildId = buildId,
             resourceVersion = version,
+            versionNum = null,
+            versionName = null,
             model = Model(
                 name = "pipelineName",
                 desc = null,
