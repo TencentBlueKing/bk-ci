@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.DependNotFoundException
