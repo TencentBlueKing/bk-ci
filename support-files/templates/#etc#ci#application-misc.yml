@@ -60,7 +60,7 @@ build:
   data:
     clear:
       switch: false
-      maxEveryProjectHandleNum: 5
+      maxEveryProjectHandleNum: __BK_CI_BUILD_DATA_CLEAR_SWITCH__
       monthRange: -1
       maxKeepNum: 10000  
       codeccDayRange: -14
