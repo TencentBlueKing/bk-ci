@@ -346,8 +346,8 @@
                 this.isLoading = true
                 await this.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${this.projectId}/${id}?repositoryType=ID`)
                     .then(async (res) => {
-                        await this.handleCheckPacProject()
                         this.repoInfo = res
+                        await this.handleCheckPacProject()
                         this.$router.push({
                             query: {
                                 ...this.$route.query,
