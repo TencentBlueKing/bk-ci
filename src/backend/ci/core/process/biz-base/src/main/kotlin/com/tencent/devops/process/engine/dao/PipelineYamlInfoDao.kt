@@ -149,6 +149,20 @@ class PipelineYamlInfoDao {
         }
     }
 
+    fun listByPipelineIds(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineIds: List<String>
+    ): List<PipelineYamlInfo> {
+        with(TPipelineYamlInfo.T_PIPELINE_YAML_INFO) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.`in`(pipelineIds))
+                .and(DELETE.eq(false))
+                .fetch().map { convert(it) }
+        }
+    }
+
     fun listPipelineIdWithDirectory(
         dslContext: DSLContext,
         projectId: String,

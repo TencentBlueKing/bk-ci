@@ -109,6 +109,7 @@ import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_LIST_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_RECENT_USE
 import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
+import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.quality.api.v2.pojo.response.QualityPipeline
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
@@ -142,7 +143,8 @@ class PipelineListFacadeService @Autowired constructor(
     private val pipelineFavorDao: PipelineFavorDao,
     private val pipelineLabelPipelineDao: PipelineLabelPipelineDao,
     private val pipelineRecentUseService: PipelineRecentUseService,
-    private val pipelineListQueryParamService: PipelineListQueryParamService
+    private val pipelineListQueryParamService: PipelineListQueryParamService,
+    private val pipelineYamlService: PipelineYamlService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -1351,6 +1353,11 @@ class PipelineListFacadeService @Autowired constructor(
         // 获取view信息
         val pipelineViewNameMap = pipelineViewGroupService.getViewNameMap(projectId, pipelineIds)
 
+        // yaml流水线信息
+        val pipelineYamlInfoList = pipelineYamlService.listEnablePacPipelineMap(
+            projectId = projectId, pipelineIds = pipelineIds.toList()
+        ).map { it.pipelineId }
+
         // 完善数据
         finalPipelines(
             pipelines = pipelines,
@@ -1362,7 +1369,8 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineViewNameMap = pipelineViewNameMap,
             pipelineBuildMap = pipelineBuildMap,
             buildTaskTotalCountMap = buildTaskTotalCountMap,
-            buildTaskFinishCountMap = buildTaskFinishCountMap
+            buildTaskFinishCountMap = buildTaskFinishCountMap,
+            pipelineYamlInfoList = pipelineYamlInfoList
         )
 
         return pipelines
@@ -1378,7 +1386,8 @@ class PipelineListFacadeService @Autowired constructor(
         pipelineViewNameMap: Map<String, MutableList<String>>,
         pipelineBuildMap: Map<String, BuildInfo>,
         buildTaskTotalCountMap: Map<String, Int>,
-        buildTaskFinishCountMap: Map<String, Int>
+        buildTaskFinishCountMap: Map<String, Int>,
+        pipelineYamlInfoList: List<String>
     ) {
         pipelines.forEach {
             val pipelineId = it.pipelineId
@@ -1448,6 +1457,7 @@ class PipelineListFacadeService @Autowired constructor(
                 it.lock = PipelineRunLockType.checkLock(pipelineSettingRecord.get(tSetting.RUN_LOCK_TYPE))
                 it.buildNumRule = pipelineSettingRecord.get(tSetting.BUILD_NUM_RULE)
             }
+            it.pac = pipelineYamlInfoList.contains(pipelineId)
         }
     }
 
