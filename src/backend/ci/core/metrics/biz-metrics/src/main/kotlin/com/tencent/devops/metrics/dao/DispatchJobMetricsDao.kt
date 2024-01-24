@@ -30,6 +30,7 @@ package com.tencent.devops.metrics.dao
 import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
 import com.tencent.devops.model.metrics.tables.TDispatchJobDailyMetrics
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -41,17 +42,26 @@ class DispatchJobMetricsDao {
     ) {
         with(TDispatchJobDailyMetrics.T_DISPATCH_JOB_DAILY_METRICS) {
             dispatchJobMetricsData.forEach { jobMetricsData ->
-                dslContext.insertInto(this)
-                    .set(PROJECT_ID, jobMetricsData.projectId)
-                    .set(PRODUCT_ID, jobMetricsData.productId)
-                    .set(THE_DATE, jobMetricsData.theDate)
-                    .set(JOB_TYPE, jobMetricsData.jobType)
-                    .set(CHANNEL_CODE, jobMetricsData.channelCode)
-                    .set(MAX_JOB_CONCURRENCY, jobMetricsData.maxJobConcurrency)
-                    .set(SUM_JOB_COST, jobMetricsData.sumJobCost)
-                    .set(CHANNEL_CODE, jobMetricsData.channelCode)
-                    .execute()
+                try {
+                    dslContext.insertInto(this)
+                        .set(ID, jobMetricsData.id)
+                        .set(PROJECT_ID, jobMetricsData.projectId)
+                        .set(PRODUCT_ID, jobMetricsData.productId)
+                        .set(THE_DATE, jobMetricsData.theDate)
+                        .set(JOB_TYPE, jobMetricsData.jobType)
+                        .set(CHANNEL_CODE, jobMetricsData.channelCode)
+                        .set(MAX_JOB_CONCURRENCY, jobMetricsData.maxJobConcurrency)
+                        .set(SUM_JOB_COST, jobMetricsData.sumJobCost)
+                        .set(CHANNEL_CODE, jobMetricsData.channelCode)
+                        .execute()
+                } catch (e: Exception) {
+                    logger.error("Save dispatchJobMetrics error.", e)
+                }
             }
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(DispatchJobMetricsDao::class.java)
     }
 }

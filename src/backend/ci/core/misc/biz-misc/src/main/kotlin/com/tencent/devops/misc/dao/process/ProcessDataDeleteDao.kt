@@ -27,6 +27,7 @@
 
 package com.tencent.devops.misc.dao.process
 
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.model.process.tables.TAuditResource
 import com.tencent.devops.model.process.tables.TPipelineBuildContainer
 import com.tencent.devops.model.process.tables.TPipelineBuildDetail
@@ -49,15 +50,21 @@ import com.tencent.devops.model.process.tables.TPipelineLabelPipeline
 import com.tencent.devops.model.process.tables.TPipelineModelTask
 import com.tencent.devops.model.process.tables.TPipelinePauseValue
 import com.tencent.devops.model.process.tables.TPipelineRecentUse
+import com.tencent.devops.model.process.tables.TPipelineRemoteAuth
 import com.tencent.devops.model.process.tables.TPipelineResource
 import com.tencent.devops.model.process.tables.TPipelineResourceVersion
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.TPipelineSettingVersion
+import com.tencent.devops.model.process.tables.TPipelineTimer
+import com.tencent.devops.model.process.tables.TPipelineTriggerDetail
+import com.tencent.devops.model.process.tables.TPipelineTriggerEvent
+import com.tencent.devops.model.process.tables.TPipelineTriggerReview
 import com.tencent.devops.model.process.tables.TPipelineView
 import com.tencent.devops.model.process.tables.TPipelineViewGroup
 import com.tencent.devops.model.process.tables.TPipelineViewTop
 import com.tencent.devops.model.process.tables.TPipelineViewUserLastView
 import com.tencent.devops.model.process.tables.TPipelineViewUserSettings
+import com.tencent.devops.model.process.tables.TPipelineWebhook
 import com.tencent.devops.model.process.tables.TPipelineWebhookBuildParameter
 import com.tencent.devops.model.process.tables.TPipelineWebhookQueue
 import com.tencent.devops.model.process.tables.TProjectPipelineCallback
@@ -65,6 +72,7 @@ import com.tencent.devops.model.process.tables.TProjectPipelineCallbackHistory
 import com.tencent.devops.model.process.tables.TReport
 import com.tencent.devops.model.process.tables.TTemplate
 import com.tencent.devops.model.process.tables.TTemplatePipeline
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -72,10 +80,23 @@ import org.springframework.stereotype.Repository
 @Repository
 class ProcessDataDeleteDao {
 
-    fun deleteAuditResource(dslContext: DSLContext, projectId: String) {
+    fun deleteAuditResource(
+        dslContext: DSLContext,
+        projectId: String,
+        resourceType: String? = null,
+        resourceId: String? = null
+    ) {
         with(TAuditResource.T_AUDIT_RESOURCE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            if (!resourceType.isNullOrBlank()) {
+                conditions.add(RESOURCE_TYPE.eq(resourceType))
+            }
+            if (!resourceId.isNullOrBlank()) {
+                conditions.add(RESOURCE_ID.eq(resourceId))
+            }
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(conditions)
                 .execute()
         }
     }
@@ -296,10 +317,10 @@ class ProcessDataDeleteDao {
         }
     }
 
-    fun deleteTemplatePipeline(dslContext: DSLContext, projectId: String) {
+    fun deleteTemplatePipeline(dslContext: DSLContext, projectId: String, pipelineIds: List<String>) {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.`in`(pipelineIds)))
                 .execute()
         }
     }
@@ -325,10 +346,18 @@ class ProcessDataDeleteDao {
         }
     }
 
-    fun deletePipelineViewGroup(dslContext: DSLContext, projectId: String) {
+    fun deletePipelineTriggerReview(dslContext: DSLContext, projectId: String, buildIds: List<String>) {
+        with(TPipelineTriggerReview.T_PIPELINE_TRIGGER_REVIEW) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
+                .execute()
+        }
+    }
+
+    fun deletePipelineViewGroup(dslContext: DSLContext, projectId: String, pipelineId: String) {
         with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
                 .execute()
         }
     }
@@ -341,10 +370,10 @@ class ProcessDataDeleteDao {
         }
     }
 
-    fun deletePipelineRecentUse(dslContext: DSLContext, projectId: String) {
+    fun deletePipelineRecentUse(dslContext: DSLContext, projectId: String, pipelineId: String) {
         with(TPipelineRecentUse.T_PIPELINE_RECENT_USE) {
             dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
                 .execute()
         }
     }
@@ -377,6 +406,57 @@ class ProcessDataDeleteDao {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))
+                .execute()
+        }
+    }
+
+    fun deletePipelineTriggerDetail(dslContext: DSLContext, projectId: String, pipelineId: String) {
+        with(TPipelineTriggerDetail.T_PIPELINE_TRIGGER_DETAIL) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
+                .execute()
+        }
+    }
+
+    fun deletePipelineAuditResource(dslContext: DSLContext, projectId: String, pipelineId: String) {
+        with(TAuditResource.T_AUDIT_RESOURCE) {
+            dslContext.deleteFrom(this)
+                .where(
+                    PROJECT_ID.eq(projectId)
+                        .and(RESOURCE_TYPE.eq(AuthResourceType.PIPELINE_DEFAULT.value)).and(RESOURCE_ID.eq(pipelineId))
+                )
+                .execute()
+        }
+    }
+
+    fun deletePipelineRemoteAuth(dslContext: DSLContext, projectId: String, pipelineId: String) {
+        with(TPipelineRemoteAuth.T_PIPELINE_REMOTE_AUTH) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
+                .execute()
+        }
+    }
+
+    fun deletePipelineWebhook(dslContext: DSLContext, projectId: String, pipelineId: String) {
+        with(TPipelineWebhook.T_PIPELINE_WEBHOOK) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
+                .execute()
+        }
+    }
+
+    fun deletePipelineTimer(dslContext: DSLContext, projectId: String, pipelineId: String) {
+        with(TPipelineTimer.T_PIPELINE_TIMER) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
+                .execute()
+        }
+    }
+
+    fun deletePipelineTriggerEvent(dslContext: DSLContext, projectId: String) {
+        with(TPipelineTriggerEvent.T_PIPELINE_TRIGGER_EVENT) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
                 .execute()
         }
     }

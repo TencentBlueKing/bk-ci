@@ -62,6 +62,7 @@ import com.tencent.devops.process.utils.PIPELINE_CREATE_USER
 import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
+import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_MANUAL_USER_ID
@@ -208,7 +209,8 @@ class PipelineBuildService(
                     maxQueueSize = setting.maxQueueSize,
                     concurrencyGroup = context.concurrencyGroup,
                     concurrencyCancelInProgress = setting.concurrencyCancelInProgress,
-                    maxConRunningQueueSize = setting.maxConRunningQueueSize
+                    maxConRunningQueueSize = setting.maxConRunningQueueSize,
+                    retry = pipelineParamMap[PIPELINE_RETRY_COUNT] != null
                 )
             )
             if (interceptResult.isNotOk()) {

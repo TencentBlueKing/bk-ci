@@ -18,15 +18,19 @@
 _M = {}
 -- 判断当前请求属于哪个tag
 function _M:get_tag(ns_config)
-    if ngx.var.use_default_tag == 'true' then
-        return ns_config.tag
-    end
-
     local devops_project_id = ngx.var.project_id
     local devops_project = ngx.var.project
     local devops_service = ngx.var.service
-    local default_tag = ns_config.tag
     local tag = nil
+
+    local default_tag = ns_config.tag
+    if devops_project == 'codecc' then
+        default_tag = ns_config.codecc_tag
+    end
+
+    if ngx.var.use_default_tag == 'true' then
+        return default_tag
+    end
 
     -- 根据header强制路由tag
     local x_gateway_tag = ngx.var.http_x_gateway_tag
