@@ -622,11 +622,18 @@ class PipelineRepositoryService constructor(
         description: String?,
         pipelineAsCodeSettings: PipelineAsCodeSettings?
     ): DeployPipelineResult {
+        val onlyDraft = versionStatus == VersionStatus.COMMITTING
         val modelVersion = 1
-        val versionNum = 1
-        val pipelineVersion = 1
-        val triggerVersion = 1
+        var versionNum = 1
+        var pipelineVersion = 1
+        var triggerVersion = 1
         val settingVersion = 1
+        // 如果是仅有草稿的状态，resource表的版本号先设为0作为基准
+        if (onlyDraft) {
+            versionNum = 0
+            pipelineVersion = 0
+            triggerVersion = 0
+        }
         val taskCount: Int = model.taskCount()
         val id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_INFO").data
         val lock = PipelineModelLock(redisOperation, pipelineId)
@@ -648,7 +655,7 @@ class PipelineRepositoryService constructor(
                     canElementSkip = canElementSkip,
                     taskCount = taskCount,
                     id = id,
-                    onlyDraft = versionStatus == VersionStatus.COMMITTING
+                    onlyDraft = onlyDraft
                 )
                 model.latestVersion = modelVersion
                 var savedSetting = PipelineSetting(
@@ -1009,6 +1016,7 @@ class PipelineRepositoryService constructor(
                             canElementSkip = canElementSkip,
                             taskCount = taskCount,
                             latestVersion = model.latestVersion,
+                            // 进行过至少一次发布版本后，才取消仅有草稿的状态
                             onlyDraft = false
                         )
                         model.latestVersion = version

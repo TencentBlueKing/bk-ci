@@ -299,6 +299,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_CONSTANTS_BLANK_ERROR = "2101187" // 常量({0})的取值为空
     const val ERROR_PIPELINE_YAML_FILENAME = "2101188" // 流水线YAML文件后缀{0}不正确
     const val ERROR_PIPELINE_WITH_EMPTY_STAGE = "2101189" // 编辑保存stage不能为空
+    const val ERROR_NO_RELEASE_PIPELINE_VERSION = "2101190" // 无发布版本的流水线无法执行
 
     const val ERROR_TRIGGER_DETAIL_NOT_FOUND = "2101191" // 触发详情{0}不存在
     const val ERROR_TRIGGER_EVENT_NOT_FOUND = "2101192" // 触发事件{0}不存在
