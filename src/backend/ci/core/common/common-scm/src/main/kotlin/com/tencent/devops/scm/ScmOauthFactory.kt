@@ -27,13 +27,10 @@
 
 package com.tencent.devops.scm
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.scm.code.CodeGitScmImpl
 import com.tencent.devops.scm.code.CodeGitlabScmImpl
@@ -43,7 +40,6 @@ import com.tencent.devops.scm.code.git.api.GitOauthApi
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.enums.CodeSvnRegion
-import com.tencent.devops.scm.exception.ScmException
 
 object ScmOauthFactory {
 
@@ -78,15 +74,6 @@ object ScmOauthFactory {
                         errorCode = ErrorCode.USER_INPUT_INVAILD,
                         errorType = ErrorType.USER,
                         errorMsg = "The svn private key is null"
-                    )
-                }
-                if (token == null) {
-                    throw ScmException(
-                        MessageUtil.getMessageByLocale(
-                            messageCode = CommonMessageCode.SVN_TOKEN_EMPTY,
-                            language = DEFAULT_LOCALE_LANGUAGE
-                        ),
-                        ScmType.CODE_SVN.name
                     )
                 }
                 val svnConfig = SpringContextUtil.getBean(SVNConfig::class.java)

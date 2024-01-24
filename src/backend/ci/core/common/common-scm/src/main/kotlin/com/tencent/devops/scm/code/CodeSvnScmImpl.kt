@@ -28,7 +28,9 @@
 package com.tencent.devops.scm.code
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.svn.api.SVNApi
@@ -56,7 +58,7 @@ class CodeSvnScmImpl constructor(
     private var privateKey: String,
     private val passphrase: String?,
     private val svnConfig: SVNConfig,
-    private val token: String
+    private val token: String?
 ) : IScm {
 
     override fun getLatestRevision(): RevisionInfo {
@@ -120,6 +122,15 @@ class CodeSvnScmImpl constructor(
 
     override fun checkTokenAndPrivateKey() {
         try {
+            if (token.isNullOrBlank()){
+                throw ScmException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = CommonMessageCode.SVN_TOKEN_EMPTY,
+                        language = DEFAULT_LOCALE_LANGUAGE
+                    ),
+                    ScmType.CODE_SVN.name
+                )
+            }
             SVNApi.getFileList(
                 host = svnConfig.webhookApiUrl,
                 token = token,
@@ -151,6 +162,15 @@ class CodeSvnScmImpl constructor(
 
     override fun checkTokenAndUsername() {
         try {
+            if (token.isNullOrBlank()){
+                throw ScmException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = CommonMessageCode.SVN_TOKEN_EMPTY,
+                        language = DEFAULT_LOCALE_LANGUAGE
+                    ),
+                    ScmType.CODE_SVN.name
+                )
+            }
             SVNApi.getFileList(
                 host = svnConfig.webhookApiUrl,
                 token = token,
@@ -194,7 +214,7 @@ class CodeSvnScmImpl constructor(
         } catch (ignored: Exception) {
             logger.warn("Fail to add the webhook", ignored)
             throw ScmException(
-                message = I18nUtil.getCodeLanMessage(
+                message = ignored.message ?: I18nUtil.getCodeLanMessage(
                     CommonMessageCode.SVN_CREATE_HOOK_FAIL
                 ),
                 scmType = ScmType.CODE_SVN.name
@@ -335,6 +355,15 @@ class CodeSvnScmImpl constructor(
      * 基于私人令牌添加svn仓库的webhook
      */
     private fun addWebhookByToken(hookUrl: String) {
+        if (token.isNullOrBlank()){
+            throw ScmException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = CommonMessageCode.SVN_TOKEN_EMPTY,
+                    language = DEFAULT_LOCALE_LANGUAGE
+                ),
+                ScmType.CODE_SVN.name
+            )
+        }
         val hooks = SVNApi.getWebhooks(
             host = svnConfig.webhookApiUrl,
             projectName = projectName,
