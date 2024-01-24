@@ -122,7 +122,7 @@ class CodeSvnScmImpl constructor(
 
     override fun checkTokenAndPrivateKey() {
         try {
-            if (token.isNullOrBlank()){
+            if (token.isNullOrBlank()) {
                 throw ScmException(
                     MessageUtil.getMessageByLocale(
                         messageCode = CommonMessageCode.SVN_TOKEN_EMPTY,
@@ -162,7 +162,7 @@ class CodeSvnScmImpl constructor(
 
     override fun checkTokenAndUsername() {
         try {
-            if (token.isNullOrBlank()){
+            if (token.isNullOrBlank()) {
                 throw ScmException(
                     MessageUtil.getMessageByLocale(
                         messageCode = CommonMessageCode.SVN_TOKEN_EMPTY,
@@ -355,7 +355,7 @@ class CodeSvnScmImpl constructor(
      * 基于私人令牌添加svn仓库的webhook
      */
     private fun addWebhookByToken(hookUrl: String) {
-        if (token.isNullOrBlank()){
+        if (token.isNullOrBlank()) {
             throw ScmException(
                 MessageUtil.getMessageByLocale(
                     messageCode = CommonMessageCode.SVN_TOKEN_EMPTY,
