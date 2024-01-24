@@ -31,10 +31,8 @@ class BluekingNotifySendCmd @Autowired constructor(
                     val successContent = EnvUtils.parseEnv(
                         successSubscription.content, commandContext.variables, replaceWithEmpty
                     )
-                    val params = mapOf(
-                        "successContent" to successContent,
-                        "emailSuccessContent" to successContent
-                    )
+                    commandContext.notifyValue["successContent"] = successContent
+                    commandContext.notifyValue["emailSuccessContent"] = successContent
                     val receivers = successSubscription.users.split(",").map {
                         EnvUtils.parseEnv(
                             command = it,
@@ -46,8 +44,8 @@ class BluekingNotifySendCmd @Autowired constructor(
                         templateCode = getNotifyTemplateCode(shutdownType, successSubscription.detailFlag),
                         receivers = receivers,
                         notifyType = successSubscription.types.map { it.name }.toMutableSet(),
-                        titleParams = params,
-                        bodyParams = params
+                        titleParams = commandContext.notifyValue,
+                        bodyParams = commandContext.notifyValue
                     )
                 }
             }
@@ -57,10 +55,8 @@ class BluekingNotifySendCmd @Autowired constructor(
                     val failContent = EnvUtils.parseEnv(
                         failSubscription.content, commandContext.variables, replaceWithEmpty
                     )
-                    val params = mapOf(
-                        "failContent" to failContent,
-                        "emailFailContent" to failContent
-                    )
+                    commandContext.notifyValue["failContent"] = failContent
+                    commandContext.notifyValue["emailFailContent"] = failContent
                     val receivers = failSubscription.users.split(",").map {
                         EnvUtils.parseEnv(
                             command = it,
@@ -72,8 +68,8 @@ class BluekingNotifySendCmd @Autowired constructor(
                         templateCode = getNotifyTemplateCode(shutdownType, failSubscription.detailFlag),
                         receivers = receivers,
                         notifyType = failSubscription.types.map { it.name }.toMutableSet(),
-                        titleParams = params,
-                        bodyParams = params
+                        titleParams = commandContext.notifyValue,
+                        bodyParams = commandContext.notifyValue
                     )
                 }
             }
