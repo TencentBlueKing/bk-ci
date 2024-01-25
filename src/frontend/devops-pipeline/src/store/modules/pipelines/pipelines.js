@@ -465,12 +465,8 @@ const actions = {
         return ajax.delete(`${prefix}${projectId}/${pipelineId}/${version}`)
     },
     async rollbackPipelineVersion ({ rootCommit }, { projectId, pipelineId, version }) {
-        try {
-            const res = await ajax.post(`${versionPrefix}/projects/${projectId}/pipelines/${pipelineId}/rollbackDraft?version=${version}`)
-            return res.data
-        } catch (error) {
-
-        }
+        const res = await ajax.post(`${versionPrefix}/projects/${projectId}/pipelines/${pipelineId}/rollbackDraft?version=${version}`)
+        return res.data
     },
     updateBuildRemark (_, { projectId, pipelineId, buildId, remark }) {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/updateRemark`, {

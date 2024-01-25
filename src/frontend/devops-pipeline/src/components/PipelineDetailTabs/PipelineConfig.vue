@@ -238,7 +238,6 @@
                 'setPipelineSetting',
                 'setPipelineWithoutTrigger'
             ]),
-            ...mapActions('pipelines', ['rollbackPipelineVersion']),
             async init () {
                 try {
                     if (this.activePipelineVersion) {
