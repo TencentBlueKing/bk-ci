@@ -259,6 +259,7 @@ class AgentDisconnectNotifyService @Autowired constructor(
     private fun getEmailTitle(type: Type) =
         if (type == Type.ONLINE) "✔️【蓝盾第三方构建机上线告警通知 - #{projectName}】" else "❌【蓝盾第三方构建机下线告警通知 - #{projectName}】"
 
+    @Suppress("All")
     private fun getEmailBody(type: Type): String {
         val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
         val title = if (type == Type.ONLINE) "✔️【蓝盾第三方构建机上线告警通知】" else "❌【蓝盾第三方构建机下线告警通知】"
