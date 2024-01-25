@@ -754,7 +754,7 @@ class PipelineRepositoryService constructor(
                 } else {
                     PipelineVersionUtils.getVersionName(pipelineVersion, triggerVersion, settingVersion)
                 }
-
+                // TODO #8161 配置暂时忽略，后面根据yaml
 //                val yamlStr = try {
 //                    transferService.transfer(
 //                        userId = userId,
