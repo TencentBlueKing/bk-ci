@@ -85,7 +85,7 @@ class PipelineRepositoryVersionService(
         }
     }
 
-    fun deletePipelineVer(projectId: String, pipelineId: String, version: Int) {
+    fun deletePipelineVersion(projectId: String, pipelineId: String, version: Int) {
         // 判断该流水线版本是否还有关联的构建记录，没有记录才能删除
         val pipelineVersionLock = PipelineVersionLock(redisOperation, pipelineId, version)
         try {
@@ -103,8 +103,9 @@ class PipelineRepositoryVersionService(
             }
             dslContext.transaction { t ->
                 val transactionContext = DSL.using(t)
-                pipelineResourceVersionDao.deleteByVer(transactionContext, projectId, pipelineId, version)
-                pipelineSettingVersionDao.deleteByVer(transactionContext, projectId, pipelineId, version)
+                // #8161 软删除数据，前端无法查询到该版本
+                pipelineResourceVersionDao.deleteByVersion(transactionContext, projectId, pipelineId, version)
+//                pipelineSettingVersionDao.deleteByVer(transactionContext, projectId, pipelineId, version)
             }
         } finally {
             pipelineVersionLock.unlock()

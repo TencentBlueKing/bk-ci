@@ -585,8 +585,12 @@ class PipelineYamlRepositoryService @Autowired constructor(
         pipelineId: String,
         version: Int
     ): List<PipelineWebhookVersion> {
-        val model =
-            pipelineRepositoryService.getModel(projectId = projectId, pipelineId = pipelineId, version = version)
+        val model = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            includeDraft = true
+        )?.model
         if (model == null) {
             logger.info("$pipelineId|$version|model is null")
             return emptyList()
