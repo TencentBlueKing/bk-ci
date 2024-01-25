@@ -69,8 +69,7 @@ class MigrateV0PolicyService constructor(
     private val groupService: PermissionResourceGroupService,
     private val authMigrationDao: AuthMigrationDao,
     private val deptService: DeptService,
-    private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
-    private val authResourceGroupService: AuthResourceGroupService
+    private val permissionGroupPoliciesService: PermissionGroupPoliciesService
 ) : AbMigratePolicyService(
     v2ManagerService = v2ManagerService,
     iamConfiguration = iamConfiguration,
@@ -82,8 +81,7 @@ class MigrateV0PolicyService constructor(
     permissionService = permissionService,
     rbacCacheService = rbacCacheService,
     deptService = deptService,
-    permissionGroupPoliciesService = permissionGroupPoliciesService,
-    authResourceGroupService = authResourceGroupService
+    permissionGroupPoliciesService = permissionGroupPoliciesService
 ) {
 
     companion object {
@@ -233,7 +231,7 @@ class MigrateV0PolicyService constructor(
             resourceCode = resourceCode,
             groupCode = BkAuthGroup.EXECUTOR.value
         )?.relationId ?: return true
-        // 查询对应组的人员模板ID，并像该流水线用户组加入人员模板
+        // 查询对应组的人员模板ID，并像该流水线用户组加入人员模板aaaa
         return false
     }
 
