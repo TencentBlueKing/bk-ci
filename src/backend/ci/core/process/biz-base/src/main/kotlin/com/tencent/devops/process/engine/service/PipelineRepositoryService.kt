@@ -53,6 +53,7 @@ import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
+import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
@@ -98,6 +99,8 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
@@ -751,25 +754,24 @@ class PipelineRepositoryService constructor(
                 } else {
                     PipelineVersionUtils.getVersionName(pipelineVersion, triggerVersion, settingVersion)
                 }
-                // TODO #8161 配置暂时忽略，后面根据yaml
-//                val yamlStr = try {
-//                    transferService.transfer(
-//                        userId = userId,
-//                        projectId = projectId,
-//                        pipelineId = null,
-//                        actionType = TransferActionType.FULL_MODEL2YAML,
-//                        data = TransferBody(
-//                            modelAndSetting = PipelineModelAndSetting(
-//                                model = model,
-//                                setting = savedSetting
-//                            )
-//                        )
-//                    ).newYaml ?: ""
-//                } catch (ignore: Throwable) {
-//                    // 旧流水线可能无法转换，用空YAML代替
-//                    logger.warn("TRANSFER_YAML|$projectId|$userId", ignore)
-//                    null
-//                }
+                val yaml = yamlStr ?: try {
+                    transferService.transfer(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = null,
+                        actionType = TransferActionType.FULL_MODEL2YAML,
+                        data = TransferBody(
+                            modelAndSetting = PipelineModelAndSetting(
+                                model = model,
+                                setting = savedSetting
+                            )
+                        )
+                    ).newYaml ?: ""
+                } catch (ignore: Throwable) {
+                    // 旧流水线可能无法转换，用空YAML代替
+                    logger.warn("TRANSFER_YAML|$projectId|$userId", ignore)
+                    null
+                }
                 pipelineResourceDao.create(
                     dslContext = transactionContext,
                     projectId = projectId,
@@ -777,7 +779,7 @@ class PipelineRepositoryService constructor(
                     creator = userId,
                     version = 1,
                     model = model,
-                    yamlStr = yamlStr,
+                    yamlStr = yaml,
                     versionName = versionName,
                     versionNum = versionNum,
                     pipelineVersion = pipelineVersion,
@@ -792,7 +794,7 @@ class PipelineRepositoryService constructor(
                     creator = userId,
                     version = 1,
                     model = model,
-                    yaml = yamlStr,
+                    yaml = yaml,
                     baseVersion = baseVersion,
                     versionName = versionName ?: "",
                     versionNum = versionNum,
