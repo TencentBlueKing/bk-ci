@@ -14,7 +14,7 @@
                                 projectId,
                                 resourceType: 'pipeline',
                                 resourceCode: pipeline.pipelineId,
-                                action: RESOURCE_ACTION.EDIT
+                                action: RESOURCE_ACTION.VIEW
                             }
                         }"
                     >
