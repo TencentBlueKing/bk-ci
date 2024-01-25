@@ -1,6 +1,8 @@
 package com.tencent.devops.remotedev.service.tcloud
 
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.remotedev.dao.ProjectTCloudCfsDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
@@ -20,14 +22,17 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 @Suppress("ALL")
 @Service
 class TCloudCfsService @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectTCloudCfsDao: ProjectTCloudCfsDao,
-    private val workspaceJoinDao: WorkspaceJoinDao
+    private val workspaceJoinDao: WorkspaceJoinDao,
+    private val redisOperation: RedisOperation
 ) {
     @Value("\${tcloud.apiSecretId:}")
     val secretId = ""
@@ -73,34 +78,23 @@ class TCloudCfsService @Autowired constructor(
             logger.debug("fetchCfsLinkCfsPermission|willdelete|${gpResp.ruleList}|$ip")
             gpResp.ruleList.forEach {
                 if (it.authClientIp == ip) {
-                    try {
-                        client.DeleteCfsRule(
-                            DeleteCfsRuleRequest().apply {
-                                this.pGroupId = pgId
-                                this.ruleId = it.ruleId
-                            }
-                        )
-                    } catch (e: Exception) {
-                        logger.error("fetchCfsLinkCfsPermission|DeleteCfsRule error", e)
-                        return
-                    }
+                    createOrDeleteCfsRule(
+                        pgId = pgId,
+                        ip = "",
+                        ruleId = it.ruleId,
+                        region = record.region,
+                        delete = true
+                    )
                 }
             }
         } else {
-            try {
-                client.CreateCfsRule(
-                    CreateCfsRuleRequest().apply {
-                        this.pGroupId = pgId
-                        this.authClientIp = ip
-                        this.priority = 1
-                        this.rwPermission = "rw"
-                        this.userPermission = "no_root_squash"
-                    }
-                )
-            } catch (e: Exception) {
-                logger.error("fetchCfsLinkCfsPermission|CreateCfsRule error", e)
-                return
-            }
+            createOrDeleteCfsRule(
+                pgId = pgId,
+                ip = ip,
+                ruleId = "",
+                region = record.region,
+                delete = false
+            )
         }
     }
 
@@ -125,8 +119,6 @@ class TCloudCfsService @Autowired constructor(
         return resp.fileSystems.first().pGroup.pGroupId
     }
 
-    private val executor = Executors.newCachedThreadPool()
-
     fun addProjectCfsId(
         projectId: String,
         cfsId: String,
@@ -146,40 +138,99 @@ class TCloudCfsService @Autowired constructor(
         val pgId = getPGId(client, cfsId) ?: throw RuntimeException("获取权限组ID失败")
         projectTCloudCfsDao.add(dslContext, projectId, cfsId, region, pgId)
 
-        executor.execute {
-            // 将所有这个项目下的ip都添加到权限组
-            val ips = workspaceJoinDao.limitFetchProjectWorkspace(
-                dslContext = dslContext,
-                null,
-                queryType = QueryType.WEB,
-                search = WorkspaceSearch(
-                    projectId = listOf(projectId),
-                    workspaceSystemType = listOf(WorkspaceSystemType.WINDOWS_GPU),
-                    onFuzzyMatch = false
-                )
-            )?.filter { !it.hostName.isNullOrBlank() }?.map {
-                it.hostName?.split(".")?.let { host ->
-                    host.subList(1, host.size).joinToString(separator = ".")
-                }!!
-            }?.toSet() ?: return@execute
+        // 将所有这个项目下的ip都添加到权限组
+        val ips = workspaceJoinDao.limitFetchProjectWorkspace(
+            dslContext = dslContext,
+            null,
+            queryType = QueryType.WEB,
+            search = WorkspaceSearch(
+                projectId = listOf(projectId),
+                workspaceSystemType = listOf(WorkspaceSystemType.WINDOWS_GPU),
+                onFuzzyMatch = false
+            )
+        )?.filter { !it.hostName.isNullOrBlank() }?.map {
+            it.hostName?.split(".")?.let { host ->
+                host.subList(1, host.size).joinToString(separator = ".")
+            }!!
+        }?.toSet() ?: return
 
-            ips.forEach { ip ->
-                try {
-                    client.CreateCfsRule(
-                        CreateCfsRuleRequest().apply {
-                            this.pGroupId = pgId
-                            this.authClientIp = ip
-                            this.priority = 1
-                            this.rwPermission = "rw"
-                            this.userPermission = "no_root_squash"
-                        }
-                    )
-                } catch (e: Exception) {
-                    logger.error("fetchCfsLinkCfsPermission|CreateCfsRule error", e)
-                    return@execute
-                }
-                // 中间休眠下，防止快速操作腾讯云报错
-                Thread.sleep(75000)
+        ips.forEach { ip ->
+            createOrDeleteCfsRule(pgId = pgId, ip = ip, ruleId = "", region = region, delete = false)
+        }
+    }
+
+    // 腾讯云对创建cfs权限组规则有频率限制，我们使用75s发送一次
+    private val askExecutor = ThreadPoolExecutor(
+        10,
+        20,
+        76000L,
+        TimeUnit.MILLISECONDS,
+        LinkedBlockingQueue(100)
+    )
+
+    private fun createOrDeleteCfsRule(
+        pgId: String,
+        ip: String,
+        ruleId: String,
+        region: String,
+        delete: Boolean
+    ) {
+        askExecutor.execute {
+            val key = "$TCLOUD_PGID_REDIS_KEY_PREFIX:$pgId"
+            val redisLock = RedisLock(redisOperation, key, 76)
+            try {
+                redisLock.lock()
+                doCreateOrDeleteCfsRule(pgId, ip, ruleId, region, delete)
+            } finally {
+                redisLock.unlock()
+            }
+        }
+    }
+
+    private fun doCreateOrDeleteCfsRule(
+        pgId: String,
+        ip: String,
+        ruleId: String,
+        region: String,
+        delete: Boolean
+    ) {
+        val cred = Credential(secretId, secretKey)
+        val profile = HttpProfile().apply {
+            this.endpoint = TCLOUD_DOMAIN
+        }
+        val client = CfsClient(
+            cred,
+            region,
+            ClientProfile().apply {
+                this.httpProfile = profile
+            }
+        )
+        if (delete) {
+            try {
+                client.DeleteCfsRule(
+                    DeleteCfsRuleRequest().apply {
+                        this.pGroupId = pgId
+                        this.ruleId = ruleId
+                    }
+                )
+            } catch (e: Exception) {
+                logger.error("doCreateOrDeleteCfsRule|DeleteCfsRule error", e)
+                return
+            }
+        } else {
+            try {
+                client.CreateCfsRule(
+                    CreateCfsRuleRequest().apply {
+                        this.pGroupId = pgId
+                        this.authClientIp = ip
+                        this.priority = 1
+                        this.rwPermission = "rw"
+                        this.userPermission = "no_root_squash"
+                    }
+                )
+            } catch (e: Exception) {
+                logger.error("doCreateOrDeleteCfsRule|CreateCfsRule error", e)
+                return
             }
         }
     }
@@ -208,5 +259,6 @@ class TCloudCfsService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(TCloudCfsService::class.java)
         private const val TCLOUD_DOMAIN = "cfs.internal.tencentcloudapi.com"
+        private const val TCLOUD_PGID_REDIS_KEY_PREFIX = "remotedev:tcloud:pgid"
     }
 }
