@@ -16,6 +16,7 @@ allprojects {
 
     // 加载boot的插件
     if (name.startsWith("boot-")) {
+        pluginManager.apply("task-sharding-db-table-check") // 分区表检查插件
         pluginManager.apply("org.owasp.dependencycheck") // 检查依赖包漏洞版本
         pluginManager.apply("task-i18n-load") // i18n插件
         if (System.getProperty("devops.assemblyMode") == "KUBERNETES") {
@@ -129,6 +130,7 @@ allprojects {
             dependency("com.jakewharton:disklrucache:${Versions.disklrucache}")
             dependency("org.apache.poi:poi:${Versions.apachepoi}")
             dependency("org.apache.poi:poi-ooxml:${Versions.apachepoi}")
+            dependency("com.mysql:mysql-connector-j:${Versions.MysqlDriver}")
             dependency("com.tencentcloudapi:tencentcloud-sdk-java-cfs:${Versions.tencentcloudsdkcfs}")
         }
     }

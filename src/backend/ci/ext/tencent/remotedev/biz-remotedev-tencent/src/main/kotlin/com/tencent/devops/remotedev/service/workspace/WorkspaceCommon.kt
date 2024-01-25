@@ -32,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisOperation
@@ -59,6 +60,7 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
+import com.tencent.devops.remotedev.pojo.WorkspaceKafkaInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
@@ -81,6 +83,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -108,7 +111,8 @@ class WorkspaceCommon @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val whiteListService: WhiteListService,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
-    private val notifyControl: NotifyControl
+    private val notifyControl: NotifyControl,
+    private val kafkaClient: KafkaClient
 ) {
 
     companion object {
@@ -118,6 +122,9 @@ class WorkspaceCommon @Autowired constructor(
         private const val LOCALDRIVER = "L"
         private const val PIPELINE_CONFIG_INFO = "remotedev:assignWorkspace.pipelineinfo"
     }
+
+    @Value("\${spring.kafka.topics.cgsInfoTopic:#{null}}")
+    val buildCommitsTopic: String? = null
 
     fun getOpHistory(key: OpHistoryCopyWriting) =
         redisCache.get(REDIS_OP_HISTORY_KEY_PREFIX + key.name)?.ifBlank {
@@ -647,6 +654,22 @@ class WorkspaceCommon @Autowired constructor(
                 WorkspaceRecord::createUserId.name to workspace.createUserId
             ).plus(noticeParams)
         )
+    }
+
+    // 云桌面删除成功后往kafka发送消息
+    fun sendCgsInfo2Kafka(workspaceKafkaInfo: WorkspaceKafkaInfo) {
+        if (buildCommitsTopic.isNullOrBlank()) return
+        logger.info("sendCgsInfo2Kafka|workspaceKafkaInfo|{}", workspaceKafkaInfo)
+        kotlin.runCatching {
+            kafkaClient.send(
+                buildCommitsTopic!!,
+                    JsonUtil.toJson(
+                workspaceKafkaInfo
+            )
+            )
+        }.onFailure {
+            logger.warn("send cgs info 2 kafka fail")
+        }
     }
 
     // 创建实例成功后做异步设置，包含L盘挂载

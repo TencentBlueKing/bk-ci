@@ -51,3 +51,4 @@ bkEsbEnabled: false
 bkCiSm4Key: s31^dDjd!3k
 bkCiSm4Enabled: false
 bkCiMonitorRegister: false
+bkCiBuildDataClearSwitch: false
