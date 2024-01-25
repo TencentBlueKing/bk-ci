@@ -371,9 +371,9 @@
             <ul class="error-info-list" v-if="activeBuild">
                 <li v-for="item in activeBuild.errorInfoList" :key="item.errCode">
                     <logo :name="item.icon" size="18" />
-                    <span v-bk-overflow-tips>
+                    <p v-bk-tooltips="{ maxWidth: 600, content: item.errorMsg }" :title="item.errorMsg">
                         {{ $t(item.title) }} (<b>{{ item.errCode }}</b>): {{ item.errorMsg }}
-                    </span>
+                    </p>
                 </li>
             </ul>
             <footer slot="footer">
@@ -1242,7 +1242,7 @@
         &:first-child {
             border-top: 1px solid #EAEBF0;
         }
-        > span {
+        > p {
             display: -webkit-box;
             -webkit-box-orient: vertical;
             -webkit-line-clamp: 3;

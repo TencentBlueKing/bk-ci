@@ -176,12 +176,13 @@
                 }).then(({ records, count }) => {
                     this.versionList = records.map(item => {
                         const isDraft = item.status === 'COMMITTING'
+                        const isBranchVersion = item.status === 'BRANCH'
                         const displayName = generateDisplayName(item.versionNum, item.versionName)
                         return {
                             ...item,
-                            displayName: isDraft ? this.$t('draft') : displayName,
+                            displayName: isBranchVersion ? item.versionName : isDraft ? this.$t('draft') : displayName,
                             description: isDraft ? this.$t('baseOn', [generateDisplayName(item.baseVersion, item.baseVersionName)]) : (item.description || '--'),
-                            isBranchVersion: item.status === 'BRANCH',
+                            isBranchVersion,
                             isDraft,
                             isRelease: item.status === 'RELEASED'
                         }
