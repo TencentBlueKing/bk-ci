@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.service.utils.CommonUtils.idcProxyRequest
 import com.tencent.devops.repository.pojo.github.GithubAppUrl
 import com.tencent.devops.repository.pojo.github.GithubOauth
 import com.tencent.devops.repository.pojo.github.GithubOauthCallback
@@ -191,7 +192,7 @@ class GithubOAuthService @Autowired constructor(
             .header("Accept", "application/json")
             .post(RequestBody.create("application/x-www-form-urlencoded;charset=utf-8".toMediaTypeOrNull(), ""))
             .build()
-        OkhttpUtils.doHttp(request).use { response ->
+        OkhttpUtils.doHttp(request.idcProxyRequest()).use { response ->
             val data = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.info("Github get code(${response.code}) and response($data)")
