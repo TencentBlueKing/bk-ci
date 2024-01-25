@@ -38,6 +38,8 @@ import com.tencent.devops.project.pojo.OrgInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
+import com.tencent.devops.project.pojo.ProjectOrganizationInfo
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ProjectWithPermission
@@ -222,6 +224,16 @@ interface ServiceProjectResource {
         projectName: String
     ): Result<Boolean>
 
+    @PUT
+    @Path("/{projectCode}/properties")
+    fun updateProjectProperties(
+        @ApiParam("项目Code", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("项目名称", required = true)
+        properties: ProjectProperties
+    ): Result<Boolean>
+
     @GET
     @Path("projectNames/{projectName}")
     fun getProjectByName(
@@ -321,5 +333,28 @@ interface ServiceProjectResource {
         projectId: String,
         @ApiParam(value = "ke", required = true)
         subjectScopes: List<SubjectScopeInfo>
+    ): Result<Boolean>
+
+    @PUT
+    @Path("{projectId}/updateProjectProductId")
+    @ApiOperation("修改项目关联产品")
+    fun updateProjectProductId(
+        @ApiParam(value = "项目code", required = true)
+        @PathParam("projectId")
+        projectCode: String,
+        @ApiParam("产品名称", required = true)
+        @QueryParam("productName")
+        productName: String
+    ): Result<Boolean>
+
+    @PUT
+    @Path("{projectId}/updateOrganizationByEnglishName")
+    @ApiOperation("修改项目组织架构")
+    fun updateOrganizationByEnglishName(
+        @ApiParam(value = "项目code", required = true)
+        @PathParam("projectId")
+        projectCode: String,
+        @ApiParam("产品名称", required = true)
+        projectOrganizationInfo: ProjectOrganizationInfo
     ): Result<Boolean>
 }

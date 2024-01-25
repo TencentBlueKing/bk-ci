@@ -783,11 +783,11 @@
     id: "aab3cc905f004b9392773d388d64daef"
     sender: "DevOps"
     title: "The pipeline under the project [${projectName}] [${pipelineName}] # ${buildNum} builds Stage audit"
-    body: "The build status is stage sucess, and your audit is required to implement the follow-up process.\nAudit description: ${reviewDesc}\nClick ${reviewUrl} on the computer side\nClick ${reviewAppUrl} on the mobile phone"
+    body: "The build status is stage success, and your audit is required to implement the follow-up process.\nAudit description: ${reviewDesc}\nClick ${reviewUrl} on the computer side\nClick ${reviewAppUrl} on the mobile phone"
   weworkGroupTemplate:
     id: "cead07553b364b5a9c3f0290e35c82da"
     title: "The pipeline under the project [${projectName}] [${pipelineName}] # ${buildNum} builds Stage audit"
-    body: "The build status is stage sucess, and an audit of \"${reviewers}\" is required to execute the subsequent process.\n\nAudit description:\n${reviewDesc}\n\n[click on the computer side] (${reviewUrl})\n[click on mobile] (${reviewAppUrl})"
+    body: "The build status is stage success, and an audit of \"${reviewers}\" is required to execute the subsequent process.\n\nAudit description:\n${reviewDesc}\n\n[click on the computer side] (${reviewUrl})\n[click on mobile] (${reviewAppUrl})"
   creator: "system"
   modifior: "system"
 - index: 37
@@ -867,7 +867,7 @@
 - index: 41
   id: "ea98239a51a74f8db0a012a809bc2017"
   templateCode: "MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE"
-  templateName: "迁移PROCESS数据库中项目的数据成功提醒"
+  templateName: "Reminder for successful migration of project data in the PROCESS database"
   notifyTypeScope:
     - "WEWORK"
   priority: 0
@@ -877,5 +877,35 @@
     sender: "DevOps"
     title: "Successfully migrated the data of the project [${projectId}] in the PROCESS database"
     body: "Successfully migrated the data of the project [${projectId}] in the PROCESS database,there are a total of [${pipelineNum}] simulations that have been successfully migrated."
+  creator: "system"
+  modifior: "system"
+- index: 42
+  id: "ea98239a51a74f8db0a012a809bc2018"
+  templateCode: "MIGRATE_PROCESS_PIPELINE_DATA_FAIL_TEMPLATE"
+  templateName: "Data migration failure reminder for the pipeline under the project"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "390987c50179422388dd742924fc2003"
+    sender: "DevOps"
+    title: "Failed to migrate data of pipeline [${pipelineId}] under project [${projectId}]"
+    body: "Failed to migrate data of pipeline [${pipelineId}] under project [${projectId}]. Failure reason: ${failMsg}"
+  creator: "system"
+  modifior: "system"
+- index: 43
+  id: "ea98239a51a74f8db0a012a809bc2019"
+  templateCode: "MIGRATE_PROCESS_PIPELINE_DATA_SUCCESS_TEMPLATE"
+  templateName: "Reminder of successful data migration in the pipeline under the project"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "390987c50179422388dd742924fc2004"
+    sender: "DevOps"
+    title: "The data of the pipeline [${pipelineId}] under the project [${projectId}] was successfully migrated"
+    body: "The data of the pipeline [${pipelineId}] under the project [${projectId}] was successfully migrated, and there was a total of 1 successfully migrated pipeline."
   creator: "system"
   modifior: "system"

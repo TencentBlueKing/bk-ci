@@ -18,21 +18,33 @@
  */
 export default {
     callBack: () => {},
+    onReconnect: () => {},
 
     installWsMessage (callBack) {
         this.callBack = (res) => {
             const type = res?.data?.webSocketType
+            console.log('webSocket Receive data', res?.data)
             if (type === 'IFRAME' && res.data?.message) {
                 const message = JSON.parse(res.data.message)
-                callBack(message)
+                if (message === 'WEBSOCKET_RECONNECT') {
+                    console.log('webSocket reconnect', this.onReconnect)
+                    this.onReconnect?.()
+                } else {
+                    callBack(message)
+                }
             }
         }
         window.addEventListener('message', this.callBack)
     },
 
+    registeOnReconnect (callBack) {
+        this.onReconnect = callBack
+    },
+
     unInstallWsMessage () {
         window.removeEventListener('message', this.callBack)
         this.callBack = () => {}
+        this.onReconnect = () => {}
     },
 
     openDialogWebSocket (callBack, payLoad) {

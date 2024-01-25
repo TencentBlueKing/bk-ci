@@ -1,5 +1,5 @@
 <template>
-    <ul class="pipeline-label-selector" v-bkloading="{ isLoading }">
+    <ul class="pipeline-label-selector" ref="labelSelectorParent" v-bkloading="{ isLoading }">
         <template v-if="tagSelectModelList.length > 0">
             <li
                 v-for="item in tagSelectModelList"
@@ -10,6 +10,9 @@
                     class="sub-label-select"
                     :value="labelIdMap[item.id]"
                     @change="item.handleChange"
+                    :popover-options="{
+                        appendTo: $refs.labelSelectorParent
+                    }"
                     multiple
                 >
                     <bk-option

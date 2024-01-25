@@ -8,6 +8,14 @@
                 :disabled="saveBtnDisabled"
                 :loading="saveStatus"
                 theme="primary"
+                v-perm="{
+                    permissionData: {
+                        projectId: $route.params.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: $route.params.pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    }
+                }"
                 @click="save"
             >
                 {{ $t("save") }}
@@ -16,7 +24,15 @@
                 theme="primary"
                 :disabled="btnDisabled || !canManualStartup"
                 :loading="executeStatus"
-                :title="canManualStartup ? '' : this.$t('newlist.cannotManual')"
+                :title="canManualStartup ? '' : $t('newlist.cannotManual')"
+                v-perm="{
+                    permissionData: {
+                        projectId: $route.params.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: $route.params.pipelineId,
+                        action: RESOURCE_ACTION.EXECUTE
+                    }
+                }"
                 @click="saveAndExec"
             >
                 {{ isSaveAndRun ? $t("subpage.saveAndExec") : $t("exec") }}
@@ -27,12 +43,16 @@
 </template>
 
 <script>
-    import { mapState, mapGetters, mapActions, mapMutations } from 'vuex'
-    import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
     import VersionSideslider from '@/components/VersionSideslider'
-    import MoreActions from './MoreActions.vue'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
+    import {
+        handlePipelineNoPermission,
+        RESOURCE_ACTION
+    } from '@/utils/permission'
     import { HttpError } from '@/utils/util'
+    import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
+    import MoreActions from './MoreActions.vue'
+    import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
     export default {
         components: {
             PipelineBreadCrumb,
@@ -47,6 +67,9 @@
                 isEditing: 'atom/isEditing',
                 checkPipelineInvalid: 'atom/checkPipelineInvalid'
             }),
+            RESOURCE_ACTION () {
+                return RESOURCE_ACTION
+            },
             btnDisabled () {
                 return this.saveStatus || this.executeStatus
             },
@@ -220,19 +243,11 @@
                         data: responses
                     }
                 } catch (e) {
-                    this.handleError(e, [
-                        {
-                            actionId: this.$permissionActionMap.edit,
-                            resourceId: this.$permissionResourceMap.pipeline,
-                            instanceId: [
-                                {
-                                    id: pipelineId,
-                                    name: this.pipeline.name
-                                }
-                            ],
-                            projectId
-                        }
-                    ])
+                    handlePipelineNoPermission({
+                        projectId,
+                        resourceCode: pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    })
                     return {
                         code: e.code,
                         message: e.message

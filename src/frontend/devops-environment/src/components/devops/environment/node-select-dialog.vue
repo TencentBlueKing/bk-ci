@@ -58,7 +58,7 @@
                         ></bk-checkbox>
                         <div class="table-node-item node-item-ip">IP</div>
                         <div class="table-node-item node-item-displayname">{{ $t('environment.nodeInfo.displayName') }}</div>
-                        <div class="table-node-item node-item-name">{{ $t('environment.nodeInfo.cpuName') }}</div>
+                        <div class="table-node-item node-item-name">{{ $t('environment.nodeInfo.hostName') }}</div>
                         <div class="table-node-item node-item-type">{{ `${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}` }}</div>
                         <div class="table-node-item node-item-status">{{ $t('environment.nodeInfo.cpuStatus') }}</div>
                         <div class="table-node-item node-item-agstatus">

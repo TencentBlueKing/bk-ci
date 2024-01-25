@@ -79,6 +79,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineRestoreEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
+import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineName
@@ -170,6 +171,16 @@ class PipelineRepositoryService constructor(
                     canManualStartup = true
                     canElementSkip = it.canElementSkip ?: false
                     return@lit
+                }
+            }
+        }
+
+        // 检查jobId长度，并打日志方便后续填充和报错
+        model.stages.forEach { stage ->
+            stage.containers.forEach { con ->
+                if ((con.jobId?.length ?: 0) > 32) {
+                    // TODO: 会在issue #9810 中改为在DefaultModelCheckPlugin中填充和限制jobId的逻辑，这里先打印统计日志
+                    logger.warn("deployPipeline|#9810|$pipelineId|${con.jobId!!.length}")
                 }
             }
         }
@@ -295,6 +306,9 @@ class PipelineRepositoryService constructor(
             c.containerHashId = modelContainerIdGenerator.getNextId()
         }
         distIds.add(c.containerHashId!!)
+
+        // 清理无用的options
+        c.params = PipelineUtils.cleanOptions(c.params)
 
         var taskSeq = 0
         c.elements.forEach { e ->
@@ -758,17 +772,20 @@ class PipelineRepositoryService constructor(
         projectId: String,
         pipelineId: String,
         channelCode: ChannelCode? = null,
-        delete: Boolean? = false
+        delete: Boolean? = false,
+        queryDslContext: DSLContext? = null
     ): PipelineInfo? {
-        val template = templatePipelineDao.get(dslContext, projectId, pipelineId)
+        val finalDslContext = queryDslContext ?: dslContext
+        val template = templatePipelineDao.get(finalDslContext, projectId, pipelineId)
         val srcTemplate = template?.let { t ->
             templateDao.getTemplate(
-                dslContext = dslContext, templateId = t.templateId)
+                dslContext = finalDslContext, templateId = t.templateId
+            )
         }
         val templateId = template?.templateId
         val info = pipelineInfoDao.convert(
             t = pipelineInfoDao.getPipelineInfo(
-                dslContext = dslContext,
+                dslContext = finalDslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 channelCode = channelCode,
@@ -1176,9 +1193,10 @@ class PipelineRepositoryService constructor(
         sortType: PipelineSortType,
         collation: PipelineCollation
     ): List<PipelineInfo> {
-        val result = pipelineInfoDao.listDeletePipelineIdByProject(
+        val result = pipelineInfoDao.listPipelinesByProject(
             dslContext = dslContext,
             projectId = projectId,
+            deleteFlag = true,
             days = days,
             offset = offset,
             limit = limit,

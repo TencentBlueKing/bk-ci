@@ -25,9 +25,13 @@
 
 <script>
     import MiniMap from '@/components/MiniMap'
-    import { BaseSettingTab, NotifyTab, PipelineEditTab } from '@/components/PipelineEditTabs/'
+    import { AuthorityTab, BaseSettingTab, NotifyTab, PipelineEditTab } from '@/components/PipelineEditTabs/'
     import emptyTips from '@/components/devops/emptyTips'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
+    import {
+        RESOURCE_ACTION,
+        handlePipelineNoPermission
+    } from '@/utils/permission'
     import { navConfirm } from '@/utils/util'
     import { mapActions, mapState } from 'vuex'
 
@@ -37,6 +41,7 @@
             PipelineEditTab,
             BaseSettingTab,
             NotifyTab,
+            AuthorityTab,
             MiniMap
         },
         mixins: [pipelineOperateMixin],
@@ -47,6 +52,7 @@
                 leaving: false,
                 confirmMsg: this.$t('editPage.confirmMsg'),
                 confirmTitle: this.$t('editPage.confirmTitle'),
+                cancelText: this.$t('cancel'),
                 noPermissionTipsConfig: {
                     title: this.$t('noPermission'),
                     desc: this.$t('history.noPermissionTips'),
@@ -61,9 +67,10 @@
                             theme: 'success',
                             size: 'normal',
                             handler: () => {
-                                this.toApplyPermission(this.$permissionActionMap.edit, {
-                                    id: this.pipelineId,
-                                    name: this.pipelineId
+                                handlePipelineNoPermission({
+                                    projectId: this.$route.params.projectId,
+                                    resourceCode: this.pipelineId,
+                                    action: RESOURCE_ACTION.EDIT
                                 })
                             },
                             text: this.$t('applyPermission')
@@ -120,6 +127,13 @@
                                 }
                             }
                         },
+                        ...(this.isDraftEdit
+                            ? []
+                            : [{
+                                name: 'auth',
+                                label: this.$t('settings.auth'),
+                                component: 'AuthorityTab'
+                            }]),
                         {
                             name: 'baseSetting',
                             label: this.$t('editPage.baseSetting'),
@@ -195,11 +209,12 @@
                 'requestQualityAtom',
                 'requestInterceptAtom'
             ]),
-            init () {
+            async init () {
                 if (!this.isDraftEdit) {
                     this.isLoading = true
-                    this.requestPipeline(this.$route.params)
-                    this.requestPipelineSetting(this.$route.params)
+                    await this.requestPipeline(this.$route.params)
+                    await this.requestPipelineSetting(this.$route.params)
+                    this.isLoading = false
                 }
             },
             switchTab (tab) {
@@ -213,7 +228,7 @@
                 if (!this.leaving) {
                     if (this.isEditing) {
                         this.leaving = true
-                        navConfirm({ content: this.confirmMsg, type: 'warning' })
+                        navConfirm({ content: this.confirmMsg, type: 'warning', cancelText: this.cancelText })
                             .then(() => {
                                 next(true)
                                 this.leaving = false

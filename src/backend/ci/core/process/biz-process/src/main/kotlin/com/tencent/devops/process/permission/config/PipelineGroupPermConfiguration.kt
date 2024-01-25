@@ -31,9 +31,9 @@ package com.tencent.devops.process.permission.config
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.PipelineGroupAuthServiceCode
-import com.tencent.devops.process.permission.MockPipelineGroupPermissionService
-import com.tencent.devops.process.permission.PipelineGroupPermissionService
-import com.tencent.devops.process.permission.RbacPipelineGroupPermissionService
+import com.tencent.devops.process.permission.group.MockPipelineGroupPermissionService
+import com.tencent.devops.process.permission.group.PipelineGroupPermissionService
+import com.tencent.devops.process.permission.group.RbacPipelineGroupPermissionService
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty

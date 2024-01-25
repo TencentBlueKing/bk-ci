@@ -30,6 +30,7 @@ package com.tencent.devops.store.service.atom.impl
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
+import com.tencent.devops.common.api.auth.REFERER
 import com.tencent.devops.common.api.constant.AND
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DANG
@@ -50,12 +51,14 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.api.util.ThreadLocalUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.AtomBaseInfo
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.util.RegexUtils
+import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomEnvInfo
@@ -133,16 +136,16 @@ import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
 import com.tencent.devops.store.utils.StoreUtils
-import java.time.LocalDateTime
-import java.util.Calendar
-import java.util.concurrent.Callable
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import java.time.LocalDateTime
+import java.util.Calendar
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
 @Suppress("ALL")
 abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomService {
@@ -266,7 +269,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         pageSize: Int?,
         urlProtocolTrim: Boolean = false
     ): Future<MarketAtomResp> {
+        val referer = BkApiUtil.getHttpServletRequest()?.getHeader(REFERER)
         return executor.submit(Callable<MarketAtomResp> {
+            referer?.let {
+                ThreadLocalUtil.set(REFERER, referer)
+            }
             val results = mutableListOf<MarketItem>()
             // 获取插件
             val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode.split(",")
@@ -320,69 +327,72 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             classifyList?.forEach {
                 classifyMap[it.id] = it.classifyCode
             }
-
-            atoms.forEach {
-                val atomCode = it[tAtom.ATOM_CODE] as String
-                val visibleList = atomVisibleData?.get(atomCode)
-                val statistic = atomStatisticData[atomCode]
-                val atomHonorInfos = atomHonorInfoMap[atomCode]
-                val atomIndexInfos = atomIndexInfosMap[atomCode]
-                val members = memberData?.get(atomCode)
-                val defaultFlag = it[tAtom.DEFAULT_FLAG] as Boolean
-                val flag = storeCommonService.generateInstallFlag(defaultFlag = defaultFlag,
-                    members = members,
-                    userId = userId,
-                    visibleList = visibleList,
-                    userDeptList = userDeptList)
-                val classifyId = it[tAtom.CLASSIFY_ID] as String
-                var logoUrl = it[tAtom.LOGO_URL]
-                logoUrl = logoUrl?.let {
-                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
-                }
-                logoUrl = if (logoUrl?.contains("?") == true) {
-                    logoUrl.plus("&logo=true")
-                } else {
-                    logoUrl?.plus("?logo=true")
-                }
-                if (urlProtocolTrim) { // #4796 LogoUrl跟随主站协议
-                    logoUrl = RegexUtils.trimProtocol(logoUrl)
-                }
-                val osStr = it[tAtom.OS]
-                results.add(
-                    MarketItem(
-                        id = it[tAtom.ID] as String,
-                        name = it[tAtom.NAME] as String,
-                        code = atomCode,
-                        version = it[tAtom.VERSION] as String,
-                        type = it[tAtom.JOB_TYPE] as String,
-                        rdType = AtomTypeEnum.getAtomType((it[tAtom.ATOM_TYPE] as Byte).toInt()),
-                        classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
-                        category = AtomCategoryEnum.getAtomCategory((it[tAtom.CATEGROY] as Byte).toInt()),
-                        logoUrl = logoUrl,
-                        publisher = it[tAtom.PUBLISHER] as String,
-                        os = if (!osStr.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(
-                            osStr,
-                            List::class.java
-                        ) as List<String> else null,
-                        downloads = statistic?.downloads ?: 0,
-                        score = statistic?.score ?: 0.toDouble(),
-                        summary = it[tAtom.SUMMARY],
-                        flag = flag,
-                        publicFlag = it[tAtom.DEFAULT_FLAG] as Boolean,
-                        buildLessRunFlag = if (it[tAtom.BUILD_LESS_RUN_FLAG] == null) {
-                            false
-                        } else it[tAtom.BUILD_LESS_RUN_FLAG] as Boolean,
-                        docsLink = if (it[tAtom.DOCS_LINK] == null) "" else it[tAtom.DOCS_LINK] as String,
-                        modifier = it[tAtom.MODIFIER] as String,
-                        updateTime = DateTimeUtil.toDateTime(it[tAtom.UPDATE_TIME] as LocalDateTime),
-                        recommendFlag = it[tAtomFeature.RECOMMEND_FLAG],
-                        yamlFlag = it[tAtomFeature.YAML_FLAG],
-                        recentExecuteNum = statistic?.recentExecuteNum ?: 0,
-                        indexInfos = atomIndexInfos,
-                        honorInfos = atomHonorInfos,
-                        hotFlag = statistic?.hotFlag
+            try {
+                atoms.forEach {
+                    val atomCode = it[tAtom.ATOM_CODE] as String
+                    val visibleList = atomVisibleData?.get(atomCode)
+                    val statistic = atomStatisticData[atomCode]
+                    val atomHonorInfos = atomHonorInfoMap[atomCode]
+                    val atomIndexInfos = atomIndexInfosMap[atomCode]
+                    val members = memberData?.get(atomCode)
+                    val defaultFlag = it[tAtom.DEFAULT_FLAG] as Boolean
+                    val flag = storeCommonService.generateInstallFlag(defaultFlag = defaultFlag,
+                        members = members,
+                        userId = userId,
+                        visibleList = visibleList,
+                        userDeptList = userDeptList)
+                    val classifyId = it[tAtom.CLASSIFY_ID] as String
+                    var logoUrl = it[tAtom.LOGO_URL]
+                    logoUrl = logoUrl?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                    }
+                    logoUrl = if (logoUrl?.contains("?") == true) {
+                        logoUrl.plus("&logo=true")
+                    } else {
+                        logoUrl?.plus("?logo=true")
+                    }
+                    if (urlProtocolTrim) { // #4796 LogoUrl跟随主站协议
+                        logoUrl = RegexUtils.trimProtocol(logoUrl)
+                    }
+                    val osStr = it[tAtom.OS]
+                    results.add(
+                        MarketItem(
+                            id = it[tAtom.ID] as String,
+                            name = it[tAtom.NAME] as String,
+                            code = atomCode,
+                            version = it[tAtom.VERSION] as String,
+                            type = it[tAtom.JOB_TYPE] as String,
+                            rdType = AtomTypeEnum.getAtomType((it[tAtom.ATOM_TYPE] as Byte).toInt()),
+                            classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
+                            category = AtomCategoryEnum.getAtomCategory((it[tAtom.CATEGROY] as Byte).toInt()),
+                            logoUrl = logoUrl,
+                            publisher = it[tAtom.PUBLISHER] as String,
+                            os = if (!osStr.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(
+                                osStr,
+                                List::class.java
+                            ) as List<String> else null,
+                            downloads = statistic?.downloads ?: 0,
+                            score = statistic?.score ?: 0.toDouble(),
+                            summary = it[tAtom.SUMMARY],
+                            flag = flag,
+                            publicFlag = it[tAtom.DEFAULT_FLAG] as Boolean,
+                            buildLessRunFlag = if (it[tAtom.BUILD_LESS_RUN_FLAG] == null) {
+                                false
+                            } else it[tAtom.BUILD_LESS_RUN_FLAG] as Boolean,
+                            docsLink = if (it[tAtom.DOCS_LINK] == null) "" else it[tAtom.DOCS_LINK] as String,
+                            modifier = it[tAtom.MODIFIER] as String,
+                            updateTime = DateTimeUtil.toDateTime(it[tAtom.UPDATE_TIME] as LocalDateTime),
+                            recommendFlag = it[tAtomFeature.RECOMMEND_FLAG],
+                            yamlFlag = it[tAtomFeature.YAML_FLAG],
+                            recentExecuteNum = statistic?.recentExecuteNum ?: 0,
+                            indexInfos = atomIndexInfos,
+                            honorInfos = atomHonorInfos,
+                            hotFlag = statistic?.hotFlag
+                        )
                     )
-                )
+                }
+            } finally {
+                ThreadLocalUtil.remove(REFERER)
             }
 
             return@Callable MarketAtomResp(count, page, pageSize, results)
@@ -516,11 +526,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         pageSize: Int?,
         urlProtocolTrim: Boolean
     ): MarketAtomResp {
-        logger.info("[list]enter")
-
         // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)
-        logger.info("[list]get userDeptList:$userDeptList")
 
         return doList(
             userId = userId,
@@ -962,6 +969,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             // 只有处于构建中的插件才允许改构建结束后的构建状态
             if (AtomStatusEnum.BUILDING.status.toByte() == atomRecord.atomStatus) {
                 marketAtomDao.setAtomStatusById(dslContext, atomRecord.id, atomStatus.status.toByte(), userId, msg)
+
                 // 通过websocket推送状态变更消息
                 storeWebsocketService.sendWebsocketMessage(userId, atomRecord.id)
             }
@@ -1436,18 +1444,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val version = atomItem.version
             val atomEnvResult = marketAtomEnvService.getMarketAtomEnvInfo(projectCode, atomCode, version)
             val atomEnv = atomEnvResult.data
-            if (atomEnvResult.isNotOk()) {
-                throw ErrorCodeException(
-                    errorCode = atomEnvResult.status.toString(),
-                    defaultMessage = atomEnvResult.message
-                )
-            }
-            if (atomEnv == null) {
-                throw ErrorCodeException(
+                ?: throw ErrorCodeException(
                     errorCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
                     params = arrayOf(projectCode, atomCode)
                 )
-            }
             val atomPostInfo = atomEnv.atomPostInfo
             if (atomPostInfo != null) {
                 postAtoms.add(atomPostInfo)

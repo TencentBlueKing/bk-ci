@@ -16,6 +16,7 @@ allprojects {
 
     // 加载boot的插件
     if (name.startsWith("boot-")) {
+        pluginManager.apply("task-sharding-db-table-check") // 分区表检查插件
         pluginManager.apply("org.owasp.dependencycheck") // 检查依赖包漏洞版本
         pluginManager.apply("task-i18n-load") // i18n插件
         if (System.getProperty("devops.assemblyMode") == "KUBERNETES") {
@@ -66,6 +67,7 @@ allprojects {
             dependency("org.bouncycastle:bcprov-ext-jdk15on:${Versions.BouncyCastle}")
             dependency("org.mybatis:mybatis:${Versions.MyBatis}")
             dependency("commons-io:commons-io:${Versions.CommonIo}")
+            dependency("com.tencent.bk.sdk:crypto-java-sdk:${Versions.BkCrypto}")
             dependencySet("org.glassfish.jersey.containers:${Versions.Jersey}") {
                 entry("jersey-container-servlet-core")
                 entry("jersey-container-servlet")
@@ -127,6 +129,7 @@ allprojects {
             dependency("com.tencent.bk.sdk:iam-java-sdk:${Versions.iam}")
             dependency("com.tencent.bk.sdk:spring-boot-bk-audit-starter:${Versions.audit}")
             dependency("com.jakewharton:disklrucache:${Versions.disklrucache}")
+            dependency("com.mysql:mysql-connector-j:${Versions.MysqlDriver}")
         }
     }
 

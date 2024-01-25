@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.JOB_BUILD_STOPS
 import com.tencent.devops.common.api.constant.CommonMessageCode.UNABLE_GET_PIPELINE_JOB_STATUS
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
@@ -117,24 +118,8 @@ class DispatchService constructor(
             id = secretInfo.hashId,
             secretKey = secretInfo.secretKey,
             gateway = gateway!!,
-            projectId = event.projectId,
-            pipelineId = event.pipelineId,
-            buildId = event.buildId,
-            dispatchMessage = event.dispatchType.value,
-            userId = event.userId,
-            vmSeqId = event.vmSeqId,
-            channelCode = event.channelCode,
-            vmNames = event.vmNames,
-            atoms = event.atoms,
-            zone = event.zone,
-            containerHashId = event.containerHashId,
-            executeCount = event.executeCount,
-            containerId = event.containerId,
-            containerType = event.containerType,
-            stageId = event.stageId,
-            dispatchType = event.dispatchType,
             customBuildEnv = customBuildEnv,
-            dockerRoutingType = event.dockerRoutingType
+            event = event
         )
     }
 
@@ -183,9 +168,12 @@ class DispatchService constructor(
         }
 
         if (!needStart) {
-            if (event.retryTime > 1) return false
-            // 如果Job已经结束或为在启动中，则dispatch主动发起的重试
             logger.warn("The build event($event) is not running")
+            // dispatch主动发起的重试或者用户已取消的流水线忽略异常报错
+            if (event.retryTime > 1 || buildContainer.status.isCancel()) {
+                return false
+            }
+
             val errorMessage = I18nUtil.getCodeLanMessage(JOB_BUILD_STOPS)
             throw BuildFailureException(
                 errorType = ErrorType.USER,
@@ -290,7 +278,8 @@ class DispatchService constructor(
                     buildId = event.buildId,
                     vmSeqId = event.vmSeqId,
                     channelCode = event.channelCode,
-                    zone = event.zone,
+                    // 待废弃属性
+                    zone = Zone.SHENZHEN,
                     atoms = event.atoms,
                     executeCount = event.executeCount ?: 1
                 )
