@@ -73,6 +73,7 @@ class PipelineOperationLogService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        creator: String?,
         page: Int?,
         pageSize: Int?
     ): Page<PipelineOperationDetail> {
@@ -85,12 +86,14 @@ class PipelineOperationLogService @Autowired constructor(
         val opCount = pipelineOperationLogDao.getCountByPipeline(
             dslContext = dslContext,
             projectId = projectId,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            creator = if (creator.isNullOrBlank()) null else creator
         )
         val opList = pipelineOperationLogDao.getListByPipeline(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
+            creator = if (creator.isNullOrBlank()) null else creator,
             offset = offset,
             limit = limit
         )

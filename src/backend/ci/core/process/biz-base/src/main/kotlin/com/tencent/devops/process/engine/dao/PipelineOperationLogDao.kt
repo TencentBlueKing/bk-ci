@@ -107,12 +107,14 @@ class PipelineOperationLogDao {
     fun getCountByPipeline(
         dslContext: DSLContext,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        creator: String?
     ): Int {
         return with(TPipelineOperationLog.T_PIPELINE_OPERATION_LOG) {
-            dslContext.selectCount().from(this)
+            val select = dslContext.selectCount().from(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
-                .fetchOne(0, Int::class.java)!!
+            creator?.let { select.and(OPERATOR.like("%$creator%")) }
+            select.fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -120,6 +122,7 @@ class PipelineOperationLogDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
+        creator: String?,
         offset: Int,
         limit: Int
     ): List<PipelineOperationLog> {
