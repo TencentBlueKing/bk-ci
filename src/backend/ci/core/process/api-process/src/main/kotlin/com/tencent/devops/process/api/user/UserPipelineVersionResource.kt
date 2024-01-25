@@ -230,6 +230,9 @@ interface UserPipelineVersionResource {
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
+        @ApiParam("搜索字段：创建人", required = false)
+        @QueryParam("creator")
+        creator: String? = null,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,

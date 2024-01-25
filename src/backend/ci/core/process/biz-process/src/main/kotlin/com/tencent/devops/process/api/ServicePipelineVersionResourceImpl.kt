@@ -302,6 +302,7 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        creator: String?,
         page: Int?,
         pageSize: Int?
     ): Result<Page<PipelineOperationDetail>> {
@@ -328,6 +329,7 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
+                creator = creator,
                 page = page,
                 pageSize = pageSize
             )
