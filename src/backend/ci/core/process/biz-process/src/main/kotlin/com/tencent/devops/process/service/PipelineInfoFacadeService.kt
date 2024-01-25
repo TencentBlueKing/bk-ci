@@ -445,7 +445,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     branchName = branchName,
                     templateId = templateId,
                     description = description,
-                    yamlStr = null,
+                    yamlStr = yaml,
                     baseVersion = null,
                     pipelineAsCodeSettings = pipelineAsCodeSettings
                 )
