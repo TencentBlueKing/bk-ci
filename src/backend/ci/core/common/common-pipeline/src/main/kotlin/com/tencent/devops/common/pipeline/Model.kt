@@ -49,6 +49,7 @@ data class Model(
     @ApiModelProperty("阶段集合", required = true)
     val stages: List<Stage>,
     @ApiModelProperty("标签", required = false)
+    @Deprecated("以PipelineGroupService和流水线设置版本中为准")
     var labels: List<String> = emptyList(),
     @ApiModelProperty("是否从模板中实例化出来的", required = false)
     val instanceFromTemplate: Boolean? = null,
