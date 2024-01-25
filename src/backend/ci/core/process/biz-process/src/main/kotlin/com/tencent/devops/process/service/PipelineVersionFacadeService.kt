@@ -214,7 +214,6 @@ class PipelineVersionFacadeService @Autowired constructor(
         // 根据项目PAC状态进行接口调用
         val enabled = originSetting.pipelineAsCodeSettings?.enable == true || request.enablePac
         val targetSettings = originSetting.copy(
-            desc = request.description ?: "",
             pipelineAsCodeSettings = PipelineAsCodeSettings(enabled)
         )
         var targetUrl: String? = null
@@ -347,7 +346,11 @@ class PipelineVersionFacadeService @Autowired constructor(
                                 elements = listOf(
                                     ManualTriggerElement(
                                         id = "T-1-1-1",
-                                        name = "manualTrigger"
+                                        name = I18nUtil.getCodeLanMessage(
+                                            CommonMessageCode.BK_MANUAL_TRIGGER,
+                                            language = I18nUtil.getLanguage(userId
+                                            )
+                                        )
                                     )
                                 )
                             )

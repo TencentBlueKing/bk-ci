@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.DependNotFoundException
@@ -155,7 +154,6 @@ class PipelineRepositoryService constructor(
     private val pipelineInfoExtService: PipelineInfoExtService,
     private val operationLogService: PipelineOperationLogService,
     private val client: Client,
-    private val objectMapper: ObjectMapper,
     private val transferService: PipelineTransferYamlService,
     private val redisOperation: RedisOperation,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao
@@ -782,7 +780,7 @@ class PipelineRepositoryService constructor(
                     yamlStr = yamlStr,
                     versionName = versionName,
                     versionNum = versionNum,
-                    pipelineVersion = modelVersion,
+                    pipelineVersion = pipelineVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion
                 )
@@ -798,7 +796,7 @@ class PipelineRepositoryService constructor(
                     baseVersion = baseVersion,
                     versionName = versionName ?: "",
                     versionNum = versionNum,
-                    pipelineVersion = modelVersion,
+                    pipelineVersion = pipelineVersion,
                     triggerVersion = triggerVersion,
                     settingVersion = settingVersion,
                     versionStatus = versionStatus,
@@ -896,8 +894,12 @@ class PipelineRepositoryService constructor(
                         version = if (draftVersion == null) {
                             // 创建
                             operationLogType = OperationLogType.CREATE_DRAFT_VERSION
-                            operationLogParams = latestVersion.versionName ?: latestVersion.version.toString()
                             realBaseVersion = realBaseVersion ?: releaseResource?.version
+                            operationLogParams = realBaseVersion?.let { base ->
+                                pipelineResourceVersionDao.getPipelineVersionSimple(
+                                    dslContext, projectId, pipelineId, base
+                                )?.versionName
+                            } ?: latestVersion.versionName ?: latestVersion.version.toString()
                             latestVersion.version + 1
                         } else {
                             // 更新
