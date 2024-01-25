@@ -301,7 +301,8 @@ class CreateControl @Autowired constructor(
                 centerName = projectInfo.centerName,
                 groupName = null,
                 dslContext = dslContext,
-                projectName = projectInfo.projectName
+                projectName = projectInfo.projectName,
+                businessLineNmae = projectInfo.businessLineName ?: ""
             )
 
             // 审计
@@ -626,7 +627,8 @@ class CreateControl @Autowired constructor(
                 centerName = projectInfo.centerName,
                 groupName = null,
                 dslContext = dslContext,
-                projectName = projectInfo.projectName
+                projectName = projectInfo.projectName,
+                businessLineNmae = projectInfo.businessLineName
             )
         } else {
             val userInfo = kotlin.runCatching {
@@ -641,7 +643,8 @@ class CreateControl @Autowired constructor(
                 centerName = userInfo?.centerName,
                 groupName = userInfo?.groupName,
                 dslContext = dslContext,
-                projectName = ws.projectId ?: ""
+                projectName = ws.projectId ?: "",
+                businessLineNmae = userInfo?.businessLineName
             )
         }
 
@@ -955,7 +958,8 @@ class CreateControl @Autowired constructor(
             centerName = userInfo?.centerName,
             groupName = userInfo?.groupName,
             dslContext = dslContext,
-            projectName = workspace.projectId ?: ""
+            projectName = workspace.projectId ?: "",
+            businessLineNmae = userInfo?.businessLineName
         )
     }
 
