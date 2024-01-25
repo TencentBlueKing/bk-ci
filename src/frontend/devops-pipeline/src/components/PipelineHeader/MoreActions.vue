@@ -16,7 +16,7 @@
                             v-if="!action.hidden"
                             :key="aIndex"
                             v-perm="{
-                                permissionData: action.permissionData
+                                ...action.vPerm
                             }"
                             @click="action.handler"
                         >
@@ -121,26 +121,30 @@
                         {
                             label: 'newlist.exportPipelineJson',
                             handler: this.exportPipeline,
-                            hasPermission: pipeline.permissions?.canEdit,
-                            disablePermissionApi: true,
-                            permissionData: {
-                                projectId,
-                                resourceType: 'pipeline',
-                                resourceCode: pipeline.pipelineId,
-                                action: RESOURCE_ACTION.EDIT
+                            vPerm: {
+                                hasPermission: pipeline.permissions?.canEdit,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId,
+                                    resourceType: 'pipeline',
+                                    resourceCode: pipeline.pipelineId,
+                                    action: RESOURCE_ACTION.EDIT
+                                }
                             }
                         },
                         {
                             label: 'newlist.importModifyPipelineJson',
                             handler: this.importModifyPipeline,
                             hidden: this.isTemplatePipeline,
-                            hasPermission: pipeline.permissions?.canEdit,
-                            disablePermissionApi: true,
-                            permissionData: {
-                                projectId,
-                                resourceType: 'pipeline',
-                                resourceCode: pipeline.pipelineId,
-                                action: RESOURCE_ACTION.EDIT
+                            vPerm: {
+                                hasPermission: pipeline.permissions?.canEdit,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId,
+                                    resourceType: 'pipeline',
+                                    resourceCode: pipeline.pipelineId,
+                                    action: RESOURCE_ACTION.EDIT
+                                }
                             }
                         },
                         ...(pipeline.templateId
@@ -160,13 +164,15 @@
                         {
                             label: 'newlist.copyAs',
                             handler: () => this.copyAs(pipeline),
-                            hasPermission: pipeline.permissions?.canEdit,
-                            disablePermissionApi: true,
-                            permissionData: {
-                                projectId,
-                                resourceType: 'pipeline',
-                                resourceCode: pipeline.pipelineId,
-                                action: RESOURCE_ACTION.EDIT
+                            vPerm: {
+                                hasPermission: pipeline.permissions?.canEdit,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId,
+                                    resourceType: 'pipeline',
+                                    resourceCode: pipeline.pipelineId,
+                                    action: RESOURCE_ACTION.EDIT
+                                }
                             }
                         },
                         {
@@ -190,25 +196,29 @@
                         {
                             label: this.isCurPipelineLocked ? 'enable' : 'disable',
                             handler: () => this.disablePipeline(),
-                            hasPermission: pipeline.permissions?.canEdit,
-                            disablePermissionApi: true,
-                            permissionData: {
-                                projectId,
-                                resourceType: 'pipeline',
-                                resourceCode: pipeline.pipelineId,
-                                action: RESOURCE_ACTION.EDIT
+                            vPerm: {
+                                hasPermission: pipeline.permissions?.canEdit,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId,
+                                    resourceType: 'pipeline',
+                                    resourceCode: pipeline.pipelineId,
+                                    action: RESOURCE_ACTION.EDIT
+                                }
                             }
                         },
                         {
                             label: 'delete',
                             handler: () => this.deleteHandler(pipeline),
-                            hasPermission: pipeline.permissions?.canDelete,
-                            disablePermissionApi: true,
-                            permissionData: {
-                                projectId,
-                                resourceType: 'pipeline',
-                                resourceCode: pipeline.pipelineId,
-                                action: RESOURCE_ACTION.DELETE
+                            vPerm: {
+                                hasPermission: pipeline.permissions?.canDelete,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId,
+                                    resourceType: 'pipeline',
+                                    resourceCode: pipeline.pipelineId,
+                                    action: RESOURCE_ACTION.DELETE
+                                }
                             }
                         }
                     ]
