@@ -135,15 +135,7 @@
                                 </bk-popover>
                             </bk-radio-group>
                         </bk-form-item>
-                        <bk-form-item v-if="isPublicTemplate">
-                            <PipelineGroupSelector
-                                v-model="groupValue"
-                                :pipeline-name="newPipelineName"
-                                ref="pipelineGroupSelector"
-                                :has-manage-permission="isManage"
-                            />
-                        </bk-form-item>
-                        <bk-form-item :label="$t('克隆模板配置')" v-else>
+                        <bk-form-item :label="$t('克隆模板配置')">
                             <bk-checkbox-group v-model="applySettings">
                                 <div v-for="item in settingItems"
                                     :key="item.label"
@@ -191,7 +183,6 @@
     import { mapActions, mapState } from 'vuex'
     import pipelineHeader from '@/components/devops/pipeline-header'
     import Logo from '@/components/Logo'
-    import PipelineGroupSelector from '@/components/PipelineActionDialog/PipelineGroupSelector'
     import PipelineTemplatePreview from '@/components/PipelineTemplatePreview'
     import { getCacheViewId } from '@/utils/util'
     import { templateTypeEnum } from '@/utils/pipelineConst'
@@ -200,7 +191,6 @@
     export default {
         components: {
             pipelineHeader,
-            PipelineGroupSelector,
             PipelineTemplatePreview,
             Logo
         },
@@ -221,10 +211,6 @@
                 storeTemplateNum: 0,
                 page: 1,
                 pageSize: 50,
-                groupValue: {
-                    labels: [],
-                    staticViews: []
-                },
                 isShowPreview: false,
                 previewSettingType: ''
             }
@@ -293,9 +279,6 @@
             },
             activeTemp () {
                 return this.tempList[this.activeTempIndex] ?? null
-            },
-            isPublicTemplate () {
-                return this.activeTemp.templateType === templateTypeEnum.PUBLIC
             },
             isActiveTempEmpty () {
                 return !this.activeTemp
@@ -465,8 +448,7 @@
                             result[item] = true
                             return result
                         }, {}),
-                        instanceType: this.templateType,
-                        ...(this.isPublicTemplate ? this.groupValue : {})
+                        instanceType: this.templateType
                     }
 
                     if (this.templateType === templateTypeEnum.CONSTRAIN) {

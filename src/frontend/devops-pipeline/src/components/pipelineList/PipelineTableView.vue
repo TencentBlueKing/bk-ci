@@ -193,6 +193,8 @@
                     text
                     theme="primary"
                     v-perm="{
+                        hasPermission: props.row.permissions && props.row.permissions.canManage,
+                        disablePermissionApi: true,
                         permissionData: {
                             projectId: projectId,
                             resourceType: 'project',
@@ -209,6 +211,8 @@
                     theme="primary"
                     :disabled="!isManage"
                     v-perm="{
+                        hasPermission: props.row.permissions && props.row.permissions.canManage,
+                        disablePermissionApi: true,
                         permissionData: {
                             projectId: projectId,
                             resourceType: 'project',
@@ -241,6 +245,8 @@
                             }
                         }"
                         v-perm="{
+                            hasPermission: props.row.permissions && props.row.permissions.canEdit,
+                            disablePermissionApi: true,
                             permissionData: {
                                 projectId: projectId,
                                 resourceType: 'pipeline',

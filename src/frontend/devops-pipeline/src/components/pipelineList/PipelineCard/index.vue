@@ -3,11 +3,13 @@
         <header class="bk-pipeline-card-header">
             <aside class="bk-pipeline-card-header-left-aside">
                 <h3>
-                    <router-link
+                    <span
                         class="pipeline-cell-link"
-                        :to="pipeline.historyRoute"
+                        @click="goPipeline(pipeline.historyRoute)"
                         v-bk-overflow-tips
                         v-perm="{
+                            hasPermission: pipeline.permissions.canView,
+                            disablePermissionApi: true,
                             permissionData: {
                                 projectId: projectId,
                                 resourceType: 'pipeline',
@@ -17,7 +19,7 @@
                         }"
                     >
                         {{pipeline.pipelineName}}
-                    </router-link>
+                    </span>
                     <logo
                         class="ml5 template-mode-icon"
                         v-if="pipeline.templateId"
@@ -224,6 +226,9 @@
                     resourceCode: pipeline.pipelineId,
                     action: RESOURCE_ACTION.VIEW
                 })
+            },
+            goPipeline (route) {
+                this.$router.push(route)
             }
         }
     }
