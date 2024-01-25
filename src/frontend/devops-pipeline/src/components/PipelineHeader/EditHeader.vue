@@ -140,7 +140,6 @@
                 'setPipelineEditing',
                 'saveDraftPipeline',
                 'setSaveStatus',
-                'setAuthEditing',
                 'updateContainer'
             ]),
             async exec (debug) {
