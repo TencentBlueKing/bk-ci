@@ -262,11 +262,10 @@ export default {
                         action: TEMPLATE_RESOURCE_ACTION.CREATE
                     }
                 },
-                ...(pipeline.isInstanceTemplate
+                ...(pipeline.instanceFromTemplate
                     ? [{
                         text: this.$t('newlist.jumpToTemp'),
-                        handler: this.jumpToTemplate,
-                        isJumpToTem: true
+                        handler: this.jumpToTemplate
                     }]
                     : []),
                 ...(isShowRemovedAction
