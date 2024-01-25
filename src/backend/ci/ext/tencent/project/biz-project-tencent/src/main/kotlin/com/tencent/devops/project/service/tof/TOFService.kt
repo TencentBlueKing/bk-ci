@@ -578,7 +578,9 @@ class TOFService @Autowired constructor(
             groupId = groupId,
             groupName = groupName,
             // 该字段只返回部门及部门以上的层级，若不包含部门，将直接置空
-            deptInfos = filterDeptInfos(deptInfos = deptInfos)
+            deptInfos = filterDeptInfos(deptInfos = deptInfos),
+            name = staffInfo.chineseName,
+            userId = userId
         )
     }
 

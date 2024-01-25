@@ -74,7 +74,7 @@ class ProjectUserDao {
             userDeptDetail.businessLineId?.let {
                 baseStep.set(BUSINESS_LINE_ID, it.toLong())
             }
-            baseStep.where(USER_ID.eq(userDeptDetail.userId)).execute()
+            baseStep.where(USER_ID.eq(userDeptDetail.userId!!)).execute()
         }
     }
 }
