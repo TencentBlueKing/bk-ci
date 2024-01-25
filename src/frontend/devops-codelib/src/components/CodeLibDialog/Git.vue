@@ -85,7 +85,7 @@
                 </bk-input>
             </bk-form-item>
             
-            <!-- <bk-form-item
+            <bk-form-item
                 :label="$t('codelib.PACmode')"
             >
                 <div class="pac-item">
@@ -120,7 +120,7 @@
                         </bk-popover>
                     </p>
                 </div>
-            </bk-form-item> -->
+            </bk-form-item>
         </template>
         <template v-else-if="!isOAUTH">
             <bk-form-item
