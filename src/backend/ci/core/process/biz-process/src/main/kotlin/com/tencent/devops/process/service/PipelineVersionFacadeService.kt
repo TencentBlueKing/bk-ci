@@ -323,7 +323,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             pipelineName = draftVersion.model.name,
             version = result.version,
-            versionNum = null,
+            versionNum = result.versionNum,
             versionName = result.versionName,
             targetUrl = targetUrl
         )

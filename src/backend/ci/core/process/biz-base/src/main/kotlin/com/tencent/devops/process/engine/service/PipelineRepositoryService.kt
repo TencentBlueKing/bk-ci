@@ -985,7 +985,7 @@ class PipelineRepositoryService constructor(
                         pipelineVersion = releaseResource?.pipelineVersion ?: 1
                         triggerVersion = releaseResource?.triggerVersion ?: 1
                         // 数据分离：发布记录的版本自增，旧数据保留和版本表中version一致，后续单独用于前端展示
-                        versionNum = (releaseResource?.version ?: latestVersion.version) + 1
+                        versionNum = (releaseResource?.versionNum ?: 0) + 1
                         releaseResource?.let {
                             pipelineVersion = PipelineVersionUtils.getPipelineVersion(
                                 pipelineVersion, it.model, model
