@@ -385,7 +385,6 @@
                     @include ellipsis();
                 }
                 > span {
-                    @include ellipsis();
                     flex-shrink: 0;
                 }
                 .remove-pieline-type-icon {
