@@ -204,6 +204,7 @@
                                 <span
                                     :class="{ 'remark-span': true, active: props.row.active }"
                                     v-bk-tooltips="{
+                                        allowHTML: false,
                                         content: props.row.remark,
                                         maxWidth: 500,
                                         disabled: !props.row.remark, delay: [300, 0]

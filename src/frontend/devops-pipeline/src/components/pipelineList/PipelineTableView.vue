@@ -234,16 +234,10 @@
                 <template
                     v-else-if="props.row.hasPermission && !props.row.delete"
                 >
-                    <router-link
+                    <span
                         v-if="props.row.onlyDraft"
                         class="text-link exec-pipeline-btn"
-                        :to="{
-                            name: 'pipelinesEdit',
-                            params: {
-                                projectId: props.row.projectId,
-                                pipelineId: props.row.pipelineId
-                            }
-                        }"
+                        @click="goEdit(props.row)"
                         v-perm="{
                             hasPermission: props.row.permissions && props.row.permissions.canEdit,
                             disablePermissionApi: true,
@@ -256,7 +250,7 @@
                         }"
                     >
                         {{ $t('edit') }}
-                    </router-link>
+                    </span>
                     <span v-else v-bk-tooltips="props.row.tooltips">
                         <bk-button
                             text
@@ -676,6 +670,15 @@
                     columns: fields,
                     size
                 }))
+            },
+            goEdit (pipeline) {
+                this.$router.push({
+                    name: 'pipelinesEdit',
+                    params: {
+                        projectId: pipeline.projectId,
+                        pipelineId: pipeline.pipelineId
+                    }
+                })
             }
         }
     }
