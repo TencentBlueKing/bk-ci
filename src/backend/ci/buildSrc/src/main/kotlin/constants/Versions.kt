@@ -51,6 +51,7 @@ object Versions {
     const val BkCrypto = "1.1.3"
     const val apachepoi = "5.2.4"
     const val audit = "1.0.8"
+    const val MysqlDriver = "8.0.33"
     const val swagger = "2.2.16"
     const val jakarta = "2.1.2"
 }

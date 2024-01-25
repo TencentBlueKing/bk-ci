@@ -9,4 +9,6 @@ object ResourceTypeId {
     const val CGS = "cgs"
     const val IMAGE = "image"
     const val CODE_PROXY = "code_proxy"
+    // 自定义
+    const val SECURITY = "security"
 }

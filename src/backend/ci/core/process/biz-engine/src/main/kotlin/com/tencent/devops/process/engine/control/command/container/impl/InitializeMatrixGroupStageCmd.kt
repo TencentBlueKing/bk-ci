@@ -244,11 +244,11 @@ class InitializeMatrixGroupStageCmd(
                 }
 
                 contextCaseList.forEach { contextCase ->
-                    val contextPair = if (asCodeEnabled) {
-                        EnvReplacementParser.getCustomExecutionContextByMap(variables)
-                    } else null
                     // 包括matrix.xxx的所有上下文，矩阵生成的要覆盖原变量
                     val allContext = (modelContainer.customBuildEnv ?: mapOf()).plus(contextCase)
+                    val contextPair = if (asCodeEnabled) {
+                        EnvReplacementParser.getCustomExecutionContextByMap(allContext)
+                    } else null
 
                     // 对自定义构建环境的做特殊解析
                     // customDispatchType决定customBaseOS是否计算，请勿填充默认值
@@ -401,7 +401,7 @@ class InitializeMatrixGroupStageCmd(
                         modelContainer.elements, context.executeCount, postParentIdMap, matrixTaskIds
                     )
                     val replacement = if (asCodeEnabled) {
-                        EnvReplacementParser.getCustomExecutionContextByMap(variables)
+                        EnvReplacementParser.getCustomExecutionContextByMap(contextCase)
                     } else null
                     val mutexGroup = modelContainer.mutexGroup?.let { self ->
                         self.copy(
