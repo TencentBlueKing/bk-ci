@@ -13,6 +13,7 @@ import com.tencent.devops.process.notify.command.impl.NotifyPipelineCmd
 import com.tencent.devops.process.notify.command.impl.NotifySendCmd
 import com.tencent.devops.process.notify.command.impl.NotifyUrlBuildCmd
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineContextService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service
 @Service
 class PipelineNotifyService @Autowired constructor(
     val buildVariableService: BuildVariableService,
+    val pipelineContextService: PipelineContextService,
     val pipelineRepositoryService: PipelineRepositoryService
 ) {
 
@@ -40,7 +42,9 @@ class PipelineNotifyService @Autowired constructor(
     ) {
         logger.info("onPipelineShutdown new $pipelineId|$buildId|$buildStatus")
 
-        val vars = buildVariableService.getAllVariable(projectId, pipelineId, buildId).toMutableMap()
+        val vars = pipelineContextService.getAllBuildContext(
+            buildVariableService.getAllVariable(projectId, pipelineId, buildId)
+        ).toMutableMap()
 
         val setting = pipelineRepositoryService.getSetting(projectId, pipelineId) ?: return
 
