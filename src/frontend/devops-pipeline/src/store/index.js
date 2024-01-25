@@ -56,7 +56,7 @@ export default new Vuex.Store({
         fetchError: null,
 
         cancelTokenMap: {},
-        modeList,
+        modeList: [...modeList],
         pipelineMode: modeList.includes(initPipelineMode) ? initPipelineMode : UI_MODE
     },
     // 公共 mutations
