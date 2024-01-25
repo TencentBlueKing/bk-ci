@@ -50,6 +50,8 @@ data class PipelineDetail(
     val canRelease: Boolean,
     @ApiModelProperty("是否从模板实例化")
     val instanceFromTemplate: Boolean,
+    @ApiModelProperty("当前模板的ID", required = false)
+    var templateId: String?,
     @ApiModelProperty("草稿或最新的发布版本")
     val version: Int,
     @ApiModelProperty("草稿或最新的发布版本名称")
