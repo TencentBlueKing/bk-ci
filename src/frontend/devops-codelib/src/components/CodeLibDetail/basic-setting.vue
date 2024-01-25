@@ -102,7 +102,7 @@
                         class="switcher-item"
                         :class="{ 'disabled-pac': (!repoInfo.enablePac && pacProjectName) || syncStatus === 'SYNC' }"
                         v-perm="{
-                            hasPermission: !curRepo.canEdit,
+                            hasPermission: curRepo.canEdit,
                             disablePermissionApi: true,
                             permissionData: {
                                 projectId: projectId,
