@@ -76,6 +76,15 @@ BEGIN
     END IF;
 
     IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_NODE'
+                    AND COLUMN_NAME = 'AGENT_VERSION') THEN
+        ALTER TABLE `T_NODE`
+            ADD COLUMN `AGENT_VERSION` varchar(64) default null comment 'agent版本';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
                   FROM information_schema.statistics
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_NODE'
