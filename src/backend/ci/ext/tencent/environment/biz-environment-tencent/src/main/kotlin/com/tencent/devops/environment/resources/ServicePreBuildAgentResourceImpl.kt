@@ -30,8 +30,8 @@ package com.tencent.devops.environment.resources
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.environment.api.thirdPartyAgent.ServicePreBuildAgentResource
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
+import com.tencent.devops.environment.api.thirdpartyagent.ServicePreBuildAgentResource
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.environment.service.thirdPartyAgent.PreBuildAgentMgrService
 import org.springframework.beans.factory.annotation.Autowired
 

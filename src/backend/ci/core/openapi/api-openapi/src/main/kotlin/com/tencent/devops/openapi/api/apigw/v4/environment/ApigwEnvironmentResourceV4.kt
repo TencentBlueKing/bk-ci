@@ -38,7 +38,7 @@ import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
-import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentPipelineRef
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

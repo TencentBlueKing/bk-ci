@@ -19,7 +19,7 @@ import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyDockerDebugInf
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentDockerDebugDoLock
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentDockerDebugLock
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentUtils
-import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

@@ -1,7 +1,7 @@
 package com.tencent.devops.prebuild.pojo
 
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
 
 /**

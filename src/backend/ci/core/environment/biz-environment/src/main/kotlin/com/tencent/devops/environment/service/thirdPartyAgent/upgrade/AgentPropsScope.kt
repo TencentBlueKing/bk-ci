@@ -8,7 +8,7 @@ import com.tencent.devops.common.api.pojo.agent.AgentArchType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.model.AgentProps
-import com.tencent.devops.environment.pojo.thirdPartyAgent.JDKInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.JDKInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component

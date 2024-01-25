@@ -27,7 +27,7 @@
 
 package com.tencent.devops.environment.dao.thirdPartyAgent
 
-import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineStatus
+import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineStatus
 import com.tencent.devops.model.environment.tables.TEnvironmentAgentPipeline
 import com.tencent.devops.model.environment.tables.records.TEnvironmentAgentPipelineRecord
 import org.jooq.DSLContext

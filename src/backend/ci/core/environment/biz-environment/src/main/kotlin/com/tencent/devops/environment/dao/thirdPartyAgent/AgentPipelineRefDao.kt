@@ -27,7 +27,7 @@
 
 package com.tencent.devops.environment.dao.thirdPartyAgent
 
-import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentPipelineRef
 import com.tencent.devops.model.environment.tables.TAgentPipelineRef
 import com.tencent.devops.model.environment.tables.records.TAgentPipelineRefRecord
 import org.jooq.DSLContext

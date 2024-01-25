@@ -35,7 +35,7 @@ import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.environment.pojo.AgentUpgradeType
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
 import com.tencent.devops.environment.model.AgentProps
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentUpgradeByVersionInfo
 import com.tencent.devops.environment.service.thirdPartyAgent.upgrade.AgentPropsScope
 import com.tencent.devops.environment.service.thirdPartyAgent.upgrade.AgentScope
 import com.tencent.devops.environment.service.thirdPartyAgent.upgrade.ProjectScope

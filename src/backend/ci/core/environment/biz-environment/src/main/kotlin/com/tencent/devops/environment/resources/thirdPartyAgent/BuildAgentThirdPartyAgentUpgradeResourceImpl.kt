@@ -28,7 +28,7 @@
 package com.tencent.devops.environment.resources.thirdPartyAgent
 
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.environment.api.thirdPartyAgent.BuildAgentThirdPartyAgentUpgradeResource
+import com.tencent.devops.environment.api.thirdpartyagent.BuildAgentThirdPartyAgentUpgradeResource
 import com.tencent.devops.environment.service.thirdPartyAgent.DownloadAgentInstallService
 import org.springframework.beans.factory.annotation.Autowired
 

@@ -33,7 +33,7 @@ import com.tencent.devops.environment.dao.thirdPartyAgent.AgentPipelineRefDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
 import com.tencent.devops.environment.pojo.AgentPipelineRefInfo
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
-import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentPipelineRef
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL

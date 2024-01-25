@@ -40,7 +40,7 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchTy
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.prebuild.PreBuildMessageCode.PRECI_SUPPORTS_REMOTE_TEMPLATES
 import com.tencent.devops.prebuild.PreBuildMessageCode.REMOTE_WAREHOUSE_KEYWORD_CANNOT_EMPTY
 import com.tencent.devops.prebuild.dao.PrebuildProjectDao

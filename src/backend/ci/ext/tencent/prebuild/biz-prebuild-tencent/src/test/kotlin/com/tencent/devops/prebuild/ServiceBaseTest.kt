@@ -2,7 +2,7 @@ package com.tencent.devops.prebuild
 
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.prebuild.pojo.StartUpReq
 
 open class ServiceBaseTest {

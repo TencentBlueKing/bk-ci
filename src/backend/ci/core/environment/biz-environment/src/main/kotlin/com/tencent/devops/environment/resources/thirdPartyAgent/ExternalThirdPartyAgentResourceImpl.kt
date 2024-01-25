@@ -28,7 +28,7 @@
 package com.tencent.devops.environment.resources.thirdPartyAgent
 
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.environment.api.thirdPartyAgent.ExternalThirdPartyAgentResource
+import com.tencent.devops.environment.api.thirdpartyagent.ExternalThirdPartyAgentResource
 import com.tencent.devops.common.api.pojo.agent.AgentArchType
 import com.tencent.devops.environment.service.thirdPartyAgent.DownloadAgentInstallService
 import com.tencent.devops.environment.service.thirdPartyAgent.ImportService

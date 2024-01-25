@@ -29,13 +29,13 @@ package com.tencent.devops.environment.resources.thirdPartyAgent
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.environment.api.thirdPartyAgent.OpThirdPartyAgentResource
+import com.tencent.devops.environment.api.thirdpartyagent.OpThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
-import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentShared
-import com.tencent.devops.environment.pojo.thirdPartyAgent.UpdateAgentRequest
-import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCreate
-import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
-import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineSeqId
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentShared
+import com.tencent.devops.environment.pojo.thirdpartyagent.UpdateAgentRequest
+import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineCreate
+import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineResponse
+import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineSeqId
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.service.thirdPartyAgent.AgentShareService
 import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentMgrService

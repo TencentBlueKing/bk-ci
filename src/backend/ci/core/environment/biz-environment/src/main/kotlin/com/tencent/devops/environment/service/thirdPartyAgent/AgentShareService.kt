@@ -1,7 +1,7 @@
 package com.tencent.devops.environment.service.thirdPartyAgent
 
 import com.tencent.devops.environment.dao.AgentShareProjectDao
-import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentShared
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentShared
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

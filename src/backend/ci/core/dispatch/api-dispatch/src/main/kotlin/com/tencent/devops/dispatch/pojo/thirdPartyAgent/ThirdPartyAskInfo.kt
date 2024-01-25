@@ -3,9 +3,9 @@ package com.tencent.devops.dispatch.pojo.thirdPartyAgent
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.tencent.devops.common.api.pojo.agent.NewHeartbeatInfo
 import com.tencent.devops.common.api.pojo.agent.UpgradeItem
-import com.tencent.devops.environment.pojo.thirdPartyAgent.AskHeartbeatResponse
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentPipeline
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.AskHeartbeatResponse
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentPipeline
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentUpgradeByVersionInfo
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ThirdPartyAskInfo(
