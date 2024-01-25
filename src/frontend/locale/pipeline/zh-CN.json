@@ -1398,6 +1398,8 @@
   "applyToYaml": "应用",
   "yamlCodeLib": "存储流水线 YAML 的库",
   "yamlDir": "YAML 文件路径",
+  "yamlCodeLibDesc": "若找不到目标库，请先到代码库服务下关联代码库并开启 PAC 模式",
+  "yamlDirDesc": ".ci下仅支持1级子目录",
   "noPacEnableCodelibYet": "还没有代码库开启 PAC 模式",
   "goCodelibsEnablePac": "前往代码库开启 PAC 模式",
   "oauth": "OAUTH 授权",

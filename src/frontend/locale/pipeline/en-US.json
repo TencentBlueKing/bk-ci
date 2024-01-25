@@ -1399,6 +1399,8 @@
   "applyToYaml": "Apply",
   "yamlCodeLib": "存储流水线 YAML 的库",
   "yamlDir": "YAML 文件路径",
+  "yamlCodeLibDesc": "If the target repository cannot be found, please associate the repository under the code repository service and enable PAC mode first",
+  "yamlDirDesc": "Only 1-level subdirectories are supported under .ci",
   "noPacEnableCodelibYet": "还没有代码库开启 PAC 模式",
   "goCodelibsEnablePac": "前往代码库开启 PAC 模式",
   "oauth": "OAUTH 授权",
