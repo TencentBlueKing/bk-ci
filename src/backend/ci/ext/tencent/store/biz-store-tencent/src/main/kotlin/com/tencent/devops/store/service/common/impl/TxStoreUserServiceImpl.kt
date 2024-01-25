@@ -99,7 +99,7 @@ class TxStoreUserServiceImpl : StoreUserService {
         return if (null != userDeptInfo) {
             val commenterDept = StringBuilder(userDeptInfo.bgName) // 组装评论者的机构信息
             if (
-                userDeptInfo.businessLineName.isNullOrBlank()
+                !userDeptInfo.businessLineName.isNullOrBlank()
             ) commenterDept.append("/").append(userDeptInfo.businessLineName)
             if (userDeptInfo.deptName.isNotEmpty()) commenterDept.append("/").append(userDeptInfo.deptName)
             if (userDeptInfo.centerName.isNotEmpty()) commenterDept.append("/").append(userDeptInfo.centerName)
