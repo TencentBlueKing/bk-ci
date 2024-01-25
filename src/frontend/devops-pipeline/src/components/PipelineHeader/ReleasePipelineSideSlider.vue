@@ -76,7 +76,7 @@
                             {{ $t("yamlCodeLib") }}
                             <i
                                 class="devops-icon icon-question-circle-shape"
-                                v-bk-tooltips="$t('aaaa')"
+                                v-bk-tooltips="$t('yamlCodeLibDesc')"
                             />
                         </label>
                         <bk-form-item required property="repoHashId">
@@ -119,7 +119,7 @@
                             {{ $t("yamlDir") }}
                             <i
                                 class="devops-icon icon-question-circle-shape"
-                                v-bk-tooltips="$t('aaaa')"
+                                v-bk-tooltips="$t('yamlDirDesc')"
                             />
                         </label>
                         <bk-form-item required property="filePath">
