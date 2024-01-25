@@ -42,6 +42,7 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.bk.sdk.iam.service.v2.impl.V2GrantServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2ManagerServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2PolicyServiceImpl
+import com.tencent.devops.auth.dao.AuthItsmCallbackDao
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
@@ -518,11 +519,15 @@ class RbacAuthConfiguration {
     fun rbacPermissionAuthorizationScopesService(
         authMonitorSpaceService: AuthMonitorSpaceService,
         iamConfiguration: IamConfiguration,
-        authResourceService: AuthResourceService
+        authResourceService: AuthResourceService,
+        authItsmCallbackDao: AuthItsmCallbackDao,
+        dslContext: DSLContext
     ) = RbacPermissionAuthorizationScopesService(
         authMonitorSpaceService = authMonitorSpaceService,
         iamConfiguration = iamConfiguration,
-        authResourceService = authResourceService
+        authResourceService = authResourceService,
+        authItsmCallbackDao = authItsmCallbackDao,
+        dslContext = dslContext
     )
 
     @Bean
