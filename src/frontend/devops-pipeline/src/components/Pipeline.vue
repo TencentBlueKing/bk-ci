@@ -1,5 +1,5 @@
 <template>
-    <div class="create-pipeline-wrapper" v-bkloading="{ isLoading: isSaving, title: $t('editPage.saving') }">
+    <div class="create-pipeline-wrapper" v-bkloading="loadingConf">
         <header v-if="showHeader" class="create-pipeline-header">
             <div>
                 <slot name="pipeline-name"><span style="cursor: default" :title="pipeline.name">{{ pipeline.name }}</span></slot>
@@ -172,6 +172,12 @@
                     this.setInsertStageState({
                         isStagePopupShow: value
                     })
+                }
+            },
+            loadingConf () {
+                return {
+                    isLoading: this.isSaving,
+                    title: this.$t('editPage.saving')
                 }
             },
             stageTypeDialogWidth () {
