@@ -178,12 +178,8 @@ class TCloudCfsService @Autowired constructor(
         askExecutor.execute {
             val key = "$TCLOUD_PGID_REDIS_KEY_PREFIX:$pgId"
             val redisLock = RedisLock(redisOperation, key, 76)
-            try {
-                redisLock.lock()
-                doCreateOrDeleteCfsRule(pgId, ip, ruleId, region, delete)
-            } finally {
-                redisLock.unlock()
-            }
+            redisLock.lock()
+            doCreateOrDeleteCfsRule(pgId, ip, ruleId, region, delete)
         }
     }
 
