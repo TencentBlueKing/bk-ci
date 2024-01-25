@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfi
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
 import com.tencent.devops.repository.pojo.RepoPipelineRefRequest
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
@@ -221,13 +222,11 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
 
     override fun insertAtomRepoFlag(
         userId: String,
-        projectId: String?,
-        repoHashIds: Set<String>?
+        atomRefRepositoryInfo: List<AtomRefRepositoryInfo>
     ): Result<Boolean> {
         repositoryService.insertAtomRepoFlag(
             userId = userId,
-            projectId = projectId,
-            repoHashIds = repoHashIds
+            atomRefRepositoryInfo = atomRefRepositoryInfo
         )
         return Result(true)
     }

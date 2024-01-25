@@ -24,18 +24,11 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.repository.pojo.auth
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-import org.apache.commons.lang3.StringUtils
+package com.tencent.devops.repository.pojo
 
-@ApiModel("代码库授权信息")
-data class RepoAuthInfo(
-    @ApiModelProperty("授权类型", required = true)
-    val authType: String,
-    @ApiModelProperty("授权凭证ID", required = true)
-    val credentialId: String,
-    @ApiModelProperty("SVN类型", required = false)
-    val svnType: String? = StringUtils.EMPTY
+data class AtomRefRepositoryInfo(
+    val atomCode: String,
+    val repositoryHashId: String,
+    val projectId: String
 )

@@ -144,6 +144,13 @@ class OpAtomResourceImpl @Autowired constructor(
         )
     }
 
+    override fun insertAtomRepoFlag(userId: String, atomCode: String?): Result<Boolean> {
+        return opAtomService.insertAtomRepoFlag(
+            userId = userId,
+            atomCode = atomCode
+        )
+    }
+
     override fun setDefault(userId: String, atomCode: String): Result<Boolean> {
         return Result(opAtomService.setDefault(userId = userId, atomCode = atomCode))
     }

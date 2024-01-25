@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
 import com.tencent.devops.repository.pojo.RepoPipelineRefRequest
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
@@ -240,10 +241,7 @@ interface ServiceRepositoryResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = false)
-        @PathParam("projectId")
-        projectId: String?,
-        @ApiParam("流水线引用信息", required = false)
-        repoHashIds: Set<String>?
+        @ApiParam(value = "插件代码库关联关系")
+        atomRefRepositoryInfo: List<AtomRefRepositoryInfo>
     ): Result<Boolean>
 }

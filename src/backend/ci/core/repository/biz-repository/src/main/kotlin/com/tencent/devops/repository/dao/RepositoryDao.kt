@@ -54,7 +54,8 @@ class RepositoryDao {
         userId: String,
         aliasName: String,
         url: String,
-        type: ScmType
+        type: ScmType,
+        atomRepo: Boolean? = false
     ): Long {
         val now = LocalDateTime.now()
         var repoId = 0L
@@ -71,7 +72,8 @@ class RepositoryDao {
                     CREATED_TIME,
                     UPDATED_TIME,
                     IS_DELETED,
-                    UPDATED_USER
+                    UPDATED_USER,
+                    ATOM_REPO
                 ).values(
                     projectId,
                     userId,
@@ -81,7 +83,8 @@ class RepositoryDao {
                     now,
                     now,
                     false,
-                    userId
+                    userId,
+                    atomRepo
                 )
                     .returning(REPOSITORY_ID)
                     .fetchOne()!!.repositoryId
@@ -421,42 +424,31 @@ class RepositoryDao {
         }
     }
 
-    fun listByProjectIdAndIds(
+    fun get(
         dslContext: DSLContext,
-        projectId: String?,
-        repositoryIds: Set<Long>,
-        scmType: ScmType
-    ): List<TRepositoryRecord> {
-        return with(TRepository.T_REPOSITORY) {
-            dslContext.selectFrom(this)
+        projectId: String,
+        repositoryHashId: String
+    ): TRepositoryRecord? {
+        with(TRepository.T_REPOSITORY) {
+            return dslContext.selectFrom(this)
                 .where(
-                    buildConditions(
-                        projectId = projectId,
-                        ids = repositoryIds,
-                        type  = scmType,
-                        delete = true
-                    )
-                ).fetch()
+                    PROJECT_ID.eq(projectId).and(REPOSITORY_HASH_ID.eq(repositoryHashId))
+                        .and(IS_DELETED.eq(false))
+                )
+                .fetchAny()
         }
     }
 
-    fun buildConditions(
-        projectId: String? = null,
-        ids: Set<Long>? = null,
-        type: ScmType? = null,
-        aliasName: String? = null,
-        delete: Boolean? = null,
-        userId: String? = null
-    ): List<Condition> {
-        return with(TRepository.T_REPOSITORY) {
-            val conditions = mutableListOf<Condition>()
-            if (!projectId.isNullOrBlank()) conditions.add(PROJECT_ID.eq(projectId))
-            if (!ids.isNullOrEmpty()) conditions.add(REPOSITORY_ID.`in`(ids))
-            if (type != null) conditions.add(TYPE.eq(type.name))
-            if (!aliasName.isNullOrBlank()) conditions.add(ALIAS_NAME.like("%$aliasName%"))
-            if (delete != null) conditions.add(IS_DELETED.eq(delete))
-            if (!userId.isNullOrBlank()) conditions.add(USER_ID.eq(userId))
-            conditions
+    fun insertAtomRepoFlag(
+        dslContext: DSLContext,
+        projectId: String,
+        repositoryHashId: String
+    ) {
+        with(TRepository.T_REPOSITORY) {
+            dslContext.update(this)
+                .set(ATOM_REPO, true)
+                .where(REPOSITORY_HASH_ID.eq(repositoryHashId))
+                .execute()
         }
     }
 }

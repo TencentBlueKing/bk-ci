@@ -83,7 +83,8 @@ class CodeGitRepositoryService @Autowired constructor(
                 userId = userId,
                 aliasName = repository.aliasName,
                 url = repository.getFormatURL(),
-                type = ScmType.CODE_GIT
+                type = ScmType.CODE_GIT,
+                atomRepo = repository.atomRepo
             )
             // Git项目ID
             val gitProjectId =
@@ -111,7 +112,7 @@ class CodeGitRepositoryService @Autowired constructor(
         repository: CodeGitRepository,
         record: TRepositoryRecord
     ) {
-        if (compose(record).atomRepo == true) {
+        if (record.atomRepo == true) {
             throw OperationException(
                 MessageUtil.getMessageByLocale(
                     RepositoryMessageCode.ATOM_REPO_CAN_NOT_EDIT,
@@ -193,7 +194,7 @@ class CodeGitRepositoryService @Autowired constructor(
             projectId = repository.projectId,
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
             gitProjectId = record.gitProjectId,
-            atomRepo = record.atomRepo
+            atomRepo = repository.atomRepo
         )
     }
 
@@ -295,7 +296,7 @@ class CodeGitRepositoryService @Autowired constructor(
             } else {
                 it.credentialId
             }
-            RepoAuthInfo(authType = gitAuthType, credentialId = gitAuthIdentity, atomRepo = it.atomRepo)
+            RepoAuthInfo(gitAuthType, gitAuthIdentity)
         }) ?: mapOf()
     }
 

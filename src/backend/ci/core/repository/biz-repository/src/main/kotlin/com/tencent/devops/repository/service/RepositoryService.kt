@@ -52,6 +52,7 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_CREATE_PEM_ERROR
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
+import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.RepoRename
 import com.tencent.devops.repository.pojo.Repository
@@ -602,6 +603,14 @@ class RepositoryService @Autowired constructor(
                 )
             )
         }
+        if (record.atomRepo == true) {
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    RepositoryMessageCode.ATOM_REPO_CAN_NOT_EDIT,
+                    I18nUtil.getLanguage(userId)
+                )
+            )
+        }
         val codeRepositoryService = CodeRepositoryServiceRegistrar.getService(repository)
         codeRepositoryService.edit(
             userId = userId,
@@ -709,7 +718,7 @@ class RepositoryService @Autowired constructor(
         }
         val repositoryList = repositoryRecordList.map {
             val authInfo = repoAuthInfoMap[it.repositoryId]
-            val atomRepo = authInfo?.atomRepo ?: false
+            val atomRepo = it.atomRepo ?: false
             val hasEditPermission = hasEditPermissionRepoList.contains(it.repositoryId) && atomRepo
             val hasDeletePermission = hasDeletePermissionRepoList.contains(it.repositoryId) && atomRepo
             val hasUsePermission = hasUsePermissionRepoList.contains(it.repositoryId)
@@ -720,8 +729,8 @@ class RepositoryService @Autowired constructor(
                 url = it.url,
                 type = ScmType.valueOf(it.type),
                 updatedTime = it.updatedTime.timestamp(),
-                canEdit = hasEditPermission,
-                canDelete = hasDeletePermission,
+                canEdit = atomRepo && hasEditPermission,
+                canDelete = atomRepo && hasDeletePermission,
                 canUse = hasUsePermission,
                 canView = hasViewPermission,
                 authType = authInfo?.authType ?: RepoAuthType.HTTP.name,
@@ -869,16 +878,13 @@ class RepositoryService @Autowired constructor(
         if (record.projectId != projectId) {
             throw NotFoundException("Repository is not part of the project")
         }
-        if (record.type == ScmType.CODE_GIT.name) {
-            val codeGitService = CodeRepositoryServiceRegistrar.getServiceByScmType(ScmType.CODE_GIT.name)
-            if ((codeGitService.compose(record) as CodeGitRepository).atomRepo == true) {
-                throw OperationException(
-                    MessageUtil.getMessageByLocale(
-                        RepositoryMessageCode.ATOM_REPO_CAN_NOT_DELETE,
-                        I18nUtil.getLanguage(userId)
-                    )
+        if (record.atomRepo == true) {
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    RepositoryMessageCode.ATOM_REPO_CAN_NOT_DELETE,
+                    I18nUtil.getLanguage(userId)
                 )
-            }
+            )
         }
         deleteResource(projectId, repositoryId)
         val deleteTime = DateTimeUtil.toDateTime(LocalDateTime.now(), "yyMMddHHmmSS")
@@ -1157,25 +1163,30 @@ class RepositoryService @Autowired constructor(
 
     fun insertAtomRepoFlag(
         userId: String,
-        projectId: String?,
-        repoHashIds: Set<String>?
+        atomRefRepositoryInfo: List<AtomRefRepositoryInfo>
     ) {
-        if (repoHashIds.isNullOrEmpty()) {
+        logger.info("start insert atom repo flag, userId: $userId, atomRefRepositoryInfo: $atomRefRepositoryInfo")
+        if (atomRefRepositoryInfo.isEmpty()) {
             return
         }
-        val repositoryIds = repositoryDao.listByProjectIdAndIds(
-            dslContext = dslContext,
-            projectId = projectId,
-            repositoryIds = repoHashIds.map { HashUtil.decodeOtherIdToLong(it) }.toSet(),
-            scmType = ScmType.CODE_GIT
-        ).map {
-            it.repositoryId
-        }.toSet()
-        logger.info("insert atom repo flag, repositoryIds: $repositoryIds, projectId: $projectId")
-        repositoryCodeGitDao.insertAtomRepoFlag(
-            dslContext = dslContext,
-            ids = repositoryIds
-        )
+        val repoInfos = mutableListOf <TRepositoryRecord>()
+        // 过滤无效数据
+        atomRefRepositoryInfo.forEach {
+            val repositoryRecord = repositoryDao.get(
+                dslContext = dslContext,
+                projectId = it.projectId,
+                repositoryHashId = it.repositoryHashId
+            ) ?: return@forEach
+            repoInfos.add(repositoryRecord)
+        }
+        repoInfos.forEach {
+            logger.info("insert atom repo flag|${it.projectId}|${it.repositoryHashId}")
+            repositoryDao.insertAtomRepoFlag(
+                dslContext = dslContext,
+                projectId = it.projectId,
+                repositoryHashId = it.repositoryHashId
+            )
+        }
     }
 
     companion object {

@@ -74,8 +74,8 @@ object RepositoryMessageCode {
     const val USER_NEED_PROJECT_X_PERMISSION = "2115025" // 用户（{0}）无（{1}）项目权限
     const val NOT_AUTHORIZED_BY_OAUTH = "2115026" // 用户[{0}]尚未进行OAUTH授权，请先授权。
     const val CAN_NOT_SWITCH_REPO_URL = "2115027" // 不可切换代码库地址
-    const val ATOM_REPO_CAN_NOT_EDIT = "2115028" // 插件仓库不得修改
-    const val ATOM_REPO_CAN_NOT_DELETE = "2115029" // 插件仓库不得删除
+    const val ATOM_REPO_CAN_NOT_EDIT = "2115040" // 插件仓库不得修改
+    const val ATOM_REPO_CAN_NOT_DELETE = "2115041" // 插件仓库不得删除
 
     const val BK_REQUEST_FILE_SIZE_LIMIT = "bkRequestFileSizeLimit" // 请求文件不能超过1M
     const val OPERATION_ADD_CHECK_RUNS = "OperationAddCheckRuns" // 添加检测任务

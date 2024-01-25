@@ -43,6 +43,8 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
+import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_FILE_PATH_ERROR
@@ -52,6 +54,7 @@ import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
 import com.tencent.devops.store.dao.atom.MarketAtomVersionLogDao
 import com.tencent.devops.store.dao.common.LabelDao
+import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.ApproveReq
 import com.tencent.devops.store.pojo.atom.Atom
 import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest
@@ -85,6 +88,7 @@ import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
 import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil
 import com.tencent.devops.store.utils.StoreUtils
+import com.tencent.devops.store.utils.ThreadPoolUtil
 import java.io.File
 import java.io.InputStream
 import java.nio.charset.Charset
@@ -97,6 +101,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.util.FileSystemUtils
+import java.util.concurrent.ThreadPoolExecutor
 
 @Service
 @Suppress("LongParameterList", "LongMethod", "ReturnCount", "ComplexMethod", "NestedBlockDepth")
@@ -116,7 +121,8 @@ class OpAtomServiceImpl @Autowired constructor(
     private val storeI18nMessageService: StoreI18nMessageService,
     private val storeFileService: StoreFileService,
     private val redisOperation: RedisOperation,
-    private val client: Client
+    private val client: Client,
+    private val storeProjectRelDao: StoreProjectRelDao
 ) : OpAtomService {
 
     private val logger = LoggerFactory.getLogger(OpAtomServiceImpl::class.java)
@@ -583,6 +589,74 @@ class OpAtomServiceImpl @Autowired constructor(
         } catch (e: Exception) {
             logger.error("set default atom failed , userId:$userId , atomCode:$atomCode")
             false
+        }
+    }
+
+    override fun insertAtomRepoFlag(userId: String, atomCode: String?): Result<Boolean> {
+        ThreadPoolUtil.submitAction(
+            action = {
+                insertAtomRepoFlagAction(
+                    userId = userId,
+                    atomCode = atomCode,
+                    threadPoolExecutor = it
+                )
+            },
+            actionTitle = "insertAtomRepoFlag"
+        )
+        return Result(true)
+    }
+
+    private fun insertAtomRepoFlagAction(
+        userId: String,
+        atomCode: String?,
+        threadPoolExecutor: ThreadPoolExecutor
+    ) {
+        val limit = 100
+        var offset = 0
+        try {
+            do {
+                val atomRecords = atomDao.getAtomByCode(
+                    dslContext = dslContext,
+                    atomCode = atomCode,
+                    limit = limit,
+                    offset = offset
+                )
+                val recordSize = atomRecords.size
+                logger.info("recordSize:$recordSize")
+                // 获取插件与代码库的对应关系
+                val atomRefRepositoryInfos = mutableListOf<AtomRefRepositoryInfo>()
+                atomRecords.forEach { atomItem ->
+                    // 获取插件初始化时的蓝盾项目code
+                    val atomProjectRel = storeProjectRelDao.getAtomProjectRel(
+                        dslContext = dslContext,
+                        storeCode = atomItem.atomCode
+                    )
+                    if (atomProjectRel == null) {
+                        logger.warn("atomProjectRel is null|atomCode:${atomItem.atomCode}")
+                        return@forEach
+                    }
+                    atomRefRepositoryInfos.add(
+                        AtomRefRepositoryInfo(
+                            atomCode = atomItem.atomCode,
+                            projectId = atomProjectRel.projectCode,
+                            repositoryHashId = atomItem.repositoryHashId
+                        )
+                    )
+                }
+                try {
+                    client.get(ServiceRepositoryResource::class).insertAtomRepoFlag(
+                        userId = userId,
+                        atomRefRepositoryInfo = atomRefRepositoryInfos
+                    )
+                } catch (ignored: Exception) {
+                    logger.warn("fail to insert atom flag|atomRefRepositoryInfos[$atomRefRepositoryInfos]", ignored)
+                }
+                offset += limit
+            } while (recordSize == limit)
+        } catch (ignored: Exception) {
+            logger.warn("insertAtomRepoFlag failed", ignored)
+        } finally {
+            threadPoolExecutor.shutdown()
         }
     }
 }

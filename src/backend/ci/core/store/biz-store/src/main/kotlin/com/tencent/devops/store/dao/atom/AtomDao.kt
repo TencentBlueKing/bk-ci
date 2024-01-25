@@ -1372,4 +1372,24 @@ class AtomDao : AtomBaseDao() {
                 .orderBy(tAtom.CREATE_TIME.desc()).limit(1).fetchOne(0, String::class.java)
         }
     }
+
+    fun getAtomByCode(
+        dslContext: DSLContext,
+        atomCode: String?,
+        limit: Int,
+        offset: Int
+    ): Result<TAtomRecord> {
+        return with(TAtom.T_ATOM) {
+            dslContext.selectFrom(this).let {
+                if (!atomCode.isNullOrBlank()) {
+                    it.where(ATOM_CODE.eq(atomCode))
+                }
+                it
+            }
+                .orderBy(CREATE_TIME.desc())
+                .limit(limit)
+                .offset(offset)
+                .fetch()
+        }
+    }
 }
