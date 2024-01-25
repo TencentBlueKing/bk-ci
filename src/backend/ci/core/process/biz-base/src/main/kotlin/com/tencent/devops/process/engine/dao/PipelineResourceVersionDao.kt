@@ -323,7 +323,6 @@ class PipelineResourceVersionDao {
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(VERSION.eq(version))
                 .and(PROJECT_ID.eq(projectId))
-                .and(REFER_FLAG.eq(false))
                 .execute()
         }
     }

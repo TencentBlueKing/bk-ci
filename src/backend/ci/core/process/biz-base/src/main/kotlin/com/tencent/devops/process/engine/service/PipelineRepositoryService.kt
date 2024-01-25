@@ -298,6 +298,7 @@ class PipelineRepositoryService constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 model = model,
+                yamlStr = yamlStr,
                 userId = userId,
                 channelCode = channelCode,
                 canManualStartup = canManualStartup,
@@ -604,6 +605,7 @@ class PipelineRepositoryService constructor(
         projectId: String,
         pipelineId: String,
         model: Model,
+        yamlStr: String?,
         userId: String,
         channelCode: ChannelCode,
         canManualStartup: Boolean,
@@ -752,24 +754,25 @@ class PipelineRepositoryService constructor(
                 } else {
                     PipelineVersionUtils.getVersionName(pipelineVersion, triggerVersion, settingVersion)
                 }
-                val yamlStr = try {
-                    transferService.transfer(
-                        userId = userId,
-                        projectId = projectId,
-                        pipelineId = null,
-                        actionType = TransferActionType.FULL_MODEL2YAML,
-                        data = TransferBody(
-                            modelAndSetting = PipelineModelAndSetting(
-                                model = model,
-                                setting = savedSetting
-                            )
-                        )
-                    ).newYaml ?: ""
-                } catch (ignore: Throwable) {
-                    // 旧流水线可能无法转换，用空YAML代替
-                    logger.warn("TRANSFER_YAML|$projectId|$userId", ignore)
-                    null
-                }
+
+//                val yamlStr = try {
+//                    transferService.transfer(
+//                        userId = userId,
+//                        projectId = projectId,
+//                        pipelineId = null,
+//                        actionType = TransferActionType.FULL_MODEL2YAML,
+//                        data = TransferBody(
+//                            modelAndSetting = PipelineModelAndSetting(
+//                                model = model,
+//                                setting = savedSetting
+//                            )
+//                        )
+//                    ).newYaml ?: ""
+//                } catch (ignore: Throwable) {
+//                    // 旧流水线可能无法转换，用空YAML代替
+//                    logger.warn("TRANSFER_YAML|$projectId|$userId", ignore)
+//                    null
+//                }
                 pipelineResourceDao.create(
                     dslContext = transactionContext,
                     projectId = projectId,
