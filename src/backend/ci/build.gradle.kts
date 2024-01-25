@@ -128,9 +128,9 @@ allprojects {
             dependency("com.tencent.bk.sdk:iam-java-sdk:${Versions.iam}")
             dependency("com.tencent.bk.sdk:spring-boot-bk-audit-starter:${Versions.audit}")
             dependency("com.jakewharton:disklrucache:${Versions.disklrucache}")
-            dependency("com.mysql:mysql-connector-j:${Versions.MysqlDriver}")
             dependency("org.apache.poi:poi:${Versions.apachepoi}")
             dependency("org.apache.poi:poi-ooxml:${Versions.apachepoi}")
+            dependency("com.mysql:mysql-connector-j:${Versions.MysqlDriver}")
             // TODO 升级swagger,等升级到spring boot 3.1+后可以去掉
             dependencySet("io.swagger.core.v3:${Versions.swagger}") {
                 entry("swagger-annotations")

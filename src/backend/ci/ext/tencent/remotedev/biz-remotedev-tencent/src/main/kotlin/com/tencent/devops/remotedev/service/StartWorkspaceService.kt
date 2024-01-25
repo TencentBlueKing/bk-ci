@@ -21,34 +21,36 @@ class StartWorkspaceService @Autowired constructor(
 ) {
     fun computerStatus(
         userId: String,
-        projectId: String
+        projectId: String?,
+        cgsIds: MutableSet<String> = mutableSetOf()
     ): ComputerStatusResp {
         // 获取这个项目下所有的工作空间
-        val csgIds = mutableSetOf<String>()
-        workspaceDao.fetchWinWorkspaceIpAndRegId(dslContext, projectId).forEach { (_, cgsId, _) ->
-            if (cgsId.isNullOrBlank()) {
-                return@forEach
+        if (projectId != null) {
+            workspaceDao.fetchWinWorkspaceIpAndRegId(dslContext, projectId).forEach { (_, cgsId, _) ->
+                if (cgsId.isNullOrBlank()) {
+                    return@forEach
+                }
+                cgsIds.add(cgsId)
             }
-            csgIds.add(cgsId)
         }
-
-        if (csgIds.isEmpty()) {
+        if (cgsIds.isEmpty()) {
             return ComputerStatusResp(0, emptyList(), emptyList())
         }
 
         // 获取状态信息
-        val resp = startCloudClient.computerStatus(userId, csgIds)
+        val resp = startCloudClient.computerStatus(userId, cgsIds)
             ?: return ComputerStatusResp(0, emptyList(), emptyList())
 
         // 拼接仪表信息
         val statusResMap = mutableMapOf<ComputerStatusEnum, ComputerStatusData>()
         val userResMap = mutableMapOf(
-            ComputerUserEnum.LOGIN to ComputerUserData(0, ComputerUserEnum.LOGIN),
-            ComputerUserEnum.LOGOUT to ComputerUserData(0, ComputerUserEnum.LOGOUT)
+            ComputerUserEnum.LOGIN to ComputerUserData(0, mutableMapOf(), ComputerUserEnum.LOGIN),
+            ComputerUserEnum.LOGOUT to ComputerUserData(0, null, ComputerUserEnum.LOGOUT)
         )
         resp.forEach {
             if (!it.userInfos.isNullOrEmpty()) {
                 userResMap[ComputerUserEnum.LOGIN]!!.value++
+                userResMap[ComputerUserEnum.LOGIN]!!.names!![it.cgsId] = it.userInfos.map { user -> user.account }
             } else {
                 userResMap[ComputerUserEnum.LOGOUT]!!.value++
             }
@@ -69,6 +71,19 @@ class StartWorkspaceService @Autowired constructor(
             status = statusResMap.values.toList(),
             users = userResMap.values.toList()
         )
+    }
+
+    fun loginUsers(
+        userId: String,
+        cgsIds: Set<String>
+    ): Map<String, List<String>> {
+        return kotlin.runCatching {
+            computerStatus(
+                userId,
+                null,
+                cgsIds.toMutableSet()
+            ).users.find { it.type == ComputerUserEnum.LOGIN }?.names
+        }.getOrNull() ?: emptyMap()
     }
 
     companion object {

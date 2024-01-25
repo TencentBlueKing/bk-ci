@@ -50,6 +50,7 @@ interface IWorkspace {
     val cpu: Int
     val memory: Int
     val disk: Int
+    var currentLoginUsers: List<String>
 }
 
 @Schema(title = "工作空间信息")
@@ -90,6 +91,8 @@ data class Workspace(
     override val cpu: Int = 8,
     override val memory: Int = 32,
     override val disk: Int = 100,
+    @get:Schema(title = "当前登陆者信息")
+    override var currentLoginUsers: List<String> = emptyList(),
     @get:Schema(title = "windows 地域配置")
     val zoneConfig: WindowsResourceZoneConfig? = null,
     @get:Schema(title = "远程开发仓库地址")
