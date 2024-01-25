@@ -50,7 +50,7 @@
                         hasPermission: canExecute,
                         disablePermissionApi: true,
                         permissionData: {
-                            projectId: projectId,
+                            projectId,
                             resourceType: 'pipeline',
                             resourceCode: pipelineId,
                             action: RESOURCE_ACTION.EXECUTE
