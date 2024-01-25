@@ -101,6 +101,16 @@
                     <div
                         class="switcher-item"
                         :class="{ 'disabled-pac': (!repoInfo.enablePac && pacProjectName) || syncStatus === 'SYNC' }"
+                        v-perm="{
+                            hasPermission: !curRepo.canEdit,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: RESOURCE_TYPE,
+                                resourceCode: curRepo.repositoryHashId,
+                                action: RESOURCE_ACTION.EDIT
+                            }
+                        }"
                         @click="handleTogglePacStatus">
                     </div>
                    
