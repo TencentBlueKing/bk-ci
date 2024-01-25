@@ -107,7 +107,8 @@ class PipelineSettingVersionService @Autowired constructor(
             getPipelineSettingVersion(projectId, pipelineId, version)?.let { ve ->
                 settingInfo.successSubscriptionList = ve.successSubscriptionList
                 settingInfo.failSubscriptionList = ve.failSubscriptionList
-                settingInfo.pipelineName
+                // 这里不应该出现错误的流水线名，但保留历史留下的处理方式
+                settingInfo.pipelineName = ve.pipelineName ?: "unknown pipeline name"
                 settingInfo.labels = ve.labels ?: listOf()
                 settingInfo.desc = ve.desc ?: ""
                 settingInfo.buildNumRule = ve.buildNumRule

@@ -28,6 +28,7 @@
 package com.tencent.devops.process.dao
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
@@ -65,6 +66,7 @@ class PipelineSettingVersionDao {
                 PIPELINE_ID,
                 NAME,
                 DESC,
+                LABELS,
                 RUN_LOCK_TYPE,
                 WAIT_QUEUE_TIME_SECOND,
                 MAX_QUEUE_SIZE,
@@ -82,6 +84,9 @@ class PipelineSettingVersionDao {
                 setting.pipelineId,
                 setting.pipelineName,
                 setting.desc,
+                setting.labels.let { self ->
+                    JsonUtil.toJson(self, false)
+                },
                 PipelineRunLockType.toValue(setting.runLockType),
                 DateTimeUtil.minuteToSecond(setting.waitQueueTimeMinute),
                 setting.maxQueueSize,
@@ -206,7 +211,9 @@ class PipelineSettingVersionDao {
                         JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
                     },
                     version = t.version,
-                    labels = emptyList(),
+                    labels = t.labels?.let { self ->
+                        JsonUtil.getObjectMapper().readValue(self) as List<String>
+                    },
                     waitQueueTimeMinute = DateTimeUtil.secondToMinute(t.waitQueueTimeSecond ?: 600000),
                     maxQueueSize = t.maxQueueSize,
                     buildNumRule = t.buildNumRule,

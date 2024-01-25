@@ -385,6 +385,15 @@ BEGIN
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_PIPELINE_SETTING_VERSION'
+                    AND COLUMN_NAME = 'LABELS') THEN
+    ALTER TABLE `T_PIPELINE_SETTING_VERSION`
+        ADD COLUMN `LABELS` text DEFAULT NULL COMMENT '版本修改的标签';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING_VERSION'
                     AND COLUMN_NAME = 'RUN_LOCK_TYPE') THEN
     ALTER TABLE `T_PIPELINE_SETTING_VERSION`
         ADD COLUMN `RUN_LOCK_TYPE` int(11) DEFAULT '1' COMMENT '运行并发配置',;
