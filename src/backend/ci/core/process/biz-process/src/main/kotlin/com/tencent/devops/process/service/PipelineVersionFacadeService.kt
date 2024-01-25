@@ -322,6 +322,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             pipelineName = draftVersion.model.name,
             version = result.version,
+            versionNum = null,
             versionName = result.versionName,
             targetUrl = targetUrl
         )
@@ -522,6 +523,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             Triple(modelAndYaml.modelAndSetting.model, modelAndYaml.modelAndSetting.setting, newYaml)
         }
         return if (pipelineId.isNullOrBlank()) {
+            // 新建流水线产生草稿
             pipelineInfoFacadeService.createPipeline(
                 userId = userId,
                 projectId = projectId,
@@ -532,6 +534,7 @@ class PipelineVersionFacadeService @Autowired constructor(
                 yaml = newYaml
             )
         } else {
+            // 修改已存在的草稿
             val draft = pipelineRepositoryService.getDraftVersionResource(projectId, pipelineId)
             val savedSetting = pipelineSettingFacadeService.saveSetting(
                 userId = userId,

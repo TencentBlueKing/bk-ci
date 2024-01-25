@@ -54,7 +54,7 @@ class PipelineResourceDao {
         versionName: String?,
         model: Model,
         yamlStr: String?,
-        versionNum: Int,
+        versionNum: Int?,
         pipelineVersion: Int,
         triggerVersion: Int,
         settingVersion: Int
