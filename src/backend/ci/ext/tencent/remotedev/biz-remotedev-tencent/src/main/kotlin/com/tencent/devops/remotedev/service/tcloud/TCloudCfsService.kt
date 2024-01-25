@@ -132,21 +132,21 @@ class TCloudCfsService @Autowired constructor(
         cfsId: String,
         region: String
     ) {
-        executor.execute {
-            val cred = Credential(secretId, secretKey)
-            val profile = HttpProfile().apply {
-                this.endpoint = TCLOUD_DOMAIN
+        val cred = Credential(secretId, secretKey)
+        val profile = HttpProfile().apply {
+            this.endpoint = TCLOUD_DOMAIN
+        }
+        val client = CfsClient(
+            cred, region,
+            ClientProfile().apply {
+                this.httpProfile = profile
             }
-            val client = CfsClient(
-                cred, region,
-                ClientProfile().apply {
-                    this.httpProfile = profile
-                }
-            )
+        )
 
-            val pgId = getPGId(client, cfsId) ?: throw RuntimeException("获取权限组ID失败")
-            projectTCloudCfsDao.add(dslContext, projectId, cfsId, region, pgId)
+        val pgId = getPGId(client, cfsId) ?: throw RuntimeException("获取权限组ID失败")
+        projectTCloudCfsDao.add(dslContext, projectId, cfsId, region, pgId)
 
+        executor.execute {
             // 将所有这个项目下的ip都添加到权限组
             val ips = workspaceJoinDao.limitFetchProjectWorkspace(
                 dslContext = dslContext,
@@ -179,7 +179,7 @@ class TCloudCfsService @Autowired constructor(
                     return@execute
                 }
                 // 中间休眠下，防止快速操作腾讯云报错
-                Thread.sleep(5000)
+                Thread.sleep(75000)
             }
         }
     }
