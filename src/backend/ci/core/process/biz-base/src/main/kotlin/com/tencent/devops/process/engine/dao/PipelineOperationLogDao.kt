@@ -127,9 +127,10 @@ class PipelineOperationLogDao {
         limit: Int
     ): List<PipelineOperationLog> {
         return with(TPipelineOperationLog.T_PIPELINE_OPERATION_LOG) {
-            dslContext.selectFrom(this)
+            val select = dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
-                .orderBy(CREATE_TIME.asc())
+            creator?.let { select.and(OPERATOR.like("%$creator%")) }
+            select.orderBy(CREATE_TIME.asc())
                 .limit(limit).offset(offset)
                 .fetch(mapper)
         }
