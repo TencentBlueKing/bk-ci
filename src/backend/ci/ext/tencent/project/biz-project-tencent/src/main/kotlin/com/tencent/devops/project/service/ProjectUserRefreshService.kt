@@ -122,19 +122,7 @@ class ProjectUserRefreshService @Autowired constructor(
                                 "tof ${tofDeptInfo.centerId} ${tofDeptInfo.centerName}, " +
                                 "local ${it.centerId} ${it.centerName}"
                         )
-                        userDao.update(
-                            userId = it.userId!!,
-                            groupId = tofDeptInfo.groupId.toInt(),
-                            groupName = tofDeptInfo.groupName,
-                            bgId = tofDeptInfo.bgId.toInt(),
-                            bgName = tofDeptInfo.bgName,
-                            centerId = tofDeptInfo.centerId.toInt(),
-                            centerName = tofDeptInfo.centerName,
-                            deptId = tofDeptInfo.deptId.toInt(),
-                            deptName = tofDeptInfo.deptName,
-                            dslContext = dslContext,
-                            name = it.name!!
-                        )
+                        userDao.update(dslContext, tofDeptInfo)
                     }
                 } catch (oe: OperationException) {
                     logger.warn("getUserDept fail: ${it.userId}|$oe")
@@ -185,18 +173,7 @@ class ProjectUserRefreshService @Autowired constructor(
                 )) {
                 logger.info("user info diff, bk:$userInfo, tof :$deptInfo")
                 // 组织信息不一致，刷新当前用户数据。 以tof数据为准, 数据源直接获取tof数据
-                projectUserDao.update(
-                    userId = userId,
-                    groupId = deptInfo.groupId.toInt(),
-                    groupName = deptInfo.groupName,
-                    bgId = deptInfo.bgId.toInt(),
-                    bgName = deptInfo.bgName,
-                    centerId = deptInfo.centerId.toInt(),
-                    centerName = deptInfo.centerName,
-                    deptId = deptInfo.deptId.toInt(),
-                    deptName = deptInfo.deptName,
-                    dslContext = dslContext
-                )
+                projectUserDao.update(dslContext, deptInfo)
                 return deptInfo
             }
         } catch (e: OperationException) {
@@ -359,7 +336,9 @@ class ProjectUserRefreshService @Autowired constructor(
             tofDeptInfo.centerId != dbUserRecord.centerId ||
             tofDeptInfo.centerName != dbUserRecord.centerName ||
             tofDeptInfo.groupId != dbUserRecord.groupId ||
-            tofDeptInfo.groupName != dbUserRecord.groupName
+            tofDeptInfo.groupName != dbUserRecord.groupName ||
+            tofDeptInfo.businessLineId != dbUserRecord.businessLineId ||
+            tofDeptInfo.businessLineName != dbUserRecord.businessLineName
     }
 
     companion object {
